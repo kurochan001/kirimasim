@@ -64,3 +64,44 @@ jobs:
       - run: cmake --preset dev
       - run: cmake --build --preset dev
       - run: ctest --preset dev --output-on-failure
+
+  # The newest compilers named in the design. Not part of the required
+  # checks yet: move a job to ci.yml once it has been green for a while.
+  gcc-16:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install GCC 16 (Ubuntu universe package)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-16
+          g++-16 --version
+          cmake --version
+
+      - run: cmake --preset dev
+        env:
+          CC: gcc-16
+          CXX: g++-16
+      - run: cmake --build --preset dev
+      - run: ctest --preset dev --output-on-failure
+
+  clang-23:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Clang 23 (apt.llvm.org packages of the LLVM 23 release)
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 23
+          clang++-23 --version
+          cmake --version
+
+      - run: cmake --preset dev
+        env:
+          CC: clang-23
+          CXX: clang++-23
+      - run: cmake --build --preset dev
+      - run: ctest --preset dev --output-on-failure
