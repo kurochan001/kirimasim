@@ -2,7 +2,7 @@
 :name: missing_semicolon
 :description: A declaration without its semicolon is a syntax error
 :tags: syntax error
-:lrm: 1800-2023 6.8
+:lrm: 1800-2023 A.2.1.3 6.8
 :oracle: spec
 :fourstate: no
 :nondeterministic: no
