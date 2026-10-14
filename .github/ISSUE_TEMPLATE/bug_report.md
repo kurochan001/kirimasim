@@ -4,6 +4,11 @@ about: haremasim behaves differently from what you expect
 labels: bug
 ---
 
+<!-- Please do not paste text, figures, or example code from the IEEE 1800
+     standard or code written by others, and do not include confidential
+     information from your employer. Cite section numbers and use your own
+     words and your own minimal examples. -->
+
 ## What happened
 
 <!-- Command line, input files (a minimal example), and the actual output. -->

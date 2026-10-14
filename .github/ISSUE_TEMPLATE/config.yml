@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and early ideas
+    url: https://github.com/haremasim/haremasim/discussions
+    about: Ask questions, or discuss ideas that are not yet a concrete proposal, in GitHub Discussions.
+  - name: Security vulnerability
+    url: https://github.com/haremasim/haremasim/security/policy
+    about: Do not open a public issue. Report vulnerabilities privately as described in SECURITY.md.

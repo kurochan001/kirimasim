@@ -1,0 +1,62 @@
+name: Specification proposal
+description: Propose a change or addition to a haremasim specification document
+labels: ["spec-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        haremasim is implemented from its specifications under `docs/spec/`,
+        so proposals to those documents are the main way to shape the
+        project. If a proposal is accepted, a maintainer updates the
+        specification, and the implementation follows it.
+
+        Please do not paste text, figures, or example code from the
+        IEEE 1800 standard or from other people's code, and do not include
+        confidential information from your employer. Cite section numbers
+        and describe things in your own words.
+  - type: input
+    id: document
+    attributes:
+      label: Document and section
+      description: |
+        The specification document and the section of it that your
+        proposal concerns. The specifications are written in Japanese;
+        proposals in English are welcome.
+      placeholder: "docs/spec/SCHEDULER_SPEC.md, section 4.2"
+    validations:
+      required: true
+  - type: input
+    id: ieee-sections
+    attributes:
+      label: Related IEEE 1800-2023 sections
+      description: Section numbers only. Do not paste the text of the standard.
+      placeholder: "4.7, 9.4.2"
+    validations:
+      required: false
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should the specification say? Describe the change or addition.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale and evidence
+      description: |
+        Why the change is needed, and what supports it: your reading of the
+        standard in your own words, the behavior of other simulators (name
+        and version), or a use case.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example SystemVerilog
+      description: |
+        A minimal example, if it helps. Only code you wrote yourself: not
+        copied from the standard, other projects, or your employer.
+      render: systemverilog
+    validations:
+      required: false
