@@ -84,6 +84,17 @@ For release builds, also run `python3 tools/check_release_flags.py` after
 `cmake --preset release`. The `asan` and `ubsan` presets run the same tests
 with sanitizers.
 
+To run every check that CI runs (all four presets, the release flag check,
+the banned-feature check, clang-format and clang-tidy) in one go:
+
+```sh
+python3 tools/local_ci.py
+```
+
+Hosted macOS runners are not always available to this repository, so if
+you work on macOS, run `tools/local_ci.py` before pushing and paste its
+summary into the pull request.
+
 ## Pull requests
 
 Fill in the pull request template. Keep one purpose per commit and write

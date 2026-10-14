@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""Runs the CI checks on the local machine, mainly for macOS.
+
+GitHub's hosted macOS arm64 runners are often unavailable for private
+repositories, so the macOS results come from running this script on a
+developer's Mac before pushing. It runs, in order:
+
+1. configure, build and ctest for each preset (default: dev, release,
+   asan, ubsan),
+2. tools/check_release_flags.py (when the release preset is included),
+3. tools/check_banned.py,
+4. clang-format --dry-run --Werror on all tracked .cpp and .h files,
+5. clang-tidy on all tracked .cpp files under src/ and tests/ (using the
+   dev build's compile_commands.json).
+
+clang-format and clang-tidy are taken from --llvm-bin, then from PATH,
+then from Homebrew's LLVM (/opt/homebrew/opt/llvm/bin). A missing tool is
+reported as "not run" and makes the result fail unless --skip-lint is given.
+
+Prints a summary that can be pasted into a push or PR description and
+exits with 1 if any step failed.
+"""
+
+import argparse
+import platform
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_PRESETS = ["dev", "release", "asan", "ubsan"]
+HOMEBREW_LLVM = Path("/opt/homebrew/opt/llvm/bin")
+
+
+class Step:
+    def __init__(self, name: str, status: str, seconds: float, detail: str = ""):
+        self.name = name
+        self.status = status  # "ok", "FAILED" or "not run"
+        self.seconds = seconds
+        self.detail = detail
+
+
+def run(cmd: list[str], log: Path) -> bool:
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("w", encoding="utf-8") as f:
+        f.write("$ " + " ".join(cmd) + "\n")
+        f.flush()
+        proc = subprocess.run(cmd, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT, check=False)
+    return proc.returncode == 0
+
+
+def timed(name: str, cmd: list[str], log: Path) -> Step:
+    start = time.monotonic()
+    ok = run(cmd, log)
+    return Step(name, "ok" if ok else "FAILED", time.monotonic() - start,
+                "" if ok else f"see {log.relative_to(ROOT)}")
+
+
+def find_tool(name: str, llvm_bin: Path | None) -> str | None:
+    if llvm_bin and (llvm_bin / name).exists():
+        return str(llvm_bin / name)
+    found = shutil.which(name)
+    if found:
+        return found
+    if (HOMEBREW_LLVM / name).exists():
+        return str(HOMEBREW_LLVM / name)
+    return None
+
+
+def tool_version(cmd: list[str]) -> str:
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False).stdout
+    except OSError:
+        return "unavailable"
+    return out.splitlines()[0].strip() if out else "unavailable"
+
+
+def git_files(*patterns: str) -> list[str]:
+    out = subprocess.run(["git", "ls-files", *patterns], cwd=ROOT, capture_output=True,
+                         text=True, check=True).stdout
+    return out.split()
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--presets", default=",".join(DEFAULT_PRESETS),
+                    help="comma-separated presets (default: %(default)s)")
+    ap.add_argument("--skip-lint", action="store_true",
+                    help="do not run clang-format and clang-tidy")
+    ap.add_argument("--llvm-bin", type=Path, default=None,
+                    help="directory that contains clang-format and clang-tidy")
+    args = ap.parse_args()
+
+    presets = [p for p in args.presets.split(",") if p]
+    logs = ROOT / "build" / "local-ci"
+    steps: list[Step] = []
+
+    for preset in presets:
+        for kind, cmd in (("configure", ["cmake", "--preset", preset]),
+                          ("build", ["cmake", "--build", "--preset", preset]),
+                          ("test", ["ctest", "--preset", preset])):
+            step = timed(f"{preset}: {kind}", cmd, logs / f"{preset}-{kind}.log")
+            steps.append(step)
+            if step.status != "ok":
+                break
+
+    if "release" in presets:
+        steps.append(timed("check_release_flags",
+                           [sys.executable, "tools/check_release_flags.py"],
+                           logs / "check_release_flags.log"))
+    steps.append(timed("check_banned", [sys.executable, "tools/check_banned.py"],
+                       logs / "check_banned.log"))
+
+    clang_format = clang_tidy = None
+    if not args.skip_lint:
+        clang_format = find_tool("clang-format", args.llvm_bin)
+        clang_tidy = find_tool("clang-tidy", args.llvm_bin)
+        if clang_format:
+            steps.append(timed("clang-format",
+                               [clang_format, "--dry-run", "--Werror",
+                                *git_files("*.cpp", "*.h")],
+                               logs / "clang-format.log"))
+        else:
+            steps.append(Step("clang-format", "not run", 0.0, "clang-format not found"))
+        if not clang_tidy:
+            steps.append(Step("clang-tidy", "not run", 0.0, "clang-tidy not found"))
+        elif not (ROOT / "build" / "dev" / "compile_commands.json").exists():
+            steps.append(Step("clang-tidy", "not run", 0.0,
+                              "needs the dev preset (build/dev/compile_commands.json)"))
+        else:
+            cmd = [clang_tidy, "-p", "build/dev", "--quiet"]
+            if platform.system() == "Darwin":
+                sdk = subprocess.run(["xcrun", "--show-sdk-path"], capture_output=True,
+                                     text=True, check=False).stdout.strip()
+                if sdk:
+                    cmd.append(f"--extra-arg=-isysroot{sdk}")
+            steps.append(timed("clang-tidy", cmd + git_files("src/*.cpp", "tests/*.cpp"),
+                               logs / "clang-tidy.log"))
+
+    head = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT,
+                          capture_output=True, text=True, check=False).stdout.strip()
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True,
+                           text=True, check=False).stdout.strip()
+
+    print("local CI summary")
+    print(f"  commit:   {head}{' (uncommitted changes present)' if dirty else ''}")
+    print(f"  system:   {platform.system()} {platform.release()} {platform.machine()}")
+    print(f"  compiler: {tool_version(['c++', '--version'])}")
+    print(f"  cmake:    {tool_version(['cmake', '--version'])}")
+    if clang_format:
+        print(f"  format:   {tool_version([clang_format, '--version'])}")
+    if clang_tidy:
+        print(f"  tidy:     {tool_version([clang_tidy, '--version'])}")
+    failed = False
+    for s in steps:
+        line = f"  {s.status:8} {s.name:28} {s.seconds:7.1f}s"
+        if s.detail:
+            line += f"  ({s.detail})"
+        print(line)
+        if s.status != "ok":
+            failed = True
+    print("result: " + ("FAILED" if failed else "all checks passed"))
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
