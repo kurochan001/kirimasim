@@ -1,0 +1,14 @@
+{
+    "tests/suite/sched/nba_order_same_proc.sv": {
+        "front.files": 1,
+        "front.syntax_trees": 1,
+        "front.errors": 0,
+        "front.warnings": 0
+    },
+    "tests/suite/syntax/missing_semicolon.sv": {
+        "front.files": 1,
+        "front.syntax_trees": 1,
+        "front.errors": 1,
+        "front.warnings": 0
+    }
+}
