@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# haremasim does not use C++20 modules. Without this, CMake 3.28+ makes Clang
+# scan for module dependencies and puts @*.modmap response files, which exist
+# only after a full build, into compile_commands.json; clang-tidy then fails.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 include(cmake/Dependencies.cmake)
 
