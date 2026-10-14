@@ -1,0 +1,8 @@
+// Includes every public kernel header so that they are compiled as C++20.
+// Keep this list in sync with src/kernel/include/haremasim/kernel/.
+
+#include "haremasim/kernel/context.h"
+#include "haremasim/kernel/counters.h"
+#include "haremasim/kernel/w4.h"
+
+static_assert(__cplusplus == 202002L, "this file must be compiled as C++20");
