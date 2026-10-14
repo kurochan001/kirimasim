@@ -1,0 +1,19 @@
+---
+# bugprone-* and performance-* are the core. Checks that are too noisy for
+# this code base are switched off below, each with a reason.
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  cppcoreguidelines-avoid-non-const-global-variables,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-branch-clone,
+  -performance-enum-size
+# bugprone-easily-swappable-parameters: fires on most two-argument functions.
+# bugprone-narrowing-conversions: bit-level code narrows on purpose.
+# bugprone-branch-clone: truth tables and switch tables repeat on purpose.
+# performance-enum-size: enum sizes are chosen per type already.
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*/src/.*'
+...
