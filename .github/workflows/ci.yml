@@ -21,6 +21,11 @@ jobs:
         os: [macos-26, ubuntu-24.04]  # macos-26 is Apple Silicon (arm64)
         preset: [dev, release]
     runs-on: ${{ matrix.os }}
+    # Hosted macOS arm64 runners are often unavailable for this private
+    # repository, and queued jobs get cancelled. Until the repository is
+    # public, macOS results come from tools/local_ci.py run before pushing,
+    # and a macOS failure here does not fail the workflow.
+    continue-on-error: ${{ startsWith(matrix.os, 'macos') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
