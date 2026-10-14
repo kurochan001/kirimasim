@@ -29,7 +29,9 @@ upstream.
 
 Every tier registers its processes with the **execution kernel** in the
 same form: a resume function plus a frame that holds the process state
-(automatic variables and resume position). The kernel owns everything else:
+(automatic variables, resume position, temporaries that live across a wait,
+and pending violation and assertion reports; calls to tasks that can wait
+add call frames chained to it). The kernel owns everything else:
 the scheduler with all IEEE 1800-2023 regions, value operations, objects
 and garbage collection, VPI, DPI-C, waveforms, assertions, coverage and
 constraint solving. Because the kernel cannot tell the tiers apart,

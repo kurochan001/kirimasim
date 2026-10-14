@@ -1,6 +1,6 @@
 # TEST_SUITE：テストスイート
 
-優先度：P0。状態：**承認済み（2026-10-14）**。ただし「必須テストの一覧」は案のままとし、テストを書いて規格の節を確かめたものから確定する。
+優先度：P0。状態：**改訂の承認待ち（2026-10-15）**。2026-10-14 に承認した版に、独立レビューの指摘と、テストを書いた結果を反映した。「必須テストの一覧」は案のままとし、テストを書いて規格の節を確かめたものから確定する。
 
 この文書は、haremasim のテストスイート（`tests/suite/`、将来は別リポジトリで公開する適合性テスト）の形式、区分、期待値の決まり、比べる相手を定める。ユニットテスト（`tests/unit/`）と PerfCount（`tests/perf_counts/`）は、期待値を守る決まりだけを共有する。
 
@@ -146,17 +146,17 @@ P0 では、`haremasim parse` が通るか（失敗を期待するテストは�
 | 分類 | テスト（予定の名前） | 確かめること | 規格の節 | 状態 |
 | --- | --- | --- | --- | --- |
 | スケジューリング | `sched/nba_order_same_proc` | 同じプロセスの NBA は文の順に反映される | 4.6 | ある |
-| スケジューリング | `sched/comb_order` | always_comb の中の文の順序と、自分の書き込みで起き直さないこと | 9.2.2.2.1（設計書の記述） | 未作成 |
-| スケジューリング | `sched/pulse_history` | always_comb の途中の 0→1→0 で待っているプロセスが起きること | 要確認 | 未作成 |
+| スケジューリング | `sched/comb_order` | always_comb の中の文の順序と、自分の書き込みで起き直さないこと | 9.2.2.2、9.2.2.2.1（規格で確認） | ある |
+| スケジューリング | `sched/pulse_history` | always_comb の途中の 0→1→0 で待っているプロセスが起きること | 要確認 | ある |
 | スケジューリング | `sched/zero_delay_forever` | `forever #0` が時刻を進めずに上限で止まり、診断が出ること | 要確認 | 未作成 |
 | スケジューリング | `sched/empty_forever` | 空の `forever` が上限で止まり、診断が出ること | 要確認 | 未作成 |
-| 4 値 | `values/cond_truth` | 条件の真偽への変換（1 が無く X・Z があると不定、`if` は不定を偽） | 12.4、11.4.5、11.4.7（規格で確認。真偽の決め方は VALUE_SEMANTICS 3.5 の解釈） | 未作成 |
-| 4 値 | `values/known_inputs_x` | 入力が既知でも 0 での除算と範囲外の読み出しが X を作ること | 11.4.3、7.4.5（規格で確認） | 未作成 |
-| 4 値 | `values/and_or_truth` | ビット演算の 4 値の真理値表 | 11.4.8（規格で確認） | 未作成 |
-| 4 値 | `values/cond_op_ambiguous` | 条件が不定のときのビットごとの合わせ方（両側が z のビットは x） | 11.4.11（規格で確認） | 未作成 |
-| 4 値 | `values/casez_expr_dontcare` | `casez` と `casex` が式の側の z や x も無視すること | 12.5.1（規格で確認） | 未作成 |
-| 4 値 | `values/edge_table` | posedge と negedge の判定（x と z の間は辺にならない） | 9.4.2（規格で確認） | 未作成 |
-| case | `values/unique_case_violation` | unique case の違反の報告の時点 | 12.4.2.1、12.5.3（設計書の記述） | 未作成 |
+| 4 値 | `values/cond_truth` | 条件の真偽への変換（1 が無く X・Z があると不定、`if` は不定を偽） | 12.4、11.4.5、11.4.7（規格で確認。真偽の決め方は VALUE_SEMANTICS 3.5 の解釈） | ある |
+| 4 値 | `values/known_inputs_x` | 入力が既知でも 0 での除算と範囲外の読み出しが X を作ること | 11.4.3、7.4.5（規格で確認） | ある |
+| 4 値 | `values/and_or_truth` | ビット演算の 4 値の真理値表 | 11.4.8（規格で確認） | ある |
+| 4 値 | `values/cond_op_ambiguous` | 条件が不定のときのビットごとの合わせ方（両側が z のビットは x） | 11.4.11（規格で確認） | ある |
+| 4 値 | `values/casez_expr_dontcare` | `casez` と `casex` が式の側の z や x も無視すること | 12.5.1（規格で確認） | ある |
+| 4 値 | `values/edge_table` | posedge と negedge の判定（x と z の間は辺にならない） | 9.4.2（規格で確認） | ある |
+| case | `values/unique_case_violation` | unique case の違反の報告の時点 | 12.5.3、12.5.3.1、12.4.2.1（規格で確認） | 未作成 |
 | プロセス制御 | `proc/fork_join_any`、`proc/disable_fork` | fork の 3 種と disable fork | 要確認 | 未作成 |
 | クロッキングブロック | `cb/input_sample_1step` | `#1step` の入力の標本化 | 要確認 | 未作成（P3） |
 | 構文 | `syntax/missing_semicolon` | 構文エラーを意図した位置で報告する | 6.8 | ある |
@@ -175,5 +175,7 @@ ctest --preset dev -L Suite      # テストスイートだけ
 
 - テストスイートを別リポジトリに分ける時期。
 - `@<名前>.expected` の読み込みと、許される結果の集合の判定を、`tools/run_suite_test.py` に実装する（`:expected_stdout:` を比べ始める P1 で）。
+- システムタスクの意味（`$display` 系の書式の変換と x・z の表示、`%t` と `$timeformat`、`%m`、`$strobe`・`$monitor` の時点、`$time` と `$realtime` の丸め、`$readmemh` の形式、ファイル入出力。規格の 20.3、21.2〜21.4）を、新しい詳細仕様書 `SYSTEM_TASKS.md` に書く（P1 の着手前。新設の提案。標準出力で合否を決めるので、書式の細部が決まらないと期待値を作れない）。
+- 時刻が進まない実行のテスト（`zero_delay_forever`、`empty_forever`）は、標準出力ではなく終了コードと診断を確かめる。その項目（`:expected_exit:` など）を、P1 で足す。
 - CI で、比べる相手の Icarus Verilog と Verilator を用意する方法（固定したコミットからのビルドか、イメージか）。
 - 波形の要約と観測対象の事象の列の期待値の形式（P1 で足す。足したら期待値を守る決まりの対象に加える）。
