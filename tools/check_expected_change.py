@@ -6,11 +6,16 @@ the implementation (anything under src/), it must not also:
 
 * change or remove an existing entry of tests/perf_counts/expected.json,
 * change or remove an existing line of any other tests/**/expected* file,
-* change or remove an existing line of a test file (tests/**/*.sv and the
-  unit test sources tests/unit/**/*.cpp). This covers ":expected_stdout:"
-  lines and also rewriting a test's body to get the same effect,
+* change or remove an existing line of a test-suite file (tests/**/*.sv).
+  This covers ":expected_stdout:" lines and also rewriting a test's body
+  to get the same effect,
 * delete or rename an existing file under tests/ (other than CMakeLists.txt
   and README.md).
+
+Unit test sources (tests/unit/) often have to change together with the
+code they call, for example when a function is renamed, so editing them
+does not fail the check. Removed lines that contain an assertion
+(EXPECT_*, ASSERT_*) are listed as warnings for the reviewers instead.
 
 Adding new tests, new expected values and new PerfCount entries in the same
 PR as the implementation is fine; a human checks their basis in review.
@@ -21,10 +26,13 @@ and the IEEE 1800 section.
 import argparse
 import fnmatch
 import json
+import re
 import subprocess
 import sys
 
-TEST_SOURCE_PATTERNS = ("tests/*.sv", "tests/unit/*.cpp", "tests/unit/*.h")
+TEST_SOURCE_PATTERNS = ("tests/*.sv",)
+UNIT_TEST_PATTERNS = ("tests/unit/*.cpp", "tests/unit/*.h")
+ASSERTION = re.compile(r"\b(?:EXPECT|ASSERT)_[A-Z_]+\s*\(")
 NOT_PROTECTED = {"CMakeLists.txt", "README.md"}
 PERF_EXPECTED = "tests/perf_counts/expected.json"
 
@@ -40,6 +48,10 @@ def is_expected_file(path: str) -> bool:
 def is_test_source(path: str) -> bool:
     # fnmatch's * also matches "/", so these patterns cover subdirectories.
     return any(fnmatch.fnmatch(path, p) for p in TEST_SOURCE_PATTERNS)
+
+
+def is_unit_test(path: str) -> bool:
+    return any(fnmatch.fnmatch(path, p) for p in UNIT_TEST_PATTERNS)
 
 
 def is_protected(path: str) -> bool:
@@ -83,6 +95,7 @@ def main() -> int:
 
     impl_changed = []
     errors = []
+    warnings = []
     for row in status:
         fields = row.split("\t")
         code, paths = fields[0], fields[1:]
@@ -101,6 +114,15 @@ def main() -> int:
             elif is_expected_file(old_path) or is_test_source(old_path):
                 for line in removed_lines(base, args.head, old_path):
                     errors.append(f"{old_path}: existing line changed or removed: {line!r}")
+            elif is_unit_test(old_path):
+                for line in removed_lines(base, args.head, old_path):
+                    if ASSERTION.search(line):
+                        warnings.append(f"{old_path}: assertion changed or removed: "
+                                        f"{line.strip()!r}")
+
+    for w in warnings:
+        # GitHub Actions shows ::warning:: lines as annotations on the PR.
+        print(f"::warning::check_expected_change: {w}")
 
     if not impl_changed:
         print("check_expected_change: no changes under src/; expectation changes are allowed")

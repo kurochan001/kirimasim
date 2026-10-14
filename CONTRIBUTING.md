@@ -38,9 +38,15 @@ they are protected:
 
 - A change that modifies, removes, or relaxes an **existing** expectation
   (`tests/perf_counts/expected.json` entries, `tests/**/expected*` lines,
-  `:expected_stdout:` lines, or the body of an existing test) must be its
-  **own pull request**, separate from implementation changes under `src/`.
-  Explain the reason and cite the IEEE 1800 section number in the PR.
+  `:expected_stdout:` lines, or the body of an existing test-suite file
+  under `tests/suite/`) must be its **own pull request**, separate from
+  implementation changes under `src/`. The same applies to deleting or
+  renaming an existing test file. Explain the reason and cite the IEEE 1800
+  section number in the PR.
+- Unit tests (`tests/unit/`) may be edited together with the code they
+  call, for example when a function is renamed. CI lists every changed or
+  removed `EXPECT_*`/`ASSERT_*` line as a warning, and reviewers check that
+  no assertion was weakened.
 - Adding new tests and their expectations in the same PR as the
   implementation is fine. Reviewers check where the expectation comes from.
 - CI enforces this with `tools/check_expected_change.py`.
