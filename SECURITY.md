@@ -1,0 +1,16 @@
+# Security policy
+
+## Reporting a vulnerability
+
+Please report security vulnerabilities privately through GitHub's private
+vulnerability reporting: open the repository's **Security** tab and choose
+**Report a vulnerability**. Do not open a public issue for a security
+problem.
+
+We will acknowledge the report, investigate, and coordinate a fix and
+disclosure with you.
+
+## Supported versions
+
+haremasim has not made a release yet. Until it does, only the latest commit
+on `main` is supported.

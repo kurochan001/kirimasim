@@ -1,0 +1,15 @@
+# Build trees (all presets write to build/<preset>)
+/build/
+/out/
+
+# Editors and tools
+.cache/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+compile_commands.json
+
+# Python
+__pycache__/
+*.pyc
