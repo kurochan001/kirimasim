@@ -1,0 +1,8 @@
+1x:true
+0x:false
+0z:false
+00:false
+not0x=x
+not1x=0
+and=x
+or=1
