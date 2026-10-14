@@ -150,15 +150,18 @@ P0 では、`haremasim parse` が通るか（失敗を期待するテストは�
 | スケジューリング | `sched/pulse_history` | always_comb の途中の 0→1→0 で待っているプロセスが起きること | 要確認 | 未作成 |
 | スケジューリング | `sched/zero_delay_forever` | `forever #0` が時刻を進めずに上限で止まり、診断が出ること | 要確認 | 未作成 |
 | スケジューリング | `sched/empty_forever` | 空の `forever` が上限で止まり、診断が出ること | 要確認 | 未作成 |
-| 4 値 | `values/cond_truth` | 条件の真偽への変換（1 が無く X・Z があると不定、`if` は不定を偽） | 11.3.5、11.4.7（設計書の記述） | 未作成 |
-| 4 値 | `values/known_inputs_x` | 入力が既知でも 0 での除算と範囲外の読み出しが X を作ること | 要確認 | 未作成 |
-| 4 値 | `values/and_or_truth` | ビット演算の 4 値の真理値表 | 要確認 | 未作成 |
+| 4 値 | `values/cond_truth` | 条件の真偽への変換（1 が無く X・Z があると不定、`if` は不定を偽） | 12.4、11.4.5、11.4.7（規格で確認。真偽の決め方は VALUE_SEMANTICS 3.5 の解釈） | 未作成 |
+| 4 値 | `values/known_inputs_x` | 入力が既知でも 0 での除算と範囲外の読み出しが X を作ること | 11.4.3、7.4.5（規格で確認） | 未作成 |
+| 4 値 | `values/and_or_truth` | ビット演算の 4 値の真理値表 | 11.4.8（規格で確認） | 未作成 |
+| 4 値 | `values/cond_op_ambiguous` | 条件が不定のときのビットごとの合わせ方（両側が z のビットは x） | 11.4.11（規格で確認） | 未作成 |
+| 4 値 | `values/casez_expr_dontcare` | `casez` と `casex` が式の側の z や x も無視すること | 12.5.1（規格で確認） | 未作成 |
+| 4 値 | `values/edge_table` | posedge と negedge の判定（x と z の間は辺にならない） | 9.4.2（規格で確認） | 未作成 |
 | case | `values/unique_case_violation` | unique case の違反の報告の時点 | 12.4.2.1、12.5.3（設計書の記述） | 未作成 |
 | プロセス制御 | `proc/fork_join_any`、`proc/disable_fork` | fork の 3 種と disable fork | 要確認 | 未作成 |
 | クロッキングブロック | `cb/input_sample_1step` | `#1step` の入力の標本化 | 要確認 | 未作成（P3） |
 | 構文 | `syntax/missing_semicolon` | 構文エラーを意図した位置で報告する | 6.8 | ある |
 
-節番号は、設計書に書かれているものだけを書き、それ以外は「要確認」とした。どれもテストを書くときに規格で確かめる。
+「規格で確認」と書いた節は、VALUE_SEMANTICS.md を書くときに規格で確かめた。それ以外は、設計書に書かれている節か「要確認」で、テストを書くときに規格で確かめる。
 
 ## 実行の仕方
 
