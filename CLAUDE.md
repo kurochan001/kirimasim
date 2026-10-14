@@ -1,0 +1,85 @@
+# CLAUDE.md：haremasim で作業する Claude Code への決まり
+
+## プロジェクトの目的
+
+haremasim は、オープンソースの SystemVerilog シミュレータです。4 値（0・1・X・Z）を既定とし、IEEE 1800-2023 どおりのスケジューリング（時刻スロットの全領域と参照アルゴリズム）を守ったうえで、実用的な速さを目指します。フロントエンドは slang を改変せずに版を固定して使い、中間表現 SIR を経て、インタプリタ（第 1 層）と C++ 生成（第 2 層）が 1 つの実行カーネルを共有して動きます。今は P0（準備）の段階で、ビルドの土台と骨組みだけがあります。
+
+## ライブラリの依存の規則
+
+依存は下の表の向きだけにします。`target_link_libraries` に表に無い依存を足さないこと。
+
+| ライブラリ | 内容 | 依存してよいもの | 状態 |
+| --- | --- | --- | --- |
+| `front` | slang の呼び出しと、SIR への変換 | slang、`sir` | slang で読んでエラボレーションするだけ |
+| `sir` | SIR の定義、検証器、テキスト形式 | なし | 版を返す関数だけ |
+| `analysis` | X 到達解析、静的な島、レベル化、可観測性 | `sir` | 空 |
+| `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | 空 |
+| `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 空 |
+| `kernel` | 実行カーネル（スケジューラ、値の演算、GC、VPI、DPI-C、波形など） | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` に隔離し、`kernel` はその C++ のインターフェースだけを見る | 4 値の語と `and4`、回数カウンタ、Context |
+| `solver_adapter` | 制約ソルバの差し替え口 | `sir`、採用した外部のソルバ | P3 で作る |
+| `fiber_backend` | 時間を使う DPI-C の task を止めて再開するファイバー | 採用したライブラリだけ | P3 で作る |
+| `valsem` | 値の意味の参照実装（遅いが明らかに正しい） | なし | 1 ビットの 4 値と AND |
+| `driver` | 実行ファイル `haremasim` | すべて | `--version`、`parse`、`--stats=json` |
+
+- `kernel` は利用者の設計と一緒にリンクされるので、slang や LLVM に依存させない。
+- `kernel` の公開ヘッダ（`src/kernel/include/haremasim/kernel/`）は C++20 でコンパイルできること。新しいヘッダを足したら `tests/unit/kernel_headers_cxx20.cpp` にも足す。
+- 名前空間は `haremasim::<ライブラリ名>`。
+
+## C++ の版と禁止事項
+
+- 本体は C++23。C++26 の機能は、使えるコンパイラでだけ機能検出マクロを通して使う。
+- `kernel` の公開ヘッダと生成コードは C++20。生成コードは例外と RTTI を使わない。
+- `src/kernel/` と `src/vm/`（と将来の生成コード）で禁止：`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid`。`tools/check_banned.py` が検査する。コメントの中の語も検出されるので、説明文では別の書き方をする。
+- `std::unordered_map` と `std::unordered_set` は、同じ行か直前の行に `// haremasim: unordered-ok <理由>` を書いたときだけ使ってよい。結果に影響する箇所で走査しない。
+- 書き換え可能な大域変数・static 変数・シングルトンを持たない。状態は Context が持つ。
+- 実行中に環境変数を読まない。設定は起動時に 1 回だけ読む（`driver` も今は環境変数を読まない）。
+- 実行中に文字列で信号を引かない（名前の表は VPI・波形・診断のためだけ）。
+- 実行カーネルの境界を越えて例外を投げない。エラーは戻り値で返す。
+- 演算・辺の判定・case の一致の意味は `valsem` の参照実装 1 か所で定め、高速版はそれと突き合わせるテストを持つ。
+
+## ビルドとテストのコマンド
+
+```sh
+cmake --preset dev && cmake --build --preset dev && ctest --preset dev
+cmake --preset release && cmake --build --preset release && ctest --preset release
+python3 tools/check_release_flags.py      # release の構成のあとで
+cmake --preset asan  && cmake --build --preset asan  && ctest --preset asan
+cmake --preset ubsan && cmake --build --preset ubsan && ctest --preset ubsan
+python3 tools/check_banned.py
+ctest --preset dev -L PerfCount           # 回数の回帰だけ
+```
+
+- テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。今は `haremasim parse` が通るかだけを見る。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
+- PerfCount の期待値は `tests/perf_counts/expected.json`。更新の手順は `tests/perf_counts/README.md`。
+
+## コミットの書き方
+
+- 1 つの目的ごとに 1 コミット。メッセージは英語で、1 行目は 72 文字以内。
+- AI が手伝ったら、トレーラーに `Assisted-by: Claude Code:<モデル名と版>` を付ける。`Co-Authored-By` は付けない。
+- `Signed-off-by` は AI が付けない。人が内容を確かめてから付ける。
+- コミットの作者のメールアドレスは GitHub の noreply アドレスにする。
+
+## 期待値を変える変更は別の PR にする
+
+既存の期待値（`tests/perf_counts/expected.json` の既存の項目、`tests/**/expected*` の既存の行、`:expected_stdout:` の行、既存のテストの本体）を変える・消す・緩める変更は、`src/` の変更と同じ PR に入れない。理由と規格の節番号を書いた別の PR にする。新しいテストと新しい期待値の追加は、実装と同じ PR でよい。テストを通すために期待値やテストを書き換えてはいけない。食い違ったら、まず実装と期待値のどちらが規格どおりかを人に示す。`tools/check_expected_change.py` が CI で検査する。
+
+## 公開リポジトリに入れてはいけないもの
+
+- 非公開の設計資料（設計仕様書の原本、図、報告）。リポジトリの文書は、それを要約して書き直したものにする。
+- 非公開の前身プロジェクトの名前、コード、内部の情報。
+- IEEE 1800 の本文、図、例のコードの引き写し（節番号を示し、自分の言葉で要約するのはよい）。
+- ホームディレクトリの絶対パス、ユーザー名、メールアドレス（GitHub の noreply を除く）、機械の識別子。
+- 勤務先や業務に関する情報。
+- 商用シミュレータの出力。
+
+## 他のシミュレータのソースを読まない
+
+Icarus Verilog と Verilator のソースコードは読まない（クリーンルーム）。動作は規格と、実行した結果から知る。slang は依存なので読んでよい。
+
+## 分からないことは「未確認」と書く
+
+版の番号、ライセンス、規格の解釈、ツールの動作など、確かめていないことを推測で埋めない。文書と報告には「未確認」と書き、確かめる方法を添える。版の番号は実際に調べた値を使う。
+
+## 仕様と食い違う変更
+
+`docs/spec/` の詳細仕様書と食い違う変更が必要になったら、実装する前に、仕様書の修正案として人に提案し、承認を受けてから実装する。正式な文面が決まっている文書（ライセンス、行動規範など）は記憶から書かず、公式の配布元から取得する。新しい依存を足すときと、新しいツールをインストールする必要があるときは、止まって人に確かめる。
