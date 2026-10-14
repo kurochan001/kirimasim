@@ -12,6 +12,10 @@ haremasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) と [CONTRIBUTING.md](CONTRIBUTING.md) を見てください。
 
+## 貢献：今は仕様の提案と Issue だけを受け付けています
+
+haremasim は開発の初期にあるため、今は**仕様の提案と Issue だけ**を受け付けています。コードの PR は受け付けていません（PR を作れるのは協力者だけという設定にしています）。`docs/spec/` の仕様書への提案、不具合の報告、期待値の誤りの指摘には Issue のフォームを、質問やまだ形になっていない案には Discussions を使ってください。受け付けを広げるときは、この節と [CONTRIBUTING.md](CONTRIBUTING.md) でお知らせします。
+
 ## ビルド
 
 必要なもの：CMake 3.28 以上、Ninja、Python 3、C++23 のコンパイラ（macOS arm64 の Apple clang 21 で確認。CI では Ubuntu 24.04 でもビルドします）。最初の configure で slang と GoogleTest を取得します。

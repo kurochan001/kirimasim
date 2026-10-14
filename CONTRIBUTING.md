@@ -1,8 +1,40 @@
 # Contributing to haremasim
 
-Thank you for your interest. haremasim is in early development (P0), so
-the most useful contributions right now are reviews of the specifications
-and new tests.
+Thank you for your interest. haremasim is in early development (P0).
+
+## What we accept for now
+
+For now, haremasim accepts **specification proposals and issues only**.
+Only collaborators can open pull requests. When the project starts
+accepting more, this file and the README will say so.
+
+We accept:
+
+- **Specification proposals**: changes or additions to the documents under
+  `docs/spec/`, through the "Specification proposal" issue form.
+- **Bug reports**, through the "Bug report" issue form.
+- **Reports of wrong expected values** in tests, through the "Expected value
+  change" issue form.
+- **Discussion** of questions and early ideas in GitHub Discussions.
+
+We do not accept:
+
+- **Code pull requests** from outside the project.
+
+In issues and discussions, do not paste text, figures, or example code from
+the IEEE 1800 standard or code written by others, and do not include
+confidential information from your employer. Cite section numbers, describe
+things in your own words, and write your own minimal examples.
+
+### When a specification proposal is accepted
+
+haremasim is implemented from its specifications. When a proposal is
+accepted, a maintainer first updates the specification under `docs/spec/`,
+and the implementation then follows the updated specification. The
+proposal issue is linked from those changes.
+
+The rest of this file describes the rules that collaborators follow when
+they change the repository.
 
 ## Developer Certificate of Origin (DCO)
 
@@ -97,7 +129,8 @@ summary into the pull request.
 
 ## Pull requests
 
-Fill in the pull request template. Keep one purpose per commit and write
+Pull requests come from collaborators only for now. Fill in the pull
+request template. Keep one purpose per commit and write
 commit messages in English with a summary line of 72 characters or less.
 
 By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).

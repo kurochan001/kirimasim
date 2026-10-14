@@ -24,6 +24,16 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Contributions: specification proposals and issues only, for now
+
+haremasim is in early development, so for now it accepts **specification
+proposals and issues only**. It does not accept code pull requests: only
+collaborators can open pull requests. Use the issue forms to propose a
+change to a specification under `docs/spec/`, report a bug, or point out a
+wrong expected value, and use Discussions for questions and early ideas.
+When the project starts accepting more, this section and
+[CONTRIBUTING.md](CONTRIBUTING.md) will say so.
+
 ## Building
 
 Requirements: CMake 3.28 or later, Ninja, Python 3, and a C++23 compiler

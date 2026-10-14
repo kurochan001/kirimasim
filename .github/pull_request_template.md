@@ -1,3 +1,5 @@
+<!-- External pull requests are not accepted for now; see CONTRIBUTING.md. -->
+
 ## Summary
 
 <!-- What does this change do, and why? -->
