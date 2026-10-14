@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Not used by CI for now: the project does not require Signed-off-by while
+# it accepts no code pull requests from outside. Kept for when DCO (or a
+# CLA) is introduced together with outside code contributions.
 """Checks that every commit in base..head carries the author's Signed-off-by.
 
 Merge commits are skipped, so pass the PR's real head commit

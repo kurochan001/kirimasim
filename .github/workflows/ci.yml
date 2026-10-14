@@ -118,10 +118,3 @@ jobs:
           python3 tools/check_expected_change.py
           --base ${{ github.event.pull_request.base.sha }}
           --head ${{ github.event.pull_request.head.sha }}
-
-      - name: DCO sign-off on every commit
-        if: github.event_name == 'pull_request'
-        run: >
-          python3 tools/check_dco.py
-          --base ${{ github.event.pull_request.base.sha }}
-          --head ${{ github.event.pull_request.head.sha }}

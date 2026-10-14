@@ -17,5 +17,3 @@
       changes) that gives the reason and the IEEE 1800 section number.
 - [ ] `Assisted-by: <tool>:<model and version>` is on every commit an AI
       tool helped with.
-- [ ] `Signed-off-by` (added by a human, matching the author) is on every
-      commit.

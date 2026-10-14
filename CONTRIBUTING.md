@@ -36,19 +36,12 @@ proposal issue is linked from those changes.
 The rest of this file describes the rules that collaborators follow when
 they change the repository.
 
-## Developer Certificate of Origin (DCO)
+## Sign-off
 
-Every commit must carry a `Signed-off-by:` line that matches the commit
-author, certifying the [Developer Certificate of Origin](https://developercertificate.org/):
-
-```sh
-git commit -s
-```
-
-**Only humans add `Signed-off-by`.** By signing off you state that you have
-read and understood the change and take responsibility for it. AI tools must
-never add a `Signed-off-by` line, even when they write the commit. CI
-(`tools/check_dco.py`) checks every non-merge commit in a pull request.
+Commits do not need a `Signed-off-by` line for now. The project will
+introduce the Developer Certificate of Origin (DCO), or a contributor
+license agreement, when it starts accepting code pull requests from
+outside.
 
 ## Use of AI tools
 
