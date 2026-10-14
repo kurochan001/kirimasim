@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-test:
+    name: build-test (${{ matrix.os }}, ${{ matrix.preset }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, ubuntu-24.04]  # macos-26 is Apple Silicon (arm64)
+        preset: [dev, release]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show tool versions
+        run: |
+          c++ --version
+          cmake --version
+          ninja --version
+          python3 --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/${{ matrix.preset }}/_deps/*-src
+            build/${{ matrix.preset }}/_deps/*-subbuild
+            build/${{ matrix.preset }}/_deps/*-tmp
+            build/${{ matrix.preset }}/CMakeFiles/fc-stamp
+          key: fetchcontent-${{ matrix.os }}-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} --output-on-failure
+
+      - name: Check release optimization flags
+        if: matrix.preset == 'release'
+        run: python3 tools/check_release_flags.py
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      # The full history is needed by the PR history checks below. The default
+      # checkout of a pull_request event fetches only GitHub's test merge commit.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Show tool versions
+        run: |
+          clang-18 --version
+          clang-tidy-18 --version
+          clang-format-18 --version
+
+      - name: Banned C++ features in kernel and vm
+        run: python3 tools/check_banned.py
+
+      - name: clang-format
+        run: git ls-files '*.cpp' '*.h' | xargs clang-format-18 --dry-run --Werror
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/dev/_deps/*-src
+            build/dev/_deps/*-subbuild
+            build/dev/_deps/*-tmp
+            build/dev/CMakeFiles/fc-stamp
+          key: fetchcontent-lint-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configure for clang-tidy
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: cmake --preset dev
+
+      # slang generates some of its headers at build time; build slang first so
+      # that clang-tidy can see them.
+      - name: Build slang
+        run: cmake --build --preset dev --target slang_slang
+
+      - name: clang-tidy
+        run: git ls-files 'src/*.cpp' 'tests/*.cpp' | xargs clang-tidy-18 -p build/dev --quiet
+
+      - name: Expected-value changes stay out of implementation PRs
+        if: github.event_name == 'pull_request'
+        run: >
+          python3 tools/check_expected_change.py
+          --base ${{ github.event.pull_request.base.sha }}
+          --head ${{ github.event.pull_request.head.sha }}
+
+      - name: DCO sign-off on every commit
+        if: github.event_name == 'pull_request'
+        run: >
+          python3 tools/check_dco.py
+          --base ${{ github.event.pull_request.base.sha }}
+          --head ${{ github.event.pull_request.head.sha }}

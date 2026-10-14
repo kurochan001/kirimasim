@@ -1,0 +1,66 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "17 18 * * *"  # once a day (18:17 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sanitizers:
+    name: sanitizers (${{ matrix.os }}, ${{ matrix.preset }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, ubuntu-24.04]
+        preset: [asan, ubsan]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show tool versions
+        run: |
+          c++ --version
+          cmake --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/${{ matrix.preset }}/_deps/*-src
+            build/${{ matrix.preset }}/_deps/*-subbuild
+            build/${{ matrix.preset }}/_deps/*-tmp
+            build/${{ matrix.preset }}/CMakeFiles/fc-stamp
+          key: fetchcontent-${{ matrix.os }}-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - run: cmake --preset ${{ matrix.preset }}
+      - run: cmake --build --preset ${{ matrix.preset }}
+      - run: ctest --preset ${{ matrix.preset }} --output-on-failure
+
+  linux-arm64:
+    # ubuntu-24.04-arm is a standard GitHub-hosted arm64 runner for public
+    # repositories.
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show tool versions
+        run: |
+          c++ --version
+          cmake --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/dev/_deps/*-src
+            build/dev/_deps/*-subbuild
+            build/dev/_deps/*-tmp
+            build/dev/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-arm-dev-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - run: cmake --preset dev
+      - run: cmake --build --preset dev
+      - run: ctest --preset dev --output-on-failure
