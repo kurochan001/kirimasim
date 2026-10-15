@@ -18,6 +18,7 @@ FINAL = str(HERE / "final.sv")
 SPIN = str(HERE / "spin.sv")
 ZERO_DELAY = str(HERE / "zero_delay.sv")
 VIOLATIONS = str(HERE / "violations.sv")
+WRITERS = str(HERE / "writers.sv")
 
 # The violation reports of violations.sv, exactly these and in this order
 # (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
@@ -63,6 +64,9 @@ CASES = [
      "haremasim: error: time did not advance: 10 moves into the Active region in one time"
      " slot (--max-zero-delay=10)\nharemasim: info: zero_time_limit at 0 ns"),
     ([ZERO_DELAY], 5, "=final ran\n", "(--max-zero-delay=1000000)"),
+    # Another writer of an always_comb variable is an error of the design
+    # (SCHEDULER_SPEC.md 6.4), not an internal error.
+    ([WRITERS], 2, "", "writers.sv:6:3: error: 'top.a' is written here and by top.initial1 at"),
     ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "haremasim: info: quiescent at 1 ns"),
     (["--max-time=0ns", FINAL], 4, "=final 1 n=0\nfinal 2\n", "time_limit at 0 ns"),
 ]

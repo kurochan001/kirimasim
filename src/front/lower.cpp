@@ -151,6 +151,18 @@ bool covers(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t widt
     return af <= bf && bf + bn <= af + an && al <= bl && bl + bw <= al + aw;
 }
 
+/// Whether two ranges share a bit.
+bool overlap(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
+             std::uint32_t elems) {
+    if (a.slot != b.slot) return false;
+    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
+    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
+    const std::uint32_t aw = a.width == 0 ? width : a.width;
+    const std::uint32_t bw = b.width == 0 ? width : b.width;
+    return a.firstElem < b.firstElem + bn && b.firstElem < a.firstElem + an && a.lsb < b.lsb + bw &&
+           b.lsb < a.lsb + aw;
+}
+
 }  // namespace
 
 // --- Diagnostics and types ---------------------------------------------------
@@ -295,6 +307,41 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     design_.timePrecision = precision_;
     for (const ast::InstanceSymbol* top : root.topInstances)
         lowerTop(*top);
+    if (numErrors_ == 0) checkWriters();
+}
+
+void Lowerer::checkWriters() {
+    // A variable that always_comb, always_latch or always_ff writes has no
+    // other writer (9.2.2.2, 9.2.2.4); haremasim checks it here, at
+    // elaboration (SCHEDULER_SPEC.md 6.4).
+    const auto exclusive = [](sir::ProcessKind k) {
+        return k == sir::ProcessKind::Comb || k == sir::ProcessKind::Latch ||
+               k == sir::ProcessKind::Ff;
+    };
+    const auto where = [&](const sir::SourceLoc& l) {
+        const std::string file = l.file < design_.sources.size() ? design_.sources[l.file] : "?";
+        return file + ":" + std::to_string(l.line) + ":" + std::to_string(l.column);
+    };
+    const auto& ps = design_.processes;
+    for (std::size_t i = 0; i < ps.size(); ++i) {
+        for (std::size_t j = 0; j < ps.size(); ++j) {
+            if (i == j || !exclusive(ps[i].kind) || (exclusive(ps[j].kind) && j < i)) continue;
+            bool reported = false;
+            for (const sir::SlotRange& a : ps[i].writes) {
+                for (const sir::SlotRange& b : ps[j].writes) {
+                    const sir::Slot& s = design_.slots[a.slot];
+                    const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+                    if (reported || !overlap(a, b, s.type.width, elems)) continue;
+                    ++numErrors_;
+                    diags_ += where(ps[i].loc) + ": error: '" + s.name +
+                              "' is written here and by " + ps[j].name + " at " + where(ps[j].loc) +
+                              "; a variable that always_comb, always_latch or always_ff writes "
+                              "has no other writer (IEEE 1800-2023 9.2.2.2, 9.2.2.4)\n";
+                    reported = true;
+                }
+            }
+        }
+    }
 }
 
 void Lowerer::lowerTop(const ast::InstanceSymbol& inst) {

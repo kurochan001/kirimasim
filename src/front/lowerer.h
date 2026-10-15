@@ -194,6 +194,7 @@ private:
     Body b_;
 
     void lowerTop(const ast::InstanceSymbol& inst);
+    void checkWriters();
     void lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::InstanceId inst,
                         std::map<std::string, std::uint32_t>& counts);
 };
