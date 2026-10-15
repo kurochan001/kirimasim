@@ -8,6 +8,7 @@
 #pragma once
 
 #include "haremasim/kernel/counters.h"
+#include "haremasim/kernel/sim.h"
 
 namespace haremasim::kernel {
 
@@ -15,9 +16,12 @@ class Context {
 public:
     Counters& counters() { return counters_; }
     [[nodiscard]] const Counters& counters() const { return counters_; }
+    Scheduler& scheduler() { return scheduler_; }
+    [[nodiscard]] const Scheduler& scheduler() const { return scheduler_; }
 
 private:
     Counters counters_;
+    Scheduler scheduler_;
 };
 
 }  // namespace haremasim::kernel

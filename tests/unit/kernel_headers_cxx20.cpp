@@ -3,6 +3,7 @@
 
 #include "haremasim/kernel/context.h"
 #include "haremasim/kernel/counters.h"
+#include "haremasim/kernel/sim.h"
 #include "haremasim/kernel/w4.h"
 #include "haremasim/kernel/w4ops.h"
 

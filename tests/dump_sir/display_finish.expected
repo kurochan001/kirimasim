@@ -1,0 +1,13 @@
+; sir format 0
+source 0 "display_finish.sv"
+instance 0 top def=top parent=-
+
+process @top.initial0 kind=initial inst=0 {  ; 0:4:3
+bb0:
+  syscall "$display", "hello"  ; 0:5:5
+  syscall "$write", "a"  ; 0:6:5
+  syscall "$display", "b 100%%"  ; 0:7:5
+  syscall "$finish", const i2<32> 32'h00000001  ; 0:8:5
+  syscall "$display", "never"  ; 0:9:5
+  ret  ; 0:4:3
+}
