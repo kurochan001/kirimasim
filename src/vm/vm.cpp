@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -84,6 +85,19 @@ struct Frame {
     kernel::ProcessId kernelId = 0;  ///< Id in the kernel.
     sir::BlockId block = 0;          ///< Block to resume at.
     std::vector<W4> vars;            ///< Frame variables (SIR_SPEC.md 7.4).
+
+    // Process control (SCHEDULER_SPEC.md 10).
+    enum class Join : std::uint8_t { None, All, Any, WaitFork };
+    Frame* parent = nullptr;       ///< The process that forked this one.
+    std::vector<Frame*> children;  ///< Every child, finished or not.
+    std::uint32_t liveChildren = 0;
+    bool finished = false;
+    std::uint32_t group = 0;      ///< The parent's fork group it belongs to (0: none).
+    std::uint32_t forkGroup = 0;  ///< This frame's latest join or join_any group.
+    std::uint32_t groupSize = 0;
+    std::uint32_t groupDone = 0;
+    Join pending = Join::None;               ///< What the frame waits for before going on.
+    kernel::EventId joinEvent = UINT32_MAX;  ///< Triggered when a child ends.
 };
 
 class Interpreter {
@@ -128,15 +142,11 @@ public:
             store_.add(kernelDomain(dom), s.type.width,
                        static_cast<std::uint32_t>(sir::elementCount(s)), init);
         }
-        // Frames do not move once processes refer to them.
-        frames_.resize(d_.processes.size());
         std::vector<kernel::ProcessId> combs;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
-            Frame& f = frames_[p];
-            f.vm = this;
-            f.process = p;
-            f.vars.assign(proc.frame.size(), W4{0, 0});
+            if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
+            Frame& f = newFrame(p);
             switch (proc.kind) {
                 case sir::ProcessKind::Initial:
                 case sir::ProcessKind::General:
@@ -175,6 +185,7 @@ public:
         std::uint64_t steps = 0;
         const kernel::Status st = vm.runProcess(*f, steps);
         vm.counters_.increment(vm.cInstrs_, steps);
+        if (st == kernel::Status::Done) vm.ended(*f);
         return static_cast<hs_status>(st);
     }
 
@@ -191,8 +202,8 @@ private:
     std::vector<W4> consts_;
     std::vector<std::vector<sir::Type>> tempTypes_;          ///< [process][temp]
     std::vector<std::vector<std::vector<InstrInfo>>> info_;  ///< [process][block][instr]
-    std::vector<W4> temps_;  ///< Temps never live across a wait, so one set serves all.
-    std::vector<Frame> frames_;
+    std::vector<W4> temps_;     ///< Temps never live across a wait, so one set serves all.
+    std::deque<Frame> frames_;  ///< A deque, so that frames never move.
     std::vector<kernel::WaitItem> items_;  ///< Scratch for wait.event.
 
     InstrInfo decode(const sir::Instr& in) {
@@ -209,6 +220,87 @@ private:
                 loadError_ = error;
         }
         return info;
+    }
+
+    Frame& newFrame(std::uint32_t process) {
+        Frame& f = frames_.emplace_back();
+        f.vm = this;
+        f.process = process;
+        f.vars.assign(d_.processes[process].frame.size(), W4{0, 0});
+        return f;
+    }
+
+    // --- Process control (SCHEDULER_SPEC.md 10) ---
+
+    /// Bookkeeping when a process ends, normally or killed: its parent may
+    /// be waiting for it at a join or wait fork.
+    void ended(Frame& c) {
+        if (c.finished) return;
+        c.finished = true;
+        Frame* parent = c.parent;
+        if (parent == nullptr) return;
+        --parent->liveChildren;
+        if (c.group != 0 && c.group == parent->forkGroup) ++parent->groupDone;
+        if (parent->pending != Frame::Join::None && !parent->finished &&
+            parent->joinEvent != UINT32_MAX)
+            sched_.trigger(parent->joinEvent);
+    }
+
+    static bool joined(const Frame& f) {
+        switch (f.pending) {
+            case Frame::Join::None: return true;
+            case Frame::Join::All: return f.groupDone >= f.groupSize;
+            case Frame::Join::Any: return f.groupDone >= 1 || f.groupSize == 0;
+            case Frame::Join::WaitFork: return f.liveChildren == 0;
+        }
+        return true;
+    }
+
+    /// Waits until the frame's pending join is satisfied. Returns false if
+    /// it already is, so the process goes on at once.
+    bool waitJoin(Frame& f) {
+        if (joined(f)) {
+            f.pending = Frame::Join::None;
+            return false;
+        }
+        if (f.joinEvent == UINT32_MAX) f.joinEvent = sched_.addEvent();
+        sched_.waitNamed(f.kernelId, f.joinEvent);
+        return true;
+    }
+
+    /// fork: makes a frame and a kernel process for each child, in order.
+    /// They run after the parent waits or ends (9.3.2): start() queues
+    /// them behind the running parent.
+    void fork(Frame& f, const std::vector<Operand>& ops) {
+        const std::string& join = ops[ops.size() - 2].text;
+        const bool none = join == "join_none";
+        if (!none) {
+            ++f.forkGroup;
+            f.groupDone = 0;
+            f.groupSize = static_cast<std::uint32_t>(ops.size() - 2);
+            f.pending = join == "join" ? Frame::Join::All : Frame::Join::Any;
+        }
+        for (std::size_t i = 0; i + 2 < ops.size(); ++i) {
+            Frame& c = newFrame(ops[i].id);
+            c.parent = &f;
+            c.group = none ? 0 : f.forkGroup;
+            c.kernelId = sched_.addProcess(&resume, &c, kernel::Group::Active);
+            f.children.push_back(&c);
+            ++f.liveChildren;
+            sched_.start(c.kernelId);
+        }
+    }
+
+    /// disable fork: ends every descendant, also those of children that
+    /// have already finished (9.6.3).
+    void disableFork(Frame& f) {
+        for (Frame* c : f.children) {
+            if (!c->finished) {
+                sched_.kill(c->kernelId);
+                ended(*c);
+            }
+            disableFork(*c);
+        }
     }
 
     kernel::Status fail(const sir::Process& p, const std::string& what) {
@@ -324,6 +416,8 @@ private:
     kernel::Status runProcess(Frame& f, std::uint64_t& steps) {
         const std::uint32_t pid = f.process;
         const sir::Process& p = d_.processes[pid];
+        // Woken at a join or wait fork: wait again until it is satisfied.
+        if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
         sir::BlockId b = f.block;
         for (;;) {
             const auto& instrs = p.blocks[b].instrs;
@@ -357,6 +451,20 @@ private:
                                 return kernel::Status::Waiting;
                             default: return kernel::Status::Done;
                         }
+                    case Op::Fork:
+                    case Op::WaitFork: {
+                        if (in.op == Op::Fork)
+                            fork(f, ops);
+                        else
+                            f.pending = Frame::Join::WaitFork;
+                        f.block = ops.back().id;
+                        if (f.pending != Frame::Join::None && waitJoin(f))
+                            return kernel::Status::Waiting;
+                        b = f.block;
+                        jumped = true;
+                        break;
+                    }
+                    case Op::DisableFork: disableFork(f); break;
                     case Op::WaitDelay: {
                         const W4 t = value(f, ops[0]);
                         sched_.waitDelay(f.kernelId, t.b != 0 ? 0 : t.a);  // x or z: 0 (9.4.1)

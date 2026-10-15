@@ -349,9 +349,10 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
     p.instance = inst;
     p.loc = loc(pb.location);
     p.blocks.resize(1);
+    const std::size_t first = design_.processes.size();
     design_.processes.push_back(std::move(p));
     b_ = Body{};
-    b_.proc = static_cast<std::uint32_t>(design_.processes.size() - 1);
+    b_.proc = static_cast<std::uint32_t>(first);
     b_.scale = timeScaleOf(*pb.getParentScope());
     evalSymbol_ = &pb;
 
@@ -440,7 +441,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
             case ast::ProceduralBlockKind::Final: unsupported(pb.location, "final procedure");
         }
     } catch (const Unsupported&) {
-        design_.processes.pop_back();
+        design_.processes.resize(first);  // with any fork children
     }
 }
 

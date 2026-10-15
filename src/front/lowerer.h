@@ -70,6 +70,7 @@ public:
     // Statements (lower_stmt.cpp).
     void lowerStatement(const ast::Statement& s);
     void lowerIf(const ast::ConditionalStatement& s);
+    void lowerFork(const ast::BlockStatement& b);
     void lowerCase(const ast::CaseStatement& s);
     void lowerTiming(const ast::TimingControl& t);
     void lowerForeach(const std::vector<const ast::ForeachLoopStatement::LoopDim*>& dims,
@@ -171,6 +172,7 @@ public:
         std::vector<Loop> loops;
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;  ///< For the sensitivity of always_comb.
+        std::uint32_t forks = 0;            ///< Fork statements so far, for child names.
     };
     Body& body() { return b_; }
 

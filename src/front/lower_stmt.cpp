@@ -65,8 +65,10 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             return;
         case ast::StatementKind::Block: {
             const auto& b = s.as<ast::BlockStatement>();
-            if (b.blockKind != ast::StatementBlockKind::Sequential)
-                unsupported(sl, "fork-join block");
+            if (b.blockKind != ast::StatementBlockKind::Sequential) {
+                lowerFork(b);
+                return;
+            }
             lowerStatement(b.body);
             return;
         }
@@ -237,6 +239,13 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             // Needs the default zero-time limits first (CLI.md 6), or a
             // forever loop that never waits runs without end.
             unsupported(sl, "forever loop");
+        case ast::StatementKind::DisableFork: emitVoid(Op::DisableFork, {}, sl); return;
+        case ast::StatementKind::WaitFork: {
+            const sir::BlockId cont = newBlock();
+            terminate(Op::WaitFork, {Operand::block(cont)}, sl);
+            setBlock(cont);
+            return;
+        }
         case ast::StatementKind::Break:
             if (b_.loops.empty()) unsupported(sl, "break outside a loop");
             terminate(Op::Br, {Operand::block(breakTarget(b_.loops.size() - 1))}, sl);
@@ -286,6 +295,51 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
         jump(cond, sl);
     }
     endLoop(loop);
+}
+
+void Lowerer::lowerFork(const ast::BlockStatement& b) {
+    const slang::SourceLocation sl = b.sourceRange.start();
+    // Each statement of the fork is a child process (SIR_SPEC.md 7.5).
+    std::vector<const ast::Statement*> stmts;
+    if (b.body.kind == ast::StatementKind::List) {
+        for (const ast::Statement* item : b.body.as<ast::StatementList>().list)
+            stmts.push_back(item);
+    } else {
+        stmts.push_back(&b.body);
+    }
+    const std::uint32_t parent = b_.proc;
+    const std::uint32_t forkNumber = b_.forks++;
+    std::vector<Operand> ops;
+    for (std::size_t i = 0; i < stmts.size(); ++i) {
+        if (stmts[i]->kind == ast::StatementKind::VariableDeclaration)
+            unsupported(stmts[i]->sourceRange.start(), "declarations in a fork block");
+        if (stmts[i]->kind == ast::StatementKind::Empty) continue;
+        sir::Process child;
+        child.name = proc().name + ".fork" + std::to_string(forkNumber) + "." + std::to_string(i);
+        child.kind = sir::ProcessKind::General;
+        child.instance = proc().instance;
+        child.parent = {sir::Owner::Kind::Process, parent};
+        child.loc = loc(stmts[i]->sourceRange.start());
+        child.blocks.resize(1);
+        const auto id = static_cast<std::uint32_t>(design().processes.size());
+        design().processes.push_back(std::move(child));
+        Body saved = std::move(b_);
+        b_ = Body{};
+        b_.proc = id;
+        b_.scale = saved.scale;
+        lowerStatement(*stmts[i]);
+        if (!b_.dead) terminate(Op::Ret, {}, sl);
+        b_ = std::move(saved);
+        ops.push_back(Operand::process(id));
+    }
+    const char* join = b.blockKind == ast::StatementBlockKind::JoinAll   ? "join"
+                       : b.blockKind == ast::StatementBlockKind::JoinAny ? "join_any"
+                                                                         : "join_none";
+    ops.push_back(Operand::str(join));
+    const sir::BlockId cont = newBlock();
+    ops.push_back(Operand::block(cont));
+    terminate(Op::Fork, std::move(ops), sl);
+    setBlock(cont);
 }
 
 void Lowerer::lowerIf(const ast::ConditionalStatement& s) {
