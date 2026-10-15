@@ -90,7 +90,7 @@ class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
-          options_(options) {
+          counters_(ctx.counters()), options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         for (const sir::Constant& c : d.constants)
@@ -161,6 +161,8 @@ public:
                                                              " is not supported by the VM yet"};
             }
         }
+        // After the kernel's own counters, which the first process registers.
+        cInstrs_ = counters_.add("vm.instrs");
         for (const kernel::ProcessId k : combs)
             sched_.start(k);
         const kernel::EndReason reason = sched_.run();
@@ -169,7 +171,11 @@ public:
 
     static hs_status resume(hs_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
-        return static_cast<hs_status>(f->vm->runProcess(*f));
+        Interpreter& vm = *f->vm;
+        std::uint64_t steps = 0;
+        const kernel::Status st = vm.runProcess(*f, steps);
+        vm.counters_.increment(vm.cInstrs_, steps);
+        return static_cast<hs_status>(st);
     }
 
 private:
@@ -177,6 +183,8 @@ private:
     kernel::Scheduler& sched_;
     kernel::Store& store_;
     kernel::Output& output_;
+    kernel::Counters& counters_;
+    kernel::CounterId cInstrs_ = 0;
     RunOptions options_;
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
@@ -312,17 +320,17 @@ private:
 
     /// Runs a process from where it stopped until it waits, returns or the
     /// simulation ends.
-    kernel::Status runProcess(Frame& f) {
+    /// Counts the instructions it runs in `steps` (vm.instrs).
+    kernel::Status runProcess(Frame& f, std::uint64_t& steps) {
         const std::uint32_t pid = f.process;
         const sir::Process& p = d_.processes[pid];
         sir::BlockId b = f.block;
-        std::uint64_t steps = 0;
         for (;;) {
             const auto& instrs = p.blocks[b].instrs;
             bool jumped = false;
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 const sir::Instr& in = instrs[k];
-                if (options_.maxSteps != 0 && ++steps > options_.maxSteps) {
+                if (++steps > options_.maxSteps && options_.maxSteps != 0) {
                     sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
                     return kernel::Status::Stop;
                 }

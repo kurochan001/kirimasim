@@ -189,8 +189,28 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
     }
     if (!compiled.success) return kExitInputError;
 
+    // The size of the SIR (PERFORMANCE.md 3.2).
+    const haremasim::sir::Design& d = compiled.design;
+    std::uint64_t blocks = 0;
+    std::uint64_t instrs = 0;
+    const auto count = [&](const std::vector<haremasim::sir::BasicBlock>& bs) {
+        blocks += bs.size();
+        for (const auto& b : bs)
+            instrs += b.instrs.size();
+    };
+    for (const auto& p : d.processes)
+        count(p.blocks);
+    for (const auto& s : d.subroutines)
+        count(s.blocks);
+    auto& counters = context.counters();
+    counters.set(counters.add("sir.slots"), d.slots.size());
+    counters.set(counters.add("sir.processes"), d.processes.size());
+    counters.set(counters.add("sir.subroutines"), d.subroutines.size());
+    counters.set(counters.add("sir.blocks"), blocks);
+    counters.set(counters.add("sir.instrs"), instrs);
+
     if (o.dumpSir) {
-        std::fputs(haremasim::sir::toText(compiled.design).c_str(), stdout);
+        std::fputs(haremasim::sir::toText(d).c_str(), stdout);
         return kExitOk;
     }
 
