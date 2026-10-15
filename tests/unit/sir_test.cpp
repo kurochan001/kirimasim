@@ -188,6 +188,25 @@ TEST(Sir, AddNeedsMatchingTypes) {
     EXPECT_TRUE(mentions(verify(d), "same integral type"));
 }
 
+TEST(Sir, MatchMaskTakesTwoValuesAndAKind) {
+    // VALUE_SEMANTICS.md 4.2: casez and casex matching gives i2<1>.
+    Design d = counter();
+    auto& instrs = d.processes[0].blocks[2].instrs;
+    d.processes[0].numTemps = 6;
+    const auto match = [](Type t, const char* kind) {
+        return make(Op::MatchMask, t, 5,
+                    {Operand::temp(3), Operand::constant(1), Operand::str(kind)}, 5);
+    };
+    instrs.insert(instrs.begin() + 1, match(u2(1), "casez"));
+    EXPECT_TRUE(verify(d).empty());
+    EXPECT_NE(toText(d).find("match.mask i2<1> %t3, const i4<8> 8'h01, \"casez\""),
+              std::string::npos);
+    instrs[1] = match(u2(1), "case");
+    EXPECT_TRUE(mentions(verify(d), "casez or casex"));
+    instrs[1] = match(u4(1), "casex");
+    EXPECT_TRUE(mentions(verify(d), "result must be i2<1>"));
+}
+
 TEST(Sir, SlotRangeOutOfBounds) {
     Design d = counter();
     d.processes[0].blocks[2].instrs[0] = make(Op::Load, u4(4), 3, {Operand::slot(2, 6, 4)}, 5);

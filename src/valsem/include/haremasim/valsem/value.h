@@ -65,6 +65,10 @@ Value ceq(const Value& x, const Value& y);  ///< ===, always 0 or 1.
 Value cne(const Value& x, const Value& y);  ///< !==, always 0 or 1.
 Value weq(const Value& x, const Value& y);  ///< ==?: X and Z in y match anything.
 Value wne(const Value& x, const Value& y);
+/// casez (ignoreX false) and casex (ignoreX true) matching (4.2): z bits,
+/// and x bits too for casex, on either side are not compared; the other
+/// bits must be the same value. Always 0 or 1.
+Value caseMatch(const Value& x, const Value& y, bool ignoreX);
 
 // Logical (3.5). The truth of a value: 1 if it has a 1 bit, 0 if all bits
 // are 0, X otherwise. Results are 1 bit.

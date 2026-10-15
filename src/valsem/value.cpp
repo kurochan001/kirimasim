@@ -320,6 +320,17 @@ Value ne(const Value& x, const Value& y) { return bit1(invert(equality(x, y, fal
 Value weq(const Value& x, const Value& y) { return bit1(equality(x, y, true)); }
 Value wne(const Value& x, const Value& y) { return bit1(invert(equality(x, y, true))); }
 
+Value caseMatch(const Value& x, const Value& y, bool ignoreX) {
+    for (std::size_t i = 0; i < x.bits.size(); ++i) {
+        const Logic a = x.bits[i];
+        const Logic b = y.bits[i];
+        const auto ignored = [&](Logic l) { return l == Logic::Z || (ignoreX && l == Logic::X); };
+        if (ignored(a) || ignored(b)) continue;
+        if (a != b) return bit1(Logic::Zero);
+    }
+    return bit1(Logic::One);
+}
+
 Value ceq(const Value& x, const Value& y) {
     return bit1(x.bits == y.bits ? Logic::One : Logic::Zero);
 }

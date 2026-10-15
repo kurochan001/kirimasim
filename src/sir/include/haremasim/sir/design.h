@@ -175,6 +175,10 @@ enum class Op : std::uint8_t {
     Cne,  ///< !==
     Weq,  ///< ==?
     Wne,  ///< !=?
+    /// %r = match.mask <value>, <value>, "casez" | "casex": the case-item
+    /// match of casez and casex, which ignores z (casex: x and z) on both
+    /// sides (VALUE_SEMANTICS.md 4.2). Always 0 or 1.
+    MatchMask,
     // Logical. There are no short-circuit instructions: &&, ||, -> and ?:
     // with operands that have side effects are lowered to branches.
     Lnot,

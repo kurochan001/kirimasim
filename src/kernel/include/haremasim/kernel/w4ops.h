@@ -214,6 +214,15 @@ inline W4 weq4(W4 x, W4 y) {
 
 inline W4 wne4(W4 x, W4 y) { return negate1(weq4(x, y)); }
 
+/// casez (ignoreX false) and casex matching (4.2): z bits, and x bits for
+/// casex, on either side are not compared. Always 0 or 1.
+inline W4 caseMatch4(W4 x, W4 y, bool ignoreX) {
+    std::uint64_t ignored = (~x.a & x.b) | (~y.a & y.b);
+    if (ignoreX) ignored |= x.b | y.b;
+    const std::uint64_t differ = (x.a ^ y.a) | (x.b ^ y.b);
+    return (differ & ~ignored) != 0 ? kW4Zero : kW4One;
+}
+
 // --- Shifts (3.8). The amount is unsigned, at most 64 bits. ----------------
 
 inline W4 shl4(W4 x, W4 amount, unsigned w) {

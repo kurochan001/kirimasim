@@ -837,6 +837,17 @@ private:
                         bad("result must be 1 bit in the operands' domain");
                 }
                 break;
+            case Op::MatchMask:
+                if (nOps(3)) {
+                    if (!isIntegral(ty(0)) || ty(0) != ty(1))
+                        bad("operands must have one type");
+                    else if (ops[2].kind != Operand::Kind::Text ||
+                             (ops[2].text != "casez" && ops[2].text != "casex"))
+                        bad("the kind must be casez or casex");
+                    else if (!width1(rt) || isFourState(rt))
+                        bad("result must be i2<1>");
+                }
+                break;
             case Op::Ceq:
             case Op::Cne:
                 if (nOps(2)) {

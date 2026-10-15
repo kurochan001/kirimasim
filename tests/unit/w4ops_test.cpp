@@ -93,6 +93,8 @@ TEST(W4Ops, Binary) {
         ASSERT_TRUE(same(k::cne4(x, y), v::cne(rx, ry), "cne " + ctx));
         ASSERT_TRUE(same(k::weq4(x, y), v::weq(rx, ry), "weq " + ctx));
         ASSERT_TRUE(same(k::wne4(x, y), v::wne(rx, ry), "wne " + ctx));
+        ASSERT_TRUE(same(k::caseMatch4(x, y, false), v::caseMatch(rx, ry, false), "casez " + ctx));
+        ASSERT_TRUE(same(k::caseMatch4(x, y, true), v::caseMatch(rx, ry, true), "casex " + ctx));
         ASSERT_TRUE(same(k::land4(x, y), v::land(rx, ry), "land " + ctx));
         ASSERT_TRUE(same(k::lor4(x, y), v::lor(rx, ry), "lor " + ctx));
     }

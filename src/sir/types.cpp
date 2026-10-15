@@ -87,6 +87,7 @@ const char* opName(Op op) {
         case Op::Cne: return "cne";
         case Op::Weq: return "weq";
         case Op::Wne: return "wne";
+        case Op::MatchMask: return "match.mask";
         case Op::Lnot: return "lnot";
         case Op::Land: return "land";
         case Op::Lor: return "lor";

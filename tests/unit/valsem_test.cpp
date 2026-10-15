@@ -74,6 +74,17 @@ TEST(Valsem, EqualityRules) {                         // 3.4
     EXPECT_EQ(str(weq(bits("1x10"), bits("0010"))), "0");
 }
 
+TEST(Valsem, CaseMatchIgnoresBothSides) {  // 4.2, 12.5.1
+    // casez ignores z on either side; x is compared as a value.
+    EXPECT_EQ(str(caseMatch(bits("10z1"), bits("1001"), false)), "1");
+    EXPECT_EQ(str(caseMatch(bits("1001"), bits("10z1"), false)), "1");
+    EXPECT_EQ(str(caseMatch(bits("10x1"), bits("1001"), false)), "0");
+    EXPECT_EQ(str(caseMatch(bits("10x1"), bits("10x1"), false)), "1");
+    // casex also ignores x.
+    EXPECT_EQ(str(caseMatch(bits("10x1"), bits("1001"), true)), "1");
+    EXPECT_EQ(str(caseMatch(bits("1001"), bits("1x11"), true)), "0");
+}
+
 TEST(Valsem, TruthAndLogical) {  // 3.5
     EXPECT_EQ(str(truth(bits("1x"))), "1");
     EXPECT_EQ(str(truth(bits("0x"))), "x");
