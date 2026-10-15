@@ -310,6 +310,34 @@ EndReason Scheduler::run() {
     return reason();
 }
 
+void Scheduler::runFinal(std::span<const ProcessId> finals) {
+    if (reason() == EndReason::Internal) return;
+    const bool wasEnding = ending_;
+    const EndReason endReason = reason_;
+    const int endLevel = level_;
+    for (const ProcessId p : finals) {
+        if (processes_[p].done) continue;
+        ending_ = false;
+        counters_.increment(cWakeups_);
+        const auto st = static_cast<Status>(processes_[p].fn(toC(ctx_), processes_[p].frame));
+        processes_[p].done = true;
+        ++processes_[p].gen;
+        counters_.increment(cFinished_);
+        if (st == Status::Error && reason_ != EndReason::Internal) {
+            if (error_.empty()) error_ = "a final procedure failed";
+            reason_ = EndReason::Internal;
+        }
+        if (ending_) break;  // $finish, or a failure
+    }
+    if (ending_ && reason_ == EndReason::Internal) {
+        counters_.setText(cEndReason_, endReasonName(EndReason::Internal));
+        return;
+    }
+    ending_ = wasEnding;
+    reason_ = endReason;
+    level_ = endLevel;
+}
+
 bool Scheduler::anyEvents(Region first, Region last) const {
     for (int r = static_cast<int>(first); r <= static_cast<int>(last); ++r)
         if (!regions_[r].empty()) return true;

@@ -189,6 +189,13 @@ public:
 
     /// Runs the simulation until it ends, and returns the reason.
     EndReason run();
+    /// After run(): runs the final procedures once each, in the order
+    /// given, as calls from one process with no time passing; nothing they
+    /// schedule runs, and $finish in one of them skips the rest
+    /// (SCHEDULER_SPEC.md 6.2, 16.2). The end reason stays the one run()
+    /// gave, unless a final procedure fails. Not run after an internal
+    /// error.
+    void runFinal(std::span<const ProcessId> finals);
 
     /// Asks the simulation to end. `level` is the argument of $finish or
     /// $stop (0, 1 or 2); it decides what the termination line prints.

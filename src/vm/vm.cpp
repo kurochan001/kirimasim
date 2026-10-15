@@ -143,6 +143,7 @@ public:
                        static_cast<std::uint32_t>(sir::elementCount(s)), init);
         }
         std::vector<kernel::ProcessId> combs;
+        std::vector<kernel::ProcessId> finals;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
             if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
@@ -165,6 +166,11 @@ public:
                     f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
                     combs.push_back(f.kernelId);
                     break;
+                case sir::ProcessKind::Final:
+                    // Run once each when the simulation ends.
+                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    finals.push_back(f.kernelId);
+                    break;
                 default:
                     return {kernel::EndReason::Internal, "process \"" + proc.name + "\": kind " +
                                                              sir::kindName(proc.kind) +
@@ -175,7 +181,9 @@ public:
         cInstrs_ = counters_.add("vm.instrs");
         for (const kernel::ProcessId k : combs)
             sched_.start(k);
-        const kernel::EndReason reason = sched_.run();
+        sched_.run();
+        sched_.runFinal(finals);
+        const kernel::EndReason reason = sched_.reason();
         return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
     }
 

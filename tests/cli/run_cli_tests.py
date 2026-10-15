@@ -14,8 +14,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 DESIGN = str(HERE / "display_finish.sv")
 DELAYS = str(HERE / "delays.sv")
+FINAL = str(HERE / "final.sv")
 
-# (arguments, exit code, text stdout must contain, text stderr must contain)
+# (arguments, exit code, text stdout must contain, text stderr must contain).
+# Expected stdout starting with "=" must match the whole output.
 CASES = [
     ([DESIGN], 0, "hello\n", "haremasim: info: finish at 0 ns"),
     (["--max-steps=2", DESIGN], 5, "hello\n", "haremasim: info: zero_time_limit"),
@@ -38,6 +40,8 @@ CASES = [
     (["--max-time=1500ps", DELAYS], 4, "a\n", "haremasim: info: time_limit at 1500 ps"),
     (["--max-time=1499ps", DELAYS], 4, "", "haremasim: info: time_limit at 1499 ps"),
     (["--max-time=2ns", "--max-time-ok", DELAYS], 0, "a\n", "time_limit at 2 ns"),
+    ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "haremasim: info: quiescent at 1 ns"),
+    (["--max-time=0ns", FINAL], 4, "=final 1 n=0\nfinal 2\n", "time_limit at 0 ns"),
 ]
 
 
@@ -53,7 +57,10 @@ def main() -> int:
         problems = []
         if proc.returncode != code:
             problems.append(f"exit code {proc.returncode}, expected {code}")
-        if out not in proc.stdout:
+        if out.startswith("="):
+            if proc.stdout != out[1:]:
+                problems.append(f"stdout is {proc.stdout!r}, expected {out[1:]!r}")
+        elif out not in proc.stdout:
             problems.append(f"stdout lacks {out!r}")
         if err not in proc.stderr:
             problems.append(f"stderr lacks {err!r}")

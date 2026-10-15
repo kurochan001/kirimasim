@@ -438,7 +438,12 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
                 if (!b_.dead) terminate(sir::Op::Br, {sir::Operand::block(loop)}, pb.location);
                 break;
             }
-            case ast::ProceduralBlockKind::Final: unsupported(pb.location, "final procedure");
+            case ast::ProceduralBlockKind::Final:
+                // Runs once when the simulation ends; it cannot wait (9.2.3).
+                proc().kind = sir::ProcessKind::Final;
+                lowerStatement(bodyStmt);
+                if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
+                break;
         }
     } catch (const Unsupported&) {
         design_.processes.resize(first);  // with any fork children
