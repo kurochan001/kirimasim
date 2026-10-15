@@ -40,6 +40,7 @@ enum class Op {
     TriggerNb,  // ->> #c ev a
     WaitTrue,   // wait (slot a != 0)
     Finish,     // $finish
+    Kill,       // kill process a (not the running one)
 };
 
 struct Step {
@@ -69,6 +70,7 @@ public:
     virtual void triggerNb(std::uint32_t p, std::uint32_t ev, std::uint64_t d) = 0;
     virtual void waitTrue(std::uint32_t p, std::uint32_t slot) = 0;
     virtual void finish() = 0;
+    virtual void kill(std::uint32_t p) = 0;
 };
 
 /// Runs a script from its program counter until it waits or ends, writing
@@ -106,6 +108,10 @@ struct Runner {
                     b.waitTrue(p, s.a);
                     return Status::Waiting;
                 case Op::Finish: b.finish(); return Status::Stop;
+                case Op::Kill:
+                    if (s.a != p && s.a < scripts.size()) b.kill(s.a);
+                    log += who + " k" + std::to_string(s.a) + "\n";
+                    break;
             }
         }
         return Status::Done;
@@ -172,6 +178,7 @@ public:
         ctx_.scheduler().waitMonitor(p, m);
     }
     void finish() override { ctx_.scheduler().requestEnd(EndReason::Finish, 1); }
+    void kill(std::uint32_t p) override { ctx_.scheduler().kill(p); }
 
 private:
     struct Frame {
@@ -214,6 +221,7 @@ public:
         slots_.assign(slots, 0);
         triggeredAt_.assign(events, UINT64_MAX);
         gen_.assign(runner_.scripts.size(), 0);
+        killed_.assign(runner_.scripts.size(), false);
     }
 
     EndReason run() {
@@ -310,6 +318,11 @@ public:
     void finish() override {
         if (!ending_) ending_ = true, reason_ = EndReason::Finish;
     }
+    void kill(std::uint32_t p) override {
+        // Never resumed again: every pending wake-up is stale.
+        killed_[p] = true;
+        ++gen_[p];
+    }
 
 private:
     struct Ev {
@@ -334,6 +347,7 @@ private:
     std::vector<std::uint64_t> slots_;
     std::vector<std::uint64_t> triggeredAt_;
     std::vector<std::uint32_t> gen_;
+    std::vector<bool> killed_;
     std::vector<Ev> regions_[17];
     std::vector<Fut> future_;
     std::vector<Wait> waits_;
@@ -373,7 +387,7 @@ private:
             regions_[r].erase(regions_[r].begin());
             if (e.kind == 0) {
                 const auto p = static_cast<std::uint32_t>(e.a);
-                if (gen_[p] != e.b) continue;
+                if (gen_[p] != e.b || killed_[p]) continue;
                 if (runner_.step(*this, p) != Status::Waiting) ++gen_[p];
             } else if (e.kind == 1) {
                 write(static_cast<std::uint32_t>(e.a), e.b);
@@ -483,6 +497,30 @@ TEST(Scheduler, TimeLimitRunsEventsAtTheLimit) {
     EXPECT_EQ(sim.context().scheduler().time(), 5U);
     EXPECT_NE(sim.log().find("L0"), std::string::npos);
     EXPECT_EQ(sim.log().find("L1"), std::string::npos);
+}
+
+TEST(Scheduler, KilledProcessNeverResumes) {
+    // SCHEDULER_SPEC.md 10.7: the delay, the subscription and the named
+    // event wait of a killed process are all dropped; its NBA still runs.
+    KernelSim sim({{{nba(1, 5, 2), delay(3), log(0)}},
+                   {{waitEdge(0, Edge::Any), log(1)}},
+                   {{waitNamed(0), log(2)}},
+                   {{delay(1),
+                     {Op::Kill, 0, 0, 0},
+                     {Op::Kill, 1, 0, 0},
+                     {Op::Kill, 2, 0, 0},
+                     write(0, 1),
+                     trig(0),
+                     delay(5),
+                     log(3)}}});
+    EXPECT_EQ(sim.run(), EndReason::Quiescent);
+    EXPECT_EQ(sim.log().find(" L0"), std::string::npos);
+    EXPECT_EQ(sim.log().find(" L1"), std::string::npos);
+    EXPECT_EQ(sim.log().find(" L2"), std::string::npos);
+    EXPECT_NE(sim.log().find("t6 p3 L3"), std::string::npos);
+    EXPECT_EQ(sim.context().store().element(1, 0)[0], 5U);
+    const std::string json = sim.context().counters().toJson();
+    EXPECT_NE(json.find("\"proc.created\": 4, \"proc.finished\": 4"), std::string::npos) << json;
 }
 
 TEST(Scheduler, ZeroDelayLimit) {
@@ -705,7 +743,10 @@ std::vector<Script> randomScripts(std::mt19937_64& rng) {
                 case 17:
                 case 18: s.steps.push_back(waitTrue(slot)); break;
                 default:
-                    if (pick(4) == 0) s.steps.push_back(finish());
+                    if (pick(4) == 0)
+                        s.steps.push_back(finish());
+                    else if (pick(3) == 0)
+                        s.steps.push_back({Op::Kill, static_cast<std::uint32_t>(pick(6)), 0, 0});
                     break;
             }
         }

@@ -145,6 +145,8 @@ void Scheduler::begin() {
         cEvents_[r] =
             counters_.add(std::string("sched.events.") + regionName(static_cast<Region>(r)));
     cWakeups_ = counters_.add("proc.wakeups");
+    cCreated_ = counters_.add("proc.created");
+    cFinished_ = counters_.add("proc.finished");
     cWrites_ = counters_.add("slot.writes");
     cChanges_ = counters_.add("slot.changes");
     cNbaScheduled_ = counters_.add("nba.scheduled");
@@ -161,7 +163,20 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     proc.frame = frame;
     proc.group = group;
     processes_.push_back(proc);
+    counters_.increment(cCreated_);
     return static_cast<ProcessId>(processes_.size() - 1);
+}
+
+void Scheduler::kill(ProcessId p) {
+    Process& proc = processes_[p];
+    if (proc.done) return;
+    // A new wait number makes every pending wake-up of the process stale:
+    // its delay events, subscriptions and named-event waits are dropped
+    // when they come up (SCHEDULER_SPEC.md 10.7). NBAs it scheduled stay.
+    freeMonitor(p);
+    proc.done = true;
+    ++proc.gen;
+    counters_.increment(cFinished_);
 }
 
 void Scheduler::start(ProcessId p) {
@@ -364,6 +379,7 @@ void Scheduler::execute(const Event& e) {
                 case Status::Done:
                 case Status::Killed:
                     freeMonitor(e.id);
+                    if (!after.done) counters_.increment(cFinished_);
                     after.done = true;
                     ++after.gen;
                     break;

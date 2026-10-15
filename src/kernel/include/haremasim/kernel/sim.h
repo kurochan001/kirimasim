@@ -155,6 +155,12 @@ public:
     void start(ProcessId p);
     /// Creates a named event object.
     EventId addEvent();
+    /// Ends a process that is not running now (kill, disable, disable
+    /// fork): it is never resumed again. Ending a finished process does
+    /// nothing.
+    void kill(ProcessId p);
+    /// Whether a process has finished or been killed.
+    [[nodiscard]] bool finished(ProcessId p) const { return processes_[p].done; }
 
     // Waits. A running process calls one of these and then returns
     // Status::Waiting. A later wait replaces nothing: a process has one
@@ -290,7 +296,8 @@ private:
     bool begun_ = false;
     CounterId cTimeSlots_ = 0, cTimeAdvances_ = 0, cActiveLoops_ = 0, cReactiveLoops_ = 0;
     CounterId cEvents_[kNumRegions] = {};
-    CounterId cWakeups_ = 0, cWrites_ = 0, cChanges_ = 0, cNbaScheduled_ = 0;
+    CounterId cWakeups_ = 0, cCreated_ = 0, cFinished_ = 0, cWrites_ = 0, cChanges_ = 0,
+              cNbaScheduled_ = 0;
     CounterId cSubscriptions_ = 0, cMonitorEvals_ = 0, cEndTime_ = 0, cEndReason_ = 0;
 
     void begin();
