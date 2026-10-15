@@ -1,7 +1,10 @@
 # PerfCount: event-count regression tests
 
 `expected.json` records, for each listed test file, the counters that
-`haremasim --stats=json parse <file>` reports. The `PerfCount` CTest label
+haremasim reports with `--stats=json`: a test whose `:type:` includes
+`simulation` is run to its end (`haremasim --stats=json <file>`), any other
+test is only parsed (`haremasim --stats=json parse <file>`). Text counters
+such as `sim.end_reason` must match exactly (PERFORMANCE.md 4). The `PerfCount` CTest label
 (`ctest --preset dev -L PerfCount`) runs `tools/perfcount_check.py`, which
 fails when a counter is **10% or more above** its expected value, when an
 expected counter is missing, or when a run reports a counter that
@@ -17,7 +20,8 @@ in CI.
 
    ```sh
    cmake --build --preset dev
-   build/dev/src/driver/haremasim --stats=json parse tests/suite/<path>.sv
+   build/dev/src/driver/haremasim --stats=json tests/suite/<path>.sv        # simulation
+   build/dev/src/driver/haremasim --stats=json parse tests/suite/<path>.sv  # parsing only
    ```
 
 2. Edit `expected.json` by hand. Keys are paths relative to the repository
