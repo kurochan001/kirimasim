@@ -9,6 +9,7 @@
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: @unique_case_violation.expected
+:expected_stderr: @unique_case_violation.stderr
 */
 // The default time unit and precision are implementation-specific (3.14.2.3),
 // and the test prints nonzero times with %0t, so it sets them.
@@ -18,9 +19,8 @@
 // violation is discarded and nothing is reported (12.4.2.1). At time 2, sel
 // stays 2'b11, so the violation matures in the Observed region and is
 // reported once. With no matching item no statement runs, so hit keeps 1.
-// Violation reports go to stderr (SYSTEM_TASKS.md 2), so only stdout is
-// compared for now: checking that exactly one report, for time 2, appears
-// needs a header field that TEST_SUITE.md adds in P1.
+// Violation reports go to stderr (SYSTEM_TASKS.md 2, 10.4); :expected_stderr:
+// checks that exactly one report, for time 2, appears.
 // Icarus Verilog 13.0 and Verilator 5.052 (--assert) both report the glitch
 // at time 1, which 12.4.2.1 rules out.
 module top;

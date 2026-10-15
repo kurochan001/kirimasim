@@ -9,13 +9,15 @@
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: @zero_delay_forever.expected
+:expected_exit: 5
+:expected_stderr: @zero_delay_forever.stderr
 */
 // The standard warns that a forever loop without a timing control that
 // advances time can hang the scheduler (12.7.6) but sets no limit. The limit
 // and the exit are haremasim rules (SCHEDULER_SPEC.md 16.2): the run stops
 // with the reason zero_time_limit, exit code 5, a reason line on stderr, and
-// final procedures run. Only stdout is compared for now; checking the exit
-// code and the stderr line needs a header field that TEST_SUITE.md adds in P1.
+// final procedures run. :expected_exit: and :expected_stderr: check the code
+// and the line naming the limit (CLI.md 2.6, default --max-zero-delay).
 // Icarus Verilog and Verilator loop without end on this test.
 module top;
   initial begin
