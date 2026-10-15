@@ -9,7 +9,9 @@ comment) decides what is expected:
   test fails if the error comes from some unrelated place.
 * Otherwise `haremasim parse` must succeed (exit code 0). Then, for a test
   whose :type: includes "simulation", the design is run and its standard
-  output is compared with :expected_stdout: (TEST_SUITE.md). A design that
+  output is compared with :expected_stdout:, the exit code with
+  :expected_exit: (0 when absent) and, with :expected_stderr:, haremasim's
+  own warning and error lines with the given file (TEST_SUITE.md). A design that
   uses a construct haremasim does not support yet (exit code 2 with an
   "unsupported" error, CLI.md 5) is reported as skipped, not as passed.
 
@@ -59,6 +61,32 @@ def expected_outputs(test: Path, meta: dict[str, str]) -> list[list[str]] | None
     if meta.get("nondeterministic") == "yes":
         return [normalize(part) for part in re.split(r"(?m)^---\s*$", text)]
     return [normalize(text)]
+
+
+def message_lines(stderr: str, test: Path) -> list[str]:
+    """haremasim's warning and error lines (CLI.md 4): "haremasim: <kind>:" or
+    "<file>:<line>...: <kind>:". Paths are cut to start at the test's file
+    name. Lines of other programs (an allocator's warning) are left out."""
+    out = []
+    for line in stderr.splitlines():
+        m = re.match(r"^(.*?): (warning|error): ", line)
+        if not m:
+            continue
+        where = m.group(1)
+        if where != "haremasim" and not re.search(r":\d+(:\d+)?$", where):
+            continue
+        i = line.find(test.name)
+        out.append(line[i:] if 0 <= i < len(where) else line)
+    return out
+
+
+def expected_stderr(test: Path, meta: dict[str, str]) -> list[str] | None:
+    value = meta.get("expected_stderr")
+    if value is None:
+        return None
+    if value.startswith("@"):
+        return normalize((test.parent / value[1:]).read_text(encoding="utf-8"))
+    return [value]
 
 
 def check_failure(args, meta, proc) -> int:
@@ -119,12 +147,24 @@ def main() -> int:
     if expected is None:
         print("FAIL: a simulation test needs :expected_stdout:", file=sys.stderr)
         return 1
+    problems = []
     got = normalize(run.stdout)
-    if got in expected:
+    if got not in expected:
+        problems.append("standard output differs\n--- expected ---\n" +
+                        "\n".join(expected[0]) + "\n--- got ---\n" + "\n".join(got))
+    want_exit = int(meta.get("expected_exit", "0"))
+    if run.returncode != want_exit:
+        problems.append(f"exit code {run.returncode}, expected {want_exit}")
+    want_err = expected_stderr(args.test, meta)
+    if want_err is not None:
+        got_err = message_lines(run.stderr, args.test)
+        if got_err != want_err:
+            problems.append("warning and error lines differ\n--- expected ---\n" +
+                            "\n".join(want_err) + "\n--- got ---\n" + "\n".join(got_err))
+    if not problems:
         return 0
-    print(f"FAIL: standard output differs (exit code {run.returncode})", file=sys.stderr)
-    print("--- expected ---\n" + "\n".join(expected[0]), file=sys.stderr)
-    print("--- got ---\n" + "\n".join(got), file=sys.stderr)
+    for p in problems:
+        print("FAIL: " + p, file=sys.stderr)
     print("--- stderr ---\n" + run.stderr, file=sys.stderr)
     return 1
 
