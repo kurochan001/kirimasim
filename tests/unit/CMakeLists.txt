@@ -1,6 +1,7 @@
 include(GoogleTest)
 
-add_executable(haremasim_unit_tests and4_test.cpp counters_test.cpp sir_test.cpp)
+add_executable(haremasim_unit_tests and4_test.cpp counters_test.cpp sir_test.cpp
+    valsem_test.cpp w4ops_test.cpp)
 target_link_libraries(haremasim_unit_tests PRIVATE
     haremasim_kernel haremasim_sir haremasim_valsem GTest::gtest_main)
 gtest_discover_tests(haremasim_unit_tests)
