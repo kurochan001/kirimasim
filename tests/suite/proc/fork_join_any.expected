@@ -1,0 +1,10 @@
+[1] join child 1
+[2] join child 2
+[2] after join
+[12] any child 10
+[12] after join_any
+[22] any child 20
+[32] any child 30
+[52] parent first
+[52] join_none child
+[53] end
