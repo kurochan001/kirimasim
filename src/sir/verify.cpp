@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -29,7 +30,8 @@ bool hasNoResult(Op op) {
         case Op::Trigger:
         case Op::TriggerNb:
         case Op::Disable:
-        case Op::DisableFork: return true;
+        case Op::DisableFork:
+        case Op::ReportDefer: return true;
         default: return isTerminator(op);
     }
 }
@@ -1024,6 +1026,24 @@ private:
                     bad("needs a process, a subroutine or a block name");
                 break;
             case Op::DisableFork: nOps(0); break;
+            case Op::ReportDefer: {
+                static constexpr std::string_view kConstructs[] = {"unique case",   "unique0 case",
+                                                                   "priority case", "unique if",
+                                                                   "unique0 if",    "priority if"};
+                static constexpr std::string_view kContents[] = {
+                    "no item matches", "more than one item matches", "no condition is true",
+                    "more than one condition is true"};
+                const auto among = [](std::string_view s, const auto& set) {
+                    for (const std::string_view t : set)
+                        if (s == t) return true;
+                    return false;
+                };
+                if (nOps(2) &&
+                    (ops[0].kind != Operand::Kind::Text || ops[1].kind != Operand::Kind::Text ||
+                     !among(ops[0].text, kConstructs) || !among(ops[1].text, kContents)))
+                    bad("needs a construct and a content of SYSTEM_TASKS.md 10.4");
+                break;
+            }
             case Op::Call: {
                 if (ops.empty() || ops[0].kind != Operand::Kind::Subroutine ||
                     ops[0].id >= d_.subroutines.size()) {

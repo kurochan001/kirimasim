@@ -352,9 +352,93 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     setBlock(cont);
 }
 
+void Lowerer::reportViolations(const std::vector<Val>& matches, ast::UniquePriorityCheck check,
+                               bool hasElse, bool isCase, slang::SourceLocation sl) {
+    std::string construct = check == ast::UniquePriorityCheck::Unique    ? "unique"
+                            : check == ast::UniquePriorityCheck::Unique0 ? "unique0"
+                                                                         : "priority";
+    construct += isCase ? " case" : " if";
+    Val any = matches.empty() ? constant(sir::u2(1), 0) : matches[0];
+    Val multi = constant(sir::u2(1), 0);
+    for (std::size_t i = 1; i < matches.size(); ++i) {
+        const Val both = emit(Op::And, sir::u2(1), {any.op, matches[i].op}, sl);
+        multi = emit(Op::Or, sir::u2(1), {multi.op, both.op}, sl);
+        any = emit(Op::Or, sir::u2(1), {any.op, matches[i].op}, sl);
+    }
+    const auto report = [&](const Val& cond, bool when, const char* content) {
+        const sir::BlockId rep = newBlock();
+        const sir::BlockId next = newBlock();
+        terminate(Op::BrIf,
+                  {cond.op, Operand::block(when ? rep : next), Operand::block(when ? next : rep)},
+                  sl);
+        setBlock(rep);
+        emitVoid(Op::ReportDefer, {Operand::str(construct), Operand::str(content)}, sl);
+        jump(next, sl);
+        setBlock(next);
+    };
+    // unique and unique0: more than one; unique and priority: none, unless
+    // there is an else or default (12.4.2, 12.5.3).
+    if (check != ast::UniquePriorityCheck::Priority && matches.size() >= 2)
+        report(multi, true,
+               isCase ? "more than one item matches" : "more than one condition is true");
+    if (check != ast::UniquePriorityCheck::Unique0 && !hasElse)
+        report(any, false, isCase ? "no item matches" : "no condition is true");
+}
+
+void Lowerer::lowerUniqueIf(const ast::ConditionalStatement& s) {
+    const slang::SourceLocation sl = s.sourceRange.start();
+    // The if-else-if chain: every condition in order, then the checks, then
+    // the first true one (SCHEDULER_SPEC.md 15.1).
+    std::vector<const ast::Statement*> bodies;
+    std::vector<Val> trues;
+    const ast::Statement* elseStmt = nullptr;
+    const ast::ConditionalStatement* cur = &s;
+    for (;;) {
+        if (cur->conditions.size() != 1 || cur->conditions[0].pattern != nullptr)
+            unsupported(sl, "if with a pattern");
+        const Val c = lowerCondition(*cur->conditions[0].expr);
+        // Only a known 1 is true; x counts as false here too.
+        trues.push_back(emit(Op::Ceq, sir::u2(1), {c.op, constant(c.type, 1).op}, sl));
+        bodies.push_back(&cur->ifTrue);
+        if (cur->ifFalse != nullptr && cur->ifFalse->kind == ast::StatementKind::Conditional) {
+            cur = &cur->ifFalse->as<ast::ConditionalStatement>();
+            continue;
+        }
+        elseStmt = cur->ifFalse;
+        break;
+    }
+    reportViolations(trues, s.check, elseStmt != nullptr, false, sl);
+    std::vector<sir::BlockId> ends;
+    std::vector<sir::BlockId> blocks;
+    for (std::size_t i = 0; i < bodies.size(); ++i) {
+        blocks.push_back(newBlock());
+        const sir::BlockId next = newBlock();
+        terminate(Op::BrIf, {trues[i].op, Operand::block(blocks[i]), Operand::block(next)}, sl);
+        setBlock(next);
+    }
+    if (elseStmt != nullptr) lowerStatement(*elseStmt);
+    if (!b_.dead) ends.push_back(b_.block);
+    for (std::size_t i = 0; i < bodies.size(); ++i) {
+        setBlock(blocks[i]);
+        lowerStatement(*bodies[i]);
+        if (!b_.dead) ends.push_back(b_.block);
+    }
+    if (ends.empty()) {
+        b_.dead = true;
+        return;
+    }
+    const sir::BlockId join = newBlock();
+    for (const sir::BlockId e : ends)
+        emitInto(e, Op::Br, {Operand::block(join)}, sl);
+    setBlock(join);
+}
+
 void Lowerer::lowerIf(const ast::ConditionalStatement& s) {
     const slang::SourceLocation sl = s.sourceRange.start();
-    if (s.check != ast::UniquePriorityCheck::None) unsupported(sl, "unique or priority if");
+    if (s.check != ast::UniquePriorityCheck::None) {
+        lowerUniqueIf(s);
+        return;
+    }
     if (s.conditions.size() != 1 || s.conditions[0].pattern != nullptr)
         unsupported(sl, "if with a pattern");
     const Val c = lowerCondition(*s.conditions[0].expr);
@@ -381,7 +465,6 @@ void Lowerer::lowerIf(const ast::ConditionalStatement& s) {
 
 void Lowerer::lowerCase(const ast::CaseStatement& s) {
     const slang::SourceLocation sl = s.sourceRange.start();
-    if (s.check != ast::UniquePriorityCheck::None) unsupported(sl, "unique or priority case");
     if (s.condition == ast::CaseStatementCondition::Inside) unsupported(sl, "case inside");
     // The expression is evaluated once, before the items; the items in
     // order until one matches (12.5). All take the width of the widest, and
@@ -404,20 +487,44 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
     bodies.reserve(s.items.size());
     for (std::size_t g = 0; g < s.items.size(); ++g)
         bodies.push_back(newBlock());
-    for (std::size_t g = 0; g < s.items.size(); ++g) {
-        for (const ast::Expression* e : s.items[g].expressions) {
-            const slang::SourceLocation isl = e->sourceRange.start();
-            const Val v = coerce(lowerExpr(*e), ct, isl);
-            Val m;
-            if (s.condition == ast::CaseStatementCondition::Normal) {
-                m = emit(Op::Ceq, sir::u2(1), {x.op, v.op}, isl);
-            } else {
-                const bool casex = s.condition == ast::CaseStatementCondition::WildcardXOrZ;
-                m = emit(Op::MatchMask, sir::u2(1),
-                         {x.op, v.op, Operand::str(casex ? "casex" : "casez")}, isl);
+    const auto match = [&](const ast::Expression& e) {
+        const slang::SourceLocation isl = e.sourceRange.start();
+        const Val v = coerce(lowerExpr(e), ct, isl);
+        if (s.condition == ast::CaseStatementCondition::Normal)
+            return emit(Op::Ceq, sir::u2(1), {x.op, v.op}, isl);
+        const bool casex = s.condition == ast::CaseStatementCondition::WildcardXOrZ;
+        return emit(Op::MatchMask, sir::u2(1),
+                    {x.op, v.op, Operand::str(casex ? "casex" : "casez")}, isl);
+    };
+    if (s.check == ast::UniquePriorityCheck::None) {
+        // The items in order until one matches.
+        for (std::size_t g = 0; g < s.items.size(); ++g) {
+            for (const ast::Expression* e : s.items[g].expressions) {
+                const Val m = match(*e);
+                const sir::BlockId next = newBlock();
+                terminate(Op::BrIf, {m.op, Operand::block(bodies[g]), Operand::block(next)},
+                          e->sourceRange.start());
+                setBlock(next);
             }
+        }
+    } else {
+        // unique, unique0, priority: every item and expression in order,
+        // then the violation checks, then the first matching item
+        // (SCHEDULER_SPEC.md 15.1).
+        std::vector<Val> matches;
+        for (const auto& g : s.items) {
+            std::optional<Val> any;
+            for (const ast::Expression* e : g.expressions) {
+                const Val m = match(*e);
+                any = any ? emit(Op::Or, sir::u2(1), {any->op, m.op}, sl) : m;
+            }
+            matches.push_back(any ? *any : constant(sir::u2(1), 0));
+        }
+        reportViolations(matches, s.check, s.defaultCase != nullptr, true, sl);
+        for (std::size_t g = 0; g < s.items.size(); ++g) {
             const sir::BlockId next = newBlock();
-            terminate(Op::BrIf, {m.op, Operand::block(bodies[g]), Operand::block(next)}, isl);
+            terminate(Op::BrIf, {matches[g].op, Operand::block(bodies[g]), Operand::block(next)},
+                      sl);
             setBlock(next);
         }
     }

@@ -211,6 +211,7 @@ void Scheduler::freeMonitor(ProcessId p) {
 void Scheduler::wake(ProcessId p) {
     freeMonitor(p);
     Process& proc = processes_[p];
+    proc.flushOnResume = true;
     ++proc.gen;  // ends every other item of the wait
     const Region r = proc.group == Group::Active ? Region::Active : Region::Reactive;
     schedule(r, {Kind::Resume, r, p, proc.gen}, 0);
@@ -373,11 +374,19 @@ void Scheduler::runSlot() {
     movesThisSlot_ = 0;
     runRegion(Region::Preponed);
     runRegion(Region::PreActive);
-    while (!ending_ && anyEvents(Region::Active, Region::PrePostponed)) {
-        while (!ending_ && anyEvents(Region::Active, Region::PostObserved)) {
+    // A pending report counts as an event of the Observed region (15.3).
+    while (!ending_ &&
+           (anyEvents(Region::Active, Region::PrePostponed) || pendingProcesses_ != 0)) {
+        while (!ending_ &&
+               (anyEvents(Region::Active, Region::PostObserved) || pendingProcesses_ != 0)) {
             counters_.increment(cActiveLoops_);
             runRegion(Region::Active);
-            if (!ending_) moveFirst(Region::Inactive, Region::PostObserved, Region::Active);
+            if (ending_) break;
+            if (pendingProcesses_ != 0 && !anyEvents(Region::Inactive, Region::PreObserved)) {
+                confirmReports();
+                continue;
+            }
+            moveFirst(Region::Inactive, Region::PostObserved, Region::Active);
         }
         while (!ending_ && anyEvents(Region::Reactive, Region::PostReNba)) {
             counters_.increment(cReactiveLoops_);
@@ -408,6 +417,10 @@ void Scheduler::execute(const Event& e) {
         case Kind::Resume: {
             Process& proc = processes_[e.id];
             if (proc.done || proc.gen != e.gen) return;  // killed, or woken again
+            if (proc.flushOnResume) {
+                proc.flushOnResume = false;
+                flushReports(e.id);
+            }
             counters_.increment(cWakeups_);
             const auto st = static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
             Process& after = processes_[e.id];  // the table may have grown
@@ -686,6 +699,35 @@ void Scheduler::triggerNb(ProcessId p, EventId e, std::uint64_t delay) {
 
 bool Scheduler::triggered(EventId e) const { return events_[e].triggeredAt == time_; }
 
+// --- Pending reports (SCHEDULER_SPEC.md 15) -------------------------------------
+
+void Scheduler::deferReport(ProcessId p, std::string line) {
+    Process& proc = processes_[p];
+    if (proc.pending.empty()) {
+        if (std::find(pendingOrder_.begin(), pendingOrder_.end(), p) == pendingOrder_.end())
+            pendingOrder_.push_back(p);
+        ++pendingProcesses_;
+    }
+    proc.pending.push_back(std::move(line));
+}
+
+void Scheduler::flushReports(ProcessId p) {
+    Process& proc = processes_[p];
+    if (proc.pending.empty()) return;
+    proc.pending.clear();
+    --pendingProcesses_;
+}
+
+void Scheduler::confirmReports() {
+    for (const ProcessId p : pendingOrder_) {
+        for (const std::string& line : processes_[p].pending)
+            ctx_.output().message(line);
+        processes_[p].pending.clear();
+    }
+    pendingOrder_.clear();
+    pendingProcesses_ = 0;
+}
+
 // --- Ending ------------------------------------------------------------------
 
 void Scheduler::requestEnd(EndReason r, int level) {
@@ -707,5 +749,11 @@ void Output::write(std::string_view text) {
 }
 
 void Output::flush() { std::fflush(stdout); }
+
+void Output::message(std::string_view line) {
+    std::fflush(stdout);
+    std::fwrite(line.data(), 1, line.size(), stderr);
+    std::fputc('\n', stderr);
+}
 
 }  // namespace haremasim::kernel

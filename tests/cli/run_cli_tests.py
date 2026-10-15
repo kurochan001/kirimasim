@@ -17,6 +17,18 @@ DELAYS = str(HERE / "delays.sv")
 FINAL = str(HERE / "final.sv")
 SPIN = str(HERE / "spin.sv")
 ZERO_DELAY = str(HERE / "zero_delay.sv")
+VIOLATIONS = str(HERE / "violations.sv")
+
+# The violation reports of violations.sv, exactly these and in this order
+# (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
+# match and the if with an else report nothing.
+VIOLATION_LINES = [
+    "violations.sv:9: warning: unique case violation: no item matches [top @ 2ns]",
+    "violations.sv:22: warning: unique if violation: more than one condition is true [top @ 5ns]",
+    "violations.sv:24: warning: priority if violation: no condition is true [top @ 5ns]",
+    "violations.sv:28: warning: priority case violation: no item matches [top @ 5ns]",
+    "violations.sv:32: warning: unique case violation: more than one item matches [top @ 5ns]",
+]
 
 # (arguments, exit code, text stdout must contain, text stderr must contain).
 # Expected stdout starting with "=" must match the whole output.
@@ -91,6 +103,13 @@ def main() -> int:
     except (IndexError, ValueError) as e:
         failures += 1
         print(f"FAIL: --stats=json: {e}\n{proc.stdout}", file=sys.stderr)
+
+    proc = subprocess.run([args.haremasim, VIOLATIONS], capture_output=True, text=True,
+                          check=False)
+    got = [line.split("/")[-1] for line in proc.stderr.splitlines() if " violation: " in line]
+    if proc.returncode != 0 or proc.stdout != "h=8\n" or got != VIOLATION_LINES:
+        failures += 1
+        print(f"FAIL: violation reports\n{proc.stdout}{proc.stderr}", file=sys.stderr)
 
     return 1 if failures else 0
 

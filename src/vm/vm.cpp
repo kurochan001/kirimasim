@@ -65,6 +65,20 @@ kernel::Edge kernelEdge(sir::Edge e) {
     return kernel::Edge::Any;
 }
 
+/// A time in the form of messages (SYSTEM_TASKS.md 10.1): a whole number in
+/// the unit of the global precision, then the unit, with no space: 15000ps.
+std::string messageTime(std::uint64_t ticks, int precision) {
+    static constexpr const char* kUnits[] = {"s", "ms", "us", "ns", "ps", "fs"};
+    int base = precision;
+    while (base % 3 != 0)
+        --base;
+    std::string text = std::to_string(ticks);
+    if (ticks != 0) text.append(static_cast<std::size_t>(precision - base), '0');
+    const int index = -base / 3;
+    text += index >= 0 && index < 6 ? kUnits[index] : "?";
+    return text;
+}
+
 /// Whether a 1-bit condition is true: a known 1 (x and z are false).
 bool isTrue(W4 c) { return (c.a & ~c.b & 1U) != 0; }
 
@@ -598,6 +612,24 @@ private:
                 const std::size_t n = s.dims.size();
                 storeBits(f, ops[0].id, e, v(n + 1), t(n + 1), v(n + 2), t(n + 2).width,
                           in.op == Op::NbaBits);
+                return true;
+            }
+            case Op::ReportDefer: {
+                // SYSTEM_TASKS.md 10.4; the kernel holds it until the
+                // Observed region (SCHEDULER_SPEC.md 15.3).
+                std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+                line += ":";
+                line += std::to_string(in.loc.line);
+                line += ": warning: ";
+                line += ops[0].text;
+                line += " violation: ";
+                line += ops[1].text;
+                line += " [";
+                line += d_.instances[p.instance].scopeName;
+                line += " @ ";
+                line += messageTime(sched_.time(), d_.timePrecision);
+                line += "]";
+                sched_.deferReport(f.kernelId, std::move(line));
                 return true;
             }
             case Op::Fload: set(f.vars[ops[0].id]); return true;

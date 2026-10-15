@@ -230,6 +230,10 @@ enum class Op : std::uint8_t {
     TriggerNb,    ///< trigger.nb <event slot>[, <delay>]
     Disable,      ///< disable <process or subroutine>
     DisableFork,  ///< disable.fork
+    /// report.defer "<construct>", "<content>": puts a unique, unique0 or
+    /// priority violation on the running process's queue of pending
+    /// reports (SCHEDULER_SPEC.md 15; the texts are SYSTEM_TASKS.md 10.4).
+    ReportDefer,
     // Calls.
     Call,     ///< [%r =] call @N, <argument>...
     Syscall,  ///< [%r =] syscall "$name", <operand>...

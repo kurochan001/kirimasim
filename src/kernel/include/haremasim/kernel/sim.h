@@ -187,6 +187,13 @@ public:
     /// Whether e was triggered in the current time slot (15.5.3).
     [[nodiscard]] bool triggered(EventId e) const;
 
+    /// Puts a report (a whole stderr line) on the pending queue of the
+    /// running process p (SCHEDULER_SPEC.md 15.3). The queue is dropped
+    /// when the process resumes from an event control or wait (a flush
+    /// point), and confirmed when the time slot reaches the Observed
+    /// region.
+    void deferReport(ProcessId p, std::string line);
+
     /// Runs the simulation until it ends, and returns the reason.
     EndReason run();
     /// After run(): runs the final procedures once each, in the order
@@ -236,6 +243,8 @@ private:
         std::uint32_t gen = 0;               ///< Number of the current wait.
         std::uint32_t monitor = UINT32_MAX;  ///< Monitor record of the current wait.
         bool done = false;
+        bool flushOnResume = false;        ///< Woken by an event: a flush point.
+        std::vector<std::string> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
     };
     struct Subscription {
         ProcessId process = 0;
@@ -306,6 +315,8 @@ private:
     std::uint64_t movesThisSlot_ = 0;
     std::string error_;
     std::string endNote_;
+    std::vector<ProcessId> pendingOrder_;  ///< Processes in the order they got a pending report.
+    std::uint32_t pendingProcesses_ = 0;   ///< Processes with a non-empty queue.
 
     bool begun_ = false;
     CounterId cTimeSlots_ = 0, cTimeAdvances_ = 0, cActiveLoops_ = 0, cReactiveLoops_ = 0;
@@ -330,6 +341,9 @@ private:
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
     void freeMonitor(ProcessId p);
     void ensureSlotTables();
+    void flushReports(ProcessId p);
+    /// The Observed region: confirms every pending report (15.3).
+    void confirmReports();
 };
 
 /// The design's output on stdout (CLI.md 3). It remembers whether the
@@ -337,6 +351,8 @@ private:
 class Output {
 public:
     void write(std::string_view text);
+    /// One line on stderr, after flushing stdout (CLI.md 3).
+    void message(std::string_view line);
     /// Flushes stdout, so that it comes before what follows on stderr.
     void flush();
     /// Whether nothing was written, or the last thing written ended a line.

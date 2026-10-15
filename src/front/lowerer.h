@@ -71,6 +71,11 @@ public:
     void lowerStatement(const ast::Statement& s);
     void lowerIf(const ast::ConditionalStatement& s);
     void lowerFork(const ast::BlockStatement& b);
+    void lowerUniqueIf(const ast::ConditionalStatement& s);
+    /// The violation checks of unique, unique0 and priority on the 1-bit
+    /// two-state match of each item or condition (SCHEDULER_SPEC.md 15.1).
+    void reportViolations(const std::vector<Val>& matches, ast::UniquePriorityCheck check,
+                          bool hasElse, bool isCase, slang::SourceLocation sl);
     void lowerCase(const ast::CaseStatement& s);
     void lowerTiming(const ast::TimingControl& t);
     void lowerForeach(const std::vector<const ast::ForeachLoopStatement::LoopDim*>& dims,
