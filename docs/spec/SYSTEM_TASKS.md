@@ -9,7 +9,7 @@
 - 「本書の決まり」と書いた項目は、規格が処理系に任せているところを、本書で決めたもの。
 - 「参考」として、Icarus Verilog 13.0 と Verilator 5.052（macOS arm64、2026-10-15）で走らせた結果を添えたところがある。参考は根拠ではない。
 
-実行の制御（`$finish`、`$stop`、`$exit`、`$fatal`）の意味と終了コードは SCHEDULER_SPEC.md の 16 節で定めた。この文書は、それらが出すメッセージの形だけを扱う（10 節）。乱数（`$random`、`$urandom`、`$dist_*`）は RANDOMIZE_SPEC.md、アサーションの関数（`$sampled`、`$past` など）と制御（`$assertoff` など）は ASSERTION_COVERAGE_SPEC.md、波形（`$dump*`）は P1 で書く波形の文書で扱う。
+実行の制御（`$finish`、`$stop`、`$exit`、`$fatal`）の意味と終了コードは SCHEDULER_SPEC.md の 16 節で定めた。この文書は、それらが出すメッセージの形だけを扱う（10 節）。乱数のシステム関数（`$random`、`$urandom`、`$urandom_range`、`$dist_*`）は P1 で本書に足す（設計仕様書で P1 の範囲。2026-10-15 に承認）。制約付き乱数は RANDOMIZE_SPEC.md、アサーションの関数（`$sampled`、`$past` など）と制御（`$assertoff` など）は ASSERTION_COVERAGE_SPEC.md、波形（`$dump*`）は P1 で書く波形の文書で扱う。
 
 ## 1. 対象と対応の時期
 
