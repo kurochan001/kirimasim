@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "haremasim/sir/timescale.h"
 #include "haremasim/sir/types.h"
 
 namespace haremasim::sir {
@@ -253,6 +254,7 @@ std::string constantText(const Constant& c) {
 
 std::string toText(const Design& d) {
     std::string out = "; sir format 0\n";
+    out += "precision " + timeExponentText(d.timePrecision) + "\n";
     for (std::size_t i = 0; i < d.sources.size(); ++i)
         out += "source " + std::to_string(i) + " " + quoted(d.sources[i]) + "\n";
     for (std::size_t i = 0; i < d.instances.size(); ++i) {

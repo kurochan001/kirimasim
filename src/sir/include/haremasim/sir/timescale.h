@@ -47,4 +47,15 @@ std::optional<std::uint64_t> delayTicks(std::uint64_t value, TimeScale scale, in
 /// would.
 std::optional<std::uint64_t> delayTicksReal(double value, TimeScale scale, int global);
 
+/// Reads a time such as "10us" or "1.5ns" (CLI.md 2.5: a decimal number
+/// and a unit, with no space) and converts it to ticks of `global`,
+/// rounding half away from zero. Nothing for any other text, or if the
+/// result does not fit in 64 bits.
+std::optional<std::uint64_t> parseTimeTicks(std::string_view text, int global);
+
+/// The text of a time of `ticks` steps of `global` (CLI.md 4): a whole
+/// number and the largest unit that shows it exactly, such as "120 ns" or
+/// "1500 ps". Time 0 is shown in the unit of `global`.
+std::string timeText(std::uint64_t ticks, int global);
+
 }  // namespace haremasim::sir

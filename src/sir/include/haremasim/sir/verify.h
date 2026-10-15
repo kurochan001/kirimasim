@@ -6,7 +6,7 @@
 // restrictions), 7 (automatic variables; mostly kept by the form of SIR,
 // since NBAs and event controls take only slots), 8 (unused high bits of
 // constants), 9 (source locations), 10 (type, frame, subroutine and process
-// tables) and 11 (one index per array dimension).
+// tables, and the time precision) and 11 (one index per array dimension).
 
 #pragma once
 

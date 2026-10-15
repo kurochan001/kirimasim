@@ -414,6 +414,10 @@ struct Subroutine {
 
 /// The SIR of one design.
 struct Design {
+    /// The global time precision, as a power of ten of a second (-9 is
+    /// 1 ns): the smallest precision of all design elements. Delays and
+    /// the simulation time count steps of it (SCHEDULER_SPEC.md 1).
+    int timePrecision = -9;
     std::vector<std::string> sources;  ///< File number -> path.
     std::vector<Instance> instances;
     std::vector<Slot> slots;

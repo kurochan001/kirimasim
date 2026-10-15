@@ -475,6 +475,16 @@ TEST(Scheduler, TimeLimit) {
     EXPECT_EQ(sim.log().find("L1"), std::string::npos);
 }
 
+TEST(Scheduler, TimeLimitRunsEventsAtTheLimit) {
+    // CLI.md 2.5: events at the limit itself still run.
+    KernelSim sim({{{delay(5), log(0), delay(1), log(1)}}});
+    sim.context().scheduler().setLimits({5, 0});
+    EXPECT_EQ(sim.run(), EndReason::TimeLimit);
+    EXPECT_EQ(sim.context().scheduler().time(), 5U);
+    EXPECT_NE(sim.log().find("L0"), std::string::npos);
+    EXPECT_EQ(sim.log().find("L1"), std::string::npos);
+}
+
 TEST(Scheduler, ZeroDelayLimit) {
     const std::vector<Step> spin(50, delay(0));
     KernelSim sim({{spin}});

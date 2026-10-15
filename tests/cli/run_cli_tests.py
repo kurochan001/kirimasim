@@ -25,6 +25,12 @@ CASES = [
     (["--max-time-ok", DESIGN], 0, "hello\n", ""),
     (["--timescale=1ns/1ps", DESIGN], 0, "hello\n", ""),
     (["--no-such-option", DESIGN], 2, "", "unknown option '--no-such-option'"),
+    (["--max-time=10us", DESIGN], 0, "hello\n", ""),
+    (["--max-time=0.5ns", DESIGN], 0, "hello\n", ""),
+    (["--max-time=10", DESIGN], 2, "", "--max-time=10 needs a time such as 10us"),
+    (["--max-time=1 ns", DESIGN], 2, "", "needs a time"),
+    (["--max-time=100000000000s", DESIGN], 2, "", "too large for the time precision 1ns"),
+    (["--timescale=1ns/1ps", "--max-time=1.5ns", DESIGN], 0, "hello\n", ""),
 ]
 
 

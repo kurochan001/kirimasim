@@ -5,8 +5,8 @@
 //   haremasim --version | --help
 //
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
-// slang), --max-time-ok, --max-zero-delay, --max-steps, --max-scc-iter,
-// --dump-sir and --stats=json. Exit codes are those of CLI.md 5.
+// slang), --max-time, --max-time-ok, --max-zero-delay, --max-steps,
+// --max-scc-iter, --dump-sir and --stats=json. Exit codes are those of CLI.md 5.
 
 #include <charconv>
 #include <cstdint>
@@ -23,6 +23,7 @@
 #include "haremasim/front/front.h"
 #include "haremasim/kernel/context.h"
 #include "haremasim/sir/text.h"
+#include "haremasim/sir/timescale.h"
 #include "haremasim/vm/vm.h"
 
 namespace {
@@ -36,8 +37,9 @@ void printUsage(std::FILE* out) {
                "       haremasim parse [options] <file>...\n"
                "       haremasim --version\n"
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
-               "         --timescale=<unit>/<precision>, --max-time-ok, --max-zero-delay=<n>,\n"
-               "         --max-steps=<n>, --max-scc-iter=<n>, --dump-sir, --stats=json\n",
+               "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
+               "         --max-zero-delay=<n>, --max-steps=<n>, --max-scc-iter=<n>, --dump-sir,\n"
+               "         --stats=json\n",
                out);
 }
 
@@ -58,6 +60,7 @@ struct Options {
     std::vector<std::string> original;   // the arguments as given, for the version line
     bool statsJson = false;
     bool dumpSir = false;
+    std::string maxTime;  // as given; converted once the time precision is known
     bool maxTimeOk = false;
     std::uint64_t maxZeroDelay = 0;  // 0: no limit (defaults are set in M5, CLI.md 6)
     std::uint64_t maxSteps = 0;
@@ -107,6 +110,15 @@ int parseArgs(int argc, char** argv, Options& o) {
         if (counted) continue;
         if (arg == "--stats=json") {
             o.statsJson = true;
+        } else if (arg.starts_with("--max-time=")) {
+            o.maxTime = arg.substr(std::string_view("--max-time=").size());
+            // The precision is not known yet; check the form with the
+            // coarsest one, which can only fail on the form.
+            if (!haremasim::sir::parseTimeTicks(o.maxTime, haremasim::sir::kMaxTimeExponent)) {
+                std::fprintf(stderr, "haremasim: error: %s needs a time such as 10us or 1.5ns\n",
+                             argv[i]);
+                return kExitInputError;
+            }
         } else if (arg == "--max-time-ok") {
             o.maxTimeOk = true;
         } else if (arg == "--dump-sir") {
@@ -182,7 +194,18 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
         return kExitOk;
     }
 
+    const int precision = compiled.design.timePrecision;
     haremasim::kernel::Limits limits;
+    if (!o.maxTime.empty()) {
+        const auto ticks = haremasim::sir::parseTimeTicks(o.maxTime, precision);
+        if (!ticks) {
+            std::fprintf(stderr,
+                         "haremasim: error: --max-time=%s is too large for the time precision %s\n",
+                         o.maxTime.c_str(), haremasim::sir::timeExponentText(precision).c_str());
+            return kExitInputError;
+        }
+        limits.maxTime = *ticks;
+    }
     limits.maxZeroDelay = o.maxZeroDelay;
     context.scheduler().setLimits(limits);
     const auto result = haremasim::vm::run(compiled.design, context, {o.maxSteps});
@@ -195,9 +218,9 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
                              reason == haremasim::kernel::EndReason::Stop) &&
                             context.scheduler().level() == 0;
         if (!silent) {
-            std::fprintf(stderr, "haremasim: info: %s at time %llu\n",
+            std::fprintf(stderr, "haremasim: info: %s at %s\n",
                          haremasim::kernel::endReasonName(reason),
-                         static_cast<unsigned long long>(context.scheduler().time()));
+                         haremasim::sir::timeText(context.scheduler().time(), precision).c_str());
         }
     }
     if (reason == haremasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;

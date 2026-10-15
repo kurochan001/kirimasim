@@ -5,6 +5,7 @@
 // $display and $write with a string literal, and $finish. Everything else is
 // reported as an unsupported construct (CLI.md 5), never silently dropped.
 
+#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -14,6 +15,7 @@
 #include <vector>
 
 #include "haremasim/front/front.h"
+#include "haremasim/sir/timescale.h"
 #include "haremasim/sir/types.h"
 #include "haremasim/sir/verify.h"
 #include "slang/ast/Compilation.h"
@@ -26,6 +28,7 @@
 #include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/driver/Driver.h"
+#include "slang/numeric/Time.h"
 #include "slang/text/SourceManager.h"
 
 namespace haremasim::front {
@@ -214,6 +217,37 @@ private:
     }
 };
 
+/// The exponent of a slang time value: 1ns is -9, 100ps is -10.
+int exponentOf(const slang::TimeScaleValue& v) {
+    const int magnitude = v.magnitude == slang::TimeScaleMagnitude::Hundred ? 2
+                          : v.magnitude == slang::TimeScaleMagnitude::Ten   ? 1
+                                                                            : 0;
+    return -3 * static_cast<int>(v.unit) + magnitude;
+}
+
+/// The global time precision: the smallest precision of all design
+/// elements (3.14.3). An element without a timescale of its own takes the
+/// default, which is --timescale if given and 1ns/1ns otherwise
+/// (SCHEDULER_SPEC.md 1). slang has already reported a design that mixes
+/// elements with and without one, unless --timescale filled the gaps.
+int globalPrecision(const ast::Compilation& compilation) {
+    const std::optional<slang::TimeScale> given = compilation.getDefaultTimeScale();
+    const int fallback = given ? exponentOf(given->precision) : sir::TimeScale{}.precision;
+    std::optional<int> result;
+    const auto take = [&](const std::optional<slang::TimeScale>& ts) {
+        const int e = ts ? exponentOf(ts->precision) : fallback;
+        result = result ? std::min(*result, e) : e;
+    };
+    for (const ast::Symbol* sym : compilation.getDefinitions())
+        if (sym->kind == ast::SymbolKind::Definition)
+            take(sym->as<ast::DefinitionSymbol>().timeScale);
+    for (const ast::PackageSymbol* pkg : compilation.getPackages())
+        if (pkg != &compilation.getStdPackage()) take(pkg->timeScale);
+    for (const ast::CompilationUnitSymbol* unit : compilation.getCompilationUnits())
+        if (unit->timeScale) take(unit->timeScale);
+    return result.value_or(fallback);
+}
+
 }  // namespace
 
 CompileResult compile(std::span<const std::string> args) {
@@ -253,6 +287,7 @@ CompileResult compile(std::span<const std::string> args) {
         return result;
     }
     result.design = lowerer.takeDesign();
+    result.design.timePrecision = globalPrecision(*compilation);
     for (const sir::VerifyError& e : sir::verify(result.design)) {
         result.verifyErrors +=
             "haremasim: internal error: SIR verifier: " + e.where + ": " + e.message + "\n";

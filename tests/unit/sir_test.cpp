@@ -81,6 +81,7 @@ TEST(Sir, CounterVerifies) {
 
 TEST(Sir, CounterText) {
     const std::string expected = R"(; sir format 0
+precision 1ns
 source 0 "counter.sv"
 instance 0 "top" def="counter" parent=-
 slot %s0 "top.clk" : i4<1> var inst=0 flags(observable)
@@ -219,6 +220,19 @@ TEST(Sir, DuplicateSlotName) {
     Design d = counter();
     d.slots[1].name = "top.clk";
     EXPECT_TRUE(mentions(verify(d), "not unique"));
+}
+
+TEST(Sir, TimePrecision) {
+    // The global time precision is printed as a unit and kept within
+    // 1fs..100s (SCHEDULER_SPEC.md 1).
+    Design d = counter();
+    d.timePrecision = -11;
+    EXPECT_TRUE(verify(d).empty());
+    EXPECT_NE(toText(d).find("\nprecision 10ps\n"), std::string::npos);
+    d.timePrecision = -16;
+    EXPECT_TRUE(mentions(verify(d), "time precision"));
+    d.timePrecision = 3;
+    EXPECT_TRUE(mentions(verify(d), "time precision"));
 }
 
 TEST(Sir, DomainFollowsTheType) {

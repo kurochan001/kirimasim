@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "haremasim/sir/text.h"
+#include "haremasim/sir/timescale.h"
 #include "haremasim/sir/types.h"
 
 namespace haremasim::sir {
@@ -136,6 +137,8 @@ public:
     explicit Verifier(const Design& d) : d_(d) {}
 
     std::vector<VerifyError> run() {
+        if (d_.timePrecision < kMinTimeExponent || d_.timePrecision > kMaxTimeExponent)
+            error("design", "time precision must be between 1fs and 100s");
         checkInstances();
         checkTypes();
         checkSlots();

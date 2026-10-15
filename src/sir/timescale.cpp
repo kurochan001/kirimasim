@@ -1,5 +1,6 @@
 #include "haremasim/sir/timescale.h"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cmath>
@@ -39,6 +40,46 @@ constexpr std::array<UnitName, 6> kUnits{{
     {"ps", -12},
     {"fs", -15},
 }};
+
+/// n * 10 + the digit c, or nothing if it does not fit in 64 bits.
+std::optional<std::uint64_t> appendDigit(std::uint64_t n, char c) {
+    const auto m = mulChecked(n, 10);
+    const auto d = static_cast<std::uint64_t>(c - '0');
+    if (!m || *m > UINT64_MAX - d) return std::nullopt;
+    return *m + d;
+}
+
+/// Rounds digits * 10^shift to a whole number, half away from zero.
+/// `digits` is a non-empty string of decimal digits. Nothing if the result
+/// does not fit in 64 bits.
+std::optional<std::uint64_t> roundScaled(std::string_view digits, int shift) {
+    std::uint64_t steps = 0;
+    if (shift >= 0) {
+        for (const char c : digits) {
+            const auto m = appendDigit(steps, c);
+            if (!m) return std::nullopt;
+            steps = *m;
+        }
+        const auto f = pow10(shift);
+        if (!f) return steps == 0 ? std::optional<std::uint64_t>(0) : std::nullopt;
+        return mulChecked(steps, *f);
+    }
+    // Keep the digits above the cut, and round on the first one below it
+    // (half away from zero: a 5 or more rounds up).
+    const auto drop = static_cast<std::size_t>(-shift);
+    const std::size_t keep = digits.size() > drop ? digits.size() - drop : 0;
+    for (std::size_t i = 0; i < keep; ++i) {
+        const auto m = appendDigit(steps, digits[i]);
+        if (!m) return std::nullopt;
+        steps = *m;
+    }
+    const char first = digits.size() >= drop ? digits[keep] : '0';
+    if (first >= '5') {
+        if (steps == UINT64_MAX) return std::nullopt;
+        ++steps;
+    }
+    return steps;
+}
 
 }  // namespace
 
@@ -103,39 +144,56 @@ std::optional<std::uint64_t> delayTicksReal(double value, TimeScale scale, int g
     if (std::from_chars(es.data(), es.data() + es.size(), exp10).ec != std::errc())
         return std::nullopt;
     // value = digits * 10^(exp10 - (digits.size() - 1)) units. Count it in
-    // precision steps: steps = digits * 10^shift.
+    // precision steps.
     const int shift = exp10 - static_cast<int>(digits.size() - 1) + (scale.unit - scale.precision);
-    std::uint64_t steps = 0;
-    if (shift >= 0) {
-        for (const char c : digits) {
-            const auto m = mulChecked(steps, 10);
-            if (!m) return std::nullopt;
-            steps = *m + static_cast<std::uint64_t>(c - '0');
-        }
-        const auto f = pow10(shift);
-        if (!f) return steps == 0 ? std::optional<std::uint64_t>(0) : std::nullopt;
-        const auto s = mulChecked(steps, *f);
-        if (!s) return std::nullopt;
-        steps = *s;
-    } else {
-        // Keep the digits above the cut, and round on the first one below
-        // it (half away from zero: a 5 or more rounds up).
-        const auto drop = static_cast<std::size_t>(-shift);
-        const std::size_t keep = digits.size() > drop ? digits.size() - drop : 0;
-        for (std::size_t i = 0; i < keep; ++i) {
-            const auto m = mulChecked(steps, 10);
-            if (!m) return std::nullopt;
-            steps = *m + static_cast<std::uint64_t>(digits[i] - '0');
-        }
-        const char first = digits.size() >= drop ? digits[keep] : '0';
-        if (first >= '5') {
-            if (steps == UINT64_MAX) return std::nullopt;
-            ++steps;
+    const std::optional<std::uint64_t> steps = roundScaled(digits, shift);
+    if (!steps) return std::nullopt;
+    const auto f = pow10(scale.precision - global);
+    if (!f) return *steps == 0 ? std::optional<std::uint64_t>(0) : std::nullopt;
+    return mulChecked(*steps, *f);
+}
+
+std::optional<std::uint64_t> parseTimeTicks(std::string_view text, int global) {
+    std::string digits;
+    int fraction = -1;  // digits after the point; -1 before the point
+    std::size_t i = 0;
+    for (; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c >= '0' && c <= '9') {
+            digits += c;
+            if (fraction >= 0) ++fraction;
+        } else if (c == '.' && fraction < 0 && !digits.empty()) {
+            fraction = 0;
+        } else {
+            break;
         }
     }
-    const auto f = pow10(scale.precision - global);
-    if (!f) return steps == 0 ? std::optional<std::uint64_t>(0) : std::nullopt;
-    return mulChecked(steps, *f);
+    if (digits.empty() || fraction == 0) return std::nullopt;
+    const std::string_view unit = text.substr(i);
+    for (const UnitName& u : kUnits) {
+        if (unit != u.name) continue;
+        return roundScaled(digits, u.exponent - global - std::max(fraction, 0));
+    }
+    return std::nullopt;
+}
+
+std::string timeText(std::uint64_t ticks, int global) {
+    // The largest unit not above `exponent`, and how many zeros it needs.
+    const auto inUnit = [](std::string number, int exponent) {
+        for (const UnitName& u : kUnits) {
+            if (exponent < u.exponent) continue;
+            if (number != "0") number.append(static_cast<std::size_t>(exponent - u.exponent), '0');
+            return number + " " + std::string(u.name);
+        }
+        return number + " ?";
+    };
+    if (ticks == 0) return inUnit("0", global);
+    int exponent = global;
+    while (ticks % 10 == 0) {
+        ticks /= 10;
+        ++exponent;
+    }
+    return inUnit(std::to_string(ticks), exponent);
 }
 
 }  // namespace haremasim::sir
