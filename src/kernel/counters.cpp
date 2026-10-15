@@ -33,8 +33,14 @@ CounterId Counters::add(std::string_view name) {
     for (std::size_t i = 0; i < entries_.size(); ++i) {
         if (entries_[i].name == name) return static_cast<CounterId>(i);
     }
-    entries_.push_back(Entry{std::string(name), 0});
+    entries_.push_back(Entry{std::string(name), 0, false, {}});
     return static_cast<CounterId>(entries_.size() - 1);
+}
+
+CounterId Counters::addText(std::string_view name) {
+    const CounterId id = add(name);
+    entries_[id].isText = true;
+    return id;
 }
 
 std::string Counters::toJson() const {
@@ -43,7 +49,10 @@ std::string Counters::toJson() const {
         if (i != 0) out += ", ";
         appendJsonString(out, entries_[i].name);
         out += ": ";
-        out += std::to_string(entries_[i].value);
+        if (entries_[i].isText)
+            appendJsonString(out, entries_[i].text);
+        else
+            out += std::to_string(entries_[i].value);
     }
     out += "}\n";
     return out;

@@ -40,6 +40,17 @@ SysTask resolveSysTask(std::string_view name) {
     return SysTask::Unknown;
 }
 
+class Interpreter;
+
+/// The frame of a process run by the VM (RUNTIME_ABI.md 4.3): where it
+/// goes on when the kernel resumes it.
+struct Frame {
+    Interpreter* vm = nullptr;
+    std::uint32_t process = 0;       ///< Index in the SIR process table.
+    kernel::ProcessId kernelId = 0;  ///< Id in the kernel.
+    sir::BlockId block = 0;          ///< Block to resume at.
+};
+
 class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx) : d_(d), sched_(ctx.scheduler()) {
@@ -59,41 +70,51 @@ public:
     }
 
     RunResult run() {
-        for (std::uint32_t p = 0; p < d_.processes.size(); ++p)
-            if (d_.processes[p].kind == sir::ProcessKind::Initial) sched_.scheduleActive(p);
-        std::uint32_t p = 0;
-        while (sched_.popActive(p)) {
-            if (!runProcess(p)) return {kernel::EndReason::Internal, error_};
+        frames_.resize(d_.processes.size());
+        for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
+            if (d_.processes[p].kind != sir::ProcessKind::Initial) continue;
+            Frame& f = frames_[p];
+            f.vm = this;
+            f.process = p;
+            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+            sched_.start(f.kernelId);
         }
-        return {sched_.reason(), {}};
+        const kernel::EndReason reason = sched_.run();
+        return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
+    }
+
+    static hs_status resume(hs_context* /*ctx*/, void* frame) {
+        auto* f = static_cast<Frame*>(frame);
+        return static_cast<hs_status>(f->vm->runProcess(*f));
     }
 
 private:
     const sir::Design& d_;
     kernel::Scheduler& sched_;
-    std::string error_;
     std::vector<std::vector<std::vector<SysTask>>> sysTasks_;
+    std::vector<Frame> frames_;
 
-    bool fail(const sir::Process& p, const std::string& what) {
-        error_ = "process \"" + p.name + "\": " + what;
-        return false;
+    kernel::Status fail(const sir::Process& p, const std::string& what) {
+        sched_.fail("process \"" + p.name + "\": " + what);
+        return kernel::Status::Error;
     }
 
-    /// Runs a process from its entry block until it returns or the
-    /// simulation ends. False on an instruction the VM cannot run yet.
-    bool runProcess(std::uint32_t pid) {
+    /// Runs a process from where it stopped until it waits, returns or the
+    /// simulation ends.
+    kernel::Status runProcess(Frame& f) {
+        const std::uint32_t pid = f.process;
         const sir::Process& p = d_.processes[pid];
-        sir::BlockId b = 0;
+        sir::BlockId b = f.block;
         for (;;) {
             const auto& instrs = p.blocks[b].instrs;
             for (std::size_t k = 0; k < instrs.size(); ++k) {
                 const sir::Instr& in = instrs[k];
                 switch (in.op) {
                     case sir::Op::Syscall:
-                        if (!syscall(p, in, sysTasks_[pid][b][k])) return false;
-                        if (sched_.ending()) return true;
+                        if (!syscall(p, in, sysTasks_[pid][b][k])) return kernel::Status::Error;
+                        if (sched_.ending()) return kernel::Status::Stop;
                         break;
-                    case sir::Op::Ret: return true;
+                    case sir::Op::Ret: return kernel::Status::Done;
                     case sir::Op::Br: b = in.operands[0].id; break;
                     default:
                         return fail(p, std::string("instruction ") + sir::opName(in.op) +
@@ -121,7 +142,8 @@ private:
             case SysTask::None:
             case SysTask::Unknown: break;
         }
-        return fail(p, "system task " + in.operands[0].text + " is not supported by the VM yet");
+        fail(p, "system task " + in.operands[0].text + " is not supported by the VM yet");
+        return false;
     }
 };
 

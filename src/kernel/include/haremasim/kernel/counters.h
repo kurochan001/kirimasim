@@ -29,6 +29,10 @@ public:
     /// Adds a counter with the given name and returns its id. If a counter
     /// with the same name already exists, returns the existing id.
     CounterId add(std::string_view name);
+    /// Adds an entry that holds text instead of a number (only
+    /// sim.end_reason; PERFORMANCE.md 3.1).
+    CounterId addText(std::string_view name);
+    void setText(CounterId id, std::string_view text) { entries_[id].text = text; }
 
     void increment(CounterId id, std::uint64_t n = 1) { entries_[id].value += n; }
     void set(CounterId id, std::uint64_t value) { entries_[id].value = value; }
@@ -37,13 +41,15 @@ public:
     [[nodiscard]] std::size_t size() const { return entries_.size(); }
 
     /// Returns the counters as a single JSON object, in insertion order,
-    /// followed by a newline. Example: {"front.files": 1, "front.errors": 0}
+    /// followed by a newline. Example: {"front.files": 1, "sim.end_reason": "finish"}
     [[nodiscard]] std::string toJson() const;
 
 private:
     struct Entry {
         std::string name;
         std::uint64_t value = 0;
+        bool isText = false;
+        std::string text;
     };
     std::vector<Entry> entries_;
 };
