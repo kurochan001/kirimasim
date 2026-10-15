@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "haremasim/kernel/bits.h"
@@ -433,6 +434,15 @@ private:
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 const sir::Instr& in = instrs[k];
                 if (++steps > options_.maxSteps && options_.maxSteps != 0) {
+                    const std::string n = std::to_string(options_.maxSteps);
+                    std::string note = "process \"";
+                    note += p.name;
+                    note += "\" ran ";
+                    note += n;
+                    note += " instructions without waiting (--max-steps=";
+                    note += n;
+                    note += ")";
+                    sched_.setEndNote(std::move(note));
                     sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
                     return kernel::Status::Stop;
                 }

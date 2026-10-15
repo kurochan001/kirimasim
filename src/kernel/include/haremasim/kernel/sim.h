@@ -202,6 +202,12 @@ public:
     void requestEnd(EndReason r, int level);
     /// Ends the simulation with an internal error.
     void fail(std::string message);
+    /// Which zero-time limit stopped the run, for the line the driver
+    /// prints before the end-reason line (CLI.md 2.6). Empty otherwise.
+    void setEndNote(std::string note) {
+        if (endNote_.empty()) endNote_ = std::move(note);
+    }
+    [[nodiscard]] const std::string& endNote() const { return endNote_; }
 
     [[nodiscard]] bool ending() const { return ending_; }
     [[nodiscard]] EndReason reason() const { return ending_ ? reason_ : EndReason::Quiescent; }
@@ -299,6 +305,7 @@ private:
     std::uint64_t time_ = 0;
     std::uint64_t movesThisSlot_ = 0;
     std::string error_;
+    std::string endNote_;
 
     bool begun_ = false;
     CounterId cTimeSlots_ = 0, cTimeAdvances_ = 0, cActiveLoops_ = 0, cReactiveLoops_ = 0;

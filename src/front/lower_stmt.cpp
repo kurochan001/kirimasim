@@ -235,10 +235,20 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             endLoop(loop);
             return;
         }
-        case ast::StatementKind::ForeverLoop:
-            // Needs the default zero-time limits first (CLI.md 6), or a
-            // forever loop that never waits runs without end.
-            unsupported(sl, "forever loop");
+        case ast::StatementKind::ForeverLoop: {
+            // A loop that never waits is stopped by the zero-time limits
+            // (CLI.md 2.6).
+            const sir::BlockId body = newBlock();
+            jump(body, sl);
+            setBlock(body);
+            const std::size_t loop = b_.loops.size();
+            b_.loops.push_back({});
+            b_.loops[loop].continueTo = body;
+            lowerStatement(s.as<ast::ForeverLoopStatement>().body);
+            jump(body, sl);
+            endLoop(loop);
+            return;
+        }
         case ast::StatementKind::DisableFork: emitVoid(Op::DisableFork, {}, sl); return;
         case ast::StatementKind::WaitFork: {
             const sir::BlockId cont = newBlock();

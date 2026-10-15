@@ -62,8 +62,8 @@ struct Options {
     bool dumpSir = false;
     std::string maxTime;  // as given; converted once the time precision is known
     bool maxTimeOk = false;
-    std::uint64_t maxZeroDelay = 0;  // 0: no limit (defaults are set in M5, CLI.md 6)
-    std::uint64_t maxSteps = 0;
+    std::uint64_t maxZeroDelay = 1000000;  // the defaults of CLI.md 2.6; 0: no limit
+    std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
 };
 
@@ -234,6 +234,9 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
     if (reason == haremasim::kernel::EndReason::Internal) {
         std::fprintf(stderr, "haremasim: internal error: %s\n", result.error.c_str());
     } else {
+        if (!context.scheduler().endNote().empty())
+            std::fprintf(stderr, "haremasim: error: time did not advance: %s\n",
+                         context.scheduler().endNote().c_str());
         const bool silent = (reason == haremasim::kernel::EndReason::Finish ||
                              reason == haremasim::kernel::EndReason::Stop) &&
                             context.scheduler().level() == 0;

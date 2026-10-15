@@ -15,6 +15,8 @@ HERE = Path(__file__).resolve().parent
 DESIGN = str(HERE / "display_finish.sv")
 DELAYS = str(HERE / "delays.sv")
 FINAL = str(HERE / "final.sv")
+SPIN = str(HERE / "spin.sv")
+ZERO_DELAY = str(HERE / "zero_delay.sv")
 
 # (arguments, exit code, text stdout must contain, text stderr must contain).
 # Expected stdout starting with "=" must match the whole output.
@@ -40,6 +42,15 @@ CASES = [
     (["--max-time=1500ps", DELAYS], 4, "a\n", "haremasim: info: time_limit at 1500 ps"),
     (["--max-time=1499ps", DELAYS], 4, "", "haremasim: info: time_limit at 1499 ps"),
     (["--max-time=2ns", "--max-time-ok", DELAYS], 0, "a\n", "time_limit at 2 ns"),
+    # The zero-time limits stop the run with code 5 and say which one; final
+    # procedures still run.
+    (["--max-steps=1000", SPIN], 5, "=final ran\n",
+     'haremasim: error: time did not advance: process "top.initial0" ran 1000 instructions'
+     " without waiting (--max-steps=1000)\nharemasim: info: zero_time_limit at 0 ns"),
+    (["--max-zero-delay=10", ZERO_DELAY], 5, "=final ran\n",
+     "haremasim: error: time did not advance: 10 moves into the Active region in one time"
+     " slot (--max-zero-delay=10)\nharemasim: info: zero_time_limit at 0 ns"),
+    ([ZERO_DELAY], 5, "=final ran\n", "(--max-zero-delay=1000000)"),
     ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "haremasim: info: quiescent at 1 ns"),
     (["--max-time=0ns", FINAL], 4, "=final 1 n=0\nfinal 2\n", "time_limit at 0 ns"),
 ]

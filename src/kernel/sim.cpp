@@ -352,8 +352,17 @@ bool Scheduler::moveFirst(Region first, Region last, Region to) {
         dst.insert(dst.end(), q.begin(), q.end());
         q.clear();
         ++movesThisSlot_;
-        if (limits_.maxZeroDelay != 0 && movesThisSlot_ > limits_.maxZeroDelay)
+        if (limits_.maxZeroDelay != 0 && movesThisSlot_ > limits_.maxZeroDelay) {
+            const std::string n = std::to_string(limits_.maxZeroDelay);
+            std::string note = n;
+            note += " moves into the ";
+            note += to == Region::Active ? "Active" : "Reactive";
+            note += " region in one time slot (--max-zero-delay=";
+            note += n;
+            note += ")";
+            setEndNote(std::move(note));
             requestEnd(EndReason::ZeroTimeLimit, 1);
+        }
         return true;
     }
     return false;
