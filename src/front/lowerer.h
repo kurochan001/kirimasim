@@ -189,6 +189,7 @@ private:
     std::size_t numErrors_ = 0;
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
     std::map<const ast::Symbol*, sir::SlotId> slots_;
+    std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
     sir::InstanceId instance_ = 0;
     const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
     Body b_;

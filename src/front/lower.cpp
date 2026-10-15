@@ -260,7 +260,11 @@ sir::SlotId Lowerer::slotOf(const ast::VariableSymbol& v, slang::SourceLocation 
     }
     if (t->isUnpackedArray()) unsupported(sl, "variable of type '" + v.getType().toString() + "'");
     sir::Slot s;
+    // Static variables of unnamed blocks share a hierarchical path; the
+    // second and later get "~2", "~3", ... (names are for diagnostics and
+    // the text form, and must be unique; SIR_SPEC.md 3.1).
     s.name = v.getHierarchicalPath();
+    if (const std::uint32_t n = ++slotNames_[s.name]; n > 1) s.name += "~" + std::to_string(n);
     s.type = typeOf(*t, sl);
     s.dims = std::move(dims);
     s.instance = instance_;
