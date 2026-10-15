@@ -1,5 +1,7 @@
 #include "haremasim/sir/types.h"
 
+#include <cstdint>
+
 #include "haremasim/sir/design.h"
 
 namespace haremasim::sir {
@@ -33,11 +35,41 @@ std::string toString(Type t) {
     return "?";
 }
 
+Domain domainOf(Type t) {
+    switch (t.kind) {
+        case TypeKind::U2:
+        case TypeKind::S2: return Domain::Two;
+        case TypeKind::U4:
+        case TypeKind::S4: return Domain::Four;
+        case TypeKind::Real:
+        case TypeKind::ShortReal: return Domain::Real;
+        default: return Domain::Handle;
+    }
+}
+
+std::uint64_t elementCount(const Slot& s) {
+    std::uint64_t n = 1;
+    for (const ArrayDim& d : s.dims) {
+        const std::int64_t lo = d.left < d.right ? d.left : d.right;
+        const std::int64_t hi = d.left < d.right ? d.right : d.left;
+        n *= static_cast<std::uint64_t>(hi - lo) + 1;
+    }
+    return n;
+}
+
 const char* opName(Op op) {
     switch (op) {
         case Op::Load: return "load";
         case Op::Store: return "store";
         case Op::Nba: return "nba";
+        case Op::NbaDelay: return "nba.delay";
+        case Op::LoadElem: return "load.elem";
+        case Op::StoreElem: return "store.elem";
+        case Op::NbaElem: return "nba.elem";
+        case Op::StoreBits: return "store.bits";
+        case Op::NbaBits: return "nba.bits";
+        case Op::Fload: return "fload";
+        case Op::Fstore: return "fstore";
         case Op::Add: return "add";
         case Op::Sub: return "sub";
         case Op::Mul: return "mul";
@@ -58,6 +90,8 @@ const char* opName(Op op) {
         case Op::Lnot: return "lnot";
         case Op::Land: return "land";
         case Op::Lor: return "lor";
+        case Op::Limp: return "limp";
+        case Op::Leqv: return "leqv";
         case Op::Truth: return "truth";
         case Op::And: return "and";
         case Op::Or: return "or";
@@ -74,19 +108,73 @@ const char* opName(Op op) {
         case Op::Shr: return "shr";
         case Op::Ashr: return "ashr";
         case Op::Select: return "select";
+        case Op::Bitsel: return "bitsel";
+        case Op::Partsel: return "partsel";
+        case Op::IdxPartsel: return "idxpartsel";
+        case Op::Concat: return "concat";
+        case Op::Repl: return "repl";
         case Op::Zext: return "zext";
         case Op::Sext: return "sext";
         case Op::Trunc: return "trunc";
         case Op::To2: return "to2";
         case Op::To4: return "to4";
+        case Op::Itor: return "itor";
+        case Op::Rtoi: return "rtoi";
+        case Op::Rconv: return "rconv";
+        case Op::Itos: return "itos";
+        case Op::Stoi: return "stoi";
+        case Op::StrGet: return "str.get";
+        case Op::Trigger: return "trigger";
+        case Op::TriggerNb: return "trigger.nb";
+        case Op::Disable: return "disable";
+        case Op::DisableFork: return "disable.fork";
+        case Op::Call: return "call";
         case Op::Syscall: return "syscall";
+        case Op::Builtin: return "builtin";
         case Op::Br: return "br";
         case Op::BrIf: return "br.if";
         case Op::Ret: return "ret";
         case Op::WaitDelay: return "wait.delay";
         case Op::WaitEvent: return "wait.event";
+        case Op::WaitCond: return "wait.cond";
+        case Op::WaitNamed: return "wait.named";
+        case Op::Fork: return "fork";
+        case Op::WaitFork: return "wait.fork";
+        case Op::CallTask: return "call.task";
     }
     return "?";
+}
+
+bool isTerminator(Op op) {
+    switch (op) {
+        case Op::Br:
+        case Op::BrIf:
+        case Op::Ret:
+        case Op::WaitDelay:
+        case Op::WaitEvent:
+        case Op::WaitCond:
+        case Op::WaitNamed:
+        case Op::Fork:
+        case Op::WaitFork:
+        case Op::CallTask: return true;
+        default: return false;
+    }
+}
+
+bool isWait(const Instr& in) {
+    switch (in.op) {
+        case Op::WaitDelay:
+        case Op::WaitEvent:
+        case Op::WaitCond:
+        case Op::WaitNamed:
+        case Op::WaitFork:
+        case Op::CallTask: return true;
+        case Op::Fork:
+            // fork @P..., "<join kind>", bbN
+            return in.operands.size() >= 2 &&
+                   in.operands[in.operands.size() - 2].text != "join_none";
+        default: return false;
+    }
 }
 
 const char* kindName(ProcessKind k) {
@@ -118,6 +206,37 @@ const char* kindName(SlotKind k) {
         case SlotKind::Supply0: return "supply0";
         case SlotKind::Supply1: return "supply1";
         case SlotKind::Uwire: return "uwire";
+    }
+    return "?";
+}
+
+const char* kindName(SubroutineKind k) {
+    switch (k) {
+        case SubroutineKind::Function: return "function";
+        case SubroutineKind::Task: return "task";
+        case SubroutineKind::Guard: return "guard";
+    }
+    return "?";
+}
+
+const char* kindName(TypeEntryKind k) {
+    switch (k) {
+        case TypeEntryKind::Enum: return "enum";
+        case TypeEntryKind::PackedStruct: return "struct.packed";
+        case TypeEntryKind::PackedUnion: return "union.packed";
+        case TypeEntryKind::UnpackedStruct: return "struct";
+        case TypeEntryKind::Array: return "array";
+    }
+    return "?";
+}
+
+const char* directionName(Direction d) {
+    switch (d) {
+        case Direction::Input: return "input";
+        case Direction::Output: return "output";
+        case Direction::Inout: return "inout";
+        case Direction::Ref: return "ref";
+        case Direction::ConstRef: return "const.ref";
     }
     return "?";
 }

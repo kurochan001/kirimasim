@@ -1,5 +1,8 @@
 #include "haremasim/sir/text.h"
 
+#include <array>
+#include <bit>
+#include <charconv>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -23,20 +26,40 @@ std::string quoted(const std::string& s) {
             case '\\': out += "\\\\"; break;
             case '\n': out += "\\n"; break;
             case '\t': out += "\\t"; break;
-            default: out += c; break;
+            default:
+                if (static_cast<unsigned char>(c) < 0x20 || c == 0x7f) {
+                    static constexpr char kHex[] = "0123456789abcdef";
+                    const auto u = static_cast<unsigned char>(c);
+                    out += "\\x";
+                    out += kHex[u >> 4];
+                    out += kHex[u & 15U];
+                } else {
+                    out += c;
+                }
+                break;
         }
     }
     out += '"';
     return out;
 }
 
-std::string slotRef(const Design& d, SlotId s, std::uint32_t lsb, std::uint32_t width) {
-    std::string out = "%";
-    out += s < d.slots.size() ? d.slots[s].name : "?slot" + std::to_string(s);
+std::string rangeText(std::uint32_t firstElem, std::uint32_t numElems, std::uint32_t lsb,
+                      std::uint32_t width) {
+    std::string out;
+    if (numElems == 1) {
+        out += "{" + std::to_string(firstElem) + "}";
+    } else if (numElems != 0) {
+        out +=
+            "{" + std::to_string(firstElem) + ".." + std::to_string(firstElem + numElems - 1) + "}";
+    }
     if (width != 0) {
         out += "[" + std::to_string(lsb + width - 1) + ":" + std::to_string(lsb) + "]";
     }
     return out;
+}
+
+std::string slotRef(const SlotRange& r) {
+    return "%s" + std::to_string(r.slot) + rangeText(r.firstElem, r.numElems, r.lsb, r.width);
 }
 
 std::string operandText(const Design& d, const Operand& o) {
@@ -50,12 +73,37 @@ std::string operandText(const Design& d, const Operand& o) {
             return "const ?" + std::to_string(o.id);
         case Operand::Kind::Slot: {
             std::string out = o.edge == Edge::Any ? "" : std::string(edgeName(o.edge)) + " ";
-            return out + slotRef(d, o.id, o.lsb, o.width);
+            return out + "%s" + std::to_string(o.id) +
+                   rangeText(o.firstElem, o.numElems, o.lsb, o.width);
         }
         case Operand::Kind::Block: return "bb" + std::to_string(o.id);
         case Operand::Kind::Text: return quoted(o.text);
+        case Operand::Kind::Frame: return "%f" + std::to_string(o.id);
+        case Operand::Kind::Subroutine:
+        case Operand::Kind::Process: return "@" + std::to_string(o.id);
     }
     return "?";
+}
+
+/// The operands of an instruction: block arguments go in parentheses after
+/// their block, and an iff guard of wait.event follows its event item.
+std::string operandsText(const Design& d, const Instr& in) {
+    std::string out;
+    const auto& ops = in.operands;
+    for (std::size_t k = 0; k < ops.size(); ++k) {
+        const Operand& o = ops[k];
+        if (in.op == Op::WaitEvent && o.kind == Operand::Kind::Subroutine) {
+            out += " iff " + operandText(d, o);
+            continue;
+        }
+        out += (k == 0 ? " " : ", ") + operandText(d, o);
+        if (o.kind != Operand::Kind::Block || o.count == 0) continue;
+        out += "(";
+        for (std::uint32_t a = 0; a < o.count && k + 1 < ops.size(); ++a)
+            out += (a == 0 ? "" : ", ") + operandText(d, ops[++k]);
+        out += ")";
+    }
+    return out;
 }
 
 std::string locText(const SourceLoc& loc) {
@@ -71,8 +119,7 @@ std::string slotFlags(std::uint32_t f) {
     } kNames[] = {{kObservable, "observable"},
                   {kForceTarget, "force"},
                   {kMultiDriver, "multi-driver"},
-                  {kNeedsStrength, "strength"},
-                  {kProvenNoX, "no-x"}};
+                  {kNeedsStrength, "strength"}};
     std::string out;
     for (const auto& n : kNames) {
         if ((f & n.bit) == 0) continue;
@@ -82,19 +129,104 @@ std::string slotFlags(std::uint32_t f) {
     return out.empty() ? "" : " flags(" + out + ")";
 }
 
-const char* domainName(Domain d) {
-    switch (d) {
-        case Domain::Two: return "two";
-        case Domain::Four: return "four";
-        case Domain::Real: return "real";
-        case Domain::Handle: return "handle";
+std::string ownerText(const Owner& o) {
+    switch (o.kind) {
+        case Owner::Kind::None: return "-";
+        case Owner::Kind::Process: return "process @" + std::to_string(o.id);
+        case Owner::Kind::Subroutine: return "subroutine @" + std::to_string(o.id);
     }
     return "?";
+}
+
+std::string typeRef(TypeId t) { return t == kNone ? "-" : "!" + std::to_string(t); }
+
+std::string dimsText(const std::vector<ArrayDim>& dims) {
+    std::string out;
+    for (const ArrayDim& dim : dims)
+        out += " [" + std::to_string(dim.left) + ":" + std::to_string(dim.right) + "]";
+    return out;
+}
+
+std::string frameText(const std::vector<FrameVar>& frame) {
+    std::string out;
+    for (std::size_t i = 0; i < frame.size(); ++i) {
+        const FrameVar& f = frame[i];
+        out += "  frame %f" + std::to_string(i) + " " + quoted(f.name) + " : " + toString(f.type);
+        if (f.declType != kNone) out += " type=" + typeRef(f.declType);
+        out += "\n";
+    }
+    return out;
+}
+
+std::string blocksText(const Design& d, const std::vector<BasicBlock>& blocks) {
+    std::string out;
+    for (std::size_t b = 0; b < blocks.size(); ++b) {
+        out += "bb" + std::to_string(b);
+        const auto& params = blocks[b].params;
+        if (!params.empty()) {
+            out += "(";
+            for (std::size_t i = 0; i < params.size(); ++i) {
+                out += (i == 0 ? "%t" : ", %t") + std::to_string(params[i].temp) + ": " +
+                       toString(params[i].type);
+            }
+            out += ")";
+        }
+        out += ":\n";
+        for (const Instr& in : blocks[b].instrs) {
+            std::string line = "  ";
+            if (in.result != kNone) line += "%t" + std::to_string(in.result) + " = ";
+            line += opName(in.op);
+            if (in.type.kind != TypeKind::Void) line += " " + toString(in.type);
+            out += line + operandsText(d, in) + locText(in.loc) + "\n";
+        }
+    }
+    return out;
+}
+
+std::string typeEntryText(const Design& d, const TypeEntry& t) {
+    std::string out = std::string(kindName(t.kind)) + " " + quoted(t.name);
+    if (t.value.kind != TypeKind::Void) out += " : " + toString(t.value);
+    if (t.kind == TypeEntryKind::Array) out += " elem=" + typeRef(t.element) + dimsText(t.dims);
+    if (t.kind == TypeEntryKind::Enum) {
+        out += " {";
+        for (std::size_t i = 0; i < t.items.size(); ++i) {
+            const EnumItem& item = t.items[i];
+            out += (i == 0 ? " " : ", ") + quoted(item.name) + " = " +
+                   (item.value < d.constants.size() ? constantText(d.constants[item.value]) : "?");
+        }
+        out += " }";
+    } else if (!t.fields.empty()) {
+        const bool packed = t.kind != TypeEntryKind::UnpackedStruct;
+        out += " {";
+        for (std::size_t i = 0; i < t.fields.size(); ++i) {
+            const Field& f = t.fields[i];
+            out += (i == 0 ? " " : ", ") + quoted(f.name);
+            if (packed)
+                out +=
+                    " [" + std::to_string(f.lsb + f.width - 1) + ":" + std::to_string(f.lsb) + "]";
+            if (f.type != kNone) out += " " + typeRef(f.type);
+        }
+        out += " }";
+    }
+    return out;
 }
 
 }  // namespace
 
 std::string constantText(const Constant& c) {
+    if (c.type.kind == TypeKind::String) return quoted(c.bytes);
+    if (c.type.kind == TypeKind::Real || c.type.kind == TypeKind::ShortReal) {
+        const std::uint64_t bits = c.aWords.empty() ? 0 : c.aWords[0];
+        std::array<char, 64> buf{};
+        std::to_chars_result r{};
+        if (c.type.kind == TypeKind::Real) {
+            r = std::to_chars(buf.data(), buf.data() + buf.size(), std::bit_cast<double>(bits));
+        } else {
+            r = std::to_chars(buf.data(), buf.data() + buf.size(),
+                              std::bit_cast<float>(static_cast<std::uint32_t>(bits)));
+        }
+        return std::string(buf.data(), r.ptr);
+    }
     if (!isIntegral(c.type)) return "?";
     const std::uint32_t w = c.type.width;
     bool hasXz = false;
@@ -125,46 +257,60 @@ std::string toText(const Design& d) {
         out += "source " + std::to_string(i) + " " + quoted(d.sources[i]) + "\n";
     for (std::size_t i = 0; i < d.instances.size(); ++i) {
         const Instance& inst = d.instances[i];
-        out += "instance " + std::to_string(i) + " " + inst.scopeName + " def=" + inst.definition +
+        out += "instance " + std::to_string(i) + " " + quoted(inst.scopeName) +
+               " def=" + quoted(inst.definition) +
                " parent=" + (inst.parent == kNone ? "-" : std::to_string(inst.parent)) + "\n";
     }
-    for (const Slot& s : d.slots) {
-        out += "slot %" + s.name + " : " + toString(s.type) + " " + kindName(s.kind) +
-               " domain=" + domainName(s.domain) + " inst=" + std::to_string(s.instance);
-        for (const ArrayDim& dim : s.dims)
-            out += " [" + std::to_string(dim.left) + ":" + std::to_string(dim.right) + "]";
+    for (std::size_t i = 0; i < d.types.size(); ++i)
+        out += "type !" + std::to_string(i) + " " + typeEntryText(d, d.types[i]) + "\n";
+    for (std::size_t i = 0; i < d.slots.size(); ++i) {
+        const Slot& s = d.slots[i];
+        out += "slot %s" + std::to_string(i) + " " + quoted(s.name) + " : " + toString(s.type) +
+               dimsText(s.dims) + " " + kindName(s.kind) + " inst=" + std::to_string(s.instance);
+        if (s.subroutine != kNone) out += " sub=@" + std::to_string(s.subroutine);
+        if (s.declType != kNone) out += " type=" + typeRef(s.declType);
         out += slotFlags(s.flags) + "\n";
     }
     for (const NameEntry& n : d.names) {
         if (n.slot < d.slots.size() && n.path == d.slots[n.slot].name) continue;
-        out += "alias " + quoted(n.path) + " -> " + slotRef(d, n.slot, 0, 0) + "\n";
+        out += "alias " + quoted(n.path) + " -> %s" + std::to_string(n.slot) + "\n";
     }
-    for (const Process& p : d.processes) {
-        out += "\nprocess @" + p.name + " kind=" + kindName(p.kind) +
-               " inst=" + std::to_string(p.instance);
+    for (std::size_t i = 0; i < d.subroutines.size(); ++i) {
+        const Subroutine& sub = d.subroutines[i];
+        out += "\nsubroutine @" + std::to_string(i) + " " + quoted(sub.name) + " " +
+               kindName(sub.kind) + (sub.automatic ? " automatic" : " static") +
+               (sub.mayWait ? " may-wait" : "") + " inst=" + std::to_string(sub.instance) +
+               " ret=" + toString(sub.returnType);
+        if (sub.frameOf.kind != Owner::Kind::None) out += " frame-of=" + ownerText(sub.frameOf);
+        out += " {" + locText(sub.loc) + "\n";
+        for (const Param& prm : sub.params) {
+            out += "  param " + std::string(directionName(prm.dir)) + " " + quoted(prm.name) +
+                   " : " + toString(prm.type) + " -> " +
+                   (prm.slot != kNone ? "%s" + std::to_string(prm.slot)
+                                      : "%f" + std::to_string(prm.frameVar)) +
+                   "\n";
+        }
+        out += frameText(sub.frame) + blocksText(d, sub.blocks) + "}\n";
+    }
+    for (std::size_t i = 0; i < d.processes.size(); ++i) {
+        const Process& p = d.processes[i];
+        out += "\nprocess @" + std::to_string(i) + " " + quoted(p.name) +
+               " kind=" + kindName(p.kind) + " inst=" + std::to_string(p.instance);
+        if (p.parent.kind != Owner::Kind::None) out += " parent=" + ownerText(p.parent);
         if (!p.triggers.empty()) {
             out += " trigger=";
-            for (std::size_t i = 0; i < p.triggers.size(); ++i) {
-                const Trigger& t = p.triggers[i];
-                if (i != 0) out += ",";
-                out +=
-                    std::string(edgeName(t.edge)) + "(" + slotRef(d, t.slot, t.lsb, t.width) + ")";
+            for (std::size_t k = 0; k < p.triggers.size(); ++k) {
+                const Trigger& t = p.triggers[k];
+                if (k != 0) out += ",";
+                out += std::string(edgeName(t.edge)) + "(" + slotRef(t.range) + ")";
             }
         }
-        out += " {" + locText(p.loc) + "\n";
-        for (std::size_t b = 0; b < p.blocks.size(); ++b) {
-            out += "bb" + std::to_string(b) + ":\n";
-            for (const Instr& in : p.blocks[b].instrs) {
-                std::string line = "  ";
-                if (in.result != kNone) line += "%t" + std::to_string(in.result) + " = ";
-                line += opName(in.op);
-                if (in.type.kind != TypeKind::Void) line += " " + toString(in.type);
-                for (std::size_t k = 0; k < in.operands.size(); ++k)
-                    line += (k == 0 ? " " : ", ") + operandText(d, in.operands[k]);
-                out += line + locText(in.loc) + "\n";
-            }
+        if (!p.writes.empty()) {
+            out += " writes=";
+            for (std::size_t k = 0; k < p.writes.size(); ++k)
+                out += (k == 0 ? "" : ",") + slotRef(p.writes[k]);
         }
-        out += "}\n";
+        out += " {" + locText(p.loc) + "\n" + frameText(p.frame) + blocksText(d, p.blocks) + "}\n";
     }
     return out;
 }

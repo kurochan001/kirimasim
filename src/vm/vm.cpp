@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "haremasim/sir/types.h"
 
@@ -27,16 +28,42 @@ std::uint64_t constantValue(const sir::Design& d, const sir::Operand& o) {
     return c.aWords.empty() ? 0 : c.aWords[0];
 }
 
+/// System tasks the VM knows. Names are resolved to these when the design
+/// is loaded, so nothing compares names while the design runs (SIR_SPEC.md
+/// 1).
+enum class SysTask : std::uint8_t { None, Display, Write, Finish, Unknown };
+
+SysTask resolveSysTask(std::string_view name) {
+    if (name == "$display") return SysTask::Display;
+    if (name == "$write") return SysTask::Write;
+    if (name == "$finish") return SysTask::Finish;
+    return SysTask::Unknown;
+}
+
 class Interpreter {
 public:
-    Interpreter(const sir::Design& d, kernel::Context& ctx) : d_(d), sched_(ctx.scheduler()) {}
+    Interpreter(const sir::Design& d, kernel::Context& ctx) : d_(d), sched_(ctx.scheduler()) {
+        // sysTasks_[process][block][instruction]
+        sysTasks_.resize(d.processes.size());
+        for (std::size_t p = 0; p < d.processes.size(); ++p) {
+            const auto& blocks = d.processes[p].blocks;
+            sysTasks_[p].resize(blocks.size());
+            for (std::size_t b = 0; b < blocks.size(); ++b) {
+                for (const sir::Instr& in : blocks[b].instrs) {
+                    const bool sys = in.op == sir::Op::Syscall && !in.operands.empty();
+                    sysTasks_[p][b].push_back(sys ? resolveSysTask(in.operands[0].text)
+                                                  : SysTask::None);
+                }
+            }
+        }
+    }
 
     RunResult run() {
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p)
             if (d_.processes[p].kind == sir::ProcessKind::Initial) sched_.scheduleActive(p);
         std::uint32_t p = 0;
         while (sched_.popActive(p)) {
-            if (!runProcess(d_.processes[p])) return {kernel::EndReason::Internal, error_};
+            if (!runProcess(p)) return {kernel::EndReason::Internal, error_};
         }
         return {sched_.reason(), {}};
     }
@@ -45,21 +72,25 @@ private:
     const sir::Design& d_;
     kernel::Scheduler& sched_;
     std::string error_;
+    std::vector<std::vector<std::vector<SysTask>>> sysTasks_;
 
     bool fail(const sir::Process& p, const std::string& what) {
-        error_ = "process @" + p.name + ": " + what;
+        error_ = "process \"" + p.name + "\": " + what;
         return false;
     }
 
     /// Runs a process from its entry block until it returns or the
     /// simulation ends. False on an instruction the VM cannot run yet.
-    bool runProcess(const sir::Process& p) {
+    bool runProcess(std::uint32_t pid) {
+        const sir::Process& p = d_.processes[pid];
         sir::BlockId b = 0;
         for (;;) {
-            for (const sir::Instr& in : p.blocks[b].instrs) {
+            const auto& instrs = p.blocks[b].instrs;
+            for (std::size_t k = 0; k < instrs.size(); ++k) {
+                const sir::Instr& in = instrs[k];
                 switch (in.op) {
                     case sir::Op::Syscall:
-                        if (!syscall(p, in)) return false;
+                        if (!syscall(p, in, sysTasks_[pid][b][k])) return false;
                         if (sched_.ending()) return true;
                         break;
                     case sir::Op::Ret: return true;
@@ -73,20 +104,24 @@ private:
         }
     }
 
-    bool syscall(const sir::Process& p, const sir::Instr& in) {
-        const std::string& name = in.operands[0].text;
-        if (name == "$display" || name == "$write") {
-            std::string text = in.operands.size() > 1 ? formatLiteral(in.operands[1].text) : "";
-            if (name == "$display") text += '\n';
-            kernel::writeOut(text);
-            return true;
+    bool syscall(const sir::Process& p, const sir::Instr& in, SysTask task) {
+        switch (task) {
+            case SysTask::Display:
+            case SysTask::Write: {
+                std::string text = in.operands.size() > 1 ? formatLiteral(in.operands[1].text) : "";
+                if (task == SysTask::Display) text += '\n';
+                kernel::writeOut(text);
+                return true;
+            }
+            case SysTask::Finish: {
+                const auto level = static_cast<int>(constantValue(d_, in.operands[1]));
+                sched_.requestEnd(kernel::EndReason::Finish, level);
+                return true;
+            }
+            case SysTask::None:
+            case SysTask::Unknown: break;
         }
-        if (name == "$finish") {
-            const auto level = static_cast<int>(constantValue(d_, in.operands[1]));
-            sched_.requestEnd(kernel::EndReason::Finish, level);
-            return true;
-        }
-        return fail(p, "system task " + name + " is not supported by the VM yet");
+        return fail(p, "system task " + in.operands[0].text + " is not supported by the VM yet");
     }
 };
 
