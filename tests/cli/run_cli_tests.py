@@ -16,7 +16,7 @@ DESIGN = str(HERE / "display_finish.sv")
 
 # (arguments, exit code, text stdout must contain, text stderr must contain)
 CASES = [
-    ([DESIGN], 0, "hello\n", "haremasim: info: finish at time 0"),
+    ([DESIGN], 0, "hello\n", "haremasim: info: finish at 0 ns"),
     (["--max-steps=2", DESIGN], 5, "hello\n", "haremasim: info: zero_time_limit"),
     (["--max-steps=x", DESIGN], 2, "", "--max-steps=x needs a whole number"),
     (["--max-zero-delay=", DESIGN], 2, "", "needs a whole number"),

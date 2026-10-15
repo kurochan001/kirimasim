@@ -1,4 +1,5 @@
 ; sir format 0
+precision 1ns
 source 0 "display_finish.sv"
 instance 0 "top" def="top" parent=-
 
