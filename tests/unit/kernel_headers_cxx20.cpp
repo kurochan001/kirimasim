@@ -6,6 +6,7 @@
 #include "haremasim/kernel/context.h"
 #include "haremasim/kernel/counters.h"
 #include "haremasim/kernel/edge.h"
+#include "haremasim/kernel/format.h"
 #include "haremasim/kernel/sim.h"
 #include "haremasim/kernel/store.h"
 #include "haremasim/kernel/w4.h"
