@@ -5,6 +5,7 @@
 :type: simulation
 :lrm: 1800-2023 12.7.6 9.2.3
 :oracle: spec
+:spec_check: ai
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: @zero_delay_forever.expected

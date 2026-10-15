@@ -5,6 +5,7 @@
 :type: simulation
 :lrm: 1800-2023 4.6
 :oracle: spec
+:spec_check: ai
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: q=2

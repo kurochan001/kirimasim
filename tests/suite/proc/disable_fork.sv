@@ -5,6 +5,7 @@
 :type: simulation
 :lrm: 1800-2023 9.6.3 9.3.2
 :oracle: spec verilator@5.052
+:spec_check: ai
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: @disable_fork.expected

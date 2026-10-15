@@ -4,7 +4,8 @@
 :tags: scheduling always_comb events
 :type: simulation
 :lrm: 1800-2023 4.3 4.7 9.4.2 9.2.2.2
-:oracle: iverilog@13.0
+:oracle: spec iverilog@13.0
+:spec_check: ai
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: hits=1
@@ -15,7 +16,7 @@
 // (4.7 allows either). haremasim runs always_comb to completion before
 // waking other processes (SCHEDULER_SPEC.md 4.3), but the wakeup is already
 // scheduled when pulse goes to 1, so hits is 1. The clauses were checked
-// against the standard; adding spec to :oracle: waits for a human check.
+// against the standard by AI (:spec_check: ai); a human has not checked them yet.
 // Verilator 5.052 (--binary) prints hits=0: it does not show the
 // intermediate value to the waiting process.
 module top;

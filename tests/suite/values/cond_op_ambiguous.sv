@@ -5,6 +5,7 @@
 :type: simulation
 :lrm: 1800-2023 11.4.11
 :oracle: spec
+:spec_check: ai
 :fourstate: yes
 :nondeterministic: no
 :expected_stdout: @cond_op_ambiguous.expected

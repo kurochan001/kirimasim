@@ -5,6 +5,7 @@
 :type: simulation
 :lrm: 1800-2023 12.5.3 12.5.3.1 12.4.2 12.4.2.1
 :oracle: spec
+:spec_check: ai
 :fourstate: no
 :nondeterministic: no
 :expected_stdout: @unique_case_violation.expected
