@@ -1,8 +1,10 @@
-// Lowering of slang's elaborated design to SIR.
+// Lowering of slang's elaborated design to SIR: modules, variables and
+// procedures. Statements are in lower_stmt.cpp and expressions in
+// lower_expr.cpp (lowerer.h).
 //
-// This first version covers only the thin path of P1 (stage M3a): top
-// modules whose members are initial procedures made of begin-end blocks,
-// $display and $write with a string literal, and $finish. Everything else is
+// So far: top modules whose members are variables of integral types up to
+// 64 bits (and fixed-size unpacked arrays of them) and initial, always,
+// always_comb, always_latch and always_ff procedures. Everything else is
 // reported as an unsupported construct (CLI.md 5), never silently dropped.
 
 #include <algorithm>
@@ -18,204 +20,21 @@
 #include "haremasim/sir/timescale.h"
 #include "haremasim/sir/types.h"
 #include "haremasim/sir/verify.h"
-#include "slang/ast/Compilation.h"
-#include "slang/ast/Statement.h"
-#include "slang/ast/expressions/CallExpression.h"
-#include "slang/ast/expressions/LiteralExpressions.h"
+#include "lowerer.h"
+#include "slang/ast/expressions/MiscExpressions.h"
+#include "slang/ast/expressions/SelectExpressions.h"
 #include "slang/ast/statements/MiscStatements.h"
-#include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/CompilationUnitSymbols.h"
-#include "slang/ast/symbols/InstanceSymbols.h"
+#include "slang/ast/symbols/MemberSymbols.h"
+#include "slang/ast/symbols/ParameterSymbols.h"
+#include "slang/ast/types/AllTypes.h"
 #include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/driver/Driver.h"
 #include "slang/numeric/Time.h"
-#include "slang/text/SourceManager.h"
 
 namespace haremasim::front {
 
 namespace {
-
-namespace ast = slang::ast;
-
-class Lowerer {
-public:
-    explicit Lowerer(const slang::SourceManager& sm) : sm_(sm) {}
-
-    void lower(const ast::RootSymbol& root) {
-        for (const ast::InstanceSymbol* top : root.topInstances)
-            lowerTop(*top);
-    }
-
-    sir::Design takeDesign() { return std::move(design_); }
-    const std::string& diagnostics() const { return diags_; }
-    std::size_t numErrors() const { return numErrors_; }
-
-private:
-    const slang::SourceManager& sm_;
-    sir::Design design_;
-    std::string diags_;
-    std::size_t numErrors_ = 0;
-    std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
-
-    sir::Process* proc_ = nullptr;
-    sir::BlockId block_ = 0;
-
-    sir::SourceLoc loc(slang::SourceLocation sl) {
-        if (!sl.valid()) return {};
-        const std::uint32_t buf = sl.buffer().getId();
-        auto it = fileIds_.find(buf);
-        if (it == fileIds_.end()) {
-            const auto id = static_cast<std::uint32_t>(design_.sources.size());
-            design_.sources.emplace_back(sm_.getFileName(sl));
-            it = fileIds_.emplace(buf, id).first;
-        }
-        return {it->second, static_cast<std::uint32_t>(sm_.getLineNumber(sl)),
-                static_cast<std::uint32_t>(sm_.getColumnNumber(sl))};
-    }
-
-    void unsupported(slang::SourceLocation sl, std::string_view what) {
-        ++numErrors_;
-        if (sl.valid()) {
-            diags_ += std::string(sm_.getFileName(sl)) + ":" +
-                      std::to_string(sm_.getLineNumber(sl)) + ":" +
-                      std::to_string(sm_.getColumnNumber(sl)) + ": ";
-        } else {
-            diags_ += "haremasim: ";
-        }
-        diags_ += "error: unsupported: ";
-        diags_ += what;
-        diags_ += " (not implemented yet)\n";
-    }
-
-    void emit(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
-        proc_->blocks[block_].instrs.push_back(
-            {op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
-    }
-
-    sir::ConstId constant32(std::uint64_t v) {
-        const auto id = static_cast<sir::ConstId>(design_.constants.size());
-        design_.constants.push_back({sir::u2(32), {v & 0xffffffffU}, {}});
-        return id;
-    }
-
-    void lowerTop(const ast::InstanceSymbol& inst) {
-        const auto instId = static_cast<sir::InstanceId>(design_.instances.size());
-        design_.instances.push_back(
-            {std::string(inst.name), std::string(inst.getDefinition().name), sir::kNone});
-        std::uint32_t initials = 0;
-        for (const ast::Symbol& member : inst.body.members()) {
-            if (member.kind != ast::SymbolKind::ProceduralBlock) {
-                unsupported(member.location,
-                            "module member '" + std::string(ast::toString(member.kind)) + "'");
-                continue;
-            }
-            const auto& pb = member.as<ast::ProceduralBlockSymbol>();
-            if (pb.procedureKind != ast::ProceduralBlockKind::Initial) {
-                unsupported(pb.location,
-                            std::string(ast::toString(pb.procedureKind)) + " procedure");
-                continue;
-            }
-            sir::Process p;
-            p.name = std::string(inst.name) + ".initial" + std::to_string(initials++);
-            p.kind = sir::ProcessKind::Initial;
-            p.instance = instId;
-            p.loc = loc(pb.location);
-            p.blocks.resize(1);
-            design_.processes.push_back(std::move(p));
-            proc_ = &design_.processes.back();
-            block_ = 0;
-            lowerStatement(pb.getBody());
-            emit(sir::Op::Ret, {}, pb.location);
-            proc_ = nullptr;
-        }
-    }
-
-    void lowerStatement(const ast::Statement& s) {
-        switch (s.kind) {
-            case ast::StatementKind::Empty: return;
-            case ast::StatementKind::List:
-                for (const ast::Statement* item : s.as<ast::StatementList>().list)
-                    lowerStatement(*item);
-                return;
-            case ast::StatementKind::Block: {
-                const auto& b = s.as<ast::BlockStatement>();
-                if (b.blockKind != ast::StatementBlockKind::Sequential) {
-                    unsupported(s.sourceRange.start(), "fork-join block");
-                    return;
-                }
-                if (b.blockSymbol != nullptr && !b.blockSymbol->members().empty()) {
-                    unsupported(s.sourceRange.start(), "declarations in a block");
-                    return;
-                }
-                lowerStatement(b.body);
-                return;
-            }
-            case ast::StatementKind::ExpressionStatement:
-                lowerExpressionStatement(s.as<ast::ExpressionStatement>());
-                return;
-            default:
-                unsupported(s.sourceRange.start(),
-                            "statement '" + std::string(ast::toString(s.kind)) + "'");
-                return;
-        }
-    }
-
-    void lowerExpressionStatement(const ast::ExpressionStatement& es) {
-        const ast::Expression& e = es.expr;
-        const slang::SourceLocation sl = e.sourceRange.start();
-        if (e.kind != ast::ExpressionKind::Call || !e.as<ast::CallExpression>().isSystemCall()) {
-            unsupported(sl, "expression statement");
-            return;
-        }
-        const auto& call = e.as<ast::CallExpression>();
-        const std::string name(call.getSubroutineName());
-        const auto args = call.arguments();
-        if (name == "$display" || name == "$write") {
-            std::vector<sir::Operand> ops{sir::Operand::str(name)};
-            if (args.size() > 1) {
-                unsupported(sl, name + " with arguments after the format");
-                return;
-            }
-            if (args.size() == 1) {
-                if (args[0]->kind != ast::ExpressionKind::StringLiteral) {
-                    unsupported(sl, name + " of something other than a string literal");
-                    return;
-                }
-                const std::string text(args[0]->as<ast::StringLiteral>().getValue());
-                for (std::size_t i = 0; i < text.size(); ++i) {
-                    if (text[i] != '%') continue;
-                    if (i + 1 < text.size() && text[i + 1] == '%') {
-                        ++i;
-                        continue;
-                    }
-                    unsupported(sl, name + " format specifiers");
-                    return;
-                }
-                ops.push_back(sir::Operand::str(text));
-            }
-            emit(sir::Op::Syscall, std::move(ops), sl);
-            return;
-        }
-        if (name == "$finish") {
-            std::uint64_t n = 1;  // the default argument (20.2)
-            if (!args.empty()) {
-                const slang::ConstantValue* cv = args[0]->getConstant();
-                const std::optional<std::uint64_t> v = cv != nullptr && cv->isInteger()
-                                                           ? cv->integer().as<std::uint64_t>()
-                                                           : std::nullopt;
-                if (!v) {
-                    unsupported(sl, "$finish with a non-constant argument");
-                    return;
-                }
-                n = *v;
-            }
-            emit(sir::Op::Syscall, {sir::Operand::str(name), sir::Operand::constant(constant32(n))},
-                 sl);
-            return;
-        }
-        unsupported(sl, "system task " + name);
-    }
-};
 
 /// The exponent of a slang time value: 1ns is -9, 100ps is -10.
 int exponentOf(const slang::TimeScaleValue& v) {
@@ -248,7 +67,382 @@ int globalPrecision(const ast::Compilation& compilation) {
     return result.value_or(fallback);
 }
 
+/// The time unit and precision of the scope a procedure is in; 1ns/1ns
+/// when nothing sets them (SCHEDULER_SPEC.md 1).
+sir::TimeScale timeScaleOf(const ast::Scope& scope) {
+    const std::optional<slang::TimeScale> ts = scope.getTimeScale();
+    if (!ts) return {};
+    return {exponentOf(ts->base), exponentOf(ts->precision)};
+}
+
+/// Whether a statement may wait (a timing control, wait, fork with join or
+/// join_any). Unknown statements count as waiting.
+bool mayWait(const ast::Statement& s) {
+    switch (s.kind) {
+        case ast::StatementKind::Empty:
+        case ast::StatementKind::VariableDeclaration:
+        case ast::StatementKind::Break:
+        case ast::StatementKind::Continue:
+        case ast::StatementKind::DisableFork: return false;
+        case ast::StatementKind::ExpressionStatement: {
+            const ast::Expression& e = s.as<ast::ExpressionStatement>().expr;
+            if (e.kind == ast::ExpressionKind::Assignment)
+                return e.as<ast::AssignmentExpression>().timingControl != nullptr;
+            return e.kind == ast::ExpressionKind::Call &&
+                   !e.as<ast::CallExpression>().isSystemCall();
+        }
+        case ast::StatementKind::List:
+            for (const ast::Statement* item : s.as<ast::StatementList>().list)
+                if (mayWait(*item)) return true;
+            return false;
+        case ast::StatementKind::Block: {
+            const auto& b = s.as<ast::BlockStatement>();
+            if (b.blockKind != ast::StatementBlockKind::Sequential &&
+                b.blockKind != ast::StatementBlockKind::JoinNone)
+                return true;
+            return b.blockKind == ast::StatementBlockKind::Sequential && mayWait(b.body);
+        }
+        case ast::StatementKind::Conditional: {
+            const auto& c = s.as<ast::ConditionalStatement>();
+            return mayWait(c.ifTrue) || (c.ifFalse != nullptr && mayWait(*c.ifFalse));
+        }
+        case ast::StatementKind::Case: {
+            const auto& c = s.as<ast::CaseStatement>();
+            for (const auto& g : c.items)
+                if (mayWait(*g.stmt)) return true;
+            return c.defaultCase != nullptr && mayWait(*c.defaultCase);
+        }
+        case ast::StatementKind::ForLoop: return mayWait(s.as<ast::ForLoopStatement>().body);
+        case ast::StatementKind::ForeachLoop:
+            return mayWait(s.as<ast::ForeachLoopStatement>().body);
+        case ast::StatementKind::RepeatLoop: return mayWait(s.as<ast::RepeatLoopStatement>().body);
+        case ast::StatementKind::WhileLoop: return mayWait(s.as<ast::WhileLoopStatement>().body);
+        case ast::StatementKind::DoWhileLoop:
+            return mayWait(s.as<ast::DoWhileLoopStatement>().body);
+        case ast::StatementKind::ForeverLoop:
+            return mayWait(s.as<ast::ForeverLoopStatement>().body);
+        default: return true;
+    }
+}
+
+sir::Edge edgeOf(ast::EdgeKind k) {
+    switch (k) {
+        case ast::EdgeKind::PosEdge: return sir::Edge::Pos;
+        case ast::EdgeKind::NegEdge: return sir::Edge::Neg;
+        case ast::EdgeKind::BothEdges: return sir::Edge::Both;
+        case ast::EdgeKind::None: break;
+    }
+    return sir::Edge::Any;
+}
+
+/// Whether range `a` covers range `b` of the same slot (0 counts means
+/// "all"; `width` is the slot's element width).
+bool covers(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
+            std::uint32_t elems) {
+    if (a.slot != b.slot) return false;
+    const std::uint32_t af = a.firstElem;
+    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
+    const std::uint32_t bf = b.firstElem;
+    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
+    const std::uint32_t al = a.lsb;
+    const std::uint32_t aw = a.width == 0 ? width : a.width;
+    const std::uint32_t bl = b.lsb;
+    const std::uint32_t bw = b.width == 0 ? width : b.width;
+    return af <= bf && bf + bn <= af + an && al <= bl && bl + bw <= al + aw;
+}
+
 }  // namespace
+
+// --- Diagnostics and types ---------------------------------------------------
+
+void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
+    report(sl, what);
+    throw Unsupported{};
+}
+
+void Lowerer::report(slang::SourceLocation sl, std::string_view what) {
+    ++numErrors_;
+    if (sl.valid()) {
+        diags_ += std::string(sm_.getFileName(sl)) + ":" + std::to_string(sm_.getLineNumber(sl)) +
+                  ":" + std::to_string(sm_.getColumnNumber(sl)) + ": ";
+    } else {
+        diags_ += "haremasim: ";
+    }
+    diags_ += "error: unsupported: ";
+    diags_ += what;
+    diags_ += " (not implemented yet)\n";
+}
+
+sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
+    if (!sl.valid()) return {};
+    const std::uint32_t buf = sl.buffer().getId();
+    auto it = fileIds_.find(buf);
+    if (it == fileIds_.end()) {
+        const auto id = static_cast<std::uint32_t>(design_.sources.size());
+        design_.sources.emplace_back(sm_.getFileName(sl));
+        it = fileIds_.emplace(buf, id).first;
+    }
+    return {it->second, static_cast<std::uint32_t>(sm_.getLineNumber(sl)),
+            static_cast<std::uint32_t>(sm_.getColumnNumber(sl))};
+}
+
+sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
+    const ast::Type& t = type.getCanonicalType();
+    if (!t.isIntegral()) unsupported(sl, "type '" + t.toString() + "'");
+    const std::uint32_t w = t.getBitWidth();
+    if (w == 0 || w > 64) unsupported(sl, "values wider than 64 bits");
+    if (t.isFourState()) return t.isSigned() ? sir::s4(w) : sir::u4(w);
+    return t.isSigned() ? sir::s2(w) : sir::u2(w);
+}
+
+// --- Building blocks ---------------------------------------------------------
+
+sir::BlockId Lowerer::newBlock() {
+    proc().blocks.emplace_back();
+    return static_cast<sir::BlockId>(proc().blocks.size() - 1);
+}
+
+Val Lowerer::emit(sir::Op op, sir::Type t, std::vector<sir::Operand> ops,
+                  slang::SourceLocation sl) {
+    const sir::TempId r = newTemp();
+    proc().blocks[b_.block].instrs.push_back({op, t, r, std::move(ops), loc(sl)});
+    return {sir::Operand::temp(r), t};
+}
+
+void Lowerer::emitVoid(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
+    proc().blocks[b_.block].instrs.push_back(
+        {op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
+}
+
+void Lowerer::emitInto(sir::BlockId b, sir::Op op, std::vector<sir::Operand> ops,
+                       slang::SourceLocation sl) {
+    proc().blocks[b].instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
+}
+
+void Lowerer::terminate(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
+    emitVoid(op, std::move(ops), sl);
+    b_.dead = true;
+}
+
+Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
+    const std::uint64_t m = t.width >= 64 ? ~std::uint64_t{0} : (std::uint64_t{1} << t.width) - 1;
+    sir::Constant c;
+    c.type = t;
+    c.aWords = {a & m};
+    if (sir::isFourState(t)) c.bWords = {b & m};
+    const auto id = static_cast<sir::ConstId>(design_.constants.size());
+    design_.constants.push_back(std::move(c));
+    return {sir::Operand::constant(id), t};
+}
+
+// --- Variables ---------------------------------------------------------------
+
+sir::SlotId Lowerer::slotOf(const ast::VariableSymbol& v, slang::SourceLocation sl) {
+    if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
+    const ast::Type* t = &v.getType().getCanonicalType();
+    std::vector<sir::ArrayDim> dims;
+    while (t->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        const auto& a = t->as<ast::FixedSizeUnpackedArrayType>();
+        dims.push_back({a.range.left, a.range.right});
+        t = &a.elementType.getCanonicalType();
+    }
+    if (t->isUnpackedArray()) unsupported(sl, "variable of type '" + v.getType().toString() + "'");
+    sir::Slot s;
+    s.name = v.getHierarchicalPath();
+    s.type = typeOf(*t, sl);
+    s.dims = std::move(dims);
+    s.instance = instance_;
+    const auto id = static_cast<sir::SlotId>(design_.slots.size());
+    design_.names.push_back({s.name, id});
+    design_.slots.push_back(std::move(s));
+    slots_.emplace(&v, id);
+    return id;
+}
+
+sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl) {
+    if (auto it = b_.frameVars.find(&v); it != b_.frameVars.end()) return it->second;
+    const sir::Type t = typeOf(v.getType(), sl);
+    const auto id = static_cast<sir::FrameVarId>(proc().frame.size());
+    proc().frame.push_back({std::string(v.name), t, sir::kNone});
+    b_.frameVars.emplace(&v, id);
+    return id;
+}
+
+std::optional<sir::FrameVarId> Lowerer::findFrameVar(const ast::Symbol& s) const {
+    if (auto it = b_.frameVars.find(&s); it != b_.frameVars.end()) return it->second;
+    return std::nullopt;
+}
+
+sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
+    const auto id = static_cast<sir::FrameVarId>(proc().frame.size());
+    proc().frame.push_back({std::string(), t, sir::kNone});
+    return id;
+}
+
+void Lowerer::noteWrite(const sir::SlotRange& r) {
+    const sir::Slot& s = design_.slots[r.slot];
+    const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+    for (const sir::SlotRange& w : proc().writes)
+        if (covers(w, r, s.type.width, elems)) return;
+    proc().writes.push_back(r);
+}
+
+void Lowerer::noteRead(const sir::SlotRange& r) { b_.reads.push_back(r); }
+
+// --- Modules and procedures --------------------------------------------------
+
+void Lowerer::lower(const ast::RootSymbol& root) {
+    design_.timePrecision = precision_;
+    for (const ast::InstanceSymbol* top : root.topInstances)
+        lowerTop(*top);
+}
+
+void Lowerer::lowerTop(const ast::InstanceSymbol& inst) {
+    const auto instId = static_cast<sir::InstanceId>(design_.instances.size());
+    design_.instances.push_back(
+        {std::string(inst.name), std::string(inst.getDefinition().name), sir::kNone});
+    instance_ = instId;
+    std::map<std::string, std::uint32_t> counts;
+    // Variables first, so that every procedure finds their slots.
+    for (const ast::Symbol& member : inst.body.members()) {
+        if (member.kind != ast::SymbolKind::Variable) continue;
+        const auto& v = member.as<ast::VariableSymbol>();
+        if (v.getInitializer() != nullptr) {
+            report(v.location, "initial value of a static variable");
+            continue;
+        }
+        try {
+            slotOf(v, v.location);
+        } catch (const Unsupported&) {
+            continue;  // already reported
+        }
+    }
+    for (const ast::Symbol& member : inst.body.members()) {
+        switch (member.kind) {
+            case ast::SymbolKind::Variable:
+            case ast::SymbolKind::Parameter:
+            case ast::SymbolKind::TypeParameter:
+            case ast::SymbolKind::TypeAlias:
+            case ast::SymbolKind::StatementBlock: continue;  // scopes inside procedures
+            case ast::SymbolKind::ProceduralBlock:
+                lowerProcedure(member.as<ast::ProceduralBlockSymbol>(), instId, counts);
+                continue;
+            default:
+                report(member.location,
+                       "module member '" + std::string(ast::toString(member.kind)) + "'");
+        }
+    }
+}
+
+void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::InstanceId inst,
+                             std::map<std::string, std::uint32_t>& counts) {
+    const std::string kindName(ast::toString(pb.procedureKind));
+    std::string lower = kindName;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    if (lower == "alwayscomb") lower = "always_comb";
+    if (lower == "alwayslatch") lower = "always_latch";
+    if (lower == "alwaysff") lower = "always_ff";
+
+    sir::Process p;
+    p.name = design_.instances[inst].scopeName + "." + lower + std::to_string(counts[lower]++);
+    p.instance = inst;
+    p.loc = loc(pb.location);
+    p.blocks.resize(1);
+    design_.processes.push_back(std::move(p));
+    b_ = Body{};
+    b_.proc = static_cast<std::uint32_t>(design_.processes.size() - 1);
+    b_.scale = timeScaleOf(*pb.getParentScope());
+    evalSymbol_ = &pb;
+
+    const ast::Statement& bodyStmt = pb.getBody();
+    try {
+        switch (pb.procedureKind) {
+            case ast::ProceduralBlockKind::Initial:
+                proc().kind = sir::ProcessKind::Initial;
+                lowerStatement(bodyStmt);
+                if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
+                break;
+            case ast::ProceduralBlockKind::AlwaysComb:
+            case ast::ProceduralBlockKind::AlwaysLatch: {
+                proc().kind = pb.procedureKind == ast::ProceduralBlockKind::AlwaysComb
+                                  ? sir::ProcessKind::Comb
+                                  : sir::ProcessKind::Latch;
+                lowerStatement(bodyStmt);
+                if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
+                // The implicit sensitivity: what the block reads, less what
+                // it writes (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
+                for (const sir::SlotRange& r : b_.reads) {
+                    const sir::Slot& s = design_.slots[r.slot];
+                    const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+                    bool skip = false;
+                    for (const sir::SlotRange& w : proc().writes)
+                        skip = skip || covers(w, r, s.type.width, elems);
+                    for (const sir::Trigger& t : proc().triggers)
+                        skip = skip || covers(t.range, r, s.type.width, elems);
+                    if (!skip) proc().triggers.push_back({r, sir::Edge::Any});
+                }
+                break;
+            }
+            case ast::ProceduralBlockKind::Always:
+            case ast::ProceduralBlockKind::AlwaysFF: {
+                const bool ff = pb.procedureKind == ast::ProceduralBlockKind::AlwaysFF;
+                // A leading event control on fixed signals followed by a
+                // statement that never waits: ff-plain (or ff), with the
+                // event control as the trigger (SIR_SPEC.md 7.1).
+                std::vector<sir::Trigger> triggers;
+                const ast::Statement* inner = nullptr;
+                if (bodyStmt.kind == ast::StatementKind::Timed) {
+                    const auto& ts = bodyStmt.as<ast::TimedStatement>();
+                    std::vector<const ast::TimingControl*> items;
+                    if (ts.timing.kind == ast::TimingControlKind::SignalEvent)
+                        items.push_back(&ts.timing);
+                    else if (ts.timing.kind == ast::TimingControlKind::EventList)
+                        for (const ast::TimingControl* t :
+                             ts.timing.as<ast::EventListControl>().events)
+                            items.push_back(t);
+                    bool fixed = !items.empty() && !mayWait(ts.stmt);
+                    for (const ast::TimingControl* t : items) {
+                        if (!fixed) break;
+                        if (t->kind != ast::TimingControlKind::SignalEvent) {
+                            fixed = false;
+                            break;
+                        }
+                        const auto& se = t->as<ast::SignalEventControl>();
+                        const std::optional<sir::SlotRange> r = eventSlot(se.expr);
+                        if (!r || se.iffCondition != nullptr) {
+                            fixed = false;
+                            break;
+                        }
+                        triggers.push_back({*r, edgeOf(se.edge)});
+                    }
+                    if (fixed) inner = &ts.stmt;
+                }
+                if (inner != nullptr) {
+                    proc().kind = ff ? sir::ProcessKind::Ff : sir::ProcessKind::FfPlain;
+                    proc().triggers = std::move(triggers);
+                    lowerStatement(*inner);
+                    if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
+                    break;
+                }
+                if (ff) unsupported(pb.location, "always_ff without a single event control");
+                if (!mayWait(bodyStmt))
+                    unsupported(pb.location, "always procedure without a timing control");
+                // Any other always: a general process that loops forever.
+                proc().kind = sir::ProcessKind::General;
+                const sir::BlockId loop = newBlock();
+                terminate(sir::Op::Br, {sir::Operand::block(loop)}, pb.location);
+                setBlock(loop);
+                lowerStatement(bodyStmt);
+                if (!b_.dead) terminate(sir::Op::Br, {sir::Operand::block(loop)}, pb.location);
+                break;
+            }
+            case ast::ProceduralBlockKind::Final: unsupported(pb.location, "final procedure");
+        }
+    } catch (const Unsupported&) {
+        design_.processes.pop_back();
+    }
+}
 
 CompileResult compile(std::span<const std::string> args) {
     CompileResult result;
@@ -278,7 +472,7 @@ CompileResult compile(std::span<const std::string> args) {
     result.diagnostics = client->getString();
     if (result.numErrors != 0) return result;
 
-    Lowerer lowerer(*compilation->getSourceManager());
+    Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation));
     lowerer.lower(compilation->getRoot());
     result.diagnostics += lowerer.diagnostics();
     if (lowerer.numErrors() != 0) {
@@ -287,7 +481,6 @@ CompileResult compile(std::span<const std::string> args) {
         return result;
     }
     result.design = lowerer.takeDesign();
-    result.design.timePrecision = globalPrecision(*compilation);
     for (const sir::VerifyError& e : sir::verify(result.design)) {
         result.verifyErrors +=
             "haremasim: internal error: SIR verifier: " + e.where + ": " + e.message + "\n";

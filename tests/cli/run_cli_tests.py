@@ -13,6 +13,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DESIGN = str(HERE / "display_finish.sv")
+DELAYS = str(HERE / "delays.sv")
 
 # (arguments, exit code, text stdout must contain, text stderr must contain)
 CASES = [
@@ -31,6 +32,12 @@ CASES = [
     (["--max-time=1 ns", DESIGN], 2, "", "needs a time"),
     (["--max-time=100000000000s", DESIGN], 2, "", "too large for the time precision 1ns"),
     (["--timescale=1ns/1ps", "--max-time=1.5ns", DESIGN], 0, "hello\n", ""),
+    # Time advances in picoseconds; events at the limit itself still run.
+    ([DELAYS], 0, "a\nb\n", "haremasim: info: finish at 3500 ps"),
+    (["--max-time=2ns", DELAYS], 4, "a\n", "haremasim: info: time_limit at 2 ns"),
+    (["--max-time=1500ps", DELAYS], 4, "a\n", "haremasim: info: time_limit at 1500 ps"),
+    (["--max-time=1499ps", DELAYS], 4, "", "haremasim: info: time_limit at 1499 ps"),
+    (["--max-time=2ns", "--max-time-ok", DELAYS], 0, "a\n", "time_limit at 2 ns"),
 ]
 
 
