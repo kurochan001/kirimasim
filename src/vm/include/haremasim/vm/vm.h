@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 #include "haremasim/kernel/context.h"
@@ -21,7 +22,15 @@ struct RunResult {
     std::string error;
 };
 
+/// Limits of the VM (CLI.md 2.2).
+struct RunOptions {
+    /// --max-steps: instructions one process may run without waiting; 0 is
+    /// no limit. Going over ends the run with zero_time_limit
+    /// (SCHEDULER_SPEC.md 16.2).
+    std::uint64_t maxSteps = 0;
+};
+
 /// Runs the design to its end on the given context.
-RunResult run(const sir::Design& design, kernel::Context& context);
+RunResult run(const sir::Design& design, kernel::Context& context, const RunOptions& options = {});
 
 }  // namespace haremasim::vm

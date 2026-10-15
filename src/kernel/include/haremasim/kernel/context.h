@@ -23,11 +23,13 @@ public:
     [[nodiscard]] const Counters& counters() const { return counters_; }
     Scheduler& scheduler() { return scheduler_; }
     [[nodiscard]] const Scheduler& scheduler() const { return scheduler_; }
+    Output& output() { return output_; }
     Store& store() { return store_; }
     [[nodiscard]] const Store& store() const { return store_; }
 
 private:
     Counters counters_;
+    Output output_;
     Store store_;
     Scheduler scheduler_;
 };

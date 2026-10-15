@@ -53,7 +53,8 @@ struct Frame {
 
 class Interpreter {
 public:
-    Interpreter(const sir::Design& d, kernel::Context& ctx) : d_(d), sched_(ctx.scheduler()) {
+    Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
+        : d_(d), sched_(ctx.scheduler()), output_(ctx.output()), options_(options) {
         // sysTasks_[process][block][instruction]
         sysTasks_.resize(d.processes.size());
         for (std::size_t p = 0; p < d.processes.size(); ++p) {
@@ -91,6 +92,8 @@ public:
 private:
     const sir::Design& d_;
     kernel::Scheduler& sched_;
+    kernel::Output& output_;
+    RunOptions options_;
     std::vector<std::vector<std::vector<SysTask>>> sysTasks_;
     std::vector<Frame> frames_;
 
@@ -105,10 +108,15 @@ private:
         const std::uint32_t pid = f.process;
         const sir::Process& p = d_.processes[pid];
         sir::BlockId b = f.block;
+        std::uint64_t steps = 0;
         for (;;) {
             const auto& instrs = p.blocks[b].instrs;
             for (std::size_t k = 0; k < instrs.size(); ++k) {
                 const sir::Instr& in = instrs[k];
+                if (options_.maxSteps != 0 && ++steps > options_.maxSteps) {
+                    sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
+                    return kernel::Status::Stop;
+                }
                 switch (in.op) {
                     case sir::Op::Syscall:
                         if (!syscall(p, in, sysTasks_[pid][b][k])) return kernel::Status::Error;
@@ -131,7 +139,7 @@ private:
             case SysTask::Write: {
                 std::string text = in.operands.size() > 1 ? formatLiteral(in.operands[1].text) : "";
                 if (task == SysTask::Display) text += '\n';
-                kernel::writeOut(text);
+                output_.write(text);
                 return true;
             }
             case SysTask::Finish: {
@@ -149,8 +157,8 @@ private:
 
 }  // namespace
 
-RunResult run(const sir::Design& design, kernel::Context& context) {
-    return Interpreter(design, context).run();
+RunResult run(const sir::Design& design, kernel::Context& context, const RunOptions& options) {
+    return Interpreter(design, context, options).run();
 }
 
 }  // namespace haremasim::vm

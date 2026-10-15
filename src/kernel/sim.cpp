@@ -647,8 +647,12 @@ void Scheduler::fail(std::string message) {
     requestEnd(EndReason::Internal, 1);
 }
 
-void writeOut(std::string_view text) { std::fwrite(text.data(), 1, text.size(), stdout); }
+void Output::write(std::string_view text) {
+    if (text.empty()) return;
+    std::fwrite(text.data(), 1, text.size(), stdout);
+    atLineStart_ = text.back() == '\n';
+}
 
-void flushOut() { std::fflush(stdout); }
+void Output::flush() { std::fflush(stdout); }
 
 }  // namespace haremasim::kernel

@@ -4,13 +4,19 @@
 //   haremasim parse [options] <file>...          parse and elaborate only
 //   haremasim --version | --help
 //
-// Options so far: -f, +incdir+, +define+, --top (passed to slang),
+// Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
+// slang), --max-time-ok, --max-zero-delay, --max-steps, --max-scc-iter,
 // --dump-sir and --stats=json. Exit codes are those of CLI.md 5.
 
+#include <charconv>
+#include <cstdint>
 #include <cstdio>
 #include <exception>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <system_error>
+#include <utility>
 #include <vector>
 
 #include "build_info.h"
@@ -30,7 +36,8 @@ void printUsage(std::FILE* out) {
                "       haremasim parse [options] <file>...\n"
                "       haremasim --version\n"
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
-               "         --dump-sir, --stats=json\n",
+               "         --timescale=<unit>/<precision>, --max-time-ok, --max-zero-delay=<n>,\n"
+               "         --max-steps=<n>, --max-scc-iter=<n>, --dump-sir, --stats=json\n",
                out);
 }
 
@@ -51,7 +58,20 @@ struct Options {
     std::vector<std::string> original;   // the arguments as given, for the version line
     bool statsJson = false;
     bool dumpSir = false;
+    bool maxTimeOk = false;
+    std::uint64_t maxZeroDelay = 0;  // 0: no limit (defaults are set in M5, CLI.md 6)
+    std::uint64_t maxSteps = 0;
+    std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
 };
+
+/// Reads the number of --name=<n>. False if it is not a whole number.
+bool parseCount(std::string_view arg, std::string_view name, std::uint64_t& out) {
+    const std::string_view text = arg.substr(name.size() + 1);
+    const char* first = std::to_address(text.begin());
+    const char* last = std::to_address(text.end());
+    const auto r = std::from_chars(first, last, out);
+    return !text.empty() && r.ec == std::errc() && r.ptr == last;
+}
 
 bool isSlangPlusOption(std::string_view arg) {
     return arg.starts_with("+incdir+") || arg.starts_with("+define+") ||
@@ -71,8 +91,24 @@ int parseArgs(int argc, char** argv, Options& o) {
             printUsage(stdout);
             return kExitOk;
         }
+        bool counted = false;
+        for (const auto& [name, field] :
+             {std::pair<std::string_view, std::uint64_t*>{"--max-zero-delay", &o.maxZeroDelay},
+              {"--max-steps", &o.maxSteps},
+              {"--max-scc-iter", &o.maxSccIter}}) {
+            if (!arg.starts_with(name) || arg.size() <= name.size() || arg[name.size()] != '=')
+                continue;
+            if (!parseCount(arg, name, *field)) {
+                std::fprintf(stderr, "haremasim: error: %s needs a whole number\n", argv[i]);
+                return kExitInputError;
+            }
+            counted = true;
+        }
+        if (counted) continue;
         if (arg == "--stats=json") {
             o.statsJson = true;
+        } else if (arg == "--max-time-ok") {
+            o.maxTimeOk = true;
         } else if (arg == "--dump-sir") {
             o.dumpSir = true;
         } else if (arg == "-f" || arg == "--top") {
@@ -83,7 +119,7 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.slangArgs.emplace_back(arg);
             o.slangArgs.emplace_back(argv[++i]);
             o.original.emplace_back(argv[i]);
-        } else if (arg.starts_with("--top=")) {
+        } else if (arg.starts_with("--top=") || arg.starts_with("--timescale=")) {
             o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with("+")) {
             if (isSlangPlusOption(arg))
@@ -146,8 +182,11 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
         return kExitOk;
     }
 
-    const auto result = haremasim::vm::run(compiled.design, context);
-    haremasim::kernel::flushOut();
+    haremasim::kernel::Limits limits;
+    limits.maxZeroDelay = o.maxZeroDelay;
+    context.scheduler().setLimits(limits);
+    const auto result = haremasim::vm::run(compiled.design, context, {o.maxSteps});
+    context.output().flush();
     const auto reason = result.reason;
     if (reason == haremasim::kernel::EndReason::Internal) {
         std::fprintf(stderr, "haremasim: internal error: %s\n", result.error.c_str());
@@ -161,6 +200,7 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
                          static_cast<unsigned long long>(context.scheduler().time()));
         }
     }
+    if (reason == haremasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;
     return haremasim::kernel::exitCode(reason);
 }
 
@@ -170,7 +210,11 @@ int run(int argc, char** argv) {
 
     haremasim::kernel::Context context;
     const int code = o.command == "parse" ? runParse(context, o) : runDesign(context, o);
-    if (o.statsJson) std::fputs(context.counters().toJson().c_str(), stdout);
+    if (o.statsJson) {
+        // The JSON is the last line of stdout (PERFORMANCE.md 3.1).
+        if (!context.output().atLineStart()) std::fputc('\n', stdout);
+        std::fputs(context.counters().toJson().c_str(), stdout);
+    }
     return code;
 }
 

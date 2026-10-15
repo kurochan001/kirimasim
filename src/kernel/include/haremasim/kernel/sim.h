@@ -311,10 +311,18 @@ private:
     void ensureSlotTables();
 };
 
-/// Writes the design's output to stdout.
-void writeOut(std::string_view text);
+/// The design's output on stdout (CLI.md 3). It remembers whether the
+/// output so far ends a line, so that --stats=json can start its own line.
+class Output {
+public:
+    void write(std::string_view text);
+    /// Flushes stdout, so that it comes before what follows on stderr.
+    void flush();
+    /// Whether nothing was written, or the last thing written ended a line.
+    [[nodiscard]] bool atLineStart() const { return atLineStart_; }
 
-/// Flushes stdout, so that it comes before what follows on stderr.
-void flushOut();
+private:
+    bool atLineStart_ = true;
+};
 
 }  // namespace haremasim::kernel
