@@ -175,7 +175,6 @@ ctest --preset dev -L Suite      # テストスイートだけ
 
 - テストスイートを別リポジトリに分ける時期。
 - `@<名前>.expected` の読み込みと、許される結果の集合の判定を、`tools/run_suite_test.py` に実装する（`:expected_stdout:` を比べ始める P1 で）。
-- システムタスクの意味（`$display` 系の書式の変換と x・z の表示、`%t` と `$timeformat`、`%m`、`$strobe`・`$monitor` の時点、`$time` と `$realtime` の丸め、`$readmemh` の形式、ファイル入出力。規格の 20.3、21.2〜21.4）を、新しい詳細仕様書 `SYSTEM_TASKS.md` に書く（P1 の着手前。新設の提案。標準出力で合否を決めるので、書式の細部が決まらないと期待値を作れない）。
 - 時刻が進まない実行のテスト（`zero_delay_forever`、`empty_forever`）は、標準出力ではなく終了コードと診断を確かめる。その項目（`:expected_exit:` など）を、P1 で足す。
 - CI で、比べる相手の Icarus Verilog と Verilator を用意する方法（固定したコミットからのビルドか、イメージか）。
 - 波形の要約と観測対象の事象の列の期待値の形式（P1 で足す。足したら期待値を守る決まりの対象に加える）。
