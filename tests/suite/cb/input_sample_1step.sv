@@ -9,6 +9,9 @@
 :nondeterministic: no
 :expected_stdout: @input_sample_1step.expected
 */
+// The default time unit and precision are implementation-specific (3.14.2.3),
+// and the test prints nonzero times with %0t, so it sets them.
+`timescale 1ns/1ns
 // With a #1step input skew, the sampled value is the one in the Postponed
 // region of the previous time step (14.13). A process that waits for the
 // clocking block event reads the updated sampled values (14.13), and the

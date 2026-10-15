@@ -9,6 +9,9 @@
 :nondeterministic: no
 :expected_stdout: @unique_case_violation.expected
 */
+// The default time unit and precision are implementation-specific (3.14.2.3),
+// and the test prints nonzero times with %0t, so it sets them.
+`timescale 1ns/1ns
 // At time 1, sel is 2'b10 (no item matches: a violation) and then, after #0,
 // 2'b01. The second run of the always_comb is a flush point, so the pending
 // violation is discarded and nothing is reported (12.4.2.1). At time 2, sel

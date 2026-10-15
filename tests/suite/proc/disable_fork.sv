@@ -9,6 +9,9 @@
 :nondeterministic: no
 :expected_stdout: @disable_fork.expected
 */
+// The default time unit and precision are implementation-specific (3.14.2.3),
+// and the test prints nonzero times with %0t, so it sets them.
+`timescale 1ns/1ns
 // child2 starts a grandchild and finishes at time 5. disable fork at time 7
 // ends child1 and the grandchild (9.6.3), so neither prints.
 // Icarus Verilog 13.0 still prints "[20] grandchild done": it does not end

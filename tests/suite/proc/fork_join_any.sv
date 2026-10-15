@@ -9,6 +9,9 @@
 :nondeterministic: no
 :expected_stdout: @fork_join_any.expected
 */
+// The default time unit and precision are implementation-specific (3.14.2.3),
+// and the test prints nonzero times with %0t, so it sets them.
+`timescale 1ns/1ns
 // join waits for every child, join_any for the first one to finish, and
 // join_none for none. With every kind of join, the children start only
 // after the parent blocks or finishes (9.3.2), so "parent first" is printed
