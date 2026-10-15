@@ -48,8 +48,8 @@ Design counter() {
         make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
         make(Op::Lnot, u4(1), 1, {Operand::temp(0)}, 3),
         make(Op::Truth, u4(1), 2, {Operand::temp(1)}, 3),
-        make(Op::BrIf, voidType(), kNone,
-             {Operand::temp(2), Operand::block(1), Operand::block(2)}, 3),
+        make(Op::BrIf, voidType(), kNone, {Operand::temp(2), Operand::block(1), Operand::block(2)},
+             3),
     };
     p.blocks[1].instrs = {
         make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::constant(0)}, 4),
@@ -150,8 +150,8 @@ TEST(Sir, TempDefinedTwice) {
 TEST(Sir, WaitInFlipFlop) {
     Design d = counter();
     auto& instrs = d.processes[0].blocks[1].instrs;
-    instrs.back() = make(Op::WaitDelay, voidType(), kNone,
-                         {Operand::constant(1), Operand::block(2)}, 4);
+    instrs.back() =
+        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(1), Operand::block(2)}, 4);
     EXPECT_TRUE(mentions(verify(d), "wait.delay in a ff-plain process"));
 }
 
@@ -160,8 +160,8 @@ TEST(Sir, WaitInInitialIsAllowed) {
     d.processes[0].kind = ProcessKind::Initial;
     d.processes[0].triggers.clear();
     auto& instrs = d.processes[0].blocks[1].instrs;
-    instrs.back() = make(Op::WaitDelay, voidType(), kNone,
-                         {Operand::constant(1), Operand::block(2)}, 4);
+    instrs.back() =
+        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(1), Operand::block(2)}, 4);
     EXPECT_TRUE(verify(d).empty());
 }
 
@@ -197,8 +197,7 @@ TEST(Sir, PartOfASlotIsUnsigned) {
     d.slots[2].type = s4(8);
     // Bits [3:0] of a signed slot read as unsigned (like a part-select).
     d.processes[0].blocks[2].instrs[0] = make(Op::Load, u4(4), 3, {Operand::slot(2, 0, 4)}, 5);
-    d.processes[0].blocks[2].instrs[1] =
-        make(Op::Zext, u4(8), 4, {Operand::temp(3)}, 5);
+    d.processes[0].blocks[2].instrs[1] = make(Op::Zext, u4(8), 4, {Operand::temp(3)}, 5);
     const auto errors = verify(d);
     EXPECT_FALSE(mentions(errors, "load"));
 }

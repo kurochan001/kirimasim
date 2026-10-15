@@ -21,9 +21,7 @@ bool isTerminator(Op op) {
 bool isWait(Op op) { return op == Op::WaitDelay || op == Op::WaitEvent; }
 
 /// Instructions that produce no value.
-bool hasNoResult(Op op) {
-    return op == Op::Store || op == Op::Nba || isTerminator(op);
-}
+bool hasNoResult(Op op) { return op == Op::Store || op == Op::Nba || isTerminator(op); }
 
 /// Process kinds whose body may not contain wait instructions. The leading
 /// edge wait of ff and ff-plain is held in the process's triggers, so the
@@ -180,8 +178,10 @@ private:
                           in.loc);  // rule 5
                 for (const Operand& o : in.operands) {
                     if (o.kind != Operand::Kind::Block) continue;
-                    if (o.id >= nb) error(bw, "branch target out of range", in.loc);
-                    else succ[b].push_back(o.id);
+                    if (o.id >= nb)
+                        error(bw, "branch target out of range", in.loc);
+                    else
+                        succ[b].push_back(o.id);
                 }
             }
         }
@@ -284,8 +284,10 @@ private:
             error(bw, std::string(opName(in.op)) + ": " + why, in.loc);
         };
         // Rule 9: every instruction has a source location.
-        if (in.loc.line == 0) bad("no source location");
-        else if (in.loc.file >= d_.sources.size()) bad("source file out of range");
+        if (in.loc.line == 0)
+            bad("no source location");
+        else if (in.loc.file >= d_.sources.size())
+            bad("source file out of range");
 
         if (hasNoResult(in.op)) {
             if (in.result != kNone || in.type.kind != TypeKind::Void) bad("must not have a result");
@@ -320,7 +322,8 @@ private:
             case Op::Store:
             case Op::Nba:
                 if (nOps(2)) {
-                    if (ops[0].kind != Operand::Kind::Slot || !isValue(1)) bad("bad operands");
+                    if (ops[0].kind != Operand::Kind::Slot || !isValue(1))
+                        bad("bad operands");
                     else if (unsignedOf(ty(0)) != unsignedOf(ty(1)))
                         bad("value type " + toString(ty(1)) + " does not fit " + toString(ty(0)));
                 }
@@ -352,7 +355,8 @@ private:
             case Op::Weq:
             case Op::Wne:
                 if (nOps(2)) {
-                    if (!isIntegral(ty(0)) || ty(0) != ty(1)) bad("operands must have one type");
+                    if (!isIntegral(ty(0)) || ty(0) != ty(1))
+                        bad("operands must have one type");
                     else if (!width1(rt) || isFourState(rt) != isFourState(ty(0)))
                         bad("result must be 1 bit in the operands' domain");
                 }
@@ -360,8 +364,10 @@ private:
             case Op::Ceq:
             case Op::Cne:
                 if (nOps(2)) {
-                    if (!isIntegral(ty(0)) || ty(0) != ty(1)) bad("operands must have one type");
-                    else if (!width1(rt) || isFourState(rt)) bad("result must be i2<1>");
+                    if (!isIntegral(ty(0)) || ty(0) != ty(1))
+                        bad("operands must have one type");
+                    else if (!width1(rt) || isFourState(rt))
+                        bad("result must be i2<1>");
                 }
                 break;
             case Op::Lnot:
@@ -372,8 +378,8 @@ private:
             case Op::Rnor:
             case Op::Rxor:
             case Op::Rxnor:
-                if (nOps(1) && (!isIntegral(ty(0)) || !width1(rt) ||
-                                isFourState(rt) != isFourState(ty(0))))
+                if (nOps(1) &&
+                    (!isIntegral(ty(0)) || !width1(rt) || isFourState(rt) != isFourState(ty(0))))
                     bad("needs an integral operand and a 1-bit result in its domain");
                 break;
             case Op::Land:
@@ -406,7 +412,8 @@ private:
                     bad("must convert a four-state value to the same two-state type");
                 break;
             case Op::To4:
-                if (nOps(1) && (!isIntegral(ty(0)) || isFourState(ty(0)) || otherDomain(ty(0)) != rt))
+                if (nOps(1) &&
+                    (!isIntegral(ty(0)) || isFourState(ty(0)) || otherDomain(ty(0)) != rt))
                     bad("must convert a two-state value to the same four-state type");
                 break;
             case Op::Syscall:

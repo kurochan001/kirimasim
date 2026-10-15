@@ -147,8 +147,8 @@ std::string toText(const Design& d) {
             for (std::size_t i = 0; i < p.triggers.size(); ++i) {
                 const Trigger& t = p.triggers[i];
                 if (i != 0) out += ",";
-                out += std::string(edgeName(t.edge)) + "(" + slotRef(d, t.slot, t.lsb, t.width) +
-                       ")";
+                out +=
+                    std::string(edgeName(t.edge)) + "(" + slotRef(d, t.slot, t.lsb, t.width) + ")";
             }
         }
         out += " {" + locText(p.loc) + "\n";
