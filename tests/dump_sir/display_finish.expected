@@ -1,8 +1,8 @@
 ; sir format 0
 source 0 "display_finish.sv"
-instance 0 top def=top parent=-
+instance 0 "top" def="top" parent=-
 
-process @top.initial0 kind=initial inst=0 {  ; 0:4:3
+process @0 "top.initial0" kind=initial inst=0 {  ; 0:4:3
 bb0:
   syscall "$display", "hello"  ; 0:5:5
   syscall "$write", "a"  ; 0:6:5
