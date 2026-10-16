@@ -75,6 +75,8 @@ MUTANTS = [
     ("front: a concatenation target fills its parts from the least significant one",
      "src/front/lower_expr.cpp", "{all.op, constant(sir::u2(32), lsb).op}, sl);",
      "{all.op, constant(sir::u2(32), p.width - lsb - w).op}, sl);"),
+    ("front: a variable of the compilation unit gets an instance slot", "src/front/lower.cpp",
+     "if (sc->asSymbol().kind == ast::SymbolKind::CompilationUnit)", "if (false)"),
 ]
 
 

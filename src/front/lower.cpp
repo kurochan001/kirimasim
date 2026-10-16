@@ -320,12 +320,15 @@ Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
-    // A package variable needs a place outside every instance and its own
-    // initialization; not done yet.
+    // A variable of a package or of the compilation unit ($unit, 3.12.1)
+    // needs a place outside every instance and its own initialization
+    // (6.21); not done yet.
     for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
          sc = sc->asSymbol().getParentScope()) {
         if (sc->asSymbol().kind == ast::SymbolKind::Package)
             unsupported(sl, "variable '" + std::string(v.name) + "' of a package");
+        if (sc->asSymbol().kind == ast::SymbolKind::CompilationUnit)
+            unsupported(sl, "variable '" + std::string(v.name) + "' of the compilation unit");
         if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
     }
     sir::SlotKind kind = sir::SlotKind::Var;
