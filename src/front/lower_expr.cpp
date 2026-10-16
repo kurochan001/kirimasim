@@ -105,6 +105,22 @@ bool isPureSystemFunction(std::string_view n) {
 
 bool isString(Type t) { return t.kind == sir::TypeKind::String; }
 
+/// The bytes of a known integral constant from the most significant one,
+/// without the zero bytes, as a string (6.16); nothing if it has x or z.
+std::optional<std::string> stringBytes(const slang::SVInt& v) {
+    if (v.hasUnknown()) return std::nullopt;
+    const std::uint32_t n = (v.getBitWidth() + 7) / 8;
+    const slang::SVInt x = v.getBitWidth() < n * 8 ? v.zext(n * 8) : v;
+    std::string out;
+    for (std::uint32_t k = n; k-- > 0;) {
+        const std::optional<std::uint64_t> byte =
+            x.slice(static_cast<std::int32_t>(8 * k + 7), static_cast<std::int32_t>(8 * k))
+                .as<std::uint64_t>();
+        if (byte && *byte != 0) out.push_back(static_cast<char>(*byte));
+    }
+    return out;
+}
+
 /// The bytes of an integral value as a string (6.16): the most significant
 /// byte first, zero bytes dropped.
 std::string integerToString(std::uint64_t a, std::uint64_t b, std::uint32_t width) {
@@ -805,6 +821,16 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::Conversion: {
             const auto& c = e.as<ast::ConversionExpression>();
             const Type want = typeOf(*e.type, sl);
+            if (isString(want) && c.operand().type->isIntegral() && !sideEffects(c.operand())) {
+                // A constant integral value as a string, string literals and
+                // their concatenations among them: its bytes without the
+                // zero ones (VALUE_SEMANTICS.md 7.6), at any width.
+                if (const std::optional<slang::ConstantValue> cv = constantValue(c.operand());
+                    cv && cv->isInteger()) {
+                    if (const std::optional<std::string> text = stringBytes(cv->integer()))
+                        return stringConstant(*text);
+                }
+            }
             if (c.conversionKind == ast::ConversionKind::StreamingConcat) {
                 // A stream is left-aligned in a wider target, zeros on the
                 // right, then cast to the target's type (11.4.14).
@@ -2112,6 +2138,16 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
         const bool hasSpec = !pending.empty();
         const char conv = hasSpec ? pending.front() : 'd';
         if (!pending.empty()) pending.pop_front();
+        if (hasSpec && conv == 's' && arg->kind == ast::ExpressionKind::StringLiteral &&
+            arg->type->getBitWidth() > 64) {
+            // Its characters, which %s prints (SYSTEM_TASKS.md 3.5); a literal
+            // has no zero bytes in front.
+            const std::string text(arg->as<ast::StringLiteral>().getValue());
+            if (text.find('\0') == std::string::npos) {
+                ops.push_back(stringConstant(text).op);
+                continue;
+            }
+        }
         Val v = lowerExpr(*arg);
         const bool realFormat = conv == 'e' || conv == 'f' || conv == 'g';
         if (isReal(v.type)) {

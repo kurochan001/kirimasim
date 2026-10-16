@@ -161,6 +161,9 @@ MUTANTS = [
      "{src.op, constant(sir::u2(32), 0).op}, sl);"),
     ("front: an automatic string starts from a constant of words", "src/front/lower_stmt.cpp",
      "                if (t.kind == sir::TypeKind::String) return stringConstant(\"\");\n", ""),
+    ("front: a constant made a string keeps its zero bytes", "src/front/lower_expr.cpp",
+     "        if (byte && *byte != 0) out.push_back(static_cast<char>(*byte));",
+     "        if (byte) out.push_back(static_cast<char>(*byte));"),
 ]
 
 

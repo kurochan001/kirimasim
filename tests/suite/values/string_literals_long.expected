@@ -1,0 +1,14 @@
+init: [a literal longer than eight characters] len=38
+array: [first long element] len=18
+assigned: [assigned in a procedure] len=23
+argument: [passed straight as an argument] len=30
+default: [Hello, everybody out there!] len=27
+returned: [Hello, kirimasim users!] len=23
+compare: [equal strings] len=13
+compare not: [not equal] len=9
+literal concat: [concatenated literals only] len=26
+constant ?:: [a constant condition picks this] len=31
+a long literal printed with %s|and with %0s too
+concat: [a literal longer than eight characters -- and more text after it] len=64
+zero dropped: [zeroinside the literal] len=22
+index: [abcdef 57] len=9
