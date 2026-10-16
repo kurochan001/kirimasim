@@ -24,6 +24,7 @@
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
+#include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
 #include "slang/ast/types/AllTypes.h"
 #include "slang/numeric/SVInt.h"
@@ -512,6 +513,14 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (sym.kind == ast::SymbolKind::EnumValue)
                 return constantFrom(sym.as<ast::EnumValueSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
+            if (sym.kind == ast::SymbolKind::ModportPort) {
+                // A modport port reads what it connects to: a member of the
+                // interface instance, or the expression of a modport
+                // expression (25.5, 25.5.4).
+                const ast::Expression* c = sym.as<ast::ModportPortSymbol>().getConnectionExpr();
+                if (c == nullptr) unsupported(sl, "modport port with no connection");
+                return coerce(lowerExpr(*c), typeOf(*e.type, sl), sl);
+            }
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym))
                 return emit(Op::Fload, frameVars()[*f].type, {Operand::frame(*f)}, sl);
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
@@ -1004,6 +1013,12 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
         case ast::ExpressionKind::NamedValue:
         case ast::ExpressionKind::HierarchicalValue: {
             const ast::Symbol& sym = lhs.as<ast::ValueExpressionBase>().symbol;
+            if (sym.kind == ast::SymbolKind::ModportPort) {
+                // What the modport port connects to (25.5, 25.5.4).
+                const ast::Expression* c = sym.as<ast::ModportPortSymbol>().getConnectionExpr();
+                if (c == nullptr) unsupported(sl, "modport port with no connection");
+                return placeOf(*c, sl);
+            }
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
                 p.kind = Place::Kind::Frame;
                 p.frame = *f;

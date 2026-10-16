@@ -238,10 +238,17 @@ bool mayWait(const ast::Statement& s) {
 }
 
 const ast::Symbol* namedSymbol(const ast::Expression& e) {
-    if (e.kind == ast::ExpressionKind::NamedValue ||
-        e.kind == ast::ExpressionKind::HierarchicalValue)
-        return &e.as<ast::ValueExpressionBase>().symbol;
-    return nullptr;
+    if (e.kind != ast::ExpressionKind::NamedValue &&
+        e.kind != ast::ExpressionKind::HierarchicalValue)
+        return nullptr;
+    const ast::Symbol* s = &e.as<ast::ValueExpressionBase>().symbol;
+    // A modport port that names a member of the interface instance is that
+    // member (25.5).
+    if (s->kind == ast::SymbolKind::ModportPort) {
+        const ast::Symbol* internal = s->as<ast::ModportPortSymbol>().internalSymbol;
+        if (internal != nullptr) return internal;
+    }
+    return s;
 }
 
 bool inSlot(const ast::Symbol& s) {
@@ -694,7 +701,9 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
             case ast::SymbolKind::ExplicitImport:     // names resolved by slang
             case ast::SymbolKind::WildcardImport:
             case ast::SymbolKind::EmptyMember:
-            case ast::SymbolKind::Port:                      // connected by the parent (lowerPorts)
+            case ast::SymbolKind::Port:           // connected by the parent (lowerPorts)
+            case ast::SymbolKind::InterfacePort:  // names through it reach the interface
+            case ast::SymbolKind::Modport:        // a view of the interface's members (25.5)
             case ast::SymbolKind::StatementBlock: continue;  // scopes inside procedures
             case ast::SymbolKind::Subroutine: continue;      // lowered when first called
             case ast::SymbolKind::Net: {
@@ -765,6 +774,9 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
     const std::string scope = design_.instances[instanceIds_.at(&child)].scopeName;
     for (const ast::PortConnection* conn : child.getPortConnections()) {
         const ast::Symbol& port = conn->port;
+        // An interface port connects no value; names through it reach the
+        // interface instance directly (25.3).
+        if (port.kind == ast::SymbolKind::InterfacePort) continue;
         if (port.kind != ast::SymbolKind::Port) {
             report(port.location, "port of kind '" + std::string(ast::toString(port.kind)) + "'");
             continue;
