@@ -1,0 +1,76 @@
+; sir format 0
+precision 1ns
+source 0 "gates.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.a" : i4<1> var inst=0
+slot %s1 "top.b" : i4<1> var inst=0
+slot %s2 "top.en" : i4<1> var inst=0
+slot %s3 "top.o" : i4<1> wire inst=0
+slot %s4 "top.alone" : i4<1> wire inst=0
+slot %s5 "top.shared" : i4<1> wire inst=0 flags(multi-driver)
+slot %s6 "top.shared.$driver0" : i4<1> wire inst=0 driver-of=%s5 strength=(6,6)
+slot %s7 "top.shared.$side0" : i2<2> var inst=0
+slot %s8 "top.shared.$driver1" : i4<1> wire inst=0 driver-of=%s5 strength=(5,5)
+
+process @0 "top.gate0" kind=cont inst=0 trigger=any(%s0),any(%s1) writes=%s3 {  ; 0:7:8
+bb0:
+  %t0 = load i4<1> %s0  ; 0:7:12
+  %t1 = xor i4<1> %t0, const i4<1> 1'h0  ; 0:7:8
+  %t2 = load i4<1> %s1  ; 0:7:15
+  %t3 = and i4<1> %t1, %t2  ; 0:7:8
+  %t4 = not i4<1> %t3  ; 0:7:8
+  store %s3, %t4  ; 0:7:8
+  ret  ; 0:7:8
+}
+
+process @1 "top.gate1" kind=cont inst=0 trigger=any(%s0),any(%s2) writes=%s4 {  ; 0:8:10
+bb0:
+  %t0 = load i4<1> %s0  ; 0:8:18
+  %t1 = xor i4<1> %t0, const i4<1> 1'h0  ; 0:8:10
+  %t2 = load i4<1> %s2  ; 0:8:21
+  %t3 = ceq i2<1> %t2, const i4<1> 1'h1  ; 0:8:10
+  %t4 = ceq i2<1> %t2, const i4<1> 1'h0  ; 0:8:10
+  %t5 = select i4<1> %t4, const i4<1> 1'bz, const i4<1> 1'bx  ; 0:8:10
+  %t6 = select i4<1> %t3, %t1, %t5  ; 0:8:10
+  store %s4, %t6  ; 0:8:10
+  ret  ; 0:8:10
+}
+
+process @2 "top.gate2" kind=cont inst=0 trigger=any(%s0),any(%s2) writes=%s6,%s7[0:0],%s7[1:1] {  ; 0:9:10
+bb0:
+  %t0 = load i4<1> %s0  ; 0:9:19
+  %t1 = xor i4<1> %t0, const i4<1> 1'h0  ; 0:9:10
+  %t2 = load i4<1> %s2  ; 0:9:22
+  %t3 = ceq i2<1> %t2, const i4<1> 1'h0  ; 0:9:10
+  %t4 = ceq i2<1> %t2, const i4<1> 1'h1  ; 0:9:10
+  %t5 = select i4<1> %t4, const i4<1> 1'bz, const i4<1> 1'bx  ; 0:9:10
+  %t6 = select i4<1> %t3, %t1, %t5  ; 0:9:10
+  store %s6, %t6  ; 0:9:10
+  %t7 = or i2<1> %t3, %t4  ; 0:9:10
+  %t8 = not i2<1> %t7  ; 0:9:10
+  %t9 = ceq i2<1> %t1, const i4<1> 1'h0  ; 0:9:10
+  %t10 = and i2<1> %t8, %t9  ; 0:9:10
+  %t11 = not i2<1> %t10  ; 0:9:10
+  %t12 = ceq i2<1> %t1, const i4<1> 1'h1  ; 0:9:10
+  %t13 = and i2<1> %t8, %t12  ; 0:9:10
+  %t14 = not i2<1> %t13  ; 0:9:10
+  store %s7[0:0], %t11  ; 0:9:10
+  store %s7[1:1], %t14  ; 0:9:10
+  ret  ; 0:9:10
+}
+
+process @3 "top.gate3" kind=cont inst=0 writes=%s8 {  ; 0:10:10
+bb0:
+  store %s8, const i4<1> 1'h1  ; 0:10:10
+  ret  ; 0:10:10
+}
+
+process @4 "top.shared.$resolve" kind=cont inst=0 trigger=any(%s6),any(%s7),any(%s8) writes=%s5 {  ; 0:9:10
+bb0:
+  %t0 = load i4<1> %s6  ; 0:9:10
+  %t1 = load i2<2> %s7  ; 0:9:10
+  %t2 = load i4<1> %s8  ; 0:9:10
+  %t3 = resolve i4<1> "wire", %t0, const i2<3> 3'h6, const i2<3> 3'h6, %t1, %t2, const i2<3> 3'h5, const i2<3> 3'h5  ; 0:9:10
+  store %s5, %t3  ; 0:9:10
+  ret  ; 0:9:10
+}
