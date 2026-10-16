@@ -213,6 +213,7 @@ bool mayWaitIn(const ast::Statement& s, std::vector<const ast::Symbol*>& seen) {
         case ast::StatementKind::Break:
         case ast::StatementKind::Continue:
         case ast::StatementKind::DisableFork:
+        case ast::StatementKind::Disable:
         case ast::StatementKind::Return: return false;
         case ast::StatementKind::ExpressionStatement: {
             const ast::Expression& e = s.as<ast::ExpressionStatement>().expr;

@@ -72,10 +72,25 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             }
             // A named block is a scope of the hierarchy (9.3.5).
             const std::string outer = b_.scope;
-            if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
+            const bool named = b.blockSymbol != nullptr && !b.blockSymbol->name.empty();
+            if (named) {
                 b_.scope += "." + std::string(b.blockSymbol->name);
+                b_.named.push_back({b.blockSymbol, std::nullopt, false});
+            }
             lowerStatement(b.body);
             b_.scope = outer;
+            if (named) {
+                const Body::Named n = b_.named.back();
+                b_.named.pop_back();
+                if (n.exit) {
+                    // A disable also ends what the block started (9.6.2).
+                    if (n.spawns)
+                        unsupported(sl, "disable of a block that starts processes it does not "
+                                        "wait for");
+                    if (!b_.dead) terminate(Op::Br, {Operand::block(*n.exit)}, sl);
+                    setBlock(*n.exit);
+                }
+            }
             return;
         }
         case ast::StatementKind::VariableDeclaration: {
@@ -311,6 +326,26 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             emitVoid(Op::TriggerNb, std::move(ops), sl);
             return;
         }
+        case ast::StatementKind::Disable: {
+            // A named block around this statement goes on after its end
+            // (9.6.2, SCHEDULER_SPEC.md 10.4). That ends its only activation
+            // when it is in an initial, always or final procedure, outside
+            // forks and subroutines; other blocks and tasks may be running
+            // in other processes too.
+            const ast::Expression& t = s.as<ast::DisableStatement>().target;
+            const ast::Symbol* sym = t.kind == ast::ExpressionKind::ArbitrarySymbol
+                                         ? t.as<ast::ArbitrarySymbolExpression>().symbol.get()
+                                         : nullptr;
+            Body::Named* n = nullptr;
+            for (auto it = b_.named.rbegin(); it != b_.named.rend() && n == nullptr; ++it)
+                if (it->sym == sym) n = &*it;
+            if (n == nullptr || b_.isSub || proc().parent.kind != sir::Owner::Kind::None)
+                unsupported(sl, "disable of a task, or of a block from outside it or in a fork "
+                                "or subroutine");
+            if (!n->exit) n->exit = newBlock();
+            terminate(Op::Br, {Operand::block(*n->exit)}, sl);
+            return;
+        }
         case ast::StatementKind::WaitFork: {
             const sir::BlockId cont = newBlock();
             terminate(Op::WaitFork, {Operand::block(cont)}, sl);
@@ -380,6 +415,10 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     }
     const std::uint32_t parent = b_.proc;
     const std::uint32_t forkNumber = b_.forks++;
+    // Children not waited for may outlive the named blocks around the fork.
+    if (b.blockKind != ast::StatementBlockKind::JoinAll)
+        for (Body::Named& n : b_.named)
+            n.spawns = true;
     std::string scope = b_.scope;  // a named fork is a scope (9.3.5)
     if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
         scope += "." + std::string(b.blockSymbol->name);

@@ -367,6 +367,15 @@ public:
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
         std::map<const ast::Symbol*, sir::FrameVarId> structFrames;  ///< The first leaf's.
         std::vector<Loop> loops;
+        /// The named blocks around the current point, innermost last, for
+        /// disable (9.6.2): the block, its end once a disable jumps there,
+        /// and whether it starts processes it does not wait for.
+        struct Named {
+            const ast::Symbol* sym = nullptr;
+            std::optional<sir::BlockId> exit;
+            bool spawns = false;
+        };
+        std::vector<Named> named;
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;        ///< For the sensitivity of always_comb.
         std::uint32_t forks = 0;                  ///< Fork statements so far, for child names.

@@ -149,6 +149,10 @@ MUTANTS = [
      "    const Val m = lowerExpr(e);\n    const bool integralPair = false;"),
     ("front: an inside range has no upper bound", "src/front/lower_expr.cpp",
      "        bound(vr.right(), Op::Le);", "        (void)vr;"),
+    ("front: disable of a named block does nothing", "src/front/lower_stmt.cpp",
+     "            terminate(Op::Br, {Operand::block(*n->exit)}, sl);\n            return;\n        }\n"
+     "        case ast::StatementKind::WaitFork",
+     "            return;\n        }\n        case ast::StatementKind::WaitFork"),
 ]
 
 

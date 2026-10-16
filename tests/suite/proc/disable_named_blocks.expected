@@ -1,0 +1,11 @@
+for: i=5 sum=10
+while: n=12
+repeat: n=7
+do: n=2
+forever: n=3 at 3
+continue: sum=101011
+nested: trace=123
+both loops: sum=13 i=2 n=3
+case 2
+always: n=4
+final sum 12
