@@ -141,7 +141,7 @@ jobs:
       # valsem gate: the fuzzers at 100 times their size, seeded by the date.
       - name: Fuzz against valsem and the reference scheduler
         run: |
-          HS_FUZZ_SCALE=100 HS_FUZZ_SEED=$(date -u +%Y%m%d) \
+          KIRIMA_FUZZ_SCALE=100 KIRIMA_FUZZ_SEED=$(date -u +%Y%m%d) \
             build/release/tests/unit/kirimasim_unit_tests \
             --gtest_filter='W4Ops.*:Valsem.*:Scheduler.*'
 

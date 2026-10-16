@@ -93,13 +93,13 @@ using EventId = std::uint32_t;
 /// three callback types are the C forms of abi.h, so every tier registers
 /// the same way (RUNTIME_ABI.md 1, 4.3); toC() and fromC() in context.h
 /// convert the context.
-using ResumeFn = hs_resume_fn;
+using ResumeFn = kirima_resume_fn;
 /// The iff condition of an event-control item, read when the item's event
 /// occurs (9.4.2.3). Nonzero is true.
-using GuardFn = hs_guard_fn;
+using GuardFn = kirima_guard_fn;
 /// Evaluates a monitored expression into `out` (laid out like a slot
 /// element of the monitor's domain and width).
-using EvalFn = hs_eval_fn;
+using EvalFn = kirima_eval_fn;
 
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems
 /// 0: all) and bits [lsb, lsb + width) of each (width 0: all).

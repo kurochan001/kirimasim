@@ -195,11 +195,11 @@ private:
     std::vector<Frame> frames_;
     std::vector<MonitorFrame> monitors_;
 
-    static hs_status resume(hs_context* /*ctx*/, void* frame) {
+    static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
-        return static_cast<hs_status>(f->sim->runner_.step(*f->sim, f->process));
+        return static_cast<kirima_status>(f->sim->runner_.step(*f->sim, f->process));
     }
-    static void evalSlot(hs_context* ctx, void* frame, std::uint64_t* out) {
+    static void evalSlot(kirima_context* ctx, void* frame, std::uint64_t* out) {
         const auto* m = static_cast<MonitorFrame*>(frame);
         out[0] = k::fromC(ctx).store().element(m->slot, 0)[0];
     }
@@ -557,7 +557,7 @@ struct GuardState {
     bool value = false;
 };
 
-int guardFn(hs_context* /*ctx*/, void* frame) {
+int guardFn(kirima_context* /*ctx*/, void* frame) {
     auto* g = static_cast<GuardState*>(frame);
     ++g->calls;
     return g->value ? 1 : 0;
@@ -568,10 +568,10 @@ struct Waiter {
     std::string name;
 };
 
-hs_status logOnce(hs_context* ctx, void* frame) {
+kirima_status logOnce(kirima_context* ctx, void* frame) {
     auto* w = static_cast<Waiter*>(frame);
     w->log->push_back(w->name + "@" + std::to_string(k::fromC(ctx).scheduler().time()));
-    return HS_DONE;
+    return KIRIMA_DONE;
 }
 
 TEST(Scheduler, FourStateEdgesMatchTheReference) {
@@ -638,7 +638,7 @@ struct BitFrame {
 };
 
 /// The monitored expression `slot & 1`.
-void evalBit0(hs_context* ctx, void* frame, std::uint64_t* out) {
+void evalBit0(kirima_context* ctx, void* frame, std::uint64_t* out) {
     const auto* f = static_cast<BitFrame*>(frame);
     out[0] = k::fromC(ctx).store().element(f->slot, 0)[0] & 1U;
 }
@@ -675,36 +675,36 @@ TEST(Scheduler, MonitorWakesOnlyWhenTheValueChanges) {
 // --- The C function table -------------------------------------------------------
 
 struct AbiProcess {
-    const hs_kernel_api* api;
+    const kirima_kernel_api* api;
     std::uint32_t id = 0;
     int step = 0;
     std::vector<std::uint64_t> seen;
 };
 
-hs_status abiResume(hs_context* ctx, void* frame) {
+kirima_status abiResume(kirima_context* ctx, void* frame) {
     auto* p = static_cast<AbiProcess*>(frame);
-    const hs_kernel_api* api = p->api;
+    const kirima_kernel_api* api = p->api;
     p->seen.push_back(api->time(ctx));
     if (p->step++ == 0) {
         const std::uint64_t v = 5;
         api->schedule_nba(ctx, p->id, 0, 0, 0, 0, &v, 2);
         api->wait_delay(ctx, p->id, 3);
-        return HS_WAITING;
+        return KIRIMA_WAITING;
     }
     p->seen.push_back(api->slot_words(ctx, 0, 0)[0]);
     api->request_end(ctx, static_cast<std::uint32_t>(EndReason::Finish), 0);
-    return HS_STOP;
+    return KIRIMA_STOP;
 }
 
 TEST(KernelAbi, TableReachesTheScheduler) {
-    const hs_kernel_api* api = hs_get_kernel_api();
+    const kirima_kernel_api* api = kirima_get_kernel_api();
     ASSERT_NE(api, nullptr);
-    EXPECT_EQ(api->abi_major, static_cast<std::uint32_t>(HS_ABI_MAJOR));
-    EXPECT_EQ(api->abi_minor, static_cast<std::uint32_t>(HS_ABI_MINOR));
+    EXPECT_EQ(api->abi_major, static_cast<std::uint32_t>(KIRIMA_ABI_MAJOR));
+    EXPECT_EQ(api->abi_minor, static_cast<std::uint32_t>(KIRIMA_ABI_MINOR));
     k::Context ctx;
     ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
     AbiProcess p{api};
-    p.id = api->add_process(k::toC(ctx), &abiResume, &p, HS_GROUP_ACTIVE);
+    p.id = api->add_process(k::toC(ctx), &abiResume, &p, KIRIMA_GROUP_ACTIVE);
     api->start(k::toC(ctx), p.id);
     EXPECT_EQ(ctx.scheduler().run(), EndReason::Finish);
     // Run at 0, then at 3 after the NBA of 5 at time 2.

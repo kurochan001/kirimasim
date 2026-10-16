@@ -54,7 +54,7 @@ private:
     std::mt19937_64 rng_{kirimasim::test::fuzzSeed(0x77346f7073ULL)};
 };
 
-/// Rounds of each fuzz test: 20000 times HS_FUZZ_SCALE (fuzz.h).
+/// Rounds of each fuzz test: 20000 times KIRIMA_FUZZ_SCALE (fuzz.h).
 std::uint64_t rounds() { return 20'000 * kirimasim::test::fuzzScale(); }
 
 /// Whether the fast result equals the reference, with a message if not.

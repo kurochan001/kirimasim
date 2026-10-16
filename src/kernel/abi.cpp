@@ -12,31 +12,31 @@ namespace kirimasim::kernel {
 
 namespace {
 
-static_assert(static_cast<int>(Status::Waiting) == HS_WAITING);
-static_assert(static_cast<int>(Status::Done) == HS_DONE);
-static_assert(static_cast<int>(Status::Killed) == HS_KILLED);
-static_assert(static_cast<int>(Status::Error) == HS_ERROR);
-static_assert(static_cast<int>(Status::Stop) == HS_STOP);
-static_assert(static_cast<int>(Edge::Both) == HS_EDGE_BOTH);
-static_assert(static_cast<int>(Group::Reactive) == HS_GROUP_REACTIVE);
-static_assert(static_cast<int>(Domain::Four) == HS_DOMAIN_FOUR);
-static_assert(sizeof(hs_slot_part) == sizeof(SlotPart));
+static_assert(static_cast<int>(Status::Waiting) == KIRIMA_WAITING);
+static_assert(static_cast<int>(Status::Done) == KIRIMA_DONE);
+static_assert(static_cast<int>(Status::Killed) == KIRIMA_KILLED);
+static_assert(static_cast<int>(Status::Error) == KIRIMA_ERROR);
+static_assert(static_cast<int>(Status::Stop) == KIRIMA_STOP);
+static_assert(static_cast<int>(Edge::Both) == KIRIMA_EDGE_BOTH);
+static_assert(static_cast<int>(Group::Reactive) == KIRIMA_GROUP_REACTIVE);
+static_assert(static_cast<int>(Domain::Four) == KIRIMA_DOMAIN_FOUR);
+static_assert(sizeof(kirima_slot_part) == sizeof(SlotPart));
 
-Scheduler& sched(hs_context* c) { return fromC(c).scheduler(); }
+Scheduler& sched(kirima_context* c) { return fromC(c).scheduler(); }
 
-SlotPart partOf(const hs_slot_part& p) {
+SlotPart partOf(const kirima_slot_part& p) {
     return {p.slot, p.first_elem, p.num_elems, p.lsb, p.width};
 }
 
-constexpr hs_kernel_api kApi = {
-    HS_ABI_MAJOR,
-    HS_ABI_MINOR,
-    [](hs_context* c, hs_resume_fn fn, void* frame, std::uint32_t group) {
+constexpr kirima_kernel_api kApi = {
+    KIRIMA_ABI_MAJOR,
+    KIRIMA_ABI_MINOR,
+    [](kirima_context* c, kirima_resume_fn fn, void* frame, std::uint32_t group) {
         return sched(c).addProcess(fn, frame, static_cast<Group>(group));
     },
-    [](hs_context* c, std::uint32_t p) { sched(c).start(p); },
-    [](hs_context* c, std::uint32_t p, std::uint64_t ticks) { sched(c).waitDelay(p, ticks); },
-    [](hs_context* c, std::uint32_t p, const hs_wait_item* items, std::uint32_t n) {
+    [](kirima_context* c, std::uint32_t p) { sched(c).start(p); },
+    [](kirima_context* c, std::uint32_t p, std::uint64_t ticks) { sched(c).waitDelay(p, ticks); },
+    [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n) {
         std::vector<WaitItem> v;
         v.reserve(n);
         for (std::uint32_t i = 0; i < n; ++i)
@@ -44,7 +44,7 @@ constexpr hs_kernel_api kApi = {
                          items[i].guard_frame});
         sched(c).waitEvent(p, v);
     },
-    [](hs_context* c, std::uint32_t p, const hs_monitor* m) {
+    [](kirima_context* c, std::uint32_t p, const kirima_monitor* m) {
         MonitorSpec spec;
         for (std::uint32_t i = 0; i < m->num_slots; ++i)
             spec.slots.push_back(partOf(m->slots[i]));
@@ -57,24 +57,25 @@ constexpr hs_kernel_api kApi = {
         spec.untilTrue = m->until_true != 0;
         sched(c).waitMonitor(p, spec);
     },
-    [](hs_context* c, std::uint32_t p, std::uint32_t e) { sched(c).waitNamed(p, e); },
-    [](hs_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+    [](kirima_context* c, std::uint32_t p, std::uint32_t e) { sched(c).waitNamed(p, e); },
+    [](kirima_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
+       std::uint32_t width,
        const std::uint64_t* value) { return sched(c).write(s, elem, lsb, width, value) ? 1 : 0; },
-    [](hs_context* c, std::uint32_t p, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
+    [](kirima_context* c, std::uint32_t p, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width, const std::uint64_t* value,
        std::uint64_t delay) { sched(c).scheduleNba(p, s, elem, lsb, width, value, delay); },
-    [](hs_context* c, std::uint32_t e) { sched(c).trigger(e); },
-    [](hs_context* c, std::uint32_t p, std::uint32_t e, std::uint64_t delay) {
+    [](kirima_context* c, std::uint32_t e) { sched(c).trigger(e); },
+    [](kirima_context* c, std::uint32_t p, std::uint32_t e, std::uint64_t delay) {
         sched(c).triggerNb(p, e, delay);
     },
-    [](hs_context* c, std::uint32_t e) { return sched(c).triggered(e) ? 1 : 0; },
-    [](hs_context* c) { return sched(c).time(); },
-    [](hs_context* c, std::uint32_t reason, std::int32_t level) {
+    [](kirima_context* c, std::uint32_t e) { return sched(c).triggered(e) ? 1 : 0; },
+    [](kirima_context* c) { return sched(c).time(); },
+    [](kirima_context* c, std::uint32_t reason, std::int32_t level) {
         sched(c).requestEnd(static_cast<EndReason>(reason), level);
     },
-    [](hs_context* c) { return sched(c).ending() ? 1 : 0; },
-    [](hs_context* c, const char* message) { sched(c).fail(message); },
-    [](hs_context* c, std::uint32_t s, std::uint32_t elem) {
+    [](kirima_context* c) { return sched(c).ending() ? 1 : 0; },
+    [](kirima_context* c, const char* message) { sched(c).fail(message); },
+    [](kirima_context* c, std::uint32_t s, std::uint32_t elem) {
         return fromC(c).store().element(s, elem);
     },
 };
@@ -83,4 +84,4 @@ constexpr hs_kernel_api kApi = {
 
 }  // namespace kirimasim::kernel
 
-extern "C" const hs_kernel_api* hs_get_kernel_api(void) { return &kirimasim::kernel::kApi; }
+extern "C" const kirima_kernel_api* kirima_get_kernel_api(void) { return &kirimasim::kernel::kApi; }

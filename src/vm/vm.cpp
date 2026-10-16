@@ -418,14 +418,14 @@ public:
         return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
     }
 
-    static hs_status resume(hs_context* /*ctx*/, void* frame) {
+    static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
         std::uint64_t steps = 0;
         const kernel::Status st = vm.runProcess(*f, steps);
         vm.counters_.increment(vm.cInstrs_, steps);
         if (st == kernel::Status::Done) vm.ended(*f);
-        return static_cast<hs_status>(st);
+        return static_cast<kirima_status>(st);
     }
 
 private:

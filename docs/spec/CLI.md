@@ -115,4 +115,4 @@ SCHEDULER_SPEC.md の 16.2 節の表と同じ。理由の名前は `--stats=json
 ## 6. 未確認・後で書くこと
 
 - `$error` を数えるオプションの名前と既定。
-- `--diag-format=json` の項目と、診断の ID の体系（M7。RUNTIME_ABI.md の `hs_status` と一緒に）。
+- `--diag-format=json` の項目と、診断の ID の体系（M7。RUNTIME_ABI.md の `kirima_status` と一緒に）。

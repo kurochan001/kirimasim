@@ -39,7 +39,7 @@ private:
 };
 
 /// The C handle of a context (abi.h), and back.
-inline hs_context* toC(Context& c) { return reinterpret_cast<hs_context*>(&c); }
-inline Context& fromC(hs_context* c) { return *reinterpret_cast<Context*>(c); }
+inline kirima_context* toC(Context& c) { return reinterpret_cast<kirima_context*>(&c); }
+inline Context& fromC(kirima_context* c) { return *reinterpret_cast<Context*>(c); }
 
 }  // namespace kirimasim::kernel
