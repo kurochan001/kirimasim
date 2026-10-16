@@ -141,6 +141,8 @@ MUTANTS = [
      "copyArray(to.id, {}, from.id, {}, nonblocking, sl);", "(void)from;"),
     ("front: a structure pattern counts one leaf per member", "src/front/lower_struct.cpp",
      "            off += leafCount(ft);", "            off += 1;"),
+    ("vm: the exponent of ** has the width of the result", "src/vm/vm.cpp",
+     "sir::isSigned(rt), t(1).width,", "sir::isSigned(rt), w,"),
 ]
 
 
