@@ -64,6 +64,11 @@ bool isPureSystemFunction(std::string_view n) {
     return among(n, kPure) || among(n, kRealMath1) || among(n, kRealMath2);
 }
 
+/// A variable, or a formal argument of a subroutine (also a variable).
+bool isVariable(const ast::Symbol& s) {
+    return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
+}
+
 bool isReal(Type t) { return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal; }
 
 /// The bits a real constant keeps: a double, or a float for shortreal
@@ -334,7 +339,7 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
     }
     if (acc.indices.empty() || cur->kind != ast::ExpressionKind::NamedValue) return std::nullopt;
     const ast::Symbol& sym = cur->as<ast::NamedValueExpression>().symbol;
-    if (sym.kind != ast::SymbolKind::Variable) return std::nullopt;
+    if (!isVariable(sym)) return std::nullopt;
     acc.var = &sym.as<ast::VariableSymbol>();
     std::reverse(acc.indices.begin(), acc.indices.end());
     return acc;
@@ -356,7 +361,7 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
     }
     if (base->kind != ast::ExpressionKind::NamedValue) return std::nullopt;
     const ast::Symbol& sym = base->as<ast::NamedValueExpression>().symbol;
-    if (sym.kind != ast::SymbolKind::Variable || findFrameVar(sym)) return std::nullopt;
+    if (!isVariable(sym) || findFrameVar(sym)) return std::nullopt;
     const auto& v = sym.as<ast::VariableSymbol>();
     if (v.lifetime != ast::VariableLifetime::Static) return std::nullopt;
     const sir::SlotId s = slotOf(v, e.sourceRange.start());
@@ -396,8 +401,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 return constantFrom(sym.as<ast::ParameterSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym))
-                return emit(Op::Fload, proc().frame[*f].type, {Operand::frame(*f)}, sl);
-            if (sym.kind != ast::SymbolKind::Variable)
+                return emit(Op::Fload, frameVars()[*f].type, {Operand::frame(*f)}, sl);
+            if (!isVariable(sym))
                 unsupported(sl, "reference to a " + std::string(ast::toString(sym.kind)));
             const auto& v = sym.as<ast::VariableSymbol>();
             if (v.lifetime != ast::VariableLifetime::Static)
@@ -464,7 +469,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::Call: {
             const auto& call = e.as<ast::CallExpression>();
             const std::string name(call.getSubroutineName());
-            if (!call.isSystemCall()) unsupported(sl, "call of function '" + name + "'");
+            if (!call.isSystemCall()) return lowerCall(call);
             if ((name == "$signed" || name == "$unsigned") && call.arguments().size() == 1)
                 return coerce(lowerExpr(*call.arguments()[0]), typeOf(*e.type, sl), sl);
             if (name == "$time") {
@@ -820,11 +825,11 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             const ast::Symbol& sym = lhs.as<ast::NamedValueExpression>().symbol;
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
                 if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
-                const Val fv = coerce(v, proc().frame[*f].type, sl);
+                const Val fv = coerce(v, frameVars()[*f].type, sl);
                 emitVoid(Op::Fstore, {Operand::frame(*f), fv.op}, sl);
                 return;
             }
-            if (sym.kind != ast::SymbolKind::Variable)
+            if (!isVariable(sym))
                 unsupported(sl, "assignment to a " + std::string(ast::toString(sym.kind)));
             const auto& var = sym.as<ast::VariableSymbol>();
             if (var.lifetime != ast::VariableLifetime::Static)
@@ -870,7 +875,7 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             sir::SlotId s = 0;
             if (base.kind == ast::ExpressionKind::NamedValue) {
                 const ast::Symbol& sym = base.as<ast::NamedValueExpression>().symbol;
-                if (sym.kind != ast::SymbolKind::Variable || findFrameVar(sym) ||
+                if (!isVariable(sym) || findFrameVar(sym) ||
                     sym.as<ast::VariableSymbol>().lifetime != ast::VariableLifetime::Static)
                     unsupported(sl, "assignment to a part of this variable");
                 s = slotOf(sym.as<ast::VariableSymbol>(), sl);

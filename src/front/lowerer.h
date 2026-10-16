@@ -39,6 +39,11 @@ namespace ast = slang::ast;
 /// procedure being lowered.
 struct Unsupported {};
 
+/// The time unit and precision of a scope; 1ns/1ns when nothing sets them.
+sir::TimeScale timeScaleOf(const ast::Scope& scope);
+/// Whether a statement may wait (unknown statements count as waiting).
+bool mayWait(const ast::Statement& s);
+
 /// A value: an operand (a temp or a constant) and its type.
 struct Val {
     sir::Operand op;
@@ -117,6 +122,13 @@ public:
     void lowerStore(const ast::Expression& lhs, const Val& v, bool nonblocking,
                     slang::SourceLocation sl);
     Val lowerAssignment(const ast::AssignmentExpression& a);
+
+    // Subroutines (lower_sub.cpp).
+    /// The subroutine row of a function or task for the current instance,
+    /// lowered on its first call.
+    sir::SubroutineId subroutineOf(const ast::SubroutineSymbol& sym, slang::SourceLocation sl);
+    Val lowerCall(const ast::CallExpression& call);
+    void lowerReturn(const ast::Expression* e, slang::SourceLocation sl);
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
 
@@ -130,7 +142,7 @@ public:
     Val constantFrom(const slang::ConstantValue& cv, sir::Type t, slang::SourceLocation sl);
 
     // Building blocks.
-    sir::TempId newTemp() { return proc().numTemps++; }
+    sir::TempId newTemp() { return numTemps()++; }
     sir::BlockId newBlock();
     void setBlock(sir::BlockId b) {
         b_.block = b;
@@ -145,6 +157,16 @@ public:
                   slang::SourceLocation sl);
 
     sir::Process& proc() { return design_.processes[b_.proc]; }
+    // The parts of the body being lowered, a process or a subroutine.
+    std::vector<sir::BasicBlock>& blocks() {
+        return b_.isSub ? design_.subroutines[b_.proc].blocks : proc().blocks;
+    }
+    std::vector<sir::FrameVar>& frameVars() {
+        return b_.isSub ? design_.subroutines[b_.proc].frame : proc().frame;
+    }
+    std::uint32_t& numTemps() {
+        return b_.isSub ? design_.subroutines[b_.proc].numTemps : proc().numTemps;
+    }
     sir::Design& design() { return design_; }
     int precision() const { return precision_; }
     sir::TimeScale timeScale() const { return b_.scale; }
@@ -181,8 +203,12 @@ public:
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
         std::vector<Loop> loops;
         sir::TimeScale scale;
-        std::vector<sir::SlotRange> reads;  ///< For the sensitivity of always_comb.
-        std::uint32_t forks = 0;            ///< Fork statements so far, for child names.
+        std::vector<sir::SlotRange> reads;        ///< For the sensitivity of always_comb.
+        std::uint32_t forks = 0;                  ///< Fork statements so far, for child names.
+        bool isSub = false;                       ///< proc is a subroutine number.
+        const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
+        std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
+        std::optional<sir::SlotId> retSlot;       ///< The same, static.
     };
     Body& body() { return b_; }
 
@@ -198,11 +224,22 @@ private:
     sir::InstanceId instance_ = 0;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
     std::map<sir::InstanceId, Body> staticBody_;           ///< Its lowering state.
-    const ast::Symbol* evalSymbol_ = nullptr;              ///< Where constants are evaluated.
+    /// Subroutines lowered so far, per instance and symbol.
+    std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
+    std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subWrites_;
+    std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subReads_;
+    /// Calls made by each body: (is a subroutine, number) -> callees.
+    std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> callees_;
+    /// The reads of each always_comb and always_latch, for its sensitivity.
+    std::map<std::uint32_t, std::vector<sir::SlotRange>> combReads_;
+    const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
     Body b_;
 
     void lowerTop(const ast::InstanceSymbol& inst);
     void checkWriters();
+    /// After every body is lowered: the write sets and the always_comb
+    /// sensitivity, including what called subroutines read and write.
+    void finishDesign();
     void lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::InstanceId inst,
                         std::map<std::string, std::uint32_t>& counts);
 };

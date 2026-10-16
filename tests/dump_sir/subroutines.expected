@@ -1,0 +1,70 @@
+; sir format 0
+precision 1ns
+source 0 "subroutines.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.g" : s2<32> var inst=0
+slot %s1 "top.k" : s2<32> var inst=0
+slot %s2 "top.sum" : s2<32> var inst=0
+slot %s3 "top.b" : i4<8> var inst=0
+slot %s4 "top.addg.a" : s2<32> var inst=0 sub=@0
+slot %s5 "top.addg.calls" : s2<32> var inst=0 sub=@0
+
+subroutine @0 "top.addg" function static inst=0 ret=s2<32> {  ; 0:9:16
+  param input "a" : s2<32> -> %s4
+  frame %f0 "addg" : s2<32>
+bb0:
+  %t0 = load s2<32> %s5  ; 0:11:13
+  %t1 = add s2<32> %t0, const s2<32> 32'h00000001  ; 0:11:13
+  store %s5, %t1  ; 0:11:5
+  %t2 = load s2<32> %s4  ; 0:12:12
+  %t3 = load s2<32> %s0  ; 0:12:16
+  %t4 = add s2<32> %t2, %t3  ; 0:12:12
+  ret %t4  ; 0:12:5
+}
+
+subroutine @1 "top.twice" function automatic inst=0 ret=s2<32> {  ; 0:14:26
+  param input "a" : s2<32> -> %f0
+  frame %f0 "a" : s2<32>
+  frame %f1 "twice" : s2<32>
+bb0:
+  %t0 = fload s2<32> %f0  ; 0:15:16
+  %t1 = mul s2<32> const s2<32> 32'h00000002, %t0  ; 0:15:12
+  ret %t1  ; 0:15:5
+}
+
+subroutine @2 "top.split" task automatic inst=0 ret=void {  ; 0:17:18
+  param input "x" : i4<8> -> %f0
+  param output "hi" : i4<4> -> %f1
+  frame %f0 "x" : i4<8>
+  frame %f1 "hi" : i4<4>
+bb0:
+  %t0 = fload i4<8> %f0  ; 0:18:10
+  %t1 = partsel i4<4> %t0, const i2<32> 32'h00000004  ; 0:18:10
+  fstore %f1, %t1  ; 0:18:5
+  ret  ; 0:17:18
+}
+
+process @0 "top.always_comb0" kind=comb inst=0 trigger=any(%s1),any(%s0) writes=%s2,%s4,%s5 {  ; 0:20:3
+bb0:
+  %t0 = load s2<32> %s1  ; 0:20:26
+  %t1 = call s2<32> @0, %t0  ; 0:20:21
+  store %s2, %t1  ; 0:20:15
+  ret  ; 0:20:3
+}
+
+process @1 "top.$static" kind=static-init inst=0 writes=%s5 {  ; 0:10:16
+bb0:
+  store %s5, const s2<32> 32'h00000000  ; 0:10:16
+  ret  ; 0:6:8
+}
+
+process @2 "top.initial0" kind=initial inst=0 writes=%s1,%s3[3:0] {  ; 0:21:3
+  frame %f0 "" : i4<4>
+bb0:
+  %t0 = call s2<32> @1, const s2<32> 32'h00000003  ; 0:22:9
+  store %s1, %t0  ; 0:22:5
+  call @2, const i4<8> 8'ha5, %f0  ; 0:23:5
+  %t1 = fload i4<4> %f0  ; 0:23:5
+  store %s3[3:0], %t1  ; 0:23:5
+  ret  ; 0:21:3
+}

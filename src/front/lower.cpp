@@ -67,6 +67,46 @@ int globalPrecision(const ast::Compilation& compilation) {
     return result.value_or(fallback);
 }
 
+sir::Edge edgeOf(ast::EdgeKind k) {
+    switch (k) {
+        case ast::EdgeKind::PosEdge: return sir::Edge::Pos;
+        case ast::EdgeKind::NegEdge: return sir::Edge::Neg;
+        case ast::EdgeKind::BothEdges: return sir::Edge::Both;
+        case ast::EdgeKind::None: break;
+    }
+    return sir::Edge::Any;
+}
+
+/// Whether range `a` covers range `b` of the same slot (0 counts means
+/// "all"; `width` is the slot's element width).
+bool covers(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
+            std::uint32_t elems) {
+    if (a.slot != b.slot) return false;
+    const std::uint32_t af = a.firstElem;
+    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
+    const std::uint32_t bf = b.firstElem;
+    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
+    const std::uint32_t al = a.lsb;
+    const std::uint32_t aw = a.width == 0 ? width : a.width;
+    const std::uint32_t bl = b.lsb;
+    const std::uint32_t bw = b.width == 0 ? width : b.width;
+    return af <= bf && bf + bn <= af + an && al <= bl && bl + bw <= al + aw;
+}
+
+/// Whether two ranges share a bit.
+bool overlap(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
+             std::uint32_t elems) {
+    if (a.slot != b.slot) return false;
+    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
+    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
+    const std::uint32_t aw = a.width == 0 ? width : a.width;
+    const std::uint32_t bw = b.width == 0 ? width : b.width;
+    return a.firstElem < b.firstElem + bn && b.firstElem < a.firstElem + an && a.lsb < b.lsb + bw &&
+           b.lsb < a.lsb + aw;
+}
+
+}  // namespace
+
 /// The time unit and precision of the scope a procedure is in; 1ns/1ns
 /// when nothing sets them (SCHEDULER_SPEC.md 1).
 sir::TimeScale timeScaleOf(const ast::Scope& scope) {
@@ -125,46 +165,6 @@ bool mayWait(const ast::Statement& s) {
     }
 }
 
-sir::Edge edgeOf(ast::EdgeKind k) {
-    switch (k) {
-        case ast::EdgeKind::PosEdge: return sir::Edge::Pos;
-        case ast::EdgeKind::NegEdge: return sir::Edge::Neg;
-        case ast::EdgeKind::BothEdges: return sir::Edge::Both;
-        case ast::EdgeKind::None: break;
-    }
-    return sir::Edge::Any;
-}
-
-/// Whether range `a` covers range `b` of the same slot (0 counts means
-/// "all"; `width` is the slot's element width).
-bool covers(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
-            std::uint32_t elems) {
-    if (a.slot != b.slot) return false;
-    const std::uint32_t af = a.firstElem;
-    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
-    const std::uint32_t bf = b.firstElem;
-    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
-    const std::uint32_t al = a.lsb;
-    const std::uint32_t aw = a.width == 0 ? width : a.width;
-    const std::uint32_t bl = b.lsb;
-    const std::uint32_t bw = b.width == 0 ? width : b.width;
-    return af <= bf && bf + bn <= af + an && al <= bl && bl + bw <= al + aw;
-}
-
-/// Whether two ranges share a bit.
-bool overlap(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
-             std::uint32_t elems) {
-    if (a.slot != b.slot) return false;
-    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
-    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
-    const std::uint32_t aw = a.width == 0 ? width : a.width;
-    const std::uint32_t bw = b.width == 0 ? width : b.width;
-    return a.firstElem < b.firstElem + bn && b.firstElem < a.firstElem + an && a.lsb < b.lsb + bw &&
-           b.lsb < a.lsb + aw;
-}
-
-}  // namespace
-
 // --- Diagnostics and types ---------------------------------------------------
 
 void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
@@ -214,25 +214,24 @@ sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
 // --- Building blocks ---------------------------------------------------------
 
 sir::BlockId Lowerer::newBlock() {
-    proc().blocks.emplace_back();
-    return static_cast<sir::BlockId>(proc().blocks.size() - 1);
+    blocks().emplace_back();
+    return static_cast<sir::BlockId>(blocks().size() - 1);
 }
 
 Val Lowerer::emit(sir::Op op, sir::Type t, std::vector<sir::Operand> ops,
                   slang::SourceLocation sl) {
     const sir::TempId r = newTemp();
-    proc().blocks[b_.block].instrs.push_back({op, t, r, std::move(ops), loc(sl)});
+    blocks()[b_.block].instrs.push_back({op, t, r, std::move(ops), loc(sl)});
     return {sir::Operand::temp(r), t};
 }
 
 void Lowerer::emitVoid(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
-    proc().blocks[b_.block].instrs.push_back(
-        {op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
+    blocks()[b_.block].instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
 }
 
 void Lowerer::emitInto(sir::BlockId b, sir::Op op, std::vector<sir::Operand> ops,
                        slang::SourceLocation sl) {
-    proc().blocks[b].instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
+    blocks()[b].instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
 }
 
 void Lowerer::terminate(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
@@ -272,6 +271,17 @@ sir::SlotId Lowerer::slotOf(const ast::VariableSymbol& v, slang::SourceLocation 
     s.type = typeOf(*t, sl);
     s.dims = std::move(dims);
     s.instance = instance_;
+    // A variable or argument of the subroutine being lowered belongs to it.
+    if (b_.isSub) {
+        for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
+             sc = sc->asSymbol().getParentScope()) {
+            if (&sc->asSymbol() == b_.subSymbol) {
+                s.subroutine = b_.proc;
+                break;
+            }
+            if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
+        }
+    }
     const auto id = static_cast<sir::SlotId>(design_.slots.size());
     design_.names.push_back({s.name, id});
     design_.slots.push_back(std::move(s));
@@ -282,8 +292,8 @@ sir::SlotId Lowerer::slotOf(const ast::VariableSymbol& v, slang::SourceLocation 
 sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl) {
     if (auto it = b_.frameVars.find(&v); it != b_.frameVars.end()) return it->second;
     const sir::Type t = typeOf(v.getType(), sl);
-    const auto id = static_cast<sir::FrameVarId>(proc().frame.size());
-    proc().frame.push_back({std::string(v.name), t, sir::kNone});
+    const auto id = static_cast<sir::FrameVarId>(frameVars().size());
+    frameVars().push_back({std::string(v.name), t, sir::kNone});
     b_.frameVars.emplace(&v, id);
     return id;
 }
@@ -294,17 +304,18 @@ std::optional<sir::FrameVarId> Lowerer::findFrameVar(const ast::Symbol& s) const
 }
 
 sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
-    const auto id = static_cast<sir::FrameVarId>(proc().frame.size());
-    proc().frame.push_back({std::string(), t, sir::kNone});
+    const auto id = static_cast<sir::FrameVarId>(frameVars().size());
+    frameVars().push_back({std::string(), t, sir::kNone});
     return id;
 }
 
 void Lowerer::noteWrite(const sir::SlotRange& r) {
     const sir::Slot& s = design_.slots[r.slot];
     const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
-    for (const sir::SlotRange& w : proc().writes)
+    std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.proc] : proc().writes;
+    for (const sir::SlotRange& w : writes)
         if (covers(w, r, s.type.width, elems)) return;
-    proc().writes.push_back(r);
+    writes.push_back(r);
 }
 
 void Lowerer::noteRead(const sir::SlotRange& r) { b_.reads.push_back(r); }
@@ -315,7 +326,66 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     design_.timePrecision = precision_;
     for (const ast::InstanceSymbol* top : root.topInstances)
         lowerTop(*top);
-    if (numErrors_ == 0) checkWriters();
+    if (numErrors_ != 0) return;
+    finishDesign();
+    checkWriters();
+}
+
+void Lowerer::finishDesign() {
+    const auto add = [&](std::vector<sir::SlotRange>& set, const sir::SlotRange& r) {
+        const sir::Slot& s = design_.slots[r.slot];
+        const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+        for (const sir::SlotRange& w : set)
+            if (covers(w, r, s.type.width, elems)) return false;
+        set.push_back(r);
+        return true;
+    };
+    // What each subroutine writes and reads, with what it calls, until
+    // nothing changes (recursion included).
+    std::map<sir::SubroutineId, std::vector<sir::SlotRange>> writes = subWrites_;
+    std::map<sir::SubroutineId, std::vector<sir::SlotRange>> reads = subReads_;
+    for (bool changed = true; changed;) {
+        changed = false;
+        for (const auto& [key, called] : callees_) {
+            if (!key.first) continue;
+            for (const sir::SubroutineId c : called) {
+                for (const sir::SlotRange& r : std::vector(writes[c]))
+                    changed = add(writes[key.second], r) || changed;
+                for (const sir::SlotRange& r : std::vector(reads[c]))
+                    changed = add(reads[key.second], r) || changed;
+            }
+        }
+    }
+    // A process writes what the subroutines it calls write; always_comb and
+    // always_latch are sensitive to what they read there too (9.2.2.2.1,
+    // SCHEDULER_SPEC.md 6.3, 6.4).
+    for (const auto& [key, called] : callees_) {
+        if (key.first) continue;
+        for (const sir::SubroutineId c : called) {
+            for (const sir::SlotRange& r : writes[c])
+                add(design_.processes[key.second].writes, r);
+            if (combReads_.count(key.second) != 0)
+                for (const sir::SlotRange& r : reads[c])
+                    combReads_[key.second].push_back(r);
+        }
+    }
+    // The implicit sensitivity: what the block reads, less what it writes
+    // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
+    for (const auto& [p, procReads] : combReads_) {
+        sir::Process& proc = design_.processes[p];
+        for (const sir::SlotRange& r : procReads) {
+            const sir::Slot& s = design_.slots[r.slot];
+            const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+            // Variables and arguments declared in a called function are not
+            // part of it either.
+            bool skip = s.subroutine != sir::kNone;
+            for (const sir::SlotRange& w : proc.writes)
+                skip = skip || covers(w, r, s.type.width, elems);
+            for (const sir::Trigger& t : proc.triggers)
+                skip = skip || covers(t.range, r, s.type.width, elems);
+            if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
+        }
+    }
 }
 
 void Lowerer::checkWriters() {
@@ -380,6 +450,7 @@ void Lowerer::lowerTop(const ast::InstanceSymbol& inst) {
             case ast::SymbolKind::TypeParameter:
             case ast::SymbolKind::TypeAlias:
             case ast::SymbolKind::StatementBlock: continue;  // scopes inside procedures
+            case ast::SymbolKind::Subroutine: continue;      // lowered when first called
             case ast::SymbolKind::ProceduralBlock:
                 lowerProcedure(member.as<ast::ProceduralBlockSymbol>(), instId, counts);
                 continue;
@@ -475,18 +546,9 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
                                   : sir::ProcessKind::Latch;
                 lowerStatement(bodyStmt);
                 if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
-                // The implicit sensitivity: what the block reads, less what
-                // it writes (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
-                for (const sir::SlotRange& r : b_.reads) {
-                    const sir::Slot& s = design_.slots[r.slot];
-                    const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
-                    bool skip = false;
-                    for (const sir::SlotRange& w : proc().writes)
-                        skip = skip || covers(w, r, s.type.width, elems);
-                    for (const sir::Trigger& t : proc().triggers)
-                        skip = skip || covers(t.range, r, s.type.width, elems);
-                    if (!skip) proc().triggers.push_back({r, sir::Edge::Any});
-                }
+                // The sensitivity is made once every call is known
+                // (finishDesign).
+                combReads_[b_.proc] = b_.reads;
                 break;
             }
             case ast::ProceduralBlockKind::Always:
@@ -551,6 +613,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
         }
     } catch (const Unsupported&) {
         design_.processes.resize(first);  // with any fork children
+        combReads_.erase(static_cast<std::uint32_t>(first));
         // A static-init process made while lowering this one goes too.
         for (auto it = staticInit_.begin(); it != staticInit_.end();) {
             if (it->second >= first) {

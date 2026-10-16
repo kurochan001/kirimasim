@@ -230,25 +230,25 @@ public:
         for (const sir::Constant& c : d.constants)
             consts_.push_back(
                 {c.aWords.empty() ? 0 : c.aWords[0], c.bWords.empty() ? 0 : c.bWords[0]});
-        std::uint32_t maxTemps = 0;
-        info_.resize(d.processes.size());
-        tempTypes_.resize(d.processes.size());
-        for (std::size_t p = 0; p < d.processes.size(); ++p) {
-            const sir::Process& proc = d.processes[p];
-            maxTemps = std::max(maxTemps, proc.numTemps);
-            tempTypes_[p].resize(proc.numTemps);
-            info_[p].resize(proc.blocks.size());
-            for (std::size_t b = 0; b < proc.blocks.size(); ++b) {
-                for (const sir::BlockParam& bp : proc.blocks[b].params)
-                    if (bp.temp < proc.numTemps) tempTypes_[p][bp.temp] = bp.type;
-                for (const sir::Instr& in : proc.blocks[b].instrs) {
-                    if (in.result != sir::kNone && in.result < proc.numTemps)
+        // Bodies: processes first, then subroutines (bodyBlocks).
+        const std::size_t bodies = d.processes.size() + d.subroutines.size();
+        info_.resize(bodies);
+        tempTypes_.resize(bodies);
+        for (std::uint32_t p = 0; p < bodies; ++p) {
+            const auto& blocks = bodyBlocks(p);
+            const std::uint32_t n = bodyTemps(p);
+            tempTypes_[p].resize(n);
+            info_[p].resize(blocks.size());
+            for (std::size_t b = 0; b < blocks.size(); ++b) {
+                for (const sir::BlockParam& bp : blocks[b].params)
+                    if (bp.temp < n) tempTypes_[p][bp.temp] = bp.type;
+                for (const sir::Instr& in : blocks[b].instrs) {
+                    if (in.result != sir::kNone && in.result < n)
                         tempTypes_[p][in.result] = in.type;
                     info_[p][b].push_back(decode(in));
                 }
             }
         }
-        temps_.resize(maxTemps);
     }
 
     RunResult run() {
@@ -341,8 +341,41 @@ private:
     std::vector<W4> consts_;
     std::vector<std::vector<sir::Type>> tempTypes_;          ///< [process][temp]
     std::vector<std::vector<std::vector<InstrInfo>>> info_;  ///< [process][block][instr]
-    std::vector<W4> temps_;     ///< Temps never live across a wait, so one set serves all.
-    std::deque<Frame> frames_;  ///< A deque, so that frames never move.
+    /// The temps of the running body and of the calls below it. Temps never
+    /// live across a wait (SIR_SPEC.md 5.1), so a process starts at 0.
+    std::vector<W4> tempStack_;
+    /// The body being run: a process or a called subroutine, its frame
+    /// variables and where its temps start.
+    struct Act {
+        std::uint32_t body = 0;
+        std::vector<W4>* vars = nullptr;
+        std::size_t base = 0;
+    };
+    Act act_;
+    std::uint32_t callDepth_ = 0;
+
+    std::uint32_t processCount() const { return static_cast<std::uint32_t>(d_.processes.size()); }
+    bool isSubBody(std::uint32_t body) const { return body >= processCount(); }
+    const sir::Subroutine& subOf(std::uint32_t body) const {
+        return d_.subroutines[body - processCount()];
+    }
+    const std::vector<sir::BasicBlock>& bodyBlocks(std::uint32_t body) const {
+        return isSubBody(body) ? subOf(body).blocks : d_.processes[body].blocks;
+    }
+    const std::vector<sir::FrameVar>& bodyFrame(std::uint32_t body) const {
+        return isSubBody(body) ? subOf(body).frame : d_.processes[body].frame;
+    }
+    std::uint32_t bodyTemps(std::uint32_t body) const {
+        return isSubBody(body) ? subOf(body).numTemps : d_.processes[body].numTemps;
+    }
+    W4& temp(sir::TempId id) { return tempStack_[act_.base + id]; }
+    /// Enters a body: its temps above the current ones.
+    void enter(Act a) {
+        act_ = a;
+        if (tempStack_.size() < a.base + bodyTemps(a.body))
+            tempStack_.resize(a.base + bodyTemps(a.body));
+    }
+    std::deque<Frame> frames_;             ///< A deque, so that frames never move.
     std::vector<kernel::WaitItem> items_;  ///< Scratch for wait.event.
 
     InstrInfo decode(const sir::Instr& in) {
@@ -454,21 +487,21 @@ private:
 
     // --- Values ---
 
-    sir::Type typeOf(std::uint32_t p, const Operand& o) const {
+    sir::Type typeOf(const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp: return tempTypes_[p][o.id];
+            case Operand::Kind::Temp: return tempTypes_[act_.body][o.id];
             case Operand::Kind::Const: return d_.constants[o.id].type;
-            case Operand::Kind::Frame: return d_.processes[p].frame[o.id].type;
+            case Operand::Kind::Frame: return bodyFrame(act_.body)[o.id].type;
             case Operand::Kind::Slot: return d_.slots[o.id].type;
             default: return sir::voidType();
         }
     }
 
-    W4 value(const Frame& f, const Operand& o) const {
+    W4 value(const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp: return temps_[o.id];
+            case Operand::Kind::Temp: return tempStack_[act_.base + o.id];
             case Operand::Kind::Const: return consts_[o.id];
-            case Operand::Kind::Frame: return f.vars[o.id];
+            case Operand::Kind::Frame: return (*act_.vars)[o.id];
             default: return {0, 0};
         }
     }
@@ -503,7 +536,7 @@ private:
         std::uint64_t elem = 0;
         for (std::size_t d = 0; d < s.dims.size(); ++d) {
             const Operand& o = ops[first + d];
-            const std::optional<std::int64_t> idx = indexValue(value(f, o), typeOf(f.process, o));
+            const std::optional<std::int64_t> idx = indexValue(value(o), typeOf(o));
             if (!idx) return std::nullopt;
             const std::int64_t l = s.dims[d].left;
             const std::int64_t r = s.dims[d].right;
@@ -558,13 +591,40 @@ private:
     /// simulation ends.
     /// Counts the instructions it runs in `steps` (vm.instrs).
     kernel::Status runProcess(Frame& f, std::uint64_t& steps) {
-        const std::uint32_t pid = f.process;
-        const sir::Process& p = d_.processes[pid];
+        const sir::Process& p = d_.processes[f.process];
         // Woken at a join or wait fork: wait again until it is satisfied.
         if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
-        sir::BlockId b = f.block;
+        enter({f.process, &f.vars, 0});
+        W4 ret{0, 0};
+        const Exit e = runBody(f, f.block, steps, ret);
+        if (e != Exit::Ret) return static_cast<kernel::Status>(e);
+        switch (p.kind) {
+            case sir::ProcessKind::Comb:
+            case sir::ProcessKind::Latch:
+            case sir::ProcessKind::Ff:
+            case sir::ProcessKind::FfPlain:
+                f.block = 0;
+                waitTriggers(f, p);
+                return kernel::Status::Waiting;
+            default: return kernel::Status::Done;
+        }
+    }
+
+    /// How running a body stops: like kernel::Status, or at its ret.
+    enum class Exit : std::uint8_t {
+        Waiting = static_cast<std::uint8_t>(kernel::Status::Waiting),
+        Error = static_cast<std::uint8_t>(kernel::Status::Error),
+        Stop = static_cast<std::uint8_t>(kernel::Status::Stop),
+        Ret = 0xff,
+    };
+
+    /// Runs the current body (act_) from block b until a wait, its ret, an
+    /// error or the end of the simulation. A ret's value goes to `ret`.
+    Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
+        const sir::Process& p = d_.processes[f.process];
+        const std::uint32_t body = act_.body;
         for (;;) {
-            const auto& instrs = p.blocks[b].instrs;
+            const auto& instrs = bodyBlocks(body)[b].instrs;
             bool jumped = false;
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 const sir::Instr& in = instrs[k];
@@ -579,7 +639,7 @@ private:
                     note += ")";
                     sched_.setEndNote(std::move(note));
                     sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
-                    return kernel::Status::Stop;
+                    return Exit::Stop;
                 }
                 const auto& ops = in.operands;
                 switch (in.op) {
@@ -589,21 +649,19 @@ private:
                         break;
                     case Op::BrIf: {
                         const std::size_t second = 2 + ops[1].count;
-                        b = takeBranch(f, ops, isTrue(value(f, ops[0])) ? 1 : second);
+                        b = takeBranch(f, ops, isTrue(value(ops[0])) ? 1 : second);
                         jumped = true;
                         break;
                     }
                     case Op::Ret:
-                        switch (p.kind) {
-                            case sir::ProcessKind::Comb:
-                            case sir::ProcessKind::Latch:
-                            case sir::ProcessKind::Ff:
-                            case sir::ProcessKind::FfPlain:
-                                f.block = 0;
-                                waitTriggers(f, p);
-                                return kernel::Status::Waiting;
-                            default: return kernel::Status::Done;
-                        }
+                        if (!ops.empty()) ret = value(ops[0]);
+                        return Exit::Ret;
+                    case Op::Call: {
+                        const Exit e = call(f, in, steps);
+                        if (e != Exit::Ret) return e;
+                        if (sched_.ending()) return Exit::Stop;
+                        break;
+                    }
                     case Op::Fork:
                     case Op::WaitFork: {
                         if (in.op == Op::Fork)
@@ -611,26 +669,27 @@ private:
                         else
                             f.pending = Frame::Join::WaitFork;
                         f.block = ops.back().id;
-                        if (f.pending != Frame::Join::None && waitJoin(f))
-                            return kernel::Status::Waiting;
+                        if (f.pending != Frame::Join::None && waitJoin(f)) return Exit::Waiting;
                         b = f.block;
                         jumped = true;
                         break;
                     }
                     case Op::DisableFork: disableFork(f); break;
                     case Op::WaitDelay: {
-                        const W4 t = value(f, ops[0]);
+                        const W4 t = value(ops[0]);
                         sched_.waitDelay(f.kernelId, t.b != 0 ? 0 : t.a);  // x or z: 0 (9.4.1)
                         f.block = ops[1].id;
-                        return kernel::Status::Waiting;
+                        return Exit::Waiting;
                     }
                     case Op::WaitEvent: {
                         items_.clear();
                         for (std::size_t i = 0; i + 1 < ops.size(); ++i) {
                             const Operand& o = ops[i];
-                            if (o.kind != Operand::Kind::Slot)
-                                return fail(p, "wait.event with an iff guard is not supported "
-                                               "by the VM yet");
+                            if (o.kind != Operand::Kind::Slot) {
+                                fail(p, "wait.event with an iff guard is not supported by the "
+                                        "VM yet");
+                                return Exit::Error;
+                            }
                             kernel::WaitItem item;
                             item.part = {o.id, o.firstElem, o.numElems, o.lsb, o.width};
                             item.edge = kernelEdge(o.edge);
@@ -638,38 +697,108 @@ private:
                         }
                         sched_.waitEvent(f.kernelId, items_);
                         f.block = ops.back().id;
-                        return kernel::Status::Waiting;
+                        return Exit::Waiting;
                     }
                     case Op::Syscall: {
-                        const InstrInfo& info = info_[pid][b][k];
-                        if (!syscall(f, p, in, info)) return kernel::Status::Error;
-                        if (sched_.ending()) return kernel::Status::Stop;
+                        const InstrInfo& info = info_[body][b][k];
+                        if (!syscall(f, p, in, info)) return Exit::Error;
+                        if (sched_.ending()) return Exit::Stop;
                         break;
                     }
                     default:
-                        if (!execute(f, p, in)) return kernel::Status::Error;
-                        if (sched_.ending()) return kernel::Status::Stop;
+                        if (!execute(f, p, in)) return Exit::Error;
+                        if (sched_.ending()) return Exit::Stop;
                         break;
                 }
             }
-            if (!jumped) return fail(p, "block bb" + std::to_string(b) + " has no terminator");
+            if (!jumped) {
+                fail(p, "block bb" + std::to_string(b) + " has no terminator");
+                return Exit::Error;
+            }
         }
+    }
+
+    /// A value of a type's default (VALUE_SEMANTICS.md 1.4): x for
+    /// four-state, 0 for the others.
+    static W4 defaultValue(sir::Type t) {
+        return sir::isFourState(t) ? kernel::allX(t.width) : W4{0, 0};
+    }
+
+    /// call: runs a function, or a task that does not wait, to its ret.
+    /// Inputs and inouts are copied in, outputs and inouts copied back to
+    /// the caller's places like blocking assignments (SIR_SPEC.md 8, 4.9.7).
+    Exit call(Frame& f, const sir::Instr& in, std::uint64_t& steps) {
+        const auto& ops = in.operands;
+        const sir::Subroutine& s = d_.subroutines[ops[0].id];
+        if (callDepth_ >= 10000) {
+            fail(d_.processes[f.process], "calls nested more than 10000 deep");
+            return Exit::Error;
+        }
+        const Act caller = act_;
+        std::vector<W4> vars(s.frame.size());
+        for (std::size_t i = 0; i < s.frame.size(); ++i)
+            vars[i] = defaultValue(s.frame[i].type);
+        // The arguments are read in the caller before anything is written.
+        std::vector<W4> args(s.params.size());
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const Operand& o = ops[1 + i];
+            if (o.kind == Operand::Kind::Slot)
+                args[i] = readSlot(o.id, o.firstElem, o.lsb, o.width);
+            else
+                args[i] = value(o);
+        }
+        enter({processCount() + ops[0].id, &vars, caller.base + bodyTemps(caller.body)});
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            const W4 v = prm.dir == sir::Direction::Output ? defaultValue(prm.type) : args[i];
+            if (prm.frameVar != sir::kNone)
+                vars[prm.frameVar] = v;
+            else if (prm.dir != sir::Direction::Output)
+                writeSlot(prm.slot, 0, 0, 0, v);  // a static output keeps its value
+        }
+        W4 ret{0, 0};
+        ++callDepth_;
+        const Exit e = runBody(f, 0, steps, ret);
+        --callDepth_;
+        std::vector<W4> outs(s.params.size());
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            if (prm.dir == sir::Direction::Input) continue;
+            outs[i] = prm.frameVar != sir::kNone ? vars[prm.frameVar] : readSlot(prm.slot, 0, 0, 0);
+        }
+        act_ = caller;
+        if (e == Exit::Waiting) {
+            fail(d_.processes[f.process],
+                 "task " + s.name + " waited; tasks that wait are not supported by the VM yet");
+            return Exit::Error;
+        }
+        if (e != Exit::Ret) return e;
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            if (s.params[i].dir == sir::Direction::Input) continue;
+            const Operand& o = ops[1 + i];
+            if (o.kind == Operand::Kind::Slot)
+                writeSlot(o.id, o.firstElem, o.lsb, o.width, outs[i]);
+            else
+                (*act_.vars)[o.id] = outs[i];
+        }
+        if (in.result != sir::kNone) temp(in.result) = ret;
+        return Exit::Ret;
     }
 
     /// Passes the arguments of the block operand at ops[i] to its
     /// parameters and returns the block.
     sir::BlockId takeBranch(const Frame& f, const std::vector<Operand>& ops, std::size_t i) {
         const Operand& target = ops[i];
-        const auto& params = d_.processes[f.process].blocks[target.id].params;
+        const auto& params = bodyBlocks(act_.body)[target.id].params;
         if (target.count != 0) {
             // Read every argument before writing any parameter.
             W4 vals[16];
             std::vector<W4> many;
             W4* v = target.count <= 16 ? vals : (many.resize(target.count), many.data());
             for (std::uint32_t a = 0; a < target.count; ++a)
-                v[a] = value(f, ops[i + 1 + a]);
+                v[a] = value(ops[i + 1 + a]);
             for (std::uint32_t a = 0; a < target.count; ++a)
-                temps_[params[a].temp] = v[a];
+                temp(params[a].temp) = v[a];
         }
         return target.id;
     }
@@ -679,12 +808,12 @@ private:
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
         const unsigned w = rt.width;
-        const auto v = [&](std::size_t i) { return value(f, ops[i]); };
-        const auto t = [&](std::size_t i) { return typeOf(f.process, ops[i]); };
+        const auto v = [&](std::size_t i) { return value(ops[i]); };
+        const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
         const auto set = [&](W4 r) {
             // A two-state result has no x or z (VALUE_SEMANTICS.md 1.2).
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
-            temps_[in.result] = r;
+            temp(in.result) = r;
         };
         if (!ops.empty() && (isRealType(rt) || isRealType(t(0)))) {
             // Real operations (VALUE_SEMANTICS.md 7.5): real in double,
@@ -692,9 +821,9 @@ private:
             const auto r = [&](std::size_t i) { return toReal(v(i), t(i)); };
             const bool single = rt.kind == sir::TypeKind::ShortReal;
             const auto put = [&](double d) {
-                temps_[in.result] = fromReal(single ? static_cast<float>(d) : d, rt);
+                temp(in.result) = fromReal(single ? static_cast<float>(d) : d, rt);
             };
-            const auto cmp = [&](bool b) { temps_[in.result] = {b ? 1U : 0U, 0}; };
+            const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
             const bool fl = t(0).kind == sir::TypeKind::ShortReal;
             const auto a2 = [&](std::size_t i) {
                 return fl ? static_cast<double>(static_cast<float>(r(i))) : r(i);
@@ -720,8 +849,8 @@ private:
                 case Op::Ge: cmp(a2(0) >= a2(1)); return true;
                 case Op::Eq: cmp(a2(0) == a2(1)); return true;
                 case Op::Ne: cmp(a2(0) != a2(1)); return true;
-                case Op::Truth: temps_[in.result] = truthOf(v(0), t(0)); return true;
-                case Op::Lnot: temps_[in.result] = kernel::lnot4(truthOf(v(0), t(0))); return true;
+                case Op::Truth: temp(in.result) = truthOf(v(0), t(0)); return true;
+                case Op::Lnot: temp(in.result) = kernel::lnot4(truthOf(v(0), t(0))); return true;
                 case Op::Itor: put(integerToReal(v(0), t(0))); return true;
                 case Op::Rconv: put(r(0)); return true;
                 case Op::Rtoi:
@@ -732,9 +861,9 @@ private:
                     // or 0.0 (VALUE_SEMANTICS.md 3.9, table 7-1).
                     const W4 c = kernel::truth4(v(0));
                     if (c.b == 0) {
-                        temps_[in.result] = (c.a & 1U) != 0 ? v(1) : v(2);
+                        temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
                     } else {
-                        temps_[in.result] = r(1) == r(2) ? v(1) : fromReal(0.0, rt);
+                        temp(in.result) = r(1) == r(2) ? v(1) : fromReal(0.0, rt);
                     }
                     return true;
                 }
@@ -827,8 +956,8 @@ private:
                 sched_.deferReport(f.kernelId, std::move(line));
                 return true;
             }
-            case Op::Fload: set(f.vars[ops[0].id]); return true;
-            case Op::Fstore: f.vars[ops[0].id] = v(1); return true;
+            case Op::Fload: set((*act_.vars)[ops[0].id]); return true;
+            case Op::Fstore: (*act_.vars)[ops[0].id] = v(1); return true;
             case Op::Add: set(kernel::add4(v(0), v(1), w)); return true;
             case Op::Sub: set(kernel::sub4(v(0), v(1), w)); return true;
             case Op::Mul: set(kernel::mul4(v(0), v(1), w)); return true;
@@ -955,8 +1084,8 @@ private:
 
     std::string formatValue(const Frame& f, const Operand& o,
                             const kernel::FormatSpec& spec) const {
-        const sir::Type t = typeOf(f.process, o);
-        const W4 x = value(f, o);
+        const sir::Type t = typeOf(o);
+        const W4 x = value(o);
         if (isRealType(t)) {
             // front makes every other specifier take an integer; without
             // one, a real shows like %g (SYSTEM_TASKS.md 3.6).
@@ -1007,7 +1136,7 @@ private:
             }
             case SysTask::Finish:
             case SysTask::Stop: {
-                const auto level = static_cast<int>(value(f, ops[1]).a);
+                const auto level = static_cast<int>(value(ops[1]).a);
                 sched_.requestEnd(info.task == SysTask::Finish ? kernel::EndReason::Finish
                                                                : kernel::EndReason::Stop,
                                   level);
@@ -1016,16 +1145,16 @@ private:
             case SysTask::Time: {
                 // The time in the caller's unit, rounded half away from zero
                 // (SYSTEM_TASKS.md 5.1); the operand is 10^(unit - precision).
-                const std::uint64_t div = value(f, ops[1]).a;
+                const std::uint64_t div = value(ops[1]).a;
                 const std::uint64_t now = sched_.time();
                 const std::uint64_t q = now / div;
                 const std::uint64_t r = now % div;
-                temps_[in.result] = {q + (div > 1 && r >= div - r ? 1 : 0), 0};
+                temp(in.result) = {q + (div > 1 && r >= div - r ? 1 : 0), 0};
                 return true;
             }
             case SysTask::Realtime: {
-                const auto div = static_cast<double>(value(f, ops[1]).a);
-                temps_[in.result] = fromReal(static_cast<double>(sched_.time()) / div, in.type);
+                const auto div = static_cast<double>(value(ops[1]).a);
+                temp(in.result) = fromReal(static_cast<double>(sched_.time()) / div, in.type);
                 return true;
             }
             case SysTask::Rtoi:
@@ -1037,8 +1166,8 @@ private:
             case SysTask::Math2:
             case SysTask::Clog2: {
                 const sir::Type rt = in.type;
-                const auto arg = [&](std::size_t i) { return value(f, ops[i]); };
-                const auto argType = [&](std::size_t i) { return typeOf(f.process, ops[i]); };
+                const auto arg = [&](std::size_t i) { return value(ops[i]); };
+                const auto argType = [&](std::size_t i) { return typeOf(ops[i]); };
                 W4 r{0, 0};
                 switch (info.task) {
                     case SysTask::Rtoi:
@@ -1074,7 +1203,7 @@ private:
                     default: break;
                 }
                 if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
-                temps_[in.result] = r;
+                temp(in.result) = r;
                 return true;
             }
             case SysTask::None:

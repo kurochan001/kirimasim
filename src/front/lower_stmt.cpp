@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "lowerer.h"
+#include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"
@@ -84,7 +85,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             // Automatic: a frame variable, set each time the scope is
             // entered (SIR_SPEC.md 7.4).
             const sir::FrameVarId f = frameVarOf(v, sl);
-            const Type t = proc().frame[f].type;
+            const Type t = frameVars()[f].type;
             const ast::Expression* init = v.getInitializer();
             const Val value =
                 init != nullptr
@@ -100,8 +101,16 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 lowerAssignment(e.as<ast::AssignmentExpression>());
                 return;
             }
-            if (e.kind == ast::ExpressionKind::Call && e.as<ast::CallExpression>().isSystemCall()) {
-                lowerSystemTask(e.as<ast::CallExpression>());
+            if (e.kind == ast::ExpressionKind::Call) {
+                const auto& call = e.as<ast::CallExpression>();
+                if (call.isSystemCall())
+                    lowerSystemTask(call);
+                else
+                    lowerCall(call);
+                return;
+            }
+            if (e.kind == ast::ExpressionKind::Conversion && e.type->isVoid()) {
+                lowerExpr(e.as<ast::ConversionExpression>().operand());  // void'(f())
                 return;
             }
             if (e.kind == ast::ExpressionKind::UnaryOp) {
@@ -249,6 +258,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             return;
         }
         case ast::StatementKind::DisableFork: emitVoid(Op::DisableFork, {}, sl); return;
+        case ast::StatementKind::Return: lowerReturn(s.as<ast::ReturnStatement>().expr, sl); return;
         case ast::StatementKind::WaitFork: {
             const sir::BlockId cont = newBlock();
             terminate(Op::WaitFork, {Operand::block(cont)}, sl);
@@ -276,7 +286,7 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
     // Each index runs from the left bound to the right bound (12.7.3).
     const ast::ForeachLoopStatement::LoopDim& d = *dims[k];
     const sir::FrameVarId fv = frameVarOf(*d.loopVar, sl);
-    const Type t = proc().frame[fv].type;
+    const Type t = frameVars()[fv].type;
     const slang::ConstantRange range = d.range.value_or(slang::ConstantRange{});
     const std::int64_t left = range.left;
     const std::int64_t right = range.right;
