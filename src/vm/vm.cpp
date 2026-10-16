@@ -1106,6 +1106,16 @@ private:
                     put(text);
                     return true;
                 }
+                case Op::Select: {
+                    // An unknown condition with unequal strings gives the
+                    // empty string (VALUE_SEMANTICS.md 3.9, table 7-1).
+                    const W4 c = kernel::truth4(v(0));
+                    if (c.b == 0)
+                        temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
+                    else
+                        temp(in.result) = str(1) == str(2) ? v(1) : W4{0, 0};  // 0 is ""
+                    return true;
+                }
                 case Op::Eq: cmp(str(0) == str(1)); return true;
                 case Op::Ne: cmp(str(0) != str(1)); return true;
                 case Op::Lt: cmp(str(0) < str(1)); return true;
