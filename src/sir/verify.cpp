@@ -832,10 +832,17 @@ private:
             case Op::Sub:
             case Op::Mul:
             case Op::Div:
-            case Op::Pow:
                 if (nOps(2) && (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt || ty(1) != rt))
                     bad("operands and result must have the same integral type (or the same real "
                         "type)");
+                break;
+            case Op::Pow:
+                // The exponent of an integral power is self-determined and
+                // may have any integral type (VALUE_SEMANTICS.md 3.2).
+                if (nOps(2) && (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt ||
+                                (isReal(rt) ? ty(1) != rt : !isIntegral(ty(1)))))
+                    bad("base and result must have the same integral type with an integral "
+                        "exponent (or the same real type)");
                 break;
             case Op::Mod:
             case Op::And:

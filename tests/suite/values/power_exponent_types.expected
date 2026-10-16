@@ -1,0 +1,18 @@
+int ** byte 3: 8
+int ** byte unsigned 3: 8
+int ** shortint -2: 0
+-1 ** shortint -2: 1
+-1 ** byte 3: -1
+1 ** shortint -2: 1
+int 3 ** longint 40 (wraps): 689956897
+8-bit 2 ** 3-bit 7: 128
+8-bit 2 ** 8 (overflow): 0
+signed 2 ** -1: 0
+signed 0 ** -1: xxxxxxxx
+signed -2 ** unsigned 3: -8
+0 ** 0: 1
+8-bit 2 ** x exponent: xxxxxxxx
+int 2 ** x exponent: 0
+8-bit 1 ** z exponent: xxxxxxxx
+width: 8 8
+sign: 1

@@ -1242,7 +1242,7 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
             const Val l = coerce(lowerExpr(b.left()), rt, sl);
             Val r = lowerExpr(b.right());
             if (isReal(rt)) r = coerce(r, rt, sl);  // a real power takes a real exponent
-            if (r.type != rt) unsupported(sl, "** with an exponent of another type");
+            if (!isReal(rt) && !sir::isIntegral(r.type)) unsupported(sl, "** with this exponent");
             return emit(Op::Pow, rt, {l.op, r.op}, sl);
         }
     }
