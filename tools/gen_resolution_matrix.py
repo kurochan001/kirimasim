@@ -9,10 +9,13 @@ The axes: every kind of net that resolves (6.6.1 to 6.6.6) with two
 drivers of each value 0, 1, x and z at strong strength; two drivers of
 every pair of driving strengths (supply, strong, pull, weak) on wire,
 wand and wor; tri0, tri1, supply0 and supply1 with one driver of each
-strength; drivers with highz for one value (H and L); and a 4-bit net
-whose bits resolve separately. The drivers are continuous assignments
-and net declaration assignments. Drivers that meet through ports wait for
-inout ports (VALUE_SEMANTICS.md 5.3).
+strength; drivers with highz for one value (H and L); a 4-bit net whose
+bits resolve separately; and drivers that meet through an output or an
+input port. The drivers are continuous assignments, net declaration
+assignments and ports. A port between a variable and a net drives
+strong; a port between nets carries the strengths of both sides to one
+net (VALUE_SEMANTICS.md 5.3), which needs the nets merged, so
+net_port_drivers_net is skipped as unsupported until they are.
 
 The expected outputs follow from the rule of VALUE_SEMANTICS.md 5.4,
 written again below without reading kirimasim's code. A person checks
@@ -222,10 +225,63 @@ def highz():
     return name, sv, exp
 
 
+def port_drivers(between_nets):
+    """A weak driver on one side of a port and a driver on the other side.
+    Between nets, through an output port (the child drives, the parent
+    drives too) and an input port (the parent drives, the child drives
+    too): both drivers keep their strengths on one net (5.3, 23.3.3.7).
+    From an output port of a variable to a net, which may have more
+    drivers (23.3.3.2): the port drives strong. A variable on the outer
+    side of an input port the child drives is left out: such a port turns
+    inout (23.3.3.1), which takes no variable (23.3.3.2)."""
+    name = "net_port_drivers_" + ("net" if between_nets else "var")
+    if between_nets:
+        description = ("Drivers that meet through output and input ports between nets "
+                       "resolve on one net with their own strengths")
+        note = ""
+    else:
+        description = ("An output port of a variable drives the net outside strong, "
+                       "against another driver of that net")
+        note = ("// Icarus 13.0 stops with an error (it takes the net for a uwire) and Verilator\n"
+                "// 5.052 does not support the design; 23.3.3.2 allows more drivers on a net\n"
+                "// that an output port of a variable drives, and the lines follow 10.3.4 and\n"
+                "// 28.12.\n")
+    sv = header(name, description, "4.9.6 23.3.3.1 23.3.3.2 23.3.3.7 10.3.4 28.12.1 28.12.2",
+                note)
+    if between_nets:
+        sv += ("module outc (output wire o);\n  logic cv;\n  assign (weak1, weak0) o = cv;\n"
+               "endmodule\n")
+    else:
+        sv += "module outc (output logic o);\n  logic cv;\n  assign o = cv;\nendmodule\n"
+    if between_nets:
+        sv += ("module inc (input wire i);\n  logic cv;\n  assign (weak1, weak0) i = cv;\n"
+               "endmodule\n")
+    sv += "module top;\n  logic pv;\n  wire po" + (", pi;\n" if between_nets else ";\n")
+    sv += "  outc u (.o(po));\n  assign (weak1, weak0) po = pv;\n"
+    if between_nets:
+        sv += "  assign (weak1, weak0) pi = pv;\n  inc v (.i(pi));\n"
+    sv += "  initial begin\n"
+    port = 3 if between_nets else 6
+    exp = ""
+    for c, p in itertools.product(VALUES, VALUES):
+        out = resolved("wire", [(c, port, port), (p, 3, 3)])
+        if between_nets:
+            sv += (f"    u.cv = 1'b{c}; v.cv = 1'b{c}; pv = 1'b{p};\n"
+                   f"    #1 $display(\"{c}{p} out=%b in=%b\", po, v.i);\n")
+            inn = resolved("wire", [(p, port, port), (c, 3, 3)])
+            exp += f"{c}{p} out={out} in={inn}\n"
+        else:
+            sv += (f"    u.cv = 1'b{c}; pv = 1'b{p};\n"
+                   f"    #1 $display(\"{c}{p} out=%b\", po);\n")
+            exp += f"{c}{p} out={out}\n"
+    sv += "  end\nendmodule\n"
+    return name, sv, exp
+
+
 def files():
     out = {}
     for name, sv, exp in [two_drivers(), strengths("wire"), strengths("wand"), strengths("wor"),
-                          own_driver(), highz()]:
+                          own_driver(), highz(), port_drivers(False), port_drivers(True)]:
         out[f"{name}.sv"] = sv
         out[f"{name}.expected"] = exp
     return out

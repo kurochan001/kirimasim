@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <set>
 #include <span>
 #include <string>
 #include <string_view>
@@ -282,6 +283,8 @@ private:
     /// The cont processes whose drive strength is not (strong1, strong0):
     /// process -> (strength1, strength0).
     std::map<std::uint32_t, std::pair<std::uint8_t, std::uint8_t>> strengths_;
+    /// The cont processes of port connections between nets.
+    std::set<std::uint32_t> netPorts_;
     /// Process names used so far, "<scope>.<kind>" -> the next number.
     std::map<std::string, std::uint32_t> nameCounts_;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.

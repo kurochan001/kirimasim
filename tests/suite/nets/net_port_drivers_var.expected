@@ -1,0 +1,16 @@
+00 out=0
+01 out=0
+0x out=0
+0z out=0
+10 out=1
+11 out=1
+1x out=1
+1z out=1
+x0 out=x
+x1 out=x
+xx out=x
+xz out=x
+z0 out=0
+z1 out=1
+zx out=x
+zz out=z

@@ -24,7 +24,9 @@
 #include "kirimasim/sir/verify.h"
 #include "lowerer.h"
 #include "slang/analysis/AnalysisManager.h"
+#include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/MiscExpressions.h"
+#include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
 #include "slang/ast/statements/MiscStatements.h"
 #include "slang/ast/symbols/CompilationUnitSymbols.h"
@@ -130,6 +132,29 @@ const ast::Expression* outputPlace(const ast::Expression* e) {
         if (a.isLValueArg()) return &a.left();
     }
     return e;
+}
+
+/// Whether an expression names a net, or a part or element of one, or
+/// holds one in a concatenation.
+bool namesNet(const ast::Expression& e) {
+    switch (e.kind) {
+        case ast::ExpressionKind::NamedValue:
+        case ast::ExpressionKind::HierarchicalValue: {
+            const ast::Symbol* s = namedSymbol(e);
+            return s != nullptr && s->kind == ast::SymbolKind::Net;
+        }
+        case ast::ExpressionKind::ElementSelect:
+            return namesNet(e.as<ast::ElementSelectExpression>().value());
+        case ast::ExpressionKind::RangeSelect:
+            return namesNet(e.as<ast::RangeSelectExpression>().value());
+        case ast::ExpressionKind::Conversion:
+            return namesNet(e.as<ast::ConversionExpression>().operand());
+        case ast::ExpressionKind::Concatenation:
+            for (const ast::Expression* op : e.as<ast::ConcatenationExpression>().operands())
+                if (namesNet(*op)) return true;
+            return false;
+        default: return false;
+    }
 }
 
 /// Whether range `a` covers range `b` of the same slot (0 counts means
@@ -470,6 +495,7 @@ void Lowerer::dropProcesses(std::size_t first) {
     design_.processes.resize(first);  // with any fork children
     combReads_.erase(static_cast<std::uint32_t>(first));
     strengths_.erase(strengths_.lower_bound(static_cast<std::uint32_t>(first)), strengths_.end());
+    netPorts_.erase(netPorts_.lower_bound(static_cast<std::uint32_t>(first)), netPorts_.end());
     // A static-init process made while lowering the dropped ones goes too.
     for (auto it = staticInit_.begin(); it != staticInit_.end();) {
         if (it->second >= first) {
@@ -568,6 +594,18 @@ void Lowerer::resolveNets() {
         std::vector<std::uint32_t> ps;
         for (const auto& w : writes)
             if (std::find(ps.begin(), ps.end(), w.first) == ps.end()) ps.push_back(w.first);
+        // Drivers that meet through a port between nets resolve on one net
+        // with their own strengths (VALUE_SEMANTICS.md 5.3); that needs
+        // the nets merged, not done yet.
+        const auto through = std::find_if(ps.begin(), ps.end(),
+                                          [&](std::uint32_t p) { return netPorts_.contains(p); });
+        if (through != ps.end()) {
+            ++numErrors_;
+            diags_ += whereOf(design_.processes[*through].loc) +
+                      ": error: unsupported: " + "drivers of the net '" + design_.slots[net].name +
+                      "' that meet through a port (not implemented yet)\n";
+            continue;
+        }
         const sir::SourceLoc where = design_.processes[ps.front()].loc;
         if (!design_.slots[net].dims.empty()) {
             ++numErrors_;
@@ -800,6 +838,12 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         const sir::SlotId s = it->second;
         const slang::SourceLocation sl = ext->sourceRange.start();
         const std::string name = scope + ".$port." + std::string(ps.name);
+        // A port between nets passes strengths both ways (VALUE_SEMANTICS.md
+        // 5.3), which these continuous assignments do not do.
+        const std::size_t before = design_.processes.size();
+        const bool betweenNets =
+            internal->kind == ast::SymbolKind::Net &&
+            namesNet(ps.direction == ast::ArgumentDirection::Out ? *outputPlace(ext) : *ext);
         switch (ps.direction) {
             case ast::ArgumentDirection::In:
                 lowerCont(name, sl, child, [&] {
@@ -822,6 +866,8 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
             case ast::ArgumentDirection::InOut: report(ps.location, "inout port"); break;
             case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
         }
+        if (betweenNets && design_.processes.size() > before)
+            netPorts_.insert(static_cast<std::uint32_t>(before));
     }
 }
 

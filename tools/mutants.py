@@ -91,6 +91,8 @@ MUTANTS = [
      "if (sides == 1 || (sides == 3 && wand)) {", "if (sides == 1 || (sides == 3 && false)) {"),
     ("front: a weak drive strength counts as strong", "src/front/lower.cpp",
      "case ast::DriveStrength::Weak: return 3;", "case ast::DriveStrength::Weak: return 6;"),
+    ("front: drivers that meet through a port between nets resolve with a strong port",
+     "src/front/lower.cpp", "if (through != ps.end()) {", "if (false) {"),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),
