@@ -103,6 +103,56 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
     return static_cast<double>(a);
 }
 
+/// System functions whose constant evaluation in slang is known to be wrong
+/// (SIR_SPEC.md 6): expressions that contain them are computed at run time.
+constexpr std::string_view kUntrustedConstants[] = {
+    "$rtoi",  // negative values give 0 (slang issue #2023)
+};
+
+/// Whether an expression contains a call of one of kUntrustedConstants.
+bool untrustedConstant(const ast::Expression& e) {
+    const auto any = [](std::span<const ast::Expression* const> es) {
+        for (const ast::Expression* x : es)
+            if (untrustedConstant(*x)) return true;
+        return false;
+    };
+    switch (e.kind) {
+        case ast::ExpressionKind::Call: {
+            const auto& c = e.as<ast::CallExpression>();
+            if (c.isSystemCall() && among(c.getSubroutineName(), kUntrustedConstants)) return true;
+            return any(c.arguments());
+        }
+        case ast::ExpressionKind::UnaryOp:
+            return untrustedConstant(e.as<ast::UnaryExpression>().operand());
+        case ast::ExpressionKind::BinaryOp: {
+            const auto& b = e.as<ast::BinaryExpression>();
+            return untrustedConstant(b.left()) || untrustedConstant(b.right());
+        }
+        case ast::ExpressionKind::ConditionalOp: {
+            const auto& c = e.as<ast::ConditionalExpression>();
+            for (const auto& cond : c.conditions)
+                if (untrustedConstant(*cond.expr)) return true;
+            return untrustedConstant(c.left()) || untrustedConstant(c.right());
+        }
+        case ast::ExpressionKind::Concatenation:
+            return any(e.as<ast::ConcatenationExpression>().operands());
+        case ast::ExpressionKind::Replication:
+            return untrustedConstant(e.as<ast::ReplicationExpression>().concat());
+        case ast::ExpressionKind::Conversion:
+            return untrustedConstant(e.as<ast::ConversionExpression>().operand());
+        case ast::ExpressionKind::ElementSelect: {
+            const auto& s = e.as<ast::ElementSelectExpression>();
+            return untrustedConstant(s.value()) || untrustedConstant(s.selector());
+        }
+        case ast::ExpressionKind::RangeSelect: {
+            const auto& s = e.as<ast::RangeSelectExpression>();
+            return untrustedConstant(s.value()) || untrustedConstant(s.left()) ||
+                   untrustedConstant(s.right());
+        }
+        default: return false;
+    }
+}
+
 /// Whether evaluating an expression can change anything.
 bool sideEffects(const ast::Expression& e) {
     switch (e.kind) {
@@ -198,7 +248,7 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
 // --- Constants and conversions -----------------------------------------------
 
 std::optional<slang::ConstantValue> Lowerer::constantValue(const ast::Expression& e) {
-    if (sideEffects(e)) return std::nullopt;
+    if (sideEffects(e) || untrustedConstant(e)) return std::nullopt;
     if (const slang::ConstantValue* cv = e.getConstant()) return *cv;
     if (evalSymbol_ == nullptr) return std::nullopt;
     ast::EvalContext ctx(*evalSymbol_);
@@ -375,7 +425,8 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
 Val Lowerer::lowerExpr(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const bool pure = e.kind != ast::ExpressionKind::Assignment &&
-                      e.kind != ast::ExpressionKind::Call && !sideEffects(e);
+                      e.kind != ast::ExpressionKind::Call && !sideEffects(e) &&
+                      !untrustedConstant(e);
     if (pure && e.getConstant() != nullptr && (e.type->isIntegral() || e.type->isFloating()) &&
         (e.getConstant()->isInteger() || e.getConstant()->isReal() ||
          e.getConstant()->isShortReal()))
