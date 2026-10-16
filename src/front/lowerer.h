@@ -280,7 +280,6 @@ private:
     void dropProcesses(std::size_t first);
     /// "<file>:<line>:<column>" of a SIR source position.
     std::string whereOf(const sir::SourceLoc& l) const;
-    void checkWriters();
     /// Drivers of nets that need resolution, not implemented yet.
     void checkDrivers();
     /// After every body is lowered: the write sets and the always_comb

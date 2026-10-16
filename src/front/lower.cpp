@@ -21,6 +21,7 @@
 #include "kirimasim/sir/types.h"
 #include "kirimasim/sir/verify.h"
 #include "lowerer.h"
+#include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
 #include "slang/ast/statements/MiscStatements.h"
@@ -423,7 +424,6 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     }
     if (numErrors_ != 0) return;
     finishDesign();
-    checkWriters();
     checkDrivers();
 }
 
@@ -508,82 +508,12 @@ void Lowerer::finishDesign() {
     }
 }
 
-void Lowerer::checkWriters() {
-    // A variable that always_comb, always_latch or always_ff writes has no
-    // other writer (9.2.2.2, 9.2.2.4); kirimasim checks it here, at
-    // elaboration (SCHEDULER_SPEC.md 6.4).
-    const auto exclusive = [](sir::ProcessKind k) {
-        return k == sir::ProcessKind::Comb || k == sir::ProcessKind::Latch ||
-               k == sir::ProcessKind::Ff;
-    };
-    const auto& ps = design_.processes;
-    for (std::size_t i = 0; i < ps.size(); ++i) {
-        for (std::size_t j = 0; j < ps.size(); ++j) {
-            // A declaration's initial value is not a write by a process
-            // (6.8), so static-init is no other writer.
-            if (i == j || !exclusive(ps[i].kind) || (exclusive(ps[j].kind) && j < i) ||
-                ps[j].kind == sir::ProcessKind::StaticInit)
-                continue;
-            bool reported = false;
-            for (const sir::SlotRange& a : ps[i].writes) {
-                for (const sir::SlotRange& b : ps[j].writes) {
-                    const sir::Slot& s = design_.slots[a.slot];
-                    const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
-                    if (reported || !overlap(a, b, s.type.width, elems)) continue;
-                    ++numErrors_;
-                    diags_ += whereOf(ps[i].loc) + ": error: '" + s.name +
-                              "' is written here and by " + ps[j].name + " at " +
-                              whereOf(ps[j].loc) +
-                              "; a variable that always_comb, always_latch or always_ff writes "
-                              "has no other writer (IEEE 1800-2023 9.2.2.2, 9.2.2.4)\n";
-                    reported = true;
-                }
-            }
-        }
-    }
-}
-
 void Lowerer::checkDrivers() {
-    // A variable driven by a continuous assignment or an output port has
-    // no other driver, no other writer and no initial value in its
-    // declaration (10.3.2, SCHEDULER_SPEC.md 12). What always_comb,
-    // always_latch and always_ff write, checkWriters reports.
-    const auto& ps = design_.processes;
-    std::vector<bool> reported(design_.slots.size(), false);
-    for (std::size_t i = 0; i < ps.size(); ++i) {
-        if (ps[i].kind != sir::ProcessKind::Cont) continue;
-        for (const sir::SlotRange& a : ps[i].writes) {
-            const sir::Slot& s = design_.slots[a.slot];
-            if (s.kind != sir::SlotKind::Var || reported[a.slot]) continue;
-            const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
-            for (std::size_t j = 0; j < ps.size() && !reported[a.slot]; ++j) {
-                const sir::ProcessKind k = ps[j].kind;
-                if (j == i || (k == sir::ProcessKind::Cont && j > i) ||
-                    k == sir::ProcessKind::Comb || k == sir::ProcessKind::Latch ||
-                    k == sir::ProcessKind::Ff)
-                    continue;
-                for (const sir::SlotRange& b : ps[j].writes) {
-                    if (!overlap(a, b, s.type.width, elems)) continue;
-                    ++numErrors_;
-                    diags_ +=
-                        whereOf(ps[i].loc) + ": error: '" + s.name +
-                        "' is driven by a continuous assignment here and " +
-                        (k == sir::ProcessKind::StaticInit
-                             ? std::string("has an initial value in its declaration")
-                             : "is also written by " + ps[j].name + " at " + whereOf(ps[j].loc)) +
-                        "; a variable driven by a continuous assignment or an output "
-                        "port has no other writer (IEEE 1800-2023 10.3.2)\n";
-                    reported[a.slot] = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    // A uwire has one driver (6.6.2). The nets whose value comes from
-    // resolving several drivers, or a driver and the net's own pull or
-    // supply (VALUE_SEMANTICS.md 5), are not supported yet; undriven ones
-    // only keep their initial value.
+    // The nets whose value comes from resolving several drivers, or a
+    // driver and the net's own pull or supply (VALUE_SEMANTICS.md 5), are
+    // not supported yet; undriven ones only keep their initial value. Two
+    // drivers of a uwire never get here: slang's analysis rejects them
+    // (6.6.2).
     std::map<sir::SlotId, std::vector<std::pair<sir::ProcessId, sir::SlotRange>>> drivers;
     for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
         if (design_.processes[p].kind != sir::ProcessKind::Cont) continue;
@@ -599,11 +529,7 @@ void Lowerer::checkDrivers() {
                 if (overlap(ds[i].second, ds[j].second, s.type.width, elems)) second = j;
         const bool plain = s.kind == sir::SlotKind::Wire || s.kind == sir::SlotKind::Tri ||
                            s.kind == sir::SlotKind::Uwire;
-        if (s.kind == sir::SlotKind::Uwire && second) {
-            ++numErrors_;
-            diags_ += whereOf(design_.processes[ds[*second].first].loc) + ": error: uwire '" +
-                      s.name + "' has more than one driver (IEEE 1800-2023 6.6.2)\n";
-        } else if (!plain || second) {
+        if (!plain || second) {
             ++numErrors_;
             const sir::ProcessId p = ds[second.value_or(0)].first;
             diags_ += whereOf(design_.processes[p].loc) + ": error: unsupported: " +
@@ -1003,6 +929,9 @@ CompileResult compile(std::span<const std::string> args) {
     }
     std::unique_ptr<ast::Compilation> compilation = driver.createCompilation();
     driver.reportCompilation(*compilation, /* quiet */ true);
+    // slang's analysis checks the writers and drivers of variables and nets
+    // (SCHEDULER_SPEC.md 6.4, 12), here as for `kirimasim parse`.
+    driver.runAnalysis(*compilation);
     result.numErrors = driver.diagEngine.getNumErrors();
     result.numWarnings = driver.diagEngine.getNumWarnings();
     result.diagnostics = client->getString();
