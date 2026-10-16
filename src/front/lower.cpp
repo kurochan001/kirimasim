@@ -1064,10 +1064,14 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
         evalSymbol_ = savedEval;
     };
     try {
-        const sir::Type t = design_.slots[slot].type;
-        const Val val = coerce(lowerExpr(*v.getInitializer()), t, sl);
-        emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
-        noteWrite({slot, 0, 0, 0, 0});
+        if (!design_.slots[slot].dims.empty()) {
+            assignArray(slot, {}, *v.getInitializer(), false, sl);  // element by element
+        } else {
+            const sir::Type t = design_.slots[slot].type;
+            const Val val = coerce(lowerExpr(*v.getInitializer()), t, sl);
+            emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
+            noteWrite({slot, 0, 0, 0, 0});
+        }
     } catch (const Unsupported&) {
         restore();
         throw;

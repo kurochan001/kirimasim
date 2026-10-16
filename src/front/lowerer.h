@@ -169,6 +169,24 @@ public:
     /// What a read or write of a place covers (SIR_SPEC.md 3.4).
     sir::SlotRange rangeOf(const Place& p) const;
     Val lowerAssignment(const ast::AssignmentExpression& a);
+    /// An unpacked array in a slot, or a sub-array of one selected by
+    /// constant indices (declared index values).
+    struct ArrayTarget {
+        sir::SlotId slot = 0;
+        std::vector<std::int64_t> indices;
+    };
+    std::optional<ArrayTarget> arrayTarget(const ast::Expression& e);
+    /// Assigns an unpacked array value (a pattern, another array, or nested
+    /// ones) to the (sub-)array of slot s at `indices`, element by element.
+    void assignArray(sir::SlotId s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
+                     bool nonblocking, slang::SourceLocation sl);
+    void copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
+                   std::vector<std::int64_t> fromIndices, bool nonblocking,
+                   slang::SourceLocation sl);
+    /// The number of the element at the given declared indices
+    /// (SIR_SPEC.md 4.2).
+    std::uint32_t elementNumber(const sir::Slot& slot,
+                                const std::vector<std::int64_t>& indices) const;
 
     // Subroutines (lower_sub.cpp).
     /// The subroutine row of a function or task for the current instance,

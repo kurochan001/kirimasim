@@ -102,6 +102,34 @@ bool isPureSystemFunction(std::string_view n) {
     return among(n, kPure) || among(n, kRealMath1) || among(n, kRealMath2);
 }
 
+/// The elements of an assignment pattern of any of its three forms, in
+/// order: slang expands the defaults and the names of a structured one;
+/// a replicated one repeats its elements its constant count of times
+/// (10.9.1), or gives nothing when the count is not known.
+std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
+    switch (e.kind) {
+        case ast::ExpressionKind::SimpleAssignmentPattern: {
+            const auto el = e.as<ast::SimpleAssignmentPatternExpression>().elements();
+            return {el.begin(), el.end()};
+        }
+        case ast::ExpressionKind::StructuredAssignmentPattern: {
+            const auto el = e.as<ast::StructuredAssignmentPatternExpression>().elements();
+            return {el.begin(), el.end()};
+        }
+        default: {
+            const auto& r = e.as<ast::ReplicatedAssignmentPatternExpression>();
+            const ast::Expression& countExpr = r.count();
+            const slang::ConstantValue* cv = countExpr.getConstant();
+            std::vector<const ast::Expression*> out;
+            if (cv == nullptr || !cv->isInteger()) return out;
+            const std::optional<std::int64_t> n = cv->integer().as<std::int64_t>();
+            for (std::int64_t k = 0; n && k < *n; ++k)
+                out.insert(out.end(), r.elements().begin(), r.elements().end());
+            return out;
+        }
+    }
+}
+
 /// A variable, or a formal argument of a subroutine (also a variable).
 bool isVariable(const ast::Symbol& s) {
     return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
@@ -549,6 +577,27 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         }
         case ast::ExpressionKind::ElementSelect: return lowerElementSelect(e);
         case ast::ExpressionKind::RangeSelect: return lowerRangeSelect(e);
+        case ast::ExpressionKind::SimpleAssignmentPattern:
+        case ast::ExpressionKind::StructuredAssignmentPattern:
+        case ast::ExpressionKind::ReplicatedAssignmentPattern: {
+            // A pattern of a packed type is the concatenation of its
+            // elements, the first one most significant (10.9).
+            if (!e.type->isIntegral())
+                unsupported(sl, "expression '" + std::string(ast::toString(e.kind)) + "'");
+            std::vector<Operand> ops;
+            std::uint32_t width = 0;
+            bool four = false;
+            for (const ast::Expression* el : patternElements(e)) {
+                const Val v = lowerExpr(*el);
+                if (!sir::isIntegral(v.type)) unsupported(sl, "an element of this type");
+                ops.push_back(v.op);
+                width += v.type.width;
+                four = four || sir::isFourState(v.type);
+            }
+            if (ops.empty() || width > 64) unsupported(sl, "values wider than 64 bits");
+            const Val c = emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
+            return coerce(c, typeOf(*e.type, sl), sl);
+        }
         case ast::ExpressionKind::MemberAccess: {
             // A member of a packed structure or union: its bits, from the
             // field's offset (0 in a union).
@@ -1119,9 +1168,135 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         storePlace(p, v, a.isNonBlocking(), sl);
         return v;
     }
+    if (a.left().type->getCanonicalType().isUnpackedArray()) {
+        // An unpacked array is assigned element by element (7.6, 10.9.1).
+        const std::optional<ArrayTarget> target = arrayTarget(a.left());
+        if (!target) unsupported(sl, "assignment to this unpacked array");
+        assignArray(target->slot, target->indices, a.right(), a.isNonBlocking(), sl);
+        return Val{Operand::temp(0), sir::voidType()};
+    }
     const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
     lowerStore(a.left(), v, a.isNonBlocking(), sl);
     return v;
+}
+
+std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& e) {
+    // A whole unpacked array in a slot, or a sub-array of one selected by
+    // constant indices.
+    if (e.kind == ast::ExpressionKind::ElementSelect) {
+        const auto& es = e.as<ast::ElementSelectExpression>();
+        if (!es.value().type->getCanonicalType().isUnpackedArray()) return std::nullopt;
+        std::optional<ArrayTarget> t = arrayTarget(es.value());
+        const std::optional<std::int64_t> i = constInt(es.selector());
+        if (!t || !i) return std::nullopt;
+        t->indices.push_back(*i);
+        return t;
+    }
+    const ast::Symbol* sym = namedSymbol(e);
+    if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net) ||
+        findFrameVar(*sym) || !inSlot(*sym))
+        return std::nullopt;
+    const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), e.sourceRange.start());
+    if (design().slots[s].dims.empty()) return std::nullopt;
+    return ArrayTarget{s, {}};
+}
+
+void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
+                          const ast::Expression& rhs, bool nonblocking, slang::SourceLocation sl) {
+    const ast::Expression* r = &rhs;
+    while (r->kind == ast::ExpressionKind::Conversion &&
+           r->as<ast::ConversionExpression>().operand().type->getCanonicalType().isUnpackedArray())
+        r = &r->as<ast::ConversionExpression>().operand();
+    const std::vector<sir::ArrayDim>& dims = design().slots[s].dims;
+    const std::size_t level = indices.size();
+    if (level == dims.size()) {
+        // One element: its value, to its constant indices (SIR_SPEC.md 5.3).
+        const Val v = coerce(lowerExpr(*r), design().slots[s].type, sl);
+        std::vector<Operand> ops{Operand::slot(s)};
+        for (const std::int64_t i : indices)
+            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
+        ops.push_back(v.op);
+        emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(ops), sl);
+        noteWrite({s, elementNumber(design().slots[s], indices), 1, 0, 0});
+        return;
+    }
+    const sir::ArrayDim d = dims[level];
+    const std::int64_t step = d.left <= d.right ? 1 : -1;
+    const auto count =
+        static_cast<std::size_t>((d.left <= d.right ? d.right - d.left : d.left - d.right) + 1);
+    if (r->kind == ast::ExpressionKind::SimpleAssignmentPattern ||
+        r->kind == ast::ExpressionKind::StructuredAssignmentPattern ||
+        r->kind == ast::ExpressionKind::ReplicatedAssignmentPattern) {
+        // The elements of the pattern, from the left bound (10.9.1).
+        const std::vector<const ast::Expression*> elems = patternElements(*r);
+        if (elems.size() != count) unsupported(sl, "an assignment pattern of this size");
+        for (std::size_t k = 0; k < count; ++k) {
+            indices.push_back(d.left + static_cast<std::int64_t>(k) * step);
+            assignArray(s, indices, *elems[k], nonblocking, sl);
+            indices.pop_back();
+        }
+        return;
+    }
+    if (const std::optional<ArrayTarget> src = arrayTarget(*r)) {
+        // Another array of the same shape: element by element, from the
+        // left bounds (7.6).
+        const std::vector<sir::ArrayDim>& sdims = design().slots[src->slot].dims;
+        if (sdims.size() - src->indices.size() != dims.size() - level)
+            unsupported(sl, "assignment of an unpacked array of another shape");
+        copyArray(s, std::move(indices), src->slot, src->indices, nonblocking, sl);
+        return;
+    }
+    unsupported(sl, "assignment of this unpacked array value");
+}
+
+void Lowerer::copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
+                        std::vector<std::int64_t> fromIndices, bool nonblocking,
+                        slang::SourceLocation sl) {
+    const std::vector<sir::ArrayDim>& td = design().slots[to].dims;
+    const std::vector<sir::ArrayDim>& fd = design().slots[from].dims;
+    if (toIndices.size() == td.size()) {
+        std::vector<Operand> load{Operand::slot(from)};
+        for (const std::int64_t i : fromIndices)
+            load.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
+        noteRead({from, elementNumber(design().slots[from], fromIndices), 1, 0, 0});
+        const Val v = coerce(emit(Op::LoadElem, design().slots[from].type, std::move(load), sl),
+                             design().slots[to].type, sl);
+        std::vector<Operand> store{Operand::slot(to)};
+        for (const std::int64_t i : toIndices)
+            store.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
+        store.push_back(v.op);
+        emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(store), sl);
+        noteWrite({to, elementNumber(design().slots[to], toIndices), 1, 0, 0});
+        return;
+    }
+    const sir::ArrayDim t = td[toIndices.size()];
+    const sir::ArrayDim f = fd[fromIndices.size()];
+    const auto count = [](sir::ArrayDim a) {
+        return (a.left <= a.right ? a.right - a.left : a.left - a.right) + 1;
+    };
+    if (count(t) != count(f)) unsupported(sl, "assignment of an unpacked array of another shape");
+    for (std::int64_t k = 0; k < count(t); ++k) {
+        toIndices.push_back(t.left + (t.left <= t.right ? k : -k));
+        fromIndices.push_back(f.left + (f.left <= f.right ? k : -k));
+        copyArray(to, toIndices, from, fromIndices, nonblocking, sl);
+        toIndices.pop_back();
+        fromIndices.pop_back();
+    }
+}
+
+std::uint32_t Lowerer::elementNumber(const sir::Slot& slot,
+                                     const std::vector<std::int64_t>& indices) const {
+    // Elements are numbered from the left bound, the rightmost dimension
+    // fastest (SIR_SPEC.md 4.2).
+    std::uint64_t n = 0;
+    for (std::size_t d = 0; d < slot.dims.size(); ++d) {
+        const std::int64_t l = slot.dims[d].left;
+        const std::int64_t r = slot.dims[d].right;
+        const auto size = static_cast<std::uint64_t>((l <= r ? r - l : l - r) + 1);
+        const auto off = static_cast<std::uint64_t>(l <= r ? indices[d] - l : l - indices[d]);
+        n = n * size + off;
+    }
+    return static_cast<std::uint32_t>(n);
 }
 
 void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblocking,
