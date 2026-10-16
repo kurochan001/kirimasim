@@ -257,6 +257,12 @@ public:
     /// The slot range of an event-control expression on a fixed signal
     /// (a static variable, or a constant bit of one), if it is one.
     std::optional<sir::SlotRange> eventSlot(const ast::Expression& e);
+    /// The event slot element that a named-event expression denotes.
+    sir::Operand eventOperand(const ast::Expression& e, slang::SourceLocation sl);
+    /// `ev.triggered` (15.5.3).
+    Val lowerTriggered(const ast::Expression& ev, sir::Type rt, slang::SourceLocation sl);
+    /// The ticks of a constant delay (9.4.1).
+    std::uint64_t delayTicks(const ast::Expression& e, slang::SourceLocation sl);
 
     /// Puts the initializer of a static variable into the static-init
     /// process of the current instance (SIR_SPEC.md 7.1).

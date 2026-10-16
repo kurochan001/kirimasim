@@ -1,0 +1,15 @@
+2 count 1
+3 count 2
+3 f.triggered 0
+3 f.triggered 1
+3 f.triggered after #0 1
+4 f.triggered next slot 0
+7 g woke from a later trigger
+7 f.triggered after ->> 0
+7 f woke from its own ->>, triggered 1
+9 f woke from ->> #2
+11 ea[1] woke
+12 eb[3] woke
+14 em[1][2] woke
+15 pk::pe woke
+18 u.hits 2

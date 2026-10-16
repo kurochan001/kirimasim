@@ -502,6 +502,8 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
 }  // namespace
 
 std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
+    // A named event is waited on, not watched for changes (SCHEDULER_SPEC.md 9.5).
+    if (e.type->isEvent()) return std::nullopt;
     const ast::Expression* base = &e;
     std::optional<std::int64_t> pos;
     if (e.kind == ast::ExpressionKind::ElementSelect) {
@@ -521,10 +523,79 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
     return sir::SlotRange{s, 0, 0, 0, 0};
 }
 
+Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl) {
+    // The element of an event slot, with constant indices (SIR_SPEC.md 3.2.1).
+    std::vector<std::int64_t> indices;
+    const ast::Expression* base = &e;
+    while (base->kind == ast::ExpressionKind::ElementSelect) {
+        const auto& es = base->as<ast::ElementSelectExpression>();
+        const std::optional<std::int64_t> idx = constInt(es.selector());
+        if (!idx) unsupported(sl, "event selected by an index that is not constant");
+        indices.insert(indices.begin(), *idx);
+        base = &es.value();
+    }
+    const ast::Symbol* sym = namedSymbol(*base);
+    if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym))
+        unsupported(sl, "event given by this expression");
+    const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), sl);
+    const sir::Slot& slot = design().slots[s];
+    if (indices.size() != slot.dims.size()) unsupported(sl, "event given by this expression");
+    for (std::size_t d = 0; d < indices.size(); ++d) {
+        const std::int64_t l = slot.dims[d].left;
+        const std::int64_t r = slot.dims[d].right;
+        if (indices[d] < std::min(l, r) || indices[d] > std::max(l, r))
+            unsupported(sl, "event index outside the array");
+    }
+    Operand o = Operand::slot(s);
+    if (!slot.dims.empty()) {
+        o.firstElem = elementNumber(slot, indices);
+        o.numElems = 1;
+    }
+    return o;
+}
+
+Val Lowerer::lowerTriggered(const ast::Expression& ev, Type rt, slang::SourceLocation sl) {
+    // A trigger changes no slot, so an implicit sensitivity (always_comb,
+    // always_latch, always @*, a continuous assignment, and the functions
+    // they may call) would not see it.
+    const bool implicit =
+        b_.isSub
+            ? design().subroutines[b_.proc].kind == sir::SubroutineKind::Function
+            : proc().kind == sir::ProcessKind::Comb || proc().kind == sir::ProcessKind::Latch ||
+                  proc().kind == sir::ProcessKind::CombAt || proc().kind == sir::ProcessKind::Cont;
+    if (implicit) unsupported(sl, "triggered in a function or under an implicit sensitivity");
+    const Operand o = eventOperand(ev, sl);
+    const Val h = emit(Op::Load, Type{sir::TypeKind::Event, 0}, {o}, sl);
+    return coerce(emit(Op::Builtin, sir::u2(1), {Operand::str("triggered"), h.op}, sl), rt, sl);
+}
+
+std::uint64_t Lowerer::delayTicks(const ast::Expression& e, slang::SourceLocation sl) {
+    const std::optional<slang::ConstantValue> cv = constantValue(e);
+    if (!cv) unsupported(sl, "delay that is not a constant");
+    std::optional<std::uint64_t> ticks;
+    if (cv->isInteger()) {
+        // x or z: 0. Negative: read as an unsigned 64-bit time (9.4.1).
+        const slang::SVInt& v = cv->integer();
+        if (v.hasUnknown()) {
+            ticks = 0;
+        } else {
+            const std::optional<std::int64_t> n = v.as<std::int64_t>();
+            if (n)
+                ticks = sir::delayTicks(static_cast<std::uint64_t>(*n), timeScale(), precision());
+        }
+    } else if (cv->isReal()) {
+        ticks = sir::delayTicksReal(cv->real(), timeScale(), precision());
+    }
+    if (!ticks) unsupported(sl, "this delay value");
+    return *ticks;
+}
+
 // --- Expressions -------------------------------------------------------------
 
 Val Lowerer::lowerExpr(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
+    // Assigning, comparing and printing events come with their handles (P3).
+    if (e.type->isEvent()) unsupported(sl, "event used as a value");
     const bool pure = e.kind != ast::ExpressionKind::Assignment &&
                       e.kind != ast::ExpressionKind::Call && !sideEffects(e) &&
                       !untrustedConstant(e);
@@ -723,6 +794,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             const auto& call = e.as<ast::CallExpression>();
             const std::string name(call.getSubroutineName());
             if (!call.isSystemCall()) return lowerCall(call);
+            if (name == "triggered" && call.arguments().size() == 1 &&
+                call.arguments()[0]->type->isEvent())
+                return lowerTriggered(*call.arguments()[0], typeOf(*e.type, sl), sl);
             if ((name == "$signed" || name == "$unsigned") && call.arguments().size() == 1)
                 return coerce(lowerExpr(*call.arguments()[0]), typeOf(*e.type, sl), sl);
             if (name == "$time") {

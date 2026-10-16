@@ -267,6 +267,25 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::DisableFork: emitVoid(Op::DisableFork, {}, sl); return;
         case ast::StatementKind::Return: lowerReturn(s.as<ast::ReturnStatement>().expr, sl); return;
+        case ast::StatementKind::EventTrigger: {
+            // -> wakes the processes waiting now; ->> triggers in the NBA
+            // region after its delay (SCHEDULER_SPEC.md 9.4).
+            const auto& et = s.as<ast::EventTriggerStatement>();
+            std::vector<Operand> ops{eventOperand(et.target, sl)};
+            if (!et.isNonBlocking) {
+                emitVoid(Op::Trigger, std::move(ops), sl);
+                return;
+            }
+            if (et.timing != nullptr) {
+                if (et.timing->kind != ast::TimingControlKind::Delay)
+                    unsupported(sl, "->> with an event control");
+                ops.push_back(
+                    constant(sir::u2(64), delayTicks(et.timing->as<ast::DelayControl>().expr, sl))
+                        .op);
+            }
+            emitVoid(Op::TriggerNb, std::move(ops), sl);
+            return;
+        }
         case ast::StatementKind::WaitFork: {
             const sir::BlockId cont = newBlock();
             terminate(Op::WaitFork, {Operand::block(cont)}, sl);
@@ -597,27 +616,9 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
     const slang::SourceLocation sl = t.sourceRange.start();
     switch (t.kind) {
         case ast::TimingControlKind::Delay: {
-            const ast::Expression& e = t.as<ast::DelayControl>().expr;
-            const std::optional<slang::ConstantValue> cv = constantValue(e);
-            if (!cv) unsupported(sl, "delay that is not a constant");
-            std::optional<std::uint64_t> ticks;
-            if (cv->isInteger()) {
-                // x or z: 0. Negative: read as an unsigned 64-bit time (9.4.1).
-                const slang::SVInt& v = cv->integer();
-                if (v.hasUnknown()) {
-                    ticks = 0;
-                } else {
-                    const std::optional<std::int64_t> n = v.as<std::int64_t>();
-                    if (n)
-                        ticks = sir::delayTicks(static_cast<std::uint64_t>(*n), timeScale(),
-                                                precision());
-                }
-            } else if (cv->isReal()) {
-                ticks = sir::delayTicksReal(cv->real(), timeScale(), precision());
-            }
-            if (!ticks) unsupported(sl, "this delay value");
+            const std::uint64_t ticks = delayTicks(t.as<ast::DelayControl>().expr, sl);
             const sir::BlockId cont = newBlock();
-            terminate(Op::WaitDelay, {constant(sir::u2(64), *ticks).op, Operand::block(cont)}, sl);
+            terminate(Op::WaitDelay, {constant(sir::u2(64), ticks).op, Operand::block(cont)}, sl);
             setBlock(cont);
             return;
         }
@@ -635,6 +636,15 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                     unsupported(sl, "this event control");
                 const auto& se = i->as<ast::SignalEventControl>();
                 if (se.iffCondition != nullptr) unsupported(sl, "event control with iff");
+                if (se.expr.type->isEvent()) {
+                    // @ev: wait for the next trigger of a named event
+                    // (SCHEDULER_SPEC.md 9.4).
+                    if (items.size() != 1) unsupported(sl, "event list with a named event");
+                    const sir::BlockId cont = newBlock();
+                    terminate(Op::WaitNamed, {eventOperand(se.expr, sl), Operand::block(cont)}, sl);
+                    setBlock(cont);
+                    return;
+                }
                 const std::optional<sir::SlotRange> r = eventSlot(se.expr);
                 if (!r) unsupported(sl, "event control on an expression");
                 Operand o = Operand::slot(r->slot, r->lsb, r->width);

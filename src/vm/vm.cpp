@@ -92,16 +92,30 @@ enum class Method : std::uint8_t {
     OctToA,
     BinToA,
     RealToA,
+    Triggered,
 };
 
 Method resolveMethod(std::string_view n) {
     static constexpr std::pair<std::string_view, Method> kNames[] = {
-        {"len", Method::Len},           {"getc", Method::Getc},       {"putc", Method::Putc},
-        {"toupper", Method::ToUpper},   {"tolower", Method::ToLower}, {"compare", Method::Compare},
-        {"icompare", Method::ICompare}, {"substr", Method::Substr},   {"atoi", Method::AtoI},
-        {"atohex", Method::AtoHex},     {"atooct", Method::AtoOct},   {"atobin", Method::AtoBin},
-        {"atoreal", Method::AtoReal},   {"itoa", Method::ItoA},       {"hextoa", Method::HexToA},
-        {"octtoa", Method::OctToA},     {"bintoa", Method::BinToA},   {"realtoa", Method::RealToA},
+        {"len", Method::Len},
+        {"getc", Method::Getc},
+        {"putc", Method::Putc},
+        {"toupper", Method::ToUpper},
+        {"tolower", Method::ToLower},
+        {"compare", Method::Compare},
+        {"icompare", Method::ICompare},
+        {"substr", Method::Substr},
+        {"atoi", Method::AtoI},
+        {"atohex", Method::AtoHex},
+        {"atooct", Method::AtoOct},
+        {"atobin", Method::AtoBin},
+        {"atoreal", Method::AtoReal},
+        {"itoa", Method::ItoA},
+        {"hextoa", Method::HexToA},
+        {"octtoa", Method::OctToA},
+        {"bintoa", Method::BinToA},
+        {"realtoa", Method::RealToA},
+        {"triggered", Method::Triggered},
     };
     for (const auto& [name, m] : kNames)
         if (name == n) return m;
@@ -411,6 +425,15 @@ public:
                        static_cast<std::uint32_t>(sir::elementCount(s)),
                        dom == sir::Domain::Four ? kernelInit(sir::initialValue(s.kind))
                                                 : kernel::Init::Zero);
+        }
+        // Every element of an event slot holds its own event from the
+        // start; the handle is the event's number plus 1, 0 being null
+        // (SIR_SPEC.md 3.2.1).
+        for (sir::SlotId s = 0; s < d_.slots.size(); ++s) {
+            if (d_.slots[s].type.kind != sir::TypeKind::Event) continue;
+            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
+            for (std::uint32_t e = 0; e < n; ++e)
+                *store_.element(s, e) = std::uint64_t{sched_.addEvent()} + 1;
         }
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
@@ -938,6 +961,31 @@ private:
                         resumeAt(f) = ops.back().id;
                         return Exit::Waiting;
                     }
+                    case Op::WaitNamed: {
+                        const std::optional<kernel::EventId> e = eventOf(ops[0]);
+                        if (!e) {
+                            fail(p, "wait on a null event");
+                            return Exit::Error;
+                        }
+                        sched_.waitNamed(f.kernelId, *e);
+                        resumeAt(f) = ops[1].id;
+                        return Exit::Waiting;
+                    }
+                    case Op::Trigger:
+                    case Op::TriggerNb: {
+                        const std::optional<kernel::EventId> e = eventOf(ops[0]);
+                        if (!e) {
+                            fail(p, "trigger of a null event");
+                            return Exit::Error;
+                        }
+                        if (in.op == Op::Trigger) {
+                            sched_.trigger(*e);
+                        } else {
+                            const W4 t = ops.size() > 1 ? value(ops[1]) : W4{0, 0};
+                            sched_.triggerNb(f.kernelId, *e, t.b != 0 ? 0 : t.a);
+                        }
+                        break;
+                    }
                     case Op::Builtin: builtin(in, info_[body][b][k]); break;
                     case Op::Resolve: resolve(in, info_[body][b][k]); break;
                     case Op::Syscall: {
@@ -1407,10 +1455,24 @@ private:
 
     /// The string methods (6.16, VALUE_SEMANTICS.md 7.6). The ones that
     /// change the string return the new one; front stores it.
+    /// The event an element of an event slot holds; nothing for null.
+    std::optional<kernel::EventId> eventOf(const sir::Operand& o) const {
+        const std::uint64_t h = readSlot(o.id, o.firstElem, 0, 0).a;
+        if (h == 0) return std::nullopt;
+        return static_cast<kernel::EventId>(h - 1);
+    }
+
     void builtin(const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const auto v = [&](std::size_t i) { return value(ops[i]); };
         const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
+        if (info.method == Method::Triggered) {
+            // False for a null event (15.5.3).
+            const std::uint64_t h = v(1).a;
+            const bool on = h != 0 && sched_.triggered(static_cast<kernel::EventId>(h - 1));
+            temp(in.result) = {on ? 1U : 0U, 0};
+            return;
+        }
         const std::string_view self = strings_.get(v(1).a);
         const sir::Type rt = in.type;
         const auto put = [&](std::string_view text) {
@@ -1509,7 +1571,8 @@ private:
             case Method::RealToA:  // like %g (VALUE_SEMANTICS.md 7.6)
                 put(kernel::formatReal(toReal(v(2), t(2)), kernel::FormatSpec{}));
                 return;
-            case Method::None: return;
+            case Method::None:
+            case Method::Triggered: return;  // handled above
         }
     }
 

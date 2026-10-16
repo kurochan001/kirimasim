@@ -328,6 +328,8 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
     if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
+    // A handle to a kernel event (SIR_SPEC.md 3.2.1).
+    if (t.isEvent()) return sir::Type{sir::TypeKind::Event, 0};
     if (t.isFloating())
         return t.as<ast::FloatingType>().floatKind == ast::FloatingType::ShortReal
                    ? sir::Type{sir::TypeKind::ShortReal, 0}
@@ -440,6 +442,9 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
 sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl) {
     if (auto it = b_.frameVars.find(&v); it != b_.frameVars.end()) return it->second;
     const sir::Type t = typeOf(v.getType(), sl);
+    // An event slot gets its event when the design starts (SIR_SPEC.md
+    // 3.2.1); a frame would need one each time it is made.
+    if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
     frameVars().push_back({std::string(v.name), t, sir::kNone});
     b_.frameVars.emplace(&v, id);
