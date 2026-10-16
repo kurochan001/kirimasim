@@ -16,6 +16,7 @@
 
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/sir/types.h"
 
@@ -255,7 +256,22 @@ struct InstrInfo {
     /// For $display and $write: the parsed format of each text operand
     /// (empty for the others).
     std::vector<std::vector<kernel::FormatPiece>> formats;
+    kernel::NetKind netKind = kernel::NetKind::Wire;  ///< For resolve.
 };
+
+/// The kind of net a resolve instruction names (SIR_SPEC.md 3.5).
+std::optional<kernel::NetKind> netKindOf(std::string_view name) {
+    static constexpr std::pair<std::string_view, kernel::NetKind> kKinds[] = {
+        {"wire", kernel::NetKind::Wire},       {"tri", kernel::NetKind::Tri},
+        {"wand", kernel::NetKind::Wand},       {"triand", kernel::NetKind::Triand},
+        {"wor", kernel::NetKind::Wor},         {"trior", kernel::NetKind::Trior},
+        {"tri0", kernel::NetKind::Tri0},       {"tri1", kernel::NetKind::Tri1},
+        {"supply0", kernel::NetKind::Supply0}, {"supply1", kernel::NetKind::Supply1},
+        {"uwire", kernel::NetKind::Uwire}};
+    for (const auto& [n, k] : kKinds)
+        if (n == name) return k;
+    return std::nullopt;
+}
 
 kernel::Domain kernelDomain(sir::Domain d) {
     switch (d) {
@@ -512,11 +528,18 @@ private:
         if (tempStack_.size() < a.base + bodyTemps(a.body))
             tempStack_.resize(a.base + bodyTemps(a.body));
     }
-    std::deque<Frame> frames_;             ///< A deque, so that frames never move.
-    std::vector<kernel::WaitItem> items_;  ///< Scratch for wait.event.
+    std::deque<Frame> frames_;                     ///< A deque, so that frames never move.
+    std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
+    std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
+        if (in.op == Op::Resolve && !in.operands.empty()) {
+            const std::optional<kernel::NetKind> k = netKindOf(in.operands[0].text);
+            if (!k && loadError_.empty()) loadError_ = "resolve of net kind " + in.operands[0].text;
+            info.netKind = k.value_or(kernel::NetKind::Wire);
+            return info;
+        }
         if (in.op == Op::Builtin && !in.operands.empty()) {
             info.method = resolveMethod(in.operands[0].text);
             if (info.method == Method::None && loadError_.empty())
@@ -911,6 +934,7 @@ private:
                         return Exit::Waiting;
                     }
                     case Op::Builtin: builtin(in, info_[body][b][k]); break;
+                    case Op::Resolve: resolve(in, info_[body][b][k]); break;
                     case Op::Syscall: {
                         const InstrInfo& info = info_[body][b][k];
                         if (!syscall(f, p, in, info)) return Exit::Error;
@@ -1016,6 +1040,18 @@ private:
     }
 
     /// Runs one instruction that is not a terminator or a system call.
+    /// resolve (SIR_SPEC.md 3.5): each driver is a value and its strengths
+    /// for 1 and for 0 (VALUE_SEMANTICS.md 5.4).
+    void resolve(const sir::Instr& in, const InstrInfo& info) {
+        const auto& ops = in.operands;
+        drivers_.clear();
+        for (std::size_t i = 1; i + 2 < ops.size(); i += 3)
+            drivers_.push_back({value(ops[i]), static_cast<std::uint8_t>(value(ops[i + 1]).a),
+                                static_cast<std::uint8_t>(value(ops[i + 2]).a)});
+        temp(in.result) = kernel::resolve4(info.netKind, drivers_.data(),
+                                           static_cast<unsigned>(drivers_.size()), in.type.width);
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in) {
         const auto& ops = in.operands;
         const sir::Type rt = in.type;

@@ -10,7 +10,7 @@ kinds whose value with one driver is the driver's value (wire, tri, uwire)
 with one continuous driver of each value 0, 1, x and z. The driver is an
 assign statement, a net declaration assignment or an output port. Several
 drivers, drive strengths and the kinds that resolve even one driver against
-their own pull or supply come with the resolution of nets
+their own pull or supply are in tools/gen_resolution_matrix.py
 (VALUE_SEMANTICS.md 5).
 
 The expected outputs follow from the rule tables below. A person checks the

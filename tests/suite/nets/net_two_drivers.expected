@@ -1,0 +1,16 @@
+00 wire=0 tri=0 wand=0 triand=0 wor=0 trior=0 tri0=0 tri1=0 supply0=0 supply1=1
+01 wire=x tri=x wand=0 triand=0 wor=1 trior=1 tri0=x tri1=x supply0=0 supply1=1
+0x wire=x tri=x wand=0 triand=0 wor=x trior=x tri0=x tri1=x supply0=0 supply1=1
+0z wire=0 tri=0 wand=0 triand=0 wor=0 trior=0 tri0=0 tri1=0 supply0=0 supply1=1
+10 wire=x tri=x wand=0 triand=0 wor=1 trior=1 tri0=x tri1=x supply0=0 supply1=1
+11 wire=1 tri=1 wand=1 triand=1 wor=1 trior=1 tri0=1 tri1=1 supply0=0 supply1=1
+1x wire=x tri=x wand=x triand=x wor=1 trior=1 tri0=x tri1=x supply0=0 supply1=1
+1z wire=1 tri=1 wand=1 triand=1 wor=1 trior=1 tri0=1 tri1=1 supply0=0 supply1=1
+x0 wire=x tri=x wand=0 triand=0 wor=x trior=x tri0=x tri1=x supply0=0 supply1=1
+x1 wire=x tri=x wand=x triand=x wor=1 trior=1 tri0=x tri1=x supply0=0 supply1=1
+xx wire=x tri=x wand=x triand=x wor=x trior=x tri0=x tri1=x supply0=0 supply1=1
+xz wire=x tri=x wand=x triand=x wor=x trior=x tri0=x tri1=x supply0=0 supply1=1
+z0 wire=0 tri=0 wand=0 triand=0 wor=0 trior=0 tri0=0 tri1=0 supply0=0 supply1=1
+z1 wire=1 tri=1 wand=1 triand=1 wor=1 trior=1 tri0=1 tri1=1 supply0=0 supply1=1
+zx wire=x tri=x wand=x triand=x wor=x trior=x tri0=x tri1=x supply0=0 supply1=1
+zz wire=z tri=z wand=z triand=z wor=z trior=z tri0=0 tri1=1 supply0=0 supply1=1

@@ -1,7 +1,9 @@
 #include "kirimasim/sir/verify.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <optional>
 #include <set>
 #include <string>
@@ -40,20 +42,6 @@ bool hasNoResult(Op op) {
 /// Instructions whose result is optional (a call of a void function, a
 /// system task, a method without a value).
 bool resultOptional(Op op) { return op == Op::Call || op == Op::Syscall || op == Op::Builtin; }
-
-/// Instructions that write a slot (SIR_SPEC.md 3.4).
-bool writesSlot(Op op) {
-    switch (op) {
-        case Op::Store:
-        case Op::Nba:
-        case Op::NbaDelay:
-        case Op::StoreElem:
-        case Op::NbaElem:
-        case Op::StoreBits:
-        case Op::NbaBits: return true;
-        default: return false;
-    }
-}
 
 /// Process kinds whose body may not contain wait instructions. The leading
 /// edge wait of ff and ff-plain is held in the process's triggers, so the
@@ -235,6 +223,14 @@ private:
             if (!typeRefOk(s.declType)) error(where, "type out of range");
             if (s.type.kind == TypeKind::Void) error(where, "slot has type void");
             if (isIntegral(s.type) && s.type.width == 0) error(where, "integral slot has width 0");
+            if (s.driverOf != kNone) {
+                // A driver slot (SIR_SPEC.md 3.5): the shape of its net.
+                if (s.driverOf >= d_.slots.size() || d_.slots[s.driverOf].kind == SlotKind::Var ||
+                    d_.slots[s.driverOf].type != s.type || !d_.slots[s.driverOf].dims.empty() ||
+                    !s.dims.empty())
+                    error(where, "a driver slot drives a net of its own type");
+                if (s.strength1 > 7 || s.strength0 > 7) error(where, "strength out of range");
+            }
             if (!s.dims.empty()) {
                 std::uint64_t n = 1;
                 for (const ArrayDim& dim : s.dims) {
@@ -946,6 +942,32 @@ private:
                 if (nOps(2) && (!isIntegral(rt) || ty(0) != rt || !isIntegral(ty(1))))
                     bad("value must have the result type; the amount must be integral");
                 break;
+            case Op::Resolve: {
+                // A net kind, then a value of the result type and two
+                // constant strengths from 0 to 7 for each driver.
+                static constexpr std::string_view kKinds[] = {
+                    "wire", "tri",  "wand",    "triand",  "wor",  "trior",
+                    "tri0", "tri1", "supply0", "supply1", "uwire"};
+                bool ok = !ops.empty() && ops[0].kind == Operand::Kind::Text &&
+                          std::find(std::begin(kKinds), std::end(kKinds), ops[0].text) !=
+                              std::end(kKinds) &&
+                          ops.size() % 3 == 1 && isIntegral(rt) && isFourState(rt);
+                for (std::size_t i = 1; ok && i < ops.size(); i += 3) {
+                    ok = ty(i) == rt;
+                    for (std::size_t j = i + 1; ok && j < i + 3; ++j) {
+                        ok = ops[j].kind == Operand::Kind::Const && isIntegral(ty(j));
+                        if (ok) {
+                            const Constant& c = d_.constants[ops[j].id];
+                            ok = (c.bWords.empty() || c.bWords[0] == 0) &&
+                                 (c.aWords.empty() || c.aWords[0] <= 7);
+                        }
+                    }
+                }
+                if (!ok)
+                    bad("needs a net kind, then a 4-state value of the result type and two "
+                        "constant strengths from 0 to 7 for each driver");
+                break;
+            }
             case Op::Select:
                 if (nOps(3) &&
                     (!width1(ty(0)) || rt.kind == TypeKind::Void || ty(1) != rt || ty(2) != rt))

@@ -1,0 +1,20 @@
+00 sthi.st=0 sthi.pu=0 sthi.we=0 hist.st=0 hist.pu=0 hist.we=0 puhi.st=0 puhi.pu=0 puhi.we=0 hiwe.st=0 hiwe.pu=0 hiwe.we=0
+01 sthi.st=1 sthi.pu=1 sthi.we=1 hist.st=x hist.pu=0 hist.we=0 puhi.st=1 puhi.pu=1 puhi.we=1 hiwe.st=1 hiwe.pu=1 hiwe.we=x
+0x sthi.st=x sthi.pu=x sthi.we=x hist.st=x hist.pu=0 hist.we=0 puhi.st=x puhi.pu=x puhi.we=x hiwe.st=x hiwe.pu=x hiwe.we=x
+0z sthi.st=z sthi.pu=z sthi.we=z hist.st=0 hist.pu=0 hist.we=0 puhi.st=z puhi.pu=z puhi.we=z hiwe.st=0 hiwe.pu=0 hiwe.we=0
+10 sthi.st=x sthi.pu=1 sthi.we=1 hist.st=0 hist.pu=0 hist.we=0 puhi.st=0 puhi.pu=x puhi.we=1 hiwe.st=0 hiwe.pu=0 hiwe.we=0
+11 sthi.st=1 sthi.pu=1 sthi.we=1 hist.st=1 hist.pu=1 hist.we=1 puhi.st=1 puhi.pu=1 puhi.we=1 hiwe.st=1 hiwe.pu=1 hiwe.we=1
+1x sthi.st=x sthi.pu=1 sthi.we=1 hist.st=x hist.pu=x hist.we=x puhi.st=x puhi.pu=x puhi.we=1 hiwe.st=x hiwe.pu=x hiwe.we=x
+1z sthi.st=1 sthi.pu=1 sthi.we=1 hist.st=z hist.pu=z hist.we=z puhi.st=1 puhi.pu=1 puhi.we=1 hiwe.st=z hiwe.pu=z hiwe.we=z
+x0 sthi.st=x sthi.pu=x sthi.we=x hist.st=0 hist.pu=0 hist.we=0 puhi.st=0 puhi.pu=x puhi.we=x hiwe.st=0 hiwe.pu=0 hiwe.we=0
+x1 sthi.st=1 sthi.pu=1 sthi.we=1 hist.st=x hist.pu=x hist.we=x puhi.st=1 puhi.pu=1 puhi.we=1 hiwe.st=1 hiwe.pu=1 hiwe.we=x
+xx sthi.st=x sthi.pu=x sthi.we=x hist.st=x hist.pu=x hist.we=x puhi.st=x puhi.pu=x puhi.we=x hiwe.st=x hiwe.pu=x hiwe.we=x
+xz sthi.st=x sthi.pu=x sthi.we=x hist.st=x hist.pu=x hist.we=x puhi.st=x puhi.pu=x puhi.we=x hiwe.st=x hiwe.pu=x hiwe.we=x
+z0 sthi.st=0 sthi.pu=0 sthi.we=0 hist.st=0 hist.pu=0 hist.we=0 puhi.st=0 puhi.pu=0 puhi.we=0 hiwe.st=0 hiwe.pu=0 hiwe.we=0
+z1 sthi.st=1 sthi.pu=1 sthi.we=1 hist.st=1 hist.pu=1 hist.we=1 puhi.st=1 puhi.pu=1 puhi.we=1 hiwe.st=1 hiwe.pu=1 hiwe.we=1
+zx sthi.st=x sthi.pu=x sthi.we=x hist.st=x hist.pu=x hist.we=x puhi.st=x puhi.pu=x puhi.we=x hiwe.st=x hiwe.pu=x hiwe.we=x
+zz sthi.st=z sthi.pu=z sthi.we=z hist.st=z hist.pu=z hist.we=z puhi.st=z puhi.pu=z puhi.we=z hiwe.st=z hiwe.pu=z hiwe.we=z
+v 01xz 0000 01xz
+v 01xz 1111 1111
+v 01xz xxxx x1xx
+v 1100 z1x0 11x0

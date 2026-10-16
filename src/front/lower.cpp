@@ -14,6 +14,8 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "kirimasim/front/front.h"
@@ -99,6 +101,25 @@ std::optional<sir::SlotKind> netKindOf(const ast::NetSymbol& n) {
         case ast::NetType::UWire: return sir::SlotKind::Uwire;
         default: return std::nullopt;
     }
+}
+
+/// The strengths of a drive strength specification for 1 and for 0, from
+/// 0 (highz) to 7 (supply); strong where none is given (10.3.4, table
+/// 28-7).
+std::pair<std::uint8_t, std::uint8_t>
+driveLevels(std::pair<std::optional<ast::DriveStrength>, std::optional<ast::DriveStrength>> ds) {
+    const auto level = [](std::optional<ast::DriveStrength> d) -> std::uint8_t {
+        if (!d) return 6;
+        switch (*d) {
+            case ast::DriveStrength::Supply: return 7;
+            case ast::DriveStrength::Strong: return 6;
+            case ast::DriveStrength::Pull: return 5;
+            case ast::DriveStrength::Weak: return 3;
+            case ast::DriveStrength::HighZ: return 0;
+        }
+        return 6;
+    };
+    return {level(ds.second), level(ds.first)};  // slang gives (strength0, strength1)
 }
 
 /// The lvalue an output port connection names: slang binds it like an
@@ -337,8 +358,6 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
         const std::optional<sir::SlotKind> k = netKindOf(n);
         if (!k) unsupported(sl, "net of kind '" + std::string(n.netType.name) + "'");
         if (n.getDelay() != nullptr) unsupported(sl, "net with a delay");
-        const auto strength = n.getDriveStrength();
-        if (strength.first || strength.second) unsupported(sl, "drive strength");
         kind = *k;
     }
     const ast::Type* t = &v.getType().getCanonicalType();
@@ -427,7 +446,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     }
     if (numErrors_ != 0) return;
     finishDesign();
-    checkDrivers();
+    resolveNets();
 }
 
 std::string Lowerer::whereOf(const sir::SourceLoc& l) const {
@@ -443,6 +462,7 @@ std::string Lowerer::processName(const std::string& prefix, const std::string& k
 void Lowerer::dropProcesses(std::size_t first) {
     design_.processes.resize(first);  // with any fork children
     combReads_.erase(static_cast<std::uint32_t>(first));
+    strengths_.erase(strengths_.lower_bound(static_cast<std::uint32_t>(first)), strengths_.end());
     // A static-init process made while lowering the dropped ones goes too.
     for (auto it = staticInit_.begin(); it != staticInit_.end();) {
         if (it->second >= first) {
@@ -511,36 +531,100 @@ void Lowerer::finishDesign() {
     }
 }
 
-void Lowerer::checkDrivers() {
-    // The nets whose value comes from resolving several drivers, or a
-    // driver and the net's own pull or supply (VALUE_SEMANTICS.md 5), are
-    // not supported yet; undriven ones only keep their initial value. Two
-    // drivers of a uwire never get here: slang's analysis rejects them
+void Lowerer::resolveNets() {
+    // The drivers of each net: the cont processes that write it (a
+    // continuous assignment, a net declaration assignment or a port).
+    // Two drivers of a uwire never get here: slang's analysis rejects them
     // (6.6.2).
-    std::map<sir::SlotId, std::vector<std::pair<sir::ProcessId, sir::SlotRange>>> drivers;
+    std::map<sir::SlotId, std::vector<std::pair<std::uint32_t, sir::SlotRange>>> drivers;
     for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
         if (design_.processes[p].kind != sir::ProcessKind::Cont) continue;
         for (const sir::SlotRange& w : design_.processes[p].writes)
             if (design_.slots[w.slot].kind != sir::SlotKind::Var) drivers[w.slot].push_back({p, w});
     }
-    for (const auto& [slot, ds] : drivers) {
-        const sir::Slot& s = design_.slots[slot];
-        const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
-        std::optional<std::size_t> second;
-        for (std::size_t i = 0; i < ds.size() && !second; ++i)
-            for (std::size_t j = i + 1; j < ds.size() && !second; ++j)
-                if (overlap(ds[i].second, ds[j].second, s.type.width, elems)) second = j;
-        const bool plain = s.kind == sir::SlotKind::Wire || s.kind == sir::SlotKind::Tri ||
-                           s.kind == sir::SlotKind::Uwire;
-        if (!plain || second) {
+    for (const auto& [net, writes] : drivers) {
+        // Only nets with bits that several drivers write, or with a driver
+        // and their own pull or supply, are resolved (VALUE_SEMANTICS.md
+        // 5.5). Where drivers write separate bits, each bit has the value
+        // of its one driver either way.
+        const sir::SlotKind kind = design_.slots[net].kind;
+        const bool own = kind == sir::SlotKind::Tri0 || kind == sir::SlotKind::Tri1 ||
+                         kind == sir::SlotKind::Supply0 || kind == sir::SlotKind::Supply1;
+        const auto elems = static_cast<std::uint32_t>(sir::elementCount(design_.slots[net]));
+        bool shared = false;
+        for (std::size_t i = 0; i < writes.size() && !shared; ++i)
+            for (std::size_t j = i + 1; j < writes.size() && !shared; ++j)
+                shared = writes[i].first != writes[j].first &&
+                         overlap(writes[i].second, writes[j].second, design_.slots[net].type.width,
+                                 elems);
+        if (!shared && !own) continue;
+        std::vector<std::uint32_t> ps;
+        for (const auto& w : writes)
+            if (std::find(ps.begin(), ps.end(), w.first) == ps.end()) ps.push_back(w.first);
+        const sir::SourceLoc where = design_.processes[ps.front()].loc;
+        if (!design_.slots[net].dims.empty()) {
             ++numErrors_;
-            const sir::ProcessId p = ds[second.value_or(0)].first;
-            diags_ += whereOf(design_.processes[p].loc) + ": error: unsupported: " +
-                      (plain ? "net '" + s.name + "' with more than one driver"
-                             : "a driver of the " + std::string(sir::kindName(s.kind)) + " net '" +
-                                   s.name + "'") +
-                      " (not implemented yet)\n";
+            diags_ += whereOf(where) + ": error: unsupported: an array of nets with " +
+                      "several drivers (not implemented yet)\n";
+            continue;
         }
+        const sir::Type type = design_.slots[net].type;
+        const sir::InstanceId instance = design_.slots[net].instance;
+        design_.slots[net].flags |= sir::kMultiDriver;
+
+        // Each driver writes its own slot, which starts at z (SIR_SPEC.md
+        // 3.5): the bits it does not write do not drive.
+        std::vector<sir::SlotId> slots;
+        for (std::size_t k = 0; k < ps.size(); ++k) {
+            sir::Slot d;
+            d.name = design_.slots[net].name + ".$driver" + std::to_string(k);
+            d.type = type;
+            d.kind = sir::SlotKind::Wire;
+            d.instance = instance;
+            d.driverOf = net;
+            const auto it = strengths_.find(ps[k]);
+            if (it != strengths_.end()) std::tie(d.strength1, d.strength0) = it->second;
+            const auto id = static_cast<sir::SlotId>(design_.slots.size());
+            design_.slots.push_back(std::move(d));
+            slots.push_back(id);
+            sir::Process& p = design_.processes[ps[k]];
+            for (sir::BasicBlock& bb : p.blocks)
+                for (sir::Instr& in : bb.instrs)
+                    if (sir::writesSlot(in.op) && !in.operands.empty() &&
+                        in.operands[0].kind == sir::Operand::Kind::Slot && in.operands[0].id == net)
+                        in.operands[0].id = id;
+            for (sir::SlotRange& w : p.writes)
+                if (w.slot == net) w.slot = id;
+        }
+
+        // The net's value is resolved again whenever a driver changes
+        // (VALUE_SEMANTICS.md 5.6).
+        sir::Process r;
+        r.name = design_.slots[net].name + ".$resolve";
+        r.kind = sir::ProcessKind::Cont;
+        r.instance = instance;
+        r.loc = where;
+        r.blocks.resize(1);
+        std::vector<sir::Operand> ops{sir::Operand::str(std::string(sir::kindName(kind)))};
+        for (std::size_t k = 0; k < slots.size(); ++k) {
+            const sir::TempId t = r.numTemps++;
+            r.blocks[0].instrs.push_back(
+                {sir::Op::Load, type, t, {sir::Operand::slot(slots[k])}, where});
+            r.triggers.push_back({sir::SlotRange{slots[k], 0, 0, 0, 0}, sir::Edge::Any});
+            ops.push_back(sir::Operand::temp(t));
+            ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength1).op);
+            ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength0).op);
+        }
+        const sir::TempId v = r.numTemps++;
+        r.blocks[0].instrs.push_back({sir::Op::Resolve, type, v, std::move(ops), where});
+        r.blocks[0].instrs.push_back({sir::Op::Store,
+                                      sir::voidType(),
+                                      sir::kNone,
+                                      {sir::Operand::slot(net), sir::Operand::temp(v)},
+                                      where});
+        r.blocks[0].instrs.push_back({sir::Op::Ret, sir::voidType(), sir::kNone, {}, where});
+        r.writes.push_back({net, 0, 0, 0, 0});
+        design_.processes.push_back(std::move(r));
     }
 }
 
@@ -621,28 +705,31 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                 const sir::SlotId s = it->second;
                 // A net declaration assignment is a continuous assignment
                 // to the net (10.3.1).
-                lowerCont(processName(prefix, "assign"), n.location, n, [&] {
-                    if (!design_.slots[s].dims.empty())
-                        unsupported(n.location, "assignment to a whole unpacked array");
-                    const Val v = coerce(lowerExpr(*init), design_.slots[s].type, n.location);
-                    emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, n.location);
-                    noteWrite({s, 0, 0, 0, 0});
-                });
+                lowerCont(
+                    processName(prefix, "assign"), n.location, n,
+                    [&] {
+                        if (!design_.slots[s].dims.empty())
+                            unsupported(n.location, "assignment to a whole unpacked array");
+                        const Val v = coerce(lowerExpr(*init), design_.slots[s].type, n.location);
+                        emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, n.location);
+                        noteWrite({s, 0, 0, 0, 0});
+                    },
+                    driveLevels(n.getDriveStrength()));
                 continue;
             }
             case ast::SymbolKind::ContinuousAssign: {
                 const auto& ca = member.as<ast::ContinuousAssignSymbol>();
-                lowerCont(processName(prefix, "assign"), ca.location, ca, [&] {
-                    if (ca.getDelay() != nullptr)
-                        unsupported(ca.location, "continuous assignment with a delay");
-                    const auto strength = ca.getDriveStrength();
-                    if (strength.first || strength.second)
-                        unsupported(ca.location, "drive strength");
-                    const ast::Expression& e = ca.getAssignment();
-                    if (e.kind != ast::ExpressionKind::Assignment)
-                        unsupported(ca.location, "this continuous assignment");
-                    lowerAssignment(e.as<ast::AssignmentExpression>());
-                });
+                lowerCont(
+                    processName(prefix, "assign"), ca.location, ca,
+                    [&] {
+                        if (ca.getDelay() != nullptr)
+                            unsupported(ca.location, "continuous assignment with a delay");
+                        const ast::Expression& e = ca.getAssignment();
+                        if (e.kind != ast::ExpressionKind::Assignment)
+                            unsupported(ca.location, "this continuous assignment");
+                        lowerAssignment(e.as<ast::AssignmentExpression>());
+                    },
+                    driveLevels(ca.getDriveStrength()));
                 continue;
             }
             case ast::SymbolKind::ProceduralBlock:
@@ -728,7 +815,8 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
 
 template <typename F>
 void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
-                        const ast::Symbol& evalAt, F&& body) {
+                        const ast::Symbol& evalAt, F&& body,
+                        std::pair<std::uint8_t, std::uint8_t> strength) {
     sir::Process p;
     p.name = name;
     p.kind = sir::ProcessKind::Cont;
@@ -748,6 +836,8 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
         dropProcesses(first);
         return;
     }
+    if (strength != std::pair<std::uint8_t, std::uint8_t>{6, 6})
+        strengths_[static_cast<std::uint32_t>(first)] = strength;
     // Evaluated again whenever an operand of the right-hand side changes
     // (10.3.2): what the body reads, not what the subroutines it calls
     // read inside.

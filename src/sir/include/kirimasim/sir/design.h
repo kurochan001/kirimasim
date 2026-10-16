@@ -83,6 +83,12 @@ struct Slot {
     SubroutineId subroutine = kNone;  ///< Owning static subroutine, if any.
     TypeId declType = kNone;          ///< Type table row, when the value type is not enough.
     std::uint32_t offset = 0;         ///< Word offset inside the domain (assigned later).
+    /// A driver slot: the net it drives, and the driver's strengths for 1
+    /// and for 0, from 0 (highz) to 7 (supply) (SIR_SPEC.md 3.5,
+    /// VALUE_SEMANTICS.md 5.3).
+    SlotId driverOf = kNone;
+    std::uint8_t strength1 = 6;
+    std::uint8_t strength0 = 6;
 };
 
 /// A row of the name table: a hierarchical name and the slot it denotes.
@@ -234,6 +240,10 @@ enum class Op : std::uint8_t {
     /// priority violation on the running process's queue of pending
     /// reports (SCHEDULER_SPEC.md 15; the texts are SYSTEM_TASKS.md 10.4).
     ReportDefer,
+    /// %r = resolve "<net kind>", (<driver value>, <s1>, <s0>)...: the value
+    /// of a net from its drivers and their strengths (SIR_SPEC.md 3.5,
+    /// VALUE_SEMANTICS.md 5.4).
+    Resolve,
     // Calls.
     Call,     ///< [%r =] call @N, <argument>...
     Syscall,  ///< [%r =] syscall "$name", <operand>...
@@ -454,6 +464,9 @@ std::uint64_t elementCount(const Slot& s);
 const char* opName(Op op);
 /// Whether the instruction ends a basic block.
 bool isTerminator(Op op);
+/// Whether the instruction writes the slot of its first operand
+/// (SIR_SPEC.md 3.4, 5.3).
+bool writesSlot(Op op);
 /// Whether the terminator can suspend the process (SIR_SPEC.md 7.2). A
 /// fork is a wait unless it is join_none.
 bool isWait(const Instr& in);

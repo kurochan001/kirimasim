@@ -1,0 +1,4 @@
+0 tri0.su=0 tri0.st=0 tri0.pu=0 tri0.we=0 tri1.su=0 tri1.st=0 tri1.pu=x tri1.we=1 supply0.st=0 supply1.st=1
+1 tri0.su=1 tri0.st=1 tri0.pu=x tri0.we=0 tri1.su=1 tri1.st=1 tri1.pu=1 tri1.we=1 supply0.st=0 supply1.st=1
+x tri0.su=x tri0.st=x tri0.pu=x tri0.we=0 tri1.su=x tri1.st=x tri1.pu=x tri1.we=1 supply0.st=0 supply1.st=1
+z tri0.su=0 tri0.st=0 tri0.pu=0 tri0.we=0 tri1.su=1 tri1.st=1 tri1.pu=1 tri1.we=1 supply0.st=0 supply1.st=1

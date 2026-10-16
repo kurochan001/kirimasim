@@ -144,6 +144,7 @@ const char* opName(Op op) {
         case Op::Syscall: return "syscall";
         case Op::Builtin: return "builtin";
         case Op::ReportDefer: return "report.defer";
+        case Op::Resolve: return "resolve";
         case Op::Br: return "br";
         case Op::BrIf: return "br.if";
         case Op::Ret: return "ret";
@@ -263,6 +264,19 @@ const char* edgeName(Edge e) {
         case Edge::Both: return "edge";
     }
     return "?";
+}
+
+bool writesSlot(Op op) {
+    switch (op) {
+        case Op::Store:
+        case Op::Nba:
+        case Op::NbaDelay:
+        case Op::StoreElem:
+        case Op::NbaElem:
+        case Op::StoreBits:
+        case Op::NbaBits: return true;
+        default: return false;
+    }
 }
 
 }  // namespace kirimasim::sir

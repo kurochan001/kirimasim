@@ -1,0 +1,16 @@
+00 susu=0 sust=0 supu=0 suwe=0 stsu=0 stst=0 stpu=0 stwe=0 pusu=0 pust=0 pupu=0 puwe=0 wesu=0 west=0 wepu=0 wewe=0
+01 susu=0 sust=0 supu=0 suwe=0 stsu=1 stst=0 stpu=0 stwe=0 pusu=1 pust=1 pupu=0 puwe=0 wesu=1 west=1 wepu=1 wewe=0
+0x susu=0 sust=0 supu=0 suwe=0 stsu=x stst=0 stpu=0 stwe=0 pusu=x pust=x pupu=0 puwe=0 wesu=x west=x wepu=x wewe=0
+0z susu=0 sust=0 supu=0 suwe=0 stsu=0 stst=0 stpu=0 stwe=0 pusu=0 pust=0 pupu=0 puwe=0 wesu=0 west=0 wepu=0 wewe=0
+10 susu=0 sust=1 supu=1 suwe=1 stsu=0 stst=0 stpu=1 stwe=1 pusu=0 pust=0 pupu=0 puwe=1 wesu=0 west=0 wepu=0 wewe=0
+11 susu=1 sust=1 supu=1 suwe=1 stsu=1 stst=1 stpu=1 stwe=1 pusu=1 pust=1 pupu=1 puwe=1 wesu=1 west=1 wepu=1 wewe=1
+1x susu=x sust=1 supu=1 suwe=1 stsu=x stst=x stpu=1 stwe=1 pusu=x pust=x pupu=x puwe=1 wesu=x west=x wepu=x wewe=x
+1z susu=1 sust=1 supu=1 suwe=1 stsu=1 stst=1 stpu=1 stwe=1 pusu=1 pust=1 pupu=1 puwe=1 wesu=1 west=1 wepu=1 wewe=1
+x0 susu=0 sust=x supu=x suwe=x stsu=0 stst=0 stpu=x stwe=x pusu=0 pust=0 pupu=0 puwe=x wesu=0 west=0 wepu=0 wewe=0
+x1 susu=x sust=x supu=x suwe=x stsu=1 stst=x stpu=x stwe=x pusu=1 pust=1 pupu=x puwe=x wesu=1 west=1 wepu=1 wewe=x
+xx susu=x sust=x supu=x suwe=x stsu=x stst=x stpu=x stwe=x pusu=x pust=x pupu=x puwe=x wesu=x west=x wepu=x wewe=x
+xz susu=x sust=x supu=x suwe=x stsu=x stst=x stpu=x stwe=x pusu=x pust=x pupu=x puwe=x wesu=x west=x wepu=x wewe=x
+z0 susu=0 sust=0 supu=0 suwe=0 stsu=0 stst=0 stpu=0 stwe=0 pusu=0 pust=0 pupu=0 puwe=0 wesu=0 west=0 wepu=0 wewe=0
+z1 susu=1 sust=1 supu=1 suwe=1 stsu=1 stst=1 stpu=1 stwe=1 pusu=1 pust=1 pupu=1 puwe=1 wesu=1 west=1 wepu=1 wewe=1
+zx susu=x sust=x supu=x suwe=x stsu=x stst=x stpu=x stwe=x pusu=x pust=x pupu=x puwe=x wesu=x west=x wepu=x wewe=x
+zz susu=z sust=z supu=z suwe=z stsu=z stst=z stpu=z stwe=z pusu=z pust=z pupu=z puwe=z wesu=z west=z wepu=z wewe=z

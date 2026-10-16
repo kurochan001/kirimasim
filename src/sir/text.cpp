@@ -271,6 +271,9 @@ std::string toText(const Design& d) {
                dimsText(s.dims) + " " + kindName(s.kind) + " inst=" + std::to_string(s.instance);
         if (s.subroutine != kNone) out += " sub=@" + std::to_string(s.subroutine);
         if (s.declType != kNone) out += " type=" + typeRef(s.declType);
+        if (s.driverOf != kNone)
+            out += " driver-of=%s" + std::to_string(s.driverOf) + " strength=(" +
+                   std::to_string(s.strength1) + "," + std::to_string(s.strength0) + ")";
         out += slotFlags(s.flags) + "\n";
     }
     for (const NameEntry& n : d.names) {

@@ -279,6 +279,9 @@ private:
     sir::InstanceId instance_ = 0;
     std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;
     std::vector<const ast::InstanceSymbol*> instanceSyms_;  ///< Instance -> its symbol.
+    /// The cont processes whose drive strength is not (strong1, strong0):
+    /// process -> (strength1, strength0).
+    std::map<std::uint32_t, std::pair<std::uint8_t, std::uint8_t>> strengths_;
     /// Process names used so far, "<scope>.<kind>" -> the next number.
     std::map<std::string, std::uint32_t> nameCounts_;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
@@ -306,9 +309,11 @@ private:
     void lowerPorts(const ast::InstanceSymbol& child);
     /// A cont process (SIR_SPEC.md 7.1): `body` lowers the right-hand side
     /// and the store; the process waits on what it reads.
+    /// `strength` is the drive strength for 1 and for 0 (VALUE_SEMANTICS.md
+    /// 5.3), used when the net it drives needs resolution.
     template <typename F>
     void lowerCont(const std::string& name, slang::SourceLocation sl, const ast::Symbol& evalAt,
-                   F&& body);
+                   F&& body, std::pair<std::uint8_t, std::uint8_t> strength = {6, 6});
     /// The next process name for a kind of process in a scope.
     std::string processName(const std::string& prefix, const std::string& kind);
     /// Drops the processes from number `first` on, after an unsupported
@@ -316,8 +321,9 @@ private:
     void dropProcesses(std::size_t first);
     /// "<file>:<line>:<column>" of a SIR source position.
     std::string whereOf(const sir::SourceLoc& l) const;
-    /// Drivers of nets that need resolution, not implemented yet.
-    void checkDrivers();
+    /// The nets that need resolution (VALUE_SEMANTICS.md 5.5) get a driver
+    /// slot per driver and a process that resolves them (SIR_SPEC.md 3.5).
+    void resolveNets();
     /// After every body is lowered: the write sets and the always_comb
     /// sensitivity, including what called subroutines read and write.
     void finishDesign();
