@@ -23,12 +23,12 @@ bb2:
   store %s1, const s2<32> 32'h00000001  ; 0:10:21
   br bb9  ; 0:8:5
 bb3:
-  report.defer "unique case", "more than one item matches"  ; 0:8:5
+  report.defer "unique case", "more than one item matches", "top"  ; 0:8:5
   br bb4  ; 0:8:5
 bb4:
   br.if %t7, bb6, bb5  ; 0:8:5
 bb5:
-  report.defer "unique case", "no item matches"  ; 0:8:5
+  report.defer "unique case", "no item matches", "top"  ; 0:8:5
   br bb6  ; 0:8:5
 bb6:
   br.if %t1, bb1, bb7  ; 0:8:5
