@@ -570,6 +570,7 @@ CompileResult compile(std::span<const std::string> args) {
 
     std::vector<const char*> argv;
     argv.push_back("haremasim");
+    argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
     for (const auto& a : args)
         argv.push_back(a.c_str());
     if (!driver.parseCommandLine(static_cast<int>(argv.size()), argv.data())) return result;

@@ -18,6 +18,7 @@ ParseResult parseAndElaborate(std::span<const std::string> files) {
 
     std::vector<const char*> argv;
     argv.push_back("haremasim");
+    argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
     for (const auto& f : files)
         argv.push_back(f.c_str());
     if (!driver.parseCommandLine(static_cast<int>(argv.size()), argv.data())) return result;
