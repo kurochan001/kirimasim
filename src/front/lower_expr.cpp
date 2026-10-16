@@ -708,6 +708,11 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                                {v.op, constant(sir::u2(32), lsb).op}, sl);
             return coerce(r, typeOf(*e.type, sl), sl);
         }
+        case ast::ExpressionKind::Inside: {
+            const auto& in = e.as<ast::InsideExpression>();
+            const Val v = lowerExpr(in.left());
+            return coerce(lowerInside(v, in.rangeList(), sl), typeOf(*e.type, sl), sl);
+        }
         case ast::ExpressionKind::UnaryOp: return lowerUnary(e);
         case ast::ExpressionKind::BinaryOp: return lowerBinary(e);
         case ast::ExpressionKind::ConditionalOp: {
@@ -1128,6 +1133,107 @@ Val Lowerer::lowerUnary(const ast::Expression& e) {
     unsupported(sl, "unary operator");
 }
 
+Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
+    if (isString(l.type) || isString(r.type)) {
+        // Strings compare by their characters (table 6-9).
+        const Type st{sir::TypeKind::String, 0};
+        l = coerce(l, st, sl);
+        r = coerce(r, st, sl);
+        return emit(op, sir::u2(1), {l.op, r.op}, sl);
+    }
+    if (isReal(l.type) || isReal(r.type)) {
+        // Compared as reals: real if either is, else shortreal (11.3.1).
+        const bool shortOnly =
+            l.type.kind != sir::TypeKind::Real && r.type.kind != sir::TypeKind::Real;
+        const Type ct{shortOnly ? sir::TypeKind::ShortReal : sir::TypeKind::Real, 0};
+        l = coerce(l, ct, sl);
+        r = coerce(r, ct, sl);
+        return emit(op, sir::u2(1), {l.op, r.op}, sl);
+    }
+    if (!sir::isIntegral(l.type) || !sir::isIntegral(r.type))
+        unsupported(sl, "comparison of these types");
+    const bool four = sir::isFourState(l.type) || sir::isFourState(r.type);
+    const Type ct = integral(four, sir::isSigned(l.type) && sir::isSigned(r.type),
+                             std::max(l.type.width, r.type.width));
+    l = coerce(l, ct, sl);
+    r = coerce(r, ct, sl);
+    const bool twoStateResult = op == Op::Ceq || op == Op::Cne;
+    return emit(op, integral(four && !twoStateResult, false, 1), {l.op, r.op}, sl);
+}
+
+Val Lowerer::bitOp(Op op, const Val& a, const Val& b, slang::SourceLocation sl) {
+    // Two 1-bit values, four-state if either is.
+    const Type t = integral(sir::isFourState(a.type) || sir::isFourState(b.type), false, 1);
+    return emit(op, t, {coerce(a, t, sl).op, coerce(b, t, sl).op}, sl);
+}
+
+Val Lowerer::lowerInside(const Val& v, std::span<const ast::Expression* const> set,
+                         slang::SourceLocation sl) {
+    // The OR of the matches with every member of the set (11.4.13): 1 if
+    // one is 1, else x if one is x (VALUE_SEMANTICS.md 3.10). Members are
+    // evaluated in the order written.
+    std::optional<Val> any;
+    for (const ast::Expression* e : set) {
+        if (sideEffects(*e)) unsupported(sl, "set member with side effects");
+        const Val m = insideMatch(v, *e, sl);
+        any = any ? bitOp(Op::Or, *any, m, sl) : m;
+    }
+    return any ? *any : constant(sir::u2(1), 0);
+}
+
+Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLocation sl) {
+    if (e.kind == ast::ExpressionKind::ValueRange) {
+        // [lo:hi] by >= and <=; a $ bound always holds (11.4.13).
+        const auto& vr = e.as<ast::ValueRangeExpression>();
+        if (vr.rangeKind != ast::ValueRangeKind::Simple) unsupported(sl, "tolerance range");
+        std::optional<Val> in;
+        const auto bound = [&](const ast::Expression& b, Op op) {
+            if (b.unwrapImplicitConversions().kind == ast::ExpressionKind::UnboundedLiteral) return;
+            const Val c = compareValues(op, v, lowerExpr(b), sl);
+            in = in ? bitOp(Op::And, *in, c, sl) : c;
+        };
+        bound(vr.left(), Op::Ge);
+        bound(vr.right(), Op::Le);
+        return in ? *in : constant(sir::u2(1), 1);
+    }
+    if (e.type->getCanonicalType().isUnpackedArray()) {
+        // Every element, down to single values (11.4.13).
+        const std::optional<ArrayTarget> a = arrayTarget(e);
+        if (!a) unsupported(sl, "set member of this array");
+        return arrayMatch(v, a->slot, a->indices, sl);
+    }
+    // ==? for integral values, so that x and z in the member match any
+    // bit; == for others (11.4.13).
+    const Val m = lowerExpr(e);
+    const bool integralPair = sir::isIntegral(v.type) && sir::isIntegral(m.type);
+    return compareValues(integralPair ? Op::Weq : Op::Eq, v, m, sl);
+}
+
+Val Lowerer::arrayMatch(const Val& v, sir::SlotId s, std::vector<std::int64_t> indices,
+                        slang::SourceLocation sl) {
+    const sir::Slot& slot = design().slots[s];
+    if (indices.size() == slot.dims.size()) {
+        std::vector<Operand> ops{Operand::slot(s)};
+        for (const std::int64_t i : indices)
+            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
+        noteRead({s, elementNumber(slot, indices), 1, 0, 0});
+        const Val m = emit(Op::LoadElem, slot.type, std::move(ops), sl);
+        const bool integralPair = sir::isIntegral(v.type) && sir::isIntegral(m.type);
+        return compareValues(integralPair ? Op::Weq : Op::Eq, v, m, sl);
+    }
+    const sir::ArrayDim d = slot.dims[indices.size()];
+    const std::int64_t step = d.left <= d.right ? 1 : -1;
+    std::optional<Val> any;
+    for (std::int64_t i = d.left;; i += step) {
+        indices.push_back(i);
+        const Val m = arrayMatch(v, s, indices, sl);
+        indices.pop_back();
+        any = any ? bitOp(Op::Or, *any, m, sl) : m;
+        if (i == d.right) break;
+    }
+    return *any;
+}
+
 Val Lowerer::lowerBinary(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& b = e.as<ast::BinaryExpression>();
@@ -1140,34 +1246,9 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
     };
     // Comparisons: both sides in one type; a 1-bit result.
     const auto compare = [&](Op op) {
-        Val l = lowerExpr(b.left());
-        Val r = lowerExpr(b.right());
-        if (isString(l.type) || isString(r.type)) {
-            // Strings compare by their characters (table 6-9).
-            const Type st{sir::TypeKind::String, 0};
-            l = coerce(l, st, sl);
-            r = coerce(r, st, sl);
-            return coerce(emit(op, sir::u2(1), {l.op, r.op}, sl), rt, sl);
-        }
-        if (isReal(l.type) || isReal(r.type)) {
-            // Compared as reals: real if either is, else shortreal (11.3.1).
-            const bool shortOnly =
-                l.type.kind != sir::TypeKind::Real && r.type.kind != sir::TypeKind::Real;
-            const Type ct{shortOnly ? sir::TypeKind::ShortReal : sir::TypeKind::Real, 0};
-            l = coerce(l, ct, sl);
-            r = coerce(r, ct, sl);
-            return coerce(emit(op, sir::u2(1), {l.op, r.op}, sl), rt, sl);
-        }
-        if (!sir::isIntegral(l.type) || !sir::isIntegral(r.type))
-            unsupported(sl, "comparison of these types");
-        const bool four = sir::isFourState(l.type) || sir::isFourState(r.type);
-        const Type ct = integral(four, sir::isSigned(l.type) && sir::isSigned(r.type),
-                                 std::max(l.type.width, r.type.width));
-        l = coerce(l, ct, sl);
-        r = coerce(r, ct, sl);
-        const bool twoStateResult = op == Op::Ceq || op == Op::Cne;
-        const Val res = emit(op, integral(four && !twoStateResult, false, 1), {l.op, r.op}, sl);
-        return coerce(res, rt, sl);
+        const Val l = lowerExpr(b.left());
+        const Val r = lowerExpr(b.right());
+        return coerce(compareValues(op, l, r, sl), rt, sl);
     };
     const auto logical = [&](Op op) {
         const auto ok = [](Type t) { return sir::isIntegral(t) || isReal(t); };

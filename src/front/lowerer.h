@@ -304,6 +304,19 @@ public:
     static bool isUnpackedMember(const ast::Expression& e);
     /// The place of one leaf: a frame variable or a whole slot.
     Place storagePlace(Storage st);
+    /// a op b for a comparison op of values of any types that compare:
+    /// strings, reals, or integral values at their common type. 1 bit.
+    Val compareValues(sir::Op op, Val l, Val r, slang::SourceLocation sl);
+    /// a op b for two 1-bit values (And, Or).
+    Val bitOp(sir::Op op, const Val& a, const Val& b, slang::SourceLocation sl);
+    /// Whether v is a member of the set of an inside operator or a case
+    /// inside item (11.4.13, 12.5.4): 1, 0 or x.
+    Val lowerInside(const Val& v, std::span<const ast::Expression* const> set,
+                    slang::SourceLocation sl);
+    Val insideMatch(const Val& v, const ast::Expression& e, slang::SourceLocation sl);
+    /// Whether v matches an element of the (sub-)array of slot s at indices.
+    Val arrayMatch(const Val& v, sir::SlotId s, std::vector<std::int64_t> indices,
+                   slang::SourceLocation sl);
     /// Reports an aggregate assignment whose pattern may read its target
     /// variable.
     void checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,

@@ -143,6 +143,12 @@ MUTANTS = [
      "            off += leafCount(ft);", "            off += 1;"),
     ("vm: the exponent of ** has the width of the result", "src/vm/vm.cpp",
      "sir::isSigned(rt), t(1).width,", "sir::isSigned(rt), w,"),
+    ("front: inside compares integral members with ==", "src/front/lower_expr.cpp",
+     "    const Val m = lowerExpr(e);\n    const bool integralPair = sir::isIntegral(v.type) && "
+     "sir::isIntegral(m.type);",
+     "    const Val m = lowerExpr(e);\n    const bool integralPair = false;"),
+    ("front: an inside range has no upper bound", "src/front/lower_expr.cpp",
+     "        bound(vr.right(), Op::Le);", "        (void)vr;"),
 ]
 
 

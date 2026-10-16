@@ -556,30 +556,37 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
 
 void Lowerer::lowerCase(const ast::CaseStatement& s) {
     const slang::SourceLocation sl = s.sourceRange.start();
-    if (s.condition == ast::CaseStatementCondition::Inside) unsupported(sl, "case inside");
     // The expression is evaluated once, before the items; the items in
     // order until one matches (12.5). All take the width of the widest, and
-    // are unsigned unless all are signed (VALUE_SEMANTICS.md 4.2).
+    // are unsigned unless all are signed (VALUE_SEMANTICS.md 4.2). An item
+    // of case inside matches as the set of an inside operator does, and
+    // only when that gives 1 (12.5.4).
+    const bool inside = s.condition == ast::CaseStatementCondition::Inside;
     std::uint32_t width = s.expr.type->getBitWidth();
     bool allSigned = s.expr.type->isSigned();
     bool four = s.expr.type->isFourState();
     for (const auto& g : s.items) {
         for (const ast::Expression* e : g.expressions) {
+            if (inside) break;
             width = std::max(width, e->type->getBitWidth());
             allSigned = allSigned && e->type->isSigned();
             four = four || e->type->isFourState();
         }
     }
-    if (width == 0 || width > 64) unsupported(sl, "values wider than 64 bits");
+    if (!inside && (width == 0 || width > 64)) unsupported(sl, "values wider than 64 bits");
     const Type ct = four ? (allSigned ? sir::s4(width) : sir::u4(width))
                          : (allSigned ? sir::s2(width) : sir::u2(width));
-    const Val x = coerce(lowerExpr(s.expr), ct, sl);
+    const Val x = inside ? lowerExpr(s.expr) : coerce(lowerExpr(s.expr), ct, sl);
     std::vector<sir::BlockId> bodies;
     bodies.reserve(s.items.size());
     for (std::size_t g = 0; g < s.items.size(); ++g)
         bodies.push_back(newBlock());
     const auto match = [&](const ast::Expression& e) {
         const slang::SourceLocation isl = e.sourceRange.start();
+        if (inside) {
+            const ast::Expression* const item[] = {&e};
+            return coerce(lowerInside(x, item, isl), sir::u2(1), isl);
+        }
         const Val v = coerce(lowerExpr(e), ct, isl);
         if (s.condition == ast::CaseStatementCondition::Normal)
             return emit(Op::Ceq, sir::u2(1), {x.op, v.op}, isl);

@@ -1,0 +1,21 @@
+list hit 1
+list miss 0
+range hit 1
+range above below 0 0
+range edge 1 1
+empty range 0
+dollar 1 0
+array 1
+nested array 1 0
+signed range 1
+wild element 1 1
+left x exact x
+left x differs 0
+left x one of them x
+left x wild 1
+left x range x
+x then hit 1
+real 1 1
+string 1 0
+if inside
+if not inside
