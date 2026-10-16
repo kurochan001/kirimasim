@@ -70,7 +70,12 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 lowerFork(b);
                 return;
             }
+            // A named block is a scope of the hierarchy (9.3.5).
+            const std::string outer = b_.scope;
+            if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
+                b_.scope += "." + std::string(b.blockSymbol->name);
             lowerStatement(b.body);
+            b_.scope = outer;
             return;
         }
         case ast::StatementKind::VariableDeclaration: {
@@ -328,6 +333,9 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     }
     const std::uint32_t parent = b_.proc;
     const std::uint32_t forkNumber = b_.forks++;
+    std::string scope = b_.scope;  // a named fork is a scope (9.3.5)
+    if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
+        scope += "." + std::string(b.blockSymbol->name);
     std::vector<Operand> ops;
     for (std::size_t i = 0; i < stmts.size(); ++i) {
         if (stmts[i]->kind == ast::StatementKind::VariableDeclaration)
@@ -346,6 +354,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         b_ = Body{};
         b_.proc = id;
         b_.scale = saved.scale;
+        b_.scope = scope;
         lowerStatement(*stmts[i]);
         if (!b_.dead) terminate(Op::Ret, {}, sl);
         b_ = std::move(saved);

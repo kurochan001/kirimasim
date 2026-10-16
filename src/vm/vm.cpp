@@ -47,8 +47,27 @@ enum class SysTask : std::uint8_t {
     Math2,
     Clog2,
     SFormatF,
+    Fatal,
+    Error,
+    Warning,
+    Info,
     Unknown,
 };
+
+/// The operand where the format and its values start: after the scope of
+/// a severity task, and after the level of $fatal (SYSTEM_TASKS.md 10.1).
+std::size_t formatStart(SysTask t) {
+    switch (t) {
+        case SysTask::Display:
+        case SysTask::Write:
+        case SysTask::SFormatF: return 1;
+        case SysTask::Error:
+        case SysTask::Warning:
+        case SysTask::Info: return 2;
+        case SysTask::Fatal: return 3;
+        default: return 0;
+    }
+}
 
 /// The string methods (6.16), resolved from their names at load.
 enum class Method : std::uint8_t {
@@ -179,6 +198,10 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$bitstoshortreal") return SysTask::BitsToShortReal;
     if (name == "$clog2") return SysTask::Clog2;
     if (name == "$sformatf") return SysTask::SFormatF;
+    if (name == "$fatal") return SysTask::Fatal;
+    if (name == "$error") return SysTask::Error;
+    if (name == "$warning") return SysTask::Warning;
+    if (name == "$info") return SysTask::Info;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -507,11 +530,10 @@ private:
             info.fn1 = m.fn1;
             info.fn2 = m.fn2;
         }
-        if (info.task != SysTask::Display && info.task != SysTask::Write &&
-            info.task != SysTask::SFormatF)
-            return info;
+        const std::size_t start = formatStart(info.task);
+        if (start == 0) return info;
         info.formats.resize(in.operands.size());
-        for (std::size_t i = 1; i < in.operands.size(); ++i) {
+        for (std::size_t i = start; i < in.operands.size(); ++i) {
             if (in.operands[i].kind != Operand::Kind::Text) continue;
             std::string error;
             if (!kernel::parseFormat(in.operands[i].text, info.formats[i], error) &&
@@ -1464,38 +1486,70 @@ private:
         return kernel::formatInt(iv, spec);
     }
 
+    /// The text of the format operands from `i` on: a text operand is a
+    /// format; the values after it fill its specifiers, and values left
+    /// over print in decimal (SYSTEM_TASKS.md 3.1).
+    std::optional<std::string> formatOperands(Frame& f, const sir::Process& p, const sir::Instr& in,
+                                              const InstrInfo& info, std::size_t i) {
+        const auto& ops = in.operands;
+        std::string text;
+        while (i < ops.size()) {
+            if (ops[i].kind != Operand::Kind::Text) {
+                text += formatValue(f, ops[i], kernel::FormatSpec{});
+                ++i;
+                continue;
+            }
+            const auto& pieces = info.formats[i];
+            ++i;
+            for (const kernel::FormatPiece& piece : pieces) {
+                if (!piece.isSpec) {
+                    text += piece.text;
+                    continue;
+                }
+                if (i >= ops.size() || ops[i].kind == Operand::Kind::Text) {
+                    fail(p, "a format specifier has no argument");
+                    return std::nullopt;
+                }
+                text += formatValue(f, ops[i], piece.spec);
+                ++i;
+            }
+        }
+        return text;
+    }
+
     bool syscall(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         switch (info.task) {
+            case SysTask::Fatal:
+            case SysTask::Error:
+            case SysTask::Warning:
+            case SysTask::Info: {
+                // <file>:<line>: <severity>: <message> [<scope> @ <time>]
+                // on stderr (SYSTEM_TASKS.md 10.1); $fatal then ends the
+                // run like $finish with its level (20.10).
+                const std::optional<std::string> message =
+                    formatOperands(f, p, in, info, formatStart(info.task));
+                if (!message) return false;
+                std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+                line += ":" + std::to_string(in.loc.line) + ": ";
+                line += info.task == SysTask::Fatal     ? "fatal"
+                        : info.task == SysTask::Error   ? "error"
+                        : info.task == SysTask::Warning ? "warning"
+                                                        : "info";
+                line += ": " + *message + " [" + ops[1].text + " @ " +
+                        messageTime(sched_.time(), d_.timePrecision) + "]";
+                output_.message(line);
+                if (info.task == SysTask::Fatal)
+                    sched_.requestEnd(kernel::EndReason::Fatal, static_cast<int>(value(ops[2]).a));
+                return true;
+            }
             case SysTask::Display:
             case SysTask::Write:
             case SysTask::SFormatF: {
-                // A text operand is a format; the values after it fill its
-                // specifiers, and values left over print in decimal
-                // (SYSTEM_TASKS.md 3.1).
-                std::string text;
-                std::size_t i = 1;
-                while (i < ops.size()) {
-                    if (ops[i].kind != Operand::Kind::Text) {
-                        text += formatValue(f, ops[i], kernel::FormatSpec{});
-                        ++i;
-                        continue;
-                    }
-                    const auto& pieces = info.formats[i];
-                    ++i;
-                    for (const kernel::FormatPiece& piece : pieces) {
-                        if (!piece.isSpec) {
-                            text += piece.text;
-                            continue;
-                        }
-                        if (i >= ops.size() || ops[i].kind == Operand::Kind::Text) {
-                            fail(p, "a format specifier has no argument");
-                            return false;
-                        }
-                        text += formatValue(f, ops[i], piece.spec);
-                        ++i;
-                    }
-                }
+                const std::optional<std::string> formatted =
+                    formatOperands(f, p, in, info, formatStart(info.task));
+                if (!formatted) return false;
+                std::string text = *formatted;
                 if (info.task == SysTask::SFormatF) {
                     temp(in.result) = {strings_.intern(text), 0};
                     return true;

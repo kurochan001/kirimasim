@@ -259,6 +259,9 @@ public:
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         std::optional<sir::SlotId> retSlot;       ///< The same, static.
         std::vector<Val> lvalueRefs;  ///< The targets' values of the assignment operators.
+        /// The hierarchical name of the scope being lowered, for the
+        /// messages of $error and the like (SYSTEM_TASKS.md 10.1).
+        std::string scope;
     };
     Body& body() { return b_; }
 

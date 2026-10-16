@@ -1433,6 +1433,25 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         return;
     }
     if (const std::optional<Val> v = lowerStringCall(call, sl)) return;  // putc and the like
+    if (name == "$fatal" || name == "$error" || name == "$warning" || name == "$info") {
+        // The message names the calling scope (SYSTEM_TASKS.md 10.1);
+        // $fatal's first argument is the level of $finish (20.10).
+        std::vector<Operand> ops{Operand::str(name), Operand::str(b_.scope)};
+        std::span<const ast::Expression* const> message = args;
+        if (name == "$fatal") {
+            std::uint64_t n = 1;
+            if (!args.empty()) {
+                const std::optional<std::int64_t> v = constInt(*args[0]);
+                if (!v || *v < 0 || *v > 2) unsupported(sl, name + " with this first argument");
+                n = static_cast<std::uint64_t>(*v);
+                message = args.subspan(1);
+            }
+            ops.push_back(constant(sir::u2(32), n).op);
+        }
+        lowerFormatArgs(message, ops, sl);
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
     if (name == "$finish" || name == "$stop") {
         std::uint64_t n = 1;  // the default argument (20.2)
         if (!args.empty()) {

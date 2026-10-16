@@ -77,6 +77,11 @@ MUTANTS = [
      "{all.op, constant(sir::u2(32), p.width - lsb - w).op}, sl);"),
     ("front: a variable of the compilation unit gets an instance slot", "src/front/lower.cpp",
      "if (sc->asSymbol().kind == ast::SymbolKind::CompilationUnit)", "if (false)"),
+    ("vm: $fatal does not end the run", "src/vm/vm.cpp",
+     "sched_.requestEnd(kernel::EndReason::Fatal, static_cast<int>(value(ops[2]).a));",
+     "(void)value(ops[2]);"),
+    ("front: a named block is not a scope of the messages", "src/front/lower_stmt.cpp",
+     "b_.scope += \".\" + std::string(b.blockSymbol->name);", "b_.scope += \"\";"),
 ]
 
 

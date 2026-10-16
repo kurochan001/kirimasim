@@ -77,6 +77,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     b_.subSymbol = &sym;
     b_.proc = id;
     b_.scale = timeScaleOf(*sym.getParentScope());
+    b_.scope = sym.getHierarchicalPath();  // its own scope, also when called from elsewhere
     evalSymbol_ = &sym;
     try {
         for (const ast::FormalArgumentSymbol* a : sym.getArguments()) {
