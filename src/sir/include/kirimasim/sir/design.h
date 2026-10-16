@@ -236,9 +236,10 @@ enum class Op : std::uint8_t {
     TriggerNb,    ///< trigger.nb <event slot>[, <delay>]
     Disable,      ///< disable <process or subroutine>
     DisableFork,  ///< disable.fork
-    /// report.defer "<construct>", "<content>": puts a unique, unique0 or
-    /// priority violation on the running process's queue of pending
-    /// reports (SCHEDULER_SPEC.md 15; the texts are SYSTEM_TASKS.md 10.4).
+    /// report.defer "<construct>", "<content>", "<scope>": puts a unique,
+    /// unique0 or priority violation on the running process's queue of
+    /// pending reports (SCHEDULER_SPEC.md 15; the texts are SYSTEM_TASKS.md
+    /// 10.4); the scope is the hierarchical name of the statement's scope.
     ReportDefer,
     /// %r = resolve "<net kind>", (<driver value>, <s1>, <s0>)...: the value
     /// of a net from its drivers and their strengths (SIR_SPEC.md 3.5,

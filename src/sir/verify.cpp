@@ -1113,10 +1113,11 @@ private:
                         if (s == t) return true;
                     return false;
                 };
-                if (nOps(2) &&
+                if (nOps(3) &&
                     (ops[0].kind != Operand::Kind::Text || ops[1].kind != Operand::Kind::Text ||
-                     !among(ops[0].text, kConstructs) || !among(ops[1].text, kContents)))
-                    bad("needs a construct and a content of SYSTEM_TASKS.md 10.4");
+                     ops[2].kind != Operand::Kind::Text || !among(ops[0].text, kConstructs) ||
+                     !among(ops[1].text, kContents) || ops[2].text.empty()))
+                    bad("needs a construct and a content of SYSTEM_TASKS.md 10.4 and a scope");
                 break;
             }
             case Op::Call: {

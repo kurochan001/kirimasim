@@ -1270,7 +1270,7 @@ private:
                 line += " violation: ";
                 line += ops[1].text;
                 line += " [";
-                line += d_.instances[p.instance].scopeName;
+                line += ops[2].text;
                 line += " @ ";
                 line += messageTime(sched_.time(), d_.timePrecision);
                 line += "]";

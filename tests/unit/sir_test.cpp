@@ -211,18 +211,20 @@ TEST(Sir, ReportDeferTakesTheTextsOf10_4) {
     // SIR_SPEC.md 5.2; the texts are those of SYSTEM_TASKS.md 10.4.
     Design d = counter();
     auto& instrs = d.processes[0].blocks[2].instrs;
-    const auto report = [](const char* construct, const char* content) {
+    const auto report = [](const char* construct, const char* content, const char* scope) {
         return make(Op::ReportDefer, voidType(), kNone,
-                    {Operand::str(construct), Operand::str(content)}, 5);
+                    {Operand::str(construct), Operand::str(content), Operand::str(scope)}, 5);
     };
-    instrs.insert(instrs.begin(), report("unique case", "no item matches"));
+    instrs.insert(instrs.begin(), report("unique case", "no item matches", "top.blk"));
     EXPECT_TRUE(verify(d).empty());
-    EXPECT_NE(toText(d).find("report.defer \"unique case\", \"no item matches\""),
+    EXPECT_NE(toText(d).find("report.defer \"unique case\", \"no item matches\", \"top.blk\""),
               std::string::npos);
-    instrs[0] = report("unique case", "something else");
+    instrs[0] = report("unique case", "something else", "top.blk");
     EXPECT_TRUE(mentions(verify(d), "SYSTEM_TASKS.md 10.4"));
-    instrs[0] = report("final case", "no item matches");
+    instrs[0] = report("final case", "no item matches", "top.blk");
     EXPECT_TRUE(mentions(verify(d), "SYSTEM_TASKS.md 10.4"));
+    instrs[0] = report("unique case", "no item matches", "");
+    EXPECT_TRUE(mentions(verify(d), "a scope"));
 }
 
 TEST(Sir, SlotRangeOutOfBounds) {

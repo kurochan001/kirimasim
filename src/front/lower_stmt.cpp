@@ -393,7 +393,8 @@ void Lowerer::reportViolations(const std::vector<Val>& matches, ast::UniquePrior
                   {cond.op, Operand::block(when ? rep : next), Operand::block(when ? next : rep)},
                   sl);
         setBlock(rep);
-        emitVoid(Op::ReportDefer, {Operand::str(construct), Operand::str(content)}, sl);
+        emitVoid(Op::ReportDefer,
+                 {Operand::str(construct), Operand::str(content), Operand::str(b_.scope)}, sl);
         jump(next, sl);
         setBlock(next);
     };
