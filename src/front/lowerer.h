@@ -279,6 +279,9 @@ public:
     int precision() const { return precision_; }
     sir::TimeScale timeScale() const { return b_.scale; }
 
+    /// The hierarchical name of the scope a symbol is declared in, for %m
+    /// (SYSTEM_TASKS.md 3.8).
+    std::string scopeNameOf(const ast::Symbol& sym) const;
     /// The slot of a net or static variable, created on first use.
     sir::SlotId slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl);
     /// The slots of a static variable of an unpacked structure type, one

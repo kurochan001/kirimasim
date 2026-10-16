@@ -1,0 +1,17 @@
+module init: top.u
+module statement: top.u
+named block init: top.u.blk
+named block statement: top.u.blk
+unnamed block init: top.u.blk
+unnamed block statement: top.u.blk
+nested named init: top.u.blk.inner
+nested named statement: top.u.blk.inner
+task init: top.u.t
+task statement: top.u.t
+function init: top.u.f
+function statement: top.u.f
+generate init: top.u.gen
+generate statement: top.u.gen
+fork statement: top.u.blk.forked
+continuous assignment: top.u
+generate continuous assignment: top.u.gen

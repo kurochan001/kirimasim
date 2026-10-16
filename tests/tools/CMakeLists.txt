@@ -32,3 +32,7 @@ set_tests_properties(tools/gen_range_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_default_init_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_default_init_matrix.py --check)
 set_tests_properties(tools/gen_default_init_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_scope_name_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_scope_name_matrix.py --check)
+set_tests_properties(tools/gen_scope_name_matrix PROPERTIES LABELS Tools)

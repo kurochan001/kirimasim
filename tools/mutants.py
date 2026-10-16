@@ -176,6 +176,9 @@ MUTANTS = [
     ("front: elements of an array of instances get no connections", "src/front/lower.cpp",
      "                                         lowerPorts(i);\n                                         lowerInstance(i);",
      "                                         lowerInstance(i);"),
+    ("front: an unnamed block hides the scope around it", "src/front/lower.cpp",
+     "        if (s.kind == ast::SymbolKind::StatementBlock && s.name.empty()) continue;",
+     "        if (s.kind == ast::SymbolKind::StatementBlock && s.name.empty()) break;"),
 ]
 
 

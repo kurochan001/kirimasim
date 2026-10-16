@@ -434,6 +434,22 @@ Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
 
 // --- Variables ---------------------------------------------------------------
 
+std::string Lowerer::scopeNameOf(const ast::Symbol& sym) const {
+    // The scope a declaration or assignment is in, for %m and $error
+    // (SYSTEM_TASKS.md 3.8): the instance, subroutine, named block or
+    // generate block; unnamed blocks are not part of the hierarchy.
+    for (const ast::Scope* sc = sym.getParentScope(); sc != nullptr;
+         sc = sc->asSymbol().getParentScope()) {
+        const ast::Symbol& s = sc->asSymbol();
+        if (s.kind == ast::SymbolKind::StatementBlock && s.name.empty()) continue;
+        if (s.kind == ast::SymbolKind::InstanceBody || s.kind == ast::SymbolKind::Package ||
+            s.kind == ast::SymbolKind::CompilationUnit)
+            break;
+        return s.getHierarchicalPath();
+    }
+    return design_.instances[instance_].scopeName;
+}
+
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
     if (unpackedStruct(v.getType()) != nullptr)
@@ -1102,6 +1118,7 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
     b_ = Body{};
     b_.proc = static_cast<std::uint32_t>(first);
     b_.scale = timeScaleOf(*evalAt.getParentScope());
+    b_.scope = scopeNameOf(evalAt);
     evalSymbol_ = &evalAt;
     try {
         body();
@@ -1153,6 +1170,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
     }
     Body saved = std::move(b_);
     b_ = std::move(staticBody_[instance_]);
+    b_.scope = scopeNameOf(v);
     const ast::Symbol* savedEval = evalSymbol_;
     evalSymbol_ = &v;
     const auto restore = [&] {
