@@ -16,6 +16,7 @@
 
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/sir/types.h"
@@ -54,6 +55,8 @@ enum class SysTask : std::uint8_t {
     Info,
     CountBits,
     TestPlusargs,
+    Sscanf,
+    ValuePlusargs,
     Unknown,
 };
 
@@ -221,6 +224,8 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$info") return SysTask::Info;
     if (name == "$countbits") return SysTask::CountBits;
     if (name == "$test$plusargs") return SysTask::TestPlusargs;
+    if (name == "$sscanf") return SysTask::Sscanf;
+    if (name == "$value$plusargs") return SysTask::ValuePlusargs;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -560,6 +565,7 @@ private:
     std::deque<Frame> frames_;                     ///< A deque, so that frames never move.
     std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
     std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
+    std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
@@ -1465,6 +1471,19 @@ private:
 
     /// The string methods (6.16, VALUE_SEMANTICS.md 7.6). The ones that
     /// change the string return the new one; front stores it.
+    /// A value read by $sscanf or $value$plusargs in the type of its target
+    /// (SYSTEM_TASKS.md 6.3, 9): the low bits of an integral value, a lone
+    /// x or z in every bit, a string's characters, a real.
+    W4 scanned(const kernel::ScanValue& v, sir::Type t) {
+        if (t.kind == sir::TypeKind::String)
+            return {strings_.intern(v.conv == 's' ? v.text : std::string()), 0};
+        if (isRealType(t)) return fromReal(v.conv == 'f' ? v.real : 0.0, t);
+        W4 r = v.conv == 's' ? stringToInteger(v.text, t.width) : v.bits;
+        if (v.fill) r = {v.bits.a != 0 ? ~std::uint64_t{0} : 0, ~std::uint64_t{0}};
+        r = {r.a & kernel::mask(t.width), r.b & kernel::mask(t.width)};
+        return sir::isFourState(t) ? r : kernel::to2(r);
+    }
+
     /// The event an element of an event slot holds; nothing for null.
     std::optional<kernel::EventId> eventOf(const sir::Operand& o) const {
         const std::uint64_t h = readSlot(o.id, o.firstElem, 0, 0).a;
@@ -1716,6 +1735,57 @@ private:
                 const std::uint64_t q = now / div;
                 const std::uint64_t r = now % div;
                 temp(in.result) = {q + (div > 1 && r >= div - r ? 1 : 0), 0};
+                return true;
+            }
+            case SysTask::Sscanf: {
+                // $sscanf(input, format, frame variables...): the values read
+                // go to the frame variables, which the front copies to the
+                // targets (SIR_SPEC.md 8, SYSTEM_TASKS.md 6.3). An input with
+                // x or z bits gives -1.
+                std::string input;
+                const sir::Type it = typeOf(ops[1]);
+                const W4 iv = value(ops[1]);
+                int n = -1;
+                if (it.kind == sir::TypeKind::String) {
+                    input = strings_.get(iv.a);
+                } else if (iv.b == 0) {
+                    // The bytes from the most significant one, NULs kept.
+                    for (unsigned k = (it.width + 7) / 8; k-- > 0;)
+                        input.push_back(
+                            static_cast<char>(k * 8 < 64 ? (iv.a >> (k * 8)) & 0xffU : 0));
+                } else {
+                    temp(in.result) = {0xffffffffU, 0};
+                    return true;
+                }
+                scanValues_.clear();
+                n = kernel::scanString(input, ops[2].text, scanValues_);
+                for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
+                    (*act_.vars)[ops[3 + i].id] = scanned(scanValues_[i], typeOf(ops[3 + i]));
+                temp(in.result) = {static_cast<std::uint32_t>(n), 0};
+                return true;
+            }
+            case SysTask::ValuePlusargs: {
+                // The first plusarg that starts with the name before the %:
+                // the rest by the one conversion (SYSTEM_TASKS.md 9).
+                const std::string_view fmt = ops[1].text;
+                const std::size_t pct = fmt.find('%');
+                const std::string_view name = fmt.substr(0, pct);
+                char conv = 'd';
+                for (std::size_t k = pct + 1; k < fmt.size(); ++k) {
+                    if (fmt[k] >= '0' && fmt[k] <= '9') continue;
+                    conv = static_cast<char>(std::tolower(static_cast<unsigned char>(fmt[k])));
+                    break;
+                }
+                if (conv == 'x') conv = 'h';
+                if (conv == 'e' || conv == 'g') conv = 'f';
+                temp(in.result) = {0, 0};
+                for (const std::string& a : options_.plusargs) {
+                    if (!std::string_view(a).starts_with(name)) continue;
+                    const kernel::ScanValue v = kernel::plusargValue(a.substr(name.size()), conv);
+                    (*act_.vars)[ops[2].id] = scanned(v, typeOf(ops[2]));
+                    temp(in.result) = {1, 0};
+                    break;
+                }
                 return true;
             }
             case SysTask::TestPlusargs: {

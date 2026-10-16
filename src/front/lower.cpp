@@ -361,6 +361,19 @@ void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
     throw Unsupported{};
 }
 
+void Lowerer::error(slang::SourceLocation sl, std::string_view what) {
+    ++numErrors_;
+    if (sl.valid())
+        diags_ += std::string(sm_.getFileName(sl)) + ":" + std::to_string(sm_.getLineNumber(sl)) +
+                  ":" + std::to_string(sm_.getColumnNumber(sl)) + ": ";
+    else
+        diags_ += "kirimasim: ";
+    diags_ += "error: ";
+    diags_ += what;
+    diags_ += "\n";
+    throw Unsupported{};
+}
+
 void Lowerer::report(slang::SourceLocation sl, std::string_view what) {
     ++numErrors_;
     if (sl.valid()) {

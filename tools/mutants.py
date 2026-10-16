@@ -194,6 +194,14 @@ MUTANTS = [
     ("front: a constant index into an array of structures is 0", "src/front/lower_struct.cpp",
      "            return withIndex(std::move(*base), *c);",
      "            return withIndex(std::move(*base), 0 * *c);"),
+    ("vm: $sscanf drops the first value it reads", "src/vm/vm.cpp",
+     "                for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)",
+     "                for (std::size_t i = 1; i < scanValues_.size() && 3 + i < ops.size(); ++i)"),
+    ("front: $sscanf assigns one target more than its count", "src/front/lower_expr.cpp",
+     "        const Val above = emit(Op::Gt, sir::u2(1),",
+     "        const Val above = emit(Op::Ge, sir::u2(1),"),
+    ("kernel: %c skips white space", "src/kernel/scan.cpp",
+     "        if (s.conv != 'c') skipSpace();", "        skipSpace();"),
 ]
 
 

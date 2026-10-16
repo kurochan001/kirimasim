@@ -997,6 +997,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                  name == "xor") &&
                 !args.empty() && args[0]->type->getCanonicalType().isUnpackedArray())
                 return lowerArrayReduction(call, name, rt, sl);
+            if (name == "$sscanf" || name == "$value$plusargs") return lowerScanCall(call, rt, sl);
             if (name == "$test$plusargs" && args.size() == 1) {
                 // An integral argument is read as a string (21.6).
                 const Val str = coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl);
@@ -1480,6 +1481,122 @@ Val Lowerer::compareAggregates(const ast::BinaryExpression& b, slang::SourceLoca
     if (b.op == BO::Inequality || b.op == BO::CaseInequality)
         all = emit(Op::Not, all.type, {all.op}, sl);
     return all;
+}
+
+namespace {
+
+/// The conversions of a $sscanf format that assign, in order, as letters
+/// (%x is h; %e and %g are f); false with the specifier in `bad` for one
+/// that is not supported (SIR_SPEC.md 8, SYSTEM_TASKS.md 6.3).
+bool scanConversions(std::string_view f, std::vector<char>& convs, std::string& bad) {
+    for (std::size_t i = 0; i < f.size(); ++i) {
+        if (f[i] != '%') continue;
+        bool assigns = true;
+        ++i;
+        if (i < f.size() && f[i] == '*') {
+            assigns = false;
+            ++i;
+        }
+        while (i < f.size() && f[i] >= '0' && f[i] <= '9')
+            ++i;
+        if (i >= f.size()) {
+            bad = "%";
+            return false;
+        }
+        auto c = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
+        if (c == '%') continue;
+        if (c == 'x') c = 'h';
+        if (c == 'e' || c == 'g') c = 'f';
+        if (std::string_view("bohdcsf").find(c) == std::string_view::npos) {
+            bad = std::string("%") + f[i];
+            return false;
+        }
+        if (assigns) convs.push_back(c);
+    }
+    return true;
+}
+
+}  // namespace
+
+Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::SourceLocation sl) {
+    // $sscanf(input, format, targets...) and $value$plusargs(format,
+    // target): each target that a conversion assigns gets a frame variable
+    // of its type, which the syscall writes; the targets are assigned
+    // after it, as many as it reports (SIR_SPEC.md 8).
+    const std::string name(call.getSubroutineName());
+    const bool plus = name == "$value$plusargs";
+    const auto args = call.arguments();
+    const std::size_t fmtArg = plus ? 0 : 1;
+    if (args.size() <= fmtArg) unsupported(sl, name + " without a format");
+    const std::optional<slang::ConstantValue> fc = constantValue(*args[fmtArg]);
+    std::optional<std::string> fmt;
+    if (fc && fc->isString()) fmt = fc->str();
+    if (fc && fc->isInteger()) fmt = stringBytes(fc->integer());
+    if (!fmt) unsupported(sl, name + " with a format that is not a constant");
+    std::vector<char> convs;
+    std::string bad;
+    if (plus) {
+        // name%conv: the one conversion after the name (21.6).
+        const std::size_t pct = fmt->find('%');
+        if (pct == std::string::npos || !scanConversions(fmt->substr(pct), convs, bad) ||
+            convs.size() != 1)
+            unsupported(sl, name + " with this format");
+    } else if (!scanConversions(*fmt, convs, bad)) {
+        unsupported(sl, "format specifier " + bad + " in " + name);
+    }
+    const std::span<const ast::Expression* const> targets = args.subspan(fmtArg + 1);
+    // Fewer targets than conversions: an error (SYSTEM_TASKS.md 6.3); more
+    // are ignored (21.3.4.3).
+    if (targets.size() < convs.size())
+        error(sl, name + " has fewer arguments than its format has conversions");
+    std::vector<Operand> ops{Operand::str(name)};
+    if (!plus) {
+        // A literal input of any length as a string (VALUE_SEMANTICS.md 7.6).
+        const ast::Expression& ie = args[0]->unwrapImplicitConversions();
+        std::string text;
+        if (ie.kind == ast::ExpressionKind::StringLiteral) {
+            text = ie.as<ast::StringLiteral>().getValue();
+            std::erase(text, '\0');
+        }
+        Val in = ie.kind == ast::ExpressionKind::StringLiteral ? stringConstant(text)
+                                                               : lowerExpr(*args[0]);
+        if (!isString(in.type) && !sir::isIntegral(in.type))
+            unsupported(sl, name + " of an input of this type");
+        ops.push_back(in.op);
+    }
+    ops.push_back(Operand::str(*fmt));
+    std::vector<std::pair<const ast::Expression*, sir::FrameVarId>> outs;
+    for (std::size_t i = 0; i < convs.size(); ++i) {
+        const ast::Expression* t = targets[i];
+        if (t->kind == ast::ExpressionKind::Assignment &&
+            t->as<ast::AssignmentExpression>().isLValueArg())
+            t = &t->as<ast::AssignmentExpression>().left();
+        const ast::Type& tt = t->type->getCanonicalType();
+        const char c = convs[i];
+        const bool ok = c == 'f'   ? tt.isFloating()
+                        : c == 's' ? tt.isString() || tt.isIntegral()
+                                   : tt.isIntegral();
+        if (!ok) unsupported(sl, std::string("%") + c + " into a target of this type");
+        const sir::FrameVarId f = newFrameVar(typeOf(tt, sl));
+        ops.push_back(Operand::frame(f));
+        outs.emplace_back(t, f);
+    }
+    const Val n = emit(Op::Syscall, sir::s2(32), std::move(ops), sl);
+    // Target i is assigned when the count is above i.
+    for (std::size_t i = 0; i < outs.size(); ++i) {
+        const Val above = emit(Op::Gt, sir::u2(1),
+                               {n.op, constant(sir::s2(32), static_cast<std::uint64_t>(i)).op}, sl);
+        const sir::BlockId store = newBlock();
+        const sir::BlockId next = newBlock();
+        terminate(Op::BrIf, {above.op, Operand::block(store), Operand::block(next)}, sl);
+        setBlock(store);
+        const Val v =
+            emit(Op::Fload, frameVars()[outs[i].second].type, {Operand::frame(outs[i].second)}, sl);
+        lowerStore(*outs[i].first, v, false, sl);
+        terminate(Op::Br, {Operand::block(next)}, sl);
+        setBlock(next);
+    }
+    return coerce(n, rt, sl);
 }
 
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
@@ -2405,6 +2522,10 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             dest->as<ast::AssignmentExpression>().isLValueArg())
             dest = &dest->as<ast::AssignmentExpression>().left();
         lowerStore(*dest, coerce(v, typeOf(*dest->type, sl), sl), false, sl);
+        return;
+    }
+    if (name == "$sscanf" || name == "$value$plusargs") {
+        (void)lowerExpr(call);  // its value unused
         return;
     }
     if (const std::optional<Val> v = lowerStringCall(call, sl)) return;  // putc and the like

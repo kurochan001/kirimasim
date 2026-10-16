@@ -21,6 +21,7 @@ VIOLATIONS = str(HERE / "violations.sv")
 WRITERS = str(HERE / "writers.sv")
 STRING_REPL = str(HERE / "string_repl.sv")
 PLUSARGS = str(HERE / "plusargs.sv")
+VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
 
 # The violation reports of violations.sv, exactly these and in this order
 # (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
@@ -39,6 +40,9 @@ CASES = [
     # Plusargs go to $test$plusargs in order, without their + (CLI.md 2.4).
     ([PLUSARGS, "+mode=fast", "+verbose"], 0, "=1 1 0 1\n", ""),
     ([PLUSARGS], 0, "=0 0 0 0\n", ""),
+    ([VALUE_PLUSARGS, "+mode=fast", "+count=42", "+mask=f0g"], 0, "=1 fast\n1 42\n1 xx\n", ""),
+    ([VALUE_PLUSARGS, "+count=", "+mask=3z"], 0, "=0 none\n1 0\n1 3z\n", ""),
+    ([VALUE_PLUSARGS], 0, "=0 none\n0 5\n0 11\n", ""),
     ([DESIGN], 0, "hello\n", "kirimasim: info: finish at 0 ns"),
     (["--max-steps=2", DESIGN], 5, "hello\n", "kirimasim: info: zero_time_limit"),
     (["--max-steps=x", DESIGN], 2, "", "--max-steps=x needs a whole number"),

@@ -1,0 +1,17 @@
+decimal n=3 12 -34 5
+hex 1 0001xxxx0000zzzz 00000000
+z into two-state 1 00001010
+octal binary 2 511 10
+widths 2 12 345
+suppressed 1 9
+stops 1 5 0
+empty -1
+no match 0
+strings 2 hello|world
+string into bits 1 797a
+char 1 32
+real 2 250.00 -0.125
+truncated 1 112
+integral input 2 41 42
+targets 4 1 2 3 7904
+plusarg 0 99

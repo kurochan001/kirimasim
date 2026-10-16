@@ -114,6 +114,12 @@ public:
     [[noreturn]] void unsupported(slang::SourceLocation sl, std::string_view what);
     /// Reports an unsupported construct without throwing.
     void report(slang::SourceLocation sl, std::string_view what);
+    /// Reports an error in the design that slang does not find and throws
+    /// Unsupported, which drops the procedure.
+    [[noreturn]] void error(slang::SourceLocation sl, std::string_view what);
+    /// $sscanf and $value$plusargs: system functions with output arguments
+    /// (SIR_SPEC.md 8).
+    Val lowerScanCall(const ast::CallExpression& call, sir::Type rt, slang::SourceLocation sl);
     sir::SourceLoc loc(slang::SourceLocation sl);
 
     /// The SIR value type of a slang type; unsupported for anything other

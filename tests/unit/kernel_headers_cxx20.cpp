@@ -7,6 +7,7 @@
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/edge.h"
 #include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength.h"

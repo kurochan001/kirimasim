@@ -1,6 +1,6 @@
 include(GoogleTest)
 
-add_executable(kirimasim_unit_tests and4_test.cpp counters_test.cpp format_test.cpp scheduler_test.cpp sir_test.cpp strength_test.cpp timescale_test.cpp
+add_executable(kirimasim_unit_tests and4_test.cpp counters_test.cpp format_test.cpp scan_test.cpp scheduler_test.cpp sir_test.cpp strength_test.cpp timescale_test.cpp
     valsem_test.cpp w4ops_test.cpp)
 target_link_libraries(kirimasim_unit_tests PRIVATE
     kirimasim_kernel kirimasim_sir kirimasim_valsem GTest::gtest_main)
