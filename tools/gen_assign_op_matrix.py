@@ -17,9 +17,8 @@ containers (module variables by short and by hierarchical names, the
 variables of a static task, and of an automatic function). The automatic
 function has whole variables only, since automatic arrays and parts of
 automatic variables are not supported yet; they join the matrix with
-their support. So do increments and decrements of a target whose index
-has side effects: 11.4.2 does not say how often their index is
-evaluated, and VALUE_SEMANTICS.md has yet to settle it.
+their support. Increments and decrements evaluate the index of their
+target once too (VALUE_SEMANTICS.md 3.12).
 
 The expected outputs follow from the model below (11.4.1 to 11.4.3,
 11.4.8, 11.4.10, 11.8). A person checks the model against the standard
@@ -35,7 +34,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 # Integral types: name -> (declaration, width, signed, four-state, display).
 INTEGRAL = {
@@ -237,12 +236,19 @@ def part_cases():
                 "10 21 30 40"))
     out.append(("idx a[idx()] *= 3", arr, ["calls = 0;", "a[idx()] *= 3;"],
                 [("a[1]", "%0d"), ("a[2]", "%0d"), ("calls", "%0d")], "20 90 1"))
+    out.append(("idx a[idx()]++", arr, ["calls = 0;", "a[idx()]++;"],
+                [("a[1]", "%0d"), ("a[2]", "%0d"), ("calls", "%0d")], "20 31 1"))
+    out.append(("idx y = a[idx()]--", arr + [("int", "y", bits_of(0, 32))],
+                ["calls = 0;", "y = a[idx()]--;"],
+                [("a[2]", "%0d"), ("y", "%0d"), ("calls", "%0d")], "29 30 1"))
     out.append(("idx a[idx()] <<= idx()", arr, ["calls = 0;", "a[idx()] <<= idx();"],
                 [("a[2]", "%0d"), ("calls", "%0d")], "120 2"))
     marr = [("logic8arr", "m", ["00010010", "00110100"])]
     out.append(("elem part m[1][3:0] += 4'd13", marr, ["m[1][3:0] += 4'd13;"],
                 [("m[0]", "%b"), ("m[1]", "%b")], "00010010 00110001"))
     out.append(("elem part m[idx()-1][7:4] -= 1", marr, ["calls = 0;", "m[idx()-1][7:4] -= 1;"],
+                [("m[0]", "%b"), ("m[1]", "%b"), ("calls", "%0d")], "00010010 00100100 1"))
+    out.append(("elem part m[idx()-1][7:4]--", marr, ["calls = 0;", "m[idx()-1][7:4]--;"],
                 [("m[0]", "%b"), ("m[1]", "%b"), ("calls", "%0d")], "00010010 00100100 1"))
     return out
 
@@ -354,6 +360,13 @@ def evidence(kind, container, cases):
             "Verilator 5.052 matches the lines on a string variable, run alone, and fails on",
             "the lines on array elements (an internal error, or C++ that does not compile);",
             "they follow 6.16, with the one index evaluated once."]
+    if kind == "incdec" and any(c[0].startswith("idx") for c in cases):
+        return "spec iverilog@13.0", [
+            "Icarus 13.0 cannot run y = a[idx()]-- (an unresolved reference) or the",
+            "\"elem part\" line (an internal error); every other line matches its output,",
+            "run alone. Verilator 5.052 calls idx() three times in y = a[idx()]-- and",
+            "twice in m[idx()-1][7:4]--, where VALUE_SEMANTICS.md 3.12 evaluates the",
+            "index once."]
     if any(c[0].startswith("elem part") for c in cases):
         return "spec iverilog@13.0 verilator@5.052", [
             "Icarus 13.0 stops with an internal error on the assignments to a part of an",
