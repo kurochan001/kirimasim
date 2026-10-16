@@ -1,0 +1,6 @@
+violation_order.sv:25: warning: unique case violation: more than one item matches [top @ 1ns]
+violation_order.sv:31: warning: unique0 case violation: more than one item matches [top @ 1ns]
+violation_order.sv:37: warning: priority case violation: no item matches [top @ 1ns]
+violation_order.sv:43: warning: unique if violation: more than one condition is true [top @ 1ns]
+violation_order.sv:47: warning: unique0 if violation: more than one condition is true [top @ 1ns]
+violation_order.sv:51: warning: priority if violation: no condition is true [top @ 1ns]

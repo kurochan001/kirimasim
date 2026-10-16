@@ -99,6 +99,8 @@ MUTANTS = [
     ("vm: a violation report names the process's instance", "src/vm/vm.cpp",
      "                line += ops[2].text;\n                line += \" @ \";",
      "                line += d_.instances[p.instance].scopeName;\n                line += \" @ \";"),
+    ("scheduler: reports confirmed in the order they were first held", "src/kernel/sim.cpp",
+     "    std::sort(pendingOrder_.begin(), pendingOrder_.end());\n", ""),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),

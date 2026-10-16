@@ -315,7 +315,7 @@ private:
     std::uint64_t movesThisSlot_ = 0;
     std::string error_;
     std::string endNote_;
-    std::vector<ProcessId> pendingOrder_;  ///< Processes in the order they got a pending report.
+    std::vector<ProcessId> pendingOrder_;  ///< Processes that got a pending report.
     std::uint32_t pendingProcesses_ = 0;   ///< Processes with a non-empty queue.
 
     bool begun_ = false;

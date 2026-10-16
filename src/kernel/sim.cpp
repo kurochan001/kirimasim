@@ -719,6 +719,9 @@ void Scheduler::flushReports(ProcessId p) {
 }
 
 void Scheduler::confirmReports() {
+    // In the order of the processes' numbers, not of their first reports
+    // (SCHEDULER_SPEC.md 15.4); within a process, in the order held.
+    std::sort(pendingOrder_.begin(), pendingOrder_.end());
     for (const ProcessId p : pendingOrder_) {
         for (const std::string& line : processes_[p].pending)
             ctx_.output().message(line);
