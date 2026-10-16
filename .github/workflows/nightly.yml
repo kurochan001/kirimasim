@@ -172,3 +172,24 @@ jobs:
           git -C suite checkout -q "$commit"
           python3 tools/p1_population.py run --tests-repo suite \
             --haremasim build/release/src/driver/haremasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
+
+  # Negative controls (TEST_SUITE.md): each known mistake put into the
+  # sources must make some test fail.
+  mutants:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/dev/_deps/*-src
+            build/dev/_deps/*-subbuild
+            build/dev/_deps/*-tmp
+            build/dev/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-dev-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - run: cmake --preset dev
+      - run: cmake --build --preset dev
+      - run: python3 tools/mutants.py --preset dev | tee -a "$GITHUB_STEP_SUMMARY"
