@@ -675,6 +675,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::NamedValue:
         case ast::ExpressionKind::HierarchicalValue: {
             const ast::Symbol& sym = e.as<ast::ValueExpressionBase>().symbol;
+            // The item of an array method's with clause, bound by the method.
+            if (const auto it = iterators_.find(&sym); it != iterators_.end()) return it->second;
             if (sym.kind == ast::SymbolKind::Parameter)
                 return constantFrom(sym.as<ast::ParameterSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
@@ -985,6 +987,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val k = constant(sir::s2(32), name == "$isunknown" ? 0 : 1);
                 return coerce(emit(cmp, sir::u2(1), {n.op, k.op}, sl), rt, sl);
             }
+            if ((name == "sum" || name == "product" || name == "and" || name == "or" ||
+                 name == "xor") &&
+                !args.empty() && args[0]->type->getCanonicalType().isUnpackedArray())
+                return lowerArrayReduction(call, name, rt, sl);
             if (name == "$test$plusargs" && args.size() == 1) {
                 // An integral argument is read as a string (21.6).
                 const Val str = coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl);
@@ -1300,6 +1306,50 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
     }
     all.type = integral(sir::isFourState(src.type), false, all.width);
     storePlace(all, src, nonblocking, sl);
+}
+
+Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::string& name, Type rt,
+                                 slang::SourceLocation sl) {
+    // sum, product, and, or and xor of the elements, or of the with
+    // clause's value for each element, in the result's type (7.12.3); the
+    // elements in the order foreach visits them.
+    const std::optional<ArrayTarget> a = arrayTarget(*call.arguments()[0]);
+    if (!a) unsupported(sl, "array method " + name + " on this array");
+    if (!sir::isIntegral(rt) && !(isReal(rt) && (name == "sum" || name == "product")))
+        unsupported(sl, "array method " + name + " of this type");
+    // Each item is an element of the first remaining dimension; with more
+    // than one left, an item would be an array.
+    if (design().slots[a->slot].dims.size() != a->indices.size() + 1)
+        unsupported(sl, "array method " + name + " on this array");
+    const auto [with, item] = std::get<1>(call.subroutine).getIteratorInfo();
+    const Op op = name == "sum"       ? Op::Add
+                  : name == "product" ? Op::Mul
+                  : name == "and"     ? Op::And
+                  : name == "or"      ? Op::Or
+                                      : Op::Xor;
+    const sir::Slot& slot = design().slots[a->slot];
+    std::optional<Val> acc;
+    std::vector<std::int64_t> idx = a->indices;
+    const sir::ArrayDim d = slot.dims.back();
+    const std::int64_t step = d.left <= d.right ? 1 : -1;
+    for (std::int64_t i = d.left;; i += step) {
+        idx.push_back(i);
+        std::vector<Operand> ops{Operand::slot(a->slot)};
+        for (const std::int64_t k : idx)
+            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(k)).op);
+        noteRead({a->slot, elementNumber(slot, idx), 1, 0, 0});
+        idx.pop_back();
+        Val v = emit(Op::LoadElem, slot.type, std::move(ops), sl);
+        if (with != nullptr) {
+            iterators_[item] = v;
+            v = lowerExpr(*with);
+            iterators_.erase(item);
+        }
+        v = coerce(v, rt, sl);
+        acc = acc ? emit(op, rt, {acc->op, v.op}, sl) : v;
+        if (i == d.right) break;
+    }
+    return *acc;
 }
 
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {

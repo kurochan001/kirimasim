@@ -179,6 +179,9 @@ MUTANTS = [
     ("front: an unnamed block hides the scope around it", "src/front/lower.cpp",
      "        if (s.kind == ast::SymbolKind::StatementBlock && s.name.empty()) continue;",
      "        if (s.kind == ast::SymbolKind::StatementBlock && s.name.empty()) break;"),
+    ("front: an array method ignores its with clause", "src/front/lower_expr.cpp",
+     "        if (with != nullptr) {\n            iterators_[item] = v;",
+     "        if (false && with != nullptr) {\n            iterators_[item] = v;"),
 ]
 
 

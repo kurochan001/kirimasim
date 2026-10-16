@@ -318,6 +318,9 @@ public:
     /// A streaming concatenation as the target of an assignment (11.4.14.3).
     void lowerUnpack(const ast::StreamingConcatenationExpression& s, const ast::Expression& rhs,
                      bool nonblocking, slang::SourceLocation sl);
+    /// An array reduction method: sum, product, and, or, xor (7.12.3).
+    Val lowerArrayReduction(const ast::CallExpression& call, const std::string& name, sir::Type rt,
+                            slang::SourceLocation sl);
     /// a op b for a comparison op of values of any types that compare:
     /// strings, reals, or integral values at their common type. 1 bit.
     Val compareValues(sir::Op op, Val l, Val r, slang::SourceLocation sl);
@@ -413,7 +416,9 @@ private:
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<const ast::Symbol*, sir::SlotId> structSlots_;  ///< The first leaf's slot.
-    std::map<std::string, std::uint32_t> slotNames_;         ///< Uses of each slot name.
+    /// The values of the iterators of the with clauses being lowered.
+    std::map<const ast::Symbol*, Val> iterators_;
+    std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
     sir::InstanceId instance_ = 0;
     std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;
     /// Row of the instance table -> its symbol: an instance, a package or
