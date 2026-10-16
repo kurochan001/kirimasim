@@ -1,0 +1,6 @@
+init member var part-whole 100
+init member var whole-part 101
+task member var part-whole 100
+task member var whole-part 101
+comb member var part-whole 100
+comb member var whole-part 101

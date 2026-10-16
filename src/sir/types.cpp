@@ -279,4 +279,36 @@ bool writesSlot(Op op) {
     }
 }
 
+namespace {
+
+/// The elements and bits of a range: first, count, lsb, width, with 0
+/// counts and widths spelled out.
+struct Extent {
+    std::uint64_t firstElem, numElems, lsb, width;
+};
+
+Extent extentOf(const Slot& s, const SlotRange& r) {
+    const std::uint64_t elems = elementCount(s);
+    return {r.firstElem, r.numElems == 0 ? elems : r.numElems, r.lsb,
+            r.width == 0 ? s.type.width : r.width};
+}
+
+}  // namespace
+
+bool covers(const Slot& s, const SlotRange& outer, const SlotRange& inner) {
+    if (outer.slot != inner.slot) return false;
+    const Extent o = extentOf(s, outer);
+    const Extent i = extentOf(s, inner);
+    return o.firstElem <= i.firstElem && i.firstElem + i.numElems <= o.firstElem + o.numElems &&
+           o.lsb <= i.lsb && i.lsb + i.width <= o.lsb + o.width;
+}
+
+bool overlaps(const Slot& s, const SlotRange& a, const SlotRange& b) {
+    if (a.slot != b.slot) return false;
+    const Extent x = extentOf(s, a);
+    const Extent y = extentOf(s, b);
+    return x.firstElem < y.firstElem + y.numElems && y.firstElem < x.firstElem + x.numElems &&
+           x.lsb < y.lsb + y.width && y.lsb < x.lsb + x.width;
+}
+
 }  // namespace kirimasim::sir

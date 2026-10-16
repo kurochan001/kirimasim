@@ -465,6 +465,12 @@ enum class InitValue : std::uint8_t { Zero, One, X, Z };
 InitValue initialValue(SlotKind k);
 /// Number of elements of a slot (1 for a slot that is not an array).
 std::uint64_t elementCount(const Slot& s);
+/// Whether range `outer` holds every bit of range `inner`, both of slot s
+/// (SIR_SPEC.md 3.4). A count or width of 0 means all of them, so a range
+/// of every bit, given by its width or by 0, is the same range.
+bool covers(const Slot& s, const SlotRange& outer, const SlotRange& inner);
+/// Whether two ranges of slot s share a bit.
+bool overlaps(const Slot& s, const SlotRange& a, const SlotRange& b);
 
 /// Text name of an opcode in the SIR text format (load, br.if, ...).
 const char* opName(Op op);

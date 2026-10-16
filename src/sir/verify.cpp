@@ -100,17 +100,6 @@ bool overlaps(const SlotRange& x, const SlotRange& y) {
 }
 
 /// Whether range `outer` covers all of `inner`.
-bool covers(const SlotRange& outer, const SlotRange& inner) {
-    const auto within = [](std::uint32_t o, std::uint32_t no, std::uint32_t i, std::uint32_t ni) {
-        if (no == 0) return true;
-        if (ni == 0) return false;
-        return o <= i && i + ni <= o + no;
-    };
-    return outer.slot == inner.slot &&
-           within(outer.firstElem, outer.numElems, inner.firstElem, inner.numElems) &&
-           within(outer.lsb, outer.width, inner.lsb, inner.width);
-}
-
 /// What the verifier needs to know about a process or subroutine body.
 struct Body {
     std::string where;
@@ -689,7 +678,7 @@ private:
                 target = elementTarget(body, in, tempType);
             bool covered = false;
             for (const SlotRange& w : body.process->writes)
-                covered = covered || covers(w, target);
+                covered = covered || covers(d_.slots[o.id], w, target);
             if (!covered) bad("writes %s" + std::to_string(o.id) + " outside the write set");
         }
 

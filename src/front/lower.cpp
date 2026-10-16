@@ -194,34 +194,6 @@ sir::SlotKind mergedKind(sir::SlotKind internal, sir::SlotKind external) {
     return c == 'E' || c == 'e' ? external : internal;
 }
 
-/// Whether range `a` covers range `b` of the same slot (0 counts means
-/// "all"; `width` is the slot's element width).
-bool covers(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
-            std::uint32_t elems) {
-    if (a.slot != b.slot) return false;
-    const std::uint32_t af = a.firstElem;
-    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
-    const std::uint32_t bf = b.firstElem;
-    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
-    const std::uint32_t al = a.lsb;
-    const std::uint32_t aw = a.width == 0 ? width : a.width;
-    const std::uint32_t bl = b.lsb;
-    const std::uint32_t bw = b.width == 0 ? width : b.width;
-    return af <= bf && bf + bn <= af + an && al <= bl && bl + bw <= al + aw;
-}
-
-/// Whether two ranges share a bit.
-bool overlap(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
-             std::uint32_t elems) {
-    if (a.slot != b.slot) return false;
-    const std::uint32_t an = a.numElems == 0 ? elems : a.numElems;
-    const std::uint32_t bn = b.numElems == 0 ? elems : b.numElems;
-    const std::uint32_t aw = a.width == 0 ? width : a.width;
-    const std::uint32_t bw = b.width == 0 ? width : b.width;
-    return a.firstElem < b.firstElem + bn && b.firstElem < a.firstElem + an && a.lsb < b.lsb + bw &&
-           b.lsb < a.lsb + aw;
-}
-
 }  // namespace
 
 /// The time unit and precision of the scope a procedure is in; 1ns/1ns
@@ -487,10 +459,9 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
 
 void Lowerer::noteWrite(const sir::SlotRange& r) {
     const sir::Slot& s = design_.slots[r.slot];
-    const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
     std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.proc] : proc().writes;
     for (const sir::SlotRange& w : writes)
-        if (covers(w, r, s.type.width, elems)) return;
+        if (sir::covers(s, w, r)) return;
     writes.push_back(r);
 }
 
@@ -553,9 +524,8 @@ void Lowerer::dropProcesses(std::size_t first) {
 void Lowerer::finishDesign() {
     const auto add = [&](std::vector<sir::SlotRange>& set, const sir::SlotRange& r) {
         const sir::Slot& s = design_.slots[r.slot];
-        const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
         for (const sir::SlotRange& w : set)
-            if (covers(w, r, s.type.width, elems)) return false;
+            if (sir::covers(s, w, r)) return false;
         set.push_back(r);
         return true;
     };
@@ -594,14 +564,13 @@ void Lowerer::finishDesign() {
         sir::Process& proc = design_.processes[p];
         for (const sir::SlotRange& r : procReads) {
             const sir::Slot& s = design_.slots[r.slot];
-            const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
             // Variables and arguments declared in a called function are not
             // part of it either.
             bool skip = s.subroutine != sir::kNone;
             for (const sir::SlotRange& w : proc.writes)
-                skip = skip || covers(w, r, s.type.width, elems);
+                skip = skip || sir::covers(s, w, r);
             for (const sir::Trigger& t : proc.triggers)
-                skip = skip || covers(t.range, r, s.type.width, elems);
+                skip = skip || sir::covers(s, t.range, r);
             if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
         }
     }
@@ -626,13 +595,11 @@ void Lowerer::resolveNets() {
         const sir::SlotKind kind = design_.slots[net].kind;
         const bool own = kind == sir::SlotKind::Tri0 || kind == sir::SlotKind::Tri1 ||
                          kind == sir::SlotKind::Supply0 || kind == sir::SlotKind::Supply1;
-        const auto elems = static_cast<std::uint32_t>(sir::elementCount(design_.slots[net]));
         bool shared = false;
         for (std::size_t i = 0; i < writes.size() && !shared; ++i)
             for (std::size_t j = i + 1; j < writes.size() && !shared; ++j)
                 shared = writes[i].first != writes[j].first &&
-                         overlap(writes[i].second, writes[j].second, design_.slots[net].type.width,
-                                 elems);
+                         sir::overlaps(design_.slots[net], writes[i].second, writes[j].second);
         if (!shared && !own) continue;
         std::vector<std::uint32_t> ps;
         for (const auto& w : writes)
@@ -1057,10 +1024,9 @@ void Lowerer::triggerOnReads() {
     for (const sir::SlotRange& r : b_.reads) {
         const sir::Slot& s = design_.slots[r.slot];
         if (s.subroutine != sir::kNone) continue;
-        const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
         bool dup = false;
         for (const sir::Trigger& t : proc().triggers)
-            dup = dup || covers(t.range, r, s.type.width, elems);
+            dup = dup || sir::covers(s, t.range, r);
         if (!dup) proc().triggers.push_back({r, sir::Edge::Any});
     }
 }
