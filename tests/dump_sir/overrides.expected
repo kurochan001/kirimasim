@@ -1,0 +1,49 @@
+; sir format 0
+precision 1ns
+source 0 "overrides.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.a" : i4<8> var inst=0
+slot %s1 "top.v" : i4<8> var inst=0 flags(force)
+slot %s2 "top.w" : i4<8> wire inst=0 flags(force)
+
+process @0 "top.assign0" kind=cont inst=0 trigger=any(%s0) writes=%s2 {  ; 0:6:10
+bb0:
+  %t0 = load i4<8> %s0  ; 0:6:14
+  store %s2, %t0  ; 0:6:10
+  ret  ; 0:6:10
+}
+
+process @1 "top.initial0" kind=initial inst=0 {  ; 0:7:3
+bb0:
+  override.start "assign", @2, %s1  ; 0:8:5
+  override.start "force", @3, %s2[3:0]  ; 0:9:5
+  override.start "force", @4, %s1, %s2[7:4]  ; 0:10:5
+  override.stop "force", %s2[3:0]  ; 0:11:5
+  override.stop "force", %s1, %s2[7:4]  ; 0:12:5
+  override.stop "assign", %s1  ; 0:13:5
+  ret  ; 0:7:3
+}
+
+process @2 "top.$assign0" kind=override inst=0 trigger=any(%s0) writes=%s1 {  ; 0:8:5
+bb0:
+  %t0 = load i4<8> %s0  ; 0:8:16
+  store.override "assign", %s1, %t0  ; 0:8:5
+  ret  ; 0:8:5
+}
+
+process @3 "top.$force0" kind=override inst=0 trigger=any(%s0) writes=%s2[3:0] {  ; 0:9:5
+bb0:
+  %t0 = load i4<8> %s0  ; 0:9:20
+  %t1 = partsel i4<4> %t0, const i2<32> 32'h00000004  ; 0:9:20
+  store.override "force", %s2[3:0], %t1  ; 0:9:5
+  ret  ; 0:9:5
+}
+
+process @4 "top.$force1" kind=override inst=0 writes=%s1,%s2[7:4] {  ; 0:10:5
+bb0:
+  %t0 = partsel i4<8> const i4<12> 12'hfff, const i2<32> 32'h00000004  ; 0:10:5
+  store.override "force", %s1, %t0  ; 0:10:5
+  %t1 = partsel i4<4> const i4<12> 12'hfff, const i2<32> 32'h00000000  ; 0:10:5
+  store.override "force", %s2[7:4], %t1  ; 0:10:5
+  ret  ; 0:10:5
+}

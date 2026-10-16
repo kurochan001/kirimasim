@@ -134,6 +134,10 @@ struct MonitorSpec {
     bool untilTrue = false;  ///< `wait (expr)`: wake when the value is true.
 };
 
+/// The levels of a procedural continuous assignment; force is above
+/// assign (SCHEDULER_SPEC.md 14).
+enum class Hold : std::uint8_t { Assign, Force };
+
 /// Limits of a run (CLI.md 2.2). 0 means no limit for maxZeroDelay.
 struct Limits {
     std::uint64_t maxTime = UINT64_MAX;
@@ -176,6 +180,38 @@ public:
     /// whether the value changed.
     bool write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                const std::uint64_t* value);
+    // Procedural continuous assignments (SCHEDULER_SPEC.md 14, SIR_SPEC.md
+    // 5.6). A marked slot keeps, bit by bit, who holds it at each level and
+    // the value that level gives, and the value its ordinary writes give.
+    // Its value is that of force where a force holds it, else that of
+    // assign where an assign holds it, else that of the ordinary writes.
+
+    /// Marks slot s (integral) as one that assign or force may hold
+    /// (SCHEDULER_SPEC.md 14.4): a net, or a variable, which a continuous
+    /// assignment may drive (`driven`). Writes to unmarked slots never look
+    /// at holds.
+    void markHeld(SlotId s, bool net, bool driven);
+    /// Process `owner` holds the bits of `part` at `level` from now on,
+    /// taking them from any other holder at that level. The value changes
+    /// when the owner writes it.
+    void hold(Hold level, ProcessId owner, const SlotPart& part);
+    /// Writes the bits of the part (laid out as in write()) that `owner`
+    /// holds at `level`.
+    void writeHeld(Hold level, ProcessId owner, SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                   std::uint32_t width, const std::uint64_t* value);
+    /// Ends the holds at `level` on `part` (10.6.1, 10.6.2). A net takes its
+    /// drivers' value now. A variable that an assign still holds, or that
+    /// a continuous assignment drives, takes that value when it is
+    /// evaluated again: in the Active region. Any other variable keeps its
+    /// value until the next write.
+    void release(Hold level, const SlotPart& part);
+    /// Whether `owner` holds any bit at `level`.
+    [[nodiscard]] bool holdsAny(Hold level, ProcessId owner) const;
+    /// Drops the wait of a process that is not running, without ending it:
+    /// it runs again only when started, or when it waits again and is
+    /// woken.
+    void cancelWait(ProcessId p);
+
     /// Schedules a nonblocking update, `delay` ticks from now, in the NBA
     /// region of the scheduling process's group (SCHEDULER_SPEC.md 13).
     void scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint32_t lsb,
@@ -223,7 +259,9 @@ public:
     [[nodiscard]] const std::string& error() const { return error_; }
 
 private:
-    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb };
+    /// Show: a released held variable shows its value (id: the slot, gen:
+    /// the element).
+    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb, Show };
     struct Event {
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
@@ -281,6 +319,19 @@ private:
         std::vector<std::uint64_t> value;  ///< Delayed updates only.
     };
 
+    /// A slot that assign or force may hold. `base` and `value` are laid
+    /// out like the slot's storage; `owner` has one entry per bit, element
+    /// by element: the holding process, or kNoHolder.
+    struct Held {
+        bool net = false;
+        bool driven = false;
+        std::vector<std::uint64_t> base;
+        std::vector<std::uint64_t> value[2];
+        std::vector<ProcessId> owner[2];
+    };
+    static constexpr std::uint32_t kNotHeld = UINT32_MAX;
+    static constexpr ProcessId kNoHolder = UINT32_MAX;
+
     static constexpr std::uint64_t kWheel = 256;
 
     Context& ctx_;
@@ -305,7 +356,10 @@ private:
     std::vector<std::uint64_t> arena_;    ///< Their values.
     std::vector<NbaRecord> delayedNbas_;  ///< Updates with a delay.
     std::vector<std::uint32_t> freeDelayedNbas_;
-    std::vector<std::uint64_t> old_;      ///< Scratch: an element before a write.
+    std::vector<std::uint64_t> old_;     ///< Scratch: an element before a write.
+    std::vector<std::uint32_t> heldOf_;  ///< By slot: its row in held_; empty if none is marked.
+    std::vector<Held> held_;
+    std::vector<std::uint64_t> shown_;    ///< Scratch: a held part's value.
     std::vector<std::uint64_t> scratch_;  ///< Scratch: a monitor's new value.
 
     bool ending_ = false;
@@ -337,6 +391,13 @@ private:
     bool moveFirst(Region first, Region last, Region to);
     void execute(const Event& e);
     void notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
+    /// write() without looking at holds.
+    bool writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                  const std::uint64_t* value);
+    /// Gives bits [lsb, lsb + width) of element elem of a held slot the
+    /// value of their highest hold, or of the ordinary writes. Returns
+    /// whether the value changed.
+    bool showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
     void evaluateMonitor(std::uint32_t id);
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
     void freeMonitor(ProcessId p);

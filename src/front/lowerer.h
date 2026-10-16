@@ -131,6 +131,14 @@ public:
     void lowerIf(const ast::ConditionalStatement& s);
     void lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s);
     void lowerFork(const ast::BlockStatement& b);
+    /// One target of assign, force, deassign or release: a slot range and
+    /// the type of its value (SIR_SPEC.md 5.6).
+    struct HeldTarget {
+        sir::Operand range;
+        sir::Type type;
+    };
+    std::vector<HeldTarget> heldTargets(const ast::Expression& lhs, slang::SourceLocation sl);
+    void lowerOverride(const ast::ProceduralAssignStatement& s);
     void lowerUniqueIf(const ast::ConditionalStatement& s);
     /// The violation checks of unique, unique0 and priority on the 1-bit
     /// two-state match of each item or condition (SCHEDULER_SPEC.md 15.1).
@@ -511,8 +519,10 @@ private:
         bool known = true;
     };
     std::map<std::uint32_t, GateSide> sides_;
-    /// The port connections whose nets are merged (mergePorts).
+    /// The port connections whose nets are merged (mergePorts), and the
+    /// slots they share.
     std::set<const ast::PortConnection*> mergedPorts_;
+    std::set<sir::SlotId> mergedSlots_;
     /// Process names used so far, "<scope>.<kind>" -> the next number.
     std::map<std::string, std::uint32_t> nameCounts_;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.

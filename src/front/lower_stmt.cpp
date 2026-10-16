@@ -357,6 +357,19 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             setBlock(cont);
             return;
         }
+        case ast::StatementKind::ProceduralAssign:
+            lowerOverride(s.as<ast::ProceduralAssignStatement>());
+            return;
+        case ast::StatementKind::ProceduralDeassign: {
+            // deassign and release end the holds of their level on the
+            // targets (SCHEDULER_SPEC.md 14, SIR_SPEC.md 5.6).
+            const auto& d = s.as<ast::ProceduralDeassignStatement>();
+            std::vector<Operand> ops{Operand::str(d.isRelease ? "force" : "assign")};
+            for (const HeldTarget& h : heldTargets(d.lvalue, sl))
+                ops.push_back(h.range);
+            emitVoid(Op::OverrideStop, std::move(ops), sl);
+            return;
+        }
         case ast::StatementKind::Break:
             if (b_.loops.empty()) unsupported(sl, "break outside a loop");
             terminate(Op::Br, {Operand::block(breakTarget(b_.loops.size() - 1))}, sl);
@@ -459,6 +472,115 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     ops.push_back(Operand::block(cont));
     terminate(Op::Fork, std::move(ops), sl);
     setBlock(cont);
+}
+
+std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs,
+                                                      slang::SourceLocation sl) {
+    // The places of a target of assign, force, deassign and release: a
+    // variable, a net, a constant part of a net, or a concatenation of
+    // them (10.6.1, 10.6.2), most significant first. slang rejects the
+    // others. Each slot is marked as a force target (SCHEDULER_SPEC.md
+    // 14.4).
+    std::vector<HeldTarget> out;
+    const auto add = [&](const Place& p, auto& self) -> void {
+        if (p.kind == Place::Kind::Concat) {
+            for (const Place& part : p.base)
+                self(part, self);
+            return;
+        }
+        if (p.kind == Place::Kind::Frame)
+            unsupported(sl, "an automatic variable as the target of assign or force");
+        sir::Slot& slot = design_.slots[p.slot];
+        if (!sir::isIntegral(slot.type))
+            unsupported(sl, "assign or force of a value that is not integral");
+        // A net merged with another through a port would be held on both
+        // sides (SCHEDULER_SPEC.md 14.4).
+        if (mergedSlots_.contains(p.slot))
+            unsupported(sl, "assign or force of a net connected through a port");
+        Operand o = Operand::slot(p.slot);
+        std::uint32_t w = slot.type.width;
+        sir::Type type = slot.type;
+        if (p.kind == Place::Kind::Element || p.kind == Place::Kind::Bits) {
+            if (!p.indices.empty()) {
+                if (!p.elem) unsupported(sl, "an element selected at run time here");
+                o.firstElem = *p.elem;
+                o.numElems = 1;
+            }
+        } else if (p.kind != Place::Kind::Slot) {
+            unsupported(sl, "this target of assign or force");
+        }
+        if (p.kind == Place::Kind::Bits) {
+            if (p.pos || p.lsb < 0 || p.lsb + p.width > w)
+                unsupported(sl, "a part selected at run time or outside the net here");
+            o.lsb = static_cast<std::uint32_t>(p.lsb);
+            o.width = p.width;
+            w = p.width;
+            type = sir::isFourState(slot.type) ? sir::u4(w) : sir::u2(w);
+        } else if (!slot.dims.empty() && o.numElems != 1) {
+            unsupported(sl, "assign or force of a whole unpacked array");
+        }
+        slot.flags |= sir::kForceTarget;
+        out.push_back({o, type});
+    };
+    add(placeOf(lhs, sl), add);
+    return out;
+}
+
+void Lowerer::lowerOverride(const ast::ProceduralAssignStatement& s) {
+    // assign and force (10.6.1, 10.6.2): an override process computes the
+    // right side and writes the targets it holds, now and whenever what it
+    // reads changes (SIR_SPEC.md 5.6, 7.1).
+    const slang::SourceLocation sl = s.sourceRange.start();
+    if (s.assignment.kind != ast::ExpressionKind::Assignment)
+        unsupported(sl, "this procedural continuous assignment");
+    const auto& a = s.assignment.as<ast::AssignmentExpression>();
+    const std::string level = s.isForce ? "force" : "assign";
+    const std::vector<HeldTarget> targets = heldTargets(a.left(), sl);
+    const sir::InstanceId inst = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
+    sir::Process p;
+    p.name = processName(design_.instances[inst].scopeName, "$" + level);
+    p.kind = sir::ProcessKind::Override;
+    p.instance = inst;
+    p.loc = loc(sl);
+    p.blocks.resize(1);
+    const auto id = static_cast<std::uint32_t>(design_.processes.size());
+    design_.processes.push_back(std::move(p));
+    Body saved = std::move(b_);
+    b_ = Body{};
+    b_.proc = id;
+    b_.scale = saved.scale;
+    b_.scope = saved.scope;
+    try {
+        std::uint32_t total = 0;
+        bool four = false;
+        for (const HeldTarget& h : targets) {
+            total += h.type.width;
+            four = four || sir::isFourState(h.type);
+        }
+        const Val all = coerce(lowerExpr(a.right()), four ? sir::u4(total) : sir::u2(total), sl);
+        std::uint32_t lsb = total;
+        for (const HeldTarget& h : targets) {
+            lsb -= h.type.width;
+            Val part = all;
+            if (targets.size() > 1)
+                part = emit(Op::Partsel, four ? sir::u4(h.type.width) : sir::u2(h.type.width),
+                            {all.op, constant(sir::u2(32), lsb).op}, sl);
+            part = coerce(part, h.type, sl);
+            emitVoid(Op::StoreOverride, {Operand::str(level), h.range, part.op}, sl);
+            noteWrite(
+                {h.range.id, h.range.firstElem, h.range.numElems, h.range.lsb, h.range.width});
+        }
+        terminate(Op::Ret, {}, sl);
+        triggerOnReads();
+    } catch (const Unsupported&) {
+        b_ = std::move(saved);
+        throw;
+    }
+    b_ = std::move(saved);
+    std::vector<Operand> ops{Operand::str(level), Operand::process(id)};
+    for (const HeldTarget& h : targets)
+        ops.push_back(h.range);
+    emitVoid(Op::OverrideStart, std::move(ops), sl);
 }
 
 void Lowerer::reportViolations(const std::vector<Val>& matches, ast::UniquePriorityCheck check,

@@ -975,6 +975,7 @@ void Lowerer::mergePorts(const ast::InstanceSymbol& child) {
             slots_.emplace(&inner, s);
             design_.names.push_back({inner.getHierarchicalPath(), s});
             mergedPorts_.insert(conn);
+            mergedSlots_.insert(s);
         } catch (const Unsupported&) {
             continue;  // already reported
         }

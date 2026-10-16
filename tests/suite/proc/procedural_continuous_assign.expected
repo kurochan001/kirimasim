@@ -1,0 +1,300 @@
+initial var start 34
+initial var forced ed
+initial var follows a9
+initial var written a9
+initial var released a9
+initial var settled a9
+initial var after bc
+initial bit2 start 34
+initial bit2 forced ed
+initial bit2 follows a9
+initial bit2 written a9
+initial bit2 released a9
+initial bit2 settled a9
+initial bit2 after bc
+initial driven var start 13
+initial driven var forced ed
+initial driven var follows a9
+initial driven var written a9
+initial driven var released a9
+initial driven var settled 57
+initial driven var after 9b
+initial net start 12
+initial net forced ed
+initial net follows a9
+initial net written a9
+initial net released 56
+initial net settled 56
+initial net after 9a
+initial resolved net start 12
+initial resolved net forced ed
+initial resolved net follows a9
+initial resolved net written a9
+initial resolved net released 56
+initial resolved net settled 56
+initial resolved net after 9a
+initial hier net start 1d
+initial hier net forced ed
+initial hier net follows a9
+initial hier net written a9
+initial hier net released 59
+initial hier net settled 59
+initial hier net after 95
+initial generate var start 34
+initial generate var forced ed
+initial generate var follows a9
+initial generate var written a9
+initial generate var released a9
+initial generate var settled a9
+initial generate var after bc
+initial concat start 1412
+initial concat forced ed12
+initial concat follows a956
+initial concat written a956
+initial concat released a956
+initial concat settled 5856
+initial concat after 9c9a
+initial net part start 12
+initial net part forced 3e
+initial net part follows 7c
+initial net part released 40
+initial net bit start 12
+initial net bit forced 92
+initial net bit follows c0
+initial net bit released 40
+initial assign start 11
+initial assign assigned 12
+initial assign follows 34
+initial assign written 34
+initial assign forced aa
+initial assign forced follows aa
+initial assign released aa
+initial assign reassigned 56
+initial assign deassigned 56
+initial assign written again 99
+initial x xxxxxxxx 00000000
+task var start 34
+task var forced ed
+task var follows a9
+task var written a9
+task var released a9
+task var settled a9
+task var after bc
+task bit2 start 34
+task bit2 forced ed
+task bit2 follows a9
+task bit2 written a9
+task bit2 released a9
+task bit2 settled a9
+task bit2 after bc
+task driven var start 13
+task driven var forced ed
+task driven var follows a9
+task driven var written a9
+task driven var released a9
+task driven var settled 57
+task driven var after 9b
+task net start 12
+task net forced ed
+task net follows a9
+task net written a9
+task net released 56
+task net settled 56
+task net after 9a
+task resolved net start 12
+task resolved net forced ed
+task resolved net follows a9
+task resolved net written a9
+task resolved net released 56
+task resolved net settled 56
+task resolved net after 9a
+task hier net start 1d
+task hier net forced ed
+task hier net follows a9
+task hier net written a9
+task hier net released 59
+task hier net settled 59
+task hier net after 95
+task generate var start 34
+task generate var forced ed
+task generate var follows a9
+task generate var written a9
+task generate var released a9
+task generate var settled a9
+task generate var after bc
+task concat start 1412
+task concat forced ed12
+task concat follows a956
+task concat written a956
+task concat released a956
+task concat settled 5856
+task concat after 9c9a
+task net part start 12
+task net part forced 3e
+task net part follows 7c
+task net part released 40
+task net bit start 12
+task net bit forced 92
+task net bit follows c0
+task net bit released 40
+task assign start 11
+task assign assigned 12
+task assign follows 34
+task assign written 34
+task assign forced aa
+task assign forced follows aa
+task assign released aa
+task assign reassigned 56
+task assign deassigned 56
+task assign written again 99
+task x xxxxxxxx 00000000
+always var start 34
+always var forced ed
+always var follows a9
+always var written a9
+always var released a9
+always var settled a9
+always var after bc
+always bit2 start 34
+always bit2 forced ed
+always bit2 follows a9
+always bit2 written a9
+always bit2 released a9
+always bit2 settled a9
+always bit2 after bc
+always driven var start 13
+always driven var forced ed
+always driven var follows a9
+always driven var written a9
+always driven var released a9
+always driven var settled 57
+always driven var after 9b
+always net start 12
+always net forced ed
+always net follows a9
+always net written a9
+always net released 56
+always net settled 56
+always net after 9a
+always resolved net start 12
+always resolved net forced ed
+always resolved net follows a9
+always resolved net written a9
+always resolved net released 56
+always resolved net settled 56
+always resolved net after 9a
+always hier net start 1d
+always hier net forced ed
+always hier net follows a9
+always hier net written a9
+always hier net released 59
+always hier net settled 59
+always hier net after 95
+always generate var start 34
+always generate var forced ed
+always generate var follows a9
+always generate var written a9
+always generate var released a9
+always generate var settled a9
+always generate var after bc
+always concat start 1412
+always concat forced ed12
+always concat follows a956
+always concat written a956
+always concat released a956
+always concat settled 5856
+always concat after 9c9a
+always net part start 12
+always net part forced 3e
+always net part follows 7c
+always net part released 40
+always net bit start 12
+always net bit forced 92
+always net bit follows c0
+always net bit released 40
+always assign start 11
+always assign assigned 12
+always assign follows 34
+always assign written 34
+always assign forced aa
+always assign forced follows aa
+always assign released aa
+always assign reassigned 56
+always assign deassigned 56
+always assign written again 99
+always x xxxxxxxx 00000000
+fork var start 34
+fork var forced ed
+fork var follows a9
+fork var written a9
+fork var released a9
+fork var settled a9
+fork var after bc
+fork bit2 start 34
+fork bit2 forced ed
+fork bit2 follows a9
+fork bit2 written a9
+fork bit2 released a9
+fork bit2 settled a9
+fork bit2 after bc
+fork driven var start 13
+fork driven var forced ed
+fork driven var follows a9
+fork driven var written a9
+fork driven var released a9
+fork driven var settled 57
+fork driven var after 9b
+fork net start 12
+fork net forced ed
+fork net follows a9
+fork net written a9
+fork net released 56
+fork net settled 56
+fork net after 9a
+fork resolved net start 12
+fork resolved net forced ed
+fork resolved net follows a9
+fork resolved net written a9
+fork resolved net released 56
+fork resolved net settled 56
+fork resolved net after 9a
+fork hier net start 1d
+fork hier net forced ed
+fork hier net follows a9
+fork hier net written a9
+fork hier net released 59
+fork hier net settled 59
+fork hier net after 95
+fork generate var start 34
+fork generate var forced ed
+fork generate var follows a9
+fork generate var written a9
+fork generate var released a9
+fork generate var settled a9
+fork generate var after bc
+fork concat start 1412
+fork concat forced ed12
+fork concat follows a956
+fork concat written a956
+fork concat released a956
+fork concat settled 5856
+fork concat after 9c9a
+fork net part start 12
+fork net part forced 3e
+fork net part follows 7c
+fork net part released 40
+fork net bit start 12
+fork net bit forced 92
+fork net bit follows c0
+fork net bit released 40
+fork assign start 11
+fork assign assigned 12
+fork assign follows 34
+fork assign written 34
+fork assign forced aa
+fork assign forced follows aa
+fork assign released aa
+fork assign reassigned 56
+fork assign deassigned 56
+fork assign written again 99
+fork x xxxxxxxx 00000000

@@ -144,6 +144,9 @@ const char* opName(Op op) {
         case Op::Syscall: return "syscall";
         case Op::Builtin: return "builtin";
         case Op::ReportDefer: return "report.defer";
+        case Op::OverrideStart: return "override.start";
+        case Op::OverrideStop: return "override.stop";
+        case Op::StoreOverride: return "store.override";
         case Op::Resolve: return "resolve";
         case Op::Br: return "br";
         case Op::BrIf: return "br.if";
@@ -203,6 +206,7 @@ const char* kindName(ProcessKind k) {
         case ProcessKind::Final: return "final";
         case ProcessKind::General: return "general";
         case ProcessKind::StaticInit: return "static-init";
+        case ProcessKind::Override: return "override";
     }
     return "?";
 }

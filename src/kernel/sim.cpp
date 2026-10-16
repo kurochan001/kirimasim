@@ -459,6 +459,7 @@ void Scheduler::execute(const Event& e) {
             return;
         }
         case Kind::TriggerNb: trigger(e.id); return;
+        case Kind::Show: showHeld(e.id, e.gen, 0, store_.layout(e.id).width); return;
     }
 }
 
@@ -530,6 +531,138 @@ void Scheduler::waitNamed(ProcessId p, EventId e) {
 
 bool Scheduler::write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                       const std::uint64_t* value) {
+    if (heldOf_.empty() || heldOf_[s] == kNotHeld) return writeRaw(s, elem, lsb, width, value);
+    // A held slot: the write goes to the value of the ordinary writes,
+    // which shows where nothing holds the bits (SCHEDULER_SPEC.md 14).
+    const SlotLayout& l = store_.layout(s);
+    if (width == 0) {
+        lsb = 0;
+        width = l.width;
+    }
+    const unsigned stride = l.domain == Domain::Four ? 2 : 1;
+    std::uint64_t* base = held_[heldOf_[s]].base.data() + std::uint64_t{elem} * l.elemWords;
+    for (unsigned k = 0; k < stride; ++k)
+        copyBits(base + k, stride, lsb, value + k, stride, 0, width);
+    return showHeld(s, elem, lsb, width);
+}
+
+void Scheduler::markHeld(SlotId s, bool net, bool driven) {
+    if (heldOf_.size() < store_.size()) heldOf_.resize(store_.size(), kNotHeld);
+    if (heldOf_[s] != kNotHeld) return;
+    const SlotLayout& l = store_.layout(s);
+    Held h;
+    h.net = net;
+    h.driven = driven;
+    const std::uint64_t* first = store_.element(s, 0);
+    h.base.assign(first, first + std::uint64_t{l.elements} * l.elemWords);
+    for (int level = 0; level < 2; ++level) {
+        h.value[level].assign(h.base.size(), 0);
+        h.owner[level].assign(std::uint64_t{l.elements} * l.width, kNoHolder);
+    }
+    heldOf_[s] = static_cast<std::uint32_t>(held_.size());
+    held_.push_back(std::move(h));
+}
+
+void Scheduler::hold(Hold level, ProcessId owner, const SlotPart& part) {
+    Held& h = held_[heldOf_[part.slot]];
+    const SlotLayout& l = store_.layout(part.slot);
+    const std::uint32_t n = part.numElems == 0 ? l.elements : part.numElems;
+    const std::uint32_t lsb = part.width == 0 ? 0 : part.lsb;
+    const std::uint32_t width = part.width == 0 ? l.width : part.width;
+    std::vector<ProcessId>& who = h.owner[static_cast<int>(level)];
+    for (std::uint32_t e = part.firstElem; e < part.firstElem + n; ++e)
+        for (std::uint32_t i = lsb; i < lsb + width; ++i)
+            who[std::uint64_t{e} * l.width + i] = owner;
+}
+
+void Scheduler::writeHeld(Hold level, ProcessId owner, SlotId s, std::uint32_t elem,
+                          std::uint32_t lsb, std::uint32_t width, const std::uint64_t* value) {
+    Held& h = held_[heldOf_[s]];
+    const SlotLayout& l = store_.layout(s);
+    if (width == 0) {
+        lsb = 0;
+        width = l.width;
+    }
+    const unsigned stride = l.domain == Domain::Four ? 2 : 1;
+    const int k = static_cast<int>(level);
+    std::uint64_t* v = h.value[k].data() + std::uint64_t{elem} * l.elemWords;
+    const ProcessId* who = h.owner[k].data() + std::uint64_t{elem} * l.width;
+    for (std::uint32_t i = 0; i < width; ++i) {
+        if (who[lsb + i] != owner) continue;
+        for (unsigned plane = 0; plane < stride; ++plane)
+            copyBits(v + plane, stride, lsb + i, value + plane, stride, i, 1);
+    }
+    showHeld(s, elem, lsb, width);
+}
+
+void Scheduler::release(Hold level, const SlotPart& part) {
+    Held& h = held_[heldOf_[part.slot]];
+    const SlotLayout& l = store_.layout(part.slot);
+    const std::uint32_t n = part.numElems == 0 ? l.elements : part.numElems;
+    const std::uint32_t lsb = part.width == 0 ? 0 : part.lsb;
+    const std::uint32_t width = part.width == 0 ? l.width : part.width;
+    const unsigned stride = l.domain == Domain::Four ? 2 : 1;
+    const int k = static_cast<int>(level);
+    for (std::uint32_t e = part.firstElem; e < part.firstElem + n; ++e) {
+        const std::uint64_t first = std::uint64_t{e} * l.width;
+        std::uint64_t* base = h.base.data() + std::uint64_t{e} * l.elemWords;
+        const std::uint64_t* now = store_.element(part.slot, e);
+        bool later = false;
+        for (std::uint32_t i = lsb; i < lsb + width; ++i) {
+            h.owner[k][first + i] = kNoHolder;
+            if (h.net) continue;
+            const bool other = h.owner[1 - k][first + i] != kNoHolder;
+            if (level == Hold::Force && (other || h.driven)) {
+                // The assign or the continuous assignment is evaluated
+                // again in its region (10.6.2).
+                later = true;
+            } else if (!other) {
+                // Keeps its value until the next write (10.6.1, 10.6.2).
+                for (unsigned plane = 0; plane < stride; ++plane)
+                    copyBits(base + plane, stride, i, now + plane, stride, i, 1);
+            }
+        }
+        // A net takes its drivers' value now (10.6.2). A variable's other
+        // bits show what they show already.
+        if (h.net)
+            showHeld(part.slot, e, lsb, width);
+        else if (later)
+            schedule(Region::Active, {Kind::Show, Region::Active, part.slot, e}, 0);
+    }
+}
+
+bool Scheduler::holdsAny(Hold level, ProcessId owner) const {
+    for (const Held& h : held_)
+        for (const ProcessId p : h.owner[static_cast<int>(level)])
+            if (p == owner) return true;
+    return false;
+}
+
+void Scheduler::cancelWait(ProcessId p) {
+    freeMonitor(p);
+    ++processes_[p].gen;
+}
+
+bool Scheduler::showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) {
+    const Held& h = held_[heldOf_[s]];
+    const SlotLayout& l = store_.layout(s);
+    const unsigned stride = l.domain == Domain::Four ? 2 : 1;
+    const std::uint64_t at = std::uint64_t{elem} * l.elemWords;
+    const std::uint64_t first = std::uint64_t{elem} * l.width;
+    shown_.assign(std::uint64_t{stride} * wordsFor(width), 0);
+    for (std::uint32_t i = 0; i < width; ++i) {
+        const std::uint64_t bit = first + lsb + i;
+        const std::uint64_t* from = h.owner[1][bit] != kNoHolder   ? h.value[1].data() + at
+                                    : h.owner[0][bit] != kNoHolder ? h.value[0].data() + at
+                                                                   : h.base.data() + at;
+        for (unsigned plane = 0; plane < stride; ++plane)
+            copyBits(shown_.data() + plane, stride, i, from + plane, stride, lsb + i, 1);
+    }
+    return writeRaw(s, elem, lsb, width, shown_.data());
+}
+
+bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                         const std::uint64_t* value) {
     begin();
     ensureSlotTables();
     const SlotLayout& l = store_.layout(s);

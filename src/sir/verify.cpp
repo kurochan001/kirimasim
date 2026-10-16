@@ -34,7 +34,10 @@ bool hasNoResult(Op op) {
         case Op::TriggerNb:
         case Op::Disable:
         case Op::DisableFork:
-        case Op::ReportDefer: return true;
+        case Op::ReportDefer:
+        case Op::OverrideStart:
+        case Op::OverrideStop:
+        case Op::StoreOverride: return true;
         default: return isTerminator(op);
     }
 }
@@ -55,7 +58,8 @@ bool waitsForbidden(ProcessKind k) {
         case ProcessKind::Ff:
         case ProcessKind::FfPlain:
         case ProcessKind::Final:
-        case ProcessKind::StaticInit: return true;
+        case ProcessKind::StaticInit:
+        case ProcessKind::Override: return true;
         case ProcessKind::Initial:
         case ProcessKind::General: return false;
     }
@@ -298,6 +302,23 @@ private:
     }
     bool rangeOk(const Operand& o) const {
         return rangeOk(o.id, o.firstElem, o.numElems, o.lsb, o.width);
+    }
+
+    /// "assign" or "force", the levels of SIR_SPEC.md 5.6.
+    static bool levelOk(const Operand& o) {
+        return o.kind == Operand::Kind::Text && (o.text == "assign" || o.text == "force");
+    }
+    /// A target of assign or force: bits of an integral slot marked as a
+    /// force target, in one element of an array (SIR_SPEC.md 5.6).
+    bool heldOk(const Operand& o) const {
+        if (!rangeOk(o)) return false;
+        const Slot& s = d_.slots[o.id];
+        return isIntegral(s.type) && (s.flags & kForceTarget) != 0 &&
+               (s.dims.empty() || o.numElems == 1);
+    }
+    /// The bits of one element a slot operand covers.
+    std::uint32_t rangeWidth(const Operand& o) const {
+        return o.width == 0 ? d_.slots[o.id].type.width : o.width;
     }
 
     /// The value type of a slot operand: one element (or the whole slot if
@@ -1105,6 +1126,43 @@ private:
                     bad("needs a process, a subroutine or a block name");
                 break;
             case Op::DisableFork: nOps(0); break;
+            case Op::OverrideStart:
+            case Op::OverrideStop: {
+                // A level, the override process (start), then the targets:
+                // whole slots, elements or constant bit ranges.
+                const std::size_t first = in.op == Op::OverrideStart ? 2 : 1;
+                bool ok = ops.size() > first && levelOk(ops[0]);
+                if (ok && in.op == Op::OverrideStart)
+                    ok = ops[1].kind == Operand::Kind::Process && ops[1].id < d_.processes.size() &&
+                         d_.processes[ops[1].id].kind == ProcessKind::Override;
+                for (std::size_t i = first; ok && i < ops.size(); ++i)
+                    ok = ops[i].kind == Operand::Kind::Slot && heldOk(ops[i]);
+                if (!ok)
+                    bad("needs \"assign\" or \"force\", " +
+                        std::string(in.op == Op::OverrideStart ? "an override process, " : "") +
+                        "and integral slot ranges marked as force targets");
+                break;
+            }
+            case Op::StoreOverride: {
+                if (body.process == nullptr || body.process->kind != ProcessKind::Override) {
+                    bad("only an override process writes with it");
+                    break;
+                }
+                if (!nOps(3)) break;
+                if (!levelOk(ops[0]) || ops[1].kind != Operand::Kind::Slot || !heldOk(ops[1]) ||
+                    !isIntegral(ty(2)) || ty(2).width != rangeWidth(ops[1])) {
+                    bad("needs \"assign\" or \"force\", a slot range marked as a force target "
+                        "and a value of its width");
+                    break;
+                }
+                const Operand& o = ops[1];
+                const SlotRange target{o.id, o.firstElem, o.numElems, o.lsb, o.width};
+                bool covered = false;
+                for (const SlotRange& w : body.process->writes)
+                    covered = covered || covers(d_.slots[o.id], w, target);
+                if (!covered) bad("writes %s" + std::to_string(o.id) + " outside the write set");
+                break;
+            }
             case Op::ReportDefer: {
                 static constexpr std::string_view kConstructs[] = {"unique case",   "unique0 case",
                                                                    "priority case", "unique if",
@@ -1274,6 +1332,11 @@ private:
                         // process (6.8).
                         if (ps[i].kind == ProcessKind::StaticInit ||
                             ps[j].kind == ProcessKind::StaticInit)
+                            continue;
+                        // assign and force hold a target over its other
+                        // writers (SCHEDULER_SPEC.md 14).
+                        if (ps[i].kind == ProcessKind::Override ||
+                            ps[j].kind == ProcessKind::Override)
                             continue;
                         const Slot& s = d_.slots[a.slot];
                         const bool exclusive =

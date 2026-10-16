@@ -374,6 +374,10 @@ struct Frame {
     std::uint32_t groupDone = 0;
     Join pending = Join::None;               ///< What the frame waits for before going on.
     kernel::EventId joinEvent = UINT32_MAX;  ///< Triggered when a child ends.
+    /// An override process: whether it holds a target and so runs when what
+    /// it reads changes (SIR_SPEC.md 5.6), and at which level.
+    bool holding = false;
+    kernel::Hold level = kernel::Hold::Assign;
 
     /// Calls of tasks that may wait, innermost last (SIR_SPEC.md 7.4): each
     /// keeps its frame variables and the block to go on at. Their temps do
@@ -442,6 +446,17 @@ public:
             for (std::uint32_t e = 0; e < n; ++e)
                 *store_.element(s, e) = std::uint64_t{sched_.addEvent()} + 1;
         }
+        // The slots assign and force may hold (SCHEDULER_SPEC.md 14.4). A
+        // net, or a variable that a continuous assignment drives, gets its
+        // drivers' value back when released.
+        std::vector<bool> driven(d_.slots.size(), false);
+        for (const sir::Process& proc : d_.processes)
+            if (proc.kind == sir::ProcessKind::Cont)
+                for (const sir::SlotRange& w : proc.writes)
+                    driven[w.slot] = true;
+        for (sir::SlotId s = 0; s < d_.slots.size(); ++s)
+            if ((d_.slots[s].flags & sir::kForceTarget) != 0)
+                sched_.markHeld(s, d_.slots[s].kind != sir::SlotKind::Var, driven[s]);
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
         std::uint64_t initSteps = 0;
@@ -453,6 +468,7 @@ public:
         }
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
+        overrides_.assign(d_.processes.size(), nullptr);
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
             if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
@@ -485,6 +501,11 @@ public:
                     // Run once each when the simulation ends.
                     f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
                     finals.push_back(f.kernelId);
+                    break;
+                case sir::ProcessKind::Override:
+                    // Runs from override.start to override.stop.
+                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    overrides_[p] = &f;
                     break;
                 default:
                     return {kernel::EndReason::Internal, "process \"" + proc.name + "\": kind " +
@@ -566,6 +587,7 @@ private:
     std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
     std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
     std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
+    std::vector<Frame*> overrides_;                ///< By process: an override process's frame.
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
@@ -822,6 +844,11 @@ private:
                 f.block = 0;
                 waitTriggers(f, p);
                 return kernel::Status::Waiting;
+            case sir::ProcessKind::Override:
+                // Idle once it holds nothing, until override.start again.
+                f.block = 0;
+                if (f.holding) waitTriggers(f, p);
+                return kernel::Status::Waiting;
             default: return kernel::Status::Done;
         }
     }
@@ -1002,6 +1029,26 @@ private:
                         if (sched_.ending()) return Exit::Stop;
                         break;
                     }
+                    case Op::OverrideStart: {
+                        const Exit e = overrideStart(in, steps);
+                        if (e != Exit::Ret) return e;
+                        if (sched_.ending()) return Exit::Stop;
+                        break;
+                    }
+                    case Op::OverrideStop: {
+                        const kernel::Hold level = holdLevel(ops[0]);
+                        for (std::size_t i = 1; i < ops.size(); ++i)
+                            sched_.release(level, partOf(ops[i]));
+                        dropIdle(level);
+                        break;
+                    }
+                    case Op::StoreOverride: {
+                        const W4 v = value(ops[2]);
+                        const std::uint64_t buf[2] = {v.a, v.b};
+                        sched_.writeHeld(holdLevel(ops[0]), f.kernelId, ops[1].id, ops[1].firstElem,
+                                         ops[1].lsb, ops[1].width, buf);
+                        break;
+                    }
                     default:
                         if (!execute(f, p, in)) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
@@ -1012,6 +1059,48 @@ private:
                 fail(p, "block bb" + std::to_string(b) + " has no terminator");
                 return Exit::Error;
             }
+        }
+    }
+
+    // --- Procedural continuous assignments (SIR_SPEC.md 5.6) ---
+
+    static kernel::Hold holdLevel(const Operand& o) {
+        return o.text == "force" ? kernel::Hold::Force : kernel::Hold::Assign;
+    }
+
+    static kernel::SlotPart partOf(const Operand& o) {
+        return {o.id, o.firstElem, o.numElems, o.lsb, o.width};
+    }
+
+    /// override.start: the targets go to the override process, which runs
+    /// once now and then whenever what it reads changes. A process that no
+    /// longer holds anything stops (10.6.1, 10.6.2).
+    Exit overrideStart(const sir::Instr& in, std::uint64_t& steps) {
+        const auto& ops = in.operands;
+        const kernel::Hold level = holdLevel(ops[0]);
+        Frame& o = *overrides_[ops[1].id];
+        for (std::size_t i = 2; i < ops.size(); ++i)
+            sched_.hold(level, o.kernelId, partOf(ops[i]));
+        dropIdle(level);
+        const Act caller = act_;
+        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body)});
+        W4 ret{0, 0};
+        const Exit e = runBody(o, 0, steps, ret);
+        act_ = caller;
+        if (e != Exit::Ret) return e;
+        o.holding = true;
+        o.level = level;
+        waitTriggers(o, d_.processes[ops[1].id]);
+        return Exit::Ret;
+    }
+
+    /// Stops the override processes of a level that hold nothing now.
+    void dropIdle(kernel::Hold level) {
+        for (Frame* o : overrides_) {
+            if (o == nullptr || !o->holding || o->level != level) continue;
+            if (sched_.holdsAny(level, o->kernelId)) continue;
+            o->holding = false;
+            sched_.cancelWait(o->kernelId);
         }
     }
 

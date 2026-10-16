@@ -251,6 +251,16 @@ enum class Op : std::uint8_t {
     /// side of twice the width gives the sides a driver drives (SIR_SPEC.md
     /// 3.5, VALUE_SEMANTICS.md 5.4).
     Resolve,
+    // Procedural continuous assignments (SIR_SPEC.md 5.6).
+    /// override.start "assign" | "force", @P, <slot range>...: the targets
+    /// are held at that level by override process P, which runs once now.
+    OverrideStart,
+    /// override.stop "assign" | "force", <slot range>...: ends the holds at
+    /// that level (SCHEDULER_SPEC.md 14).
+    OverrideStop,
+    /// store.override "assign" | "force", <slot range>, <value>: an override
+    /// process writes the bits it holds at that level.
+    StoreOverride,
     // Calls.
     Call,     ///< [%r =] call @N, <argument>...
     Syscall,  ///< [%r =] syscall "$name", <operand>...
@@ -365,6 +375,7 @@ enum class ProcessKind : std::uint8_t {
     Final,
     General,
     StaticInit,  ///< The static variable initializers of an instance (SIR_SPEC.md 7.1).
+    Override,    ///< A procedural assign or force; runs while it holds a target (5.6, 7.1).
 };
 
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems
