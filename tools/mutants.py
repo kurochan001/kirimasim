@@ -69,6 +69,9 @@ MUTANTS = [
      "src/front/lower_expr.cpp",
      "const Val self = place ? loadPlace(*place, sl) : lowerExpr(*selfExpr);",
      "const Val self = lowerExpr(*selfExpr);"),
+    ("front: an assignment operator evaluates the index of its target twice",
+     "src/front/lower_expr.cpp", "b_.lvalueRefs.push_back(loadPlace(p, sl));",
+     "b_.lvalueRefs.push_back(lowerExpr(a.left()));"),
 ]
 
 

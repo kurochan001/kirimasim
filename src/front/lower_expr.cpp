@@ -599,6 +599,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         }
         case ast::ExpressionKind::Assignment:
             return lowerAssignment(e.as<ast::AssignmentExpression>());
+        case ast::ExpressionKind::LValueReference:
+            // The target of the assignment operator being lowered.
+            if (b_.lvalueRefs.empty()) unsupported(sl, "expression 'LValueReference'");
+            return coerce(b_.lvalueRefs.back(), typeOf(*e.type, sl), sl);
         case ast::ExpressionKind::Call: {
             const auto& call = e.as<ast::CallExpression>();
             const std::string name(call.getSubroutineName());
@@ -969,8 +973,19 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
 
 Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     const slang::SourceLocation sl = a.sourceRange.start();
-    if (a.isCompound()) unsupported(sl, "compound assignment");
     if (a.timingControl != nullptr) unsupported(sl, "intra-assignment timing control");
+    if (a.isCompound()) {
+        // a op= b is a = a op (b) with the indices of a evaluated once
+        // (11.4.1): the target's indices, its value, then b. slang gives
+        // the right side as `<lvalue> op b`, the lvalue as an
+        // LValueReference.
+        const Place p = placeOf(a.left(), sl);
+        b_.lvalueRefs.push_back(loadPlace(p, sl));
+        const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
+        b_.lvalueRefs.pop_back();
+        storePlace(p, v, a.isNonBlocking(), sl);
+        return v;
+    }
     const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
     lowerStore(a.left(), v, a.isNonBlocking(), sl);
     return v;

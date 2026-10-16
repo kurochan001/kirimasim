@@ -257,6 +257,7 @@ public:
         const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         std::optional<sir::SlotId> retSlot;       ///< The same, static.
+        std::vector<Val> lvalueRefs;  ///< The targets' values of the assignment operators.
     };
     Body& body() { return b_; }
 
