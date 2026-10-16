@@ -985,6 +985,11 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val k = constant(sir::s2(32), name == "$isunknown" ? 0 : 1);
                 return coerce(emit(cmp, sir::u2(1), {n.op, k.op}, sl), rt, sl);
             }
+            if (name == "$test$plusargs" && args.size() == 1) {
+                // An integral argument is read as a string (21.6).
+                const Val str = coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl);
+                return coerce(sys(sir::u2(1), {str.op}), rt, sl);
+            }
             if (std::optional<Val> v = lowerStringCall(call, sl)) return *v;
             if (std::optional<Val> v = lowerEnumCall(call, sl)) return *v;
             unsupported(sl, "system function " + name);

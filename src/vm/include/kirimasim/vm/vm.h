@@ -30,6 +30,8 @@ struct RunOptions {
     /// no limit. Going over ends the run with zero_time_limit
     /// (SCHEDULER_SPEC.md 16.2).
     std::uint64_t maxSteps = 0;
+    /// The run-time plusargs, in order, without their leading + (CLI.md 2.4).
+    std::vector<std::string> plusargs;
 };
 
 /// Runs the design to its end on the given context.

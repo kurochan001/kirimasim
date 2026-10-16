@@ -228,7 +228,11 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     }
     limits.maxZeroDelay = o.maxZeroDelay;
     context.scheduler().setLimits(limits);
-    const auto result = kirimasim::vm::run(compiled.design, context, {o.maxSteps});
+    kirimasim::vm::RunOptions run;
+    run.maxSteps = o.maxSteps;
+    for (const std::string& a : o.plusargs)
+        run.plusargs.push_back(a.substr(1));
+    const auto result = kirimasim::vm::run(compiled.design, context, run);
     context.output().flush();
     const auto reason = result.reason;
     if (reason == kirimasim::kernel::EndReason::Internal) {

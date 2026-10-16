@@ -53,6 +53,7 @@ enum class SysTask : std::uint8_t {
     Warning,
     Info,
     CountBits,
+    TestPlusargs,
     Unknown,
 };
 
@@ -219,6 +220,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$warning") return SysTask::Warning;
     if (name == "$info") return SysTask::Info;
     if (name == "$countbits") return SysTask::CountBits;
+    if (name == "$test$plusargs") return SysTask::TestPlusargs;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -1714,6 +1716,15 @@ private:
                 const std::uint64_t q = now / div;
                 const std::uint64_t r = now % div;
                 temp(in.result) = {q + (div > 1 && r >= div - r ? 1 : 0), 0};
+                return true;
+            }
+            case SysTask::TestPlusargs: {
+                // 1 if some plusarg starts with the string (SYSTEM_TASKS.md 9).
+                const std::string_view prefix = strings_.get(value(ops[1]).a);
+                bool found = false;
+                for (const std::string& a : options_.plusargs)
+                    found = found || std::string_view(a).starts_with(prefix);
+                temp(in.result) = {found ? 1U : 0U, 0};
                 return true;
             }
             case SysTask::Realtime: {

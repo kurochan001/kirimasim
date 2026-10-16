@@ -170,6 +170,9 @@ MUTANTS = [
     ("vm: nba.delay updates in the current time step", "src/vm/vm.cpp",
      "nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), d.b != 0 ? 0 : d.a);",
      "nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), 0 * d.a);"),
+    ("vm: $test$plusargs wants the whole plusarg", "src/vm/vm.cpp",
+     "found = found || std::string_view(a).starts_with(prefix);",
+     "found = found || std::string_view(a) == prefix;"),
 ]
 
 
