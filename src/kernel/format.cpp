@@ -1,8 +1,11 @@
 #include "haremasim/kernel/format.h"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -195,6 +198,12 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             literal.push_back('%');
             continue;
         }
+        // Flags and a precision are kept only for the real formats.
+        const std::size_t start = i;
+        while (i < format.size() &&
+               std::string_view("-+ #").find(format[i]) != std::string_view::npos)
+            ++i;
+        const bool flags = i != start;
         int width = -1;
         if (format[i] >= '0' && format[i] <= '9') {
             width = 0;
@@ -206,6 +215,13 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
                 }
                 ++i;
             }
+        }
+        bool precision = false;
+        if (i < format.size() && format[i] == '.') {
+            precision = true;
+            ++i;
+            while (i < format.size() && format[i] >= '0' && format[i] <= '9')
+                ++i;
         }
         if (i >= format.size()) {
             error = "the format ends inside a specifier";
@@ -222,21 +238,34 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             case 'c':
             case 's':
             case 't': break;
+            case 'e':
+            case 'f':
+            case 'g': break;
             default:
                 error = std::string("format specifier %") + format[i] + " is not supported yet";
                 return false;
         }
+        const bool real = conv == 'e' || conv == 'f' || conv == 'g';
+        if ((flags || precision) && !real) {
+            error = "flags and precisions are for %e, %f and %g only";
+            return false;
+        }
         flush();
         FormatPiece p;
         p.isSpec = true;
-        p.spec = {conv, width};
+        p.spec = {conv, width, {}};
+        if (real) {
+            p.spec.cformat = "%";
+            p.spec.cformat += format.substr(start, i - start);
+            p.spec.cformat += conv;
+        }
         pieces.push_back(std::move(p));
     }
     flush();
     return true;
 }
 
-std::string formatInt(const IntValue& v, FormatSpec spec) {
+std::string formatInt(const IntValue& v, const FormatSpec& spec) {
     switch (spec.conv) {
         case 'd': return formatDecimal(v, spec.width);
         case 'c': {
@@ -253,6 +282,37 @@ std::string formatInt(const IntValue& v, FormatSpec spec) {
     std::string digits = radixDigits(v, bits);
     if (spec.width < 0) return digits;  // the automatic width keeps leading zeros
     return padLeft(stripLeadingZeros(digits), static_cast<std::size_t>(spec.width), '0');
+}
+
+std::string formatReal(double v, const FormatSpec& spec) {
+    const std::string fmt = spec.cformat.empty() ? std::string("%g") : spec.cformat;
+    std::array<char, 512> buf{};
+    if (std::isnan(v) || std::isinf(v)) {
+        // The width and the - flag of the specifier still apply.
+        const char* text = std::isnan(v) ? "nan" : (v < 0 ? "-inf" : "inf");
+        // Keep the - flag and the width; drop the other flags, which do
+        // not apply to text, and the precision.
+        std::string sfmt = "%";
+        std::size_t k = 1;
+        for (; k < fmt.size() && std::string_view("-+ #0").find(fmt[k]) != std::string_view::npos;
+             ++k)
+            if (fmt[k] == '-') sfmt += '-';
+        for (; k < fmt.size() && fmt[k] >= '0' && fmt[k] <= '9'; ++k)
+            sfmt += fmt[k];
+        sfmt += 's';
+        std::snprintf(buf.data(), buf.size(), sfmt.c_str(),
+                      text);  // NOLINT(cppcoreguidelines-pro-type-vararg)
+        return buf.data();
+    }
+    const int n = std::snprintf(buf.data(), buf.size(), fmt.c_str(),
+                                v);  // NOLINT(cppcoreguidelines-pro-type-vararg)
+    if (n < 0) return "?";
+    if (static_cast<std::size_t>(n) < buf.size()) return buf.data();
+    std::string big(static_cast<std::size_t>(n) + 1, '\0');
+    std::snprintf(big.data(), big.size(), fmt.c_str(),
+                  v);  // NOLINT(cppcoreguidelines-pro-type-vararg)
+    big.pop_back();
+    return big;
 }
 
 std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width) {

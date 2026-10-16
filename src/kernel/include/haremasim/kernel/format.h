@@ -31,6 +31,9 @@ struct IntValue {
 struct FormatSpec {
     char conv = 'd';
     int width = -1;
+    /// %e, %f and %g: the whole specifier in the form of C's printf, with
+    /// its flags, width and precision (3.6). Empty for the others.
+    std::string cformat;
 };
 
 /// A piece of a parsed format: literal text, or a specifier that takes
@@ -46,7 +49,12 @@ struct FormatPiece {
 bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std::string& error);
 
 /// Formats an integral value with %b, %o, %h, %d, %c or %s (3.2 to 3.5).
-std::string formatInt(const IntValue& v, FormatSpec spec);
+std::string formatInt(const IntValue& v, const FormatSpec& spec);
+
+/// Formats a real with %e, %f or %g as C does; infinities and NaN are
+/// "inf", "-inf" and "nan" whatever the sign of NaN (3.6). An empty
+/// cformat is plain %g, the form of a real without a specifier (3.6).
+std::string formatReal(double v, const FormatSpec& spec);
 
 /// The settings of $timeformat (5.4): the unit as a power of ten of a
 /// second, digits after the decimal point, the suffix and the minimum

@@ -1,6 +1,7 @@
 // Tests for the formatting of $display values (SYSTEM_TASKS.md 3). The
 // expected texts follow the examples and rules of that section.
 
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -114,6 +115,27 @@ TEST(Format, Time) {
     tf = {-15, 0, "", 0};
     EXPECT_EQ(formatTime(Num(3, 64).value, -12, tf, -1), "3000");
     EXPECT_EQ(formatTime(Num(0, 64).value, -12, tf, -1), "0");
+}
+
+TEST(Format, Reals) {
+    // 3.6: C's formats, with inf, -inf and nan spelled one way.
+    std::vector<FormatPiece> p;
+    std::string error;
+    ASSERT_TRUE(parseFormat("%f|%e|%g|%10.3f|%-8.2f|%+.1e", p, error));
+    const auto spec = [&](std::size_t i) { return p[i].spec; };
+    EXPECT_EQ(formatReal(5.0, spec(0)), "5.000000");
+    EXPECT_EQ(formatReal(1.5, spec(2)), "1.500000e+00");
+    EXPECT_EQ(formatReal(1.5, spec(4)), "1.5");
+    EXPECT_EQ(formatReal(1.5, spec(6)), "     1.500");
+    EXPECT_EQ(formatReal(1.5, spec(8)), "1.50    ");
+    EXPECT_EQ(formatReal(1.5, spec(10)), "+1.5e+00");
+    EXPECT_EQ(formatReal(1.5, FormatSpec{}), "1.5");  // no specifier: %g
+    EXPECT_EQ(formatReal(123456789.0, FormatSpec{}), "1.23457e+08");
+    EXPECT_EQ(formatReal(1.0 / 0.0, spec(0)), "inf");
+    EXPECT_EQ(formatReal(-1.0 / 0.0, spec(6)), "      -inf");
+    EXPECT_EQ(formatReal(-std::nan(""), spec(8)), "nan     ");
+    p.clear();
+    EXPECT_FALSE(parseFormat("%.2d", p, error));  // a precision is for reals only
 }
 
 TEST(Format, Parse) {
