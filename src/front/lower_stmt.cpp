@@ -136,6 +136,9 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             return;
         }
         case ast::StatementKind::Conditional: lowerIf(s.as<ast::ConditionalStatement>()); return;
+        case ast::StatementKind::ImmediateAssertion:
+            lowerImmediateAssertion(s.as<ast::ImmediateAssertionStatement>());
+            return;
         case ast::StatementKind::Case: lowerCase(s.as<ast::CaseStatement>()); return;
         case ast::StatementKind::ForLoop: {
             const auto& f = s.as<ast::ForLoopStatement>();
@@ -478,6 +481,31 @@ void Lowerer::lowerIf(const ast::ConditionalStatement& s) {
     const sir::BlockId join = newBlock();
     if (thenLive) emitInto(thenEnd, Op::Br, {Operand::block(join)}, sl);
     if (elseLive) emitInto(elseEnd, Op::Br, {Operand::block(join)}, sl);
+    setBlock(join);
+}
+
+void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s) {
+    const slang::SourceLocation sl = s.sourceRange.start();
+    if (s.isDeferred) unsupported(sl, "deferred immediate assertion");
+    // The expression is a condition as in if: x, z and 0 fail (16.3). The
+    // pass statement runs on success; the fail statement on failure, or
+    // $error when an assert or assume has none. A cover has no failure.
+    const Val c = lowerCondition(s.cond);
+    const sir::BlockId pass = newBlock();
+    const sir::BlockId fail = newBlock();
+    const sir::BlockId join = newBlock();
+    terminate(Op::BrIf, {c.op, Operand::block(pass), Operand::block(fail)}, sl);
+    setBlock(pass);
+    if (s.ifTrue != nullptr) lowerStatement(*s.ifTrue);
+    jump(join, sl);
+    setBlock(fail);
+    if (s.ifFalse != nullptr) {
+        lowerStatement(*s.ifFalse);
+    } else if (s.assertionKind == ast::AssertionKind::Assert ||
+               s.assertionKind == ast::AssertionKind::Assume) {
+        emitVoid(Op::Syscall, {Operand::str("$error"), Operand::str(b_.scope)}, sl);
+    }
+    jump(join, sl);
     setBlock(join);
 }
 

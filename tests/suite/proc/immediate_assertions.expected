@@ -1,0 +1,6 @@
+passes 2 fails 3
+pass statement only
+covered one
+check failed for -1
+sel 01 ok
+sel 11 bad

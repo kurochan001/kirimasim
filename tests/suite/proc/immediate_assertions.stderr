@@ -1,0 +1,3 @@
+immediate_assertions.sv:44: error:  [top @ 0ps]
+immediate_assertions.sv:45: error:  [top.chk @ 0ps]
+immediate_assertions.sv:47: error: assumption zero=0 [top @ 0ps]

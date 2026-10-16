@@ -25,6 +25,7 @@
 #include "slang/ast/expressions/CallExpression.h"
 #include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/ast/statements/LoopStatements.h"
+#include "slang/ast/statements/MiscStatements.h"
 #include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/ast/symbols/VariableSymbols.h"
@@ -83,6 +84,7 @@ public:
     // Statements (lower_stmt.cpp).
     void lowerStatement(const ast::Statement& s);
     void lowerIf(const ast::ConditionalStatement& s);
+    void lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s);
     void lowerFork(const ast::BlockStatement& b);
     void lowerUniqueIf(const ast::ConditionalStatement& s);
     /// The violation checks of unique, unique0 and priority on the 1-bit
