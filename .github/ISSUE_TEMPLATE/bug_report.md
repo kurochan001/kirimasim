@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: haremasim behaves differently from what you expect
+about: kirimasim behaves differently from what you expect
 labels: bug
 ---
 
@@ -21,6 +21,6 @@ labels: bug
 
 ## Environment
 
-- haremasim version (`haremasim --version`):
+- kirimasim version (`kirimasim --version`):
 - OS and CPU:
-- Compiler used to build haremasim:
+- Compiler used to build kirimasim:

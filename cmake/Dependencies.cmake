@@ -38,7 +38,7 @@ FetchContent_MakeAvailable(slang googletest)
 # slang issue #2023: constant evaluation of $rtoi converts a negative double
 # straight to uint64_t, which is undefined behavior, during elaboration.
 # Until a slang release fixes it, the ubsan preset does not check
-# float-to-integer conversions inside slang's own code. haremasim's code is
+# float-to-integer conversions inside slang's own code. kirimasim's code is
 # still checked in full. Remove this when slang is upgraded past the fix.
 if(CMAKE_CXX_FLAGS_DEBUG MATCHES "fsanitize=undefined" AND TARGET slang_slang)
     target_compile_options(slang_slang PRIVATE -fno-sanitize=float-cast-overflow)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks that the release build really optimizes haremasim's own code.
+"""Checks that the release build really optimizes kirimasim's own code.
 
 Reads build/release/compile_commands.json and requires every entry whose
 source file is under the repository's src/ or tests/ to have -O2 or -O3,
@@ -63,7 +63,7 @@ def main() -> int:
     for err in errors:
         print(err, file=sys.stderr)
     if checked == 0:
-        print("check_release_flags: no haremasim translation units found", file=sys.stderr)
+        print("check_release_flags: no kirimasim translation units found", file=sys.stderr)
         return 1
     if errors:
         print(f"check_release_flags: {len(errors)} of {checked} unit(s) not optimized",

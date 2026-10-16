@@ -1,8 +1,8 @@
-# haremasim
+# kirimasim
 
 [日本語](README.ja.md)
 
-haremasim is an open-source SystemVerilog simulator in early development.
+kirimasim is an open-source SystemVerilog simulator in early development.
 Its goal is a simulator that does not give up any of the following:
 
 - **Four-state values** (0, 1, X, Z) by default, with no optimization that
@@ -13,7 +13,7 @@ Its goal is a simulator that does not give up any of the following:
   or checked at run time that no X or Z is present.
 
 > **Status: not usable yet.** The repository currently holds only the P0
-> groundwork: the build, library skeletons, a `haremasim parse` command that
+> groundwork: the build, library skeletons, a `kirimasim parse` command that
 > runs the [slang](https://github.com/MikePopoloski/slang) front end, the
 > first tests, and CI. The detailed specifications under `docs/spec/` are
 > headings only, and the P0 exit criteria are not met yet. There is no
@@ -26,7 +26,7 @@ for the specification, the tests, and review.** See
 
 ## Contributions: specification proposals and issues only, for now
 
-haremasim is in early development, so for now it accepts **specification
+kirimasim is in early development, so for now it accepts **specification
 proposals and issues only**. It does not accept code pull requests: only
 collaborators can open pull requests. Use the issue forms to propose a
 change to a specification under `docs/spec/`, report a bug, or point out a
@@ -58,9 +58,9 @@ Each preset builds into `build/<preset>/`.
 ## Usage (so far)
 
 ```sh
-build/dev/src/driver/haremasim --version
-build/dev/src/driver/haremasim parse file.sv ...        # parse and elaborate
-build/dev/src/driver/haremasim --stats=json parse file.sv
+build/dev/src/driver/kirimasim --version
+build/dev/src/driver/kirimasim parse file.sv ...        # parse and elaborate
+build/dev/src/driver/kirimasim --stats=json parse file.sv
 ```
 
 `parse` exits with code 2 if slang reports any error.
@@ -74,6 +74,6 @@ build/dev/src/driver/haremasim --stats=json parse file.sv
 
 ## License
 
-haremasim is licensed under the Apache License 2.0 with LLVM Exceptions
+kirimasim is licensed under the Apache License 2.0 with LLVM Exceptions
 (`Apache-2.0 WITH LLVM-exception`). See [LICENSE](LICENSE) and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

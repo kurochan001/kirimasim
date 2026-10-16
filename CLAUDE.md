@@ -1,8 +1,8 @@
-# CLAUDE.md：haremasim で作業する Claude Code への決まり
+# CLAUDE.md：kirimasim で作業する Claude Code への決まり
 
 ## プロジェクトの目的
 
-haremasim は、オープンソースの SystemVerilog シミュレータです。4 値（0・1・X・Z）を既定とし、IEEE 1800-2023 どおりのスケジューリング（時刻スロットの全領域と参照アルゴリズム）を守ったうえで、実用的な速さを目指します。フロントエンドは slang を改変せずに版を固定して使い、中間表現 SIR を経て、インタプリタ（第 1 層）と C++ 生成（第 2 層）が 1 つの実行カーネルを共有して動きます。今は P0（準備）の段階で、ビルドの土台と骨組みだけがあります。
+kirimasim は、オープンソースの SystemVerilog シミュレータです。4 値（0・1・X・Z）を既定とし、IEEE 1800-2023 どおりのスケジューリング（時刻スロットの全領域と参照アルゴリズム）を守ったうえで、実用的な速さを目指します。フロントエンドは slang を改変せずに版を固定して使い、中間表現 SIR を経て、インタプリタ（第 1 層）と C++ 生成（第 2 層）が 1 つの実行カーネルを共有して動きます。今は P0（準備）の段階で、ビルドの土台と骨組みだけがあります。
 
 ## ライブラリの依存の規則
 
@@ -19,18 +19,18 @@ haremasim は、オープンソースの SystemVerilog シミュレータです�
 | `solver_adapter` | 制約ソルバの差し替え口 | `sir`、採用した外部のソルバ | P3 で作る |
 | `fiber_backend` | 時間を使う DPI-C の task を止めて再開するファイバー | 採用したライブラリだけ | P3 で作る |
 | `valsem` | 値の意味の参照実装（遅いが明らかに正しい） | なし | 1 ビットの 4 値と AND |
-| `driver` | 実行ファイル `haremasim` | すべて | `--version`、`parse`、`--stats=json` |
+| `driver` | 実行ファイル `kirimasim` | すべて | `--version`、`parse`、`--stats=json` |
 
 - `kernel` は利用者の設計と一緒にリンクされるので、slang や LLVM に依存させない。
-- `kernel` の公開ヘッダ（`src/kernel/include/haremasim/kernel/`）は C++20 でコンパイルできること。新しいヘッダを足したら `tests/unit/kernel_headers_cxx20.cpp` にも足す。
-- 名前空間は `haremasim::<ライブラリ名>`。
+- `kernel` の公開ヘッダ（`src/kernel/include/kirimasim/kernel/`）は C++20 でコンパイルできること。新しいヘッダを足したら `tests/unit/kernel_headers_cxx20.cpp` にも足す。
+- 名前空間は `kirimasim::<ライブラリ名>`。
 
 ## C++ の版と禁止事項
 
 - 本体は C++23。C++26 の機能は、使えるコンパイラでだけ機能検出マクロを通して使う。
 - `kernel` の公開ヘッダと生成コードは C++20。生成コードは例外と RTTI を使わない。
 - `src/kernel/` と `src/vm/`（と将来の生成コード）で禁止：`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid`。`tools/check_banned.py` が検査する。コメントの中の語も検出されるので、説明文では別の書き方をする。
-- `std::unordered_map` と `std::unordered_set` は、同じ行か直前の行に `// haremasim: unordered-ok <理由>` を書いたときだけ使ってよい。結果に影響する箇所で走査しない。
+- `std::unordered_map` と `std::unordered_set` は、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` を書いたときだけ使ってよい。結果に影響する箇所で走査しない。
 - 書き換え可能な大域変数・static 変数・シングルトンを持たない。状態は Context が持つ。
 - 実行中に環境変数を読まない。設定は起動時に 1 回だけ読む（`driver` も今は環境変数を読まない）。
 - 実行中に文字列で信号を引かない（名前の表は VPI・波形・診断のためだけ）。
@@ -52,7 +52,7 @@ python3 tools/local_ci.py                 # 上の全部と clang-format・clang
 
 - push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。GitHub の macOS のランナーはこのリポジトリでは取れないことが多いので、macOS の結果はこれで代える（CI の macOS のジョブは、失敗してもワークフロー全体を失敗にしない設定にしてある）。
 
-- テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。今は `haremasim parse` が通るかだけを見る。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
+- テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。今は `kirimasim parse` が通るかだけを見る。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
 - PerfCount の期待値は `tests/perf_counts/expected.json`。更新の手順は `tests/perf_counts/README.md`。
 
 ## 意味は 1 か所で決め、症状の形ごとに直さない（2026-10-16 に承認）

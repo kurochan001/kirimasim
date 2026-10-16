@@ -1,8 +1,8 @@
-#include "haremasim/kernel/counters.h"
+#include "kirimasim/kernel/counters.h"
 
 #include <cstdio>
 
-namespace haremasim::kernel {
+namespace kirimasim::kernel {
 
 namespace {
 
@@ -58,4 +58,4 @@ std::string Counters::toJson() const {
     return out;
 }
 
-}  // namespace haremasim::kernel
+}  // namespace kirimasim::kernel

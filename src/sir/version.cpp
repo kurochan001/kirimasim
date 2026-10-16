@@ -1,7 +1,7 @@
-#include "haremasim/sir/version.h"
+#include "kirimasim/sir/version.h"
 
-namespace haremasim::sir {
+namespace kirimasim::sir {
 
 std::uint32_t formatVersion() { return 0; }
 
-}  // namespace haremasim::sir
+}  // namespace kirimasim::sir

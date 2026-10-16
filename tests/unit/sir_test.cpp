@@ -6,13 +6,13 @@
 
 #include <gtest/gtest.h>
 
-#include "haremasim/sir/design.h"
-#include "haremasim/sir/text.h"
-#include "haremasim/sir/verify.h"
+#include "kirimasim/sir/design.h"
+#include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verify.h"
 
 namespace {
 
-using namespace haremasim::sir;
+using namespace kirimasim::sir;
 
 SourceLoc at(std::uint32_t line, std::uint32_t col = 1) { return {0, line, col}; }
 

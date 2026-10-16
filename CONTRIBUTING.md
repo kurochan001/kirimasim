@@ -1,10 +1,10 @@
-# Contributing to haremasim
+# Contributing to kirimasim
 
-Thank you for your interest. haremasim is in early development (P0).
+Thank you for your interest. kirimasim is in early development (P0).
 
 ## What we accept for now
 
-For now, haremasim accepts **specification proposals and issues only**.
+For now, kirimasim accepts **specification proposals and issues only**.
 Only collaborators can open pull requests. When the project starts
 accepting more, this file and the README will say so.
 
@@ -28,7 +28,7 @@ things in your own words, and write your own minimal examples.
 
 ### When a specification proposal is accepted
 
-haremasim is implemented from its specifications. When a proposal is
+kirimasim is implemented from its specifications. When a proposal is
 accepted, a maintainer first updates the specification under `docs/spec/`,
 and the implementation then follows the updated specification. The
 proposal issue is linked from those changes.
@@ -45,7 +45,7 @@ outside.
 
 ## Use of AI tools
 
-AI tools are welcome, and most of haremasim's code is AI-generated. If an AI
+AI tools are welcome, and most of kirimasim's code is AI-generated. If an AI
 tool helped with a commit, say so with an `Assisted-by` trailer:
 
 ```text
@@ -78,11 +78,11 @@ they are protected:
 
 ## Rules for the code
 
-- C++23 for haremasim itself; the kernel's public headers
+- C++23 for kirimasim itself; the kernel's public headers
   (`src/kernel/include/`) must compile as C++20.
 - In `src/kernel/` and `src/vm/`, do not use `std::shared_ptr`,
   `dynamic_cast`, `std::function`, `getenv`, or `typeid`. `std::unordered_map`
-  and `std::unordered_set` need a `// haremasim: unordered-ok <reason>`
+  and `std::unordered_set` need a `// kirimasim: unordered-ok <reason>`
   comment on the same line or the line above, and their iteration order must
   never affect results. `tools/check_banned.py` checks this.
 - No mutable global or static state and no singletons; state belongs to a

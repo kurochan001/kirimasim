@@ -1,8 +1,8 @@
-// The haremasim command line (CLI.md).
+// The kirimasim command line (CLI.md).
 //
-//   haremasim [options] <file>... [+plusarg]...   compile and run
-//   haremasim parse [options] <file>...          parse and elaborate only
-//   haremasim --version | --help
+//   kirimasim [options] <file>... [+plusarg]...   compile and run
+//   kirimasim parse [options] <file>...          parse and elaborate only
+//   kirimasim --version | --help
 //
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-steps,
@@ -20,11 +20,11 @@
 #include <vector>
 
 #include "build_info.h"
-#include "haremasim/front/front.h"
-#include "haremasim/kernel/context.h"
-#include "haremasim/sir/text.h"
-#include "haremasim/sir/timescale.h"
-#include "haremasim/vm/vm.h"
+#include "kirimasim/front/front.h"
+#include "kirimasim/kernel/context.h"
+#include "kirimasim/sir/text.h"
+#include "kirimasim/sir/timescale.h"
+#include "kirimasim/vm/vm.h"
 
 namespace {
 
@@ -33,9 +33,9 @@ constexpr int kExitInputError = 2;
 constexpr int kExitInternalError = 3;
 
 void printUsage(std::FILE* out) {
-    std::fputs("usage: haremasim [options] <file>... [+plusarg]...\n"
-               "       haremasim parse [options] <file>...\n"
-               "       haremasim --version\n"
+    std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
+               "       kirimasim parse [options] <file>...\n"
+               "       kirimasim --version\n"
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-steps=<n>, --max-scc-iter=<n>, --dump-sir,\n"
@@ -44,13 +44,13 @@ void printUsage(std::FILE* out) {
 }
 
 std::string versionText() {
-    return std::string("haremasim ") + haremasim::driver::kVersion + " (commit " +
-           haremasim::driver::kCommit + ")";
+    return std::string("kirimasim ") + kirimasim::driver::kVersion + " (commit " +
+           kirimasim::driver::kCommit + ")";
 }
 
 void printVersion() {
-    std::printf("%s, built with %s %s\n", versionText().c_str(), haremasim::driver::kCompilerId,
-                haremasim::driver::kCompilerVersion);
+    std::printf("%s, built with %s %s\n", versionText().c_str(), kirimasim::driver::kCompilerId,
+                kirimasim::driver::kCompilerVersion);
 }
 
 struct Options {
@@ -102,7 +102,7 @@ int parseArgs(int argc, char** argv, Options& o) {
             if (!arg.starts_with(name) || arg.size() <= name.size() || arg[name.size()] != '=')
                 continue;
             if (!parseCount(arg, name, *field)) {
-                std::fprintf(stderr, "haremasim: error: %s needs a whole number\n", argv[i]);
+                std::fprintf(stderr, "kirimasim: error: %s needs a whole number\n", argv[i]);
                 return kExitInputError;
             }
             counted = true;
@@ -114,8 +114,8 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.maxTime = arg.substr(std::string_view("--max-time=").size());
             // The precision is not known yet; check the form with the
             // coarsest one, which can only fail on the form.
-            if (!haremasim::sir::parseTimeTicks(o.maxTime, haremasim::sir::kMaxTimeExponent)) {
-                std::fprintf(stderr, "haremasim: error: %s needs a time such as 10us or 1.5ns\n",
+            if (!kirimasim::sir::parseTimeTicks(o.maxTime, kirimasim::sir::kMaxTimeExponent)) {
+                std::fprintf(stderr, "kirimasim: error: %s needs a time such as 10us or 1.5ns\n",
                              argv[i]);
                 return kExitInputError;
             }
@@ -125,7 +125,7 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.dumpSir = true;
         } else if (arg == "-f" || arg == "--top") {
             if (i + 1 >= argc) {
-                std::fprintf(stderr, "haremasim: error: %s needs a value\n", argv[i]);
+                std::fprintf(stderr, "kirimasim: error: %s needs a value\n", argv[i]);
                 return kExitInputError;
             }
             o.slangArgs.emplace_back(arg);
@@ -139,7 +139,7 @@ int parseArgs(int argc, char** argv, Options& o) {
             else
                 o.plusargs.emplace_back(arg);
         } else if (arg.starts_with("-")) {
-            std::fprintf(stderr, "haremasim: error: unknown option '%s'\n", argv[i]);
+            std::fprintf(stderr, "kirimasim: error: unknown option '%s'\n", argv[i]);
             printUsage(stderr);
             return kExitInputError;
         } else if (o.command.empty() && o.slangArgs.empty() && arg == "parse") {
@@ -151,12 +151,12 @@ int parseArgs(int argc, char** argv, Options& o) {
     return -1;
 }
 
-int runParse(haremasim::kernel::Context& context, const Options& o) {
+int runParse(kirimasim::kernel::Context& context, const Options& o) {
     if (o.slangArgs.empty()) {
-        std::fputs("haremasim: error: parse needs at least one file\n", stderr);
+        std::fputs("kirimasim: error: parse needs at least one file\n", stderr);
         return kExitInputError;
     }
-    const auto result = haremasim::front::parseAndElaborate(o.slangArgs);
+    const auto result = kirimasim::front::parseAndElaborate(o.slangArgs);
     std::fputs(result.diagnostics.c_str(), stderr);
 
     auto& counters = context.counters();
@@ -168,20 +168,20 @@ int runParse(haremasim::kernel::Context& context, const Options& o) {
     return result.success ? kExitOk : kExitInputError;
 }
 
-int runDesign(haremasim::kernel::Context& context, const Options& o) {
+int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     if (o.slangArgs.empty()) {
-        std::fputs("haremasim: error: no input files\n", stderr);
+        std::fputs("kirimasim: error: no input files\n", stderr);
         printUsage(stderr);
         return kExitInputError;
     }
     if (!o.dumpSir) {
-        std::string line = "haremasim: info: " + versionText() + " args:";
+        std::string line = "kirimasim: info: " + versionText() + " args:";
         for (const auto& a : o.original)
             line += " " + a;
         std::fprintf(stderr, "%s\n", line.c_str());
     }
 
-    const auto compiled = haremasim::front::compile(o.slangArgs);
+    const auto compiled = kirimasim::front::compile(o.slangArgs);
     std::fputs(compiled.diagnostics.c_str(), stderr);
     if (!compiled.verifyErrors.empty()) {
         std::fputs(compiled.verifyErrors.c_str(), stderr);
@@ -190,10 +190,10 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
     if (!compiled.success) return kExitInputError;
 
     // The size of the SIR (PERFORMANCE.md 3.2).
-    const haremasim::sir::Design& d = compiled.design;
+    const kirimasim::sir::Design& d = compiled.design;
     std::uint64_t blocks = 0;
     std::uint64_t instrs = 0;
-    const auto count = [&](const std::vector<haremasim::sir::BasicBlock>& bs) {
+    const auto count = [&](const std::vector<kirimasim::sir::BasicBlock>& bs) {
         blocks += bs.size();
         for (const auto& b : bs)
             instrs += b.instrs.size();
@@ -210,51 +210,51 @@ int runDesign(haremasim::kernel::Context& context, const Options& o) {
     counters.set(counters.add("sir.instrs"), instrs);
 
     if (o.dumpSir) {
-        std::fputs(haremasim::sir::toText(d).c_str(), stdout);
+        std::fputs(kirimasim::sir::toText(d).c_str(), stdout);
         return kExitOk;
     }
 
     const int precision = compiled.design.timePrecision;
-    haremasim::kernel::Limits limits;
+    kirimasim::kernel::Limits limits;
     if (!o.maxTime.empty()) {
-        const auto ticks = haremasim::sir::parseTimeTicks(o.maxTime, precision);
+        const auto ticks = kirimasim::sir::parseTimeTicks(o.maxTime, precision);
         if (!ticks) {
             std::fprintf(stderr,
-                         "haremasim: error: --max-time=%s is too large for the time precision %s\n",
-                         o.maxTime.c_str(), haremasim::sir::timeExponentText(precision).c_str());
+                         "kirimasim: error: --max-time=%s is too large for the time precision %s\n",
+                         o.maxTime.c_str(), kirimasim::sir::timeExponentText(precision).c_str());
             return kExitInputError;
         }
         limits.maxTime = *ticks;
     }
     limits.maxZeroDelay = o.maxZeroDelay;
     context.scheduler().setLimits(limits);
-    const auto result = haremasim::vm::run(compiled.design, context, {o.maxSteps});
+    const auto result = kirimasim::vm::run(compiled.design, context, {o.maxSteps});
     context.output().flush();
     const auto reason = result.reason;
-    if (reason == haremasim::kernel::EndReason::Internal) {
-        std::fprintf(stderr, "haremasim: internal error: %s\n", result.error.c_str());
+    if (reason == kirimasim::kernel::EndReason::Internal) {
+        std::fprintf(stderr, "kirimasim: internal error: %s\n", result.error.c_str());
     } else {
         if (!context.scheduler().endNote().empty())
-            std::fprintf(stderr, "haremasim: error: time did not advance: %s\n",
+            std::fprintf(stderr, "kirimasim: error: time did not advance: %s\n",
                          context.scheduler().endNote().c_str());
-        const bool silent = (reason == haremasim::kernel::EndReason::Finish ||
-                             reason == haremasim::kernel::EndReason::Stop) &&
+        const bool silent = (reason == kirimasim::kernel::EndReason::Finish ||
+                             reason == kirimasim::kernel::EndReason::Stop) &&
                             context.scheduler().level() == 0;
         if (!silent) {
-            std::fprintf(stderr, "haremasim: info: %s at %s\n",
-                         haremasim::kernel::endReasonName(reason),
-                         haremasim::sir::timeText(context.scheduler().time(), precision).c_str());
+            std::fprintf(stderr, "kirimasim: info: %s at %s\n",
+                         kirimasim::kernel::endReasonName(reason),
+                         kirimasim::sir::timeText(context.scheduler().time(), precision).c_str());
         }
     }
-    if (reason == haremasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;
-    return haremasim::kernel::exitCode(reason);
+    if (reason == kirimasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;
+    return kirimasim::kernel::exitCode(reason);
 }
 
 int run(int argc, char** argv) {
     Options o;
     if (const int code = parseArgs(argc, argv, o); code >= 0) return code;
 
-    haremasim::kernel::Context context;
+    kirimasim::kernel::Context context;
     const int code = o.command == "parse" ? runParse(context, o) : runDesign(context, o);
     if (o.statsJson) {
         // The JSON is the last line of stdout (PERFORMANCE.md 3.1).
@@ -270,9 +270,9 @@ int main(int argc, char** argv) {
     try {
         return run(argc, argv);
     } catch (const std::exception& e) {
-        std::fprintf(stderr, "haremasim: internal error: %s\n", e.what());
+        std::fprintf(stderr, "kirimasim: internal error: %s\n", e.what());
     } catch (...) {
-        std::fputs("haremasim: internal error: unknown exception\n", stderr);
+        std::fputs("kirimasim: internal error: unknown exception\n", stderr);
     }
     return kExitInternalError;
 }

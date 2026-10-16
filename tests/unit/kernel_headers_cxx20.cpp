@@ -1,16 +1,16 @@
 // Includes every public kernel header so that they are compiled as C++20.
-// Keep this list in sync with src/kernel/include/haremasim/kernel/.
+// Keep this list in sync with src/kernel/include/kirimasim/kernel/.
 
-#include "haremasim/kernel/abi.h"
-#include "haremasim/kernel/bits.h"
-#include "haremasim/kernel/context.h"
-#include "haremasim/kernel/counters.h"
-#include "haremasim/kernel/edge.h"
-#include "haremasim/kernel/format.h"
-#include "haremasim/kernel/sim.h"
-#include "haremasim/kernel/store.h"
-#include "haremasim/kernel/strings.h"
-#include "haremasim/kernel/w4.h"
-#include "haremasim/kernel/w4ops.h"
+#include "kirimasim/kernel/abi.h"
+#include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/context.h"
+#include "kirimasim/kernel/counters.h"
+#include "kirimasim/kernel/edge.h"
+#include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/sim.h"
+#include "kirimasim/kernel/store.h"
+#include "kirimasim/kernel/strings.h"
+#include "kirimasim/kernel/w4.h"
+#include "kirimasim/kernel/w4ops.h"
 
 static_assert(__cplusplus == 202002L, "this file must be compiled as C++20");

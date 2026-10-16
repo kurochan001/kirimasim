@@ -21,7 +21,7 @@
 #include "slang/ast/statements/MiscStatements.h"
 #include "slang/ast/types/Type.h"
 
-namespace haremasim::front {
+namespace kirimasim::front {
 
 namespace {
 
@@ -620,4 +620,4 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
     }
 }
 
-}  // namespace haremasim::front
+}  // namespace kirimasim::front

@@ -9,13 +9,13 @@ pass/fail strings such as "TEST PASSED", the names of test metadata
 (should_fail, expected_stdout and the like), and string literals that pick
 out files or libraries by name: "-fail.sv", "/uvm/", "/testbenches/", or a
 UVM class or package name ("uvm_..."). A line may carry
-    // haremasim: banned-ok <reason>
+    // kirimasim: banned-ok <reason>
 (or have it on the line just above) where such a string is needed for
 another purpose; reviews look at every waiver.
 
 std::unordered_map and std::unordered_set are allowed only when the same line
 or the line just above carries a comment of the form
-    // haremasim: unordered-ok <reason>
+    // kirimasim: unordered-ok <reason>
 (their iteration order is unspecified, so they must not affect results).
 
 Violations are printed as file:line. Comments are not ignored: write the
@@ -46,9 +46,9 @@ SUITE_KNOWLEDGE = [
      "a file name or path test"),
     (re.compile(r'"uvm_[A-Za-z0-9_]*'), "a UVM name"),
 ]
-SUITE_WAIVER = re.compile(r"//\s*haremasim:\s*banned-ok\s+\S")
+SUITE_WAIVER = re.compile(r"//\s*kirimasim:\s*banned-ok\s+\S")
 UNORDERED = re.compile(r"\bstd\s*::\s*unordered_(?:map|set)\b")
-WAIVER = re.compile(r"//\s*haremasim:\s*unordered-ok\s+\S")
+WAIVER = re.compile(r"//\s*kirimasim:\s*unordered-ok\s+\S")
 
 
 def check_suite_knowledge(path: Path, display: str) -> list[str]:
@@ -76,7 +76,7 @@ def check_file(path: Path, display: str) -> list[str]:
             if not (WAIVER.search(line) or WAIVER.search(prev)):
                 errors.append(
                     f"{display}:{i + 1}: unordered container without "
-                    "'// haremasim: unordered-ok <reason>'")
+                    "'// kirimasim: unordered-ok <reason>'")
     return errors
 
 

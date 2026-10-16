@@ -2,12 +2,12 @@
 
 #pragma once
 
-namespace haremasim::driver {
+namespace kirimasim::driver {
 
 inline constexpr const char* kVersion = "@PROJECT_VERSION@";
 // The commit is captured when CMake configures the build tree.
-inline constexpr const char* kCommit = "@HAREMASIM_GIT_COMMIT@";
+inline constexpr const char* kCommit = "@KIRIMASIM_GIT_COMMIT@";
 inline constexpr const char* kCompilerId = "@CMAKE_CXX_COMPILER_ID@";
 inline constexpr const char* kCompilerVersion = "@CMAKE_CXX_COMPILER_VERSION@";
 
-}  // namespace haremasim::driver
+}  // namespace kirimasim::driver

@@ -1,4 +1,4 @@
-#include "haremasim/sir/timescale.h"
+#include "kirimasim/sir/timescale.h"
 
 #include <algorithm>
 #include <array>
@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 
-namespace haremasim::sir {
+namespace kirimasim::sir {
 
 namespace {
 
@@ -196,4 +196,4 @@ std::string timeText(std::uint64_t ticks, int global) {
     return inUnit(std::to_string(ticks), exponent);
 }
 
-}  // namespace haremasim::sir
+}  // namespace kirimasim::sir

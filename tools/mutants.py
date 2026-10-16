@@ -22,20 +22,20 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
-    ("kernel and4: x & 0 is x", "src/kernel/include/haremasim/kernel/w4.h",
+    ("kernel and4: x & 0 is x", "src/kernel/include/kirimasim/kernel/w4.h",
      "(~x.a & ~x.b) | (~y.a & ~y.b);  // either side is a known 0",
      "(~x.a & ~x.b) & (~y.a & ~y.b);  // either side is a known 0"),
-    ("kernel or4: x | 1 is x", "src/kernel/include/haremasim/kernel/w4ops.h",
+    ("kernel or4: x | 1 is x", "src/kernel/include/kirimasim/kernel/w4ops.h",
      "(~x.a & ~x.b) & (~y.a & ~y.b);  // both sides are known 0",
      "(~x.a & ~x.b) | (~y.a & ~y.b);  // both sides are known 0"),
-    ("kernel casex compares x", "src/kernel/include/haremasim/kernel/w4ops.h",
+    ("kernel casex compares x", "src/kernel/include/kirimasim/kernel/w4ops.h",
      "if (ignoreX) ignored |= x.b | y.b;", "if (ignoreX) ignored |= 0;"),
     ("valsem casez looks at one side", "src/valsem/value.cpp",
      "if (ignored(a) || ignored(b)) continue;", "if (ignored(a)) continue;"),
     ("valsem 1 & x is 1", "src/valsem/logic.cpp",
      "/* 0 */ {Zero, Zero, Zero, Zero},\n        /* 1 */ {Zero, One, X, X},",
      "/* 0 */ {Zero, Zero, Zero, Zero},\n        /* 1 */ {Zero, One, One, X},"),
-    ("edge: x -> 1 is no posedge", "src/kernel/include/haremasim/kernel/edge.h",
+    ("edge: x -> 1 is no posedge", "src/kernel/include/kirimasim/kernel/edge.h",
      "(from >= 2 && to == 1)", "(from == 2 && to == 1)"),
     ("scheduler: NBA in the Inactive region", "src/kernel/sim.cpp",
      "counters_.increment(cNbaScheduled_);\n"

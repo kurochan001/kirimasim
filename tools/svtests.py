@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Runs the sv-tests simulation tests with haremasim and Icarus and compares.
+"""Runs the sv-tests simulation tests with kirimasim and Icarus and compares.
 
 This is the first P1 gate of TEST_SUITE.md ("sv-tests で Icarus 以上"):
 
@@ -11,7 +11,7 @@ This is the first P1 gate of TEST_SUITE.md ("sv-tests で Icarus 以上"):
   fail (nonzero exit), otherwise it must succeed (0); a simulation test
   must also print no :assert: line whose expression is false. The time
   limit is :timeout: seconds (30 by default).
-* For haremasim only, a test that should fail does not pass when haremasim
+* For kirimasim only, a test that should fail does not pass when kirimasim
   fails because of an unsupported construct.
 * Tests tagged with a library of conf/runners/libs.json (uvm) get its files
   from third_party, as sv-tests does.
@@ -21,7 +21,7 @@ compiled program. Use the build of tools/build_icarus.sh.
 
 Writes results.json (every test, every tool) and summary.md (totals and
 counts per chapter) to --out, and prints the summary. With --gate, the exit
-code is 1 when haremasim passes fewer tests than Icarus.
+code is 1 when kirimasim passes fewer tests than Icarus.
 """
 
 import argparse
@@ -77,7 +77,7 @@ def run(cmd: list[str], cwd: str, timeout: int) -> tuple[int, str]:
         return TIMEOUT_RC, f"Timeout: > {timeout}s\n"
 
 
-def run_haremasim(exe: str, files, incdirs, defines, top, cwd, timeout):
+def run_kirimasim(exe: str, files, incdirs, defines, top, cwd, timeout):
     cmd = [exe] + [f"+incdir+{d}" for d in incdirs] + [f"+define+{d}" for d in defines]
     if top:
         cmd.append(f"--top={top}")
@@ -96,12 +96,12 @@ def run_icarus(exe: str, files, incdirs, defines, top, cwd, timeout):
     return rc2, log + log2
 
 
-def judge(rc: int, log: str, should_fail: bool, haremasim: bool) -> bool:
+def judge(rc: int, log: str, should_fail: bool, kirimasim: bool) -> bool:
     if rc >= CRASH:
         return False
     if should_fail != (rc != 0):
         return False
-    if should_fail and haremasim and "error: unsupported:" in log:
+    if should_fail and kirimasim and "error: unsupported:" in log:
         return False
     return assert_ok(log)
 
@@ -114,12 +114,12 @@ def chapter(tags: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--sv-tests", required=True, type=Path, help="sv-tests checkout")
-    ap.add_argument("--haremasim", help="haremasim executable")
+    ap.add_argument("--kirimasim", help="kirimasim executable")
     ap.add_argument("--iverilog", help="iverilog of tools/build_icarus.sh")
     ap.add_argument("--out", type=Path, default=Path("build/svtests"))
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
     ap.add_argument("--filter", default="", help="only tests whose path contains this")
-    ap.add_argument("--gate", action="store_true", help="exit 1 if haremasim < Icarus")
+    ap.add_argument("--gate", action="store_true", help="exit 1 if kirimasim < Icarus")
     args = ap.parse_args()
 
     root = args.sv_tests.resolve()
@@ -139,8 +139,8 @@ def main() -> int:
         tests.append((path, params))
 
     tools = {}
-    if args.haremasim:
-        tools["haremasim"] = (run_haremasim, str(Path(args.haremasim).resolve()))
+    if args.kirimasim:
+        tools["kirimasim"] = (run_kirimasim, str(Path(args.kirimasim).resolve()))
     if args.iverilog:
         tools["icarus"] = (run_icarus, str(Path(args.iverilog).resolve()))
 
@@ -160,7 +160,7 @@ def main() -> int:
             with tempfile.TemporaryDirectory() as tmp:
                 rc, log = fn(exe, files, incdirs, defines, params["top_module"], tmp,
                              int(params["timeout"]))
-            result[name] = {"rc": rc, "pass": judge(rc, log, should_fail, name == "haremasim"),
+            result[name] = {"rc": rc, "pass": judge(rc, log, should_fail, name == "kirimasim"),
                             "unsupported": "error: unsupported:" in log}
         return result
 
@@ -181,15 +181,15 @@ def main() -> int:
         counts = [str(sum(1 for r in rows if r[n]["pass"])) for n in names]
         label = "**total**" if c == "total" else c
         lines.append(f"| {label} | {len(rows)} | " + " | ".join(counts) + " |")
-    if "haremasim" in tools:
-        unsupported = sum(1 for r in results if r["haremasim"]["unsupported"])
-        lines += ["", f"haremasim stopped at an unsupported construct in {unsupported} tests."]
+    if "kirimasim" in tools:
+        unsupported = sum(1 for r in results if r["kirimasim"]["unsupported"])
+        lines += ["", f"kirimasim stopped at an unsupported construct in {unsupported} tests."]
     summary = "\n".join(lines) + "\n"
     (args.out / "summary.md").write_text(summary, encoding="utf-8")
     print(summary, end="")
 
     if args.gate and len(names) == 2:
-        h = sum(1 for r in results if r["haremasim"]["pass"])
+        h = sum(1 for r in results if r["kirimasim"]["pass"])
         i = sum(1 for r in results if r["icarus"]["pass"])
         return 0 if h >= i else 1
     return 0

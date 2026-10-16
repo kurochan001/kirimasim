@@ -1,4 +1,4 @@
-#include "haremasim/front/front.h"
+#include "kirimasim/front/front.h"
 
 #include <memory>
 #include <vector>
@@ -7,7 +7,7 @@
 #include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/driver/Driver.h"
 
-namespace haremasim::front {
+namespace kirimasim::front {
 
 ParseResult parseAndElaborate(std::span<const std::string> files) {
     ParseResult result;
@@ -17,7 +17,7 @@ ParseResult parseAndElaborate(std::span<const std::string> files) {
     driver.addStandardArgs();
 
     std::vector<const char*> argv;
-    argv.push_back("haremasim");
+    argv.push_back("kirimasim");
     argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
     for (const auto& f : files)
         argv.push_back(f.c_str());
@@ -42,4 +42,4 @@ ParseResult parseAndElaborate(std::span<const std::string> files) {
     return result;
 }
 
-}  // namespace haremasim::front
+}  // namespace kirimasim::front

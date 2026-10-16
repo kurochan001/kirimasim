@@ -1,4 +1,4 @@
-#include "haremasim/sir/verify.h"
+#include "kirimasim/sir/verify.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -8,11 +8,11 @@
 #include <utility>
 #include <vector>
 
-#include "haremasim/sir/text.h"
-#include "haremasim/sir/timescale.h"
-#include "haremasim/sir/types.h"
+#include "kirimasim/sir/text.h"
+#include "kirimasim/sir/timescale.h"
+#include "kirimasim/sir/types.h"
 
-namespace haremasim::sir {
+namespace kirimasim::sir {
 
 namespace {
 
@@ -1220,4 +1220,4 @@ private:
 
 std::vector<VerifyError> verify(const Design& design) { return Verifier(design).run(); }
 
-}  // namespace haremasim::sir
+}  // namespace kirimasim::sir

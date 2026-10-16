@@ -1,4 +1,4 @@
-# haremasim architecture
+# kirimasim architecture
 
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/) (headings only during P0).
@@ -72,7 +72,7 @@ Dependencies run only in the directions listed here.
 | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P3 |
 | `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P3 |
 | `valsem` | Reference implementations of value semantics | nothing | One-bit four-state AND |
-| `driver` | The `haremasim` command line | everything | `--version`, `parse`, `--stats=json` |
+| `driver` | The `kirimasim` command line | everything | `--version`, `parse`, `--stats=json` |
 
 Rules that follow from this layout:
 

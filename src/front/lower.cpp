@@ -16,10 +16,10 @@
 #include <string_view>
 #include <vector>
 
-#include "haremasim/front/front.h"
-#include "haremasim/sir/timescale.h"
-#include "haremasim/sir/types.h"
-#include "haremasim/sir/verify.h"
+#include "kirimasim/front/front.h"
+#include "kirimasim/sir/timescale.h"
+#include "kirimasim/sir/types.h"
+#include "kirimasim/sir/verify.h"
 #include "lowerer.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
@@ -33,7 +33,7 @@
 #include "slang/driver/Driver.h"
 #include "slang/numeric/Time.h"
 
-namespace haremasim::front {
+namespace kirimasim::front {
 
 namespace {
 
@@ -196,7 +196,7 @@ void Lowerer::report(slang::SourceLocation sl, std::string_view what) {
         diags_ += std::string(sm_.getFileName(sl)) + ":" + std::to_string(sm_.getLineNumber(sl)) +
                   ":" + std::to_string(sm_.getColumnNumber(sl)) + ": ";
     } else {
-        diags_ += "haremasim: ";
+        diags_ += "kirimasim: ";
     }
     diags_ += "error: unsupported: ";
     diags_ += what;
@@ -409,7 +409,7 @@ void Lowerer::finishDesign() {
 
 void Lowerer::checkWriters() {
     // A variable that always_comb, always_latch or always_ff writes has no
-    // other writer (9.2.2.2, 9.2.2.4); haremasim checks it here, at
+    // other writer (9.2.2.2, 9.2.2.4); kirimasim checks it here, at
     // elaboration (SCHEDULER_SPEC.md 6.4).
     const auto exclusive = [](sir::ProcessKind k) {
         return k == sir::ProcessKind::Comb || k == sir::ProcessKind::Latch ||
@@ -651,7 +651,7 @@ CompileResult compile(std::span<const std::string> args) {
     driver.addStandardArgs();
 
     std::vector<const char*> argv;
-    argv.push_back("haremasim");
+    argv.push_back("kirimasim");
     argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
     for (const auto& a : args)
         argv.push_back(a.c_str());
@@ -685,10 +685,10 @@ CompileResult compile(std::span<const std::string> args) {
     result.design = lowerer.takeDesign();
     for (const sir::VerifyError& e : sir::verify(result.design)) {
         result.verifyErrors +=
-            "haremasim: internal error: SIR verifier: " + e.where + ": " + e.message + "\n";
+            "kirimasim: internal error: SIR verifier: " + e.where + ": " + e.message + "\n";
     }
     result.success = result.verifyErrors.empty();
     return result;
 }
 
-}  // namespace haremasim::front
+}  // namespace kirimasim::front

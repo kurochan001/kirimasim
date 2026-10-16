@@ -1,15 +1,15 @@
-#include "haremasim/kernel/sim.h"
+#include "kirimasim/kernel/sim.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <string>
 #include <utility>
 
-#include "haremasim/kernel/bits.h"
-#include "haremasim/kernel/context.h"
-#include "haremasim/kernel/edge.h"
+#include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/context.h"
+#include "kirimasim/kernel/edge.h"
 
-namespace haremasim::kernel {
+namespace kirimasim::kernel {
 
 namespace {
 
@@ -756,4 +756,4 @@ void Output::message(std::string_view line) {
     std::fputc('\n', stderr);
 }
 
-}  // namespace haremasim::kernel
+}  // namespace kirimasim::kernel

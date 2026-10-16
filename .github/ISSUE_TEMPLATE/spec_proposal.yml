@@ -1,11 +1,11 @@
 name: Specification proposal
-description: Propose a change or addition to a haremasim specification document
+description: Propose a change or addition to a kirimasim specification document
 labels: ["spec-proposal"]
 body:
   - type: markdown
     attributes:
       value: |
-        haremasim is implemented from its specifications under `docs/spec/`,
+        kirimasim is implemented from its specifications under `docs/spec/`,
         so proposals to those documents are the main way to shape the
         project. If a proposal is accepted, a maintainer updates the
         specification, and the implementation follows it.

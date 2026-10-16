@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace haremasim::test {
+namespace kirimasim::test {
 
 /// How many times the default number of rounds to run (at least 1).
 inline std::uint64_t fuzzScale() {
@@ -32,4 +32,4 @@ inline std::string fuzzSetting(std::uint64_t seed) {
     return "seed " + std::to_string(seed) + ", HS_FUZZ_SCALE=" + std::to_string(fuzzScale());
 }
 
-}  // namespace haremasim::test
+}  // namespace kirimasim::test

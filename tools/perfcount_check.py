@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Checks event counts against tests/perf_counts/expected.json.
 
-For every test file listed in expected.json, runs haremasim with
+For every test file listed in expected.json, runs kirimasim with
 --stats=json and compares each counter with its expected value
 (PERFORMANCE.md 4). A test whose :type: includes "simulation" is run to its
-end (`haremasim --stats=json <file>`), any other only parsed
-(`haremasim --stats=json parse <file>`); the JSON is the last line of
+end (`kirimasim --stats=json <file>`), any other only parsed
+(`kirimasim --stats=json parse <file>`); the JSON is the last line of
 standard output. The check fails when a counter is 10% or more above its
 expected value (any increase from an expected 0 counts), when a text
 counter such as sim.end_reason differs, when an expected counter is
@@ -41,7 +41,7 @@ def is_simulation(path: Path) -> bool:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--haremasim", required=True, help="path to the haremasim executable")
+    ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     ap.add_argument("--expected", required=True, type=Path, help="expected.json")
     ap.add_argument("--root", required=True, type=Path,
                     help="repository root; paths in expected.json are relative to it")
@@ -51,7 +51,7 @@ def main() -> int:
     failures: list[str] = []
     for test, expected in sorted(expected_all.items()):
         path = args.root / test
-        cmd = [args.haremasim, "--stats=json"]
+        cmd = [args.kirimasim, "--stats=json"]
         if not is_simulation(path):
             cmd.append("parse")
         proc = subprocess.run(cmd + [str(path)], capture_output=True, text=True, check=False)

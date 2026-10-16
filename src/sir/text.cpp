@@ -1,4 +1,4 @@
-#include "haremasim/sir/text.h"
+#include "kirimasim/sir/text.h"
 
 #include <array>
 #include <bit>
@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "haremasim/sir/timescale.h"
-#include "haremasim/sir/types.h"
+#include "kirimasim/sir/timescale.h"
+#include "kirimasim/sir/types.h"
 
-namespace haremasim::sir {
+namespace kirimasim::sir {
 
 namespace {
 
@@ -317,4 +317,4 @@ std::string toText(const Design& d) {
     return out;
 }
 
-}  // namespace haremasim::sir
+}  // namespace kirimasim::sir

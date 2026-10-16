@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "haremasim/kernel/context.h"
+#include "kirimasim/kernel/context.h"
 
 namespace {
 
-using haremasim::kernel::Context;
+using kirimasim::kernel::Context;
 
 TEST(Counters, KeepInsertionOrderInJson) {
     Context context;

@@ -6,7 +6,7 @@
 #
 # The commit is the one pinned by sv-tests. The source is fetched and built
 # only; nothing here reads it (clean room, CLAUDE.md). The default install
-# directory is $XDG_CACHE_HOME/haremasim/icarus-<commit> (or ~/.cache/...).
+# directory is $XDG_CACHE_HOME/kirimasim/icarus-<commit> (or ~/.cache/...).
 # Prints the path of iverilog when done. Building again is skipped if the
 # install directory already has it.
 #
@@ -18,7 +18,7 @@ set -eu
 COMMIT=04cc493506bd4d75c861cfc9961e2a56517d7cc6
 URL=https://github.com/steveicarus/iverilog.git
 
-CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/haremasim
+CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/kirimasim
 PREFIX=${1:-$CACHE/icarus-$COMMIT}
 if [ -x "$PREFIX/bin/iverilog" ]; then
     echo "$PREFIX/bin/iverilog"

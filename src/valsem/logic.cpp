@@ -1,6 +1,6 @@
-#include "haremasim/valsem/logic.h"
+#include "kirimasim/valsem/logic.h"
 
-namespace haremasim::valsem {
+namespace kirimasim::valsem {
 
 namespace {
 
@@ -84,4 +84,4 @@ bool isNegedge(Logic from, Logic to) {
     return table[idx(from)][idx(to)];
 }
 
-}  // namespace haremasim::valsem
+}  // namespace kirimasim::valsem

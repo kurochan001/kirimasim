@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Runs one test-suite file through haremasim and checks the result.
+"""Runs one test-suite file through kirimasim and checks the result.
 
 The test's metadata header (sv-tests style, inside the first /* ... */
 comment) decides what is expected:
 
-* With :should_fail_because:, `haremasim parse` must exit with code 2, and
+* With :should_fail_because:, `kirimasim parse` must exit with code 2, and
   stderr must contain "<file name>:<value of :expected_error:>", so that the
   test fails if the error comes from some unrelated place.
-* Otherwise `haremasim parse` must succeed (exit code 0). Then, for a test
+* Otherwise `kirimasim parse` must succeed (exit code 0). Then, for a test
   whose :type: includes "simulation", the design is run and its standard
   output is compared with :expected_stdout:, the exit code with
-  :expected_exit: (0 when absent) and, with :expected_stderr:, haremasim's
+  :expected_exit: (0 when absent) and, with :expected_stderr:, kirimasim's
   own warning and error lines with the given file (TEST_SUITE.md). A design that
-  uses a construct haremasim does not support yet (exit code 2 with an
+  uses a construct kirimasim does not support yet (exit code 2 with an
   "unsupported" error, CLI.md 5) is reported as skipped, not as passed.
 
 Standard output is compared line by line without empty lines (lines of
@@ -62,7 +62,7 @@ def expected_outputs(test: Path, meta: dict[str, str]) -> list[list[str]] | None
 
 
 def message_lines(stderr: str, test: Path) -> list[str]:
-    """haremasim's warning and error lines (CLI.md 4): "haremasim: <kind>:" or
+    """kirimasim's warning and error lines (CLI.md 4): "kirimasim: <kind>:" or
     "<file>:<line>...: <kind>:". Paths are cut to start at the test's file
     name. Lines of other programs (an allocator's warning) are left out."""
     out = []
@@ -71,7 +71,7 @@ def message_lines(stderr: str, test: Path) -> list[str]:
         if not m:
             continue
         where = m.group(1)
-        if where != "haremasim" and not re.search(r":\d+(:\d+)?$", where):
+        if where != "kirimasim" and not re.search(r":\d+(:\d+)?$", where):
             continue
         i = line.find(test.name)
         out.append(line[i:] if 0 <= i < len(where) else line)
@@ -110,13 +110,13 @@ def check_failure(args, meta, proc) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--haremasim", required=True, help="path to the haremasim executable")
+    ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     ap.add_argument("test", type=Path, help="test-suite .sv file")
     args = ap.parse_args()
 
     meta = read_metadata(args.test)
     proc = subprocess.run(
-        [args.haremasim, "parse", str(args.test)],
+        [args.kirimasim, "parse", str(args.test)],
         capture_output=True,
         text=True,
         check=False,
@@ -132,7 +132,7 @@ def main() -> int:
         return 0
 
     run = subprocess.run(
-        [args.haremasim, str(args.test)],
+        [args.kirimasim, str(args.test)],
         capture_output=True,
         text=True,
         check=False,

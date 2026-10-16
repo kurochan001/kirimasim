@@ -129,7 +129,7 @@ jobs:
       - name: Cache the Icarus build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/haremasim
+          path: ~/.cache/kirimasim
           key: icarus-${{ hashFiles('tools/build_icarus.sh') }}
 
       - name: Install the tools to build Icarus
@@ -142,7 +142,7 @@ jobs:
       - name: Fuzz against valsem and the reference scheduler
         run: |
           HS_FUZZ_SCALE=100 HS_FUZZ_SEED=$(date -u +%Y%m%d) \
-            build/release/tests/unit/haremasim_unit_tests \
+            build/release/tests/unit/kirimasim_unit_tests \
             --gtest_filter='W4Ops.*:Valsem.*:Scheduler.*'
 
       # sv-tests gate: the pinned sv-tests commit with its UVM submodule.
@@ -154,24 +154,24 @@ jobs:
             15490e95fd978ada1c1dc59b7c4b53a7edb23b78
           git -C sv-tests checkout -q FETCH_HEAD
           git -C sv-tests submodule update -q --init --depth 1 third_party/tests/uvm
-          python3 tools/svtests.py --sv-tests sv-tests --haremasim build/release/src/driver/haremasim \
+          python3 tools/svtests.py --sv-tests sv-tests --kirimasim build/release/src/driver/kirimasim \
             --iverilog "$iverilog" --out build/svtests | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Own-suite gate: needs read access to the test-suite repository while
-      # it is private (secret HAREMASIM_TESTS_TOKEN); skipped without it.
+      # it is private (secret KIRIMASIM_TESTS_TOKEN); skipped without it.
       - name: Own suite, P1 population
         env:
-          TOKEN: ${{ secrets.HAREMASIM_TESTS_TOKEN }}
+          TOKEN: ${{ secrets.KIRIMASIM_TESTS_TOKEN }}
         run: |
           if [ -z "$TOKEN" ]; then
-            echo "skipped: no HAREMASIM_TESTS_TOKEN" | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "skipped: no KIRIMASIM_TESTS_TOKEN" | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          commit=$(head -1 tests/gates/p1_population.txt | sed -n 's/.*haremasim-tests \([0-9a-f]*\),.*/\1/p')
-          git clone -q "https://x-access-token:${TOKEN}@github.com/kurochan001/haremasim-tests.git" suite
+          commit=$(head -1 tests/gates/p1_population.txt | sed -n 's/.*kirimasim-tests \([0-9a-f]*\),.*/\1/p')
+          git clone -q "https://x-access-token:${TOKEN}@github.com/kurochan001/kirimasim-tests.git" suite
           git -C suite checkout -q "$commit"
           python3 tools/p1_population.py run --tests-repo suite \
-            --haremasim build/release/src/driver/haremasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
+            --kirimasim build/release/src/driver/kirimasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
 
   # Negative controls (TEST_SUITE.md): each known mistake put into the
   # sources must make some test fail.

@@ -12,5 +12,5 @@ disclosure with you.
 
 ## Supported versions
 
-haremasim has not made a release yet. Until it does, only the latest commit
+kirimasim has not made a release yet. Until it does, only the latest commit
 on `main` is supported.

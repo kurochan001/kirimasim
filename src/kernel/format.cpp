@@ -1,4 +1,4 @@
-#include "haremasim/kernel/format.h"
+#include "kirimasim/kernel/format.h"
 
 #include <algorithm>
 #include <array>
@@ -10,7 +10,7 @@
 #include <string_view>
 #include <vector>
 
-namespace haremasim::kernel {
+namespace kirimasim::kernel {
 
 namespace {
 
@@ -344,4 +344,4 @@ std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& t
     return padLeft(digits + tf.suffix, w, ' ');
 }
 
-}  // namespace haremasim::kernel
+}  // namespace kirimasim::kernel

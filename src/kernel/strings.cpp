@@ -1,6 +1,6 @@
-#include "haremasim/kernel/strings.h"
+#include "kirimasim/kernel/strings.h"
 
-namespace haremasim::kernel {
+namespace kirimasim::kernel {
 
 std::uint64_t Strings::intern(std::string_view s) {
     if (s.empty()) return 0;
@@ -12,4 +12,4 @@ std::uint64_t Strings::intern(std::string_view s) {
     return h;
 }
 
-}  // namespace haremasim::kernel
+}  // namespace kirimasim::kernel

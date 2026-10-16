@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks `haremasim --dump-sir` against an expected SIR text.
+"""Checks `kirimasim --dump-sir` against an expected SIR text.
 
 The test runs in the directory of the .sv file and passes only the file
 name, so that the source paths in the SIR text do not depend on where the
@@ -15,13 +15,13 @@ from pathlib import Path
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--haremasim", required=True, help="path to the haremasim executable")
+    ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     ap.add_argument("test", type=Path, help="the .sv file")
     args = ap.parse_args()
 
     expected = args.test.with_suffix(".expected").read_text(encoding="utf-8")
     proc = subprocess.run(
-        [args.haremasim, "--dump-sir", args.test.name],
+        [args.kirimasim, "--dump-sir", args.test.name],
         cwd=args.test.parent,
         capture_output=True,
         text=True,

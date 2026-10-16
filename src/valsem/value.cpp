@@ -1,8 +1,8 @@
-#include "haremasim/valsem/value.h"
+#include "kirimasim/valsem/value.h"
 
 #include <cstddef>
 
-namespace haremasim::valsem {
+namespace kirimasim::valsem {
 
 namespace {
 
@@ -420,4 +420,4 @@ Value to2(const Value& x) {
     return out;
 }
 
-}  // namespace haremasim::valsem
+}  // namespace kirimasim::valsem

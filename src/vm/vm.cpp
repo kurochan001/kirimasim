@@ -1,4 +1,4 @@
-#include "haremasim/vm/vm.h"
+#include "kirimasim/vm/vm.h"
 
 #include <algorithm>
 #include <bit>
@@ -14,12 +14,12 @@
 #include <utility>
 #include <vector>
 
-#include "haremasim/kernel/bits.h"
-#include "haremasim/kernel/format.h"
-#include "haremasim/kernel/w4ops.h"
-#include "haremasim/sir/types.h"
+#include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/w4ops.h"
+#include "kirimasim/sir/types.h"
 
-namespace haremasim::vm {
+namespace kirimasim::vm {
 
 namespace {
 
@@ -1577,4 +1577,4 @@ RunResult run(const sir::Design& design, kernel::Context& context, const RunOpti
     return Interpreter(design, context, options).run();
 }
 
-}  // namespace haremasim::vm
+}  // namespace kirimasim::vm

@@ -6,6 +6,6 @@ foreach(sv ${suite_files})
     string(REGEX REPLACE "\\.sv$" "" test_name "${rel}")
     add_test(NAME suite/${test_name}
         COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/run_suite_test.py
-            --haremasim $<TARGET_FILE:haremasim> ${sv})
+            --kirimasim $<TARGET_FILE:kirimasim> ${sv})
     set_tests_properties(suite/${test_name} PROPERTIES LABELS Suite SKIP_RETURN_CODE 77)
 endforeach()

@@ -1,8 +1,8 @@
-#include "haremasim/kernel/store.h"
+#include "kirimasim/kernel/store.h"
 
-#include "haremasim/kernel/bits.h"
+#include "kirimasim/kernel/bits.h"
 
-namespace haremasim::kernel {
+namespace kirimasim::kernel {
 
 SlotId Store::add(Domain domain, std::uint32_t width, std::uint32_t elements, Init init) {
     SlotLayout l;
@@ -29,4 +29,4 @@ SlotId Store::add(Domain domain, std::uint32_t width, std::uint32_t elements, In
     return static_cast<SlotId>(slots_.size() - 1);
 }
 
-}  // namespace haremasim::kernel
+}  // namespace kirimasim::kernel

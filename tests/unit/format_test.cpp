@@ -8,11 +8,11 @@
 
 #include <gtest/gtest.h>
 
-#include "haremasim/kernel/format.h"
+#include "kirimasim/kernel/format.h"
 
 namespace {
 
-using namespace haremasim::kernel;
+using namespace kirimasim::kernel;
 
 /// A four-state value from 0, 1, x and z, most significant first.
 struct Bits {

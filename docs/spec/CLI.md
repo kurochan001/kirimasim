@@ -2,14 +2,14 @@
 
 優先度：P1。状態：**承認済み（2026-10-15）**。2026-10-16 に、`--max-time` の書き方と打ち切り方（2.5 節）と、終了の理由の行の時刻の書き方（4 節）を足した（承認済み）。同日、時刻が進まない実行の上限の既定値（2.6 節）と、slang の言語の版（2.1 節）を足した（承認済み）。設計仕様書の「外部インターフェース」の案を、実装する段階ごとに整理し、決まっていなかった点（出力の行き先、`--dump-sir`、プラスアーグ）を足した。
 
-この文書は、haremasim のコマンドラインの形、オプション、終了コード、haremasim 自身が出すメッセージの形を定める。終了の理由とコードの意味は SCHEDULER_SPEC.md の 16 節、システムタスクの出力は SYSTEM_TASKS.md に従う。
+この文書は、kirimasim のコマンドラインの形、オプション、終了コード、kirimasim 自身が出すメッセージの形を定める。終了の理由とコードの意味は SCHEDULER_SPEC.md の 16 節、システムタスクの出力は SYSTEM_TASKS.md に従う。
 
 ## 1. コマンドの形
 
 ```text
-haremasim [オプション] <ファイル>... [+プラスアーグ]...     コンパイルして実行する（既定）
-haremasim parse [オプション] <ファイル>...                  構文の解析とエラボレーションだけを行う
-haremasim --version | --help
+kirimasim [オプション] <ファイル>... [+プラスアーグ]...     コンパイルして実行する（既定）
+kirimasim parse [オプション] <ファイル>...                  構文の解析とエラボレーションだけを行う
+kirimasim --version | --help
 ```
 
 - サブコマンドを書かないときは、コンパイルして実行する。
@@ -22,7 +22,7 @@ haremasim --version | --help
 
 ### 2.1 入力（slang にそのまま渡す）
 
-- **言語の版（2026-10-16 に承認）：** haremasim は、slang を常に IEEE 1800-2023 の版（slang の `--std=1800-2023`）で動かす。slang の既定は 1800-2017 で、その版では、大きさの指定の無い 32 ビットを超える 10 進のリテラルを 32 ビットに切り詰めるなど、規格の 2023 年版と違う扱いがある（5.7.1。slang v12.0 で確かめた）。版を選ぶオプションは置かない（CLAUDE.md の「隠れたつまみを作らない」）。
+- **言語の版（2026-10-16 に承認）：** kirimasim は、slang を常に IEEE 1800-2023 の版（slang の `--std=1800-2023`）で動かす。slang の既定は 1800-2017 で、その版では、大きさの指定の無い 32 ビットを超える 10 進のリテラルを 32 ビットに切り詰めるなど、規格の 2023 年版と違う扱いがある（5.7.1。slang v12.0 で確かめた）。版を選ぶオプションは置かない（CLAUDE.md の「隠れたつまみを作らない」）。
 
 | オプション | 意味 | 段 |
 | --- | --- | --- |
@@ -80,20 +80,20 @@ P2 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt
   - `--max-steps` を大きめにしたのは、`initial` の中で大きなメモリを 1 つのループで初期化する設計（1600 万語なら、およそ 1 億命令）を誤って止めないためである。
 - この既定の値は、M6 で sv-tests と実設計を走らせたときに見直す。変えるときは本書を直し、人の承認を受ける。
 - 上限に達したら、終了の理由の行（4 節）の前に、どの上限に達したかを 1 行で標準エラーに書く。形：
-  - `haremasim: error: time did not advance: <n> moves into the Active region in one time slot (--max-zero-delay=<n>)`（reactive の組なら `Reactive`）
-  - `haremasim: error: time did not advance: process "<プロセスの名前>" ran <n> instructions without waiting (--max-steps=<n>)`
+  - `kirimasim: error: time did not advance: <n> moves into the Active region in one time slot (--max-zero-delay=<n>)`（reactive の組なら `Reactive`）
+  - `kirimasim: error: time did not advance: process "<プロセスの名前>" ran <n> instructions without waiting (--max-steps=<n>)`
   - プロセスの名前は SIR のプロセスの名前（`top.initial0` など）。
 
 ## 3. 出力の行き先
 
 - **標準出力：** 設計が出すもの（`$display`、`$write`、`$strobe`、`$monitor` など）だけを書く。テストスイートは標準出力だけを比べる（TEST_SUITE.md）。例外は `--dump-sir` の SIR と、`--stats=json` の JSON（最後に書く）。
-- **標準エラー：** haremasim 自身のメッセージ（診断、版の行、終了の理由の行など）をすべて書く（SYSTEM_TASKS.md の 2 節）。標準エラーに書く前に、標準出力を流す。
+- **標準エラー：** kirimasim 自身のメッセージ（診断、版の行、終了の理由の行など）をすべて書く（SYSTEM_TASKS.md の 2 節）。標準エラーに書く前に、標準出力を流す。
 
-## 4. haremasim 自身のメッセージ
+## 4. kirimasim 自身のメッセージ
 
-- 形は `haremasim: <種類>: <内容>`。種類は `error`、`warning`、`note`、`info` のどれか。ソースの位置があるものは、slang の診断と同じ `<ファイル>:<行>:<列>: <種類>: <内容>` の形にする。
-- **版の行：** 実行の冒頭に、版、コミット、オプション、シードを 1 行で標準エラーに書く（あとから同じ条件で再現するため）。例：`haremasim: info: haremasim 0.1.0 (commit 0123456789ab) seed=1 args: --top=tb a.sv`。標準出力には書かないので、テストスイートで取り除く必要は無い。
-- **終了の理由の行：** 終わるときに、理由と時刻を 1 行で標準エラーに書く。例：`haremasim: info: finish at 120 ns`。`$finish(0)` と `$stop(0)` のときは書かない（SCHEDULER_SPEC.md の 16.2 節）。
+- 形は `kirimasim: <種類>: <内容>`。種類は `error`、`warning`、`note`、`info` のどれか。ソースの位置があるものは、slang の診断と同じ `<ファイル>:<行>:<列>: <種類>: <内容>` の形にする。
+- **版の行：** 実行の冒頭に、版、コミット、オプション、シードを 1 行で標準エラーに書く（あとから同じ条件で再現するため）。例：`kirimasim: info: kirimasim 0.1.0 (commit 0123456789ab) seed=1 args: --top=tb a.sv`。標準出力には書かないので、テストスイートで取り除く必要は無い。
+- **終了の理由の行：** 終わるときに、理由と時刻を 1 行で標準エラーに書く。例：`kirimasim: info: finish at 120 ns`。`$finish(0)` と `$stop(0)` のときは書かない（SCHEDULER_SPEC.md の 16.2 節）。
 - **時刻の書き方（2026-10-16 に承認）：** 整数と単位を空白 1 つで区切って書く。単位は `s`、`ms`、`us`、`ns`、`ps`、`fs` のうち、その時刻を整数で正確に表せる最も大きいもの（例：精度 1ps で 120000 刻みなら `120 ns`、1500 刻みなら `1500 ps`）。時刻 0 は、設計全体の精度の単位で書く（精度 1ps なら `0 ps`、10ps なら `0 ps`）。丸めないので、表示から刻みの数を正確に戻せる。
 
 ## 5. 終了コード
@@ -105,7 +105,7 @@ SCHEDULER_SPEC.md の 16.2 節の表と同じ。理由の名前は `--stats=json
 | 0 | finish、quiescent、stop | `$finish`、事象が尽きた、`$stop`。`--max-time-ok` 付きの time_limit も 0 |
 | 1 | fatal | `$fatal`。`$error` を数えるオプションが有効なら、`$error` が 1 件以上 |
 | 2 | error | コマンドラインや入力の誤り（構文エラー、未対応の構文を含む） |
-| 3 | internal | haremasim の内部エラー（SIR の検証器の失敗など） |
+| 3 | internal | kirimasim の内部エラー（SIR の検証器の失敗など） |
 | 4 | time_limit | `--max-time` に達した |
 | 5 | zero_time_limit | 時刻が進まないまま上限に達した |
 | 130 | interrupted | SIGINT |

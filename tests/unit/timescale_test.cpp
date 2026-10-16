@@ -7,11 +7,11 @@
 
 #include <gtest/gtest.h>
 
-#include "haremasim/sir/timescale.h"
+#include "kirimasim/sir/timescale.h"
 
 namespace {
 
-using namespace haremasim::sir;
+using namespace kirimasim::sir;
 
 TEST(Timescale, ParseUnits) {
     EXPECT_EQ(parseTimeExponent("1ns"), -9);

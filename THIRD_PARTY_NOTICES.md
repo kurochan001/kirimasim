@@ -1,13 +1,13 @@
 # Third-party notices
 
-haremasim itself is licensed under the Apache License 2.0 with LLVM
+kirimasim itself is licensed under the Apache License 2.0 with LLVM
 Exceptions (see `LICENSE`). It does not include copies of third-party
 sources in this repository. The components below are downloaded at configure
 time by CMake `FetchContent`, pinned to the versions listed, and compiled
-into haremasim or its tests. Each component's license is the one stated in
+into kirimasim or its tests. Each component's license is the one stated in
 the license file of the fetched sources.
 
-## Compiled into the `haremasim` executable
+## Compiled into the `kirimasim` executable
 
 | Component | Version | License | Source |
 | --- | --- | --- | --- |
@@ -31,6 +31,6 @@ pins in its own `external/CMakeLists.txt`.
 
 ## Not used
 
-slang's source tree also contains files that haremasim does not build or
+slang's source tree also contains files that kirimasim does not build or
 ship, such as the IEEE 1800 VPI and DPI headers under `external/ieee1800/`
 and documentation data under `docs/`.

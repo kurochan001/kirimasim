@@ -1,14 +1,14 @@
 // The C function table of abi.h. Every entry forwards to the C++ API, so
 // the table and the API have one meaning (RUNTIME_ABI.md 4.2).
 
-#include "haremasim/kernel/abi.h"
+#include "kirimasim/kernel/abi.h"
 
 #include <span>
 #include <vector>
 
-#include "haremasim/kernel/context.h"
+#include "kirimasim/kernel/context.h"
 
-namespace haremasim::kernel {
+namespace kirimasim::kernel {
 
 namespace {
 
@@ -81,6 +81,6 @@ constexpr hs_kernel_api kApi = {
 
 }  // namespace
 
-}  // namespace haremasim::kernel
+}  // namespace kirimasim::kernel
 
-extern "C" const hs_kernel_api* hs_get_kernel_api(void) { return &haremasim::kernel::kApi; }
+extern "C" const hs_kernel_api* hs_get_kernel_api(void) { return &kirimasim::kernel::kApi; }

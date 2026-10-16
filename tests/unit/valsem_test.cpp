@@ -7,11 +7,11 @@
 
 #include <gtest/gtest.h>
 
-#include "haremasim/valsem/value.h"
+#include "kirimasim/valsem/value.h"
 
 namespace {
 
-using namespace haremasim::valsem;
+using namespace kirimasim::valsem;
 
 /// A value from a string of 0, 1, x and z, most significant first.
 Value bits(const std::string& s, bool isSigned = false) {

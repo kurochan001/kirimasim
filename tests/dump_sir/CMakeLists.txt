@@ -6,6 +6,6 @@ foreach(sv ${dump_sir_files})
     get_filename_component(test_name ${sv} NAME_WE)
     add_test(NAME dump_sir/${test_name}
         COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/run_dump_sir_test.py
-            --haremasim $<TARGET_FILE:haremasim> ${sv})
+            --kirimasim $<TARGET_FILE:kirimasim> ${sv})
     set_tests_properties(dump_sir/${test_name} PROPERTIES LABELS DumpSir)
 endforeach()

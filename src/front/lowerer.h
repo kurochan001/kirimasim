@@ -16,8 +16,8 @@
 #include <string_view>
 #include <vector>
 
-#include "haremasim/sir/design.h"
-#include "haremasim/sir/timescale.h"
+#include "kirimasim/sir/design.h"
+#include "kirimasim/sir/timescale.h"
 #include "slang/ast/Compilation.h"
 #include "slang/ast/Statement.h"
 #include "slang/ast/TimingControl.h"
@@ -32,7 +32,7 @@
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 
-namespace haremasim::front {
+namespace kirimasim::front {
 
 namespace ast = slang::ast;
 
@@ -251,4 +251,4 @@ private:
                         std::map<std::string, std::uint32_t>& counts);
 };
 
-}  // namespace haremasim::front
+}  // namespace kirimasim::front

@@ -28,7 +28,7 @@
 #include "slang/ast/types/AllTypes.h"
 #include "slang/numeric/SVInt.h"
 
-namespace haremasim::front {
+namespace kirimasim::front {
 
 namespace {
 
@@ -1235,4 +1235,4 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     unsupported(sl, "system task " + name);
 }
 
-}  // namespace haremasim::front
+}  // namespace kirimasim::front

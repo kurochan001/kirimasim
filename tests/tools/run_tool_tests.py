@@ -25,10 +25,10 @@ def expect(name: str, cmd: list[str], want_ok: bool) -> None:
                         f"{'0' if want_ok else 'nonzero'}\n{p.stdout}{p.stderr}")
 
 
-def suite_test(haremasim: str, tmp: Path) -> None:
+def suite_test(kirimasim: str, tmp: Path) -> None:
     """run_suite_test.py on a copy of values/unique_case_violation."""
     src = ROOT / "tests/suite/values/unique_case_violation"
-    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--haremasim", haremasim]
+    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
 
     def case(name: str, edit, want_ok: bool) -> None:
         d = tmp / name
@@ -62,7 +62,7 @@ def banned(tmp: Path) -> None:
         ("file_name", 'if (name.ends_with("-fail.sv")) {}', False),
         ("uvm_name", 'if (cls == "uvm_test") {}', False),
         ("metadata", "bool should_fail = true;", False),
-        ("waived", '// haremasim: banned-ok needed for DPI-C\nreg("uvm_hdl_deposit");', True),
+        ("waived", '// kirimasim: banned-ok needed for DPI-C\nreg("uvm_hdl_deposit");', True),
         ("clean", "int x = 1;", True),
     ]:
         root = tmp / ("banned_" + name)
@@ -85,7 +85,7 @@ def suite_files(tmp: Path) -> None:
                want_ok)
 
 
-def perfcount(haremasim: str, tmp: Path) -> None:
+def perfcount(kirimasim: str, tmp: Path) -> None:
     test = "tests/suite/sched/nba_order_same_proc.sv"
     real = json.loads((ROOT / "tests/perf_counts/expected.json").read_text(encoding="utf-8"))
     base = real[test]
@@ -97,20 +97,20 @@ def perfcount(haremasim: str, tmp: Path) -> None:
         exp = tmp / f"perf_{name}.json"
         exp.write_text(json.dumps({test: {**base, **change}}), encoding="utf-8")
         expect("perfcount_check " + name,
-               [sys.executable, str(TOOLS / "perfcount_check.py"), "--haremasim", haremasim,
+               [sys.executable, str(TOOLS / "perfcount_check.py"), "--kirimasim", kirimasim,
                 "--expected", str(exp), "--root", str(ROOT)], want_ok)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--haremasim", required=True)
+    ap.add_argument("--kirimasim", required=True)
     args = ap.parse_args()
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
-        suite_test(args.haremasim, tmp)
+        suite_test(args.kirimasim, tmp)
         banned(tmp)
         suite_files(tmp)
-        perfcount(args.haremasim, tmp)
+        perfcount(args.kirimasim, tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)
     if failures:

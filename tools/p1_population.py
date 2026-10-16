@@ -2,7 +2,7 @@
 """The second P1 gate of TEST_SUITE.md: 90% of the own-suite tests in P1 scope.
 
   tools/p1_population.py select --tests-repo DIR > tests/gates/p1_population.txt
-  tools/p1_population.py run --tests-repo DIR --haremasim BIN [--list FILE]
+  tools/p1_population.py run --tests-repo DIR --kirimasim BIN [--list FILE]
 
 select prints the population: the simulation tests of the test-suite
 repository that use no P3 feature. A test is out when its source, without
@@ -73,20 +73,20 @@ def select(repo: Path) -> int:
         total += 1
         if not p3_features(text):
             names.append(str(path.relative_to(repo / "tests").with_suffix("")))
-    print(f"# P1 gate population (TEST_SUITE.md): haremasim-tests {commit}, "
+    print(f"# P1 gate population (TEST_SUITE.md): kirimasim-tests {commit}, "
           f"{len(names)} of {total} simulation tests; made by tools/p1_population.py select")
     for n in names:
         print(n)
     return 0
 
 
-def run(repo: Path, haremasim: str, listing: Path, jobs: int) -> int:
+def run(repo: Path, kirimasim: str, listing: Path, jobs: int) -> int:
     lines = listing.read_text(encoding="utf-8").splitlines()
     names = [ln for ln in lines if ln and not ln.startswith("#")]
 
     def one(name: str) -> tuple[str, int]:
-        p = subprocess.run([sys.executable, str(HERE / "run_suite_test.py"), "--haremasim",
-                            haremasim, str(repo / "tests" / (name + ".sv"))],
+        p = subprocess.run([sys.executable, str(HERE / "run_suite_test.py"), "--kirimasim",
+                            kirimasim, str(repo / "tests" / (name + ".sv"))],
                            capture_output=True, text=True, check=False)
         return name, p.returncode
 
@@ -110,15 +110,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("command", choices=["select", "run"])
     ap.add_argument("--tests-repo", required=True, type=Path)
-    ap.add_argument("--haremasim")
+    ap.add_argument("--kirimasim")
     ap.add_argument("--list", type=Path, default=DEFAULT_LIST)
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
     args = ap.parse_args()
     if args.command == "select":
         return select(args.tests_repo.resolve())
-    if not args.haremasim:
-        ap.error("run needs --haremasim")
-    return run(args.tests_repo.resolve(), str(Path(args.haremasim).resolve()), args.list,
+    if not args.kirimasim:
+        ap.error("run needs --kirimasim")
+    return run(args.tests_repo.resolve(), str(Path(args.kirimasim).resolve()), args.list,
                args.jobs)
 
 

@@ -9,13 +9,13 @@
 #include <gtest/gtest.h>
 
 #include "fuzz.h"
-#include "haremasim/kernel/w4ops.h"
-#include "haremasim/valsem/value.h"
+#include "kirimasim/kernel/w4ops.h"
+#include "kirimasim/valsem/value.h"
 
 namespace {
 
-namespace k = haremasim::kernel;
-namespace v = haremasim::valsem;
+namespace k = kirimasim::kernel;
+namespace v = kirimasim::valsem;
 using k::W4;
 
 v::Value ref(W4 x, unsigned w, bool s) { return v::fromWords({x.a}, {x.b}, w, s); }
@@ -51,11 +51,11 @@ public:
     bool flip() { return (rng_() & 1U) != 0; }
 
 private:
-    std::mt19937_64 rng_{haremasim::test::fuzzSeed(0x77346f7073ULL)};
+    std::mt19937_64 rng_{kirimasim::test::fuzzSeed(0x77346f7073ULL)};
 };
 
 /// Rounds of each fuzz test: 20000 times HS_FUZZ_SCALE (fuzz.h).
-std::uint64_t rounds() { return 20'000 * haremasim::test::fuzzScale(); }
+std::uint64_t rounds() { return 20'000 * kirimasim::test::fuzzScale(); }
 
 /// Whether the fast result equals the reference, with a message if not.
 ::testing::AssertionResult same(W4 fast, const v::Value& slow, const std::string& what) {
@@ -67,7 +67,7 @@ std::uint64_t rounds() { return 20'000 * haremasim::test::fuzzScale(); }
 
 TEST(W4Ops, Binary) {
     Gen g;
-    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));
     for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
         const unsigned w = g.width();
         const bool s = g.flip();
@@ -105,7 +105,7 @@ TEST(W4Ops, Binary) {
 
 TEST(W4Ops, Unary) {
     Gen g;
-    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));
     for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
         const unsigned w = g.width();
         const bool s = g.flip();
@@ -133,7 +133,7 @@ TEST(W4Ops, Unary) {
 
 TEST(W4Ops, ShiftsAndPower) {
     Gen g;
-    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));
     for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
         const unsigned w = g.width();
         const unsigned aw = g.width();  // the amount or exponent has its own width
@@ -155,7 +155,7 @@ TEST(W4Ops, ShiftsAndPower) {
 
 TEST(W4Ops, Select) {
     Gen g;
-    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));
     for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
         const unsigned w = g.width();
         const unsigned cw = 1 + static_cast<unsigned>(n % 3);

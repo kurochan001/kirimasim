@@ -1,4 +1,4 @@
-# P1 gate population (TEST_SUITE.md): haremasim-tests 823ef307bff8, 1466 of 1853 simulation tests; made by tools/p1_population.py select
+# P1 gate population (TEST_SUITE.md): kirimasim-tests 823ef307bff8, 1466 of 1853 simulation tests; made by tools/p1_population.py select
 ch10/test_adder_edge_cases
 ch10/test_alias_stmt
 ch10/test_assign_blocking

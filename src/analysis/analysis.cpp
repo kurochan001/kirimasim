@@ -1,7 +1,7 @@
-#include "haremasim/analysis/analysis.h"
+#include "kirimasim/analysis/analysis.h"
 
-namespace haremasim::analysis {
+namespace kirimasim::analysis {
 
 std::string_view libraryName() { return "analysis"; }
 
-}  // namespace haremasim::analysis
+}  // namespace kirimasim::analysis

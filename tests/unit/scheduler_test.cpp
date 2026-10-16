@@ -15,14 +15,14 @@
 #include <gtest/gtest.h>
 
 #include "fuzz.h"
-#include "haremasim/kernel/abi.h"
-#include "haremasim/kernel/context.h"
-#include "haremasim/kernel/edge.h"
-#include "haremasim/valsem/logic.h"
+#include "kirimasim/kernel/abi.h"
+#include "kirimasim/kernel/context.h"
+#include "kirimasim/kernel/edge.h"
+#include "kirimasim/valsem/logic.h"
 
 namespace {
 
-namespace k = haremasim::kernel;
+namespace k = kirimasim::kernel;
 using k::Edge;
 using k::EndReason;
 using k::Group;
@@ -211,7 +211,7 @@ private:
 /// vectors per region and one unsorted list of future events, and every
 /// wait is one entry of a single list scanned in the order it was made.
 /// Wake-ups caused by one write go in that order, subscriptions on the
-/// slot first and then `wait` conditions, as haremasim does (SCHEDULER_SPEC.md
+/// slot first and then `wait` conditions, as kirimasim does (SCHEDULER_SPEC.md
 /// 4.3: events leave a region in the order they were scheduled).
 class RefSim : public Backend {
 public:
@@ -575,7 +575,7 @@ hs_status logOnce(hs_context* ctx, void* frame) {
 }
 
 TEST(Scheduler, FourStateEdgesMatchTheReference) {
-    namespace v = haremasim::valsem;
+    namespace v = kirimasim::valsem;
     const v::Logic values[4] = {v::Logic::Zero, v::Logic::One, v::Logic::Z, v::Logic::X};
     for (unsigned from = 0; from < 4; ++from) {
         for (unsigned to = 0; to < 4; ++to) {
@@ -756,10 +756,10 @@ std::vector<Script> randomScripts(std::mt19937_64& rng) {
 }
 
 TEST(Scheduler, MatchesTheReferenceModel) {
-    const std::uint64_t seed = haremasim::test::fuzzSeed(0x5c4ed);
+    const std::uint64_t seed = kirimasim::test::fuzzSeed(0x5c4ed);
     std::mt19937_64 rng(seed);
-    const std::uint64_t rounds = 3000 * haremasim::test::fuzzScale();
-    SCOPED_TRACE(haremasim::test::fuzzSetting(seed));
+    const std::uint64_t rounds = 3000 * kirimasim::test::fuzzScale();
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
     for (std::uint64_t round = 0; round < rounds; ++round) {
         const std::vector<Script> scripts = randomScripts(rng);
         KernelSim fast(scripts);

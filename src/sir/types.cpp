@@ -1,10 +1,10 @@
-#include "haremasim/sir/types.h"
+#include "kirimasim/sir/types.h"
 
 #include <cstdint>
 
-#include "haremasim/sir/design.h"
+#include "kirimasim/sir/design.h"
 
-namespace haremasim::sir {
+namespace kirimasim::sir {
 
 Type otherDomain(Type t) {
     switch (t.kind) {
@@ -254,4 +254,4 @@ const char* edgeName(Edge e) {
     return "?";
 }
 
-}  // namespace haremasim::sir
+}  // namespace kirimasim::sir

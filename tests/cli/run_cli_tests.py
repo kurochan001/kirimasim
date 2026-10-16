@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Checks haremasim's command line: options, exit codes and messages (CLI.md).
+"""Checks kirimasim's command line: options, exit codes and messages (CLI.md).
 
-Each case runs haremasim with some arguments on a small design and checks
+Each case runs kirimasim with some arguments on a small design and checks
 the exit code, and text that stdout or stderr must contain.
 """
 
@@ -35,8 +35,8 @@ VIOLATION_LINES = [
 # (arguments, exit code, text stdout must contain, text stderr must contain).
 # Expected stdout starting with "=" must match the whole output.
 CASES = [
-    ([DESIGN], 0, "hello\n", "haremasim: info: finish at 0 ns"),
-    (["--max-steps=2", DESIGN], 5, "hello\n", "haremasim: info: zero_time_limit"),
+    ([DESIGN], 0, "hello\n", "kirimasim: info: finish at 0 ns"),
+    (["--max-steps=2", DESIGN], 5, "hello\n", "kirimasim: info: zero_time_limit"),
     (["--max-steps=x", DESIGN], 2, "", "--max-steps=x needs a whole number"),
     (["--max-zero-delay=", DESIGN], 2, "", "needs a whole number"),
     (["--max-zero-delay=100", DESIGN], 0, "hello\n", ""),
@@ -51,39 +51,39 @@ CASES = [
     (["--max-time=100000000000s", DESIGN], 2, "", "too large for the time precision 1ns"),
     (["--timescale=1ns/1ps", "--max-time=1.5ns", DESIGN], 0, "hello\n", ""),
     # Time advances in picoseconds; events at the limit itself still run.
-    ([DELAYS], 0, "a\nb\n", "haremasim: info: finish at 3500 ps"),
-    (["--max-time=2ns", DELAYS], 4, "a\n", "haremasim: info: time_limit at 2 ns"),
-    (["--max-time=1500ps", DELAYS], 4, "a\n", "haremasim: info: time_limit at 1500 ps"),
-    (["--max-time=1499ps", DELAYS], 4, "", "haremasim: info: time_limit at 1499 ps"),
+    ([DELAYS], 0, "a\nb\n", "kirimasim: info: finish at 3500 ps"),
+    (["--max-time=2ns", DELAYS], 4, "a\n", "kirimasim: info: time_limit at 2 ns"),
+    (["--max-time=1500ps", DELAYS], 4, "a\n", "kirimasim: info: time_limit at 1500 ps"),
+    (["--max-time=1499ps", DELAYS], 4, "", "kirimasim: info: time_limit at 1499 ps"),
     (["--max-time=2ns", "--max-time-ok", DELAYS], 0, "a\n", "time_limit at 2 ns"),
     # The zero-time limits stop the run with code 5 and say which one; final
     # procedures still run.
     (["--max-steps=1000", SPIN], 5, "=final ran\n",
-     'haremasim: error: time did not advance: process "top.initial0" ran 1000 instructions'
-     " without waiting (--max-steps=1000)\nharemasim: info: zero_time_limit at 0 ns"),
+     'kirimasim: error: time did not advance: process "top.initial0" ran 1000 instructions'
+     " without waiting (--max-steps=1000)\nkirimasim: info: zero_time_limit at 0 ns"),
     (["--max-zero-delay=10", ZERO_DELAY], 5, "=final ran\n",
-     "haremasim: error: time did not advance: 10 moves into the Active region in one time"
-     " slot (--max-zero-delay=10)\nharemasim: info: zero_time_limit at 0 ns"),
+     "kirimasim: error: time did not advance: 10 moves into the Active region in one time"
+     " slot (--max-zero-delay=10)\nkirimasim: info: zero_time_limit at 0 ns"),
     ([ZERO_DELAY], 5, "=final ran\n", "(--max-zero-delay=1000000)"),
     # Another writer of an always_comb variable is an error of the design
     # (SCHEDULER_SPEC.md 6.4), not an internal error.
     ([WRITERS], 2, "", "writers.sv:6:3: error: 'top.a' is written here and by top.initial1 at"),
     ([STRING_REPL], 0, "=[]\n[]\n",
      "string_repl.sv:9:9: warning: string replication count is negative, x or z; the result is"
-     " the empty string\nharemasim: info: quiescent"),
-    ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "haremasim: info: quiescent at 1 ns"),
+     " the empty string\nkirimasim: info: quiescent"),
+    ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "kirimasim: info: quiescent at 1 ns"),
     (["--max-time=0ns", FINAL], 4, "=final 1 n=0\nfinal 2\n", "time_limit at 0 ns"),
 ]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--haremasim", required=True, help="path to the haremasim executable")
+    ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     args = ap.parse_args()
 
     failures = 0
     for argv, code, out, err in CASES:
-        proc = subprocess.run([args.haremasim, *argv], capture_output=True, text=True,
+        proc = subprocess.run([args.kirimasim, *argv], capture_output=True, text=True,
                               check=False)
         problems = []
         if proc.returncode != code:
@@ -97,12 +97,12 @@ def main() -> int:
             problems.append(f"stderr lacks {err!r}")
         if problems:
             failures += 1
-            print(f"FAIL: haremasim {' '.join(argv)}: {'; '.join(problems)}", file=sys.stderr)
+            print(f"FAIL: kirimasim {' '.join(argv)}: {'; '.join(problems)}", file=sys.stderr)
             print(f"--- stdout ---\n{proc.stdout}--- stderr ---\n{proc.stderr}", file=sys.stderr)
 
     # --stats=json puts one JSON object on the last line of stdout, with the
     # end reason as text (PERFORMANCE.md 3.1).
-    proc = subprocess.run([args.haremasim, "--stats=json", DESIGN], capture_output=True,
+    proc = subprocess.run([args.kirimasim, "--stats=json", DESIGN], capture_output=True,
                           text=True, check=False)
     try:
         stats = json.loads(proc.stdout.splitlines()[-1])
@@ -112,7 +112,7 @@ def main() -> int:
         failures += 1
         print(f"FAIL: --stats=json: {e}\n{proc.stdout}", file=sys.stderr)
 
-    proc = subprocess.run([args.haremasim, VIOLATIONS], capture_output=True, text=True,
+    proc = subprocess.run([args.kirimasim, VIOLATIONS], capture_output=True, text=True,
                           check=False)
     got = [line.split("/")[-1] for line in proc.stderr.splitlines() if " violation: " in line]
     if proc.returncode != 0 or proc.stdout != "h=8\n" or got != VIOLATION_LINES:

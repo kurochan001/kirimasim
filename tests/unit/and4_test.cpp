@@ -6,13 +6,13 @@
 
 #include <gtest/gtest.h>
 
-#include "haremasim/kernel/w4.h"
-#include "haremasim/valsem/logic.h"
+#include "kirimasim/kernel/w4.h"
+#include "kirimasim/valsem/logic.h"
 
 namespace {
 
-using haremasim::kernel::W4;
-using haremasim::valsem::Logic;
+using kirimasim::kernel::W4;
+using kirimasim::valsem::Logic;
 
 Logic bitAt(W4 w, int i) {
     const bool a = (w.a >> i) & 1U;
@@ -46,8 +46,8 @@ constexpr Logic kAll[] = {Logic::Zero, Logic::One, Logic::Z, Logic::X};
 TEST(And4, MatchesReferenceForAllOneBitPairs) {
     for (const Logic x : kAll) {
         for (const Logic y : kAll) {
-            const W4 r = haremasim::kernel::and4(fromLogic(x), fromLogic(y));
-            EXPECT_EQ(bitAt(r, 0), haremasim::valsem::logicAnd(x, y))
+            const W4 r = kirimasim::kernel::and4(fromLogic(x), fromLogic(y));
+            EXPECT_EQ(bitAt(r, 0), kirimasim::valsem::logicAnd(x, y))
                 << name(x) << " & " << name(y);
         }
     }
@@ -61,9 +61,9 @@ TEST(And4, MatchesReferenceForRandomWords) {
         W4 y{rng(), rng()};
         // Every fourth pair has no X or Z, so the two-state path is covered too.
         if (n % 4 == 0) x.b = y.b = 0;
-        const W4 r = haremasim::kernel::and4(x, y);
+        const W4 r = kirimasim::kernel::and4(x, y);
         for (int i = 0; i < 64; ++i) {
-            ASSERT_EQ(bitAt(r, i), haremasim::valsem::logicAnd(bitAt(x, i), bitAt(y, i)))
+            ASSERT_EQ(bitAt(r, i), kirimasim::valsem::logicAnd(bitAt(x, i), bitAt(y, i)))
                 << "pair " << n << ", bit " << i;
         }
     }

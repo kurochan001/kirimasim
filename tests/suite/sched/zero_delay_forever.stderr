@@ -1,1 +1,1 @@
-haremasim: error: time did not advance: 1000000 moves into the Active region in one time slot (--max-zero-delay=1000000)
+kirimasim: error: time did not advance: 1000000 moves into the Active region in one time slot (--max-zero-delay=1000000)

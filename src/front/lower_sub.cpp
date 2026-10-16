@@ -20,7 +20,7 @@
 #include "slang/ast/symbols/SubroutineSymbols.h"
 #include "slang/ast/types/Type.h"
 
-namespace haremasim::front {
+namespace kirimasim::front {
 
 namespace {
 
@@ -207,4 +207,4 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
     return result;
 }
 
-}  // namespace haremasim::front
+}  // namespace kirimasim::front
