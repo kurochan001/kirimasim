@@ -82,8 +82,11 @@ jobs:
           clang-tidy-22 --version
           clang-format-22 --version
 
-      - name: Banned C++ features in kernel and vm
+      - name: Banned features and test-suite knowledge in src
         run: python3 tools/check_banned.py
+
+      - name: Expectation files without their test
+        run: python3 tools/check_suite_files.py
 
       - name: clang-format
         run: git ls-files '*.cpp' '*.h' | xargs clang-format-22 --dry-run --Werror

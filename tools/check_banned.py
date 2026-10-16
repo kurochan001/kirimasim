@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
-"""Fails if src/kernel/ or src/vm/ uses a banned C++ feature.
+"""Fails if src/ uses something banned (CLAUDE.md).
 
-Banned everywhere in those directories: std::shared_ptr, dynamic_cast,
+Banned in src/kernel/ and src/vm/: std::shared_ptr, dynamic_cast,
 std::function, getenv, typeid.
+
+Banned in all of src/ (the simulator must know nothing of test suites):
+pass/fail strings such as "TEST PASSED", the names of test metadata
+(should_fail, expected_stdout and the like), and string literals that pick
+out files or libraries by name: "-fail.sv", "/uvm/", "/testbenches/", or a
+UVM class or package name ("uvm_..."). A line may carry
+    // haremasim: banned-ok <reason>
+(or have it on the line just above) where such a string is needed for
+another purpose; reviews look at every waiver.
 
 std::unordered_map and std::unordered_set are allowed only when the same line
 or the line just above carries a comment of the form
@@ -28,8 +37,31 @@ BANNED = [
     (re.compile(r"\b(?:std\s*::\s*)?(?:secure_)?getenv\b"), "getenv"),
     (re.compile(r"\btypeid\b"), "typeid"),
 ]
+# Test-suite knowledge, checked in all of src/.
+SUITE_KNOWLEDGE = [
+    (re.compile(r"TEST[ _](?:PASS|FAIL)", re.IGNORECASE), "a pass/fail string"),
+    (re.compile(r"\bshould_fail|\bexpected_(?:stdout|stderr|exit|error)\b"),
+     "test metadata"),
+    (re.compile(r'"[^"\n]*(?:-fail\.sv|/uvm/|/testbenches/)[^"\n]*"'),
+     "a file name or path test"),
+    (re.compile(r'"uvm_[A-Za-z0-9_]*'), "a UVM name"),
+]
+SUITE_WAIVER = re.compile(r"//\s*haremasim:\s*banned-ok\s+\S")
 UNORDERED = re.compile(r"\bstd\s*::\s*unordered_(?:map|set)\b")
 WAIVER = re.compile(r"//\s*haremasim:\s*unordered-ok\s+\S")
+
+
+def check_suite_knowledge(path: Path, display: str) -> list[str]:
+    errors = []
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    for i, line in enumerate(lines):
+        prev = lines[i - 1] if i > 0 else ""
+        if SUITE_WAIVER.search(line) or SUITE_WAIVER.search(prev):
+            continue
+        for pattern, what in SUITE_KNOWLEDGE:
+            if pattern.search(line):
+                errors.append(f"{display}:{i + 1}: banned in src/: {what}")
+    return errors
 
 
 def check_file(path: Path, display: str) -> list[str]:
@@ -64,6 +96,12 @@ def main() -> int:
             if path.is_file() and path.suffix in SUFFIXES:
                 checked += 1
                 errors += check_file(path, path.relative_to(args.root).as_posix())
+
+    src = args.root / "src"
+    if src.is_dir():
+        for path in sorted(src.rglob("*")):
+            if path.is_file() and path.suffix in SUFFIXES:
+                errors += check_suite_knowledge(path, path.relative_to(args.root).as_posix())
 
     for e in errors:
         print(e, file=sys.stderr)

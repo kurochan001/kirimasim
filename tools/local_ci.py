@@ -8,7 +8,7 @@ developer's Mac before pushing. It runs, in order:
 1. configure, build and ctest for each preset (default: dev, release,
    asan, ubsan),
 2. tools/check_release_flags.py (when the release preset is included),
-3. tools/check_banned.py,
+3. tools/check_banned.py and tools/check_suite_files.py,
 4. clang-format --dry-run --Werror on all tracked .cpp and .h files,
 5. clang-tidy on all tracked .cpp files under src/ and tests/ (using the
    dev build's compile_commands.json).
@@ -112,6 +112,8 @@ def main() -> int:
                            logs / "check_release_flags.log"))
     steps.append(timed("check_banned", [sys.executable, "tools/check_banned.py"],
                        logs / "check_banned.log"))
+    steps.append(timed("check_suite_files", [sys.executable, "tools/check_suite_files.py"],
+                       logs / "check_suite_files.log"))
 
     clang_format = clang_tidy = None
     if not args.skip_lint:
