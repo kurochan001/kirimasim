@@ -939,17 +939,19 @@ private:
                     bad("value must have the result type; the amount must be integral");
                 break;
             case Op::Resolve: {
-                // A net kind, then a value of the result type and two
-                // constant strengths from 0 to 7 for each driver.
+                // A net kind, then for each driver a value of the result
+                // type, two constant strengths from 0 to 7 and, for a
+                // driver with a side slot, a 2-state value of twice the
+                // width (SIR_SPEC.md 3.5).
                 static constexpr std::string_view kKinds[] = {
                     "wire", "tri",  "wand",    "triand",  "wor",  "trior",
                     "tri0", "tri1", "supply0", "supply1", "uwire"};
                 bool ok = !ops.empty() && ops[0].kind == Operand::Kind::Text &&
                           std::find(std::begin(kKinds), std::end(kKinds), ops[0].text) !=
                               std::end(kKinds) &&
-                          ops.size() % 3 == 1 && isIntegral(rt) && isFourState(rt);
-                for (std::size_t i = 1; ok && i < ops.size(); i += 3) {
-                    ok = ty(i) == rt;
+                          isIntegral(rt) && isFourState(rt);
+                for (std::size_t i = 1; ok && i < ops.size();) {
+                    ok = i + 2 < ops.size() && ty(i) == rt;
                     for (std::size_t j = i + 1; ok && j < i + 3; ++j) {
                         ok = ops[j].kind == Operand::Kind::Const && isIntegral(ty(j));
                         if (ok) {
@@ -958,10 +960,16 @@ private:
                                  (c.aWords.empty() || c.aWords[0] <= 7);
                         }
                     }
+                    i += 3;
+                    if (ok && i < ops.size() && !isFourState(ty(i))) {
+                        ok = isIntegral(ty(i)) && ty(i).width == 2 * rt.width;
+                        ++i;
+                    }
                 }
                 if (!ok)
-                    bad("needs a net kind, then a 4-state value of the result type and two "
-                        "constant strengths from 0 to 7 for each driver");
+                    bad("needs a net kind, then a 4-state value of the result type, two "
+                        "constant strengths from 0 to 7 and an optional 2-state side of twice "
+                        "the width for each driver");
                 break;
             }
             case Op::Select:

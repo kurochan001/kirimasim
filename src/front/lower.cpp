@@ -12,6 +12,8 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -194,14 +196,16 @@ sir::SlotKind mergedKind(sir::SlotKind internal, sir::SlotKind external) {
     return c == 'E' || c == 'e' ? external : internal;
 }
 
-/// Calls f on every instance of an array of instances, the elements of
-/// nested arrays included, in order (23.3.2).
-template <typename F> void forEachArrayInstance(const ast::InstanceArraySymbol& a, F&& f) {
+/// Calls f on every element of type T (an instance or a primitive
+/// instance) of an array of instances, the elements of nested arrays
+/// included, in order (23.3.2, 28.3.6).
+template <typename T, typename F>
+void forEachArrayElement(const ast::InstanceArraySymbol& a, F&& f) {
     for (const ast::Symbol* e : a.elements) {
         if (e->kind == ast::SymbolKind::InstanceArray)
-            forEachArrayInstance(e->as<ast::InstanceArraySymbol>(), f);
-        else if (e->kind == ast::SymbolKind::Instance)
-            f(e->as<ast::InstanceSymbol>());
+            forEachArrayElement<T>(e->as<ast::InstanceArraySymbol>(), f);
+        else if (T::isKind(e->kind))
+            f(e->as<T>());
     }
 }
 
@@ -629,6 +633,7 @@ void Lowerer::dropProcesses(std::size_t first) {
     combReads_.erase(static_cast<std::uint32_t>(first));
     strengths_.erase(strengths_.lower_bound(static_cast<std::uint32_t>(first)), strengths_.end());
     netPorts_.erase(netPorts_.lower_bound(static_cast<std::uint32_t>(first)), netPorts_.end());
+    sides_.erase(sides_.lower_bound(static_cast<std::uint32_t>(first)), sides_.end());
     // A static-init process made while lowering the dropped ones goes too.
     for (auto it = staticInit_.begin(); it != staticInit_.end();) {
         if (it->second >= first) {
@@ -743,6 +748,18 @@ void Lowerer::resolveNets() {
                       "several drivers (not implemented yet)\n";
             continue;
         }
+        const auto unknownSide = std::find_if(ps.begin(), ps.end(), [&](std::uint32_t p) {
+            const auto it = sides_.find(p);
+            return it != sides_.end() && !it->second.known;
+        });
+        if (unknownSide != ps.end()) {
+            ++numErrors_;
+            diags_ +=
+                whereOf(design_.processes[*unknownSide].loc) +
+                ": error: unsupported: a three-state gate that drives this part of the net '" +
+                design_.slots[net].name + "' with other drivers (not implemented yet)\n";
+            continue;
+        }
         const sir::Type type = design_.slots[net].type;
         const sir::InstanceId instance = design_.slots[net].instance;
         design_.slots[net].flags |= sir::kMultiDriver;
@@ -750,6 +767,7 @@ void Lowerer::resolveNets() {
         // Each driver writes its own slot, which starts at z (SIR_SPEC.md
         // 3.5): the bits it does not write do not drive.
         std::vector<sir::SlotId> slots;
+        std::vector<sir::SlotId> sideSlots;
         for (std::size_t k = 0; k < ps.size(); ++k) {
             sir::Slot d;
             d.name = design_.slots[net].name + ".$driver" + std::to_string(k);
@@ -770,6 +788,29 @@ void Lowerer::resolveNets() {
                         in.operands[0].id = id;
             for (sir::SlotRange& w : p.writes)
                 if (w.slot == net) w.slot = id;
+            // A three-state gate's sides go to a side slot of twice the
+            // width (SIR_SPEC.md 3.5), which starts with no side driven.
+            const auto side = sides_.find(ps[k]);
+            if (side == sides_.end()) {
+                sideSlots.push_back(sir::kNone);
+                continue;
+            }
+            sir::Slot ss;
+            ss.name = design_.slots[net].name + ".$side" + std::to_string(k);
+            ss.type = sir::u2(2 * type.width);
+            ss.instance = instance;
+            const auto sid = static_cast<sir::SlotId>(design_.slots.size());
+            design_.slots.push_back(std::move(ss));
+            sideSlots.push_back(sid);
+            std::vector<sir::Instr>& instrs = p.blocks[0].instrs;
+            for (std::size_t i = side->second.first; i < side->second.first + side->second.count;
+                 ++i) {
+                if (instrs[i].op != sir::Op::Store) continue;
+                sir::Operand& o = instrs[i].operands[0];
+                o.id = sid;
+                p.writes.push_back({sid, 0, 0, o.lsb, o.width});
+            }
+            sides_.erase(side);
         }
 
         // The net's value is resolved again whenever a driver changes
@@ -789,6 +830,15 @@ void Lowerer::resolveNets() {
             ops.push_back(sir::Operand::temp(t));
             ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength1).op);
             ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength0).op);
+            if (sideSlots[k] == sir::kNone) continue;
+            const sir::TempId s = r.numTemps++;
+            r.blocks[0].instrs.push_back({sir::Op::Load,
+                                          design_.slots[sideSlots[k]].type,
+                                          s,
+                                          {sir::Operand::slot(sideSlots[k])},
+                                          where});
+            r.triggers.push_back({sir::SlotRange{sideSlots[k], 0, 0, 0, 0}, sir::Edge::Any});
+            ops.push_back(sir::Operand::temp(s));
         }
         const sir::TempId v = r.numTemps++;
         r.blocks[0].instrs.push_back({sir::Op::Resolve, type, v, std::move(ops), where});
@@ -801,6 +851,14 @@ void Lowerer::resolveNets() {
         r.writes.push_back({net, 0, 0, 0, 0});
         design_.processes.push_back(std::move(r));
     }
+    // A three-state gate on a net that does not resolve writes L and H as
+    // x alone (SIR_SPEC.md 3.5): its side computation goes.
+    for (const auto& [proc, side] : sides_) {
+        std::vector<sir::Instr>& instrs = design_.processes[proc].blocks[0].instrs;
+        const auto at = instrs.begin() + static_cast<std::ptrdiff_t>(side.first);
+        instrs.erase(at, at + static_cast<std::ptrdiff_t>(side.count));
+    }
+    sides_.clear();
 }
 
 void Lowerer::declarePackages(const ast::RootSymbol& root) {
@@ -953,7 +1011,7 @@ void Lowerer::declareScope(const ast::Scope& scope) {
                 declareInstance(member.as<ast::InstanceSymbol>(), instance_);
                 break;
             case ast::SymbolKind::InstanceArray:
-                forEachArrayInstance(
+                forEachArrayElement<ast::InstanceSymbol>(
                     member.as<ast::InstanceArraySymbol>(),
                     [&](const ast::InstanceSymbol& i) { declareInstance(i, instance_); });
                 break;
@@ -1041,13 +1099,19 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                 continue;
             }
             case ast::SymbolKind::InstanceArray:
-                // Each element is an instance; slang gives each its slice of
-                // the connections (23.3.3.5).
-                forEachArrayInstance(member.as<ast::InstanceArraySymbol>(),
-                                     [&](const ast::InstanceSymbol& i) {
-                                         lowerPorts(i);
-                                         lowerInstance(i);
-                                     });
+                // Each element is an instance or a gate; slang gives each its
+                // slice of the connections (23.3.3.5, 28.3.6).
+                forEachArrayElement<ast::InstanceSymbol>(member.as<ast::InstanceArraySymbol>(),
+                                                         [&](const ast::InstanceSymbol& i) {
+                                                             lowerPorts(i);
+                                                             lowerInstance(i);
+                                                         });
+                forEachArrayElement<ast::PrimitiveInstanceSymbol>(
+                    member.as<ast::InstanceArraySymbol>(),
+                    [&](const ast::PrimitiveInstanceSymbol& g) { lowerPrimitive(g, prefix); });
+                continue;
+            case ast::SymbolKind::PrimitiveInstance:
+                lowerPrimitive(member.as<ast::PrimitiveInstanceSymbol>(), prefix);
                 continue;
             case ast::SymbolKind::GenerateBlock: {
                 const auto& g = member.as<ast::GenerateBlockSymbol>();
@@ -1131,6 +1195,132 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         if (betweenNets && design_.processes.size() > before)
             netPorts_.insert(static_cast<std::uint32_t>(before));
     }
+}
+
+void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {
+    // A built-in gate or pull is a cont process that computes its outputs
+    // from its inputs whenever one changes (VALUE_SEMANTICS.md 5.8,
+    // SIR_SPEC.md 3.5, 7.1).
+    const ast::PrimitiveSymbol& prim = g.primitiveType;
+    const std::string kind(prim.name);
+    if (prim.primitiveKind == ast::PrimitiveSymbol::UserDefined) {
+        report(g.location, "user-defined primitive");
+        return;
+    }
+    static const std::set<std::string, std::less<>> kLogic = {"and", "nand", "or",
+                                                              "nor", "xor",  "xnor"};
+    static const std::set<std::string, std::less<>> kTri = {"bufif0", "bufif1", "notif0", "notif1"};
+    const bool pull = kind == "pullup" || kind == "pulldown";
+    const bool logic = kLogic.contains(kind);
+    const bool tri = kTri.contains(kind);
+    if (!logic && !tri && !pull && kind != "buf" && kind != "not") {
+        // MOS switches and bidirectional switches are phase 4
+        // (VALUE_SEMANTICS.md 5.1).
+        report(g.location, "switch '" + kind + "'");
+        return;
+    }
+    const std::span<const ast::Expression* const> conns = g.getPortConnections();
+    if (conns.empty()) return;  // slang reported the connections
+    const auto ds = g.getDriveStrength();
+    std::pair<std::uint8_t, std::uint8_t> strength = driveLevels(ds);
+    if (pull) {
+        // A pull drives pull strength unless one is given (28.10).
+        if (!ds.second) strength.first = 5;
+        if (!ds.first) strength.second = 5;
+    }
+    const std::string name = g.name.empty() && g.arrayPath.empty() ? processName(prefix, "gate")
+                                                                   : g.getHierarchicalPath();
+    const slang::SourceLocation sl = g.location;
+    const auto first = static_cast<std::uint32_t>(design_.processes.size());
+    std::optional<GateSide> side;
+    lowerCont(
+        name, sl, g,
+        [&] {
+            if (g.getDelay() != nullptr) unsupported(sl, "gate with a delay");
+            const sir::Type bit = sir::u4(1);
+            const auto in = [&](std::size_t i) { return coerce(lowerExpr(*conns[i]), bit, sl); };
+            const auto out = [&](std::size_t i, const Val& v) {
+                const Place p = placeOf(*outputPlace(conns[i]), sl);
+                storePlace(p, coerce(v, p.type, sl), false, sl);
+                return p;
+            };
+            const auto op2 = [&](sir::Op op, const Val& a, const Val& b) {
+                return emit(op, a.type, {a.op, b.op}, sl);
+            };
+            const auto inv = [&](const Val& a) { return emit(sir::Op::Not, a.type, {a.op}, sl); };
+            // An input z reads as x (28.4, 28.5): z ^ 0 is x.
+            const auto known = [&](const Val& a) { return op2(sir::Op::Xor, a, constant(bit, 0)); };
+            if (pull) {
+                out(0, constant(bit, kind == "pullup" ? 1 : 0));
+                return;
+            }
+            if (logic) {
+                // The bitwise operator over the inputs in order (28.4).
+                const sir::Op op = kind == "and" || kind == "nand" ? sir::Op::And
+                                   : kind == "or" || kind == "nor" ? sir::Op::Or
+                                                                   : sir::Op::Xor;
+                Val v = known(in(1));
+                for (std::size_t i = 2; i < conns.size(); ++i)
+                    v = op2(op, v, in(i));
+                if (kind == "nand" || kind == "nor" || kind == "xnor") v = inv(v);
+                out(0, v);
+                return;
+            }
+            if (!tri) {
+                // buf and not: the last terminal is the input, the others
+                // outputs (28.5).
+                const Val x = in(conns.size() - 1);
+                const Val v = kind == "buf" ? known(x) : inv(x);
+                for (std::size_t i = 0; i + 1 < conns.size(); ++i)
+                    out(i, v);
+                return;
+            }
+            // bufif0, bufif1, notif0, notif1 (28.6, table 28-5): the data
+            // when the control enables, z when it disables, and L or H (x
+            // with one side, VALUE_SEMANTICS.md 5.8) when it is x or z.
+            const bool if1 = kind.back() == '1';
+            const Val data = kind.starts_with("not") ? inv(in(1)) : known(in(1));
+            const Val ctrl = in(2);
+            const Val on =
+                emit(sir::Op::Ceq, sir::u2(1), {ctrl.op, constant(bit, if1 ? 1 : 0).op}, sl);
+            const Val off =
+                emit(sir::Op::Ceq, sir::u2(1), {ctrl.op, constant(bit, if1 ? 0 : 1).op}, sl);
+            const Val v = emit(sir::Op::Select, bit,
+                               {on.op, data.op,
+                                emit(sir::Op::Select, bit,
+                                     {off.op, constant(bit, 0, 1).op, constant(bit, 1, 1).op}, sl)
+                                    .op},
+                               sl);
+            const Place p = out(0, v);
+            // The sides it drives, for the net's side slot when the net
+            // resolves (SIR_SPEC.md 3.5): no 1 side for L, no 0 side for H.
+            // resolveNets keeps these instructions or removes them.
+            const bool net = p.kind == Place::Kind::Slot || p.kind == Place::Kind::Bits;
+            if (!net || design_.slots[p.slot].kind == sir::SlotKind::Var) return;
+            const std::uint32_t w = design_.slots[p.slot].type.width;
+            const bool fixed = p.kind == Place::Kind::Slot
+                                   ? w == 1
+                                   : !p.pos && p.indices.empty() && p.width == 1 && p.lsb >= 0 &&
+                                         p.lsb < static_cast<std::int64_t>(w);
+            if (!fixed || !design_.slots[p.slot].dims.empty() || 2 * w > 64) {
+                side = GateSide{0, 0, false};
+                return;
+            }
+            const auto at = static_cast<std::uint32_t>(p.kind == Place::Kind::Slot ? 0 : p.lsb);
+            const std::size_t start = blocks()[b_.block].instrs.size();
+            const sir::Type flag = sir::u2(1);
+            const Val unknown = inv(op2(sir::Op::Or, on, off));
+            const auto is = [&](std::uint64_t value) {
+                return emit(sir::Op::Ceq, flag, {data.op, constant(bit, value).op}, sl);
+            };
+            const Val one = inv(op2(sir::Op::And, unknown, is(0)));
+            const Val zero = inv(op2(sir::Op::And, unknown, is(1)));
+            emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, at, 1), one.op}, sl);
+            emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, w + at, 1), zero.op}, sl);
+            side = GateSide{start, blocks()[b_.block].instrs.size() - start, true};
+        },
+        strength);
+    if (side && design_.processes.size() > first) sides_[first] = *side;
 }
 
 template <typename F>

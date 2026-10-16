@@ -499,6 +499,18 @@ private:
     std::map<std::uint32_t, std::pair<std::uint8_t, std::uint8_t>> strengths_;
     /// The cont processes of port connections between nets.
     std::set<std::uint32_t> netPorts_;
+    /// The side computation of a three-state gate (SIR_SPEC.md 3.5):
+    /// instructions [first, first + count) of its process's entry block,
+    /// which store to a side slot not made yet (kNone). resolveNets points
+    /// them at the side slot of the gate's driver when its net resolves,
+    /// and removes them when it does not. `known` is false when the output
+    /// is a place whose bits are not fixed; resolving it is unsupported.
+    struct GateSide {
+        std::size_t first = 0;
+        std::size_t count = 0;
+        bool known = true;
+    };
+    std::map<std::uint32_t, GateSide> sides_;
     /// The port connections whose nets are merged (mergePorts).
     std::set<const ast::PortConnection*> mergedPorts_;
     /// Process names used so far, "<scope>.<kind>" -> the next number.
@@ -538,6 +550,9 @@ private:
     /// The implicit continuous assignments of a child's port connections
     /// (4.9.6, SIR_SPEC.md 3.5).
     void lowerPorts(const ast::InstanceSymbol& child);
+    /// A built-in gate or pull (VALUE_SEMANTICS.md 5.8), or one element of an
+    /// array of them.
+    void lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix);
     /// Merges the child's nets with the parent's where a port connects
     /// whole nets of the same type (SIR_SPEC.md 3.5, 23.3.3.7).
     void mergePorts(const ast::InstanceSymbol& child);

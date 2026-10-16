@@ -1,0 +1,5 @@
+0110 1 0 body=1 gen=1 child=0 arr=0110 tri=zz bus=0110
+1001 1 1 body=0 gen=1 child=1 arr=1001 tri=01 bus=1010
+1x0z 0 x body=x gen=0 child=1 arr=0000 tri=xx bus=1xxx
+z1x0 1 z body=1 gen=1 child=0 arr=x1x0 tri=xx bus=xxx0
+1111 x 0 body=x gen=1 child=x arr=xxxx tri=zz bus=1111

@@ -1105,12 +1105,24 @@ private:
     /// for 1 and for 0 (VALUE_SEMANTICS.md 5.4).
     void resolve(const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
+        const unsigned w = in.type.width;
         drivers_.clear();
-        for (std::size_t i = 1; i + 2 < ops.size(); i += 3)
-            drivers_.push_back({value(ops[i]), static_cast<std::uint8_t>(value(ops[i + 1]).a),
-                                static_cast<std::uint8_t>(value(ops[i + 2]).a)});
+        for (std::size_t i = 1; i + 2 < ops.size();) {
+            kernel::StrengthDriver d{value(ops[i]), static_cast<std::uint8_t>(value(ops[i + 1]).a),
+                                     static_cast<std::uint8_t>(value(ops[i + 2]).a)};
+            i += 3;
+            // A two-state operand after the strengths is the driver's side
+            // slot: the sides it drives on the low w bits for 1, on the
+            // next w for 0 (SIR_SPEC.md 3.5). Driver values are four-state.
+            if (i < ops.size() && !sir::isFourState(typeOf(ops[i]))) {
+                const std::uint64_t side = value(ops[i++]).a;
+                d.one = side & kernel::mask(w);
+                d.zero = w < 64 ? side >> w : 0;
+            }
+            drivers_.push_back(d);
+        }
         temp(in.result) = kernel::resolve4(info.netKind, drivers_.data(),
-                                           static_cast<unsigned>(drivers_.size()), in.type.width);
+                                           static_cast<unsigned>(drivers_.size()), w);
     }
 
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in) {

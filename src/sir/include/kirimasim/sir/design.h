@@ -246,9 +246,10 @@ enum class Op : std::uint8_t {
     /// pending reports (SCHEDULER_SPEC.md 15; the texts are SYSTEM_TASKS.md
     /// 10.4); the scope is the hierarchical name of the statement's scope.
     ReportDefer,
-    /// %r = resolve "<net kind>", (<driver value>, <s1>, <s0>)...: the value
-    /// of a net from its drivers and their strengths (SIR_SPEC.md 3.5,
-    /// VALUE_SEMANTICS.md 5.4).
+    /// %r = resolve "<net kind>", (<driver value>, <s1>, <s0>[, <side>])...:
+    /// the value of a net from its drivers and their strengths; a two-state
+    /// side of twice the width gives the sides a driver drives (SIR_SPEC.md
+    /// 3.5, VALUE_SEMANTICS.md 5.4).
     Resolve,
     // Calls.
     Call,     ///< [%r =] call @N, <argument>...

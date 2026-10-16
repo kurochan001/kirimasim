@@ -161,4 +161,42 @@ TEST(Strength, KernelMatchesReferenceOnRandomNets) {
     }
 }
 
+// Drivers with side slots (SIR_SPEC.md 3.5): a bit that does not drive a
+// side has highz strength on it, so each bit is the reference with that
+// strength set to 0.
+TEST(Strength, KernelMatchesReferenceWithSides) {
+    const std::uint64_t seed = kirimasim::test::fuzzSeed(0x7369646573ULL);
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+    std::mt19937_64 rng{seed};
+    const std::uint64_t rounds = 2'000 * kirimasim::test::fuzzScale();
+    for (std::uint64_t n = 0; n < rounds; ++n) {
+        const NetKind kind = kKinds[rng() % std::size(kKinds)];
+        const auto w = static_cast<unsigned>(1 + rng() % 16);
+        const auto count = static_cast<unsigned>(rng() % 4);
+        const std::uint64_t m = k::mask(w);
+        std::vector<k::StrengthDriver> ds;
+        ds.reserve(count);
+        for (unsigned d = 0; d < count; ++d)
+            ds.push_back({{rng() & m, rng() & rng() & m},
+                          static_cast<std::uint8_t>(rng() % 8),
+                          static_cast<std::uint8_t>(rng() % 8),
+                          rng() & m,
+                          rng() & m});
+        const k::W4 fast = k::resolve4(kernelKind(kind), ds.data(), count, w);
+        for (unsigned bit = 0; bit < w; ++bit) {
+            std::vector<v::Driver> bits;
+            bits.reserve(ds.size());
+            for (const k::StrengthDriver& d : ds) {
+                const Logic value =
+                    v::fromWords({d.value.a >> bit}, {d.value.b >> bit}, 1, false).bits[0];
+                bits.push_back({value, ((d.one >> bit) & 1U) != 0 ? d.s1 : 0,
+                                ((d.zero >> bit) & 1U) != 0 ? d.s0 : 0});
+            }
+            const Logic slow = v::valueOf(v::resolve(kind, bits));
+            const Logic got = v::fromWords({fast.a >> bit}, {fast.b >> bit}, 1, false).bits[0];
+            ASSERT_EQ(got, slow) << "kind " << static_cast<int>(kind) << " bit " << bit;
+        }
+    }
+}
+
 }  // namespace

@@ -30,11 +30,16 @@ enum class NetKind : std::uint8_t {
 };
 
 /// One driver of a net: its value and its strengths for 1 and for 0, each
-/// from 0 (highz) to 7 (supply).
+/// from 0 (highz) to 7 (supply). A driver with a side slot (the L and H of
+/// a three-state gate, SIR_SPEC.md 3.5) drives its 1 side only on the bits
+/// set in `one` and its 0 side only on those set in `zero`; on the others
+/// that strength is highz.
 struct StrengthDriver {
     W4 value;
     std::uint8_t s1;
     std::uint8_t s0;
+    std::uint64_t one = ~std::uint64_t{0};
+    std::uint64_t zero = ~std::uint64_t{0};
 };
 
 namespace detail {
@@ -81,8 +86,8 @@ inline W4 resolveBit(NetKind kind, const StrengthDriver* drivers, unsigned count
     for (unsigned d = 0; d < count; ++d) {
         const unsigned a = (drivers[d].value.a >> bit) & 1U;
         const unsigned b = (drivers[d].value.b >> bit) & 1U;
-        const int s1 = drivers[d].s1;
-        const int s0 = drivers[d].s0;
+        const int s1 = ((drivers[d].one >> bit) & 1U) != 0 ? drivers[d].s1 : 0;
+        const int s0 = ((drivers[d].zero >> bit) & 1U) != 0 ? drivers[d].s0 : 0;
         if (b == 0)
             range(a != 0 ? s1 : -s0, a != 0 ? s1 : -s0);  // 1 or 0
         else if (a != 0)
