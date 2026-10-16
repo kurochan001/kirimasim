@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "lowerer.h"
+#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/LiteralExpressions.h"
@@ -106,6 +107,12 @@ bool isPureSystemFunction(std::string_view n) {
 /// order: slang expands the defaults and the names of a structured one;
 /// a replicated one repeats its elements its constant count of times
 /// (10.9.1), or gives nothing when the count is not known.
+bool isPattern(const ast::Expression& e) {
+    return e.kind == ast::ExpressionKind::SimpleAssignmentPattern ||
+           e.kind == ast::ExpressionKind::StructuredAssignmentPattern ||
+           e.kind == ast::ExpressionKind::ReplicatedAssignmentPattern;
+}
+
 std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
     switch (e.kind) {
         case ast::ExpressionKind::SimpleAssignmentPattern: {
@@ -1227,6 +1234,63 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
 
 // --- Assignments -------------------------------------------------------------
 
+namespace {
+
+/// Whether evaluating e may read variable v: e names v, or calls a
+/// subroutine, which might.
+bool mayRead(const ast::Expression& e, const ast::Symbol* v) {
+    struct Finder : ast::ASTVisitor<Finder, ast::VisitFlags::Expressions> {
+        const ast::Symbol* target = nullptr;
+        bool found = false;
+        void handle(const ast::NamedValueExpression& n) { found = found || &n.symbol == target; }
+        void handle(const ast::HierarchicalValueExpression& n) {
+            found = found || &n.symbol == target;
+        }
+        void handle(const ast::CallExpression& c) {
+            if (!c.isSystemCall())
+                found = true;
+            else
+                visitDefault(c);
+        }
+    };
+    Finder f;
+    f.target = v;
+    e.visit(f);
+    return f.found;
+}
+
+}  // namespace
+
+const ast::Symbol* rootSymbol(const ast::Expression& e) {
+    const ast::Expression* cur = &e;
+    for (;;) {
+        switch (cur->kind) {
+            case ast::ExpressionKind::MemberAccess:
+                cur = &cur->as<ast::MemberAccessExpression>().value();
+                break;
+            case ast::ExpressionKind::ElementSelect:
+                cur = &cur->as<ast::ElementSelectExpression>().value();
+                break;
+            case ast::ExpressionKind::RangeSelect:
+                cur = &cur->as<ast::RangeSelectExpression>().value();
+                break;
+            default: return namedSymbol(*cur);
+        }
+    }
+}
+
+void Lowerer::checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,
+                                   slang::SourceLocation sl) {
+    // Whether a pattern that reads its own target sees the old or the new
+    // values of the elements written before it is not settled yet
+    // (VALUE_SEMANTICS.md 8); such assignments are reported.
+    const ast::Expression* r = &rhs;
+    while (r->kind == ast::ExpressionKind::Conversion)
+        r = &r->as<ast::ConversionExpression>().operand();
+    if (isPattern(*r) && mayRead(*r, target))
+        unsupported(sl, "assignment pattern that may read its own target");
+}
+
 Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     const slang::SourceLocation sl = a.sourceRange.start();
     if (a.timingControl != nullptr) unsupported(sl, "intra-assignment timing control");
@@ -1246,6 +1310,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         // An unpacked array is assigned element by element (7.6, 10.9.1).
         const std::optional<ArrayTarget> target = arrayTarget(a.left());
         if (!target) unsupported(sl, "assignment to this unpacked array");
+        checkAggregateSource(rootSymbol(a.left()), a.right(), sl);
         assignArray(target->slot, target->indices, a.right(), a.isNonBlocking(), sl);
         return Val{Operand::temp(0), sir::voidType()};
     }

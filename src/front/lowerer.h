@@ -53,6 +53,9 @@ const ast::Symbol* namedSymbol(const ast::Expression& e);
 /// variable or argument (SIR_SPEC.md 3.3). Automatic variables live in
 /// frames.
 bool inSlot(const ast::Symbol& s);
+/// The variable at the root of a chain of member accesses and selects,
+/// or nullptr.
+const ast::Symbol* rootSymbol(const ast::Expression& e);
 
 /// A value: an operand (a temp or a constant) and its type.
 struct Val {
@@ -178,6 +181,10 @@ public:
     std::optional<ArrayTarget> arrayTarget(const ast::Expression& e);
     /// Assigns an unpacked array value (a pattern, another array, or nested
     /// ones) to the (sub-)array of slot s at `indices`, element by element.
+    /// Reports an aggregate assignment whose pattern may read its target
+    /// variable.
+    void checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,
+                              slang::SourceLocation sl);
     void assignArray(sir::SlotId s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
                      bool nonblocking, slang::SourceLocation sl);
     void copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,

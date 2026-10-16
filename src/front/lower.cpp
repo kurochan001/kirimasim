@@ -1070,6 +1070,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
     };
     try {
         if (!design_.slots[slot].dims.empty()) {
+            checkAggregateSource(&v, *v.getInitializer(), sl);
             assignArray(slot, {}, *v.getInitializer(), false, sl);  // element by element
         } else {
             const sir::Type t = design_.slots[slot].type;
