@@ -13,9 +13,9 @@ strength; drivers with highz for one value (H and L); a 4-bit net whose
 bits resolve separately; and drivers that meet through an output or an
 input port. The drivers are continuous assignments, net declaration
 assignments and ports. A port between a variable and a net drives
-strong; a port between nets carries the strengths of both sides to one
-net (VALUE_SEMANTICS.md 5.3), which needs the nets merged, so
-net_port_drivers_net is skipped as unsupported until they are.
+strong; a port between nets merges them into one net, which resolves
+the drivers of both sides with their strengths (VALUE_SEMANTICS.md 5.3),
+of the kind of table 23-1 (SIR_SPEC.md 3.5).
 
 The expected outputs follow from the rule of VALUE_SEMANTICS.md 5.4,
 written again below without reading kirimasim's code. A person checks
@@ -278,10 +278,63 @@ def port_drivers(between_nets):
     return name, sv, exp
 
 
+# Table 23-1, the kind of a net merged by a port: rows are the internal
+# (port) kind, columns the external (connection) kind; "E" external, "I"
+# internal (the warnings of the table are left out here).
+MERGE_KINDS = ["wire", "wand", "wor", "tri0", "tri1", "supply0", "supply1"]
+MERGE_TABLE = {
+    "wire":    "EEEEEEE",
+    "wand":    "IEEEEEE",
+    "wor":     "IEEEEEE",
+    "tri0":    "IEEEEEE",
+    "tri1":    "IEEEEEE",
+    "supply0": "IIIIIEE",
+    "supply1": "IIIIIEE",
+}
+
+
+def merged(internal, external):
+    c = MERGE_TABLE[internal][MERGE_KINDS.index(external)]
+    return external if c == "E" else internal
+
+
+def merge_kinds():
+    """A child's inout net of each kind connected to a parent's net of each
+    kind: one net of the kind of table 23-1, with a strong driver on each
+    side (23.3.3.7)."""
+    name = "net_port_merge_kinds"
+    sv = header(name, "An inout port merges the child's net and the parent's net into one net "
+                "of the kind of table 23-1, which resolves the drivers of both sides",
+                "23.3.3.7 4.9.6 6.6 28.12 28.15",
+                "// slang warns about the combinations that table 23-1 marks with a warning.\n"
+                "// Icarus 13.0 differs on six pairs: with a wand or wor and a supply net it\n"
+                "// applies the wired logic though the strengths differ (28.12.4), and with\n"
+                "// supply0 and supply1 it gives x, keeping both supplies, where table 23-1\n"
+                "// makes one net of the external kind. The lines follow the standard.\n")
+    for k in MERGE_KINDS:
+        sv += f"module c_{k} (inout {k} w, input logic v);\n  assign w = v;\nendmodule\n"
+    sv += "module top;\n  logic cv, pv;\n"
+    pairs = [(i, e) for i in MERGE_KINDS for e in MERGE_KINDS]
+    for i, e in pairs:
+        sv += (f"  {e} n_{i}_{e};\n  assign n_{i}_{e} = pv;\n"
+               f"  c_{i} u_{i}_{e} (.w(n_{i}_{e}), .v(cv));\n")
+    sv += "  initial begin\n"
+    exp = ""
+    for c, p in itertools.product(VALUES, VALUES):
+        sv += f"    cv = 1'b{c}; pv = 1'b{p};\n    #1 $display(\"{c}{p}"
+        sv += "".join(f" %b" for _ in pairs) + "\", " + ", ".join(f"n_{i}_{e}" for i, e in pairs)
+        sv += ");\n"
+        exp += f"{c}{p}" + "".join(
+            " " + resolved(merged(i, e), [(c, 6, 6), (p, 6, 6)]) for i, e in pairs) + "\n"
+    sv += "  end\nendmodule\n"
+    return name, sv, exp
+
+
 def files():
     out = {}
     for name, sv, exp in [two_drivers(), strengths("wire"), strengths("wand"), strengths("wor"),
-                          own_driver(), highz(), port_drivers(False), port_drivers(True)]:
+                          own_driver(), highz(), port_drivers(False), port_drivers(True),
+                          merge_kinds()]:
         out[f"{name}.sv"] = sv
         out[f"{name}.expected"] = exp
     return out

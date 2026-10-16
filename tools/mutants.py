@@ -101,6 +101,8 @@ MUTANTS = [
      "                line += d_.instances[p.instance].scopeName;\n                line += \" @ \";"),
     ("scheduler: reports confirmed in the order they were first held", "src/kernel/sim.cpp",
      "    std::sort(pendingOrder_.begin(), pendingOrder_.end());\n", ""),
+    ("front: a merged net keeps the external kind", "src/front/lower.cpp",
+     "slot.kind = mergedKind(*innerKind, slot.kind);", "slot.kind = slot.kind;"),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),

@@ -157,6 +157,43 @@ bool namesNet(const ast::Expression& e) {
     }
 }
 
+/// The kind of the net that a port connection merges (table 23-1): the
+/// internal or the external kind.
+sir::SlotKind mergedKind(sir::SlotKind internal, sir::SlotKind external) {
+    using K = sir::SlotKind;
+    const auto group = [](K k) {
+        switch (k) {
+            case K::Wire:
+            case K::Tri: return 0;
+            case K::Wand:
+            case K::Triand: return 1;
+            case K::Wor:
+            case K::Trior: return 2;
+            case K::Tri0: return 3;
+            case K::Tri1: return 4;
+            case K::Uwire: return 5;
+            case K::Supply0: return 6;
+            case K::Supply1: return 7;
+            case K::Var: break;
+        }
+        return 0;
+    };
+    // Rows internal, columns external, in the order of group(): E external,
+    // I internal; e and i are the same with a warning of the table.
+    static constexpr const char* kTable[] = {
+        "EEEEEEEE",  // wire, tri
+        "IEeeeeEE",  // wand, triand
+        "IeEeeeEE",  // wor, trior
+        "IeeEeeEE",  // tri0
+        "IeeeEeEE",  // tri1
+        "IiiiiEEE",  // uwire
+        "IIIIIIEe",  // supply0
+        "IIIIIIeE",  // supply1
+    };
+    const char c = kTable[group(internal)][group(external)];
+    return c == 'E' || c == 'e' ? external : internal;
+}
+
 /// Whether range `a` covers range `b` of the same slot (0 counts means
 /// "all"; `width` is the slot's element width).
 bool covers(const sir::SlotRange& a, const sir::SlotRange& b, std::uint32_t width,
@@ -679,10 +716,49 @@ void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId p
         {inst.getHierarchicalPath(), std::string(inst.getDefinition().name), parent});
     instanceIds_[&inst] = id;
     instanceSyms_.push_back(&inst);
+    mergePorts(inst);  // before the instance's own nets get slots
     const sir::InstanceId saved = instance_;
     instance_ = id;
     declareScope(inst.body);
     instance_ = saved;
+}
+
+void Lowerer::mergePorts(const ast::InstanceSymbol& child) {
+    // A port between whole nets of the same type is one net: the child's
+    // net shares the parent's slot, whatever the direction (SIR_SPEC.md
+    // 3.5, 23.3.3.7).
+    for (const ast::PortConnection* conn : child.getPortConnections()) {
+        if (conn->port.kind != ast::SymbolKind::Port) continue;
+        const auto& ps = conn->port.as<ast::PortSymbol>();
+        const ast::Expression* ext = conn->getExpression();
+        if (ext == nullptr || ps.internalSymbol == nullptr ||
+            ps.internalSymbol->kind != ast::SymbolKind::Net)
+            continue;
+        const auto& inner = ps.internalSymbol->as<ast::NetSymbol>();
+        const ast::Expression* outer = outputPlace(ext);
+        if (outer->kind != ast::ExpressionKind::NamedValue &&
+            outer->kind != ast::ExpressionKind::HierarchicalValue)
+            continue;
+        const ast::Symbol* os = namedSymbol(*outer);
+        if (os == nullptr || os->kind != ast::SymbolKind::Net) continue;
+        const std::optional<sir::SlotKind> innerKind = netKindOf(inner);
+        if (!innerKind || inner.getDelay() != nullptr || slots_.contains(&inner)) continue;
+        const slang::SourceLocation sl = outer->sourceRange.start();
+        try {
+            const sir::SlotId s = slotOf(os->as<ast::ValueSymbol>(), sl);
+            sir::Slot& slot = design_.slots[s];
+            if (!slot.dims.empty() || inner.getType().getCanonicalType().isUnpackedArray() ||
+                slot.type != typeOf(inner.getType(), sl))
+                continue;
+            // slang gives the warnings of table 23-1 (-Wnet-inconsistent).
+            slot.kind = mergedKind(*innerKind, slot.kind);
+            slots_.emplace(&inner, s);
+            design_.names.push_back({inner.getHierarchicalPath(), s});
+            mergedPorts_.insert(conn);
+        } catch (const Unsupported&) {
+            continue;  // already reported
+        }
+    }
 }
 
 void Lowerer::declareScope(const ast::Scope& scope) {
@@ -819,6 +895,7 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
             report(port.location, "port of kind '" + std::string(ast::toString(port.kind)) + "'");
             continue;
         }
+        if (mergedPorts_.contains(conn)) continue;  // one net with the parent's (mergePorts)
         const auto& ps = port.as<ast::PortSymbol>();
         const ast::Expression* ext = conn->getExpression();
         if (ext == nullptr) {

@@ -1,0 +1,4 @@
+port_merge_uwire.sv:37:17: warning: net type 'uwire' of connection is inconsistent with net type 'wand' of port [-Wnet-inconsistent]
+port_merge_uwire.sv:38:16: warning: net type 'uwire' of connection is inconsistent with net type 'wor' of port [-Wnet-inconsistent]
+port_merge_uwire.sv:39:17: warning: net type 'uwire' of connection is inconsistent with net type 'tri0' of port [-Wnet-inconsistent]
+port_merge_uwire.sv:40:17: warning: net type 'uwire' of connection is inconsistent with net type 'tri1' of port [-Wnet-inconsistent]

@@ -285,6 +285,8 @@ private:
     std::map<std::uint32_t, std::pair<std::uint8_t, std::uint8_t>> strengths_;
     /// The cont processes of port connections between nets.
     std::set<std::uint32_t> netPorts_;
+    /// The port connections whose nets are merged (mergePorts).
+    std::set<const ast::PortConnection*> mergedPorts_;
     /// Process names used so far, "<scope>.<kind>" -> the next number.
     std::map<std::string, std::uint32_t> nameCounts_;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
@@ -310,6 +312,9 @@ private:
     /// The implicit continuous assignments of a child's port connections
     /// (4.9.6, SIR_SPEC.md 3.5).
     void lowerPorts(const ast::InstanceSymbol& child);
+    /// Merges the child's nets with the parent's where a port connects
+    /// whole nets of the same type (SIR_SPEC.md 3.5, 23.3.3.7).
+    void mergePorts(const ast::InstanceSymbol& child);
     /// A cont process (SIR_SPEC.md 7.1): `body` lowers the right-hand side
     /// and the store; the process waits on what it reads.
     /// `strength` is the drive strength for 1 and for 0 (VALUE_SEMANTICS.md
