@@ -159,6 +159,8 @@ MUTANTS = [
     ("front: unpacking takes the right end of a wider source", "src/front/lower_expr.cpp",
      "{src.op, constant(sir::u2(32), src.type.width - w).op}, sl);",
      "{src.op, constant(sir::u2(32), 0).op}, sl);"),
+    ("front: an automatic string starts from a constant of words", "src/front/lower_stmt.cpp",
+     "                if (t.kind == sir::TypeKind::String) return stringConstant(\"\");\n", ""),
 ]
 
 

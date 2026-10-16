@@ -95,7 +95,9 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::VariableDeclaration: {
             const auto& v = s.as<ast::VariableDeclStatement>().symbol;
+            // The default initial value (6.8, table 6-7): x, 0, 0.0 or "".
             const auto initial = [&](Type t) {
+                if (t.kind == sir::TypeKind::String) return stringConstant("");
                 return sir::isFourState(t) ? constant(t, ~std::uint64_t{0}, ~std::uint64_t{0})
                                            : constant(t, 0);
             };
