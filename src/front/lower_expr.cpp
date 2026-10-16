@@ -6,10 +6,13 @@
 // instruction. coerce() turns a value into the type an instruction needs.
 
 #include <algorithm>
+#include <bit>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <deque>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -43,15 +46,65 @@ Type integral(bool four, bool isSigned, std::uint32_t w) {
     return isSigned ? sir::s2(w) : sir::u2(w);
 }
 
+/// The real functions of 20.8 with one argument, and with two.
+constexpr std::string_view kRealMath1[] = {
+    "$ln",   "$log10", "$exp",  "$sqrt", "$floor", "$ceil", "$sin",   "$cos",   "$tan",
+    "$asin", "$acos",  "$atan", "$sinh", "$cosh",  "$tanh", "$asinh", "$acosh", "$atanh"};
+constexpr std::string_view kRealMath2[] = {"$pow", "$atan2", "$hypot"};
+
+bool among(std::string_view n, std::span<const std::string_view> set) {
+    return std::find(set.begin(), set.end(), n) != set.end();
+}
+
+/// System functions that only compute a value.
+bool isPureSystemFunction(std::string_view n) {
+    static constexpr std::string_view kPure[] = {
+        "$time",       "$realtime",   "$signed",          "$unsigned",        "$itor", "$rtoi",
+        "$realtobits", "$bitstoreal", "$shortrealtobits", "$bitstoshortreal", "$clog2"};
+    return among(n, kPure) || among(n, kRealMath1) || among(n, kRealMath2);
+}
+
+bool isReal(Type t) { return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal; }
+
+/// The bits a real constant keeps: a double, or a float for shortreal
+/// (SIR_SPEC.md 6).
+std::uint64_t realBits(double d, Type t) {
+    if (t.kind == sir::TypeKind::ShortReal)
+        return std::bit_cast<std::uint32_t>(static_cast<float>(d));
+    return std::bit_cast<std::uint64_t>(d);
+}
+
+double realValue(const sir::Constant& c) {
+    const std::uint64_t a = c.aWords.empty() ? 0 : c.aWords[0];
+    if (c.type.kind == sir::TypeKind::ShortReal)
+        return std::bit_cast<float>(static_cast<std::uint32_t>(a));
+    return std::bit_cast<double>(a);
+}
+
+/// Real to integer (VALUE_SEMANTICS.md 1.5, 7.4): to the nearest, half away
+/// from zero; NaN and values outside 64 bits give 0.
+std::int64_t roundReal(double d) {
+    if (std::isnan(d) || d >= 9223372036854775808.0 || d < -9223372036854775808.0) return 0;
+    return static_cast<std::int64_t>(std::round(d));
+}
+
+/// Integer to real (1.5): x and z bits count as 0; signed if the type is.
+double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
+    a &= ~b;
+    if (sir::isSigned(t)) {
+        const unsigned s = 64 - t.width;
+        return static_cast<double>(static_cast<std::int64_t>(a << s) >> s);
+    }
+    return static_cast<double>(a);
+}
+
 /// Whether evaluating an expression can change anything.
 bool sideEffects(const ast::Expression& e) {
     switch (e.kind) {
         case ast::ExpressionKind::Assignment: return true;
         case ast::ExpressionKind::Call: {
             const auto& c = e.as<ast::CallExpression>();
-            if (!c.isSystemCall()) return true;
-            const std::string_view n = c.getSubroutineName();
-            if (n != "$time" && n != "$signed" && n != "$unsigned") return true;
+            if (!c.isSystemCall() || !isPureSystemFunction(c.getSubroutineName())) return true;
             for (const ast::Expression* arg : c.arguments())
                 if (sideEffects(*arg)) return true;
             return false;
@@ -116,7 +169,9 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
             return false;
         }
         if (f[i] == '%') continue;
-        while (i < f.size() && f[i] >= '0' && f[i] <= '9')
+        while (i < f.size() && std::string_view("-+ #").find(f[i]) != std::string_view::npos)
+            ++i;
+        while (i < f.size() && ((f[i] >= '0' && f[i] <= '9') || f[i] == '.'))
             ++i;
         if (i >= f.size()) {
             bad = "%";
@@ -124,7 +179,7 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
         }
         auto conv = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
         if (conv == 'x') conv = 'h';
-        if (std::string_view("bohdcst").find(conv) == std::string_view::npos) {
+        if (std::string_view("bohdcstefg").find(conv) == std::string_view::npos) {
             bad = std::string("%") + f[i];
             return false;
         }
@@ -153,8 +208,31 @@ std::optional<std::int64_t> Lowerer::constInt(const ast::Expression& e) {
     return cv->integer().as<std::int64_t>();
 }
 
+Val Lowerer::realConstant(Type t, double d) {
+    sir::Constant c;
+    c.type = t;
+    c.aWords = {realBits(d, t)};
+    const auto id = static_cast<sir::ConstId>(design().constants.size());
+    design().constants.push_back(std::move(c));
+    return {Operand::constant(id), t};
+}
+
 Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceLocation sl) {
-    if (!cv.isInteger()) unsupported(sl, "a constant that is not an integer");
+    if (cv.isReal() || cv.isShortReal()) {
+        const double d =
+            cv.isReal() ? static_cast<double>(cv.real()) : static_cast<double>(cv.shortReal());
+        return coerce(realConstant(Type{sir::TypeKind::Real, 0}, d), t, sl);
+    }
+    if (!cv.isInteger()) unsupported(sl, "a constant of this kind");
+    if (isReal(t)) {
+        // An integer constant used as a real: the integer first, then 1.5.
+        const slang::SVInt& v = cv.integer();
+        const std::uint32_t w = v.getBitWidth();
+        if (w == 0 || w > 64) unsupported(sl, "values wider than 64 bits");
+        const Type it = v.hasUnknown() ? (v.isSigned() ? sir::s4(w) : sir::u4(w))
+                                       : (v.isSigned() ? sir::s2(w) : sir::u2(w));
+        return coerce(constantFrom(cv, it, sl), t, sl);
+    }
     const slang::SVInt& v = cv.integer();
     std::uint64_t a = 0;
     std::uint64_t b = 0;
@@ -175,6 +253,24 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
 
 Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     if (v.type == want) return v;
+    if ((isReal(v.type) || isReal(want)) && (sir::isIntegral(v.type) || isReal(v.type)) &&
+        (sir::isIntegral(want) || isReal(want))) {
+        // Between reals, and between reals and integers (VALUE_SEMANTICS.md
+        // 1.5, 7.4). A constant is converted here.
+        if (v.op.kind == Operand::Kind::Const) {
+            const sir::Constant& c = design().constants[v.op.id];
+            if (isReal(want)) {
+                const double d = isReal(c.type)
+                                     ? realValue(c)
+                                     : integerToReal(c.aWords.empty() ? 0 : c.aWords[0],
+                                                     c.bWords.empty() ? 0 : c.bWords[0], c.type);
+                return realConstant(want, d);
+            }
+            return constant(want, static_cast<std::uint64_t>(roundReal(realValue(c))));
+        }
+        if (isReal(v.type) && isReal(want)) return emit(Op::Rconv, want, {v.op}, sl);
+        return emit(isReal(want) ? Op::Itor : Op::Rtoi, want, {v.op}, sl);
+    }
     if (!sir::isIntegral(v.type) || !sir::isIntegral(want))
         unsupported(sl, "conversion from " + sir::toString(v.type) + " to " + sir::toString(want));
     // A constant is converted here rather than by an instruction.
@@ -208,6 +304,8 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
 
 Val Lowerer::lowerCondition(const ast::Expression& e) {
     Val v = lowerExpr(e);
+    if (isReal(v.type))  // 0.0 is false, anything else true (VALUE_SEMANTICS.md 7.5)
+        return emit(Op::Truth, sir::u2(1), {v.op}, e.sourceRange.start());
     if (!sir::isIntegral(v.type)) unsupported(e.sourceRange.start(), "condition of this type");
     if (v.type.width == 1 && !sir::isSigned(v.type)) return v;
     return emit(Op::Truth, integral(sir::isFourState(v.type), false, 1), {v.op},
@@ -273,7 +371,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const bool pure = e.kind != ast::ExpressionKind::Assignment &&
                       e.kind != ast::ExpressionKind::Call && !sideEffects(e);
-    if (pure && e.getConstant() != nullptr && e.getConstant()->isInteger() && e.type->isIntegral())
+    if (pure && e.getConstant() != nullptr && (e.type->isIntegral() || e.type->isFloating()) &&
+        (e.getConstant()->isInteger() || e.getConstant()->isReal() ||
+         e.getConstant()->isShortReal()))
         return constantFrom(*e.getConstant(), typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
@@ -283,6 +383,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::UnbasedUnsizedIntegerLiteral:
             return constantFrom(
                 slang::ConstantValue(e.as<ast::UnbasedUnsizedIntegerLiteral>().getValue()),
+                typeOf(*e.type, sl), sl);
+        case ast::ExpressionKind::RealLiteral:
+            return constantFrom(
+                slang::ConstantValue(slang::real_t(e.as<ast::RealLiteral>().getValue())),
                 typeOf(*e.type, sl), sl);
         case ast::ExpressionKind::StringLiteral:
             return constantFrom(e.as<ast::StringLiteral>().getIntValue(), typeOf(*e.type, sl), sl);
@@ -373,6 +477,43 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                     div *= 10;
                 const Val d = constant(sir::u2(64), div);
                 return emit(Op::Syscall, sir::u4(64), {Operand::str(name), d.op}, sl);
+            }
+            const auto args = call.arguments();
+            const Type real{sir::TypeKind::Real, 0};
+            const auto arg = [&](std::size_t i, Type t) {
+                return coerce(lowerExpr(*args[i]), t, sl);
+            };
+            const auto sys = [&](Type rt, std::vector<Operand> ops) {
+                ops.insert(ops.begin(), Operand::str(name));
+                return emit(Op::Syscall, rt, std::move(ops), sl);
+            };
+            const Type rt = typeOf(*e.type, sl);
+            // Conversions (20.5): $itor and $rtoi are real and integer
+            // conversions, but $rtoi truncates instead of rounding.
+            if (name == "$itor" && args.size() == 1) return coerce(lowerExpr(*args[0]), rt, sl);
+            if (name == "$rtoi" && args.size() == 1) return sys(rt, {arg(0, real).op});
+            if (name == "$realtobits" && args.size() == 1) return sys(rt, {arg(0, real).op});
+            if (name == "$bitstoreal" && args.size() == 1) return sys(rt, {arg(0, sir::u2(64)).op});
+            if (name == "$shortrealtobits" && args.size() == 1)
+                return sys(rt, {arg(0, Type{sir::TypeKind::ShortReal, 0}).op});
+            if (name == "$bitstoshortreal" && args.size() == 1)
+                return sys(rt, {arg(0, sir::u2(32)).op});
+            if (name == "$realtime") {
+                // In the caller's time unit, as a real (SYSTEM_TASKS.md 5.1).
+                const int shift = timeScale().unit - precision();
+                if (shift < 0 || shift > 19) unsupported(sl, "$realtime with this time unit");
+                std::uint64_t div = 1;
+                for (int i = 0; i < shift; ++i)
+                    div *= 10;
+                return sys(rt, {constant(sir::u2(64), div).op});
+            }
+            if (among(name, kRealMath1) && args.size() == 1) return sys(rt, {arg(0, real).op});
+            if (among(name, kRealMath2) && args.size() == 2)
+                return sys(rt, {arg(0, real).op, arg(1, real).op});
+            if (name == "$clog2" && args.size() == 1) {
+                const Val v = lowerExpr(*args[0]);
+                if (!sir::isIntegral(v.type)) unsupported(sl, "$clog2 of this type");
+                return sys(rt, {v.op});
             }
             unsupported(sl, "system function " + name);
         }
@@ -538,6 +679,8 @@ Val Lowerer::lowerUnary(const ast::Expression& e) {
         case ast::UnaryOperator::BitwiseNor:
         case ast::UnaryOperator::BitwiseXnor: {
             const Val v = lowerExpr(u.operand());
+            if (u.op == ast::UnaryOperator::LogicalNot && isReal(v.type))
+                return coerce(emit(Op::Lnot, sir::u2(1), {v.op}, sl), rt, sl);
             if (!sir::isIntegral(v.type)) unsupported(sl, "operand of this type");
             Op op = Op::Lnot;
             switch (u.op) {
@@ -583,6 +726,15 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
     const auto compare = [&](Op op) {
         Val l = lowerExpr(b.left());
         Val r = lowerExpr(b.right());
+        if (isReal(l.type) || isReal(r.type)) {
+            // Compared as reals: real if either is, else shortreal (11.3.1).
+            const bool shortOnly =
+                l.type.kind != sir::TypeKind::Real && r.type.kind != sir::TypeKind::Real;
+            const Type ct{shortOnly ? sir::TypeKind::ShortReal : sir::TypeKind::Real, 0};
+            l = coerce(l, ct, sl);
+            r = coerce(r, ct, sl);
+            return coerce(emit(op, sir::u2(1), {l.op, r.op}, sl), rt, sl);
+        }
         if (!sir::isIntegral(l.type) || !sir::isIntegral(r.type))
             unsupported(sl, "comparison of these types");
         const bool four = sir::isFourState(l.type) || sir::isFourState(r.type);
@@ -598,8 +750,8 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
         if (sideEffects(b.right())) unsupported(sl, "logical operator with side effects");
         const Val l = lowerExpr(b.left());
         const Val r = lowerExpr(b.right());
-        if (!sir::isIntegral(l.type) || !sir::isIntegral(r.type))
-            unsupported(sl, "logical operator on these types");
+        const auto ok = [](Type t) { return sir::isIntegral(t) || isReal(t); };
+        if (!ok(l.type) || !ok(r.type)) unsupported(sl, "logical operator on these types");
         const bool four = sir::isFourState(l.type) || sir::isFourState(r.type);
         return coerce(emit(op, integral(four, false, 1), {l.op, r.op}, sl), rt, sl);
     };
@@ -639,7 +791,8 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
         case BO::ArithmeticShiftRight: return shift(Op::Ashr);
         case BO::Power: {
             const Val l = coerce(lowerExpr(b.left()), rt, sl);
-            const Val r = lowerExpr(b.right());
+            Val r = lowerExpr(b.right());
+            if (isReal(rt)) r = coerce(r, rt, sl);  // a real power takes a real exponent
             if (r.type != rt) unsupported(sl, "** with an exponent of another type");
             return emit(Op::Pow, rt, {l.op, r.op}, sl);
         }
@@ -808,11 +961,22 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
                 ops.push_back(Operand::str(text));
                 continue;
             }
-            const char conv = pending.empty() ? 'd' : pending.front();
+            const bool hasSpec = !pending.empty();
+            const char conv = hasSpec ? pending.front() : 'd';
             if (!pending.empty()) pending.pop_front();
             Val v = lowerExpr(*arg);
-            if (!sir::isIntegral(v.type))
+            const bool realFormat = conv == 'e' || conv == 'f' || conv == 'g';
+            if (isReal(v.type)) {
+                // A real with an integer format goes through a 64-bit signed
+                // integer; without a specifier the VM shows it like %g
+                // (SYSTEM_TASKS.md 3.6).
+                if (conv == 't') unsupported(arg->sourceRange.start(), "%t of a real value");
+                if (hasSpec && !realFormat) v = coerce(v, sir::s2(64), sl);
+            } else if (!sir::isIntegral(v.type)) {
                 unsupported(arg->sourceRange.start(), "display of a value of this type");
+            } else if (realFormat) {
+                v = coerce(v, Type{sir::TypeKind::Real, 0}, sl);  // integer as a real (7.4)
+            }
             if (conv == 't') {
                 const int shift = timeScale().unit - precision();
                 if (shift < 0 || shift > 19) unsupported(sl, "%t with this time unit");

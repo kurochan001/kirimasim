@@ -126,6 +126,7 @@ public:
     /// The same as a 64-bit integer, if it is one without x or z bits.
     std::optional<std::int64_t> constInt(const ast::Expression& e);
     Val constant(sir::Type t, std::uint64_t a, std::uint64_t b = 0);
+    Val realConstant(sir::Type t, double d);
     Val constantFrom(const slang::ConstantValue& cv, sir::Type t, slang::SourceLocation sl);
 
     // Building blocks.

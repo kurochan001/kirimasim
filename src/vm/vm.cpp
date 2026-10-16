@@ -1,6 +1,8 @@
 #include "haremasim/vm/vm.h"
 
 #include <algorithm>
+#include <bit>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -26,7 +28,60 @@ using sir::Operand;
 /// System tasks and functions the VM knows. Names are resolved to these
 /// when the design is loaded, so nothing compares names while the design
 /// runs (SIR_SPEC.md 1).
-enum class SysTask : std::uint8_t { None, Display, Write, Finish, Stop, Time, Unknown };
+enum class SysTask : std::uint8_t {
+    None,
+    Display,
+    Write,
+    Finish,
+    Stop,
+    Time,
+    Realtime,
+    Rtoi,
+    RealToBits,
+    BitsToReal,
+    ShortRealToBits,
+    BitsToShortReal,
+    Math1,
+    Math2,
+    Clog2,
+    Unknown,
+};
+
+using Math1Fn = double (*)(double);
+using Math2Fn = double (*)(double, double);
+
+/// The real functions of 20.8, which call the host's C library
+/// (SYSTEM_TASKS.md 8).
+struct MathName {
+    std::string_view name;
+    Math1Fn fn1;
+    Math2Fn fn2;
+};
+// clang-format off
+constexpr MathName kMath[] = {
+    {"$ln", [](double x) { return std::log(x); }, nullptr},
+    {"$log10", [](double x) { return std::log10(x); }, nullptr},
+    {"$exp", [](double x) { return std::exp(x); }, nullptr},
+    {"$sqrt", [](double x) { return std::sqrt(x); }, nullptr},
+    {"$floor", [](double x) { return std::floor(x); }, nullptr},
+    {"$ceil", [](double x) { return std::ceil(x); }, nullptr},
+    {"$sin", [](double x) { return std::sin(x); }, nullptr},
+    {"$cos", [](double x) { return std::cos(x); }, nullptr},
+    {"$tan", [](double x) { return std::tan(x); }, nullptr},
+    {"$asin", [](double x) { return std::asin(x); }, nullptr},
+    {"$acos", [](double x) { return std::acos(x); }, nullptr},
+    {"$atan", [](double x) { return std::atan(x); }, nullptr},
+    {"$sinh", [](double x) { return std::sinh(x); }, nullptr},
+    {"$cosh", [](double x) { return std::cosh(x); }, nullptr},
+    {"$tanh", [](double x) { return std::tanh(x); }, nullptr},
+    {"$asinh", [](double x) { return std::asinh(x); }, nullptr},
+    {"$acosh", [](double x) { return std::acosh(x); }, nullptr},
+    {"$atanh", [](double x) { return std::atanh(x); }, nullptr},
+    {"$pow", nullptr, [](double x, double y) { return std::pow(x, y); }},
+    {"$atan2", nullptr, [](double x, double y) { return std::atan2(x, y); }},
+    {"$hypot", nullptr, [](double x, double y) { return std::hypot(x, y); }},
+};
+// clang-format on
 
 SysTask resolveSysTask(std::string_view name) {
     if (name == "$display") return SysTask::Display;
@@ -34,12 +89,62 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
+    if (name == "$realtime") return SysTask::Realtime;
+    if (name == "$rtoi") return SysTask::Rtoi;
+    if (name == "$realtobits") return SysTask::RealToBits;
+    if (name == "$bitstoreal") return SysTask::BitsToReal;
+    if (name == "$shortrealtobits") return SysTask::ShortRealToBits;
+    if (name == "$bitstoshortreal") return SysTask::BitsToShortReal;
+    if (name == "$clog2") return SysTask::Clog2;
+    for (const MathName& m : kMath)
+        if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
+}
+
+bool isRealType(sir::Type t) {
+    return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal;
+}
+
+/// A real value: a double in the a word, or a float in its low 32 bits for
+/// shortreal (SIR_SPEC.md 3.2, 6).
+double toReal(W4 v, sir::Type t) {
+    if (t.kind == sir::TypeKind::ShortReal)
+        return std::bit_cast<float>(static_cast<std::uint32_t>(v.a));
+    return std::bit_cast<double>(v.a);
+}
+
+W4 fromReal(double d, sir::Type t) {
+    if (t.kind == sir::TypeKind::ShortReal)
+        return {std::bit_cast<std::uint32_t>(static_cast<float>(d)), 0};
+    return {std::bit_cast<std::uint64_t>(d), 0};
+}
+
+/// Integer to real (VALUE_SEMANTICS.md 1.5): x and z bits are 0.
+double integerToReal(W4 v, sir::Type t) {
+    const std::uint64_t a = v.a & ~v.b;
+    if (sir::isSigned(t)) return static_cast<double>(kernel::asSigned(a, t.width));
+    return static_cast<double>(a);
+}
+
+/// Real to a 64-bit integer, rounded (1.5) or truncated ($rtoi, 20.5); NaN
+/// and values outside 64 bits give 0 (7.4).
+std::uint64_t realToInteger(double d, bool truncate) {
+    if (std::isnan(d) || d >= 9223372036854775808.0 || d < -9223372036854775808.0) return 0;
+    return static_cast<std::uint64_t>(
+        static_cast<std::int64_t>(truncate ? std::trunc(d) : std::round(d)));
+}
+
+/// The truth of a value as a 1-bit W4 (3.5, 7.5: a real is true unless 0.0).
+W4 truthOf(W4 v, sir::Type t) {
+    if (isRealType(t)) return {toReal(v, t) != 0.0 ? 1U : 0U, 0};
+    return kernel::truth4(v);
 }
 
 /// What the VM works out once per instruction when it loads the design.
 struct InstrInfo {
     SysTask task = SysTask::None;
+    Math1Fn fn1 = nullptr;
+    Math2Fn fn2 = nullptr;
     /// For $display and $write: the parsed format of each text operand
     /// (empty for the others).
     std::vector<std::vector<kernel::FormatPiece>> formats;
@@ -244,6 +349,11 @@ private:
         InstrInfo info;
         if (in.op != Op::Syscall || in.operands.empty()) return info;
         info.task = resolveSysTask(in.operands[0].text);
+        for (const MathName& m : kMath) {
+            if (m.name != in.operands[0].text) continue;
+            info.fn1 = m.fn1;
+            info.fn2 = m.fn2;
+        }
         if (info.task != SysTask::Display && info.task != SysTask::Write) return info;
         info.formats.resize(in.operands.size());
         for (std::size_t i = 1; i < in.operands.size(); ++i) {
@@ -576,6 +686,80 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temps_[in.result] = r;
         };
+        if (!ops.empty() && (isRealType(rt) || isRealType(t(0)))) {
+            // Real operations (VALUE_SEMANTICS.md 7.5): real in double,
+            // shortreal in float.
+            const auto r = [&](std::size_t i) { return toReal(v(i), t(i)); };
+            const bool single = rt.kind == sir::TypeKind::ShortReal;
+            const auto put = [&](double d) {
+                temps_[in.result] = fromReal(single ? static_cast<float>(d) : d, rt);
+            };
+            const auto cmp = [&](bool b) { temps_[in.result] = {b ? 1U : 0U, 0}; };
+            const bool fl = t(0).kind == sir::TypeKind::ShortReal;
+            const auto a2 = [&](std::size_t i) {
+                return fl ? static_cast<double>(static_cast<float>(r(i))) : r(i);
+            };
+            switch (in.op) {
+                case Op::Add:
+                    put(single ? double(float(r(0)) + float(r(1))) : r(0) + r(1));
+                    return true;
+                case Op::Sub:
+                    put(single ? double(float(r(0)) - float(r(1))) : r(0) - r(1));
+                    return true;
+                case Op::Mul:
+                    put(single ? double(float(r(0)) * float(r(1))) : r(0) * r(1));
+                    return true;
+                case Op::Div:
+                    put(single ? double(float(r(0)) / float(r(1))) : r(0) / r(1));
+                    return true;
+                case Op::Pow: put(std::pow(r(0), r(1))); return true;
+                case Op::Neg: put(-r(0)); return true;
+                case Op::Lt: cmp(a2(0) < a2(1)); return true;
+                case Op::Le: cmp(a2(0) <= a2(1)); return true;
+                case Op::Gt: cmp(a2(0) > a2(1)); return true;
+                case Op::Ge: cmp(a2(0) >= a2(1)); return true;
+                case Op::Eq: cmp(a2(0) == a2(1)); return true;
+                case Op::Ne: cmp(a2(0) != a2(1)); return true;
+                case Op::Truth: temps_[in.result] = truthOf(v(0), t(0)); return true;
+                case Op::Lnot: temps_[in.result] = kernel::lnot4(truthOf(v(0), t(0))); return true;
+                case Op::Itor: put(integerToReal(v(0), t(0))); return true;
+                case Op::Rconv: put(r(0)); return true;
+                case Op::Rtoi:
+                    set(W4{realToInteger(r(0), false) & kernel::mask(w), 0});
+                    return true;
+                case Op::Select: {
+                    // An unknown condition gives the value both sides share,
+                    // or 0.0 (VALUE_SEMANTICS.md 3.9, table 7-1).
+                    const W4 c = kernel::truth4(v(0));
+                    if (c.b == 0) {
+                        temps_[in.result] = (c.a & 1U) != 0 ? v(1) : v(2);
+                    } else {
+                        temps_[in.result] = r(1) == r(2) ? v(1) : fromReal(0.0, rt);
+                    }
+                    return true;
+                }
+                default: break;  // loads, stores and moves copy the bits as they are
+            }
+        }
+        switch (in.op) {
+            case Op::Land:
+            case Op::Lor:
+            case Op::Limp:
+            case Op::Leqv:
+                if (isRealType(t(0)) || isRealType(t(1))) {
+                    const W4 x = truthOf(v(0), t(0));
+                    const W4 y = truthOf(v(1), t(1));
+                    W4 res = in.op == Op::Land  ? kernel::land4(x, y)
+                             : in.op == Op::Lor ? kernel::lor4(x, y)
+                             : in.op == Op::Limp
+                                 ? kernel::lor4(kernel::lnot4(x), y)
+                                 : ((x.b | y.b) != 0 ? kernel::kW4X : W4{x.a == y.a ? 1U : 0U, 0});
+                    set(res);
+                    return true;
+                }
+                break;
+            default: break;
+        }
         switch (in.op) {
             case Op::Load: {
                 const Operand& o = ops[0];
@@ -769,9 +953,16 @@ private:
         return false;
     }
 
-    std::string formatValue(const Frame& f, const Operand& o, kernel::FormatSpec spec) const {
+    std::string formatValue(const Frame& f, const Operand& o,
+                            const kernel::FormatSpec& spec) const {
         const sir::Type t = typeOf(f.process, o);
         const W4 x = value(f, o);
+        if (isRealType(t)) {
+            // front makes every other specifier take an integer; without
+            // one, a real shows like %g (SYSTEM_TASKS.md 3.6).
+            const bool realSpec = spec.conv == 'e' || spec.conv == 'f' || spec.conv == 'g';
+            return kernel::formatReal(toReal(x, t), realSpec ? spec : kernel::FormatSpec{});
+        }
         const std::uint64_t words[2] = {x.a, x.b};
         const kernel::IntValue iv{words, t.width, sir::isFourState(t), sir::isSigned(t)};
         if (spec.conv == 't')
@@ -791,7 +982,7 @@ private:
                 std::size_t i = 1;
                 while (i < ops.size()) {
                     if (ops[i].kind != Operand::Kind::Text) {
-                        text += formatValue(f, ops[i], {'d', -1});
+                        text += formatValue(f, ops[i], kernel::FormatSpec{});
                         ++i;
                         continue;
                     }
@@ -830,6 +1021,60 @@ private:
                 const std::uint64_t q = now / div;
                 const std::uint64_t r = now % div;
                 temps_[in.result] = {q + (div > 1 && r >= div - r ? 1 : 0), 0};
+                return true;
+            }
+            case SysTask::Realtime: {
+                const auto div = static_cast<double>(value(f, ops[1]).a);
+                temps_[in.result] = fromReal(static_cast<double>(sched_.time()) / div, in.type);
+                return true;
+            }
+            case SysTask::Rtoi:
+            case SysTask::RealToBits:
+            case SysTask::BitsToReal:
+            case SysTask::ShortRealToBits:
+            case SysTask::BitsToShortReal:
+            case SysTask::Math1:
+            case SysTask::Math2:
+            case SysTask::Clog2: {
+                const sir::Type rt = in.type;
+                const auto arg = [&](std::size_t i) { return value(f, ops[i]); };
+                const auto argType = [&](std::size_t i) { return typeOf(f.process, ops[i]); };
+                W4 r{0, 0};
+                switch (info.task) {
+                    case SysTask::Rtoi:
+                        r = {realToInteger(toReal(arg(1), argType(1)), true) &
+                                 kernel::mask(rt.width),
+                             0};
+                        break;
+                    case SysTask::RealToBits:
+                    case SysTask::ShortRealToBits:
+                    case SysTask::BitsToReal:
+                    case SysTask::BitsToShortReal: r = {arg(1).a & ~arg(1).b, 0}; break;
+                    case SysTask::Math1:
+                        r = fromReal(info.fn1(toReal(arg(1), argType(1))), rt);
+                        break;
+                    case SysTask::Math2:
+                        r = fromReal(
+                            info.fn2(toReal(arg(1), argType(1)), toReal(arg(2), argType(2))), rt);
+                        break;
+                    case SysTask::Clog2: {
+                        // ceil(log2(n)), and 0 for 0 and 1 (20.8.1); x for an
+                        // unknown argument.
+                        const W4 n = arg(1);
+                        if (n.b != 0) {
+                            r = kernel::allX(rt.width);
+                        } else {
+                            std::uint64_t k = 0;
+                            while (k < 64 && (std::uint64_t{1} << k) < n.a)
+                                ++k;
+                            r = {k, 0};
+                        }
+                        break;
+                    }
+                    default: break;
+                }
+                if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
+                temps_[in.result] = r;
                 return true;
             }
             case SysTask::None:

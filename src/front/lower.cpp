@@ -200,6 +200,10 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
+    if (t.isFloating())
+        return t.as<ast::FloatingType>().floatKind == ast::FloatingType::ShortReal
+                   ? sir::Type{sir::TypeKind::ShortReal, 0}
+                   : sir::Type{sir::TypeKind::Real, 0};  // real and realtime (6.12)
     if (!t.isIntegral()) unsupported(sl, "type '" + t.toString() + "'");
     const std::uint32_t w = t.getBitWidth();
     if (w == 0 || w > 64) unsupported(sl, "values wider than 64 bits");
