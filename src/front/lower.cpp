@@ -285,6 +285,40 @@ const ast::Symbol* namedSymbol(const ast::Expression& e) {
     return s;
 }
 
+const ast::UnpackedStructType* unpackedStruct(const ast::Type& t) {
+    const ast::Type& c = t.getCanonicalType();
+    return c.kind == ast::SymbolKind::UnpackedStructType ? &c.as<ast::UnpackedStructType>()
+                                                         : nullptr;
+}
+
+void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out) {
+    const ast::UnpackedStructType* st = unpackedStruct(t);
+    if (st == nullptr) {
+        out.push_back({prefix, &t});
+        return;
+    }
+    for (const ast::FieldSymbol* f : st->fields)
+        structLeaves(f->getType(), prefix + "." + std::string(f->name), out);
+}
+
+std::uint32_t leafCount(const ast::Type& t) {
+    const ast::UnpackedStructType* st = unpackedStruct(t);
+    if (st == nullptr) return 1;
+    std::uint32_t n = 0;
+    for (const ast::FieldSymbol* f : st->fields)
+        n += leafCount(f->getType());
+    return n;
+}
+
+std::uint32_t leafOffset(const ast::UnpackedStructType& st, const ast::FieldSymbol& f) {
+    std::uint32_t n = 0;
+    for (const ast::FieldSymbol* g : st.fields) {
+        if (g == &f) break;
+        n += leafCount(g->getType());
+    }
+    return n;
+}
+
 bool inSlot(const ast::Symbol& s) {
     if (s.kind == ast::SymbolKind::Net) return true;
     if (s.kind != ast::SymbolKind::Variable && s.kind != ast::SymbolKind::FormalArgument)
@@ -390,6 +424,28 @@ Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
+    if (unpackedStruct(v.getType()) != nullptr)
+        unsupported(sl, "unpacked structure used as a whole here");
+    const sir::SlotId id = newSlot(v, "", v.getType(), sl);
+    slots_.emplace(&v, id);
+    return id;
+}
+
+sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl) {
+    // One slot per innermost member, in declaration order (SIR_SPEC.md 4.2).
+    if (auto it = structSlots_.find(&v); it != structSlots_.end()) return it->second;
+    if (v.kind == ast::SymbolKind::Net) unsupported(sl, "net of an unpacked structure type");
+    std::vector<Leaf> leaves;
+    structLeaves(v.getType(), "", leaves);
+    const auto first = static_cast<sir::SlotId>(design_.slots.size());
+    for (const Leaf& l : leaves)
+        newSlot(v, l.path, *l.type, sl);
+    structSlots_.emplace(&v, first);
+    return first;
+}
+
+sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& member,
+                             const ast::Type& type, slang::SourceLocation sl) {
     // A variable or net of a package or of a compilation unit ($unit,
     // 3.12.1) belongs to its row, one in the design (SIR_SPEC.md 3.3).
     const std::optional<sir::InstanceId> row = rowOf(v);
@@ -401,21 +457,23 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
         if (n.getDelay() != nullptr) unsupported(sl, "net with a delay");
         kind = *k;
     }
-    const ast::Type* t = &v.getType().getCanonicalType();
+    const ast::Type* t = &type.getCanonicalType();
     std::vector<sir::ArrayDim> dims;
     while (t->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         const auto& a = t->as<ast::FixedSizeUnpackedArrayType>();
         dims.push_back({a.range.left, a.range.right});
         t = &a.elementType.getCanonicalType();
     }
-    if (t->isUnpackedArray()) unsupported(sl, "variable of type '" + v.getType().toString() + "'");
+    if (t->isUnpackedArray()) unsupported(sl, "variable of type '" + type.toString() + "'");
     sir::Slot s;
     // Static variables of unnamed blocks share a hierarchical path; the
     // second and later get "~2", "~3", ... (names are for diagnostics and
-    // the text form, and must be unique; SIR_SPEC.md 3.1).
+    // the text form, and must be unique; SIR_SPEC.md 3.1). A member of an
+    // unpacked structure adds its path, ".x" (SIR_SPEC.md 4.2).
     s.name = v.getHierarchicalPath();
     if (row && v.getParentScope() == &instanceSyms_[*row]->as<ast::Scope>())
         s.name = design_.instances[*row].scopeName + "::" + std::string(v.name);
+    s.name += member;
     if (const std::uint32_t n = ++slotNames_[s.name]; n > 1) s.name += "~" + std::to_string(n);
     s.type = typeOf(*t, sl);
     s.kind = kind;
@@ -435,7 +493,6 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
     const auto id = static_cast<sir::SlotId>(design_.slots.size());
     design_.names.push_back({s.name, id});
     design_.slots.push_back(std::move(s));
-    slots_.emplace(&v, id);
     return id;
 }
 
@@ -815,6 +872,15 @@ void Lowerer::declareScope(const ast::Scope& scope) {
             case ast::SymbolKind::Net: {
                 const auto& v = member.as<ast::ValueSymbol>();
                 try {
+                    if (unpackedStruct(v.getType()) != nullptr) {
+                        // One slot per member; the initial value or the
+                        // members' defaults (7.2.2) in static-init.
+                        const sir::SlotId first = structSlots(v, v.location);
+                        if (member.kind == ast::SymbolKind::Variable &&
+                            (v.getInitializer() != nullptr || hasMemberDefaults(v.getType())))
+                            lowerStaticInit(member.as<ast::VariableSymbol>(), first, v.location);
+                        break;
+                    }
                     const sir::SlotId s = slotOf(v, v.location);
                     // A net's initializer is a continuous assignment
                     // (10.3.1), lowered with the processes.
@@ -1069,7 +1135,15 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
         evalSymbol_ = savedEval;
     };
     try {
-        if (!design_.slots[slot].dims.empty()) {
+        if (unpackedStruct(v.getType()) != nullptr) {
+            // The initializer, or else the members' defaults (7.2.2).
+            if (const ast::Expression* init = v.getInitializer()) {
+                checkAggregateSource(&v, *init, sl);
+                assignStruct({false, slot}, v.getType(), *init, false, sl);
+            } else {
+                memberDefaults({false, slot}, v.getType(), sl);
+            }
+        } else if (!design_.slots[slot].dims.empty()) {
             checkAggregateSource(&v, *v.getInitializer(), sl);
             assignArray(slot, {}, *v.getInitializer(), false, sl);  // element by element
         } else {

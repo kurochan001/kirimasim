@@ -30,6 +30,7 @@
 #include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/ast/symbols/VariableSymbols.h"
+#include "slang/ast/types/AllTypes.h"
 #include "slang/numeric/ConstantValue.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
@@ -53,9 +54,37 @@ const ast::Symbol* namedSymbol(const ast::Expression& e);
 /// variable or argument (SIR_SPEC.md 3.3). Automatic variables live in
 /// frames.
 bool inSlot(const ast::Symbol& s);
+
+/// A variable, or a formal argument of a subroutine (also a variable).
+bool isVariable(const ast::Symbol& s);
+/// The elements of an assignment pattern of any of its three forms, in
+/// order: slang expands the defaults and the names of a structured one;
+/// a replicated one repeats its elements its constant count of times
+/// (10.9.1), or gives nothing when the count is not known.
+std::vector<const ast::Expression*> patternElements(const ast::Expression& e);
+/// Whether e is an assignment pattern.
+bool isPattern(const ast::Expression& e);
+
+/// The unpacked structure type that a type is, or nullptr.
+const ast::UnpackedStructType* unpackedStruct(const ast::Type& t);
+/// An innermost member of an unpacked structure: its path from the
+/// structure (".a.b") and its type. Anything else is its own one leaf.
+struct Leaf {
+    std::string path;
+    const ast::Type* type = nullptr;
+};
+/// The leaves of a type, in declaration order (SIR_SPEC.md 4.2).
+void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out);
+/// The number of leaves of a type: 1 unless it is an unpacked structure.
+std::uint32_t leafCount(const ast::Type& t);
+/// The number of leaves before member f of a structure.
+std::uint32_t leafOffset(const ast::UnpackedStructType& st, const ast::FieldSymbol& f);
 /// The variable at the root of a chain of member accesses and selects,
 /// or nullptr.
 const ast::Symbol* rootSymbol(const ast::Expression& e);
+/// Whether an unpacked structure type gives some member a default value
+/// (7.2.2), itself or in a nested structure.
+bool hasMemberDefaults(const ast::Type& t);
 
 /// A value: an operand (a temp or a constant) and its type.
 struct Val {
@@ -181,10 +210,6 @@ public:
     std::optional<ArrayTarget> arrayTarget(const ast::Expression& e);
     /// Assigns an unpacked array value (a pattern, another array, or nested
     /// ones) to the (sub-)array of slot s at `indices`, element by element.
-    /// Reports an aggregate assignment whose pattern may read its target
-    /// variable.
-    void checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,
-                              slang::SourceLocation sl);
     void assignArray(sir::SlotId s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
                      bool nonblocking, slang::SourceLocation sl);
     void copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
@@ -255,6 +280,44 @@ public:
 
     /// The slot of a net or static variable, created on first use.
     sir::SlotId slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl);
+    /// The slots of a static variable of an unpacked structure type, one
+    /// per leaf in order, created on first use: the first one.
+    sir::SlotId structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl);
+    /// A new slot for variable v, or for the member of it at path `member`
+    /// (empty for v itself) of the given type.
+    sir::SlotId newSlot(const ast::ValueSymbol& v, const std::string& member, const ast::Type& type,
+                        slang::SourceLocation sl);
+    /// The frame variables of an automatic variable of an unpacked
+    /// structure type, one per leaf in order: the first one.
+    sir::FrameVarId structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl);
+    /// Where the value an expression names lives: a frame variable or a
+    /// slot. For an unpacked structure, its first leaf, the others
+    /// following in order (SIR_SPEC.md 4.2).
+    struct Storage {
+        bool frame = false;
+        std::uint32_t id = 0;
+    };
+    /// The storage of a variable, a net or a member of an unpacked
+    /// structure; nothing for other expressions.
+    std::optional<Storage> storageOf(const ast::Expression& e, slang::SourceLocation sl);
+    /// Whether an expression is a member of an unpacked structure.
+    static bool isUnpackedMember(const ast::Expression& e);
+    /// The place of one leaf: a frame variable or a whole slot.
+    Place storagePlace(Storage st);
+    /// Reports an aggregate assignment whose pattern may read its target
+    /// variable.
+    void checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,
+                              slang::SourceLocation sl);
+    /// Assigns an unpacked structure value to the leaves at dst, member by
+    /// member (SIR_SPEC.md 4.2).
+    void assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs, bool nonblocking,
+                      slang::SourceLocation sl);
+    /// Assigns one member of type t, whose leaves start at dst.
+    void assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs, bool nonblocking,
+                      slang::SourceLocation sl);
+    /// Gives the members of an unpacked structure at dst their default
+    /// values (7.2.2), where the type has them.
+    void memberDefaults(Storage dst, const ast::Type& t, slang::SourceLocation sl);
     /// A frame variable for an automatic variable, created on first use.
     sir::FrameVarId frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl);
     std::optional<sir::FrameVarId> findFrameVar(const ast::Symbol& s) const;
@@ -289,6 +352,7 @@ public:
         sir::BlockId block = 0;
         bool dead = false;  ///< The current point is unreachable.
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
+        std::map<const ast::Symbol*, sir::FrameVarId> structFrames;  ///< The first leaf's.
         std::vector<Loop> loops;
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;        ///< For the sensitivity of always_comb.
@@ -312,7 +376,8 @@ private:
     std::size_t numErrors_ = 0;
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
     std::map<const ast::Symbol*, sir::SlotId> slots_;
-    std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
+    std::map<const ast::Symbol*, sir::SlotId> structSlots_;  ///< The first leaf's slot.
+    std::map<std::string, std::uint32_t> slotNames_;         ///< Uses of each slot name.
     sir::InstanceId instance_ = 0;
     std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;
     /// Row of the instance table -> its symbol: an instance, a package or

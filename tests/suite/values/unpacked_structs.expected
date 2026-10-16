@@ -1,0 +1,24 @@
+fresh: v=xxxxxxxx n=0 name="" r=0.0 st=x bytes0=0
+d1: id=7 flags=1010 at=(0,0) plain=0
+d2: id=1 flags=0001 at=(3,4) plain=5
+pkg: width=8 tag=cfg
+pkg after: width=16
+s: v=1b n=-3 name=abc r=2.5 st=RUN p=39 hi=3 bytes=42,43
+s ops: name=abcd len=4 r=3.5 n=-2
+copy: s.n=-2 t.n=100 s.bytes2=42 t.bytes2=0 t.bytes3=43 t.name=abcd
+l1: a=(1,2) b=(3,4) color=c0
+l1 named: a=(10,20) b=(30,40) color=0f
+l2 default: a=(5,5) b=(5,5) color=5
+l2 type key: a=(6,6) color=ee
+l2 member copy: a=(30,40)
+pt replicated: (9,9)
+task: l1.b.y=40 l2.b.y=77 l2.a.x=10
+nba before: (9,9)
+nba after: (1,2)
+auto 1: id=7 flags=1010 at=(0,0) q=(1,2)
+auto 1 after: id=99 q=(1,10)
+auto 2: id=7 flags=1010 at=(0,0) q=(2,3)
+auto 2 after: id=99 q=(2,20)
+wakes=2 comb_v=e4
+child: v=77 n=120
+fork: l1.a.x=500

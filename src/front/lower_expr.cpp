@@ -103,45 +103,6 @@ bool isPureSystemFunction(std::string_view n) {
     return among(n, kPure) || among(n, kRealMath1) || among(n, kRealMath2);
 }
 
-/// The elements of an assignment pattern of any of its three forms, in
-/// order: slang expands the defaults and the names of a structured one;
-/// a replicated one repeats its elements its constant count of times
-/// (10.9.1), or gives nothing when the count is not known.
-bool isPattern(const ast::Expression& e) {
-    return e.kind == ast::ExpressionKind::SimpleAssignmentPattern ||
-           e.kind == ast::ExpressionKind::StructuredAssignmentPattern ||
-           e.kind == ast::ExpressionKind::ReplicatedAssignmentPattern;
-}
-
-std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
-    switch (e.kind) {
-        case ast::ExpressionKind::SimpleAssignmentPattern: {
-            const auto el = e.as<ast::SimpleAssignmentPatternExpression>().elements();
-            return {el.begin(), el.end()};
-        }
-        case ast::ExpressionKind::StructuredAssignmentPattern: {
-            const auto el = e.as<ast::StructuredAssignmentPatternExpression>().elements();
-            return {el.begin(), el.end()};
-        }
-        default: {
-            const auto& r = e.as<ast::ReplicatedAssignmentPatternExpression>();
-            const ast::Expression& countExpr = r.count();
-            const slang::ConstantValue* cv = countExpr.getConstant();
-            std::vector<const ast::Expression*> out;
-            if (cv == nullptr || !cv->isInteger()) return out;
-            const std::optional<std::int64_t> n = cv->integer().as<std::int64_t>();
-            for (std::int64_t k = 0; n && k < *n; ++k)
-                out.insert(out.end(), r.elements().begin(), r.elements().end());
-            return out;
-        }
-    }
-}
-
-/// A variable, or a formal argument of a subroutine (also a variable).
-bool isVariable(const ast::Symbol& s) {
-    return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
-}
-
 bool isString(Type t) { return t.kind == sir::TypeKind::String; }
 
 /// The bytes of an integral value as a string (6.16): the most significant
@@ -279,6 +240,8 @@ bool sideEffects(const ast::Expression& e) {
             return sideEffects(e.as<ast::ReplicationExpression>().concat());
         case ast::ExpressionKind::Conversion:
             return sideEffects(e.as<ast::ConversionExpression>().operand());
+        case ast::ExpressionKind::MemberAccess:
+            return sideEffects(e.as<ast::MemberAccessExpression>().value());
         case ast::ExpressionKind::ElementSelect: {
             const auto& s = e.as<ast::ElementSelectExpression>();
             return sideEffects(s.value()) || sideEffects(s.selector());
@@ -331,6 +294,40 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
 }
 
 }  // namespace
+
+bool isPattern(const ast::Expression& e) {
+    return e.kind == ast::ExpressionKind::SimpleAssignmentPattern ||
+           e.kind == ast::ExpressionKind::StructuredAssignmentPattern ||
+           e.kind == ast::ExpressionKind::ReplicatedAssignmentPattern;
+}
+
+std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
+    switch (e.kind) {
+        case ast::ExpressionKind::SimpleAssignmentPattern: {
+            const auto el = e.as<ast::SimpleAssignmentPatternExpression>().elements();
+            return {el.begin(), el.end()};
+        }
+        case ast::ExpressionKind::StructuredAssignmentPattern: {
+            const auto el = e.as<ast::StructuredAssignmentPatternExpression>().elements();
+            return {el.begin(), el.end()};
+        }
+        default: {
+            const auto& r = e.as<ast::ReplicatedAssignmentPatternExpression>();
+            const ast::Expression& countExpr = r.count();
+            const slang::ConstantValue* cv = countExpr.getConstant();
+            std::vector<const ast::Expression*> out;
+            if (cv == nullptr || !cv->isInteger()) return out;
+            const std::optional<std::int64_t> n = cv->integer().as<std::int64_t>();
+            for (std::int64_t k = 0; n && k < *n; ++k)
+                out.insert(out.end(), r.elements().begin(), r.elements().end());
+            return out;
+        }
+    }
+}
+
+bool isVariable(const ast::Symbol& s) {
+    return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
+}
 
 // --- Constants and conversions -----------------------------------------------
 
@@ -482,10 +479,11 @@ Val Lowerer::lowerCondition(const ast::Expression& e) {
 
 namespace {
 
-/// An unpacked-array element access: the array variable and the index
-/// expressions, outermost dimension first.
+/// An unpacked-array element access: the array (a variable, a net or a
+/// member of an unpacked structure) and the index expressions, outermost
+/// dimension first.
 struct ArrayAccess {
-    const ast::ValueSymbol* var = nullptr;
+    const ast::Expression* base = nullptr;
     std::vector<const ast::Expression*> indices;
 };
 
@@ -498,10 +496,12 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
         acc.indices.push_back(&es.selector());
         cur = &es.value();
     }
-    const ast::Symbol* sym = acc.indices.empty() ? nullptr : namedSymbol(*cur);
-    if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
+    if (acc.indices.empty()) return std::nullopt;
+    const ast::Symbol* sym = namedSymbol(*cur);
+    if (!Lowerer::isUnpackedMember(*cur) &&
+        (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net)))
         return std::nullopt;
-    acc.var = &sym->as<ast::ValueSymbol>();
+    acc.base = cur;
     std::reverse(acc.indices.begin(), acc.indices.end());
     return acc;
 }
@@ -523,8 +523,12 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
         base = &es.value();
     }
     const ast::Symbol* sym = namedSymbol(*base);
-    if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym)) return std::nullopt;
-    const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), e.sourceRange.start());
+    if (unpackedStruct(*base->type) != nullptr ||
+        (!isUnpackedMember(*base) && (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym))))
+        return std::nullopt;
+    const std::optional<Storage> st = storageOf(*base, e.sourceRange.start());
+    if (!st || st->frame) return std::nullopt;
+    const sir::SlotId s = st->id;
     if (!design().slots[s].dims.empty()) return std::nullopt;
     if (pos) return sir::SlotRange{s, 0, 0, static_cast<std::uint32_t>(*pos), 1};
     return sir::SlotRange{s, 0, 0, 0, 0};
@@ -642,6 +646,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 if (c == nullptr) unsupported(sl, "modport port with no connection");
                 return coerce(lowerExpr(*c), typeOf(*e.type, sl), sl);
             }
+            if (unpackedStruct(*e.type) != nullptr)
+                unsupported(sl, "unpacked structure used as a whole here");
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym))
                 return emit(Op::Fload, frameVars()[*f].type, {Operand::frame(*f)}, sl);
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
@@ -677,6 +683,17 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return coerce(c, typeOf(*e.type, sl), sl);
         }
         case ast::ExpressionKind::MemberAccess: {
+            if (isUnpackedMember(e)) {
+                // A member of an unpacked structure: its own slot or frame
+                // variable (SIR_SPEC.md 4.2).
+                const std::optional<Storage> st = storageOf(e, sl);
+                if (!st) unsupported(sl, "expression 'MemberAccess'");
+                if (unpackedStruct(*e.type) != nullptr)
+                    unsupported(sl, "unpacked structure used as a whole here");
+                if (!st->frame && !design().slots[st->id].dims.empty())
+                    unsupported(sl, "an unpacked array as a value");
+                return coerce(loadPlace(storagePlace(*st), sl), typeOf(*e.type, sl), sl);
+            }
             // A member of a packed structure or union: its bits, from the
             // field's offset (0 in a union).
             const auto& m = e.as<ast::MemberAccessExpression>();
@@ -953,9 +970,9 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     const ast::Type& vt = es.value().type->getCanonicalType();
     if (vt.isUnpackedArray()) {
         const std::optional<ArrayAccess> acc = arrayAccess(e);
-        if (!acc || findFrameVar(*acc->var) || !inSlot(*acc->var))
-            unsupported(sl, "selecting from this array");
-        const sir::SlotId s = slotOf(*acc->var, sl);
+        const std::optional<Storage> st = acc ? storageOf(*acc->base, sl) : std::nullopt;
+        if (!st || st->frame) unsupported(sl, "selecting from this array");
+        const sir::SlotId s = st->id;
         const sir::Slot& slot = design().slots[s];
         if (slot.dims.size() != acc->indices.size())
             unsupported(sl, "selecting a part of an unpacked array");
@@ -1306,6 +1323,14 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         storePlace(p, v, a.isNonBlocking(), sl);
         return v;
     }
+    if (unpackedStruct(*a.left().type) != nullptr) {
+        // An unpacked structure is assigned member by member (7.2.2, 10.9.2).
+        const std::optional<Storage> dst = storageOf(a.left(), sl);
+        if (!dst) unsupported(sl, "assignment to this unpacked structure");
+        checkAggregateSource(rootSymbol(a.left()), a.right(), sl);
+        assignStruct(*dst, *a.left().type, a.right(), a.isNonBlocking(), sl);
+        return Val{Operand::temp(0), sir::voidType()};
+    }
     if (a.left().type->getCanonicalType().isUnpackedArray()) {
         // An unpacked array is assigned element by element (7.6, 10.9.1).
         const std::optional<ArrayTarget> target = arrayTarget(a.left());
@@ -1331,13 +1356,10 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
         t->indices.push_back(*i);
         return t;
     }
-    const ast::Symbol* sym = namedSymbol(e);
-    if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net) ||
-        findFrameVar(*sym) || !inSlot(*sym))
-        return std::nullopt;
-    const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), e.sourceRange.start());
-    if (design().slots[s].dims.empty()) return std::nullopt;
-    return ArrayTarget{s, {}};
+    if (!e.type->getCanonicalType().isUnpackedArray()) return std::nullopt;
+    const std::optional<Storage> st = storageOf(e, e.sourceRange.start());
+    if (!st || st->frame || design().slots[st->id].dims.empty()) return std::nullopt;
+    return ArrayTarget{st->id, {}};
 }
 
 void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
@@ -1489,10 +1511,10 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             }
             if (element && base.type->isUnpackedArray()) {
                 const std::optional<ArrayAccess> acc = arrayAccess(lhs);
-                if (!acc || findFrameVar(*acc->var) || !inSlot(*acc->var))
-                    unsupported(sl, "assignment to an element of this array");
+                const std::optional<Storage> st = acc ? storageOf(*acc->base, sl) : std::nullopt;
+                if (!st || st->frame) unsupported(sl, "assignment to an element of this array");
                 p.kind = Place::Kind::Element;
-                p.slot = slotOf(*acc->var, sl);
+                p.slot = st->id;
                 const sir::Slot& slot = design().slots[p.slot];
                 if (slot.dims.size() != acc->indices.size())
                     unsupported(sl, "assignment to a part of an unpacked array");
@@ -1509,17 +1531,16 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             const ast::Type& bt = base.type->getCanonicalType();
             if (!bt.isIntegral()) unsupported(sl, "assignment to a part of this type");
             p.kind = Place::Kind::Bits;
-            if (const ast::Symbol* sym = namedSymbol(base)) {
-                if ((!isVariable(*sym) && sym->kind != ast::SymbolKind::Net) ||
-                    findFrameVar(*sym) || !inSlot(*sym))
-                    unsupported(sl, "assignment to a part of this variable");
-                p.slot = slotOf(sym->as<ast::ValueSymbol>(), sl);
+            if (namedSymbol(base) != nullptr || isUnpackedMember(base)) {
+                const std::optional<Storage> st = storageOf(base, sl);
+                if (!st || st->frame) unsupported(sl, "assignment to a part of this variable");
+                p.slot = st->id;
                 if (!design().slots[p.slot].dims.empty())
                     unsupported(sl, "assignment to a part of an unpacked array");
             } else if (const std::optional<ArrayAccess> acc = arrayAccess(base)) {
-                if (findFrameVar(*acc->var) || !inSlot(*acc->var))
-                    unsupported(sl, "assignment to a part of this variable");
-                p.slot = slotOf(*acc->var, sl);
+                const std::optional<Storage> st = storageOf(*acc->base, sl);
+                if (!st || st->frame) unsupported(sl, "assignment to a part of this variable");
+                p.slot = st->id;
                 if (design().slots[p.slot].dims.size() != acc->indices.size())
                     unsupported(sl, "assignment to a part of an unpacked array");
                 p.elem = constElement(design().slots[p.slot], acc->indices);
@@ -1564,6 +1585,17 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             return p;
         }
         case ast::ExpressionKind::MemberAccess: {
+            if (isUnpackedMember(lhs)) {
+                // A member of an unpacked structure: its own slot or frame
+                // variable (SIR_SPEC.md 4.2).
+                const std::optional<Storage> st = storageOf(lhs, sl);
+                if (!st) unsupported(sl, "assignment to a member of this structure");
+                if (unpackedStruct(*lhs.type) != nullptr)
+                    unsupported(sl, "unpacked structure used as a whole here");
+                if (!st->frame && !design().slots[st->id].dims.empty())
+                    unsupported(sl, "assignment to a whole unpacked array");
+                return storagePlace(*st);
+            }
             // A member of a packed structure or union: its bits (7.2.1,
             // 7.3.1; SIR_SPEC.md 4.2).
             const auto& m = lhs.as<ast::MemberAccessExpression>();

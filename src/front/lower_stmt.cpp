@@ -80,6 +80,35 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::VariableDeclaration: {
             const auto& v = s.as<ast::VariableDeclStatement>().symbol;
+            const auto initial = [&](Type t) {
+                return sir::isFourState(t) ? constant(t, ~std::uint64_t{0}, ~std::uint64_t{0})
+                                           : constant(t, 0);
+            };
+            if (unpackedStruct(v.getType()) != nullptr) {
+                // One slot or frame variable per member (SIR_SPEC.md 4.2),
+                // set from the initializer or else the members' defaults
+                // (7.2.2).
+                const ast::Expression* init = v.getInitializer();
+                if (v.lifetime == ast::VariableLifetime::Static) {
+                    const sir::SlotId first = structSlots(v, sl);
+                    if (init != nullptr || hasMemberDefaults(v.getType()))
+                        lowerStaticInit(v, first, sl);
+                    return;
+                }
+                const sir::FrameVarId first = structFrameVars(v, sl);
+                const std::uint32_t n = leafCount(v.getType());
+                for (std::uint32_t k = 0; k < n; ++k)
+                    emitVoid(Op::Fstore,
+                             {Operand::frame(first + k), initial(frameVars()[first + k].type).op},
+                             sl);
+                if (init != nullptr) {
+                    checkAggregateSource(&v, *init, sl);
+                    assignStruct({true, first}, v.getType(), *init, false, sl);
+                } else {
+                    memberDefaults({true, first}, v.getType(), sl);
+                }
+                return;
+            }
             if (v.lifetime == ast::VariableLifetime::Static) {
                 // Static: a slot, set once before time 0 starts (6.21) by
                 // the static-init process, not when the block runs.
@@ -92,11 +121,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             const sir::FrameVarId f = frameVarOf(v, sl);
             const Type t = frameVars()[f].type;
             const ast::Expression* init = v.getInitializer();
-            const Val value =
-                init != nullptr
-                    ? coerce(lowerExpr(*init), t, sl)
-                    : (sir::isFourState(t) ? constant(t, ~std::uint64_t{0}, ~std::uint64_t{0})
-                                           : constant(t, 0));
+            const Val value = init != nullptr ? coerce(lowerExpr(*init), t, sl) : initial(t);
             emitVoid(Op::Fstore, {Operand::frame(f), value.op}, sl);
             return;
         }
