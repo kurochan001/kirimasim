@@ -164,6 +164,9 @@ MUTANTS = [
     ("front: a constant made a string keeps its zero bytes", "src/front/lower_expr.cpp",
      "        if (byte && *byte != 0) out.push_back(static_cast<char>(*byte));",
      "        if (byte) out.push_back(static_cast<char>(*byte));"),
+    ("front: %m prints nothing", "src/front/lower_expr.cpp",
+     "ops.push_back(Operand::str(withScope(text, b_.scope)));",
+     "ops.push_back(Operand::str(withScope(text, \"\")));"),
 ]
 
 

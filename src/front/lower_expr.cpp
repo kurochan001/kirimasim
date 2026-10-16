@@ -300,6 +300,7 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
         }
         auto conv = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
         if (conv == 'x') conv = 'h';
+        if (conv == 'm') continue;  // takes no argument (withScope)
         if (std::string_view("bohdcstefg").find(conv) == std::string_view::npos) {
             bad = std::string("%") + f[i];
             return false;
@@ -307,6 +308,32 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
         convs.push_back(conv);
     }
     return true;
+}
+
+/// A format with each %m replaced by the hierarchical name of the scope
+/// that calls the task (SYSTEM_TASKS.md 3.8).
+std::string withScope(std::string_view f, std::string_view scope) {
+    std::string out;
+    for (std::size_t i = 0; i < f.size(); ++i) {
+        if (f[i] != '%' || i + 1 >= f.size()) {
+            out.push_back(f[i]);
+            continue;
+        }
+        std::size_t j = i + 1;
+        while (j < f.size() &&
+               std::string_view("-+ #0123456789.").find(f[j]) != std::string_view::npos)
+            ++j;
+        if (j < f.size() && (f[j] == 'm' || f[j] == 'M')) {
+            out += scope;
+            i = j;
+        } else {
+            // %% and any other specifier stay as they are.
+            const std::size_t end = j < f.size() ? j : f.size() - 1;
+            out.append(f.substr(i, end - i + 1));
+            i = end;
+        }
+    }
+    return out;
 }
 
 }  // namespace
@@ -2132,7 +2159,7 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             if (!scanFormat(text, convs, bad))
                 unsupported(arg->sourceRange.start(), "format specifier " + bad);
             pending.assign(convs.begin(), convs.end());
-            ops.push_back(Operand::str(text));
+            ops.push_back(Operand::str(withScope(text, b_.scope)));
             continue;
         }
         const bool hasSpec = !pending.empty();
@@ -2191,8 +2218,10 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         emitVoid(Op::Syscall, std::move(ops), sl);
         return;
     }
-    if (name == "$sformat" && !args.empty()) {
-        // $sformat(dest, format, ...): $sformatf into dest (21.3.3).
+    if ((name == "$sformat" || name == "$swrite") && !args.empty()) {
+        // $sformat(dest, format, ...) and $swrite(dest, ...): $sformatf
+        // into dest (21.3.3); $swrite reads every string literal argument
+        // not taken by a specifier as a format, as lowerFormatArgs does.
         std::vector<Operand> ops{Operand::str("$sformatf")};
         lowerFormatArgs(args.subspan(1), ops, sl);
         const Val v = emit(Op::Syscall, Type{sir::TypeKind::String, 0}, std::move(ops), sl);

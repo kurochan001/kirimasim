@@ -1,0 +1,9 @@
+named generate: top.u.named_gen
+unnamed generate: top.u.genblk2
+module: top
+nested: top.outer.inner, 100% sure
+task: top.u.t
+function: top.u.f
+package function: pk::where_am_i
+named fork branch: top.forked
+swrite: top k=1 hex=c3
