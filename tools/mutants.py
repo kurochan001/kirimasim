@@ -138,7 +138,8 @@ MUTANTS = [
      "if (const ast::Expression* init = f->getInitializer())",
      "if (const ast::Expression* init = nullptr)"),
     ("front: a structure copy skips array members", "src/front/lower_struct.cpp",
-     "copyArray(to.id, {}, from.id, {}, nonblocking, sl);", "(void)from;"),
+     "copyArray(dst.id, fixedIndices(dst, sl), src.id, fixedIndices(src, sl), out, sl);",
+     "(void)src;"),
     ("front: a structure pattern counts one leaf per member", "src/front/lower_struct.cpp",
      "            off += leafCount(ft);", "            off += 1;"),
     ("vm: the exponent of ** has the width of the result", "src/vm/vm.cpp",
@@ -190,6 +191,9 @@ MUTANTS = [
      "        storePlace(elementPlace(s, indices), v, false, sl);\n        return;"),
     ("front: aggregate == looks at the last pair only", "src/front/lower_expr.cpp",
      "        all = bitOp(Op::And, all, pair(i), sl);", "        all = pair(i);"),
+    ("front: a constant index into an array of structures is 0", "src/front/lower_struct.cpp",
+     "            return withIndex(std::move(*base), *c);",
+     "            return withIndex(std::move(*base), 0 * *c);"),
 ]
 
 

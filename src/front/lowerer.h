@@ -68,15 +68,23 @@ bool isPattern(const ast::Expression& e);
 
 /// The unpacked structure type that a type is, or nullptr.
 const ast::UnpackedStructType* unpackedStruct(const ast::Type& t);
+/// The unpacked structure type that a type is, or that a fixed-size
+/// unpacked array (of any dimensions) has as its elements, or nullptr.
+const ast::UnpackedStructType* structElement(const ast::Type& t);
 /// An innermost member of an unpacked structure: its path from the
-/// structure (".a.b") and its type. Anything else is its own one leaf.
+/// structure (".a.b"), its type, and the dimensions of the arrays of
+/// structures around it, outermost first (SIR_SPEC.md 4.2). Anything else
+/// is its own one leaf.
 struct Leaf {
     std::string path;
     const ast::Type* type = nullptr;
+    std::vector<sir::ArrayDim> dims;
 };
 /// The leaves of a type, in declaration order (SIR_SPEC.md 4.2).
-void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out);
-/// The number of leaves of a type: 1 unless it is an unpacked structure.
+void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out,
+                  const std::vector<sir::ArrayDim>& outer = {});
+/// The number of leaves of a type: 1 unless it is an unpacked structure
+/// or an array of them.
 std::uint32_t leafCount(const ast::Type& t);
 /// The number of leaves before member f of a structure.
 std::uint32_t leafOffset(const ast::UnpackedStructType& st, const ast::FieldSymbol& f);
@@ -157,6 +165,10 @@ public:
     /// The number of the element that constant indices select in an
     /// unpacked array slot (SIR_SPEC.md 4.2), or nullopt when an index is
     /// not constant or is outside its range.
+    /// The element number of constant declared indices, or nothing when one
+    /// is outside its range.
+    static std::optional<std::uint32_t> constElementOf(const sir::Slot& slot,
+                                                       const std::vector<std::int64_t>& indices);
     std::optional<std::uint32_t> constElement(const sir::Slot& slot,
                                               const std::vector<const ast::Expression*>& indices);
     /// Converts a value to another integral type (VALUE_SEMANTICS.md 2).
@@ -290,9 +302,10 @@ public:
     /// per leaf in order, created on first use: the first one.
     sir::SlotId structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl);
     /// A new slot for variable v, or for the member of it at path `member`
-    /// (empty for v itself) of the given type.
+    /// (empty for v itself) of the given type, inside arrays of structures
+    /// of dimensions `outer`.
     sir::SlotId newSlot(const ast::ValueSymbol& v, const std::string& member, const ast::Type& type,
-                        slang::SourceLocation sl);
+                        const std::vector<sir::ArrayDim>& outer, slang::SourceLocation sl);
     /// The frame variables of an automatic variable of an unpacked
     /// structure type, one per leaf in order: the first one.
     sir::FrameVarId structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl);
@@ -302,7 +315,26 @@ public:
     struct Storage {
         bool frame = false;
         std::uint32_t id = 0;
+        /// In an array of structures: the indices of the element, outermost
+        /// first, evaluated once (SIR_SPEC.md 4.2), and their values when
+        /// all are constant.
+        std::vector<sir::Operand> elem;
+        bool dynamic = false;
+        std::vector<std::int64_t> constIdx;
     };
+    /// The storage `off` leaves after s, in the same element.
+    static Storage leafAt(Storage s, std::uint32_t off);
+    /// s with one more constant element index.
+    Storage withIndex(Storage s, std::int64_t index);
+    /// Whether the leaf at s is an unpacked array beyond its element indices.
+    bool isArrayLeaf(const Storage& s) const;
+    /// The constant element indices of s; reported when they are not.
+    std::vector<std::int64_t> fixedIndices(const Storage& s, slang::SourceLocation sl);
+    /// The element of an unpacked array named by base and indices, its
+    /// indices evaluated in order.
+    Place arrayElementPlace(const ast::Expression& base,
+                            const std::vector<const ast::Expression*>& indices,
+                            slang::SourceLocation sl);
     /// The storage of a variable, a net or a member of an unpacked
     /// structure; nothing for other expressions.
     std::optional<Storage> storageOf(const ast::Expression& e, slang::SourceLocation sl);
@@ -350,12 +382,20 @@ public:
     /// by member (SIR_SPEC.md 4.2).
     void assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
                       slang::SourceLocation sl);
-    /// Computes one member of type t, whose leaves start at dst.
-    void assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
-                      slang::SourceLocation sl);
+    /// Computes a value of type t, a structure, an array of them, an array
+    /// or a single value, for the leaves at dst.
+    void assignAggregate(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
+                         slang::SourceLocation sl);
+    /// Copies the leaves of type t at src to those at dst.
+    void copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores& out,
+                       slang::SourceLocation sl);
+    /// The single values of the leaves of type t at s, in order (3.14).
+    void storageValues(const Storage& s, const ast::Type& t, std::vector<Val>& out,
+                       slang::SourceLocation sl);
     /// The default values (7.2.2) of the members of an unpacked structure
     /// at dst, where the type has them.
-    void memberDefaults(Storage dst, const ast::Type& t, Stores& out, slang::SourceLocation sl);
+    void memberDefaults(const Storage& dst, const ast::Type& t, Stores& out,
+                        slang::SourceLocation sl);
     /// A frame variable for an automatic variable, created on first use.
     sir::FrameVarId frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl);
     std::optional<sir::FrameVarId> findFrameVar(const ast::Symbol& s) const;

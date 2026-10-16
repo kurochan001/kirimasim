@@ -303,18 +303,34 @@ const ast::UnpackedStructType* unpackedStruct(const ast::Type& t) {
                                                          : nullptr;
 }
 
-void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out) {
-    const ast::UnpackedStructType* st = unpackedStruct(t);
-    if (st == nullptr) {
-        out.push_back({prefix, &t});
+const ast::UnpackedStructType* structElement(const ast::Type& t) {
+    const ast::Type* c = &t.getCanonicalType();
+    while (c->kind == ast::SymbolKind::FixedSizeUnpackedArrayType)
+        c = &c->as<ast::FixedSizeUnpackedArrayType>().elementType.getCanonicalType();
+    return unpackedStruct(*c);
+}
+
+void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out,
+                  const std::vector<sir::ArrayDim>& outer) {
+    // An array of structures adds its dimensions to every leaf of the
+    // structure (SIR_SPEC.md 4.2).
+    if (structElement(t) == nullptr) {
+        out.push_back({prefix, &t, outer});
         return;
     }
-    for (const ast::FieldSymbol* f : st->fields)
-        structLeaves(f->getType(), prefix + "." + std::string(f->name), out);
+    std::vector<sir::ArrayDim> dims = outer;
+    const ast::Type* c = &t.getCanonicalType();
+    while (c->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        const auto& a = c->as<ast::FixedSizeUnpackedArrayType>();
+        dims.push_back({a.range.left, a.range.right});
+        c = &a.elementType.getCanonicalType();
+    }
+    for (const ast::FieldSymbol* f : unpackedStruct(*c)->fields)
+        structLeaves(f->getType(), prefix + "." + std::string(f->name), out, dims);
 }
 
 std::uint32_t leafCount(const ast::Type& t) {
-    const ast::UnpackedStructType* st = unpackedStruct(t);
+    const ast::UnpackedStructType* st = structElement(t);
     if (st == nullptr) return 1;
     std::uint32_t n = 0;
     for (const ast::FieldSymbol* f : st->fields)
@@ -452,9 +468,9 @@ std::string Lowerer::scopeNameOf(const ast::Symbol& sym) const {
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
-    if (unpackedStruct(v.getType()) != nullptr)
+    if (structElement(v.getType()) != nullptr)
         unsupported(sl, "unpacked structure used as a whole here");
-    const sir::SlotId id = newSlot(v, "", v.getType(), sl);
+    const sir::SlotId id = newSlot(v, "", v.getType(), {}, sl);
     slots_.emplace(&v, id);
     return id;
 }
@@ -467,13 +483,14 @@ sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocatio
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::SlotId>(design_.slots.size());
     for (const Leaf& l : leaves)
-        newSlot(v, l.path, *l.type, sl);
+        newSlot(v, l.path, *l.type, l.dims, sl);
     structSlots_.emplace(&v, first);
     return first;
 }
 
 sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& member,
-                             const ast::Type& type, slang::SourceLocation sl) {
+                             const ast::Type& type, const std::vector<sir::ArrayDim>& outer,
+                             slang::SourceLocation sl) {
     // A variable or net of a package or of a compilation unit ($unit,
     // 3.12.1) belongs to its row, one in the design (SIR_SPEC.md 3.3).
     const std::optional<sir::InstanceId> row = rowOf(v);
@@ -486,7 +503,7 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         kind = *k;
     }
     const ast::Type* t = &type.getCanonicalType();
-    std::vector<sir::ArrayDim> dims;
+    std::vector<sir::ArrayDim> dims = outer;
     while (t->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         const auto& a = t->as<ast::FixedSizeUnpackedArrayType>();
         dims.push_back({a.range.left, a.range.right});
@@ -900,7 +917,7 @@ void Lowerer::declareScope(const ast::Scope& scope) {
             case ast::SymbolKind::Net: {
                 const auto& v = member.as<ast::ValueSymbol>();
                 try {
-                    if (unpackedStruct(v.getType()) != nullptr) {
+                    if (structElement(v.getType()) != nullptr) {
                         // One slot per member; the initial value or the
                         // members' defaults (7.2.2) in static-init.
                         const sir::SlotId first = structSlots(v, v.location);
@@ -1179,13 +1196,15 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
         evalSymbol_ = savedEval;
     };
     try {
-        if (unpackedStruct(v.getType()) != nullptr) {
+        if (structElement(v.getType()) != nullptr) {
             // The initializer, or else the members' defaults (7.2.2).
             Stores stores;
+            Storage dst;
+            dst.id = slot;
             if (const ast::Expression* init = v.getInitializer())
-                assignStruct({false, slot}, v.getType(), *init, stores, sl);
+                assignAggregate(dst, v.getType(), *init, stores, sl);
             else
-                memberDefaults({false, slot}, v.getType(), stores, sl);
+                memberDefaults(dst, v.getType(), stores, sl);
             flushStores(stores, false, sl);
         } else if (!design_.slots[slot].dims.empty()) {
             Stores stores;

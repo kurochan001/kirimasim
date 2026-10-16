@@ -101,7 +101,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 return sir::isFourState(t) ? constant(t, ~std::uint64_t{0}, ~std::uint64_t{0})
                                            : constant(t, 0);
             };
-            if (unpackedStruct(v.getType()) != nullptr) {
+            if (structElement(v.getType()) != nullptr) {
                 // One slot or frame variable per member (SIR_SPEC.md 4.2),
                 // set from the initializer or else the members' defaults
                 // (7.2.2).
@@ -119,10 +119,13 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                              {Operand::frame(first + k), initial(frameVars()[first + k].type).op},
                              sl);
                 Stores stores;
+                Storage dst;
+                dst.frame = true;
+                dst.id = first;
                 if (init != nullptr)
-                    assignStruct({true, first}, v.getType(), *init, stores, sl);
+                    assignAggregate(dst, v.getType(), *init, stores, sl);
                 else
-                    memberDefaults({true, first}, v.getType(), stores, sl);
+                    memberDefaults(dst, v.getType(), stores, sl);
                 flushStores(stores, false, sl);
                 return;
             }

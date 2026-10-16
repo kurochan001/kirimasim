@@ -1,15 +1,20 @@
-// Lowering of unpacked structures (SIR_SPEC.md 4.2).
+// Lowering of unpacked structures and arrays of them (SIR_SPEC.md 4.2).
 //
 // A variable of an unpacked structure type has one slot, or one frame
 // variable when it is automatic, for each innermost member (a leaf), in
-// declaration order. A member is then read and written like a variable of
-// its own type. A whole structure is assigned member by member: from an
-// assignment pattern, whose elements slang gives in member order, or from
-// another structure of the same type, leaf by leaf.
+// declaration order. An array of structures has the same slots with the
+// array's dimensions in front: a[i].x is element i of the slot of x. A
+// member is then read and written like a variable of its own type, inside
+// the element its indices choose. A whole structure or array of them is
+// assigned member by member and element by element: from an assignment
+// pattern, whose elements slang gives in order, or from another one of
+// the same type, leaf by leaf; every value first, then every write
+// (VALUE_SEMANTICS.md 3.13).
 
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "lowerer.h"
@@ -19,8 +24,21 @@
 
 namespace kirimasim::front {
 
+namespace {
+
+/// The expression without the conversions slang puts around an aggregate.
+const ast::Expression& unwrapAggregate(const ast::Expression& e) {
+    const ast::Expression* r = &e;
+    while (r->kind == ast::ExpressionKind::Conversion &&
+           Lowerer::isAggregate(*r->as<ast::ConversionExpression>().operand().type))
+        r = &r->as<ast::ConversionExpression>().operand();
+    return *r;
+}
+
+}  // namespace
+
 bool hasMemberDefaults(const ast::Type& t) {
-    const ast::UnpackedStructType* st = unpackedStruct(t);
+    const ast::UnpackedStructType* st = structElement(t);
     if (st == nullptr) return false;
     for (const ast::FieldSymbol* f : st->fields)
         if (f->getInitializer() != nullptr || hasMemberDefaults(f->getType())) return true;
@@ -32,14 +50,34 @@ bool Lowerer::isUnpackedMember(const ast::Expression& e) {
            unpackedStruct(*e.as<ast::MemberAccessExpression>().value().type) != nullptr;
 }
 
+Lowerer::Storage Lowerer::leafAt(Storage s, std::uint32_t off) {
+    s.id += off;
+    return s;
+}
+
+Lowerer::Storage Lowerer::withIndex(Storage s, std::int64_t index) {
+    s.elem.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(index)).op);
+    s.constIdx.push_back(index);
+    return s;
+}
+
+bool Lowerer::isArrayLeaf(const Storage& s) const {
+    return !s.frame && design_.slots[s.id].dims.size() > s.elem.size();
+}
+
+std::vector<std::int64_t> Lowerer::fixedIndices(const Storage& s, slang::SourceLocation sl) {
+    if (s.dynamic) unsupported(sl, "an array member of an element chosen at run time");
+    return s.constIdx;
+}
+
 sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl) {
     if (auto it = b_.structFrames.find(&v); it != b_.structFrames.end()) return it->second;
     std::vector<Leaf> leaves;
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::FrameVarId>(frameVars().size());
     for (const Leaf& l : leaves) {
-        if (l.type->getCanonicalType().isUnpackedArray())
-            unsupported(sl, "unpacked array member of an automatic structure");
+        if (l.type->getCanonicalType().isUnpackedArray() || !l.dims.empty())
+            unsupported(sl, "automatic unpacked array in a structure or of structures");
         const sir::Type t = typeOf(*l.type, sl);
         if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
         frameVars().push_back({std::string(v.name) + l.path, t, sir::kNone});
@@ -56,101 +94,212 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         if (m.member.kind != ast::SymbolKind::Field) return std::nullopt;
         std::optional<Storage> base = storageOf(m.value(), sl);
         if (!base) return std::nullopt;
-        base->id += leafOffset(*unpackedStruct(*m.value().type), m.member.as<ast::FieldSymbol>());
+        return leafAt(std::move(*base), leafOffset(*unpackedStruct(*m.value().type),
+                                                   m.member.as<ast::FieldSymbol>()));
+    }
+    if (e.kind == ast::ExpressionKind::ElementSelect) {
+        // An element of an array of structures: the array's leaves with one
+        // more index, evaluated now.
+        const auto& es = e.as<ast::ElementSelectExpression>();
+        const ast::Type& vt = es.value().type->getCanonicalType();
+        if (!vt.isUnpackedArray() || structElement(vt) == nullptr) return std::nullopt;
+        std::optional<Storage> base = storageOf(es.value(), sl);
+        if (!base) return std::nullopt;
+        if (const std::optional<std::int64_t> c = constInt(es.selector()))
+            return withIndex(std::move(*base), *c);
+        const Val iv = lowerExpr(es.selector());
+        if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
+        base->elem.push_back(iv.op);
+        base->dynamic = true;
         return base;
     }
     const ast::Symbol* sym = namedSymbol(e);
     if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
         return std::nullopt;
     const auto& v = sym->as<ast::ValueSymbol>();
-    if (unpackedStruct(v.getType()) != nullptr) {
-        if (auto it = b_.structFrames.find(sym); it != b_.structFrames.end())
-            return Storage{true, it->second};
+    Storage st;
+    if (structElement(v.getType()) != nullptr) {
+        if (auto it = b_.structFrames.find(sym); it != b_.structFrames.end()) {
+            st.frame = true;
+            st.id = it->second;
+            return st;
+        }
         if (!inSlot(*sym)) unsupported(sl, "automatic variable '" + std::string(v.name) + "' here");
-        return Storage{false, structSlots(v, sl)};
+        st.id = structSlots(v, sl);
+        return st;
     }
-    if (const std::optional<sir::FrameVarId> f = findFrameVar(*sym)) return Storage{true, *f};
+    if (const std::optional<sir::FrameVarId> f = findFrameVar(*sym)) {
+        st.frame = true;
+        st.id = *f;
+        return st;
+    }
     if (!inSlot(*sym)) return std::nullopt;
-    return Storage{false, slotOf(v, sl)};
+    st.id = slotOf(v, sl);
+    return st;
 }
 
 Lowerer::Place Lowerer::storagePlace(Storage st) {
+    // One single leaf: a frame variable, a whole slot, or the element of an
+    // array of structures.
     Place p;
     if (st.frame) {
         p.kind = Place::Kind::Frame;
         p.frame = st.id;
         p.type = frameVars()[st.id].type;
-    } else {
-        p.kind = Place::Kind::Slot;
-        p.slot = st.id;
-        p.type = design().slots[st.id].type;
+        return p;
     }
+    const sir::Slot& slot = design().slots[st.id];
+    p.slot = st.id;
+    p.type = slot.type;
+    if (st.elem.empty()) {
+        p.kind = Place::Kind::Slot;
+        return p;
+    }
+    p.kind = Place::Kind::Element;
+    p.indices = std::move(st.elem);
+    if (!st.dynamic) p.elem = constElementOf(slot, st.constIdx);
     return p;
 }
 
 void Lowerer::assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
                            slang::SourceLocation sl) {
     const ast::UnpackedStructType& st = *unpackedStruct(t);
-    const ast::Expression* r = &rhs;
-    while (r->kind == ast::ExpressionKind::Conversion &&
-           unpackedStruct(*r->as<ast::ConversionExpression>().operand().type) != nullptr)
-        r = &r->as<ast::ConversionExpression>().operand();
-    if (isPattern(*r)) {
+    const ast::Expression& r = unwrapAggregate(rhs);
+    if (isPattern(r)) {
         // One element per member, in declaration order (10.9.2).
-        const std::vector<const ast::Expression*> elems = patternElements(*r);
+        const std::vector<const ast::Expression*> elems = patternElements(r);
         if (elems.size() != st.fields.size()) unsupported(sl, "assignment pattern of this size");
         std::uint32_t off = 0;
         for (std::size_t i = 0; i < elems.size(); ++i) {
             const ast::Type& ft = st.fields[i]->getType();
-            assignMember({dst.frame, dst.id + off}, ft, *elems[i], out, sl);
+            assignAggregate(leafAt(dst, off), ft, *elems[i], out, sl);
             off += leafCount(ft);
         }
         return;
     }
     // Another structure of the same type (6.22.2): leaf by leaf.
     const std::optional<Storage> src =
-        unpackedStruct(*r->type) != nullptr ? storageOf(*r, sl) : std::nullopt;
+        unpackedStruct(*r.type) != nullptr ? storageOf(r, sl) : std::nullopt;
     if (!src) unsupported(sl, "assignment of this unpacked structure value");
-    std::vector<Leaf> leaves;
-    structLeaves(t, "", leaves);
-    for (std::uint32_t k = 0; k < leaves.size(); ++k) {
-        const Storage from{src->frame, src->id + k};
-        const Storage to{dst.frame, dst.id + k};
-        if (leaves[k].type->getCanonicalType().isUnpackedArray()) {
-            // Automatic structures have no array members (structFrameVars).
-            copyArray(to.id, {}, from.id, {}, out, sl);
-            continue;
-        }
-        out.emplace_back(storagePlace(to), loadPlace(storagePlace(from), sl));
-    }
+    copyAggregate(std::move(dst), *src, t, out, sl);
 }
 
-void Lowerer::assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
-                           slang::SourceLocation sl) {
+void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expression& rhs,
+                              Stores& out, slang::SourceLocation sl) {
     if (unpackedStruct(t) != nullptr) {
-        assignStruct(dst, t, rhs, out, sl);
+        assignStruct(std::move(dst), t, rhs, out, sl);
         return;
     }
-    if (t.getCanonicalType().isUnpackedArray()) {
-        assignArray(dst.id, {}, rhs, out, sl);
+    const ast::Type& ct = t.getCanonicalType();
+    if (structElement(ct) != nullptr) {
+        // An array of structures, one dimension at a time: the pattern's
+        // elements from the left bound, or the other array's (10.9.1, 7.6).
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const ast::Expression& r = unwrapAggregate(rhs);
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        if (isPattern(r)) {
+            const std::vector<const ast::Expression*> elems = patternElements(r);
+            if (elems.size() != at.range.width())
+                unsupported(sl, "assignment pattern of this size");
+            for (std::size_t k = 0; k < elems.size(); ++k)
+                assignAggregate(withIndex(dst, at.range.left + static_cast<std::int64_t>(k) * step),
+                                at.elementType, *elems[k], out, sl);
+            return;
+        }
+        const std::optional<Storage> src =
+            structElement(*r.type) != nullptr ? storageOf(r, sl) : std::nullopt;
+        if (!src) unsupported(sl, "assignment of this array of structures");
+        copyAggregate(std::move(dst), *src, t, out, sl);
         return;
     }
-    Place p = storagePlace(dst);
-    Val v = coerce(lowerExpr(rhs), p.type, sl);
+    if (ct.isUnpackedArray()) {
+        assignArray(dst.id, fixedIndices(dst, sl), rhs, out, sl);
+        return;
+    }
+    Place p = storagePlace(std::move(dst));
+    const Val v = coerce(lowerExpr(rhs), p.type, sl);
     out.emplace_back(std::move(p), v);
 }
 
-void Lowerer::memberDefaults(Storage dst, const ast::Type& t, Stores& out,
+void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores& out,
+                            slang::SourceLocation sl) {
+    const ast::Type& ct = t.getCanonicalType();
+    if (const ast::UnpackedStructType* st = unpackedStruct(ct)) {
+        std::uint32_t off = 0;
+        for (const ast::FieldSymbol* f : st->fields) {
+            copyAggregate(leafAt(dst, off), leafAt(src, off), f->getType(), out, sl);
+            off += leafCount(f->getType());
+        }
+        return;
+    }
+    if (structElement(ct) != nullptr) {
+        // Element by element; both sides have the same type, so the same
+        // ranges (7.6).
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        for (std::int64_t i = at.range.left;; i += step) {
+            copyAggregate(withIndex(dst, i), withIndex(src, i), at.elementType, out, sl);
+            if (i == at.range.right) break;
+        }
+        return;
+    }
+    if (ct.isUnpackedArray()) {
+        copyArray(dst.id, fixedIndices(dst, sl), src.id, fixedIndices(src, sl), out, sl);
+        return;
+    }
+    const Val v = loadPlace(storagePlace(std::move(src)), sl);
+    out.emplace_back(storagePlace(std::move(dst)), v);
+}
+
+void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Val>& out,
+                            slang::SourceLocation sl) {
+    const ast::Type& ct = t.getCanonicalType();
+    if (const ast::UnpackedStructType* st = unpackedStruct(ct)) {
+        std::uint32_t off = 0;
+        for (const ast::FieldSymbol* f : st->fields) {
+            storageValues(leafAt(s, off), f->getType(), out, sl);
+            off += leafCount(f->getType());
+        }
+        return;
+    }
+    if (structElement(ct) != nullptr) {
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        for (std::int64_t i = at.range.left;; i += step) {
+            storageValues(withIndex(s, i), at.elementType, out, sl);
+            if (i == at.range.right) break;
+        }
+        return;
+    }
+    if (ct.isUnpackedArray()) {
+        arrayValues(s.id, fixedIndices(s, sl), out, sl);
+        return;
+    }
+    out.push_back(loadPlace(storagePlace(s), sl));
+}
+
+void Lowerer::memberDefaults(const Storage& dst, const ast::Type& t, Stores& out,
                              slang::SourceLocation sl) {
     // A member's own initial value (7.2.2); the members of a nested
-    // structure that has none get theirs.
-    const ast::UnpackedStructType* st = unpackedStruct(t);
+    // structure that has none get theirs; in an array of structures, in
+    // every element.
+    const ast::Type& ct = t.getCanonicalType();
+    if (structElement(ct) != nullptr && unpackedStruct(ct) == nullptr) {
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        for (std::int64_t i = at.range.left;; i += step) {
+            memberDefaults(withIndex(dst, i), at.elementType, out, sl);
+            if (i == at.range.right) break;
+        }
+        return;
+    }
+    const ast::UnpackedStructType* st = unpackedStruct(ct);
     if (st == nullptr) return;
     std::uint32_t off = 0;
     for (const ast::FieldSymbol* f : st->fields) {
-        const Storage at{dst.frame, dst.id + off};
+        const Storage at = leafAt(dst, off);
         if (const ast::Expression* init = f->getInitializer())
-            assignMember(at, f->getType(), *init, out, sl);
+            assignAggregate(at, f->getType(), *init, out, sl);
         else
             memberDefaults(at, f->getType(), out, sl);
         off += leafCount(f->getType());

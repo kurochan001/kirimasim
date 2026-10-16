@@ -1,0 +1,17 @@
+defaults 7 7 7
+dynamic 20 10 12
+bits 1f
+element pattern 5 6 aa
+element copies 5 6 10
+array copy 5 99 10
+swap 5 10 5
+default pattern 1 2 0
+nested 3 7 7
+2-D 8 7
+compare 1 0 1
+compare x x 1
+wakes 1
+foreach 100 101 102
+nba before 101
+nba after 7
+outside 0 0 xxxxxxxx

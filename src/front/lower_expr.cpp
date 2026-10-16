@@ -569,11 +569,19 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
         (!isUnpackedMember(*base) && (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym))))
         return std::nullopt;
     const std::optional<Storage> st = storageOf(*base, e.sourceRange.start());
-    if (!st || st->frame) return std::nullopt;
+    if (!st || st->frame || st->dynamic || isArrayLeaf(*st)) return std::nullopt;
     const sir::SlotId s = st->id;
-    if (!design().slots[s].dims.empty()) return std::nullopt;
-    if (pos) return sir::SlotRange{s, 0, 0, static_cast<std::uint32_t>(*pos), 1};
-    return sir::SlotRange{s, 0, 0, 0, 0};
+    // A member of an element of an array of structures: that element.
+    std::uint32_t first = 0;
+    std::uint32_t count = 0;
+    if (!st->elem.empty()) {
+        const std::optional<std::uint32_t> el = constElementOf(design().slots[s], st->constIdx);
+        if (!el) return std::nullopt;
+        first = *el;
+        count = 1;
+    }
+    if (pos) return sir::SlotRange{s, first, count, static_cast<std::uint32_t>(*pos), 1};
+    return sir::SlotRange{s, first, count, 0, 0};
 }
 
 Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl) {
@@ -730,12 +738,11 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (isUnpackedMember(e)) {
                 // A member of an unpacked structure: its own slot or frame
                 // variable (SIR_SPEC.md 4.2).
+                if (structElement(*e.type) != nullptr)
+                    unsupported(sl, "unpacked structure used as a whole here");
                 const std::optional<Storage> st = storageOf(e, sl);
                 if (!st) unsupported(sl, "expression 'MemberAccess'");
-                if (unpackedStruct(*e.type) != nullptr)
-                    unsupported(sl, "unpacked structure used as a whole here");
-                if (!st->frame && !design().slots[st->id].dims.empty())
-                    unsupported(sl, "an unpacked array as a value");
+                if (isArrayLeaf(*st)) unsupported(sl, "an unpacked array as a value");
                 return coerce(loadPlace(storagePlace(*st), sl), typeOf(*e.type, sl), sl);
             }
             // A member of a packed structure or union: its bits, from the
@@ -1048,30 +1055,66 @@ Lowerer::constElement(const sir::Slot& slot, const std::vector<const ast::Expres
     return elem;
 }
 
+std::optional<std::uint32_t> Lowerer::constElementOf(const sir::Slot& slot,
+                                                     const std::vector<std::int64_t>& indices) {
+    // The element number of constant declared indices, or nothing when one
+    // is outside its range.
+    std::uint32_t elem = 0;
+    if (indices.size() != slot.dims.size()) return std::nullopt;
+    for (std::size_t d = 0; d < indices.size(); ++d) {
+        const std::int64_t l = slot.dims[d].left;
+        const std::int64_t r = slot.dims[d].right;
+        const auto n = static_cast<std::uint32_t>(std::abs(l - r) + 1);
+        const std::int64_t off = l <= r ? indices[d] - l : l - indices[d];
+        if (off < 0 || off >= n) return std::nullopt;
+        elem = elem * n + static_cast<std::uint32_t>(off);
+    }
+    return elem;
+}
+
+Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
+                                          const std::vector<const ast::Expression*>& indices,
+                                          slang::SourceLocation sl) {
+    // The indices of the element of an array of structures come first, then
+    // those written after the member (SIR_SPEC.md 4.2); all evaluated in
+    // order. Constant indices make the sensitivity that element alone.
+    const std::optional<Storage> st = storageOf(base, sl);
+    if (!st || st->frame) unsupported(sl, "selecting from this array");
+    const sir::Slot& slot = design().slots[st->id];
+    if (slot.dims.size() != st->elem.size() + indices.size())
+        unsupported(sl, "a part of an unpacked array");
+    Place p;
+    p.kind = Place::Kind::Element;
+    p.slot = st->id;
+    p.indices = st->elem;
+    bool fixed = !st->dynamic;
+    std::vector<std::int64_t> idx = st->constIdx;
+    for (const ast::Expression* ix : indices) {
+        const Val iv = lowerExpr(*ix);
+        if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
+        p.indices.push_back(iv.op);
+        const std::optional<std::int64_t> c = constInt(*ix);
+        if (c)
+            idx.push_back(*c);
+        else
+            fixed = false;
+    }
+    if (fixed) p.elem = constElementOf(slot, idx);
+    p.type = slot.type;
+    return p;
+}
+
 Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& es = e.as<ast::ElementSelectExpression>();
     const ast::Type& vt = es.value().type->getCanonicalType();
     if (vt.isUnpackedArray()) {
+        if (structElement(*e.type) != nullptr)
+            unsupported(sl, "unpacked structure used as a whole here");
         const std::optional<ArrayAccess> acc = arrayAccess(e);
-        const std::optional<Storage> st = acc ? storageOf(*acc->base, sl) : std::nullopt;
-        if (!st || st->frame) unsupported(sl, "selecting from this array");
-        const sir::SlotId s = st->id;
-        const sir::Slot& slot = design().slots[s];
-        if (slot.dims.size() != acc->indices.size())
-            unsupported(sl, "selecting a part of an unpacked array");
-        std::vector<Operand> ops{Operand::slot(s)};
-        // Constant indices: the sensitivity is that element alone.
-        const std::optional<std::uint32_t> elem = constElement(slot, acc->indices);
-        for (const ast::Expression* ixp : acc->indices) {
-            const ast::Expression& ix = *ixp;
-            const Val iv = lowerExpr(ix);
-            if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
-            ops.push_back(iv.op);
-        }
-        noteRead(elem ? sir::SlotRange{s, *elem, 1, 0, 0} : sir::SlotRange{s, 0, 0, 0, 0});
-        const Type et = slot.type;
-        return coerce(emit(Op::LoadElem, et, std::move(ops), sl), typeOf(*e.type, sl), sl);
+        if (!acc) unsupported(sl, "selecting from this array");
+        return coerce(loadPlace(arrayElementPlace(*acc->base, acc->indices, sl), sl),
+                      typeOf(*e.type, sl), sl);
     }
     if (vt.isString()) {
         // s[i]: the byte, or 0 outside the string (table 6-9).
@@ -1386,18 +1429,10 @@ void Lowerer::aggregateValues(const ast::Expression& e, const ast::Type& t, std:
         out.push_back(coerce(lowerExpr(*r), typeOf(ct, sl), sl));
         return;
     }
-    if (st != nullptr) {
+    if (structElement(ct) != nullptr) {
         const std::optional<Storage> src = storageOf(*r, sl);
         if (!src || !isAggregate(*r->type)) unsupported(sl, "comparison of this structure value");
-        std::vector<Leaf> leaves;
-        structLeaves(ct, "", leaves);
-        for (std::uint32_t k = 0; k < leaves.size(); ++k) {
-            const Storage leaf{src->frame, src->id + k};
-            if (leaves[k].type->getCanonicalType().isUnpackedArray())
-                arrayValues(leaf.id, {}, out, sl);
-            else
-                out.push_back(loadPlace(storagePlace(leaf), sl));
-        }
+        storageValues(*src, ct, out, sl);
         return;
     }
     const std::optional<ArrayTarget> a = arrayTarget(*r);
@@ -1714,12 +1749,13 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         storePlace(p, v, a.isNonBlocking(), sl);
         return v;
     }
-    if (unpackedStruct(*a.left().type) != nullptr) {
-        // An unpacked structure is assigned member by member (7.2.2, 10.9.2).
+    if (structElement(*a.left().type) != nullptr) {
+        // An unpacked structure, or an array of them, is assigned member by
+        // member and element by element (7.2.2, 10.9.2, SIR_SPEC.md 4.2).
         const std::optional<Storage> dst = storageOf(a.left(), sl);
         if (!dst) unsupported(sl, "assignment to this unpacked structure");
         Stores stores;
-        assignStruct(*dst, *a.left().type, a.right(), stores, sl);
+        assignAggregate(*dst, *a.left().type, a.right(), stores, sl);
         flushStores(stores, a.isNonBlocking(), sl);
         return Val{Operand::temp(0), sir::voidType()};
     }
@@ -1749,10 +1785,13 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
         t->indices.push_back(*i);
         return t;
     }
-    if (!e.type->getCanonicalType().isUnpackedArray()) return std::nullopt;
+    // An array member of an element of an array of structures is the
+    // sub-array of its slot at the element's indices.
+    if (!e.type->getCanonicalType().isUnpackedArray() || structElement(*e.type) != nullptr)
+        return std::nullopt;
     const std::optional<Storage> st = storageOf(e, e.sourceRange.start());
-    if (!st || st->frame || design().slots[st->id].dims.empty()) return std::nullopt;
-    return ArrayTarget{st->id, {}};
+    if (!st || st->frame || st->dynamic || !isArrayLeaf(*st)) return std::nullopt;
+    return ArrayTarget{st->id, st->constIdx};
 }
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
@@ -1911,22 +1950,11 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 return p;
             }
             if (element && base.type->isUnpackedArray()) {
+                if (structElement(*lhs.type) != nullptr)
+                    unsupported(sl, "unpacked structure used as a whole here");
                 const std::optional<ArrayAccess> acc = arrayAccess(lhs);
-                const std::optional<Storage> st = acc ? storageOf(*acc->base, sl) : std::nullopt;
-                if (!st || st->frame) unsupported(sl, "assignment to an element of this array");
-                p.kind = Place::Kind::Element;
-                p.slot = st->id;
-                const sir::Slot& slot = design().slots[p.slot];
-                if (slot.dims.size() != acc->indices.size())
-                    unsupported(sl, "assignment to a part of an unpacked array");
-                for (const ast::Expression* ix : acc->indices) {
-                    const Val iv = lowerExpr(*ix);
-                    if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
-                    p.indices.push_back(iv.op);
-                }
-                p.elem = constElement(slot, acc->indices);
-                p.type = slot.type;
-                return p;
+                if (!acc) unsupported(sl, "assignment to an element of this array");
+                return arrayElementPlace(*acc->base, acc->indices, sl);
             }
             // Bits of a packed variable, or of an element of an array.
             const ast::Type& bt = base.type->getCanonicalType();
@@ -1935,21 +1963,18 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             if (namedSymbol(base) != nullptr || isUnpackedMember(base)) {
                 const std::optional<Storage> st = storageOf(base, sl);
                 if (!st || st->frame) unsupported(sl, "assignment to a part of this variable");
-                p.slot = st->id;
-                if (!design().slots[p.slot].dims.empty())
-                    unsupported(sl, "assignment to a part of an unpacked array");
+                if (isArrayLeaf(*st)) unsupported(sl, "assignment to a part of an unpacked array");
+                // A member of an element of an array of structures is an
+                // element of its slot.
+                const Place leaf = storagePlace(*st);
+                p.slot = leaf.slot;
+                p.indices = leaf.indices;
+                p.elem = leaf.elem;
             } else if (const std::optional<ArrayAccess> acc = arrayAccess(base)) {
-                const std::optional<Storage> st = storageOf(*acc->base, sl);
-                if (!st || st->frame) unsupported(sl, "assignment to a part of this variable");
-                p.slot = st->id;
-                if (design().slots[p.slot].dims.size() != acc->indices.size())
-                    unsupported(sl, "assignment to a part of an unpacked array");
-                p.elem = constElement(design().slots[p.slot], acc->indices);
-                for (const ast::Expression* ix : acc->indices) {
-                    const Val iv = lowerExpr(*ix);
-                    if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
-                    p.indices.push_back(iv.op);
-                }
+                const Place el = arrayElementPlace(*acc->base, acc->indices, sl);
+                p.slot = el.slot;
+                p.indices = el.indices;
+                p.elem = el.elem;
             } else {
                 // A part of a member or of another part: the bits of
                 // that place (narrow).
@@ -1989,12 +2014,11 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             if (isUnpackedMember(lhs)) {
                 // A member of an unpacked structure: its own slot or frame
                 // variable (SIR_SPEC.md 4.2).
+                if (structElement(*lhs.type) != nullptr)
+                    unsupported(sl, "unpacked structure used as a whole here");
                 const std::optional<Storage> st = storageOf(lhs, sl);
                 if (!st) unsupported(sl, "assignment to a member of this structure");
-                if (unpackedStruct(*lhs.type) != nullptr)
-                    unsupported(sl, "unpacked structure used as a whole here");
-                if (!st->frame && !design().slots[st->id].dims.empty())
-                    unsupported(sl, "assignment to a whole unpacked array");
+                if (isArrayLeaf(*st)) unsupported(sl, "assignment to a whole unpacked array");
                 return storagePlace(*st);
             }
             // A member of a packed structure or union: its bits (7.2.1,
