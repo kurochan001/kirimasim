@@ -15,8 +15,9 @@ comment) decides what is expected:
   uses a construct haremasim does not support yet (exit code 2 with an
   "unsupported" error, CLI.md 5) is reported as skipped, not as passed.
 
-Standard output is compared line by line; only empty lines at the end are
-ignored. For :nondeterministic: yes, the .expected file holds
+Standard output is compared line by line without empty lines (lines of
+only white space included), as the test-suite repository does
+(TEST_SUITE.md). For :nondeterministic: yes, the .expected file holds
 the allowed outputs separated by lines of "---"; any one of them passes.
 """
 
@@ -44,10 +45,7 @@ def read_metadata(path: Path) -> dict[str, str]:
 
 
 def normalize(text: str) -> list[str]:
-    lines = text.splitlines()
-    while lines and lines[-1] == "":
-        lines.pop()
-    return lines
+    return [line for line in text.splitlines() if line.strip()]
 
 
 def expected_outputs(test: Path, meta: dict[str, str]) -> list[list[str]] | None:
