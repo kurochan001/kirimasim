@@ -66,8 +66,10 @@ CASES = [
      " slot (--max-zero-delay=10)\nkirimasim: info: zero_time_limit at 0 ns"),
     ([ZERO_DELAY], 5, "=final ran\n", "(--max-zero-delay=1000000)"),
     # Another writer of an always_comb variable is an error of the design
-    # (SCHEDULER_SPEC.md 6.4), not an internal error.
-    ([WRITERS], 2, "", "writers.sv:6:3: error: 'top.a' is written here and by top.initial1 at"),
+    # (SCHEDULER_SPEC.md 6.4), not an internal error; slang's analysis
+    # reports it.
+    ([WRITERS], 2, "", "writers.sv:6:15: error: variable 'a[1:0]' driven by always_comb procedure"
+     " cannot be written to by any other process"),
     ([STRING_REPL], 0, "=[]\n[]\n",
      "string_repl.sv:9:9: warning: string replication count is negative, x or z; the result is"
      " the empty string\nkirimasim: info: quiescent"),
