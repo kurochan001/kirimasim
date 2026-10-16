@@ -509,6 +509,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (sym.kind == ast::SymbolKind::Parameter)
                 return constantFrom(sym.as<ast::ParameterSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
+            if (sym.kind == ast::SymbolKind::EnumValue)
+                return constantFrom(sym.as<ast::EnumValueSymbol>().getValue(), typeOf(*e.type, sl),
+                                    sl);
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym))
                 return emit(Op::Fload, frameVars()[*f].type, {Operand::frame(*f)}, sl);
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
@@ -651,6 +654,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 return sys(rt, {v.op});
             }
             if (std::optional<Val> v = lowerStringCall(call, sl)) return *v;
+            if (std::optional<Val> v = lowerEnumCall(call, sl)) return *v;
             unsupported(sl, "system function " + name);
         }
         default: unsupported(sl, "expression '" + std::string(ast::toString(e.kind)) + "'");
@@ -1110,6 +1114,56 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
 }
 
 // --- System tasks ------------------------------------------------------------
+
+std::optional<Val> Lowerer::lowerEnumCall(const ast::CallExpression& call,
+                                          slang::SourceLocation sl) {
+    // The enumeration methods (6.19.5): the value is the first argument.
+    const auto args = call.arguments();
+    if (args.empty() || !args[0]->type->getCanonicalType().isEnum()) return std::nullopt;
+    const std::string name(call.getSubroutineName());
+    const ast::Type& et = args[0]->type->getCanonicalType();
+    std::vector<const ast::EnumValueSymbol*> members;
+    for (const ast::EnumValueSymbol& m : et.as<ast::EnumType>().values())
+        members.push_back(&m);
+    if (members.empty()) return std::nullopt;
+    const Type vt = typeOf(et, sl);
+    const auto member = [&](std::size_t i) { return constantFrom(members[i]->getValue(), vt, sl); };
+    const std::size_t n = members.size();
+    if (name == "first" && args.size() == 1) return member(0);
+    if (name == "last" && args.size() == 1) return member(n - 1);
+    if (name == "num" && args.size() == 1) return constant(typeOf(*call.type, sl), n);
+    const bool isName = name == "name" && args.size() == 1;
+    if (!isName && !((name == "next" || name == "prev") && args.size() <= 2)) return std::nullopt;
+    // next(N) and prev(N) wrap around; N is an int unsigned.
+    std::size_t step = 0;
+    if (!isName) {
+        std::int64_t count = 1;
+        if (args.size() == 2) {
+            const std::optional<std::int64_t> c = constInt(*args[1]);
+            if (!c)
+                unsupported(sl, "enumeration method " + name + " with a count known at run time");
+            count = *c;
+        }
+        step = static_cast<std::size_t>(count) % n;
+        if (name == "prev") step = (n - step) % n;
+    }
+    // A value that is not a member gives the empty string for name() and
+    // the default initial value of the base type (table 6-7) for next()
+    // and prev(). Members are told apart by ===, so a value with x or z
+    // bits matches only a member with the same bits.
+    const Val v = coerce(lowerExpr(*args[0]), vt, sl);
+    Val result = isName                 ? stringConstant("")
+                 : sir::isFourState(vt) ? constant(vt, maskOf(vt.width), maskOf(vt.width))
+                                        : constant(vt, 0);
+    for (std::size_t i = n; i-- > 0;) {
+        const Val m = member(i);
+        const Val hit = emit(Op::Ceq, sir::u2(1), {v.op, m.op}, sl);
+        const Val then =
+            isName ? stringConstant(std::string(members[i]->name)) : member((i + step) % n);
+        result = emit(Op::Select, result.type, {hit.op, then.op, result.op}, sl);
+    }
+    return result;
+}
 
 std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
                                             slang::SourceLocation sl) {

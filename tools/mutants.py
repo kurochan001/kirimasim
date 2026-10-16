@@ -59,6 +59,9 @@ MUTANTS = [
     ("front: an operand is extended by its own sign", "src/front/lower_expr.cpp",
      "if (c.conversionKind == ast::ConversionKind::Propagated && sir::isIntegral(v.type) &&",
      "if (false && sir::isIntegral(v.type) &&"),
+    ("front: next() of a value that is no member is 0 in 4-state", "src/front/lower_expr.cpp",
+     ": sir::isFourState(vt) ? constant(vt, maskOf(vt.width), maskOf(vt.width))",
+     ": sir::isFourState(vt) ? constant(vt, 0)"),
 ]
 
 

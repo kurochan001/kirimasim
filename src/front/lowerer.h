@@ -158,6 +158,8 @@ public:
     Val stringConstant(std::string bytes);
     /// Lowers a string method call (6.16) or a call of $sformatf.
     std::optional<Val> lowerStringCall(const ast::CallExpression& call, slang::SourceLocation sl);
+    /// Lowers an enumeration method call (6.19.5).
+    std::optional<Val> lowerEnumCall(const ast::CallExpression& call, slang::SourceLocation sl);
     Val constantFrom(const slang::ConstantValue& cv, sir::Type t, slang::SourceLocation sl);
 
     // Building blocks.
