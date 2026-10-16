@@ -134,6 +134,33 @@ public:
     /// nonblocking assignment.
     void lowerStore(const ast::Expression& lhs, const Val& v, bool nonblocking,
                     slang::SourceLocation sl);
+    /// An assignment target with its indices and positions evaluated, so
+    /// that it can be read and written without evaluating them again
+    /// (11.4.1, 11.4.2).
+    struct Place {
+        enum class Kind : std::uint8_t {
+            Frame,       ///< An automatic variable.
+            Slot,        ///< A whole net or static variable.
+            Element,     ///< An element of an unpacked array.
+            Bits,        ///< Bits of a variable or of an element.
+            StringChar,  ///< A character of a string (base[0]).
+        };
+        Kind kind = Kind::Slot;
+        sir::FrameVarId frame = 0;
+        sir::SlotId slot = 0;
+        std::vector<sir::Operand> indices;  ///< Of an array element; of the character.
+        std::optional<std::uint32_t> elem;  ///< The element, when the indices are constant.
+        std::optional<Val> pos;             ///< Bits: a position known at run time,
+        std::int64_t lsb = 0;               ///< or a constant one;
+        std::uint32_t width = 0;            ///< and the width.
+        std::vector<Place> base;            ///< StringChar: the string.
+        sir::Type type;                     ///< The type of the value there.
+    };
+    Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
+    Val loadPlace(const Place& p, slang::SourceLocation sl);
+    void storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl);
+    /// What a read or write of a place covers (SIR_SPEC.md 3.4).
+    sir::SlotRange rangeOf(const Place& p) const;
     Val lowerAssignment(const ast::AssignmentExpression& a);
 
     // Subroutines (lower_sub.cpp).

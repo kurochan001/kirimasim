@@ -1,0 +1,8 @@
+s.putc(0, "x") xbc
+s[2] = "z" abz
+s.itoa(-42) -42
+s.hextoa(255) ff
+sa[1].putc(1, "y") dyf
+sa[idx()].putc(0, "z") zhi 1
+sa[idx()][1] = "w" gwi 1
+sa[idx()].bintoa(5) 101 1

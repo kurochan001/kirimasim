@@ -1,0 +1,4 @@
+s.putc(0, "x") xbc
+s[2] = "z" abz
+s.itoa(-42) -42
+s.hextoa(255) ff

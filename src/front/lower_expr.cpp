@@ -857,9 +857,13 @@ Val Lowerer::lowerUnary(const ast::Expression& e) {
                              u.op == ast::UnaryOperator::Postincrement;
             const bool pre = u.op == ast::UnaryOperator::Preincrement ||
                              u.op == ast::UnaryOperator::Predecrement;
-            const Val old = coerce(lowerExpr(u.operand()), rt, sl);
-            const Val n = emit(inc ? Op::Add : Op::Sub, rt, {old.op, constant(rt, 1).op}, sl);
-            lowerStore(u.operand(), n, false, sl);
+            // The operand is read and written as one place, its indices
+            // evaluated once (11.4.1, 11.4.2); a real steps by 1.0.
+            const Place p = placeOf(u.operand(), sl);
+            const Val old = coerce(loadPlace(p, sl), rt, sl);
+            const Val one = coerce(constant(sir::s2(32), 1), rt, sl);
+            const Val n = emit(inc ? Op::Add : Op::Sub, rt, {old.op, one.op}, sl);
+            storePlace(p, n, false, sl);
             return pre ? n : old;
         }
     }
@@ -976,27 +980,30 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
                          slang::SourceLocation sl) {
     // The value is computed before the indices of the target (SIR_SPEC.md
     // 7.3); the callers lower it first.
+    storePlace(placeOf(lhs, sl), v, nonblocking, sl);
+}
+
+Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocation sl) {
+    Place p;
     switch (lhs.kind) {
         case ast::ExpressionKind::NamedValue:
         case ast::ExpressionKind::HierarchicalValue: {
             const ast::Symbol& sym = lhs.as<ast::ValueExpressionBase>().symbol;
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
-                if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
-                const Val fv = coerce(v, frameVars()[*f].type, sl);
-                emitVoid(Op::Fstore, {Operand::frame(*f), fv.op}, sl);
-                return;
+                p.kind = Place::Kind::Frame;
+                p.frame = *f;
+                p.type = frameVars()[*f].type;
+                return p;
             }
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
                 unsupported(sl, "assignment to a " + std::string(ast::toString(sym.kind)));
             if (!inSlot(sym))
                 unsupported(sl, "automatic variable '" + std::string(sym.name) + "' here");
-            const sir::SlotId s = slotOf(sym.as<ast::ValueSymbol>(), sl);
-            if (!design().slots[s].dims.empty())
+            p.slot = slotOf(sym.as<ast::ValueSymbol>(), sl);
+            if (!design().slots[p.slot].dims.empty())
                 unsupported(sl, "assignment to a whole unpacked array");
-            const Val sv = coerce(v, design().slots[s].type, sl);
-            emitVoid(nonblocking ? Op::Nba : Op::Store, {Operand::slot(s), sv.op}, sl);
-            noteWrite({s, 0, 0, 0, 0});
-            return;
+            p.type = design().slots[p.slot].type;
+            return p;
         }
         case ast::ExpressionKind::ElementSelect:
         case ast::ExpressionKind::RangeSelect: {
@@ -1004,112 +1011,184 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             const ast::Expression& base = element ? lhs.as<ast::ElementSelectExpression>().value()
                                                   : lhs.as<ast::RangeSelectExpression>().value();
             if (element && base.type->isString()) {
-                // s[i] = c is s.putc(i, c) (6.16.3): the new string to s.
-                const Type st{sir::TypeKind::String, 0};
-                const Val str = lowerExpr(base);
-                const Val i = lowerExpr(lhs.as<ast::ElementSelectExpression>().selector());
-                const Val c = coerce(v, sir::u2(8), sl);
-                const Val n = emit(Op::Builtin, st, {Operand::str("putc"), str.op, i.op, c.op}, sl);
-                lowerStore(base, n, nonblocking, sl);
-                return;
+                // s[i] is written as s.putc(i, c) (6.16.3).
+                p.kind = Place::Kind::StringChar;
+                p.base.push_back(placeOf(base, sl));
+                p.indices.push_back(
+                    lowerExpr(lhs.as<ast::ElementSelectExpression>().selector()).op);
+                p.type = sir::u2(8);
+                return p;
             }
             if (element && base.type->isUnpackedArray()) {
                 const std::optional<ArrayAccess> acc = arrayAccess(lhs);
                 if (!acc || findFrameVar(*acc->var) || !inSlot(*acc->var))
                     unsupported(sl, "assignment to an element of this array");
-                const sir::SlotId s = slotOf(*acc->var, sl);
-                const sir::Slot& slot = design().slots[s];
+                p.kind = Place::Kind::Element;
+                p.slot = slotOf(*acc->var, sl);
+                const sir::Slot& slot = design().slots[p.slot];
                 if (slot.dims.size() != acc->indices.size())
                     unsupported(sl, "assignment to a part of an unpacked array");
-                const Val ev = coerce(v, slot.type, sl);
-                std::vector<Operand> ops{Operand::slot(s)};
                 for (const ast::Expression* ix : acc->indices) {
                     const Val iv = lowerExpr(*ix);
                     if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
-                    ops.push_back(iv.op);
+                    p.indices.push_back(iv.op);
                 }
-                ops.push_back(ev.op);
-                emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(ops), sl);
-                // With constant indices, the longest static prefix is the
-                // element (11.5.3, SIR_SPEC.md 3.4).
-                const std::optional<std::uint32_t> elem = constElement(slot, acc->indices);
-                noteWrite(elem ? sir::SlotRange{s, *elem, 1, 0, 0} : sir::SlotRange{s, 0, 0, 0, 0});
-                return;
+                p.elem = constElement(slot, acc->indices);
+                p.type = slot.type;
+                return p;
             }
             // Bits of a packed variable, or of an element of an array.
             const ast::Type& bt = base.type->getCanonicalType();
             if (!bt.isIntegral()) unsupported(sl, "assignment to a part of this type");
-            std::vector<Operand> ops;
-            sir::SlotId s = 0;
-            std::optional<std::uint32_t> elem;  // of an array, when the indices are constant
+            p.kind = Place::Kind::Bits;
             if (const ast::Symbol* sym = namedSymbol(base)) {
                 if ((!isVariable(*sym) && sym->kind != ast::SymbolKind::Net) ||
                     findFrameVar(*sym) || !inSlot(*sym))
                     unsupported(sl, "assignment to a part of this variable");
-                s = slotOf(sym->as<ast::ValueSymbol>(), sl);
-                if (!design().slots[s].dims.empty())
+                p.slot = slotOf(sym->as<ast::ValueSymbol>(), sl);
+                if (!design().slots[p.slot].dims.empty())
                     unsupported(sl, "assignment to a part of an unpacked array");
-                ops.push_back(Operand::slot(s));
             } else if (const std::optional<ArrayAccess> acc = arrayAccess(base)) {
                 if (findFrameVar(*acc->var) || !inSlot(*acc->var))
                     unsupported(sl, "assignment to a part of this variable");
-                s = slotOf(*acc->var, sl);
-                if (design().slots[s].dims.size() != acc->indices.size())
+                p.slot = slotOf(*acc->var, sl);
+                if (design().slots[p.slot].dims.size() != acc->indices.size())
                     unsupported(sl, "assignment to a part of an unpacked array");
-                elem = constElement(design().slots[s], acc->indices);
-                ops.push_back(Operand::slot(s));
+                p.elem = constElement(design().slots[p.slot], acc->indices);
                 for (const ast::Expression* ix : acc->indices) {
                     const Val iv = lowerExpr(*ix);
                     if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
-                    ops.push_back(iv.op);
+                    p.indices.push_back(iv.op);
                 }
             } else {
                 unsupported(sl, "assignment to a part of this expression");
             }
-            const sir::Slot& slot = design().slots[s];
             const std::uint32_t w = lhs.type->getBitWidth();
-            Part p;
             if (element) {
                 const Val pos = bitPosition(lhs.as<ast::ElementSelectExpression>().selector(),
                                             bt.getFixedRange(), w);
-                if (pos.op.kind == Operand::Kind::Const) {
-                    const sir::Constant& c = design().constants[pos.op.id];
-                    p = {std::nullopt, static_cast<std::int64_t>(c.aWords[0]), w};
-                } else {
-                    p = {pos, 0, w};
-                }
+                if (pos.op.kind == Operand::Kind::Const)
+                    p.lsb = static_cast<std::int64_t>(design().constants[pos.op.id].aWords[0]);
+                else
+                    p.pos = pos;
             } else {
-                p = partOf(lhs);
+                const Part part = partOf(lhs);
+                p.pos = part.pos;
+                p.lsb = part.lsb;
             }
-            const Val pv = coerce(v, integral(sir::isFourState(slot.type), false, w), sl);
-            if (!p.pos && ops.size() == 1) {
+            p.width = w;
+            p.type = integral(sir::isFourState(design().slots[p.slot].type), false, w);
+            return p;
+        }
+        default: unsupported(sl, "assignment to this kind of target");
+    }
+}
+
+sir::SlotRange Lowerer::rangeOf(const Place& p) const {
+    // The longest static prefix (11.5.3): the bits when the element and
+    // the part are constant, else the element or the whole slot.
+    if (!p.indices.empty() && !p.elem) return {p.slot, 0, 0, 0, 0};
+    const std::uint32_t elem = p.elem.value_or(0);
+    const std::uint32_t count = p.elem ? 1 : 0;
+    if (p.kind == Place::Kind::Bits && !p.pos && p.lsb >= 0 &&
+        p.lsb + p.width <= design_.slots[p.slot].type.width)
+        return {p.slot, elem, count, static_cast<std::uint32_t>(p.lsb), p.width};
+    return {p.slot, elem, count, 0, 0};
+}
+
+Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
+    switch (p.kind) {
+        case Place::Kind::Frame: return emit(Op::Fload, p.type, {Operand::frame(p.frame)}, sl);
+        case Place::Kind::Slot:
+            noteRead(rangeOf(p));
+            return emit(Op::Load, p.type, {Operand::slot(p.slot)}, sl);
+        case Place::Kind::StringChar: {
+            // Outside the string: 0 (table 6-9).
+            const Val str = loadPlace(p.base[0], sl);
+            return emit(Op::StrGet, p.type, {str.op, p.indices[0]}, sl);
+        }
+        case Place::Kind::Element: {
+            noteRead(rangeOf(p));
+            std::vector<Operand> ops{Operand::slot(p.slot)};
+            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+            return emit(Op::LoadElem, p.type, std::move(ops), sl);
+        }
+        case Place::Kind::Bits: {
+            noteRead(rangeOf(p));
+            const Type st = design().slots[p.slot].type;
+            std::vector<Operand> ops{Operand::slot(p.slot)};
+            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+            const Val whole =
+                emit(p.indices.empty() ? Op::Load : Op::LoadElem, st, std::move(ops), sl);
+            const Val pos =
+                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
+            return emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {whole.op, pos.op}, sl);
+        }
+    }
+    unsupported(sl, "reading this target");
+}
+
+void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl) {
+    switch (p.kind) {
+        case Place::Kind::Frame: {
+            if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
+            const Val fv = coerce(v, p.type, sl);
+            emitVoid(Op::Fstore, {Operand::frame(p.frame), fv.op}, sl);
+            return;
+        }
+        case Place::Kind::Slot: {
+            const Val sv = coerce(v, p.type, sl);
+            emitVoid(nonblocking ? Op::Nba : Op::Store, {Operand::slot(p.slot), sv.op}, sl);
+            noteWrite(rangeOf(p));
+            return;
+        }
+        case Place::Kind::StringChar: {
+            // s[i] = c is s.putc(i, c) (6.16.3): the new string to s.
+            const Type st{sir::TypeKind::String, 0};
+            const Val str = loadPlace(p.base[0], sl);
+            const Val c = coerce(v, sir::u2(8), sl);
+            const Val n =
+                emit(Op::Builtin, st, {Operand::str("putc"), str.op, p.indices[0], c.op}, sl);
+            storePlace(p.base[0], n, nonblocking, sl);
+            return;
+        }
+        case Place::Kind::Element: {
+            const Val ev = coerce(v, p.type, sl);
+            std::vector<Operand> ops{Operand::slot(p.slot)};
+            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+            ops.push_back(ev.op);
+            emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(ops), sl);
+            noteWrite(rangeOf(p));
+            return;
+        }
+        case Place::Kind::Bits: {
+            const sir::Slot& slot = design().slots[p.slot];
+            const Val pv = coerce(v, p.type, sl);
+            if (!p.pos && p.indices.empty()) {
                 // A constant part of a whole variable: an ordinary store to a
                 // slot range. A part wholly outside writes nothing (3.11).
                 if (p.lsb >= static_cast<std::int64_t>(slot.type.width) ||
-                    p.lsb + static_cast<std::int64_t>(w) <= 0)
+                    p.lsb + static_cast<std::int64_t>(p.width) <= 0)
                     return;
-                if (p.lsb >= 0 && p.lsb + w <= slot.type.width) {
-                    emitVoid(nonblocking ? Op::Nba : Op::Store,
-                             {Operand::slot(s, static_cast<std::uint32_t>(p.lsb), w), pv.op}, sl);
-                    noteWrite({s, 0, 0, static_cast<std::uint32_t>(p.lsb), w});
+                if (p.lsb >= 0 && p.lsb + p.width <= slot.type.width) {
+                    emitVoid(
+                        nonblocking ? Op::Nba : Op::Store,
+                        {Operand::slot(p.slot, static_cast<std::uint32_t>(p.lsb), p.width), pv.op},
+                        sl);
+                    noteWrite(rangeOf(p));
                     return;
                 }
             }
+            std::vector<Operand> ops{Operand::slot(p.slot)};
+            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
             const Val pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             ops.push_back(pos.op);
             ops.push_back(pv.op);
             emitVoid(nonblocking ? Op::NbaBits : Op::StoreBits, std::move(ops), sl);
-            // The longest static prefix (11.5.3): the bits when both the
-            // element and the part are constant, else the element or the
-            // whole slot.
-            if (elem && !p.pos && p.lsb >= 0 && p.lsb + w <= slot.type.width)
-                noteWrite({s, *elem, 1, static_cast<std::uint32_t>(p.lsb), w});
-            else
-                noteWrite(elem ? sir::SlotRange{s, *elem, 1, 0, 0} : sir::SlotRange{s, 0, 0, 0, 0});
+            noteWrite(rangeOf(p));
             return;
         }
-        default: unsupported(sl, "assignment to this kind of target");
     }
 }
 
@@ -1182,7 +1261,13 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
     if (selfExpr->kind == ast::ExpressionKind::Assignment &&
         selfExpr->as<ast::AssignmentExpression>().isLValueArg())
         selfExpr = &selfExpr->as<ast::AssignmentExpression>().left();
-    const Val self = lowerExpr(*selfExpr);
+    // A method that changes the string reads and writes it as one place,
+    // its indices evaluated once.
+    std::optional<Place> place;
+    if (name == "putc" || name == "itoa" || name == "hextoa" || name == "octtoa" ||
+        name == "bintoa" || name == "realtoa")
+        place = placeOf(*selfExpr, sl);
+    const Val self = place ? loadPlace(*place, sl) : lowerExpr(*selfExpr);
     const auto arg = [&](std::size_t i, Type t) { return coerce(lowerExpr(*args[i]), t, sl); };
     const auto method = [&](Type rt, std::vector<Operand> ops) {
         ops.insert(ops.begin(), {Operand::str(name), self.op});
@@ -1213,8 +1298,8 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
     }
     if (name == "realtoa" && args.size() == 2)
         changed = method(st, {arg(1, Type{sir::TypeKind::Real, 0}).op});
-    if (!changed) unsupported(sl, "string method " + name);
-    lowerStore(*selfExpr, *changed, false, sl);
+    if (!changed || !place) unsupported(sl, "string method " + name);
+    storePlace(*place, *changed, false, sl);
     return Val{Operand::temp(0), sir::voidType()};
 }
 

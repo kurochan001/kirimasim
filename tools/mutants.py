@@ -62,6 +62,13 @@ MUTANTS = [
     ("front: next() of a value that is no member is 0 in 4-state", "src/front/lower_expr.cpp",
      ": sir::isFourState(vt) ? constant(vt, maskOf(vt.width), maskOf(vt.width))",
      ": sir::isFourState(vt) ? constant(vt, 0)"),
+    ("front: an increment steps a real by its smallest step", "src/front/lower_expr.cpp",
+     "const Val one = coerce(constant(sir::s2(32), 1), rt, sl);",
+     "const Val one = constant(rt, 1);"),
+    ("front: a string method evaluates the index of its string twice",
+     "src/front/lower_expr.cpp",
+     "const Val self = place ? loadPlace(*place, sl) : lowerExpr(*selfExpr);",
+     "const Val self = lowerExpr(*selfExpr);"),
 ]
 
 

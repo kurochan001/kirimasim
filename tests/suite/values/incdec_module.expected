@@ -1,0 +1,59 @@
+int ++v; 101
+int y = ++v 101 101
+int v++; 101
+int y = v++ 101 100
+int --v; 99
+int y = --v 99 99
+int v--; 99
+int y = v-- 99 100
+int ++v; -2147483647
+int y = ++v -2147483647 -2147483647
+int v++; -2147483647
+int y = v++ -2147483647 -2147483648
+int --v; 2147483647
+int y = --v 2147483647 2147483647
+int v--; 2147483647
+int y = v-- 2147483647 -2147483648
+byte ++v; -7
+byte y = ++v -7 -7
+byte v++; -7
+byte y = v++ -7 -8
+byte --v; -9
+byte y = --v -9 -9
+byte v--; -9
+byte y = v-- -9 -8
+byte ++v; -128
+byte y = ++v -128 -128
+byte v++; -128
+byte y = v++ -128 127
+byte --v; 126
+byte y = --v 126 126
+byte v--; 126
+byte y = v-- 126 127
+logic8 ++v; 11000110
+logic8 y = ++v 11000110 11000110
+logic8 v++; 11000110
+logic8 y = v++ 11000110 11000101
+logic8 --v; 11000100
+logic8 y = --v 11000100 11000100
+logic8 v--; 11000100
+logic8 y = v-- 11000100 11000101
+logic8 ++v; xxxxxxxx
+logic8 y = ++v xxxxxxxx xxxxxxxx
+logic8 v++; xxxxxxxx
+logic8 y = v++ xxxxxxxx 1100x101
+logic8 --v; xxxxxxxx
+logic8 y = --v xxxxxxxx xxxxxxxx
+logic8 v--; xxxxxxxx
+logic8 y = v-- xxxxxxxx 1100x101
+real y = ++v 2.500000 2.500000
+real y = v++ 2.500000 1.500000
+real y = --v 0.500000 0.500000
+real y = v-- 0.500000 1.500000
+shortreal y = ++v 2.500000 2.500000
+shortreal y = v++ 2.500000 1.500000
+shortreal y = --v 0.500000 0.500000
+shortreal y = v-- 0.500000 1.500000
+part v[6:3]++ 11001101
+bit v[7]-- 01000101
+elem a[1]++ 10 21 30 40
