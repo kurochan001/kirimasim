@@ -118,12 +118,12 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                     emitVoid(Op::Fstore,
                              {Operand::frame(first + k), initial(frameVars()[first + k].type).op},
                              sl);
-                if (init != nullptr) {
-                    checkAggregateSource(&v, *init, sl);
-                    assignStruct({true, first}, v.getType(), *init, false, sl);
-                } else {
-                    memberDefaults({true, first}, v.getType(), sl);
-                }
+                Stores stores;
+                if (init != nullptr)
+                    assignStruct({true, first}, v.getType(), *init, stores, sl);
+                else
+                    memberDefaults({true, first}, v.getType(), stores, sl);
+                flushStores(stores, false, sl);
                 return;
             }
             if (v.lifetime == ast::VariableLifetime::Static) {

@@ -1181,15 +1181,16 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
     try {
         if (unpackedStruct(v.getType()) != nullptr) {
             // The initializer, or else the members' defaults (7.2.2).
-            if (const ast::Expression* init = v.getInitializer()) {
-                checkAggregateSource(&v, *init, sl);
-                assignStruct({false, slot}, v.getType(), *init, false, sl);
-            } else {
-                memberDefaults({false, slot}, v.getType(), sl);
-            }
+            Stores stores;
+            if (const ast::Expression* init = v.getInitializer())
+                assignStruct({false, slot}, v.getType(), *init, stores, sl);
+            else
+                memberDefaults({false, slot}, v.getType(), stores, sl);
+            flushStores(stores, false, sl);
         } else if (!design_.slots[slot].dims.empty()) {
-            checkAggregateSource(&v, *v.getInitializer(), sl);
-            assignArray(slot, {}, *v.getInitializer(), false, sl);  // element by element
+            Stores stores;
+            assignArray(slot, {}, *v.getInitializer(), stores, sl);  // element by element
+            flushStores(stores, false, sl);
         } else {
             const sir::Type t = design_.slots[slot].type;
             const Val val = coerce(lowerExpr(*v.getInitializer()), t, sl);

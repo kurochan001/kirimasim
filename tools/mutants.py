@@ -185,6 +185,9 @@ MUTANTS = [
     ("kernel: %E and %G write a small e", "src/kernel/format.cpp",
      "p.spec.cformat += format[i] == 'E' || format[i] == 'G' ? format[i] : conv;",
      "p.spec.cformat += conv;"),
+    ("front: an array element is written as soon as it is computed", "src/front/lower_expr.cpp",
+     "        out.emplace_back(elementPlace(s, indices), v);\n        return;",
+     "        storePlace(elementPlace(s, indices), v, false, sl);\n        return;"),
 ]
 
 

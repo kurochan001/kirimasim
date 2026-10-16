@@ -80,9 +80,6 @@ void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Lea
 std::uint32_t leafCount(const ast::Type& t);
 /// The number of leaves before member f of a structure.
 std::uint32_t leafOffset(const ast::UnpackedStructType& st, const ast::FieldSymbol& f);
-/// The variable at the root of a chain of member accesses and selects,
-/// or nullptr.
-const ast::Symbol* rootSymbol(const ast::Expression& e);
 /// Whether an unpacked structure type gives some member a default value
 /// (7.2.2), itself or in a nested structure.
 bool hasMemberDefaults(const ast::Type& t);
@@ -209,13 +206,18 @@ public:
         std::vector<std::int64_t> indices;
     };
     std::optional<ArrayTarget> arrayTarget(const ast::Expression& e);
-    /// Assigns an unpacked array value (a pattern, another array, or nested
-    /// ones) to the (sub-)array of slot s at `indices`, element by element.
+    /// The writes of an aggregate assignment: each place with the value it
+    /// gets, all computed before any is written (VALUE_SEMANTICS.md 3.13).
+    using Stores = std::vector<std::pair<Place, Val>>;
+    void flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl);
+    /// The element of slot s at constant declared indices.
+    Place elementPlace(sir::SlotId s, const std::vector<std::int64_t>& indices);
+    /// Computes an unpacked array value (a pattern, another array, or nested
+    /// ones) for the (sub-)array of slot s at `indices`, element by element.
     void assignArray(sir::SlotId s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
-                     bool nonblocking, slang::SourceLocation sl);
+                     Stores& out, slang::SourceLocation sl);
     void copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
-                   std::vector<std::int64_t> fromIndices, bool nonblocking,
-                   slang::SourceLocation sl);
+                   std::vector<std::int64_t> fromIndices, Stores& out, slang::SourceLocation sl);
     /// The number of the element at the given declared indices
     /// (SIR_SPEC.md 4.2).
     std::uint32_t elementNumber(const sir::Slot& slot,
@@ -334,20 +336,16 @@ public:
     /// Whether v matches an element of the (sub-)array of slot s at indices.
     Val arrayMatch(const Val& v, sir::SlotId s, std::vector<std::int64_t> indices,
                    slang::SourceLocation sl);
-    /// Reports an aggregate assignment whose pattern may read its target
-    /// variable.
-    void checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,
-                              slang::SourceLocation sl);
-    /// Assigns an unpacked structure value to the leaves at dst, member by
-    /// member (SIR_SPEC.md 4.2).
-    void assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs, bool nonblocking,
+    /// Computes an unpacked structure value for the leaves at dst, member
+    /// by member (SIR_SPEC.md 4.2).
+    void assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
                       slang::SourceLocation sl);
-    /// Assigns one member of type t, whose leaves start at dst.
-    void assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs, bool nonblocking,
+    /// Computes one member of type t, whose leaves start at dst.
+    void assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
                       slang::SourceLocation sl);
-    /// Gives the members of an unpacked structure at dst their default
-    /// values (7.2.2), where the type has them.
-    void memberDefaults(Storage dst, const ast::Type& t, slang::SourceLocation sl);
+    /// The default values (7.2.2) of the members of an unpacked structure
+    /// at dst, where the type has them.
+    void memberDefaults(Storage dst, const ast::Type& t, Stores& out, slang::SourceLocation sl);
     /// A frame variable for an automatic variable, created on first use.
     sir::FrameVarId frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl);
     std::optional<sir::FrameVarId> findFrameVar(const ast::Symbol& s) const;

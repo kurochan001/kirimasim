@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "lowerer.h"
-#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/LiteralExpressions.h"
@@ -1551,63 +1550,6 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
 
 // --- Assignments -------------------------------------------------------------
 
-namespace {
-
-/// Whether evaluating e may read variable v: e names v, or calls a
-/// subroutine, which might.
-bool mayRead(const ast::Expression& e, const ast::Symbol* v) {
-    struct Finder : ast::ASTVisitor<Finder, ast::VisitFlags::Expressions> {
-        const ast::Symbol* target = nullptr;
-        bool found = false;
-        void handle(const ast::NamedValueExpression& n) { found = found || &n.symbol == target; }
-        void handle(const ast::HierarchicalValueExpression& n) {
-            found = found || &n.symbol == target;
-        }
-        void handle(const ast::CallExpression& c) {
-            if (!c.isSystemCall())
-                found = true;
-            else
-                visitDefault(c);
-        }
-    };
-    Finder f;
-    f.target = v;
-    e.visit(f);
-    return f.found;
-}
-
-}  // namespace
-
-const ast::Symbol* rootSymbol(const ast::Expression& e) {
-    const ast::Expression* cur = &e;
-    for (;;) {
-        switch (cur->kind) {
-            case ast::ExpressionKind::MemberAccess:
-                cur = &cur->as<ast::MemberAccessExpression>().value();
-                break;
-            case ast::ExpressionKind::ElementSelect:
-                cur = &cur->as<ast::ElementSelectExpression>().value();
-                break;
-            case ast::ExpressionKind::RangeSelect:
-                cur = &cur->as<ast::RangeSelectExpression>().value();
-                break;
-            default: return namedSymbol(*cur);
-        }
-    }
-}
-
-void Lowerer::checkAggregateSource(const ast::Symbol* target, const ast::Expression& rhs,
-                                   slang::SourceLocation sl) {
-    // Whether a pattern that reads its own target sees the old or the new
-    // values of the elements written before it is not settled yet
-    // (VALUE_SEMANTICS.md 8); such assignments are reported.
-    const ast::Expression* r = &rhs;
-    while (r->kind == ast::ExpressionKind::Conversion)
-        r = &r->as<ast::ConversionExpression>().operand();
-    if (isPattern(*r) && mayRead(*r, target))
-        unsupported(sl, "assignment pattern that may read its own target");
-}
-
 Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     // a = #d b and a = @(e) b compute b first and assign it when the delay
     // or event comes, the target's indices then; a <= #d b decides both
@@ -1676,16 +1618,18 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         // An unpacked structure is assigned member by member (7.2.2, 10.9.2).
         const std::optional<Storage> dst = storageOf(a.left(), sl);
         if (!dst) unsupported(sl, "assignment to this unpacked structure");
-        checkAggregateSource(rootSymbol(a.left()), a.right(), sl);
-        assignStruct(*dst, *a.left().type, a.right(), a.isNonBlocking(), sl);
+        Stores stores;
+        assignStruct(*dst, *a.left().type, a.right(), stores, sl);
+        flushStores(stores, a.isNonBlocking(), sl);
         return Val{Operand::temp(0), sir::voidType()};
     }
     if (a.left().type->getCanonicalType().isUnpackedArray()) {
         // An unpacked array is assigned element by element (7.6, 10.9.1).
         const std::optional<ArrayTarget> target = arrayTarget(a.left());
         if (!target) unsupported(sl, "assignment to this unpacked array");
-        checkAggregateSource(rootSymbol(a.left()), a.right(), sl);
-        assignArray(target->slot, target->indices, a.right(), a.isNonBlocking(), sl);
+        Stores stores;
+        assignArray(target->slot, target->indices, a.right(), stores, sl);
+        flushStores(stores, a.isNonBlocking(), sl);
         return Val{Operand::temp(0), sir::voidType()};
     }
     const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
@@ -1711,8 +1655,26 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
     return ArrayTarget{st->id, {}};
 }
 
+void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
+    // The writes of an aggregate assignment, after every value of its right
+    // side (VALUE_SEMANTICS.md 3.13).
+    for (const auto& [place, value] : stores)
+        storePlace(place, value, nonblocking, sl);
+}
+
+Lowerer::Place Lowerer::elementPlace(sir::SlotId s, const std::vector<std::int64_t>& indices) {
+    Place p;
+    p.kind = Place::Kind::Element;
+    p.slot = s;
+    for (const std::int64_t i : indices)
+        p.indices.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
+    p.elem = elementNumber(design().slots[s], indices);
+    p.type = design().slots[s].type;
+    return p;
+}
+
 void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
-                          const ast::Expression& rhs, bool nonblocking, slang::SourceLocation sl) {
+                          const ast::Expression& rhs, Stores& out, slang::SourceLocation sl) {
     const ast::Expression* r = &rhs;
     while (r->kind == ast::ExpressionKind::Conversion &&
            r->as<ast::ConversionExpression>().operand().type->getCanonicalType().isUnpackedArray())
@@ -1720,14 +1682,9 @@ void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
     const std::vector<sir::ArrayDim>& dims = design().slots[s].dims;
     const std::size_t level = indices.size();
     if (level == dims.size()) {
-        // One element: its value, to its constant indices (SIR_SPEC.md 5.3).
+        // One element: its value, for its constant indices (SIR_SPEC.md 5.3).
         const Val v = coerce(lowerExpr(*r), design().slots[s].type, sl);
-        std::vector<Operand> ops{Operand::slot(s)};
-        for (const std::int64_t i : indices)
-            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
-        ops.push_back(v.op);
-        emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(ops), sl);
-        noteWrite({s, elementNumber(design().slots[s], indices), 1, 0, 0});
+        out.emplace_back(elementPlace(s, indices), v);
         return;
     }
     const sir::ArrayDim d = dims[level];
@@ -1742,7 +1699,7 @@ void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
         if (elems.size() != count) unsupported(sl, "an assignment pattern of this size");
         for (std::size_t k = 0; k < count; ++k) {
             indices.push_back(d.left + static_cast<std::int64_t>(k) * step);
-            assignArray(s, indices, *elems[k], nonblocking, sl);
+            assignArray(s, indices, *elems[k], out, sl);
             indices.pop_back();
         }
         return;
@@ -1753,14 +1710,14 @@ void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
         const std::vector<sir::ArrayDim>& sdims = design().slots[src->slot].dims;
         if (sdims.size() - src->indices.size() != dims.size() - level)
             unsupported(sl, "assignment of an unpacked array of another shape");
-        copyArray(s, std::move(indices), src->slot, src->indices, nonblocking, sl);
+        copyArray(s, std::move(indices), src->slot, src->indices, out, sl);
         return;
     }
     unsupported(sl, "assignment of this unpacked array value");
 }
 
 void Lowerer::copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
-                        std::vector<std::int64_t> fromIndices, bool nonblocking,
+                        std::vector<std::int64_t> fromIndices, Stores& out,
                         slang::SourceLocation sl) {
     const std::vector<sir::ArrayDim>& td = design().slots[to].dims;
     const std::vector<sir::ArrayDim>& fd = design().slots[from].dims;
@@ -1771,12 +1728,7 @@ void Lowerer::copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir
         noteRead({from, elementNumber(design().slots[from], fromIndices), 1, 0, 0});
         const Val v = coerce(emit(Op::LoadElem, design().slots[from].type, std::move(load), sl),
                              design().slots[to].type, sl);
-        std::vector<Operand> store{Operand::slot(to)};
-        for (const std::int64_t i : toIndices)
-            store.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
-        store.push_back(v.op);
-        emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(store), sl);
-        noteWrite({to, elementNumber(design().slots[to], toIndices), 1, 0, 0});
+        out.emplace_back(elementPlace(to, toIndices), v);
         return;
     }
     const sir::ArrayDim t = td[toIndices.size()];
@@ -1788,7 +1740,7 @@ void Lowerer::copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir
     for (std::int64_t k = 0; k < count(t); ++k) {
         toIndices.push_back(t.left + (t.left <= t.right ? k : -k));
         fromIndices.push_back(f.left + (f.left <= f.right ? k : -k));
-        copyArray(to, toIndices, from, fromIndices, nonblocking, sl);
+        copyArray(to, toIndices, from, fromIndices, out, sl);
         toIndices.pop_back();
         fromIndices.pop_back();
     }

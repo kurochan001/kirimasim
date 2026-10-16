@@ -88,8 +88,8 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
     return p;
 }
 
-void Lowerer::assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs,
-                           bool nonblocking, slang::SourceLocation sl) {
+void Lowerer::assignStruct(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
+                           slang::SourceLocation sl) {
     const ast::UnpackedStructType& st = *unpackedStruct(t);
     const ast::Expression* r = &rhs;
     while (r->kind == ast::ExpressionKind::Conversion &&
@@ -102,7 +102,7 @@ void Lowerer::assignStruct(Storage dst, const ast::Type& t, const ast::Expressio
         std::uint32_t off = 0;
         for (std::size_t i = 0; i < elems.size(); ++i) {
             const ast::Type& ft = st.fields[i]->getType();
-            assignMember({dst.frame, dst.id + off}, ft, *elems[i], nonblocking, sl);
+            assignMember({dst.frame, dst.id + off}, ft, *elems[i], out, sl);
             off += leafCount(ft);
         }
         return;
@@ -118,28 +118,30 @@ void Lowerer::assignStruct(Storage dst, const ast::Type& t, const ast::Expressio
         const Storage to{dst.frame, dst.id + k};
         if (leaves[k].type->getCanonicalType().isUnpackedArray()) {
             // Automatic structures have no array members (structFrameVars).
-            copyArray(to.id, {}, from.id, {}, nonblocking, sl);
+            copyArray(to.id, {}, from.id, {}, out, sl);
             continue;
         }
-        storePlace(storagePlace(to), loadPlace(storagePlace(from), sl), nonblocking, sl);
+        out.emplace_back(storagePlace(to), loadPlace(storagePlace(from), sl));
     }
 }
 
-void Lowerer::assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs,
-                           bool nonblocking, slang::SourceLocation sl) {
+void Lowerer::assignMember(Storage dst, const ast::Type& t, const ast::Expression& rhs, Stores& out,
+                           slang::SourceLocation sl) {
     if (unpackedStruct(t) != nullptr) {
-        assignStruct(dst, t, rhs, nonblocking, sl);
+        assignStruct(dst, t, rhs, out, sl);
         return;
     }
     if (t.getCanonicalType().isUnpackedArray()) {
-        assignArray(dst.id, {}, rhs, nonblocking, sl);
+        assignArray(dst.id, {}, rhs, out, sl);
         return;
     }
-    const Place p = storagePlace(dst);
-    storePlace(p, coerce(lowerExpr(rhs), p.type, sl), nonblocking, sl);
+    Place p = storagePlace(dst);
+    Val v = coerce(lowerExpr(rhs), p.type, sl);
+    out.emplace_back(std::move(p), v);
 }
 
-void Lowerer::memberDefaults(Storage dst, const ast::Type& t, slang::SourceLocation sl) {
+void Lowerer::memberDefaults(Storage dst, const ast::Type& t, Stores& out,
+                             slang::SourceLocation sl) {
     // A member's own initial value (7.2.2); the members of a nested
     // structure that has none get theirs.
     const ast::UnpackedStructType* st = unpackedStruct(t);
@@ -148,9 +150,9 @@ void Lowerer::memberDefaults(Storage dst, const ast::Type& t, slang::SourceLocat
     for (const ast::FieldSymbol* f : st->fields) {
         const Storage at{dst.frame, dst.id + off};
         if (const ast::Expression* init = f->getInitializer())
-            assignMember(at, f->getType(), *init, false, sl);
+            assignMember(at, f->getType(), *init, out, sl);
         else
-            memberDefaults(at, f->getType(), sl);
+            memberDefaults(at, f->getType(), out, sl);
         off += leafCount(f->getType());
     }
 }
