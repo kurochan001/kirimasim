@@ -555,13 +555,41 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             const auto& c = e.as<ast::ConditionalExpression>();
             if (c.conditions.size() != 1 || c.conditions[0].pattern != nullptr)
                 unsupported(sl, "conditional operator with a pattern");
-            if (sideEffects(c.left()) || sideEffects(c.right()))
-                unsupported(sl, "conditional operator with side effects");
             const Type rt = typeOf(*e.type, sl);
             Val cond = lowerExpr(*c.conditions[0].expr);
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
                     emit(Op::Truth, integral(sir::isFourState(cond.type), false, 1), {cond.op}, sl);
+            if (sideEffects(c.left()) || sideEffects(c.right())) {
+                // Only the side a known condition picks is evaluated; both
+                // when it is x or z (VALUE_SEMANTICS.md 3.9, 11.4.11).
+                const sir::BlockId first = newBlock();
+                const sir::BlockId notOne = newBlock();
+                const sir::BlockId second = newBlock();
+                const sir::BlockId both = newBlock();
+                const sir::BlockId join = newBlock();
+                const Val result = blockParam(join, rt);
+                const Val isOne =
+                    emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 1).op}, sl);
+                terminate(Op::BrIf, {isOne.op, Operand::block(first), Operand::block(notOne)}, sl);
+                setBlock(notOne);
+                const Val isZero =
+                    emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 0).op}, sl);
+                terminate(Op::BrIf, {isZero.op, Operand::block(second), Operand::block(both)}, sl);
+                setBlock(first);
+                const Val l1 = coerce(lowerExpr(c.left()), rt, sl);
+                terminate(Op::Br, {Operand::block(join, 1), l1.op}, sl);
+                setBlock(second);
+                const Val r1 = coerce(lowerExpr(c.right()), rt, sl);
+                terminate(Op::Br, {Operand::block(join, 1), r1.op}, sl);
+                setBlock(both);
+                const Val l2 = coerce(lowerExpr(c.left()), rt, sl);
+                const Val r2 = coerce(lowerExpr(c.right()), rt, sl);
+                const Val merged = emit(Op::Select, rt, {cond.op, l2.op, r2.op}, sl);
+                terminate(Op::Br, {Operand::block(join, 1), merged.op}, sl);
+                setBlock(join);
+                return result;
+            }
             const Val l = coerce(lowerExpr(c.left()), rt, sl);
             const Val r = coerce(lowerExpr(c.right()), rt, sl);
             return emit(Op::Select, rt, {cond.op, l.op, r.op}, sl);
@@ -980,10 +1008,36 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
         return coerce(res, rt, sl);
     };
     const auto logical = [&](Op op) {
-        if (sideEffects(b.right())) unsupported(sl, "logical operator with side effects");
+        const auto ok = [](Type t) { return sir::isIntegral(t) || isReal(t); };
+        if (sideEffects(b.right()) && op != Op::Leqv) {
+            // &&, || and -> do not evaluate the right side when the left
+            // one decides (VALUE_SEMANTICS.md 3.1, 11.4.7): branches, so
+            // that its side effects do not happen (SIR_SPEC.md 5.2).
+            const Val l = lowerExpr(b.left());
+            if (!ok(l.type)) unsupported(sl, "logical operator on these types");
+            const Val t = emit(Op::Truth, integral(sir::isFourState(l.type), false, 1), {l.op}, sl);
+            const std::uint64_t decider = op == Op::Lor ? 1 : 0;
+            const std::uint64_t decided = op == Op::Land ? 0 : 1;
+            const Val stop = emit(Op::Ceq, sir::u2(1), {t.op, constant(t.type, decider).op}, sl);
+            const sir::BlockId right = newBlock();
+            const sir::BlockId join = newBlock();
+            const Val result = blockParam(join, sir::u4(1));
+            terminate(Op::BrIf,
+                      {stop.op, Operand::block(join, 1), constant(sir::u4(1), decided).op,
+                       Operand::block(right)},
+                      sl);
+            setBlock(right);
+            const Val r = lowerExpr(b.right());
+            if (!ok(r.type)) unsupported(sl, "logical operator on these types");
+            const bool four = sir::isFourState(t.type) || sir::isFourState(r.type);
+            const Val v =
+                coerce(emit(op, integral(four, false, 1), {t.op, r.op}, sl), sir::u4(1), sl);
+            terminate(Op::Br, {Operand::block(join, 1), v.op}, sl);
+            setBlock(join);
+            return coerce(result, rt, sl);
+        }
         const Val l = lowerExpr(b.left());
         const Val r = lowerExpr(b.right());
-        const auto ok = [](Type t) { return sir::isIntegral(t) || isReal(t); };
         if (!ok(l.type) || !ok(r.type)) unsupported(sl, "logical operator on these types");
         const bool four = sir::isFourState(l.type) || sir::isFourState(r.type);
         return coerce(emit(op, integral(four, false, 1), {l.op, r.op}, sl), rt, sl);

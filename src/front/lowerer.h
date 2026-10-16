@@ -196,6 +196,8 @@ public:
     // Building blocks.
     sir::TempId newTemp() { return numTemps()++; }
     sir::BlockId newBlock();
+    /// A new argument of block b (SIR_SPEC.md 5.1), where values join.
+    Val blockParam(sir::BlockId b, sir::Type t);
     void setBlock(sir::BlockId b) {
         b_.block = b;
         b_.dead = false;

@@ -374,6 +374,12 @@ sir::BlockId Lowerer::newBlock() {
     return static_cast<sir::BlockId>(blocks().size() - 1);
 }
 
+Val Lowerer::blockParam(sir::BlockId b, sir::Type t) {
+    const sir::TempId p = newTemp();
+    blocks()[b].params.push_back({p, t});
+    return {sir::Operand::temp(p), t};
+}
+
 Val Lowerer::emit(sir::Op op, sir::Type t, std::vector<sir::Operand> ops,
                   slang::SourceLocation sl) {
     const sir::TempId r = newTemp();
