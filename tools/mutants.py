@@ -6,6 +6,11 @@ tests.
 
   tools/mutants.py [--preset dev] [--only <name>]
 
+A mistake counts as caught when some test fails, or when a test that ran
+on the unchanged sources is skipped as unsupported: a mistake can turn a
+supported construct into an unsupported one rather than give a wrong
+value.
+
 Each mistake is a text replacement that must match exactly once. The source
 file is always restored, even when the run is interrupted; the script
 refuses to start when src/ has uncommitted changes, so that restoring can
@@ -14,6 +19,7 @@ is 1 if a mistake survives or does not apply.
 """
 
 import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -126,12 +132,28 @@ MUTANTS = [
      "o.firstElem = elementNumber(slot, indices);",
      "o.firstElem = static_cast<std::uint32_t>(sir::elementCount(slot)) - 1 -\n"
      "                      elementNumber(slot, indices);"),
+    ("front: every member of a structure starts at its first leaf", "src/front/lower.cpp",
+     "        n += leafCount(g->getType());", "        n += 0;"),
+    ("front: members take no default values", "src/front/lower_struct.cpp",
+     "if (const ast::Expression* init = f->getInitializer())",
+     "if (const ast::Expression* init = nullptr)"),
+    ("front: a structure copy skips array members", "src/front/lower_struct.cpp",
+     "copyArray(to.id, {}, from.id, {}, nonblocking, sl);", "(void)from;"),
+    ("front: a structure pattern counts one leaf per member", "src/front/lower_struct.cpp",
+     "            off += leafCount(ft);", "            off += 1;"),
 ]
 
 
 def run(cmd: list[str]) -> int:
     return subprocess.run(cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                           check=False).returncode
+
+
+def run_tests(cmd: list[str]) -> tuple[int, set[str]]:
+    """The exit code of ctest and the names of the tests it skipped."""
+    p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
+    skipped = set(re.findall(r"Test +#\d+: (\S+) \.*\*+Skipped", p.stdout))
+    return p.returncode, skipped
 
 
 def main() -> int:
@@ -146,6 +168,13 @@ def main() -> int:
         return 2
     build = ["cmake", "--build", "--preset", args.preset]
     test = ["ctest", "--preset", args.preset, "-j8"]
+    if run(build) != 0:
+        print("mutants: the unchanged sources do not build", file=sys.stderr)
+        return 2
+    rc, skipped_before = run_tests(test)
+    if rc != 0:
+        print("mutants: tests fail on the unchanged sources", file=sys.stderr)
+        return 2
 
     bad = 0
     for name, rel, old, new in MUTANTS:
@@ -163,7 +192,8 @@ def main() -> int:
                 print(f"DOES NOT BUILD  {name}")
                 bad += 1
                 continue
-            caught = run(test) != 0
+            rc, skipped = run_tests(test)
+            caught = rc != 0 or not skipped <= skipped_before
         finally:
             path.write_text(original, encoding="utf-8")
         print(f"{'caught' if caught else 'SURVIVED':14}  {name}")
