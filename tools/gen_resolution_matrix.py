@@ -278,6 +278,34 @@ def port_drivers(between_nets):
     return name, sv, exp
 
 
+def port_drivers_part():
+    """As net_port_drivers_net, but the ports connect to one bit of a
+    vector net: the drivers of both sides still meet with their strengths
+    (5.3). kirimasim merges whole nets only (SIR_SPEC.md 3.5) and reports
+    this form as unsupported, so the test is skipped until parts are
+    merged too."""
+    name = "net_port_drivers_part"
+    sv = header(name, "Drivers that meet through output and input ports connected to a bit of "
+                "a vector net resolve with their own strengths",
+                "4.9.6 23.3.3.1 23.3.3.7 10.3.4 28.12.1 28.12.2")
+    sv += ("module outc (output wire o);\n  logic cv;\n  assign (weak1, weak0) o = cv;\n"
+           "endmodule\n"
+           "module inc (input wire i);\n  logic cv;\n  assign (weak1, weak0) i = cv;\n"
+           "endmodule\n")
+    sv += "module top;\n  logic pv;\n  wire [1:0] po, pi;\n"
+    sv += "  outc u (.o(po[1]));\n  assign (weak1, weak0) po[1] = pv;\n"
+    sv += "  assign (weak1, weak0) pi[1] = pv;\n  inc v (.i(pi[1]));\n"
+    sv += "  initial begin\n"
+    exp = ""
+    for c, p in itertools.product(VALUES, VALUES):
+        sv += (f"    u.cv = 1'b{c}; v.cv = 1'b{c}; pv = 1'b{p};\n"
+               f"    #1 $display(\"{c}{p} out=%b in=%b\", po[1], v.i);\n")
+        out = resolved("wire", [(c, 3, 3), (p, 3, 3)])
+        exp += f"{c}{p} out={out} in={out}\n"
+    sv += "  end\nendmodule\n"
+    return name, sv, exp
+
+
 # Table 23-1, the kind of a net merged by a port: rows are the internal
 # (port) kind, columns the external (connection) kind; "E" external, "I"
 # internal (the warnings of the table are left out here).
@@ -334,7 +362,7 @@ def files():
     out = {}
     for name, sv, exp in [two_drivers(), strengths("wire"), strengths("wand"), strengths("wor"),
                           own_driver(), highz(), port_drivers(False), port_drivers(True),
-                          merge_kinds()]:
+                          port_drivers_part(), merge_kinds()]:
         out[f"{name}.sv"] = sv
         out[f"{name}.expected"] = exp
     return out

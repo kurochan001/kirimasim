@@ -1,0 +1,16 @@
+00 out=0 in=0
+01 out=x in=x
+0x out=x in=x
+0z out=0 in=0
+10 out=x in=x
+11 out=1 in=1
+1x out=x in=x
+1z out=1 in=1
+x0 out=x in=x
+x1 out=x in=x
+xx out=x in=x
+xz out=x in=x
+z0 out=0 in=0
+z1 out=1 in=1
+zx out=x in=x
+zz out=z in=z
