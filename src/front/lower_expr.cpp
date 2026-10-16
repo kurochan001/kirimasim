@@ -583,7 +583,16 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         }
         case ast::ExpressionKind::Conversion: {
             const auto& c = e.as<ast::ConversionExpression>();
-            return coerce(lowerExpr(c.operand()), typeOf(*e.type, sl), sl);
+            const Type want = typeOf(*e.type, sl);
+            Val v = lowerExpr(c.operand());
+            // An operand of a context-determined expression takes the sign
+            // of the expression before it is extended (11.8.2); other
+            // conversions extend by the operand's own sign (11.8.3).
+            if (c.conversionKind == ast::ConversionKind::Propagated && sir::isIntegral(v.type) &&
+                sir::isIntegral(want))
+                v = coerce(v, integral(sir::isFourState(v.type), sir::isSigned(want), v.type.width),
+                           sl);
+            return coerce(v, want, sl);
         }
         case ast::ExpressionKind::Assignment:
             return lowerAssignment(e.as<ast::AssignmentExpression>());

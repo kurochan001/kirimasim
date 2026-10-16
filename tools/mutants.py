@@ -56,6 +56,9 @@ MUTANTS = [
      "if (false) proc().triggers.push_back({r, sir::Edge::Any});"),
     ("sir: tri1 and supply1 start at z", "src/sir/types.cpp",
      "case SlotKind::Supply1: return InitValue::One;", "case SlotKind::Supply1: return InitValue::Z;"),
+    ("front: an operand is extended by its own sign", "src/front/lower_expr.cpp",
+     "if (c.conversionKind == ast::ConversionKind::Propagated && sir::isIntegral(v.type) &&",
+     "if (false && sir::isIntegral(v.type) &&"),
 ]
 
 
