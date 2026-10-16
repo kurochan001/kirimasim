@@ -118,6 +118,14 @@ MUTANTS = [
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),
+    ("vm: ->> triggers at once", "src/vm/vm.cpp",
+     "sched_.triggerNb(f.kernelId, *e, t.b != 0 ? 0 : t.a);", "sched_.trigger(*e);"),
+    ("kernel: triggered stays true after its time slot", "src/kernel/sim.cpp",
+     "return events_[e].triggeredAt == time_;", "return events_[e].triggeredAt <= time_;"),
+    ("front: an event array element counts from the right bound", "src/front/lower_expr.cpp",
+     "o.firstElem = elementNumber(slot, indices);",
+     "o.firstElem = static_cast<std::uint32_t>(sir::elementCount(slot)) - 1 -\n"
+     "                      elementNumber(slot, indices);"),
 ]
 
 
