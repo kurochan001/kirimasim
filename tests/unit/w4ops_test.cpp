@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include "fuzz.h"
 #include "haremasim/kernel/w4ops.h"
 #include "haremasim/valsem/value.h"
 
@@ -50,10 +51,10 @@ public:
     bool flip() { return (rng_() & 1U) != 0; }
 
 private:
-    std::mt19937_64 rng_{0x77346f7073ULL};  // NOLINT(bugprone-random-generator-seed)
+    std::mt19937_64 rng_{haremasim::test::fuzzSeed(0x77346f7073ULL)};
 };
 
-constexpr int kRounds = 20'000;
+const std::uint64_t kRounds = 20'000 * haremasim::test::fuzzScale();
 
 /// Whether the fast result equals the reference, with a message if not.
 ::testing::AssertionResult same(W4 fast, const v::Value& slow, const std::string& what) {
@@ -65,7 +66,8 @@ constexpr int kRounds = 20'000;
 
 TEST(W4Ops, Binary) {
     Gen g;
-    for (int n = 0; n < kRounds; ++n) {
+    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    for (std::uint64_t n = 0; n < kRounds; ++n) {
         const unsigned w = g.width();
         const bool s = g.flip();
         const W4 x = g.next(w);
@@ -102,7 +104,8 @@ TEST(W4Ops, Binary) {
 
 TEST(W4Ops, Unary) {
     Gen g;
-    for (int n = 0; n < kRounds; ++n) {
+    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    for (std::uint64_t n = 0; n < kRounds; ++n) {
         const unsigned w = g.width();
         const bool s = g.flip();
         const W4 x = g.next(w);
@@ -129,7 +132,8 @@ TEST(W4Ops, Unary) {
 
 TEST(W4Ops, ShiftsAndPower) {
     Gen g;
-    for (int n = 0; n < kRounds; ++n) {
+    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    for (std::uint64_t n = 0; n < kRounds; ++n) {
         const unsigned w = g.width();
         const unsigned aw = g.width();  // the amount or exponent has its own width
         const bool s = g.flip();
@@ -150,7 +154,8 @@ TEST(W4Ops, ShiftsAndPower) {
 
 TEST(W4Ops, Select) {
     Gen g;
-    for (int n = 0; n < kRounds; ++n) {
+    SCOPED_TRACE(haremasim::test::fuzzSetting(haremasim::test::fuzzSeed(0x77346f7073ULL)));
+    for (std::uint64_t n = 0; n < kRounds; ++n) {
         const unsigned w = g.width();
         const unsigned cw = 1 + static_cast<unsigned>(n % 3);
         const W4 c = g.next(cw);

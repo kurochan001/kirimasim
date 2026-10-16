@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include "fuzz.h"
 #include "haremasim/kernel/abi.h"
 #include "haremasim/kernel/context.h"
 #include "haremasim/kernel/edge.h"
@@ -755,8 +756,11 @@ std::vector<Script> randomScripts(std::mt19937_64& rng) {
 }
 
 TEST(Scheduler, MatchesTheReferenceModel) {
-    std::mt19937_64 rng(0x5c4ed);  // NOLINT(bugprone-random-generator-seed)
-    for (int round = 0; round < 3000; ++round) {
+    const std::uint64_t seed = haremasim::test::fuzzSeed(0x5c4ed);
+    std::mt19937_64 rng(seed);
+    const std::uint64_t rounds = 3000 * haremasim::test::fuzzScale();
+    SCOPED_TRACE(haremasim::test::fuzzSetting(seed));
+    for (std::uint64_t round = 0; round < rounds; ++round) {
         const std::vector<Script> scripts = randomScripts(rng);
         KernelSim fast(scripts);
         RefSim ref(scripts);
