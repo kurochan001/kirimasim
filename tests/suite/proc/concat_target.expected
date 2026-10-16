@@ -1,0 +1,14 @@
+whole a 5
+three 1 f f
+signed 1111 1001
+wider b c
+bits 10000110
+nested 1100 0011 1
+elem 0 7 0 9 calls 1
+op 0 0
+nba before 01 10 11
+nba after 11 01 10
+xz 1x0z 0110
+cont 110 10101
+port d 6
+task 101 11001

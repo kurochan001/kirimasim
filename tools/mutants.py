@@ -72,6 +72,9 @@ MUTANTS = [
     ("front: an assignment operator evaluates the index of its target twice",
      "src/front/lower_expr.cpp", "b_.lvalueRefs.push_back(loadPlace(p, sl));",
      "b_.lvalueRefs.push_back(lowerExpr(a.left()));"),
+    ("front: a concatenation target fills its parts from the least significant one",
+     "src/front/lower_expr.cpp", "{all.op, constant(sir::u2(32), lsb).op}, sl);",
+     "{all.op, constant(sir::u2(32), p.width - lsb - w).op}, sl);"),
 ]
 
 

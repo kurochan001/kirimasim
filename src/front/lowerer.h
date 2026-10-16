@@ -144,6 +144,7 @@ public:
             Element,     ///< An element of an unpacked array.
             Bits,        ///< Bits of a variable or of an element.
             StringChar,  ///< A character of a string (base[0]).
+            Concat,      ///< A concatenation of the places in base (11.4.12).
         };
         Kind kind = Kind::Slot;
         sir::FrameVarId frame = 0;
@@ -153,7 +154,7 @@ public:
         std::optional<Val> pos;             ///< Bits: a position known at run time,
         std::int64_t lsb = 0;               ///< or a constant one;
         std::uint32_t width = 0;            ///< and the width.
-        std::vector<Place> base;            ///< StringChar: the string.
+        std::vector<Place> base;            ///< StringChar: the string; Concat: the parts.
         sir::Type type;                     ///< The type of the value there.
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);

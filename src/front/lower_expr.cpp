@@ -1095,6 +1095,19 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             p.type = integral(sir::isFourState(design().slots[p.slot].type), false, w);
             return p;
         }
+        case ast::ExpressionKind::Concatenation: {
+            // One packed vector (11.4.12): the parts from the most
+            // significant one, their indices evaluated from the left.
+            p.kind = Place::Kind::Concat;
+            for (const ast::Expression* op : lhs.as<ast::ConcatenationExpression>().operands()) {
+                p.base.push_back(placeOf(*op, sl));
+                if (!sir::isIntegral(p.base.back().type))
+                    unsupported(sl, "a concatenation target of this type");
+                p.width += p.base.back().type.width;
+            }
+            p.type = typeOf(*lhs.type, sl);
+            return p;
+        }
         default: unsupported(sl, "assignment to this kind of target");
     }
 }
@@ -1127,6 +1140,13 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
             std::vector<Operand> ops{Operand::slot(p.slot)};
             ops.insert(ops.end(), p.indices.begin(), p.indices.end());
             return emit(Op::LoadElem, p.type, std::move(ops), sl);
+        }
+        case Place::Kind::Concat: {
+            std::vector<Operand> ops;
+            ops.reserve(p.base.size());
+            for (const Place& part : p.base)
+                ops.push_back(loadPlace(part, sl).op);
+            return emit(Op::Concat, p.type, std::move(ops), sl);
         }
         case Place::Kind::Bits: {
             noteRead(rangeOf(p));
@@ -1165,6 +1185,20 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             const Val n =
                 emit(Op::Builtin, st, {Operand::str("putc"), str.op, p.indices[0], c.op}, sl);
             storePlace(p.base[0], n, nonblocking, sl);
+            return;
+        }
+        case Place::Kind::Concat: {
+            // Each part gets its bits of the value, the most significant
+            // part the most significant bits.
+            const Val all = coerce(v, p.type, sl);
+            std::uint32_t lsb = p.width;
+            for (const Place& part : p.base) {
+                const std::uint32_t w = part.type.width;
+                lsb -= w;
+                const Val bits = emit(Op::Partsel, integral(sir::isFourState(all.type), false, w),
+                                      {all.op, constant(sir::u2(32), lsb).op}, sl);
+                storePlace(part, bits, nonblocking, sl);
+            }
             return;
         }
         case Place::Kind::Element: {
