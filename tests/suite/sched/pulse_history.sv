@@ -13,7 +13,7 @@
 // Every change of pulse is an update event, and the process waiting on
 // posedge pulse is sensitive to it (4.3), so the 0 to 1 change wakes it
 // whether or not the simulator suspends always_comb between the two writes
-// (4.7 allows either). haremasim runs always_comb to completion before
+// (4.7 allows either). kirimasim runs always_comb to completion before
 // waking other processes (SCHEDULER_SPEC.md 4.3), but the wakeup is already
 // scheduled when pulse goes to 1, so hits is 1. The clauses were checked
 // against the standard by AI (:spec_check: ai); a human has not checked them yet.

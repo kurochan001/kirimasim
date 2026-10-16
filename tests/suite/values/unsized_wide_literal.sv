@@ -12,7 +12,7 @@
 */
 // 5.7.1: an unsized number that needs more than 32 bits has at least the
 // width that represents it, with a sign bit for a signed (decimal) number.
-// slang's 1800-2017 mode truncated such literals; haremasim runs slang as
+// slang's 1800-2017 mode truncated such literals; kirimasim runs slang as
 // 1800-2023 (CLI.md 2.1).
 module top;
   longint x;

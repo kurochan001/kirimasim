@@ -11,7 +11,7 @@
 :expected_stdout: @string_methods.expected
 */
 // compare and icompare only promise a negative, zero or positive result
-// (6.16.6); haremasim returns -1, 0 or 1 (VALUE_SEMANTICS.md 7.6), so the
+// (6.16.6); kirimasim returns -1, 0 or 1 (VALUE_SEMANTICS.md 7.6), so the
 // second number on the compare line is -1, where the output of Verilator
 // 5.052 has the difference of the first differing characters (-16). The
 // other lines match that output.

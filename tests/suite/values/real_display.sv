@@ -10,7 +10,7 @@
 :nondeterministic: no
 :expected_stdout: @real_display.expected
 */
-// The standard leaves the form of a real without a specifier open; haremasim
+// The standard leaves the form of a real without a specifier open; kirimasim
 // prints it like %g (SYSTEM_TASKS.md 3.6). With %d the real is first rounded
 // to a 64-bit signed integer (6.12.1: 1.5 rounds to 2), so the automatic
 // width is 20 characters. Icarus Verilog 13.0 prints 1.50000 for the first

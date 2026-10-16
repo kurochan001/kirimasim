@@ -11,7 +11,7 @@
 :expected_stdout: @rtoi_truncates.expected
 */
 // $rtoi truncates (20.5), unlike the assignment of a real to an integer,
-// which rounds (6.12.1). haremasim computes $rtoi of a constant at run time
+// which rounds (6.12.1). kirimasim computes $rtoi of a constant at run time
 // because slang's constant evaluation gives 0 for negative values (slang
 // issue #2023, SIR_SPEC.md 6).
 module top;
