@@ -110,6 +110,8 @@ MUTANTS = [
      "const Val stop = constant(sir::u2(1), decider - decider);"),
     ("sir: a range of every bit does not cover the whole slot", "src/sir/types.cpp",
      "r.width == 0 ? s.type.width : r.width", "r.width"),
+    ("front: a member is written at bit 0 of its structure", "src/front/lower_expr.cpp",
+     "        base.lsb = lsb;", "        base.lsb = 0;"),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),

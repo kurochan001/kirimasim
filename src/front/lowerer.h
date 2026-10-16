@@ -161,6 +161,9 @@ public:
         sir::Type type;                     ///< The type of the value there.
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
+    /// Bits lsb .. lsb + width - 1 of an integral place: a member of a
+    /// packed structure, or a part of a member or part.
+    Place narrow(Place base, std::int64_t lsb, std::uint32_t width, slang::SourceLocation sl);
     Val loadPlace(const Place& p, slang::SourceLocation sl);
     void storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl);
     /// What a read or write of a place covers (SIR_SPEC.md 3.4).

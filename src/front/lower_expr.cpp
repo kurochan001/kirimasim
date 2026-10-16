@@ -549,6 +549,21 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         }
         case ast::ExpressionKind::ElementSelect: return lowerElementSelect(e);
         case ast::ExpressionKind::RangeSelect: return lowerRangeSelect(e);
+        case ast::ExpressionKind::MemberAccess: {
+            // A member of a packed structure or union: its bits, from the
+            // field's offset (0 in a union).
+            const auto& m = e.as<ast::MemberAccessExpression>();
+            const ast::Type& vt = m.value().type->getCanonicalType();
+            if (!vt.isIntegral() || m.member.kind != ast::SymbolKind::Field || vt.isTaggedUnion())
+                unsupported(sl, "expression 'MemberAccess'");
+            const Val v = lowerExpr(m.value());
+            const std::uint32_t w = e.type->getBitWidth();
+            const std::uint64_t lsb =
+                vt.isPackedUnion() ? 0 : m.member.as<ast::FieldSymbol>().bitOffset;
+            const Val r = emit(Op::Partsel, integral(sir::isFourState(v.type), false, w),
+                               {v.op, constant(sir::u2(32), lsb).op}, sl);
+            return coerce(r, typeOf(*e.type, sl), sl);
+        }
         case ast::ExpressionKind::UnaryOp: return lowerUnary(e);
         case ast::ExpressionKind::BinaryOp: return lowerBinary(e);
         case ast::ExpressionKind::ConditionalOp: {
@@ -1200,7 +1215,22 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     p.indices.push_back(iv.op);
                 }
             } else {
-                unsupported(sl, "assignment to a part of this expression");
+                // A part of a member or of another part: the bits of
+                // that place (narrow).
+                Place inner = placeOf(base, sl);
+                const std::uint32_t w = lhs.type->getBitWidth();
+                if (element) {
+                    const Val pos = bitPosition(lhs.as<ast::ElementSelectExpression>().selector(),
+                                                bt.getFixedRange(), w);
+                    if (pos.op.kind != Operand::Kind::Const)
+                        unsupported(sl, "a select known at run time of a member or a part");
+                    return narrow(
+                        std::move(inner),
+                        static_cast<std::int64_t>(design().constants[pos.op.id].aWords[0]), w, sl);
+                }
+                const Part part = partOf(lhs);
+                if (part.pos) unsupported(sl, "a select known at run time of a member or a part");
+                return narrow(std::move(inner), part.lsb, w, sl);
             }
             const std::uint32_t w = lhs.type->getBitWidth();
             if (element) {
@@ -1219,6 +1249,19 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             p.type = integral(sir::isFourState(design().slots[p.slot].type), false, w);
             return p;
         }
+        case ast::ExpressionKind::MemberAccess: {
+            // A member of a packed structure or union: its bits (7.2.1,
+            // 7.3.1; SIR_SPEC.md 4.2).
+            const auto& m = lhs.as<ast::MemberAccessExpression>();
+            const ast::Type& vt = m.value().type->getCanonicalType();
+            if (!vt.isIntegral() || m.member.kind != ast::SymbolKind::Field || vt.isTaggedUnion())
+                unsupported(sl, "assignment to a member of this type");
+            const std::int64_t lsb =
+                vt.isPackedUnion()
+                    ? 0
+                    : static_cast<std::int64_t>(m.member.as<ast::FieldSymbol>().bitOffset);
+            return narrow(placeOf(m.value(), sl), lsb, lhs.type->getBitWidth(), sl);
+        }
         case ast::ExpressionKind::Concatenation: {
             // One packed vector (11.4.12): the parts from the most
             // significant one, their indices evaluated from the left.
@@ -1234,6 +1277,31 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
         }
         default: unsupported(sl, "assignment to this kind of target");
     }
+}
+
+Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width,
+                               slang::SourceLocation sl) {
+    // Bits lsb .. lsb + width - 1 of an integral place. A select outside
+    // the place would reach other bits of its slot, so it is reported.
+    if (base.kind != Place::Kind::Slot && base.kind != Place::Kind::Element &&
+        base.kind != Place::Kind::Bits)
+        unsupported(sl, "assignment to a part of this target");
+    const std::uint32_t outer = base.kind == Place::Kind::Bits ? base.width : base.type.width;
+    if (lsb < 0 || lsb + width > outer) unsupported(sl, "a select outside a member or a part");
+    if (base.kind == Place::Kind::Bits) {
+        if (base.pos)
+            base.pos = emit(
+                Op::Add, base.pos->type,
+                {base.pos->op, constant(base.pos->type, static_cast<std::uint64_t>(lsb)).op}, sl);
+        else
+            base.lsb += lsb;
+    } else {
+        base.lsb = lsb;
+    }
+    base.kind = Place::Kind::Bits;
+    base.width = width;
+    base.type = integral(sir::isFourState(design().slots[base.slot].type), false, width);
+    return base;
 }
 
 sir::SlotRange Lowerer::rangeOf(const Place& p) const {
