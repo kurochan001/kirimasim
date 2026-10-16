@@ -107,3 +107,68 @@ jobs:
           CXX: clang++-23
       - run: cmake --build --preset dev
       - run: ctest --preset dev --output-on-failure
+
+  # The P1 gates of TEST_SUITE.md ("P1 の合格条件の測り方"). The tables go to
+  # the job summary. Gates that are not met yet do not fail the job; the
+  # decision is made at the end of P1 (M8).
+  p1-gates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/release/_deps/*-src
+            build/release/_deps/*-subbuild
+            build/release/_deps/*-tmp
+            build/release/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-release-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Cache the Icarus build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/haremasim
+          key: icarus-${{ hashFiles('tools/build_icarus.sh') }}
+
+      - name: Install the tools to build Icarus
+        run: sudo apt-get update && sudo apt-get install -y autoconf gperf bison flex
+
+      - run: cmake --preset release
+      - run: cmake --build --preset release
+
+      # valsem gate: the fuzzers at 100 times their size, seeded by the date.
+      - name: Fuzz against valsem and the reference scheduler
+        run: |
+          HS_FUZZ_SCALE=100 HS_FUZZ_SEED=$(date -u +%Y%m%d) \
+            build/release/tests/unit/haremasim_unit_tests \
+            --gtest_filter='W4Ops.*:Valsem.*:Scheduler.*'
+
+      # sv-tests gate: the pinned sv-tests commit with its UVM submodule.
+      - name: sv-tests against Icarus
+        run: |
+          iverilog=$(tools/build_icarus.sh)
+          git init -q sv-tests
+          git -C sv-tests fetch -q --depth 1 https://github.com/chipsalliance/sv-tests.git \
+            15490e95fd978ada1c1dc59b7c4b53a7edb23b78
+          git -C sv-tests checkout -q FETCH_HEAD
+          git -C sv-tests submodule update -q --init --depth 1 third_party/tests/uvm
+          python3 tools/svtests.py --sv-tests sv-tests --haremasim build/release/src/driver/haremasim \
+            --iverilog "$iverilog" --out build/svtests | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Own-suite gate: needs read access to the test-suite repository while
+      # it is private (secret HAREMASIM_TESTS_TOKEN); skipped without it.
+      - name: Own suite, P1 population
+        env:
+          TOKEN: ${{ secrets.HAREMASIM_TESTS_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "skipped: no HAREMASIM_TESTS_TOKEN" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          commit=$(head -1 tests/gates/p1_population.txt | sed -n 's/.*haremasim-tests \([0-9a-f]*\),.*/\1/p')
+          git clone -q "https://x-access-token:${TOKEN}@github.com/kurochan001/haremasim-tests.git" suite
+          git -C suite checkout -q "$commit"
+          python3 tools/p1_population.py run --tests-repo suite \
+            --haremasim build/release/src/driver/haremasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
