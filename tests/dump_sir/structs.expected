@@ -33,14 +33,14 @@ process @1 "top.initial0" kind=initial inst=0 writes=%s0,%s4,%s5,%s6,%s7{0},%s7{
 bb0:
   store %s0, const s2<32> 32'h00000005  ; 0:13:5
   %t0 = load s2<32> %s0  ; 0:14:5
-  store %s4, %t0  ; 0:14:5
   %t1 = load s2<32> %s1  ; 0:14:5
-  store %s5, %t1  ; 0:14:5
   %t2 = load i4<4> %s2  ; 0:14:5
-  store %s6, %t2  ; 0:14:5
   %t3 = load.elem s2<8> %s3, const s2<64> 64'h0000000000000000  ; 0:14:5
-  store.elem %s7, const s2<64> 64'h0000000000000000, %t3  ; 0:14:5
   %t4 = load.elem s2<8> %s3, const s2<64> 64'h0000000000000001  ; 0:14:5
+  store %s4, %t0  ; 0:14:5
+  store %s5, %t1  ; 0:14:5
+  store %s6, %t2  ; 0:14:5
+  store.elem %s7, const s2<64> 64'h0000000000000000, %t3  ; 0:14:5
   store.elem %s7, const s2<64> 64'h0000000000000001, %t4  ; 0:14:5
   call @0  ; 0:15:5
   ret  ; 0:12:3
