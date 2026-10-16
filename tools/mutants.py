@@ -173,6 +173,9 @@ MUTANTS = [
     ("vm: $test$plusargs wants the whole plusarg", "src/vm/vm.cpp",
      "found = found || std::string_view(a).starts_with(prefix);",
      "found = found || std::string_view(a) == prefix;"),
+    ("front: elements of an array of instances get no connections", "src/front/lower.cpp",
+     "                                         lowerPorts(i);\n                                         lowerInstance(i);",
+     "                                         lowerInstance(i);"),
 ]
 
 

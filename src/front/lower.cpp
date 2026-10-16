@@ -194,6 +194,17 @@ sir::SlotKind mergedKind(sir::SlotKind internal, sir::SlotKind external) {
     return c == 'E' || c == 'e' ? external : internal;
 }
 
+/// Calls f on every instance of an array of instances, the elements of
+/// nested arrays included, in order (23.3.2).
+template <typename F> void forEachArrayInstance(const ast::InstanceArraySymbol& a, F&& f) {
+    for (const ast::Symbol* e : a.elements) {
+        if (e->kind == ast::SymbolKind::InstanceArray)
+            forEachArrayInstance(e->as<ast::InstanceArraySymbol>(), f);
+        else if (e->kind == ast::SymbolKind::Instance)
+            f(e->as<ast::InstanceSymbol>());
+    }
+}
+
 }  // namespace
 
 /// The time unit and precision of the scope a procedure is in; 1ns/1ns
@@ -895,6 +906,11 @@ void Lowerer::declareScope(const ast::Scope& scope) {
             case ast::SymbolKind::Instance:
                 declareInstance(member.as<ast::InstanceSymbol>(), instance_);
                 break;
+            case ast::SymbolKind::InstanceArray:
+                forEachArrayInstance(
+                    member.as<ast::InstanceArraySymbol>(),
+                    [&](const ast::InstanceSymbol& i) { declareInstance(i, instance_); });
+                break;
             case ast::SymbolKind::GenerateBlock:
                 if (!member.as<ast::GenerateBlockSymbol>().isUninstantiated)
                     declareScope(member.as<ast::GenerateBlockSymbol>());
@@ -978,6 +994,15 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                 lowerInstance(child);
                 continue;
             }
+            case ast::SymbolKind::InstanceArray:
+                // Each element is an instance; slang gives each its slice of
+                // the connections (23.3.3.5).
+                forEachArrayInstance(member.as<ast::InstanceArraySymbol>(),
+                                     [&](const ast::InstanceSymbol& i) {
+                                         lowerPorts(i);
+                                         lowerInstance(i);
+                                     });
+                continue;
             case ast::SymbolKind::GenerateBlock: {
                 const auto& g = member.as<ast::GenerateBlockSymbol>();
                 if (!g.isUninstantiated) lowerScope(g, g.getHierarchicalPath());

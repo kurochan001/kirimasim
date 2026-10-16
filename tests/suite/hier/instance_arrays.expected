@@ -1,0 +1,5 @@
+down_y=00011011 up_y=11100100
+down[3].a=11 down[0].a=00 up[0].a=11 up[3].a=00
+grid[1][0].a=10 grid[0][1].a=01
+each: [2].a=01 [0].a=11 per_y=011011
+names top.down[3] top.up[0] top.grid[1][0] top.each[1]
