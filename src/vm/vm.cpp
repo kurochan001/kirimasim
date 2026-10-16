@@ -454,6 +454,7 @@ private:
     };
     Act act_;
     std::uint32_t callDepth_ = 0;
+    bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.
 
     std::uint32_t processCount() const { return static_cast<std::uint32_t>(d_.processes.size()); }
     bool isSubBody(std::uint32_t body) const { return body >= processCount(); }
@@ -1011,8 +1012,20 @@ private:
                     return true;
                 }
                 case Op::Repl: {
-                    // A negative, x or z count gives the empty string (7.3).
+                    // A negative, x or z count gives the empty string, with
+                    // one warning per run (VALUE_SEMANTICS.md 7.3).
                     const std::optional<std::int64_t> n = indexValue(v(0), t(0));
+                    if ((!n || *n < 0) && !warnedRepl_) {
+                        warnedRepl_ = true;
+                        std::string line =
+                            in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+                        line +=
+                            ":" + std::to_string(in.loc.line) + ":" + std::to_string(in.loc.column);
+                        line += ": warning: string replication count is negative, x or z; the "
+                                "result is "
+                                "the empty string";
+                        output_.message(line);
+                    }
                     std::string text;
                     for (std::int64_t i = 0; n && i < *n; ++i)
                         text += str(1);

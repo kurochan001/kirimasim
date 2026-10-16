@@ -19,6 +19,7 @@ SPIN = str(HERE / "spin.sv")
 ZERO_DELAY = str(HERE / "zero_delay.sv")
 VIOLATIONS = str(HERE / "violations.sv")
 WRITERS = str(HERE / "writers.sv")
+STRING_REPL = str(HERE / "string_repl.sv")
 
 # The violation reports of violations.sv, exactly these and in this order
 # (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
@@ -67,6 +68,9 @@ CASES = [
     # Another writer of an always_comb variable is an error of the design
     # (SCHEDULER_SPEC.md 6.4), not an internal error.
     ([WRITERS], 2, "", "writers.sv:6:3: error: 'top.a' is written here and by top.initial1 at"),
+    ([STRING_REPL], 0, "=[]\n[]\n",
+     "string_repl.sv:9:9: warning: string replication count is negative, x or z; the result is"
+     " the empty string\nharemasim: info: quiescent"),
     ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "haremasim: info: quiescent at 1 ns"),
     (["--max-time=0ns", FINAL], 4, "=final 1 n=0\nfinal 2\n", "time_limit at 0 ns"),
 ]
