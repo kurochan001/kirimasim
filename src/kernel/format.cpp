@@ -255,9 +255,10 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
         p.isSpec = true;
         p.spec = {conv, width, {}};
         if (real) {
+            // %E and %G keep their capital E, as in C; %F is %f (3.6).
             p.spec.cformat = "%";
             p.spec.cformat += format.substr(start, i - start);
-            p.spec.cformat += conv;
+            p.spec.cformat += format[i] == 'E' || format[i] == 'G' ? format[i] : conv;
         }
         pieces.push_back(std::move(p));
     }

@@ -138,6 +138,21 @@ TEST(Format, Reals) {
     EXPECT_FALSE(parseFormat("%.2d", p, error));  // a precision is for reals only
 }
 
+TEST(Format, CapitalRealFormats) {
+    // 3.6: %E and %G write a capital E as C does, %F is %f; infinities and
+    // NaN keep their one spelling.
+    std::vector<FormatPiece> p;
+    std::string error;
+    ASSERT_TRUE(parseFormat("%E|%G|%F|%10.2E", p, error));
+    const auto spec = [&](std::size_t i) { return p[i].spec; };
+    EXPECT_EQ(formatReal(1.23e-4, spec(0)), "1.230000E-04");
+    EXPECT_EQ(formatReal(1.0e10, spec(2)), "1E+10");
+    EXPECT_EQ(formatReal(2.5, spec(4)), "2.500000");
+    EXPECT_EQ(formatReal(-1.5e3, spec(6)), " -1.50E+03");
+    EXPECT_EQ(formatReal(1.0 / 0.0, spec(0)), "inf");
+    EXPECT_EQ(formatReal(std::nan(""), spec(2)), "nan");
+}
+
 TEST(Format, Parse) {
     std::vector<FormatPiece> p;
     std::string error;

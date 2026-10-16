@@ -182,6 +182,9 @@ MUTANTS = [
     ("front: an array method ignores its with clause", "src/front/lower_expr.cpp",
      "        if (with != nullptr) {\n            iterators_[item] = v;",
      "        if (false && with != nullptr) {\n            iterators_[item] = v;"),
+    ("kernel: %E and %G write a small e", "src/kernel/format.cpp",
+     "p.spec.cformat += format[i] == 'E' || format[i] == 'G' ? format[i] : conv;",
+     "p.spec.cformat += conv;"),
 ]
 
 
