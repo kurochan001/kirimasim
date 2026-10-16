@@ -323,6 +323,16 @@ public:
     /// An array reduction method: sum, product, and, or, xor (7.12.3).
     Val lowerArrayReduction(const ast::CallExpression& call, const std::string& name, sir::Type rt,
                             slang::SourceLocation sl);
+    /// Whether a type is an unpacked array or structure (11.2.2).
+    static bool isAggregate(const ast::Type& t);
+    /// The single values of an aggregate expression of type t, in order.
+    void aggregateValues(const ast::Expression& e, const ast::Type& t, std::vector<Val>& out,
+                         slang::SourceLocation sl);
+    /// The elements of the (sub-)array of slot s at indices, in order.
+    void arrayValues(sir::SlotId s, std::vector<std::int64_t> indices, std::vector<Val>& out,
+                     slang::SourceLocation sl);
+    /// ==, !=, === and !== of unpacked arrays and structures (3.14).
+    Val compareAggregates(const ast::BinaryExpression& b, slang::SourceLocation sl);
     /// a op b for a comparison op of values of any types that compare:
     /// strings, reals, or integral values at their common type. 1 bit.
     Val compareValues(sir::Op op, Val l, Val r, slang::SourceLocation sl);

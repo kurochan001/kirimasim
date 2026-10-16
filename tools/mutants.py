@@ -188,6 +188,8 @@ MUTANTS = [
     ("front: an array element is written as soon as it is computed", "src/front/lower_expr.cpp",
      "        out.emplace_back(elementPlace(s, indices), v);\n        return;",
      "        storePlace(elementPlace(s, indices), v, false, sl);\n        return;"),
+    ("front: aggregate == looks at the last pair only", "src/front/lower_expr.cpp",
+     "        all = bitOp(Op::And, all, pair(i), sl);", "        all = pair(i);"),
 ]
 
 

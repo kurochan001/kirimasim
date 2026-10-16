@@ -1351,6 +1351,102 @@ Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::str
     return *acc;
 }
 
+bool Lowerer::isAggregate(const ast::Type& t) {
+    return unpackedStruct(t) != nullptr || t.getCanonicalType().isUnpackedArray();
+}
+
+void Lowerer::aggregateValues(const ast::Expression& e, const ast::Type& t, std::vector<Val>& out,
+                              slang::SourceLocation sl) {
+    // The values of an unpacked array or structure, single values in order:
+    // array elements from the left bound, structure members in declaration
+    // order, nested ones in turn (VALUE_SEMANTICS.md 3.14).
+    const ast::Expression* r = &e;
+    while (r->kind == ast::ExpressionKind::Conversion &&
+           isAggregate(*r->as<ast::ConversionExpression>().operand().type))
+        r = &r->as<ast::ConversionExpression>().operand();
+    const ast::Type& ct = t.getCanonicalType();
+    const ast::UnpackedStructType* st = unpackedStruct(ct);
+    if (isPattern(*r)) {
+        const std::vector<const ast::Expression*> elems = patternElements(*r);
+        if (st != nullptr) {
+            if (elems.size() != st->fields.size()) unsupported(sl, "pattern of this size");
+            for (std::size_t i = 0; i < elems.size(); ++i)
+                aggregateValues(*elems[i], st->fields[i]->getType(), out, sl);
+            return;
+        }
+        if (ct.kind != ast::SymbolKind::FixedSizeUnpackedArrayType)
+            unsupported(sl, "comparison of this array");
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        if (elems.size() != at.range.width()) unsupported(sl, "pattern of this size");
+        for (const ast::Expression* el : elems)
+            aggregateValues(*el, at.elementType, out, sl);
+        return;
+    }
+    if (!isAggregate(ct)) {
+        out.push_back(coerce(lowerExpr(*r), typeOf(ct, sl), sl));
+        return;
+    }
+    if (st != nullptr) {
+        const std::optional<Storage> src = storageOf(*r, sl);
+        if (!src || !isAggregate(*r->type)) unsupported(sl, "comparison of this structure value");
+        std::vector<Leaf> leaves;
+        structLeaves(ct, "", leaves);
+        for (std::uint32_t k = 0; k < leaves.size(); ++k) {
+            const Storage leaf{src->frame, src->id + k};
+            if (leaves[k].type->getCanonicalType().isUnpackedArray())
+                arrayValues(leaf.id, {}, out, sl);
+            else
+                out.push_back(loadPlace(storagePlace(leaf), sl));
+        }
+        return;
+    }
+    const std::optional<ArrayTarget> a = arrayTarget(*r);
+    if (!a) unsupported(sl, "comparison of this array value");
+    arrayValues(a->slot, a->indices, out, sl);
+}
+
+void Lowerer::arrayValues(sir::SlotId s, std::vector<std::int64_t> indices, std::vector<Val>& out,
+                          slang::SourceLocation sl) {
+    const sir::Slot& slot = design().slots[s];
+    if (indices.size() == slot.dims.size()) {
+        const Place p = elementPlace(s, indices);
+        out.push_back(loadPlace(p, sl));
+        return;
+    }
+    const sir::ArrayDim d = slot.dims[indices.size()];
+    const std::int64_t step = d.left <= d.right ? 1 : -1;
+    for (std::int64_t i = d.left;; i += step) {
+        indices.push_back(i);
+        arrayValues(s, indices, out, sl);
+        indices.pop_back();
+        if (i == d.right) break;
+    }
+}
+
+Val Lowerer::compareAggregates(const ast::BinaryExpression& b, slang::SourceLocation sl) {
+    // == is 0 if a pair is 0, else x if a pair is x, else 1: the AND of
+    // the pairs' ==; === the AND of their ===; != and !== the negation
+    // (VALUE_SEMANTICS.md 3.14). Both sides are evaluated, left first.
+    using BO = ast::BinaryOperator;
+    const bool caseEq = b.op == BO::CaseEquality || b.op == BO::CaseInequality;
+    std::vector<Val> l;
+    std::vector<Val> r;
+    aggregateValues(b.left(), *b.left().type, l, sl);
+    aggregateValues(b.right(), *b.left().type, r, sl);
+    if (l.size() != r.size() || l.empty()) unsupported(sl, "comparison of these aggregates");
+    const auto pair = [&](std::size_t i) {
+        // Reals and strings have no x or z: their === is ==.
+        const bool bits = sir::isIntegral(l[i].type) && sir::isIntegral(r[i].type);
+        return compareValues(caseEq && bits ? Op::Ceq : Op::Eq, l[i], r[i], sl);
+    };
+    Val all = pair(0);
+    for (std::size_t i = 1; i < l.size(); ++i)
+        all = bitOp(Op::And, all, pair(i), sl);
+    if (b.op == BO::Inequality || b.op == BO::CaseInequality)
+        all = emit(Op::Not, all.type, {all.op}, sl);
+    return all;
+}
+
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
     if (isString(l.type) || isString(r.type)) {
         // Strings compare by their characters (table 6-9).
@@ -1457,6 +1553,10 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
     const auto& b = e.as<ast::BinaryExpression>();
     const Type rt = typeOf(*e.type, sl);
     using BO = ast::BinaryOperator;
+    if ((b.op == BO::Equality || b.op == BO::Inequality || b.op == BO::CaseEquality ||
+         b.op == BO::CaseInequality) &&
+        isAggregate(*b.left().type))
+        return coerce(compareAggregates(b, sl), rt, sl);
     const auto same = [&](Op op) {
         const Val l = coerce(lowerExpr(b.left()), rt, sl);
         const Val r = coerce(lowerExpr(b.right()), rt, sl);

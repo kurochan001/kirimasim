@@ -1,0 +1,15 @@
+same: 1 0 1 0
+differ: 0 1 0 1
+x only: x x 0 1
+x and differ: 0 1 0
+x on both: x 1
+pattern: 1 x
+deep same: 1 0
+array member: 0
+string member: 0
+real member: 1
+nested member: 0
+opposite ranges: 1
+z element: x 1
+rows: 1
+rows differ: 1
