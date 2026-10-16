@@ -167,6 +167,9 @@ MUTANTS = [
     ("front: %m prints nothing", "src/front/lower_expr.cpp",
      "ops.push_back(Operand::str(withScope(text, b_.scope)));",
      "ops.push_back(Operand::str(withScope(text, \"\")));"),
+    ("vm: nba.delay updates in the current time step", "src/vm/vm.cpp",
+     "nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), d.b != 0 ? 0 : d.a);",
+     "nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), 0 * d.a);"),
 ]
 
 

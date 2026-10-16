@@ -716,9 +716,9 @@ private:
     }
 
     void nbaSlot(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
-                 std::uint32_t width, W4 v) {
+                 std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.scheduleNba(f.kernelId, s, elem, lsb, width, buf, 0);
+        sched_.scheduleNba(f.kernelId, s, elem, lsb, width, buf, delay);
     }
 
     /// The element number of an unpacked-array access from the index
@@ -1273,6 +1273,14 @@ private:
                     writeSlot(o.id, o.firstElem, o.lsb, o.width, v(1));
                 else
                     nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1));
+                return true;
+            }
+            case Op::NbaDelay: {
+                // The update in the NBA region of the time slot `delay` ticks
+                // ahead (SCHEDULER_SPEC.md 13); x or z ticks are 0 (9.4.1).
+                const Operand& o = ops[0];
+                const W4 d = v(2);
+                nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), d.b != 0 ? 0 : d.a);
                 return true;
             }
             case Op::LoadElem: {

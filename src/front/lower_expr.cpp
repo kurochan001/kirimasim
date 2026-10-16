@@ -1553,9 +1553,53 @@ void Lowerer::checkAggregateSource(const ast::Symbol* target, const ast::Express
         unsupported(sl, "assignment pattern that may read its own target");
 }
 
+Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
+    // a = #d b and a = @(e) b compute b first and assign it when the delay
+    // or event comes, the target's indices then; a <= #d b decides both
+    // now and updates in the NBA region d later (SCHEDULER_SPEC.md 8, 13;
+    // 9.4.5). The value lives in a frame variable across the wait.
+    const slang::SourceLocation sl = a.sourceRange.start();
+    const ast::TimingControl& t = *a.timingControl;
+    if (a.isCompound() || unpackedStruct(*a.left().type) != nullptr ||
+        a.left().type->getCanonicalType().isUnpackedArray() ||
+        a.left().kind == ast::ExpressionKind::Streaming)
+        unsupported(sl, "intra-assignment timing control on this assignment");
+    const Type lt = typeOf(*a.left().type, sl);
+    Val v = coerce(lowerExpr(a.right()), lt, sl);
+    if (a.isNonBlocking()) {
+        if (t.kind != ast::TimingControlKind::Delay)
+            unsupported(sl, "nonblocking assignment with an event control");
+        const std::uint64_t ticks = delayTicks(t.as<ast::DelayControl>().expr, sl);
+        // The target is a fixed range of a slot: a whole variable, an
+        // element or bits at constant positions (SIR_SPEC.md 5.3).
+        const Place p = placeOf(a.left(), sl);
+        const sir::Slot& slot = design().slots[p.slot];
+        const bool fixedElem = p.kind == Place::Kind::Element ? p.elem.has_value()
+                               : p.kind == Place::Kind::Bits  ? p.indices.empty() || p.elem
+                                                              : p.kind == Place::Kind::Slot;
+        const bool fixedBits = p.kind != Place::Kind::Bits ||
+                               (!p.pos && p.lsb >= 0 && p.lsb + p.width <= slot.type.width);
+        if (!fixedElem || !fixedBits || (p.kind == Place::Kind::Slot && !slot.dims.empty()))
+            unsupported(sl, "delayed nonblocking assignment to this target");
+        const sir::SlotRange r = rangeOf(p);
+        Operand o = Operand::slot(r.slot, r.lsb, r.width);
+        o.firstElem = r.firstElem;
+        o.numElems = r.numElems;
+        emitVoid(Op::NbaDelay, {o, coerce(v, p.type, sl).op, constant(sir::u2(64), ticks).op}, sl);
+        noteWrite(r);
+        return v;
+    }
+    const sir::FrameVarId f = newFrameVar(lt);
+    emitVoid(Op::Fstore, {Operand::frame(f), v.op}, sl);
+    lowerTiming(t);
+    const Val later = emit(Op::Fload, lt, {Operand::frame(f)}, sl);
+    lowerStore(a.left(), later, false, sl);
+    return later;
+}
+
 Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     const slang::SourceLocation sl = a.sourceRange.start();
-    if (a.timingControl != nullptr) unsupported(sl, "intra-assignment timing control");
+    if (a.timingControl != nullptr) return lowerDelayedAssignment(a);
     if (a.left().kind == ast::ExpressionKind::Streaming) {
         lowerUnpack(a.left().as<ast::StreamingConcatenationExpression>(), a.right(),
                     a.isNonBlocking(), sl);

@@ -305,6 +305,8 @@ public:
     static bool isUnpackedMember(const ast::Expression& e);
     /// The place of one leaf: a frame variable or a whole slot.
     Place storagePlace(Storage st);
+    /// An assignment with a delay or event control inside it (9.4.5).
+    Val lowerDelayedAssignment(const ast::AssignmentExpression& a);
     /// The stream of a streaming concatenation used as a value (11.4.14).
     Val lowerStream(const ast::StreamingConcatenationExpression& s, slang::SourceLocation sl);
     /// v with its blocks of `size` bits in reverse order, sliced from the

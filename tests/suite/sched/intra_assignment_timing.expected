@@ -1,0 +1,13 @@
+3 blocking a=1
+5 blocking sampled a=2
+7 element chosen late arr0=0 arr3=7
+15 event a=21
+15 nba issued y=0
+16 step1 y=0 arr1=0 w=xx
+17 step2 y=0 arr1=99 w=00
+18 step3 y=20 w=00
+19 step4 w=0f
+23 pipeline y=10
+24 pipeline y=20
+25 pipeline y=30
+26 pipeline y=30
