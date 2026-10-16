@@ -169,4 +169,23 @@ TEST(W4Ops, Select) {
     }
 }
 
+TEST(W4Ops, CountBits) {
+    Gen g;
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));
+    for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
+        const unsigned w = g.width();
+        const W4 x = g.next(w);
+        const v::Value rx = ref(x, w, false);
+        for (unsigned m = 0; m < 16; ++m) {
+            const bool zeros = (m & 1U) != 0;
+            const bool ones = (m & 2U) != 0;
+            const bool zs = (m & 4U) != 0;
+            const bool xs = (m & 8U) != 0;
+            const unsigned fast = k::countBits4(x, w, zeros, ones, zs, xs);
+            ASSERT_TRUE(same(W4{fast, 0}, v::countBits(rx, zeros, ones, zs, xs),
+                             "countbits " + std::to_string(m) + " " + show(x, w)));
+        }
+    }
+}
+
 }  // namespace

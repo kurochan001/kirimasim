@@ -358,6 +358,16 @@ Value redNor(const Value& x) { return reduce(x, logicOr, true); }
 Value redXor(const Value& x) { return reduce(x, logicXor, false); }
 Value redXnor(const Value& x) { return reduce(x, logicXor, true); }
 
+Value countBits(const Value& x, bool zeros, bool ones, bool zs, bool xs) {
+    std::uint64_t n = 0;
+    for (const Logic b : x.bits) {
+        const bool counted = (b == Logic::Zero && zeros) || (b == Logic::One && ones) ||
+                             (b == Logic::Z && zs) || (b == Logic::X && xs);
+        if (counted) ++n;
+    }
+    return fromUint(n, 32, true);
+}
+
 Value shl(const Value& x, const Value& amount) {
     std::uint64_t n = 0;
     if (!shiftAmount(amount, x.width(), n)) return allX(x.width(), x.isSigned);

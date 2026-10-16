@@ -1,0 +1,12 @@
+mixed 2 4 1 1 2
+mixed 0 0 1
+repeat 6
+onehot-x 1 1 1 1
+zero 0 1 0
+allz 8 1 1
+runtime 4
+runtime 4
+2state 4 0 0
+64 17 0
+sizes 8 64 3 5
+wide 4

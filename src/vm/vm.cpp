@@ -52,6 +52,7 @@ enum class SysTask : std::uint8_t {
     Error,
     Warning,
     Info,
+    CountBits,
     Unknown,
 };
 
@@ -203,6 +204,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$error") return SysTask::Error;
     if (name == "$warning") return SysTask::Warning;
     if (name == "$info") return SysTask::Info;
+    if (name == "$countbits") return SysTask::CountBits;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -1590,6 +1592,24 @@ private:
                 output_.message(line);
                 if (info.task == SysTask::Fatal)
                     sched_.requestEnd(kernel::EndReason::Fatal, static_cast<int>(value(ops[2]).a));
+                return true;
+            }
+            case SysTask::CountBits: {
+                // $countbits (20.9): the values to count are those of the
+                // control bits.
+                bool zeros = false, ones = false, zs = false, xs = false;
+                for (std::size_t i = 2; i < ops.size(); ++i) {
+                    const W4 c = value(ops[i]);
+                    const bool a = (c.a & 1U) != 0;
+                    const bool b = (c.b & 1U) != 0;
+                    zeros = zeros || (!a && !b);
+                    ones = ones || (a && !b);
+                    zs = zs || (!a && b);
+                    xs = xs || (a && b);
+                }
+                temp(in.result) = {
+                    kernel::countBits4(value(ops[1]), typeOf(ops[1]).width, zeros, ones, zs, xs),
+                    0};
                 return true;
             }
             case SysTask::Display:

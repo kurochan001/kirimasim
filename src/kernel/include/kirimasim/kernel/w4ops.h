@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <bit>
 #include <cstdint>
 
 #include "kirimasim/kernel/w4.h"
@@ -102,6 +103,17 @@ inline W4 negate1(W4 r) { return r.b != 0 ? kW4X : W4{r.a ^ 1U, 0}; }
 inline W4 redNand4(W4 x, unsigned w) { return negate1(redAnd4(x, w)); }
 inline W4 redNor4(W4 x) { return negate1(redOr4(x)); }
 inline W4 redXnor4(W4 x) { return negate1(redXor4(x)); }
+
+/// $countbits (20.9): the number of bits of the w-bit x whose value is one
+/// of those chosen. The reference is valsem::countBits.
+inline unsigned countBits4(W4 x, unsigned w, bool zeros, bool ones, bool zs, bool xs) {
+    std::uint64_t chosen = 0;
+    if (zeros) chosen |= ~x.a & ~x.b;
+    if (ones) chosen |= x.a & ~x.b;
+    if (zs) chosen |= ~x.a & x.b;
+    if (xs) chosen |= x.a & x.b;
+    return static_cast<unsigned>(std::popcount(chosen & mask(w)));
+}
 
 // --- Arithmetic (3.2). Any X or Z bit makes every result bit X. ------------
 

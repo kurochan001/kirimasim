@@ -83,7 +83,22 @@ bool isPureSystemFunction(std::string_view n) {
                                                  "$bitstoreal",
                                                  "$shortrealtobits",
                                                  "$bitstoshortreal",
-                                                 "$clog2"};
+                                                 "$clog2",
+                                                 "$countbits",
+                                                 "$countones",
+                                                 "$onehot",
+                                                 "$onehot0",
+                                                 "$isunknown",
+                                                 "$bits",
+                                                 "$isunbounded",
+                                                 "$left",
+                                                 "$right",
+                                                 "$low",
+                                                 "$high",
+                                                 "$increment",
+                                                 "$size",
+                                                 "$dimensions",
+                                                 "$unpacked_dimensions"};
     return among(n, kPure) || among(n, kRealMath1) || among(n, kRealMath2);
 }
 
@@ -665,6 +680,46 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val v = lowerExpr(*args[0]);
                 if (!sir::isIntegral(v.type)) unsupported(sl, "$clog2 of this type");
                 return sys(rt, {v.op});
+            }
+            if (name == "$bits" || name == "$isunbounded" || name == "$left" || name == "$right" ||
+                name == "$low" || name == "$high" || name == "$increment" || name == "$size" ||
+                name == "$dimensions" || name == "$unpacked_dimensions") {
+                // The queries of 20.6 and 20.7 on a fixed type are constants
+                // (SYSTEM_TASKS.md 8); on dynamic data they come with it (P3).
+                if (const std::optional<slang::ConstantValue> cv = constantValue(e))
+                    return constantFrom(*cv, rt, sl);
+                unsupported(sl, "system function " + name + " on this argument");
+            }
+            if (name == "$countbits" || name == "$countones" || name == "$onehot" ||
+                name == "$onehot0" || name == "$isunknown") {
+                // 20.9: $countbits counts the bits of the expression that
+                // have one of the values of the control bits (the LSB of
+                // each); the others are defined by it (SYSTEM_TASKS.md 8).
+                if (args.empty()) unsupported(sl, "system function " + name);
+                const Val v = lowerExpr(*args[0]);
+                if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");
+                std::vector<Operand> ops{Operand::str("$countbits"), v.op};
+                const auto control = [&](std::uint64_t a, std::uint64_t b) {
+                    ops.push_back(constant(sir::u4(1), a, b).op);
+                };
+                if (name == "$countbits") {
+                    for (std::size_t i = 1; i < args.size(); ++i) {
+                        Val c = lowerExpr(*args[i]);
+                        if (!sir::isIntegral(c.type)) unsupported(sl, "control bit of this type");
+                        c = coerce(c, integral(sir::isFourState(c.type), false, c.type.width), sl);
+                        ops.push_back(coerce(c, sir::u4(1), sl).op);  // its LSB
+                    }
+                } else if (name == "$isunknown") {
+                    control(0, 1);  // 'z
+                    control(1, 1);  // 'x
+                } else {
+                    control(1, 0);  // '1
+                }
+                const Val n = emit(Op::Syscall, sir::s2(32), std::move(ops), sl);
+                if (name == "$countbits" || name == "$countones") return coerce(n, rt, sl);
+                const Op cmp = name == "$onehot" ? Op::Eq : name == "$onehot0" ? Op::Le : Op::Ne;
+                const Val k = constant(sir::s2(32), name == "$isunknown" ? 0 : 1);
+                return coerce(emit(cmp, sir::u2(1), {n.op, k.op}, sl), rt, sl);
             }
             if (std::optional<Val> v = lowerStringCall(call, sl)) return *v;
             if (std::optional<Val> v = lowerEnumCall(call, sl)) return *v;

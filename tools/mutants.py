@@ -103,6 +103,8 @@ MUTANTS = [
      "slot.kind = mergedKind(*innerKind, slot.kind);", "slot.kind = slot.kind;"),
     ("front: packages get their rows and initializers after the instances",
      "src/front/lower.cpp", "    declarePackages(root);\n", ""),
+    ("kernel: $countbits takes z for x", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "if (zs) chosen |= ~x.a & x.b;", "if (zs) chosen |= x.a & x.b;"),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),

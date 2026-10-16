@@ -92,6 +92,11 @@ Value redNor(const Value& x);
 Value redXor(const Value& x);
 Value redXnor(const Value& x);
 
+/// $countbits (20.9; SYSTEM_TASKS.md 8): the number of bits of x whose
+/// value is one of those chosen, as a 32-bit signed two-state value (an
+/// int). $countones, $onehot, $onehot0 and $isunknown are defined by it.
+Value countBits(const Value& x, bool zeros, bool ones, bool zs, bool xs);
+
 // Shifts (3.8). The amount is unsigned and may have any width; X or Z in
 // it makes every result bit X. ashr fills with the sign bit only when x is
 // signed.
