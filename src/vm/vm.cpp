@@ -218,6 +218,17 @@ struct Frame {
     std::uint32_t groupDone = 0;
     Join pending = Join::None;               ///< What the frame waits for before going on.
     kernel::EventId joinEvent = UINT32_MAX;  ///< Triggered when a child ends.
+
+    /// Calls of tasks that may wait, innermost last (SIR_SPEC.md 7.4): each
+    /// keeps its frame variables and the block to go on at. Their temps do
+    /// not live across the call.task, so they start at 0.
+    struct TaskCall {
+        std::uint32_t body = 0;
+        std::vector<W4> vars;
+        sir::BlockId block = 0;
+        const sir::Instr* site = nullptr;  ///< The call.task in the caller.
+    };
+    std::vector<TaskCall> calls;
 };
 
 class Interpreter {
@@ -594,10 +605,22 @@ private:
         const sir::Process& p = d_.processes[f.process];
         // Woken at a join or wait fork: wait again until it is satisfied.
         if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
-        enter({f.process, &f.vars, 0});
         W4 ret{0, 0};
-        const Exit e = runBody(f, f.block, steps, ret);
-        if (e != Exit::Ret) return static_cast<kernel::Status>(e);
+        for (;;) {
+            Exit e = Exit::Ret;
+            if (f.calls.empty()) {
+                enter({f.process, &f.vars, 0});
+                e = runBody(f, f.block, steps, ret);
+            } else {
+                Frame::TaskCall& c = f.calls.back();
+                enter({c.body, &c.vars, 0});
+                e = runBody(f, c.block, steps, ret);
+            }
+            if (e == Exit::Entered) continue;  // a task was called
+            if (e != Exit::Ret) return static_cast<kernel::Status>(e);
+            if (f.calls.empty()) break;
+            returnFromTask(f);  // and go on in its caller
+        }
         switch (p.kind) {
             case sir::ProcessKind::Comb:
             case sir::ProcessKind::Latch:
@@ -615,8 +638,61 @@ private:
         Waiting = static_cast<std::uint8_t>(kernel::Status::Waiting),
         Error = static_cast<std::uint8_t>(kernel::Status::Error),
         Stop = static_cast<std::uint8_t>(kernel::Status::Stop),
+        Entered = 0xfe,  ///< call.task made a new innermost call.
         Ret = 0xff,
     };
+
+    /// Where the innermost activation of a frame goes on after a wait.
+    static sir::BlockId& resumeAt(Frame& f) {
+        return f.calls.empty() ? f.block : f.calls.back().block;
+    }
+
+    /// The end of a task called with call.task: outputs and inouts back to
+    /// the caller's places (4.9.7), then the call is gone.
+    void returnFromTask(Frame& f) {
+        Frame::TaskCall c = std::move(f.calls.back());
+        f.calls.pop_back();
+        const sir::Subroutine& s = subOf(c.body);
+        std::vector<W4>& callerVars = f.calls.empty() ? f.vars : f.calls.back().vars;
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            if (prm.dir == sir::Direction::Input) continue;
+            const W4 v =
+                prm.frameVar != sir::kNone ? c.vars[prm.frameVar] : readSlot(prm.slot, 0, 0, 0);
+            const Operand& o = c.site->operands[1 + i];
+            if (o.kind == Operand::Kind::Slot)
+                writeSlot(o.id, o.firstElem, o.lsb, o.width, v);
+            else
+                callerVars[o.id] = v;
+        }
+    }
+
+    /// call.task: copies the inputs in and makes the call the innermost
+    /// one; the caller goes on at the block the instruction names.
+    void enterTask(Frame& f, const sir::Instr& in) {
+        const auto& ops = in.operands;
+        const sir::Subroutine& s = d_.subroutines[ops[0].id];
+        Frame::TaskCall c;
+        c.body = processCount() + ops[0].id;
+        c.site = &in;
+        c.vars.resize(s.frame.size());
+        for (std::size_t i = 0; i < s.frame.size(); ++i)
+            c.vars[i] = defaultValue(s.frame[i].type);
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            const Operand& o = ops[1 + i];
+            W4 v = defaultValue(prm.type);
+            if (prm.dir != sir::Direction::Output)
+                v = o.kind == Operand::Kind::Slot ? readSlot(o.id, o.firstElem, o.lsb, o.width)
+                                                  : value(o);
+            if (prm.frameVar != sir::kNone)
+                c.vars[prm.frameVar] = v;
+            else if (prm.dir != sir::Direction::Output)
+                writeSlot(prm.slot, 0, 0, 0, v);
+        }
+        resumeAt(f) = ops.back().id;
+        f.calls.push_back(std::move(c));
+    }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
@@ -656,6 +732,7 @@ private:
                     case Op::Ret:
                         if (!ops.empty()) ret = value(ops[0]);
                         return Exit::Ret;
+                    case Op::CallTask: enterTask(f, in); return Exit::Entered;
                     case Op::Call: {
                         const Exit e = call(f, in, steps);
                         if (e != Exit::Ret) return e;
@@ -668,9 +745,9 @@ private:
                             fork(f, ops);
                         else
                             f.pending = Frame::Join::WaitFork;
-                        f.block = ops.back().id;
+                        resumeAt(f) = ops.back().id;
                         if (f.pending != Frame::Join::None && waitJoin(f)) return Exit::Waiting;
-                        b = f.block;
+                        b = resumeAt(f);
                         jumped = true;
                         break;
                     }
@@ -678,7 +755,7 @@ private:
                     case Op::WaitDelay: {
                         const W4 t = value(ops[0]);
                         sched_.waitDelay(f.kernelId, t.b != 0 ? 0 : t.a);  // x or z: 0 (9.4.1)
-                        f.block = ops[1].id;
+                        resumeAt(f) = ops[1].id;
                         return Exit::Waiting;
                     }
                     case Op::WaitEvent: {
@@ -696,7 +773,7 @@ private:
                             items_.push_back(item);
                         }
                         sched_.waitEvent(f.kernelId, items_);
-                        f.block = ops.back().id;
+                        resumeAt(f) = ops.back().id;
                         return Exit::Waiting;
                     }
                     case Op::Syscall: {

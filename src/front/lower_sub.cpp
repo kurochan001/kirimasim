@@ -64,8 +64,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     s.blocks.resize(1);
     const ast::Type& ret = sym.getReturnType();
     s.returnType = ret.isVoid() ? sir::voidType() : typeOf(ret, sl);
-    if (s.kind == sir::SubroutineKind::Task && mayWait(sym.getBody()))
-        unsupported(sl, "call of task '" + std::string(sym.name) + "' that may wait");
+    // A task that may wait is called with call.task (SIR_SPEC.md 7.2, 8).
+    s.mayWait = s.kind == sir::SubroutineKind::Task && mayWait(sym.getBody());
     const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
     design_.subroutines.push_back(std::move(s));
     subs_.emplace(key, id);  // before the body, so that recursion finds it
@@ -142,6 +142,7 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
     callees_[{b_.isSub, b_.proc}].push_back(id);
     const std::vector<sir::Param> params = design_.subroutines[id].params;
     const Type rt = design_.subroutines[id].returnType;
+    const bool waits = design_.subroutines[id].mayWait;
     const auto args = call.arguments();
     if (args.size() != params.size()) unsupported(sl, "call with this argument list");
 
@@ -188,10 +189,17 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
         copies.push_back({&place, fv, prm.type});
     }
     Val result{Operand::temp(0), sir::voidType()};
-    if (rt.kind == sir::TypeKind::Void)
+    if (waits) {
+        // call.task ends the block; the caller goes on in a new one.
+        const sir::BlockId cont = newBlock();
+        ops.push_back(Operand::block(cont));
+        terminate(Op::CallTask, std::move(ops), sl);
+        setBlock(cont);
+    } else if (rt.kind == sir::TypeKind::Void) {
         emitVoid(Op::Call, std::move(ops), sl);
-    else
+    } else {
         result = emit(Op::Call, rt, std::move(ops), sl);
+    }
     for (const CopyBack& c : copies) {
         const Val v = emit(Op::Fload, c.type, {Operand::frame(c.fv)}, sl);
         lowerStore(*c.place, coerce(v, typeOf(*c.place->type, sl), sl), false, sl);

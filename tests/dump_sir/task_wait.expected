@@ -1,0 +1,56 @@
+; sir format 0
+precision 1ns
+source 0 "task_wait.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.clk" : i4<1> var inst=0
+slot %s1 "top.n" : s2<32> var inst=0
+slot %s2 "top.m" : s2<32> var inst=0
+slot %s3 "top.inc.a" : s2<32> var inst=0 sub=@1
+
+subroutine @0 "top.quick_inc" task automatic inst=0 ret=void {  ; 0:15:18
+  param inout "v" : s2<32> -> %f0
+  frame %f0 "v" : s2<32>
+bb0:
+  %t0 = fload s2<32> %f0  ; 0:16:13
+  %t1 = call s2<32> @1, %t0  ; 0:16:9
+  fstore %f0, %t1  ; 0:16:5
+  ret  ; 0:15:18
+}
+
+subroutine @1 "top.inc" function static inst=0 ret=s2<32> {  ; 0:9:16
+  param input "a" : s2<32> -> %s3
+  frame %f0 "inc" : s2<32>
+bb0:
+  %t0 = load s2<32> %s3  ; 0:10:12
+  %t1 = add s2<32> %t0, const s2<32> 32'h00000001  ; 0:10:12
+  ret %t1  ; 0:10:5
+}
+
+subroutine @2 "top.delay_inc" task automatic may-wait inst=0 ret=void {  ; 0:12:18
+  param inout "v" : s2<32> -> %f0
+  frame %f0 "v" : s2<32>
+bb0:
+  wait.delay const i2<64> 64'h0000000000000002, bb1  ; 0:13:5
+bb1:
+  %t0 = fload s2<32> %f0  ; 0:13:16
+  %t1 = call s2<32> @1, %t0  ; 0:13:12
+  fstore %f0, %t1  ; 0:13:8
+  ret  ; 0:12:18
+}
+
+process @0 "top.always0" kind=ff-plain inst=0 trigger=posedge(%s0) writes=%s2,%s3 {  ; 0:18:3
+bb0:
+  call @0, %s2  ; 0:18:25
+  ret  ; 0:18:3
+}
+
+process @1 "top.initial0" kind=initial inst=0 writes=%s1,%s3 {  ; 0:19:3
+bb0:
+  store %s1, const s2<32> 32'h00000001  ; 0:20:5
+  call.task @2, %s1, bb1  ; 0:21:5
+bb1:
+  %t0 = load s2<32> %s1  ; 0:22:9
+  %t1 = add s2<32> %t0, const s2<32> 32'h00000001  ; 0:22:9
+  store %s1, %t1  ; 0:22:5
+  ret  ; 0:19:3
+}

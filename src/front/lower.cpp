@@ -27,6 +27,7 @@
 #include "slang/ast/symbols/CompilationUnitSymbols.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
+#include "slang/ast/symbols/SubroutineSymbols.h"
 #include "slang/ast/types/AllTypes.h"
 #include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/driver/Driver.h"
@@ -117,52 +118,69 @@ sir::TimeScale timeScaleOf(const ast::Scope& scope) {
 
 /// Whether a statement may wait (a timing control, wait, fork with join or
 /// join_any). Unknown statements count as waiting.
-bool mayWait(const ast::Statement& s) {
+bool mayWaitIn(const ast::Statement& s, std::vector<const ast::Symbol*>& seen) {
     switch (s.kind) {
         case ast::StatementKind::Empty:
         case ast::StatementKind::VariableDeclaration:
         case ast::StatementKind::Break:
         case ast::StatementKind::Continue:
-        case ast::StatementKind::DisableFork: return false;
+        case ast::StatementKind::DisableFork:
+        case ast::StatementKind::Return: return false;
         case ast::StatementKind::ExpressionStatement: {
             const ast::Expression& e = s.as<ast::ExpressionStatement>().expr;
             if (e.kind == ast::ExpressionKind::Assignment)
                 return e.as<ast::AssignmentExpression>().timingControl != nullptr;
-            return e.kind == ast::ExpressionKind::Call &&
-                   !e.as<ast::CallExpression>().isSystemCall();
+            if (e.kind != ast::ExpressionKind::Call) return false;
+            // A function never waits; a task may if its body may (13.3).
+            const auto& call = e.as<ast::CallExpression>();
+            if (call.isSystemCall()) return false;
+            const ast::SubroutineSymbol& sub = *std::get<0>(call.subroutine);
+            if (sub.subroutineKind == ast::SubroutineKind::Function) return false;
+            if (std::find(seen.begin(), seen.end(), &sub) != seen.end()) return false;
+            seen.push_back(&sub);
+            return mayWaitIn(sub.getBody(), seen);
         }
         case ast::StatementKind::List:
             for (const ast::Statement* item : s.as<ast::StatementList>().list)
-                if (mayWait(*item)) return true;
+                if (mayWaitIn(*item, seen)) return true;
             return false;
         case ast::StatementKind::Block: {
             const auto& b = s.as<ast::BlockStatement>();
             if (b.blockKind != ast::StatementBlockKind::Sequential &&
                 b.blockKind != ast::StatementBlockKind::JoinNone)
                 return true;
-            return b.blockKind == ast::StatementBlockKind::Sequential && mayWait(b.body);
+            return b.blockKind == ast::StatementBlockKind::Sequential && mayWaitIn(b.body, seen);
         }
         case ast::StatementKind::Conditional: {
             const auto& c = s.as<ast::ConditionalStatement>();
-            return mayWait(c.ifTrue) || (c.ifFalse != nullptr && mayWait(*c.ifFalse));
+            return mayWaitIn(c.ifTrue, seen) ||
+                   (c.ifFalse != nullptr && mayWaitIn(*c.ifFalse, seen));
         }
         case ast::StatementKind::Case: {
             const auto& c = s.as<ast::CaseStatement>();
             for (const auto& g : c.items)
-                if (mayWait(*g.stmt)) return true;
-            return c.defaultCase != nullptr && mayWait(*c.defaultCase);
+                if (mayWaitIn(*g.stmt, seen)) return true;
+            return c.defaultCase != nullptr && mayWaitIn(*c.defaultCase, seen);
         }
-        case ast::StatementKind::ForLoop: return mayWait(s.as<ast::ForLoopStatement>().body);
+        case ast::StatementKind::ForLoop:
+            return mayWaitIn(s.as<ast::ForLoopStatement>().body, seen);
         case ast::StatementKind::ForeachLoop:
-            return mayWait(s.as<ast::ForeachLoopStatement>().body);
-        case ast::StatementKind::RepeatLoop: return mayWait(s.as<ast::RepeatLoopStatement>().body);
-        case ast::StatementKind::WhileLoop: return mayWait(s.as<ast::WhileLoopStatement>().body);
+            return mayWaitIn(s.as<ast::ForeachLoopStatement>().body, seen);
+        case ast::StatementKind::RepeatLoop:
+            return mayWaitIn(s.as<ast::RepeatLoopStatement>().body, seen);
+        case ast::StatementKind::WhileLoop:
+            return mayWaitIn(s.as<ast::WhileLoopStatement>().body, seen);
         case ast::StatementKind::DoWhileLoop:
-            return mayWait(s.as<ast::DoWhileLoopStatement>().body);
+            return mayWaitIn(s.as<ast::DoWhileLoopStatement>().body, seen);
         case ast::StatementKind::ForeverLoop:
-            return mayWait(s.as<ast::ForeverLoopStatement>().body);
+            return mayWaitIn(s.as<ast::ForeverLoopStatement>().body, seen);
         default: return true;
     }
+}
+
+bool mayWait(const ast::Statement& s) {
+    std::vector<const ast::Symbol*> seen;
+    return mayWaitIn(s, seen);
 }
 
 // --- Diagnostics and types ---------------------------------------------------
