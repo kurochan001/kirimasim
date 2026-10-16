@@ -1,0 +1,36 @@
+; sir format 0
+precision 1ns
+source 0 "strings.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.s" : string var inst=0
+slot %s1 "top.t" : string var inst=0
+slot %s2 "top.b" : s2<8> var inst=0
+
+process @0 "top.initial0" kind=initial inst=0 writes=%s0,%s1,%s2 {  ; 0:7:3
+bb0:
+  store %s0, const string "ab"  ; 0:8:5
+  %t0 = load string %s0  ; 0:9:10
+  %t1 = concat string %t0, const string "c"  ; 0:9:9
+  store %s1, %t1  ; 0:9:5
+  %t2 = load string %s1  ; 0:10:9
+  %t3 = load string %s0  ; 0:10:13
+  %t4 = gt i2<1> %t2, %t3  ; 0:10:9
+  br.if %t4, bb1, bb2  ; 0:10:5
+bb1:
+  %t5 = load string %s1  ; 0:10:20
+  %t6 = str.get i2<8> %t5, const s2<32> 32'h00000002  ; 0:10:20
+  %t7 = zext s2<8> %t6  ; 0:10:20
+  store %s2, %t7  ; 0:10:16
+  br bb3  ; 0:10:5
+bb2:
+  br bb3  ; 0:10:5
+bb3:
+  %t8 = load string %s1  ; 0:11:5
+  %t9 = builtin string "putc", %t8, const s2<32> 32'h00000000, const i2<8> 8'h78  ; 0:11:5
+  store %s1, %t9  ; 0:11:5
+  %t10 = load string %s1  ; 0:12:26
+  %t11 = builtin s2<32> "len", %t10  ; 0:12:26
+  %t12 = syscall string "$sformatf", "%0d", %t11  ; 0:12:9
+  store %s0, %t12  ; 0:12:5
+  ret  ; 0:7:3
+}

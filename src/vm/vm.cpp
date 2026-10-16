@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <bit>
+#include <cctype>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <deque>
 #include <optional>
 #include <string>
@@ -44,8 +46,88 @@ enum class SysTask : std::uint8_t {
     Math1,
     Math2,
     Clog2,
+    SFormatF,
     Unknown,
 };
+
+/// The string methods (6.16), resolved from their names at load.
+enum class Method : std::uint8_t {
+    None,
+    Len,
+    Getc,
+    Putc,
+    ToUpper,
+    ToLower,
+    Compare,
+    ICompare,
+    Substr,
+    AtoI,
+    AtoHex,
+    AtoOct,
+    AtoBin,
+    AtoReal,
+    ItoA,
+    HexToA,
+    OctToA,
+    BinToA,
+    RealToA,
+};
+
+Method resolveMethod(std::string_view n) {
+    static constexpr std::pair<std::string_view, Method> kNames[] = {
+        {"len", Method::Len},           {"getc", Method::Getc},       {"putc", Method::Putc},
+        {"toupper", Method::ToUpper},   {"tolower", Method::ToLower}, {"compare", Method::Compare},
+        {"icompare", Method::ICompare}, {"substr", Method::Substr},   {"atoi", Method::AtoI},
+        {"atohex", Method::AtoHex},     {"atooct", Method::AtoOct},   {"atobin", Method::AtoBin},
+        {"atoreal", Method::AtoReal},   {"itoa", Method::ItoA},       {"hextoa", Method::HexToA},
+        {"octtoa", Method::OctToA},     {"bintoa", Method::BinToA},   {"realtoa", Method::RealToA},
+    };
+    for (const auto& [name, m] : kNames)
+        if (name == n) return m;
+    return Method::None;
+}
+
+/// The bytes of an integral value as a string (6.16): most significant
+/// first, zero bytes dropped; x and z bits read as 0.
+std::string integerToString(W4 v, unsigned width) {
+    const std::uint64_t a = v.a & ~v.b;
+    std::string s;
+    for (unsigned k = (width + 7) / 8; k-- > 0;) {
+        const auto c = static_cast<char>(k * 8 < 64 ? (a >> (k * 8)) & 0xffU : 0);
+        if (c != 0) s.push_back(c);
+    }
+    return s;
+}
+
+/// A string as an integral value of `width` bits: the last character in
+/// the low byte (6.16).
+W4 stringToInteger(std::string_view s, unsigned width) {
+    std::uint64_t a = 0;
+    for (const char c : s)
+        a = (a << 8) | static_cast<unsigned char>(c);
+    return {a & kernel::mask(width), 0};
+}
+
+/// atoi and friends (6.16.9): digits of the base and underscores only, no
+/// sign and no leading space (VALUE_SEMANTICS.md 7.6).
+std::uint64_t parseDigits(std::string_view s, unsigned base) {
+    std::uint64_t n = 0;
+    for (const char c : s) {
+        if (c == '_') continue;
+        unsigned d = 0;
+        if (c >= '0' && c <= '9')
+            d = static_cast<unsigned>(c - '0');
+        else if (c >= 'a' && c <= 'f')
+            d = static_cast<unsigned>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F')
+            d = static_cast<unsigned>(c - 'A' + 10);
+        else
+            break;
+        if (d >= base) break;
+        n = n * base + d;
+    }
+    return n;
+}
 
 using Math1Fn = double (*)(double);
 using Math2Fn = double (*)(double, double);
@@ -96,6 +178,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$shortrealtobits") return SysTask::ShortRealToBits;
     if (name == "$bitstoshortreal") return SysTask::BitsToShortReal;
     if (name == "$clog2") return SysTask::Clog2;
+    if (name == "$sformatf") return SysTask::SFormatF;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -143,6 +226,7 @@ W4 truthOf(W4 v, sir::Type t) {
 /// What the VM works out once per instruction when it loads the design.
 struct InstrInfo {
     SysTask task = SysTask::None;
+    Method method = Method::None;
     Math1Fn fn1 = nullptr;
     Math2Fn fn2 = nullptr;
     /// For $display and $write: the parsed format of each text operand
@@ -235,12 +319,17 @@ class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
-          counters_(ctx.counters()), options_(options) {
+          strings_(ctx.strings()), counters_(ctx.counters()), options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
-        for (const sir::Constant& c : d.constants)
+        for (const sir::Constant& c : d.constants) {
+            if (c.type.kind == sir::TypeKind::String) {
+                consts_.push_back({strings_.intern(c.bytes), 0});
+                continue;
+            }
             consts_.push_back(
                 {c.aWords.empty() ? 0 : c.aWords[0], c.bWords.empty() ? 0 : c.bWords[0]});
+        }
         // Bodies: processes first, then subroutines (bodyBlocks).
         const std::size_t bodies = d.processes.size() + d.subroutines.size();
         info_.resize(bodies);
@@ -344,6 +433,7 @@ private:
     kernel::Scheduler& sched_;
     kernel::Store& store_;
     kernel::Output& output_;
+    kernel::Strings& strings_;
     kernel::Counters& counters_;
     kernel::CounterId cInstrs_ = 0;
     RunOptions options_;
@@ -391,6 +481,12 @@ private:
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
+        if (in.op == Op::Builtin && !in.operands.empty()) {
+            info.method = resolveMethod(in.operands[0].text);
+            if (info.method == Method::None && loadError_.empty())
+                loadError_ = "method " + in.operands[0].text + " is not supported by the VM yet";
+            return info;
+        }
         if (in.op != Op::Syscall || in.operands.empty()) return info;
         info.task = resolveSysTask(in.operands[0].text);
         for (const MathName& m : kMath) {
@@ -398,7 +494,9 @@ private:
             info.fn1 = m.fn1;
             info.fn2 = m.fn2;
         }
-        if (info.task != SysTask::Display && info.task != SysTask::Write) return info;
+        if (info.task != SysTask::Display && info.task != SysTask::Write &&
+            info.task != SysTask::SFormatF)
+            return info;
         info.formats.resize(in.operands.size());
         for (std::size_t i = 1; i < in.operands.size(); ++i) {
             if (in.operands[i].kind != Operand::Kind::Text) continue;
@@ -776,6 +874,7 @@ private:
                         resumeAt(f) = ops.back().id;
                         return Exit::Waiting;
                     }
+                    case Op::Builtin: builtin(in, info_[body][b][k]); break;
                     case Op::Syscall: {
                         const InstrInfo& info = info_[body][b][k];
                         if (!syscall(f, p, in, info)) return Exit::Error;
@@ -892,6 +991,54 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
+        if (!ops.empty() &&
+            (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
+            // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the
+            // context's interned strings.
+            const auto str = [&](std::size_t i) { return strings_.get(v(i).a); };
+            const auto put = [&](std::string_view text) {
+                temp(in.result) = {strings_.intern(text), 0};
+            };
+            const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
+            switch (in.op) {
+                case Op::Itos: put(integerToString(v(0), t(0).width)); return true;
+                case Op::Stoi: set(stringToInteger(str(0), w)); return true;
+                case Op::Concat: {
+                    std::string text;
+                    for (std::size_t i = 0; i < ops.size(); ++i)
+                        text += str(i);
+                    put(text);
+                    return true;
+                }
+                case Op::Repl: {
+                    // A negative, x or z count gives the empty string (7.3).
+                    const std::optional<std::int64_t> n = indexValue(v(0), t(0));
+                    std::string text;
+                    for (std::int64_t i = 0; n && i < *n; ++i)
+                        text += str(1);
+                    put(text);
+                    return true;
+                }
+                case Op::Eq: cmp(str(0) == str(1)); return true;
+                case Op::Ne: cmp(str(0) != str(1)); return true;
+                case Op::Lt: cmp(str(0) < str(1)); return true;
+                case Op::Le: cmp(str(0) <= str(1)); return true;
+                case Op::Gt: cmp(str(0) > str(1)); return true;
+                case Op::Ge: cmp(str(0) >= str(1)); return true;
+                case Op::StrGet: {
+                    // Outside the string: 0 (table 6-9).
+                    const std::string_view text = str(0);
+                    const std::optional<std::int64_t> i = indexValue(v(1), t(1));
+                    const bool inside = i && *i >= 0 && static_cast<std::size_t>(*i) < text.size();
+                    temp(in.result) = {
+                        inside ? static_cast<unsigned char>(text[static_cast<std::size_t>(*i)])
+                               : 0U,
+                        0};
+                    return true;
+                }
+                default: break;  // loads, stores and moves copy the handle
+            }
+        }
         if (!ops.empty() && (isRealType(rt) || isRealType(t(0)))) {
             // Real operations (VALUE_SEMANTICS.md 7.5): real in double,
             // shortreal in float.
@@ -1159,10 +1306,125 @@ private:
         return false;
     }
 
+    /// The string methods (6.16, VALUE_SEMANTICS.md 7.6). The ones that
+    /// change the string return the new one; front stores it.
+    void builtin(const sir::Instr& in, const InstrInfo& info) {
+        const auto& ops = in.operands;
+        const auto v = [&](std::size_t i) { return value(ops[i]); };
+        const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
+        const std::string_view self = strings_.get(v(1).a);
+        const sir::Type rt = in.type;
+        const auto put = [&](std::string_view text) {
+            temp(in.result) = {strings_.intern(text), 0};
+        };
+        const auto num = [&](std::uint64_t n) {
+            W4 r{n & kernel::mask(rt.width), 0};
+            temp(in.result) = r;
+        };
+        const auto index = [&](std::size_t i) { return indexValue(v(i), t(i)); };
+        switch (info.method) {
+            case Method::Len: num(self.size()); return;
+            case Method::Getc: {
+                const std::optional<std::int64_t> i = index(2);
+                const bool ok = i && *i >= 0 && static_cast<std::size_t>(*i) < self.size();
+                num(ok ? static_cast<unsigned char>(self[static_cast<std::size_t>(*i)]) : 0U);
+                return;
+            }
+            case Method::Putc: {
+                // Outside the string, or the character 0: no change (6.16.3).
+                std::string text(self);
+                const std::optional<std::int64_t> i = index(2);
+                const auto c = static_cast<char>(v(3).a & ~v(3).b & 0xffU);
+                if (i && *i >= 0 && static_cast<std::size_t>(*i) < text.size() && c != 0)
+                    text[static_cast<std::size_t>(*i)] = c;
+                put(text);
+                return;
+            }
+            case Method::ToUpper:
+            case Method::ToLower: {
+                std::string text(self);
+                for (char& c : text)
+                    c = static_cast<char>(info.method == Method::ToUpper
+                                              ? std::toupper(static_cast<unsigned char>(c))
+                                              : std::tolower(static_cast<unsigned char>(c)));
+                put(text);
+                return;
+            }
+            case Method::Compare:
+            case Method::ICompare: {
+                // -1, 0 or 1 (VALUE_SEMANTICS.md 7.6).
+                std::string a(self);
+                std::string b(strings_.get(v(2).a));
+                if (info.method == Method::ICompare) {
+                    for (char& c : a)
+                        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                    for (char& c : b)
+                        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                }
+                const int r = a.compare(b);
+                num(static_cast<std::uint64_t>(static_cast<std::int64_t>(r < 0   ? -1
+                                                                         : r > 0 ? 1
+                                                                                 : 0)));
+                return;
+            }
+            case Method::Substr: {
+                // Characters i to j; empty when out of range (6.16.8).
+                const std::optional<std::int64_t> i = index(2);
+                const std::optional<std::int64_t> j = index(3);
+                const auto n = static_cast<std::int64_t>(self.size());
+                if (!i || !j || *i < 0 || *j < *i || *j >= n) {
+                    put("");
+                    return;
+                }
+                put(self.substr(static_cast<std::size_t>(*i),
+                                static_cast<std::size_t>(*j - *i + 1)));
+                return;
+            }
+            case Method::AtoI: num(parseDigits(self, 10)); return;
+            case Method::AtoHex: num(parseDigits(self, 16)); return;
+            case Method::AtoOct: num(parseDigits(self, 8)); return;
+            case Method::AtoBin: num(parseDigits(self, 2)); return;
+            case Method::AtoReal: {
+                const std::string text(self);
+                char* end = nullptr;
+                const double d = std::strtod(text.c_str(), &end);
+                temp(in.result) = fromReal(d, rt);
+                return;
+            }
+            case Method::ItoA:
+            case Method::HexToA:
+            case Method::OctToA:
+            case Method::BinToA: {
+                // Like $sformatf with %0d, %0h, %0o and %0b (6.16.12).
+                const char conv = info.method == Method::ItoA     ? 'd'
+                                  : info.method == Method::HexToA ? 'h'
+                                  : info.method == Method::OctToA ? 'o'
+                                                                  : 'b';
+                const sir::Type at = t(2);
+                const W4 x = v(2);
+                const std::uint64_t words[2] = {x.a, x.b};
+                const kernel::IntValue iv{words, at.width, sir::isFourState(at), sir::isSigned(at)};
+                put(kernel::formatInt(iv, kernel::FormatSpec{conv, 0, {}}));
+                return;
+            }
+            case Method::RealToA:  // like %g (VALUE_SEMANTICS.md 7.6)
+                put(kernel::formatReal(toReal(v(2), t(2)), kernel::FormatSpec{}));
+                return;
+            case Method::None: return;
+        }
+    }
+
     std::string formatValue(const Frame& f, const Operand& o,
                             const kernel::FormatSpec& spec) const {
         const sir::Type t = typeOf(o);
         const W4 x = value(o);
+        if (t.kind == sir::TypeKind::String) {
+            // The characters, padded to an explicit width (3.5).
+            std::string text(strings_.get(x.a));
+            if (spec.width > 0 && text.size() < static_cast<std::size_t>(spec.width))
+                text.insert(0, static_cast<std::size_t>(spec.width) - text.size(), ' ');
+            return text;
+        }
         if (isRealType(t)) {
             // front makes every other specifier take an integer; without
             // one, a real shows like %g (SYSTEM_TASKS.md 3.6).
@@ -1180,7 +1442,8 @@ private:
         const auto& ops = in.operands;
         switch (info.task) {
             case SysTask::Display:
-            case SysTask::Write: {
+            case SysTask::Write:
+            case SysTask::SFormatF: {
                 // A text operand is a format; the values after it fill its
                 // specifiers, and values left over print in decimal
                 // (SYSTEM_TASKS.md 3.1).
@@ -1206,6 +1469,10 @@ private:
                         text += formatValue(f, ops[i], piece.spec);
                         ++i;
                     }
+                }
+                if (info.task == SysTask::SFormatF) {
+                    temp(in.result) = {strings_.intern(text), 0};
+                    return true;
                 }
                 if (info.task == SysTask::Display) text += '\n';
                 output_.write(text);

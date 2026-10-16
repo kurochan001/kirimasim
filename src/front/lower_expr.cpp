@@ -58,15 +58,51 @@ bool among(std::string_view n, std::span<const std::string_view> set) {
 
 /// System functions that only compute a value.
 bool isPureSystemFunction(std::string_view n) {
-    static constexpr std::string_view kPure[] = {
-        "$time",       "$realtime",   "$signed",          "$unsigned",        "$itor", "$rtoi",
-        "$realtobits", "$bitstoreal", "$shortrealtobits", "$bitstoshortreal", "$clog2"};
+    static constexpr std::string_view kPure[] = {"$time",
+                                                 "$realtime",
+                                                 "$signed",
+                                                 "$unsigned",
+                                                 "$itor",
+                                                 "$sformatf",
+                                                 "$psprintf",
+                                                 "len",
+                                                 "getc",
+                                                 "toupper",
+                                                 "tolower",
+                                                 "compare",
+                                                 "icompare",
+                                                 "substr",
+                                                 "atoi",
+                                                 "atohex",
+                                                 "atooct",
+                                                 "atobin",
+                                                 "atoreal",
+                                                 "$rtoi",
+                                                 "$realtobits",
+                                                 "$bitstoreal",
+                                                 "$shortrealtobits",
+                                                 "$bitstoshortreal",
+                                                 "$clog2"};
     return among(n, kPure) || among(n, kRealMath1) || among(n, kRealMath2);
 }
 
 /// A variable, or a formal argument of a subroutine (also a variable).
 bool isVariable(const ast::Symbol& s) {
     return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
+}
+
+bool isString(Type t) { return t.kind == sir::TypeKind::String; }
+
+/// The bytes of an integral value as a string (6.16): the most significant
+/// byte first, zero bytes dropped.
+std::string integerToString(std::uint64_t a, std::uint64_t b, std::uint32_t width) {
+    a &= ~b;
+    std::string s;
+    for (std::uint32_t k = (width + 7) / 8; k-- > 0;) {
+        const auto c = static_cast<char>(k * 8 < 64 ? (a >> (k * 8)) & 0xffU : 0);
+        if (c != 0) s.push_back(c);
+    }
+    return s;
 }
 
 bool isReal(Type t) { return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal; }
@@ -272,7 +308,20 @@ Val Lowerer::realConstant(Type t, double d) {
     return {Operand::constant(id), t};
 }
 
+Val Lowerer::stringConstant(std::string bytes) {
+    sir::Constant c;
+    c.type = Type{sir::TypeKind::String, 0};
+    c.bytes = std::move(bytes);
+    const auto id = static_cast<sir::ConstId>(design().constants.size());
+    design().constants.push_back(std::move(c));
+    return {Operand::constant(id), Type{sir::TypeKind::String, 0}};
+}
+
 Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceLocation sl) {
+    if (cv.isString()) {
+        if (!isString(t)) unsupported(sl, "a string constant as a value of this type");
+        return stringConstant(cv.str());
+    }
     if (cv.isReal() || cv.isShortReal()) {
         const double d =
             cv.isReal() ? static_cast<double>(cv.real()) : static_cast<double>(cv.shortReal());
@@ -308,6 +357,17 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
 
 Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     if (v.type == want) return v;
+    if (isString(want) && sir::isIntegral(v.type)) {
+        // Integer to string: its bytes, zero bytes dropped (6.16).
+        if (v.op.kind == Operand::Kind::Const) {
+            const sir::Constant& c = design().constants[v.op.id];
+            return stringConstant(integerToString(c.aWords.empty() ? 0 : c.aWords[0],
+                                                  c.bWords.empty() ? 0 : c.bWords[0],
+                                                  c.type.width));
+        }
+        return emit(Op::Itos, want, {v.op}, sl);
+    }
+    if (isString(v.type) && sir::isIntegral(want)) return emit(Op::Stoi, want, {v.op}, sl);
     if ((isReal(v.type) || isReal(want)) && (sir::isIntegral(v.type) || isReal(v.type)) &&
         (sir::isIntegral(want) || isReal(want))) {
         // Between reals, and between reals and integers (VALUE_SEMANTICS.md
@@ -483,6 +543,13 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return emit(Op::Select, rt, {cond.op, l.op, r.op}, sl);
         }
         case ast::ExpressionKind::Concatenation: {
+            if (e.type->isString()) {
+                // A string concatenation (11.4.12.2): every operand as a string.
+                std::vector<Operand> ops;
+                for (const ast::Expression* op : e.as<ast::ConcatenationExpression>().operands())
+                    ops.push_back(coerce(lowerExpr(*op), Type{sir::TypeKind::String, 0}, sl).op);
+                return emit(Op::Concat, Type{sir::TypeKind::String, 0}, std::move(ops), sl);
+            }
             std::vector<Operand> ops;
             std::uint32_t width = 0;
             bool four = false;
@@ -499,6 +566,12 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         }
         case ast::ExpressionKind::Replication: {
             const auto& r = e.as<ast::ReplicationExpression>();
+            if (e.type->isString()) {
+                // The count need not be constant (table 6-9).
+                const Val n = lowerExpr(r.count());
+                const Val v = coerce(lowerExpr(r.concat()), Type{sir::TypeKind::String, 0}, sl);
+                return emit(Op::Repl, Type{sir::TypeKind::String, 0}, {n.op, v.op}, sl);
+            }
             const std::optional<std::int64_t> n = constInt(r.count());
             if (!n || *n <= 0) unsupported(sl, "replication with this count");
             const Val v = lowerExpr(r.concat());
@@ -571,6 +644,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 if (!sir::isIntegral(v.type)) unsupported(sl, "$clog2 of this type");
                 return sys(rt, {v.op});
             }
+            if (std::optional<Val> v = lowerStringCall(call, sl)) return *v;
             unsupported(sl, "system function " + name);
         }
         default: unsupported(sl, "expression '" + std::string(ast::toString(e.kind)) + "'");
@@ -638,6 +712,12 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
         noteRead(elem ? sir::SlotRange{s, *elem, 1, 0, 0} : sir::SlotRange{s, 0, 0, 0, 0});
         const Type et = slot.type;
         return coerce(emit(Op::LoadElem, et, std::move(ops), sl), typeOf(*e.type, sl), sl);
+    }
+    if (vt.isString()) {
+        // s[i]: the byte, or 0 outside the string (table 6-9).
+        const Val v = lowerExpr(es.value());
+        const Val i = lowerExpr(es.selector());
+        return coerce(emit(Op::StrGet, sir::u2(8), {v.op, i.op}, sl), typeOf(*e.type, sl), sl);
     }
     if (!vt.isIntegral()) unsupported(sl, "selecting from a value of this type");
     const Val v = lowerExpr(es.value());
@@ -782,6 +862,13 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
     const auto compare = [&](Op op) {
         Val l = lowerExpr(b.left());
         Val r = lowerExpr(b.right());
+        if (isString(l.type) || isString(r.type)) {
+            // Strings compare by their characters (table 6-9).
+            const Type st{sir::TypeKind::String, 0};
+            l = coerce(l, st, sl);
+            r = coerce(r, st, sl);
+            return coerce(emit(op, sir::u2(1), {l.op, r.op}, sl), rt, sl);
+        }
         if (isReal(l.type) || isReal(r.type)) {
             // Compared as reals: real if either is, else shortreal (11.3.1).
             const bool shortOnly =
@@ -898,6 +985,16 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             const bool element = lhs.kind == ast::ExpressionKind::ElementSelect;
             const ast::Expression& base = element ? lhs.as<ast::ElementSelectExpression>().value()
                                                   : lhs.as<ast::RangeSelectExpression>().value();
+            if (element && base.type->isString()) {
+                // s[i] = c is s.putc(i, c) (6.16.3): the new string to s.
+                const Type st{sir::TypeKind::String, 0};
+                const Val str = lowerExpr(base);
+                const Val i = lowerExpr(lhs.as<ast::ElementSelectExpression>().selector());
+                const Val c = coerce(v, sir::u2(8), sl);
+                const Val n = emit(Op::Builtin, st, {Operand::str("putc"), str.op, i.op, c.op}, sl);
+                lowerStore(base, n, nonblocking, sl);
+                return;
+            }
             if (element && base.type->isUnpackedArray()) {
                 const std::optional<ArrayAccess> acc = arrayAccess(lhs);
                 if (!acc || findFrameVar(*acc->var) ||
@@ -991,65 +1088,140 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
 
 // --- System tasks ------------------------------------------------------------
 
+std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
+                                            slang::SourceLocation sl) {
+    const std::string name(call.getSubroutineName());
+    const auto args = call.arguments();
+    const Type st{sir::TypeKind::String, 0};
+    if (name == "$sformatf" || name == "$psprintf") {
+        std::vector<Operand> ops{Operand::str("$sformatf")};
+        lowerFormatArgs(args, ops, sl);
+        return emit(Op::Syscall, st, std::move(ops), sl);
+    }
+    // The string methods (6.16): the string is the first argument.
+    if (args.empty() || !args[0]->type->isString()) return std::nullopt;
+    // A method that changes the string gets it as an lvalue argument.
+    const ast::Expression* selfExpr = args[0];
+    if (selfExpr->kind == ast::ExpressionKind::Assignment &&
+        selfExpr->as<ast::AssignmentExpression>().isLValueArg())
+        selfExpr = &selfExpr->as<ast::AssignmentExpression>().left();
+    const Val self = lowerExpr(*selfExpr);
+    const auto arg = [&](std::size_t i, Type t) { return coerce(lowerExpr(*args[i]), t, sl); };
+    const auto method = [&](Type rt, std::vector<Operand> ops) {
+        ops.insert(ops.begin(), {Operand::str(name), self.op});
+        return emit(Op::Builtin, rt, std::move(ops), sl);
+    };
+    const Type rt = call.type->isVoid() ? sir::voidType() : typeOf(*call.type, sl);
+    if (name == "len" && args.size() == 1) return method(rt, {});
+    if (name == "getc" && args.size() == 2)
+        return coerce(method(sir::u2(8), {arg(1, sir::s2(32)).op}), rt, sl);
+    if ((name == "toupper" || name == "tolower") && args.size() == 1) return method(st, {});
+    if ((name == "compare" || name == "icompare") && args.size() == 2)
+        return method(rt, {arg(1, st).op});
+    if (name == "substr" && args.size() == 3)
+        return method(st, {arg(1, sir::s2(32)).op, arg(2, sir::s2(32)).op});
+    if ((name == "atoi" || name == "atohex" || name == "atooct" || name == "atobin" ||
+         name == "atoreal") &&
+        args.size() == 1)
+        return method(rt, {});
+    // The methods that change the string: the new string goes to it.
+    std::optional<Val> changed;
+    if (name == "putc" && args.size() == 3)
+        changed = method(st, {arg(1, sir::s2(32)).op, arg(2, sir::u2(8)).op});
+    if ((name == "itoa" || name == "hextoa" || name == "octtoa" || name == "bintoa") &&
+        args.size() == 2) {
+        const Val v = lowerExpr(*args[1]);
+        if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");
+        changed = method(st, {v.op});
+    }
+    if (name == "realtoa" && args.size() == 2)
+        changed = method(st, {arg(1, Type{sir::TypeKind::Real, 0}).op});
+    if (!changed) unsupported(sl, "string method " + name);
+    lowerStore(*selfExpr, *changed, false, sl);
+    return Val{Operand::temp(0), sir::voidType()};
+}
+
+void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
+                              std::vector<Operand>& ops, slang::SourceLocation sl) {
+    // A string literal not taken by an earlier specifier is a format
+    // (SYSTEM_TASKS.md 3.1); the VM parses it once when it loads the
+    // design. A %t value is scaled from the caller's time unit to ticks of
+    // the global precision here, so the VM needs no unit.
+    std::deque<char> pending;
+    for (const ast::Expression* arg : args) {
+        if (arg->kind == ast::ExpressionKind::EmptyArgument) {
+            ops.push_back(Operand::str(" "));
+            continue;
+        }
+        if (arg->kind == ast::ExpressionKind::StringLiteral && pending.empty()) {
+            const std::string text(arg->as<ast::StringLiteral>().getValue());
+            std::vector<char> convs;
+            std::string bad;
+            if (!scanFormat(text, convs, bad))
+                unsupported(arg->sourceRange.start(), "format specifier " + bad);
+            pending.assign(convs.begin(), convs.end());
+            ops.push_back(Operand::str(text));
+            continue;
+        }
+        const bool hasSpec = !pending.empty();
+        const char conv = hasSpec ? pending.front() : 'd';
+        if (!pending.empty()) pending.pop_front();
+        Val v = lowerExpr(*arg);
+        const bool realFormat = conv == 'e' || conv == 'f' || conv == 'g';
+        if (isReal(v.type)) {
+            // A real with an integer format goes through a 64-bit signed
+            // integer; without a specifier the VM shows it like %g
+            // (SYSTEM_TASKS.md 3.6).
+            if (conv == 't') unsupported(arg->sourceRange.start(), "%t of a real value");
+            if (hasSpec && !realFormat) v = coerce(v, sir::s2(64), sl);
+        } else if (isString(v.type)) {
+            // A string with %s or no specifier prints its characters.
+            if (hasSpec && conv != 's')
+                unsupported(arg->sourceRange.start(), "%" + std::string(1, conv) + " of a string");
+        } else if (!sir::isIntegral(v.type)) {
+            unsupported(arg->sourceRange.start(), "display of a value of this type");
+        } else if (realFormat) {
+            v = coerce(v, Type{sir::TypeKind::Real, 0}, sl);  // integer as a real (7.4)
+        }
+        if (conv == 't') {
+            const int shift = timeScale().unit - precision();
+            if (shift < 0 || shift > 19) unsupported(sl, "%t with this time unit");
+            if (shift > 0) {
+                std::uint64_t f = 1;
+                for (int i = 0; i < shift; ++i)
+                    f *= 10;
+                const Type t64 = integral(sir::isFourState(v.type), false, 64);
+                v = coerce(v, t64, sl);
+                v = emit(Op::Mul, t64, {v.op, constant(t64, f).op}, sl);
+            }
+        }
+        ops.push_back(v.op);
+    }
+}
+
 void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const std::string name(call.getSubroutineName());
     const auto args = call.arguments();
     if (name == "$display" || name == "$write") {
-        // A string literal not taken by an earlier specifier is a format
-        // (SYSTEM_TASKS.md 3.1); the VM parses it once when it loads the
-        // design. A %t value is scaled from the caller's time unit to ticks
-        // of the global precision here, so the VM needs no unit.
         std::vector<Operand> ops{Operand::str(name)};
-        std::deque<char> pending;
-        for (const ast::Expression* arg : args) {
-            if (arg->kind == ast::ExpressionKind::EmptyArgument) {
-                ops.push_back(Operand::str(" "));
-                continue;
-            }
-            if (arg->kind == ast::ExpressionKind::StringLiteral && pending.empty()) {
-                const std::string text(arg->as<ast::StringLiteral>().getValue());
-                std::vector<char> convs;
-                std::string bad;
-                if (!scanFormat(text, convs, bad))
-                    unsupported(arg->sourceRange.start(), "format specifier " + bad);
-                pending.assign(convs.begin(), convs.end());
-                ops.push_back(Operand::str(text));
-                continue;
-            }
-            const bool hasSpec = !pending.empty();
-            const char conv = hasSpec ? pending.front() : 'd';
-            if (!pending.empty()) pending.pop_front();
-            Val v = lowerExpr(*arg);
-            const bool realFormat = conv == 'e' || conv == 'f' || conv == 'g';
-            if (isReal(v.type)) {
-                // A real with an integer format goes through a 64-bit signed
-                // integer; without a specifier the VM shows it like %g
-                // (SYSTEM_TASKS.md 3.6).
-                if (conv == 't') unsupported(arg->sourceRange.start(), "%t of a real value");
-                if (hasSpec && !realFormat) v = coerce(v, sir::s2(64), sl);
-            } else if (!sir::isIntegral(v.type)) {
-                unsupported(arg->sourceRange.start(), "display of a value of this type");
-            } else if (realFormat) {
-                v = coerce(v, Type{sir::TypeKind::Real, 0}, sl);  // integer as a real (7.4)
-            }
-            if (conv == 't') {
-                const int shift = timeScale().unit - precision();
-                if (shift < 0 || shift > 19) unsupported(sl, "%t with this time unit");
-                if (shift > 0) {
-                    std::uint64_t f = 1;
-                    for (int i = 0; i < shift; ++i)
-                        f *= 10;
-                    const Type t64 = integral(sir::isFourState(v.type), false, 64);
-                    v = coerce(v, t64, sl);
-                    v = emit(Op::Mul, t64, {v.op, constant(t64, f).op}, sl);
-                }
-            }
-            ops.push_back(v.op);
-        }
+        lowerFormatArgs(args, ops, sl);
         emitVoid(Op::Syscall, std::move(ops), sl);
         return;
     }
+    if (name == "$sformat" && !args.empty()) {
+        // $sformat(dest, format, ...): $sformatf into dest (21.3.3).
+        std::vector<Operand> ops{Operand::str("$sformatf")};
+        lowerFormatArgs(args.subspan(1), ops, sl);
+        const Val v = emit(Op::Syscall, Type{sir::TypeKind::String, 0}, std::move(ops), sl);
+        const ast::Expression* dest = args[0];
+        if (dest->kind == ast::ExpressionKind::Assignment &&
+            dest->as<ast::AssignmentExpression>().isLValueArg())
+            dest = &dest->as<ast::AssignmentExpression>().left();
+        lowerStore(*dest, coerce(v, typeOf(*dest->type, sl), sl), false, sl);
+        return;
+    }
+    if (const std::optional<Val> v = lowerStringCall(call, sl)) return;  // putc and the like
     if (name == "$finish" || name == "$stop") {
         std::uint64_t n = 1;  // the default argument (20.2)
         if (!args.empty()) {

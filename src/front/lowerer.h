@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -129,6 +130,9 @@ public:
     sir::SubroutineId subroutineOf(const ast::SubroutineSymbol& sym, slang::SourceLocation sl);
     Val lowerCall(const ast::CallExpression& call);
     void lowerReturn(const ast::Expression* e, slang::SourceLocation sl);
+    /// The format and value arguments of $display, $write and $sformatf.
+    void lowerFormatArgs(std::span<const ast::Expression* const> args,
+                         std::vector<sir::Operand>& ops, slang::SourceLocation sl);
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
 
@@ -139,6 +143,9 @@ public:
     std::optional<std::int64_t> constInt(const ast::Expression& e);
     Val constant(sir::Type t, std::uint64_t a, std::uint64_t b = 0);
     Val realConstant(sir::Type t, double d);
+    Val stringConstant(std::string bytes);
+    /// Lowers a string method call (6.16) or a call of $sformatf.
+    std::optional<Val> lowerStringCall(const ast::CallExpression& call, slang::SourceLocation sl);
     Val constantFrom(const slang::ConstantValue& cv, sir::Type t, slang::SourceLocation sl);
 
     // Building blocks.

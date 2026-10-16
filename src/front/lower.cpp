@@ -218,6 +218,7 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
+    if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
     if (t.isFloating())
         return t.as<ast::FloatingType>().floatKind == ast::FloatingType::ShortReal
                    ? sir::Type{sir::TypeKind::ShortReal, 0}
