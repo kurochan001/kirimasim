@@ -261,7 +261,11 @@ std::string toText(const Design& d) {
         const Instance& inst = d.instances[i];
         out += "instance " + std::to_string(i) + " " + quoted(inst.scopeName) +
                " def=" + quoted(inst.definition) +
-               " parent=" + (inst.parent == kNone ? "-" : std::to_string(inst.parent)) + "\n";
+               " parent=" + (inst.parent == kNone ? "-" : std::to_string(inst.parent)) +
+               (inst.kind == InstanceKind::Package ? " package"
+                : inst.kind == InstanceKind::Unit  ? " unit"
+                                                   : "") +
+               "\n";
     }
     for (std::size_t i = 0; i < d.types.size(); ++i)
         out += "type !" + std::to_string(i) + " " + typeEntryText(d, d.types[i]) + "\n";

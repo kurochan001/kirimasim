@@ -98,11 +98,16 @@ struct NameEntry {
     SlotId slot = 0;
 };
 
+/// What a row of the instance table is: an instance, or a package or a
+/// compilation unit with variables or static subroutines (SIR_SPEC.md 2).
+enum class InstanceKind : std::uint8_t { Module, Package, Unit };
+
 /// A row of the instance table.
 struct Instance {
-    std::string scopeName;   ///< Hierarchical name of the instance.
+    std::string scopeName;   ///< Hierarchical name of the instance; a package's name, or $unit.
     std::string definition;  ///< Module name (with parameter values, if any).
     InstanceId parent = kNone;
+    InstanceKind kind = InstanceKind::Module;
 };
 
 /// Kinds of type-table rows (SIR_SPEC.md 4.3).

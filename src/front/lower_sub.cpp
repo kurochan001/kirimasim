@@ -51,15 +51,20 @@ const ast::Expression* actualPlace(const ast::Expression* arg) {
 
 sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                                         slang::SourceLocation sl) {
-    const auto key = std::make_pair(instance_, static_cast<const ast::Symbol*>(&sym));
+    // A subroutine of a package or compilation unit is one in the design
+    // and belongs to its row (SIR_SPEC.md 3.3); the others, to the
+    // instance they are lowered for.
+    const std::optional<sir::InstanceId> row = rowOf(sym);
+    const sir::InstanceId owner = row.value_or(instance_);
+    const auto key = std::make_pair(owner, static_cast<const ast::Symbol*>(&sym));
     if (auto it = subs_.find(key); it != subs_.end()) return it->second;
 
     sir::Subroutine s;
-    s.name = design_.instances[instance_].scopeName + "." + std::string(sym.name);
+    s.name = design_.instances[owner].scopeName + (row ? "::" : ".") + std::string(sym.name);
     s.kind = sym.subroutineKind == ast::SubroutineKind::Function ? sir::SubroutineKind::Function
                                                                  : sir::SubroutineKind::Task;
     s.automatic = sym.defaultLifetime == ast::VariableLifetime::Automatic;
-    s.instance = instance_;
+    s.instance = owner;
     s.loc = loc(sym.location);
     s.blocks.resize(1);
     const ast::Type& ret = sym.getReturnType();
@@ -72,6 +77,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
 
     Body saved = std::move(b_);
     const ast::Symbol* savedEval = evalSymbol_;
+    const sir::InstanceId savedInstance = instance_;
+    instance_ = owner;
     b_ = Body{};
     b_.isSub = true;
     b_.subSymbol = &sym;
@@ -108,11 +115,13 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     } catch (const Unsupported&) {
         b_ = std::move(saved);
         evalSymbol_ = savedEval;
+        instance_ = savedInstance;
         throw;
     }
     subReads_[id] = b_.reads;
     b_ = std::move(saved);
     evalSymbol_ = savedEval;
+    instance_ = savedInstance;
     return id;
 }
 

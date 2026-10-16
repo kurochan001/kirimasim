@@ -103,6 +103,8 @@ MUTANTS = [
      "    std::sort(pendingOrder_.begin(), pendingOrder_.end());\n", ""),
     ("front: a merged net keeps the external kind", "src/front/lower.cpp",
      "slot.kind = mergedKind(*innerKind, slot.kind);", "slot.kind = slot.kind;"),
+    ("front: packages get their rows and initializers after the instances",
+     "src/front/lower.cpp", "    declarePackages(root);\n", ""),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
      "(void)sl;"),

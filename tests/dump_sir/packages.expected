@@ -1,0 +1,49 @@
+; sir format 0
+precision 1ns
+source 0 "packages.sv"
+instance 0 "p1" def="p1" parent=- package
+instance 1 "p2" def="p2" parent=- package
+instance 2 "$unit" def="$unit" parent=- unit
+instance 3 "top" def="top" parent=-
+slot %s0 "p1::base" : s2<32> var inst=0
+slot %s1 "p2::derived" : s2<32> var inst=1
+slot %s2 "$unit::g" : s2<32> var inst=2
+slot %s3 "top.x" : s2<32> var inst=3
+
+subroutine @0 "p1::twice" function automatic inst=0 ret=s2<32> {  ; 0:8:26
+  param input "v" : s2<32> -> %f0
+  frame %f0 "v" : s2<32>
+  frame %f1 "twice" : s2<32>
+bb0:
+  %t0 = fload s2<32> %f0  ; 0:9:16
+  %t1 = mul s2<32> const s2<32> 32'h00000002, %t0  ; 0:9:12
+  ret %t1  ; 0:9:5
+}
+
+process @0 "p1::$static" kind=static-init inst=0 writes=%s0 {  ; 0:7:7
+bb0:
+  store %s0, const s2<32> 32'h00000005  ; 0:7:7
+  ret  ; 0:6:9
+}
+
+process @1 "p2::$static" kind=static-init inst=1 writes=%s1 {  ; 0:13:7
+bb0:
+  %t0 = load s2<32> %s0  ; 0:13:17
+  %t1 = add s2<32> %t0, const s2<32> 32'h00000001  ; 0:13:17
+  store %s1, %t1  ; 0:13:7
+  ret  ; 0:12:9
+}
+
+process @2 "$unit::$static" kind=static-init inst=2 writes=%s2 {  ; 0:15:5
+bb0:
+  store %s2, const s2<32> 32'h00000007  ; 0:15:5
+  ret  ; 0:15:5
+}
+
+process @3 "top.$static" kind=static-init inst=3 writes=%s3 {  ; 0:17:7
+bb0:
+  %t0 = load s2<32> %s1  ; 0:17:21
+  %t1 = call s2<32> @0, %t0  ; 0:17:11
+  store %s3, %t1  ; 0:17:7
+  ret  ; 0:16:8
+}

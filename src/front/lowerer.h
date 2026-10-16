@@ -279,7 +279,12 @@ private:
     std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
     sir::InstanceId instance_ = 0;
     std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;
-    std::vector<const ast::InstanceSymbol*> instanceSyms_;  ///< Instance -> its symbol.
+    /// Row of the instance table -> its symbol: an instance, a package or
+    /// a compilation unit.
+    std::vector<const ast::Symbol*> instanceSyms_;
+    /// Packages and compilation units -> their rows (SIR_SPEC.md 2).
+    std::map<const ast::Symbol*, sir::InstanceId> scopeRows_;
+    std::uint32_t units_ = 0;  ///< Compilation units with rows so far.
     /// The cont processes whose drive strength is not (strong1, strong0):
     /// process -> (strength1, strength0).
     std::map<std::uint32_t, std::pair<std::uint8_t, std::uint8_t>> strengths_;
@@ -291,6 +296,7 @@ private:
     std::map<std::string, std::uint32_t> nameCounts_;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
     std::map<sir::InstanceId, Body> staticBody_;           ///< Its lowering state.
+    std::map<sir::InstanceId, slang::SourceLocation> staticLoc_;  ///< Its first initializer.
     /// Subroutines lowered so far, per instance and symbol.
     std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subWrites_;
@@ -306,6 +312,17 @@ private:
     // (SIR_SPEC.md 1): first for the instance table, the slots of nets and
     // variables and the static initializers, then for the processes.
     void declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent);
+    /// The rows of the packages and compilation units that hold variables,
+    /// nets or subroutines, in source order, with their slots and static
+    /// initializers, before any instance (SIR_SPEC.md 2, 3.3, 7.1).
+    void declarePackages(const ast::RootSymbol& root);
+    /// The package or compilation unit a symbol is declared in, if any.
+    static const ast::Symbol* packageOf(const ast::Symbol& s);
+    /// The row of the package or compilation unit a symbol is declared in,
+    /// if it is declared in one; made on first use.
+    std::optional<sir::InstanceId> rowOf(const ast::Symbol& s);
+    /// The row of a package or compilation unit, made on first use.
+    sir::InstanceId rowFor(const ast::Symbol& scope);
     void declareScope(const ast::Scope& scope);
     void lowerInstance(const ast::InstanceSymbol& inst);
     void lowerScope(const ast::Scope& scope, const std::string& prefix);

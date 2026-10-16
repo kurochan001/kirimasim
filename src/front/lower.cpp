@@ -410,17 +410,9 @@ Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
-    // A variable of a package or of the compilation unit ($unit, 3.12.1)
-    // needs a place outside every instance and its own initialization
-    // (6.21); not done yet.
-    for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
-         sc = sc->asSymbol().getParentScope()) {
-        if (sc->asSymbol().kind == ast::SymbolKind::Package)
-            unsupported(sl, "variable '" + std::string(v.name) + "' of a package");
-        if (sc->asSymbol().kind == ast::SymbolKind::CompilationUnit)
-            unsupported(sl, "variable '" + std::string(v.name) + "' of the compilation unit");
-        if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
-    }
+    // A variable or net of a package or of a compilation unit ($unit,
+    // 3.12.1) belongs to its row, one in the design (SIR_SPEC.md 3.3).
+    const std::optional<sir::InstanceId> row = rowOf(v);
     sir::SlotKind kind = sir::SlotKind::Var;
     if (v.kind == ast::SymbolKind::Net) {
         const auto& n = v.as<ast::NetSymbol>();
@@ -442,11 +434,13 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
     // second and later get "~2", "~3", ... (names are for diagnostics and
     // the text form, and must be unique; SIR_SPEC.md 3.1).
     s.name = v.getHierarchicalPath();
+    if (row && v.getParentScope() == &instanceSyms_[*row]->as<ast::Scope>())
+        s.name = design_.instances[*row].scopeName + "::" + std::string(v.name);
     if (const std::uint32_t n = ++slotNames_[s.name]; n > 1) s.name += "~" + std::to_string(n);
     s.type = typeOf(*t, sl);
     s.kind = kind;
     s.dims = std::move(dims);
-    s.instance = instance_;
+    s.instance = row.value_or(instance_);
     // A variable or argument of the subroutine being lowered belongs to it.
     if (b_.isSub) {
         for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
@@ -500,6 +494,7 @@ void Lowerer::noteRead(const sir::SlotRange& r) { b_.reads.push_back(r); }
 
 void Lowerer::lower(const ast::RootSymbol& root) {
     design_.timePrecision = precision_;
+    declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
     for (const ast::InstanceSymbol* top : root.topInstances)
@@ -509,7 +504,11 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     for (auto& [inst, body] : staticBody_) {
         Body saved = std::move(b_);
         b_ = std::move(body);
-        if (!b_.dead) terminate(sir::Op::Ret, {}, instanceSyms_[inst]->location);
+        // A compilation unit has no location of its own; its first
+        // initializer's will do.
+        slang::SourceLocation end = instanceSyms_[inst]->location;
+        if (!end.valid()) end = staticLoc_.at(inst);
+        if (!b_.dead) terminate(sir::Op::Ret, {}, end);
         body = std::move(b_);
         b_ = std::move(saved);
     }
@@ -537,6 +536,7 @@ void Lowerer::dropProcesses(std::size_t first) {
     for (auto it = staticInit_.begin(); it != staticInit_.end();) {
         if (it->second >= first) {
             staticBody_.erase(it->first);
+            staticLoc_.erase(it->first);
             it = staticInit_.erase(it);
         } else {
             ++it;
@@ -708,6 +708,75 @@ void Lowerer::resolveNets() {
         r.writes.push_back({net, 0, 0, 0, 0});
         design_.processes.push_back(std::move(r));
     }
+}
+
+void Lowerer::declarePackages(const ast::RootSymbol& root) {
+    // The rows of the packages and compilation units with variables or
+    // nets first, in source order: a package where it is declared, a
+    // compilation unit at its first variable or net. One with subroutines
+    // alone gets its row when one of them is lowered (rowFor); it has
+    // nothing to initialize.
+    const auto holds = [](const ast::Symbol& m) {
+        return m.kind == ast::SymbolKind::Variable || m.kind == ast::SymbolKind::Net;
+    };
+    const auto holdsAny = [&](const ast::Scope& sc) {
+        for (const ast::Symbol& m : sc.members())
+            if (holds(m)) return true;
+        return false;
+    };
+    std::vector<const ast::Symbol*> order;
+    for (const ast::CompilationUnitSymbol* unit : root.compilationUnits) {
+        for (const ast::Symbol& m : unit->members()) {
+            if (m.kind == ast::SymbolKind::Package && holdsAny(m.as<ast::PackageSymbol>()))
+                order.push_back(&m);
+            else if (holds(m) && std::find(order.begin(), order.end(), unit) == order.end())
+                order.push_back(unit);
+        }
+    }
+    for (const ast::PackageSymbol* pkg : root.getCompilation().getPackages())
+        if (std::find(order.begin(), order.end(), pkg) == order.end() && holdsAny(*pkg))
+            order.push_back(pkg);
+    for (const ast::Symbol* sym : order)
+        rowFor(*sym);
+    // Then their slots and static initializers, in the same order.
+    for (const ast::Symbol* sym : order) {
+        instance_ = scopeRows_.at(sym);
+        declareScope(sym->as<ast::Scope>());
+    }
+    instance_ = 0;
+}
+
+sir::InstanceId Lowerer::rowFor(const ast::Symbol& scope) {
+    if (const auto it = scopeRows_.find(&scope); it != scopeRows_.end()) return it->second;
+    const bool unit = scope.kind == ast::SymbolKind::CompilationUnit;
+    // Compilation units are per file; the second and later are $unit#2,
+    // ... (SIR_SPEC.md 7.1).
+    std::string name(scope.name);
+    if (unit) name = ++units_ == 1 ? "$unit" : "$unit#" + std::to_string(units_);
+    const auto id = static_cast<sir::InstanceId>(design_.instances.size());
+    design_.instances.push_back(
+        {name, name, sir::kNone, unit ? sir::InstanceKind::Unit : sir::InstanceKind::Package});
+    instanceSyms_.push_back(&scope);
+    scopeRows_[&scope] = id;
+    return id;
+}
+
+const ast::Symbol* Lowerer::packageOf(const ast::Symbol& s) {
+    for (const ast::Scope* sc = s.getParentScope(); sc != nullptr;
+         sc = sc->asSymbol().getParentScope()) {
+        const ast::Symbol& owner = sc->asSymbol();
+        if (owner.kind == ast::SymbolKind::InstanceBody) return nullptr;
+        if (owner.kind == ast::SymbolKind::Package ||
+            owner.kind == ast::SymbolKind::CompilationUnit)
+            return &owner;
+    }
+    return nullptr;
+}
+
+std::optional<sir::InstanceId> Lowerer::rowOf(const ast::Symbol& s) {
+    const ast::Symbol* scope = packageOf(s);
+    if (scope == nullptr) return std::nullopt;
+    return rowFor(*scope);
 }
 
 void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent) {
@@ -996,7 +1065,10 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
     // into one process that runs before all others (6.8, SIR_SPEC.md 7.1).
     if (staticInit_.find(instance_) == staticInit_.end()) {
         sir::Process p;
-        p.name = design_.instances[instance_].scopeName + ".$static";
+        // <instance>.$static; <package>::$static and $unit::$static (SIR_SPEC.md 7.1).
+        p.name = design_.instances[instance_].scopeName +
+                 (design_.instances[instance_].kind == sir::InstanceKind::Module ? ".$static"
+                                                                                 : "::$static");
         p.kind = sir::ProcessKind::StaticInit;
         p.instance = instance_;
         p.loc = loc(sl);
@@ -1004,6 +1076,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
         const auto id = static_cast<std::uint32_t>(design_.processes.size());
         design_.processes.push_back(std::move(p));
         staticInit_[instance_] = id;
+        staticLoc_[instance_] = sl;
         Body body;
         body.proc = id;
         body.scale = timeScaleOf(*v.getParentScope());
