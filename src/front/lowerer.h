@@ -314,6 +314,11 @@ private:
     template <typename F>
     void lowerCont(const std::string& name, slang::SourceLocation sl, const ast::Symbol& evalAt,
                    F&& body, std::pair<std::uint8_t, std::uint8_t> strength = {6, 6});
+    /// Makes the process wait on what its body read, not on what the
+    /// subroutines it calls read inside: the operands of a continuous
+    /// assignment (10.3.2) and the implicit sensitivity of @* (9.4.2.2,
+    /// SCHEDULER_SPEC.md 9.2).
+    void triggerOnReads();
     /// The next process name for a kind of process in a scope.
     std::string processName(const std::string& prefix, const std::string& kind);
     /// Drops the processes from number `first` on, after an unsupported

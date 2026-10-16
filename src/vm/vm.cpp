@@ -437,6 +437,8 @@ public:
                     break;
                 case sir::ProcessKind::Ff:
                 case sir::ProcessKind::FfPlain:
+                // always @* does not run at time 0 (SCHEDULER_SPEC.md 6.2).
+                case sir::ProcessKind::CombAt:
                     f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
                     waitTriggers(f, proc);
                     break;
@@ -783,6 +785,7 @@ private:
             case sir::ProcessKind::Latch:
             case sir::ProcessKind::Ff:
             case sir::ProcessKind::FfPlain:
+            case sir::ProcessKind::CombAt:
                 f.block = 0;
                 waitTriggers(f, p);
                 return kernel::Status::Waiting;

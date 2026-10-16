@@ -1,0 +1,8 @@
+start runs=0 y=x
+a runs=1 y=6
+b runs=2 y=6
+idx runs=3 y=6
+sel runs=4 y=9
+item runs=5 y=6
+hidden runs=5 y=6
+arr 1

@@ -851,8 +851,11 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
     if (strength != std::pair<std::uint8_t, std::uint8_t>{6, 6})
         strengths_[static_cast<std::uint32_t>(first)] = strength;
     // Evaluated again whenever an operand of the right-hand side changes
-    // (10.3.2): what the body reads, not what the subroutines it calls
-    // read inside.
+    // (10.3.2).
+    triggerOnReads();
+}
+
+void Lowerer::triggerOnReads() {
     for (const sir::SlotRange& r : b_.reads) {
         const sir::Slot& s = design_.slots[r.slot];
         if (s.subroutine != sir::kNone) continue;
@@ -988,6 +991,20 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                     break;
                 }
                 if (ff) unsupported(pb.location, "always_ff without a single event control");
+                if (bodyStmt.kind == ast::StatementKind::Timed &&
+                    bodyStmt.as<ast::TimedStatement>().timing.kind ==
+                        ast::TimingControlKind::ImplicitEvent &&
+                    !mayWait(bodyStmt.as<ast::TimedStatement>().stmt)) {
+                    // always @* with a statement that never waits: comb-at,
+                    // sensitive to what the statement reads (SIR_SPEC.md
+                    // 7.1, SCHEDULER_SPEC.md 9.2): not what it only writes,
+                    // and not what the functions it calls read inside.
+                    proc().kind = sir::ProcessKind::CombAt;
+                    lowerStatement(bodyStmt.as<ast::TimedStatement>().stmt);
+                    if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
+                    triggerOnReads();
+                    break;
+                }
                 if (!mayWait(bodyStmt))
                     unsupported(pb.location, "always procedure without a timing control");
                 // Any other always: a general process that loops forever.

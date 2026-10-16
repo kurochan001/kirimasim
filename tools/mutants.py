@@ -51,7 +51,7 @@ MUTANTS = [
      "return decimal(powerOfTwo(width, 1)).size() + 1;"),
     ("front: always_comb is sensitive to what it writes", "src/front/lower.cpp",
      "skip = skip || covers(w, r, s.type.width, elems);", "skip = skip || false;"),
-    ("front: a continuous assignment ignores its operands", "src/front/lower.cpp",
+    ("front: a process ignores what its body reads (assign, always @*)", "src/front/lower.cpp",
      "if (!dup) proc().triggers.push_back({r, sir::Edge::Any});",
      "if (false) proc().triggers.push_back({r, sir::Edge::Any});"),
     ("sir: tri1 and supply1 start at z", "src/sir/types.cpp",
