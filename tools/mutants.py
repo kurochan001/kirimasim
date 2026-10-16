@@ -202,6 +202,9 @@ MUTANTS = [
      "        const Val above = emit(Op::Ge, sir::u2(1),"),
     ("kernel: %c skips white space", "src/kernel/scan.cpp",
      "        if (s.conv != 'c') skipSpace();", "        skipSpace();"),
+    ("front: a stream into an array is put at the right end", "src/front/lower_expr.cpp",
+     "                          {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);",
+     "                          {constant(sir::u2(all.width - st.type.width), 0).op, st.op}, sl);"),
 ]
 
 

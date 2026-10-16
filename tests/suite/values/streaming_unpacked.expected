@@ -1,0 +1,13 @@
+pack 12345678
+pack bytes reversed 78563412
+descending a1b2c3d4
+2-D 1234
+struct abcd
+struct nibbles reversed dcba
+unpack de ad be ef
+unpack reversed 04 03 02 01
+unpack struct 1 23 4
+unpack mixed cafe 9 87 6
+into array ab cd 00 00
+array source 11 22 33 44
+short block 100111 packs back to 011110

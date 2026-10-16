@@ -1267,13 +1267,10 @@ Val Lowerer::lowerStream(const ast::StreamingConcatenationExpression& s, slang::
         if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
         const ast::Expression& op = *se.operand;
         Val v;
-        if (op.kind == ast::ExpressionKind::Streaming) {
+        if (op.kind == ast::ExpressionKind::Streaming)
             v = lowerStream(op.as<ast::StreamingConcatenationExpression>(), sl);
-        } else {
-            if (!op.type->isIntegral()) unsupported(sl, "streaming of a value of this type");
-            v = lowerExpr(op);
-            v = coerce(v, integral(sir::isFourState(v.type), false, v.type.width), sl);
-        }
+        else
+            v = bitstreamOf(op, sl);
         ops.push_back(v.op);
         width += v.type.width;
         four = four || sir::isFourState(v.type);
@@ -1321,8 +1318,7 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
     // inverse reordering; then the targets from the left like a
     // concatenation (11.4.14.3). The value comes before the targets'
     // indices, as in any assignment.
-    Val src = lowerExpr(rhs);
-    if (!sir::isIntegral(src.type)) unsupported(sl, "unpacking a value of this type");
+    Val src = bitstreamOf(rhs, sl);
     const std::uint64_t w = s.getBitstreamWidth();
     if (w == 0 || w > 64 || src.type.width < w) unsupported(sl, "unpacking this stream");
     if (src.type.width > w)
@@ -1331,24 +1327,92 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
                    {src.op, constant(sir::u2(32), src.type.width - w).op}, sl);
     else
         src = coerce(src, integral(sir::isFourState(src.type), false, src.type.width), sl);
-    if (s.getSliceSize() != 0) {
-        // With a short last block, which bits "the reverse operation" puts
-        // where is not settled yet (VALUE_SEMANTICS.md 8).
-        if (w % s.getSliceSize() != 0) unsupported(sl, "unpacking << with a short last block");
-        src = reverseBlocks(src, s.getSliceSize(), false, sl);
-    }
-    Place all;
-    all.kind = Place::Kind::Concat;
+    // <<: the inverse of packing, also with a short last block
+    // (VALUE_SEMANTICS.md 8).
+    if (s.getSliceSize() != 0) src = reverseBlocks(src, s.getSliceSize(), false, sl);
+    std::vector<Place> places;
     for (const auto& se : s.streams()) {
         if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
         const ast::Expression& op = *se.operand;
-        if (op.kind == ast::ExpressionKind::Streaming || !op.type->isIntegral())
+        if (op.kind == ast::ExpressionKind::Streaming)
             unsupported(sl, "unpacking into this target");
-        all.base.push_back(placeOf(op, sl));
-        all.width += all.base.back().type.width;
+        bitstreamPlaces(op, places, sl);
     }
-    all.type = integral(sir::isFourState(src.type), false, all.width);
+    Place all = concatPlace(std::move(places), src.type, sl);
     storePlace(all, src, nonblocking, sl);
+}
+
+Val Lowerer::bitstreamOf(const ast::Expression& e, slang::SourceLocation sl) {
+    // An integral value as its bits; an unpacked array or structure as the
+    // concatenation of its single values in order (11.4.14.1,
+    // VALUE_SEMANTICS.md 8).
+    std::vector<Val> vals;
+    if (isAggregate(*e.type))
+        aggregateValues(e, *e.type, vals, sl);
+    else
+        vals.push_back(lowerExpr(e));
+    std::vector<Operand> ops;
+    std::uint32_t width = 0;
+    bool four = false;
+    for (Val& v : vals) {
+        if (!sir::isIntegral(v.type)) unsupported(sl, "streaming of a value of this type");
+        v = coerce(v, integral(sir::isFourState(v.type), false, v.type.width), sl);
+        ops.push_back(v.op);
+        width += v.type.width;
+        four = four || sir::isFourState(v.type);
+    }
+    if (width == 0 || width > 64) unsupported(sl, "values wider than 64 bits");
+    if (ops.size() == 1) return vals[0];
+    return emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
+}
+
+void Lowerer::bitstreamPlaces(const ast::Expression& e, std::vector<Place>& out,
+                              slang::SourceLocation sl) {
+    // The single places of a target, in the order of bitstreamOf.
+    if (structElement(*e.type) != nullptr) {
+        const std::optional<Storage> st = storageOf(e, sl);
+        if (!st) unsupported(sl, "unpacking into this target");
+        storagePlaces(*st, *e.type, out, sl);
+        return;
+    }
+    if (e.type->getCanonicalType().isUnpackedArray()) {
+        const std::optional<ArrayTarget> a = arrayTarget(e);
+        if (!a) unsupported(sl, "unpacking into this array");
+        arrayPlaces(a->slot, a->indices, out);
+        return;
+    }
+    if (!e.type->isIntegral()) unsupported(sl, "unpacking into this target");
+    out.push_back(placeOf(e, sl));
+}
+
+void Lowerer::arrayPlaces(sir::SlotId s, std::vector<std::int64_t> indices,
+                          std::vector<Place>& out) {
+    const sir::Slot& slot = design().slots[s];
+    if (indices.size() == slot.dims.size()) {
+        out.push_back(elementPlace(s, indices));
+        return;
+    }
+    const sir::ArrayDim d = slot.dims[indices.size()];
+    const std::int64_t step = d.left <= d.right ? 1 : -1;
+    for (std::int64_t i = d.left;; i += step) {
+        indices.push_back(i);
+        arrayPlaces(s, indices, out);
+        indices.pop_back();
+        if (i == d.right) break;
+    }
+}
+
+Lowerer::Place Lowerer::concatPlace(std::vector<Place> parts, Type like, slang::SourceLocation sl) {
+    Place all;
+    all.kind = Place::Kind::Concat;
+    for (Place& part : parts) {
+        if (!sir::isIntegral(part.type)) unsupported(sl, "unpacking into a target of this type");
+        all.width += part.type.width;
+        all.base.push_back(std::move(part));
+    }
+    if (all.width == 0 || all.width > 64) unsupported(sl, "values wider than 64 bits");
+    all.type = integral(sir::isFourState(like), false, all.width);
+    return all;
 }
 
 Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::string& name, Type rt,
@@ -1865,6 +1929,28 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         b_.lvalueRefs.pop_back();
         storePlace(p, v, a.isNonBlocking(), sl);
         return v;
+    }
+    if (isAggregate(*a.left().type)) {
+        // A stream into an unpacked array or structure: left-aligned, zeros
+        // on the right, then its bits from the left into the single places
+        // in order (11.4.14).
+        const ast::Expression* r = &a.right();
+        if (r->kind == ast::ExpressionKind::Conversion &&
+            r->as<ast::ConversionExpression>().conversionKind ==
+                ast::ConversionKind::StreamingConcat)
+            r = &r->as<ast::ConversionExpression>().operand();
+        if (r->kind == ast::ExpressionKind::Streaming) {
+            Val st = lowerStream(r->as<ast::StreamingConcatenationExpression>(), sl);
+            std::vector<Place> places;
+            bitstreamPlaces(a.left(), places, sl);
+            const Place all = concatPlace(std::move(places), st.type, sl);
+            if (st.type.width > all.width) unsupported(sl, "stream wider than its target");
+            if (st.type.width < all.width)
+                st = emit(Op::Concat, integral(sir::isFourState(st.type), false, all.width),
+                          {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);
+            storePlace(all, st, a.isNonBlocking(), sl);
+            return Val{Operand::temp(0), sir::voidType()};
+        }
     }
     if (structElement(*a.left().type) != nullptr) {
         // An unpacked structure, or an array of them, is assigned member by

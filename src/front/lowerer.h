@@ -355,6 +355,19 @@ public:
     /// v with its blocks of `size` bits in reverse order, sliced from the
     /// right (packing) or from the left (unpacking).
     Val reverseBlocks(const Val& v, std::uint64_t size, bool fromRight, slang::SourceLocation sl);
+    /// An integral value, or an unpacked array or structure, as a stream of
+    /// bits (11.4.14.1).
+    Val bitstreamOf(const ast::Expression& e, slang::SourceLocation sl);
+    /// The single places of a target in the order of bitstreamOf.
+    void bitstreamPlaces(const ast::Expression& e, std::vector<Place>& out,
+                         slang::SourceLocation sl);
+    /// The element places of the (sub-)array of slot s at indices, in order.
+    void arrayPlaces(sir::SlotId s, std::vector<std::int64_t> indices, std::vector<Place>& out);
+    /// The single places of the leaves of type t at s, in order.
+    void storagePlaces(const Storage& s, const ast::Type& t, std::vector<Place>& out,
+                       slang::SourceLocation sl);
+    /// The concatenation of integral places, four-state like `like`.
+    Place concatPlace(std::vector<Place> parts, sir::Type like, slang::SourceLocation sl);
     /// A streaming concatenation as the target of an assignment (11.4.14.3).
     void lowerUnpack(const ast::StreamingConcatenationExpression& s, const ast::Expression& rhs,
                      bool nonblocking, slang::SourceLocation sl);

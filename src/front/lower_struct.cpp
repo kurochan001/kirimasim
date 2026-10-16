@@ -278,6 +278,34 @@ void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Va
     out.push_back(loadPlace(storagePlace(s), sl));
 }
 
+void Lowerer::storagePlaces(const Storage& s, const ast::Type& t, std::vector<Place>& out,
+                            slang::SourceLocation sl) {
+    // The single places of the leaves at s, in the order of storageValues.
+    const ast::Type& ct = t.getCanonicalType();
+    if (const ast::UnpackedStructType* st = unpackedStruct(ct)) {
+        std::uint32_t off = 0;
+        for (const ast::FieldSymbol* f : st->fields) {
+            storagePlaces(leafAt(s, off), f->getType(), out, sl);
+            off += leafCount(f->getType());
+        }
+        return;
+    }
+    if (structElement(ct) != nullptr) {
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        for (std::int64_t i = at.range.left;; i += step) {
+            storagePlaces(withIndex(s, i), at.elementType, out, sl);
+            if (i == at.range.right) break;
+        }
+        return;
+    }
+    if (ct.isUnpackedArray()) {
+        arrayPlaces(s.id, fixedIndices(s, sl), out);
+        return;
+    }
+    out.push_back(storagePlace(s));
+}
+
 void Lowerer::memberDefaults(const Storage& dst, const ast::Type& t, Stores& out,
                              slang::SourceLocation sl) {
     // A member's own initial value (7.2.2); the members of a nested
