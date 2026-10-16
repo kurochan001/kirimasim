@@ -9,6 +9,7 @@
 #include "haremasim/kernel/format.h"
 #include "haremasim/kernel/sim.h"
 #include "haremasim/kernel/store.h"
+#include "haremasim/kernel/strings.h"
 #include "haremasim/kernel/w4.h"
 #include "haremasim/kernel/w4ops.h"
 

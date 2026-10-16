@@ -10,6 +10,7 @@
 #include "haremasim/kernel/counters.h"
 #include "haremasim/kernel/sim.h"
 #include "haremasim/kernel/store.h"
+#include "haremasim/kernel/strings.h"
 
 namespace haremasim::kernel {
 
@@ -25,12 +26,15 @@ public:
     [[nodiscard]] const Scheduler& scheduler() const { return scheduler_; }
     Output& output() { return output_; }
     Store& store() { return store_; }
+    Strings& strings() { return strings_; }
+    [[nodiscard]] const Strings& strings() const { return strings_; }
     [[nodiscard]] const Store& store() const { return store_; }
 
 private:
     Counters counters_;
     Output output_;
     Store store_;
+    Strings strings_;
     Scheduler scheduler_;
 };
 
