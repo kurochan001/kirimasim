@@ -160,6 +160,10 @@ public:
     /// (a static variable, or a constant bit of one), if it is one.
     std::optional<sir::SlotRange> eventSlot(const ast::Expression& e);
 
+    /// Puts the initializer of a static variable into the static-init
+    /// process of the current instance (SIR_SPEC.md 7.1).
+    void lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot, slang::SourceLocation sl);
+
     void noteWrite(const sir::SlotRange& r);
     void noteRead(const sir::SlotRange& r);
 
@@ -191,7 +195,9 @@ private:
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
     sir::InstanceId instance_ = 0;
-    const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
+    std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
+    std::map<sir::InstanceId, Body> staticBody_;           ///< Its lowering state.
+    const ast::Symbol* evalSymbol_ = nullptr;              ///< Where constants are evaluated.
     Body b_;
 
     void lowerTop(const ast::InstanceSymbol& inst);

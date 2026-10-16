@@ -157,11 +157,21 @@ public:
             store_.add(kernelDomain(dom), s.type.width,
                        static_cast<std::uint32_t>(sir::elementCount(s)), init);
         }
+        // Static initializers first, in process order, run on the spot
+        // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
+        std::uint64_t initSteps = 0;
+        for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
+            if (d_.processes[p].kind != sir::ProcessKind::StaticInit) continue;
+            Frame& f = newFrame(p);
+            const kernel::Status st = runProcess(f, initSteps);
+            if (st == kernel::Status::Error) return {kernel::EndReason::Internal, sched_.error()};
+        }
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
             if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
+            if (proc.kind == sir::ProcessKind::StaticInit) continue;   // already run
             Frame& f = newFrame(p);
             switch (proc.kind) {
                 case sir::ProcessKind::Initial:
@@ -194,6 +204,7 @@ public:
         }
         // After the kernel's own counters, which the first process registers.
         cInstrs_ = counters_.add("vm.instrs");
+        counters_.increment(cInstrs_, initSteps);
         for (const kernel::ProcessId k : combs)
             sched_.start(k);
         sched_.run();

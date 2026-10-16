@@ -347,6 +347,7 @@ enum class ProcessKind : std::uint8_t {
     Initial,
     Final,
     General,
+    StaticInit,  ///< The static variable initializers of an instance (SIR_SPEC.md 7.1).
 };
 
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems

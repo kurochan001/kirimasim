@@ -65,7 +65,8 @@ bool waitsForbidden(ProcessKind k) {
         case ProcessKind::CombAt:
         case ProcessKind::Ff:
         case ProcessKind::FfPlain:
-        case ProcessKind::Final: return true;
+        case ProcessKind::Final:
+        case ProcessKind::StaticInit: return true;
         case ProcessKind::Initial:
         case ProcessKind::General: return false;
     }
@@ -1190,6 +1191,11 @@ private:
                 for (const SlotRange& a : ps[i].writes) {
                     for (const SlotRange& b : ps[j].writes) {
                         if (!overlaps(a, b) || a.slot >= d_.slots.size()) continue;
+                        // Initial values of declarations are written by no
+                        // process (6.8).
+                        if (ps[i].kind == ProcessKind::StaticInit ||
+                            ps[j].kind == ProcessKind::StaticInit)
+                            continue;
                         const Slot& s = d_.slots[a.slot];
                         const bool exclusive =
                             exclusiveWriter(ps[i].kind) || exclusiveWriter(ps[j].kind);

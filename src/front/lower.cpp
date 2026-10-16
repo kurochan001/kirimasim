@@ -329,7 +329,11 @@ void Lowerer::checkWriters() {
     const auto& ps = design_.processes;
     for (std::size_t i = 0; i < ps.size(); ++i) {
         for (std::size_t j = 0; j < ps.size(); ++j) {
-            if (i == j || !exclusive(ps[i].kind) || (exclusive(ps[j].kind) && j < i)) continue;
+            // A declaration's initial value is not a write by a process
+            // (6.8), so static-init is no other writer.
+            if (i == j || !exclusive(ps[i].kind) || (exclusive(ps[j].kind) && j < i) ||
+                ps[j].kind == sir::ProcessKind::StaticInit)
+                continue;
             bool reported = false;
             for (const sir::SlotRange& a : ps[i].writes) {
                 for (const sir::SlotRange& b : ps[j].writes) {
@@ -358,12 +362,9 @@ void Lowerer::lowerTop(const ast::InstanceSymbol& inst) {
     for (const ast::Symbol& member : inst.body.members()) {
         if (member.kind != ast::SymbolKind::Variable) continue;
         const auto& v = member.as<ast::VariableSymbol>();
-        if (v.getInitializer() != nullptr) {
-            report(v.location, "initial value of a static variable");
-            continue;
-        }
         try {
-            slotOf(v, v.location);
+            const sir::SlotId s = slotOf(v, v.location);
+            if (v.getInitializer() != nullptr) lowerStaticInit(v, s, v.location);
         } catch (const Unsupported&) {
             continue;  // already reported
         }
@@ -383,6 +384,54 @@ void Lowerer::lowerTop(const ast::InstanceSymbol& inst) {
                        "module member '" + std::string(ast::toString(member.kind)) + "'");
         }
     }
+    // The static-init process of the instance ends here.
+    if (auto it = staticBody_.find(instId); it != staticBody_.end()) {
+        Body saved = std::move(b_);
+        b_ = std::move(it->second);
+        if (!b_.dead) terminate(sir::Op::Ret, {}, inst.location);
+        it->second = std::move(b_);
+        b_ = std::move(saved);
+    }
+}
+
+void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
+                              slang::SourceLocation sl) {
+    // Every static initializer of an instance goes, in declaration order,
+    // into one process that runs before all others (6.8, SIR_SPEC.md 7.1).
+    if (staticInit_.find(instance_) == staticInit_.end()) {
+        sir::Process p;
+        p.name = design_.instances[instance_].scopeName + ".$static";
+        p.kind = sir::ProcessKind::StaticInit;
+        p.instance = instance_;
+        p.loc = loc(sl);
+        p.blocks.resize(1);
+        const auto id = static_cast<std::uint32_t>(design_.processes.size());
+        design_.processes.push_back(std::move(p));
+        staticInit_[instance_] = id;
+        Body body;
+        body.proc = id;
+        body.scale = timeScaleOf(*v.getParentScope());
+        staticBody_[instance_] = std::move(body);
+    }
+    Body saved = std::move(b_);
+    b_ = std::move(staticBody_[instance_]);
+    const ast::Symbol* savedEval = evalSymbol_;
+    evalSymbol_ = &v;
+    const auto restore = [&] {
+        staticBody_[instance_] = std::move(b_);
+        b_ = std::move(saved);
+        evalSymbol_ = savedEval;
+    };
+    try {
+        const sir::Type t = design_.slots[slot].type;
+        const Val val = coerce(lowerExpr(*v.getInitializer()), t, sl);
+        emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
+        noteWrite({slot, 0, 0, 0, 0});
+    } catch (const Unsupported&) {
+        restore();
+        throw;
+    }
+    restore();
 }
 
 void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::InstanceId inst,
@@ -498,6 +547,15 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
         }
     } catch (const Unsupported&) {
         design_.processes.resize(first);  // with any fork children
+        // A static-init process made while lowering this one goes too.
+        for (auto it = staticInit_.begin(); it != staticInit_.end();) {
+            if (it->second >= first) {
+                staticBody_.erase(it->first);
+                it = staticInit_.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 }
 

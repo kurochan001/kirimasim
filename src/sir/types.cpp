@@ -190,6 +190,7 @@ const char* kindName(ProcessKind k) {
         case ProcessKind::Initial: return "initial";
         case ProcessKind::Final: return "final";
         case ProcessKind::General: return "general";
+        case ProcessKind::StaticInit: return "static-init";
     }
     return "?";
 }

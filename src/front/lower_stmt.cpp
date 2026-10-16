@@ -75,11 +75,10 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         case ast::StatementKind::VariableDeclaration: {
             const auto& v = s.as<ast::VariableDeclStatement>().symbol;
             if (v.lifetime == ast::VariableLifetime::Static) {
-                // Static: a slot, set once at time 0 (6.21), which needs the
-                // static initialization that comes later.
-                if (v.getInitializer() != nullptr)
-                    unsupported(sl, "initial value of a static variable");
-                slotOf(v, sl);
+                // Static: a slot, set once before time 0 starts (6.21) by
+                // the static-init process, not when the block runs.
+                const sir::SlotId slot = slotOf(v, sl);
+                if (v.getInitializer() != nullptr) lowerStaticInit(v, slot, sl);
                 return;
             }
             // Automatic: a frame variable, set each time the scope is
