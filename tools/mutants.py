@@ -153,6 +153,12 @@ MUTANTS = [
      "            terminate(Op::Br, {Operand::block(*n->exit)}, sl);\n            return;\n        }\n"
      "        case ast::StatementKind::WaitFork",
      "            return;\n        }\n        case ast::StatementKind::WaitFork"),
+    ("front: << slices a stream from the left", "src/front/lower_expr.cpp",
+     "    return reverseBlocks(stream, s.getSliceSize(), true, sl);",
+     "    return reverseBlocks(stream, s.getSliceSize(), false, sl);"),
+    ("front: unpacking takes the right end of a wider source", "src/front/lower_expr.cpp",
+     "{src.op, constant(sir::u2(32), src.type.width - w).op}, sl);",
+     "{src.op, constant(sir::u2(32), 0).op}, sl);"),
 ]
 
 

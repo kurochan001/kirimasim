@@ -1,0 +1,19 @@
+keep 12345678
+bits 1e6a2c48
+bytes 78563412
+byte type 78563412
+halves 56781234
+ignored slice 12345678
+short block 011110
+nested 1011
+padded abcdef0000
+padded reversed efcdab0000
+four-state z0x1
+unpack 13 57
+unpack reversed 57 13
+unpack left end 9a
+unpack parts fedcba98
+unpack members 68 24
+unpack two-state 1010001000000001
+nba before 12345678
+nba after ddccbbaa

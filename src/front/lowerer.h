@@ -24,6 +24,7 @@
 #include "slang/ast/TimingControl.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
 #include "slang/ast/expressions/CallExpression.h"
+#include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/ast/statements/LoopStatements.h"
 #include "slang/ast/statements/MiscStatements.h"
@@ -304,6 +305,14 @@ public:
     static bool isUnpackedMember(const ast::Expression& e);
     /// The place of one leaf: a frame variable or a whole slot.
     Place storagePlace(Storage st);
+    /// The stream of a streaming concatenation used as a value (11.4.14).
+    Val lowerStream(const ast::StreamingConcatenationExpression& s, slang::SourceLocation sl);
+    /// v with its blocks of `size` bits in reverse order, sliced from the
+    /// right (packing) or from the left (unpacking).
+    Val reverseBlocks(const Val& v, std::uint64_t size, bool fromRight, slang::SourceLocation sl);
+    /// A streaming concatenation as the target of an assignment (11.4.14.3).
+    void lowerUnpack(const ast::StreamingConcatenationExpression& s, const ast::Expression& rhs,
+                     bool nonblocking, slang::SourceLocation sl);
     /// a op b for a comparison op of values of any types that compare:
     /// strings, reals, or integral values at their common type. 1 bit.
     Val compareValues(sir::Op op, Val l, Val r, slang::SourceLocation sl);

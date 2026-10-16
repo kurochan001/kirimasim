@@ -713,6 +713,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             const Val v = lowerExpr(in.left());
             return coerce(lowerInside(v, in.rangeList(), sl), typeOf(*e.type, sl), sl);
         }
+        case ast::ExpressionKind::Streaming:
+            return lowerStream(e.as<ast::StreamingConcatenationExpression>(), sl);
         case ast::ExpressionKind::UnaryOp: return lowerUnary(e);
         case ast::ExpressionKind::BinaryOp: return lowerBinary(e);
         case ast::ExpressionKind::ConditionalOp: {
@@ -803,6 +805,20 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::Conversion: {
             const auto& c = e.as<ast::ConversionExpression>();
             const Type want = typeOf(*e.type, sl);
+            if (c.conversionKind == ast::ConversionKind::StreamingConcat) {
+                // A stream is left-aligned in a wider target, zeros on the
+                // right, then cast to the target's type (11.4.14).
+                if (c.operand().kind != ast::ExpressionKind::Streaming || !sir::isIntegral(want))
+                    unsupported(sl, "streaming into this target");
+                Val st = lowerStream(c.operand().as<ast::StreamingConcatenationExpression>(), sl);
+                if (st.type.width > want.width) unsupported(sl, "stream wider than its target");
+                if (st.type.width < want.width) {
+                    const Val zeros = constant(sir::u2(want.width - st.type.width), 0);
+                    st = emit(Op::Concat, integral(sir::isFourState(st.type), false, want.width),
+                              {st.op, zeros.op}, sl);
+                }
+                return coerce(st, want, sl);
+            }
             Val v = lowerExpr(c.operand());
             // An operand of a context-determined expression takes the sign
             // of the expression before it is extended (11.8.2); other
@@ -1133,6 +1149,101 @@ Val Lowerer::lowerUnary(const ast::Expression& e) {
     unsupported(sl, "unary operator");
 }
 
+Val Lowerer::lowerStream(const ast::StreamingConcatenationExpression& s, slang::SourceLocation sl) {
+    // The bits of the operands from the left (11.4.14.1); four-state if any
+    // operand is. Then, for <<, the blocks of the slice size from the right
+    // in reverse order (11.4.14.2).
+    std::vector<Operand> ops;
+    std::uint32_t width = 0;
+    bool four = false;
+    for (const auto& se : s.streams()) {
+        if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
+        const ast::Expression& op = *se.operand;
+        Val v;
+        if (op.kind == ast::ExpressionKind::Streaming) {
+            v = lowerStream(op.as<ast::StreamingConcatenationExpression>(), sl);
+        } else {
+            if (!op.type->isIntegral()) unsupported(sl, "streaming of a value of this type");
+            v = lowerExpr(op);
+            v = coerce(v, integral(sir::isFourState(v.type), false, v.type.width), sl);
+        }
+        ops.push_back(v.op);
+        width += v.type.width;
+        four = four || sir::isFourState(v.type);
+    }
+    if (width == 0 || width > 64) unsupported(sl, "values wider than 64 bits");
+    Val stream = emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
+    if (s.getSliceSize() == 0) return stream;
+    return reverseBlocks(stream, s.getSliceSize(), true, sl);
+}
+
+Val Lowerer::reverseBlocks(const Val& v, std::uint64_t size, bool fromRight,
+                           slang::SourceLocation sl) {
+    // Blocks of `size` bits, sliced from the right end (packing) or from
+    // the left end (unpacking, its inverse); the last block may be short.
+    // The result has them in the reverse order.
+    const std::uint32_t w = v.type.width;
+    if (size >= w) return v;
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> blocks;  // lsb, width
+    if (fromRight) {
+        for (std::uint32_t lsb = 0; lsb < w; lsb += static_cast<std::uint32_t>(size))
+            blocks.emplace_back(lsb,
+                                static_cast<std::uint32_t>(std::min<std::uint64_t>(size, w - lsb)));
+    } else {
+        for (std::uint32_t msb = w; msb > 0;) {
+            const auto bw = static_cast<std::uint32_t>(std::min<std::uint64_t>(size, msb));
+            msb -= bw;
+            blocks.emplace_back(msb, bw);
+        }
+        std::reverse(blocks.begin(), blocks.end());
+    }
+    // From the right: the lowest block becomes the most significant; from
+    // the left, the reversed list puts the last block first.
+    std::vector<Operand> parts;
+    parts.reserve(blocks.size());
+    for (const auto& [lsb, bw] : blocks)
+        parts.push_back(emit(Op::Partsel, integral(sir::isFourState(v.type), false, bw),
+                             {v.op, constant(sir::u2(32), lsb).op}, sl)
+                            .op);
+    return emit(Op::Concat, integral(sir::isFourState(v.type), false, w), std::move(parts), sl);
+}
+
+void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
+                          const ast::Expression& rhs, bool nonblocking, slang::SourceLocation sl) {
+    // The source's leftmost bits, as many as the targets take; for << the
+    // inverse reordering; then the targets from the left like a
+    // concatenation (11.4.14.3). The value comes before the targets'
+    // indices, as in any assignment.
+    Val src = lowerExpr(rhs);
+    if (!sir::isIntegral(src.type)) unsupported(sl, "unpacking a value of this type");
+    const std::uint64_t w = s.getBitstreamWidth();
+    if (w == 0 || w > 64 || src.type.width < w) unsupported(sl, "unpacking this stream");
+    if (src.type.width > w)
+        src = emit(Op::Partsel,
+                   integral(sir::isFourState(src.type), false, static_cast<std::uint32_t>(w)),
+                   {src.op, constant(sir::u2(32), src.type.width - w).op}, sl);
+    else
+        src = coerce(src, integral(sir::isFourState(src.type), false, src.type.width), sl);
+    if (s.getSliceSize() != 0) {
+        // With a short last block, which bits "the reverse operation" puts
+        // where is not settled yet (VALUE_SEMANTICS.md 8).
+        if (w % s.getSliceSize() != 0) unsupported(sl, "unpacking << with a short last block");
+        src = reverseBlocks(src, s.getSliceSize(), false, sl);
+    }
+    Place all;
+    all.kind = Place::Kind::Concat;
+    for (const auto& se : s.streams()) {
+        if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
+        const ast::Expression& op = *se.operand;
+        if (op.kind == ast::ExpressionKind::Streaming || !op.type->isIntegral())
+            unsupported(sl, "unpacking into this target");
+        all.base.push_back(placeOf(op, sl));
+        all.width += all.base.back().type.width;
+    }
+    all.type = integral(sir::isFourState(src.type), false, all.width);
+    storePlace(all, src, nonblocking, sl);
+}
+
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
     if (isString(l.type) || isString(r.type)) {
         // Strings compare by their characters (table 6-9).
@@ -1392,6 +1503,11 @@ void Lowerer::checkAggregateSource(const ast::Symbol* target, const ast::Express
 Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     const slang::SourceLocation sl = a.sourceRange.start();
     if (a.timingControl != nullptr) unsupported(sl, "intra-assignment timing control");
+    if (a.left().kind == ast::ExpressionKind::Streaming) {
+        lowerUnpack(a.left().as<ast::StreamingConcatenationExpression>(), a.right(),
+                    a.isNonBlocking(), sl);
+        return Val{Operand::temp(0), sir::voidType()};
+    }
     if (a.isCompound()) {
         // a op= b is a = a op (b) with the indices of a evaluated once
         // (11.4.1): the target's indices, its value, then b. slang gives
