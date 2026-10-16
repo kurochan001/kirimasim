@@ -20,8 +20,9 @@ SlotId Store::add(Domain domain, std::uint32_t width, std::uint32_t elements, In
             std::uint64_t* p = w.data() + l.offset + std::uint64_t{e} * l.elemWords;
             for (std::size_t i = 0; i < n; ++i) {
                 const auto bits = static_cast<unsigned>(i + 1 < n ? 64 : l.width - 64 * i);
-                p[2 * i] = init == Init::X ? mask(bits) : 0;
-                p[2 * i + 1] = mask(bits);
+                // 1 is a = 1, b = 0.
+                p[2 * i] = init == Init::X || init == Init::One ? mask(bits) : 0;
+                p[2 * i + 1] = init == Init::One ? 0 : mask(bits);
             }
         }
     }

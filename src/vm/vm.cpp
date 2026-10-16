@@ -244,6 +244,16 @@ kernel::Domain kernelDomain(sir::Domain d) {
     return kernel::Domain::Four;
 }
 
+kernel::Init kernelInit(sir::InitValue v) {
+    switch (v) {
+        case sir::InitValue::Zero: return kernel::Init::Zero;
+        case sir::InitValue::One: return kernel::Init::One;
+        case sir::InitValue::X: return kernel::Init::X;
+        case sir::InitValue::Z: return kernel::Init::Z;
+    }
+    return kernel::Init::X;
+}
+
 kernel::Edge kernelEdge(sir::Edge e) {
     switch (e) {
         case sir::Edge::Any: return kernel::Edge::Any;
@@ -356,11 +366,10 @@ public:
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
         for (const sir::Slot& s : d_.slots) {
             const sir::Domain dom = sir::domainOf(s.type);
-            const kernel::Init init = dom != sir::Domain::Four       ? kernel::Init::Zero
-                                      : s.kind == sir::SlotKind::Var ? kernel::Init::X
-                                                                     : kernel::Init::Z;
             store_.add(kernelDomain(dom), s.type.width,
-                       static_cast<std::uint32_t>(sir::elementCount(s)), init);
+                       static_cast<std::uint32_t>(sir::elementCount(s)),
+                       dom == sir::Domain::Four ? kernelInit(sir::initialValue(s.kind))
+                                                : kernel::Init::Zero);
         }
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
@@ -381,6 +390,9 @@ public:
             switch (proc.kind) {
                 case sir::ProcessKind::Initial:
                 case sir::ProcessKind::General:
+                // A continuous assignment is evaluated once at time 0, in
+                // Active like the procedures (SCHEDULER_SPEC.md 6.1).
+                case sir::ProcessKind::Cont:
                     f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
                     sched_.start(f.kernelId);
                     break;
@@ -721,6 +733,7 @@ private:
             returnFromTask(f);  // and go on in its caller
         }
         switch (p.kind) {
+            case sir::ProcessKind::Cont:
             case sir::ProcessKind::Comb:
             case sir::ProcessKind::Latch:
             case sir::ProcessKind::Ff:

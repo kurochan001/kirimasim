@@ -1,0 +1,5 @@
+s=0 wire=0 tri=0 uwire=0
+s=1 wire=1 tri=1 uwire=1
+s=x wire=x tri=x uwire=x
+s=z wire=z tri=z uwire=z
+v=01xz wire=01xz tri=01xz uwire=01xz

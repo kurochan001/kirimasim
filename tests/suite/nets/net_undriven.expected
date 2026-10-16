@@ -1,0 +1,11 @@
+wire z zzzz
+tri z zzzz
+wand z zzzz
+triand z zzzz
+wor z zzzz
+trior z zzzz
+tri0 0 0000
+tri1 1 1111
+supply0 0 0000
+supply1 1 1111
+uwire z zzzz

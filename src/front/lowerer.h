@@ -44,6 +44,13 @@ struct Unsupported {};
 sir::TimeScale timeScaleOf(const ast::Scope& scope);
 /// Whether a statement may wait (unknown statements count as waiting).
 bool mayWait(const ast::Statement& s);
+/// The symbol a simple or hierarchical name refers to, or nullptr for any
+/// other expression.
+const ast::Symbol* namedSymbol(const ast::Expression& e);
+/// Whether a name refers to something kept in a slot: a net, or a static
+/// variable or argument (SIR_SPEC.md 3.3). Automatic variables live in
+/// frames.
+bool inSlot(const ast::Symbol& s);
 
 /// A value: an operand (a temp or a constant) and its type.
 struct Val {
@@ -114,6 +121,11 @@ public:
         std::uint32_t width = 0;
     };
     Part partOf(const ast::Expression& e);
+    /// The number of the element that constant indices select in an
+    /// unpacked array slot (SIR_SPEC.md 4.2), or nullopt when an index is
+    /// not constant or is outside its range.
+    std::optional<std::uint32_t> constElement(const sir::Slot& slot,
+                                              const std::vector<const ast::Expression*>& indices);
     /// Converts a value to another integral type (VALUE_SEMANTICS.md 2).
     Val coerce(Val v, sir::Type want, slang::SourceLocation sl);
     /// lowerExpr, then the truth value as a 1-bit value for br.if.
@@ -178,8 +190,8 @@ public:
     int precision() const { return precision_; }
     sir::TimeScale timeScale() const { return b_.scale; }
 
-    /// The slot of a static variable, created on first use.
-    sir::SlotId slotOf(const ast::VariableSymbol& v, slang::SourceLocation sl);
+    /// The slot of a net or static variable, created on first use.
+    sir::SlotId slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl);
     /// A frame variable for an automatic variable, created on first use.
     sir::FrameVarId frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl);
     std::optional<sir::FrameVarId> findFrameVar(const ast::Symbol& s) const;
@@ -229,6 +241,10 @@ private:
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
     sir::InstanceId instance_ = 0;
+    std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;
+    std::vector<const ast::InstanceSymbol*> instanceSyms_;  ///< Instance -> its symbol.
+    /// Process names used so far, "<scope>.<kind>" -> the next number.
+    std::map<std::string, std::uint32_t> nameCounts_;
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
     std::map<sir::InstanceId, Body> staticBody_;           ///< Its lowering state.
     /// Subroutines lowered so far, per instance and symbol.
@@ -242,13 +258,35 @@ private:
     const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
     Body b_;
 
-    void lowerTop(const ast::InstanceSymbol& inst);
+    // The instance tree is walked twice, depth first and in source order
+    // (SIR_SPEC.md 1): first for the instance table, the slots of nets and
+    // variables and the static initializers, then for the processes.
+    void declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent);
+    void declareScope(const ast::Scope& scope);
+    void lowerInstance(const ast::InstanceSymbol& inst);
+    void lowerScope(const ast::Scope& scope, const std::string& prefix);
+    /// The implicit continuous assignments of a child's port connections
+    /// (4.9.6, SIR_SPEC.md 3.5).
+    void lowerPorts(const ast::InstanceSymbol& child);
+    /// A cont process (SIR_SPEC.md 7.1): `body` lowers the right-hand side
+    /// and the store; the process waits on what it reads.
+    template <typename F>
+    void lowerCont(const std::string& name, slang::SourceLocation sl, const ast::Symbol& evalAt,
+                   F&& body);
+    /// The next process name for a kind of process in a scope.
+    std::string processName(const std::string& prefix, const std::string& kind);
+    /// Drops the processes from number `first` on, after an unsupported
+    /// construct, with the static-init processes made meanwhile.
+    void dropProcesses(std::size_t first);
+    /// "<file>:<line>:<column>" of a SIR source position.
+    std::string whereOf(const sir::SourceLoc& l) const;
     void checkWriters();
+    /// Drivers of nets that need resolution, not implemented yet.
+    void checkDrivers();
     /// After every body is lowered: the write sets and the always_comb
     /// sensitivity, including what called subroutines read and write.
     void finishDesign();
-    void lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::InstanceId inst,
-                        std::map<std::string, std::uint32_t>& counts);
+    void lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::string& prefix);
 };
 
 }  // namespace kirimasim::front

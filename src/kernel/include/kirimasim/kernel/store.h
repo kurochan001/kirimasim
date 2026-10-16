@@ -15,9 +15,9 @@ using SlotId = std::uint32_t;
 /// Storage domain of a slot (SIR_SPEC.md 3.2).
 enum class Domain : std::uint8_t { Two, Four, Real, Handle };
 
-/// The value a slot starts with: 0 (two-state, real, handle), x (four-state
-/// variables) or z (four-state nets without a driver).
-enum class Init : std::uint8_t { Zero, X, Z };
+/// The value every bit of a slot starts with: 0 (two-state, real, handle;
+/// four-state too when asked), 1, x or z (four-state only).
+enum class Init : std::uint8_t { Zero, One, X, Z };
 
 /// Where a slot lives. An element of a four-state slot takes
 /// 2 * wordsFor(width) words; of a two-state slot wordsFor(width); a real

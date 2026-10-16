@@ -1,0 +1,71 @@
+; sir format 0
+precision 1ns
+source 0 "hierarchy.sv"
+instance 0 "top" def="top" parent=-
+instance 1 "top.g[0].u" def="inv" parent=0
+instance 2 "top.g[1].u" def="inv" parent=0
+slot %s0 "top.a" : i4<1> var inst=0
+slot %s1 "top.pulled" : i4<1> tri1 inst=0
+slot %s2 "top.w" : i4<2> [0:1] wire inst=0
+slot %s3 "top.g[0].u.i" : i4<1> wire inst=1
+slot %s4 "top.g[0].u.o" : i4<1> wire inst=1
+slot %s5 "top.g[1].u.i" : i4<1> wire inst=2
+slot %s6 "top.g[1].u.o" : i4<1> wire inst=2
+
+process @0 "top.g[0].u.$port.i" kind=cont inst=0 trigger=any(%s0) writes=%s3 {  ; 0:14:15
+bb0:
+  %t0 = load i4<1> %s0  ; 0:14:15
+  store %s3, %t0  ; 0:14:15
+  ret  ; 0:14:15
+}
+
+process @1 "top.g[0].u.$port.o" kind=cont inst=0 trigger=any(%s4) writes=%s2{0}[0:0] {  ; 0:14:22
+bb0:
+  %t0 = load i4<1> %s4  ; 0:14:22
+  store.bits %s2, const s4<32> 32'h00000000, const s2<64> 64'h0000000000000000, %t0  ; 0:14:22
+  ret  ; 0:14:22
+}
+
+process @2 "top.g[0].u.assign0" kind=cont inst=1 trigger=any(%s3) writes=%s4 {  ; 0:6:10
+bb0:
+  %t0 = load i4<1> %s3  ; 0:6:15
+  %t1 = not i4<1> %t0  ; 0:6:14
+  store %s4, %t1  ; 0:6:10
+  ret  ; 0:6:10
+}
+
+process @3 "top.g[0].assign0" kind=cont inst=0 trigger=any(%s0) writes=%s2{0}[1:1] {  ; 0:15:12
+bb0:
+  %t0 = load i4<1> %s0  ; 0:15:22
+  store.bits %s2, const s4<32> 32'h00000000, const s2<64> 64'h0000000000000001, %t0  ; 0:15:12
+  ret  ; 0:15:12
+}
+
+process @4 "top.g[1].u.$port.i" kind=cont inst=0 trigger=any(%s0) writes=%s5 {  ; 0:14:15
+bb0:
+  %t0 = load i4<1> %s0  ; 0:14:15
+  store %s5, %t0  ; 0:14:15
+  ret  ; 0:14:15
+}
+
+process @5 "top.g[1].u.$port.o" kind=cont inst=0 trigger=any(%s6) writes=%s2{1}[0:0] {  ; 0:14:22
+bb0:
+  %t0 = load i4<1> %s6  ; 0:14:22
+  store.bits %s2, const s4<32> 32'h00000001, const s2<64> 64'h0000000000000000, %t0  ; 0:14:22
+  ret  ; 0:14:22
+}
+
+process @6 "top.g[1].u.assign0" kind=cont inst=2 trigger=any(%s5) writes=%s6 {  ; 0:6:10
+bb0:
+  %t0 = load i4<1> %s5  ; 0:6:15
+  %t1 = not i4<1> %t0  ; 0:6:14
+  store %s6, %t1  ; 0:6:10
+  ret  ; 0:6:10
+}
+
+process @7 "top.g[1].assign0" kind=cont inst=0 trigger=any(%s0) writes=%s2{1}[1:1] {  ; 0:15:12
+bb0:
+  %t0 = load i4<1> %s0  ; 0:15:22
+  store.bits %s2, const s4<32> 32'h00000001, const s2<64> 64'h0000000000000001, %t0  ; 0:15:12
+  ret  ; 0:15:12
+}

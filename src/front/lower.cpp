@@ -27,8 +27,10 @@
 #include "slang/ast/symbols/CompilationUnitSymbols.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
+#include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/SubroutineSymbols.h"
 #include "slang/ast/types/AllTypes.h"
+#include "slang/ast/types/NetType.h"
 #include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/driver/Driver.h"
 #include "slang/numeric/Time.h"
@@ -76,6 +78,36 @@ sir::Edge edgeOf(ast::EdgeKind k) {
         case ast::EdgeKind::None: break;
     }
     return sir::Edge::Any;
+}
+
+/// The SIR kind of a net (SIR_SPEC.md 3.1), or nullopt for the kinds not
+/// supported yet: trireg (VALUE_SEMANTICS.md 5), interconnect and
+/// user-defined nettypes.
+std::optional<sir::SlotKind> netKindOf(const ast::NetSymbol& n) {
+    switch (n.netType.netKind) {
+        case ast::NetType::Wire: return sir::SlotKind::Wire;
+        case ast::NetType::Tri: return sir::SlotKind::Tri;
+        case ast::NetType::WAnd: return sir::SlotKind::Wand;
+        case ast::NetType::TriAnd: return sir::SlotKind::Triand;
+        case ast::NetType::WOr: return sir::SlotKind::Wor;
+        case ast::NetType::TriOr: return sir::SlotKind::Trior;
+        case ast::NetType::Tri0: return sir::SlotKind::Tri0;
+        case ast::NetType::Tri1: return sir::SlotKind::Tri1;
+        case ast::NetType::Supply0: return sir::SlotKind::Supply0;
+        case ast::NetType::Supply1: return sir::SlotKind::Supply1;
+        case ast::NetType::UWire: return sir::SlotKind::Uwire;
+        default: return std::nullopt;
+    }
+}
+
+/// The lvalue an output port connection names: slang binds it like an
+/// output argument, as an assignment whose left side is the lvalue.
+const ast::Expression* outputPlace(const ast::Expression* e) {
+    if (e->kind == ast::ExpressionKind::Assignment) {
+        const auto& a = e->as<ast::AssignmentExpression>();
+        if (a.isLValueArg()) return &a.left();
+    }
+    return e;
 }
 
 /// Whether range `a` covers range `b` of the same slot (0 counts means
@@ -183,6 +215,20 @@ bool mayWait(const ast::Statement& s) {
     return mayWaitIn(s, seen);
 }
 
+const ast::Symbol* namedSymbol(const ast::Expression& e) {
+    if (e.kind == ast::ExpressionKind::NamedValue ||
+        e.kind == ast::ExpressionKind::HierarchicalValue)
+        return &e.as<ast::ValueExpressionBase>().symbol;
+    return nullptr;
+}
+
+bool inSlot(const ast::Symbol& s) {
+    if (s.kind == ast::SymbolKind::Net) return true;
+    if (s.kind != ast::SymbolKind::Variable && s.kind != ast::SymbolKind::FormalArgument)
+        return false;
+    return s.as<ast::VariableSymbol>().lifetime == ast::VariableLifetime::Static;
+}
+
 // --- Diagnostics and types ---------------------------------------------------
 
 void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
@@ -271,8 +317,26 @@ Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
 
 // --- Variables ---------------------------------------------------------------
 
-sir::SlotId Lowerer::slotOf(const ast::VariableSymbol& v, slang::SourceLocation sl) {
+sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
+    // A package variable needs a place outside every instance and its own
+    // initialization; not done yet.
+    for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
+         sc = sc->asSymbol().getParentScope()) {
+        if (sc->asSymbol().kind == ast::SymbolKind::Package)
+            unsupported(sl, "variable '" + std::string(v.name) + "' of a package");
+        if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
+    }
+    sir::SlotKind kind = sir::SlotKind::Var;
+    if (v.kind == ast::SymbolKind::Net) {
+        const auto& n = v.as<ast::NetSymbol>();
+        const std::optional<sir::SlotKind> k = netKindOf(n);
+        if (!k) unsupported(sl, "net of kind '" + std::string(n.netType.name) + "'");
+        if (n.getDelay() != nullptr) unsupported(sl, "net with a delay");
+        const auto strength = n.getDriveStrength();
+        if (strength.first || strength.second) unsupported(sl, "drive strength");
+        kind = *k;
+    }
     const ast::Type* t = &v.getType().getCanonicalType();
     std::vector<sir::ArrayDim> dims;
     while (t->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
@@ -288,6 +352,7 @@ sir::SlotId Lowerer::slotOf(const ast::VariableSymbol& v, slang::SourceLocation 
     s.name = v.getHierarchicalPath();
     if (const std::uint32_t n = ++slotNames_[s.name]; n > 1) s.name += "~" + std::to_string(n);
     s.type = typeOf(*t, sl);
+    s.kind = kind;
     s.dims = std::move(dims);
     s.instance = instance_;
     // A variable or argument of the subroutine being lowered belongs to it.
@@ -344,10 +409,46 @@ void Lowerer::noteRead(const sir::SlotRange& r) { b_.reads.push_back(r); }
 void Lowerer::lower(const ast::RootSymbol& root) {
     design_.timePrecision = precision_;
     for (const ast::InstanceSymbol* top : root.topInstances)
-        lowerTop(*top);
+        declareInstance(*top, sir::kNone);
+    for (const ast::InstanceSymbol* top : root.topInstances)
+        lowerInstance(*top);
+    // The static-init processes end here: the static variables of blocks
+    // inside procedures add to them while the procedures are lowered.
+    for (auto& [inst, body] : staticBody_) {
+        Body saved = std::move(b_);
+        b_ = std::move(body);
+        if (!b_.dead) terminate(sir::Op::Ret, {}, instanceSyms_[inst]->location);
+        body = std::move(b_);
+        b_ = std::move(saved);
+    }
     if (numErrors_ != 0) return;
     finishDesign();
     checkWriters();
+    checkDrivers();
+}
+
+std::string Lowerer::whereOf(const sir::SourceLoc& l) const {
+    const std::string file = l.file < design_.sources.size() ? design_.sources[l.file] : "?";
+    return file + ":" + std::to_string(l.line) + ":" + std::to_string(l.column);
+}
+
+std::string Lowerer::processName(const std::string& prefix, const std::string& kind) {
+    const std::string key = prefix + "." + kind;
+    return key + std::to_string(nameCounts_[key]++);
+}
+
+void Lowerer::dropProcesses(std::size_t first) {
+    design_.processes.resize(first);  // with any fork children
+    combReads_.erase(static_cast<std::uint32_t>(first));
+    // A static-init process made while lowering the dropped ones goes too.
+    for (auto it = staticInit_.begin(); it != staticInit_.end();) {
+        if (it->second >= first) {
+            staticBody_.erase(it->first);
+            it = staticInit_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void Lowerer::finishDesign() {
@@ -415,10 +516,6 @@ void Lowerer::checkWriters() {
         return k == sir::ProcessKind::Comb || k == sir::ProcessKind::Latch ||
                k == sir::ProcessKind::Ff;
     };
-    const auto where = [&](const sir::SourceLoc& l) {
-        const std::string file = l.file < design_.sources.size() ? design_.sources[l.file] : "?";
-        return file + ":" + std::to_string(l.line) + ":" + std::to_string(l.column);
-    };
     const auto& ps = design_.processes;
     for (std::size_t i = 0; i < ps.size(); ++i) {
         for (std::size_t j = 0; j < ps.size(); ++j) {
@@ -434,8 +531,9 @@ void Lowerer::checkWriters() {
                     const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
                     if (reported || !overlap(a, b, s.type.width, elems)) continue;
                     ++numErrors_;
-                    diags_ += where(ps[i].loc) + ": error: '" + s.name +
-                              "' is written here and by " + ps[j].name + " at " + where(ps[j].loc) +
+                    diags_ += whereOf(ps[i].loc) + ": error: '" + s.name +
+                              "' is written here and by " + ps[j].name + " at " +
+                              whereOf(ps[j].loc) +
                               "; a variable that always_comb, always_latch or always_ff writes "
                               "has no other writer (IEEE 1800-2023 9.2.2.2, 9.2.2.4)\n";
                     reported = true;
@@ -445,46 +543,293 @@ void Lowerer::checkWriters() {
     }
 }
 
-void Lowerer::lowerTop(const ast::InstanceSymbol& inst) {
-    const auto instId = static_cast<sir::InstanceId>(design_.instances.size());
-    design_.instances.push_back(
-        {std::string(inst.name), std::string(inst.getDefinition().name), sir::kNone});
-    instance_ = instId;
-    std::map<std::string, std::uint32_t> counts;
-    // Variables first, so that every procedure finds their slots.
-    for (const ast::Symbol& member : inst.body.members()) {
-        if (member.kind != ast::SymbolKind::Variable) continue;
-        const auto& v = member.as<ast::VariableSymbol>();
-        try {
-            const sir::SlotId s = slotOf(v, v.location);
-            if (v.getInitializer() != nullptr) lowerStaticInit(v, s, v.location);
-        } catch (const Unsupported&) {
-            continue;  // already reported
+void Lowerer::checkDrivers() {
+    // A variable driven by a continuous assignment or an output port has
+    // no other driver, no other writer and no initial value in its
+    // declaration (10.3.2, SCHEDULER_SPEC.md 12). What always_comb,
+    // always_latch and always_ff write, checkWriters reports.
+    const auto& ps = design_.processes;
+    std::vector<bool> reported(design_.slots.size(), false);
+    for (std::size_t i = 0; i < ps.size(); ++i) {
+        if (ps[i].kind != sir::ProcessKind::Cont) continue;
+        for (const sir::SlotRange& a : ps[i].writes) {
+            const sir::Slot& s = design_.slots[a.slot];
+            if (s.kind != sir::SlotKind::Var || reported[a.slot]) continue;
+            const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+            for (std::size_t j = 0; j < ps.size() && !reported[a.slot]; ++j) {
+                const sir::ProcessKind k = ps[j].kind;
+                if (j == i || (k == sir::ProcessKind::Cont && j > i) ||
+                    k == sir::ProcessKind::Comb || k == sir::ProcessKind::Latch ||
+                    k == sir::ProcessKind::Ff)
+                    continue;
+                for (const sir::SlotRange& b : ps[j].writes) {
+                    if (!overlap(a, b, s.type.width, elems)) continue;
+                    ++numErrors_;
+                    diags_ +=
+                        whereOf(ps[i].loc) + ": error: '" + s.name +
+                        "' is driven by a continuous assignment here and " +
+                        (k == sir::ProcessKind::StaticInit
+                             ? std::string("has an initial value in its declaration")
+                             : "is also written by " + ps[j].name + " at " + whereOf(ps[j].loc)) +
+                        "; a variable driven by a continuous assignment or an output "
+                        "port has no other writer (IEEE 1800-2023 10.3.2)\n";
+                    reported[a.slot] = true;
+                    break;
+                }
+            }
         }
     }
-    for (const ast::Symbol& member : inst.body.members()) {
+
+    // A uwire has one driver (6.6.2). The nets whose value comes from
+    // resolving several drivers, or a driver and the net's own pull or
+    // supply (VALUE_SEMANTICS.md 5), are not supported yet; undriven ones
+    // only keep their initial value.
+    std::map<sir::SlotId, std::vector<std::pair<sir::ProcessId, sir::SlotRange>>> drivers;
+    for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
+        if (design_.processes[p].kind != sir::ProcessKind::Cont) continue;
+        for (const sir::SlotRange& w : design_.processes[p].writes)
+            if (design_.slots[w.slot].kind != sir::SlotKind::Var) drivers[w.slot].push_back({p, w});
+    }
+    for (const auto& [slot, ds] : drivers) {
+        const sir::Slot& s = design_.slots[slot];
+        const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+        std::optional<std::size_t> second;
+        for (std::size_t i = 0; i < ds.size() && !second; ++i)
+            for (std::size_t j = i + 1; j < ds.size() && !second; ++j)
+                if (overlap(ds[i].second, ds[j].second, s.type.width, elems)) second = j;
+        const bool plain = s.kind == sir::SlotKind::Wire || s.kind == sir::SlotKind::Tri ||
+                           s.kind == sir::SlotKind::Uwire;
+        if (s.kind == sir::SlotKind::Uwire && second) {
+            ++numErrors_;
+            diags_ += whereOf(design_.processes[ds[*second].first].loc) + ": error: uwire '" +
+                      s.name + "' has more than one driver (IEEE 1800-2023 6.6.2)\n";
+        } else if (!plain || second) {
+            ++numErrors_;
+            const sir::ProcessId p = ds[second.value_or(0)].first;
+            diags_ += whereOf(design_.processes[p].loc) + ": error: unsupported: " +
+                      (plain ? "net '" + s.name + "' with more than one driver"
+                             : "a driver of the " + std::string(sir::kindName(s.kind)) + " net '" +
+                                   s.name + "'") +
+                      " (not implemented yet)\n";
+        }
+    }
+}
+
+void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent) {
+    const auto id = static_cast<sir::InstanceId>(design_.instances.size());
+    design_.instances.push_back(
+        {inst.getHierarchicalPath(), std::string(inst.getDefinition().name), parent});
+    instanceIds_[&inst] = id;
+    instanceSyms_.push_back(&inst);
+    const sir::InstanceId saved = instance_;
+    instance_ = id;
+    declareScope(inst.body);
+    instance_ = saved;
+}
+
+void Lowerer::declareScope(const ast::Scope& scope) {
+    for (const ast::Symbol& member : scope.members()) {
         switch (member.kind) {
             case ast::SymbolKind::Variable:
-            case ast::SymbolKind::Parameter:
+            case ast::SymbolKind::Net: {
+                const auto& v = member.as<ast::ValueSymbol>();
+                try {
+                    const sir::SlotId s = slotOf(v, v.location);
+                    // A net's initializer is a continuous assignment
+                    // (10.3.1), lowered with the processes.
+                    if (member.kind == ast::SymbolKind::Variable && v.getInitializer() != nullptr)
+                        lowerStaticInit(member.as<ast::VariableSymbol>(), s, v.location);
+                } catch (const Unsupported&) {
+                    continue;  // already reported
+                }
+                break;
+            }
+            case ast::SymbolKind::Instance:
+                declareInstance(member.as<ast::InstanceSymbol>(), instance_);
+                break;
+            case ast::SymbolKind::GenerateBlock:
+                if (!member.as<ast::GenerateBlockSymbol>().isUninstantiated)
+                    declareScope(member.as<ast::GenerateBlockSymbol>());
+                break;
+            case ast::SymbolKind::GenerateBlockArray:
+                for (const ast::GenerateBlockSymbol* g :
+                     member.as<ast::GenerateBlockArraySymbol>().entries)
+                    if (!g->isUninstantiated) declareScope(*g);
+                break;
+            default: break;
+        }
+    }
+}
+
+void Lowerer::lowerInstance(const ast::InstanceSymbol& inst) {
+    const sir::InstanceId saved = instance_;
+    instance_ = instanceIds_.at(&inst);
+    lowerScope(inst.body, design_.instances[instance_].scopeName);
+    instance_ = saved;
+}
+
+void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
+    for (const ast::Symbol& member : scope.members()) {
+        switch (member.kind) {
+            case ast::SymbolKind::Variable:   // declareScope made the slot
+            case ast::SymbolKind::Parameter:  // constants, used where they are named
             case ast::SymbolKind::TypeParameter:
             case ast::SymbolKind::TypeAlias:
+            case ast::SymbolKind::ForwardingTypedef:
+            case ast::SymbolKind::TransparentMember:  // an enum value made visible
+            case ast::SymbolKind::Genvar:             // used up by elaboration
+            case ast::SymbolKind::ExplicitImport:     // names resolved by slang
+            case ast::SymbolKind::WildcardImport:
+            case ast::SymbolKind::EmptyMember:
+            case ast::SymbolKind::Port:                      // connected by the parent (lowerPorts)
             case ast::SymbolKind::StatementBlock: continue;  // scopes inside procedures
             case ast::SymbolKind::Subroutine: continue;      // lowered when first called
+            case ast::SymbolKind::Net: {
+                const auto& n = member.as<ast::NetSymbol>();
+                const ast::Expression* init = n.getInitializer();
+                const auto it = slots_.find(&n);
+                if (init == nullptr || it == slots_.end()) continue;  // none, or reported
+                const sir::SlotId s = it->second;
+                // A net declaration assignment is a continuous assignment
+                // to the net (10.3.1).
+                lowerCont(processName(prefix, "assign"), n.location, n, [&] {
+                    if (!design_.slots[s].dims.empty())
+                        unsupported(n.location, "assignment to a whole unpacked array");
+                    const Val v = coerce(lowerExpr(*init), design_.slots[s].type, n.location);
+                    emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, n.location);
+                    noteWrite({s, 0, 0, 0, 0});
+                });
+                continue;
+            }
+            case ast::SymbolKind::ContinuousAssign: {
+                const auto& ca = member.as<ast::ContinuousAssignSymbol>();
+                lowerCont(processName(prefix, "assign"), ca.location, ca, [&] {
+                    if (ca.getDelay() != nullptr)
+                        unsupported(ca.location, "continuous assignment with a delay");
+                    const auto strength = ca.getDriveStrength();
+                    if (strength.first || strength.second)
+                        unsupported(ca.location, "drive strength");
+                    const ast::Expression& e = ca.getAssignment();
+                    if (e.kind != ast::ExpressionKind::Assignment)
+                        unsupported(ca.location, "this continuous assignment");
+                    lowerAssignment(e.as<ast::AssignmentExpression>());
+                });
+                continue;
+            }
             case ast::SymbolKind::ProceduralBlock:
-                lowerProcedure(member.as<ast::ProceduralBlockSymbol>(), instId, counts);
+                lowerProcedure(member.as<ast::ProceduralBlockSymbol>(), prefix);
+                continue;
+            case ast::SymbolKind::Instance: {
+                const auto& child = member.as<ast::InstanceSymbol>();
+                lowerPorts(child);
+                lowerInstance(child);
+                continue;
+            }
+            case ast::SymbolKind::GenerateBlock: {
+                const auto& g = member.as<ast::GenerateBlockSymbol>();
+                if (!g.isUninstantiated) lowerScope(g, g.getHierarchicalPath());
+                continue;
+            }
+            case ast::SymbolKind::GenerateBlockArray:
+                for (const ast::GenerateBlockSymbol* g :
+                     member.as<ast::GenerateBlockArraySymbol>().entries)
+                    if (!g->isUninstantiated) lowerScope(*g, g->getHierarchicalPath());
                 continue;
             default:
                 report(member.location,
                        "module member '" + std::string(ast::toString(member.kind)) + "'");
         }
     }
-    // The static-init process of the instance ends here.
-    if (auto it = staticBody_.find(instId); it != staticBody_.end()) {
-        Body saved = std::move(b_);
-        b_ = std::move(it->second);
-        if (!b_.dead) terminate(sir::Op::Ret, {}, inst.location);
-        it->second = std::move(b_);
-        b_ = std::move(saved);
+}
+
+void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
+    // Each connection is an implicit continuous assignment (4.9.6): an
+    // input from the parent's expression to the port's net or variable,
+    // an output the other way (SIR_SPEC.md 3.5; folding is P2).
+    const std::string scope = design_.instances[instanceIds_.at(&child)].scopeName;
+    for (const ast::PortConnection* conn : child.getPortConnections()) {
+        const ast::Symbol& port = conn->port;
+        if (port.kind != ast::SymbolKind::Port) {
+            report(port.location, "port of kind '" + std::string(ast::toString(port.kind)) + "'");
+            continue;
+        }
+        const auto& ps = port.as<ast::PortSymbol>();
+        const ast::Expression* ext = conn->getExpression();
+        if (ext == nullptr) {
+            // Unconnected: the port's net or variable keeps its initial
+            // value, unless the port has a default (23.2.2.4).
+            if (ps.getInitializer() != nullptr)
+                report(ps.location, "default value of an unconnected port");
+            continue;
+        }
+        const ast::Symbol* internal = ps.internalSymbol;
+        if (internal == nullptr || !inSlot(*internal)) {
+            report(ps.location, "port connected to an expression inside the module");
+            continue;
+        }
+        const auto it = slots_.find(internal);
+        if (it == slots_.end()) continue;  // its declaration was reported
+        const sir::SlotId s = it->second;
+        const slang::SourceLocation sl = ext->sourceRange.start();
+        const std::string name = scope + ".$port." + std::string(ps.name);
+        switch (ps.direction) {
+            case ast::ArgumentDirection::In:
+                lowerCont(name, sl, child, [&] {
+                    if (!design_.slots[s].dims.empty()) unsupported(sl, "unpacked array port");
+                    const Val v = coerce(lowerExpr(*ext), design_.slots[s].type, sl);
+                    emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, sl);
+                    noteWrite({s, 0, 0, 0, 0});
+                });
+                break;
+            case ast::ArgumentDirection::Out:
+                lowerCont(name, sl, child, [&] {
+                    if (!design_.slots[s].dims.empty()) unsupported(sl, "unpacked array port");
+                    const ast::Expression& place = *outputPlace(ext);
+                    const Val v =
+                        emit(sir::Op::Load, design_.slots[s].type, {sir::Operand::slot(s)}, sl);
+                    noteRead({s, 0, 0, 0, 0});
+                    lowerStore(place, coerce(v, typeOf(*place.type, sl), sl), false, sl);
+                });
+                break;
+            case ast::ArgumentDirection::InOut: report(ps.location, "inout port"); break;
+            case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
+        }
+    }
+}
+
+template <typename F>
+void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
+                        const ast::Symbol& evalAt, F&& body) {
+    sir::Process p;
+    p.name = name;
+    p.kind = sir::ProcessKind::Cont;
+    p.instance = instance_;
+    p.loc = loc(sl);
+    p.blocks.resize(1);
+    const std::size_t first = design_.processes.size();
+    design_.processes.push_back(std::move(p));
+    b_ = Body{};
+    b_.proc = static_cast<std::uint32_t>(first);
+    b_.scale = timeScaleOf(*evalAt.getParentScope());
+    evalSymbol_ = &evalAt;
+    try {
+        body();
+        if (!b_.dead) terminate(sir::Op::Ret, {}, sl);
+    } catch (const Unsupported&) {
+        dropProcesses(first);
+        return;
+    }
+    // Evaluated again whenever an operand of the right-hand side changes
+    // (10.3.2): what the body reads, not what the subroutines it calls
+    // read inside.
+    for (const sir::SlotRange& r : b_.reads) {
+        const sir::Slot& s = design_.slots[r.slot];
+        if (s.subroutine != sir::kNone) continue;
+        const auto elems = static_cast<std::uint32_t>(sir::elementCount(s));
+        bool dup = false;
+        for (const sir::Trigger& t : proc().triggers)
+            dup = dup || covers(t.range, r, s.type.width, elems);
+        if (!dup) proc().triggers.push_back({r, sir::Edge::Any});
     }
 }
 
@@ -528,8 +873,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
     restore();
 }
 
-void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::InstanceId inst,
-                             std::map<std::string, std::uint32_t>& counts) {
+void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::string& prefix) {
     const std::string kindName(ast::toString(pb.procedureKind));
     std::string lower = kindName;
     std::transform(lower.begin(), lower.end(), lower.begin(),
@@ -539,8 +883,8 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
     if (lower == "alwaysff") lower = "always_ff";
 
     sir::Process p;
-    p.name = design_.instances[inst].scopeName + "." + lower + std::to_string(counts[lower]++);
-    p.instance = inst;
+    p.name = processName(prefix, lower);
+    p.instance = instance_;
     p.loc = loc(pb.location);
     p.blocks.resize(1);
     const std::size_t first = design_.processes.size();
@@ -631,17 +975,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, sir::Instance
                 break;
         }
     } catch (const Unsupported&) {
-        design_.processes.resize(first);  // with any fork children
-        combReads_.erase(static_cast<std::uint32_t>(first));
-        // A static-init process made while lowering this one goes too.
-        for (auto it = staticInit_.begin(); it != staticInit_.end();) {
-            if (it->second >= first) {
-                staticBody_.erase(it->first);
-                it = staticInit_.erase(it);
-            } else {
-                ++it;
-            }
-        }
+        dropProcesses(first);
     }
 }
 

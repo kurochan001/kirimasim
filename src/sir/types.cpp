@@ -47,6 +47,17 @@ Domain domainOf(Type t) {
     }
 }
 
+InitValue initialValue(SlotKind k) {
+    switch (k) {
+        case SlotKind::Var: return InitValue::X;
+        case SlotKind::Tri0:
+        case SlotKind::Supply0: return InitValue::Zero;
+        case SlotKind::Tri1:
+        case SlotKind::Supply1: return InitValue::One;
+        default: return InitValue::Z;
+    }
+}
+
 std::uint64_t elementCount(const Slot& s) {
     std::uint64_t n = 1;
     for (const ArrayDim& d : s.dims) {

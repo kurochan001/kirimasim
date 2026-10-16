@@ -439,6 +439,14 @@ struct Design {
 
 /// The storage domain of a value type (SIR_SPEC.md 3.2).
 Domain domainOf(Type t);
+
+/// The value a four-state slot holds before anything writes it.
+enum class InitValue : std::uint8_t { Zero, One, X, Z };
+/// The initial value of each bit of a four-state slot of kind `k`: x for a
+/// variable (VALUE_SEMANTICS.md 1.4); for a net, the value with no driver:
+/// 0 for tri0 and supply0, 1 for tri1 and supply1 (6.6.5, 28.15.3), z for
+/// the others (6.7.1). Every tier starts slots from this.
+InitValue initialValue(SlotKind k);
 /// Number of elements of a slot (1 for a slot that is not an array).
 std::uint64_t elementCount(const Slot& s);
 

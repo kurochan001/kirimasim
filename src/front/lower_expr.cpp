@@ -434,7 +434,7 @@ namespace {
 /// An unpacked-array element access: the array variable and the index
 /// expressions, outermost dimension first.
 struct ArrayAccess {
-    const ast::VariableSymbol* var = nullptr;
+    const ast::ValueSymbol* var = nullptr;
     std::vector<const ast::Expression*> indices;
 };
 
@@ -447,10 +447,10 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
         acc.indices.push_back(&es.selector());
         cur = &es.value();
     }
-    if (acc.indices.empty() || cur->kind != ast::ExpressionKind::NamedValue) return std::nullopt;
-    const ast::Symbol& sym = cur->as<ast::NamedValueExpression>().symbol;
-    if (!isVariable(sym)) return std::nullopt;
-    acc.var = &sym.as<ast::VariableSymbol>();
+    const ast::Symbol* sym = acc.indices.empty() ? nullptr : namedSymbol(*cur);
+    if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
+        return std::nullopt;
+    acc.var = &sym->as<ast::ValueSymbol>();
     std::reverse(acc.indices.begin(), acc.indices.end());
     return acc;
 }
@@ -469,12 +469,9 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
         if (!pos) return std::nullopt;
         base = &es.value();
     }
-    if (base->kind != ast::ExpressionKind::NamedValue) return std::nullopt;
-    const ast::Symbol& sym = base->as<ast::NamedValueExpression>().symbol;
-    if (!isVariable(sym) || findFrameVar(sym)) return std::nullopt;
-    const auto& v = sym.as<ast::VariableSymbol>();
-    if (v.lifetime != ast::VariableLifetime::Static) return std::nullopt;
-    const sir::SlotId s = slotOf(v, e.sourceRange.start());
+    const ast::Symbol* sym = namedSymbol(*base);
+    if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym)) return std::nullopt;
+    const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), e.sourceRange.start());
     if (!design().slots[s].dims.empty()) return std::nullopt;
     if (pos) return sir::SlotRange{s, 0, 0, static_cast<std::uint32_t>(*pos), 1};
     return sir::SlotRange{s, 0, 0, 0, 0};
@@ -506,19 +503,19 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 typeOf(*e.type, sl), sl);
         case ast::ExpressionKind::StringLiteral:
             return constantFrom(e.as<ast::StringLiteral>().getIntValue(), typeOf(*e.type, sl), sl);
-        case ast::ExpressionKind::NamedValue: {
-            const ast::Symbol& sym = e.as<ast::NamedValueExpression>().symbol;
+        case ast::ExpressionKind::NamedValue:
+        case ast::ExpressionKind::HierarchicalValue: {
+            const ast::Symbol& sym = e.as<ast::ValueExpressionBase>().symbol;
             if (sym.kind == ast::SymbolKind::Parameter)
                 return constantFrom(sym.as<ast::ParameterSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym))
                 return emit(Op::Fload, frameVars()[*f].type, {Operand::frame(*f)}, sl);
-            if (!isVariable(sym))
+            if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
                 unsupported(sl, "reference to a " + std::string(ast::toString(sym.kind)));
-            const auto& v = sym.as<ast::VariableSymbol>();
-            if (v.lifetime != ast::VariableLifetime::Static)
-                unsupported(sl, "automatic variable '" + std::string(v.name) + "' here");
-            const sir::SlotId s = slotOf(v, sl);
+            if (!inSlot(sym))
+                unsupported(sl, "automatic variable '" + std::string(sym.name) + "' here");
+            const sir::SlotId s = slotOf(sym.as<ast::ValueSymbol>(), sl);
             if (!design().slots[s].dims.empty()) unsupported(sl, "an unpacked array as a value");
             noteRead({s, 0, 0, 0, 0});
             return emit(Op::Load, design().slots[s].type, {Operand::slot(s)}, sl);
@@ -675,13 +672,34 @@ Val Lowerer::bitPosition(const ast::Expression& selector, const slang::ConstantR
     return pos;
 }
 
+std::optional<std::uint32_t>
+Lowerer::constElement(const sir::Slot& slot, const std::vector<const ast::Expression*>& indices) {
+    std::optional<std::uint32_t> elem = 0;
+    for (std::size_t d = 0; d < indices.size() && d < slot.dims.size(); ++d) {
+        // Elements are numbered from the left bound (SIR_SPEC.md 4.2).
+        const std::optional<std::int64_t> c = constInt(*indices[d]);
+        const std::int64_t l = slot.dims[d].left;
+        const std::int64_t r = slot.dims[d].right;
+        const auto n = static_cast<std::uint32_t>(std::abs(l - r) + 1);
+        std::optional<std::int64_t> pos;
+        if (c) {
+            const std::int64_t off = l <= r ? *c - l : l - *c;
+            if (off >= 0 && off < n) pos = off;
+        }
+        elem = (elem && pos)
+                   ? std::optional<std::uint32_t>(*elem * n + static_cast<std::uint32_t>(*pos))
+                   : std::nullopt;
+    }
+    return elem;
+}
+
 Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& es = e.as<ast::ElementSelectExpression>();
     const ast::Type& vt = es.value().type->getCanonicalType();
     if (vt.isUnpackedArray()) {
         const std::optional<ArrayAccess> acc = arrayAccess(e);
-        if (!acc || findFrameVar(*acc->var) || acc->var->lifetime != ast::VariableLifetime::Static)
+        if (!acc || findFrameVar(*acc->var) || !inSlot(*acc->var))
             unsupported(sl, "selecting from this array");
         const sir::SlotId s = slotOf(*acc->var, sl);
         const sir::Slot& slot = design().slots[s];
@@ -689,22 +707,9 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
             unsupported(sl, "selecting a part of an unpacked array");
         std::vector<Operand> ops{Operand::slot(s)};
         // Constant indices: the sensitivity is that element alone.
-        std::optional<std::uint32_t> elem = 0;
-        for (std::size_t d = 0; d < acc->indices.size(); ++d) {
-            const ast::Expression& ix = *acc->indices[d];
-            // Elements are numbered from the left bound (SIR_SPEC.md 4.2).
-            const std::optional<std::int64_t> c = constInt(ix);
-            const std::int64_t l = slot.dims[d].left;
-            const std::int64_t r = slot.dims[d].right;
-            const auto n = static_cast<std::uint32_t>(std::abs(l - r) + 1);
-            std::optional<std::int64_t> pos;
-            if (c) {
-                const std::int64_t off = l <= r ? *c - l : l - *c;
-                if (off >= 0 && off < n) pos = off;
-            }
-            elem = (elem && pos)
-                       ? std::optional<std::uint32_t>(*elem * n + static_cast<std::uint32_t>(*pos))
-                       : std::nullopt;
+        const std::optional<std::uint32_t> elem = constElement(slot, acc->indices);
+        for (const ast::Expression* ixp : acc->indices) {
+            const ast::Expression& ix = *ixp;
             const Val iv = lowerExpr(ix);
             if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
             ops.push_back(iv.op);
@@ -959,20 +964,20 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
     // The value is computed before the indices of the target (SIR_SPEC.md
     // 7.3); the callers lower it first.
     switch (lhs.kind) {
-        case ast::ExpressionKind::NamedValue: {
-            const ast::Symbol& sym = lhs.as<ast::NamedValueExpression>().symbol;
+        case ast::ExpressionKind::NamedValue:
+        case ast::ExpressionKind::HierarchicalValue: {
+            const ast::Symbol& sym = lhs.as<ast::ValueExpressionBase>().symbol;
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
                 if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
                 const Val fv = coerce(v, frameVars()[*f].type, sl);
                 emitVoid(Op::Fstore, {Operand::frame(*f), fv.op}, sl);
                 return;
             }
-            if (!isVariable(sym))
+            if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
                 unsupported(sl, "assignment to a " + std::string(ast::toString(sym.kind)));
-            const auto& var = sym.as<ast::VariableSymbol>();
-            if (var.lifetime != ast::VariableLifetime::Static)
-                unsupported(sl, "automatic variable '" + std::string(var.name) + "' here");
-            const sir::SlotId s = slotOf(var, sl);
+            if (!inSlot(sym))
+                unsupported(sl, "automatic variable '" + std::string(sym.name) + "' here");
+            const sir::SlotId s = slotOf(sym.as<ast::ValueSymbol>(), sl);
             if (!design().slots[s].dims.empty())
                 unsupported(sl, "assignment to a whole unpacked array");
             const Val sv = coerce(v, design().slots[s].type, sl);
@@ -997,8 +1002,7 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             }
             if (element && base.type->isUnpackedArray()) {
                 const std::optional<ArrayAccess> acc = arrayAccess(lhs);
-                if (!acc || findFrameVar(*acc->var) ||
-                    acc->var->lifetime != ast::VariableLifetime::Static)
+                if (!acc || findFrameVar(*acc->var) || !inSlot(*acc->var))
                     unsupported(sl, "assignment to an element of this array");
                 const sir::SlotId s = slotOf(*acc->var, sl);
                 const sir::Slot& slot = design().slots[s];
@@ -1013,7 +1017,10 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
                 }
                 ops.push_back(ev.op);
                 emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(ops), sl);
-                noteWrite({s, 0, 0, 0, 0});
+                // With constant indices, the longest static prefix is the
+                // element (11.5.3, SIR_SPEC.md 3.4).
+                const std::optional<std::uint32_t> elem = constElement(slot, acc->indices);
+                noteWrite(elem ? sir::SlotRange{s, *elem, 1, 0, 0} : sir::SlotRange{s, 0, 0, 0, 0});
                 return;
             }
             // Bits of a packed variable, or of an element of an array.
@@ -1021,21 +1028,22 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             if (!bt.isIntegral()) unsupported(sl, "assignment to a part of this type");
             std::vector<Operand> ops;
             sir::SlotId s = 0;
-            if (base.kind == ast::ExpressionKind::NamedValue) {
-                const ast::Symbol& sym = base.as<ast::NamedValueExpression>().symbol;
-                if (!isVariable(sym) || findFrameVar(sym) ||
-                    sym.as<ast::VariableSymbol>().lifetime != ast::VariableLifetime::Static)
+            std::optional<std::uint32_t> elem;  // of an array, when the indices are constant
+            if (const ast::Symbol* sym = namedSymbol(base)) {
+                if ((!isVariable(*sym) && sym->kind != ast::SymbolKind::Net) ||
+                    findFrameVar(*sym) || !inSlot(*sym))
                     unsupported(sl, "assignment to a part of this variable");
-                s = slotOf(sym.as<ast::VariableSymbol>(), sl);
+                s = slotOf(sym->as<ast::ValueSymbol>(), sl);
                 if (!design().slots[s].dims.empty())
                     unsupported(sl, "assignment to a part of an unpacked array");
                 ops.push_back(Operand::slot(s));
             } else if (const std::optional<ArrayAccess> acc = arrayAccess(base)) {
-                if (findFrameVar(*acc->var) || acc->var->lifetime != ast::VariableLifetime::Static)
+                if (findFrameVar(*acc->var) || !inSlot(*acc->var))
                     unsupported(sl, "assignment to a part of this variable");
                 s = slotOf(*acc->var, sl);
                 if (design().slots[s].dims.size() != acc->indices.size())
                     unsupported(sl, "assignment to a part of an unpacked array");
+                elem = constElement(design().slots[s], acc->indices);
                 ops.push_back(Operand::slot(s));
                 for (const ast::Expression* ix : acc->indices) {
                     const Val iv = lowerExpr(*ix);
@@ -1079,7 +1087,13 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
             ops.push_back(pos.op);
             ops.push_back(pv.op);
             emitVoid(nonblocking ? Op::NbaBits : Op::StoreBits, std::move(ops), sl);
-            noteWrite({s, 0, 0, 0, 0});
+            // The longest static prefix (11.5.3): the bits when both the
+            // element and the part are constant, else the element or the
+            // whole slot.
+            if (elem && !p.pos && p.lsb >= 0 && p.lsb + w <= slot.type.width)
+                noteWrite({s, *elem, 1, static_cast<std::uint32_t>(p.lsb), w});
+            else
+                noteWrite(elem ? sir::SlotRange{s, *elem, 1, 0, 0} : sir::SlotRange{s, 0, 0, 0, 0});
             return;
         }
         default: unsupported(sl, "assignment to this kind of target");

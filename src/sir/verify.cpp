@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -578,6 +579,57 @@ private:
         }
     }
 
+    /// The value of a constant operand used as an index or a position, or
+    /// nullopt if it is not a constant without x or z bits.
+    std::optional<std::int64_t> constIndex(const Operand& o) const {
+        if (o.kind != Operand::Kind::Const || o.id >= d_.constants.size()) return std::nullopt;
+        const Constant& c = d_.constants[o.id];
+        if (!isIntegral(c.type) || c.type.width > 64 || c.aWords.empty()) return std::nullopt;
+        for (const std::uint64_t b : c.bWords)
+            if (b != 0) return std::nullopt;
+        std::uint64_t v = c.aWords[0];
+        const std::uint32_t w = c.type.width;
+        if (isSigned(c.type) && w < 64 && ((v >> (w - 1)) & 1U) != 0) v |= ~std::uint64_t{0} << w;
+        return static_cast<std::int64_t>(v);
+    }
+
+    /// What an element or bit write (store.elem, store.bits and their NBA
+    /// forms) writes, as the write set records it (SIR_SPEC.md 3.4): the
+    /// element and bits when the indices and the position are constants,
+    /// the element when only the indices are, else the whole slot.
+    SlotRange elementTarget(const Body& body, const Instr& in,
+                            const std::vector<Type>& tempType) const {
+        const auto& ops = in.operands;
+        const SlotRange whole{ops[0].id, 0, 0, 0, 0};
+        if (ops[0].id >= d_.slots.size()) return whole;
+        const Slot& slot = d_.slots[ops[0].id];
+        const bool bits = in.op == Op::StoreBits || in.op == Op::NbaBits;
+        // slot, indices..., [position,] value
+        const std::size_t nIdx = ops.size() < (bits ? 3U : 2U) ? 0 : ops.size() - (bits ? 3 : 2);
+        if (nIdx != slot.dims.size()) return whole;
+        std::uint64_t elem = 0;
+        for (std::size_t d = 0; d < nIdx; ++d) {
+            const std::optional<std::int64_t> c = constIndex(ops[1 + d]);
+            if (!c) return whole;
+            const std::int64_t l = slot.dims[d].left;
+            const std::int64_t r = slot.dims[d].right;
+            const auto n = static_cast<std::uint64_t>((l < r ? r - l : l - r) + 1);
+            const std::int64_t off = l <= r ? *c - l : l - *c;
+            if (off < 0 || static_cast<std::uint64_t>(off) >= n) return whole;
+            elem = elem * n + static_cast<std::uint64_t>(off);
+        }
+        SlotRange t{ops[0].id, static_cast<std::uint32_t>(elem), nIdx == 0 ? 0U : 1U, 0, 0};
+        if (bits) {
+            const std::optional<std::int64_t> pos = constIndex(ops[1 + nIdx]);
+            const std::uint32_t w = operandType(body, ops.back(), tempType).width;
+            if (pos && *pos >= 0 && w != 0 && *pos + w <= slot.type.width) {
+                t.lsb = static_cast<std::uint32_t>(*pos);
+                t.width = w;
+            }
+        }
+        return t;
+    }
+
     void checkInstr(const Body& body, const std::string& bw, const Instr& in,
                     const std::vector<Type>& tempType) {
         const auto bad = [&](const std::string& why) {
@@ -638,7 +690,7 @@ private:
             const Operand& o = ops[0];
             SlotRange target{o.id, o.firstElem, o.numElems, o.lsb, o.width};
             if (in.op != Op::Store && in.op != Op::Nba && in.op != Op::NbaDelay)
-                target.firstElem = 0, target.numElems = 0, target.lsb = 0, target.width = 0;
+                target = elementTarget(body, in, tempType);
             bool covered = false;
             for (const SlotRange& w : body.process->writes)
                 covered = covered || covers(w, target);

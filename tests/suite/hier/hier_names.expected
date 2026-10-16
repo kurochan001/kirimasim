@@ -1,0 +1,4 @@
+child sees 5
+child sees 6
+top reads 6
+child reads top.flag=7
