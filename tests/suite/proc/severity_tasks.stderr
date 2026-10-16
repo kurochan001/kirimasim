@@ -1,5 +1,7 @@
+severity_tasks.sv:32: info: info 4 [top.main @ 0ps]
 severity_tasks.sv:33: error: error 4 text [top.main @ 2000ps]
 severity_tasks.sv:34: warning:  [top.main @ 2000ps]
 severity_tasks.sv:24: warning: in task 7 [top.u.t @ 2000ps]
 severity_tasks.sv:37: warning: from fork [top.main.branch @ 2000ps]
 severity_tasks.sv:40: error: x=x1 [top.main.inner @ 2000ps]
+severity_tasks.sv:43: fatal: fatal 4 [top.main @ 5000ps]

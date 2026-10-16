@@ -14,8 +14,8 @@
 */
 // The form of the messages is kirimasim's (SYSTEM_TASKS.md 10.1): the
 // scope is the named block, fork or task that calls the task, and the
-// time is in the global precision. $info and $fatal print too, but the
-// suite compares only the warning and error lines (TEST_SUITE.md).
+// time is in the global precision. The suite compares the warning, error,
+// fatal and info lines (TEST_SUITE.md).
 // Icarus 13.0 prints the same messages, scopes and times in its own form,
 // the same standard output, and exits with 1.
 `timescale 1ns/1ps

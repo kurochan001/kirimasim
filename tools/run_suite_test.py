@@ -62,16 +62,21 @@ def expected_outputs(test: Path, meta: dict[str, str]) -> list[list[str]] | None
 
 
 def message_lines(stderr: str, test: Path) -> list[str]:
-    """kirimasim's warning and error lines (CLI.md 4): "kirimasim: <kind>:" or
-    "<file>:<line>...: <kind>:". Paths are cut to start at the test's file
-    name. Lines of other programs (an allocator's warning) are left out."""
+    """kirimasim's message lines that :expected_stderr: compares (TEST_SUITE.md):
+    warning and error lines, "kirimasim: <kind>:" or "<file>:<line>...: <kind>:",
+    and the fatal and info lines of $fatal and $info, which start with a
+    source position (SYSTEM_TASKS.md 10.1); not kirimasim's own info lines
+    (the version line changes with every commit). Paths are cut to start at
+    the test's file name. Lines of other programs (an allocator's warning)
+    are left out."""
     out = []
     for line in stderr.splitlines():
-        m = re.match(r"^(.*?): (warning|error): ", line)
+        m = re.match(r"^(.*?): (warning|error|fatal|info): ", line)
         if not m:
             continue
         where = m.group(1)
-        if where != "kirimasim" and not re.search(r":\d+(:\d+)?$", where):
+        at_source = re.search(r":\d+(:\d+)?$", where) is not None
+        if not at_source and (where != "kirimasim" or m.group(2) in ("fatal", "info")):
             continue
         i = line.find(test.name)
         out.append(line[i:] if 0 <= i < len(where) else line)

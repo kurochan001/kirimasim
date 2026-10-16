@@ -56,6 +56,28 @@ def suite_test(kirimasim: str, tmp: Path) -> None:
          False)
 
 
+def severity_test(kirimasim: str, tmp: Path) -> None:
+    """run_suite_test.py on a copy of proc/severity_tasks: the fatal and info
+    lines are compared too (TEST_SUITE.md, :expected_stderr:)."""
+    src = ROOT / "tests/suite/proc/severity_tasks"
+    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
+
+    def case(name: str, old: str, new: str, want_ok: bool) -> None:
+        d = tmp / ("severity_" + name)
+        d.mkdir()
+        for ext in (".sv", ".expected", ".stderr"):
+            shutil.copy(src.with_suffix(ext), d / ("severity_tasks" + ext))
+        f = d / "severity_tasks.stderr"
+        text = f.read_text(encoding="utf-8")
+        assert old in text, old
+        f.write_text(text.replace(old, new, 1), encoding="utf-8")
+        expect("run_suite_test severity " + name, run + [str(d / "severity_tasks.sv")], want_ok)
+
+    case("unchanged", "", "", True)
+    case("info_line_missing", "severity_tasks.sv:32: info: info 4 [top.main @ 0ps]\n", "", False)
+    case("fatal_line_changed", "fatal: fatal 4", "fatal: fatal 5", False)
+
+
 def banned(tmp: Path) -> None:
     for name, line, want_ok in [
         ("pass_string", 'puts("TEST PASSED");', False),
@@ -108,6 +130,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         suite_test(args.kirimasim, tmp)
+        severity_test(args.kirimasim, tmp)
         banned(tmp)
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
