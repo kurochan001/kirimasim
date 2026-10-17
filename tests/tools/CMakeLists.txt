@@ -116,6 +116,9 @@ set_tests_properties(tools/bench_smoke PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_program_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_program_matrix.py --check)
 set_tests_properties(tools/gen_program_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_unsupported_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_unsupported_matrix.py --check)
+set_tests_properties(tools/gen_unsupported_matrix PROPERTIES LABELS Tools)
 
 add_test(NAME tools/gen_process_lifetime_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_process_lifetime_matrix.py --check)

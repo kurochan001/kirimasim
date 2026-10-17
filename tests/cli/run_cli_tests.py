@@ -23,6 +23,7 @@ STRING_REPL = str(HERE / "string_repl.sv")
 PLUSARGS = str(HERE / "plusargs.sv")
 VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
 PROGRAM_MATRIX = HERE / "program_matrix.sv"
+UNSUPPORTED_MATRIX = HERE / "unsupported_matrix"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 
 # The violation reports of violations.sv, exactly these and in this order
@@ -142,6 +143,27 @@ def main() -> int:
         failures += 1
         print(f"FAIL: program matrix: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
               file=sys.stderr)
+
+    # Every unsupported construct is reported with its position, in every
+    # container, and nothing runs (CLI.md 5; the files and the lines come
+    # from tools/gen_unsupported_matrix.py).
+    got = []
+    for sv in sorted(UNSUPPORTED_MATRIX.glob("*.sv")):
+        rel = str(sv.relative_to(HERE))
+        proc = subprocess.run([args.kirimasim, rel], cwd=HERE, capture_output=True, text=True,
+                              check=False)
+        got += [line for line in proc.stderr.splitlines() if ": error: " in line]
+        if proc.returncode != 2 or proc.stdout != "":
+            failures += 1
+            print(f"FAIL: {rel}: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
+                  file=sys.stderr)
+    want = UNSUPPORTED_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
+    if sorted(got) != sorted(want):
+        failures += 1
+        missing = sorted(set(want) - set(got))
+        extra = sorted(set(got) - set(want))
+        print("FAIL: unsupported matrix:\n" + "".join(f"  missing: {x}\n" for x in missing) +
+              "".join(f"  extra: {x}\n" for x in extra), file=sys.stderr)
 
     # The records of finished processes are released (SCHEDULER_SPEC.md
     # 10.8): with twice the rounds of the process lifetime matrix, twice as
