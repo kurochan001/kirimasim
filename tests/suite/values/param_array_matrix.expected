@@ -1,0 +1,74 @@
+P constant 5 6 7 8
+P[0] 5
+P[1] 6
+P[2] 7
+P[3] 8
+P[4] 0
+P at x 0
+L constant 0f x0 33 44
+L[0] 44
+L[1] 33
+L[2] x0
+L[3] 0f
+L[4] xx
+L at x xx
+R constant 1.50 -2.25
+R[0] 1.50
+R[1] -2.25
+R[2] 0.00
+R at x 0.00
+M constant 1 2 3 4 5 6
+M[0][0] 1
+M[0][1] 2
+M[0][2] 3
+M[1][0] 4
+M[1][1] 5
+M[1][2] 6
+M[2][0] 0
+M[2][1] 0
+M[2][2] 0
+M at x 0
+S constant ab cde
+S[0] ab
+S[1] cde
+S[2] 
+S at x 
+pk::PA constant 10 20 30 40
+pk::PA[0] 10
+pk::PA[1] 20
+pk::PA[2] 30
+pk::PA[3] 40
+pk::PA[4] 0
+pk::PA at x 0
+c1.CP constant 7 8 9
+c1.CP[0] 7
+c1.CP[1] 8
+c1.CP[2] 9
+c1.CP[3] 0
+c1.CP at x 0
+c2.CP constant 1 2 3
+c2.CP[0] 1
+c2.CP[1] 2
+c2.CP[2] 3
+c2.CP[3] 0
+c2.CP at x 0
+g.G constant 100 200
+g.G[0] 100
+g.G[1] 200
+g.G[2] 0
+g.G at x 0
+function P[0] 5
+function P[1] 6
+function P[2] 7
+function P[3] 8
+function P[4] 0
+task M[1][2] 6
+task M[0][1] 2
+child functions 0 7 1
+child functions 1 8 2
+child functions 2 9 3
+child functions 3 0 0
+assign L[0] 44 always_comb R[0] 1.50
+assign L[1] 33 always_comb R[1] -2.25
+assign L[2] x0 always_comb R[2] 0.00
+assign L[3] 0f always_comb R[3] 0.00

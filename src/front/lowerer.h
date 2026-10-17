@@ -32,6 +32,7 @@
 #include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/ast/symbols/MemberSymbols.h"
+#include "slang/ast/symbols/ParameterSymbols.h"
 #include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/ast/types/AllTypes.h"
 #include "slang/numeric/ConstantValue.h"
@@ -378,6 +379,10 @@ public:
     /// The slots of a static variable of an unpacked structure type, one
     /// per leaf in order, created on first use: the first one.
     sir::SlotId structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl);
+    /// The slot that holds an unpacked array parameter read at an index
+    /// known when it runs, filled by the static-init of the scope it is
+    /// declared in (SIR_SPEC.md 6); made on first use.
+    sir::SlotId paramSlot(const ast::ParameterSymbol& p, slang::SourceLocation sl);
     /// A new slot for variable v, or for the member of it at path `member`
     /// (empty for v itself) of the given type, inside arrays of structures
     /// of dimensions `outer`.

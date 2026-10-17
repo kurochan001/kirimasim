@@ -496,6 +496,72 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
     return id;
 }
 
+sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocation sl) {
+    if (auto it = slots_.find(&p); it != slots_.end()) return it->second;
+    std::vector<sir::ArrayDim> dims;
+    const ast::Type& et = arrayElement(p.getType(), dims);
+    if (unpackedStruct(et) != nullptr || et.isUnpackedArray())
+        unsupported(sl, "parameter of type '" + p.getType().toString() + "' at a run-time index");
+    // Its scope: a package or compilation unit, or else the instance whose
+    // body declares it.
+    const sir::InstanceId saved = instance_;
+    if (const std::optional<sir::InstanceId> row = rowOf(p)) {
+        instance_ = *row;
+    } else {
+        for (const ast::Scope* sc = p.getParentScope(); sc != nullptr;
+             sc = sc->asSymbol().getParentScope()) {
+            if (sc->asSymbol().kind != ast::SymbolKind::InstanceBody) continue;
+            const ast::InstanceSymbol* inst =
+                sc->asSymbol().as<ast::InstanceBodySymbol>().parentInstance;
+            if (const auto it = instanceIds_.find(inst); it != instanceIds_.end())
+                instance_ = it->second;
+            break;
+        }
+    }
+    const sir::SlotId id = slotOf(p, sl);
+    design_.slots[id].instance = instance_;
+    // The elements in slot order: the rightmost dimension fastest (4.2).
+    std::vector<const slang::ConstantValue*> values;
+    const auto flatten = [&](const slang::ConstantValue& cv, auto& self) -> void {
+        if (!cv.isUnpacked()) {
+            values.push_back(&cv);
+            return;
+        }
+        for (const slang::ConstantValue& e : cv.elements())
+            self(e, self);
+    };
+    flatten(p.getValue(), flatten);
+    if (values.size() != sir::elementCount(design_.slots[id])) {
+        instance_ = saved;
+        unsupported(sl, "the value of parameter '" + std::string(p.name) + "'");
+    }
+    // The stores are the declaration's.
+    const slang::SourceLocation at = p.location;
+    ensureStaticInit(p, at);
+    Body body = std::move(b_);
+    b_ = std::move(staticBody_[instance_]);
+    const auto restore = [&] {
+        staticBody_[instance_] = std::move(b_);
+        b_ = std::move(body);
+        instance_ = saved;
+    };
+    try {
+        const sir::Type t = design_.slots[id].type;
+        for (std::size_t i = 0; i < values.size(); ++i) {
+            sir::Operand o = sir::Operand::slot(id);
+            o.firstElem = static_cast<std::uint32_t>(i);
+            o.numElems = 1;
+            emitVoid(sir::Op::Store, {o, constantFrom(*values[i], t, at).op}, at);
+        }
+        noteWrite({id, 0, 0, 0, 0});
+    } catch (const Unsupported&) {
+        restore();
+        throw;
+    }
+    restore();
+    return id;
+}
+
 sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     // One slot per innermost member, in declaration order (SIR_SPEC.md 4.2).
     if (auto it = structSlots_.find(&v); it != structSlots_.end()) return it->second;

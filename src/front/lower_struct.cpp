@@ -121,6 +121,12 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         return base;
     }
     const ast::Symbol* sym = namedSymbol(e);
+    if (sym != nullptr && sym->kind == ast::SymbolKind::Parameter &&
+        sym->as<ast::ParameterSymbol>().getType().isUnpackedArray()) {
+        Storage st;
+        st.id = paramSlot(sym->as<ast::ParameterSymbol>(), sl);
+        return st;
+    }
     if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
         return std::nullopt;
     const auto& v = sym->as<ast::ValueSymbol>();

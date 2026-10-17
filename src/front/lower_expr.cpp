@@ -534,8 +534,10 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
     }
     if (acc.indices.empty()) return std::nullopt;
     const ast::Symbol* sym = namedSymbol(*cur);
+    // A parameter is read from its slot (SIR_SPEC.md 6).
     if (!Lowerer::isUnpackedMember(*cur) &&
-        (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net)))
+        (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net &&
+                            sym->kind != ast::SymbolKind::Parameter)))
         return std::nullopt;
     acc.base = cur;
     std::reverse(acc.indices.begin(), acc.indices.end());
@@ -1184,6 +1186,12 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
             unsupported(sl, "unpacked structure used as a whole here");
         const std::optional<ArrayAccess> acc = arrayAccess(e);
         if (!acc) unsupported(sl, "selecting from this array");
+        // An element of a parameter at constant indices is slang's constant
+        // (SIR_SPEC.md 6).
+        const ast::Symbol* base = namedSymbol(*acc->base);
+        if (base != nullptr && base->kind == ast::SymbolKind::Parameter)
+            if (const std::optional<slang::ConstantValue> cv = constantValue(e))
+                return constantFrom(*cv, typeOf(*e.type, sl), sl);
         return coerce(loadPlace(arrayElementPlace(*acc->base, acc->indices, sl), sl),
                       typeOf(*e.type, sl), sl);
     }
