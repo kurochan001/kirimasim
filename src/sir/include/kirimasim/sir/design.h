@@ -334,9 +334,10 @@ enum class Edge : std::uint8_t { Any, Pos, Neg, Both };
 ///
 /// A Block operand is followed by its `count` arguments. A Slot operand
 /// covers bits [lsb, lsb + width) (width 0: all bits) of elements
-/// [firstElem, firstElem + numElems) (numElems 0: all elements). In
-/// wait.event a Slot operand may be followed by a Subroutine operand, the
-/// item's iff guard.
+/// [firstElem, firstElem + numElems) (numElems 0: all elements). An item
+/// of wait.event is a Slot operand or the Subroutine operand of a watch,
+/// either with its edge, and may be followed by the Subroutine operand of
+/// a guard, its iff.
 struct Operand {
     enum class Kind : std::uint8_t {
         Temp,
@@ -357,7 +358,7 @@ struct Operand {
     std::uint32_t firstElem = 0;
     std::uint32_t numElems = 0;
     std::uint32_t count = 0;  ///< Block: number of arguments that follow.
-    Edge edge = Edge::Any;    ///< Slot in wait.event: the edge to wait for.
+    Edge edge = Edge::Any;    ///< An item of wait.event: the edge to wait for.
     std::string text;         ///< Text: system task or method name, or a word.
 
     static Operand of(Kind k, std::uint32_t id) {
@@ -488,9 +489,16 @@ struct Process {
 };
 
 /// Kinds of subroutines (SIR_SPEC.md 8). A guard is the iff condition of a
-/// wait.event item or the expression of a wait.cond; it reads the frame of
-/// the process or subroutine that waits (its `frameOf`).
-enum class SubroutineKind : std::uint8_t { Function, Task, Guard };
+/// wait.event item or the expression of a wait.cond; a watch is the
+/// expression of a wait.event item and returns its value (SIR_SPEC.md 7.2).
+/// Both read the frame of the process or subroutine that waits (their
+/// `frameOf`).
+enum class SubroutineKind : std::uint8_t { Function, Task, Guard, Watch };
+
+/// Whether a subroutine of kind k reads the frame of the body that waits.
+inline bool readsWaiterFrame(SubroutineKind k) {
+    return k == SubroutineKind::Guard || k == SubroutineKind::Watch;
+}
 
 /// Argument directions.
 enum class Direction : std::uint8_t { Input, Output, Inout, Ref, ConstRef };

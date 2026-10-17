@@ -437,13 +437,14 @@ struct Frame {
     kernel::Hold level = kernel::Hold::Assign;
     /// The guard of the wait.cond it waits at (SIR_SPEC.md 7.2).
     sir::SubroutineId cond = 0;
-    /// An iff guard of an item of the event control it waits at, which the
-    /// kernel calls with a pointer to it (SIR_SPEC.md 7.2).
-    struct Iff {
+    /// A guard or a watch of the event control it waits at, which the
+    /// kernel calls with a pointer to this record (SIR_SPEC.md 7.2).
+    struct Callback {
         Frame* frame = nullptr;
-        sir::SubroutineId guard = 0;
+        sir::SubroutineId body = 0;
     };
-    std::vector<Iff> iffs;
+    std::vector<Callback> iffs;     ///< The items' iff guards.
+    std::vector<Callback> watches;  ///< The items on expressions.
 
     /// Calls of tasks that may wait, innermost last (SIR_SPEC.md 7.4): each
     /// keeps its frame variables and the block to go on at. Their temps do
@@ -705,12 +706,28 @@ public:
 
     /// An iff guard of an event-control item: nonzero when true.
     static int evalIff(kirima_context* /*ctx*/, void* iff) {
-        const auto* g = static_cast<const Frame::Iff*>(iff);
+        const auto* g = static_cast<const Frame::Callback*>(iff);
         Interpreter& vm = *g->frame->vm;
         std::uint64_t steps = 0;
-        const bool on = vm.guard(*g->frame, g->guard, steps).value_or(false);
+        const bool on = vm.guard(*g->frame, g->body, steps).value_or(false);
         vm.counters_.increment(vm.cInstrs_, steps);
         return on ? 1 : 0;
+    }
+
+    /// A watch's value, laid out like a slot element of its type.
+    static void evalWatch(kirima_context* /*ctx*/, void* watch, std::uint64_t* out) {
+        const auto* w = static_cast<const Frame::Callback*>(watch);
+        Interpreter& vm = *w->frame->vm;
+        std::uint64_t steps = 0;
+        W4 ret{0, 0};
+        if (vm.runWaiter(*w->frame, w->body, steps, ret)) {
+            const sir::Type t = vm.d_.subroutines[w->body].returnType;
+            const std::uint32_t c = chunksOf(t);
+            const W4* v = c > 1 ? vm.retWide_.data() : &ret;
+            const std::vector<std::uint64_t> words = packed(v, c, sir::isFourState(t));
+            std::copy(words.begin(), words.end(), out);
+        }
+        vm.counters_.increment(vm.cInstrs_, steps);
     }
 
     /// A deferred assertion's call, confirmed (run) or dropped.
@@ -803,8 +820,8 @@ private:
     const std::vector<sir::FrameVar>& bodyFrame(std::uint32_t body) const {
         if (!isSubBody(body)) return d_.processes[body].frame;
         const sir::Subroutine& s = subOf(body);
-        // A guard reads the frame of the body that waits (SIR_SPEC.md 7.2).
-        if (s.kind != sir::SubroutineKind::Guard) return s.frame;
+        // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
+        if (!sir::readsWaiterFrame(s.kind)) return s.frame;
         return s.frameOf.kind == sir::Owner::Kind::Process ? d_.processes[s.frameOf.id].frame
                                                            : d_.subroutines[s.frameOf.id].frame;
     }
@@ -833,6 +850,7 @@ private:
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
     std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
+    std::vector<kernel::MonitorSpec> monitors_;    ///< Scratch for wait.event.
     std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
     std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
     /// By process: the frame of an override or postponed process.
@@ -1260,11 +1278,27 @@ private:
         sched_.waitEvent(f.kernelId, items_);
     }
 
-    /// Gives an item its iff guard, which the kernel calls when the item's
-    /// event occurs and only then (9.4.2.3). f.iffs has room for it.
-    static void withIff(Frame& f, kernel::WaitItem& item, sir::SubroutineId g) {
+    /// Gives an item, a subscription or a monitor record, its iff guard,
+    /// which the kernel calls when the item's event occurs and only then
+    /// (9.4.2.3). f.iffs has room for it.
+    template <typename Item> static void withIff(Frame& f, Item& item, sir::SubroutineId g) {
         item.guard = &evalIff;
-        item.guardFrame = &f.iffs.emplace_back(Frame::Iff{&f, g});
+        item.guardFrame = &f.iffs.emplace_back(Frame::Callback{&f, g});
+    }
+
+    /// The monitor record of a watch, an item on an expression: evaluated
+    /// again when what the watch reads changes (SIR_SPEC.md 7.2,
+    /// SCHEDULER_SPEC.md 9.5). f.watches has room for it.
+    kernel::MonitorSpec watchMonitor(Frame& f, const Operand& o) {
+        const sir::Type t = d_.subroutines[o.id].returnType;
+        kernel::MonitorSpec m;
+        readsOf(depsOf(processCount() + o.id), m);
+        m.eval = &evalWatch;
+        m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.id});
+        m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
+        m.width = t.width;
+        m.edge = kernelEdge(o.edge);
+        return m;
     }
 
     // --- Running ---
@@ -1652,20 +1686,33 @@ private:
                     }
                     case Op::WaitEvent: {
                         items_.clear();
+                        monitors_.clear();
+                        // The kernel keeps pointers into these.
                         f.iffs.clear();
-                        f.iffs.reserve(ops.size());  // the kernel keeps pointers into it
+                        f.iffs.reserve(ops.size());
+                        f.watches.clear();
+                        f.watches.reserve(ops.size());
+                        bool onWatch = false;  // the last item is a watch
                         for (std::size_t i = 0; i + 1 < ops.size(); ++i) {
                             const Operand& o = ops[i];
-                            if (o.kind == Operand::Kind::Subroutine) {  // the item's iff
-                                withIff(f, items_.back(), o.id);
-                                continue;
+                            if (o.kind == Operand::Kind::Subroutine &&
+                                d_.subroutines[o.id].kind == sir::SubroutineKind::Watch) {
+                                monitors_.push_back(watchMonitor(f, o));
+                                onWatch = true;
+                            } else if (o.kind == Operand::Kind::Subroutine) {  // the item's iff
+                                if (onWatch)
+                                    withIff(f, monitors_.back(), o.id);
+                                else
+                                    withIff(f, items_.back(), o.id);
+                            } else {
+                                kernel::WaitItem item;
+                                item.part = {o.id, o.firstElem, o.numElems, o.lsb, o.width};
+                                item.edge = kernelEdge(o.edge);
+                                items_.push_back(item);
+                                onWatch = false;
                             }
-                            kernel::WaitItem item;
-                            item.part = {o.id, o.firstElem, o.numElems, o.lsb, o.width};
-                            item.edge = kernelEdge(o.edge);
-                            items_.push_back(item);
                         }
-                        sched_.waitEvent(f.kernelId, items_);
+                        sched_.waitAny(f.kernelId, items_, monitors_);
                         resumeAt(f) = ops.back().id;
                         return Exit::Waiting;
                     }
@@ -1804,15 +1851,21 @@ private:
     /// Runs guard g on the frame of the activation that waits: the process,
     /// or its innermost task call. Empty on an error.
     std::optional<bool> guard(Frame& f, sir::SubroutineId g, std::uint64_t& steps) {
+        W4 ret{0, 0};
+        if (!runWaiter(f, g, steps, ret)) return std::nullopt;
+        return isTrue(ret);
+    }
+
+    /// Runs guard or watch g like guard(), its value in ret (and in
+    /// retWide_ when wider than 64 bits). False on an error.
+    bool runWaiter(Frame& f, sir::SubroutineId g, std::uint64_t& steps, W4& ret) {
         const Act caller = act_;
         std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         const std::uint32_t varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
         enter({processCount() + g, &vars, caller.base + bodyTemps(caller.body), varsId});
-        W4 ret{0, 0};
         const Exit e = runBody(f, 0, steps, ret);
         act_ = caller;
-        if (e != Exit::Ret) return std::nullopt;
-        return isTrue(ret);
+        return e == Exit::Ret;
     }
 
     /// The slot parts a body reads, with what the functions it calls read.
@@ -1854,6 +1907,18 @@ private:
         std::copy(fresh.begin(), fresh.end(), f.vars.begin());
     }
 
+    /// What a monitor record depends on: the slot parts a body reads, and
+    /// for ev.triggered the events its event slots hold now (15.5.3).
+    void readsOf(const GuardDeps& deps, kernel::MonitorSpec& m) const {
+        m.slots = deps.slots;
+        for (const sir::SlotId s : deps.events) {
+            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
+            for (std::uint32_t e = 0; e < n; ++e)
+                if (const std::uint64_t h = *store_.element(s, e); h != 0)
+                    m.events.push_back(static_cast<kernel::EventId>(h - 1));
+        }
+    }
+
     /// wait.cond: goes on when the guard is true, else waits on a monitor
     /// record that wakes the process when the guard becomes true
     /// (SCHEDULER_SPEC.md 9.3, 9.5). Returns whether it waits; empty on an
@@ -1861,16 +1926,8 @@ private:
     std::optional<bool> waitCond(Frame& f, sir::SubroutineId g, std::uint64_t& steps) {
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
-        const GuardDeps& deps = depsOf(processCount() + g);
         kernel::MonitorSpec m;
-        m.slots = deps.slots;
-        // ev.triggered: the events the event slots hold now (15.5.3).
-        for (const sir::SlotId s : deps.events) {
-            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
-            for (std::uint32_t e = 0; e < n; ++e)
-                if (const std::uint64_t h = *store_.element(s, e); h != 0)
-                    m.events.push_back(static_cast<kernel::EventId>(h - 1));
-        }
+        readsOf(depsOf(processCount() + g), m);
         m.eval = &evalCond;
         m.frame = &f;
         m.domain = kernel::Domain::Two;

@@ -564,6 +564,11 @@ MUTANTS = [
      "        if (fire && spec.guard != nullptr && spec.guard(toC(ctx_), spec.guardFrame) == 0)\n"
      "            fire = false;\n",
      ""),
+    ("vm: a watch waits for any change, whatever its edge", "src/vm/vm.cpp",
+     "        m.edge = kernelEdge(o.edge);\n        return m;", "        return m;"),
+    ("vm: a watch's value is cut to one bit", "src/vm/vm.cpp",
+     "        m.width = t.width;\n        m.edge = kernelEdge(o.edge);",
+     "        m.width = 1;\n        m.edge = kernelEdge(o.edge);"),
 ]
 
 

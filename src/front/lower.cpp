@@ -631,9 +631,9 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
              sc = sc->asSymbol().getParentScope()) {
             if (&sc->asSymbol() == b_.subSymbol) {
-                // A guard's variables are those of the task that waits.
+                // A guard's or watch's variables are those of the task that waits.
                 const sir::Subroutine& cur = design_.subroutines[b_.proc];
-                s.subroutine = cur.kind == sir::SubroutineKind::Guard ? cur.frameOf.id : b_.proc;
+                s.subroutine = sir::readsWaiterFrame(cur.kind) ? cur.frameOf.id : b_.proc;
                 break;
             }
             if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
@@ -1825,6 +1825,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 // event control as the trigger (SIR_SPEC.md 7.1).
                 std::vector<sir::Trigger> triggers;
                 const ast::Statement* inner = nullptr;
+                bool expression = false;  // an item on an expression
                 if (bodyStmt.kind == ast::StatementKind::Timed) {
                     const auto& ts = bodyStmt.as<ast::TimedStatement>();
                     std::vector<const ast::TimingControl*> items;
@@ -1845,6 +1846,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                         const std::optional<sir::SlotRange> r = eventSlot(se.expr);
                         if (!r) {
                             fixed = false;
+                            expression = true;
                             break;
                         }
                         triggers.push_back({*r, edgeOf(se.edge)});
@@ -1867,7 +1869,12 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                     if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
                     break;
                 }
-                if (ff) unsupported(pb.location, "always_ff without a single event control");
+                // An always_ff waits only at its event control, whose items
+                // are kept as the process's triggers (SIR_SPEC.md 7.1).
+                if (ff)
+                    unsupported(pb.location,
+                                expression ? "always_ff with an event control on an expression"
+                                           : "always_ff without a single event control");
                 if (bodyStmt.kind == ast::StatementKind::Timed &&
                     bodyStmt.as<ast::TimedStatement>().timing.kind ==
                         ast::TimingControlKind::ImplicitEvent &&

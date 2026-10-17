@@ -651,15 +651,25 @@ void Lowerer::lowerWait(const ast::WaitStatement& w) {
 
 sir::SubroutineId Lowerer::guardOf(const ast::Expression& cond, const char* what,
                                    slang::SourceLocation sl) {
+    return waiterOf(sir::SubroutineKind::Guard, cond, what, sl);
+}
+
+sir::SubroutineId Lowerer::watchOf(const ast::Expression& e, slang::SourceLocation sl) {
+    return waiterOf(sir::SubroutineKind::Watch, e, "event", sl);
+}
+
+sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Expression& e,
+                                    const char* what, slang::SourceLocation sl) {
+    const bool guard = kind == sir::SubroutineKind::Guard;
     const sir::Owner owner{b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process,
                            b_.proc};
     sir::Subroutine g;
     g.name = (b_.isSub ? design_.subroutines[b_.proc].name : proc().name) + "." + what +
              std::to_string(b_.guards++);
-    g.kind = sir::SubroutineKind::Guard;
+    g.kind = kind;
     g.instance = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
     g.frameOf = owner;
-    g.returnType = sir::u4(1);
+    g.returnType = guard ? sir::u4(1) : typeOf(*e.type, sl);
     g.loc = loc(sl);
     g.blocks.resize(1);
     const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
@@ -674,8 +684,9 @@ sir::SubroutineId Lowerer::guardOf(const ast::Expression& cond, const char* what
     b_.scale = saved.scale;
     b_.scope = saved.scope;
     try {
-        const Val c = lowerCondition(cond);
-        terminate(Op::Ret, {coerce(c, sir::u4(1), sl).op}, sl);
+        const sir::Type rt = design_.subroutines[id].returnType;
+        const Val v = guard ? lowerCondition(e) : lowerExpr(e);
+        terminate(Op::Ret, {coerce(v, rt, sl).op}, sl);
     } catch (const Unsupported&) {
         b_ = std::move(saved);
         throw;
@@ -688,7 +699,8 @@ sir::SubroutineId Lowerer::guardOf(const ast::Expression& cond, const char* what
     // event, so it may not write a variable or a net itself.
     std::set<sir::SubroutineId> seen;
     if (writesOutside(id, seen))
-        unsupported(sl, std::string(what) + " condition that writes a variable or net");
+        unsupported(sl, guard ? std::string(what) + " condition that writes a variable or net"
+                              : std::string("event expression that writes a variable or net"));
     return id;
 }
 
@@ -1191,11 +1203,18 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                     setBlock(cont);
                     return;
                 }
-                const std::optional<sir::SlotRange> r = eventSlot(se.expr);
-                if (!r) unsupported(sl, "event control on an expression");
-                Operand o = Operand::slot(r->slot, r->lsb, r->width);
-                o.firstElem = r->firstElem;
-                o.numElems = r->numElems;
+                Operand o;
+                if (const std::optional<sir::SlotRange> r = eventSlot(se.expr)) {
+                    o = Operand::slot(r->slot, r->lsb, r->width);
+                    o.firstElem = r->firstElem;
+                    o.numElems = r->numElems;
+                } else {
+                    // An expression: a watch, which the layers make a
+                    // monitor record (SIR_SPEC.md 7.2).
+                    if (!se.expr.type->isIntegral())
+                        unsupported(sl, "event control on an expression of this type");
+                    o = Operand::subroutine(watchOf(se.expr, se.expr.sourceRange.start()));
+                }
                 switch (se.edge) {
                     case ast::EdgeKind::PosEdge: o.edge = sir::Edge::Pos; break;
                     case ast::EdgeKind::NegEdge: o.edge = sir::Edge::Neg; break;

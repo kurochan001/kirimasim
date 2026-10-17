@@ -430,9 +430,14 @@ private:
             error(where, "a task returns no value", s.loc);
         for (const FrameVar& f : s.frame)
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
-        if (s.kind == SubroutineKind::Guard) {
-            if (!s.params.empty()) error(where, "a guard has no arguments", s.loc);
-            if (!width1(s.returnType)) error(where, "a guard returns a 1-bit value", s.loc);
+        if (readsWaiterFrame(s.kind)) {
+            const std::string a = std::string("a ") + kindName(s.kind);
+            if (!s.params.empty()) error(where, a + " has no arguments", s.loc);
+            if (s.kind == SubroutineKind::Guard && !width1(s.returnType))
+                error(where, "a guard returns a 1-bit value", s.loc);
+            // A watch returns the value of an event expression (SIR_SPEC.md 7.2).
+            if (s.kind == SubroutineKind::Watch && !isIntegral(s.returnType))
+                error(where, "a watch returns an integral value", s.loc);
             const Owner& o = s.frameOf;
             if (o.kind == Owner::Kind::Process && o.id < d_.processes.size()) {
                 body.frame = &d_.processes[o.id].frame;
@@ -440,7 +445,7 @@ private:
                        o.id != id) {
                 body.frame = &d_.subroutines[o.id].frame;
             } else {
-                error(where, "a guard needs the process or subroutine whose frame it reads", s.loc);
+                error(where, a + " needs the process or subroutine whose frame it reads", s.loc);
             }
         } else if (s.frameOf.kind != Owner::Kind::None) {
             error(where, "only guards read another frame", s.loc);
@@ -1482,7 +1487,8 @@ private:
                     break;
                 }
                 const Subroutine& callee = d_.subroutines[ops[0].id];
-                if (callee.kind == SubroutineKind::Guard) bad("a guard is not called");
+                if (readsWaiterFrame(callee.kind))
+                    bad(std::string("a ") + kindName(callee.kind) + " is not called");
                 if (callee.mayWait) bad("a task that may wait is called with call.task");
                 if (rt != callee.returnType) bad("result type differs from the return type");
                 checkArgs(callee, 1, ops.size());
@@ -1531,15 +1537,25 @@ private:
                     bad("needs at least one event and a block");
                     break;
                 }
+                // Each item is a slot range or a watch, and may have an iff
+                // guard after it (SIR_SPEC.md 7.2).
+                bool afterItem = false;
                 for (std::size_t i = 0; i + 1 < ops.size(); ++i) {
                     const Operand& o = ops[i];
-                    if (o.kind == Operand::Kind::Slot) continue;
-                    if (o.kind == Operand::Kind::Subroutine && i > 0 &&
-                        ops[i - 1].kind == Operand::Kind::Slot) {
-                        checkGuard(body, o, bad);
+                    const bool watch = o.kind == Operand::Kind::Subroutine &&
+                                       o.id < d_.subroutines.size() &&
+                                       d_.subroutines[o.id].kind == SubroutineKind::Watch;
+                    if (o.kind == Operand::Kind::Slot || watch) {
+                        if (watch) checkWaiter(body, o, SubroutineKind::Watch, bad);
+                        afterItem = true;
                         continue;
                     }
-                    bad("events must be slot ranges, each with an optional iff guard");
+                    if (o.kind == Operand::Kind::Subroutine && afterItem) {
+                        checkGuard(body, o, bad);
+                        afterItem = false;
+                        continue;
+                    }
+                    bad("events must be slot ranges or watches, each with an optional iff guard");
                 }
                 continuation();
                 break;
@@ -1603,12 +1619,19 @@ private:
 
     template <typename Bad>
     void checkGuard(const Body& body, const Operand& o, const Bad& bad) const {
+        checkWaiter(body, o, SubroutineKind::Guard, bad);
+    }
+
+    /// o names a guard or a watch (kind) of the frame of the body that waits.
+    template <typename Bad>
+    void checkWaiter(const Body& body, const Operand& o, SubroutineKind kind,
+                     const Bad& bad) const {
         if (o.id >= d_.subroutines.size()) return;
         const Subroutine& g = d_.subroutines[o.id];
-        if (g.kind != SubroutineKind::Guard)
-            bad("@" + std::to_string(o.id) + " is not a guard");
+        if (g.kind != kind)
+            bad("@" + std::to_string(o.id) + " is not a " + kindName(kind));
         else if (g.frameOf.kind != body.owner.kind || g.frameOf.id != body.owner.id)
-            bad("guard @" + std::to_string(o.id) + " reads another frame");
+            bad(std::string(kindName(kind)) + " @" + std::to_string(o.id) + " reads another frame");
     }
 
     // Rule 6, second half: what an always_comb, always_latch or always_ff

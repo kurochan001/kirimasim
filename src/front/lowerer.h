@@ -202,6 +202,12 @@ public:
     /// after `what` ("wait" or "iff").
     sir::SubroutineId guardOf(const ast::Expression& cond, const char* what,
                               slang::SourceLocation sl);
+    /// A watch: the same, returning the value of an event control's
+    /// expression (SIR_SPEC.md 7.2).
+    sir::SubroutineId watchOf(const ast::Expression& e, slang::SourceLocation sl);
+    /// A guard or a watch (kind) of the body being lowered, computing e.
+    sir::SubroutineId waiterOf(sir::SubroutineKind kind, const ast::Expression& e, const char* what,
+                               slang::SourceLocation sl);
     /// Whether a subroutine, or one it calls, writes a slot that is not a
     /// variable or argument of a subroutine.
     bool writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const;
@@ -407,8 +413,8 @@ public:
     std::vector<sir::FrameVar>& frameVars() {
         if (!b_.isSub) return proc().frame;
         sir::Subroutine& s = design_.subroutines[b_.proc];
-        // A guard reads the frame of the body that waits (SIR_SPEC.md 7.2).
-        if (s.kind != sir::SubroutineKind::Guard) return s.frame;
+        // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
+        if (!sir::readsWaiterFrame(s.kind)) return s.frame;
         return s.frameOf.kind == sir::Owner::Kind::Process
                    ? design_.processes[s.frameOf.id].frame
                    : design_.subroutines[s.frameOf.id].frame;

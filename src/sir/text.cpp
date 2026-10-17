@@ -81,6 +81,9 @@ std::string operandText(const Design& d, const Operand& o) {
         case Operand::Kind::Text: return quoted(o.text);
         case Operand::Kind::Frame: return "%f" + std::to_string(o.id);
         case Operand::Kind::Subroutine:
+            // A watch in wait.event has its edge.
+            return (o.edge == Edge::Any ? "" : std::string(edgeName(o.edge)) + " ") + "@" +
+                   std::to_string(o.id);
         case Operand::Kind::Process: return "@" + std::to_string(o.id);
         case Operand::Kind::Type: return "!" + std::to_string(o.id);
         case Operand::Kind::Scope: return "#" + std::to_string(o.id);
@@ -95,7 +98,8 @@ std::string operandsText(const Design& d, const Instr& in) {
     const auto& ops = in.operands;
     for (std::size_t k = 0; k < ops.size(); ++k) {
         const Operand& o = ops[k];
-        if (in.op == Op::WaitEvent && o.kind == Operand::Kind::Subroutine) {
+        if (in.op == Op::WaitEvent && o.kind == Operand::Kind::Subroutine &&
+            o.id < d.subroutines.size() && d.subroutines[o.id].kind == SubroutineKind::Guard) {
             out += " iff " + operandText(d, o);
             continue;
         }

@@ -660,6 +660,49 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
     EXPECT_TRUE(mentions(verify(d), "reads another frame"));
 }
 
+TEST(Sir, WatchItemBelongsToTheWaiter) {
+    // @(posedge (clk & rst_n) iff rst_n): a watch, the item on the
+    // expression, and its guard read the waiting process's frame
+    // (SIR_SPEC.md 7.2).
+    Design d = calls();
+    for (const SubroutineKind kind : {SubroutineKind::Watch, SubroutineKind::Guard}) {
+        Subroutine w;
+        w.name = kind == SubroutineKind::Watch ? "caller.event0" : "caller.iff1";
+        w.kind = kind;
+        w.returnType = u4(1);
+        w.frameOf = {Owner::Kind::Process, 0};
+        w.loc = at(13);
+        w.numTemps = 1;
+        w.blocks.resize(1);
+        w.blocks[0].instrs = {
+            make(Op::Load, u4(1), 0, {Operand::slot(1)}, 13),
+            make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 13),
+        };
+        d.subroutines.push_back(std::move(w));
+    }
+    Operand item = Operand::subroutine(2);
+    item.edge = Edge::Pos;
+    d.processes[0].blocks[0].instrs[2] = make(
+        Op::WaitEvent, voidType(), kNone, {item, Operand::subroutine(3), Operand::block(1)}, 12);
+    expectClean(d);
+    EXPECT_NE(toText(d).find("wait.event posedge @2 iff @3, bb1"), std::string::npos);
+    EXPECT_NE(toText(d).find("\"caller.event0\" watch"), std::string::npos);
+
+    Design bad = d;
+    bad.subroutines[2].returnType = voidType();
+    EXPECT_TRUE(mentions(verify(bad), "a watch returns an integral value"));
+    bad = d;
+    bad.subroutines[2].frameOf = {Owner::Kind::Subroutine, 1};
+    EXPECT_TRUE(mentions(verify(bad), "watch @2 reads another frame"));
+    bad = d;  // a guard is no item
+    bad.processes[0].blocks[0].instrs[2] =
+        make(Op::WaitEvent, voidType(), kNone, {Operand::subroutine(3), Operand::block(1)}, 12);
+    EXPECT_TRUE(mentions(verify(bad), "events must be slot ranges or watches"));
+    bad = d;
+    bad.processes[0].blocks[0].instrs[0] = make(Op::Call, u4(1), 0, {Operand::subroutine(2)}, 12);
+    EXPECT_TRUE(mentions(verify(bad), "a watch is not called"));
+}
+
 TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
     // always @(posedge clk iff rst_n): the trigger's guard reads the
     // process's frame.
