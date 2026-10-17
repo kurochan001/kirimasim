@@ -55,12 +55,13 @@ PROC = [
 STATEMENTS = [
     ("cond_matches", "  int x = 5, y;\n", "y = «»x matches 5 ? 1 : 0;",
      "conditional operator with a pattern", False),
-    # Narrowed or cast, where slang records a constant (SIR_SPEC.md 6).
+    # Narrowed or cast, where slang v12.0 recorded a wrong constant (slang
+    # issue #2029, fixed in the pinned commit).
     ("cond_matches_narrowed", "  int x = 5;\n  logic y1;\n", "y1 = «»x matches 5 ? 1 : 0;",
      "conditional operator with a pattern", False),
     ("cond_matches_cast", "  int x = 5, y;\n", "y = 1'(«»x matches 5 ? 1 : 0);",
      "conditional operator with a pattern", False),
-    # slang folds a wildcard to the true side, and the &&& form like the rest
+    # A wildcard, which slang v12.0 folded to the true side, and the &&& form
     # (slang issue #2029).
     ("cond_matches_wildcard", "  int x = 5;\n  logic y1;\n", "y1 = «»x matches .* ? 0 : 2;",
      "conditional operator with a pattern", False),

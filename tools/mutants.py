@@ -411,10 +411,6 @@ MUTANTS = [
      "    if (conns.size() != prim.ports.size()) {\n"
      "        report(g.location, \"a UDP instance with an unconnected port\");",
      "    if (conns.size() != prim.ports.size()) {\n        (void)g;"),
-    ("front: slang's constant of a conditional operator with a pattern is used",
-     "src/front/lower_expr.cpp",
-     "if (cond.pattern != nullptr || untrustedConstant(*cond.expr)) return true;",
-     "if (untrustedConstant(*cond.expr)) return true;"),
     ("front: an alias of a part is left out silently", "src/front/lower.cpp",
      "report(sl, \"an alias of a part or a concatenation of nets\");", "(void)sl;"),
     ("front: a switch is left out silently", "src/front/lower.cpp",

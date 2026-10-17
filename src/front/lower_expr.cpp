@@ -163,17 +163,11 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
     return static_cast<double>(a);
 }
 
-/// System functions whose constant evaluation in slang is known to be wrong
-/// (SIR_SPEC.md 6): expressions that contain them are computed at run time,
-/// as are conditional operators with a pattern (SIR_SPEC.md 6) and
-/// conversions of a real to an integer, whose result kirimasim decides
-/// (VALUE_SEMANTICS.md 7.4: NaN and the infinities).
-constexpr std::string_view kUntrustedConstants[] = {
-    "$rtoi",  // negative values give 0 (slang issue #2023)
-};
-
-/// Whether an expression contains something whose slang constant is not used
-/// (kUntrustedConstants and the rest above).
+/// Whether an expression contains something whose slang constant is not
+/// used and that is computed at run time instead: a conversion of a real to
+/// an integer, whose result kirimasim decides (VALUE_SEMANTICS.md 7.4: NaN
+/// and the infinities). SIR_SPEC.md 6 lists the constants of slang known to
+/// be wrong; there are none now.
 bool untrustedConstant(const ast::Expression& e) {
     const auto any = [](std::span<const ast::Expression* const> es) {
         for (const ast::Expression* x : es)
@@ -181,11 +175,7 @@ bool untrustedConstant(const ast::Expression& e) {
         return false;
     };
     switch (e.kind) {
-        case ast::ExpressionKind::Call: {
-            const auto& c = e.as<ast::CallExpression>();
-            if (c.isSystemCall() && among(c.getSubroutineName(), kUntrustedConstants)) return true;
-            return any(c.arguments());
-        }
+        case ast::ExpressionKind::Call: return any(e.as<ast::CallExpression>().arguments());
         case ast::ExpressionKind::UnaryOp:
             return untrustedConstant(e.as<ast::UnaryExpression>().operand());
         case ast::ExpressionKind::BinaryOp: {
@@ -194,12 +184,8 @@ bool untrustedConstant(const ast::Expression& e) {
         }
         case ast::ExpressionKind::ConditionalOp: {
             const auto& c = e.as<ast::ConditionalExpression>();
-            for (const auto& cond : c.conditions) {
-                // slang folds the match of a value that is not constant: a
-                // failed match for a constant pattern, a match for .* (slang
-                // issue #2029; SIR_SPEC.md 6).
-                if (cond.pattern != nullptr || untrustedConstant(*cond.expr)) return true;
-            }
+            for (const auto& cond : c.conditions)
+                if (untrustedConstant(*cond.expr)) return true;
             return untrustedConstant(c.left()) || untrustedConstant(c.right());
         }
         case ast::ExpressionKind::Concatenation:

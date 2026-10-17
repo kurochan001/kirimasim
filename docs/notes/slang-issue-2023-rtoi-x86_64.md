@@ -179,3 +179,5 @@ objdump -d --no-show-raw-insn -C \
 ## 追記（2026-10-18）
 
 上流では、2026-10-17 にコミット 145b57c で直った。`(uint64_t)val.real()` を、slang 自身の変換 `SVInt::fromDouble(32, val.real(), true, false)`（丸めずに切り捨てる）に置き換えた。kirimasim が固定している slang v12.0 には入っていないので、SIR_SPEC.md の 6 節の回避策はそのまま残す。
+
+2026-10-18 に、kirimasim は slang を main のコミット b7f11c1（この修正を含む）に上げ、SIR_SPEC.md の 6 節の回避策と、ubsan の構成の slang への例外を外した。
