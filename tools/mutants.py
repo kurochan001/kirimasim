@@ -389,6 +389,10 @@ MUTANTS = [
      "    reportProgram(inst);\n", "    (void)inst;\n"),
     ("front: an anonymous program is not reported", "src/front/lower.cpp",
      "        report(s.location, \"anonymous program\");", "        (void)s;"),
+    ("front: an output argument converted to its actual's type is not seen as one",
+     "src/front/lower.cpp",
+     "        while (r->kind == ast::ExpressionKind::Conversion)\n"
+     "            r = &r->as<ast::ConversionExpression>().operand();\n", ""),
     ("front: a bit position is computed in 64 bits whatever the index's width",
      "src/front/lower_expr.cpp", "index.width <= 32 ? 64 : index.width + 32", "64"),
     ("vm: an element index is read from its low word only", "src/vm/vm.cpp",

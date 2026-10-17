@@ -34,6 +34,9 @@ set_tests_properties(tools/gen_select_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_edge_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_edge_matrix.py --check)
 set_tests_properties(tools/gen_edge_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_value_argument_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_value_argument_matrix.py --check)
+set_tests_properties(tools/gen_value_argument_matrix PROPERTIES LABELS Tools)
 
 add_test(NAME tools/gen_default_init_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_default_init_matrix.py --check)

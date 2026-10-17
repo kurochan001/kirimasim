@@ -68,6 +68,12 @@ bool isVariable(const ast::Symbol& s);
 std::vector<const ast::Expression*> patternElements(const ast::Expression& e);
 /// Whether e is an assignment pattern.
 bool isPattern(const ast::Expression& e);
+/// The lvalue an output or inout argument, or an output port connection,
+/// names. slang binds one as an assignment to the lvalue of the formal,
+/// an empty argument under the conversions to the lvalue's type; the copy
+/// back is that assignment (SIR_SPEC.md 8, 4.9.7). Anything else is
+/// returned as it is.
+const ast::Expression* outputPlace(const ast::Expression* e);
 
 /// An unpacked-array element access: the array (a variable, a net or a
 /// member of an unpacked structure) and the index expressions, outermost

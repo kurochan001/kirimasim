@@ -38,15 +38,6 @@ sir::Direction directionOf(ast::ArgumentDirection d) {
     return sir::Direction::Input;
 }
 
-/// The lvalue an output or inout actual argument names.
-const ast::Expression* actualPlace(const ast::Expression* arg) {
-    if (arg->kind == ast::ExpressionKind::Assignment) {
-        const auto& a = arg->as<ast::AssignmentExpression>();
-        if (a.isLValueArg()) return &a.left();
-    }
-    return arg;
-}
-
 }  // namespace
 
 sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
@@ -416,7 +407,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             Storage tmp = tempStorage(ft, sl);
             if (prm.dir != sir::Direction::Output) {
                 Stores stores;
-                assignAggregate(tmp, ft, *actualPlace(args[i]), stores, sl);
+                assignAggregate(tmp, ft, *outputPlace(args[i]), stores, sl);
                 flushStores(stores, false, sl);
             }
             for (std::uint32_t k = 0; k < count; ++k) {
@@ -428,7 +419,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                     ops.push_back(Operand::frame(leaf.id));
             }
             if (prm.dir != sir::Direction::Input) {
-                const std::optional<Storage> dst = storageOf(*actualPlace(args[i]), sl);
+                const std::optional<Storage> dst = storageOf(*outputPlace(args[i]), sl);
                 if (!dst) unsupported(sl, "this output or inout structure argument");
                 structOuts.emplace_back(*dst, tmp);
                 structOutTypes.push_back(&ft);
@@ -436,7 +427,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             continue;
         }
         if (prm.dir == sir::Direction::Ref || prm.dir == sir::Direction::ConstRef) {
-            ops.push_back(refOf(*actualPlace(args[i]), prm.dir == sir::Direction::ConstRef, sl).op);
+            ops.push_back(refOf(*outputPlace(args[i]), prm.dir == sir::Direction::ConstRef, sl).op);
             continue;
         }
         const sir::Subroutine& callee = design_.subroutines[id];
@@ -444,7 +435,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                                                      ? callee.frame[prm.frameVar].dims
                                                      : design_.slots[prm.slot].dims;
         if (!dims.empty()) {
-            ops.push_back(arrayArgument(*actualPlace(args[i]), prm, dims, sl));
+            ops.push_back(arrayArgument(*outputPlace(args[i]), prm, dims, sl));
             continue;
         }
         if (prm.dir == sir::Direction::Input) {
@@ -453,7 +444,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         }
         // An output or inout: a whole variable of the formal's type is
         // passed as it is; anything else through a frame variable.
-        const ast::Expression& place = *actualPlace(args[i]);
+        const ast::Expression& place = *outputPlace(args[i]);
         if (place.kind == ast::ExpressionKind::NamedValue) {
             const ast::Symbol& v = place.as<ast::NamedValueExpression>().symbol;
             if (const std::optional<sir::FrameVarId> f = findFrameVar(v)) {

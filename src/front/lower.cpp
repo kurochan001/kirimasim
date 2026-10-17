@@ -127,16 +127,6 @@ driveLevels(std::pair<std::optional<ast::DriveStrength>, std::optional<ast::Driv
     return {level(ds.second), level(ds.first)};  // slang gives (strength0, strength1)
 }
 
-/// The lvalue an output port connection names: slang binds it like an
-/// output argument, as an assignment whose left side is the lvalue.
-const ast::Expression* outputPlace(const ast::Expression* e) {
-    if (e->kind == ast::ExpressionKind::Assignment) {
-        const auto& a = e->as<ast::AssignmentExpression>();
-        if (a.isLValueArg()) return &a.left();
-    }
-    return e;
-}
-
 /// Whether an expression names a net, or a part or element of one, or
 /// holds one in a concatenation.
 bool namesNet(const ast::Expression& e) {
@@ -1946,6 +1936,17 @@ CompileResult compile(std::span<const std::string> args) {
     }
     result.success = result.verifyErrors.empty();
     return result;
+}
+
+const ast::Expression* outputPlace(const ast::Expression* e) {
+    if (e->kind == ast::ExpressionKind::Assignment) {
+        const auto& a = e->as<ast::AssignmentExpression>();
+        const ast::Expression* r = &a.right();
+        while (r->kind == ast::ExpressionKind::Conversion)
+            r = &r->as<ast::ConversionExpression>().operand();
+        if (r->kind == ast::ExpressionKind::EmptyArgument) return &a.left();
+    }
+    return e;
 }
 
 }  // namespace kirimasim::front
