@@ -20,6 +20,7 @@
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/w4ops.h"
+#include "kirimasim/kernel/wide.h"
 #include "kirimasim/sir/types.h"
 
 namespace kirimasim::vm {
@@ -467,13 +468,16 @@ public:
           strings_(ctx.strings()), counters_(ctx.counters()), options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
+        constOff_.reserve(d.constants.size());
         for (const sir::Constant& c : d.constants) {
+            constOff_.push_back(static_cast<std::uint32_t>(consts_.size()));
             if (c.type.kind == sir::TypeKind::String) {
                 consts_.push_back({strings_.intern(c.bytes), 0});
                 continue;
             }
-            consts_.push_back(
-                {c.aWords.empty() ? 0 : c.aWords[0], c.bWords.empty() ? 0 : c.bWords[0]});
+            for (std::uint32_t k = 0; k < chunksOf(c.type); ++k)
+                consts_.push_back(
+                    {k < c.aWords.size() ? c.aWords[k] : 0, k < c.bWords.size() ? c.bWords[k] : 0});
         }
         // Bodies: processes first, then subroutines (bodyBlocks).
         const std::size_t bodies = d.processes.size() + d.subroutines.size();
@@ -488,21 +492,32 @@ public:
             for (const sir::UdpRow& r : te.rows)
                 udpTables_[i].rows.push_back(kernel::compileUdpRow(r.inputs, r.state, r.output));
         }
+        // A value of more than 64 bits takes consecutive W4 chunks, the
+        // least significant first, like a slot element (kernel/wide.h). The
+        // frame variables come in order, one chunk each when narrow, and the
+        // elements of the arrays after them.
         layouts_.resize(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const auto& frame = bodyFrame(p);
             Layout& l = layouts_[p];
-            l.size = frame.size();
-            l.elements.assign(frame.size(), 0);
+            l.offset.assign(frame.size(), 0);
+            l.chunks.assign(frame.size(), 1);
+            l.size = 0;
+            for (std::size_t i = 0; i < frame.size(); ++i) {
+                const bool ref = frame[i].type.kind == sir::TypeKind::Ref;
+                l.chunks[i] = ref ? 1 : chunksOf(frame[i].type);
+                l.offset[i] = l.size;
+                l.size += frame[i].dims.empty() || ref ? l.chunks[i] : 1;
+            }
             for (std::size_t i = 0; i < frame.size(); ++i) {
                 if (frame[i].dims.empty() || frame[i].type.kind == sir::TypeKind::Ref) continue;
-                l.elements[i] = l.size;
-                l.size += sir::elementCount(frame[i]);
+                l.offset[i] = l.size;
+                l.size += sir::elementCount(frame[i]) * l.chunks[i];
             }
         }
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const auto& blocks = bodyBlocks(p);
-            const std::uint32_t n = bodyTemps(p);
+            const std::uint32_t n = numTemps(p);
             tempTypes_[p].resize(n);
             info_[p].resize(blocks.size());
             for (std::size_t b = 0; b < blocks.size(); ++b) {
@@ -518,6 +533,18 @@ public:
                         info_[p][b].back().driver = sched_.addDelayedDriver();
                 }
             }
+        }
+        // The temps of a body, one chunk each when narrow.
+        tempOff_.resize(bodies);
+        tempTotal_.assign(bodies, 0);
+        for (std::uint32_t p = 0; p < bodies; ++p) {
+            std::uint32_t at = 0;
+            tempOff_[p].resize(tempTypes_[p].size());
+            for (std::size_t t = 0; t < tempTypes_[p].size(); ++t) {
+                tempOff_[p][t] = at;
+                at += chunksOf(tempTypes_[p][t]);
+            }
+            tempTotal_[p] = at;
         }
     }
 
@@ -685,6 +712,11 @@ private:
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
     std::vector<W4> consts_;
+    std::vector<std::uint32_t> constOff_;  ///< By constant: its first chunk in consts_.
+    /// By body and temp: where the temp's chunks start above the body's
+    /// base; and by body, the chunks of all its temps.
+    std::vector<std::vector<std::uint32_t>> tempOff_;
+    std::vector<std::uint32_t> tempTotal_;
     std::vector<std::vector<sir::Type>> tempTypes_;          ///< [process][temp]
     std::vector<std::vector<std::vector<InstrInfo>>> info_;  ///< [process][block][instr]
     /// The temps of the running body and of the calls below it. Temps never
@@ -702,7 +734,10 @@ private:
     /// pair for each, by number, then the elements of each array in order.
     struct Layout {
         std::size_t size = 0;
-        std::vector<std::size_t> elements;  ///< By frame variable: an array's first element.
+        /// By frame variable: where its value starts, or an array's first
+        /// element; and the chunks of the value or of one element.
+        std::vector<std::size_t> offset;
+        std::vector<std::uint32_t> chunks;
     };
     std::vector<Layout> layouts_;              ///< By body.
     std::vector<kernel::UdpTable> udpTables_;  ///< By type-table row.
@@ -731,10 +766,16 @@ private:
         return s.frameOf.kind == sir::Owner::Kind::Process ? d_.processes[s.frameOf.id].frame
                                                            : d_.subroutines[s.frameOf.id].frame;
     }
-    std::uint32_t bodyTemps(std::uint32_t body) const {
+    std::uint32_t numTemps(std::uint32_t body) const {
         return isSubBody(body) ? subOf(body).numTemps : d_.processes[body].numTemps;
     }
-    W4& temp(sir::TempId id) { return tempStack_[act_.base + id]; }
+    /// The chunks a body's temps take on the temp stack.
+    std::uint32_t bodyTemps(std::uint32_t body) const { return tempTotal_[body]; }
+    W4& temp(sir::TempId id) { return tempStack_[act_.base + tempOff_[act_.body][id]]; }
+    /// The W4 chunks of a value of type t (kernel/wide.h).
+    static std::uint32_t chunksOf(sir::Type t) {
+        return sir::isIntegral(t) && t.width > 64 ? (t.width + 63) / 64 : 1;
+    }
     /// Enters a body: its temps above the current ones.
     void enter(Act a) {
         act_ = a;
@@ -752,7 +793,7 @@ private:
     /// and its arguments' values (SIR_SPEC.md 5.7).
     struct Deferred {
         sir::SubroutineId subroutine = 0;
-        std::vector<W4> args;
+        std::vector<std::vector<W4>> args;  ///< Each argument's chunks.
     };
     std::vector<Deferred> deferred_;
     std::vector<std::uint32_t> freeDeferred_;
@@ -905,9 +946,9 @@ private:
 
     W4 value(const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp: return tempStack_[act_.base + o.id];
-            case Operand::Kind::Const: return consts_[o.id];
-            case Operand::Kind::Frame: return (*act_.vars)[o.id];
+            case Operand::Kind::Temp: return tempStack_[act_.base + tempOff_[act_.body][o.id]];
+            case Operand::Kind::Const: return consts_[constOff_[o.id]];
+            case Operand::Kind::Frame: return (*act_.vars)[layouts_[act_.body].offset[o.id]];
             default: return {0, 0};
         }
     }
@@ -931,6 +972,101 @@ private:
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
         sched_.scheduleNba(f.kernelId, s, elem, lsb, width, buf, delay);
+    }
+
+    // Values of any width, in W4 chunks (kernel/wide.h). A two-state slot
+    // keeps a words only; its chunks have b 0.
+
+    /// Bits [lsb, lsb + width) (width 0: all) of a slot element.
+    void readSlotWide(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                      W4* out) const {
+        const kernel::SlotLayout& l = store_.layout(s);
+        if (width == 0) width = l.width;
+        const std::uint64_t* p = store_.element(s, elem);
+        const bool four = l.domain == kernel::Domain::Four;
+        if (l.domain == kernel::Domain::Real || l.domain == kernel::Domain::Handle) {
+            out[0] = {p[0], 0};
+            return;
+        }
+        for (std::uint32_t k = 0; k * 64 < width; ++k) {
+            const std::uint32_t n = width - k * 64 < 64 ? width - k * 64 : 64;
+            out[k] = {kernel::readField(p, four ? 2 : 1, lsb + k * 64, n),
+                      four ? kernel::readField(p + 1, 2, lsb + k * 64, n) : 0};
+        }
+    }
+
+    /// The chunks as the words of a slot element of that many bits.
+    static std::vector<std::uint64_t> slotWords(const W4* v, std::uint32_t chunks) {
+        std::vector<std::uint64_t> buf(std::size_t{2} * chunks);
+        for (std::size_t k = 0; k < chunks; ++k) {
+            buf[2 * k] = v[k].a;
+            buf[2 * k + 1] = v[k].b;
+        }
+        return buf;
+    }
+
+    /// Writes the bits [lsb, lsb + width) (width 0: all) of a slot element.
+    void writeSlotWide(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                       const W4* v) {
+        const kernel::SlotLayout& l = store_.layout(s);
+        const std::uint32_t w = width == 0 ? l.width : width;
+        if (l.domain != kernel::Domain::Four && l.domain != kernel::Domain::Two) {
+            writeSlot(s, elem, lsb, width, v[0]);
+            return;
+        }
+        const std::uint32_t c = (w + 63) / 64;
+        const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
+        sched_.write(s, elem, lsb, width, buf.data());
+    }
+
+    void nbaSlotWide(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                     std::uint32_t width, const W4* v, std::uint64_t delay = 0) {
+        const kernel::SlotLayout& l = store_.layout(s);
+        const std::uint32_t w = width == 0 ? l.width : width;
+        if (l.domain != kernel::Domain::Four && l.domain != kernel::Domain::Two) {
+            nbaSlot(f, s, elem, lsb, width, v[0], delay);
+            return;
+        }
+        const std::vector<std::uint64_t> buf =
+            packed(v, (w + 63) / 64, l.domain == kernel::Domain::Four);
+        sched_.scheduleNba(f.kernelId, s, elem, lsb, width, buf.data(), delay);
+    }
+
+    /// Chunks laid out like a slot element: a and b words interleaved when
+    /// four-state, a words only otherwise.
+    static std::vector<std::uint64_t> packed(const W4* v, std::uint32_t chunks, bool four) {
+        if (four) return slotWords(v, chunks);
+        std::vector<std::uint64_t> buf(chunks);
+        for (std::uint32_t k = 0; k < chunks; ++k)
+            buf[k] = v[k].a;
+        return buf;
+    }
+
+    /// Reads any value operand into `chunks` chunks: a temp, a constant, a
+    /// frame variable, or the range of a slot.
+    void readOperand(const Operand& o, W4* out, std::uint32_t chunks) const {
+        switch (o.kind) {
+            case Operand::Kind::Slot: readSlotWide(o.id, o.firstElem, o.lsb, o.width, out); return;
+            case Operand::Kind::Temp: {
+                const W4* p = &tempStack_[act_.base + tempOff_[act_.body][o.id]];
+                for (std::uint32_t k = 0; k < chunks; ++k)
+                    out[k] = p[k];
+                return;
+            }
+            case Operand::Kind::Const: {
+                const W4* p = &consts_[constOff_[o.id]];
+                for (std::uint32_t k = 0; k < chunks; ++k)
+                    out[k] = p[k];
+                return;
+            }
+            case Operand::Kind::Frame: {
+                const W4* p = &(*act_.vars)[layouts_[act_.body].offset[o.id]];
+                for (std::uint32_t k = 0; k < chunks; ++k)
+                    out[k] = p[k];
+                return;
+            }
+            default: out[0] = {0, 0}; return;
+        }
     }
 
     /// The element number of an unpacked-array access from the index
@@ -1108,11 +1244,14 @@ private:
         const Layout& l = layouts_[body];
         std::vector<W4> vars(l.size, W4{0, 0});
         for (std::size_t i = 0; i < frame.size(); ++i) {
-            if (isSubBody(body)) vars[i] = defaultValue(frame[i].type);
-            if (frame[i].dims.empty() || frame[i].type.kind == sir::TypeKind::Ref) continue;
+            const bool array = !frame[i].dims.empty() && frame[i].type.kind != sir::TypeKind::Ref;
+            if (!array) {
+                if (isSubBody(body)) fillDefault(&vars[l.offset[i]], frame[i].type);
+                continue;
+            }
             const std::uint64_t n = sir::elementCount(frame[i]);
             for (std::uint64_t e = 0; e < n; ++e)
-                vars[l.elements[i] + e] = defaultValue(frame[i].type);
+                fillDefault(&vars[l.offset[i] + e * l.chunks[i]], frame[i].type);
         }
         return vars;
     }
@@ -1133,10 +1272,14 @@ private:
         freeVarSets_.push_back(id);
     }
 
-    /// Element e of array frame variable fv of the running body.
+    /// Element e of array frame variable fv of the running body: its first
+    /// chunk.
     W4& frameElem(sir::FrameVarId fv, std::uint64_t e) {
-        return (*act_.vars)[layouts_[act_.body].elements[fv] + e];
+        const Layout& l = layouts_[act_.body];
+        return (*act_.vars)[l.offset[fv] + e * l.chunks[fv]];
     }
+    /// Frame variable fv of the running body: its first chunk.
+    W4& frameVar(sir::FrameVarId fv) { return (*act_.vars)[layouts_[act_.body].offset[fv]]; }
 
     static bool isArrayParam(const sir::Subroutine& s, const sir::Param& p, const sir::Design& d) {
         return p.frameVar != sir::kNone ? !s.frame[p.frameVar].dims.empty() &&
@@ -1148,41 +1291,45 @@ private:
     }
 
     /// The elements of an array argument, read in the running body: a run
-    /// of elements of a slot, or an array frame variable.
+    /// of elements of a slot, or an array frame variable; each element's
+    /// chunks in order.
     std::vector<W4> readArray(const Operand& o) {
         std::vector<W4> out;
         if (o.kind == Operand::Kind::Slot) {
+            const std::uint32_t c = chunksOf(d_.slots[o.id].type);
             const std::uint64_t n =
                 o.numElems != 0 ? o.numElems : sir::elementCount(d_.slots[o.id]);
+            out.resize(n * c);
             for (std::uint64_t e = 0; e < n; ++e)
-                out.push_back(readSlot(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0));
+                readSlotWide(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0, &out[e * c]);
             return out;
         }
-        const std::uint64_t n = sir::elementCount(bodyFrame(act_.body)[o.id]);
-        for (std::uint64_t e = 0; e < n; ++e)
-            out.push_back(frameElem(o.id, e));
+        const Layout& l = layouts_[act_.body];
+        const std::uint64_t n = sir::elementCount(bodyFrame(act_.body)[o.id]) * l.chunks[o.id];
+        for (std::uint64_t k = 0; k < n; ++k)
+            out.push_back((*act_.vars)[l.offset[o.id] + k]);
         return out;
     }
 
     /// What each argument passes in, read in the caller before anything is
     /// written: a ref, an array's elements, or a value (none for an
-    /// output).
+    /// output), as chunks.
     std::vector<std::vector<W4>> readArgs(const sir::Subroutine& s,
                                           const std::vector<Operand>& ops) {
         std::vector<std::vector<W4>> args(s.params.size());
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
             const Operand& o = ops[1 + i];
-            if (isRefParam(prm))
+            if (isRefParam(prm)) {
                 args[i].push_back(value(o));
-            else if (prm.dir == sir::Direction::Output)
+            } else if (prm.dir == sir::Direction::Output) {
                 continue;
-            else if (isArrayParam(s, prm, d_))
+            } else if (isArrayParam(s, prm, d_)) {
                 args[i] = readArray(o);
-            else
-                args[i].push_back(o.kind == Operand::Kind::Slot
-                                      ? readSlot(o.id, o.firstElem, o.lsb, o.width)
-                                      : value(o));
+            } else {
+                args[i].resize(chunksOf(prm.type));
+                readOperand(o, args[i].data(), chunksOf(prm.type));
+            }
         }
         return args;
     }
@@ -1191,42 +1338,43 @@ private:
     /// output keeps its value.
     void bindArgs(std::uint32_t body, const sir::Subroutine& s,
                   const std::vector<std::vector<W4>>& args, std::vector<W4>& vars) {
+        const Layout& l = layouts_[body];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
             if (args[i].empty()) continue;  // an output
             if (prm.frameVar == sir::kNone) {
-                for (std::size_t e = 0; e < args[i].size(); ++e)
-                    writeSlot(prm.slot, static_cast<std::uint32_t>(e), 0, 0, args[i][e]);
-            } else if (isArrayParam(s, prm, d_)) {
-                for (std::size_t e = 0; e < args[i].size(); ++e)
-                    vars[layouts_[body].elements[prm.frameVar] + e] = args[i][e];
+                const std::uint32_t c = chunksOf(d_.slots[prm.slot].type);
+                for (std::size_t e = 0; e * c < args[i].size(); ++e)
+                    writeSlotWide(prm.slot, static_cast<std::uint32_t>(e), 0, 0, &args[i][e * c]);
             } else {
-                vars[prm.frameVar] = args[i][0];
+                for (std::size_t k = 0; k < args[i].size(); ++k)
+                    vars[l.offset[prm.frameVar] + k] = args[i][k];
             }
         }
     }
 
-    /// The values of the outputs and inouts at the callee's end.
+    /// The values of the outputs and inouts at the callee's end, as chunks.
     std::vector<std::vector<W4>> readOuts(std::uint32_t body, const sir::Subroutine& s,
                                           const std::vector<W4>& vars) const {
+        const Layout& l = layouts_[body];
         std::vector<std::vector<W4>> outs(s.params.size());
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
             if (prm.dir == sir::Direction::Input || isRefParam(prm)) continue;
-            if (!isArrayParam(s, prm, d_)) {
-                outs[i].push_back(prm.frameVar != sir::kNone ? vars[prm.frameVar]
-                                                             : readSlot(prm.slot, 0, 0, 0));
+            if (prm.frameVar == sir::kNone) {
+                const sir::Slot& slot = d_.slots[prm.slot];
+                const std::uint32_t c = chunksOf(slot.type);
+                const std::uint64_t n = sir::elementCount(slot);
+                outs[i].resize(n * c);
+                for (std::uint64_t e = 0; e < n; ++e)
+                    readSlotWide(prm.slot, static_cast<std::uint32_t>(e), 0, 0, &outs[i][e * c]);
                 continue;
             }
-            if (prm.frameVar == sir::kNone) {
-                const std::uint64_t n = sir::elementCount(d_.slots[prm.slot]);
-                for (std::uint64_t e = 0; e < n; ++e)
-                    outs[i].push_back(readSlot(prm.slot, static_cast<std::uint32_t>(e), 0, 0));
-            } else {
-                const std::uint64_t n = sir::elementCount(s.frame[prm.frameVar]);
-                for (std::uint64_t e = 0; e < n; ++e)
-                    outs[i].push_back(vars[layouts_[body].elements[prm.frameVar] + e]);
-            }
+            const sir::FrameVar& fv = s.frame[prm.frameVar];
+            const std::uint64_t n =
+                (fv.dims.empty() ? 1 : sir::elementCount(fv)) * l.chunks[prm.frameVar];
+            for (std::uint64_t k = 0; k < n; ++k)
+                outs[i].push_back(vars[l.offset[prm.frameVar] + k]);
         }
         return outs;
     }
@@ -1236,22 +1384,23 @@ private:
     void writeOuts(const sir::Subroutine& s, const std::vector<Operand>& ops,
                    const std::vector<std::vector<W4>>& outs, std::vector<W4>& callerVars,
                    std::uint32_t callerBody) {
+        const Layout& l = layouts_[callerBody];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             if (outs[i].empty()) continue;
             const Operand& o = ops[1 + i];
-            if (!isArrayParam(s, s.params[i], d_)) {
-                if (o.kind == Operand::Kind::Slot)
-                    writeSlot(o.id, o.firstElem, o.lsb, o.width, outs[i][0]);
-                else
-                    callerVars[o.id] = outs[i][0];
+            const std::uint32_t c = chunksOf(s.params[i].type);
+            if (o.kind == Operand::Kind::Slot) {
+                if (!isArrayParam(s, s.params[i], d_)) {
+                    writeSlotWide(o.id, o.firstElem, o.lsb, o.width, outs[i].data());
+                    continue;
+                }
+                for (std::size_t e = 0; e * c < outs[i].size(); ++e)
+                    writeSlotWide(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0,
+                                  &outs[i][e * c]);
                 continue;
             }
-            for (std::size_t e = 0; e < outs[i].size(); ++e) {
-                if (o.kind == Operand::Kind::Slot)
-                    writeSlot(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0, outs[i][e]);
-                else
-                    callerVars[layouts_[callerBody].elements[o.id] + e] = outs[i][e];
-            }
+            for (std::size_t k = 0; k < outs[i].size(); ++k)
+                callerVars[l.offset[o.id] + k] = outs[i][k];
         }
     }
 
@@ -1719,6 +1868,19 @@ private:
     static W4 defaultValue(sir::Type t) {
         return sir::isFourState(t) ? kernel::allX(t.width) : W4{0, 0};
     }
+    /// The default of type t in its chunks.
+    static void fillDefault(W4* p, sir::Type t) {
+        if (chunksOf(t) == 1) {
+            *p = defaultValue(t);
+            return;
+        }
+        if (sir::isFourState(t)) {
+            kernel::wide::allX(p, t.width);
+        } else {
+            for (std::uint32_t k = 0; k < chunksOf(t); ++k)
+                p[k] = {0, 0};
+        }
+    }
 
     /// call: runs a function, or a task that does not wait, to its ret.
     /// Inputs and inouts are copied in, outputs and inouts copied back to
@@ -1762,14 +1924,16 @@ private:
 
     /// Runs function s, of input arguments only, with these values, for
     /// frame f (a deferred assertion's call, SIR_SPEC.md 5.7).
-    Exit callWith(Frame& f, sir::SubroutineId s, const std::vector<W4>& args,
+    Exit callWith(Frame& f, sir::SubroutineId s, const std::vector<std::vector<W4>>& args,
                   std::uint64_t& steps) {
         const sir::Subroutine& sub = d_.subroutines[s];
         const Act caller = act_;
         const std::uint32_t body = processCount() + s;
         std::vector<W4> vars = newVars(body);
+        const Layout& l = layouts_[body];
         for (std::size_t i = 0; i < sub.params.size() && i < args.size(); ++i)
-            vars[sub.params[i].frameVar] = args[i];
+            for (std::size_t k = 0; k < args[i].size(); ++k)
+                vars[l.offset[sub.params[i].frameVar] + k] = args[i][k];
         enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars)});
         W4 ret{0, 0};
         ++callDepth_;
@@ -2044,7 +2208,7 @@ private:
                 }
                 const std::size_t n = dims.size();
                 if (frame) {
-                    W4& cell = dims.empty() ? (*act_.vars)[ops[0].id] : frameElem(ops[0].id, e);
+                    W4& cell = dims.empty() ? frameVar(ops[0].id) : frameElem(ops[0].id, e);
                     cell = mergeBits(cell, bodyFrame(act_.body)[ops[0].id].type.width, v(n + 1),
                                      t(n + 1), v(n + 2), t(n + 2).width);
                     return true;
@@ -2098,7 +2262,7 @@ private:
                 if (fv.type.kind == sir::TypeKind::Ref) {
                     // A ref argument passed on, or an element of the array
                     // it refers to.
-                    W4 r = (*act_.vars)[o.id];
+                    W4 r = frameVar(o.id);
                     if (ops.size() > 1) {
                         const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
                         if (!el) {
@@ -2113,9 +2277,14 @@ private:
                     set(r);
                     return true;
                 }
-                std::size_t at = o.id;
+                // A ref steps through words, one per leaf or element, so it
+                // reaches values of at most 64 bits.
+                if (chunksOf(fv.type) != 1) {
+                    fail(p, "ref to a value wider than 64 bits");
+                    return false;
+                }
+                std::size_t at = layouts_[act_.body].offset[o.id];
                 if (!fv.dims.empty()) {
-                    at = layouts_[act_.body].elements[o.id];
                     if (ops.size() > 1) {
                         const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
                         if (!el) {
@@ -2159,7 +2328,7 @@ private:
             case Op::StoreRefElem:
             case Op::StoreRefBits: {
                 const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].id];
-                const W4 r = (*act_.vars)[ops[0].id];
+                const W4 r = frameVar(ops[0].id);
                 std::uint32_t e = 0;
                 if (!fv.dims.empty()) {
                     const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
@@ -2193,8 +2362,11 @@ private:
                 // The kernel runs or drops it (SCHEDULER_SPEC.md 15.2).
                 Deferred d;
                 d.subroutine = ops[1].id;
-                for (std::size_t i = 2; i < ops.size(); ++i)
-                    d.args.push_back(value(ops[i]));
+                for (std::size_t i = 2; i < ops.size(); ++i) {
+                    std::vector<W4> a(chunksOf(t(i)));
+                    readOperand(ops[i], a.data(), static_cast<std::uint32_t>(a.size()));
+                    d.args.push_back(std::move(a));
+                }
                 std::uint32_t token = 0;
                 if (!freeDeferred_.empty()) {
                     token = freeDeferred_.back();
@@ -2225,8 +2397,8 @@ private:
                 sched_.deferReport(f.kernelId, std::move(line));
                 return true;
             }
-            case Op::Fload: set((*act_.vars)[ops[0].id]); return true;
-            case Op::Fstore: (*act_.vars)[ops[0].id] = v(1); return true;
+            case Op::Fload: set(frameVar(ops[0].id)); return true;
+            case Op::Fstore: frameVar(ops[0].id) = v(1); return true;
             case Op::Add: set(kernel::add4(v(0), v(1), w)); return true;
             case Op::Sub: set(kernel::sub4(v(0), v(1), w)); return true;
             case Op::Mul: set(kernel::mul4(v(0), v(1), w)); return true;
@@ -2289,7 +2461,7 @@ private:
             }
             case Op::Partsel: {
                 const W4 x = v(0);
-                const auto s = static_cast<unsigned>(consts_[ops[1].id].a);
+                const auto s = static_cast<unsigned>(v(1).a);
                 set({(x.a >> s) & kernel::mask(w), (x.b >> s) & kernel::mask(w)});
                 return true;
             }
@@ -2680,7 +2852,7 @@ private:
                 scanValues_.clear();
                 n = kernel::scanString(input, ops[2].text, scanValues_);
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
-                    (*act_.vars)[ops[3 + i].id] = scanned(scanValues_[i], typeOf(ops[3 + i]));
+                    frameVar(ops[3 + i].id) = scanned(scanValues_[i], typeOf(ops[3 + i]));
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};
                 return true;
             }
@@ -2702,7 +2874,7 @@ private:
                 for (const std::string& a : options_.plusargs) {
                     if (!std::string_view(a).starts_with(name)) continue;
                     const kernel::ScanValue v = kernel::plusargValue(a.substr(name.size()), conv);
-                    (*act_.vars)[ops[2].id] = scanned(v, typeOf(ops[2]));
+                    frameVar(ops[2].id) = scanned(v, typeOf(ops[2]));
                     temp(in.result) = {1, 0};
                     break;
                 }
