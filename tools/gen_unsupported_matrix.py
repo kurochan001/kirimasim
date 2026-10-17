@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 7
+VERSION = 8
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -86,6 +86,13 @@ STATEMENTS = [
     ("iff_writes",
      "  logic s;\n  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
      "@(posedge s iff «»wr());", "iff condition that writes a variable or net", True),
+    # An event expression, like an iff condition, is evaluated in the middle
+    # of another write; a watch returns an integral value (SIR_SPEC.md 7.2).
+    ("event_expression_writes",
+     "  logic s;\n  int k;\n  function bit wr();\n    k++;\n    return s;\n  endfunction\n",
+     "@(posedge «»wr());", "event expression that writes a variable or net", True),
+    ("event_expression_real", "  real r;\n", "@(«»r + 1.0);",
+     "event control on an expression of this type", True),
     ("stream_into_string", "  string s;\n  bit [15:0] a = 16'h4142;\n", "s = «»{>>{a}};",
      "streaming into this target", False),
     ("unpack_into_string", "  string s;\n", "«»{>>{s}} = 16'h4142;", "unpacking this stream",
@@ -146,6 +153,10 @@ ITEMS = [
      "logic c, q, r;\n  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n"
      "  always @(posedge c iff «»wr()) q = 1'b1;\n  always_ff @(posedge c iff «»wr()) r <= 1'b1;",
      "iff condition that writes a variable or net"),
+    # always_ff keeps its event control as the process's triggers, which are
+    # slot ranges.
+    ("always_ff_expression", "logic c, d, q;\n  «»always_ff @(posedge (c & d)) q <= 1'b1;",
+     "always_ff with an event control on an expression"),
     ("switch_mos", "wire a, b, c;\n  nmos «»n1(a, b, c);", "switch 'nmos'"),
     ("switch_bidirectional", "wire a, b;\n  tran «»t1(a, b);", "switch 'tran'"),
 ]
