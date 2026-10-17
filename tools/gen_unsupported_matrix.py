@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 1
+VERSION = 2
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -59,6 +59,12 @@ STATEMENTS = [
     ("cond_matches_narrowed", "  int x = 5;\n  logic y1;\n", "y1 = «»x matches 5 ? 1 : 0;",
      "conditional operator with a pattern", False),
     ("cond_matches_cast", "  int x = 5, y;\n", "y = 1'(«»x matches 5 ? 1 : 0);",
+     "conditional operator with a pattern", False),
+    # slang folds a wildcard to the true side, and the &&& form like the rest
+    # (slang issue #2029).
+    ("cond_matches_wildcard", "  int x = 5;\n  logic y1;\n", "y1 = «»x matches .* ? 0 : 2;",
+     "conditional operator with a pattern", False),
+    ("cond_matches_and", "  int x = 5;\n  logic y1;\n", "y1 = «»x matches 5 &&& x == 5 ? 0 : 2;",
      "conditional operator with a pattern", False),
     ("if_matches", "  int x = 5, y;\n", "«»if (x matches 5) y = 1;", "if with a pattern", False),
     ("display_d_string", "  string s = \"ab\";\n", "$display(\"%d\", «»s);", "%d of a string",
