@@ -17,7 +17,8 @@ widening, narrowing and two-state conversion); the container (module
 variables, kept in slots, and automatic variables of a task, kept in its
 frame). A second module writes and reads a value through every place it
 can live: an unpacked array element, a packed structure member, a
-function's argument and result, a task's output, a nonblocking
+function's argument and result, a task's output, a ref to a whole
+array (its elements and a part at a run-time position), a nonblocking
 assignment to the whole and to a part, a continuous assignment, force and
 release, an input and an output port, and a part and a bit at a run-time
 position.
@@ -39,7 +40,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "wide_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 WIDTHS = [65, 100, 128, 200]
 
 
@@ -419,12 +420,26 @@ def places():
     poke(t[2]);
     y = t[2] ^ t[0] ^ ~t[1];
   endtask
+  task automatic arrref(ref logic [99:0] x[3], output logic [99:0] y);
+    logic [7:0] at;
+    at = 70;
+    x[1] = x[0] + 1;
+    x[2][at +: 8] = 8'h5a;
+    y = x[0] ^ x[1] ^ x[2];
+  endtask
+  task automatic arrauto(input logic [99:0] a0, output logic [99:0] y);
+    logic [99:0] t[3];
+    t[0] = a0;
+    t[2] = '0;
+    arrref(t, y);
+  endtask
   task automatic poke(ref logic [99:0] x);
     logic [7:0] at;
     at = 80;
     x[at +: 1] = ~x[at +: 1];
   endtask
   logic [127:0] w128;
+  logic [99:0] arr3[3];
   wire [99:0] rn;
   assign rn = a;
   assign rn = b;
@@ -477,6 +492,14 @@ def places():
     exp.append(f"places refauto {hexdigits(allx(w))}")
     st.append("bumpauto2(a, v); $display(\"places refauto2 %h\", v);")
     exp.append(f"places refauto2 {hexdigits(V(w, (a.a + 1) ^ (1 << 80)))}")
+    st.append("arr3[0] = a; arr3[2] = b; arrref(arr3, v);"
+              " $display(\"places arrref %h %h %h\", v, arr3[1], arr3[2]);")
+    a1 = (a.a + 1) & m
+    a2 = (b.a & ~(0xff << 70)) | (0x5a << 70)
+    exp.append(f"places arrref {hexdigits(V(w, a.a ^ a1 ^ a2))} {hexdigits(V(w, a1))} "
+               f"{hexdigits(V(w, a2))}")
+    st.append("arrauto(a, v); $display(\"places arrauto %h\", v);")
+    exp.append(f"places arrauto {hexdigits(V(w, a.a ^ a1 ^ (0x5a << 70)))}")
     st.append("v = a ** 3; $display(\"places pow %h\", v);")
     exp.append(f"places pow {hexdigits(V(w, a.a ** 3))}")
     st.append("k = 8'bx; v = k[0] ? a : b; $display(\"places selx %h\", v);")
