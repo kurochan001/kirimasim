@@ -44,6 +44,13 @@ initial join normal child report#0 sb=3 ch=0 gc=0 rp=3
 initial join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
 initial join normal child reportfinal sb=3 ch=0 gc=0 rp=3
 initial join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+initial join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+initial join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+initial join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+initial join_none disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+initial join_none disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+initial function disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+initial function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 task join normal child sb=3 ch=3 gc=0 rp=0
 task join normal grandchild sb=3 ch=3 gc=3 rp=0
 task join_any normal child sb=3 ch=3 gc=0 rp=0
@@ -106,6 +113,20 @@ task join normal child report#0 sb=3 ch=0 gc=0 rp=3
 task join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
 task join normal child reportfinal sb=3 ch=0 gc=0 rp=3
 task join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+task join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+task join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task join_none disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+task join_none disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task function disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+task function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task join disable_task@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task join_any disable_task@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+task join_any disable_task@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task join_none disable_task@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+task join_none disable_task@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+task function disable_task@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+task function disable_task@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 always join normal child sb=3 ch=3 gc=0 rp=0
 always join normal grandchild sb=3 ch=3 gc=3 rp=0
 always join_any normal child sb=3 ch=3 gc=0 rp=0
@@ -152,6 +173,13 @@ always join normal child report#0 sb=3 ch=0 gc=0 rp=3
 always join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
 always join normal child reportfinal sb=3 ch=0 gc=0 rp=3
 always join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+always join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+always join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+always join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+always join_none disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+always join_none disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+always function disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+always function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 branch join normal child sb=3 ch=3 gc=0 rp=0
 branch join normal grandchild sb=3 ch=3 gc=3 rp=0
 branch join_any normal child sb=3 ch=3 gc=0 rp=0
@@ -198,3 +226,10 @@ branch join normal child report#0 sb=3 ch=0 gc=0 rp=3
 branch join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
 branch join normal child reportfinal sb=3 ch=0 gc=0 rp=3
 branch join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+branch join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+branch join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+branch join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+branch join_none disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+branch join_none disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
+branch function disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
+branch function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3

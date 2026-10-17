@@ -26,10 +26,14 @@ container (an initial procedure, an automatic task, an always procedure,
 a fork branch). A disable ends every process started in what it ends,
 with their descendants, those of a finished child included (9.6.2, 9.6.3;
 SCHEDULER_SPEC.md 10.4, 10.5), so the grandchild never counts after a
-disable. wait fork waits only for
-the direct children (9.6.1). Further cases: a child that holds a deferred
-assertion report (#0 or final) and ends at once; the report is still
-confirmed and its action runs (16.4; SCHEDULER_SPEC.md 15).
+disable. wait fork waits only for the direct children (9.6.1). Further
+cases: a child that holds a deferred assertion report (#0 or final) and
+ends at once; the report is still confirmed and its action runs (16.4;
+SCHEDULER_SPEC.md 15). And a child started before the block or the task
+call (an elder, counting at time 5, el) is not started in it, so it goes
+on after a disable of the block or the task; children are told apart by
+their birth number, not by their place among the children kept
+(SCHEDULER_SPEC.md 10.8).
 
 tests/cli/run_cli_tests.py also runs the design with two counts and checks
 that proc.kept_peak (PERFORMANCE.md 3.2) does not grow with the count.
@@ -47,7 +51,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "sched"
 NAME = "process_lifetime"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 DEFAULT_N = 3
 ROUND = 6
 
@@ -59,38 +63,51 @@ CONTAINERS = ["initial", "task", "always", "branch"]
 
 
 def cases():
-    """(container, join, end, time, grandchild, report) for every case."""
+    """(container, join, end, time, grandchild, report, elder) for every case."""
     out = []
     for c in CONTAINERS:
         ends = ["normal", "disable fork", "disable block"] + (["disable task"] if c == "task" else [])
         for end, join, gc in itertools.product(ends, JOINS, [False, True]):
             times = [None] if end == "normal" else [t for t in (2, 4) if t > JOINS[join]]
             for t in times:
-                out.append((c, join, end, t, gc, None))
+                out.append((c, join, end, t, gc, None, False))
         for report, join in itertools.product(["#0", "final"], ["join", "join_none"]):
-            out.append((c, join, "normal", None, False, report))
+            out.append((c, join, "normal", None, False, report, False))
+        # An elder child goes on after a disable of a block or a task (wait
+        # fork would wait for it, so not with it).
+        for end in ["disable block"] + (["disable task"] if c == "task" else []):
+            for join in [j for j in JOINS if j != "join_none wait fork"]:
+                for t in [t for t in (2, 4) if t > JOINS[join]]:
+                    out.append((c, join, end, t, False, None, True))
     return out
 
 
 def label(case):
-    c, join, end, t, gc, report = case
+    c, join, end, t, gc, report, elder = case
     parts = [c, join.replace(" ", "+"), end.replace(" ", "_") + (f"@{t}" if t else "")]
     parts.append("grandchild" if gc else "child")
     if report:
         parts.append(f"report{report}")
+    if elder:
+        parts.append("elder")
     return " ".join(parts)
 
 
 def expected(case, n):
-    c, join, end, t, gc, report = case
+    c, join, end, t, gc, report, elder = case
     ch = 0 if report or t == 2 else n
     return (f"{label(case)} sb={n} ch={ch} gc={n if gc and end == 'normal' else 0} "
-            f"rp={n if report else 0}")
+            f"rp={n if report else 0}" + (f" el={n}" if elder else ""))
+
+
+def elder_lines(k, pad):
+    """A child started before the block or the task call."""
+    return [f"{pad}fork", f"{pad}  #5 el[{k}]++;", f"{pad}join_none"]
 
 
 def fork_lines(k, case, pad, join):
     """The fork that starts the child and the sibling."""
-    c, _, end, t, gc, report = case
+    c, _, end, t, gc, report, elder = case
     lines = [f"{pad}fork", f"{pad}  begin"]
     if report:
         lines.append(f"{pad}    assert {report} (sb[{k}] >= 0) note({k});")
@@ -105,10 +122,12 @@ def fork_lines(k, case, pad, join):
 def round_body(k, case, pad):
     """One round of case k; in a task container with "disable task" the
     caller waits for the rest of the round."""
-    c, join, end, t, gc, report = case
+    c, join, end, t, gc, report, elder = case
     r = 0 if report and join == "join_none" else 1 if report else JOINS[join]
     lines = []
     inner = pad
+    if elder and end == "disable block":
+        lines += elder_lines(k, pad)
     if end == "disable block":
         lines.append(f"{pad}begin : blk{k}")
         inner = pad + "  "
@@ -157,6 +176,7 @@ def files():
         "module top;",
         "  int n;",
         f"  int sb[{nc}], ch[{nc}], gc[{nc}], rp[{nc}];",
+        f"  int el[{nc}];",
         "  function void note(int k);",
         "    rp[k] = rp[k] + 1;",
         "  endfunction",
@@ -165,7 +185,7 @@ def files():
             f"    if (!$value$plusargs(\"n=%d\", n)) n = {DEFAULT_N};",
             "    #1;"]
     for k, case in enumerate(all_cases):
-        c, join, end, t, gc, report = case
+        c, join, end, t, gc, report, elder = case
         if join == "function":
             sv.append(f"  function automatic void start{k}();")
             sv += fork_lines(k, case, "    ", "join_none")
@@ -175,6 +195,8 @@ def files():
             sv += round_body(k, case, "    ")
             sv.append("  endtask")
             main.append(f"    for (int i = 0; i < n; i++) begin")
+            if elder and end == "disable task":
+                main += elder_lines(k, "      ")
             main.append(f"      round{k}();")
             if end == "disable task":
                 main.append(f"      #{ROUND - t};")
@@ -197,8 +219,9 @@ def files():
             main += round_body(k, case, "      ")
             main.append("    end")
     for k, case in enumerate(all_cases):
-        main.append(f"    $display(\"{label(case)} sb=%0d ch=%0d gc=%0d rp=%0d\", "
-                    f"sb[{k}], ch[{k}], gc[{k}], rp[{k}]);")
+        el = (" el=%0d", f", el[{k}]") if case[6] else ("", "")
+        main.append(f"    $display(\"{label(case)} sb=%0d ch=%0d gc=%0d rp=%0d{el[0]}\", "
+                    f"sb[{k}], ch[{k}], gc[{k}], rp[{k}]{el[1]});")
     main.append("  end")
     sv += main
     sv.append("endmodule")
