@@ -5,8 +5,10 @@
 
 #include <bit>
 #include <cstdint>
-#include <functional>
+#include <optional>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -40,8 +42,8 @@ enum : ConstId { c5, c2, c6, cReal, cString, cTrue };
 // Frame variables of the playground process.
 enum : FrameVarId { fV, fRef, fRefArr, fRefReal };
 
-Slot slot(std::string name, Type t, std::vector<ArrayDim> dims = {},
-          SlotKind kind = SlotKind::Var, std::uint32_t flags = 0) {
+Slot slot(std::string name, Type t, std::vector<ArrayDim> dims = {}, SlotKind kind = SlotKind::Var,
+          std::uint32_t flags = 0) {
     Slot s;
     s.name = std::move(name);
     s.type = t;
@@ -70,12 +72,9 @@ Design playground() {
                slot("top.f", u4(8), {}, SlotKind::Var, kForceTarget)};
     for (SlotId s = 0; s < d.slots.size(); ++s)
         d.names.push_back({d.slots[s].name, s});
-    d.constants = {{u4(8), {5}, {0}},
-                   {u2(32), {2}, {}},
-                   {u2(32), {6}, {}},
-                   {kReal, {std::bit_cast<std::uint64_t>(1.5)}, {}},
-                   {kString, {}, {}, "x"},
-                   {u2(1), {1}, {}}};
+    d.constants = {{u4(8), {5}, {0}},      {u2(32), {2}, {}},
+                   {u2(32), {6}, {}},      {kReal, {std::bit_cast<std::uint64_t>(1.5)}, {}},
+                   {kString, {}, {}, "x"}, {u2(1), {1}, {}}};
     TypeEntry udp;
     udp.kind = TypeEntryKind::Udp;
     udp.name = "and2";
@@ -128,21 +127,33 @@ Design playground() {
                   make(Op::Load, u2(8), tB, {Operand::slot(sB)}),
                   make(Op::Load, kReal, tR, {Operand::slot(sR)}),
                   make(Op::Load, kString, tS, {Operand::slot(sS)}),
-                  make(Op::Load, u4(1), tBit, {Operand::slot(sBit)}),
-                  none(Op::Ret, {})}}};
+                  make(Op::Load, u4(1), tBit, {Operand::slot(sBit)}), none(Op::Ret, {})}}};
     d.processes.push_back(p);
     return d;
 }
 
-using Change = std::function<void(Design&)>;
+/// What a case changes in the playground: an instruction added before the
+/// ret of block 0, or an edit. (Edits capture nothing, so that copying a
+/// case copies no instruction inside a closure.)
+struct Change {
+    Change(Instr in) : instr(std::move(in)) {}
+    template <typename F>
+        requires std::is_convertible_v<F, void (*)(Design&)>
+    Change(F f) : edit(f) {}
 
-/// Adds an instruction before the ret of the playground's block 0.
-Change add(Instr in) {
-    return [in](Design& d) {
-        auto& instrs = d.processes[0].blocks[0].instrs;
-        instrs.insert(instrs.end() - 1, in);
-    };
-}
+    void apply(Design& d) const {
+        if (edit != nullptr) edit(d);
+        if (instr) {
+            auto& instrs = d.processes[0].blocks[0].instrs;
+            instrs.insert(instrs.end() - 1, *instr);
+        }
+    }
+
+    std::optional<Instr> instr;
+    void (*edit)(Design&) = nullptr;
+};
+
+Change add(Instr in) { return {std::move(in)}; }
 
 struct Case {
     const char* name;
@@ -150,20 +161,20 @@ struct Case {
     Change change;
 };
 
-const Operand A = Operand::temp(tA), B = Operand::temp(tB), R = Operand::temp(tR),
-              S = Operand::temp(tS), Bit = Operand::temp(tBit);
-const Operand C5 = Operand::constant(c5), C2 = Operand::constant(c2),
-              C6 = Operand::constant(c6);
 constexpr TempId N = tFree;
 
 std::vector<Case> cases() {
+    const Operand A = Operand::temp(tA), B = Operand::temp(tB), R = Operand::temp(tR),
+                  S = Operand::temp(tS), Bit = Operand::temp(tBit);
+    const Operand C5 = Operand::constant(c5), C2 = Operand::constant(c2),
+                  C6 = Operand::constant(c6);
     return {
         // Instructions: the operands each opcode takes (SIR_SPEC.md 5, 7).
         {"source file", "source file out of range",
          [](Design& d) {
-             Instr in = none(Op::Store, {Operand::slot(sA), A});
+             Instr in = none(Op::Store, {Operand::slot(sA), Operand::temp(tA)});
              in.loc.file = 9;
-             add(in)(d);
+             add(in).apply(d);
          }},
         {"result without type", "result and result type must come together",
          add(make(Op::Add, voidType(), N, {A, A}))},
@@ -223,8 +234,7 @@ std::vector<Case> cases() {
          add(make(Op::MatchMask, u2(1), N, {A, B, Operand::str("casez")}))},
         {"ceq types", "operands must have one type", add(make(Op::Ceq, u2(1), N, {A, B}))},
         {"ceq result", "result must be i2<1>", add(make(Op::Ceq, u4(1), N, {A, A}))},
-        {"truth of a string",
-         "needs an integral, real or chandle operand and a 1-bit result",
+        {"truth of a string", "needs an integral, real or chandle operand and a 1-bit result",
          add(make(Op::Truth, u4(1), N, {S}))},
         {"ror of a real", "needs an integral operand and a 1-bit result in its domain",
          add(make(Op::Ror, u4(1), N, {R}))},
@@ -239,8 +249,7 @@ std::vector<Case> cases() {
          add(make(Op::Bitsel, u4(8), N, {A, C2}))},
         {"partsel position", "needs an integral value, a constant position and a narrower",
          add(make(Op::Partsel, u4(4), N, {A, A}))},
-        {"partsel outside", "part is outside the value",
-         add(make(Op::Partsel, u4(4), N, {A, C6}))},
+        {"partsel outside", "part is outside the value", add(make(Op::Partsel, u4(4), N, {A, C6}))},
         {"idx.partsel", "needs an integral value and position and an unsigned result",
          add(make(Op::IdxPartsel, u4(4), N, {A, R}))},
         {"concat", "needs at least one operand", add(make(Op::Concat, u4(8), N, {}))},
@@ -260,7 +269,8 @@ std::vector<Case> cases() {
         {"rtoi", "must convert a real to an integral value", add(make(Op::Rtoi, u4(8), N, {A}))},
         {"rconv", "must convert between real and shortreal",
          add(make(Op::Rconv, kShortReal, N, {A}))},
-        {"itos", "must convert an integral value to a string", add(make(Op::Itos, kString, N, {R}))},
+        {"itos", "must convert an integral value to a string",
+         add(make(Op::Itos, kString, N, {R}))},
         {"stoi", "must convert a string to an integral value", add(make(Op::Stoi, u4(8), N, {A}))},
         {"str.get", "needs a string and an index, and gives a two-state byte",
          add(make(Op::StrGet, u4(8), N, {S, C2}))},
@@ -270,8 +280,7 @@ std::vector<Case> cases() {
         {"disable", "needs a process, a subroutine or a block name", add(none(Op::Disable, {A}))},
         {"scope.enter", "needs a scope and its exit block", add(none(Op::ScopeEnter, {A, A}))},
         {"scope.leave", "needs a scope", add(none(Op::ScopeLeave, {A}))},
-        {"disable.task", "needs a task",
-         add(none(Op::DisableTask, {Operand::subroutine(0)}))},
+        {"disable.task", "needs a task", add(none(Op::DisableTask, {Operand::subroutine(0)}))},
         {"strobe", "needs a postponed process", add(none(Op::Strobe, {A}))},
         {"udp inputs", "needs one value per input",
          add(make(Op::Udp, u4(1), N, {Operand::typeRow(0), Bit}))},
@@ -373,8 +382,7 @@ std::vector<Case> cases() {
          [](Design& d) { d.constants.push_back({kShortReal, {std::uint64_t{1} << 40}, {}}); }},
         {"void constant", "constant has no value type",
          [](Design& d) { d.constants.push_back({voidType(), {}, {}}); }},
-        {"b words", "wrong number of b words",
-         [](Design& d) { d.constants[c5].bWords = {0, 0}; }},
+        {"b words", "wrong number of b words", [](Design& d) { d.constants[c5].bWords = {0, 0}; }},
         {"task value", "a task returns no value",
          [](Design& d) { d.subroutines[1].returnType = u4(8); }},
         {"guard owner", "a guard needs the process or subroutine whose frame it reads",
@@ -407,8 +415,7 @@ std::vector<Case> cases() {
          }},
         {"no blocks", "has no blocks", [](Design& d) { d.subroutines[0].blocks.clear(); }},
         {"branch target", "branch target out of range", add(none(Op::Br, {Operand::block(9)}))},
-        {"temp range", "out of range",
-         add(make(Op::Add, u4(8), 99, {A, A}))},
+        {"temp range", "out of range", add(make(Op::Add, u4(8), 99, {A, A}))},
     };
 }
 
@@ -427,7 +434,7 @@ TEST(VerifyMatrix, PlaygroundVerifies) {
 TEST(VerifyMatrix, EveryCheckFires) {
     for (const Case& c : cases()) {
         Design d = playground();
-        c.change(d);
+        c.change.apply(d);
         const auto errors = verify(d);
         bool found = false;
         for (const auto& e : errors)
