@@ -16,7 +16,8 @@ The axes: the transition of what is waited on (0 to 1, 1 to 0, 0 to x, 1
 to z, no change); the value of the condition's variable (0, 1, x); the
 kind of item (posedge, negedge, edge, any change, and `posedge iff c or
 negedge iff !(c)`); the condition (a variable, its negation, a call of an
-automatic function); what is waited on (a variable, a bit-select, a net
+automatic function, and of a static function, whose argument several
+always_ff then write); what is waited on (a variable, a bit-select, a net
 driven by a continuous assignment); the container (always, always_ff,
 an always that waits inside, a forever loop in an initial procedure, in
 an automatic task whose condition reads a ref argument, in a fork branch,
@@ -42,7 +43,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "sched"
 NAME = "iff_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 TRANSITIONS = ["01", "10", "0x", "1z", "11"]
 ENABLES = "01x"
@@ -61,6 +62,7 @@ CONDS = [
     ("en", "{e}", lambda e: e == "1"),
     ("nen", "!{e}", lambda e: e == "0"),
     ("fn", "f({e})", lambda e: e == "1"),
+    ("sfn", "sf({e})", lambda e: e == "1"),
 ]
 # (name, the expression waited on, how a step drives it with {v})
 SOURCES = [
@@ -146,6 +148,9 @@ def files():
         "  assign w = n;",
         f"  int cnt[0:{k - 1}], base[0:{k - 1}];",
         "  function automatic logic f(logic a);",
+        "    return a;",
+        "  endfunction",
+        "  function logic sf(logic a);",
         "    return a;",
         "  endfunction",
     ]

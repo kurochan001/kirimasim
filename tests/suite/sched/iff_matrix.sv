@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: yes
 :nondeterministic: no
-:generator: gen_iff_matrix.py@1
+:generator: gen_iff_matrix.py@2
 :top_module: top
 :expected_stdout: @iff_matrix.expected
 */
@@ -19,8 +19,11 @@ module top;
   logic [3:0] b;
   wire w;
   assign w = n;
-  int cnt[0:321], base[0:321];
+  int cnt[0:426], base[0:426];
   function automatic logic f(logic a);
+    return a;
+  endfunction
+  function logic sf(logic a);
     return a;
   endfunction
   always @(posedge s iff en) cnt[0]++;
@@ -38,543 +41,723 @@ module top;
   always @(edge s iff f(en)) cnt[12]++;
   always @(s iff f(en)) cnt[13]++;
   always @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[14]++;
-  always_ff @(posedge s iff en) cnt[15]++;
-  always_ff @(negedge s iff en) cnt[16]++;
-  always_ff @(edge s iff en) cnt[17]++;
-  always_ff @(s iff en) cnt[18]++;
-  always_ff @(posedge s iff en or negedge s iff !(en)) cnt[19]++;
-  always_ff @(posedge s iff !en) cnt[20]++;
-  always_ff @(negedge s iff !en) cnt[21]++;
-  always_ff @(edge s iff !en) cnt[22]++;
-  always_ff @(s iff !en) cnt[23]++;
-  always_ff @(posedge s iff !en or negedge s iff !(!en)) cnt[24]++;
-  always_ff @(posedge s iff f(en)) cnt[25]++;
-  always_ff @(negedge s iff f(en)) cnt[26]++;
-  always_ff @(edge s iff f(en)) cnt[27]++;
-  always_ff @(s iff f(en)) cnt[28]++;
-  always_ff @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[29]++;
-  always begin @(posedge s iff en); cnt[30]++; end
-  always begin @(negedge s iff en); cnt[31]++; end
-  always begin @(edge s iff en); cnt[32]++; end
-  always begin @(s iff en); cnt[33]++; end
-  always begin @(posedge s iff en or negedge s iff !(en)); cnt[34]++; end
-  always begin @(posedge s iff !en); cnt[35]++; end
-  always begin @(negedge s iff !en); cnt[36]++; end
-  always begin @(edge s iff !en); cnt[37]++; end
-  always begin @(s iff !en); cnt[38]++; end
-  always begin @(posedge s iff !en or negedge s iff !(!en)); cnt[39]++; end
-  always begin @(posedge s iff f(en)); cnt[40]++; end
-  always begin @(negedge s iff f(en)); cnt[41]++; end
-  always begin @(edge s iff f(en)); cnt[42]++; end
-  always begin @(s iff f(en)); cnt[43]++; end
-  always begin @(posedge s iff f(en) or negedge s iff !(f(en))); cnt[44]++; end
-  initial forever @(posedge s iff en) cnt[45]++;
-  initial forever @(negedge s iff en) cnt[46]++;
-  initial forever @(edge s iff en) cnt[47]++;
-  initial forever @(s iff en) cnt[48]++;
-  initial forever @(posedge s iff en or negedge s iff !(en)) cnt[49]++;
-  initial forever @(posedge s iff !en) cnt[50]++;
-  initial forever @(negedge s iff !en) cnt[51]++;
-  initial forever @(edge s iff !en) cnt[52]++;
-  initial forever @(s iff !en) cnt[53]++;
-  initial forever @(posedge s iff !en or negedge s iff !(!en)) cnt[54]++;
-  initial forever @(posedge s iff f(en)) cnt[55]++;
-  initial forever @(negedge s iff f(en)) cnt[56]++;
-  initial forever @(edge s iff f(en)) cnt[57]++;
-  initial forever @(s iff f(en)) cnt[58]++;
-  initial forever @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[59]++;
-  task automatic t60(ref logic e);
-    forever @(posedge s iff e) cnt[60]++;
+  always @(posedge s iff sf(en)) cnt[15]++;
+  always @(negedge s iff sf(en)) cnt[16]++;
+  always @(edge s iff sf(en)) cnt[17]++;
+  always @(s iff sf(en)) cnt[18]++;
+  always @(posedge s iff sf(en) or negedge s iff !(sf(en))) cnt[19]++;
+  always_ff @(posedge s iff en) cnt[20]++;
+  always_ff @(negedge s iff en) cnt[21]++;
+  always_ff @(edge s iff en) cnt[22]++;
+  always_ff @(s iff en) cnt[23]++;
+  always_ff @(posedge s iff en or negedge s iff !(en)) cnt[24]++;
+  always_ff @(posedge s iff !en) cnt[25]++;
+  always_ff @(negedge s iff !en) cnt[26]++;
+  always_ff @(edge s iff !en) cnt[27]++;
+  always_ff @(s iff !en) cnt[28]++;
+  always_ff @(posedge s iff !en or negedge s iff !(!en)) cnt[29]++;
+  always_ff @(posedge s iff f(en)) cnt[30]++;
+  always_ff @(negedge s iff f(en)) cnt[31]++;
+  always_ff @(edge s iff f(en)) cnt[32]++;
+  always_ff @(s iff f(en)) cnt[33]++;
+  always_ff @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[34]++;
+  always_ff @(posedge s iff sf(en)) cnt[35]++;
+  always_ff @(negedge s iff sf(en)) cnt[36]++;
+  always_ff @(edge s iff sf(en)) cnt[37]++;
+  always_ff @(s iff sf(en)) cnt[38]++;
+  always_ff @(posedge s iff sf(en) or negedge s iff !(sf(en))) cnt[39]++;
+  always begin @(posedge s iff en); cnt[40]++; end
+  always begin @(negedge s iff en); cnt[41]++; end
+  always begin @(edge s iff en); cnt[42]++; end
+  always begin @(s iff en); cnt[43]++; end
+  always begin @(posedge s iff en or negedge s iff !(en)); cnt[44]++; end
+  always begin @(posedge s iff !en); cnt[45]++; end
+  always begin @(negedge s iff !en); cnt[46]++; end
+  always begin @(edge s iff !en); cnt[47]++; end
+  always begin @(s iff !en); cnt[48]++; end
+  always begin @(posedge s iff !en or negedge s iff !(!en)); cnt[49]++; end
+  always begin @(posedge s iff f(en)); cnt[50]++; end
+  always begin @(negedge s iff f(en)); cnt[51]++; end
+  always begin @(edge s iff f(en)); cnt[52]++; end
+  always begin @(s iff f(en)); cnt[53]++; end
+  always begin @(posedge s iff f(en) or negedge s iff !(f(en))); cnt[54]++; end
+  always begin @(posedge s iff sf(en)); cnt[55]++; end
+  always begin @(negedge s iff sf(en)); cnt[56]++; end
+  always begin @(edge s iff sf(en)); cnt[57]++; end
+  always begin @(s iff sf(en)); cnt[58]++; end
+  always begin @(posedge s iff sf(en) or negedge s iff !(sf(en))); cnt[59]++; end
+  initial forever @(posedge s iff en) cnt[60]++;
+  initial forever @(negedge s iff en) cnt[61]++;
+  initial forever @(edge s iff en) cnt[62]++;
+  initial forever @(s iff en) cnt[63]++;
+  initial forever @(posedge s iff en or negedge s iff !(en)) cnt[64]++;
+  initial forever @(posedge s iff !en) cnt[65]++;
+  initial forever @(negedge s iff !en) cnt[66]++;
+  initial forever @(edge s iff !en) cnt[67]++;
+  initial forever @(s iff !en) cnt[68]++;
+  initial forever @(posedge s iff !en or negedge s iff !(!en)) cnt[69]++;
+  initial forever @(posedge s iff f(en)) cnt[70]++;
+  initial forever @(negedge s iff f(en)) cnt[71]++;
+  initial forever @(edge s iff f(en)) cnt[72]++;
+  initial forever @(s iff f(en)) cnt[73]++;
+  initial forever @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[74]++;
+  initial forever @(posedge s iff sf(en)) cnt[75]++;
+  initial forever @(negedge s iff sf(en)) cnt[76]++;
+  initial forever @(edge s iff sf(en)) cnt[77]++;
+  initial forever @(s iff sf(en)) cnt[78]++;
+  initial forever @(posedge s iff sf(en) or negedge s iff !(sf(en))) cnt[79]++;
+  task automatic t80(ref logic e);
+    forever @(posedge s iff e) cnt[80]++;
   endtask
-  initial t60(en);
-  task automatic t61(ref logic e);
-    forever @(negedge s iff e) cnt[61]++;
+  initial t80(en);
+  task automatic t81(ref logic e);
+    forever @(negedge s iff e) cnt[81]++;
   endtask
-  initial t61(en);
-  task automatic t62(ref logic e);
-    forever @(edge s iff e) cnt[62]++;
+  initial t81(en);
+  task automatic t82(ref logic e);
+    forever @(edge s iff e) cnt[82]++;
   endtask
-  initial t62(en);
-  task automatic t63(ref logic e);
-    forever @(s iff e) cnt[63]++;
+  initial t82(en);
+  task automatic t83(ref logic e);
+    forever @(s iff e) cnt[83]++;
   endtask
-  initial t63(en);
-  task automatic t64(ref logic e);
-    forever @(posedge s iff e or negedge s iff !(e)) cnt[64]++;
+  initial t83(en);
+  task automatic t84(ref logic e);
+    forever @(posedge s iff e or negedge s iff !(e)) cnt[84]++;
   endtask
-  initial t64(en);
-  task automatic t65(ref logic e);
-    forever @(posedge s iff !e) cnt[65]++;
+  initial t84(en);
+  task automatic t85(ref logic e);
+    forever @(posedge s iff !e) cnt[85]++;
   endtask
-  initial t65(en);
-  task automatic t66(ref logic e);
-    forever @(negedge s iff !e) cnt[66]++;
+  initial t85(en);
+  task automatic t86(ref logic e);
+    forever @(negedge s iff !e) cnt[86]++;
   endtask
-  initial t66(en);
-  task automatic t67(ref logic e);
-    forever @(edge s iff !e) cnt[67]++;
+  initial t86(en);
+  task automatic t87(ref logic e);
+    forever @(edge s iff !e) cnt[87]++;
   endtask
-  initial t67(en);
-  task automatic t68(ref logic e);
-    forever @(s iff !e) cnt[68]++;
+  initial t87(en);
+  task automatic t88(ref logic e);
+    forever @(s iff !e) cnt[88]++;
   endtask
-  initial t68(en);
-  task automatic t69(ref logic e);
-    forever @(posedge s iff !e or negedge s iff !(!e)) cnt[69]++;
+  initial t88(en);
+  task automatic t89(ref logic e);
+    forever @(posedge s iff !e or negedge s iff !(!e)) cnt[89]++;
   endtask
-  initial t69(en);
-  task automatic t70(ref logic e);
-    forever @(posedge s iff f(e)) cnt[70]++;
+  initial t89(en);
+  task automatic t90(ref logic e);
+    forever @(posedge s iff f(e)) cnt[90]++;
   endtask
-  initial t70(en);
-  task automatic t71(ref logic e);
-    forever @(negedge s iff f(e)) cnt[71]++;
+  initial t90(en);
+  task automatic t91(ref logic e);
+    forever @(negedge s iff f(e)) cnt[91]++;
   endtask
-  initial t71(en);
-  task automatic t72(ref logic e);
-    forever @(edge s iff f(e)) cnt[72]++;
+  initial t91(en);
+  task automatic t92(ref logic e);
+    forever @(edge s iff f(e)) cnt[92]++;
   endtask
-  initial t72(en);
-  task automatic t73(ref logic e);
-    forever @(s iff f(e)) cnt[73]++;
+  initial t92(en);
+  task automatic t93(ref logic e);
+    forever @(s iff f(e)) cnt[93]++;
   endtask
-  initial t73(en);
-  task automatic t74(ref logic e);
-    forever @(posedge s iff f(e) or negedge s iff !(f(e))) cnt[74]++;
+  initial t93(en);
+  task automatic t94(ref logic e);
+    forever @(posedge s iff f(e) or negedge s iff !(f(e))) cnt[94]++;
   endtask
-  initial t74(en);
+  initial t94(en);
+  task automatic t95(ref logic e);
+    forever @(posedge s iff sf(e)) cnt[95]++;
+  endtask
+  initial t95(en);
+  task automatic t96(ref logic e);
+    forever @(negedge s iff sf(e)) cnt[96]++;
+  endtask
+  initial t96(en);
+  task automatic t97(ref logic e);
+    forever @(edge s iff sf(e)) cnt[97]++;
+  endtask
+  initial t97(en);
+  task automatic t98(ref logic e);
+    forever @(s iff sf(e)) cnt[98]++;
+  endtask
+  initial t98(en);
+  task automatic t99(ref logic e);
+    forever @(posedge s iff sf(e) or negedge s iff !(sf(e))) cnt[99]++;
+  endtask
+  initial t99(en);
   initial fork
-    forever @(posedge s iff en) cnt[75]++;
+    forever @(posedge s iff en) cnt[100]++;
   join_none
   initial fork
-    forever @(negedge s iff en) cnt[76]++;
+    forever @(negedge s iff en) cnt[101]++;
   join_none
   initial fork
-    forever @(edge s iff en) cnt[77]++;
+    forever @(edge s iff en) cnt[102]++;
   join_none
   initial fork
-    forever @(s iff en) cnt[78]++;
+    forever @(s iff en) cnt[103]++;
   join_none
   initial fork
-    forever @(posedge s iff en or negedge s iff !(en)) cnt[79]++;
+    forever @(posedge s iff en or negedge s iff !(en)) cnt[104]++;
   join_none
   initial fork
-    forever @(posedge s iff !en) cnt[80]++;
+    forever @(posedge s iff !en) cnt[105]++;
   join_none
   initial fork
-    forever @(negedge s iff !en) cnt[81]++;
+    forever @(negedge s iff !en) cnt[106]++;
   join_none
   initial fork
-    forever @(edge s iff !en) cnt[82]++;
+    forever @(edge s iff !en) cnt[107]++;
   join_none
   initial fork
-    forever @(s iff !en) cnt[83]++;
+    forever @(s iff !en) cnt[108]++;
   join_none
   initial fork
-    forever @(posedge s iff !en or negedge s iff !(!en)) cnt[84]++;
+    forever @(posedge s iff !en or negedge s iff !(!en)) cnt[109]++;
   join_none
   initial fork
-    forever @(posedge s iff f(en)) cnt[85]++;
+    forever @(posedge s iff f(en)) cnt[110]++;
   join_none
   initial fork
-    forever @(negedge s iff f(en)) cnt[86]++;
+    forever @(negedge s iff f(en)) cnt[111]++;
   join_none
   initial fork
-    forever @(edge s iff f(en)) cnt[87]++;
+    forever @(edge s iff f(en)) cnt[112]++;
   join_none
   initial fork
-    forever @(s iff f(en)) cnt[88]++;
+    forever @(s iff f(en)) cnt[113]++;
   join_none
   initial fork
-    forever @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[89]++;
+    forever @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[114]++;
   join_none
-  initial forever cnt[90] = @(posedge s iff en) cnt[90] + 1;
-  initial forever cnt[91] = @(negedge s iff en) cnt[91] + 1;
-  initial forever cnt[92] = @(edge s iff en) cnt[92] + 1;
-  initial forever cnt[93] = @(s iff en) cnt[93] + 1;
-  initial forever cnt[94] = @(posedge s iff en or negedge s iff !(en)) cnt[94] + 1;
-  initial forever cnt[95] = @(posedge s iff !en) cnt[95] + 1;
-  initial forever cnt[96] = @(negedge s iff !en) cnt[96] + 1;
-  initial forever cnt[97] = @(edge s iff !en) cnt[97] + 1;
-  initial forever cnt[98] = @(s iff !en) cnt[98] + 1;
-  initial forever cnt[99] = @(posedge s iff !en or negedge s iff !(!en)) cnt[99] + 1;
-  initial forever cnt[100] = @(posedge s iff f(en)) cnt[100] + 1;
-  initial forever cnt[101] = @(negedge s iff f(en)) cnt[101] + 1;
-  initial forever cnt[102] = @(edge s iff f(en)) cnt[102] + 1;
-  initial forever cnt[103] = @(s iff f(en)) cnt[103] + 1;
-  initial forever cnt[104] = @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[104] + 1;
-  always @(posedge b[2] iff en) cnt[105]++;
-  always @(negedge b[2] iff en) cnt[106]++;
-  always @(edge b[2] iff en) cnt[107]++;
-  always @(b[2] iff en) cnt[108]++;
-  always @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[109]++;
-  always @(posedge b[2] iff !en) cnt[110]++;
-  always @(negedge b[2] iff !en) cnt[111]++;
-  always @(edge b[2] iff !en) cnt[112]++;
-  always @(b[2] iff !en) cnt[113]++;
-  always @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[114]++;
-  always @(posedge b[2] iff f(en)) cnt[115]++;
-  always @(negedge b[2] iff f(en)) cnt[116]++;
-  always @(edge b[2] iff f(en)) cnt[117]++;
-  always @(b[2] iff f(en)) cnt[118]++;
-  always @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[119]++;
-  always_ff @(posedge b[2] iff en) cnt[120]++;
-  always_ff @(negedge b[2] iff en) cnt[121]++;
-  always_ff @(edge b[2] iff en) cnt[122]++;
-  always_ff @(b[2] iff en) cnt[123]++;
-  always_ff @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[124]++;
-  always_ff @(posedge b[2] iff !en) cnt[125]++;
-  always_ff @(negedge b[2] iff !en) cnt[126]++;
-  always_ff @(edge b[2] iff !en) cnt[127]++;
-  always_ff @(b[2] iff !en) cnt[128]++;
-  always_ff @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[129]++;
-  always_ff @(posedge b[2] iff f(en)) cnt[130]++;
-  always_ff @(negedge b[2] iff f(en)) cnt[131]++;
-  always_ff @(edge b[2] iff f(en)) cnt[132]++;
-  always_ff @(b[2] iff f(en)) cnt[133]++;
-  always_ff @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[134]++;
-  always begin @(posedge b[2] iff en); cnt[135]++; end
-  always begin @(negedge b[2] iff en); cnt[136]++; end
-  always begin @(edge b[2] iff en); cnt[137]++; end
-  always begin @(b[2] iff en); cnt[138]++; end
-  always begin @(posedge b[2] iff en or negedge b[2] iff !(en)); cnt[139]++; end
-  always begin @(posedge b[2] iff !en); cnt[140]++; end
-  always begin @(negedge b[2] iff !en); cnt[141]++; end
-  always begin @(edge b[2] iff !en); cnt[142]++; end
-  always begin @(b[2] iff !en); cnt[143]++; end
-  always begin @(posedge b[2] iff !en or negedge b[2] iff !(!en)); cnt[144]++; end
-  always begin @(posedge b[2] iff f(en)); cnt[145]++; end
-  always begin @(negedge b[2] iff f(en)); cnt[146]++; end
-  always begin @(edge b[2] iff f(en)); cnt[147]++; end
-  always begin @(b[2] iff f(en)); cnt[148]++; end
-  always begin @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))); cnt[149]++; end
-  initial forever @(posedge b[2] iff en) cnt[150]++;
-  initial forever @(negedge b[2] iff en) cnt[151]++;
-  initial forever @(edge b[2] iff en) cnt[152]++;
-  initial forever @(b[2] iff en) cnt[153]++;
-  initial forever @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[154]++;
-  initial forever @(posedge b[2] iff !en) cnt[155]++;
-  initial forever @(negedge b[2] iff !en) cnt[156]++;
-  initial forever @(edge b[2] iff !en) cnt[157]++;
-  initial forever @(b[2] iff !en) cnt[158]++;
-  initial forever @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[159]++;
-  initial forever @(posedge b[2] iff f(en)) cnt[160]++;
-  initial forever @(negedge b[2] iff f(en)) cnt[161]++;
-  initial forever @(edge b[2] iff f(en)) cnt[162]++;
-  initial forever @(b[2] iff f(en)) cnt[163]++;
-  initial forever @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[164]++;
-  task automatic t165(ref logic e);
-    forever @(posedge b[2] iff e) cnt[165]++;
+  initial fork
+    forever @(posedge s iff sf(en)) cnt[115]++;
+  join_none
+  initial fork
+    forever @(negedge s iff sf(en)) cnt[116]++;
+  join_none
+  initial fork
+    forever @(edge s iff sf(en)) cnt[117]++;
+  join_none
+  initial fork
+    forever @(s iff sf(en)) cnt[118]++;
+  join_none
+  initial fork
+    forever @(posedge s iff sf(en) or negedge s iff !(sf(en))) cnt[119]++;
+  join_none
+  initial forever cnt[120] = @(posedge s iff en) cnt[120] + 1;
+  initial forever cnt[121] = @(negedge s iff en) cnt[121] + 1;
+  initial forever cnt[122] = @(edge s iff en) cnt[122] + 1;
+  initial forever cnt[123] = @(s iff en) cnt[123] + 1;
+  initial forever cnt[124] = @(posedge s iff en or negedge s iff !(en)) cnt[124] + 1;
+  initial forever cnt[125] = @(posedge s iff !en) cnt[125] + 1;
+  initial forever cnt[126] = @(negedge s iff !en) cnt[126] + 1;
+  initial forever cnt[127] = @(edge s iff !en) cnt[127] + 1;
+  initial forever cnt[128] = @(s iff !en) cnt[128] + 1;
+  initial forever cnt[129] = @(posedge s iff !en or negedge s iff !(!en)) cnt[129] + 1;
+  initial forever cnt[130] = @(posedge s iff f(en)) cnt[130] + 1;
+  initial forever cnt[131] = @(negedge s iff f(en)) cnt[131] + 1;
+  initial forever cnt[132] = @(edge s iff f(en)) cnt[132] + 1;
+  initial forever cnt[133] = @(s iff f(en)) cnt[133] + 1;
+  initial forever cnt[134] = @(posedge s iff f(en) or negedge s iff !(f(en))) cnt[134] + 1;
+  initial forever cnt[135] = @(posedge s iff sf(en)) cnt[135] + 1;
+  initial forever cnt[136] = @(negedge s iff sf(en)) cnt[136] + 1;
+  initial forever cnt[137] = @(edge s iff sf(en)) cnt[137] + 1;
+  initial forever cnt[138] = @(s iff sf(en)) cnt[138] + 1;
+  initial forever cnt[139] = @(posedge s iff sf(en) or negedge s iff !(sf(en))) cnt[139] + 1;
+  always @(posedge b[2] iff en) cnt[140]++;
+  always @(negedge b[2] iff en) cnt[141]++;
+  always @(edge b[2] iff en) cnt[142]++;
+  always @(b[2] iff en) cnt[143]++;
+  always @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[144]++;
+  always @(posedge b[2] iff !en) cnt[145]++;
+  always @(negedge b[2] iff !en) cnt[146]++;
+  always @(edge b[2] iff !en) cnt[147]++;
+  always @(b[2] iff !en) cnt[148]++;
+  always @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[149]++;
+  always @(posedge b[2] iff f(en)) cnt[150]++;
+  always @(negedge b[2] iff f(en)) cnt[151]++;
+  always @(edge b[2] iff f(en)) cnt[152]++;
+  always @(b[2] iff f(en)) cnt[153]++;
+  always @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[154]++;
+  always @(posedge b[2] iff sf(en)) cnt[155]++;
+  always @(negedge b[2] iff sf(en)) cnt[156]++;
+  always @(edge b[2] iff sf(en)) cnt[157]++;
+  always @(b[2] iff sf(en)) cnt[158]++;
+  always @(posedge b[2] iff sf(en) or negedge b[2] iff !(sf(en))) cnt[159]++;
+  always_ff @(posedge b[2] iff en) cnt[160]++;
+  always_ff @(negedge b[2] iff en) cnt[161]++;
+  always_ff @(edge b[2] iff en) cnt[162]++;
+  always_ff @(b[2] iff en) cnt[163]++;
+  always_ff @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[164]++;
+  always_ff @(posedge b[2] iff !en) cnt[165]++;
+  always_ff @(negedge b[2] iff !en) cnt[166]++;
+  always_ff @(edge b[2] iff !en) cnt[167]++;
+  always_ff @(b[2] iff !en) cnt[168]++;
+  always_ff @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[169]++;
+  always_ff @(posedge b[2] iff f(en)) cnt[170]++;
+  always_ff @(negedge b[2] iff f(en)) cnt[171]++;
+  always_ff @(edge b[2] iff f(en)) cnt[172]++;
+  always_ff @(b[2] iff f(en)) cnt[173]++;
+  always_ff @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[174]++;
+  always_ff @(posedge b[2] iff sf(en)) cnt[175]++;
+  always_ff @(negedge b[2] iff sf(en)) cnt[176]++;
+  always_ff @(edge b[2] iff sf(en)) cnt[177]++;
+  always_ff @(b[2] iff sf(en)) cnt[178]++;
+  always_ff @(posedge b[2] iff sf(en) or negedge b[2] iff !(sf(en))) cnt[179]++;
+  always begin @(posedge b[2] iff en); cnt[180]++; end
+  always begin @(negedge b[2] iff en); cnt[181]++; end
+  always begin @(edge b[2] iff en); cnt[182]++; end
+  always begin @(b[2] iff en); cnt[183]++; end
+  always begin @(posedge b[2] iff en or negedge b[2] iff !(en)); cnt[184]++; end
+  always begin @(posedge b[2] iff !en); cnt[185]++; end
+  always begin @(negedge b[2] iff !en); cnt[186]++; end
+  always begin @(edge b[2] iff !en); cnt[187]++; end
+  always begin @(b[2] iff !en); cnt[188]++; end
+  always begin @(posedge b[2] iff !en or negedge b[2] iff !(!en)); cnt[189]++; end
+  always begin @(posedge b[2] iff f(en)); cnt[190]++; end
+  always begin @(negedge b[2] iff f(en)); cnt[191]++; end
+  always begin @(edge b[2] iff f(en)); cnt[192]++; end
+  always begin @(b[2] iff f(en)); cnt[193]++; end
+  always begin @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))); cnt[194]++; end
+  always begin @(posedge b[2] iff sf(en)); cnt[195]++; end
+  always begin @(negedge b[2] iff sf(en)); cnt[196]++; end
+  always begin @(edge b[2] iff sf(en)); cnt[197]++; end
+  always begin @(b[2] iff sf(en)); cnt[198]++; end
+  always begin @(posedge b[2] iff sf(en) or negedge b[2] iff !(sf(en))); cnt[199]++; end
+  initial forever @(posedge b[2] iff en) cnt[200]++;
+  initial forever @(negedge b[2] iff en) cnt[201]++;
+  initial forever @(edge b[2] iff en) cnt[202]++;
+  initial forever @(b[2] iff en) cnt[203]++;
+  initial forever @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[204]++;
+  initial forever @(posedge b[2] iff !en) cnt[205]++;
+  initial forever @(negedge b[2] iff !en) cnt[206]++;
+  initial forever @(edge b[2] iff !en) cnt[207]++;
+  initial forever @(b[2] iff !en) cnt[208]++;
+  initial forever @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[209]++;
+  initial forever @(posedge b[2] iff f(en)) cnt[210]++;
+  initial forever @(negedge b[2] iff f(en)) cnt[211]++;
+  initial forever @(edge b[2] iff f(en)) cnt[212]++;
+  initial forever @(b[2] iff f(en)) cnt[213]++;
+  initial forever @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[214]++;
+  initial forever @(posedge b[2] iff sf(en)) cnt[215]++;
+  initial forever @(negedge b[2] iff sf(en)) cnt[216]++;
+  initial forever @(edge b[2] iff sf(en)) cnt[217]++;
+  initial forever @(b[2] iff sf(en)) cnt[218]++;
+  initial forever @(posedge b[2] iff sf(en) or negedge b[2] iff !(sf(en))) cnt[219]++;
+  task automatic t220(ref logic e);
+    forever @(posedge b[2] iff e) cnt[220]++;
   endtask
-  initial t165(en);
-  task automatic t166(ref logic e);
-    forever @(negedge b[2] iff e) cnt[166]++;
+  initial t220(en);
+  task automatic t221(ref logic e);
+    forever @(negedge b[2] iff e) cnt[221]++;
   endtask
-  initial t166(en);
-  task automatic t167(ref logic e);
-    forever @(edge b[2] iff e) cnt[167]++;
+  initial t221(en);
+  task automatic t222(ref logic e);
+    forever @(edge b[2] iff e) cnt[222]++;
   endtask
-  initial t167(en);
-  task automatic t168(ref logic e);
-    forever @(b[2] iff e) cnt[168]++;
+  initial t222(en);
+  task automatic t223(ref logic e);
+    forever @(b[2] iff e) cnt[223]++;
   endtask
-  initial t168(en);
-  task automatic t169(ref logic e);
-    forever @(posedge b[2] iff e or negedge b[2] iff !(e)) cnt[169]++;
+  initial t223(en);
+  task automatic t224(ref logic e);
+    forever @(posedge b[2] iff e or negedge b[2] iff !(e)) cnt[224]++;
   endtask
-  initial t169(en);
-  task automatic t170(ref logic e);
-    forever @(posedge b[2] iff !e) cnt[170]++;
+  initial t224(en);
+  task automatic t225(ref logic e);
+    forever @(posedge b[2] iff !e) cnt[225]++;
   endtask
-  initial t170(en);
-  task automatic t171(ref logic e);
-    forever @(negedge b[2] iff !e) cnt[171]++;
+  initial t225(en);
+  task automatic t226(ref logic e);
+    forever @(negedge b[2] iff !e) cnt[226]++;
   endtask
-  initial t171(en);
-  task automatic t172(ref logic e);
-    forever @(edge b[2] iff !e) cnt[172]++;
+  initial t226(en);
+  task automatic t227(ref logic e);
+    forever @(edge b[2] iff !e) cnt[227]++;
   endtask
-  initial t172(en);
-  task automatic t173(ref logic e);
-    forever @(b[2] iff !e) cnt[173]++;
+  initial t227(en);
+  task automatic t228(ref logic e);
+    forever @(b[2] iff !e) cnt[228]++;
   endtask
-  initial t173(en);
-  task automatic t174(ref logic e);
-    forever @(posedge b[2] iff !e or negedge b[2] iff !(!e)) cnt[174]++;
+  initial t228(en);
+  task automatic t229(ref logic e);
+    forever @(posedge b[2] iff !e or negedge b[2] iff !(!e)) cnt[229]++;
   endtask
-  initial t174(en);
-  task automatic t175(ref logic e);
-    forever @(posedge b[2] iff f(e)) cnt[175]++;
+  initial t229(en);
+  task automatic t230(ref logic e);
+    forever @(posedge b[2] iff f(e)) cnt[230]++;
   endtask
-  initial t175(en);
-  task automatic t176(ref logic e);
-    forever @(negedge b[2] iff f(e)) cnt[176]++;
+  initial t230(en);
+  task automatic t231(ref logic e);
+    forever @(negedge b[2] iff f(e)) cnt[231]++;
   endtask
-  initial t176(en);
-  task automatic t177(ref logic e);
-    forever @(edge b[2] iff f(e)) cnt[177]++;
+  initial t231(en);
+  task automatic t232(ref logic e);
+    forever @(edge b[2] iff f(e)) cnt[232]++;
   endtask
-  initial t177(en);
-  task automatic t178(ref logic e);
-    forever @(b[2] iff f(e)) cnt[178]++;
+  initial t232(en);
+  task automatic t233(ref logic e);
+    forever @(b[2] iff f(e)) cnt[233]++;
   endtask
-  initial t178(en);
-  task automatic t179(ref logic e);
-    forever @(posedge b[2] iff f(e) or negedge b[2] iff !(f(e))) cnt[179]++;
+  initial t233(en);
+  task automatic t234(ref logic e);
+    forever @(posedge b[2] iff f(e) or negedge b[2] iff !(f(e))) cnt[234]++;
   endtask
-  initial t179(en);
-  initial fork
-    forever @(posedge b[2] iff en) cnt[180]++;
-  join_none
-  initial fork
-    forever @(negedge b[2] iff en) cnt[181]++;
-  join_none
-  initial fork
-    forever @(edge b[2] iff en) cnt[182]++;
-  join_none
-  initial fork
-    forever @(b[2] iff en) cnt[183]++;
-  join_none
-  initial fork
-    forever @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[184]++;
-  join_none
-  initial fork
-    forever @(posedge b[2] iff !en) cnt[185]++;
-  join_none
-  initial fork
-    forever @(negedge b[2] iff !en) cnt[186]++;
-  join_none
-  initial fork
-    forever @(edge b[2] iff !en) cnt[187]++;
-  join_none
-  initial fork
-    forever @(b[2] iff !en) cnt[188]++;
-  join_none
-  initial fork
-    forever @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[189]++;
-  join_none
-  initial fork
-    forever @(posedge b[2] iff f(en)) cnt[190]++;
-  join_none
-  initial fork
-    forever @(negedge b[2] iff f(en)) cnt[191]++;
-  join_none
-  initial fork
-    forever @(edge b[2] iff f(en)) cnt[192]++;
-  join_none
-  initial fork
-    forever @(b[2] iff f(en)) cnt[193]++;
-  join_none
-  initial fork
-    forever @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[194]++;
-  join_none
-  initial forever cnt[195] = @(posedge b[2] iff en) cnt[195] + 1;
-  initial forever cnt[196] = @(negedge b[2] iff en) cnt[196] + 1;
-  initial forever cnt[197] = @(edge b[2] iff en) cnt[197] + 1;
-  initial forever cnt[198] = @(b[2] iff en) cnt[198] + 1;
-  initial forever cnt[199] = @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[199] + 1;
-  initial forever cnt[200] = @(posedge b[2] iff !en) cnt[200] + 1;
-  initial forever cnt[201] = @(negedge b[2] iff !en) cnt[201] + 1;
-  initial forever cnt[202] = @(edge b[2] iff !en) cnt[202] + 1;
-  initial forever cnt[203] = @(b[2] iff !en) cnt[203] + 1;
-  initial forever cnt[204] = @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[204] + 1;
-  initial forever cnt[205] = @(posedge b[2] iff f(en)) cnt[205] + 1;
-  initial forever cnt[206] = @(negedge b[2] iff f(en)) cnt[206] + 1;
-  initial forever cnt[207] = @(edge b[2] iff f(en)) cnt[207] + 1;
-  initial forever cnt[208] = @(b[2] iff f(en)) cnt[208] + 1;
-  initial forever cnt[209] = @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[209] + 1;
-  always @(posedge w iff en) cnt[210]++;
-  always @(negedge w iff en) cnt[211]++;
-  always @(edge w iff en) cnt[212]++;
-  always @(w iff en) cnt[213]++;
-  always @(posedge w iff en or negedge w iff !(en)) cnt[214]++;
-  always @(posedge w iff !en) cnt[215]++;
-  always @(negedge w iff !en) cnt[216]++;
-  always @(edge w iff !en) cnt[217]++;
-  always @(w iff !en) cnt[218]++;
-  always @(posedge w iff !en or negedge w iff !(!en)) cnt[219]++;
-  always @(posedge w iff f(en)) cnt[220]++;
-  always @(negedge w iff f(en)) cnt[221]++;
-  always @(edge w iff f(en)) cnt[222]++;
-  always @(w iff f(en)) cnt[223]++;
-  always @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[224]++;
-  always_ff @(posedge w iff en) cnt[225]++;
-  always_ff @(negedge w iff en) cnt[226]++;
-  always_ff @(edge w iff en) cnt[227]++;
-  always_ff @(w iff en) cnt[228]++;
-  always_ff @(posedge w iff en or negedge w iff !(en)) cnt[229]++;
-  always_ff @(posedge w iff !en) cnt[230]++;
-  always_ff @(negedge w iff !en) cnt[231]++;
-  always_ff @(edge w iff !en) cnt[232]++;
-  always_ff @(w iff !en) cnt[233]++;
-  always_ff @(posedge w iff !en or negedge w iff !(!en)) cnt[234]++;
-  always_ff @(posedge w iff f(en)) cnt[235]++;
-  always_ff @(negedge w iff f(en)) cnt[236]++;
-  always_ff @(edge w iff f(en)) cnt[237]++;
-  always_ff @(w iff f(en)) cnt[238]++;
-  always_ff @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[239]++;
-  always begin @(posedge w iff en); cnt[240]++; end
-  always begin @(negedge w iff en); cnt[241]++; end
-  always begin @(edge w iff en); cnt[242]++; end
-  always begin @(w iff en); cnt[243]++; end
-  always begin @(posedge w iff en or negedge w iff !(en)); cnt[244]++; end
-  always begin @(posedge w iff !en); cnt[245]++; end
-  always begin @(negedge w iff !en); cnt[246]++; end
-  always begin @(edge w iff !en); cnt[247]++; end
-  always begin @(w iff !en); cnt[248]++; end
-  always begin @(posedge w iff !en or negedge w iff !(!en)); cnt[249]++; end
-  always begin @(posedge w iff f(en)); cnt[250]++; end
-  always begin @(negedge w iff f(en)); cnt[251]++; end
-  always begin @(edge w iff f(en)); cnt[252]++; end
-  always begin @(w iff f(en)); cnt[253]++; end
-  always begin @(posedge w iff f(en) or negedge w iff !(f(en))); cnt[254]++; end
-  initial forever @(posedge w iff en) cnt[255]++;
-  initial forever @(negedge w iff en) cnt[256]++;
-  initial forever @(edge w iff en) cnt[257]++;
-  initial forever @(w iff en) cnt[258]++;
-  initial forever @(posedge w iff en or negedge w iff !(en)) cnt[259]++;
-  initial forever @(posedge w iff !en) cnt[260]++;
-  initial forever @(negedge w iff !en) cnt[261]++;
-  initial forever @(edge w iff !en) cnt[262]++;
-  initial forever @(w iff !en) cnt[263]++;
-  initial forever @(posedge w iff !en or negedge w iff !(!en)) cnt[264]++;
-  initial forever @(posedge w iff f(en)) cnt[265]++;
-  initial forever @(negedge w iff f(en)) cnt[266]++;
-  initial forever @(edge w iff f(en)) cnt[267]++;
-  initial forever @(w iff f(en)) cnt[268]++;
-  initial forever @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[269]++;
-  task automatic t270(ref logic e);
-    forever @(posedge w iff e) cnt[270]++;
+  initial t234(en);
+  task automatic t235(ref logic e);
+    forever @(posedge b[2] iff sf(e)) cnt[235]++;
   endtask
-  initial t270(en);
-  task automatic t271(ref logic e);
-    forever @(negedge w iff e) cnt[271]++;
+  initial t235(en);
+  task automatic t236(ref logic e);
+    forever @(negedge b[2] iff sf(e)) cnt[236]++;
   endtask
-  initial t271(en);
-  task automatic t272(ref logic e);
-    forever @(edge w iff e) cnt[272]++;
+  initial t236(en);
+  task automatic t237(ref logic e);
+    forever @(edge b[2] iff sf(e)) cnt[237]++;
   endtask
-  initial t272(en);
-  task automatic t273(ref logic e);
-    forever @(w iff e) cnt[273]++;
+  initial t237(en);
+  task automatic t238(ref logic e);
+    forever @(b[2] iff sf(e)) cnt[238]++;
   endtask
-  initial t273(en);
-  task automatic t274(ref logic e);
-    forever @(posedge w iff e or negedge w iff !(e)) cnt[274]++;
+  initial t238(en);
+  task automatic t239(ref logic e);
+    forever @(posedge b[2] iff sf(e) or negedge b[2] iff !(sf(e))) cnt[239]++;
   endtask
-  initial t274(en);
-  task automatic t275(ref logic e);
-    forever @(posedge w iff !e) cnt[275]++;
+  initial t239(en);
+  initial fork
+    forever @(posedge b[2] iff en) cnt[240]++;
+  join_none
+  initial fork
+    forever @(negedge b[2] iff en) cnt[241]++;
+  join_none
+  initial fork
+    forever @(edge b[2] iff en) cnt[242]++;
+  join_none
+  initial fork
+    forever @(b[2] iff en) cnt[243]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[244]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff !en) cnt[245]++;
+  join_none
+  initial fork
+    forever @(negedge b[2] iff !en) cnt[246]++;
+  join_none
+  initial fork
+    forever @(edge b[2] iff !en) cnt[247]++;
+  join_none
+  initial fork
+    forever @(b[2] iff !en) cnt[248]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[249]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff f(en)) cnt[250]++;
+  join_none
+  initial fork
+    forever @(negedge b[2] iff f(en)) cnt[251]++;
+  join_none
+  initial fork
+    forever @(edge b[2] iff f(en)) cnt[252]++;
+  join_none
+  initial fork
+    forever @(b[2] iff f(en)) cnt[253]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[254]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff sf(en)) cnt[255]++;
+  join_none
+  initial fork
+    forever @(negedge b[2] iff sf(en)) cnt[256]++;
+  join_none
+  initial fork
+    forever @(edge b[2] iff sf(en)) cnt[257]++;
+  join_none
+  initial fork
+    forever @(b[2] iff sf(en)) cnt[258]++;
+  join_none
+  initial fork
+    forever @(posedge b[2] iff sf(en) or negedge b[2] iff !(sf(en))) cnt[259]++;
+  join_none
+  initial forever cnt[260] = @(posedge b[2] iff en) cnt[260] + 1;
+  initial forever cnt[261] = @(negedge b[2] iff en) cnt[261] + 1;
+  initial forever cnt[262] = @(edge b[2] iff en) cnt[262] + 1;
+  initial forever cnt[263] = @(b[2] iff en) cnt[263] + 1;
+  initial forever cnt[264] = @(posedge b[2] iff en or negedge b[2] iff !(en)) cnt[264] + 1;
+  initial forever cnt[265] = @(posedge b[2] iff !en) cnt[265] + 1;
+  initial forever cnt[266] = @(negedge b[2] iff !en) cnt[266] + 1;
+  initial forever cnt[267] = @(edge b[2] iff !en) cnt[267] + 1;
+  initial forever cnt[268] = @(b[2] iff !en) cnt[268] + 1;
+  initial forever cnt[269] = @(posedge b[2] iff !en or negedge b[2] iff !(!en)) cnt[269] + 1;
+  initial forever cnt[270] = @(posedge b[2] iff f(en)) cnt[270] + 1;
+  initial forever cnt[271] = @(negedge b[2] iff f(en)) cnt[271] + 1;
+  initial forever cnt[272] = @(edge b[2] iff f(en)) cnt[272] + 1;
+  initial forever cnt[273] = @(b[2] iff f(en)) cnt[273] + 1;
+  initial forever cnt[274] = @(posedge b[2] iff f(en) or negedge b[2] iff !(f(en))) cnt[274] + 1;
+  initial forever cnt[275] = @(posedge b[2] iff sf(en)) cnt[275] + 1;
+  initial forever cnt[276] = @(negedge b[2] iff sf(en)) cnt[276] + 1;
+  initial forever cnt[277] = @(edge b[2] iff sf(en)) cnt[277] + 1;
+  initial forever cnt[278] = @(b[2] iff sf(en)) cnt[278] + 1;
+  initial forever cnt[279] = @(posedge b[2] iff sf(en) or negedge b[2] iff !(sf(en))) cnt[279] + 1;
+  always @(posedge w iff en) cnt[280]++;
+  always @(negedge w iff en) cnt[281]++;
+  always @(edge w iff en) cnt[282]++;
+  always @(w iff en) cnt[283]++;
+  always @(posedge w iff en or negedge w iff !(en)) cnt[284]++;
+  always @(posedge w iff !en) cnt[285]++;
+  always @(negedge w iff !en) cnt[286]++;
+  always @(edge w iff !en) cnt[287]++;
+  always @(w iff !en) cnt[288]++;
+  always @(posedge w iff !en or negedge w iff !(!en)) cnt[289]++;
+  always @(posedge w iff f(en)) cnt[290]++;
+  always @(negedge w iff f(en)) cnt[291]++;
+  always @(edge w iff f(en)) cnt[292]++;
+  always @(w iff f(en)) cnt[293]++;
+  always @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[294]++;
+  always @(posedge w iff sf(en)) cnt[295]++;
+  always @(negedge w iff sf(en)) cnt[296]++;
+  always @(edge w iff sf(en)) cnt[297]++;
+  always @(w iff sf(en)) cnt[298]++;
+  always @(posedge w iff sf(en) or negedge w iff !(sf(en))) cnt[299]++;
+  always_ff @(posedge w iff en) cnt[300]++;
+  always_ff @(negedge w iff en) cnt[301]++;
+  always_ff @(edge w iff en) cnt[302]++;
+  always_ff @(w iff en) cnt[303]++;
+  always_ff @(posedge w iff en or negedge w iff !(en)) cnt[304]++;
+  always_ff @(posedge w iff !en) cnt[305]++;
+  always_ff @(negedge w iff !en) cnt[306]++;
+  always_ff @(edge w iff !en) cnt[307]++;
+  always_ff @(w iff !en) cnt[308]++;
+  always_ff @(posedge w iff !en or negedge w iff !(!en)) cnt[309]++;
+  always_ff @(posedge w iff f(en)) cnt[310]++;
+  always_ff @(negedge w iff f(en)) cnt[311]++;
+  always_ff @(edge w iff f(en)) cnt[312]++;
+  always_ff @(w iff f(en)) cnt[313]++;
+  always_ff @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[314]++;
+  always_ff @(posedge w iff sf(en)) cnt[315]++;
+  always_ff @(negedge w iff sf(en)) cnt[316]++;
+  always_ff @(edge w iff sf(en)) cnt[317]++;
+  always_ff @(w iff sf(en)) cnt[318]++;
+  always_ff @(posedge w iff sf(en) or negedge w iff !(sf(en))) cnt[319]++;
+  always begin @(posedge w iff en); cnt[320]++; end
+  always begin @(negedge w iff en); cnt[321]++; end
+  always begin @(edge w iff en); cnt[322]++; end
+  always begin @(w iff en); cnt[323]++; end
+  always begin @(posedge w iff en or negedge w iff !(en)); cnt[324]++; end
+  always begin @(posedge w iff !en); cnt[325]++; end
+  always begin @(negedge w iff !en); cnt[326]++; end
+  always begin @(edge w iff !en); cnt[327]++; end
+  always begin @(w iff !en); cnt[328]++; end
+  always begin @(posedge w iff !en or negedge w iff !(!en)); cnt[329]++; end
+  always begin @(posedge w iff f(en)); cnt[330]++; end
+  always begin @(negedge w iff f(en)); cnt[331]++; end
+  always begin @(edge w iff f(en)); cnt[332]++; end
+  always begin @(w iff f(en)); cnt[333]++; end
+  always begin @(posedge w iff f(en) or negedge w iff !(f(en))); cnt[334]++; end
+  always begin @(posedge w iff sf(en)); cnt[335]++; end
+  always begin @(negedge w iff sf(en)); cnt[336]++; end
+  always begin @(edge w iff sf(en)); cnt[337]++; end
+  always begin @(w iff sf(en)); cnt[338]++; end
+  always begin @(posedge w iff sf(en) or negedge w iff !(sf(en))); cnt[339]++; end
+  initial forever @(posedge w iff en) cnt[340]++;
+  initial forever @(negedge w iff en) cnt[341]++;
+  initial forever @(edge w iff en) cnt[342]++;
+  initial forever @(w iff en) cnt[343]++;
+  initial forever @(posedge w iff en or negedge w iff !(en)) cnt[344]++;
+  initial forever @(posedge w iff !en) cnt[345]++;
+  initial forever @(negedge w iff !en) cnt[346]++;
+  initial forever @(edge w iff !en) cnt[347]++;
+  initial forever @(w iff !en) cnt[348]++;
+  initial forever @(posedge w iff !en or negedge w iff !(!en)) cnt[349]++;
+  initial forever @(posedge w iff f(en)) cnt[350]++;
+  initial forever @(negedge w iff f(en)) cnt[351]++;
+  initial forever @(edge w iff f(en)) cnt[352]++;
+  initial forever @(w iff f(en)) cnt[353]++;
+  initial forever @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[354]++;
+  initial forever @(posedge w iff sf(en)) cnt[355]++;
+  initial forever @(negedge w iff sf(en)) cnt[356]++;
+  initial forever @(edge w iff sf(en)) cnt[357]++;
+  initial forever @(w iff sf(en)) cnt[358]++;
+  initial forever @(posedge w iff sf(en) or negedge w iff !(sf(en))) cnt[359]++;
+  task automatic t360(ref logic e);
+    forever @(posedge w iff e) cnt[360]++;
   endtask
-  initial t275(en);
-  task automatic t276(ref logic e);
-    forever @(negedge w iff !e) cnt[276]++;
+  initial t360(en);
+  task automatic t361(ref logic e);
+    forever @(negedge w iff e) cnt[361]++;
   endtask
-  initial t276(en);
-  task automatic t277(ref logic e);
-    forever @(edge w iff !e) cnt[277]++;
+  initial t361(en);
+  task automatic t362(ref logic e);
+    forever @(edge w iff e) cnt[362]++;
   endtask
-  initial t277(en);
-  task automatic t278(ref logic e);
-    forever @(w iff !e) cnt[278]++;
+  initial t362(en);
+  task automatic t363(ref logic e);
+    forever @(w iff e) cnt[363]++;
   endtask
-  initial t278(en);
-  task automatic t279(ref logic e);
-    forever @(posedge w iff !e or negedge w iff !(!e)) cnt[279]++;
+  initial t363(en);
+  task automatic t364(ref logic e);
+    forever @(posedge w iff e or negedge w iff !(e)) cnt[364]++;
   endtask
-  initial t279(en);
-  task automatic t280(ref logic e);
-    forever @(posedge w iff f(e)) cnt[280]++;
+  initial t364(en);
+  task automatic t365(ref logic e);
+    forever @(posedge w iff !e) cnt[365]++;
   endtask
-  initial t280(en);
-  task automatic t281(ref logic e);
-    forever @(negedge w iff f(e)) cnt[281]++;
+  initial t365(en);
+  task automatic t366(ref logic e);
+    forever @(negedge w iff !e) cnt[366]++;
   endtask
-  initial t281(en);
-  task automatic t282(ref logic e);
-    forever @(edge w iff f(e)) cnt[282]++;
+  initial t366(en);
+  task automatic t367(ref logic e);
+    forever @(edge w iff !e) cnt[367]++;
   endtask
-  initial t282(en);
-  task automatic t283(ref logic e);
-    forever @(w iff f(e)) cnt[283]++;
+  initial t367(en);
+  task automatic t368(ref logic e);
+    forever @(w iff !e) cnt[368]++;
   endtask
-  initial t283(en);
-  task automatic t284(ref logic e);
-    forever @(posedge w iff f(e) or negedge w iff !(f(e))) cnt[284]++;
+  initial t368(en);
+  task automatic t369(ref logic e);
+    forever @(posedge w iff !e or negedge w iff !(!e)) cnt[369]++;
   endtask
-  initial t284(en);
-  initial fork
-    forever @(posedge w iff en) cnt[285]++;
-  join_none
-  initial fork
-    forever @(negedge w iff en) cnt[286]++;
-  join_none
-  initial fork
-    forever @(edge w iff en) cnt[287]++;
-  join_none
-  initial fork
-    forever @(w iff en) cnt[288]++;
-  join_none
-  initial fork
-    forever @(posedge w iff en or negedge w iff !(en)) cnt[289]++;
-  join_none
-  initial fork
-    forever @(posedge w iff !en) cnt[290]++;
-  join_none
-  initial fork
-    forever @(negedge w iff !en) cnt[291]++;
-  join_none
-  initial fork
-    forever @(edge w iff !en) cnt[292]++;
-  join_none
-  initial fork
-    forever @(w iff !en) cnt[293]++;
-  join_none
-  initial fork
-    forever @(posedge w iff !en or negedge w iff !(!en)) cnt[294]++;
-  join_none
-  initial fork
-    forever @(posedge w iff f(en)) cnt[295]++;
-  join_none
-  initial fork
-    forever @(negedge w iff f(en)) cnt[296]++;
-  join_none
-  initial fork
-    forever @(edge w iff f(en)) cnt[297]++;
-  join_none
-  initial fork
-    forever @(w iff f(en)) cnt[298]++;
-  join_none
-  initial fork
-    forever @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[299]++;
-  join_none
-  initial forever cnt[300] = @(posedge w iff en) cnt[300] + 1;
-  initial forever cnt[301] = @(negedge w iff en) cnt[301] + 1;
-  initial forever cnt[302] = @(edge w iff en) cnt[302] + 1;
-  initial forever cnt[303] = @(w iff en) cnt[303] + 1;
-  initial forever cnt[304] = @(posedge w iff en or negedge w iff !(en)) cnt[304] + 1;
-  initial forever cnt[305] = @(posedge w iff !en) cnt[305] + 1;
-  initial forever cnt[306] = @(negedge w iff !en) cnt[306] + 1;
-  initial forever cnt[307] = @(edge w iff !en) cnt[307] + 1;
-  initial forever cnt[308] = @(w iff !en) cnt[308] + 1;
-  initial forever cnt[309] = @(posedge w iff !en or negedge w iff !(!en)) cnt[309] + 1;
-  initial forever cnt[310] = @(posedge w iff f(en)) cnt[310] + 1;
-  initial forever cnt[311] = @(negedge w iff f(en)) cnt[311] + 1;
-  initial forever cnt[312] = @(edge w iff f(en)) cnt[312] + 1;
-  initial forever cnt[313] = @(w iff f(en)) cnt[313] + 1;
-  initial forever cnt[314] = @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[314] + 1;
-  always @(posedge o iff oe) cnt[315]++;
-  always_ff @(posedge o iff oe) cnt[316]++;
-  always begin @(posedge o iff oe); cnt[317]++; end
-  initial forever @(posedge o iff oe) cnt[318]++;
-  task automatic t319(ref logic e);
-    forever @(posedge o iff e) cnt[319]++;
+  initial t369(en);
+  task automatic t370(ref logic e);
+    forever @(posedge w iff f(e)) cnt[370]++;
   endtask
-  initial t319(oe);
+  initial t370(en);
+  task automatic t371(ref logic e);
+    forever @(negedge w iff f(e)) cnt[371]++;
+  endtask
+  initial t371(en);
+  task automatic t372(ref logic e);
+    forever @(edge w iff f(e)) cnt[372]++;
+  endtask
+  initial t372(en);
+  task automatic t373(ref logic e);
+    forever @(w iff f(e)) cnt[373]++;
+  endtask
+  initial t373(en);
+  task automatic t374(ref logic e);
+    forever @(posedge w iff f(e) or negedge w iff !(f(e))) cnt[374]++;
+  endtask
+  initial t374(en);
+  task automatic t375(ref logic e);
+    forever @(posedge w iff sf(e)) cnt[375]++;
+  endtask
+  initial t375(en);
+  task automatic t376(ref logic e);
+    forever @(negedge w iff sf(e)) cnt[376]++;
+  endtask
+  initial t376(en);
+  task automatic t377(ref logic e);
+    forever @(edge w iff sf(e)) cnt[377]++;
+  endtask
+  initial t377(en);
+  task automatic t378(ref logic e);
+    forever @(w iff sf(e)) cnt[378]++;
+  endtask
+  initial t378(en);
+  task automatic t379(ref logic e);
+    forever @(posedge w iff sf(e) or negedge w iff !(sf(e))) cnt[379]++;
+  endtask
+  initial t379(en);
   initial fork
-    forever @(posedge o iff oe) cnt[320]++;
+    forever @(posedge w iff en) cnt[380]++;
   join_none
-  initial forever cnt[321] = @(posedge o iff oe) cnt[321] + 1;
+  initial fork
+    forever @(negedge w iff en) cnt[381]++;
+  join_none
+  initial fork
+    forever @(edge w iff en) cnt[382]++;
+  join_none
+  initial fork
+    forever @(w iff en) cnt[383]++;
+  join_none
+  initial fork
+    forever @(posedge w iff en or negedge w iff !(en)) cnt[384]++;
+  join_none
+  initial fork
+    forever @(posedge w iff !en) cnt[385]++;
+  join_none
+  initial fork
+    forever @(negedge w iff !en) cnt[386]++;
+  join_none
+  initial fork
+    forever @(edge w iff !en) cnt[387]++;
+  join_none
+  initial fork
+    forever @(w iff !en) cnt[388]++;
+  join_none
+  initial fork
+    forever @(posedge w iff !en or negedge w iff !(!en)) cnt[389]++;
+  join_none
+  initial fork
+    forever @(posedge w iff f(en)) cnt[390]++;
+  join_none
+  initial fork
+    forever @(negedge w iff f(en)) cnt[391]++;
+  join_none
+  initial fork
+    forever @(edge w iff f(en)) cnt[392]++;
+  join_none
+  initial fork
+    forever @(w iff f(en)) cnt[393]++;
+  join_none
+  initial fork
+    forever @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[394]++;
+  join_none
+  initial fork
+    forever @(posedge w iff sf(en)) cnt[395]++;
+  join_none
+  initial fork
+    forever @(negedge w iff sf(en)) cnt[396]++;
+  join_none
+  initial fork
+    forever @(edge w iff sf(en)) cnt[397]++;
+  join_none
+  initial fork
+    forever @(w iff sf(en)) cnt[398]++;
+  join_none
+  initial fork
+    forever @(posedge w iff sf(en) or negedge w iff !(sf(en))) cnt[399]++;
+  join_none
+  initial forever cnt[400] = @(posedge w iff en) cnt[400] + 1;
+  initial forever cnt[401] = @(negedge w iff en) cnt[401] + 1;
+  initial forever cnt[402] = @(edge w iff en) cnt[402] + 1;
+  initial forever cnt[403] = @(w iff en) cnt[403] + 1;
+  initial forever cnt[404] = @(posedge w iff en or negedge w iff !(en)) cnt[404] + 1;
+  initial forever cnt[405] = @(posedge w iff !en) cnt[405] + 1;
+  initial forever cnt[406] = @(negedge w iff !en) cnt[406] + 1;
+  initial forever cnt[407] = @(edge w iff !en) cnt[407] + 1;
+  initial forever cnt[408] = @(w iff !en) cnt[408] + 1;
+  initial forever cnt[409] = @(posedge w iff !en or negedge w iff !(!en)) cnt[409] + 1;
+  initial forever cnt[410] = @(posedge w iff f(en)) cnt[410] + 1;
+  initial forever cnt[411] = @(negedge w iff f(en)) cnt[411] + 1;
+  initial forever cnt[412] = @(edge w iff f(en)) cnt[412] + 1;
+  initial forever cnt[413] = @(w iff f(en)) cnt[413] + 1;
+  initial forever cnt[414] = @(posedge w iff f(en) or negedge w iff !(f(en))) cnt[414] + 1;
+  initial forever cnt[415] = @(posedge w iff sf(en)) cnt[415] + 1;
+  initial forever cnt[416] = @(negedge w iff sf(en)) cnt[416] + 1;
+  initial forever cnt[417] = @(edge w iff sf(en)) cnt[417] + 1;
+  initial forever cnt[418] = @(w iff sf(en)) cnt[418] + 1;
+  initial forever cnt[419] = @(posedge w iff sf(en) or negedge w iff !(sf(en))) cnt[419] + 1;
+  always @(posedge o iff oe) cnt[420]++;
+  always_ff @(posedge o iff oe) cnt[421]++;
+  always begin @(posedge o iff oe); cnt[422]++; end
+  initial forever @(posedge o iff oe) cnt[423]++;
+  task automatic t424(ref logic e);
+    forever @(posedge o iff e) cnt[424]++;
+  endtask
+  initial t424(oe);
+  initial fork
+    forever @(posedge o iff oe) cnt[425]++;
+  join_none
+  initial forever cnt[426] = @(posedge o iff oe) cnt[426] + 1;
   initial begin
     #10 en = 1'b0; s = 1'b0; b[2] = 1'b0; n = 1'b0;
     #2 base = cnt;
@@ -584,66 +767,87 @@ module top;
     $display("01 e=0 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("01 e=0 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("01 e=0 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("01 e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("01 e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("01 e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("01 e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("01 e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("01 e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("01 e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("01 e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("01 e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("01 e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("01 e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("01 e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("01 e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("01 e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("01 e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("01 e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("01 e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("01 e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("01 e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("01 e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("01 e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("01 e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("01 e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("01 e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("01 e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("01 e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("01 e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("01 e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("01 e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("01 e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("01 e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("01 e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("01 e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("01 e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("01 e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("01 e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("01 e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("01 e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("01 e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("01 e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("01 e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("01 e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("01 e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("01 e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("01 e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("01 e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("01 e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("01 e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("01 e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("01 e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("01 e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("01 e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("01 e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("01 e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("01 e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("01 e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("01 e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("01 e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("01 e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("01 e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("01 e=0 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("01 e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("01 e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("01 e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("01 e=0 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("01 e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("01 e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("01 e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("01 e=0 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("01 e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("01 e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("01 e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("01 e=0 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("01 e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("01 e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("01 e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("01 e=0 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("01 e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("01 e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("01 e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("01 e=0 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("01 e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("01 e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("01 e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("01 e=0 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("01 e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("01 e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("01 e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("01 e=0 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("01 e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("01 e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("01 e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("01 e=0 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("01 e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("01 e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("01 e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("01 e=0 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("01 e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("01 e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("01 e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("01 e=0 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("01 e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("01 e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("01 e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("01 e=0 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("01 e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("01 e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("01 e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("01 e=0 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("01 e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("01 e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("01 e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("01 e=0 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("01 e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("01 e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("01 e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("01 e=0 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("01 e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("01 e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("01 e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("01 e=0 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("01 e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("01 e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("01 e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("01 e=0 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("01 e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("01 e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("01 e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("01 e=0 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("01 e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("01 e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("01 e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("01 e=0 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("01 e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("01 e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("01 e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("01 e=0 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("01 e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("01 e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("01 e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("01 e=0 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b0; b[2] = 1'b0; n = 1'b0;
     #2 base = cnt;
     #2 en = 1'b1;
@@ -652,66 +856,87 @@ module top;
     $display("01 e=1 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("01 e=1 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("01 e=1 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("01 e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("01 e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("01 e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("01 e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("01 e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("01 e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("01 e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("01 e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("01 e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("01 e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("01 e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("01 e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("01 e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("01 e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("01 e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("01 e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("01 e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("01 e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("01 e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("01 e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("01 e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("01 e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("01 e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("01 e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("01 e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("01 e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("01 e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("01 e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("01 e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("01 e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("01 e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("01 e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("01 e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("01 e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("01 e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("01 e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("01 e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("01 e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("01 e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("01 e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("01 e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("01 e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("01 e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("01 e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("01 e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("01 e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("01 e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("01 e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("01 e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("01 e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("01 e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("01 e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("01 e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("01 e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("01 e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("01 e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("01 e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("01 e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("01 e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("01 e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("01 e=1 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("01 e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("01 e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("01 e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("01 e=1 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("01 e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("01 e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("01 e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("01 e=1 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("01 e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("01 e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("01 e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("01 e=1 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("01 e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("01 e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("01 e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("01 e=1 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("01 e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("01 e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("01 e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("01 e=1 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("01 e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("01 e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("01 e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("01 e=1 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("01 e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("01 e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("01 e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("01 e=1 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("01 e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("01 e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("01 e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("01 e=1 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("01 e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("01 e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("01 e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("01 e=1 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("01 e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("01 e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("01 e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("01 e=1 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("01 e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("01 e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("01 e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("01 e=1 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("01 e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("01 e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("01 e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("01 e=1 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("01 e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("01 e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("01 e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("01 e=1 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("01 e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("01 e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("01 e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("01 e=1 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("01 e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("01 e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("01 e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("01 e=1 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("01 e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("01 e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("01 e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("01 e=1 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("01 e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("01 e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("01 e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("01 e=1 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("01 e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("01 e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("01 e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("01 e=1 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("01 e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("01 e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("01 e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("01 e=1 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("01 e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("01 e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("01 e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("01 e=1 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b0; b[2] = 1'b0; n = 1'b0;
     #2 base = cnt;
     #2 en = 1'bx;
@@ -720,66 +945,87 @@ module top;
     $display("01 e=x var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("01 e=x var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("01 e=x var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("01 e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("01 e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("01 e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("01 e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("01 e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("01 e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("01 e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("01 e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("01 e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("01 e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("01 e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("01 e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("01 e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("01 e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("01 e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("01 e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("01 e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("01 e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("01 e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("01 e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("01 e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("01 e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("01 e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("01 e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("01 e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("01 e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("01 e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("01 e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("01 e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("01 e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("01 e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("01 e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("01 e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("01 e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("01 e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("01 e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("01 e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("01 e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("01 e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("01 e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("01 e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("01 e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("01 e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("01 e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("01 e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("01 e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("01 e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("01 e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("01 e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("01 e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("01 e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("01 e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("01 e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("01 e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("01 e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("01 e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("01 e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("01 e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("01 e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("01 e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("01 e=x var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("01 e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("01 e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("01 e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("01 e=x var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("01 e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("01 e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("01 e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("01 e=x var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("01 e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("01 e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("01 e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("01 e=x var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("01 e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("01 e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("01 e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("01 e=x var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("01 e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("01 e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("01 e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("01 e=x var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("01 e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("01 e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("01 e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("01 e=x var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("01 e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("01 e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("01 e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("01 e=x bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("01 e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("01 e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("01 e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("01 e=x bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("01 e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("01 e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("01 e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("01 e=x bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("01 e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("01 e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("01 e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("01 e=x bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("01 e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("01 e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("01 e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("01 e=x bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("01 e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("01 e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("01 e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("01 e=x bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("01 e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("01 e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("01 e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("01 e=x bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("01 e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("01 e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("01 e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("01 e=x net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("01 e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("01 e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("01 e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("01 e=x net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("01 e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("01 e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("01 e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("01 e=x net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("01 e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("01 e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("01 e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("01 e=x net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("01 e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("01 e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("01 e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("01 e=x net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("01 e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("01 e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("01 e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("01 e=x net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("01 e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("01 e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("01 e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("01 e=x net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'b0;
@@ -788,66 +1034,87 @@ module top;
     $display("10 e=0 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("10 e=0 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("10 e=0 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("10 e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("10 e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("10 e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("10 e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("10 e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("10 e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("10 e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("10 e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("10 e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("10 e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("10 e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("10 e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("10 e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("10 e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("10 e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("10 e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("10 e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("10 e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("10 e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("10 e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("10 e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("10 e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("10 e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("10 e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("10 e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("10 e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("10 e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("10 e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("10 e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("10 e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("10 e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("10 e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("10 e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("10 e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("10 e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("10 e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("10 e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("10 e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("10 e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("10 e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("10 e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("10 e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("10 e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("10 e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("10 e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("10 e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("10 e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("10 e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("10 e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("10 e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("10 e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("10 e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("10 e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("10 e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("10 e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("10 e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("10 e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("10 e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("10 e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("10 e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("10 e=0 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("10 e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("10 e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("10 e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("10 e=0 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("10 e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("10 e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("10 e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("10 e=0 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("10 e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("10 e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("10 e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("10 e=0 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("10 e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("10 e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("10 e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("10 e=0 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("10 e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("10 e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("10 e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("10 e=0 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("10 e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("10 e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("10 e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("10 e=0 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("10 e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("10 e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("10 e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("10 e=0 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("10 e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("10 e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("10 e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("10 e=0 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("10 e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("10 e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("10 e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("10 e=0 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("10 e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("10 e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("10 e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("10 e=0 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("10 e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("10 e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("10 e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("10 e=0 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("10 e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("10 e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("10 e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("10 e=0 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("10 e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("10 e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("10 e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("10 e=0 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("10 e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("10 e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("10 e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("10 e=0 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("10 e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("10 e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("10 e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("10 e=0 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("10 e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("10 e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("10 e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("10 e=0 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("10 e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("10 e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("10 e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("10 e=0 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("10 e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("10 e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("10 e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("10 e=0 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("10 e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("10 e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("10 e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("10 e=0 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("10 e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("10 e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("10 e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("10 e=0 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'b1;
@@ -856,66 +1123,87 @@ module top;
     $display("10 e=1 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("10 e=1 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("10 e=1 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("10 e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("10 e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("10 e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("10 e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("10 e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("10 e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("10 e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("10 e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("10 e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("10 e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("10 e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("10 e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("10 e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("10 e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("10 e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("10 e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("10 e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("10 e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("10 e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("10 e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("10 e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("10 e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("10 e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("10 e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("10 e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("10 e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("10 e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("10 e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("10 e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("10 e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("10 e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("10 e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("10 e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("10 e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("10 e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("10 e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("10 e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("10 e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("10 e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("10 e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("10 e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("10 e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("10 e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("10 e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("10 e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("10 e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("10 e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("10 e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("10 e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("10 e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("10 e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("10 e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("10 e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("10 e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("10 e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("10 e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("10 e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("10 e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("10 e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("10 e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("10 e=1 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("10 e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("10 e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("10 e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("10 e=1 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("10 e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("10 e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("10 e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("10 e=1 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("10 e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("10 e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("10 e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("10 e=1 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("10 e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("10 e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("10 e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("10 e=1 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("10 e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("10 e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("10 e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("10 e=1 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("10 e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("10 e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("10 e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("10 e=1 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("10 e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("10 e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("10 e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("10 e=1 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("10 e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("10 e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("10 e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("10 e=1 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("10 e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("10 e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("10 e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("10 e=1 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("10 e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("10 e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("10 e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("10 e=1 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("10 e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("10 e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("10 e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("10 e=1 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("10 e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("10 e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("10 e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("10 e=1 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("10 e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("10 e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("10 e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("10 e=1 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("10 e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("10 e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("10 e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("10 e=1 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("10 e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("10 e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("10 e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("10 e=1 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("10 e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("10 e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("10 e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("10 e=1 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("10 e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("10 e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("10 e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("10 e=1 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("10 e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("10 e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("10 e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("10 e=1 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("10 e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("10 e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("10 e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("10 e=1 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("10 e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("10 e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("10 e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("10 e=1 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'bx;
@@ -924,66 +1212,87 @@ module top;
     $display("10 e=x var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("10 e=x var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("10 e=x var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("10 e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("10 e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("10 e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("10 e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("10 e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("10 e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("10 e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("10 e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("10 e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("10 e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("10 e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("10 e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("10 e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("10 e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("10 e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("10 e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("10 e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("10 e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("10 e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("10 e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("10 e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("10 e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("10 e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("10 e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("10 e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("10 e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("10 e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("10 e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("10 e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("10 e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("10 e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("10 e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("10 e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("10 e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("10 e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("10 e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("10 e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("10 e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("10 e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("10 e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("10 e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("10 e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("10 e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("10 e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("10 e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("10 e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("10 e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("10 e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("10 e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("10 e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("10 e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("10 e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("10 e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("10 e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("10 e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("10 e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("10 e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("10 e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("10 e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("10 e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("10 e=x var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("10 e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("10 e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("10 e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("10 e=x var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("10 e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("10 e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("10 e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("10 e=x var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("10 e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("10 e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("10 e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("10 e=x var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("10 e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("10 e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("10 e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("10 e=x var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("10 e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("10 e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("10 e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("10 e=x var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("10 e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("10 e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("10 e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("10 e=x var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("10 e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("10 e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("10 e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("10 e=x bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("10 e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("10 e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("10 e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("10 e=x bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("10 e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("10 e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("10 e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("10 e=x bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("10 e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("10 e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("10 e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("10 e=x bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("10 e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("10 e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("10 e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("10 e=x bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("10 e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("10 e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("10 e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("10 e=x bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("10 e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("10 e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("10 e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("10 e=x bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("10 e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("10 e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("10 e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("10 e=x net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("10 e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("10 e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("10 e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("10 e=x net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("10 e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("10 e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("10 e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("10 e=x net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("10 e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("10 e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("10 e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("10 e=x net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("10 e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("10 e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("10 e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("10 e=x net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("10 e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("10 e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("10 e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("10 e=x net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("10 e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("10 e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("10 e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("10 e=x net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b0; b[2] = 1'b0; n = 1'b0;
     #2 base = cnt;
     #2 en = 1'b0;
@@ -992,66 +1301,87 @@ module top;
     $display("0x e=0 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("0x e=0 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("0x e=0 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("0x e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("0x e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("0x e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("0x e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("0x e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("0x e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("0x e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("0x e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("0x e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("0x e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("0x e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("0x e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("0x e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("0x e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("0x e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("0x e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("0x e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("0x e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("0x e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("0x e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("0x e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("0x e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("0x e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("0x e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("0x e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("0x e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("0x e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("0x e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("0x e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("0x e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("0x e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("0x e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("0x e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("0x e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("0x e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("0x e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("0x e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("0x e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("0x e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("0x e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("0x e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("0x e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("0x e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("0x e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("0x e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("0x e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("0x e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("0x e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("0x e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("0x e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("0x e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("0x e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("0x e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("0x e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("0x e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("0x e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("0x e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("0x e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("0x e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("0x e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("0x e=0 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("0x e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("0x e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("0x e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("0x e=0 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("0x e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("0x e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("0x e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("0x e=0 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("0x e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("0x e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("0x e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("0x e=0 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("0x e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("0x e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("0x e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("0x e=0 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("0x e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("0x e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("0x e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("0x e=0 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("0x e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("0x e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("0x e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("0x e=0 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("0x e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("0x e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("0x e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("0x e=0 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("0x e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("0x e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("0x e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("0x e=0 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("0x e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("0x e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("0x e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("0x e=0 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("0x e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("0x e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("0x e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("0x e=0 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("0x e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("0x e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("0x e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("0x e=0 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("0x e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("0x e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("0x e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("0x e=0 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("0x e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("0x e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("0x e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("0x e=0 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("0x e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("0x e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("0x e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("0x e=0 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("0x e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("0x e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("0x e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("0x e=0 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("0x e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("0x e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("0x e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("0x e=0 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("0x e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("0x e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("0x e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("0x e=0 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("0x e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("0x e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("0x e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("0x e=0 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("0x e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("0x e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("0x e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("0x e=0 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("0x e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("0x e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("0x e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("0x e=0 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b0; b[2] = 1'b0; n = 1'b0;
     #2 base = cnt;
     #2 en = 1'b1;
@@ -1060,66 +1390,87 @@ module top;
     $display("0x e=1 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("0x e=1 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("0x e=1 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("0x e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("0x e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("0x e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("0x e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("0x e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("0x e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("0x e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("0x e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("0x e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("0x e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("0x e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("0x e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("0x e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("0x e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("0x e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("0x e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("0x e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("0x e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("0x e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("0x e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("0x e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("0x e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("0x e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("0x e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("0x e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("0x e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("0x e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("0x e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("0x e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("0x e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("0x e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("0x e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("0x e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("0x e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("0x e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("0x e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("0x e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("0x e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("0x e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("0x e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("0x e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("0x e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("0x e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("0x e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("0x e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("0x e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("0x e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("0x e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("0x e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("0x e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("0x e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("0x e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("0x e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("0x e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("0x e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("0x e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("0x e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("0x e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("0x e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("0x e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("0x e=1 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("0x e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("0x e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("0x e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("0x e=1 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("0x e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("0x e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("0x e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("0x e=1 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("0x e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("0x e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("0x e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("0x e=1 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("0x e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("0x e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("0x e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("0x e=1 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("0x e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("0x e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("0x e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("0x e=1 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("0x e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("0x e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("0x e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("0x e=1 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("0x e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("0x e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("0x e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("0x e=1 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("0x e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("0x e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("0x e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("0x e=1 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("0x e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("0x e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("0x e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("0x e=1 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("0x e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("0x e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("0x e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("0x e=1 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("0x e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("0x e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("0x e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("0x e=1 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("0x e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("0x e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("0x e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("0x e=1 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("0x e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("0x e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("0x e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("0x e=1 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("0x e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("0x e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("0x e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("0x e=1 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("0x e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("0x e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("0x e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("0x e=1 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("0x e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("0x e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("0x e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("0x e=1 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("0x e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("0x e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("0x e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("0x e=1 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("0x e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("0x e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("0x e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("0x e=1 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("0x e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("0x e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("0x e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("0x e=1 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("0x e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("0x e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("0x e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("0x e=1 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b0; b[2] = 1'b0; n = 1'b0;
     #2 base = cnt;
     #2 en = 1'bx;
@@ -1128,66 +1479,87 @@ module top;
     $display("0x e=x var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("0x e=x var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("0x e=x var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("0x e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("0x e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("0x e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("0x e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("0x e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("0x e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("0x e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("0x e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("0x e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("0x e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("0x e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("0x e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("0x e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("0x e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("0x e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("0x e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("0x e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("0x e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("0x e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("0x e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("0x e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("0x e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("0x e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("0x e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("0x e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("0x e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("0x e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("0x e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("0x e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("0x e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("0x e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("0x e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("0x e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("0x e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("0x e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("0x e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("0x e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("0x e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("0x e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("0x e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("0x e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("0x e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("0x e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("0x e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("0x e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("0x e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("0x e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("0x e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("0x e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("0x e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("0x e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("0x e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("0x e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("0x e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("0x e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("0x e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("0x e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("0x e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("0x e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("0x e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("0x e=x var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("0x e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("0x e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("0x e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("0x e=x var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("0x e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("0x e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("0x e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("0x e=x var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("0x e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("0x e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("0x e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("0x e=x var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("0x e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("0x e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("0x e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("0x e=x var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("0x e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("0x e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("0x e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("0x e=x var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("0x e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("0x e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("0x e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("0x e=x var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("0x e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("0x e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("0x e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("0x e=x bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("0x e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("0x e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("0x e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("0x e=x bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("0x e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("0x e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("0x e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("0x e=x bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("0x e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("0x e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("0x e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("0x e=x bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("0x e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("0x e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("0x e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("0x e=x bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("0x e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("0x e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("0x e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("0x e=x bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("0x e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("0x e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("0x e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("0x e=x bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("0x e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("0x e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("0x e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("0x e=x net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("0x e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("0x e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("0x e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("0x e=x net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("0x e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("0x e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("0x e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("0x e=x net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("0x e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("0x e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("0x e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("0x e=x net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("0x e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("0x e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("0x e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("0x e=x net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("0x e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("0x e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("0x e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("0x e=x net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("0x e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("0x e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("0x e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("0x e=x net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'b0;
@@ -1196,66 +1568,87 @@ module top;
     $display("1z e=0 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("1z e=0 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("1z e=0 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("1z e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("1z e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("1z e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("1z e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("1z e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("1z e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("1z e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("1z e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("1z e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("1z e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("1z e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("1z e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("1z e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("1z e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("1z e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("1z e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("1z e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("1z e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("1z e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("1z e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("1z e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("1z e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("1z e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("1z e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("1z e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("1z e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("1z e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("1z e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("1z e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("1z e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("1z e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("1z e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("1z e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("1z e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("1z e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("1z e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("1z e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("1z e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("1z e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("1z e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("1z e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("1z e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("1z e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("1z e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("1z e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("1z e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("1z e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("1z e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("1z e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("1z e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("1z e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("1z e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("1z e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("1z e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("1z e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("1z e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("1z e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("1z e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("1z e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("1z e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("1z e=0 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("1z e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("1z e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("1z e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("1z e=0 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("1z e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("1z e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("1z e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("1z e=0 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("1z e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("1z e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("1z e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("1z e=0 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("1z e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("1z e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("1z e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("1z e=0 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("1z e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("1z e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("1z e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("1z e=0 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("1z e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("1z e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("1z e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("1z e=0 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("1z e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("1z e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("1z e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("1z e=0 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("1z e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("1z e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("1z e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("1z e=0 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("1z e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("1z e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("1z e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("1z e=0 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("1z e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("1z e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("1z e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("1z e=0 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("1z e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("1z e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("1z e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("1z e=0 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("1z e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("1z e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("1z e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("1z e=0 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("1z e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("1z e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("1z e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("1z e=0 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("1z e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("1z e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("1z e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("1z e=0 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("1z e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("1z e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("1z e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("1z e=0 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("1z e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("1z e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("1z e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("1z e=0 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("1z e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("1z e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("1z e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("1z e=0 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("1z e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("1z e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("1z e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("1z e=0 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("1z e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("1z e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("1z e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("1z e=0 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("1z e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("1z e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("1z e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("1z e=0 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'b1;
@@ -1264,66 +1657,87 @@ module top;
     $display("1z e=1 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("1z e=1 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("1z e=1 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("1z e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("1z e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("1z e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("1z e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("1z e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("1z e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("1z e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("1z e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("1z e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("1z e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("1z e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("1z e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("1z e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("1z e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("1z e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("1z e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("1z e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("1z e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("1z e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("1z e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("1z e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("1z e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("1z e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("1z e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("1z e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("1z e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("1z e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("1z e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("1z e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("1z e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("1z e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("1z e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("1z e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("1z e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("1z e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("1z e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("1z e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("1z e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("1z e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("1z e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("1z e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("1z e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("1z e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("1z e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("1z e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("1z e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("1z e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("1z e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("1z e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("1z e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("1z e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("1z e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("1z e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("1z e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("1z e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("1z e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("1z e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("1z e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("1z e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("1z e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("1z e=1 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("1z e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("1z e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("1z e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("1z e=1 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("1z e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("1z e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("1z e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("1z e=1 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("1z e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("1z e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("1z e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("1z e=1 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("1z e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("1z e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("1z e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("1z e=1 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("1z e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("1z e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("1z e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("1z e=1 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("1z e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("1z e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("1z e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("1z e=1 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("1z e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("1z e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("1z e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("1z e=1 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("1z e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("1z e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("1z e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("1z e=1 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("1z e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("1z e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("1z e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("1z e=1 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("1z e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("1z e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("1z e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("1z e=1 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("1z e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("1z e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("1z e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("1z e=1 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("1z e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("1z e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("1z e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("1z e=1 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("1z e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("1z e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("1z e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("1z e=1 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("1z e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("1z e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("1z e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("1z e=1 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("1z e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("1z e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("1z e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("1z e=1 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("1z e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("1z e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("1z e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("1z e=1 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("1z e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("1z e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("1z e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("1z e=1 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("1z e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("1z e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("1z e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("1z e=1 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("1z e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("1z e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("1z e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("1z e=1 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("1z e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("1z e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("1z e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("1z e=1 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'bx;
@@ -1332,66 +1746,87 @@ module top;
     $display("1z e=x var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("1z e=x var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("1z e=x var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("1z e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("1z e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("1z e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("1z e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("1z e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("1z e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("1z e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("1z e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("1z e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("1z e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("1z e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("1z e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("1z e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("1z e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("1z e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("1z e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("1z e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("1z e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("1z e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("1z e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("1z e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("1z e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("1z e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("1z e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("1z e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("1z e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("1z e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("1z e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("1z e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("1z e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("1z e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("1z e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("1z e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("1z e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("1z e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("1z e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("1z e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("1z e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("1z e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("1z e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("1z e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("1z e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("1z e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("1z e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("1z e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("1z e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("1z e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("1z e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("1z e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("1z e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("1z e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("1z e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("1z e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("1z e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("1z e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("1z e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("1z e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("1z e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("1z e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("1z e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("1z e=x var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("1z e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("1z e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("1z e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("1z e=x var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("1z e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("1z e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("1z e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("1z e=x var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("1z e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("1z e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("1z e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("1z e=x var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("1z e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("1z e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("1z e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("1z e=x var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("1z e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("1z e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("1z e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("1z e=x var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("1z e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("1z e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("1z e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("1z e=x var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("1z e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("1z e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("1z e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("1z e=x bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("1z e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("1z e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("1z e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("1z e=x bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("1z e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("1z e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("1z e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("1z e=x bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("1z e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("1z e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("1z e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("1z e=x bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("1z e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("1z e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("1z e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("1z e=x bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("1z e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("1z e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("1z e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("1z e=x bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("1z e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("1z e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("1z e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("1z e=x bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("1z e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("1z e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("1z e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("1z e=x net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("1z e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("1z e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("1z e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("1z e=x net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("1z e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("1z e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("1z e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("1z e=x net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("1z e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("1z e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("1z e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("1z e=x net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("1z e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("1z e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("1z e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("1z e=x net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("1z e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("1z e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("1z e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("1z e=x net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("1z e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("1z e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("1z e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("1z e=x net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'b0;
@@ -1400,66 +1835,87 @@ module top;
     $display("11 e=0 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("11 e=0 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("11 e=0 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("11 e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("11 e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("11 e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("11 e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("11 e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("11 e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("11 e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("11 e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("11 e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("11 e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("11 e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("11 e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("11 e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("11 e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("11 e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("11 e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("11 e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("11 e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("11 e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("11 e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("11 e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("11 e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("11 e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("11 e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("11 e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("11 e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("11 e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("11 e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("11 e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("11 e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("11 e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("11 e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("11 e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("11 e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("11 e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("11 e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("11 e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("11 e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("11 e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("11 e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("11 e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("11 e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("11 e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("11 e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("11 e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("11 e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("11 e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("11 e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("11 e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("11 e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("11 e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("11 e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("11 e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("11 e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("11 e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("11 e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("11 e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("11 e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("11 e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("11 e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("11 e=0 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("11 e=0 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("11 e=0 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("11 e=0 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("11 e=0 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("11 e=0 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("11 e=0 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("11 e=0 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("11 e=0 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("11 e=0 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("11 e=0 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("11 e=0 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("11 e=0 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("11 e=0 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("11 e=0 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("11 e=0 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("11 e=0 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("11 e=0 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("11 e=0 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("11 e=0 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("11 e=0 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("11 e=0 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("11 e=0 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("11 e=0 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("11 e=0 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("11 e=0 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("11 e=0 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("11 e=0 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("11 e=0 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("11 e=0 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("11 e=0 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("11 e=0 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("11 e=0 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("11 e=0 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("11 e=0 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("11 e=0 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("11 e=0 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("11 e=0 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("11 e=0 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("11 e=0 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("11 e=0 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("11 e=0 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("11 e=0 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("11 e=0 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("11 e=0 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("11 e=0 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("11 e=0 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("11 e=0 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("11 e=0 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("11 e=0 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("11 e=0 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("11 e=0 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("11 e=0 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("11 e=0 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("11 e=0 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("11 e=0 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("11 e=0 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("11 e=0 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("11 e=0 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("11 e=0 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("11 e=0 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("11 e=0 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("11 e=0 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("11 e=0 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("11 e=0 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("11 e=0 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("11 e=0 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("11 e=0 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("11 e=0 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("11 e=0 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("11 e=0 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("11 e=0 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("11 e=0 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("11 e=0 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("11 e=0 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("11 e=0 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("11 e=0 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("11 e=0 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("11 e=0 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("11 e=0 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("11 e=0 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'b1;
@@ -1468,66 +1924,87 @@ module top;
     $display("11 e=1 var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("11 e=1 var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("11 e=1 var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("11 e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("11 e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("11 e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("11 e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("11 e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("11 e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("11 e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("11 e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("11 e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("11 e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("11 e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("11 e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("11 e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("11 e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("11 e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("11 e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("11 e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("11 e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("11 e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("11 e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("11 e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("11 e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("11 e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("11 e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("11 e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("11 e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("11 e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("11 e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("11 e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("11 e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("11 e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("11 e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("11 e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("11 e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("11 e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("11 e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("11 e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("11 e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("11 e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("11 e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("11 e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("11 e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("11 e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("11 e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("11 e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("11 e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("11 e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("11 e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("11 e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("11 e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("11 e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("11 e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("11 e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("11 e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("11 e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("11 e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("11 e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("11 e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("11 e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("11 e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("11 e=1 var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("11 e=1 var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("11 e=1 var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("11 e=1 var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("11 e=1 var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("11 e=1 var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("11 e=1 var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("11 e=1 var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("11 e=1 var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("11 e=1 var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("11 e=1 var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("11 e=1 var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("11 e=1 var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("11 e=1 var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("11 e=1 var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("11 e=1 var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("11 e=1 var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("11 e=1 var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("11 e=1 var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("11 e=1 var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("11 e=1 var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("11 e=1 var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("11 e=1 var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("11 e=1 var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("11 e=1 var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("11 e=1 bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("11 e=1 bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("11 e=1 bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("11 e=1 bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("11 e=1 bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("11 e=1 bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("11 e=1 bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("11 e=1 bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("11 e=1 bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("11 e=1 bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("11 e=1 bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("11 e=1 bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("11 e=1 bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("11 e=1 bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("11 e=1 bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("11 e=1 bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("11 e=1 bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("11 e=1 bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("11 e=1 bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("11 e=1 bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("11 e=1 bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("11 e=1 bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("11 e=1 bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("11 e=1 bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("11 e=1 bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("11 e=1 bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("11 e=1 bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("11 e=1 bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("11 e=1 net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("11 e=1 net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("11 e=1 net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("11 e=1 net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("11 e=1 net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("11 e=1 net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("11 e=1 net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("11 e=1 net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("11 e=1 net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("11 e=1 net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("11 e=1 net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("11 e=1 net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("11 e=1 net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("11 e=1 net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("11 e=1 net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("11 e=1 net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("11 e=1 net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("11 e=1 net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("11 e=1 net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("11 e=1 net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("11 e=1 net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("11 e=1 net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("11 e=1 net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("11 e=1 net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("11 e=1 net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("11 e=1 net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("11 e=1 net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("11 e=1 net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 en = 1'b0; s = 1'b1; b[2] = 1'b1; n = 1'b1;
     #2 base = cnt;
     #2 en = 1'bx;
@@ -1536,88 +2013,109 @@ module top;
     $display("11 e=x var always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[0] - base[0], cnt[1] - base[1], cnt[2] - base[2], cnt[3] - base[3], cnt[4] - base[4]);
     $display("11 e=x var always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[5] - base[5], cnt[6] - base[6], cnt[7] - base[7], cnt[8] - base[8], cnt[9] - base[9]);
     $display("11 e=x var always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[10] - base[10], cnt[11] - base[11], cnt[12] - base[12], cnt[13] - base[13], cnt[14] - base[14]);
-    $display("11 e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
-    $display("11 e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
-    $display("11 e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
-    $display("11 e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
-    $display("11 e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
-    $display("11 e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
-    $display("11 e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
-    $display("11 e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
-    $display("11 e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
-    $display("11 e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
-    $display("11 e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
-    $display("11 e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
-    $display("11 e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
-    $display("11 e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
-    $display("11 e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
-    $display("11 e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
-    $display("11 e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
-    $display("11 e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
-    $display("11 e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
-    $display("11 e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
-    $display("11 e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
-    $display("11 e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
-    $display("11 e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
-    $display("11 e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
-    $display("11 e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
-    $display("11 e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
-    $display("11 e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
-    $display("11 e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
-    $display("11 e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
-    $display("11 e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
-    $display("11 e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
-    $display("11 e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
-    $display("11 e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
-    $display("11 e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
-    $display("11 e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
-    $display("11 e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
-    $display("11 e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
-    $display("11 e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
-    $display("11 e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
-    $display("11 e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
-    $display("11 e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
-    $display("11 e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
-    $display("11 e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
-    $display("11 e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
-    $display("11 e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
-    $display("11 e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
-    $display("11 e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
-    $display("11 e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
-    $display("11 e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
-    $display("11 e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
-    $display("11 e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
-    $display("11 e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
-    $display("11 e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
-    $display("11 e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
-    $display("11 e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
-    $display("11 e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
-    $display("11 e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
-    $display("11 e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
-    $display("11 e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
-    $display("11 e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("11 e=x var always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[15] - base[15], cnt[16] - base[16], cnt[17] - base[17], cnt[18] - base[18], cnt[19] - base[19]);
+    $display("11 e=x var always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[20] - base[20], cnt[21] - base[21], cnt[22] - base[22], cnt[23] - base[23], cnt[24] - base[24]);
+    $display("11 e=x var always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[25] - base[25], cnt[26] - base[26], cnt[27] - base[27], cnt[28] - base[28], cnt[29] - base[29]);
+    $display("11 e=x var always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[30] - base[30], cnt[31] - base[31], cnt[32] - base[32], cnt[33] - base[33], cnt[34] - base[34]);
+    $display("11 e=x var always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[35] - base[35], cnt[36] - base[36], cnt[37] - base[37], cnt[38] - base[38], cnt[39] - base[39]);
+    $display("11 e=x var general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[40] - base[40], cnt[41] - base[41], cnt[42] - base[42], cnt[43] - base[43], cnt[44] - base[44]);
+    $display("11 e=x var general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[45] - base[45], cnt[46] - base[46], cnt[47] - base[47], cnt[48] - base[48], cnt[49] - base[49]);
+    $display("11 e=x var general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[50] - base[50], cnt[51] - base[51], cnt[52] - base[52], cnt[53] - base[53], cnt[54] - base[54]);
+    $display("11 e=x var general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[55] - base[55], cnt[56] - base[56], cnt[57] - base[57], cnt[58] - base[58], cnt[59] - base[59]);
+    $display("11 e=x var initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[60] - base[60], cnt[61] - base[61], cnt[62] - base[62], cnt[63] - base[63], cnt[64] - base[64]);
+    $display("11 e=x var initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[65] - base[65], cnt[66] - base[66], cnt[67] - base[67], cnt[68] - base[68], cnt[69] - base[69]);
+    $display("11 e=x var initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[70] - base[70], cnt[71] - base[71], cnt[72] - base[72], cnt[73] - base[73], cnt[74] - base[74]);
+    $display("11 e=x var initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[75] - base[75], cnt[76] - base[76], cnt[77] - base[77], cnt[78] - base[78], cnt[79] - base[79]);
+    $display("11 e=x var task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[80] - base[80], cnt[81] - base[81], cnt[82] - base[82], cnt[83] - base[83], cnt[84] - base[84]);
+    $display("11 e=x var task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[85] - base[85], cnt[86] - base[86], cnt[87] - base[87], cnt[88] - base[88], cnt[89] - base[89]);
+    $display("11 e=x var task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[90] - base[90], cnt[91] - base[91], cnt[92] - base[92], cnt[93] - base[93], cnt[94] - base[94]);
+    $display("11 e=x var task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[95] - base[95], cnt[96] - base[96], cnt[97] - base[97], cnt[98] - base[98], cnt[99] - base[99]);
+    $display("11 e=x var fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[100] - base[100], cnt[101] - base[101], cnt[102] - base[102], cnt[103] - base[103], cnt[104] - base[104]);
+    $display("11 e=x var fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[105] - base[105], cnt[106] - base[106], cnt[107] - base[107], cnt[108] - base[108], cnt[109] - base[109]);
+    $display("11 e=x var fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[110] - base[110], cnt[111] - base[111], cnt[112] - base[112], cnt[113] - base[113], cnt[114] - base[114]);
+    $display("11 e=x var fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[115] - base[115], cnt[116] - base[116], cnt[117] - base[117], cnt[118] - base[118], cnt[119] - base[119]);
+    $display("11 e=x var intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[120] - base[120], cnt[121] - base[121], cnt[122] - base[122], cnt[123] - base[123], cnt[124] - base[124]);
+    $display("11 e=x var intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[125] - base[125], cnt[126] - base[126], cnt[127] - base[127], cnt[128] - base[128], cnt[129] - base[129]);
+    $display("11 e=x var intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[130] - base[130], cnt[131] - base[131], cnt[132] - base[132], cnt[133] - base[133], cnt[134] - base[134]);
+    $display("11 e=x var intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[135] - base[135], cnt[136] - base[136], cnt[137] - base[137], cnt[138] - base[138], cnt[139] - base[139]);
+    $display("11 e=x bit always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[140] - base[140], cnt[141] - base[141], cnt[142] - base[142], cnt[143] - base[143], cnt[144] - base[144]);
+    $display("11 e=x bit always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[145] - base[145], cnt[146] - base[146], cnt[147] - base[147], cnt[148] - base[148], cnt[149] - base[149]);
+    $display("11 e=x bit always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[150] - base[150], cnt[151] - base[151], cnt[152] - base[152], cnt[153] - base[153], cnt[154] - base[154]);
+    $display("11 e=x bit always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[155] - base[155], cnt[156] - base[156], cnt[157] - base[157], cnt[158] - base[158], cnt[159] - base[159]);
+    $display("11 e=x bit always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[160] - base[160], cnt[161] - base[161], cnt[162] - base[162], cnt[163] - base[163], cnt[164] - base[164]);
+    $display("11 e=x bit always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[165] - base[165], cnt[166] - base[166], cnt[167] - base[167], cnt[168] - base[168], cnt[169] - base[169]);
+    $display("11 e=x bit always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[170] - base[170], cnt[171] - base[171], cnt[172] - base[172], cnt[173] - base[173], cnt[174] - base[174]);
+    $display("11 e=x bit always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[175] - base[175], cnt[176] - base[176], cnt[177] - base[177], cnt[178] - base[178], cnt[179] - base[179]);
+    $display("11 e=x bit general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[180] - base[180], cnt[181] - base[181], cnt[182] - base[182], cnt[183] - base[183], cnt[184] - base[184]);
+    $display("11 e=x bit general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[185] - base[185], cnt[186] - base[186], cnt[187] - base[187], cnt[188] - base[188], cnt[189] - base[189]);
+    $display("11 e=x bit general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[190] - base[190], cnt[191] - base[191], cnt[192] - base[192], cnt[193] - base[193], cnt[194] - base[194]);
+    $display("11 e=x bit general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[195] - base[195], cnt[196] - base[196], cnt[197] - base[197], cnt[198] - base[198], cnt[199] - base[199]);
+    $display("11 e=x bit initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[200] - base[200], cnt[201] - base[201], cnt[202] - base[202], cnt[203] - base[203], cnt[204] - base[204]);
+    $display("11 e=x bit initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[205] - base[205], cnt[206] - base[206], cnt[207] - base[207], cnt[208] - base[208], cnt[209] - base[209]);
+    $display("11 e=x bit initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[210] - base[210], cnt[211] - base[211], cnt[212] - base[212], cnt[213] - base[213], cnt[214] - base[214]);
+    $display("11 e=x bit initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[215] - base[215], cnt[216] - base[216], cnt[217] - base[217], cnt[218] - base[218], cnt[219] - base[219]);
+    $display("11 e=x bit task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[220] - base[220], cnt[221] - base[221], cnt[222] - base[222], cnt[223] - base[223], cnt[224] - base[224]);
+    $display("11 e=x bit task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[225] - base[225], cnt[226] - base[226], cnt[227] - base[227], cnt[228] - base[228], cnt[229] - base[229]);
+    $display("11 e=x bit task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[230] - base[230], cnt[231] - base[231], cnt[232] - base[232], cnt[233] - base[233], cnt[234] - base[234]);
+    $display("11 e=x bit task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[235] - base[235], cnt[236] - base[236], cnt[237] - base[237], cnt[238] - base[238], cnt[239] - base[239]);
+    $display("11 e=x bit fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[240] - base[240], cnt[241] - base[241], cnt[242] - base[242], cnt[243] - base[243], cnt[244] - base[244]);
+    $display("11 e=x bit fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[245] - base[245], cnt[246] - base[246], cnt[247] - base[247], cnt[248] - base[248], cnt[249] - base[249]);
+    $display("11 e=x bit fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[250] - base[250], cnt[251] - base[251], cnt[252] - base[252], cnt[253] - base[253], cnt[254] - base[254]);
+    $display("11 e=x bit fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[255] - base[255], cnt[256] - base[256], cnt[257] - base[257], cnt[258] - base[258], cnt[259] - base[259]);
+    $display("11 e=x bit intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[260] - base[260], cnt[261] - base[261], cnt[262] - base[262], cnt[263] - base[263], cnt[264] - base[264]);
+    $display("11 e=x bit intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[265] - base[265], cnt[266] - base[266], cnt[267] - base[267], cnt[268] - base[268], cnt[269] - base[269]);
+    $display("11 e=x bit intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[270] - base[270], cnt[271] - base[271], cnt[272] - base[272], cnt[273] - base[273], cnt[274] - base[274]);
+    $display("11 e=x bit intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[275] - base[275], cnt[276] - base[276], cnt[277] - base[277], cnt[278] - base[278], cnt[279] - base[279]);
+    $display("11 e=x net always en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[280] - base[280], cnt[281] - base[281], cnt[282] - base[282], cnt[283] - base[283], cnt[284] - base[284]);
+    $display("11 e=x net always nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[285] - base[285], cnt[286] - base[286], cnt[287] - base[287], cnt[288] - base[288], cnt[289] - base[289]);
+    $display("11 e=x net always fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[290] - base[290], cnt[291] - base[291], cnt[292] - base[292], cnt[293] - base[293], cnt[294] - base[294]);
+    $display("11 e=x net always sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[295] - base[295], cnt[296] - base[296], cnt[297] - base[297], cnt[298] - base[298], cnt[299] - base[299]);
+    $display("11 e=x net always_ff en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[300] - base[300], cnt[301] - base[301], cnt[302] - base[302], cnt[303] - base[303], cnt[304] - base[304]);
+    $display("11 e=x net always_ff nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[305] - base[305], cnt[306] - base[306], cnt[307] - base[307], cnt[308] - base[308], cnt[309] - base[309]);
+    $display("11 e=x net always_ff fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[310] - base[310], cnt[311] - base[311], cnt[312] - base[312], cnt[313] - base[313], cnt[314] - base[314]);
+    $display("11 e=x net always_ff sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[315] - base[315], cnt[316] - base[316], cnt[317] - base[317], cnt[318] - base[318], cnt[319] - base[319]);
+    $display("11 e=x net general en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[320] - base[320], cnt[321] - base[321], cnt[322] - base[322], cnt[323] - base[323], cnt[324] - base[324]);
+    $display("11 e=x net general nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[325] - base[325], cnt[326] - base[326], cnt[327] - base[327], cnt[328] - base[328], cnt[329] - base[329]);
+    $display("11 e=x net general fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[330] - base[330], cnt[331] - base[331], cnt[332] - base[332], cnt[333] - base[333], cnt[334] - base[334]);
+    $display("11 e=x net general sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[335] - base[335], cnt[336] - base[336], cnt[337] - base[337], cnt[338] - base[338], cnt[339] - base[339]);
+    $display("11 e=x net initial en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[340] - base[340], cnt[341] - base[341], cnt[342] - base[342], cnt[343] - base[343], cnt[344] - base[344]);
+    $display("11 e=x net initial nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[345] - base[345], cnt[346] - base[346], cnt[347] - base[347], cnt[348] - base[348], cnt[349] - base[349]);
+    $display("11 e=x net initial fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[350] - base[350], cnt[351] - base[351], cnt[352] - base[352], cnt[353] - base[353], cnt[354] - base[354]);
+    $display("11 e=x net initial sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[355] - base[355], cnt[356] - base[356], cnt[357] - base[357], cnt[358] - base[358], cnt[359] - base[359]);
+    $display("11 e=x net task en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[360] - base[360], cnt[361] - base[361], cnt[362] - base[362], cnt[363] - base[363], cnt[364] - base[364]);
+    $display("11 e=x net task nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[365] - base[365], cnt[366] - base[366], cnt[367] - base[367], cnt[368] - base[368], cnt[369] - base[369]);
+    $display("11 e=x net task fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[370] - base[370], cnt[371] - base[371], cnt[372] - base[372], cnt[373] - base[373], cnt[374] - base[374]);
+    $display("11 e=x net task sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[375] - base[375], cnt[376] - base[376], cnt[377] - base[377], cnt[378] - base[378], cnt[379] - base[379]);
+    $display("11 e=x net fork en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[380] - base[380], cnt[381] - base[381], cnt[382] - base[382], cnt[383] - base[383], cnt[384] - base[384]);
+    $display("11 e=x net fork nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[385] - base[385], cnt[386] - base[386], cnt[387] - base[387], cnt[388] - base[388], cnt[389] - base[389]);
+    $display("11 e=x net fork fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[390] - base[390], cnt[391] - base[391], cnt[392] - base[392], cnt[393] - base[393], cnt[394] - base[394]);
+    $display("11 e=x net fork sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[395] - base[395], cnt[396] - base[396], cnt[397] - base[397], cnt[398] - base[398], cnt[399] - base[399]);
+    $display("11 e=x net intra en pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[400] - base[400], cnt[401] - base[401], cnt[402] - base[402], cnt[403] - base[403], cnt[404] - base[404]);
+    $display("11 e=x net intra nen pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[405] - base[405], cnt[406] - base[406], cnt[407] - base[407], cnt[408] - base[408], cnt[409] - base[409]);
+    $display("11 e=x net intra fn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[410] - base[410], cnt[411] - base[411], cnt[412] - base[412], cnt[413] - base[413], cnt[414] - base[414]);
+    $display("11 e=x net intra sfn pos=%0d neg=%0d edge=%0d any=%0d split=%0d", cnt[415] - base[415], cnt[416] - base[416], cnt[417] - base[417], cnt[418] - base[418], cnt[419] - base[419]);
     #10 oe = 1'b0; o = 1'b0;
     #2 base = cnt;
     #2 oe = 1'b1; o = 1'b1; oe = 1'b0;
     #2;
-    $display("order before always pos=%0d", cnt[315] - base[315]);
-    $display("order before always_ff pos=%0d", cnt[316] - base[316]);
-    $display("order before general pos=%0d", cnt[317] - base[317]);
-    $display("order before initial pos=%0d", cnt[318] - base[318]);
-    $display("order before task pos=%0d", cnt[319] - base[319]);
-    $display("order before fork pos=%0d", cnt[320] - base[320]);
-    $display("order before intra pos=%0d", cnt[321] - base[321]);
+    $display("order before always pos=%0d", cnt[420] - base[420]);
+    $display("order before always_ff pos=%0d", cnt[421] - base[421]);
+    $display("order before general pos=%0d", cnt[422] - base[422]);
+    $display("order before initial pos=%0d", cnt[423] - base[423]);
+    $display("order before task pos=%0d", cnt[424] - base[424]);
+    $display("order before fork pos=%0d", cnt[425] - base[425]);
+    $display("order before intra pos=%0d", cnt[426] - base[426]);
     #10 oe = 1'b0; o = 1'b0;
     #2 base = cnt;
     #2 oe = 1'b0; o = 1'b1; oe = 1'b1;
     #2;
-    $display("order after always pos=%0d", cnt[315] - base[315]);
-    $display("order after always_ff pos=%0d", cnt[316] - base[316]);
-    $display("order after general pos=%0d", cnt[317] - base[317]);
-    $display("order after initial pos=%0d", cnt[318] - base[318]);
-    $display("order after task pos=%0d", cnt[319] - base[319]);
-    $display("order after fork pos=%0d", cnt[320] - base[320]);
-    $display("order after intra pos=%0d", cnt[321] - base[321]);
+    $display("order after always pos=%0d", cnt[420] - base[420]);
+    $display("order after always_ff pos=%0d", cnt[421] - base[421]);
+    $display("order after general pos=%0d", cnt[422] - base[422]);
+    $display("order after initial pos=%0d", cnt[423] - base[423]);
+    $display("order after task pos=%0d", cnt[424] - base[424]);
+    $display("order after fork pos=%0d", cnt[425] - base[425]);
+    $display("order after intra pos=%0d", cnt[426] - base[426]);
     $finish;
   end
 endmodule
