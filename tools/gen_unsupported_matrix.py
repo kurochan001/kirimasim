@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 3
+VERSION = 4
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -75,8 +75,10 @@ STATEMENTS = [
     ("event_var_index", "  event ev[2];\n  int i;\n", "@(«»ev[i]);",
      "event selected by an index that is not constant", True),
     # Edges that tools/gen_edge_matrix.py leaves out.
-    ("event_iff", "  logic s, en = 1'b1;\n", "@(«»posedge s iff en);",
-     "event control with iff", True),
+    # The kernel evaluates a wait condition in the middle of another write.
+    ("wait_writes",
+     "  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
+     "«»wait (wr());", "wait condition that writes a variable or net", True),
     ("event_unpacked_element", "  logic m[0:1];\n", "@(«»posedge m[1]);",
      "event control on an expression", True),
     ("event_expression", "  logic s, en;\n", "@(«»posedge (s & en));",
