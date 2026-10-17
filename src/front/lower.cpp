@@ -1565,13 +1565,14 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
     // <instance>.$state and <instance>.$prev; the state starts at the
     // initial value before time 0 (VALUE_SEMANTICS.md 5.9).
     const ast::PrimitiveSymbol& prim = g.primitiveType;
+    // slang leaves an empty connection out of the list and only warns
+    // (-Wudp-port-empty); a wrong count it reports as an error, and then
+    // nothing is lowered. So a short list is an unconnected port.
     const std::span<const ast::Expression* const> conns = g.getPortConnections();
-    if (conns.size() != prim.ports.size()) return;  // slang reported the connections
-    for (const ast::Expression* c : conns)
-        if (c == nullptr) {
-            report(g.location, "a UDP instance with an unconnected port");
-            return;
-        }
+    if (conns.size() != prim.ports.size()) {
+        report(g.location, "a UDP instance with an unconnected port");
+        return;
+    }
     const slang::SourceLocation sl = g.location;
     const std::string name = g.name.empty() && g.arrayPath.empty() ? processName(prefix, "udp")
                                                                    : g.getHierarchicalPath();

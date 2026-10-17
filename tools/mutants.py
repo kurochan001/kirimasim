@@ -389,6 +389,11 @@ MUTANTS = [
      "    reportProgram(inst);\n", "    (void)inst;\n"),
     ("front: an anonymous program is not reported", "src/front/lower.cpp",
      "        report(s.location, \"anonymous program\");", "        (void)s;"),
+    ("front: a UDP instance with an empty connection is left out silently",
+     "src/front/lower.cpp",
+     "    if (conns.size() != prim.ports.size()) {\n"
+     "        report(g.location, \"a UDP instance with an unconnected port\");",
+     "    if (conns.size() != prim.ports.size()) {\n        (void)g;"),
     ("front: an alias of a part is left out silently", "src/front/lower.cpp",
      "report(sl, \"an alias of a part or a concatenation of nets\");", "(void)sl;"),
     ("front: a switch is left out silently", "src/front/lower.cpp",

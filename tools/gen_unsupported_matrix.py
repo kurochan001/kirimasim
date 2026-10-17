@@ -146,6 +146,16 @@ OTHERS = [
     ("automatic_in_fork",
      "module top;\n  task automatic t;\n    int x = 5;\n    fork\n      $display(\"%0d\", «»x);\n"
      "    join_none\n  endtask\n  initial t();\nendmodule\n", "automatic variable 'x' here"),
+    # An empty connection of a UDP: the last input, an input in the middle and
+    # the output; in the top module, an instance array (one line per
+    # element), a generate block and an instantiated module.
+    ("udp_unconnected",
+     "primitive p(output y, input a, b);\n  table\n    1 ? : 1;\n    0 0 : 0;\n  endtable\n"
+     "endprimitive\n\nmodule sub;\n  wire y;\n  p «»u(y, 1'b1, );\nendmodule\n\nmodule top;\n"
+     "  wire y;\n  wire [1:0] ys;\n  reg [1:0] a = 2'b11;\n  p «»u(y, , 1'b0);\n"
+     "  p «»«»row[1:0](ys, a, );\n  if (1) begin : g\n    p «»v(, 1'b0, 1'b1);\n  end\n"
+     "  sub s();\n  initial #1 $display(\"%b %b\", y, ys);\nendmodule\n",
+     "a UDP instance with an unconnected port"),
     ("deferred_waiting_task",
      "module top;\n  task t;\n    #1;\n  endtask\n  initial «»assert #0 (0) else t();\nendmodule\n",
      "deferred assertion whose action is a task that may wait"),
