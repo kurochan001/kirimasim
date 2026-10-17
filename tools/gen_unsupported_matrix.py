@@ -55,6 +55,11 @@ PROC = [
 STATEMENTS = [
     ("cond_matches", "  int x = 5, y;\n", "y = «»x matches 5 ? 1 : 0;",
      "conditional operator with a pattern", False),
+    # Narrowed or cast, where slang records a constant (SIR_SPEC.md 6).
+    ("cond_matches_narrowed", "  int x = 5;\n  logic y1;\n", "y1 = «»x matches 5 ? 1 : 0;",
+     "conditional operator with a pattern", False),
+    ("cond_matches_cast", "  int x = 5, y;\n", "y = 1'(«»x matches 5 ? 1 : 0);",
+     "conditional operator with a pattern", False),
     ("if_matches", "  int x = 5, y;\n", "«»if (x matches 5) y = 1;", "if with a pattern", False),
     ("display_d_string", "  string s = \"ab\";\n", "$display(\"%d\", «»s);", "%d of a string",
      False),
@@ -113,6 +118,10 @@ ITEMS = [
      "an alias of nets of different types or kinds"),
     ("alias_apart", "wire a, b, c, d;\n  alias a = b;\n  alias c = d;\n  «»alias a = c;",
      "an alias of nets that other aliases or ports joined apart"),
+    ("cond_matches_items",
+     "int x = 5;\n  wire z, o;\n  assign z = «»x matches 5 ? 1 : 0;\n"
+     "  wire n = «»x matches 5 ? 1 : 0;\n  logic v = «»x matches 5 ? 1 : 0;\n"
+     "  and a(o, «»x matches 5 ? 1 : 0, 1'b1);", "conditional operator with a pattern"),
     ("switch_mos", "wire a, b, c;\n  nmos «»n1(a, b, c);", "switch 'nmos'"),
     ("switch_bidirectional", "wire a, b;\n  tran «»t1(a, b);", "switch 'tran'"),
 ]

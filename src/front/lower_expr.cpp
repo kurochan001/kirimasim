@@ -165,13 +165,15 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
 
 /// System functions whose constant evaluation in slang is known to be wrong
 /// (SIR_SPEC.md 6): expressions that contain them are computed at run time,
-/// as are conversions of a real to an integer, whose result kirimasim
-/// decides (VALUE_SEMANTICS.md 7.4: NaN and the infinities).
+/// as are conditional operators with a pattern (SIR_SPEC.md 6) and
+/// conversions of a real to an integer, whose result kirimasim decides
+/// (VALUE_SEMANTICS.md 7.4: NaN and the infinities).
 constexpr std::string_view kUntrustedConstants[] = {
     "$rtoi",  // negative values give 0 (slang issue #2023)
 };
 
-/// Whether an expression contains a call of one of kUntrustedConstants.
+/// Whether an expression contains something whose slang constant is not used
+/// (kUntrustedConstants and the rest above).
 bool untrustedConstant(const ast::Expression& e) {
     const auto any = [](std::span<const ast::Expression* const> es) {
         for (const ast::Expression* x : es)
@@ -192,8 +194,11 @@ bool untrustedConstant(const ast::Expression& e) {
         }
         case ast::ExpressionKind::ConditionalOp: {
             const auto& c = e.as<ast::ConditionalExpression>();
-            for (const auto& cond : c.conditions)
-                if (untrustedConstant(*cond.expr)) return true;
+            for (const auto& cond : c.conditions) {
+                // slang matches a value that is not constant as a failed
+                // match, so the false side comes out (SIR_SPEC.md 6).
+                if (cond.pattern != nullptr || untrustedConstant(*cond.expr)) return true;
+            }
             return untrustedConstant(c.left()) || untrustedConstant(c.right());
         }
         case ast::ExpressionKind::Concatenation:
