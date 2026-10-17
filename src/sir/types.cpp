@@ -162,6 +162,8 @@ const char* opName(Op op) {
         case Op::Syscall: return "syscall";
         case Op::Builtin: return "builtin";
         case Op::ReportDefer: return "report.defer";
+        case Op::Udp: return "udp";
+        case Op::UdpSeq: return "udp.seq";
         case Op::OverrideStart: return "override.start";
         case Op::OverrideStop: return "override.stop";
         case Op::StoreOverride: return "store.override";
@@ -263,6 +265,7 @@ const char* kindName(TypeEntryKind k) {
         case TypeEntryKind::PackedUnion: return "union.packed";
         case TypeEntryKind::UnpackedStruct: return "struct";
         case TypeEntryKind::Array: return "array";
+        case TypeEntryKind::Udp: return "udp";
     }
     return "?";
 }

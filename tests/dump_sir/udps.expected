@@ -1,0 +1,42 @@
+; sir format 0
+precision 1ns
+source 0 "udps.sv"
+instance 0 "top" def="top" parent=-
+type !0 udp "and2" inputs=2 { "0? : 0", "?0 : 0", "11 : 1" }
+type !1 udp "dff" inputs=2 seq init=1 { "0r : ? : 0", "1r : ? : 1", "?f : ? : -", "*? : ? : -" }
+slot %s0 "top.a" : i4<1> var inst=0
+slot %s1 "top.b" : i4<1> var inst=0
+slot %s2 "top.y" : i4<1> wire inst=0
+slot %s3 "top.q" : i4<1> wire inst=0
+slot %s4 "top.u2.$state" : i4<1> var inst=0
+slot %s5 "top.u2.$prev" : i4<2> var inst=0
+
+process @0 "top.u1" kind=cont inst=0 trigger=any(%s0),any(%s1) writes=%s2 {  ; 0:29:8
+bb0:
+  %t0 = load i4<1> %s0  ; 0:29:15
+  %t1 = load i4<1> %s1  ; 0:29:18
+  %t2 = udp i4<1> !0, %t0, %t1  ; 0:29:8
+  store %s2, %t2  ; 0:29:8
+  ret  ; 0:29:8
+}
+
+process @1 "top.$static" kind=static-init inst=0 writes=%s4 {  ; 0:30:7
+bb0:
+  store %s4, const i4<1> 1'h1  ; 0:30:7
+  ret  ; 0:26:8
+}
+
+process @2 "top.u2" kind=cont inst=0 trigger=any(%s0),any(%s1) writes=%s4,%s5,%s3 {  ; 0:30:7
+bb0:
+  %t0 = load i4<1> %s0  ; 0:30:14
+  %t1 = load i4<1> %s1  ; 0:30:17
+  %t2 = load i4<1> %s4  ; 0:30:7
+  %t3 = load i4<1> %s5[0:0]  ; 0:30:7
+  %t4 = load i4<1> %s5[1:1]  ; 0:30:7
+  %t5 = udp.seq i4<1> !1, %t2, %t3, %t4, %t0, %t1  ; 0:30:7
+  store %s4, %t5  ; 0:30:7
+  %t6 = concat i4<2> %t1, %t0  ; 0:30:7
+  store %s5, %t6  ; 0:30:7
+  store %s3, %t5  ; 0:30:7
+  ret  ; 0:30:7
+}

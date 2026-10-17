@@ -12,6 +12,7 @@
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/strings.h"
+#include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/w4.h"
 #include "kirimasim/kernel/w4ops.h"
 

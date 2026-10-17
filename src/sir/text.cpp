@@ -82,6 +82,7 @@ std::string operandText(const Design& d, const Operand& o) {
         case Operand::Kind::Frame: return "%f" + std::to_string(o.id);
         case Operand::Kind::Subroutine:
         case Operand::Kind::Process: return "@" + std::to_string(o.id);
+        case Operand::Kind::Type: return "!" + std::to_string(o.id);
     }
     return "?";
 }
@@ -190,6 +191,19 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
     std::string out = std::string(kindName(t.kind)) + " " + quoted(t.name);
     if (t.value.kind != TypeKind::Void) out += " : " + toString(t.value);
     if (t.kind == TypeEntryKind::Array) out += " elem=" + typeRef(t.element) + dimsText(t.dims);
+    if (t.kind == TypeEntryKind::Udp) {
+        out += " inputs=" + std::to_string(t.inputs);
+        if (t.sequential) out += " seq init=" + std::string(1, t.initial);
+        out += " {";
+        for (std::size_t i = 0; i < t.rows.size(); ++i) {
+            const UdpRow& r = t.rows[i];
+            std::string row = r.inputs;
+            if (r.state != 0) row += std::string(" : ") + r.state;
+            row += std::string(" : ") + r.output;
+            out += (i == 0 ? " " : ", ") + quoted(row);
+        }
+        out += " }";
+    }
     if (t.kind == TypeEntryKind::Enum) {
         out += " {";
         for (std::size_t i = 0; i < t.items.size(); ++i) {

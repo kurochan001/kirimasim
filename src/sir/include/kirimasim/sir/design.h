@@ -111,7 +111,23 @@ struct Instance {
 };
 
 /// Kinds of type-table rows (SIR_SPEC.md 4.3).
-enum class TypeEntryKind : std::uint8_t { Enum, PackedStruct, PackedUnion, UnpackedStruct, Array };
+enum class TypeEntryKind : std::uint8_t {
+    Enum,
+    PackedStruct,
+    PackedUnion,
+    UnpackedStruct,
+    Array,
+    Udp,  ///< The table of a user-defined primitive (VALUE_SEMANTICS.md 5.9).
+};
+
+/// A row of a UDP table, in slang's form: one symbol per input, an edge
+/// written "(vw)" or as r, f, p, n or *; the state symbol (0 for a
+/// combinational UDP); the output symbol, '-' for no change (table 29-1).
+struct UdpRow {
+    std::string inputs;
+    char state = 0;
+    char output = 'x';
+};
 
 /// An item of an enum: its name and value (a constant of the base type).
 struct EnumItem {
@@ -137,6 +153,12 @@ struct TypeEntry {
     std::vector<Field> fields;    ///< Packed fields or unpacked members.
     TypeId element = kNone;       ///< Array: the element's row, if it needs one.
     std::vector<ArrayDim> dims;   ///< Array: the dimensions.
+    /// Udp: the number of inputs, whether it is sequential, its rows, and
+    /// the initial state of a sequential one ('0', '1' or 'x').
+    std::uint32_t inputs = 0;
+    bool sequential = false;
+    std::vector<UdpRow> rows;
+    char initial = 'x';
 };
 
 /// A constant: an integral value of any width (four-state if the type is),
@@ -260,6 +282,9 @@ enum class Op : std::uint8_t {
     /// side of twice the width gives the sides a driver drives (SIR_SPEC.md
     /// 3.5, VALUE_SEMANTICS.md 5.4).
     Resolve,
+    // User-defined primitives (SIR_SPEC.md 5.5).
+    Udp,     ///< %r = udp !T, <input>...
+    UdpSeq,  ///< %r = udp.seq !T, <state>, <previous input>..., <input>...
     // Procedural continuous assignments (SIR_SPEC.md 5.6).
     /// override.start "assign" | "force", @P, <slot range>...: the targets
     /// are held at that level by override process P, which runs once now.
@@ -298,7 +323,17 @@ enum class Edge : std::uint8_t { Any, Pos, Neg, Both };
 /// wait.event a Slot operand may be followed by a Subroutine operand, the
 /// item's iff guard.
 struct Operand {
-    enum class Kind : std::uint8_t { Temp, Const, Slot, Block, Text, Frame, Subroutine, Process };
+    enum class Kind : std::uint8_t {
+        Temp,
+        Const,
+        Slot,
+        Block,
+        Text,
+        Frame,
+        Subroutine,
+        Process,
+        Type,  ///< A row of the type table (!N).
+    };
     Kind kind = Kind::Temp;
     std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
     std::uint32_t lsb = 0;
@@ -336,6 +371,7 @@ struct Operand {
     static Operand frame(FrameVarId f) { return of(Kind::Frame, f); }
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s); }
     static Operand process(ProcessId p) { return of(Kind::Process, p); }
+    static Operand typeRow(TypeId t) { return of(Kind::Type, t); }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
         o.text = std::move(s);

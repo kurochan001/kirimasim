@@ -18,6 +18,7 @@
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/strength.h"
+#include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/sir/types.h"
 
@@ -433,6 +434,15 @@ public:
         const std::size_t bodies = d.processes.size() + d.subroutines.size();
         info_.resize(bodies);
         tempTypes_.resize(bodies);
+        // The UDP tables, compiled once (VALUE_SEMANTICS.md 5.9).
+        udpTables_.resize(d.types.size());
+        for (std::size_t i = 0; i < d.types.size(); ++i) {
+            const sir::TypeEntry& te = d.types[i];
+            if (te.kind != sir::TypeEntryKind::Udp) continue;
+            udpTables_[i].inputs = te.inputs;
+            for (const sir::UdpRow& r : te.rows)
+                udpTables_[i].rows.push_back(kernel::compileUdpRow(r.inputs, r.state, r.output));
+        }
         layouts_.resize(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const auto& frame = bodyFrame(p);
@@ -600,7 +610,8 @@ private:
         std::size_t size = 0;
         std::vector<std::size_t> elements;  ///< By frame variable: an array's first element.
     };
-    std::vector<Layout> layouts_;  ///< By body.
+    std::vector<Layout> layouts_;              ///< By body.
+    std::vector<kernel::UdpTable> udpTables_;  ///< By type-table row.
     /// The frame variables of each live activation, by number, for refs
     /// (SIR_SPEC.md 8): a ref to a frame variable is its activation's
     /// number and the word's place in it.
@@ -1617,6 +1628,31 @@ private:
                 }
                 storeBits(f, ops[0].id, e, v(n + 1), t(n + 1), v(n + 2), t(n + 2).width,
                           in.op == Op::NbaBits);
+                return true;
+            }
+            case Op::Udp:
+            case Op::UdpSeq: {
+                // A value of a UDP: 0, 1, or x for x and z.
+                const auto code = [](W4 x) -> std::uint8_t {
+                    return (x.b & 1U) != 0 ? kernel::kUdpX : static_cast<std::uint8_t>(x.a & 1U);
+                };
+                const kernel::UdpTable& table = udpTables_[ops[0].id];
+                const unsigned n = table.inputs;
+                std::uint8_t prev[kernel::kUdpMaxInputs];
+                std::uint8_t cur[kernel::kUdpMaxInputs];
+                std::uint8_t r = kernel::kUdpX;
+                if (in.op == Op::Udp) {
+                    for (unsigned i = 0; i < n; ++i)
+                        cur[i] = code(v(1 + i));
+                    r = kernel::udpOutput(table, cur);
+                } else {
+                    for (unsigned i = 0; i < n; ++i) {
+                        prev[i] = code(v(2 + i));
+                        cur[i] = code(v(2 + n + i));
+                    }
+                    r = kernel::udpStep(table, code(v(1)), prev, cur);
+                }
+                set(r == kernel::kUdpX ? W4{1, 1} : W4{r, 0});
                 return true;
             }
             case Op::RefMake: {

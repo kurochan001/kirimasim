@@ -1221,7 +1221,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
     const ast::PrimitiveSymbol& prim = g.primitiveType;
     const std::string kind(prim.name);
     if (prim.primitiveKind == ast::PrimitiveSymbol::UserDefined) {
-        report(g.location, "user-defined primitive");
+        lowerUdp(g, prefix);
         return;
     }
     static const std::set<std::string, std::less<>> kLogic = {"and", "nand", "or",
@@ -1340,6 +1340,121 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
     if (side && design_.processes.size() > first) sides_[first] = *side;
 }
 
+sir::TypeId Lowerer::udpTable(const ast::PrimitiveSymbol& prim, slang::SourceLocation sl) {
+    // The type-table row of a UDP's table (SIR_SPEC.md 4.3), in slang's
+    // form of the rows.
+    if (const auto it = udpTables_.find(&prim); it != udpTables_.end()) return it->second;
+    sir::TypeEntry t;
+    t.kind = sir::TypeEntryKind::Udp;
+    t.name = std::string(prim.name);
+    t.inputs = static_cast<std::uint32_t>(prim.ports.size() - 1);
+    t.sequential = prim.isSequential;
+    if (t.inputs == 0 || t.inputs > 32) unsupported(sl, "a UDP with this many inputs");
+    for (const ast::PrimitiveSymbol::TableEntry& e : prim.table)
+        t.rows.push_back({std::string(e.inputs), e.state, e.output});
+    if (prim.initVal != nullptr && prim.initVal->isInteger()) {
+        // The initial statement (29.7): 0, 1 or x.
+        const slang::SVInt& v = prim.initVal->integer();
+        t.initial = v.hasUnknown() ? 'x' : (v.isOdd() ? '1' : '0');
+    }
+    const auto id = static_cast<sir::TypeId>(design_.types.size());
+    design_.types.push_back(std::move(t));
+    udpTables_.emplace(&prim, id);
+    return id;
+}
+
+void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {
+    // A UDP instance is a cont process (SIR_SPEC.md 3.5, 5.5). A sequential
+    // one keeps its state and the inputs it last saw in slots of its own,
+    // <instance>.$state and <instance>.$prev; the state starts at the
+    // initial value before time 0 (VALUE_SEMANTICS.md 5.9).
+    const ast::PrimitiveSymbol& prim = g.primitiveType;
+    const std::span<const ast::Expression* const> conns = g.getPortConnections();
+    if (conns.size() != prim.ports.size()) return;  // slang reported the connections
+    for (const ast::Expression* c : conns)
+        if (c == nullptr) {
+            report(g.location, "a UDP instance with an unconnected port");
+            return;
+        }
+    const slang::SourceLocation sl = g.location;
+    const std::string name = g.name.empty() && g.arrayPath.empty() ? processName(prefix, "udp")
+                                                                   : g.getHierarchicalPath();
+    sir::TypeId table = 0;
+    try {
+        table = udpTable(prim, sl);
+    } catch (const Unsupported&) {
+        return;
+    }
+    const std::uint32_t n = design_.types[table].inputs;
+    sir::SlotId state = sir::kNone;
+    sir::SlotId prev = sir::kNone;
+    if (prim.isSequential) {
+        const auto slot = [&](const std::string& suffix, std::uint32_t w) {
+            sir::Slot s;
+            s.name = name + suffix;
+            s.type = sir::u4(w);
+            s.instance = instance_;
+            const auto id = static_cast<sir::SlotId>(design_.slots.size());
+            design_.names.push_back({s.name, id});
+            design_.slots.push_back(std::move(s));
+            return id;
+        };
+        state = slot(".$state", 1);
+        prev = slot(".$prev", n);
+        const char init = design_.types[table].initial;
+        if (init != 'x') {
+            ensureStaticInit(g, sl);
+            Body saved = std::move(b_);
+            b_ = std::move(staticBody_[instance_]);
+            emitVoid(sir::Op::Store,
+                     {sir::Operand::slot(state), constant(sir::u4(1), init == '1' ? 1 : 0).op}, sl);
+            noteWrite({state, 0, 0, 0, 0});
+            staticBody_[instance_] = std::move(b_);
+            b_ = std::move(saved);
+        }
+    }
+    lowerCont(
+        name, sl, g,
+        [&] {
+            if (g.getDelay() != nullptr) unsupported(sl, "a UDP instance with a delay");
+            const sir::Type bit = sir::u4(1);
+            std::vector<Val> in;
+            in.reserve(n);
+            for (std::uint32_t i = 0; i < n; ++i)
+                in.push_back(coerce(lowerExpr(*conns[1 + i]), bit, sl));
+            Val out;
+            if (!prim.isSequential) {
+                std::vector<sir::Operand> ops{sir::Operand::typeRow(table)};
+                for (const Val& v : in)
+                    ops.push_back(v.op);
+                out = emit(sir::Op::Udp, bit, std::move(ops), sl);
+            } else {
+                // Its own slots are not part of what wakes it.
+                std::vector<sir::Operand> ops{
+                    sir::Operand::typeRow(table),
+                    emit(sir::Op::Load, bit, {sir::Operand::slot(state)}, sl).op};
+                for (std::uint32_t i = 0; i < n; ++i)
+                    ops.push_back(
+                        emit(sir::Op::Load, bit, {sir::Operand::slot(prev, i, 1)}, sl).op);
+                for (const Val& v : in)
+                    ops.push_back(v.op);
+                out = emit(sir::Op::UdpSeq, bit, std::move(ops), sl);
+                emitVoid(sir::Op::Store, {sir::Operand::slot(state), out.op}, sl);
+                std::vector<sir::Operand> all;
+                for (std::uint32_t i = n; i-- > 0;)
+                    all.push_back(in[i].op);
+                const Val now =
+                    n == 1 ? in[0] : emit(sir::Op::Concat, sir::u4(n), std::move(all), sl);
+                emitVoid(sir::Op::Store, {sir::Operand::slot(prev), now.op}, sl);
+                noteWrite({state, 0, 0, 0, 0});
+                noteWrite({prev, 0, 0, 0, 0});
+            }
+            const Place p = placeOf(*outputPlace(conns[0]), sl);
+            storePlace(p, coerce(out, p.type, sl), false, sl);
+        },
+        driveLevels(g.getDriveStrength()));
+}
+
 template <typename F>
 void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
                         const ast::Symbol& evalAt, F&& body,
@@ -1382,8 +1497,7 @@ void Lowerer::triggerOnReads() {
     }
 }
 
-void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
-                              slang::SourceLocation sl) {
+void Lowerer::ensureStaticInit(const ast::Symbol& at, slang::SourceLocation sl) {
     // Every static initializer of an instance goes, in declaration order,
     // into one process that runs before all others (6.8, SIR_SPEC.md 7.1).
     if (staticInit_.find(instance_) == staticInit_.end()) {
@@ -1402,9 +1516,14 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
         staticLoc_[instance_] = sl;
         Body body;
         body.proc = id;
-        body.scale = timeScaleOf(*v.getParentScope());
+        body.scale = timeScaleOf(*at.getParentScope());
         staticBody_[instance_] = std::move(body);
     }
+}
+
+void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
+                              slang::SourceLocation sl) {
+    ensureStaticInit(v, sl);
     Body saved = std::move(b_);
     b_ = std::move(staticBody_[instance_]);
     b_.scope = scopeNameOf(v);

@@ -203,7 +203,42 @@ private:
                     if (t.dims.empty()) error(where, "array has no dimensions");
                     if (!typeRefOk(t.element)) error(where, "element type out of range");
                     break;
+                case TypeEntryKind::Udp: checkUdp(t, where); break;
             }
+        }
+    }
+
+    /// A UDP table (SIR_SPEC.md 4.3): rows of one symbol of table 29-1 per
+    /// input, at most one edge, a state symbol exactly when sequential.
+    void checkUdp(const TypeEntry& t, const std::string& where) {
+        if (t.inputs == 0 || t.inputs > 32) error(where, "a UDP has 1 to 32 inputs");
+        if (t.initial != '0' && t.initial != '1' && t.initial != 'x')
+            error(where, "initial state must be 0, 1 or x");
+        const auto level = [](char c) {
+            return c == '0' || c == '1' || c == 'x' || c == '?' || c == 'b';
+        };
+        for (const UdpRow& r : t.rows) {
+            std::uint32_t fields = 0;
+            std::uint32_t edges = 0;
+            bool ok = true;
+            for (std::size_t i = 0; ok && i < r.inputs.size(); ++i, ++fields) {
+                const char c = r.inputs[i];
+                if (c == '(') {
+                    ok = i + 3 < r.inputs.size() && level(r.inputs[i + 1]) &&
+                         level(r.inputs[i + 2]) && r.inputs[i + 3] == ')';
+                    i += 3;
+                    ++edges;
+                } else if (c == 'r' || c == 'f' || c == 'p' || c == 'n' || c == '*') {
+                    ++edges;
+                } else {
+                    ok = level(c);
+                }
+            }
+            const bool stateOk = t.sequential ? level(r.state) : r.state == 0;
+            const bool outOk = r.output == '0' || r.output == '1' || r.output == 'x' ||
+                               (t.sequential && r.output == '-');
+            if (!ok || fields != t.inputs || !stateOk || !outOk || edges > (t.sequential ? 1U : 0U))
+                error(where, "row \"" + r.inputs + "\" is not a row of this UDP");
         }
     }
 
@@ -719,6 +754,9 @@ private:
                     break;
                 case Operand::Kind::Process:
                     if (o.id >= d_.processes.size()) bad("process out of range");
+                    break;
+                case Operand::Kind::Type:
+                    if (o.id >= d_.types.size()) bad("type out of range");
                     break;
                 case Operand::Kind::Const:
                     if (o.id >= d_.constants.size()) bad("constant out of range");
@@ -1260,6 +1298,32 @@ private:
                     bad("needs a process, a subroutine or a block name");
                 break;
             case Op::DisableFork: nOps(0); break;
+            case Op::Udp:
+            case Op::UdpSeq: {
+                // A UDP table, then the state and the previous inputs of a
+                // sequential one, then the inputs: 1-bit values. The result
+                // is a 4-state bit (SIR_SPEC.md 5.5).
+                const bool seq = in.op == Op::UdpSeq;
+                const bool table = !ops.empty() && ops[0].kind == Operand::Kind::Type &&
+                                   ops[0].id < d_.types.size() &&
+                                   d_.types[ops[0].id].kind == TypeEntryKind::Udp &&
+                                   d_.types[ops[0].id].sequential == seq;
+                if (!table) {
+                    bad(std::string("needs a ") + (seq ? "sequential" : "combinational") +
+                        " UDP table");
+                    break;
+                }
+                const std::uint32_t n = d_.types[ops[0].id].inputs;
+                if (ops.size() != 1 + (seq ? 1 + 2 * n : n)) {
+                    bad("needs one value per input" +
+                        std::string(seq ? ", twice, and the state" : ""));
+                    break;
+                }
+                for (std::size_t i = 1; i < ops.size(); ++i)
+                    if (!isValue(i) || !width1(ty(i))) bad("values must be 1-bit");
+                if (rt != u4(1)) bad("result must be i4<1>");
+                break;
+            }
             case Op::OverrideStart:
             case Op::OverrideStop: {
                 // A level, the override process (start), then the targets:
