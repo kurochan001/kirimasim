@@ -410,6 +410,9 @@ sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
     // A handle to a kernel event (SIR_SPEC.md 3.2.1).
     if (t.isEvent()) return sir::Type{sir::TypeKind::Event, 0};
+    // A chandle holds null, 0, until DPI (VALUE_SEMANTICS.md 7.8); null
+    // itself is one.
+    if (t.isCHandle() || t.isNull()) return sir::Type{sir::TypeKind::Chandle, 0};
     if (t.isFloating())
         return t.as<ast::FloatingType>().floatKind == ast::FloatingType::ShortReal
                    ? sir::Type{sir::TypeKind::ShortReal, 0}

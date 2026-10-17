@@ -1,0 +1,8 @@
+defaults 1 1 1 1 1
+eq 1 ne 0 ceq 1 cne 0
+assigned 1
+s is false
+not 1 ternary 2
+in function: local 1 arg 1
+returned 1
+element 1

@@ -297,6 +297,12 @@ private:
                 continue;
             }
             if (!c.bytes.empty()) error(where, "only string constants have bytes");
+            if (c.type.kind == TypeKind::Chandle) {
+                // Only null (VALUE_SEMANTICS.md 7.8).
+                if (c.aWords.size() != 1 || c.aWords[0] != 0 || !c.bWords.empty())
+                    error(where, "a chandle constant is null");
+                continue;
+            }
             if (isReal(c.type)) {
                 if (c.aWords.size() != 1 || !c.bWords.empty())
                     error(where, "real constant needs exactly one word");
@@ -1075,8 +1081,10 @@ private:
             case Op::Ne:
                 if (nOps(2)) {
                     const Type t = ty(0);
-                    if (!(isIntegral(t) || isReal(t) || isString(t)) || t != ty(1))
-                        bad("operands must have one integral, real or string type");
+                    if (!(isIntegral(t) || isReal(t) || isString(t) ||
+                          t.kind == TypeKind::Chandle) ||
+                        t != ty(1))
+                        bad("operands must have one integral, real, string or chandle type");
                     else if (!width1(rt) || isFourState(rt) != isFourState(t))
                         bad("result must be 1 bit in the operands' domain");
                 }
@@ -1112,9 +1120,11 @@ private:
                 break;
             case Op::Lnot:
             case Op::Truth:
-                if (nOps(1) && (!(isIntegral(ty(0)) || isReal(ty(0))) || !width1(rt) ||
-                                isFourState(rt) != isFourState(ty(0))))
-                    bad("needs an integral or real operand and a 1-bit result in its domain");
+                if (nOps(1) &&
+                    (!(isIntegral(ty(0)) || isReal(ty(0)) || ty(0).kind == TypeKind::Chandle) ||
+                     !width1(rt) || isFourState(rt) != isFourState(ty(0))))
+                    bad("needs an integral, real or chandle operand and a 1-bit result in its "
+                        "domain");
                 break;
             case Op::Rand:
             case Op::Rnand:

@@ -511,7 +511,9 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
 
 Val Lowerer::lowerCondition(const ast::Expression& e) {
     Val v = lowerExpr(e);
-    if (isReal(v.type))  // 0.0 is false, anything else true (VALUE_SEMANTICS.md 7.5)
+    // 0.0 is false, anything else true (VALUE_SEMANTICS.md 7.5); a chandle
+    // is false when null (7.8).
+    if (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle)
         return emit(Op::Truth, sir::u2(1), {v.op}, e.sourceRange.start());
     if (!sir::isIntegral(v.type)) unsupported(e.sourceRange.start(), "condition of this type");
     if (v.type.width == 1 && !sir::isSigned(v.type)) return v;
@@ -667,6 +669,17 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return constantFrom(
                 slang::ConstantValue(slang::real_t(e.as<ast::RealLiteral>().getValue())),
                 typeOf(*e.type, sl), sl);
+        case ast::ExpressionKind::NullLiteral: {
+            // null: the handle 0 (VALUE_SEMANTICS.md 7.8; class handles
+            // are P3).
+            if (!e.type->isNull() && !e.type->isCHandle()) unsupported(sl, "null of this type");
+            sir::Constant c;
+            c.type = Type{sir::TypeKind::Chandle, 0};
+            c.aWords = {0};
+            const auto id = static_cast<sir::ConstId>(design().constants.size());
+            design().constants.push_back(std::move(c));
+            return {Operand::constant(id), Type{sir::TypeKind::Chandle, 0}};
+        }
         case ast::ExpressionKind::StringLiteral:
             return constantFrom(e.as<ast::StringLiteral>().getIntValue(), typeOf(*e.type, sl), sl);
         case ast::ExpressionKind::NamedValue:
@@ -1241,7 +1254,8 @@ Val Lowerer::lowerUnary(const ast::Expression& e) {
         case ast::UnaryOperator::BitwiseNor:
         case ast::UnaryOperator::BitwiseXnor: {
             const Val v = lowerExpr(u.operand());
-            if (u.op == ast::UnaryOperator::LogicalNot && isReal(v.type))
+            if (u.op == ast::UnaryOperator::LogicalNot &&
+                (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle))
                 return coerce(emit(Op::Lnot, sir::u2(1), {v.op}, sl), rt, sl);
             if (!sir::isIntegral(v.type)) unsupported(sl, "operand of this type");
             Op op = Op::Lnot;
@@ -1686,6 +1700,15 @@ Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
         l = coerce(l, st, sl);
         r = coerce(r, st, sl);
         return emit(op, sir::u2(1), {l.op, r.op}, sl);
+    }
+    if (l.type.kind == sir::TypeKind::Chandle || r.type.kind == sir::TypeKind::Chandle) {
+        // Two chandles, or one and null, are equal when they are the same
+        // handle; === and !== mean == and != (VALUE_SEMANTICS.md 7.8).
+        if (l.type != r.type) unsupported(sl, "comparison of a chandle with this type");
+        if (op != Op::Eq && op != Op::Ne && op != Op::Ceq && op != Op::Cne)
+            unsupported(sl, "this operator on a chandle");
+        const Op eq = op == Op::Eq || op == Op::Ceq ? Op::Eq : Op::Ne;
+        return emit(eq, sir::u2(1), {l.op, r.op}, sl);
     }
     if (isReal(l.type) || isReal(r.type)) {
         // Compared as reals: real if either is, else shortreal (11.3.1).
