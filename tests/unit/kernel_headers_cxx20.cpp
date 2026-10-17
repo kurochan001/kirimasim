@@ -15,5 +15,6 @@
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/w4.h"
 #include "kirimasim/kernel/w4ops.h"
+#include "kirimasim/kernel/wide.h"
 
 static_assert(__cplusplus == 202002L, "this file must be compiled as C++20");
