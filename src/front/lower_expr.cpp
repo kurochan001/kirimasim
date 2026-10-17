@@ -954,6 +954,13 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 // (SYSTEM_TASKS.md 8); on dynamic data they come with it (P3).
                 if (const std::optional<slang::ConstantValue> cv = constantValue(e))
                     return constantFrom(*cv, rt, sl);
+                // $bits of an expression slang does not evaluate (a
+                // hierarchical name) still comes from its fixed type alone;
+                // the expression is not evaluated (20.6.2).
+                const auto& c = e.as<ast::CallExpression>();
+                if (name == "$bits" && c.arguments().size() == 1 &&
+                    c.arguments()[0]->type->isFixedSize())
+                    return constant(rt, c.arguments()[0]->type->getBitstreamWidth());
                 unsupported(sl, "system function " + name + " on this argument");
             }
             if (name == "$countbits" || name == "$countones" || name == "$onehot" ||
