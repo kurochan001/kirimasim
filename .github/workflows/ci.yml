@@ -21,9 +21,17 @@ jobs:
         preset: [dev, release]
     # The jobs run on the project's self-hosted Linux (x86-64) runner, which
     # carries the kirimasim-linux label. macOS results come from
-    # tools/local_ci.py run before pushing.
+    # tools/local_ci.py run before pushing. A pull request from a fork would
+    # run its own code on that machine, so only pushes and pull requests from
+    # branches of this repository run here; the repository also requires
+    # approval before any workflow of an outside contributor runs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, kirimasim-linux]
     steps:
+      # The runner's home directory stays out of the public logs.
+      - name: Mask the runner's home directory
+        run: echo "::add-mask::$HOME"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Show tool versions
@@ -57,8 +65,13 @@ jobs:
         run: python3 tools/check_release_flags.py
 
   lint:
+    # The same rule as build-test: never a fork's code on the self-hosted runner.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, kirimasim-linux]
     steps:
+      - name: Mask the runner's home directory
+        run: echo "::add-mask::$HOME"
+
       # The full history is needed by the PR history checks below. The default
       # checkout of a pull_request event fetches only GitHub's test merge commit.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
