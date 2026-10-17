@@ -520,6 +520,43 @@ MUTANTS = [
     ("front: an instance's scope name is a reference into the table", "src/front/lower.cpp",
      "    const std::string scope = design_.instances[instance_].scopeName;",
      "    const std::string& scope = design_.instances[instance_].scopeName;"),
+    ("front: an element's slot is looked up before its indices", "src/front/lower_expr.cpp",
+     '    if (design().slots[st->id].dims.size() != st->elem.size() + indices.size())\n'
+     '        unsupported(sl, "a part of an unpacked array");\n'
+     '    bool fixed = !st->dynamic;\n'
+     '    std::vector<std::int64_t> idx = st->constIdx;\n'
+     '    for (const ast::Expression* ix : indices) {\n'
+     '        const Val iv = lowerExpr(*ix);\n'
+     '        if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");\n'
+     '        p.indices.push_back(iv.op);\n'
+     '        const std::optional<std::int64_t> c = constInt(*ix);\n'
+     '        if (c)\n'
+     '            idx.push_back(*c);\n'
+     '        else\n'
+     '            fixed = false;\n'
+     '    }\n'
+     '    // Looked up after the indices: the first call of a static function\n'
+     '    // among them adds its variables to the slot table.\n'
+     '    const sir::Slot& slot = design().slots[st->id];\n'
+     '    if (fixed) p.elem = constElementOf(slot, idx);\n'
+     '    p.type = slot.type;\n',
+     '    const sir::Slot& slot = design().slots[st->id];\n'
+     '    if (slot.dims.size() != st->elem.size() + indices.size())\n'
+     '        unsupported(sl, "a part of an unpacked array");\n'
+     '    bool fixed = !st->dynamic;\n'
+     '    std::vector<std::int64_t> idx = st->constIdx;\n'
+     '    for (const ast::Expression* ix : indices) {\n'
+     '        const Val iv = lowerExpr(*ix);\n'
+     '        if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");\n'
+     '        p.indices.push_back(iv.op);\n'
+     '        const std::optional<std::int64_t> c = constInt(*ix);\n'
+     '        if (c)\n'
+     '            idx.push_back(*c);\n'
+     '        else\n'
+     '            fixed = false;\n'
+     '    }\n'
+     '    if (fixed) p.elem = constElementOf(slot, idx);\n'
+     '    p.type = slot.type;\n'),
 ]
 
 

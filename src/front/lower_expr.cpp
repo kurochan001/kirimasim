@@ -1184,8 +1184,7 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
         p.type = homeType(p);
         return p;
     }
-    const sir::Slot& slot = design().slots[st->id];
-    if (slot.dims.size() != st->elem.size() + indices.size())
+    if (design().slots[st->id].dims.size() != st->elem.size() + indices.size())
         unsupported(sl, "a part of an unpacked array");
     bool fixed = !st->dynamic;
     std::vector<std::int64_t> idx = st->constIdx;
@@ -1199,6 +1198,9 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
         else
             fixed = false;
     }
+    // Looked up after the indices: the first call of a static function
+    // among them adds its variables to the slot table.
+    const sir::Slot& slot = design().slots[st->id];
     if (fixed) p.elem = constElementOf(slot, idx);
     p.type = slot.type;
     return p;
