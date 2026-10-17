@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Runs the sv-tests simulation tests with kirimasim and Icarus and compares.
+"""Runs the sv-tests simulation tests with kirimasim, Icarus and Verilator and compares.
 
 This is the first P1 gate of TEST_SUITE.md ("sv-tests で Icarus 以上"):
 
@@ -17,7 +17,10 @@ This is the first P1 gate of TEST_SUITE.md ("sv-tests で Icarus 以上"):
   from third_party, as sv-tests does.
 
 Icarus is run like sv-tests' Icarus runner: iverilog -g2012, then the
-compiled program. Use the build of tools/build_icarus.sh.
+compiled program. Use the build of tools/build_icarus.sh. Verilator, which
+is optional and only for comparison, is run like sv-tests' Verilator
+runner: verilator --timing --binary with that runner's warning and build
+options, then the built program.
 
 Writes results.json (every test, every tool) and summary.md (totals and
 counts per chapter) to --out, and prints the summary. With --gate, the exit
@@ -96,6 +99,22 @@ def run_icarus(exe: str, files, incdirs, defines, top, cwd, timeout):
     return rc2, log + log2
 
 
+def run_verilator(exe: str, files, incdirs, defines, top, cwd, timeout, extra=()):
+    name = f"V{top or 'top'}"
+    cmd = [exe, "--timing", "--binary", "--build-jobs", "0", "-CFLAGS", "-O0", "-Wno-fatal",
+           "-Wno-UNOPTFLAT", "-Wno-BLKANDNBLK", "-Wpedantic", "-Wno-context"]
+    if top:
+        cmd += ["--top-module", top]
+    cmd += [f"-I{d}" for d in incdirs] + ["-DUVM_NO_DPI"]
+    cmd += ["--Mdir", "vbuild", "--prefix", name, "-o", name] + list(extra)
+    cmd += [f"-D{d}" for d in defines] + files
+    rc, log = run(cmd, cwd, timeout)
+    if rc != 0:
+        return rc, log
+    rc2, log2 = run([f"./vbuild/{name}"], cwd, timeout)
+    return rc2, log + log2
+
+
 def judge(rc: int, log: str, should_fail: bool, kirimasim: bool) -> bool:
     if rc >= CRASH:
         return False
@@ -116,6 +135,7 @@ def main() -> int:
     ap.add_argument("--sv-tests", required=True, type=Path, help="sv-tests checkout")
     ap.add_argument("--kirimasim", help="kirimasim executable")
     ap.add_argument("--iverilog", help="iverilog of tools/build_icarus.sh")
+    ap.add_argument("--verilator", help="verilator, for comparison only")
     ap.add_argument("--out", type=Path, default=Path("build/svtests"))
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
     ap.add_argument("--filter", default="", help="only tests whose path contains this")
@@ -143,6 +163,8 @@ def main() -> int:
         tools["kirimasim"] = (run_kirimasim, str(Path(args.kirimasim).resolve()))
     if args.iverilog:
         tools["icarus"] = (run_icarus, str(Path(args.iverilog).resolve()))
+    if args.verilator:
+        tools["verilator"] = (run_verilator, args.verilator)
 
     def one(item):
         path, params = item
@@ -157,9 +179,12 @@ def main() -> int:
         result = {"test": str(path.relative_to(root)), "chapter": chapter(params["tags"]),
                   "should_fail": should_fail}
         for name, (fn, exe) in tools.items():
+            extra = {}
+            if name == "verilator" and "runner_verilator_flags" in params:
+                extra["extra"] = params["runner_verilator_flags"].split()
             with tempfile.TemporaryDirectory() as tmp:
                 rc, log = fn(exe, files, incdirs, defines, params["top_module"], tmp,
-                             int(params["timeout"]))
+                             int(params["timeout"]), **extra)
             result[name] = {"rc": rc, "pass": judge(rc, log, should_fail, name == "kirimasim"),
                             "unsupported": "error: unsupported:" in log}
         return result
@@ -188,7 +213,7 @@ def main() -> int:
     (args.out / "summary.md").write_text(summary, encoding="utf-8")
     print(summary, end="")
 
-    if args.gate and len(names) == 2:
+    if args.gate and "kirimasim" in tools and "icarus" in tools:
         h = sum(1 for r in results if r["kirimasim"]["pass"])
         i = sum(1 for r in results if r["icarus"]["pass"])
         return 0 if h >= i else 1
