@@ -76,3 +76,7 @@ set_tests_properties(tools/gen_driver_start_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_wait_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_wait_matrix.py --check)
 set_tests_properties(tools/gen_wait_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_delay_value_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delay_value_matrix.py --check)
+set_tests_properties(tools/gen_delay_value_matrix PROPERTIES LABELS Tools)

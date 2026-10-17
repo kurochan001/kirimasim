@@ -503,6 +503,9 @@ public:
     Val lowerTriggered(const ast::Expression& ev, sir::Type rt, slang::SourceLocation sl);
     /// The ticks of a constant delay (9.4.1).
     std::uint64_t delayTicks(const ast::Expression& e, slang::SourceLocation sl);
+    /// A delay in ticks as a u4<64> value: a constant one converted now,
+    /// another converted when it runs (SIR_SPEC.md 7.2).
+    Val delayValue(const ast::Expression& e, slang::SourceLocation sl);
 
     /// Puts the initializer of a static variable into the static-init
     /// process of the current instance (SIR_SPEC.md 7.1).

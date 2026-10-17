@@ -643,6 +643,41 @@ std::uint64_t Lowerer::delayTicks(const ast::Expression& e, slang::SourceLocatio
     return *ticks;
 }
 
+Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
+    if (constantValue(e)) return constant(sir::u2(64), delayTicks(e, sl));
+    // The same conversion at run time (SCHEDULER_SPEC.md 1, 8): an integral
+    // delay is a count of time units, so it only scales to ticks; a real
+    // one is rounded to the precision, half away from zero as any real to
+    // integer conversion (VALUE_SEMANTICS.md 1.5), and then scaled. A
+    // negative delay is read as a 64-bit unsigned value, and x or z as 0
+    // (wait.delay, 9.4.1).
+    const auto pow10 = [](int n) {
+        std::uint64_t f = 1;
+        for (int i = 0; i < n; ++i)
+            f *= 10;
+        return f;
+    };
+    const sir::TimeScale ts = timeScale();
+    const sir::Type t64 = sir::u4(64);
+    Val v = lowerExpr(e);
+    int scale = ts.unit - precision();
+    if (e.type->isFloating()) {
+        const sir::Type real{sir::TypeKind::Real, 0};
+        v = coerce(v, real, sl);
+        v = emit(Op::Mul, real,
+                 {v.op, realConstant(real, static_cast<double>(pow10(ts.unit - ts.precision))).op},
+                 sl);
+        v = emit(Op::Rtoi, t64, {v.op}, sl);
+        scale = ts.precision - precision();
+    } else if (e.type->isIntegral()) {
+        v = coerce(v, t64, sl);
+    } else {
+        unsupported(sl, "delay of this type");
+    }
+    if (scale == 0) return v;
+    return emit(Op::Mul, t64, {v.op, constant(t64, pow10(scale)).op}, sl);
+}
+
 // --- Expressions -------------------------------------------------------------
 
 Val Lowerer::lowerExpr(const ast::Expression& e) {
@@ -1917,7 +1952,7 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     if (a.isNonBlocking()) {
         if (t.kind != ast::TimingControlKind::Delay)
             unsupported(sl, "nonblocking assignment with an event control");
-        const std::uint64_t ticks = delayTicks(t.as<ast::DelayControl>().expr, sl);
+        const Val ticks = delayValue(t.as<ast::DelayControl>().expr, sl);
         // The target is a fixed range of a slot: a whole variable, an
         // element or bits at constant positions (SIR_SPEC.md 5.3).
         const Place p = placeOf(a.left(), sl);
@@ -1933,7 +1968,7 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
         Operand o = Operand::slot(r.slot, r.lsb, r.width);
         o.firstElem = r.firstElem;
         o.numElems = r.numElems;
-        emitVoid(Op::NbaDelay, {o, coerce(v, p.type, sl).op, constant(sir::u2(64), ticks).op}, sl);
+        emitVoid(Op::NbaDelay, {o, coerce(v, p.type, sl).op, ticks.op}, sl);
         noteWrite(r);
         return v;
     }

@@ -1,0 +1,59 @@
+initial: literal                   30
+initial: variable                   60
+initial: expression                  100
+initial: function                  160
+initial: real up                  188
+initial: real down                  198
+initial: shortreal                  203
+initial: x                  203
+initial: z                  203
+initial: unsigned vector                  353
+initial: signed vector                  403
+initial: container variable                  423
+static task: literal                  453
+static task: variable                  483
+static task: expression                  523
+static task: function                  583
+static task: real up                  611
+static task: real down                  621
+static task: shortreal                  626
+static task: x                  626
+static task: z                  626
+static task: unsigned vector                  776
+static task: signed vector                  826
+static task: container variable                  846
+automatic task: literal                  876
+automatic task: variable                  906
+automatic task: expression                  946
+automatic task: function                 1006
+automatic task: real up                 1034
+automatic task: real down                 1044
+automatic task: shortreal                 1049
+automatic task: x                 1049
+automatic task: z                 1049
+automatic task: unsigned vector                 1199
+automatic task: signed vector                 1249
+automatic task: container variable                 1269
+fork branch: literal                 1299
+fork branch: variable                 1329
+fork branch: expression                 1369
+fork branch: function                 1429
+fork branch: real up                 1457
+fork branch: real down                 1467
+fork branch: shortreal                 1472
+fork branch: x                 1472
+fork branch: z                 1472
+fork branch: unsigned vector                 1622
+fork branch: signed vector                 1672
+fork branch: container variable                 1692
+blocking: variable                 1722
+blocking: real up                 1750
+blocking: x                 1750
+nonblocking: variable                 1780
+nonblocking: real up                 1808
+nonblocking: x                 1808
+trigger: variable                 1838
+trigger: real up                 1866
+trigger: x                 1866
+child: variable                 2166
+child: real                 2196

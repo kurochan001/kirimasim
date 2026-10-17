@@ -340,9 +340,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             if (et.timing != nullptr) {
                 if (et.timing->kind != ast::TimingControlKind::Delay)
                     unsupported(sl, "->> with an event control");
-                ops.push_back(
-                    constant(sir::u2(64), delayTicks(et.timing->as<ast::DelayControl>().expr, sl))
-                        .op);
+                ops.push_back(delayValue(et.timing->as<ast::DelayControl>().expr, sl).op);
             }
             emitVoid(Op::TriggerNb, std::move(ops), sl);
             return;
@@ -897,9 +895,9 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
     const slang::SourceLocation sl = t.sourceRange.start();
     switch (t.kind) {
         case ast::TimingControlKind::Delay: {
-            const std::uint64_t ticks = delayTicks(t.as<ast::DelayControl>().expr, sl);
+            const Val ticks = delayValue(t.as<ast::DelayControl>().expr, sl);
             const sir::BlockId cont = newBlock();
-            terminate(Op::WaitDelay, {constant(sir::u2(64), ticks).op, Operand::block(cont)}, sl);
+            terminate(Op::WaitDelay, {ticks.op, Operand::block(cont)}, sl);
             setBlock(cont);
             return;
         }
