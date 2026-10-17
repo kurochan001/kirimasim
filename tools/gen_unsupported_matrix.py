@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 4
+VERSION = 5
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -79,6 +79,13 @@ STATEMENTS = [
     ("wait_writes",
      "  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
      "«»wait (wr());", "wait condition that writes a variable or net", True),
+    # wait.named has no guard; and an iff condition, like a wait condition,
+    # is evaluated in the middle of another write.
+    ("event_named_iff", "  event ev;\n  logic en = 1'b1;\n", "@(«»ev iff en);",
+     "named event with iff", True),
+    ("iff_writes",
+     "  logic s;\n  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
+     "@(posedge s iff «»wr());", "iff condition that writes a variable or net", True),
     ("event_unpacked_element", "  logic m[0:1];\n", "@(«»posedge m[1]);",
      "event control on an expression", True),
     ("event_expression", "  logic s, en;\n", "@(«»posedge (s & en));",
@@ -137,6 +144,12 @@ ITEMS = [
      "int x = 5;\n  wire z, o;\n  assign z = «»x matches 5 ? 1 : 0;\n"
      "  wire n = «»x matches 5 ? 1 : 0;\n  logic v = «»x matches 5 ? 1 : 0;\n"
      "  and a(o, «»x matches 5 ? 1 : 0, 1'b1);", "conditional operator with a pattern"),
+    # The iff of an always and an always_ff whose event control becomes the
+    # process's triggers.
+    ("iff_writes_trigger",
+     "logic c, q, r;\n  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n"
+     "  always @(posedge c iff «»wr()) q = 1'b1;\n  always_ff @(posedge c iff «»wr()) r <= 1'b1;",
+     "iff condition that writes a variable or net"),
     ("switch_mos", "wire a, b, c;\n  nmos «»n1(a, b, c);", "switch 'nmos'"),
     ("switch_bidirectional", "wire a, b;\n  tran «»t1(a, b);", "switch 'tran'"),
 ]
