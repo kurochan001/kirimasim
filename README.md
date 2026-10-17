@@ -54,6 +54,98 @@ queues, associative arrays and classes (P3), concurrent assertions (P3), and
 file I/O and `$random` (P1, not done yet). The own test suite is kept in a
 separate repository that is not public yet.
 
+### Test results
+
+Measured on 2026-10-17 at the commit that added this section.
+
+| Test set | Tests | Pass | Not passing |
+| --- | --- | --- | --- |
+| This repository's tests (CTest) | 322 | 320 | 2 skipped: one needs clocking blocks (P3), one has drivers that meet through a port between parts of nets (not supported yet) |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 180 | Icarus Verilog passes 210 of them; see the table by chapter |
+| Own test suite, P1 population | 1,466 | 1,444 | 22 stop at constructs of later work; none fails |
+
+<details>
+<summary>This repository's tests by kind</summary>
+
+| Kind | Tests | What they check |
+| --- | --- | --- |
+| Unit tests (GoogleTest) | 139 | SIR and its verifier (53), the scheduler against a reference model (19), `valsem` (14), output formats (10), strengths (9), input scanning (7), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (4), and more |
+| `tests/suite/` | 128 | Simulation and syntax tests with expected output, most of them made by the generators under `tools/`: values (55), nets (23), procedures (17), scheduling (14), hierarchy (8), continuous assignments (7), and others |
+| `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
+| Tools | 26 | Each generator still makes the files in the repository, and negative controls for the tools that judge tests |
+| Command line, event counts | 2 | Options and messages; the counts of a fixed run (PerfCount) |
+
+</details>
+
+<details>
+<summary>sv-tests by chapter of IEEE 1800-2023</summary>
+
+Pinned sv-tests commit 15490e9, hand-written tests whose type includes
+simulation; Icarus Verilog is the 14.0 development build 04cc493 that the
+P1 criterion uses. Measured with `tools/svtests.py`.
+
+| Chapter | Tests | kirimasim | Icarus | Where kirimasim stops |
+| --- | --- | --- | --- | --- |
+| 5 Lexical conventions | 1 | 1 | 1 | |
+| 6 Data types | 16 | 16 | 11 | |
+| 7 Aggregate data types | 91 | 31 | 44 | dynamic arrays (23), queues (17) and associative arrays (14), all P3; tagged unions |
+| 8 Classes | 15 | 9 | 12 | classes (P3) |
+| 9 Processes | 6 | 4 | 4 | sequences (P3); one test depends on the order of processes at time 0, which 4.7 leaves open (Icarus fails it too) |
+| 10 Assignment statements | 3 | 3 | 3 | |
+| 11 Operators and expressions | 51 | 41 | 37 | values wider than 64 bits (7, in progress), tagged unions (2) |
+| 12 Procedural programming statements | 2 | 2 | 2 | |
+| 13 Tasks and functions | 14 | 14 | 13 | |
+| 14 Clocking blocks | 1 | 1 | 1 | |
+| 15 Interprocess synchronization | 2 | 0 | 0 | mailboxes (P3) |
+| 16 Assertions | 6 | 0 | 3 | concurrent assertions (P3) |
+| 18 Constrained random value generation | 22 | 8 | 8 | `randsequence` (12), `randcase` (2) |
+| 20 Utility system tasks and functions | 38 | 29 | 34 | `$random` and the `$dist_` functions, `$coverage_control` |
+| 21 I/O system tasks and functions | 27 | 9 | 25 | file I/O (15), `$fstrobe`, `$dumpfile`, `$dumpports` |
+| 22 Compiler directives | 6 | 6 | 6 | |
+| 23 Modules and hierarchy | 1 | 1 | 1 | |
+| 24 Programs | 1 | 1 | 1 | |
+| 26 Packages | 1 | 1 | 1 | |
+| UVM | 37 | 0 | 0 | the UVM library needs classes (P3) |
+| UVM random | 3 | 3 | 3 | |
+| **Total** | **344** | **180** | **210** | |
+
+</details>
+
+<details>
+<summary>Own test suite by chapter of IEEE 1800-2023</summary>
+
+The P1 population of TEST_SUITE.md: 1,466 tests of the test suite,
+listed in `tests/gates/p1_population.txt`. The suite itself is not public
+yet.
+
+| Chapter | Tests | Pass | Stop at an unsupported construct | Fail |
+| --- | --- | --- | --- | --- |
+| 3 Design and verification building blocks | 3 | 3 | | 0 |
+| 4 Scheduling semantics | 13 | 13 | | 0 |
+| 5 Lexical conventions | 20 | 20 | | 0 |
+| 6 Data types | 226 | 223 | 3: values wider than 64 bits | 0 |
+| 7 Aggregate data types | 90 | 87 | 3: dynamic arrays, associative arrays, `sort` (P3) | 0 |
+| 9 Processes | 72 | 72 | | 0 |
+| 10 Assignment statements | 84 | 83 | 1: values wider than 64 bits | 0 |
+| 11 Operators and expressions | 347 | 347 | | 0 |
+| 12 Procedural programming statements | 106 | 106 | | 0 |
+| 13 Tasks and functions | 76 | 76 | | 0 |
+| 15 Interprocess synchronization | 3 | 3 | | 0 |
+| 16 Assertions | 21 | 18 | 3: `$sampled`, `$stable` (P3) | 0 |
+| 18 Constrained random value generation | 1 | 0 | 1: `randsequence` | 0 |
+| 20 Utility system tasks and functions | 149 | 147 | 2: values wider than 64 bits | 0 |
+| 21 I/O system tasks and functions | 57 | 56 | 1: values wider than 64 bits | 0 |
+| 22 Compiler directives | 14 | 14 | | 0 |
+| 23 Modules and hierarchy | 45 | 45 | | 0 |
+| 25 Interfaces | 29 | 26 | 3: virtual interfaces (P3) | 0 |
+| 26 Packages | 20 | 20 | | 0 |
+| 27 Generate constructs | 62 | 62 | | 0 |
+| 28 Gate-level and switch-level modeling | 22 | 17 | 5: MOS and bidirectional switches (P4) | 0 |
+| 29 User-defined primitives | 6 | 6 | | 0 |
+| **Total** | **1,466** | **1,444** | **22** | **0** |
+
+</details>
+
 ### What works
 
 Everything below runs on the tier 1 interpreter and is covered by tests.
