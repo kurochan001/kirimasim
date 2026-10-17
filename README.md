@@ -44,7 +44,7 @@ The criteria and how they are measured are fixed in
 
 | Criterion | Now | Met |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 180, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses) | Not yet |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 179, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses) | Not yet |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,444 pass (98.5%), none fails; 22 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The fuzz tests pass in every build; the seven nightly runs are not done yet | Not measured |
@@ -61,8 +61,8 @@ Verilog and Verilator built from their main branches that day.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 323 | 321, 2 skipped | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 180 | 213 | 321 |
+| This repository's tests (CTest) | 324 | 322, 2 skipped | — | — |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 179 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,444 | 1,274 | 1,329 |
 
 The two skipped tests of this repository need clocking blocks (P3), or
@@ -134,8 +134,9 @@ and 1,133 of the own test suite.
 - Verilator builds as each suite's runner does: sv-tests' runner builds
   without C++ optimization (`-O0`); the own suite's runner uses Verilator's
   default optimization and random initial values.
-- Versions and machine: kirimasim 8500bdc, the last commit that changed its
-  source (release build), Icarus Verilog 14.0 (devel) f190dbb, Verilator
+- Versions and machine: kirimasim 8500bdc (release build), except its
+  sv-tests count, measured again at 586bd15, which reports programs as
+  unsupported; Icarus Verilog 14.0 (devel) f190dbb, Verilator
   5.053 devel 8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple
   clang 21.
 
@@ -147,7 +148,7 @@ and 1,133 of the own test suite.
 | Unit tests (GoogleTest) | 139 | SIR and its verifier (53), the scheduler against a reference model (19), `valsem` (14), output formats (10), strengths (9), input scanning (7), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (4), and more |
 | `tests/suite/` | 128 | Simulation and syntax tests with expected output, most of them made by the generators under `tools/`: values (55), nets (23), procedures (17), scheduling (14), hierarchy (8), continuous assignments (7), and others |
 | `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
-| Tools | 27 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Tools | 28 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages; the counts of a fixed run (PerfCount) |
 
 </details>
@@ -177,11 +178,11 @@ simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 | 21 I/O system tasks and functions | 27 | 9 | 25 | 26 | file I/O (15), `$fstrobe`, `$dumpfile`, `$dumpports` |
 | 22 Compiler directives | 6 | 6 | 6 | 6 | |
 | 23 Modules and hierarchy | 1 | 1 | 1 | 1 | |
-| 24 Programs | 1 | 1 | 1 | 1 | |
+| 24 Programs | 1 | 0 | 1 | 1 | programs (P3) |
 | 26 Packages | 1 | 1 | 1 | 1 | |
 | UVM | 37 | 0 | 0 | 28 | the UVM library needs classes (P3) |
 | UVM random | 3 | 3 | 3 | 3 | |
-| **Total** | **344** | **180** | **213** | **321** | |
+| **Total** | **344** | **179** | **213** | **321** | |
 
 The P1 criterion compares kirimasim with the Icarus build that sv-tests
 pins (04cc493), which passes 210; the newest Icarus passes 213.
@@ -310,7 +311,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 | Values wider than 64 bits | P1, in progress (the kernel's operations are done) |
 | File I/O (`$fopen` and the rest), `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), `iff` in event controls, the `%p` format, `$stime`, `$timeunit`, `$timeprecision`, `$stacktrace` | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, `randsequence`, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let`, checkers | P3 |
-| Program blocks. A known bug: today a program runs like a module, which is not what IEEE 1800-2023 specifies (its threads belong in the Reactive region) | P3 |
+| Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
 | Freeing the frames of finished fork branches. A known bug: today they stay until the end of the run, so memory grows with every fork (about 1.3 KB per round in `bench/fork_join.sv`) | Not decided yet |
 | Tier 2 (C++ generation) and any speed work | P2 |
@@ -430,9 +431,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 25 generators, 128 tests in `tests/suite/`, and 323
+  rules. There are 26 generators, 128 tests in `tests/suite/`, and 324
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 128 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 130 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
