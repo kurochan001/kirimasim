@@ -109,7 +109,8 @@ python3 tools/check_banned.py
 
 For release builds, also run `python3 tools/check_release_flags.py` after
 `cmake --preset release`. The `asan` and `ubsan` presets run the same tests
-with sanitizers.
+with sanitizers; `asan` builds slang without mimalloc, whose allocator the
+address sanitizer cannot see into.
 
 To run every check that CI runs (all four presets, the release flag check,
 the banned-feature check, clang-format and clang-tidy) in one go:

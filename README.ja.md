@@ -43,7 +43,7 @@ sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest） | 438 | 436、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest） | 441 | 439、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 186 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -86,7 +86,7 @@ sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列
 
 | 種類 | 本数 | 確かめていること |
 | --- | --- | --- |
-| ユニットテスト（GoogleTest） | 147 | SIR とその検証器（57）、参照モデルと突き合わせるスケジューラ（21）、`valsem`（14）、出力の書式（10）、強さ（9）、入力の読み取り（8）、時間の単位（7）、UDP の表（4）、カウンタ（4）、カーネルの速い演算と `valsem` の突き合わせ：1 語（5）と任意の幅（5）など |
+| ユニットテスト（GoogleTest） | 150 | SIR とその検証器（57）、参照モデルと突き合わせるスケジューラ（23）、`valsem`（14）、出力の書式（10）、強さ（9）、入力の読み取り（8）、時間の単位（7）、UDP の表（4）、カウンタ（4）、カーネルの速い演算と `valsem` の突き合わせ：1 語（5）と任意の幅（5）など |
 | `tests/suite/` | 216 | 期待する出力を持つシミュレーションのテストと、期待する誤りを持つ違法な設計。大半は `tools/` の生成器が作る。値（63）、手続き（44）、違法な設計（35）、ネット（23）、階層（22）、スケジューリング（18）、連続代入（7）など |
 | `tests/dump_sir/` | 27 | front が作る中間表現 |
 | 道具 | 46 | 生成器がリポジトリのファイルを作り直せること、テストを判定する道具の陰性対照、ベンチマークの設計が動くこと |
@@ -184,7 +184,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 - **設計の構造：** module、ポート（input、output、inout）、parameter と `defparam`、`generate`、インスタンスの配列、interface と modport、package とコンパイル単位（`$unit`）、階層名、specparam
 - **データ型：** 任意の幅の 2 値と 4 値の整数型、`real`、`shortreal`、`realtime`、`string`、列挙型、packed と unpacked の構造体、packed の共用体、固定長の unpacked の配列（多次元、構造体の配列）、unpacked の配列のパラメータ、名前付きイベント、`chandle`（DPI-C までは null だけ）
 - **ネット：** `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。駆動の強さと、複数のドライバの解決。連続代入とネットの遅延（立ち上がり、立ち下がり、ターンオフ）。組み込みのゲートとプル。利用者定義のプリミティブ（組み合わせと順序）。`alias`
-- **手続きと時間：** `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`。ブロッキングと NBA（代入の中の遅延を含む）。遅延とイベント制御（`iff` を含む）。`wait (式)`。名前付きイベント（`->`、`->>`、`.triggered`）。`fork` と `join`、`join_any`、`join_none`。`wait fork`、`disable fork`。どのプロセスからでも働くブロックとタスクの `disable`。`assign`・`deassign` と `force`・`release`
+- **手続きと時間：** `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`。ブロッキングと NBA（代入の中の遅延を含む）。遅延とイベント制御（変数とネット、定数の位置の要素・ビット・範囲・メンバ。`iff` を含む）。`wait (式)`。名前付きイベント（`->`、`->>`、`.triggered`）。`fork` と `join`、`join_any`、`join_none`。`wait fork`、`disable fork`。どのプロセスからでも働くブロックとタスクの `disable`。`assign`・`deassign` と `force`・`release`
 - **関数とタスク：** static と automatic、再帰、`input`・`output`・`inout`・`ref` の引数、引数の既定値、unpacked の構造体と配列の引数、unpacked の構造体と配列を返す関数
 - **文と式：** `if`、`case`、`casez`、`casex`、`case inside`。違反の報告を含む `unique`、`unique0`、`priority`。すべてのループ、`break`、`continue`、`return`。ストリーミング、`inside`、ワイルドカードの等価、代入の演算子と増減を含むすべての演算子。代入のパターン
 - **アサーション：** 即時の `assert`、`assume`、`cover` と、遅延のもの（`#0`、`final`）
@@ -195,7 +195,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 | まだのもの | 予定 |
 | --- | --- |
-| ファイルの入出力（`$fopen` など）、`$readmemh`・`$writememh`、`$random`・`$urandom`、波形（`$dumpvars`、VCD と FST）、`%p` の書式、`$stime`、`$timeunit`、`$timeprecision`、`$stacktrace` | P1 |
+| ファイルの入出力（`$fopen` など）、`$readmemh`・`$writememh`、`$random`・`$urandom`、波形（`$dumpvars`、VCD と FST）、式のイベント制御（`@(posedge (a & b))`、実行時の添字の要素）、`%p` の書式、`$stime`、`$timeunit`、`$timeprecision`、`$stacktrace` | P1 |
 | クラス、動的配列、キュー、連想配列、乱数化と制約、`randsequence`、カバーグループ、並行アサーションと `$sampled`・`$stable`、クロッキングブロック、virtual interface、`let`、checker | P3 |
 | program ブロック。program のコードは reactive の領域の組で動くもの（24.3.1）なので、今は未対応として報告する | P3 |
 | VPI、DPI-C | P3 |
@@ -216,7 +216,7 @@ ctest --preset dev
 | --- | --- |
 | `dev` | `-O1 -g` |
 | `release` | `-O3` |
-| `asan` | `-O1 -g -fsanitize=address -fno-omit-frame-pointer` |
+| `asan` | `-O1 -g -fsanitize=address -fno-omit-frame-pointer`。サニタイザがヒープを見られるように、slang を mimalloc なしで作る |
 | `ubsan` | `-O1 -g -fsanitize=undefined -fno-sanitize-recover=all` |
 
 ビルドの結果は `build/<プリセット名>/` に出ます。
@@ -297,8 +297,8 @@ SystemVerilog のソース
 
 - **仕様が先。** 値の意味、スケジューリング、システムタスク、SIR を [docs/spec/](docs/spec/) に書き、人の承認を受けてから実装します。規格が決めていない所は、kirimasim がどう読むかを仕様書に書きます。
 - **値の意味の参照は 1 つ。** `valsem` は、遅いが明らかに正しい演算の実装です。カーネルの速い演算は、それとファジングで突き合わせます（1 語の値と、複数の語の値の両方）。
-- **機構の行列。** 1 つの機構を、それが現れうる所の組み合わせで確かめます（たとえば `disable` なら、ブロックの中、fork の枝、別のプロセス、タスクから、それぞれ手続き、タスク、fork の枝の中で）。テストは `tools/` の生成器が作り、期待値は書いた規則から決まります。生成器は 44 個、`tests/suite/` のテストは 216 本、CTest のテストは全部で 438 本です。
-- **陰性対照。** `tools/mutants.py` は、知られた誤り 179 個を 1 つずつコードに入れます。どの誤りでも、どれかのテストが落ちなければなりません。
+- **機構の行列。** 1 つの機構を、それが現れうる所の組み合わせで確かめます（たとえば `disable` なら、ブロックの中、fork の枝、別のプロセス、タスクから、それぞれ手続き、タスク、fork の枝の中で）。テストは `tools/` の生成器が作り、期待値は書いた規則から決まります。生成器は 44 個、`tests/suite/` のテストは 216 本、CTest のテストは全部で 441 本です。
+- **陰性対照。** `tools/mutants.py` は、知られた誤り 180 個を 1 つずつコードに入れます。どの誤りでも、どれかのテストが落ちなければなりません。
 - **他のシミュレータは証拠であって正解ではない。** Icarus Verilog と Verilator でもテストを動かし、規格と違うところはテストのヘッダに書きます。
 - **サニタイザと静的な検査：** AddressSanitizer、UndefinedBehaviorSanitizer、clang-format、clang-tidy を push の前に毎回走らせます。
 
