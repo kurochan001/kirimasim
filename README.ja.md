@@ -66,7 +66,7 @@ sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列
 - テストは短いので、実行の時間はほとんどが起動の時間です。kirimasim の実行の時間は引き算で求めていて、誤差と区別できないほど小さい値です。`--dump-sir` は SIR の文字も出すので、引き算の結果は小さめに出ます。
 - ビルドできなかったテストは準備の時間だけを数えます。kirimasim は、未対応の構文に会うと早く止まります。
 - Verilator は、それぞれのテストの道具と同じようにビルドします。sv-tests の道具は C++ を最適化しないで（`-O0`）、自前のテストスイートの道具は Verilator の既定の最適化と、初期値の乱数化でビルドします。
-- 版と機械：kirimasim cc606e4（release ビルド）、Icarus Verilog 14.0（devel）f190dbb、Verilator 5.053 devel 8668340。Apple M5 Max（18 コア）、メモリ 128 GB、macOS 27.0.1、Apple clang 21。
+- 版と機械：kirimasim 8500bdc（ソースを最後に変えたコミット。release ビルド）、Icarus Verilog 14.0（devel）f190dbb、Verilator 5.053 devel 8668340。Apple M5 Max（18 コア）、メモリ 128 GB、macOS 27.0.1、Apple clang 21。
 
 <details>
 <summary>このリポジトリのテストの種類ごとの内訳</summary>

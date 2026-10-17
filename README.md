@@ -108,8 +108,8 @@ benchmarks):
 - Verilator builds as each suite's runner does: sv-tests' runner builds
   without C++ optimization (`-O0`); the own suite's runner uses Verilator's
   default optimization and random initial values.
-- Versions and machine: kirimasim cc606e4 (release build), Icarus Verilog
-  14.0 (devel) f190dbb, Verilator 5.053 devel 8668340; Apple M5 Max (18
+- Versions and machine: kirimasim 8500bdc, the last commit that changed its
+  source (release build), Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel 8668340; Apple M5 Max (18
   cores), 128 GB, macOS 27.0.1, Apple clang 21.
 
 <details>
