@@ -1,5 +1,6 @@
 #include "kirimasim/valsem/value.h"
 
+#include <cmath>
 #include <cstddef>
 
 namespace kirimasim::valsem {
@@ -220,6 +221,22 @@ Value fromUint(std::uint64_t v, std::uint32_t width, bool isSigned) {
 
 Value filled(Logic bit, std::uint32_t width, bool isSigned) {
     return {std::vector<Logic>(width, bit), isSigned};
+}
+
+Value fromReal(double d, std::uint32_t width, bool isSigned) {
+    if (std::isnan(d) || std::isinf(d)) return filled(Logic::X, width, isSigned);
+    const double r = std::round(d);  // half away from zero
+    // |r| = mant * 2^(exp - 53), with mant an integer below 2^53.
+    int exp = 0;
+    const double frac = std::frexp(std::fabs(r), &exp);
+    const auto mant = static_cast<std::uint64_t>(std::ldexp(frac, 53));
+    const int shift = exp - 53;
+    Value v = filled(Logic::Zero, width, isSigned);
+    for (std::uint32_t i = 0; i < width; ++i) {
+        const std::int64_t k = static_cast<std::int64_t>(i) - shift;  // the bit of mant
+        if (k >= 0 && k < 53 && ((mant >> k) & 1U) != 0) v.bits[i] = Logic::One;
+    }
+    return r < 0 ? neg(v) : v;
 }
 
 void toWords(const Value& v, std::vector<std::uint64_t>& a, std::vector<std::uint64_t>& b) {

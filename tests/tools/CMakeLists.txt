@@ -148,3 +148,7 @@ set_tests_properties(tools/gen_string_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_string_format_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_string_format_matrix.py --check)
 set_tests_properties(tools/gen_string_format_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_real_convert_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_real_convert_matrix.py --check)
+set_tests_properties(tools/gen_real_convert_matrix PROPERTIES LABELS Tools)

@@ -16,8 +16,8 @@ the values print with %f and %h, and the infinities and NaN as inf, -inf
 and nan (SYSTEM_TASKS.md 3.6). The axes: the function, a real and an
 integer argument, values in and out of the function's domain, and the
 container (module variables and automatic variables of a function).
-Conversions of reals beyond 64 bits are left out until their rule is
-decided.
+Conversions of reals beyond 64 bits, NaN and the infinities are the
+subject of gen_real_convert_matrix.py.
 
 The expected outputs are computed with Python's math, which gives the C
 results. A math result is printed only with as many digits as stay the

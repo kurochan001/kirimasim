@@ -489,12 +489,31 @@ double toReal(const W4* x, unsigned w, bool isSigned) {
     return minus ? -d : d;
 }
 
-void fromReal(W4* r, unsigned w, double d) {
+void fromReal(W4* r, unsigned w, double d, bool fourState) {
     clear(r, w);
-    if (std::isnan(d) || d >= 9223372036854775808.0 || d < -9223372036854775808.0) return;
-    const auto n = static_cast<std::int64_t>(std::round(d));
-    const W4 low{static_cast<std::uint64_t>(n), 0};
-    resize(r, w, &low, 64, true);
+    if (std::isnan(d) || std::isinf(d)) {
+        if (fourState) allX(r, w);
+        return;
+    }
+    const double v = std::round(d);  // half away from zero
+    if (std::fabs(v) < 9223372036854775808.0) {
+        const W4 low{static_cast<std::uint64_t>(static_cast<std::int64_t>(v)), 0};
+        resize(r, w, &low, 64, true);
+        return;
+    }
+    // |v| = mant * 2^shift, with mant below 2^53 and shift at least 11.
+    int exp = 0;
+    const auto mant = static_cast<std::uint64_t>(std::ldexp(std::frexp(std::fabs(v), &exp), 53));
+    const int shift = exp - 53;
+    std::vector<std::uint64_t> words(chunks(w), 0);
+    for (int k = 0; k < 53; ++k) {
+        const long i = static_cast<long>(k) + shift;
+        if (((mant >> k) & 1U) != 0 && i < static_cast<long>(w))
+            words[static_cast<std::size_t>(i) / 64] |= std::uint64_t{1} << (i % 64);
+    }
+    if (v < 0) negateWords(words, w);
+    for (std::size_t k = 0; k < words.size(); ++k)
+        r[k] = {words[k], 0};
 }
 
 }  // namespace kirimasim::kernel::wide

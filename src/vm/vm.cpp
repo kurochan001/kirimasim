@@ -278,8 +278,9 @@ double integerToReal(W4 v, sir::Type t) {
     return static_cast<double>(a);
 }
 
-/// Real to a 64-bit integer, rounded (1.5) or truncated ($rtoi, 20.5); NaN
-/// and values outside 64 bits give 0 (7.4).
+/// $rtoi (20.5): truncated toward zero; NaN and values outside 64 bits give
+/// 0 until SYSTEM_TASKS.md 9 decides them. Conversions use
+/// kernel::wide::fromReal (VALUE_SEMANTICS.md 7.4).
 std::uint64_t realToInteger(double d, bool truncate) {
     if (std::isnan(d) || d >= 9223372036854775808.0 || d < -9223372036854775808.0) return 0;
     return static_cast<std::uint64_t>(
@@ -2549,7 +2550,7 @@ private:
                 return true;
             }
             case Op::Rtoi:
-                kw::fromReal(r.data(), w, toReal(value(ops[0]), t(0)));
+                kw::fromReal(r.data(), w, toReal(value(ops[0]), t(0)), sir::isFourState(rt));
                 setWide(in, r);
                 return true;
             default: break;
@@ -2856,9 +2857,13 @@ private:
                 case Op::Lnot: temp(in.result) = kernel::lnot4(truthOf(v(0), t(0))); return true;
                 case Op::Itor: put(integerToReal(v(0), t(0))); return true;
                 case Op::Rconv: put(r(0)); return true;
-                case Op::Rtoi:
-                    set(W4{realToInteger(r(0), false) & kernel::mask(w), 0});
+                case Op::Rtoi: {
+                    // VALUE_SEMANTICS.md 7.4, at any width.
+                    W4 x{0, 0};
+                    kernel::wide::fromReal(&x, w, r(0), sir::isFourState(rt));
+                    set(x);
                     return true;
+                }
                 case Op::Select: {
                     // An unknown condition gives the value both sides share,
                     // or 0.0 (VALUE_SEMANTICS.md 3.9, table 7-1).

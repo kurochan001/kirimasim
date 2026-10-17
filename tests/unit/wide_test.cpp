@@ -2,7 +2,10 @@
 // with the valsem reference (valsem/value.h) on random values of widths 1
 // to 260, with and without X and Z bits (VALUE_SEMANTICS.md 3).
 
+#include <cmath>
 #include <cstdint>
+#include <iterator>
+#include <limits>
 #include <random>
 #include <string>
 #include <vector>
@@ -235,11 +238,60 @@ TEST(Wide, Reals) {
     x = {W4{1, 0}, W4{0, 0}, W4{4, 0}};
     EXPECT_EQ(kw::toReal(x.data(), 131, false), std::ldexp(1.0, 130));
     Wide r(2);
-    kw::fromReal(r.data(), 100, -5.5);
+    kw::fromReal(r.data(), 100, -5.5, true);
     EXPECT_EQ(kw::toReal(r.data(), 100, true), -6.0);
-    kw::fromReal(r.data(), 100, 1e30);  // does not fit in 64 bits: 0 (VALUE_SEMANTICS.md 7.4)
+    // Past 64 bits: the low bits of the integer (VALUE_SEMANTICS.md 7.4);
+    // 2^70 + 2^64 is exact as a double.
+    kw::fromReal(r.data(), 100, std::ldexp(1.0, 70) + std::ldexp(1.0, 64), true);
     EXPECT_EQ(r[0].a, 0U);
-    EXPECT_EQ(r[1].a, 0U);
+    EXPECT_EQ(r[1].a, 0x41U);
+    kw::fromReal(r.data(), 100, std::nan(""), true);  // NaN: x, or 0 when two-state
+    EXPECT_EQ(r[1].b, (std::uint64_t{1} << 36) - 1);
+    kw::fromReal(r.data(), 100, -std::numeric_limits<double>::infinity(), false);
+    EXPECT_EQ(r[0].a | r[0].b | r[1].a | r[1].b, 0U);
+}
+
+TEST(Wide, FromRealMatchesReference) {
+    // Doubles of every size, halves, NaN and the infinities, at widths of
+    // one to four chunks, against valsem::fromReal.
+    const std::uint64_t seed = kirimasim::test::fuzzSeed(0xf2a1);
+    std::mt19937_64 rng(seed);
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+    const std::uint64_t rounds = 20000 * kirimasim::test::fuzzScale();
+    const double special[] = {0.0,
+                              -0.0,
+                              0.5,
+                              -0.5,
+                              2.5,
+                              -2.5,
+                              0.49999999999999994,
+                              std::ldexp(1.0, 63),
+                              -std::ldexp(1.0, 63),
+                              std::ldexp(1.0, 64),
+                              1e300,
+                              -1e300,
+                              std::nan(""),
+                              std::numeric_limits<double>::infinity(),
+                              -std::numeric_limits<double>::infinity()};
+    for (std::uint64_t round = 0; round < rounds; ++round) {
+        double d = 0;
+        if (round < std::size(special)) {
+            d = special[round];
+        } else {
+            const int e = static_cast<int>(rng() % 400) - 100;
+            d = std::ldexp(static_cast<double>(rng() >> 11) / std::ldexp(1.0, 53), e);
+            if ((rng() & 1U) != 0) d = -d;
+            if ((rng() & 7U) == 0) d = std::floor(d) + 0.5;
+        }
+        const unsigned w = 1 + static_cast<unsigned>(rng() % 200);
+        const bool four = (rng() & 1U) != 0;
+        Wide r(kw::chunks(w));
+        kw::fromReal(r.data(), w, d, four);
+        v::Value want = v::fromReal(d, w, true);
+        if (!four) want = v::to2(want);
+        ASSERT_TRUE(same(r, want, "fromReal " + std::to_string(d) + " w=" + std::to_string(w)))
+            << "round " << round;
+    }
 }
 
 }  // namespace

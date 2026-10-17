@@ -153,13 +153,6 @@ double realValue(const sir::Constant& c) {
     return std::bit_cast<double>(a);
 }
 
-/// Real to integer (VALUE_SEMANTICS.md 1.5, 7.4): to the nearest, half away
-/// from zero; NaN and values outside 64 bits give 0.
-std::int64_t roundReal(double d) {
-    if (std::isnan(d) || d >= 9223372036854775808.0 || d < -9223372036854775808.0) return 0;
-    return static_cast<std::int64_t>(std::round(d));
-}
-
 /// Integer to real (1.5): x and z bits count as 0; signed if the type is.
 double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
     a &= ~b;
@@ -171,7 +164,9 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
 }
 
 /// System functions whose constant evaluation in slang is known to be wrong
-/// (SIR_SPEC.md 6): expressions that contain them are computed at run time.
+/// (SIR_SPEC.md 6): expressions that contain them are computed at run time,
+/// as are conversions of a real to an integer, whose result kirimasim
+/// decides (VALUE_SEMANTICS.md 7.4: NaN and the infinities).
 constexpr std::string_view kUntrustedConstants[] = {
     "$rtoi",  // negative values give 0 (slang issue #2023)
 };
@@ -205,8 +200,11 @@ bool untrustedConstant(const ast::Expression& e) {
             return any(e.as<ast::ConcatenationExpression>().operands());
         case ast::ExpressionKind::Replication:
             return untrustedConstant(e.as<ast::ReplicationExpression>().concat());
-        case ast::ExpressionKind::Conversion:
-            return untrustedConstant(e.as<ast::ConversionExpression>().operand());
+        case ast::ExpressionKind::Conversion: {
+            const ast::Expression& op = e.as<ast::ConversionExpression>().operand();
+            if (op.type->isFloating() && e.type->isIntegral()) return true;
+            return untrustedConstant(op);
+        }
         case ast::ExpressionKind::ElementSelect: {
             const auto& s = e.as<ast::ElementSelectExpression>();
             return untrustedConstant(s.value()) || untrustedConstant(s.selector());
@@ -465,19 +463,17 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     if ((isReal(v.type) || isReal(want)) && (sir::isIntegral(v.type) || isReal(v.type)) &&
         (sir::isIntegral(want) || isReal(want))) {
         // Between reals, and between reals and integers (VALUE_SEMANTICS.md
-        // 1.5, 7.4). A constant is converted here.
-        // A value wider than 64 bits is converted by the instruction.
-        if (v.op.kind == Operand::Kind::Const && (isReal(v.type) || v.type.width <= 64) &&
-            (isReal(want) || want.width <= 64)) {
+        // 1.5, 7.4). A constant to a real is converted here; a real to an
+        // integer always by the instruction, whose meaning the kernel and
+        // valsem keep (7.4).
+        if (v.op.kind == Operand::Kind::Const && isReal(want) &&
+            (isReal(v.type) || v.type.width <= 64)) {
             const sir::Constant& c = design().constants[v.op.id];
-            if (isReal(want)) {
-                const double d = isReal(c.type)
-                                     ? realValue(c)
-                                     : integerToReal(c.aWords.empty() ? 0 : c.aWords[0],
-                                                     c.bWords.empty() ? 0 : c.bWords[0], c.type);
-                return realConstant(want, d);
-            }
-            return constant(want, static_cast<std::uint64_t>(roundReal(realValue(c))));
+            const double d = isReal(c.type)
+                                 ? realValue(c)
+                                 : integerToReal(c.aWords.empty() ? 0 : c.aWords[0],
+                                                 c.bWords.empty() ? 0 : c.bWords[0], c.type);
+            return realConstant(want, d);
         }
         if (isReal(v.type) && isReal(want)) return emit(Op::Rconv, want, {v.op}, sl);
         return emit(isReal(want) ? Op::Itor : Op::Rtoi, want, {v.op}, sl);
