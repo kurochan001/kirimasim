@@ -148,7 +148,7 @@ and 1,133 of the own test suite.
 | `tests/suite/` | 172 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (62), illegal designs (35), nets (23), procedures (18), scheduling (15), hierarchy (8), continuous assignments (7), and others |
 | `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
 | Tools | 39 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
-| Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (47 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
+| Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (49 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
 
 </details>
 
