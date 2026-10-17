@@ -460,6 +460,14 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::TriggerNb: trigger(e.id); return;
         case Kind::Show: showHeld(e.id, e.gen, 0, store_.layout(e.id).width); return;
+        case Kind::Drive: {
+            DelayedDriver& d = drivers_[e.id];
+            if (!d.pending || d.gen != e.gen) return;  // dropped
+            d.pending = false;
+            const std::vector<std::uint64_t> value = d.value;
+            write(d.slot, d.elem, d.lsb, d.width, value.data());
+            return;
+        }
     }
 }
 
@@ -801,6 +809,65 @@ void Scheduler::scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint
         delayedNbas_.push_back(std::move(n));
     }
     schedule(r, {Kind::NbaDelayed, r, id, 0}, delay);
+}
+
+std::uint32_t Scheduler::addDelayedDriver() {
+    drivers_.emplace_back();
+    return static_cast<std::uint32_t>(drivers_.size() - 1);
+}
+
+void Scheduler::driveDelayed(std::uint32_t driver, SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                             std::uint32_t width, const std::uint64_t* value, std::uint64_t rise,
+                             std::uint64_t fall, std::uint64_t off) {
+    begin();
+    const SlotLayout& l = store_.layout(s);
+    if (width == 0) {
+        lsb = 0;
+        width = l.width;
+    }
+    const bool four = l.domain == Domain::Four;
+    const unsigned stride = four ? 2 : 1;
+    const std::uint32_t words = stride * wordsFor(width);
+    DelayedDriver& d = drivers_[driver];
+    // A pending update of another value is dropped (10.3.3).
+    if (d.pending && !std::equal(value, value + words, d.value.begin())) {
+        d.pending = false;
+        ++d.gen;
+    }
+    // The value there now, laid out like `value`.
+    std::vector<std::uint64_t> now(words, 0);
+    const std::uint64_t* p = store_.element(s, elem);
+    for (unsigned k = 0; k < stride; ++k)
+        copyBits(now.data() + k, stride, 0, p + k, stride, lsb, width);
+    if (std::equal(value, value + words, now.begin()) || d.pending) return;
+    // The delay for the change (10.3.3, 28.16, table 28-9).
+    const auto all = [&](const std::uint64_t* v, bool a, bool b) {
+        for (std::uint32_t i = 0; i < width; ++i) {
+            if (bitAt(v, stride, i) != a) return false;
+            if (four && bitAt(v + 1, stride, i) != b) return false;
+            if (!four && b) return false;
+        }
+        return true;
+    };
+    std::uint64_t delay = rise;
+    if (width == 1) {
+        const bool a = bitAt(value, stride, 0);
+        const bool b = four && bitAt(value + 1, stride, 0);
+        delay = !b ? (a ? rise : fall) : (a ? std::min({rise, fall, off}) : off);
+    } else if (!all(now.data(), false, false) && all(value, false, false)) {
+        delay = fall;
+    } else if (all(value, false, true)) {
+        delay = off;
+    }
+    d.slot = s;
+    d.elem = elem;
+    d.lsb = lsb;
+    d.width = width;
+    d.value.assign(value, value + words);
+    d.pending = true;
+    ++d.gen;
+    schedule(delay == 0 ? Region::Inactive : Region::Active,
+             {Kind::Drive, Region::Active, driver, d.gen}, delay);
 }
 
 void Scheduler::trigger(EventId e) {

@@ -85,6 +85,7 @@ const char* opName(Op op) {
         case Op::Store: return "store";
         case Op::Nba: return "nba";
         case Op::NbaDelay: return "nba.delay";
+        case Op::DriveDelay: return "drive.delay";
         case Op::LoadElem: return "load.elem";
         case Op::StoreElem: return "store.elem";
         case Op::NbaElem: return "nba.elem";
@@ -296,6 +297,7 @@ bool writesSlot(Op op) {
         case Op::Store:
         case Op::Nba:
         case Op::NbaDelay:
+        case Op::DriveDelay:
         case Op::StoreElem:
         case Op::NbaElem:
         case Op::StoreBits:

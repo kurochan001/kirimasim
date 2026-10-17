@@ -516,7 +516,10 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         const auto& n = v.as<ast::NetSymbol>();
         const std::optional<sir::SlotKind> k = netKindOf(n);
         if (!k) unsupported(sl, "net of kind '" + std::string(n.netType.name) + "'");
-        if (n.getDelay() != nullptr) unsupported(sl, "net with a delay");
+        // A delay given with an assignment is the assignment's (10.3.3);
+        // one for every driver of the net is not done yet.
+        if (n.getDelay() != nullptr && n.getInitializer() == nullptr)
+            unsupported(sl, "net with a delay");
         kind = *k;
     }
     const ast::Type* t = &type.getCanonicalType();
@@ -768,6 +771,22 @@ void Lowerer::resolveNets() {
             const auto it = sides_.find(p);
             return it != sides_.end() && !it->second.known;
         });
+        // The side slot is written at once, so a gate whose value is
+        // delayed would show its sides before its value.
+        const auto delayedSide = std::find_if(ps.begin(), ps.end(), [&](std::uint32_t p) {
+            if (!sides_.contains(p)) return false;
+            for (const sir::Instr& in : design_.processes[p].blocks[0].instrs)
+                if (in.op == sir::Op::DriveDelay) return true;
+            return false;
+        });
+        if (delayedSide != ps.end()) {
+            ++numErrors_;
+            diags_ +=
+                whereOf(design_.processes[*delayedSide].loc) +
+                ": error: unsupported: a three-state gate with a delay that drives the net '" +
+                design_.slots[net].name + "' with other drivers (not implemented yet)\n";
+            continue;
+        }
         if (unknownSide != ps.end()) {
             ++numErrors_;
             diags_ +=
@@ -1085,10 +1104,11 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                         if (!design_.slots[s].dims.empty())
                             unsupported(n.location, "assignment to a whole unpacked array");
                         const Val v = coerce(lowerExpr(*init), design_.slots[s].type, n.location);
-                        emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, n.location);
-                        noteWrite({s, 0, 0, 0, 0});
+                        storePlace(placeOfSlot(s), v, false, n.location);
                     },
-                    driveLevels(n.getDriveStrength()));
+                    // The delay of a net declaration assignment is that of
+                    // the assignment alone (10.3.3).
+                    driveLevels(n.getDriveStrength()), n.getDelay());
                 continue;
             }
             case ast::SymbolKind::ContinuousAssign: {
@@ -1096,14 +1116,12 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                 lowerCont(
                     processName(prefix, "assign"), ca.location, ca,
                     [&] {
-                        if (ca.getDelay() != nullptr)
-                            unsupported(ca.location, "continuous assignment with a delay");
                         const ast::Expression& e = ca.getAssignment();
                         if (e.kind != ast::ExpressionKind::Assignment)
                             unsupported(ca.location, "this continuous assignment");
                         lowerAssignment(e.as<ast::AssignmentExpression>());
                     },
-                    driveLevels(ca.getDriveStrength()));
+                    driveLevels(ca.getDriveStrength()), ca.getDelay());
                 continue;
             }
             case ast::SymbolKind::ProceduralBlock:
@@ -1253,7 +1271,6 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
     lowerCont(
         name, sl, g,
         [&] {
-            if (g.getDelay() != nullptr) unsupported(sl, "gate with a delay");
             const sir::Type bit = sir::u4(1);
             const auto in = [&](std::size_t i) { return coerce(lowerExpr(*conns[i]), bit, sl); };
             const auto out = [&](std::size_t i, const Val& v) {
@@ -1336,7 +1353,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
             emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, w + at, 1), zero.op}, sl);
             side = GateSide{start, blocks()[b_.block].instrs.size() - start, true};
         },
-        strength);
+        strength, g.getDelay());
     if (side && design_.processes.size() > first) sides_[first] = *side;
 }
 
@@ -1416,7 +1433,6 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
     lowerCont(
         name, sl, g,
         [&] {
-            if (g.getDelay() != nullptr) unsupported(sl, "a UDP instance with a delay");
             const sir::Type bit = sir::u4(1);
             std::vector<Val> in;
             in.reserve(n);
@@ -1452,13 +1468,29 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
             const Place p = placeOf(*outputPlace(conns[0]), sl);
             storePlace(p, coerce(out, p.type, sl), false, sl);
         },
-        driveLevels(g.getDriveStrength()));
+        driveLevels(g.getDriveStrength()), g.getDelay());
+}
+
+std::array<Val, 3> Lowerer::delaysOf(const ast::TimingControl& t, slang::SourceLocation sl) {
+    std::uint64_t d[3] = {0, 0, 0};
+    if (t.kind == ast::TimingControlKind::Delay) {
+        d[0] = d[1] = d[2] = delayTicks(t.as<ast::DelayControl>().expr, sl);
+    } else if (t.kind == ast::TimingControlKind::Delay3) {
+        const auto& d3 = t.as<ast::Delay3Control>();
+        d[0] = delayTicks(d3.expr1, sl);
+        d[1] = d3.expr2 != nullptr ? delayTicks(*d3.expr2, sl) : d[0];
+        d[2] = d3.expr3 != nullptr ? delayTicks(*d3.expr3, sl) : std::min(d[0], d[1]);
+    } else {
+        unsupported(sl, "this delay");
+    }
+    return {constant(sir::u2(64), d[0]), constant(sir::u2(64), d[1]), constant(sir::u2(64), d[2])};
 }
 
 template <typename F>
 void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
                         const ast::Symbol& evalAt, F&& body,
-                        std::pair<std::uint8_t, std::uint8_t> strength) {
+                        std::pair<std::uint8_t, std::uint8_t> strength,
+                        const ast::TimingControl* delay) {
     sir::Process p;
     p.name = name;
     p.kind = sir::ProcessKind::Cont;
@@ -1473,6 +1505,8 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
     b_.scope = scopeNameOf(evalAt);
     evalSymbol_ = &evalAt;
     try {
+        // A delay makes the writes drive.delay (SIR_SPEC.md 5.4).
+        if (delay != nullptr) b_.delays = delaysOf(*delay, sl);
         body();
         if (!b_.dead) terminate(sir::Op::Ret, {}, sl);
     } catch (const Unsupported&) {

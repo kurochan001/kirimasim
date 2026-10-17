@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <map>
 #include <optional>
@@ -236,6 +237,13 @@ public:
         sir::Type type;                     ///< The type of the value there.
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
+    /// The place of a whole slot.
+    Place placeOfSlot(sir::SlotId s) {
+        Place p;
+        p.slot = s;
+        p.type = design_.slots[s].type;
+        return p;
+    }
     /// Bits lsb .. lsb + width - 1 of an integral place: a member of a
     /// packed structure, or a part of a member or part.
     Place narrow(Place base, std::int64_t lsb, std::uint32_t width, slang::SourceLocation sl);
@@ -520,6 +528,9 @@ public:
         /// The hierarchical name of the scope being lowered, for the
         /// messages of $error and the like (SYSTEM_TASKS.md 10.1).
         std::string scope;
+        /// The rise, fall and turn-off delays of a cont process whose
+        /// writes are delayed (drive.delay; SIR_SPEC.md 5.4).
+        std::optional<std::array<Val, 3>> delays;
     };
     Body& body() { return b_; }
 
@@ -621,7 +632,12 @@ private:
     /// 5.3), used when the net it drives needs resolution.
     template <typename F>
     void lowerCont(const std::string& name, slang::SourceLocation sl, const ast::Symbol& evalAt,
-                   F&& body, std::pair<std::uint8_t, std::uint8_t> strength = {6, 6});
+                   F&& body, std::pair<std::uint8_t, std::uint8_t> strength = {6, 6},
+                   const ast::TimingControl* delay = nullptr);
+    /// The rise, fall and turn-off delays of a continuous assignment, gate
+    /// or UDP in ticks: one delay for all, two with the lesser for
+    /// turn-off, or three (10.3.3, 28.16).
+    std::array<Val, 3> delaysOf(const ast::TimingControl& t, slang::SourceLocation sl);
     /// Makes the process wait on what its body read, not on what the
     /// subroutines it calls read inside: the operands of a continuous
     /// assignment (10.3.2) and the implicit sensitivity of @* (9.4.2.2,

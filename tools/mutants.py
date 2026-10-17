@@ -219,6 +219,20 @@ MUTANTS = [
      "src/front/lower_stmt.cpp",
      "                    for (Place& e : places)\n                        stores.emplace_back(std::move(e), initial(t));",
      "                    (void)places;"),
+    ("kernel: a delayed driver keeps an update of another value", "src/kernel/sim.cpp",
+     "    if (d.pending && !std::equal(value, value + words, d.value.begin())) {\n"
+     "        d.pending = false;",
+     "    if (d.pending && !std::equal(value, value + words, d.value.begin())) {\n"
+     "        d.pending = true;"),
+    ("kernel: a change to x takes the rise delay", "src/kernel/sim.cpp",
+     "delay = !b ? (a ? rise : fall) : (a ? std::min({rise, fall, off}) : off);",
+     "delay = !b ? (a ? rise : fall) : (a ? rise : off);"),
+    ("kernel: a vector falling to 0 takes the rise delay", "src/kernel/sim.cpp",
+     "    } else if (!all(now.data(), false, false) && all(value, false, false)) {",
+     "    } else if (false) {"),
+    ("front: a continuous assignment ignores its delay", "src/front/lower.cpp",
+     "        if (delay != nullptr) b_.delays = delaysOf(*delay, sl);",
+     "        if (false) b_.delays = delaysOf(*delay, sl);"),
     ("kernel: a UDP's level rows do not decide", "src/kernel/include/kirimasim/kernel/udp.h",
      "            if (detail::udpLevel(r, v, t.inputs, t.inputs))\n"
      "                return r.output == kUdpKeep ? state : r.output;",

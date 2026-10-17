@@ -177,10 +177,13 @@ struct Constant {
 /// Instruction opcodes (SIR_SPEC.md 5.2, 5.3 and 7.2).
 enum class Op : std::uint8_t {
     // Reads and writes of slots (SIR_SPEC.md 5.3) and frame variables (7.4).
-    Load,       ///< %r = load <slot range>
-    Store,      ///< store <slot range>, <value>  (blocking assignment)
-    Nba,        ///< nba <slot range>, <value>
-    NbaDelay,   ///< nba.delay <slot range>, <value>, <delay>
+    Load,      ///< %r = load <slot range>
+    Store,     ///< store <slot range>, <value>  (blocking assignment)
+    Nba,       ///< nba <slot range>, <value>
+    NbaDelay,  ///< nba.delay <slot range>, <value>, <delay>
+    /// drive.delay <slot range>, <value>, <rise>, <fall>, <off>: a delayed
+    /// write of a continuous assignment, gate or UDP (SIR_SPEC.md 5.4).
+    DriveDelay,
     LoadElem,   ///< %r = load.elem <slot>, <index>...
     StoreElem,  ///< store.elem <slot>, <index>..., <value>
     NbaElem,    ///< nba.elem <slot>, <index>..., <value>

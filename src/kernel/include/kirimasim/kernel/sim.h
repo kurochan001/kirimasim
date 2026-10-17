@@ -212,6 +212,22 @@ public:
     /// woken.
     void cancelWait(ProcessId p);
 
+    /// A driver whose writes are delayed (SCHEDULER_SPEC.md 12): a
+    /// continuous assignment, or the output of a gate or a UDP. It has at
+    /// most one update pending.
+    std::uint32_t addDelayedDriver();
+    /// drive.delay (SIR_SPEC.md 5.4): bits [lsb, lsb + width) of element
+    /// elem (width 0: all), laid out as in write(), take `value` after the
+    /// delay for the change from their value now (10.3.3, 28.16): to 1
+    /// `rise`, to 0 `fall`, to z `off`, to x the least of the three, for a
+    /// target of one bit; for a wider one, `fall` from a value that is not 0
+    /// to 0, `off` to all z, else `rise`. A pending update of another value
+    /// is dropped first; none is scheduled when the value is the one there
+    /// now. Updates after 0 ticks go to the Inactive region.
+    void driveDelayed(std::uint32_t driver, SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                      std::uint32_t width, const std::uint64_t* value, std::uint64_t rise,
+                      std::uint64_t fall, std::uint64_t off);
+
     /// Schedules a nonblocking update, `delay` ticks from now, in the NBA
     /// region of the scheduling process's group (SCHEDULER_SPEC.md 13).
     void scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint32_t lsb,
@@ -260,8 +276,8 @@ public:
 
 private:
     /// Show: a released held variable shows its value (id: the slot, gen:
-    /// the element).
-    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb, Show };
+    /// the element). Drive: a delayed driver's update (id: the driver).
+    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb, Show, Drive };
     struct Event {
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
@@ -329,6 +345,18 @@ private:
         std::vector<std::uint64_t> value[2];
         std::vector<ProcessId> owner[2];
     };
+    /// A delayed driver: where it writes and its pending update, if any;
+    /// gen numbers the update, so a dropped one is stale when it comes.
+    struct DelayedDriver {
+        SlotId slot = 0;
+        std::uint32_t elem = 0;
+        std::uint32_t lsb = 0;
+        std::uint32_t width = 0;
+        bool pending = false;
+        std::uint32_t gen = 0;
+        std::vector<std::uint64_t> value;
+    };
+    std::vector<DelayedDriver> drivers_;
     static constexpr std::uint32_t kNotHeld = UINT32_MAX;
     static constexpr ProcessId kNoHolder = UINT32_MAX;
 

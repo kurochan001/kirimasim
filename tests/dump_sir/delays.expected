@@ -1,0 +1,45 @@
+; sir format 0
+precision 1ns
+source 0 "delays.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.a" : i4<1> var inst=0
+slot %s1 "top.b" : i4<1> var inst=0
+slot %s2 "top.y" : i4<1> wire inst=0
+slot %s3 "top.n" : i4<1> wire inst=0
+slot %s4 "top.d" : i4<1> wire inst=0
+slot %s5 "top.w" : i4<4> wire inst=0
+slot %s6 "top.dw" : i4<1> wire inst=0
+
+process @0 "top.assign0" kind=cont inst=0 trigger=any(%s0) writes=%s2 {  ; 0:8:21
+bb0:
+  %t0 = load i4<1> %s0  ; 0:8:25
+  drive.delay %s2, %t0, const i2<64> 64'h0000000000000002, const i2<64> 64'h0000000000000003, const i2<64> 64'h0000000000000001  ; 0:8:21
+  ret  ; 0:8:21
+}
+
+process @1 "top.assign1" kind=cont inst=0 trigger=any(%s0),any(%s1) writes=%s5[1:0] {  ; 0:9:13
+bb0:
+  %t0 = load i4<1> %s0  ; 0:9:23
+  %t1 = load i4<1> %s1  ; 0:9:26
+  %t2 = concat i4<2> %t0, %t1  ; 0:9:22
+  drive.delay %s5[1:0], %t2, const i2<64> 64'h0000000000000004, const i2<64> 64'h0000000000000004, const i2<64> 64'h0000000000000004  ; 0:9:13
+  ret  ; 0:9:13
+}
+
+process @2 "top.assign2" kind=cont inst=0 trigger=any(%s0) writes=%s6 {  ; 0:10:11
+bb0:
+  %t0 = load i4<1> %s0  ; 0:10:16
+  drive.delay %s6, %t0, const i2<64> 64'h0000000000000005, const i2<64> 64'h0000000000000005, const i2<64> 64'h0000000000000005  ; 0:10:11
+  ret  ; 0:10:11
+}
+
+process @3 "top.g" kind=cont inst=0 trigger=any(%s0),any(%s1) writes=%s3 {  ; 0:11:16
+bb0:
+  %t0 = load i4<1> %s0  ; 0:11:22
+  %t1 = xor i4<1> %t0, const i4<1> 1'h0  ; 0:11:16
+  %t2 = load i4<1> %s1  ; 0:11:25
+  %t3 = and i4<1> %t1, %t2  ; 0:11:16
+  %t4 = not i4<1> %t3  ; 0:11:16
+  drive.delay %s3, %t4, const i2<64> 64'h0000000000000001, const i2<64> 64'h0000000000000002, const i2<64> 64'h0000000000000001  ; 0:11:16
+  ret  ; 0:11:16
+}

@@ -281,6 +281,7 @@ struct InstrInfo {
     /// (empty for the others).
     std::vector<std::vector<kernel::FormatPiece>> formats;
     kernel::NetKind netKind = kernel::NetKind::Wire;  ///< For resolve.
+    std::uint32_t driver = 0;                         ///< For drive.delay: its kernel driver.
 };
 
 /// The kind of net a resolve instruction names (SIR_SPEC.md 3.5).
@@ -467,6 +468,10 @@ public:
                     if (in.result != sir::kNone && in.result < n)
                         tempTypes_[p][in.result] = in.type;
                     info_[p][b].push_back(decode(in));
+                    // Each drive.delay keeps its own pending update
+                    // (SIR_SPEC.md 5.4).
+                    if (in.op == Op::DriveDelay)
+                        info_[p][b].back().driver = sched_.addDelayedDriver();
                 }
             }
         }
@@ -1236,6 +1241,19 @@ private:
                         break;
                     }
                     case Op::Builtin: builtin(in, info_[body][b][k]); break;
+                    case Op::DriveDelay: {
+                        const W4 x = value(ops[1]);
+                        const std::uint64_t buf[2] = {x.a, x.b};
+                        // A delay with x or z bits is 0 (9.4.1).
+                        const auto ticks = [&](std::size_t i) {
+                            const W4 d = value(ops[i]);
+                            return d.b != 0 ? std::uint64_t{0} : d.a;
+                        };
+                        sched_.driveDelayed(info_[body][b][k].driver, ops[0].id, ops[0].firstElem,
+                                            ops[0].lsb, ops[0].width, buf, ticks(2), ticks(3),
+                                            ticks(4));
+                        break;
+                    }
                     case Op::Resolve: resolve(in, info_[body][b][k]); break;
                     case Op::Syscall: {
                         const InstrInfo& info = info_[body][b][k];

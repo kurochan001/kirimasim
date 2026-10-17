@@ -2374,6 +2374,23 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
     const auto noNba = [&] {
         if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
     };
+    // A delayed continuous assignment, gate or UDP output writes a slot
+    // range with drive.delay (SIR_SPEC.md 5.4).
+    if (b_.delays) {
+        const sir::Slot& slot = design().slots[p.slot];
+        const bool whole = p.kind == Place::Kind::Slot;
+        const bool part = p.kind == Place::Kind::Bits && p.home == Place::Home::Slot && !p.pos &&
+                          p.indices.empty() && p.lsb >= 0 && p.lsb + p.width <= slot.type.width;
+        if (!whole && !part) unsupported(sl, "a delayed write of this target");
+        const Val dv = coerce(v, p.type, sl);
+        const Operand target =
+            whole ? Operand::slot(p.slot)
+                  : Operand::slot(p.slot, static_cast<std::uint32_t>(p.lsb), p.width);
+        emitVoid(Op::DriveDelay,
+                 {target, dv.op, (*b_.delays)[0].op, (*b_.delays)[1].op, (*b_.delays)[2].op}, sl);
+        noteWrite(rangeOf(p));
+        return;
+    }
     switch (p.kind) {
         case Place::Kind::Frame: {
             noNba();

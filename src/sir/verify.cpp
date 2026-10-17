@@ -25,6 +25,7 @@ bool hasNoResult(Op op) {
         case Op::Store:
         case Op::Nba:
         case Op::NbaDelay:
+        case Op::DriveDelay:
         case Op::StoreElem:
         case Op::NbaElem:
         case Op::StoreBits:
@@ -770,7 +771,8 @@ private:
             ops[0].kind == Operand::Kind::Slot) {
             const Operand& o = ops[0];
             SlotRange target{o.id, o.firstElem, o.numElems, o.lsb, o.width};
-            if (in.op != Op::Store && in.op != Op::Nba && in.op != Op::NbaDelay)
+            if (in.op != Op::Store && in.op != Op::Nba && in.op != Op::NbaDelay &&
+                in.op != Op::DriveDelay)
                 target = elementTarget(body, in, tempType);
             bool covered = false;
             for (const SlotRange& w : body.process->writes)
@@ -906,6 +908,17 @@ private:
                     else if (!isIntegral(ty(2)))
                         bad("the delay must be integral");
                 }
+                break;
+            case Op::DriveDelay:
+                // A cont process writes a slot range after one of three
+                // delays (SIR_SPEC.md 5.4).
+                if (body.process == nullptr || body.process->kind != ProcessKind::Cont)
+                    bad("only a cont process writes with it");
+                if (nOps(5) && (ops[0].kind != Operand::Kind::Slot || !isValue(1) ||
+                                !fits(ty(0), ty(1)) || !isIntegral(ty(0)) || !isIntegral(ty(2)) ||
+                                !isIntegral(ty(3)) || !isIntegral(ty(4))))
+                    bad("needs an integral slot range, a value of its type and three integral "
+                        "delays");
                 break;
             case Op::LoadElem:
             case Op::StoreElem:
