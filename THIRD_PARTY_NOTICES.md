@@ -11,17 +11,18 @@ the license file of the fetched sources.
 
 | Component | Version | License | Source |
 | --- | --- | --- | --- |
-| slang | v12.0 (`545f88b2ed3a2d20325fbd17413af177a6bca72f`) | MIT | https://github.com/MikePopoloski/slang |
+| slang | main after v12.0 (`b7f11c1f034029b9534444ee9d63090037f23e87`) | MIT | https://github.com/MikePopoloski/slang |
 | {fmt} (fetched by slang) | 12.2.0 | MIT | https://github.com/fmtlib/fmt |
 | mimalloc (fetched by slang) | v3.5.3 | MIT | https://github.com/microsoft/mimalloc |
 | boost::regex (fetched by slang, slang's mirror) | boost-1.91.0 | BSL-1.0 | https://github.com/MikePopoloski/regex |
 | toml++ (fetched by slang) | v3.4.0 | MIT | https://github.com/marzer/tomlplusplus |
-| boost::unordered, boost concurrent containers (vendored in slang's `external/`) | as vendored in slang v12.0 | BSL-1.0 | https://github.com/MikePopoloski/slang |
-| expected-lite (vendored in slang's `external/expected.hpp`) | as vendored in slang v12.0 | BSL-1.0 | https://github.com/MikePopoloski/slang |
-| BS::thread_pool (vendored in slang's `external/`) | as vendored in slang v12.0 | MIT | https://github.com/MikePopoloski/slang |
+| boost::unordered, boost concurrent containers (vendored in slang's `external/`) | as vendored in that slang commit | BSL-1.0 | https://github.com/MikePopoloski/slang |
+| expected-lite (vendored in slang's `external/expected.hpp`) | as vendored in that slang commit | BSL-1.0 | https://github.com/MikePopoloski/slang |
+| BS::thread_pool (vendored in slang's `external/`) | as vendored in that slang commit | MIT | https://github.com/MikePopoloski/slang |
 
-The versions of the components fetched by slang are the ones slang v12.0
-pins in its own `external/CMakeLists.txt`.
+The versions of the components fetched by slang are the ones that slang
+commit pins in its own `external/CMakeLists.txt`; `external/` is the same
+as in v12.0.
 
 ## Used only by the tests
 
