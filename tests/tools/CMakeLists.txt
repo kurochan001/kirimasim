@@ -49,6 +49,9 @@ set_tests_properties(tools/gen_package_call_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_stream_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_stream_matrix.py --check)
 set_tests_properties(tools/gen_stream_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_string_conversion_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_string_conversion_matrix.py --check)
+set_tests_properties(tools/gen_string_conversion_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_static_call_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_static_call_matrix.py --check)
 set_tests_properties(tools/gen_static_call_matrix PROPERTIES LABELS Tools)
