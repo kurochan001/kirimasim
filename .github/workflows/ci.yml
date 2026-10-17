@@ -27,6 +27,12 @@ jobs:
     # approval before any workflow of an outside contributor runs.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, kirimasim-linux]
+    # The compiler is named here rather than taken from the runner's default
+    # c++, so that the build uses LLVM 22, the version lint uses, whatever the
+    # machine's default points to.
+    env:
+      CC: clang-22
+      CXX: clang++-22
     steps:
       # The runner's home directory stays out of the public logs.
       - name: Mask the runner's home directory
@@ -36,7 +42,7 @@ jobs:
 
       - name: Show tool versions
         run: |
-          c++ --version
+          "$CXX" --version
           cmake --version
           ninja --version
           python3 --version
@@ -49,7 +55,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-linux-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-linux-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }}
