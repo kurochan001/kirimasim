@@ -93,6 +93,19 @@ benchmarks):
 | | Icarus Verilog | 20.8 s | 8.9 s | 29.7 s |
 | | Verilator | 3,796.9 s | 291.7 s | 4,088.6 s |
 
+Only the tests that all three simulators pass, from the same runs: 150
+tests of sv-tests (38 of them must be rejected, so they have no run step)
+and 1,133 of the own test suite.
+
+| Test set | Simulator | Build step | Run step | Total |
+| --- | --- | --- | --- | --- |
+| sv-tests, 150 | kirimasim | 1.4 s | 0.1 s | 1.5 s |
+| | Icarus Verilog | 2.3 s | 20.9 s | 23.2 s |
+| | Verilator | 127.0 s | 19.3 s | 146.3 s |
+| Own test suite, 1,133 | kirimasim | 10.8 s | 0.2 s | 11.0 s |
+| | Icarus Verilog | 16.1 s | 7.9 s | 24.0 s |
+| | Verilator | 3,006.7 s | 229.4 s | 3,236.1 s |
+
 - The build step is the work before the simulation starts: for kirimasim,
   reading, elaborating and lowering the design to SIR (timed as a run with
   `--dump-sir`); for Icarus, `iverilog`; for Verilator, `verilator
@@ -103,14 +116,21 @@ benchmarks):
   kirimasim's run step is found by subtraction and is too small to tell
   apart from noise; the run with `--dump-sir` also prints the SIR, so the
   subtraction errs on the small side.
-- A test that a simulator cannot build counts with its build step only;
-  kirimasim stops early at an unsupported construct.
+- On this machine, the first start of a newly built program took about
+  0.2 s, and the next start of the same file under 0.01 s (tried with three
+  files that Icarus made; why macOS takes that time is not confirmed).
+  Every run step of Verilator is such a first start, and so is Icarus's in
+  sv-tests, whose runner starts the compiled file itself; the own suite's
+  runner starts `vvp` with the file instead.
+- In the first table, a test that a simulator cannot build counts with its
+  build step only; kirimasim stops early at an unsupported construct.
 - Verilator builds as each suite's runner does: sv-tests' runner builds
   without C++ optimization (`-O0`); the own suite's runner uses Verilator's
   default optimization and random initial values.
 - Versions and machine: kirimasim 8500bdc, the last commit that changed its
-  source (release build), Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel 8668340; Apple M5 Max (18
-  cores), 128 GB, macOS 27.0.1, Apple clang 21.
+  source (release build), Icarus Verilog 14.0 (devel) f190dbb, Verilator
+  5.053 devel 8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple
+  clang 21.
 
 <details>
 <summary>This repository's tests by kind</summary>
