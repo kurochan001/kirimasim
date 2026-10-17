@@ -90,6 +90,10 @@ TEST(Format, Characters) {
     EXPECT_EQ(fmt(Num(0x0041, 16).value, 's', 0), "A");
     EXPECT_EQ(fmt(Num(0x4142, 16).value, 's'), "AB");
     EXPECT_EQ(fmt(Num(0x141, 16).value, 'c'), "A");
+    // A zero byte after the first nonzero one is a space, with %0s too.
+    EXPECT_EQ(fmt(Num(0x00410042, 32).value, 's'), " A B");
+    EXPECT_EQ(fmt(Num(0x00410042, 32).value, 's', 0), "A B");
+    EXPECT_EQ(fmt(Num(0x41000000, 32).value, 's', 0), "A   ");
 }
 
 TEST(Format, WideDecimal) {

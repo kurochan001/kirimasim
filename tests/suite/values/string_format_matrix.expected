@@ -1,0 +1,48 @@
+leading 32 s [  AB]
+leading 32 s sformatf [  AB] 4
+leading 32 0s [AB]
+leading 32 0s sformatf [AB] 2
+leading 32 12s [          AB]
+leading 32 12s sformatf [          AB] 12
+leading 100 s [           AB]
+leading 100 s sformatf [           AB] 13
+leading 100 0s [AB]
+leading 100 0s sformatf [AB] 2
+leading 100 12s [          AB]
+leading 100 12s sformatf [          AB] 12
+inside 32 s [A  B]
+inside 32 s sformatf [A  B] 4
+inside 32 0s [A  B]
+inside 32 0s sformatf [A  B] 4
+inside 32 12s [        A  B]
+inside 32 12s sformatf [        A  B] 12
+inside 100 s [         A  B]
+inside 100 s sformatf [         A  B] 13
+inside 100 0s [A  B]
+inside 100 0s sformatf [A  B] 4
+inside 100 12s [        A  B]
+inside 100 12s sformatf [        A  B] 12
+trailing 32 s [AB  ]
+trailing 32 s sformatf [AB  ] 4
+trailing 32 0s [AB  ]
+trailing 32 0s sformatf [AB  ] 4
+trailing 32 12s [        AB  ]
+trailing 32 12s sformatf [        AB  ] 12
+trailing 100 s [         AB  ]
+trailing 100 s sformatf [         AB  ] 13
+trailing 100 0s [AB  ]
+trailing 100 0s sformatf [AB  ] 4
+trailing 100 12s [        AB  ]
+trailing 100 12s sformatf [        AB  ] 12
+zero 32 s [    ]
+zero 32 s sformatf [    ] 4
+zero 32 0s []
+zero 32 0s sformatf [] 0
+zero 32 12s [            ]
+zero 32 12s sformatf [            ] 12
+zero 100 s [             ]
+zero 100 s sformatf [             ] 13
+zero 100 0s []
+zero 100 0s sformatf [] 0
+zero 100 12s [            ]
+zero 100 12s sformatf [            ] 12

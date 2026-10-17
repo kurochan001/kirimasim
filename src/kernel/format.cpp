@@ -161,7 +161,8 @@ std::string formatDecimal(const IntValue& v, int width) {
 
 std::string formatChars(const IntValue& v, int width) {
     // Bytes from the most significant end; leading zero bytes are not
-    // printed (3.5).
+    // printed, and a zero byte after the first nonzero one prints as a
+    // space (3.5).
     std::string bytes;
     const std::uint32_t n = (v.width + 7) / 8;
     for (std::uint32_t k = n; k-- > 0;) {
@@ -169,7 +170,7 @@ std::string formatChars(const IntValue& v, int width) {
         for (std::uint32_t i = 0; i < 8 && k * 8 + i < v.width; ++i)
             if (bitOf(v, k * 8 + i).a) c |= 1U << i;
         if (c == 0 && bytes.empty()) continue;
-        bytes.push_back(static_cast<char>(c));
+        bytes.push_back(c == 0 ? ' ' : static_cast<char>(c));
     }
     const std::size_t w = width < 0 ? n : static_cast<std::size_t>(width);
     return padLeft(std::move(bytes), w, ' ');
