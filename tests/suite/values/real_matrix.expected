@@ -1,0 +1,162 @@
+module ln0 0.916290732
+module ln1 -inf
+module ln1int -inf
+module ln2 nan
+module ln2int nan
+module log100 2.397940009
+module log100int 2.397940009
+module log101 -inf
+module log101int -inf
+module exp0 3.490342957
+module exp1 inf
+module exp1int inf
+module sqrt0 1.414213562
+module sqrt0int 1.414213562
+module sqrt1 nan
+module sqrt1int nan
+module pow0 1.414213562
+module pow1 nan
+module pow2 inf
+module floor0 -3.000000000
+module floor1 2.000000000
+module ceil0 -2.000000000
+module ceil1 3.000000000
+module sin0 0.681638760
+module cos0 0.731688869
+module tan0 0.931596460
+module asin0 0.523598776
+module asin1 nan
+module asin1int nan
+module acos0 1.047197551
+module acos1 nan
+module acos1int nan
+module atan0 1.249045772
+module atan0int 1.249045772
+module atan20 2.356194490
+module atan21 3.141592654
+module hypot0 5.000000000
+module sinh0 2.129279455
+module cosh0 2.352409615
+module tanh0 0.905148254
+module asinh0 1.194763217
+module acosh0 0.962423650
+module acosh1 nan
+module atanh0 0.549306144
+module atanh1 inf
+module atanh1int inf
+module truth0 10010
+module if0 e
+module sel0 2
+module truth1 10010
+module if1 e
+module sel1 2
+module truth2 01101
+module if2 t
+module sel2 1
+module truth3 01101
+module if3 t
+module sel3 1
+module truth4 01101
+module if4 t
+module sel4 1
+module truth5 01101
+module if5 t
+module sel5 1
+module cmp0 110001
+module cmp1 010110
+module cmp2 010110
+module cmp3 000001
+module cmp4 000001
+module cmp5 001101
+module round0 3 2
+module round1 -3 -2
+module round2 0 0
+module round3 -1 0
+module round4 123457 123456
+module round5 -7 -7
+module itor 9007199254740992.0 -7.0
+module tobits 3ff8000000000000 3fc00000
+module frombits 2.000000 3.141593
+module shortreal 0.100000001490 0
+module arith inf -inf 1.414214
+function ln0 0.916290732
+function ln1 -inf
+function ln1int -inf
+function ln2 nan
+function ln2int nan
+function log100 2.397940009
+function log100int 2.397940009
+function log101 -inf
+function log101int -inf
+function exp0 3.490342957
+function exp1 inf
+function exp1int inf
+function sqrt0 1.414213562
+function sqrt0int 1.414213562
+function sqrt1 nan
+function sqrt1int nan
+function pow0 1.414213562
+function pow1 nan
+function pow2 inf
+function floor0 -3.000000000
+function floor1 2.000000000
+function ceil0 -2.000000000
+function ceil1 3.000000000
+function sin0 0.681638760
+function cos0 0.731688869
+function tan0 0.931596460
+function asin0 0.523598776
+function asin1 nan
+function asin1int nan
+function acos0 1.047197551
+function acos1 nan
+function acos1int nan
+function atan0 1.249045772
+function atan0int 1.249045772
+function atan20 2.356194490
+function atan21 3.141592654
+function hypot0 5.000000000
+function sinh0 2.129279455
+function cosh0 2.352409615
+function tanh0 0.905148254
+function asinh0 1.194763217
+function acosh0 0.962423650
+function acosh1 nan
+function atanh0 0.549306144
+function atanh1 inf
+function atanh1int inf
+function truth0 10010
+function if0 e
+function sel0 2
+function truth1 10010
+function if1 e
+function sel1 2
+function truth2 01101
+function if2 t
+function sel2 1
+function truth3 01101
+function if3 t
+function sel3 1
+function truth4 01101
+function if4 t
+function sel4 1
+function truth5 01101
+function if5 t
+function sel5 1
+function cmp0 110001
+function cmp1 010110
+function cmp2 010110
+function cmp3 000001
+function cmp4 000001
+function cmp5 001101
+function round0 3 2
+function round1 -3 -2
+function round2 0 0
+function round3 -1 0
+function round4 123457 123456
+function round5 -7 -7
+function itor 9007199254740992.0 -7.0
+function tobits 3ff8000000000000 3fc00000
+function frombits 2.000000 3.141593
+function shortreal 0.100000001490 0
+function arith inf -inf 1.414214
