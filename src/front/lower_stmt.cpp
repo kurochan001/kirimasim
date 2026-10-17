@@ -367,6 +367,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             terminate(Op::Br, {Operand::block(*n->exit)}, sl);
             return;
         }
+        case ast::StatementKind::Wait: lowerWait(s.as<ast::WaitStatement>()); return;
         case ast::StatementKind::WaitFork: {
             const sir::BlockId cont = newBlock();
             terminate(Op::WaitFork, {Operand::block(cont)}, sl);
@@ -494,6 +495,66 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     ops.push_back(Operand::block(cont));
     terminate(Op::Fork, std::move(ops), sl);
     setBlock(cont);
+}
+
+void Lowerer::lowerWait(const ast::WaitStatement& w) {
+    // The condition is a guard: a subroutine that reads the frame of the
+    // body that waits and returns the truth of the expression. wait.cond
+    // goes on at once when it is true, and else when it becomes true
+    // (9.4.3, SIR_SPEC.md 7.2).
+    const slang::SourceLocation sl = w.sourceRange.start();
+    const sir::Owner owner{b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process,
+                           b_.proc};
+    sir::Subroutine g;
+    g.name = (b_.isSub ? design_.subroutines[b_.proc].name : proc().name) + ".wait" +
+             std::to_string(b_.waits++);
+    g.kind = sir::SubroutineKind::Guard;
+    g.instance = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
+    g.frameOf = owner;
+    g.returnType = sir::u4(1);
+    g.loc = loc(sl);
+    g.blocks.resize(1);
+    const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
+    design_.subroutines.push_back(std::move(g));
+    Body saved = std::move(b_);
+    b_ = Body{};
+    b_.isSub = true;
+    b_.proc = id;
+    b_.subSymbol = saved.subSymbol;  // the variables of a waiting task are its own
+    b_.frameVars = saved.frameVars;
+    b_.structFrames = saved.structFrames;
+    b_.scale = saved.scale;
+    b_.scope = saved.scope;
+    try {
+        const Val c = lowerCondition(w.cond);
+        terminate(Op::Ret, {coerce(c, sir::u4(1), sl).op}, sl);
+    } catch (const Unsupported&) {
+        b_ = std::move(saved);
+        throw;
+    }
+    b_ = std::move(saved);
+    // What the guard's calls write counts as the waiting body's.
+    callees_[{b_.isSub, b_.proc}].push_back(id);
+    // The kernel evaluates the condition again in the middle of the write
+    // that changed what it reads (SCHEDULER_SPEC.md 9.5), so it may not
+    // write a variable or a net itself.
+    std::set<sir::SubroutineId> seen;
+    if (writesOutside(id, seen)) unsupported(sl, "wait condition that writes a variable or net");
+    const sir::BlockId cont = newBlock();
+    terminate(Op::WaitCond, {Operand::subroutine(id), Operand::block(cont)}, sl);
+    setBlock(cont);
+    lowerStatement(w.stmt);
+}
+
+bool Lowerer::writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const {
+    if (!seen.insert(id).second) return false;
+    if (const auto it = subWrites_.find(id); it != subWrites_.end())
+        for (const sir::SlotRange& r : it->second)
+            if (design_.slots[r.slot].subroutine == sir::kNone) return true;
+    if (const auto it = callees_.find({true, id}); it != callees_.end())
+        for (const sir::SubroutineId c : it->second)
+            if (writesOutside(c, seen)) return true;
+    return false;
 }
 
 std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs,

@@ -1,0 +1,84 @@
+initial: at once at 0, 1
+initial: variable at 2, 3
+initial: bit at 4, 15
+initial: part at 6, 170
+initial: element at 8, 5
+initial: variable index at 10, 2
+initial: net at 12, 4
+initial: container variable at 14, 5
+initial: automatic function at 16, 6
+initial: static function at 18, 3
+initial: x then z then 1 at 20, 1
+initial: triggered at 22, 1
+initial: hierarchical at 24, 1
+initial: package at 26, 2
+always: at once at 0, 1
+always: variable at 2, 3
+always: bit at 4, 15
+always: part at 6, 170
+always: element at 8, 5
+always: variable index at 10, 2
+always: net at 12, 4
+always: container variable at 14, 5
+always: automatic function at 16, 6
+always: static function at 18, 3
+always: x then z then 1 at 20, 1
+always: triggered at 22, 1
+always: hierarchical at 24, 1
+always: package at 26, 2
+fork branch: at once at 0, 1
+fork branch: variable at 2, 3
+fork branch: bit at 4, 15
+fork branch: part at 6, 170
+fork branch: element at 8, 5
+fork branch: variable index at 10, 2
+fork branch: net at 12, 4
+fork branch: container variable at 14, 5
+fork branch: automatic function at 16, 6
+fork branch: static function at 18, 3
+fork branch: x then z then 1 at 20, 1
+fork branch: triggered at 22, 1
+fork branch: hierarchical at 24, 1
+fork branch: package at 26, 2
+static task: at once at 0, 1
+static task: variable at 2, 3
+static task: bit at 4, 15
+static task: part at 6, 170
+static task: element at 8, 5
+static task: variable index at 10, 2
+static task: net at 12, 4
+static task: container variable at 14, 5
+static task: automatic function at 16, 6
+static task: static function at 18, 3
+static task: x then z then 1 at 20, 1
+static task: triggered at 22, 1
+static task: hierarchical at 24, 1
+static task: package at 26, 2
+automatic task: at once at 0, 1
+automatic task: variable at 2, 3
+automatic task: bit at 4, 15
+automatic task: part at 6, 170
+automatic task: element at 8, 5
+automatic task: variable index at 10, 2
+automatic task: net at 12, 4
+automatic task: container variable at 14, 5
+automatic task: automatic function at 16, 6
+automatic task: static function at 18, 3
+automatic task: x then z then 1 at 20, 1
+automatic task: triggered at 22, 1
+automatic task: hierarchical at 24, 1
+automatic task: package at 26, 2
+task in a fork: at once at 0, 1
+task in a fork: variable at 2, 3
+task in a fork: bit at 4, 15
+task in a fork: part at 6, 170
+task in a fork: element at 8, 5
+task in a fork: variable index at 10, 2
+task in a fork: net at 12, 4
+task in a fork: container variable at 14, 5
+task in a fork: automatic function at 16, 6
+task in a fork: static function at 18, 3
+task in a fork: x then z then 1 at 20, 1
+task in a fork: triggered at 22, 1
+task in a fork: hierarchical at 24, 1
+task in a fork: package at 26, 2

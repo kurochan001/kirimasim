@@ -411,6 +411,8 @@ struct Frame {
     /// it reads changes (SIR_SPEC.md 5.6), and at which level.
     bool holding = false;
     kernel::Hold level = kernel::Hold::Assign;
+    /// The guard of the wait.cond it waits at (SIR_SPEC.md 7.2).
+    sir::SubroutineId cond = 0;
 
     /// Calls of tasks that may wait, innermost last (SIR_SPEC.md 7.4): each
     /// keeps its frame variables and the block to go on at. Their temps do
@@ -600,6 +602,16 @@ public:
         return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
     }
 
+    /// The monitor record of a wait.cond evaluates its guard (SCHEDULER_SPEC.md
+    /// 9.5): 1 when true.
+    static void evalCond(kirima_context* /*ctx*/, void* frame, std::uint64_t* out) {
+        auto* f = static_cast<Frame*>(frame);
+        Interpreter& vm = *f->vm;
+        std::uint64_t steps = 0;
+        out[0] = vm.guard(*f, f->cond, steps).value_or(false) ? 1U : 0U;
+        vm.counters_.increment(vm.cInstrs_, steps);
+    }
+
     static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
@@ -661,7 +673,12 @@ private:
         return isSubBody(body) ? subOf(body).blocks : d_.processes[body].blocks;
     }
     const std::vector<sir::FrameVar>& bodyFrame(std::uint32_t body) const {
-        return isSubBody(body) ? subOf(body).frame : d_.processes[body].frame;
+        if (!isSubBody(body)) return d_.processes[body].frame;
+        const sir::Subroutine& s = subOf(body);
+        // A guard reads the frame of the body that waits (SIR_SPEC.md 7.2).
+        if (s.kind != sir::SubroutineKind::Guard) return s.frame;
+        return s.frameOf.kind == sir::Owner::Kind::Process ? d_.processes[s.frameOf.id].frame
+                                                           : d_.subroutines[s.frameOf.id].frame;
     }
     std::uint32_t bodyTemps(std::uint32_t body) const {
         return isSubBody(body) ? subOf(body).numTemps : d_.processes[body].numTemps;
@@ -678,6 +695,14 @@ private:
     std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
     std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
     std::vector<Frame*> overrides_;                ///< By process: an override process's frame.
+    /// What a guard depends on, found on its first wait (SCHEDULER_SPEC.md
+    /// 9.5): the slot parts it and the functions it calls read, and the
+    /// event slots among them, whose events `triggered` may read.
+    struct GuardDeps {
+        std::vector<kernel::SlotPart> slots;
+        std::vector<sir::SlotId> events;
+    };
+    std::vector<std::optional<GuardDeps>> guardDeps_;  ///< By subroutine.
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
@@ -1246,6 +1271,17 @@ private:
                         resumeAt(f) = ops.back().id;
                         return Exit::Waiting;
                     }
+                    case Op::WaitCond: {
+                        const std::optional<bool> waits = waitCond(f, ops[0].id, steps);
+                        if (!waits) return sched_.ending() ? Exit::Stop : Exit::Error;
+                        if (*waits) {
+                            resumeAt(f) = ops[1].id;
+                            return Exit::Waiting;
+                        }
+                        b = ops[1].id;
+                        jumped = true;
+                        break;
+                    }
                     case Op::WaitNamed: {
                         const std::optional<kernel::EventId> e = eventOf(ops[0]);
                         if (!e) {
@@ -1355,6 +1391,81 @@ private:
         o.level = level;
         waitTriggers(o, d_.processes[ops[1].id]);
         return Exit::Ret;
+    }
+
+    // --- wait (expr) (SIR_SPEC.md 7.2) ---
+
+    /// Runs guard g on the frame of the activation that waits: the process,
+    /// or its innermost task call. Empty on an error.
+    std::optional<bool> guard(Frame& f, sir::SubroutineId g, std::uint64_t& steps) {
+        const Act caller = act_;
+        std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
+        const std::uint32_t varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
+        enter({processCount() + g, &vars, caller.base + bodyTemps(caller.body), varsId});
+        W4 ret{0, 0};
+        const Exit e = runBody(f, 0, steps, ret);
+        act_ = caller;
+        if (e != Exit::Ret) return std::nullopt;
+        return isTrue(ret);
+    }
+
+    /// The slot parts a body reads, with what the functions it calls read.
+    /// A subroutine's own variables are left out: a call sets them again.
+    void collectReads(std::uint32_t body, GuardDeps& deps, std::vector<bool>& seen) const {
+        if (seen[body]) return;
+        seen[body] = true;
+        for (const sir::BasicBlock& bb : bodyBlocks(body)) {
+            for (const sir::Instr& in : bb.instrs) {
+                if (in.op == Op::Call) collectReads(processCount() + in.operands[0].id, deps, seen);
+                for (const Operand& o : in.operands) {
+                    if (o.kind != Operand::Kind::Slot) continue;
+                    const sir::Slot& slot = d_.slots[o.id];
+                    if (slot.subroutine != sir::kNone) continue;
+                    const bool whole = in.op != Op::Load;
+                    deps.slots.push_back({o.id, whole ? 0 : o.firstElem, whole ? 0 : o.numElems,
+                                          whole ? 0 : o.lsb, whole ? 0 : o.width});
+                    if (slot.type.kind == sir::TypeKind::Event) deps.events.push_back(o.id);
+                }
+            }
+        }
+    }
+
+    /// What guard g depends on, found on its first wait.
+    const GuardDeps& depsOf(sir::SubroutineId g) {
+        if (guardDeps_.empty()) guardDeps_.resize(d_.subroutines.size());
+        std::optional<GuardDeps>& cached = guardDeps_[g];
+        if (cached) return *cached;
+        GuardDeps deps;
+        std::vector<bool> seen(processCount() + d_.subroutines.size(), false);
+        collectReads(processCount() + g, deps, seen);
+        return cached.emplace(std::move(deps));
+    }
+
+    /// wait.cond: goes on when the guard is true, else waits on a monitor
+    /// record that wakes the process when the guard becomes true
+    /// (SCHEDULER_SPEC.md 9.3, 9.5). Returns whether it waits; empty on an
+    /// error.
+    std::optional<bool> waitCond(Frame& f, sir::SubroutineId g, std::uint64_t& steps) {
+        const std::optional<bool> now = guard(f, g, steps);
+        if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
+        const GuardDeps& deps = depsOf(g);
+        kernel::MonitorSpec m;
+        m.slots = deps.slots;
+        // ev.triggered: the events the event slots hold now (15.5.3).
+        for (const sir::SlotId s : deps.events) {
+            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
+            for (std::uint32_t e = 0; e < n; ++e)
+                if (const std::uint64_t h = *store_.element(s, e); h != 0)
+                    m.events.push_back(static_cast<kernel::EventId>(h - 1));
+        }
+        m.eval = &evalCond;
+        m.frame = &f;
+        m.domain = kernel::Domain::Two;
+        m.width = 1;
+        m.untilTrue = true;
+        f.cond = g;
+        sched_.waitMonitor(f.kernelId, m);
+        return true;
     }
 
     /// Stops the override processes of a level that hold nothing now.

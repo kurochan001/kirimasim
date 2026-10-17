@@ -553,7 +553,9 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         for (const ast::Scope* sc = v.getParentScope(); sc != nullptr;
              sc = sc->asSymbol().getParentScope()) {
             if (&sc->asSymbol() == b_.subSymbol) {
-                s.subroutine = b_.proc;
+                // A guard's variables are those of the task that waits.
+                const sir::Subroutine& cur = design_.subroutines[b_.proc];
+                s.subroutine = cur.kind == sir::SubroutineKind::Guard ? cur.frameOf.id : b_.proc;
                 break;
             }
             if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;

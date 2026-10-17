@@ -160,6 +160,12 @@ public:
                           bool hasElse, bool isCase, slang::SourceLocation sl);
     void lowerCase(const ast::CaseStatement& s);
     void lowerTiming(const ast::TimingControl& t);
+    /// wait (expr): the condition becomes a guard that reads the frame of
+    /// the body that waits (SIR_SPEC.md 7.2).
+    void lowerWait(const ast::WaitStatement& w);
+    /// Whether a subroutine, or one it calls, writes a slot that is not a
+    /// variable or argument of a subroutine.
+    bool writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const;
     void lowerForeach(const std::vector<const ast::ForeachLoopStatement::LoopDim*>& dims,
                       std::size_t k, const ast::Statement& body, slang::SourceLocation sl);
     /// The exit and continue blocks of loop number `loop`, made on first use.
@@ -349,7 +355,13 @@ public:
         return b_.isSub ? design_.subroutines[b_.proc].blocks : proc().blocks;
     }
     std::vector<sir::FrameVar>& frameVars() {
-        return b_.isSub ? design_.subroutines[b_.proc].frame : proc().frame;
+        if (!b_.isSub) return proc().frame;
+        sir::Subroutine& s = design_.subroutines[b_.proc];
+        // A guard reads the frame of the body that waits (SIR_SPEC.md 7.2).
+        if (s.kind != sir::SubroutineKind::Guard) return s.frame;
+        return s.frameOf.kind == sir::Owner::Kind::Process
+                   ? design_.processes[s.frameOf.id].frame
+                   : design_.subroutines[s.frameOf.id].frame;
     }
     std::uint32_t& numTemps() {
         return b_.isSub ? design_.subroutines[b_.proc].numTemps : proc().numTemps;
@@ -524,6 +536,7 @@ public:
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;        ///< For the sensitivity of always_comb.
         std::uint32_t forks = 0;                  ///< Fork statements so far, for child names.
+        std::uint32_t waits = 0;                  ///< wait statements so far, for guard names.
         bool isSub = false;                       ///< proc is a subroutine number.
         const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
