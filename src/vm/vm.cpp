@@ -278,15 +278,6 @@ double integerToReal(W4 v, sir::Type t) {
     return static_cast<double>(a);
 }
 
-/// $rtoi (20.5): truncated toward zero; NaN and values outside 64 bits give
-/// 0 until SYSTEM_TASKS.md 9 decides them. Conversions use
-/// kernel::wide::fromReal (VALUE_SEMANTICS.md 7.4).
-std::uint64_t realToInteger(double d, bool truncate) {
-    if (std::isnan(d) || d >= 9223372036854775808.0 || d < -9223372036854775808.0) return 0;
-    return static_cast<std::uint64_t>(
-        static_cast<std::int64_t>(truncate ? std::trunc(d) : std::round(d)));
-}
-
 /// The truth of a value as a 1-bit W4 (3.5, 7.5: a real is true unless 0.0).
 W4 truthOf(W4 v, sir::Type t) {
     if (isRealType(t)) return {toReal(v, t) != 0.0 ? 1U : 0U, 0};
@@ -3729,9 +3720,9 @@ private:
                 W4 r{0, 0};
                 switch (info.task) {
                     case SysTask::Rtoi:
-                        r = {realToInteger(toReal(arg(1), argType(1)), true) &
-                                 kernel::mask(rt.width),
-                             0};
+                        // Truncated, then as a conversion (SYSTEM_TASKS.md 8).
+                        kernel::wide::fromReal(&r, rt.width, toReal(arg(1), argType(1)),
+                                               sir::isFourState(rt), true);
                         break;
                     case SysTask::RealToBits:
                     case SysTask::ShortRealToBits:

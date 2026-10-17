@@ -38,10 +38,11 @@ Value fromUint(std::uint64_t v, std::uint32_t width, bool isSigned);
 /// A value whose bits are all `bit`.
 Value filled(Logic bit, std::uint32_t width, bool isSigned);
 /// A real converted to an integral value of `width` bits (VALUE_SEMANTICS.md
-/// 7.4): rounded half away from zero, then the low bits of that integer's
-/// two's complement, at any magnitude. NaN and the infinities give X in
-/// every bit (a two-state target takes to2 of it: 0).
-Value fromReal(double d, std::uint32_t width, bool isSigned);
+/// 7.4): rounded half away from zero (truncated toward zero for $rtoi,
+/// SYSTEM_TASKS.md 8), then the low bits of that integer's two's
+/// complement, at any magnitude. NaN and the infinities give X in every bit
+/// (a two-state target takes to2 of it: 0).
+Value fromReal(double d, std::uint32_t width, bool isSigned, bool truncate = false);
 /// The (a, b) words of a value (the inverse of fromWords).
 void toWords(const Value& v, std::vector<std::uint64_t>& a, std::vector<std::uint64_t>& b);
 /// The bits as text, most significant first: "10xz".

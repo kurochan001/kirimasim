@@ -223,9 +223,9 @@ Value filled(Logic bit, std::uint32_t width, bool isSigned) {
     return {std::vector<Logic>(width, bit), isSigned};
 }
 
-Value fromReal(double d, std::uint32_t width, bool isSigned) {
+Value fromReal(double d, std::uint32_t width, bool isSigned, bool truncate) {
     if (std::isnan(d) || std::isinf(d)) return filled(Logic::X, width, isSigned);
-    const double r = std::round(d);  // half away from zero
+    const double r = truncate ? std::trunc(d) : std::round(d);  // round: half away from zero
     // |r| = mant * 2^(exp - 53), with mant an integer below 2^53.
     int exp = 0;
     const double frac = std::frexp(std::fabs(r), &exp);

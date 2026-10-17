@@ -285,9 +285,10 @@ TEST(Wide, FromRealMatchesReference) {
         }
         const unsigned w = 1 + static_cast<unsigned>(rng() % 200);
         const bool four = (rng() & 1U) != 0;
+        const bool truncate = (rng() & 2U) != 0;  // $rtoi
         Wide r(kw::chunks(w));
-        kw::fromReal(r.data(), w, d, four);
-        v::Value want = v::fromReal(d, w, true);
+        kw::fromReal(r.data(), w, d, four, truncate);
+        v::Value want = v::fromReal(d, w, true, truncate);
         if (!four) want = v::to2(want);
         ASSERT_TRUE(same(r, want, "fromReal " + std::to_string(d) + " w=" + std::to_string(w)))
             << "round " << round;

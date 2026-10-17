@@ -100,8 +100,9 @@ double toReal(const W4* x, unsigned w, bool isSigned);
 /// A real rounded half away from zero, to w bits; NaN and values that do
 /// not fit give 0 (7.4).
 /// A real to an integral value of w bits (VALUE_SEMANTICS.md 7.4): rounded
-/// half away from zero, the low bits of the integer at any magnitude; NaN
-/// and the infinities give x in every bit, or 0 when not fourState.
-void fromReal(W4* r, unsigned w, double d, bool fourState);
+/// half away from zero (truncated toward zero for $rtoi, SYSTEM_TASKS.md 8),
+/// the low bits of the integer at any magnitude; NaN and the infinities
+/// give x in every bit, or 0 when not fourState.
+void fromReal(W4* r, unsigned w, double d, bool fourState, bool truncate = false);
 
 }  // namespace kirimasim::kernel::wide

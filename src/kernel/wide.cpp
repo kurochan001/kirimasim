@@ -489,13 +489,13 @@ double toReal(const W4* x, unsigned w, bool isSigned) {
     return minus ? -d : d;
 }
 
-void fromReal(W4* r, unsigned w, double d, bool fourState) {
+void fromReal(W4* r, unsigned w, double d, bool fourState, bool truncate) {
     clear(r, w);
     if (std::isnan(d) || std::isinf(d)) {
         if (fourState) allX(r, w);
         return;
     }
-    const double v = std::round(d);  // half away from zero
+    const double v = truncate ? std::trunc(d) : std::round(d);  // round: half away from zero
     if (std::fabs(v) < 9223372036854775808.0) {
         const W4 low{static_cast<std::uint64_t>(static_cast<std::int64_t>(v)), 0};
         resize(r, w, &low, 64, true);
