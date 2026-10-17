@@ -560,14 +560,30 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
 
 sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl) {
     if (auto it = b_.frameVars.find(&v); it != b_.frameVars.end()) return it->second;
-    const sir::Type t = typeOf(v.getType(), sl);
+    // A fixed-size unpacked array keeps its dimensions; its elements follow
+    // in the frame (SIR_SPEC.md 7.4).
+    std::vector<sir::ArrayDim> dims;
+    const ast::Type& et = arrayElement(v.getType(), dims);
+    if (et.isUnpackedArray() || (!dims.empty() && unpackedStruct(et) != nullptr))
+        unsupported(sl, "automatic variable of type '" + v.getType().toString() + "'");
+    const sir::Type t = typeOf(et, sl);
     // An event slot gets its event when the design starts (SIR_SPEC.md
     // 3.2.1); a frame would need one each time it is made.
     if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
-    frameVars().push_back({std::string(v.name), t, sir::kNone});
+    frameVars().push_back({std::string(v.name), t, sir::kNone, std::move(dims), {}});
     b_.frameVars.emplace(&v, id);
     return id;
+}
+
+const ast::Type& arrayElement(const ast::Type& type, std::vector<sir::ArrayDim>& dims) {
+    const ast::Type* t = &type.getCanonicalType();
+    while (t->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        const auto& a = t->as<ast::FixedSizeUnpackedArrayType>();
+        dims.push_back({a.range.left, a.range.right});
+        t = &a.elementType.getCanonicalType();
+    }
+    return *t;
 }
 
 std::optional<sir::FrameVarId> Lowerer::findFrameVar(const ast::Symbol& s) const {

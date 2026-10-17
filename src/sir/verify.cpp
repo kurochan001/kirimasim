@@ -37,7 +37,11 @@ bool hasNoResult(Op op) {
         case Op::ReportDefer:
         case Op::OverrideStart:
         case Op::OverrideStop:
-        case Op::StoreOverride: return true;
+        case Op::StoreOverride:
+        case Op::StoreRef:
+        case Op::NbaRef:
+        case Op::StoreRefElem:
+        case Op::StoreRefBits: return true;
         default: return isTerminator(op);
     }
 }
@@ -321,6 +325,34 @@ private:
         return o.width == 0 ? d_.slots[o.id].type.width : o.width;
     }
 
+    /// The number of elements of an array argument, or 0 for one that is
+    /// not an array.
+    std::uint64_t paramElements(const Subroutine& s, const Param& p) const {
+        if (p.slot != kNone && p.slot < d_.slots.size())
+            return d_.slots[p.slot].dims.empty() ? 0 : elementCount(d_.slots[p.slot]);
+        if (p.frameVar < s.frame.size())
+            return s.frame[p.frameVar].dims.empty() ? 0 : elementCount(s.frame[p.frameVar]);
+        return 0;
+    }
+    /// The number of elements an array actual argument covers: a whole
+    /// array slot, a run of its elements, or an array frame variable.
+    std::uint64_t argElements(const Body& body, const Operand& o) const {
+        if (o.kind == Operand::Kind::Slot) {
+            if (!rangeOk(o) || d_.slots[o.id].dims.empty() || o.lsb != 0 || o.width != 0) return 0;
+            return o.numElems != 0 ? o.numElems : elementCount(d_.slots[o.id]);
+        }
+        if (o.kind == Operand::Kind::Frame && o.id < body.frame->size())
+            return (*body.frame)[o.id].dims.empty() ? 0 : elementCount((*body.frame)[o.id]);
+        return 0;
+    }
+    /// The element type of an array slot or frame variable operand.
+    Type elemType(const Body& body, const Operand& o) const {
+        if (o.kind == Operand::Kind::Slot && o.id < d_.slots.size()) return d_.slots[o.id].type;
+        if (o.kind == Operand::Kind::Frame && o.id < body.frame->size())
+            return (*body.frame)[o.id].type;
+        return voidType();
+    }
+
     /// The value type of a slot operand: one element (or the whole slot if
     /// it is not an array), or a part of it. Void for a range that is not
     /// one value (several elements of an array).
@@ -374,9 +406,14 @@ private:
                           " subroutine is in the " + (inSlot ? "slot table" : "frame"),
                       s.loc);
             } else if (inSlot) {
-                if (p.slot >= d_.slots.size() || !fits(d_.slots[p.slot].type, p.type))
+                if (p.slot >= d_.slots.size() || !fits(d_.slots[p.slot].type, p.type) ||
+                    p.dir == Direction::Ref || p.dir == Direction::ConstRef)
                     error(where, "argument '" + p.name + "' slot is invalid", s.loc);
-            } else if (p.frameVar >= s.frame.size() || !fits(s.frame[p.frameVar].type, p.type)) {
+            } else if (p.frameVar >= s.frame.size()) {
+                error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
+            } else if (p.dir == Direction::Ref || p.dir == Direction::ConstRef
+                           ? s.frame[p.frameVar].type.kind != TypeKind::Ref
+                           : !fits(s.frame[p.frameVar].type, p.type)) {
                 error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
             }
         }
@@ -712,6 +749,23 @@ private:
             if (o.lsb != 0 || o.width != 0 || o.firstElem != 0 || o.numElems != 0) return nullptr;
             return &d_.slots[o.id];
         };
+        // The element type and dimensions of the first operand of an
+        // element or bit operation: a whole slot, or a frame variable
+        // (SIR_SPEC.md 5.3, 7.4). A ref argument gives the dimensions of
+        // what it refers to and no type.
+        struct Base {
+            Type type;
+            const std::vector<ArrayDim>* dims = nullptr;
+            bool frame = false;
+        };
+        const auto elemBase = [&]() -> std::optional<Base> {
+            if (const Slot* s = elemSlot()) return Base{s->type, &s->dims, false};
+            if (ops.empty() || ops[0].kind != Operand::Kind::Frame ||
+                ops[0].id >= body.frame->size())
+                return std::nullopt;
+            const FrameVar& f = (*body.frame)[ops[0].id];
+            return Base{f.type, &f.dims, true};
+        };
         const auto indicesOk = [&](std::size_t first, std::size_t n) {
             for (std::size_t i = first; i < first + n; ++i)
                 if (!isIntegral(ty(i))) return false;
@@ -766,6 +820,21 @@ private:
                 const std::size_t i = first + a;
                 const bool place =
                     ops[i].kind == Operand::Kind::Slot || ops[i].kind == Operand::Kind::Frame;
+                if (prm.dir == Direction::Ref || prm.dir == Direction::ConstRef) {
+                    // A ref made by ref.make (SIR_SPEC.md 8).
+                    if (!isValue(i) || ty(i).kind != TypeKind::Ref)
+                        bad("argument '" + prm.name + "' must be a ref");
+                    continue;
+                }
+                if (paramElements(callee, prm) != 0) {
+                    // A fixed-size unpacked array: a whole array slot, a
+                    // run of its elements, or an array frame variable, with
+                    // as many elements of the formal's type.
+                    if (!place || argElements(body, ops[i]) != paramElements(callee, prm) ||
+                        !fits(prm.type, elemType(body, ops[i])))
+                        bad("argument '" + prm.name + "' must be an array of its shape");
+                    continue;
+                }
                 const bool want = prm.dir != Direction::Input;
                 if (want ? !place : !isValue(i))
                     bad("argument '" + prm.name + "' must be " +
@@ -803,12 +872,14 @@ private:
             case Op::LoadElem:
             case Op::StoreElem:
             case Op::NbaElem: {
-                const Slot* s = elemSlot();
-                if (s == nullptr || s->dims.empty()) {
-                    bad("needs a whole unpacked array slot");
+                // An automatic variable takes no NBA (10.4.2).
+                const std::optional<Base> s = elemBase();
+                if (!s || s->dims->empty() || s->type.kind == TypeKind::Ref ||
+                    (s->frame && in.op == Op::NbaElem)) {
+                    bad("needs a whole unpacked array slot or frame variable");
                     break;
                 }
-                const std::size_t n = s->dims.size();
+                const std::size_t n = s->dims->size();
                 const std::size_t want = 1 + n + (in.op == Op::LoadElem ? 0 : 1);
                 if (ops.size() != want) {
                     bad("needs one index per dimension");  // rule 11
@@ -824,12 +895,12 @@ private:
             }
             case Op::StoreBits:
             case Op::NbaBits: {
-                const Slot* s = elemSlot();
-                if (s == nullptr || !isIntegral(s->type)) {
-                    bad("needs a whole integral slot");
+                const std::optional<Base> s = elemBase();
+                if (!s || !isIntegral(s->type) || (s->frame && in.op == Op::NbaBits)) {
+                    bad("needs a whole integral slot or frame variable");
                     break;
                 }
-                const std::size_t n = s->dims.size();
+                const std::size_t n = s->dims->size();
                 if (ops.size() != n + 3) {
                     bad("needs one index per dimension, a position and a value");  // rule 11
                     break;
@@ -841,14 +912,77 @@ private:
                 break;
             }
             case Op::Fload:
-                if (nOps(1) && (ops[0].kind != Operand::Kind::Frame || ty(0) != rt))
-                    bad("needs a frame variable of the result type");
+                if (nOps(1) && (ops[0].kind != Operand::Kind::Frame || ty(0) != rt ||
+                                !(*body.frame)[ops[0].id].dims.empty() && rt.kind != TypeKind::Ref))
+                    bad("needs a frame variable of the result type that is not an array");
                 break;
             case Op::Fstore:
                 if (nOps(2) &&
-                    (ops[0].kind != Operand::Kind::Frame || !isValue(1) || !fits(ty(0), ty(1))))
-                    bad("needs a frame variable and a value of its type");
+                    (ops[0].kind != Operand::Kind::Frame || !isValue(1) || !fits(ty(0), ty(1)) ||
+                     !(*body.frame)[ops[0].id].dims.empty() && ty(0).kind != TypeKind::Ref))
+                    bad("needs a frame variable that is not an array and a value of its type");
                 break;
+            case Op::RefMake: {
+                // A slot or a frame variable, and an index per dimension
+                // of it when it selects an element (SIR_SPEC.md 8).
+                if (ops.empty() || rt.kind != TypeKind::Ref) {
+                    bad("needs a slot or frame variable and a ref result");
+                    break;
+                }
+                const std::optional<Base> s = elemBase();
+                if (!s) {
+                    bad("needs a whole slot or frame variable");
+                    break;
+                }
+                const std::size_t n = ops.size() - 1;
+                if ((n != 0 && n != s->dims->size()) || !indicesOk(1, n))
+                    bad("needs no index or one per dimension");
+                break;
+            }
+            case Op::LoadRef:
+            case Op::StoreRef:
+            case Op::NbaRef: {
+                // The ref, a constant leaf number when it is not 0, and the
+                // value written.
+                const bool load = in.op == Op::LoadRef;
+                const std::size_t n = ops.size() - (load ? 0 : 1);
+                const bool ok = !ops.empty() && (n == 1 || n == 2) && ty(0).kind == TypeKind::Ref &&
+                                (n == 1 || constIndex(ops[1])) &&
+                                (load ? rt.kind != TypeKind::Void && rt.kind != TypeKind::Ref
+                                      : isValue(ops.size() - 1));
+                if (!ok) bad("needs a ref, an optional constant leaf and a value");
+                break;
+            }
+            case Op::LoadRefElem:
+            case Op::StoreRefElem:
+            case Op::StoreRefBits: {
+                // A ref argument (a frame variable that knows the shape of
+                // what it refers to), its indices, a position for bits, and
+                // the value written.
+                const std::optional<Base> s = elemBase();
+                if (!s || !s->frame || s->type.kind != TypeKind::Ref) {
+                    bad("needs a ref argument");
+                    break;
+                }
+                const std::size_t n = s->dims->size();
+                const std::size_t want = 1 + n +
+                                         (in.op == Op::LoadRefElem    ? 0
+                                          : in.op == Op::StoreRefElem ? 1
+                                                                      : 2);
+                if (ops.size() != want || (in.op != Op::StoreRefBits && n == 0)) {
+                    bad("needs one index per dimension of what it refers to");
+                    break;
+                }
+                if (!indicesOk(1, in.op == Op::StoreRefBits ? n + 1 : n))
+                    bad("indices and the position must be integral");
+                const Type target = (*body.frame)[ops[0].id].target;
+                if (in.op != Op::LoadRefElem && !isValue(want - 1)) bad("needs a value");
+                if (in.op == Op::LoadRefElem && rt != target)
+                    bad("result must have the type of what the ref refers to");
+                if (in.op == Op::StoreRefBits && !isIntegral(target))
+                    bad("needs a ref to an integral value");
+                break;
+            }
             case Op::Add:
             case Op::Sub:
             case Op::Mul:

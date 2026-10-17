@@ -351,6 +351,27 @@ std::optional<std::int64_t> indexValue(W4 v, sir::Type t) {
     return static_cast<std::int64_t>(v.a);
 }
 
+/// v (an element of `ew` bits) with `width` bits of `part` written at the
+/// run-time position posv: only the bits inside the element
+/// (VALUE_SEMANTICS.md 3.11).
+W4 mergeBits(W4 v, std::uint32_t ew, W4 posv, sir::Type post, W4 part, std::uint32_t width) {
+    const std::optional<std::int64_t> pos = indexValue(posv, post);
+    if (!pos) return v;
+    std::int64_t lo = *pos;
+    std::int64_t hi = *pos + width;  // exclusive
+    if (lo >= static_cast<std::int64_t>(ew) || hi <= 0) return v;
+    std::uint32_t skip = 0;
+    if (lo < 0) {
+        skip = static_cast<std::uint32_t>(-lo);
+        lo = 0;
+    }
+    if (hi > static_cast<std::int64_t>(ew)) hi = ew;
+    const std::uint64_t m = kernel::mask(static_cast<unsigned>(hi - lo)) << lo;
+    v.a = (v.a & ~m) | (((part.a >> skip) << lo) & m);
+    v.b = (v.b & ~m) | (((part.b >> skip) << lo) & m);
+    return v;
+}
+
 class Interpreter;
 
 /// The frame of a process run by the VM (RUNTIME_ABI.md 4.3): where it
@@ -361,6 +382,7 @@ struct Frame {
     kernel::ProcessId kernelId = 0;  ///< Id in the kernel.
     sir::BlockId block = 0;          ///< Block to resume at.
     std::vector<W4> vars;            ///< Frame variables (SIR_SPEC.md 7.4).
+    std::uint32_t varsId = 0;        ///< Their number for refs (Interpreter::enroll).
 
     // Process control (SCHEDULER_SPEC.md 10).
     enum class Join : std::uint8_t { None, All, Any, WaitFork };
@@ -385,6 +407,7 @@ struct Frame {
     struct TaskCall {
         std::uint32_t body = 0;
         std::vector<W4> vars;
+        std::uint32_t varsId = 0;
         sir::BlockId block = 0;
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
     };
@@ -410,6 +433,18 @@ public:
         const std::size_t bodies = d.processes.size() + d.subroutines.size();
         info_.resize(bodies);
         tempTypes_.resize(bodies);
+        layouts_.resize(bodies);
+        for (std::uint32_t p = 0; p < bodies; ++p) {
+            const auto& frame = bodyFrame(p);
+            Layout& l = layouts_[p];
+            l.size = frame.size();
+            l.elements.assign(frame.size(), 0);
+            for (std::size_t i = 0; i < frame.size(); ++i) {
+                if (frame[i].dims.empty() || frame[i].type.kind == sir::TypeKind::Ref) continue;
+                l.elements[i] = l.size;
+                l.size += sir::elementCount(frame[i]);
+            }
+        }
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const auto& blocks = bodyBlocks(p);
             const std::uint32_t n = bodyTemps(p);
@@ -557,7 +592,20 @@ private:
         std::uint32_t body = 0;
         std::vector<W4>* vars = nullptr;
         std::size_t base = 0;
+        std::uint32_t varsId = 0;
     };
+    /// Where the frame variables of a body lie (RUNTIME_ABI.md 4.3): a word
+    /// pair for each, by number, then the elements of each array in order.
+    struct Layout {
+        std::size_t size = 0;
+        std::vector<std::size_t> elements;  ///< By frame variable: an array's first element.
+    };
+    std::vector<Layout> layouts_;  ///< By body.
+    /// The frame variables of each live activation, by number, for refs
+    /// (SIR_SPEC.md 8): a ref to a frame variable is its activation's
+    /// number and the word's place in it.
+    std::vector<W4*> varSets_;
+    std::vector<std::uint32_t> freeVarSets_;
     Act act_;
     std::uint32_t callDepth_ = 0;
     bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.
@@ -627,7 +675,8 @@ private:
         Frame& f = frames_.emplace_back();
         f.vm = this;
         f.process = process;
-        f.vars.assign(d_.processes[process].frame.size(), W4{0, 0});
+        f.vars = newVars(process);
+        f.varsId = enroll(f.vars);
         return f;
     }
 
@@ -754,16 +803,16 @@ private:
     /// The element number of an unpacked-array access from the index
     /// operands ops[first .. first + dims), or nothing for an invalid index
     /// (VALUE_SEMANTICS.md 3.11).
-    std::optional<std::uint32_t> elementOf(const Frame& f, const sir::Slot& s,
+    std::optional<std::uint32_t> elementOf(const std::vector<sir::ArrayDim>& dims,
                                            const std::vector<Operand>& ops,
                                            std::size_t first) const {
         std::uint64_t elem = 0;
-        for (std::size_t d = 0; d < s.dims.size(); ++d) {
+        for (std::size_t d = 0; d < dims.size(); ++d) {
             const Operand& o = ops[first + d];
             const std::optional<std::int64_t> idx = indexValue(value(o), typeOf(o));
             if (!idx) return std::nullopt;
-            const std::int64_t l = s.dims[d].left;
-            const std::int64_t r = s.dims[d].right;
+            const std::int64_t l = dims[d].left;
+            const std::int64_t r = dims[d].right;
             const std::int64_t lo = l < r ? l : r;
             const std::int64_t hi = l < r ? r : l;
             if (*idx < lo || *idx > hi) return std::nullopt;
@@ -822,11 +871,11 @@ private:
         for (;;) {
             Exit e = Exit::Ret;
             if (f.calls.empty()) {
-                enter({f.process, &f.vars, 0});
+                enter({f.process, &f.vars, 0, f.varsId});
                 e = runBody(f, f.block, steps, ret);
             } else {
                 Frame::TaskCall& c = f.calls.back();
-                enter({c.body, &c.vars, 0});
+                enter({c.body, &c.vars, 0, c.varsId});
                 e = runBody(f, c.block, steps, ret);
             }
             if (e == Exit::Entered) continue;  // a task was called
@@ -873,18 +922,12 @@ private:
         Frame::TaskCall c = std::move(f.calls.back());
         f.calls.pop_back();
         const sir::Subroutine& s = subOf(c.body);
-        std::vector<W4>& callerVars = f.calls.empty() ? f.vars : f.calls.back().vars;
-        for (std::size_t i = 0; i < s.params.size(); ++i) {
-            const sir::Param& prm = s.params[i];
-            if (prm.dir == sir::Direction::Input) continue;
-            const W4 v =
-                prm.frameVar != sir::kNone ? c.vars[prm.frameVar] : readSlot(prm.slot, 0, 0, 0);
-            const Operand& o = c.site->operands[1 + i];
-            if (o.kind == Operand::Kind::Slot)
-                writeSlot(o.id, o.firstElem, o.lsb, o.width, v);
-            else
-                callerVars[o.id] = v;
-        }
+        const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.vars);
+        retire(c.varsId);
+        if (f.calls.empty())
+            writeOuts(s, c.site->operands, outs, f.vars, f.process);
+        else
+            writeOuts(s, c.site->operands, outs, f.calls.back().vars, f.calls.back().body);
     }
 
     /// call.task: copies the inputs in and makes the call the innermost
@@ -895,24 +938,184 @@ private:
         Frame::TaskCall c;
         c.body = processCount() + ops[0].id;
         c.site = &in;
-        c.vars.resize(s.frame.size());
-        for (std::size_t i = 0; i < s.frame.size(); ++i)
-            c.vars[i] = defaultValue(s.frame[i].type);
-        for (std::size_t i = 0; i < s.params.size(); ++i) {
-            const sir::Param& prm = s.params[i];
-            const Operand& o = ops[1 + i];
-            W4 v = defaultValue(prm.type);
-            if (prm.dir != sir::Direction::Output)
-                v = o.kind == Operand::Kind::Slot ? readSlot(o.id, o.firstElem, o.lsb, o.width)
-                                                  : value(o);
-            if (prm.frameVar != sir::kNone)
-                c.vars[prm.frameVar] = v;
-            else if (prm.dir != sir::Direction::Output)
-                writeSlot(prm.slot, 0, 0, 0, v);
-        }
+        c.vars = newVars(c.body);
+        bindArgs(c.body, s, readArgs(s, ops), c.vars);
+        c.varsId = enroll(c.vars);
         resumeAt(f) = ops.back().id;
         f.calls.push_back(std::move(c));
     }
+
+    // --- Frames and arguments (SIR_SPEC.md 7.4, 8) ---
+
+    /// The frame variables of a new activation of a body: a subroutine's at
+    /// their defaults, a process's at 0 until its declarations run; array
+    /// elements at their defaults.
+    std::vector<W4> newVars(std::uint32_t body) const {
+        const auto& frame = bodyFrame(body);
+        const Layout& l = layouts_[body];
+        std::vector<W4> vars(l.size, W4{0, 0});
+        for (std::size_t i = 0; i < frame.size(); ++i) {
+            if (isSubBody(body)) vars[i] = defaultValue(frame[i].type);
+            if (frame[i].dims.empty() || frame[i].type.kind == sir::TypeKind::Ref) continue;
+            const std::uint64_t n = sir::elementCount(frame[i]);
+            for (std::uint64_t e = 0; e < n; ++e)
+                vars[l.elements[i] + e] = defaultValue(frame[i].type);
+        }
+        return vars;
+    }
+
+    /// Gives an activation's frame variables a number for refs.
+    std::uint32_t enroll(std::vector<W4>& vars) {
+        if (freeVarSets_.empty()) {
+            varSets_.push_back(vars.data());
+            return static_cast<std::uint32_t>(varSets_.size() - 1);
+        }
+        const std::uint32_t id = freeVarSets_.back();
+        freeVarSets_.pop_back();
+        varSets_[id] = vars.data();
+        return id;
+    }
+    void retire(std::uint32_t id) {
+        varSets_[id] = nullptr;
+        freeVarSets_.push_back(id);
+    }
+
+    /// Element e of array frame variable fv of the running body.
+    W4& frameElem(sir::FrameVarId fv, std::uint64_t e) {
+        return (*act_.vars)[layouts_[act_.body].elements[fv] + e];
+    }
+
+    static bool isArrayParam(const sir::Subroutine& s, const sir::Param& p, const sir::Design& d) {
+        return p.frameVar != sir::kNone ? !s.frame[p.frameVar].dims.empty() &&
+                                              s.frame[p.frameVar].type.kind != sir::TypeKind::Ref
+                                        : !d.slots[p.slot].dims.empty();
+    }
+    static bool isRefParam(const sir::Param& p) {
+        return p.dir == sir::Direction::Ref || p.dir == sir::Direction::ConstRef;
+    }
+
+    /// The elements of an array argument, read in the running body: a run
+    /// of elements of a slot, or an array frame variable.
+    std::vector<W4> readArray(const Operand& o) {
+        std::vector<W4> out;
+        if (o.kind == Operand::Kind::Slot) {
+            const std::uint64_t n =
+                o.numElems != 0 ? o.numElems : sir::elementCount(d_.slots[o.id]);
+            for (std::uint64_t e = 0; e < n; ++e)
+                out.push_back(readSlot(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0));
+            return out;
+        }
+        const std::uint64_t n = sir::elementCount(bodyFrame(act_.body)[o.id]);
+        for (std::uint64_t e = 0; e < n; ++e)
+            out.push_back(frameElem(o.id, e));
+        return out;
+    }
+
+    /// What each argument passes in, read in the caller before anything is
+    /// written: a ref, an array's elements, or a value (none for an
+    /// output).
+    std::vector<std::vector<W4>> readArgs(const sir::Subroutine& s,
+                                          const std::vector<Operand>& ops) {
+        std::vector<std::vector<W4>> args(s.params.size());
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            const Operand& o = ops[1 + i];
+            if (isRefParam(prm))
+                args[i].push_back(value(o));
+            else if (prm.dir == sir::Direction::Output)
+                continue;
+            else if (isArrayParam(s, prm, d_))
+                args[i] = readArray(o);
+            else
+                args[i].push_back(o.kind == Operand::Kind::Slot
+                                      ? readSlot(o.id, o.firstElem, o.lsb, o.width)
+                                      : value(o));
+        }
+        return args;
+    }
+
+    /// Copies the arguments into the callee's formals (4.9.7). A static
+    /// output keeps its value.
+    void bindArgs(std::uint32_t body, const sir::Subroutine& s,
+                  const std::vector<std::vector<W4>>& args, std::vector<W4>& vars) {
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            if (args[i].empty()) continue;  // an output
+            if (prm.frameVar == sir::kNone) {
+                for (std::size_t e = 0; e < args[i].size(); ++e)
+                    writeSlot(prm.slot, static_cast<std::uint32_t>(e), 0, 0, args[i][e]);
+            } else if (isArrayParam(s, prm, d_)) {
+                for (std::size_t e = 0; e < args[i].size(); ++e)
+                    vars[layouts_[body].elements[prm.frameVar] + e] = args[i][e];
+            } else {
+                vars[prm.frameVar] = args[i][0];
+            }
+        }
+    }
+
+    /// The values of the outputs and inouts at the callee's end.
+    std::vector<std::vector<W4>> readOuts(std::uint32_t body, const sir::Subroutine& s,
+                                          const std::vector<W4>& vars) const {
+        std::vector<std::vector<W4>> outs(s.params.size());
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            const sir::Param& prm = s.params[i];
+            if (prm.dir == sir::Direction::Input || isRefParam(prm)) continue;
+            if (!isArrayParam(s, prm, d_)) {
+                outs[i].push_back(prm.frameVar != sir::kNone ? vars[prm.frameVar]
+                                                             : readSlot(prm.slot, 0, 0, 0));
+                continue;
+            }
+            if (prm.frameVar == sir::kNone) {
+                const std::uint64_t n = sir::elementCount(d_.slots[prm.slot]);
+                for (std::uint64_t e = 0; e < n; ++e)
+                    outs[i].push_back(readSlot(prm.slot, static_cast<std::uint32_t>(e), 0, 0));
+            } else {
+                const std::uint64_t n = sir::elementCount(s.frame[prm.frameVar]);
+                for (std::uint64_t e = 0; e < n; ++e)
+                    outs[i].push_back(vars[layouts_[body].elements[prm.frameVar] + e]);
+            }
+        }
+        return outs;
+    }
+
+    /// Copies the outputs and inouts back to the caller's places like
+    /// blocking assignments (4.9.7).
+    void writeOuts(const sir::Subroutine& s, const std::vector<Operand>& ops,
+                   const std::vector<std::vector<W4>>& outs, std::vector<W4>& callerVars,
+                   std::uint32_t callerBody) {
+        for (std::size_t i = 0; i < s.params.size(); ++i) {
+            if (outs[i].empty()) continue;
+            const Operand& o = ops[1 + i];
+            if (!isArrayParam(s, s.params[i], d_)) {
+                if (o.kind == Operand::Kind::Slot)
+                    writeSlot(o.id, o.firstElem, o.lsb, o.width, outs[i][0]);
+                else
+                    callerVars[o.id] = outs[i][0];
+                continue;
+            }
+            for (std::size_t e = 0; e < outs[i].size(); ++e) {
+                if (o.kind == Operand::Kind::Slot)
+                    writeSlot(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0, outs[i][e]);
+                else
+                    callerVars[layouts_[callerBody].elements[o.id] + e] = outs[i][e];
+            }
+        }
+    }
+
+    // --- References (SIR_SPEC.md 8) ---
+
+    /// A ref is a frame variable's word or element (tag 1: the activation's
+    /// number in the high half of a, the word's place in the low half), or
+    /// an element of a slot (the slot in a, the element in b above the
+    /// tag).
+    static W4 frameRef(std::uint32_t vars, std::size_t at) {
+        return {(std::uint64_t{vars} << 32) | static_cast<std::uint64_t>(at), 1};
+    }
+    static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s, std::uint64_t{e} << 1}; }
+    static bool isFrameRef(W4 r) { return (r.b & 1U) != 0; }
+    W4& refWord(W4 r, std::uint64_t off) { return varSets_[r.a >> 32][(r.a & 0xffffffffU) + off]; }
+    static sir::SlotId refSlot(W4 r) { return static_cast<sir::SlotId>(r.a); }
+    static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
@@ -1083,7 +1286,7 @@ private:
             sched_.hold(level, o.kernelId, partOf(ops[i]));
         dropIdle(level);
         const Act caller = act_;
-        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body)});
+        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});
         W4 ret{0, 0};
         const Exit e = runBody(o, 0, steps, ret);
         act_ = caller;
@@ -1121,37 +1324,18 @@ private:
             return Exit::Error;
         }
         const Act caller = act_;
-        std::vector<W4> vars(s.frame.size());
-        for (std::size_t i = 0; i < s.frame.size(); ++i)
-            vars[i] = defaultValue(s.frame[i].type);
+        const std::uint32_t body = processCount() + ops[0].id;
+        std::vector<W4> vars = newVars(body);
         // The arguments are read in the caller before anything is written.
-        std::vector<W4> args(s.params.size());
-        for (std::size_t i = 0; i < s.params.size(); ++i) {
-            const Operand& o = ops[1 + i];
-            if (o.kind == Operand::Kind::Slot)
-                args[i] = readSlot(o.id, o.firstElem, o.lsb, o.width);
-            else
-                args[i] = value(o);
-        }
-        enter({processCount() + ops[0].id, &vars, caller.base + bodyTemps(caller.body)});
-        for (std::size_t i = 0; i < s.params.size(); ++i) {
-            const sir::Param& prm = s.params[i];
-            const W4 v = prm.dir == sir::Direction::Output ? defaultValue(prm.type) : args[i];
-            if (prm.frameVar != sir::kNone)
-                vars[prm.frameVar] = v;
-            else if (prm.dir != sir::Direction::Output)
-                writeSlot(prm.slot, 0, 0, 0, v);  // a static output keeps its value
-        }
+        const std::vector<std::vector<W4>> args = readArgs(s, ops);
+        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars)});
+        bindArgs(body, s, args, vars);
         W4 ret{0, 0};
         ++callDepth_;
         const Exit e = runBody(f, 0, steps, ret);
         --callDepth_;
-        std::vector<W4> outs(s.params.size());
-        for (std::size_t i = 0; i < s.params.size(); ++i) {
-            const sir::Param& prm = s.params[i];
-            if (prm.dir == sir::Direction::Input) continue;
-            outs[i] = prm.frameVar != sir::kNone ? vars[prm.frameVar] : readSlot(prm.slot, 0, 0, 0);
-        }
+        const std::vector<std::vector<W4>> outs = readOuts(body, s, vars);
+        retire(act_.varsId);
         act_ = caller;
         if (e == Exit::Waiting) {
             fail(d_.processes[f.process],
@@ -1159,14 +1343,7 @@ private:
             return Exit::Error;
         }
         if (e != Exit::Ret) return e;
-        for (std::size_t i = 0; i < s.params.size(); ++i) {
-            if (s.params[i].dir == sir::Direction::Input) continue;
-            const Operand& o = ops[1 + i];
-            if (o.kind == Operand::Kind::Slot)
-                writeSlot(o.id, o.firstElem, o.lsb, o.width, outs[i]);
-            else
-                (*act_.vars)[o.id] = outs[i];
-        }
+        writeOuts(s, ops, outs, *act_.vars, act_.body);
         if (in.result != sir::kNone) temp(in.result) = ret;
         return Exit::Ret;
     }
@@ -1393,20 +1570,28 @@ private:
                 return true;
             }
             case Op::LoadElem: {
-                const sir::Slot& s = d_.slots[ops[0].id];
-                const std::optional<std::uint32_t> e = elementOf(f, s, ops, 1);
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const std::optional<std::uint32_t> e = elementOf(
+                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims, ops,
+                    1);
                 // An invalid index reads the element type's default
                 // (VALUE_SEMANTICS.md 3.11).
-                set(e ? readSlot(ops[0].id, *e, 0, 0)
-                      : (sir::isFourState(rt) ? kernel::allX(w) : W4{0, 0}));
+                if (!e)
+                    set(defaultValue(rt));
+                else
+                    set(frame ? frameElem(ops[0].id, *e) : readSlot(ops[0].id, *e, 0, 0));
                 return true;
             }
             case Op::StoreElem:
             case Op::NbaElem: {
-                const sir::Slot& s = d_.slots[ops[0].id];
-                const std::optional<std::uint32_t> e = elementOf(f, s, ops, 1);
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const std::optional<std::uint32_t> e = elementOf(
+                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims, ops,
+                    1);
                 if (!e) return true;  // an invalid index writes nothing
-                if (in.op == Op::StoreElem)
+                if (frame)
+                    frameElem(ops[0].id, *e) = v(ops.size() - 1);
+                else if (in.op == Op::StoreElem)
                     writeSlot(ops[0].id, *e, 0, 0, v(ops.size() - 1));
                 else
                     nbaSlot(f, ops[0].id, *e, 0, 0, v(ops.size() - 1));
@@ -1414,16 +1599,135 @@ private:
             }
             case Op::StoreBits:
             case Op::NbaBits: {
-                const sir::Slot& s = d_.slots[ops[0].id];
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const std::vector<sir::ArrayDim>& dims =
+                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
                 std::uint32_t e = 0;
-                if (!s.dims.empty()) {
-                    const std::optional<std::uint32_t> el = elementOf(f, s, ops, 1);
+                if (!dims.empty()) {
+                    const std::optional<std::uint32_t> el = elementOf(dims, ops, 1);
                     if (!el) return true;
                     e = *el;
                 }
-                const std::size_t n = s.dims.size();
+                const std::size_t n = dims.size();
+                if (frame) {
+                    W4& cell = dims.empty() ? (*act_.vars)[ops[0].id] : frameElem(ops[0].id, e);
+                    cell = mergeBits(cell, bodyFrame(act_.body)[ops[0].id].type.width, v(n + 1),
+                                     t(n + 1), v(n + 2), t(n + 2).width);
+                    return true;
+                }
                 storeBits(f, ops[0].id, e, v(n + 1), t(n + 1), v(n + 2), t(n + 2).width,
                           in.op == Op::NbaBits);
+                return true;
+            }
+            case Op::RefMake: {
+                const Operand& o = ops[0];
+                if (o.kind == Operand::Kind::Slot) {
+                    std::uint32_t e = 0;
+                    if (ops.size() > 1) {
+                        const std::optional<std::uint32_t> el =
+                            elementOf(d_.slots[o.id].dims, ops, 1);
+                        if (!el) {
+                            fail(p, "ref to an element outside its array");
+                            return false;
+                        }
+                        e = *el;
+                    }
+                    set(slotRef(o.id, e));
+                    return true;
+                }
+                const sir::FrameVar& fv = bodyFrame(act_.body)[o.id];
+                if (fv.type.kind == sir::TypeKind::Ref) {
+                    // A ref argument passed on, or an element of the array
+                    // it refers to.
+                    W4 r = (*act_.vars)[o.id];
+                    if (ops.size() > 1) {
+                        const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
+                        if (!el) {
+                            fail(p, "ref to an element outside its array");
+                            return false;
+                        }
+                        if (isFrameRef(r))
+                            r.a += *el;
+                        else
+                            r.b += std::uint64_t{*el} << 1;
+                    }
+                    set(r);
+                    return true;
+                }
+                std::size_t at = o.id;
+                if (!fv.dims.empty()) {
+                    at = layouts_[act_.body].elements[o.id];
+                    if (ops.size() > 1) {
+                        const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
+                        if (!el) {
+                            fail(p, "ref to an element outside its array");
+                            return false;
+                        }
+                        at += *el;
+                    }
+                }
+                set(frameRef(act_.varsId, at));
+                return true;
+            }
+            case Op::LoadRef:
+            case Op::StoreRef:
+            case Op::NbaRef: {
+                // The leaf of a structure: the next slots or frame words.
+                const W4 r = v(0);
+                const std::size_t n = ops.size() - (in.op == Op::LoadRef ? 0 : 1);
+                const std::uint64_t k = n == 2 ? v(1).a : 0;
+                if (in.op == Op::LoadRef) {
+                    set(isFrameRef(r)
+                            ? refWord(r, k)
+                            : readSlot(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0));
+                    return true;
+                }
+                const W4 x = v(ops.size() - 1);
+                if (isFrameRef(r)) {
+                    if (in.op == Op::NbaRef) {
+                        fail(p, "nonblocking assignment to an automatic variable through a ref");
+                        return false;
+                    }
+                    refWord(r, k) = x;
+                } else if (in.op == Op::StoreRef) {
+                    writeSlot(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, x);
+                } else {
+                    nbaSlot(f, refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, x);
+                }
+                return true;
+            }
+            case Op::LoadRefElem:
+            case Op::StoreRefElem:
+            case Op::StoreRefBits: {
+                const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].id];
+                const W4 r = (*act_.vars)[ops[0].id];
+                std::uint32_t e = 0;
+                if (!fv.dims.empty()) {
+                    const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
+                    if (!el) {
+                        // An invalid index reads the default and writes
+                        // nothing (VALUE_SEMANTICS.md 3.11).
+                        if (in.op == Op::LoadRefElem) set(defaultValue(rt));
+                        return true;
+                    }
+                    e = *el;
+                }
+                const std::size_t n = fv.dims.size();
+                if (in.op == Op::LoadRefElem) {
+                    set(isFrameRef(r) ? refWord(r, e) : readSlot(refSlot(r), refElem(r) + e, 0, 0));
+                } else if (in.op == Op::StoreRefElem) {
+                    if (isFrameRef(r))
+                        refWord(r, e) = v(n + 1);
+                    else
+                        writeSlot(refSlot(r), refElem(r) + e, 0, 0, v(n + 1));
+                } else if (isFrameRef(r)) {
+                    W4& cell = refWord(r, e);
+                    cell = mergeBits(cell, fv.target.width, v(n + 1), t(n + 1), v(n + 2),
+                                     t(n + 2).width);
+                } else {
+                    storeBits(f, refSlot(r), refElem(r) + e, v(n + 1), t(n + 1), v(n + 2),
+                              t(n + 2).width, false);
+                }
                 return true;
             }
             case Op::ReportDefer: {

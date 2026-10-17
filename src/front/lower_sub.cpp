@@ -91,12 +91,27 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             sir::Param prm;
             prm.name = std::string(a->name);
             prm.dir = directionOf(a->direction);
-            if (prm.dir == sir::Direction::Ref)
-                unsupported(a->location, "ref argument '" + prm.name + "'");
-            prm.type = typeOf(a->getType(), a->location);
-            if (a->lifetime == ast::VariableLifetime::Automatic)
+            // A fixed-size unpacked array is passed element by element; its
+            // type here is its element's (SIR_SPEC.md 8).
+            std::vector<sir::ArrayDim> dims;
+            const ast::Type& et = arrayElement(a->getType(), dims);
+            if (unpackedStruct(et) != nullptr)
+                unsupported(a->location,
+                            "argument '" + prm.name + "' of an unpacked structure type");
+            prm.type = typeOf(et, a->location);
+            if (prm.dir == sir::Direction::Ref) {
+                // A ref argument: a frame variable that holds a ref to the
+                // actual, with the type and shape of what it refers to.
+                if (a->flags.has(ast::VariableFlags::Const)) prm.dir = sir::Direction::ConstRef;
+                if (a->lifetime != ast::VariableLifetime::Automatic)
+                    unsupported(a->location,
+                                "ref argument '" + prm.name + "' of a static subroutine");
+                prm.frameVar = static_cast<sir::FrameVarId>(frameVars().size());
+                frameVars().push_back({prm.name, sir::refType(), sir::kNone, dims, prm.type});
+                b_.frameVars.emplace(a, prm.frameVar);
+            } else if (a->lifetime == ast::VariableLifetime::Automatic) {
                 prm.frameVar = frameVarOf(*a, a->location);
-            else {
+            } else {
                 prm.slot = slotOf(*a, a->location);
                 noteWrite({prm.slot, 0, 0, 0, 0});  // written by every call (copy-in)
             }
@@ -145,6 +160,76 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     terminate(Op::Ret, {coerce(v, rt, sl).op}, sl);
 }
 
+Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl) {
+    // The variable a ref argument refers to: a variable, an element of an
+    // unpacked array, or a member of an unpacked structure (13.5.2), with
+    // the indices evaluated now (SIR_SPEC.md 8). The call writes what it
+    // refers to, unless the argument is const.
+    std::vector<Operand> ops;
+    std::vector<const ast::Expression*> indices;
+    const ast::Expression* base = &actual;
+    if (const std::optional<ArrayAccess> acc = arrayAccess(actual)) {
+        base = acc->base;
+        indices = acc->indices;
+    }
+    if (unpackedStruct(*base->type) != nullptr && indices.empty())
+        unsupported(sl, "a ref argument of an unpacked structure type");
+    const std::optional<Storage> st = storageOf(*base, sl);
+    if (!st || st->dynamic) unsupported(sl, "a ref argument of this actual");
+    ops.push_back(st->frame ? Operand::frame(st->id) : Operand::slot(st->id));
+    ops.insert(ops.end(), st->elem.begin(), st->elem.end());
+    for (const ast::Expression* ix : indices) {
+        const Val iv = lowerExpr(*ix);
+        if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
+        ops.push_back(iv.op);
+    }
+    if (!st->frame) {
+        noteRead({st->id, 0, 0, 0, 0});
+        if (!isConst) noteWrite({st->id, 0, 0, 0, 0});
+    }
+    return emit(Op::RefMake, sir::refType(), std::move(ops), sl);
+}
+
+Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& prm,
+                               const std::vector<sir::ArrayDim>& dims, slang::SourceLocation sl) {
+    // A fixed-size unpacked array argument is passed as the whole array, or
+    // a run of elements of one, and copied element by element (SIR_SPEC.md
+    // 8). An input that is not a variable is first computed into an array
+    // of the caller's frame.
+    const std::optional<ArrayTarget> a = arrayTarget(actual);
+    if (a && a->home == Place::Home::Slot) {
+        const sir::Slot& slot = design_.slots[a->slot];
+        Operand o = Operand::slot(a->slot);
+        if (!a->indices.empty()) {
+            // The elements of a sub-array lie together, from its left bounds.
+            std::vector<std::int64_t> first = a->indices;
+            std::uint32_t count = 1;
+            for (std::size_t d = a->indices.size(); d < slot.dims.size(); ++d) {
+                first.push_back(slot.dims[d].left);
+                count *= static_cast<std::uint32_t>((slot.dims[d].left <= slot.dims[d].right
+                                                         ? slot.dims[d].right - slot.dims[d].left
+                                                         : slot.dims[d].left - slot.dims[d].right) +
+                                                    1);
+            }
+            o.firstElem = elementNumber(slot, first);
+            o.numElems = count;
+        }
+        const sir::SlotRange r{a->slot, o.firstElem, o.numElems, 0, 0};
+        if (prm.dir != sir::Direction::Input) noteWrite(r);
+        if (prm.dir != sir::Direction::Output) noteRead(r);
+        return o;
+    }
+    if (a && a->home == Place::Home::Frame && a->indices.empty()) return Operand::frame(a->slot);
+    if (prm.dir != sir::Direction::Input)
+        unsupported(sl, "an output or inout array argument of this actual");
+    const auto fv = static_cast<sir::FrameVarId>(frameVars().size());
+    frameVars().push_back({"", prm.type, sir::kNone, dims, {}});
+    Stores stores;
+    assignArray(ArrayBase{Place::Home::Frame, fv}, {}, actual, stores, sl);
+    flushStores(stores, false, sl);
+    return Operand::frame(fv);
+}
+
 Val Lowerer::lowerCall(const ast::CallExpression& call) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const auto& sym = *std::get<0>(call.subroutine);
@@ -165,6 +250,18 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
     std::vector<CopyBack> copies;
     for (std::size_t i = 0; i < params.size(); ++i) {
         const sir::Param& prm = params[i];
+        if (prm.dir == sir::Direction::Ref || prm.dir == sir::Direction::ConstRef) {
+            ops.push_back(refOf(*actualPlace(args[i]), prm.dir == sir::Direction::ConstRef, sl).op);
+            continue;
+        }
+        const sir::Subroutine& callee = design_.subroutines[id];
+        const std::vector<sir::ArrayDim>& dims = prm.frameVar != sir::kNone
+                                                     ? callee.frame[prm.frameVar].dims
+                                                     : design_.slots[prm.slot].dims;
+        if (!dims.empty()) {
+            ops.push_back(arrayArgument(*actualPlace(args[i]), prm, dims, sl));
+            continue;
+        }
         if (prm.dir == sir::Direction::Input) {
             ops.push_back(coerce(lowerExpr(*args[i]), prm.type, sl).op);
             continue;

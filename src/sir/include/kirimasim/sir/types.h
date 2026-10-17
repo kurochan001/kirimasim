@@ -19,6 +19,7 @@ enum class TypeKind : std::uint8_t {
     String,     ///< string (a handle).
     Event,      ///< Named event (a handle).
     Chandle,    ///< chandle.
+    Ref,        ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
 };
 
 /// A value type. Integral kinds carry a bit width of at least 1; other kinds
@@ -31,6 +32,7 @@ struct Type {
 };
 
 inline Type voidType() { return {TypeKind::Void, 0}; }
+inline Type refType() { return {TypeKind::Ref, 0}; }
 inline Type u2(std::uint32_t w) { return {TypeKind::U2, w}; }
 inline Type s2(std::uint32_t w) { return {TypeKind::S2, w}; }
 inline Type u4(std::uint32_t w) { return {TypeKind::U4, w}; }

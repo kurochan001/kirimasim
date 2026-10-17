@@ -519,16 +519,6 @@ Val Lowerer::lowerCondition(const ast::Expression& e) {
 
 // --- Places ------------------------------------------------------------------
 
-namespace {
-
-/// An unpacked-array element access: the array (a variable, a net or a
-/// member of an unpacked structure) and the index expressions, outermost
-/// dimension first.
-struct ArrayAccess {
-    const ast::Expression* base = nullptr;
-    std::vector<const ast::Expression*> indices;
-};
-
 std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
     ArrayAccess acc;
     const ast::Expression* cur = &e;
@@ -547,8 +537,6 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
     std::reverse(acc.indices.begin(), acc.indices.end());
     return acc;
 }
-
-}  // namespace
 
 std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
     // A named event is waited on, not watched for changes (SCHEDULER_SPEC.md 9.5).
@@ -700,8 +688,14 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             }
             if (unpackedStruct(*e.type) != nullptr)
                 unsupported(sl, "unpacked structure used as a whole here");
-            if (const std::optional<sir::FrameVarId> f = findFrameVar(sym))
-                return emit(Op::Fload, frameVars()[*f].type, {Operand::frame(*f)}, sl);
+            if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
+                const sir::FrameVar& fv = frameVars()[*f];
+                if (!fv.dims.empty()) unsupported(sl, "an unpacked array as a value");
+                // A ref argument reads what it refers to (SIR_SPEC.md 8).
+                if (fv.type.kind == sir::TypeKind::Ref)
+                    return emit(Op::LoadRef, fv.target, {Operand::frame(*f)}, sl);
+                return emit(Op::Fload, fv.type, {Operand::frame(*f)}, sl);
+            }
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
                 unsupported(sl, "reference to a " + std::string(ast::toString(sym.kind)));
             if (!inSlot(sym))
@@ -1080,14 +1074,29 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
     // those written after the member (SIR_SPEC.md 4.2); all evaluated in
     // order. Constant indices make the sensitivity that element alone.
     const std::optional<Storage> st = storageOf(base, sl);
-    if (!st || st->frame) unsupported(sl, "selecting from this array");
-    const sir::Slot& slot = design().slots[st->id];
-    if (slot.dims.size() != st->elem.size() + indices.size())
-        unsupported(sl, "a part of an unpacked array");
+    if (!st) unsupported(sl, "selecting from this array");
     Place p;
     p.kind = Place::Kind::Element;
     p.slot = st->id;
     p.indices = st->elem;
+    if (st->frame) {
+        // An automatic array, or what an array ref argument refers to
+        // (SIR_SPEC.md 7.4, 8).
+        const bool ref = frameVars()[st->id].type.kind == sir::TypeKind::Ref;
+        p.home = ref ? Place::Home::Ref : Place::Home::Frame;
+        if (frameVars()[st->id].dims.size() != st->elem.size() + indices.size())
+            unsupported(sl, "a part of an unpacked array");
+        for (const ast::Expression* ix : indices) {
+            const Val iv = lowerExpr(*ix);
+            if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
+            p.indices.push_back(iv.op);
+        }
+        p.type = homeType(p);
+        return p;
+    }
+    const sir::Slot& slot = design().slots[st->id];
+    if (slot.dims.size() != st->elem.size() + indices.size())
+        unsupported(sl, "a part of an unpacked array");
     bool fixed = !st->dynamic;
     std::vector<std::int64_t> idx = st->constIdx;
     for (const ast::Expression* ix : indices) {
@@ -1378,21 +1387,20 @@ void Lowerer::bitstreamPlaces(const ast::Expression& e, std::vector<Place>& out,
     if (e.type->getCanonicalType().isUnpackedArray()) {
         const std::optional<ArrayTarget> a = arrayTarget(e);
         if (!a) unsupported(sl, "unpacking into this array");
-        arrayPlaces(a->slot, a->indices, out);
+        arrayPlaces(baseOf(*a), a->indices, out);
         return;
     }
     if (!e.type->isIntegral()) unsupported(sl, "unpacking into this target");
     out.push_back(placeOf(e, sl));
 }
 
-void Lowerer::arrayPlaces(sir::SlotId s, std::vector<std::int64_t> indices,
-                          std::vector<Place>& out) {
-    const sir::Slot& slot = design().slots[s];
-    if (indices.size() == slot.dims.size()) {
+void Lowerer::arrayPlaces(ArrayBase s, std::vector<std::int64_t> indices, std::vector<Place>& out) {
+    const std::vector<sir::ArrayDim>& dims = dimsOf(s);
+    if (indices.size() == dims.size()) {
         out.push_back(elementPlace(s, indices));
         return;
     }
-    const sir::ArrayDim d = slot.dims[indices.size()];
+    const sir::ArrayDim d = dims[indices.size()];
     const std::int64_t step = d.left <= d.right ? 1 : -1;
     for (std::int64_t i = d.left;; i += step) {
         indices.push_back(i);
@@ -1426,7 +1434,7 @@ Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::str
         unsupported(sl, "array method " + name + " of this type");
     // Each item is an element of the first remaining dimension; with more
     // than one left, an item would be an array.
-    if (design().slots[a->slot].dims.size() != a->indices.size() + 1)
+    if (dimsOf(baseOf(*a)).size() != a->indices.size() + 1)
         unsupported(sl, "array method " + name + " on this array");
     const auto [with, item] = std::get<1>(call.subroutine).getIteratorInfo();
     const Op op = name == "sum"       ? Op::Add
@@ -1434,19 +1442,14 @@ Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::str
                   : name == "and"     ? Op::And
                   : name == "or"      ? Op::Or
                                       : Op::Xor;
-    const sir::Slot& slot = design().slots[a->slot];
     std::optional<Val> acc;
     std::vector<std::int64_t> idx = a->indices;
-    const sir::ArrayDim d = slot.dims.back();
+    const sir::ArrayDim d = dimsOf(baseOf(*a)).back();
     const std::int64_t step = d.left <= d.right ? 1 : -1;
     for (std::int64_t i = d.left;; i += step) {
         idx.push_back(i);
-        std::vector<Operand> ops{Operand::slot(a->slot)};
-        for (const std::int64_t k : idx)
-            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(k)).op);
-        noteRead({a->slot, elementNumber(slot, idx), 1, 0, 0});
+        Val v = loadPlace(elementPlace(baseOf(*a), idx), sl);
         idx.pop_back();
-        Val v = emit(Op::LoadElem, slot.type, std::move(ops), sl);
         if (with != nullptr) {
             iterators_[item] = v;
             v = lowerExpr(*with);
@@ -1502,18 +1505,18 @@ void Lowerer::aggregateValues(const ast::Expression& e, const ast::Type& t, std:
     }
     const std::optional<ArrayTarget> a = arrayTarget(*r);
     if (!a) unsupported(sl, "comparison of this array value");
-    arrayValues(a->slot, a->indices, out, sl);
+    arrayValues(baseOf(*a), a->indices, out, sl);
 }
 
-void Lowerer::arrayValues(sir::SlotId s, std::vector<std::int64_t> indices, std::vector<Val>& out,
+void Lowerer::arrayValues(ArrayBase s, std::vector<std::int64_t> indices, std::vector<Val>& out,
                           slang::SourceLocation sl) {
-    const sir::Slot& slot = design().slots[s];
-    if (indices.size() == slot.dims.size()) {
+    const std::vector<sir::ArrayDim>& dims = dimsOf(s);
+    if (indices.size() == dims.size()) {
         const Place p = elementPlace(s, indices);
         out.push_back(loadPlace(p, sl));
         return;
     }
-    const sir::ArrayDim d = slot.dims[indices.size()];
+    const sir::ArrayDim d = dims[indices.size()];
     const std::int64_t step = d.left <= d.right ? 1 : -1;
     for (std::int64_t i = d.left;; i += step) {
         indices.push_back(i);
@@ -1730,7 +1733,7 @@ Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLo
         // Every element, down to single values (11.4.13).
         const std::optional<ArrayTarget> a = arrayTarget(e);
         if (!a) unsupported(sl, "set member of this array");
-        return arrayMatch(v, a->slot, a->indices, sl);
+        return arrayMatch(v, baseOf(*a), a->indices, sl);
     }
     // ==? for integral values, so that x and z in the member match any
     // bit; == for others (11.4.13).
@@ -1739,19 +1742,15 @@ Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLo
     return compareValues(integralPair ? Op::Weq : Op::Eq, v, m, sl);
 }
 
-Val Lowerer::arrayMatch(const Val& v, sir::SlotId s, std::vector<std::int64_t> indices,
+Val Lowerer::arrayMatch(const Val& v, ArrayBase s, std::vector<std::int64_t> indices,
                         slang::SourceLocation sl) {
-    const sir::Slot& slot = design().slots[s];
-    if (indices.size() == slot.dims.size()) {
-        std::vector<Operand> ops{Operand::slot(s)};
-        for (const std::int64_t i : indices)
-            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
-        noteRead({s, elementNumber(slot, indices), 1, 0, 0});
-        const Val m = emit(Op::LoadElem, slot.type, std::move(ops), sl);
+    const std::vector<sir::ArrayDim>& dims = dimsOf(s);
+    if (indices.size() == dims.size()) {
+        const Val m = loadPlace(elementPlace(s, indices), sl);
         const bool integralPair = sir::isIntegral(v.type) && sir::isIntegral(m.type);
         return compareValues(integralPair ? Op::Weq : Op::Eq, v, m, sl);
     }
-    const sir::ArrayDim d = slot.dims[indices.size()];
+    const sir::ArrayDim d = dims[indices.size()];
     const std::int64_t step = d.left <= d.right ? 1 : -1;
     std::optional<Val> any;
     for (std::int64_t i = d.left;; i += step) {
@@ -1967,7 +1966,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         const std::optional<ArrayTarget> target = arrayTarget(a.left());
         if (!target) unsupported(sl, "assignment to this unpacked array");
         Stores stores;
-        assignArray(target->slot, target->indices, a.right(), stores, sl);
+        assignArray(baseOf(*target), target->indices, a.right(), stores, sl);
         flushStores(stores, a.isNonBlocking(), sl);
         return Val{Operand::temp(0), sir::voidType()};
     }
@@ -1993,9 +1992,27 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
     if (!e.type->getCanonicalType().isUnpackedArray() || structElement(*e.type) != nullptr)
         return std::nullopt;
     const std::optional<Storage> st = storageOf(e, e.sourceRange.start());
-    if (!st || st->frame || st->dynamic || !isArrayLeaf(*st)) return std::nullopt;
-    return ArrayTarget{st->id, st->constIdx};
+    if (!st || st->dynamic || !isArrayLeaf(*st)) return std::nullopt;
+    if (!st->frame) return ArrayTarget{st->id, st->constIdx};
+    // An automatic array, or what an array ref argument refers to.
+    const bool ref = frameVars()[st->id].type.kind == sir::TypeKind::Ref;
+    return ArrayTarget{st->id, st->constIdx, ref ? Place::Home::Ref : Place::Home::Frame};
 }
+
+const std::vector<sir::ArrayDim>& Lowerer::dimsOf(ArrayBase b) {
+    return b.home == Place::Home::Slot ? design().slots[b.id].dims : frameVars()[b.id].dims;
+}
+
+Type Lowerer::elemTypeOf(ArrayBase b) {
+    switch (b.home) {
+        case Place::Home::Slot: return design().slots[b.id].type;
+        case Place::Home::Frame: return frameVars()[b.id].type;
+        case Place::Home::Ref: return frameVars()[b.id].target;
+    }
+    return sir::voidType();
+}
+
+Type Lowerer::homeType(const Place& p) { return elemTypeOf({p.home, p.slot}); }
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
     // The writes of an aggregate assignment, after every value of its right
@@ -2004,28 +2021,29 @@ void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceL
         storePlace(place, value, nonblocking, sl);
 }
 
-Lowerer::Place Lowerer::elementPlace(sir::SlotId s, const std::vector<std::int64_t>& indices) {
+Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices) {
     Place p;
     p.kind = Place::Kind::Element;
-    p.slot = s;
+    p.home = s.home;
+    p.slot = s.id;
     for (const std::int64_t i : indices)
         p.indices.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
-    p.elem = elementNumber(design().slots[s], indices);
-    p.type = design().slots[s].type;
+    if (s.home == Place::Home::Slot) p.elem = elementNumber(design().slots[s.id], indices);
+    p.type = elemTypeOf(s);
     return p;
 }
 
-void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
+void Lowerer::assignArray(ArrayBase s, std::vector<std::int64_t> indices,
                           const ast::Expression& rhs, Stores& out, slang::SourceLocation sl) {
     const ast::Expression* r = &rhs;
     while (r->kind == ast::ExpressionKind::Conversion &&
            r->as<ast::ConversionExpression>().operand().type->getCanonicalType().isUnpackedArray())
         r = &r->as<ast::ConversionExpression>().operand();
-    const std::vector<sir::ArrayDim>& dims = design().slots[s].dims;
+    const std::vector<sir::ArrayDim> dims = dimsOf(s);
     const std::size_t level = indices.size();
     if (level == dims.size()) {
         // One element: its value, for its constant indices (SIR_SPEC.md 5.3).
-        const Val v = coerce(lowerExpr(*r), design().slots[s].type, sl);
+        const Val v = coerce(lowerExpr(*r), elemTypeOf(s), sl);
         out.emplace_back(elementPlace(s, indices), v);
         return;
     }
@@ -2049,27 +2067,22 @@ void Lowerer::assignArray(sir::SlotId s, std::vector<std::int64_t> indices,
     if (const std::optional<ArrayTarget> src = arrayTarget(*r)) {
         // Another array of the same shape: element by element, from the
         // left bounds (7.6).
-        const std::vector<sir::ArrayDim>& sdims = design().slots[src->slot].dims;
+        const std::vector<sir::ArrayDim>& sdims = dimsOf(baseOf(*src));
         if (sdims.size() - src->indices.size() != dims.size() - level)
             unsupported(sl, "assignment of an unpacked array of another shape");
-        copyArray(s, std::move(indices), src->slot, src->indices, out, sl);
+        copyArray(s, std::move(indices), baseOf(*src), src->indices, out, sl);
         return;
     }
     unsupported(sl, "assignment of this unpacked array value");
 }
 
-void Lowerer::copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
+void Lowerer::copyArray(ArrayBase to, std::vector<std::int64_t> toIndices, ArrayBase from,
                         std::vector<std::int64_t> fromIndices, Stores& out,
                         slang::SourceLocation sl) {
-    const std::vector<sir::ArrayDim>& td = design().slots[to].dims;
-    const std::vector<sir::ArrayDim>& fd = design().slots[from].dims;
+    const std::vector<sir::ArrayDim> td = dimsOf(to);
+    const std::vector<sir::ArrayDim> fd = dimsOf(from);
     if (toIndices.size() == td.size()) {
-        std::vector<Operand> load{Operand::slot(from)};
-        for (const std::int64_t i : fromIndices)
-            load.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
-        noteRead({from, elementNumber(design().slots[from], fromIndices), 1, 0, 0});
-        const Val v = coerce(emit(Op::LoadElem, design().slots[from].type, std::move(load), sl),
-                             design().slots[to].type, sl);
+        const Val v = coerce(loadPlace(elementPlace(from, fromIndices), sl), elemTypeOf(to), sl);
         out.emplace_back(elementPlace(to, toIndices), v);
         return;
     }
@@ -2123,9 +2136,12 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 return placeOf(*c, sl);
             }
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
-                p.kind = Place::Kind::Frame;
+                const sir::FrameVar& fv = frameVars()[*f];
+                if (!fv.dims.empty()) unsupported(sl, "assignment to a whole unpacked array");
+                const bool ref = fv.type.kind == sir::TypeKind::Ref;
+                p.kind = ref ? Place::Kind::Ref : Place::Kind::Frame;
                 p.frame = *f;
-                p.type = frameVars()[*f].type;
+                p.type = ref ? fv.target : fv.type;
                 return p;
             }
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
@@ -2165,16 +2181,24 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             p.kind = Place::Kind::Bits;
             if (namedSymbol(base) != nullptr || isUnpackedMember(base)) {
                 const std::optional<Storage> st = storageOf(base, sl);
-                if (!st || st->frame) unsupported(sl, "assignment to a part of this variable");
+                if (!st) unsupported(sl, "assignment to a part of this variable");
                 if (isArrayLeaf(*st)) unsupported(sl, "assignment to a part of an unpacked array");
                 // A member of an element of an array of structures is an
                 // element of its slot.
                 const Place leaf = storagePlace(*st);
-                p.slot = leaf.slot;
-                p.indices = leaf.indices;
-                p.elem = leaf.elem;
+                if (leaf.kind == Place::Kind::Frame || leaf.kind == Place::Kind::Ref) {
+                    // Bits of an automatic variable, or of what a ref
+                    // argument refers to (SIR_SPEC.md 7.4, 8).
+                    p.home = leaf.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
+                    p.slot = leaf.frame;
+                } else {
+                    p.slot = leaf.slot;
+                    p.indices = leaf.indices;
+                    p.elem = leaf.elem;
+                }
             } else if (const std::optional<ArrayAccess> acc = arrayAccess(base)) {
                 const Place el = arrayElementPlace(*acc->base, acc->indices, sl);
+                p.home = el.home;
                 p.slot = el.slot;
                 p.indices = el.indices;
                 p.elem = el.elem;
@@ -2210,7 +2234,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 p.lsb = part.lsb;
             }
             p.width = w;
-            p.type = integral(sir::isFourState(design().slots[p.slot].type), false, w);
+            p.type = integral(sir::isFourState(homeType(p)), false, w);
             return p;
         }
         case ast::ExpressionKind::MemberAccess: {
@@ -2257,6 +2281,12 @@ Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width
                                slang::SourceLocation sl) {
     // Bits lsb .. lsb + width - 1 of an integral place. A select outside
     // the place would reach other bits of its slot, so it is reported.
+    if (base.kind == Place::Kind::Frame || base.kind == Place::Kind::Ref) {
+        // Bits of an automatic variable or of what a ref argument refers to.
+        base.home = base.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
+        base.slot = base.frame;
+        base.kind = Place::Kind::Slot;
+    }
     if (base.kind != Place::Kind::Slot && base.kind != Place::Kind::Element &&
         base.kind != Place::Kind::Bits)
         unsupported(sl, "assignment to a part of this target");
@@ -2274,7 +2304,7 @@ Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width
     }
     base.kind = Place::Kind::Bits;
     base.width = width;
-    base.type = integral(sir::isFourState(design().slots[base.slot].type), false, width);
+    base.type = integral(sir::isFourState(homeType(base)), false, width);
     return base;
 }
 
@@ -2291,8 +2321,25 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
 }
 
 Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
+    // The variable an Element or Bits place is in: a slot, a frame
+    // variable, or what a ref argument refers to (SIR_SPEC.md 5.3, 7.4, 8).
+    const auto home = [&](Op slotOp, Op frameOp, Op refOp) {
+        std::vector<Operand> ops{p.home == Place::Home::Slot ? Operand::slot(p.slot)
+                                                             : Operand::frame(p.slot)};
+        ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+        if (p.home == Place::Home::Slot) noteRead(rangeOf(p));
+        const Op op = p.home == Place::Home::Slot    ? slotOp
+                      : p.home == Place::Home::Frame ? frameOp
+                                                     : refOp;
+        return emit(op, homeType(p), std::move(ops), sl);
+    };
     switch (p.kind) {
         case Place::Kind::Frame: return emit(Op::Fload, p.type, {Operand::frame(p.frame)}, sl);
+        case Place::Kind::Ref: {
+            std::vector<Operand> ops{Operand::frame(p.frame)};
+            if (p.leaf != 0) ops.push_back(constant(sir::u2(32), p.leaf).op);
+            return emit(Op::LoadRef, p.type, std::move(ops), sl);
+        }
         case Place::Kind::Slot:
             noteRead(rangeOf(p));
             return emit(Op::Load, p.type, {Operand::slot(p.slot)}, sl);
@@ -2301,12 +2348,7 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
             const Val str = loadPlace(p.base[0], sl);
             return emit(Op::StrGet, p.type, {str.op, p.indices[0]}, sl);
         }
-        case Place::Kind::Element: {
-            noteRead(rangeOf(p));
-            std::vector<Operand> ops{Operand::slot(p.slot)};
-            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
-            return emit(Op::LoadElem, p.type, std::move(ops), sl);
-        }
+        case Place::Kind::Element: return home(Op::LoadElem, Op::LoadElem, Op::LoadRefElem);
         case Place::Kind::Concat: {
             std::vector<Operand> ops;
             ops.reserve(p.base.size());
@@ -2315,26 +2357,35 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
             return emit(Op::Concat, p.type, std::move(ops), sl);
         }
         case Place::Kind::Bits: {
-            noteRead(rangeOf(p));
-            const Type st = design().slots[p.slot].type;
-            std::vector<Operand> ops{Operand::slot(p.slot)};
-            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
-            const Val whole =
-                emit(p.indices.empty() ? Op::Load : Op::LoadElem, st, std::move(ops), sl);
+            const bool whole = p.indices.empty();
+            const Val all = home(whole ? Op::Load : Op::LoadElem, whole ? Op::Fload : Op::LoadElem,
+                                 whole ? Op::LoadRef : Op::LoadRefElem);
             const Val pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
-            return emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {whole.op, pos.op}, sl);
+            return emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {all.op, pos.op}, sl);
         }
     }
     unsupported(sl, "reading this target");
 }
 
 void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl) {
+    // An automatic variable takes no NBA (10.4.2): not through a ref either,
+    // unless the ref names a whole static variable (nba.ref).
+    const auto noNba = [&] {
+        if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
+    };
     switch (p.kind) {
         case Place::Kind::Frame: {
-            if (nonblocking) unsupported(sl, "nonblocking assignment to an automatic variable");
+            noNba();
             const Val fv = coerce(v, p.type, sl);
             emitVoid(Op::Fstore, {Operand::frame(p.frame), fv.op}, sl);
+            return;
+        }
+        case Place::Kind::Ref: {
+            std::vector<Operand> ops{Operand::frame(p.frame)};
+            if (p.leaf != 0) ops.push_back(constant(sir::u2(32), p.leaf).op);
+            ops.push_back(coerce(v, p.type, sl).op);
+            emitVoid(nonblocking ? Op::NbaRef : Op::StoreRef, std::move(ops), sl);
             return;
         }
         case Place::Kind::Slot: {
@@ -2369,6 +2420,15 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         }
         case Place::Kind::Element: {
             const Val ev = coerce(v, p.type, sl);
+            if (p.home != Place::Home::Slot) {
+                noNba();
+                std::vector<Operand> ops{Operand::frame(p.slot)};
+                ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+                ops.push_back(ev.op);
+                emitVoid(p.home == Place::Home::Frame ? Op::StoreElem : Op::StoreRefElem,
+                         std::move(ops), sl);
+                return;
+            }
             std::vector<Operand> ops{Operand::slot(p.slot)};
             ops.insert(ops.end(), p.indices.begin(), p.indices.end());
             ops.push_back(ev.op);
@@ -2377,8 +2437,20 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             return;
         }
         case Place::Kind::Bits: {
-            const sir::Slot& slot = design().slots[p.slot];
             const Val pv = coerce(v, p.type, sl);
+            const Val pos =
+                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
+            if (p.home != Place::Home::Slot) {
+                noNba();
+                std::vector<Operand> ops{Operand::frame(p.slot)};
+                ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+                ops.push_back(pos.op);
+                ops.push_back(pv.op);
+                emitVoid(p.home == Place::Home::Frame ? Op::StoreBits : Op::StoreRefBits,
+                         std::move(ops), sl);
+                return;
+            }
+            const sir::Slot& slot = design().slots[p.slot];
             if (!p.pos && p.indices.empty()) {
                 // A constant part of a whole variable: an ordinary store to a
                 // slot range. A part wholly outside writes nothing (3.11).
@@ -2396,8 +2468,6 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             }
             std::vector<Operand> ops{Operand::slot(p.slot)};
             ops.insert(ops.end(), p.indices.begin(), p.indices.end());
-            const Val pos =
-                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             ops.push_back(pos.op);
             ops.push_back(pv.op);
             emitVoid(nonblocking ? Op::NbaBits : Op::StoreBits, std::move(ops), sl);

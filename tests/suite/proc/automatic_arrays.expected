@@ -1,0 +1,32 @@
+initial default each call 1 1 1
+initial initializer each call 223 623
+initial default x xxxxxxxx
+initial recursion 120
+initial each iteration 3
+initial bits 8f
+initial element bits c0 05
+initial tasks at the same time 21 41
+task default each call 1 1 1
+task initializer each call 223 623
+task default x xxxxxxxx
+task recursion 120
+task each iteration 3
+task bits 8f
+task element bits c0 05
+task tasks at the same time 21 41
+always default each call 1 1 1
+always initializer each call 223 623
+always default x xxxxxxxx
+always recursion 120
+always each iteration 3
+always bits 8f
+always element bits c0 05
+always tasks at the same time 21 41
+fork default each call 1 1 1
+fork initializer each call 223 623
+fork default x xxxxxxxx
+fork recursion 120
+fork each iteration 3
+fork bits 8f
+fork element bits c0 05
+fork tasks at the same time 21 41

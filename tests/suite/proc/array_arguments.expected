@@ -1,0 +1,48 @@
+initial static function 10
+initial automatic function 10 100
+initial pattern 26
+initial output 4 3 2 1
+initial output to the input 40 30 20 10
+initial inout 2 3 4 5
+initial copied input 99 2
+initial descending 4 3 2 1
+initial two dimensions 36
+initial row 456 123
+initial static task 14
+initial task that waits 4 6 8 10
+task static function 10
+task automatic function 10 100
+task pattern 26
+task output 4 3 2 1
+task output to the input 40 30 20 10
+task inout 2 3 4 5
+task copied input 99 2
+task descending 4 3 2 1
+task two dimensions 36
+task row 456 123
+task static task 14
+task task that waits 4 6 8 10
+always static function 10
+always automatic function 10 100
+always pattern 26
+always output 4 3 2 1
+always output to the input 40 30 20 10
+always inout 2 3 4 5
+always copied input 99 2
+always descending 4 3 2 1
+always two dimensions 36
+always row 456 123
+always static task 14
+always task that waits 4 6 8 10
+fork static function 10
+fork automatic function 10 100
+fork pattern 26
+fork output 4 3 2 1
+fork output to the input 40 30 20 10
+fork inout 2 3 4 5
+fork copied input 99 2
+fork descending 4 3 2 1
+fork two dimensions 36
+fork row 456 123
+fork static task 14
+fork task that waits 4 6 8 10

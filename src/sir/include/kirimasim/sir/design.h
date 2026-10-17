@@ -166,6 +166,15 @@ enum class Op : std::uint8_t {
     NbaBits,    ///< nba.bits <slot>, [<index>...,] <position>, <value>
     Fload,      ///< %r = fload %fN
     Fstore,     ///< fstore %fN, <value>
+    // References, for ref arguments (SIR_SPEC.md 8). A reference names a
+    // slot or a frame variable, and an element of it when indexed.
+    RefMake,       ///< %r = ref.make <slot | %fN>, [<index>...]
+    LoadRef,       ///< %r = load.ref <ref>[, <leaf>]
+    StoreRef,      ///< store.ref <ref>, [<leaf>,] <value>
+    NbaRef,        ///< nba.ref <ref>, [<leaf>,] <value>
+    LoadRefElem,   ///< %r = load.ref.elem %fN, <index>...  (%fN: a ref argument)
+    StoreRefElem,  ///< store.ref.elem %fN, <index>..., <value>
+    StoreRefBits,  ///< store.ref.bits %fN, [<index>...,] <position>, <value>
     // Arithmetic (integral, real and shortreal).
     Add,
     Sub,
@@ -356,11 +365,16 @@ struct BasicBlock {
     std::vector<Instr> instrs;
 };
 
-/// A row of a frame-variable table (SIR_SPEC.md 7.4).
+/// A row of a frame-variable table (SIR_SPEC.md 7.4). A fixed-size
+/// unpacked array has the dimensions and `type` is its element's. A ref
+/// argument has type ref, and the value type (`target`) and dimensions of
+/// what it refers to (SIR_SPEC.md 8).
 struct FrameVar {
     std::string name;  ///< Declared name, or empty for a value the front end keeps.
     Type type;
     TypeId declType = kNone;
+    std::vector<ArrayDim> dims;
+    Type target;
 };
 
 /// Process kinds (SIR_SPEC.md 7.1).
@@ -477,6 +491,8 @@ enum class InitValue : std::uint8_t { Zero, One, X, Z };
 InitValue initialValue(SlotKind k);
 /// Number of elements of a slot (1 for a slot that is not an array).
 std::uint64_t elementCount(const Slot& s);
+/// Number of elements of a frame variable (1 if it is not an array).
+std::uint64_t elementCount(const FrameVar& f);
 /// Whether range `outer` holds every bit of range `inner`, both of slot s
 /// (SIR_SPEC.md 3.4). A count or width of 0 means all of them, so a range
 /// of every bit, given by its width or by 0, is the same range.

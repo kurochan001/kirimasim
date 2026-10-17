@@ -141,6 +141,22 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             const sir::FrameVarId f = frameVarOf(v, sl);
             const Type t = frameVars()[f].type;
             const ast::Expression* init = v.getInitializer();
+            if (!frameVars()[f].dims.empty()) {
+                // An array: its initializer element by element, or else
+                // every element's default.
+                const ArrayBase a{Place::Home::Frame, f};
+                Stores stores;
+                if (init != nullptr) {
+                    assignArray(a, {}, *init, stores, sl);
+                } else {
+                    std::vector<Place> places;
+                    arrayPlaces(a, {}, places);
+                    for (Place& e : places)
+                        stores.emplace_back(std::move(e), initial(t));
+                }
+                flushStores(stores, false, sl);
+                return;
+            }
             const Val value = init != nullptr ? coerce(lowerExpr(*init), t, sl) : initial(t);
             emitVoid(Op::Fstore, {Operand::frame(f), value.op}, sl);
             return;

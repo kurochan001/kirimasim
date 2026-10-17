@@ -1,0 +1,56 @@
+initial static 15
+initial automatic 27
+initial element 1 2 13 4
+initial element at run time 102
+initial automatic element 7 9
+initial member 7
+initial const 15 9
+initial bits 5a
+initial array 10 11 12 13 46
+initial descending array 20 21 22 23
+initial automatic array 30 126
+initial passed on 17 16 25
+initial during 18
+initial after 19
+task static 15
+task automatic 27
+task element 1 2 13 4
+task element at run time 102
+task automatic element 7 9
+task member 7
+task const 15 9
+task bits 5a
+task array 10 11 12 13 46
+task descending array 20 21 22 23
+task automatic array 30 126
+task passed on 17 16 25
+task during 18
+task after 19
+always static 15
+always automatic 27
+always element 1 2 13 4
+always element at run time 102
+always automatic element 7 9
+always member 7
+always const 15 9
+always bits 5a
+always array 10 11 12 13 46
+always descending array 20 21 22 23
+always automatic array 30 126
+always passed on 17 16 25
+always during 18
+always after 19
+fork static 15
+fork automatic 27
+fork element 1 2 13 4
+fork element at run time 102
+fork automatic element 7 9
+fork member 7
+fork const 15 9
+fork bits 5a
+fork array 10 11 12 13 46
+fork descending array 20 21 22 23
+fork automatic array 30 126
+fork passed on 17 16 25
+fork during 18
+fork after 19

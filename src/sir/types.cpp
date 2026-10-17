@@ -31,6 +31,7 @@ std::string toString(Type t) {
         case TypeKind::String: return "string";
         case TypeKind::Event: return "event";
         case TypeKind::Chandle: return "chandle";
+        case TypeKind::Ref: return "ref";
     }
     return "?";
 }
@@ -68,6 +69,16 @@ std::uint64_t elementCount(const Slot& s) {
     return n;
 }
 
+std::uint64_t elementCount(const FrameVar& f) {
+    std::uint64_t n = 1;
+    for (const ArrayDim& d : f.dims) {
+        const std::int64_t lo = d.left < d.right ? d.left : d.right;
+        const std::int64_t hi = d.left < d.right ? d.right : d.left;
+        n *= static_cast<std::uint64_t>(hi - lo) + 1;
+    }
+    return n;
+}
+
 const char* opName(Op op) {
     switch (op) {
         case Op::Load: return "load";
@@ -78,6 +89,13 @@ const char* opName(Op op) {
         case Op::StoreElem: return "store.elem";
         case Op::NbaElem: return "nba.elem";
         case Op::StoreBits: return "store.bits";
+        case Op::RefMake: return "ref.make";
+        case Op::LoadRef: return "load.ref";
+        case Op::StoreRef: return "store.ref";
+        case Op::NbaRef: return "nba.ref";
+        case Op::LoadRefElem: return "load.ref.elem";
+        case Op::StoreRefElem: return "store.ref.elem";
+        case Op::StoreRefBits: return "store.ref.bits";
         case Op::NbaBits: return "nba.bits";
         case Op::Fload: return "fload";
         case Op::Fstore: return "fstore";

@@ -66,6 +66,15 @@ std::vector<const ast::Expression*> patternElements(const ast::Expression& e);
 /// Whether e is an assignment pattern.
 bool isPattern(const ast::Expression& e);
 
+/// An unpacked-array element access: the array (a variable, a net or a
+/// member of an unpacked structure) and the index expressions, outermost
+/// dimension first.
+struct ArrayAccess {
+    const ast::Expression* base = nullptr;
+    std::vector<const ast::Expression*> indices;
+};
+std::optional<ArrayAccess> arrayAccess(const ast::Expression& e);
+
 /// The unpacked structure type that a type is, or nullptr.
 const ast::UnpackedStructType* unpackedStruct(const ast::Type& t);
 /// The unpacked structure type that a type is, or that a fixed-size
@@ -83,6 +92,9 @@ struct Leaf {
 /// The leaves of a type, in declaration order (SIR_SPEC.md 4.2).
 void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out,
                   const std::vector<sir::ArrayDim>& outer = {});
+/// The element type of a fixed-size unpacked array (of any dimensions), its
+/// dimensions added to `dims` outermost first; any other type is itself.
+const ast::Type& arrayElement(const ast::Type& type, std::vector<sir::ArrayDim>& dims);
 /// The number of leaves of a type: 1 unless it is an unpacked structure
 /// or an array of them.
 std::uint32_t leafCount(const ast::Type& t);
@@ -200,13 +212,20 @@ public:
         enum class Kind : std::uint8_t {
             Frame,       ///< An automatic variable.
             Slot,        ///< A whole net or static variable.
+            Ref,         ///< What ref argument `frame` refers to (SIR_SPEC.md 8).
             Element,     ///< An element of an unpacked array.
             Bits,        ///< Bits of a variable or of an element.
             StringChar,  ///< A character of a string (base[0]).
             Concat,      ///< A concatenation of the places in base (11.4.12).
         };
         Kind kind = Kind::Slot;
+        /// Where the variable of an Element or Bits place lives: in slot
+        /// `slot`, in frame variable `slot`, or where ref argument `slot`
+        /// refers to (SIR_SPEC.md 5.3, 7.4, 8).
+        enum class Home : std::uint8_t { Slot, Frame, Ref };
+        Home home = Home::Slot;
         sir::FrameVarId frame = 0;
+        std::uint32_t leaf = 0;  ///< Ref: the leaf of a structure it refers to.
         sir::SlotId slot = 0;
         std::vector<sir::Operand> indices;  ///< Of an array element; of the character.
         std::optional<std::uint32_t> elem;  ///< The element, when the indices are constant.
@@ -230,19 +249,34 @@ public:
     struct ArrayTarget {
         sir::SlotId slot = 0;
         std::vector<std::int64_t> indices;
+        Place::Home home = Place::Home::Slot;  ///< slot is a frame variable unless Slot.
     };
+    /// An unpacked array: a slot, an array frame variable, or what an array
+    /// ref argument refers to.
+    struct ArrayBase {
+        ArrayBase(sir::SlotId s) : id(s) {}  // NOLINT: a slot is the usual base
+        ArrayBase(Place::Home h, std::uint32_t i) : home(h), id(i) {}
+        Place::Home home = Place::Home::Slot;
+        std::uint32_t id = 0;
+    };
+    static ArrayBase baseOf(const ArrayTarget& a) { return {a.home, a.slot}; }
+    const std::vector<sir::ArrayDim>& dimsOf(ArrayBase b);
+    sir::Type elemTypeOf(ArrayBase b);
+    /// The value type of the variable an Element or Bits place is in (one
+    /// element of an array).
+    sir::Type homeType(const Place& p);
     std::optional<ArrayTarget> arrayTarget(const ast::Expression& e);
     /// The writes of an aggregate assignment: each place with the value it
     /// gets, all computed before any is written (VALUE_SEMANTICS.md 3.13).
     using Stores = std::vector<std::pair<Place, Val>>;
     void flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl);
-    /// The element of slot s at constant declared indices.
-    Place elementPlace(sir::SlotId s, const std::vector<std::int64_t>& indices);
+    /// The element of array s at constant declared indices.
+    Place elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices);
     /// Computes an unpacked array value (a pattern, another array, or nested
-    /// ones) for the (sub-)array of slot s at `indices`, element by element.
-    void assignArray(sir::SlotId s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
+    /// ones) for the (sub-)array of s at `indices`, element by element.
+    void assignArray(ArrayBase s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
                      Stores& out, slang::SourceLocation sl);
-    void copyArray(sir::SlotId to, std::vector<std::int64_t> toIndices, sir::SlotId from,
+    void copyArray(ArrayBase to, std::vector<std::int64_t> toIndices, ArrayBase from,
                    std::vector<std::int64_t> fromIndices, Stores& out, slang::SourceLocation sl);
     /// The number of the element at the given declared indices
     /// (SIR_SPEC.md 4.2).
@@ -254,6 +288,11 @@ public:
     /// lowered on its first call.
     sir::SubroutineId subroutineOf(const ast::SubroutineSymbol& sym, slang::SourceLocation sl);
     Val lowerCall(const ast::CallExpression& call);
+    /// A ref to the actual of a ref argument (SIR_SPEC.md 8).
+    Val refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl);
+    /// The operand of a fixed-size unpacked array argument (SIR_SPEC.md 8).
+    sir::Operand arrayArgument(const ast::Expression& actual, const sir::Param& prm,
+                               const std::vector<sir::ArrayDim>& dims, slang::SourceLocation sl);
     void lowerReturn(const ast::Expression* e, slang::SourceLocation sl);
     /// The format and value arguments of $display, $write and $sformatf.
     void lowerFormatArgs(std::span<const ast::Expression* const> args,
@@ -341,7 +380,9 @@ public:
     /// s with one more constant element index.
     Storage withIndex(Storage s, std::int64_t index);
     /// Whether the leaf at s is an unpacked array beyond its element indices.
-    bool isArrayLeaf(const Storage& s) const;
+    bool isArrayLeaf(const Storage& s);
+    /// The array at s, a leaf that is one.
+    ArrayBase storageBase(const Storage& s);
     /// The constant element indices of s; reported when they are not.
     std::vector<std::int64_t> fixedIndices(const Storage& s, slang::SourceLocation sl);
     /// The element of an unpacked array named by base and indices, its
@@ -369,8 +410,8 @@ public:
     /// The single places of a target in the order of bitstreamOf.
     void bitstreamPlaces(const ast::Expression& e, std::vector<Place>& out,
                          slang::SourceLocation sl);
-    /// The element places of the (sub-)array of slot s at indices, in order.
-    void arrayPlaces(sir::SlotId s, std::vector<std::int64_t> indices, std::vector<Place>& out);
+    /// The element places of the (sub-)array of s at indices, in order.
+    void arrayPlaces(ArrayBase s, std::vector<std::int64_t> indices, std::vector<Place>& out);
     /// The single places of the leaves of type t at s, in order.
     void storagePlaces(const Storage& s, const ast::Type& t, std::vector<Place>& out,
                        slang::SourceLocation sl);
@@ -387,8 +428,8 @@ public:
     /// The single values of an aggregate expression of type t, in order.
     void aggregateValues(const ast::Expression& e, const ast::Type& t, std::vector<Val>& out,
                          slang::SourceLocation sl);
-    /// The elements of the (sub-)array of slot s at indices, in order.
-    void arrayValues(sir::SlotId s, std::vector<std::int64_t> indices, std::vector<Val>& out,
+    /// The elements of the (sub-)array of s at indices, in order.
+    void arrayValues(ArrayBase s, std::vector<std::int64_t> indices, std::vector<Val>& out,
                      slang::SourceLocation sl);
     /// ==, !=, === and !== of unpacked arrays and structures (3.14).
     Val compareAggregates(const ast::BinaryExpression& b, slang::SourceLocation sl);
@@ -402,8 +443,8 @@ public:
     Val lowerInside(const Val& v, std::span<const ast::Expression* const> set,
                     slang::SourceLocation sl);
     Val insideMatch(const Val& v, const ast::Expression& e, slang::SourceLocation sl);
-    /// Whether v matches an element of the (sub-)array of slot s at indices.
-    Val arrayMatch(const Val& v, sir::SlotId s, std::vector<std::int64_t> indices,
+    /// Whether v matches an element of the (sub-)array of s at indices.
+    Val arrayMatch(const Val& v, ArrayBase s, std::vector<std::int64_t> indices,
                    slang::SourceLocation sl);
     /// Computes an unpacked structure value for the leaves at dst, member
     /// by member (SIR_SPEC.md 4.2).

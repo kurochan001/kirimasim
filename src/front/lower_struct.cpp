@@ -61,8 +61,15 @@ Lowerer::Storage Lowerer::withIndex(Storage s, std::int64_t index) {
     return s;
 }
 
-bool Lowerer::isArrayLeaf(const Storage& s) const {
-    return !s.frame && design_.slots[s.id].dims.size() > s.elem.size();
+bool Lowerer::isArrayLeaf(const Storage& s) {
+    if (s.frame) return !frameVars()[s.id].dims.empty();
+    return design_.slots[s.id].dims.size() > s.elem.size();
+}
+
+Lowerer::ArrayBase Lowerer::storageBase(const Storage& s) {
+    if (!s.frame) return s.id;
+    const bool ref = frameVars()[s.id].type.kind == sir::TypeKind::Ref;
+    return {ref ? Place::Home::Ref : Place::Home::Frame, s.id};
 }
 
 std::vector<std::int64_t> Lowerer::fixedIndices(const Storage& s, slang::SourceLocation sl) {
@@ -143,9 +150,12 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
     // array of structures.
     Place p;
     if (st.frame) {
-        p.kind = Place::Kind::Frame;
+        // An automatic variable, or what a ref argument refers to (SIR_SPEC.md 8).
+        const sir::FrameVar& fv = frameVars()[st.id];
+        const bool ref = fv.type.kind == sir::TypeKind::Ref;
+        p.kind = ref ? Place::Kind::Ref : Place::Kind::Frame;
         p.frame = st.id;
-        p.type = frameVars()[st.id].type;
+        p.type = ref ? fv.target : fv.type;
         return p;
     }
     const sir::Slot& slot = design().slots[st.id];
@@ -213,7 +223,7 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         return;
     }
     if (ct.isUnpackedArray()) {
-        assignArray(dst.id, fixedIndices(dst, sl), rhs, out, sl);
+        assignArray(storageBase(dst), fixedIndices(dst, sl), rhs, out, sl);
         return;
     }
     Place p = storagePlace(std::move(dst));
@@ -244,7 +254,8 @@ void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores
         return;
     }
     if (ct.isUnpackedArray()) {
-        copyArray(dst.id, fixedIndices(dst, sl), src.id, fixedIndices(src, sl), out, sl);
+        copyArray(storageBase(dst), fixedIndices(dst, sl), storageBase(src), fixedIndices(src, sl),
+                  out, sl);
         return;
     }
     const Val v = loadPlace(storagePlace(std::move(src)), sl);
@@ -272,7 +283,7 @@ void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Va
         return;
     }
     if (ct.isUnpackedArray()) {
-        arrayValues(s.id, fixedIndices(s, sl), out, sl);
+        arrayValues(storageBase(s), fixedIndices(s, sl), out, sl);
         return;
     }
     out.push_back(loadPlace(storagePlace(s), sl));
@@ -300,7 +311,7 @@ void Lowerer::storagePlaces(const Storage& s, const ast::Type& t, std::vector<Pl
         return;
     }
     if (ct.isUnpackedArray()) {
-        arrayPlaces(s.id, fixedIndices(s, sl), out);
+        arrayPlaces(storageBase(s), fixedIndices(s, sl), out);
         return;
     }
     out.push_back(storagePlace(s));

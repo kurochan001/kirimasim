@@ -52,3 +52,7 @@ set_tests_properties(tools/gen_override_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_fork_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_fork_matrix.py --check)
 set_tests_properties(tools/gen_fork_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_argument_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_argument_matrix.py --check)
+set_tests_properties(tools/gen_argument_matrix PROPERTIES LABELS Tools)

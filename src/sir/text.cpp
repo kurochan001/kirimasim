@@ -153,6 +153,8 @@ std::string frameText(const std::vector<FrameVar>& frame) {
     for (std::size_t i = 0; i < frame.size(); ++i) {
         const FrameVar& f = frame[i];
         out += "  frame %f" + std::to_string(i) + " " + quoted(f.name) + " : " + toString(f.type);
+        if (f.type.kind == TypeKind::Ref) out += "<" + toString(f.target) + ">";
+        out += dimsText(f.dims);
         if (f.declType != kNone) out += " type=" + typeRef(f.declType);
         out += "\n";
     }
