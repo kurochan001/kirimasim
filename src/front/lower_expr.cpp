@@ -195,8 +195,9 @@ bool untrustedConstant(const ast::Expression& e) {
         case ast::ExpressionKind::ConditionalOp: {
             const auto& c = e.as<ast::ConditionalExpression>();
             for (const auto& cond : c.conditions) {
-                // slang matches a value that is not constant as a failed
-                // match, so the false side comes out (SIR_SPEC.md 6).
+                // slang folds the match of a value that is not constant: a
+                // failed match for a constant pattern, a match for .* (slang
+                // issue #2029; SIR_SPEC.md 6).
                 if (cond.pattern != nullptr || untrustedConstant(*cond.expr)) return true;
             }
             return untrustedConstant(c.left()) || untrustedConstant(c.right());
