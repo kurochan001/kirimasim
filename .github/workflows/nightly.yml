@@ -193,3 +193,27 @@ jobs:
       - run: cmake --preset dev
       - run: cmake --build --preset dev
       - run: python3 tools/mutants.py --preset dev | tee -a "$GITHUB_STEP_SUMMARY"
+
+  slang-main:
+    # Watches slang's main branch: builds kirimasim against its latest
+    # commit and runs the tests, so that an upstream change that would
+    # break kirimasim is seen before the pinned commit moves
+    # (cmake/Dependencies.cmake). A failure here holds nothing back.
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show tool versions
+        run: |
+          c++ --version
+          cmake --version
+
+      - name: Fetch slang's main branch
+        run: |
+          git clone --depth 1 https://github.com/MikePopoloski/slang.git "$RUNNER_TEMP/slang"
+          git -C "$RUNNER_TEMP/slang" log -1 --format='slang main: %H %cs %s'
+
+      - run: cmake --preset dev -DFETCHCONTENT_SOURCE_DIR_SLANG="$RUNNER_TEMP/slang"
+      - run: cmake --build --preset dev
+      - run: ctest --preset dev --output-on-failure
