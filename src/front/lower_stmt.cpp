@@ -893,7 +893,33 @@ void Lowerer::lowerIf(const ast::ConditionalStatement& s) {
 
 void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s) {
     const slang::SourceLocation sl = s.sourceRange.start();
-    if (s.isDeferred) unsupported(sl, "deferred immediate assertion");
+    if (s.isDeferred) {
+        // The expression is evaluated now; the action goes on the process's
+        // queue of pending reports, with the values it passes (16.4,
+        // SCHEDULER_SPEC.md 15.2, SIR_SPEC.md 5.7).
+        if (b_.fromAssertion) unsupported(sl, "deferred assertion written as a module item");
+        const Val c = lowerCondition(s.cond);
+        const sir::BlockId pass = newBlock();
+        const sir::BlockId fail = newBlock();
+        const sir::BlockId join = newBlock();
+        terminate(Op::BrIf, {c.op, Operand::block(pass), Operand::block(fail)}, sl);
+        // An empty action does nothing; a missing else of assert and
+        // assume calls $error.
+        const auto acts = [](const ast::Statement* a) {
+            return a != nullptr && a->kind != ast::StatementKind::Empty;
+        };
+        setBlock(pass);
+        if (acts(s.ifTrue)) deferAction(s.ifTrue, s.isFinal, sl);
+        jump(join, sl);
+        setBlock(fail);
+        if (acts(s.ifFalse) ||
+            (s.ifFalse == nullptr && (s.assertionKind == ast::AssertionKind::Assert ||
+                                      s.assertionKind == ast::AssertionKind::Assume)))
+            deferAction(s.ifFalse, s.isFinal, sl);
+        jump(join, sl);
+        setBlock(join);
+        return;
+    }
     // The expression is a condition as in if: x, z and 0 fail (16.3). The
     // pass statement runs on success; the fail statement on failure, or
     // $error when an assert or assume has none. A cover has no failure.
@@ -914,6 +940,89 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
     }
     jump(join, sl);
     setBlock(join);
+}
+
+void Lowerer::deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl) {
+    // The action is one subroutine call (16.4): a function S runs it later
+    // with the values passed by value, evaluated now. Outputs, inouts and
+    // refs are written and read when S runs.
+    const ast::CallExpression* call = nullptr;
+    if (action != nullptr) {
+        if (action->kind == ast::StatementKind::ExpressionStatement &&
+            action->as<ast::ExpressionStatement>().expr.kind == ast::ExpressionKind::Call)
+            call = &action->as<ast::ExpressionStatement>().expr.as<ast::CallExpression>();
+        if (call == nullptr) unsupported(sl, "this action of a deferred assertion");
+        if (!call->isSystemCall() &&
+            design_.subroutines[subroutineOf(*std::get<0>(call->subroutine), sl)].mayWait)
+            unsupported(sl, "deferred assertion whose action is a task that may wait");
+    }
+    std::vector<const ast::Expression*> passed;
+    std::vector<Val> values;
+    if (call != nullptr) {
+        const auto args = call->arguments();
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            const ast::Expression* a = args[i];
+            bool byValue = true;
+            if (!call->isSystemCall()) {
+                const auto formals = std::get<0>(call->subroutine)->getArguments();
+                byValue = i < formals.size() && formals[i]->direction == ast::ArgumentDirection::In;
+            }
+            if (!byValue || a->kind == ast::ExpressionKind::StringLiteral || constantValue(*a)) {
+                if (readsAutomatic(*a))
+                    unsupported(sl, "deferred assertion action with an automatic variable as its "
+                                    "output, inout or ref argument");
+                continue;
+            }
+            passed.push_back(a);
+            values.push_back(lowerExpr(*a));
+        }
+    }
+    const std::string owner = b_.isSub ? design_.subroutines[b_.proc].name : proc().name;
+    sir::Subroutine fn;
+    fn.name = owner + ".$deferred" + std::to_string(b_.deferred++);
+    fn.kind = sir::SubroutineKind::Function;
+    fn.automatic = true;
+    fn.instance = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
+    fn.returnType = sir::voidType();
+    fn.loc = loc(sl);
+    fn.blocks.resize(1);
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        const auto fv = static_cast<sir::FrameVarId>(i);
+        fn.frame.push_back({"", values[i].type, sir::kNone, {}, {}});
+        fn.params.push_back(
+            {"$" + std::to_string(i), sir::Direction::Input, values[i].type, sir::kNone, fv});
+    }
+    const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
+    design_.subroutines.push_back(std::move(fn));
+    callees_[{b_.isSub, b_.proc}].push_back(id);
+    Body saved = std::move(b_);
+    b_ = Body{};
+    b_.isSub = true;
+    b_.proc = id;
+    b_.scale = saved.scale;
+    b_.scope = saved.scope;
+    try {
+        for (std::size_t i = 0; i < passed.size(); ++i)
+            substitutions_[passed[i]] = emit(Op::Fload, values[i].type,
+                                             {Operand::frame(static_cast<sir::FrameVarId>(i))}, sl);
+        if (call == nullptr)
+            emitVoid(Op::Syscall, {Operand::str("$error"), Operand::str(b_.scope)}, sl);
+        else if (call->isSystemCall())
+            lowerSystemTask(*call);
+        else
+            lowerCall(*call);
+        terminate(Op::Ret, {}, sl);
+    } catch (const Unsupported&) {
+        substitutions_.clear();
+        b_ = std::move(saved);
+        throw;
+    }
+    substitutions_.clear();
+    b_ = std::move(saved);
+    std::vector<Operand> ops{Operand::str(final ? "final" : "#0"), Operand::subroutine(id)};
+    for (const Val& v : values)
+        ops.push_back(v.op);
+    emitVoid(Op::ReportCall, std::move(ops), sl);
 }
 
 void Lowerer::lowerCase(const ast::CaseStatement& s) {

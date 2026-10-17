@@ -100,6 +100,9 @@ using GuardFn = kirima_guard_fn;
 /// Evaluates a monitored expression into `out` (laid out like a slot
 /// element of the monitor's domain and width).
 using EvalFn = kirima_eval_fn;
+/// The call of a deferred assertion, run or dropped (SCHEDULER_SPEC.md
+/// 15.2).
+using DeferredFn = kirima_deferred_fn;
 
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems
 /// 0: all) and bits [lsb, lsb + width) of each (width 0: all).
@@ -245,6 +248,12 @@ public:
     /// point), and confirmed when the time slot reaches the Observed
     /// region.
     void deferReport(ProcessId p, std::string line);
+    /// report.call (SIR_SPEC.md 5.7): puts the call of a deferred
+    /// assertion on the same queue. An Observed one (`final` false) is
+    /// confirmed with the reports and runs in the Reactive region; a final
+    /// one is confirmed in the Postponed region and runs there. `fn` gets
+    /// `frame` and `token`, and run 0 when the call is dropped.
+    void deferCall(ProcessId p, bool final, DeferredFn fn, void* frame, std::uint32_t token);
 
     // $strobe and $monitor (SYSTEM_TASKS.md 4, SIR_SPEC.md 7.1): processes
     // that run only in the Postponed region, where they display. The
@@ -293,8 +302,27 @@ public:
 private:
     /// Show: a released held variable shows its value (id: the slot, gen:
     /// the element). Drive: a delayed driver's update (id: the driver).
-    /// Postponed: a strobe's run (id: the process).
-    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb, Show, Drive, Postponed };
+    /// Postponed: a strobe's run (id: the process). Deferred: a deferred
+    /// assertion's call (id: its row in deferredCalls_).
+    enum class Kind : std::uint8_t {
+        Resume,
+        Nba,
+        NbaDelayed,
+        TriggerNb,
+        Show,
+        Drive,
+        Postponed,
+        Deferred
+    };
+    /// An entry of a process's pending queue: a unique or priority
+    /// violation's line, or a deferred assertion's call.
+    struct PendingReport {
+        std::string line;
+        DeferredFn fn = nullptr;
+        void* frame = nullptr;
+        std::uint32_t token = 0;
+        bool final = false;
+    };
     struct Event {
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
@@ -314,8 +342,9 @@ private:
         std::uint32_t gen = 0;               ///< Number of the current wait.
         std::uint32_t monitor = UINT32_MAX;  ///< Monitor record of the current wait.
         bool done = false;
-        bool flushOnResume = false;        ///< Woken by an event: a flush point.
-        std::vector<std::string> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
+        bool flushOnResume = false;          ///< Woken by an event: a flush point.
+        std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
+        std::uint32_t observed = 0;          ///< Those confirmed in the Observed region.
     };
     struct Subscription {
         ProcessId process = 0;
@@ -423,7 +452,10 @@ private:
     std::string error_;
     std::string endNote_;
     std::vector<ProcessId> pendingOrder_;  ///< Processes that got a pending report.
-    std::uint32_t pendingProcesses_ = 0;   ///< Processes with a non-empty queue.
+    /// Processes with a report to confirm in the Observed region.
+    std::uint32_t pendingProcesses_ = 0;
+    std::vector<PendingReport> deferredCalls_;  ///< Confirmed calls, until they run.
+    std::vector<std::uint32_t> freeDeferred_;
 
     bool begun_ = false;
     CounterId cTimeSlots_ = 0, cTimeAdvances_ = 0, cActiveLoops_ = 0, cReactiveLoops_ = 0;
@@ -457,8 +489,12 @@ private:
     void freeMonitor(ProcessId p);
     void ensureSlotTables();
     void flushReports(ProcessId p);
-    /// The Observed region: confirms every pending report (15.3).
+    /// The Observed region: confirms every pending report but the final
+    /// assertions' calls (15.3).
     void confirmReports();
+    /// The Postponed region: confirms and runs the final assertions' calls.
+    void confirmFinals();
+    void addPending(ProcessId p, PendingReport r);
 };
 
 /// The design's output on stdout (CLI.md 3). It remembers whether the

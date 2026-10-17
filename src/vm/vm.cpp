@@ -650,6 +650,19 @@ public:
         vm.counters_.increment(vm.cInstrs_, steps);
     }
 
+    /// A deferred assertion's call, confirmed (run) or dropped.
+    static void deferredCall(kirima_context* /*ctx*/, void* frame, std::uint32_t token, int run) {
+        auto* f = static_cast<Frame*>(frame);
+        Interpreter& vm = *f->vm;
+        Deferred d = std::move(vm.deferred_[token]);
+        vm.deferred_[token] = {};
+        vm.freeDeferred_.push_back(token);
+        if (run == 0) return;
+        std::uint64_t steps = 0;
+        vm.callWith(*f, d.subroutine, d.args, steps);
+        vm.counters_.increment(vm.cInstrs_, steps);
+    }
+
     static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
@@ -735,6 +748,14 @@ private:
     /// By process: the frame of an override or postponed process.
     std::vector<Frame*> overrides_;
     Frame* monitor_ = nullptr;  ///< The postponed process of the $monitor in effect.
+    /// The calls of deferred assertions on the kernel's queues: the function
+    /// and its arguments' values (SIR_SPEC.md 5.7).
+    struct Deferred {
+        sir::SubroutineId subroutine = 0;
+        std::vector<W4> args;
+    };
+    std::vector<Deferred> deferred_;
+    std::vector<std::uint32_t> freeDeferred_;
     /// What a guard depends on, found on its first wait (SCHEDULER_SPEC.md
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
@@ -1739,6 +1760,28 @@ private:
         return Exit::Ret;
     }
 
+    /// Runs function s, of input arguments only, with these values, for
+    /// frame f (a deferred assertion's call, SIR_SPEC.md 5.7).
+    Exit callWith(Frame& f, sir::SubroutineId s, const std::vector<W4>& args,
+                  std::uint64_t& steps) {
+        const sir::Subroutine& sub = d_.subroutines[s];
+        const Act caller = act_;
+        const std::uint32_t body = processCount() + s;
+        std::vector<W4> vars = newVars(body);
+        for (std::size_t i = 0; i < sub.params.size() && i < args.size(); ++i)
+            vars[sub.params[i].frameVar] = args[i];
+        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars)});
+        W4 ret{0, 0};
+        ++callDepth_;
+        f.syncCalls.push_back({body, static_cast<std::uint32_t>(f.children.size())});
+        const Exit e = runBody(f, 0, steps, ret);
+        f.syncCalls.pop_back();
+        --callDepth_;
+        retire(act_.varsId);
+        act_ = caller;
+        return e;
+    }
+
     /// Passes the arguments of the block operand at ops[i] to its
     /// parameters and returns the block.
     sir::BlockId takeBranch(const Frame& f, const std::vector<Operand>& ops, std::size_t i) {
@@ -2144,6 +2187,24 @@ private:
                     storeBits(f, refSlot(r), refElem(r) + e, v(n + 1), t(n + 1), v(n + 2),
                               t(n + 2).width, false);
                 }
+                return true;
+            }
+            case Op::ReportCall: {
+                // The kernel runs or drops it (SCHEDULER_SPEC.md 15.2).
+                Deferred d;
+                d.subroutine = ops[1].id;
+                for (std::size_t i = 2; i < ops.size(); ++i)
+                    d.args.push_back(value(ops[i]));
+                std::uint32_t token = 0;
+                if (!freeDeferred_.empty()) {
+                    token = freeDeferred_.back();
+                    freeDeferred_.pop_back();
+                    deferred_[token] = std::move(d);
+                } else {
+                    token = static_cast<std::uint32_t>(deferred_.size());
+                    deferred_.push_back(std::move(d));
+                }
+                sched_.deferCall(f.kernelId, ops[0].text == "final", &deferredCall, &f, token);
                 return true;
             }
             case Op::ReportDefer: {

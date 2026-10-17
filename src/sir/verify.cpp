@@ -36,6 +36,7 @@ bool hasNoResult(Op op) {
         case Op::Disable:
         case Op::DisableFork:
         case Op::ReportDefer:
+        case Op::ReportCall:
         case Op::OverrideStart:
         case Op::OverrideStop:
         case Op::StoreOverride:
@@ -1422,6 +1423,27 @@ private:
                 for (const SlotRange& w : body.process->writes)
                     covered = covered || covers(d_.slots[o.id], w, target);
                 if (!covered) bad("writes %s" + std::to_string(o.id) + " outside the write set");
+                break;
+            }
+            case Op::ReportCall: {
+                // A function of input arguments, called with values of
+                // their types (SIR_SPEC.md 5.7).
+                if (ops.size() < 2 || ops[0].kind != Operand::Kind::Text ||
+                    (ops[0].text != "#0" && ops[0].text != "final") ||
+                    ops[1].kind != Operand::Kind::Subroutine ||
+                    ops[1].id >= d_.subroutines.size()) {
+                    bad("needs \"#0\" or \"final\" and a function");
+                    break;
+                }
+                const Subroutine& s = d_.subroutines[ops[1].id];
+                if (s.kind != SubroutineKind::Function || s.params.size() != ops.size() - 2) {
+                    bad("needs a function and one value per argument");
+                    break;
+                }
+                for (std::size_t i = 0; i < s.params.size(); ++i)
+                    if (s.params[i].dir != Direction::Input || !isValue(i + 2) ||
+                        !fits(s.params[i].type, ty(i + 2)))
+                        bad("argument " + std::to_string(i) + " needs a value of its input's type");
                 break;
             }
             case Op::ReportDefer: {

@@ -1,0 +1,2 @@
+deferred_assertion_matrix.sv:196: error:  [top @ 260ns]
+deferred_assertion_matrix.sv:201: error:  [top @ 270ns]

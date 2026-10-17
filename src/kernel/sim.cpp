@@ -431,7 +431,9 @@ void Scheduler::runSlot() {
             runRegion(Region::PrePostponed);
     }
     if (!ending_) {
-        // The monitor first, then the strobes (SYSTEM_TASKS.md 4).
+        // The final assertions, then the monitor, then the strobes
+        // (SCHEDULER_SPEC.md 15.2, SYSTEM_TASKS.md 4).
+        confirmFinals();
         const bool due = monitorDue_ && monitorOn_ && monitorProc_ != kNoHolder;
         monitorDue_ = false;
         if (due) runPostponed(monitorProc_);
@@ -500,6 +502,12 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::TriggerNb: trigger(e.id); return;
         case Kind::Postponed: runPostponed(e.id); return;
+        case Kind::Deferred: {
+            const PendingReport r = std::move(deferredCalls_[e.id]);
+            freeDeferred_.push_back(e.id);
+            r.fn(toC(ctx_), r.frame, r.token, 1);
+            return;
+        }
         case Kind::Show: showHeld(e.id, e.gen, 0, store_.layout(e.id).width); return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
@@ -954,34 +962,86 @@ bool Scheduler::triggered(EventId e) const { return events_[e].triggeredAt == ti
 
 // --- Pending reports (SCHEDULER_SPEC.md 15) -------------------------------------
 
-void Scheduler::deferReport(ProcessId p, std::string line) {
+void Scheduler::addPending(ProcessId p, PendingReport r) {
     Process& proc = processes_[p];
-    if (proc.pending.empty()) {
-        if (std::find(pendingOrder_.begin(), pendingOrder_.end(), p) == pendingOrder_.end())
-            pendingOrder_.push_back(p);
-        ++pendingProcesses_;
-    }
-    proc.pending.push_back(std::move(line));
+    if (std::find(pendingOrder_.begin(), pendingOrder_.end(), p) == pendingOrder_.end())
+        pendingOrder_.push_back(p);
+    if (!r.final && proc.observed++ == 0) ++pendingProcesses_;
+    proc.pending.push_back(std::move(r));
+}
+
+void Scheduler::deferReport(ProcessId p, std::string line) {
+    PendingReport r;
+    r.line = std::move(line);
+    addPending(p, std::move(r));
+}
+
+void Scheduler::deferCall(ProcessId p, bool final, DeferredFn fn, void* frame,
+                          std::uint32_t token) {
+    PendingReport r;
+    r.fn = fn;
+    r.frame = frame;
+    r.token = token;
+    r.final = final;
+    addPending(p, std::move(r));
 }
 
 void Scheduler::flushReports(ProcessId p) {
     Process& proc = processes_[p];
     if (proc.pending.empty()) return;
+    std::vector<PendingReport> dropped = std::move(proc.pending);
     proc.pending.clear();
-    --pendingProcesses_;
+    if (proc.observed != 0) --pendingProcesses_;
+    proc.observed = 0;
+    for (const PendingReport& r : dropped)
+        if (r.fn != nullptr) r.fn(toC(ctx_), r.frame, r.token, 0);
 }
 
 void Scheduler::confirmReports() {
     // In the order of the processes' numbers, not of their first reports
-    // (SCHEDULER_SPEC.md 15.4); within a process, in the order held.
+    // (SCHEDULER_SPEC.md 15.4); within a process, in the order held. A
+    // confirmed call runs in the Reactive region; final ones wait for the
+    // Postponed region (15.2).
     std::sort(pendingOrder_.begin(), pendingOrder_.end());
+    std::vector<ProcessId> left;
     for (const ProcessId p : pendingOrder_) {
-        for (const std::string& line : processes_[p].pending)
-            ctx_.output().message(line);
-        processes_[p].pending.clear();
+        std::vector<PendingReport> finals;
+        for (PendingReport& r : processes_[p].pending) {
+            if (r.final) {
+                finals.push_back(std::move(r));
+            } else if (r.fn == nullptr) {
+                ctx_.output().message(r.line);
+            } else {
+                std::uint32_t id = 0;
+                if (!freeDeferred_.empty()) {
+                    id = freeDeferred_.back();
+                    freeDeferred_.pop_back();
+                    deferredCalls_[id] = std::move(r);
+                } else {
+                    id = static_cast<std::uint32_t>(deferredCalls_.size());
+                    deferredCalls_.push_back(std::move(r));
+                }
+                schedule(Region::Reactive, {Kind::Deferred, Region::Reactive, id, 0}, 0);
+            }
+        }
+        processes_[p].pending = std::move(finals);
+        processes_[p].observed = 0;
+        if (!processes_[p].pending.empty()) left.push_back(p);
     }
-    pendingOrder_.clear();
+    pendingOrder_ = std::move(left);
     pendingProcesses_ = 0;
+}
+
+void Scheduler::confirmFinals() {
+    std::sort(pendingOrder_.begin(), pendingOrder_.end());
+    const std::vector<ProcessId> order = std::move(pendingOrder_);
+    pendingOrder_.clear();
+    for (const ProcessId p : order) {
+        const std::vector<PendingReport> calls = std::move(processes_[p].pending);
+        processes_[p].pending.clear();
+        for (const PendingReport& r : calls)
+            if (!ending_ && r.fn != nullptr) r.fn(toC(ctx_), r.frame, r.token, 1);
+    }
 }
 
 // --- Ending ------------------------------------------------------------------

@@ -145,6 +145,12 @@ public:
     void lowerStatement(const ast::Statement& s);
     void lowerIf(const ast::ConditionalStatement& s);
     void lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s);
+    /// report.call for an action of a deferred assertion, a single
+    /// subroutine call, or for $error when `action` is null (SIR_SPEC.md
+    /// 5.7).
+    void deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl);
+    /// Whether an expression names an automatic variable.
+    bool readsAutomatic(const ast::Expression& e) const;
     void lowerFork(const ast::BlockStatement& b);
     /// One target of assign, force, deassign or release: a slot range and
     /// the type of its value (SIR_SPEC.md 5.6).
@@ -561,10 +567,12 @@ public:
         };
         std::vector<Named> named;
         sir::TimeScale scale;
-        std::vector<sir::SlotRange> reads;        ///< For the sensitivity of always_comb.
-        std::uint32_t forks = 0;                  ///< Fork statements so far, for child names.
-        std::uint32_t waits = 0;                  ///< wait statements so far, for guard names.
-        bool isSub = false;                       ///< proc is a subroutine number.
+        std::vector<sir::SlotRange> reads;  ///< For the sensitivity of always_comb.
+        std::uint32_t forks = 0;            ///< Fork statements so far, for child names.
+        std::uint32_t waits = 0;            ///< wait statements so far, for guard names.
+        std::uint32_t deferred = 0;         ///< Deferred assertion actions so far, for their names.
+        bool fromAssertion = false;  ///< A procedure for an assertion written as a module item.
+        bool isSub = false;          ///< proc is a subroutine number.
         const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         std::optional<sir::SlotId> retSlot;       ///< The same, static.
@@ -641,6 +649,9 @@ private:
     std::set<const ast::Symbol*> disabledFromOutside_;
     std::set<const ast::Symbol*> blocksThatSpawn_;
     std::map<const ast::Symbol*, std::uint32_t> scopeIds_;
+    /// Expressions that stand for values already evaluated: the arguments
+    /// of a deferred assertion's action inside its function.
+    std::map<const ast::Expression*, Val> substitutions_;
     const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
     Body b_;
 

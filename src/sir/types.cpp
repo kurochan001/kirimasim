@@ -174,6 +174,7 @@ const char* opName(Op op) {
         case Op::Syscall: return "syscall";
         case Op::Builtin: return "builtin";
         case Op::ReportDefer: return "report.defer";
+        case Op::ReportCall: return "report.call";
         case Op::Udp: return "udp";
         case Op::UdpSeq: return "udp.seq";
         case Op::OverrideStart: return "override.start";

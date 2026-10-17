@@ -39,6 +39,9 @@ typedef enum kirima_status {
 typedef kirima_status (*kirima_resume_fn)(kirima_context* ctx, void* frame);
 typedef int (*kirima_guard_fn)(kirima_context* ctx, void* frame);
 typedef void (*kirima_eval_fn)(kirima_context* ctx, void* frame, uint64_t* out);
+/* A deferred assertion's call (SCHEDULER_SPEC.md 15.2): run it (run
+ * nonzero) or drop it (run 0); either way the token is used up. */
+typedef void (*kirima_deferred_fn)(kirima_context* ctx, void* frame, uint32_t token, int run);
 
 /* Edges: any change, posedge, negedge, either edge. */
 enum { KIRIMA_EDGE_ANY = 0, KIRIMA_EDGE_POS = 1, KIRIMA_EDGE_NEG = 2, KIRIMA_EDGE_BOTH = 3 };

@@ -1752,6 +1752,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
     b_.proc = static_cast<std::uint32_t>(first);
     b_.scale = timeScaleOf(*pb.getParentScope());
     b_.scope = prefix;
+    b_.fromAssertion = pb.isFromAssertion;
     evalSymbol_ = &pb;
 
     const ast::Statement& bodyStmt = pb.getBody();

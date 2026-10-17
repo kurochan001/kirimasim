@@ -1,0 +1,46 @@
+s0 after the statement
+s0 pass v=0
+s1 after the statement
+s1 fail v=1
+s2 after the statement
+s2 pass v=2
+s3 after the statement
+s3 fail v=3
+s4 after the statement
+s4 pass v=4
+s5 after the statement
+s5 fail v=5
+s6 after the statement
+s6 pass v=6
+s7 after the statement
+s7 fail v=7
+s8 after the statement
+s8 covered v=8
+s9 after the statement
+s10 after the statement
+s10 covered v=10
+s11 after the statement
+s12 after the statement
+s12 fail v=12
+s13 after the statement
+s13 fail v=13
+s14 after the statement
+s14 fail v=14
+s15 after the statement
+s15 fail v=15
+s16 after the statement
+s16 fail v=16
+s17 after the statement
+note 17
+s18 after the statement
+fnote 18
+s19 after the statement
+s19 twice 38
+s20 resumed from the event control
+s21 resumed from the event control
+s22 resumed after the Observed region
+s23 resumed from the wait
+s24 after #0
+s24 kept v=24
+s25 after the statements
+s26 after the statements

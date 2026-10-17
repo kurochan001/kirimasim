@@ -685,6 +685,8 @@ Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
 
 Val Lowerer::lowerExpr(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
+    if (!substitutions_.empty())
+        if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
     // Assigning, comparing and printing events come with their handles (P3).
     if (e.type->isEvent()) unsupported(sl, "event used as a value");
     const bool pure = e.kind != ast::ExpressionKind::Assignment &&
@@ -2769,20 +2771,24 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
     }
 }
 
-void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, char radix) {
-    const slang::SourceLocation sl = call.sourceRange.start();
-    const auto args = call.arguments();
-    // The process runs apart from the caller, so it cannot read the
-    // caller's automatic variables; slang rejects them already (13.3.2).
+bool Lowerer::readsAutomatic(const ast::Expression& e) const {
     bool automatic = false;
     auto finder = ast::makeVisitor([&](auto&, const ast::NamedValueExpression& n) {
         if (n.symbol.kind == ast::SymbolKind::Variable ||
             n.symbol.kind == ast::SymbolKind::FormalArgument)
             automatic = automatic || !inSlot(n.symbol);
     });
+    e.visit(finder);
+    return automatic;
+}
+
+void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, char radix) {
+    const slang::SourceLocation sl = call.sourceRange.start();
+    const auto args = call.arguments();
+    // The process runs apart from the caller, so it cannot read the
+    // caller's automatic variables; slang rejects them already (13.3.2).
     for (const ast::Expression* a : args)
-        a->visit(finder);
-    if (automatic) unsupported(sl, "$strobe or $monitor of an automatic variable");
+        if (readsAutomatic(*a)) unsupported(sl, "$strobe or $monitor of an automatic variable");
     const sir::InstanceId inst = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
     sir::Process p;
     p.name = processName(design_.instances[inst].scopeName, monitor ? "$monitor" : "$strobe");
