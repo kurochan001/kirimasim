@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 5
+VERSION = 6
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -86,7 +86,9 @@ STATEMENTS = [
     ("iff_writes",
      "  logic s;\n  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
      "@(posedge s iff «»wr());", "iff condition that writes a variable or net", True),
-    ("event_unpacked_element", "  logic m[0:1];\n", "@(«»posedge m[1]);",
+    # An element at a run-time index: a change of the index changes the
+    # expression too (9.4.2), which needs a monitor record.
+    ("event_element_run_time", "  logic m[0:1];\n  int i = 1;\n", "@(«»posedge m[i]);",
      "event control on an expression", True),
     ("event_expression", "  logic s, en;\n", "@(«»posedge (s & en));",
      "event control on an expression", True),
