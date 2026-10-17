@@ -1265,7 +1265,10 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                     [&] {
                         if (!design_.slots[s].dims.empty())
                             unsupported(n.location, "assignment to a whole unpacked array");
-                        const Val v = coerce(lowerExpr(*init), design_.slots[s].type, n.location);
+                        // The type first: lowering the value may add slots,
+                        // which moves the table.
+                        const sir::Type t = design_.slots[s].type;
+                        const Val v = coerce(lowerExpr(*init), t, n.location);
                         storePlace(placeOfSlot(s), v, false, n.location);
                     },
                     // The delay of a net declaration assignment is that of
@@ -1381,7 +1384,8 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
             case ast::ArgumentDirection::In:
                 lowerCont(name, sl, child, [&] {
                     if (!design_.slots[s].dims.empty()) unsupported(sl, "unpacked array port");
-                    const Val v = coerce(lowerExpr(*ext), design_.slots[s].type, sl);
+                    const sir::Type t = design_.slots[s].type;  // before lowering adds slots
+                    const Val v = coerce(lowerExpr(*ext), t, sl);
                     emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, sl);
                     noteWrite({s, 0, 0, 0, 0});
                 });
