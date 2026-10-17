@@ -61,7 +61,7 @@ Verilog and Verilator built from their main branches that day.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 391 | 389, 2 skipped | — | — |
+| This repository's tests (CTest) | 394 | 392, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 186 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -144,11 +144,11 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 145 | SIR and its verifier (55), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (5), and more |
-| `tests/suite/` | 175 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (63), illegal designs (35), nets (23), procedures (19), scheduling (16), hierarchy (8), continuous assignments (7), and others |
+| Unit tests (GoogleTest) | 146 | SIR and its verifier (56), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (5), and more |
+| `tests/suite/` | 176 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (63), illegal designs (35), nets (23), procedures (19), scheduling (17), hierarchy (8), continuous assignments (7), and others |
 | `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
-| Tools | 42 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
-| Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (52 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
+| Tools | 43 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (55 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
 
 </details>
 
@@ -278,10 +278,11 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   `alias`.
 - **Procedures and timing:** `initial`, `always`, `always_comb`,
   `always_latch`, `always_ff`, `final`; blocking and nonblocking assignments
-  with intra-assignment delays; delay and event controls; `wait (expr)`;
-  named events (`->`, `->>`, `.triggered`); `fork` with `join`, `join_any`
-  and `join_none`; `wait fork`, `disable fork`; `disable` of blocks and tasks
-  in every process; `assign`/`deassign` and `force`/`release`.
+  with intra-assignment delays; delay and event controls (with `iff`);
+  `wait (expr)`; named events (`->`, `->>`, `.triggered`); `fork` with
+  `join`, `join_any` and `join_none`; `wait fork`, `disable fork`; `disable`
+  of blocks and tasks in every process; `assign`/`deassign` and
+  `force`/`release`.
 - **Functions and tasks:** static and automatic, recursion, `input`,
   `output`, `inout` and `ref` arguments, default argument values, unpacked
   structures and arrays as arguments, functions returning unpacked
@@ -309,7 +310,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 | Not yet | Planned |
 | --- | --- |
-| File I/O (`$fopen` and the rest), `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), `iff` in event controls, the `%p` format, `$stime`, `$timeunit`, `$timeprecision`, `$stacktrace` | P1 |
+| File I/O (`$fopen` and the rest), `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), the `%p` format, `$stime`, `$timeunit`, `$timeprecision`, `$stacktrace` | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, `randsequence`, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let`, checkers | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
@@ -430,9 +431,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 40 generators, 175 tests in `tests/suite/`, and 391
+  rules. There are 41 generators, 176 tests in `tests/suite/`, and 394
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 170 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 175 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
