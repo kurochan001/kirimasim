@@ -22,8 +22,9 @@ is optional and only for comparison, is run like sv-tests' Verilator
 runner: verilator --timing --binary with that runner's warning and build
 options, then the built program.
 
-Writes results.json (every test, every tool) and summary.md (totals and
-counts per chapter) to --out, and prints the summary. With --gate, the exit
+Writes results.json (every test, every tool, with the seconds each run
+took) and summary.md (totals and counts per chapter, and each tool's
+seconds summed over the tests) to --out, and prints the summary. With --gate, the exit
 code is 1 when kirimasim passes fewer tests than Icarus.
 """
 
@@ -35,6 +36,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 PINNED = "15490e95fd978ada1c1dc59b7c4b53a7edb23b78"
@@ -183,10 +185,13 @@ def main() -> int:
             if name == "verilator" and "runner_verilator_flags" in params:
                 extra["extra"] = params["runner_verilator_flags"].split()
             with tempfile.TemporaryDirectory() as tmp:
+                start = time.monotonic()
                 rc, log = fn(exe, files, incdirs, defines, params["top_module"], tmp,
                              int(params["timeout"]), **extra)
+                seconds = time.monotonic() - start
             result[name] = {"rc": rc, "pass": judge(rc, log, should_fail, name == "kirimasim"),
-                            "unsupported": "error: unsupported:" in log}
+                            "unsupported": "error: unsupported:" in log,
+                            "seconds": round(seconds, 3)}
         return result
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
@@ -206,6 +211,8 @@ def main() -> int:
         counts = [str(sum(1 for r in rows if r[n]["pass"])) for n in names]
         label = "**total**" if c == "total" else c
         lines.append(f"| {label} | {len(rows)} | " + " | ".join(counts) + " |")
+    times = [f"{sum(r[n]['seconds'] for r in results):.1f}" for n in names]
+    lines.append("| seconds, summed | | " + " | ".join(times) + " |")
     if "kirimasim" in tools:
         unsupported = sum(1 for r in results if r["kirimasim"]["unsupported"])
         lines += ["", f"kirimasim stopped at an unsupported construct in {unsupported} tests."]
