@@ -318,6 +318,9 @@ public:
                          char radix = 'd');
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
+    /// $strobe and $monitor and their b, o and h forms: a postponed process
+    /// that displays, started by strobe or monitor (SIR_SPEC.md 7.1, 7.2).
+    void lowerPostponed(const ast::CallExpression& call, bool monitor, char radix);
 
     // Constants.
     /// The value of an expression slang can evaluate as a constant.

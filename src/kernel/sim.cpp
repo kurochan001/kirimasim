@@ -193,6 +193,40 @@ void Scheduler::ensureSlotTables() {
     if (subscriptions_.size() < store_.size()) {
         subscriptions_.resize(store_.size());
         slotMonitors_.resize(store_.size());
+        monitorSlot_.resize(store_.size());
+    }
+}
+
+// --- $strobe and $monitor ----------------------------------------------------
+
+void Scheduler::strobe(ProcessId p) {
+    begin();
+    schedule(Region::Postponed, {Kind::Postponed, Region::Postponed, p, 0}, 0);
+}
+
+void Scheduler::setMonitor(ProcessId p, std::span<const SlotPart> parts) {
+    begin();
+    ensureSlotTables();
+    for (const SlotPart& part : monitorParts_)
+        monitorSlot_[part.slot] = false;
+    monitorProc_ = p;
+    monitorParts_.assign(parts.begin(), parts.end());
+    for (const SlotPart& part : monitorParts_)
+        monitorSlot_[part.slot] = true;
+    monitorDue_ = true;
+}
+
+void Scheduler::setMonitoring(bool on) {
+    monitorOn_ = on;
+    if (on) monitorDue_ = true;
+}
+
+void Scheduler::runPostponed(ProcessId p) {
+    counters_.increment(cWakeups_);
+    const auto st = static_cast<Status>(processes_[p].fn(toC(ctx_), processes_[p].frame));
+    if (st == Status::Error) {
+        if (error_.empty()) error_ = "a process failed";
+        requestEnd(EndReason::Internal, 1);
     }
 }
 
@@ -396,7 +430,13 @@ void Scheduler::runSlot() {
         if (!ending_ && !anyEvents(Region::Active, Region::PostReNba))
             runRegion(Region::PrePostponed);
     }
-    if (!ending_) runRegion(Region::Postponed);
+    if (!ending_) {
+        // The monitor first, then the strobes (SYSTEM_TASKS.md 4).
+        const bool due = monitorDue_ && monitorOn_ && monitorProc_ != kNoHolder;
+        monitorDue_ = false;
+        if (due) runPostponed(monitorProc_);
+        runRegion(Region::Postponed);
+    }
     // The arena of NBA values without a delay is freed with the slot.
     slotNbas_.clear();
     arena_.clear();
@@ -459,6 +499,7 @@ void Scheduler::execute(const Event& e) {
             return;
         }
         case Kind::TriggerNb: trigger(e.id); return;
+        case Kind::Postponed: runPostponed(e.id); return;
         case Kind::Show: showHeld(e.id, e.gen, 0, store_.layout(e.id).width); return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
@@ -679,7 +720,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
-    const bool watched = !subscriptions_[s].empty() || !slotMonitors_[s].empty();
+    const bool watched = !subscriptions_[s].empty() || !slotMonitors_[s].empty() || monitorSlot_[s];
     if (watched) old_.assign(p, p + l.elemWords);
     bool changed = false;
     switch (l.domain) {
@@ -734,6 +775,18 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         --keep;  // this item is used up
     }
     subscriptions_[s].resize(keep);
+
+    // A part that $monitor shows (SYSTEM_TASKS.md 4).
+    if (monitorSlot_[s] && !monitorDue_) {
+        for (const SlotPart& part : monitorParts_) {
+            const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
+            const std::uint32_t pwidth = part.width == 0 ? l.width : part.width;
+            if (part.slot == s && overlaps(part.firstElem, part.numElems, elem, 1) &&
+                overlaps(plsb, pwidth, lsb, width) &&
+                !sameBits(l.domain, old_.data(), now, plsb, pwidth))
+                monitorDue_ = true;
+        }
+    }
 
     // Monitor records that depend on the changed part.
     auto& mons = slotMonitors_[s];

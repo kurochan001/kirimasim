@@ -59,6 +59,8 @@ enum class SysTask : std::uint8_t {
     Sscanf,
     ValuePlusargs,
     TimeFormat,
+    MonitorOn,
+    MonitorOff,
     Unknown,
 };
 
@@ -233,6 +235,8 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$sscanf") return SysTask::Sscanf;
     if (name == "$value$plusargs") return SysTask::ValuePlusargs;
     if (name == "$timeformat") return SysTask::TimeFormat;
+    if (name == "$monitoron") return SysTask::MonitorOn;
+    if (name == "$monitoroff") return SysTask::MonitorOff;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -585,6 +589,11 @@ public:
                     f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
                     overrides_[p] = &f;
                     break;
+                case sir::ProcessKind::Postponed:
+                    // Runs from strobe and monitor, in the Postponed region.
+                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    overrides_[p] = &f;
+                    break;
                 default:
                     return {kernel::EndReason::Internal, "process \"" + proc.name + "\": kind " +
                                                              sir::kindName(proc.kind) +
@@ -694,7 +703,9 @@ private:
     std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
     std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
     std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
-    std::vector<Frame*> overrides_;                ///< By process: an override process's frame.
+    /// By process: the frame of an override or postponed process.
+    std::vector<Frame*> overrides_;
+    Frame* monitor_ = nullptr;  ///< The postponed process of the $monitor in effect.
     /// What a guard depends on, found on its first wait (SCHEDULER_SPEC.md
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
@@ -702,7 +713,7 @@ private:
         std::vector<kernel::SlotPart> slots;
         std::vector<sir::SlotId> events;
     };
-    std::vector<std::optional<GuardDeps>> guardDeps_;  ///< By subroutine.
+    std::vector<std::optional<GuardDeps>> guardDeps_;  ///< By body.
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
@@ -969,6 +980,10 @@ private:
                 // Idle once it holds nothing, until override.start again.
                 f.block = 0;
                 if (f.holding) waitTriggers(f, p);
+                return kernel::Status::Waiting;
+            case sir::ProcessKind::Postponed:
+                // Runs again from its start, each time the kernel runs it.
+                f.block = 0;
                 return kernel::Status::Waiting;
             default: return kernel::Status::Done;
         }
@@ -1334,6 +1349,16 @@ private:
                         if (sched_.ending()) return Exit::Stop;
                         break;
                     }
+                    case Op::Strobe: sched_.strobe(overrides_[ops[0].id]->kernelId); break;
+                    case Op::Monitor: {
+                        // The new monitor starts afresh and shows what it
+                        // reads (SYSTEM_TASKS.md 4).
+                        Frame& m = *overrides_[ops[0].id];
+                        freshVars(m);
+                        monitor_ = &m;
+                        sched_.setMonitor(m.kernelId, depsOf(ops[0].id).slots);
+                        break;
+                    }
                     case Op::OverrideStop: {
                         const kernel::Hold level = holdLevel(ops[0]);
                         for (std::size_t i = 1; i < ops.size(); ++i)
@@ -1430,15 +1455,22 @@ private:
         }
     }
 
-    /// What guard g depends on, found on its first wait.
-    const GuardDeps& depsOf(sir::SubroutineId g) {
-        if (guardDeps_.empty()) guardDeps_.resize(d_.subroutines.size());
-        std::optional<GuardDeps>& cached = guardDeps_[g];
+    /// What a body (a guard, or a postponed process) reads, found on its
+    /// first use.
+    const GuardDeps& depsOf(std::uint32_t body) {
+        if (guardDeps_.empty()) guardDeps_.resize(processCount() + d_.subroutines.size());
+        std::optional<GuardDeps>& cached = guardDeps_[body];
         if (cached) return *cached;
         GuardDeps deps;
         std::vector<bool> seen(processCount() + d_.subroutines.size(), false);
-        collectReads(processCount() + g, deps, seen);
+        collectReads(body, deps, seen);
         return cached.emplace(std::move(deps));
+    }
+
+    /// The frame variables of a process back to their values at its start.
+    void freshVars(Frame& f) {
+        const std::vector<W4> fresh = newVars(f.process);
+        std::copy(fresh.begin(), fresh.end(), f.vars.begin());
     }
 
     /// wait.cond: goes on when the guard is true, else waits on a monitor
@@ -1448,7 +1480,7 @@ private:
     std::optional<bool> waitCond(Frame& f, sir::SubroutineId g, std::uint64_t& steps) {
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
-        const GuardDeps& deps = depsOf(g);
+        const GuardDeps& deps = depsOf(processCount() + g);
         kernel::MonitorSpec m;
         m.slots = deps.slots;
         // ev.triggered: the events the event slots hold now (15.5.3).
@@ -2336,6 +2368,13 @@ private:
                 timeFormat_ = tf;
                 return true;
             }
+            case SysTask::MonitorOn:
+                // The monitor shows its values once more, changed or not
+                // (SYSTEM_TASKS.md 4): it starts again from a fresh frame.
+                if (monitor_ != nullptr) freshVars(*monitor_);
+                sched_.setMonitoring(true);
+                return true;
+            case SysTask::MonitorOff: sched_.setMonitoring(false); return true;
             case SysTask::Display:
             case SysTask::Write:
             case SysTask::SFormatF: {

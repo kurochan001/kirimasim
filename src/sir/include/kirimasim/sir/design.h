@@ -298,6 +298,9 @@ enum class Op : std::uint8_t {
     /// store.override "assign" | "force", <slot range>, <value>: an override
     /// process writes the bits it holds at that level.
     StoreOverride,
+    // Displays in the Postponed region (SIR_SPEC.md 7.1, SYSTEM_TASKS.md 4).
+    Strobe,   ///< strobe @P: runs postponed process P once at the end of this time slot.
+    Monitor,  ///< monitor @P: P becomes the monitor.
     // Calls.
     Call,     ///< [%r =] call @N, <argument>...
     Syscall,  ///< [%r =] syscall "$name", <operand>...
@@ -429,6 +432,9 @@ enum class ProcessKind : std::uint8_t {
     General,
     StaticInit,  ///< The static variable initializers of an instance (SIR_SPEC.md 7.1).
     Override,    ///< A procedural assign or force; runs while it holds a target (5.6, 7.1).
+    /// The display of one $strobe or $monitor; runs only in the Postponed
+    /// region, from strobe and monitor (SIR_SPEC.md 7.1).
+    Postponed,
 };
 
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems

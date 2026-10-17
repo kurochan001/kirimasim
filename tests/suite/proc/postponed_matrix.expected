@@ -1,0 +1,62 @@
+initial strobe 1: v=2 vp=11 a1=1 ak=0 w=12 e=19 d=4 s=a r=1.5 x=10x1 q=0 p=0
+initial strobe 1: v=2 vp=11 a1=1 ak=0 w=12 e=19 d=4 s=a r=1.5 x=10x1 q=0 p=0
+initial strobeh 1: 00000002
+always strobe 3: v=3 vp=12 a1=2 ak=0 w=13 e=21 d=6 s=a r=1.5 x=10x1 q=0 p=0
+always strobe 3: v=3 vp=12 a1=2 ak=0 w=13 e=21 d=6 s=a r=1.5 x=10x1 q=0 p=0
+fork branch strobe 5: v=4 vp=13 a1=3 ak=0 w=14 e=23 d=8 s=a r=1.5 x=10x1 q=0 p=0
+fork branch strobe 5: v=4 vp=13 a1=3 ak=0 w=14 e=23 d=8 s=a r=1.5 x=10x1 q=0 p=0
+static task strobe 7: v=5 vp=14 a1=4 ak=0 w=15 e=25 d=10 s=a r=1.5 x=10x1 q=0 p=0
+static task strobe 7: v=5 vp=14 a1=4 ak=0 w=15 e=25 d=10 s=a r=1.5 x=10x1 q=0 p=0
+automatic task strobe 9: v=6 vp=15 a1=5 ak=0 w=16 e=27 d=12 s=a r=1.5 x=10x1 q=0 p=0
+automatic task strobe 9: v=6 vp=15 a1=5 ak=0 w=16 e=27 d=12 s=a r=1.5 x=10x1 q=0 p=0
+function strobe 11: v=7 vp=16 a1=6 ak=0 w=17 e=29 d=14 s=a r=1.5 x=10x1 q=0 p=0
+function strobe 11: v=7 vp=16 a1=6 ak=0 w=17 e=29 d=14 s=a r=1.5 x=10x1 q=0 p=0
+initial monitor 20: v=7 vp=16 a1=6 ak=0 w=17 e=29 d=14 s=a r=1.5 x=10x1 q=0 p=0
+initial monitor 21: v=8 vp=16 a1=6 ak=0 w=17 e=30 d=16 s=a r=1.5 x=10x1 q=0 p=0
+initial monitor 23: v=8 vp=16 a1=6 ak=1 w=17 e=30 d=16 s=a r=1.5 x=10x1 q=0 p=0
+initial monitor 26: v=8 vp=16 a1=6 ak=1 w=17 e=30 d=16 s=a r=1.5 x=10x0 q=0 p=0
+initial monitor 27: v=8 vp=16 a1=6 ak=1 w=17 e=30 d=16 s=a! r=2.0 x=10x0 q=0 p=0
+initial monitor 28: v=8 vp=16 a1=6 ak=1 w=17 e=30 d=16 s=a! r=2.0 x=10x0 q=1 p=1
+initial monitor 30: v=8 vp=16 a1=6 ak=1 w=17 e=30 d=16 s=a! r=2.0 x=10x0 q=1 p=1
+always monitor 32: v=8 vp=16 a1=6 ak=1 w=17 e=30 d=16 s=a! r=2.0 x=10x0 q=1 p=1
+always monitor 33: v=9 vp=16 a1=6 ak=1 w=17 e=31 d=18 s=a! r=2.0 x=10x0 q=1 p=1
+always monitor 34: v=9 vp=16 a1=6 ak=2 w=17 e=31 d=18 s=a! r=2.0 x=10x0 q=1 p=1
+always monitor 35: v=9 vp=16 a1=6 ak=0 w=17 e=31 d=18 s=a! r=2.0 x=10x0 q=1 p=1
+always monitor 38: v=9 vp=16 a1=6 ak=0 w=17 e=31 d=18 s=a! r=2.0 x=10x1 q=1 p=1
+always monitor 39: v=9 vp=16 a1=6 ak=0 w=17 e=31 d=18 s=a!! r=2.5 x=10x1 q=1 p=1
+always monitor 40: v=9 vp=16 a1=6 ak=0 w=17 e=31 d=18 s=a!! r=2.5 x=10x1 q=2 p=2
+always monitor 42: v=9 vp=16 a1=6 ak=0 w=17 e=31 d=18 s=a!! r=2.5 x=10x1 q=2 p=2
+fork branch monitor 44: v=9 vp=16 a1=6 ak=0 w=17 e=31 d=18 s=a!! r=2.5 x=10x1 q=2 p=2
+fork branch monitor 45: v=10 vp=16 a1=6 ak=0 w=17 e=32 d=20 s=a!! r=2.5 x=10x1 q=2 p=2
+fork branch monitor 47: v=10 vp=16 a1=6 ak=3 w=17 e=32 d=20 s=a!! r=2.5 x=10x1 q=2 p=2
+fork branch monitor 50: v=10 vp=16 a1=6 ak=3 w=17 e=32 d=20 s=a!! r=2.5 x=10x0 q=2 p=2
+fork branch monitor 51: v=10 vp=16 a1=6 ak=3 w=17 e=32 d=20 s=a!!! r=3.0 x=10x0 q=2 p=2
+fork branch monitor 52: v=10 vp=16 a1=6 ak=3 w=17 e=32 d=20 s=a!!! r=3.0 x=10x0 q=3 p=3
+fork branch monitor 54: v=10 vp=16 a1=6 ak=3 w=17 e=32 d=20 s=a!!! r=3.0 x=10x0 q=3 p=3
+static task monitor 56: v=10 vp=16 a1=6 ak=3 w=17 e=32 d=20 s=a!!! r=3.0 x=10x0 q=3 p=3
+static task monitor 57: v=11 vp=16 a1=6 ak=3 w=17 e=33 d=22 s=a!!! r=3.0 x=10x0 q=3 p=3
+static task monitor 58: v=11 vp=16 a1=6 ak=4 w=17 e=33 d=22 s=a!!! r=3.0 x=10x0 q=3 p=3
+static task monitor 59: v=11 vp=16 a1=6 ak=0 w=17 e=33 d=22 s=a!!! r=3.0 x=10x0 q=3 p=3
+static task monitor 62: v=11 vp=16 a1=6 ak=0 w=17 e=33 d=22 s=a!!! r=3.0 x=10x1 q=3 p=3
+static task monitor 63: v=11 vp=16 a1=6 ak=0 w=17 e=33 d=22 s=a!!!! r=3.5 x=10x1 q=3 p=3
+static task monitor 64: v=11 vp=16 a1=6 ak=0 w=17 e=33 d=22 s=a!!!! r=3.5 x=10x1 q=4 p=4
+static task monitor 66: v=11 vp=16 a1=6 ak=0 w=17 e=33 d=22 s=a!!!! r=3.5 x=10x1 q=4 p=4
+automatic task monitor 68: v=11 vp=16 a1=6 ak=0 w=17 e=33 d=22 s=a!!!! r=3.5 x=10x1 q=4 p=4
+automatic task monitor 69: v=12 vp=16 a1=6 ak=0 w=17 e=34 d=24 s=a!!!! r=3.5 x=10x1 q=4 p=4
+automatic task monitor 71: v=12 vp=16 a1=6 ak=5 w=17 e=34 d=24 s=a!!!! r=3.5 x=10x1 q=4 p=4
+automatic task monitor 74: v=12 vp=16 a1=6 ak=5 w=17 e=34 d=24 s=a!!!! r=3.5 x=10x0 q=4 p=4
+automatic task monitor 75: v=12 vp=16 a1=6 ak=5 w=17 e=34 d=24 s=a!!!!! r=4.0 x=10x0 q=4 p=4
+automatic task monitor 76: v=12 vp=16 a1=6 ak=5 w=17 e=34 d=24 s=a!!!!! r=4.0 x=10x0 q=5 p=5
+automatic task monitor 78: v=12 vp=16 a1=6 ak=5 w=17 e=34 d=24 s=a!!!!! r=4.0 x=10x0 q=5 p=5
+function monitor 80: v=12 vp=16 a1=6 ak=5 w=17 e=34 d=24 s=a!!!!! r=4.0 x=10x0 q=5 p=5
+function monitor 81: v=13 vp=16 a1=6 ak=5 w=17 e=35 d=26 s=a!!!!! r=4.0 x=10x0 q=5 p=5
+function monitor 82: v=13 vp=16 a1=6 ak=6 w=17 e=35 d=26 s=a!!!!! r=4.0 x=10x0 q=5 p=5
+function monitor 83: v=13 vp=16 a1=6 ak=0 w=17 e=35 d=26 s=a!!!!! r=4.0 x=10x0 q=5 p=5
+function monitor 86: v=13 vp=16 a1=6 ak=0 w=17 e=35 d=26 s=a!!!!! r=4.0 x=10x1 q=5 p=5
+function monitor 87: v=13 vp=16 a1=6 ak=0 w=17 e=35 d=26 s=a!!!!!! r=4.5 x=10x1 q=5 p=5
+function monitor 88: v=13 vp=16 a1=6 ak=0 w=17 e=35 d=26 s=a!!!!!! r=4.5 x=10x1 q=6 p=6
+function monitor 90: v=13 vp=16 a1=6 ak=0 w=17 e=35 d=26 s=a!!!!!! r=4.5 x=10x1 q=6 p=6
+monitorh 92: 0000000d
+monitorh 93: 0000000e
+monitorh 98: 0000000e
+monitorh 102: 0000000e

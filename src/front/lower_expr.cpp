@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "lowerer.h"
+#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/LiteralExpressions.h"
@@ -2768,6 +2769,88 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
     }
 }
 
+void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, char radix) {
+    const slang::SourceLocation sl = call.sourceRange.start();
+    const auto args = call.arguments();
+    // The process runs apart from the caller, so it cannot read the
+    // caller's automatic variables; slang rejects them already (13.3.2).
+    bool automatic = false;
+    auto finder = ast::makeVisitor([&](auto&, const ast::NamedValueExpression& n) {
+        if (n.symbol.kind == ast::SymbolKind::Variable ||
+            n.symbol.kind == ast::SymbolKind::FormalArgument)
+            automatic = automatic || !inSlot(n.symbol);
+    });
+    for (const ast::Expression* a : args)
+        a->visit(finder);
+    if (automatic) unsupported(sl, "$strobe or $monitor of an automatic variable");
+    const sir::InstanceId inst = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
+    sir::Process p;
+    p.name = processName(design_.instances[inst].scopeName, monitor ? "$monitor" : "$strobe");
+    p.kind = sir::ProcessKind::Postponed;
+    p.instance = inst;
+    p.loc = loc(sl);
+    p.blocks.resize(1);
+    const auto id = static_cast<std::uint32_t>(design_.processes.size());
+    design_.processes.push_back(std::move(p));
+    Body saved = std::move(b_);
+    b_ = Body{};
+    b_.proc = id;
+    b_.scale = saved.scale;
+    b_.scope = saved.scope;
+    const auto display = [&] {
+        std::vector<Operand> ops{
+            Operand::str(radix == 'd' ? "$display" : "$display" + std::string(1, radix))};
+        lowerFormatArgs(args, ops, sl, radix);
+        emitVoid(Op::Syscall, std::move(ops), sl);
+    };
+    try {
+        if (monitor) {
+            // It shows the values the first time it runs and whenever one
+            // of them is not the one it showed last; the time is not
+            // compared (SIR_SPEC.md 7.2, SYSTEM_TASKS.md 4).
+            std::optional<Val> changed;
+            std::vector<std::pair<sir::FrameVarId, Val>> shown;
+            for (const ast::Expression* a : args) {
+                if (a->kind == ast::ExpressionKind::StringLiteral || constantValue(*a)) continue;
+                if (a->kind == ast::ExpressionKind::Call &&
+                    a->as<ast::CallExpression>().isSystemCall()) {
+                    const std::string_view n = a->as<ast::CallExpression>().getSubroutineName();
+                    if (n == "$time" || n == "$stime" || n == "$realtime") continue;
+                }
+                const Val v = lowerExpr(*a);
+                const sir::FrameVarId fv = newFrameVar(v.type);
+                const Val last = emit(Op::Fload, v.type, {Operand::frame(fv)}, sl);
+                const Val ne =
+                    compareValues(sir::isIntegral(v.type) ? Op::Cne : Op::Ne, v, last, sl);
+                changed = changed ? bitOp(Op::Or, *changed, ne, sl) : ne;
+                shown.emplace_back(fv, v);
+            }
+            const sir::FrameVarId seen = newFrameVar(sir::u2(1));
+            Val show = emit(Op::Lnot, sir::u2(1),
+                            {emit(Op::Fload, sir::u2(1), {Operand::frame(seen)}, sl).op}, sl);
+            if (changed) show = bitOp(Op::Or, show, *changed, sl);
+            const sir::BlockId yes = newBlock();
+            const sir::BlockId done = newBlock();
+            terminate(Op::BrIf, {show.op, Operand::block(yes), Operand::block(done)}, sl);
+            setBlock(yes);
+            for (const auto& [fv, v] : shown)
+                emitVoid(Op::Fstore, {Operand::frame(fv), v.op}, sl);
+            emitVoid(Op::Fstore, {Operand::frame(seen), constant(sir::u2(1), 1).op}, sl);
+            display();
+            terminate(Op::Br, {Operand::block(done)}, sl);
+            setBlock(done);
+        } else {
+            display();
+        }
+        terminate(Op::Ret, {}, sl);
+    } catch (const Unsupported&) {
+        b_ = std::move(saved);
+        throw;
+    }
+    b_ = std::move(saved);
+    emitVoid(monitor ? Op::Monitor : Op::Strobe, {Operand::process(id)}, sl);
+}
+
 void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const std::string name(call.getSubroutineName());
@@ -2783,6 +2866,14 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         std::vector<Operand> ops{Operand::str(name)};
         lowerFormatArgs(args, ops, sl, radix);
         emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
+    if (base == "$strobe" || base == "$monitor") {
+        lowerPostponed(call, base == "$monitor", radix);
+        return;
+    }
+    if (name == "$monitoron" || name == "$monitoroff") {
+        emitVoid(Op::Syscall, {Operand::str(name)}, sl);
         return;
     }
     if (name == "$timeformat" && (args.empty() || args.size() == 4)) {

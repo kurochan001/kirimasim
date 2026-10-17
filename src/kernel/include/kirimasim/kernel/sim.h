@@ -246,6 +246,22 @@ public:
     /// region.
     void deferReport(ProcessId p, std::string line);
 
+    // $strobe and $monitor (SYSTEM_TASKS.md 4, SIR_SPEC.md 7.1): processes
+    // that run only in the Postponed region, where they display. The
+    // monitor runs first, then the strobes in the order they were asked
+    // for. Each run starts the process afresh and must not wait.
+
+    /// strobe @P: p runs once in the Postponed region of this time slot
+    /// (21.2.2).
+    void strobe(ProcessId p);
+    /// monitor @P: p becomes the one monitor (21.2.3). It runs in the
+    /// Postponed region of this time slot, and of every later time slot in
+    /// which a bit of `parts` changes, while monitoring is on.
+    void setMonitor(ProcessId p, std::span<const SlotPart> parts);
+    /// $monitoron and $monitoroff: monitoring on (the default) or off.
+    /// Turning it on runs the monitor in this time slot's Postponed region.
+    void setMonitoring(bool on);
+
     /// Runs the simulation until it ends, and returns the reason.
     EndReason run();
     /// After run(): runs the final procedures once each, in the order
@@ -277,7 +293,8 @@ public:
 private:
     /// Show: a released held variable shows its value (id: the slot, gen:
     /// the element). Drive: a delayed driver's update (id: the driver).
-    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb, Show, Drive };
+    /// Postponed: a strobe's run (id: the process).
+    enum class Kind : std::uint8_t { Resume, Nba, NbaDelayed, TriggerNb, Show, Drive, Postponed };
     struct Event {
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
@@ -389,6 +406,14 @@ private:
     std::vector<Held> held_;
     std::vector<std::uint64_t> shown_;    ///< Scratch: a held part's value.
     std::vector<std::uint64_t> scratch_;  ///< Scratch: a monitor's new value.
+    // The $monitor process, the parts it shows, by slot whether one of
+    // them is in it, whether monitoring is on, and whether it is to run at
+    // the end of this time slot.
+    ProcessId monitorProc_ = kNoHolder;
+    std::vector<SlotPart> monitorParts_;
+    std::vector<bool> monitorSlot_;
+    bool monitorOn_ = true;
+    bool monitorDue_ = false;
 
     bool ending_ = false;
     EndReason reason_ = EndReason::Quiescent;
@@ -418,6 +443,7 @@ private:
     bool anyEvents(Region first, Region last) const;
     bool moveFirst(Region first, Region last, Region to);
     void execute(const Event& e);
+    void runPostponed(ProcessId p);
     void notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
     /// write() without looking at holds.
     bool writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,

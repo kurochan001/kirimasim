@@ -39,6 +39,8 @@ bool hasNoResult(Op op) {
         case Op::OverrideStart:
         case Op::OverrideStop:
         case Op::StoreOverride:
+        case Op::Strobe:
+        case Op::Monitor:
         case Op::StoreRef:
         case Op::NbaRef:
         case Op::StoreRefElem:
@@ -64,7 +66,8 @@ bool waitsForbidden(ProcessKind k) {
         case ProcessKind::FfPlain:
         case ProcessKind::Final:
         case ProcessKind::StaticInit:
-        case ProcessKind::Override: return true;
+        case ProcessKind::Override:
+        case ProcessKind::Postponed: return true;
         case ProcessKind::Initial:
         case ProcessKind::General: return false;
     }
@@ -471,6 +474,16 @@ private:
             if (!rangeOk(w)) error(where, "write range is invalid");
         if (p.kind == ProcessKind::Ff && p.triggers.empty())
             error(where, "always_ff needs exactly one event control", p.loc);
+        // The Postponed region writes nothing (SCHEDULER_SPEC.md 2.1) but
+        // the variables of the functions it calls.
+        if (p.kind == ProcessKind::Postponed) {
+            bool writes = !p.triggers.empty();
+            for (const SlotRange& w : p.writes)
+                writes =
+                    writes || (w.slot < d_.slots.size() && d_.slots[w.slot].subroutine == kNone);
+            if (writes)
+                error(where, "a postponed process has no triggers and writes nothing", p.loc);
+        }
         for (const FrameVar& f : p.frame)
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
         switch (p.parent.kind) {
@@ -1321,6 +1334,13 @@ private:
                     bad("needs a process, a subroutine or a block name");
                 break;
             case Op::DisableFork: nOps(0); break;
+            case Op::Strobe:
+            case Op::Monitor:
+                if (nOps(1) &&
+                    (ops[0].kind != Operand::Kind::Process || ops[0].id >= d_.processes.size() ||
+                     d_.processes[ops[0].id].kind != ProcessKind::Postponed))
+                    bad("needs a postponed process");
+                break;
             case Op::Udp:
             case Op::UdpSeq: {
                 // A UDP table, then the state and the previous inputs of a

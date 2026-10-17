@@ -84,3 +84,7 @@ set_tests_properties(tools/gen_delay_value_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_param_array_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_param_array_matrix.py --check)
 set_tests_properties(tools/gen_param_array_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_postponed_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_postponed_matrix.py --check)
+set_tests_properties(tools/gen_postponed_matrix PROPERTIES LABELS Tools)
