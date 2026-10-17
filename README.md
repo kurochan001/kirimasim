@@ -61,7 +61,7 @@ Verilog and Verilator built from their main branches that day.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 394 | 392, 2 skipped | — | — |
+| This repository's tests (CTest) | 434 | 432, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 186 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -144,10 +144,10 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 146 | SIR and its verifier (56), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (5), and more |
-| `tests/suite/` | 176 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (63), illegal designs (35), nets (23), procedures (19), scheduling (17), hierarchy (8), continuous assignments (7), and others |
+| Unit tests (GoogleTest) | 147 | SIR and its verifier (57), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (5), and more |
+| `tests/suite/` | 212 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (63), procedures (41), illegal designs (35), nets (23), hierarchy (22), scheduling (17), continuous assignments (7), and others |
 | `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
-| Tools | 43 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Tools | 46 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (55 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
 
 </details>
@@ -431,9 +431,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 41 generators, 176 tests in `tests/suite/`, and 394
+  rules. There are 44 generators, 212 tests in `tests/suite/`, and 434
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 175 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 178 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
