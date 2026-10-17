@@ -26,14 +26,19 @@ container (an initial procedure, an automatic task, an always procedure,
 a fork branch). A disable ends every process started in what it ends,
 with their descendants, those of a finished child included (9.6.2, 9.6.3;
 SCHEDULER_SPEC.md 10.4, 10.5), so the grandchild never counts after a
-disable. wait fork waits only for the direct children (9.6.1). Further
-cases: a child that holds a deferred assertion report (#0 or final) and
-ends at once; the report is still confirmed and its action runs (16.4;
-SCHEDULER_SPEC.md 15). And a child started before the block or the task
-call (an elder, counting at time 5, el) is not started in it, so it goes
-on after a disable of the block or the task; children are told apart by
-their birth number, not by their place among the children kept
-(SCHEDULER_SPEC.md 10.8).
+disable. wait fork waits only for the direct children (9.6.1).
+
+Further cases. A child that holds a report and ends at once: a deferred
+assertion (#0 or final) whose action counts (rp), or a unique case
+violation, a warning line on stderr at the time of the round (16.4,
+12.5.3; SCHEDULER_SPEC.md 15); the report is still confirmed. With a
+refork, the parent starts a new child in the same time slot, before the
+report is confirmed (#0, then a fork whose child counts at time 2, rf):
+a record released too early would be reused under the report. And a
+child started before the block or the task call (an elder, counting at
+time 5, el) is not started in it, so it goes on after a disable of the
+block or the task; children are told apart by their birth number, not by
+their place among the children kept (SCHEDULER_SPEC.md 10.8).
 
 tests/cli/run_cli_tests.py also runs the design with two counts and checks
 that proc.kept_peak (PERFORMANCE.md 3.2) does not grow with the count.
@@ -42,16 +47,20 @@ The expected outputs follow from the rules above. A person checks them
 once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
 """
 
+from __future__ import annotations
+
 import argparse
 import itertools
+import re
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "sched"
 NAME = "process_lifetime"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 2
+VERSION = 3
 DEFAULT_N = 3
 ROUND = 6
 
@@ -62,42 +71,62 @@ JOINS = {"join": 3, "join_any": 1, "join_none wait fork": 3, "join_none": 0, "fu
 CONTAINERS = ["initial", "task", "always", "branch"]
 
 
+class Case(NamedTuple):
+    container: str
+    join: str
+    end: str = "normal"
+    time: int | None = None
+    grandchild: bool = False
+    report: str | None = None  # "#0", "final" or "unique"
+    elder: bool = False
+    refork: bool = False
+
+
 def cases():
-    """(container, join, end, time, grandchild, report, elder) for every case."""
     out = []
     for c in CONTAINERS:
         ends = ["normal", "disable fork", "disable block"] + (["disable task"] if c == "task" else [])
         for end, join, gc in itertools.product(ends, JOINS, [False, True]):
             times = [None] if end == "normal" else [t for t in (2, 4) if t > JOINS[join]]
             for t in times:
-                out.append((c, join, end, t, gc, None, False))
+                out.append(Case(c, join, end, t, gc))
         for report, join in itertools.product(["#0", "final"], ["join", "join_none"]):
-            out.append((c, join, "normal", None, False, report, False))
+            out.append(Case(c, join, report=report))
         # An elder child goes on after a disable of a block or a task (wait
         # fork would wait for it, so not with it).
         for end in ["disable block"] + (["disable task"] if c == "task" else []):
             for join in [j for j in JOINS if j != "join_none wait fork"]:
                 for t in [t for t in (2, 4) if t > JOINS[join]]:
-                    out.append((c, join, end, t, False, None, True))
+                    out.append(Case(c, join, end, t, elder=True))
+        out += [Case(c, "join", report="unique"), Case(c, "join_none", report="unique")]
+        for report in ["#0", "final", "unique"]:
+            out.append(Case(c, "join_none", report=report, refork=True))
     return out
 
 
 def label(case):
-    c, join, end, t, gc, report, elder = case
-    parts = [c, join.replace(" ", "+"), end.replace(" ", "_") + (f"@{t}" if t else "")]
-    parts.append("grandchild" if gc else "child")
-    if report:
-        parts.append(f"report{report}")
-    if elder:
+    parts = [case.container, case.join.replace(" ", "+"),
+             case.end.replace(" ", "_") + (f"@{case.time}" if case.time else "")]
+    parts.append("grandchild" if case.grandchild else "child")
+    if case.report:
+        parts.append(f"report{case.report}")
+    if case.elder:
         parts.append("elder")
+    if case.refork:
+        parts.append("refork")
     return " ".join(parts)
 
 
 def expected(case, n):
-    c, join, end, t, gc, report, elder = case
-    ch = 0 if report or t == 2 else n
-    return (f"{label(case)} sb={n} ch={ch} gc={n if gc and end == 'normal' else 0} "
-            f"rp={n if report else 0}" + (f" el={n}" if elder else ""))
+    ch = 0 if case.report or case.time == 2 else n
+    gc = n if case.grandchild and case.end == "normal" else 0
+    rp = n if case.report in ("#0", "final") else 0
+    line = f"{label(case)} sb={n} ch={ch} gc={gc} rp={rp}"
+    if case.elder:
+        line += f" el={n}"
+    if case.refork:
+        line += f" rf={n}"
+    return line
 
 
 def elder_lines(k, pad):
@@ -107,12 +136,13 @@ def elder_lines(k, pad):
 
 def fork_lines(k, case, pad, join):
     """The fork that starts the child and the sibling."""
-    c, _, end, t, gc, report, elder = case
     lines = [f"{pad}fork", f"{pad}  begin"]
-    if report:
-        lines.append(f"{pad}    assert {report} (sb[{k}] >= 0) note({k});")
+    if case.report == "unique":
+        lines.append(f"{pad}    unique case (sb[{k}] < 0) 1'b1: ; endcase  // violation {k}")
+    elif case.report:
+        lines.append(f"{pad}    assert {case.report} (sb[{k}] >= 0) note({k});")
     else:
-        if gc:
+        if case.grandchild:
             lines += [f"{pad}    fork", f"{pad}      #5 gc[{k}]++;", f"{pad}    join_none"]
         lines.append(f"{pad}    #3 ch[{k}]++;")
     lines += [f"{pad}  end", f"{pad}  #1 sb[{k}]++;", f"{pad}{join}"]
@@ -122,11 +152,11 @@ def fork_lines(k, case, pad, join):
 def round_body(k, case, pad):
     """One round of case k; in a task container with "disable task" the
     caller waits for the rest of the round."""
-    c, join, end, t, gc, report, elder = case
-    r = 0 if report and join == "join_none" else 1 if report else JOINS[join]
+    join, end, t = case.join, case.end, case.time
+    r = (0 if join == "join_none" else 1) if case.report else JOINS[join]
     lines = []
     inner = pad
-    if elder and end == "disable block":
+    if case.elder and end == "disable block":
         lines += elder_lines(k, pad)
     if end == "disable block":
         lines.append(f"{pad}begin : blk{k}")
@@ -137,6 +167,8 @@ def round_body(k, case, pad):
         lines += fork_lines(k, case, inner, join.split()[0])
     if join == "join_none wait fork":
         lines.append(f"{inner}wait fork;")
+    if case.refork:
+        lines += [f"{inner}#0;", f"{inner}fork", f"{inner}  #2 rf[{k}]++;", f"{inner}join_none"]
     if end == "disable fork":
         lines.append(f"{inner}#{t - r} disable fork;")
     elif end == "disable block":
@@ -159,24 +191,26 @@ def files():
         ":description: forked processes, their descendants and their held reports behave the "
         "same however long the records of finished processes are kept: normal ends, disable "
         "fork, disable of a block and of a task while the child lives or after it ended with a "
-        "grandchild left, with each join and with a function that forks, in an initial and an "
-        "always procedure, a task and a fork branch",
+        "grandchild left, with each join and with a function that forks, children that end "
+        "holding reports with and without a new child in the same time slot, in an initial and "
+        "an always procedure, a task and a fork branch",
         ":tags: sched fork",
         ":type: simulation",
-        ":lrm: 1800-2023 9.3.2 9.6.1 9.6.2 9.6.3 13.4.4 16.4",
+        ":lrm: 1800-2023 9.3.2 9.6.1 9.6.2 9.6.3 12.5.3 13.4.4 16.4",
         ":oracle: spec",
         ":spec_check: ai",
         ":fourstate: no",
         ":nondeterministic: no",
         f":generator: gen_process_lifetime_matrix.py@{VERSION}",
         f":expected_stdout: @{NAME}.expected",
+        f":expected_stderr: @{NAME}.stderr",
         "*/",
         "// Generated by tools/gen_process_lifetime_matrix.py; change the generator, not this file.",
         "`timescale 1ns/1ns",
         "module top;",
         "  int n;",
         f"  int sb[{nc}], ch[{nc}], gc[{nc}], rp[{nc}];",
-        f"  int el[{nc}];",
+        f"  int el[{nc}], rf[{nc}];",
         "  function void note(int k);",
         "    rp[k] = rp[k] + 1;",
         "  endfunction",
@@ -185,8 +219,8 @@ def files():
             f"    if (!$value$plusargs(\"n=%d\", n)) n = {DEFAULT_N};",
             "    #1;"]
     for k, case in enumerate(all_cases):
-        c, join, end, t, gc, report, elder = case
-        if join == "function":
+        c, end = case.container, case.end
+        if case.join == "function":
             sv.append(f"  function automatic void start{k}();")
             sv += fork_lines(k, case, "    ", "join_none")
             sv.append("  endfunction")
@@ -194,12 +228,12 @@ def files():
             sv.append(f"  task automatic round{k}();")
             sv += round_body(k, case, "    ")
             sv.append("  endtask")
-            main.append(f"    for (int i = 0; i < n; i++) begin")
-            if elder and end == "disable task":
+            main.append("    for (int i = 0; i < n; i++) begin")
+            if case.elder and end == "disable task":
                 main += elder_lines(k, "      ")
             main.append(f"      round{k}();")
             if end == "disable task":
-                main.append(f"      #{ROUND - t};")
+                main.append(f"      #{ROUND - case.time};")
             main.append("    end")
         elif c == "always":
             sv.append(f"  event go{k}, done{k};")
@@ -219,14 +253,32 @@ def files():
             main += round_body(k, case, "      ")
             main.append("    end")
     for k, case in enumerate(all_cases):
-        el = (" el=%0d", f", el[{k}]") if case[6] else ("", "")
-        main.append(f"    $display(\"{label(case)} sb=%0d ch=%0d gc=%0d rp=%0d{el[0]}\", "
-                    f"sb[{k}], ch[{k}], gc[{k}], rp[{k}]{el[1]});")
+        fmt, args = "", ""
+        if case.elder:
+            fmt, args = fmt + " el=%0d", args + f", el[{k}]"
+        if case.refork:
+            fmt, args = fmt + " rf=%0d", args + f", rf[{k}]"
+        main.append(f"    $display(\"{label(case)} sb=%0d ch=%0d gc=%0d rp=%0d{fmt}\", "
+                    f"sb[{k}], ch[{k}], gc[{k}], rp[{k}]{args});")
     main.append("  end")
     sv += main
     sv.append("endmodule")
+    # Each round of a case starts at 1 + ROUND * (n * k + i); the unique case
+    # violation is reported with the scope of the statement (SYSTEM_TASKS.md
+    # 10.4): the task in a task container, else the module.
+    where = {int(m.group(1)): number for number, line in enumerate(sv, 1)
+             if (m := re.search(r"// violation (\d+)$", line))}
+    err = []
+    for k, case in enumerate(all_cases):
+        if case.report != "unique":
+            continue
+        scope = f"top.round{k}" if case.container == "task" else "top"
+        for i in range(DEFAULT_N):
+            err.append(f"{NAME}.sv:{where[k]}: warning: unique case violation: no item matches "
+                       f"[{scope} @ {1 + ROUND * (DEFAULT_N * k + i)}ns]")
     exp = [expected(case, DEFAULT_N) for case in all_cases]
-    return {f"{NAME}.sv": "\n".join(sv) + "\n", f"{NAME}.expected": "\n".join(exp) + "\n"}
+    return {f"{NAME}.sv": "\n".join(sv) + "\n", f"{NAME}.expected": "\n".join(exp) + "\n",
+            f"{NAME}.stderr": "\n".join(err) + "\n"}
 
 
 def main():

@@ -408,6 +408,8 @@ MUTANTS = [
      "static_cast<std::uint32_t>(f.syncCalls.size()), f.births});",
      "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
      "                             static_cast<std::uint32_t>(f.children.size())});"),
+    ("vm: a process is released while the kernel holds its reports", "src/vm/vm.cpp",
+     "if (&f == running_ || sched_.hasPending(f.kernelId)) {", "if (&f == running_) {"),
     ("kernel: a reused place counts its waits from 0", "src/kernel/sim.cpp",
      "        proc.gen = processes_[id].gen + 1;", "        proc.gen = 0;"),
     ("kernel: held reports go by place, not creation", "src/kernel/sim.cpp",
