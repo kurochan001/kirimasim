@@ -22,9 +22,13 @@ is optional and only for comparison, is run like sv-tests' Verilator
 runner: verilator --timing --binary with that runner's warning and build
 options, then the built program.
 
-Writes results.json (every test, every tool, with the seconds each run
-took) and summary.md (totals and counts per chapter, and each tool's
-seconds summed over the tests) to --out, and prints the summary. With --gate, the exit
+Writes results.json (every test, every tool, with the seconds of each
+tool's two steps) and summary.md (totals and counts per chapter, and each
+tool's seconds summed over the tests) to --out, and prints the summary.
+The first step builds: kirimasim reads, elaborates and lowers the design
+(timed with --dump-sir), iverilog compiles, Verilator builds the program.
+The second step runs: Icarus's and Verilator's programs, and for
+kirimasim its whole run less the first step. With --gate, the exit
 code is 1 when kirimasim passes fewer tests than Icarus.
 """
 
@@ -82,11 +86,19 @@ def run(cmd: list[str], cwd: str, timeout: int) -> tuple[int, str]:
         return TIMEOUT_RC, f"Timeout: > {timeout}s\n"
 
 
+def timed(cmd: list[str], cwd: str, timeout: int) -> tuple[int, str, float]:
+    start = time.monotonic()
+    rc, log = run(cmd, cwd, timeout)
+    return rc, log, time.monotonic() - start
+
+
 def run_kirimasim(exe: str, files, incdirs, defines, top, cwd, timeout):
     cmd = [exe] + [f"+incdir+{d}" for d in incdirs] + [f"+define+{d}" for d in defines]
     if top:
         cmd.append(f"--top={top}")
-    return run(cmd + files, cwd, timeout)
+    _, _, build = timed(cmd + ["--dump-sir"] + files, cwd, timeout)
+    rc, log, whole = timed(cmd + files, cwd, timeout)
+    return rc, log, build, max(0.0, whole - build)
 
 
 def run_icarus(exe: str, files, incdirs, defines, top, cwd, timeout):
@@ -94,11 +106,11 @@ def run_icarus(exe: str, files, incdirs, defines, top, cwd, timeout):
     if top:
         cmd += ["-s", top]
     cmd += [f"-I{d}" for d in incdirs] + [f"-D{d}" for d in defines] + files
-    rc, log = run(cmd, cwd, timeout)
+    rc, log, build = timed(cmd, cwd, timeout)
     if rc != 0:
-        return rc, log
-    rc2, log2 = run(["./iverilog.out"], cwd, timeout)
-    return rc2, log + log2
+        return rc, log, build, 0.0
+    rc2, log2, run_s = timed(["./iverilog.out"], cwd, timeout)
+    return rc2, log + log2, build, run_s
 
 
 def run_verilator(exe: str, files, incdirs, defines, top, cwd, timeout, extra=()):
@@ -110,11 +122,11 @@ def run_verilator(exe: str, files, incdirs, defines, top, cwd, timeout, extra=()
     cmd += [f"-I{d}" for d in incdirs] + ["-DUVM_NO_DPI"]
     cmd += ["--Mdir", "vbuild", "--prefix", name, "-o", name] + list(extra)
     cmd += [f"-D{d}" for d in defines] + files
-    rc, log = run(cmd, cwd, timeout)
+    rc, log, build = timed(cmd, cwd, timeout)
     if rc != 0:
-        return rc, log
-    rc2, log2 = run([f"./vbuild/{name}"], cwd, timeout)
-    return rc2, log + log2
+        return rc, log, build, 0.0
+    rc2, log2, run_s = timed([f"./vbuild/{name}"], cwd, timeout)
+    return rc2, log + log2, build, run_s
 
 
 def judge(rc: int, log: str, should_fail: bool, kirimasim: bool) -> bool:
@@ -185,13 +197,11 @@ def main() -> int:
             if name == "verilator" and "runner_verilator_flags" in params:
                 extra["extra"] = params["runner_verilator_flags"].split()
             with tempfile.TemporaryDirectory() as tmp:
-                start = time.monotonic()
-                rc, log = fn(exe, files, incdirs, defines, params["top_module"], tmp,
-                             int(params["timeout"]), **extra)
-                seconds = time.monotonic() - start
+                rc, log, build, run_s = fn(exe, files, incdirs, defines, params["top_module"],
+                                           tmp, int(params["timeout"]), **extra)
             result[name] = {"rc": rc, "pass": judge(rc, log, should_fail, name == "kirimasim"),
                             "unsupported": "error: unsupported:" in log,
-                            "seconds": round(seconds, 3)}
+                            "build_seconds": round(build, 3), "run_seconds": round(run_s, 3)}
         return result
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
@@ -211,8 +221,9 @@ def main() -> int:
         counts = [str(sum(1 for r in rows if r[n]["pass"])) for n in names]
         label = "**total**" if c == "total" else c
         lines.append(f"| {label} | {len(rows)} | " + " | ".join(counts) + " |")
-    times = [f"{sum(r[n]['seconds'] for r in results):.1f}" for n in names]
-    lines.append("| seconds, summed | | " + " | ".join(times) + " |")
+    for step in ("build", "run"):
+        times = [f"{sum(r[n][step + '_seconds'] for r in results):.1f}" for n in names]
+        lines.append(f"| {step} seconds, summed | | " + " | ".join(times) + " |")
     if "kirimasim" in tools:
         unsupported = sum(1 for r in results if r["kirimasim"]["unsupported"])
         lines += ["", f"kirimasim stopped at an unsupported construct in {unsupported} tests."]
