@@ -31,15 +31,15 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "typename_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 # Declarations, in order, by where they are.
 UNIT = ["typedef struct {byte b;} unit_t;"]
 PACKAGE = ["typedef enum {RED, GREEN = 5} color_t;", "enum bit [1:0] {LO, HI} pk_anon;",
            "typedef logic [3:0] nib_t;"]
 MODULE = [
-    "typedef bit node;", "typedef node [2:0] trio_t;", "typedef trio_t trio2_t;",
-    "typedef struct {node A, B;} AB_t;", "typedef struct packed signed {logic [3:0] hi, lo;} sps_t;",
+    "typedef bit flag_t;", "typedef flag_t [2:0] trio_t;", "typedef trio_t trio2_t;",
+    "typedef struct {flag_t lo, hi; byte n;} rec_t;", "typedef struct packed signed {logic [3:0] hi, lo;} sps_t;",
     "typedef union packed {logic [7:0] u8; byte s8;} un_t;",
     "typedef enum logic [1:0] {IDLE, RUN = 2'b10} state_t;",
     "bit b1;", "logic l1;", "reg r1;", "bit signed bs1;",
@@ -48,7 +48,7 @@ MODULE = [
     "time signed tms;",
     "logic [7:0] l8;", "logic signed [7:0] ls8;", "bit [0:3] b03;", "logic [3:0][7:0] l2d;",
     "real r;", "shortreal sr;", "realtime rt;", "string s;", "chandle ch;", "event ev;",
-    "trio_t t3;", "trio2_t t3b;", "AB_t ab[10];", "AB_t abm[2][3];", "sps_t sps;", "un_t un;",
+    "trio_t t3;", "trio2_t t3b;", "rec_t recs[5];", "rec_t grid[3][2];", "sps_t sps;", "un_t un;",
     "state_t st;", "color_t col;", "nib_t nib;", "unit_t ut;",
     "enum {X1, X2} anon1;", "struct {int a; enum {Y1} e;} anon2;", "enum {Z1} anon3;",
     "union packed {bit [1:0] p; bit [1:0] q;} anon4;", "int ua[4];", "logic [1:0] ub[0:2][1];",
@@ -66,11 +66,12 @@ ROWS = [
     ("r", "real"), ("sr", "shortreal"), ("rt", "realtime"), ("s", "string"), ("ch", "chandle"),
     ("ev", "event"),
     # Typedefs resolve to what they name.
-    ("t3", "bit [2:0]"), ("t3b", "bit [2:0]"), ("trio_t", "bit [2:0]"), ("node", "bit"),
+    ("t3", "bit [2:0]"), ("t3b", "bit [2:0]"), ("trio_t", "bit [2:0]"), ("flag_t", "bit"),
     ("nib", "logic [3:0]"),
     # Structures, unions and enumerations keep their typedef's name.
-    ("ab", "struct{bit A;bit B;}top.AB_t$[0:9]"), ("abm", "struct{bit A;bit B;}top.AB_t$[0:1][0:2]"),
-    ("AB_t", "struct{bit A;bit B;}top.AB_t"),
+    ("recs", "struct{bit lo;bit hi;byte n;}top.rec_t$[0:4]"),
+    ("grid", "struct{bit lo;bit hi;byte n;}top.rec_t$[0:2][0:1]"),
+    ("rec_t", "struct{bit lo;bit hi;byte n;}top.rec_t"),
     ("sps", "struct packed signed{logic [3:0] hi;logic [3:0] lo;}top.sps_t"),
     ("un", "union packed{logic [7:0] u8;byte s8;}top.un_t"),
     ("st", "enum logic [1:0]{IDLE=2'd0,RUN=2'd2}top.state_t"),

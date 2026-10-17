@@ -26,11 +26,11 @@ ev: event
 t3: bit [2:0]
 t3b: bit [2:0]
 trio_t: bit [2:0]
-node: bit
+flag_t: bit
 nib: logic [3:0]
-ab: struct{bit A;bit B;}top.AB_t$[0:9]
-abm: struct{bit A;bit B;}top.AB_t$[0:1][0:2]
-AB_t: struct{bit A;bit B;}top.AB_t
+recs: struct{bit lo;bit hi;byte n;}top.rec_t$[0:4]
+grid: struct{bit lo;bit hi;byte n;}top.rec_t$[0:2][0:1]
+rec_t: struct{bit lo;bit hi;byte n;}top.rec_t
 sps: struct packed signed{logic [3:0] hi;logic [3:0] lo;}top.sps_t
 un: union packed{logic [7:0] u8;byte s8;}top.un_t
 st: enum logic [1:0]{IDLE=2'd0,RUN=2'd2}top.state_t
