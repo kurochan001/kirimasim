@@ -61,7 +61,7 @@ Verilog and Verilator built from their main branches that day.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 324 | 322, 2 skipped | — | — |
+| This repository's tests (CTest) | 328 | 326, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 179 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,444 | 1,274 | 1,329 |
 
@@ -145,10 +145,10 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 139 | SIR and its verifier (53), the scheduler against a reference model (19), `valsem` (14), output formats (10), strengths (9), input scanning (7), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (4), and more |
-| `tests/suite/` | 128 | Simulation and syntax tests with expected output, most of them made by the generators under `tools/`: values (55), nets (23), procedures (17), scheduling (14), hierarchy (8), continuous assignments (7), and others |
+| Unit tests (GoogleTest) | 141 | SIR and its verifier (53), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (7), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (4), and more |
+| `tests/suite/` | 129 | Simulation and syntax tests with expected output, most of them made by the generators under `tools/`: values (55), nets (23), procedures (17), scheduling (15), hierarchy (8), continuous assignments (7), and others |
 | `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
-| Tools | 28 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Tools | 29 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages; the counts of a fixed run (PerfCount) |
 
 </details>
@@ -233,10 +233,10 @@ a checksum; all three simulators print the same.
 
 | Design | What it does | `+n=` | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 4.46 s | 7.97 s | 0.16 s |
-| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 10.48 s | 18.69 s | 0.16 s |
-| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 3.43 s | 4.93 s | 1.76 s |
-| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.77 s | 4.14 s | 0.87 s |
+| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 4.53 s | 7.97 s | 0.16 s |
+| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 10.69 s | 18.69 s | 0.16 s |
+| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 3.46 s | 4.93 s | 1.76 s |
+| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.33 s | 4.14 s | 0.87 s |
 
 - The times are of the simulation only: the median of five runs with the
   count, less the median of five runs with `+n=1`. Starting the program,
@@ -251,9 +251,11 @@ a checksum; all three simulators print the same.
   had no speed work yet. Verilator's lead is smallest where many processes
   wait (`proc_wait`, `fork_join`).
 - Memory: a run used at most 10 MiB with kirimasim, 6 MiB with Icarus and
-  2 MiB with Verilator, except kirimasim on `fork_join`, 4,947 MiB: it does
-  not free the frames of finished fork branches yet (a known bug, below).
-- The versions and the machine are the same as in the test results above.
+  2 MiB with Verilator. Before 072d0c2, which releases the records of
+  finished processes (SCHEDULER_SPEC.md 10.8), kirimasim kept them all and
+  used 4,947 MiB on `fork_join`.
+- The versions and the machine are the same as in the test results above,
+  but kirimasim's column was measured again at 394717f, after 072d0c2.
   `tools/bench.py` repeats the measurement; `--n` and `--runs` make it
   quick.
 
@@ -313,7 +315,6 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, `randsequence`, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let`, checkers | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
-| Freeing the frames of finished fork branches. A known bug: today they stay until the end of the run, so memory grows with every fork (about 1.3 KB per round in `bench/fork_join.sv`) | Not decided yet |
 | Tier 2 (C++ generation) and any speed work | P2 |
 | MOS and bidirectional switches | P4 |
 
@@ -431,9 +432,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 26 generators, 128 tests in `tests/suite/`, and 324
+  rules. There are 27 generators, 129 tests in `tests/suite/`, and 328
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 130 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 139 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
