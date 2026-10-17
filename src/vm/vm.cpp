@@ -427,8 +427,37 @@ struct Frame {
         std::uint32_t varsId = 0;
         sir::BlockId block = 0;
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
+        std::uint32_t children = 0;        ///< The frame's children when it was called.
     };
     std::vector<TaskCall> calls;
+
+    // disable (SIR_SPEC.md 7.2, SCHEDULER_SPEC.md 10.4). Where the frame
+    // stands: its task calls, and the calls run on the C++ stack (call)
+    // within the innermost one, each with the children the frame had.
+    struct SyncCall {
+        std::uint32_t body = 0;
+        std::uint32_t children = 0;
+    };
+    std::vector<SyncCall> syncCalls;
+    /// The activations of scoped named blocks, innermost last: the block,
+    /// its exit, and where the frame stood when it began.
+    struct ScopeAct {
+        std::uint32_t scope = 0;
+        sir::BlockId exit = 0;
+        std::uint32_t calls = 0;
+        std::uint32_t sync = 0;
+        std::uint32_t children = 0;
+    };
+    std::vector<ScopeAct> scopes;
+    /// Where a disable sends the running frame: the task calls and
+    /// synchronous calls it keeps, and the block it goes on at, or kNone to
+    /// go on after the call it ends.
+    struct Unwind {
+        std::uint32_t calls = 0;
+        std::uint32_t sync = 0;
+        sir::BlockId exit = sir::kNone;
+    };
+    std::optional<Unwind> unwind;
 };
 
 class Interpreter {
@@ -962,6 +991,17 @@ private:
                 e = runBody(f, c.block, steps, ret);
             }
             if (e == Exit::Entered) continue;  // a task was called
+            if (e == Exit::Disabled && f.unwind.has_value()) {
+                // The task calls a disable ended go, without their outputs.
+                const Frame::Unwind u = *f.unwind;
+                f.unwind.reset();
+                while (f.calls.size() > u.calls) {
+                    retire(f.calls.back().varsId);
+                    f.calls.pop_back();
+                }
+                if (u.exit != sir::kNone) resumeAt(f) = u.exit;
+                continue;
+            }
             if (e != Exit::Ret) return static_cast<kernel::Status>(e);
             if (f.calls.empty()) break;
             returnFromTask(f);  // and go on in its caller
@@ -994,7 +1034,9 @@ private:
         Waiting = static_cast<std::uint8_t>(kernel::Status::Waiting),
         Error = static_cast<std::uint8_t>(kernel::Status::Error),
         Stop = static_cast<std::uint8_t>(kernel::Status::Stop),
-        Entered = 0xfe,  ///< call.task made a new innermost call.
+        Killed = static_cast<std::uint8_t>(kernel::Status::Killed),
+        Disabled = 0xfd,  ///< A disable sends the frame to f.unwind.
+        Entered = 0xfe,   ///< call.task made a new innermost call.
         Ret = 0xff,
     };
 
@@ -1011,6 +1053,8 @@ private:
         const sir::Subroutine& s = subOf(c.body);
         const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.vars);
         retire(c.varsId);
+        while (!f.scopes.empty() && f.scopes.back().calls > f.calls.size())
+            f.scopes.pop_back();
         if (f.calls.empty())
             writeOuts(s, c.site->operands, outs, f.vars, f.process);
         else
@@ -1025,6 +1069,7 @@ private:
         Frame::TaskCall c;
         c.body = processCount() + ops[0].id;
         c.site = &in;
+        c.children = static_cast<std::uint32_t>(f.children.size());
         c.vars = newVars(c.body);
         bindArgs(c.body, s, readArgs(s, ops), c.vars);
         c.varsId = enroll(c.vars);
@@ -1245,9 +1290,30 @@ private:
                     case Op::CallTask: enterTask(f, in); return Exit::Entered;
                     case Op::Call: {
                         const Exit e = call(f, in, steps);
+                        if (e == Exit::Disabled && unwindsHere(f)) {
+                            b = goOn(f, b, jumped);  // a disable ended the call
+                            break;
+                        }
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
                         break;
+                    }
+                    case Op::ScopeEnter:
+                        f.scopes.push_back({ops[0].id, ops[1].id,
+                                            static_cast<std::uint32_t>(f.calls.size()),
+                                            static_cast<std::uint32_t>(f.syncCalls.size()),
+                                            static_cast<std::uint32_t>(f.children.size())});
+                        break;
+                    case Op::ScopeLeave: leaveScope(f, ops[0].id); break;
+                    case Op::DisableScope:
+                    case Op::DisableTask: {
+                        const Exit e = disable(f, in);
+                        if (e == Exit::Ret) break;
+                        if (e == Exit::Disabled && unwindsHere(f)) {
+                            b = goOn(f, b, jumped);
+                            break;
+                        }
+                        return e;
                     }
                     case Op::Fork:
                     case Op::WaitFork: {
@@ -1500,6 +1566,123 @@ private:
         return true;
     }
 
+    // --- disable (SIR_SPEC.md 7.2, SCHEDULER_SPEC.md 10.4) ---
+
+    /// Whether the disable that sends the running frame on goes on in the
+    /// body running now.
+    static bool unwindsHere(const Frame& f) {
+        return f.unwind.has_value() && f.unwind->calls == f.calls.size() &&
+               f.unwind->sync == f.syncCalls.size();
+    }
+
+    /// Where the running body goes on after a disable: its exit block, or
+    /// the instruction after the call it ended (block b).
+    static sir::BlockId goOn(Frame& f, sir::BlockId b, bool& jumped) {
+        const sir::BlockId exit = f.unwind.has_value() ? f.unwind->exit : sir::kNone;
+        f.unwind.reset();
+        if (exit == sir::kNone) return b;
+        jumped = true;
+        return exit;
+    }
+
+    /// scope.leave: the innermost activation of the block at this level
+    /// ends, with any left inside it.
+    static void leaveScope(Frame& f, std::uint32_t scope) {
+        for (std::size_t i = f.scopes.size(); i-- > 0;) {
+            const Frame::ScopeAct& a = f.scopes[i];
+            if (a.scope == scope && a.calls == f.calls.size() && a.sync == f.syncCalls.size()) {
+                f.scopes.resize(i);
+                return;
+            }
+        }
+    }
+
+    /// Ends the children a frame made from number `from` on, with their
+    /// descendants.
+    void killChildren(Frame& f, std::size_t from) {
+        for (std::size_t i = from; i < f.children.size(); ++i) {
+            Frame* c = f.children[i];
+            if (!c->finished) {
+                sched_.kill(c->kernelId);
+                ended(*c);
+            }
+            disableFork(*c);
+        }
+    }
+
+    /// disable.scope and disable.task: every activation of the block, or
+    /// every call of the task, ends in every process. Each process drops
+    /// the task calls made in it without their outputs, ends the children
+    /// it made in it, drops its wait and goes on at the block's exit or
+    /// after the task's call. Returns Ret when the running frame goes on
+    /// after the instruction, Disabled when it goes on at f.unwind, Killed
+    /// when it ended itself, or Error for a disable from a function of
+    /// what is outside it.
+    Exit disable(Frame& f, const sir::Instr& in) {
+        const bool task = in.op == Op::DisableTask;
+        const std::uint32_t target = task ? processCount() + in.operands[0].id : in.operands[0].id;
+        const bool inFunction =
+            isSubBody(act_.body) && subOf(act_.body).kind == sir::SubroutineKind::Function;
+        bool self = false;
+        for (Frame& g : frames_) {
+            if (g.finished) continue;
+            std::optional<Frame::Unwind> to;
+            std::uint32_t children = 0;
+            std::size_t keep = g.scopes.size();  ///< The activations that stay.
+            if (!task) {
+                for (std::size_t i = 0; i < g.scopes.size() && !to; ++i) {
+                    const Frame::ScopeAct& a = g.scopes[i];
+                    if (a.scope != target) continue;
+                    to = Frame::Unwind{a.calls, a.sync, a.exit};
+                    children = a.children;
+                    keep = i;
+                }
+            } else {
+                for (std::size_t i = 0; i < g.calls.size() && !to; ++i)
+                    if (g.calls[i].body == target) {
+                        to = Frame::Unwind{static_cast<std::uint32_t>(i), 0, sir::kNone};
+                        children = g.calls[i].children;
+                    }
+                for (std::size_t j = 0; &g == &f && j < f.syncCalls.size() && !to; ++j)
+                    if (f.syncCalls[j].body == target) {
+                        to = Frame::Unwind{static_cast<std::uint32_t>(f.calls.size()),
+                                           static_cast<std::uint32_t>(j), sir::kNone};
+                        children = f.syncCalls[j].children;
+                    }
+                // The activations begun inside the call.
+                while (
+                    to && keep > 0 &&
+                    (g.scopes[keep - 1].calls > to->calls ||
+                     (g.scopes[keep - 1].calls == to->calls && g.scopes[keep - 1].sync > to->sync)))
+                    --keep;
+            }
+            if (!to) continue;
+            // A function may end only its own blocks (SCHEDULER_SPEC.md 10.4).
+            if (inFunction &&
+                (&g != &f || to->calls != f.calls.size() || to->sync != f.syncCalls.size())) {
+                fail(d_.processes[f.process],
+                     "disable in a function of a block or task outside the function");
+                return Exit::Error;
+            }
+            g.scopes.resize(keep);
+            killChildren(g, children);
+            if (&g == &f) {
+                f.unwind = to;
+                self = true;
+                continue;
+            }
+            while (g.calls.size() > to->calls) {
+                retire(g.calls.back().varsId);
+                g.calls.pop_back();
+            }
+            if (to->exit != sir::kNone) resumeAt(g) = to->exit;
+            g.pending = Frame::Join::None;
+            sched_.start(g.kernelId);
+        }
+        if (f.finished) return Exit::Killed;
+        return self ? Exit::Disabled : Exit::Ret;
+    }
+
     /// Stops the override processes of a level that hold nothing now.
     void dropIdle(kernel::Hold level) {
         for (Frame* o : overrides_) {
@@ -1535,7 +1718,12 @@ private:
         bindArgs(body, s, args, vars);
         W4 ret{0, 0};
         ++callDepth_;
+        f.syncCalls.push_back({body, static_cast<std::uint32_t>(f.children.size())});
         const Exit e = runBody(f, 0, steps, ret);
+        f.syncCalls.pop_back();
+        while (!f.scopes.empty() && f.scopes.back().calls == f.calls.size() &&
+               f.scopes.back().sync > f.syncCalls.size())
+            f.scopes.pop_back();
         --callDepth_;
         const std::vector<std::vector<W4>> outs = readOuts(body, s, vars);
         retire(act_.varsId);

@@ -83,6 +83,7 @@ std::string operandText(const Design& d, const Operand& o) {
         case Operand::Kind::Subroutine:
         case Operand::Kind::Process: return "@" + std::to_string(o.id);
         case Operand::Kind::Type: return "!" + std::to_string(o.id);
+        case Operand::Kind::Scope: return "#" + std::to_string(o.id);
     }
     return "?";
 }

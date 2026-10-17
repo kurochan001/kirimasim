@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "lowerer.h"
+#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
@@ -75,14 +76,36 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             const bool named = b.blockSymbol != nullptr && !b.blockSymbol->name.empty();
             if (named) {
                 b_.scope += "." + std::string(b.blockSymbol->name);
-                b_.named.push_back({b.blockSymbol, std::nullopt, false});
+                Body::Named n{b.blockSymbol, std::nullopt, false, std::nullopt};
+                // A block that disable reaches from another activation, or
+                // that starts processes, is a scope: disable ends all its
+                // activations at once (SIR_SPEC.md 7.2). One in a task or a
+                // fork branch may be active in several processes.
+                const bool inTask =
+                    b_.isSub && design_.subroutines[b_.proc].kind == sir::SubroutineKind::Task;
+                const bool inFork = !b_.isSub && proc().parent.kind != sir::Owner::Kind::None;
+                if (disableTargets_.contains(b.blockSymbol) &&
+                    (inTask || inFork || disabledFromOutside_.contains(b.blockSymbol) ||
+                     blocksThatSpawn_.contains(b.blockSymbol))) {
+                    n.scope = scopeOf(*b.blockSymbol);
+                    n.exit = newBlock();
+                    emitVoid(Op::ScopeEnter, {Operand::scope(*n.scope), Operand::block(*n.exit)},
+                             sl);
+                }
+                b_.named.push_back(n);
             }
             lowerStatement(b.body);
             b_.scope = outer;
             if (named) {
                 const Body::Named n = b_.named.back();
                 b_.named.pop_back();
-                if (n.exit) {
+                if (n.scope.has_value() && n.exit.has_value()) {
+                    if (!b_.dead) {
+                        emitVoid(Op::ScopeLeave, {Operand::scope(*n.scope)}, sl);
+                        terminate(Op::Br, {Operand::block(*n.exit)}, sl);
+                    }
+                    setBlock(*n.exit);
+                } else if (n.exit) {
                     // A disable also ends what the block started (9.6.2).
                     if (n.spawns)
                         unsupported(sl, "disable of a block that starts processes it does not "
@@ -214,7 +237,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back({});
+            b_.loops.push_back(Loop{.named = b_.named.size()});
             const Val c = lowerCondition(*f.stopExpr);
             const sir::BlockId body = newBlock();
             terminate(Op::BrIf, {c.op, Operand::block(body), Operand::block(breakTarget(loop))},
@@ -254,7 +277,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back({});
+            b_.loops.push_back(Loop{.named = b_.named.size()});
             // A negative, x or z count runs the body no times: gt gives 0
             // or x, and br.if takes x as false.
             const Val left = emit(Op::Fload, n.type, {Operand::frame(fv)}, sl);
@@ -282,7 +305,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back({});
+            b_.loops.push_back(Loop{.named = b_.named.size()});
             b_.loops[loop].continueTo = cond;
             const Val c = lowerCondition(w.cond);
             const sir::BlockId body = newBlock();
@@ -300,7 +323,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(body, sl);
             setBlock(body);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back({});
+            b_.loops.push_back(Loop{.named = b_.named.size()});
             lowerStatement(w.body);
             if (!b_.dead) jump(continueTarget(loop), sl);
             if (b_.loops[loop].continueTo != sir::kNone) {
@@ -319,7 +342,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(body, sl);
             setBlock(body);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back({});
+            b_.loops.push_back(Loop{.named = b_.named.size()});
             b_.loops[loop].continueTo = body;
             lowerStatement(s.as<ast::ForeverLoopStatement>().body);
             jump(body, sl);
@@ -345,26 +368,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             emitVoid(Op::TriggerNb, std::move(ops), sl);
             return;
         }
-        case ast::StatementKind::Disable: {
-            // A named block around this statement goes on after its end
-            // (9.6.2, SCHEDULER_SPEC.md 10.4). That ends its only activation
-            // when it is in an initial, always or final procedure, outside
-            // forks and subroutines; other blocks and tasks may be running
-            // in other processes too.
-            const ast::Expression& t = s.as<ast::DisableStatement>().target;
-            const ast::Symbol* sym = t.kind == ast::ExpressionKind::ArbitrarySymbol
-                                         ? t.as<ast::ArbitrarySymbolExpression>().symbol.get()
-                                         : nullptr;
-            Body::Named* n = nullptr;
-            for (auto it = b_.named.rbegin(); it != b_.named.rend() && n == nullptr; ++it)
-                if (it->sym == sym) n = &*it;
-            if (n == nullptr || b_.isSub || proc().parent.kind != sir::Owner::Kind::None)
-                unsupported(sl, "disable of a task, or of a block from outside it or in a fork "
-                                "or subroutine");
-            if (!n->exit) n->exit = newBlock();
-            terminate(Op::Br, {Operand::block(*n->exit)}, sl);
-            return;
-        }
+        case ast::StatementKind::Disable: lowerDisable(s.as<ast::DisableStatement>()); return;
         case ast::StatementKind::Wait: lowerWait(s.as<ast::WaitStatement>()); return;
         case ast::StatementKind::WaitFork: {
             const sir::BlockId cont = newBlock();
@@ -387,10 +391,12 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::Break:
             if (b_.loops.empty()) unsupported(sl, "break outside a loop");
+            leaveScopes(b_.loops.back().named, sl);
             terminate(Op::Br, {Operand::block(breakTarget(b_.loops.size() - 1))}, sl);
             return;
         case ast::StatementKind::Continue:
             if (b_.loops.empty()) unsupported(sl, "continue outside a loop");
+            leaveScopes(b_.loops.back().named, sl);
             terminate(Op::Br, {Operand::block(continueTarget(b_.loops.size() - 1))}, sl);
             return;
         default: unsupported(sl, "statement '" + std::string(ast::toString(s.kind)) + "'");
@@ -416,7 +422,7 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
     jump(cond, sl);
     setBlock(cond);
     const std::size_t loop = b_.loops.size();
-    b_.loops.push_back({});
+    b_.loops.push_back(Loop{.named = b_.named.size()});
     const Val i = emit(Op::Fload, t, {Operand::frame(fv)}, sl);
     const Type bt = sir::isFourState(t) ? sir::u4(1) : sir::u2(1);
     const Val c = emit(left <= right ? Op::Le : Op::Ge, bt,
@@ -493,6 +499,115 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     ops.push_back(Operand::block(cont));
     terminate(Op::Fork, std::move(ops), sl);
     setBlock(cont);
+}
+
+void Lowerer::lowerDisable(const ast::DisableStatement& d) {
+    const slang::SourceLocation sl = d.sourceRange.start();
+    const ast::Expression& t = d.target;
+    const ast::Symbol* sym = t.kind == ast::ExpressionKind::ArbitrarySymbol
+                                 ? t.as<ast::ArbitrarySymbolExpression>().symbol.get()
+                                 : nullptr;
+    if (sym == nullptr) unsupported(sl, "disable of this target");
+    if (sym->kind == ast::SymbolKind::Subroutine) {
+        // Every call of the task ends (9.6.2).
+        const sir::SubroutineId id = subroutineOf(sym->as<ast::SubroutineSymbol>(), sl);
+        emitVoid(Op::DisableTask, {Operand::subroutine(id)}, sl);
+        return;
+    }
+    if (sym->kind != ast::SymbolKind::StatementBlock ||
+        sym->as<ast::StatementBlockSymbol>().blockKind != ast::StatementBlockKind::Sequential)
+        unsupported(sl, "disable of this block");
+    std::size_t at = b_.named.size();
+    for (std::size_t i = b_.named.size(); i-- > 0 && at == b_.named.size();)
+        if (b_.named[i].sym == sym) at = i;
+    if (at != b_.named.size() && !b_.named[at].scope) {
+        // A block around it in this body that nothing else reaches: go to
+        // its end, leaving the scopes in between (SIR_SPEC.md 7.2).
+        Body::Named& n = b_.named[at];
+        leaveScopes(at + 1, sl);
+        if (!n.exit) n.exit = newBlock();
+        terminate(Op::Br, {Operand::block(*n.exit)}, sl);
+        return;
+    }
+    emitVoid(Op::DisableScope, {Operand::scope(scopeOf(*sym))}, sl);
+    // A block around it ends here; the kernel goes on at its exit.
+    if (at == b_.named.size()) return;
+    if (const std::optional<sir::BlockId> exit = b_.named[at].exit)
+        terminate(Op::Br, {Operand::block(*exit)}, sl);
+}
+
+std::uint32_t Lowerer::scopeOf(const ast::Symbol& block) {
+    if (const auto it = scopeIds_.find(&block); it != scopeIds_.end()) return it->second;
+    const std::uint32_t id = design_.numScopes++;
+    scopeIds_.emplace(&block, id);
+    return id;
+}
+
+void Lowerer::leaveScopes(std::size_t from, slang::SourceLocation sl) {
+    for (std::size_t i = b_.named.size(); i-- > from;)
+        if (const std::optional<std::uint32_t> scope = b_.named[i].scope)
+            emitVoid(Op::ScopeLeave, {Operand::scope(*scope)}, sl);
+}
+
+void Lowerer::scanDisables(const ast::RootSymbol& root) {
+    // The named blocks around the statement being visited, in its body: a
+    // procedure, a subroutine or a fork branch.
+    std::vector<std::vector<const ast::Symbol*>> bodies(1);
+    const auto spawn = [&] {
+        for (const ast::Symbol* b : bodies.back())
+            blocksThatSpawn_.insert(b);
+    };
+    auto visitor = ast::makeVisitor(
+        [&](auto& v, const ast::ProceduralBlockSymbol& pb) {
+            bodies.emplace_back();
+            v.visitDefault(pb);
+            bodies.pop_back();
+        },
+        [&](auto& v, const ast::SubroutineSymbol& sub) {
+            bodies.emplace_back();
+            v.visitDefault(sub);
+            bodies.pop_back();
+        },
+        [&](auto& v, const ast::BlockStatement& b) {
+            if (b.blockKind == ast::StatementBlockKind::Sequential) {
+                const bool named = b.blockSymbol != nullptr && !b.blockSymbol->name.empty();
+                if (named) bodies.back().push_back(b.blockSymbol);
+                v.visitDefault(b);
+                if (named) bodies.back().pop_back();
+                return;
+            }
+            if (b.blockKind != ast::StatementBlockKind::JoinAll) spawn();
+            // Each statement of a fork is a process of its own (9.3.2).
+            const auto branch = [&](const ast::Statement& st) {
+                bodies.emplace_back();
+                st.visit(v);
+                bodies.pop_back();
+            };
+            if (b.body.kind == ast::StatementKind::List) {
+                for (const ast::Statement* item : b.body.as<ast::StatementList>().list)
+                    branch(*item);
+            } else {
+                branch(b.body);
+            }
+        },
+        [&](auto& v, const ast::DisableStatement& d) {
+            if (d.target.kind == ast::ExpressionKind::ArbitrarySymbol) {
+                const ast::Symbol* sym = d.target.as<ast::ArbitrarySymbolExpression>().symbol.get();
+                disableTargets_.insert(sym);
+                const auto& around = bodies.back();
+                if (std::find(around.begin(), around.end(), sym) == around.end())
+                    disabledFromOutside_.insert(sym);
+            }
+            v.visitDefault(d);
+        },
+        [&](auto& v, const ast::CallExpression& c) {
+            // A task may start processes it does not wait for.
+            if (!c.isSystemCall() &&
+                std::get<0>(c.subroutine)->subroutineKind == ast::SubroutineKind::Task)
+                spawn();
+            v.visitDefault(c);
+        });
+    root.visit(visitor);
 }
 
 void Lowerer::lowerWait(const ast::WaitStatement& w) {

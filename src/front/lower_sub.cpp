@@ -142,6 +142,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
 
 void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (!b_.isSub) unsupported(sl, "return outside a subroutine");
+    leaveScopes(0, sl);
     const Type rt = design_.subroutines[b_.proc].returnType;
     if (rt.kind == sir::TypeKind::Void) {
         terminate(Op::Ret, {}, sl);

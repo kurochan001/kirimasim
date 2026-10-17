@@ -161,6 +161,17 @@ public:
                           bool hasElse, bool isCase, slang::SourceLocation sl);
     void lowerCase(const ast::CaseStatement& s);
     void lowerTiming(const ast::TimingControl& t);
+    /// disable of a named block or a task (9.6.2, SIR_SPEC.md 7.2).
+    void lowerDisable(const ast::DisableStatement& d);
+    /// Finds the named blocks that disable reaches, and those it reaches
+    /// from outside the block's body or that start processes or call
+    /// tasks, before anything is lowered.
+    void scanDisables(const ast::RootSymbol& root);
+    /// The scope number of a named block, made on first use.
+    std::uint32_t scopeOf(const ast::Symbol& block);
+    /// scope.leave for the scoped named blocks from number `from` of the
+    /// body's named blocks on, innermost first.
+    void leaveScopes(std::size_t from, slang::SourceLocation sl);
     /// wait (expr): the condition becomes a guard that reads the frame of
     /// the body that waits (SIR_SPEC.md 7.2).
     void lowerWait(const ast::WaitStatement& w);
@@ -525,6 +536,8 @@ public:
     struct Loop {
         sir::BlockId breakTo = sir::kNone;
         sir::BlockId continueTo = sir::kNone;
+        std::size_t named =
+            0;  ///< Named blocks around the loop: break and continue leave the others.
     };
 
     /// The state of the procedure being lowered.
@@ -542,6 +555,9 @@ public:
             const ast::Symbol* sym = nullptr;
             std::optional<sir::BlockId> exit;
             bool spawns = false;
+            /// Its scope number, when disable reaches it with
+            /// disable.scope (SIR_SPEC.md 7.2).
+            std::optional<std::uint32_t> scope;
         };
         std::vector<Named> named;
         sir::TimeScale scale;
@@ -618,6 +634,13 @@ private:
     std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> callees_;
     /// The reads of each always_comb and always_latch, for its sensitivity.
     std::map<std::uint32_t, std::vector<sir::SlotRange>> combReads_;
+    /// From scanDisables: the named blocks and tasks a disable names, the
+    /// blocks reached from outside their body, and the blocks that start
+    /// processes they do not wait for or call tasks.
+    std::set<const ast::Symbol*> disableTargets_;
+    std::set<const ast::Symbol*> disabledFromOutside_;
+    std::set<const ast::Symbol*> blocksThatSpawn_;
+    std::map<const ast::Symbol*, std::uint32_t> scopeIds_;
     const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
     Body b_;
 

@@ -1,0 +1,35 @@
+s0 initial, from itself, waiting on delay: after the block at 1, out=0
+s1 initial, from inner block, waiting on delay: after the block at 1, out=0
+s2 initial, from fork branch, waiting on delay: after the block at 1, out=0
+s3 initial, from other process, waiting on delay: after the block at 1, out=0
+s4 initial, from task, waiting on delay: after the block at 1, out=0
+s5 initial, from waiting task, waiting on delay: after the block at 1, out=0
+s6 static task, from itself, waiting on delay: after the block at 1, out=0
+s7 static task, from inner block, waiting on delay: after the block at 1, out=0
+s8 static task, from fork branch, waiting on delay: after the block at 1, out=0
+s9 static task, from other process, waiting on delay: after the block at 1, out=0
+s10 static task, from task, waiting on delay: after the block at 1, out=0
+s11 static task, from waiting task, waiting on delay: after the block at 1, out=0
+s12 automatic task, from itself, waiting on delay: after the block at 1, out=0
+s13 automatic task, from inner block, waiting on delay: after the block at 1, out=0
+s14 automatic task, from fork branch, waiting on delay: after the block at 1, out=0
+s15 automatic task, from other process, waiting on delay: after the block at 1, out=0
+s16 automatic task, from task, waiting on delay: after the block at 1, out=0
+s17 automatic task, from waiting task, waiting on delay: after the block at 1, out=0
+s18 fork branch, from itself, waiting on delay: after the block at 1, out=0
+s19 fork branch, from inner block, waiting on delay: after the block at 1, out=0
+s20 fork branch, from fork branch, waiting on delay: after the block at 1, out=0
+s21 fork branch, from other process, waiting on delay: after the block at 1, out=0
+s22 fork branch, from task, waiting on delay: after the block at 1, out=0
+s23 fork branch, from waiting task, waiting on delay: after the block at 1, out=0
+s24 initial, from other process, waiting on event: after the block at 1, out=0
+s25 initial, from other process, waiting on join: after the block at 1, out=0
+s26 initial, from other process, waiting on task call: after the block at 1, out=0
+s27 initial, from other process, waiting on wait condition: after the block at 1, out=0
+task from another process: after the call at 1, out=5
+task from a task it called: after the call at 2, out=5
+two calls: first after the call at 2
+two calls: second after the call at 2
+task ending itself: after the call at 1, out=5
+recursion: after the block of call 0 at 1
+recursion: after the call at 1

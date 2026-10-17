@@ -301,6 +301,11 @@ enum class Op : std::uint8_t {
     // Displays in the Postponed region (SIR_SPEC.md 7.1, SYSTEM_TASKS.md 4).
     Strobe,   ///< strobe @P: runs postponed process P once at the end of this time slot.
     Monitor,  ///< monitor @P: P becomes the monitor.
+    // The named blocks and tasks disable reaches (SIR_SPEC.md 7.2).
+    ScopeEnter,    ///< scope.enter #N, bbExit: an activation of block N starts.
+    ScopeLeave,    ///< scope.leave #N: it ends.
+    DisableScope,  ///< disable.scope #N: every activation of block N ends at its exit.
+    DisableTask,   ///< disable.task @T: every call of task T ends.
     // Calls.
     Call,     ///< [%r =] call @N, <argument>...
     Syscall,  ///< [%r =] syscall "$name", <operand>...
@@ -338,7 +343,8 @@ struct Operand {
         Frame,
         Subroutine,
         Process,
-        Type,  ///< A row of the type table (!N).
+        Type,   ///< A row of the type table (!N).
+        Scope,  ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
     };
     Kind kind = Kind::Temp;
     std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
@@ -378,6 +384,7 @@ struct Operand {
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s); }
     static Operand process(ProcessId p) { return of(Kind::Process, p); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t); }
+    static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
         o.text = std::move(s);
@@ -522,6 +529,7 @@ struct Design {
     std::vector<Constant> constants;
     std::vector<Subroutine> subroutines;
     std::vector<Process> processes;
+    std::uint32_t numScopes = 0;  ///< Named blocks that disable reaches (#N).
 };
 
 /// The storage domain of a value type (SIR_SPEC.md 3.2).

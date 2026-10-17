@@ -41,6 +41,10 @@ bool hasNoResult(Op op) {
         case Op::StoreOverride:
         case Op::Strobe:
         case Op::Monitor:
+        case Op::ScopeEnter:
+        case Op::ScopeLeave:
+        case Op::DisableScope:
+        case Op::DisableTask:
         case Op::StoreRef:
         case Op::NbaRef:
         case Op::StoreRefElem:
@@ -1334,6 +1338,22 @@ private:
                     bad("needs a process, a subroutine or a block name");
                 break;
             case Op::DisableFork: nOps(0); break;
+            case Op::ScopeEnter:
+                if (nOps(2) && (ops[0].kind != Operand::Kind::Scope || ops[0].id >= d_.numScopes ||
+                                ops[1].kind != Operand::Kind::Block || ops[1].count != 0))
+                    bad("needs a scope and its exit block");
+                break;
+            case Op::ScopeLeave:
+            case Op::DisableScope:
+                if (nOps(1) && (ops[0].kind != Operand::Kind::Scope || ops[0].id >= d_.numScopes))
+                    bad("needs a scope");
+                break;
+            case Op::DisableTask:
+                if (nOps(1) && (ops[0].kind != Operand::Kind::Subroutine ||
+                                ops[0].id >= d_.subroutines.size() ||
+                                d_.subroutines[ops[0].id].kind != SubroutineKind::Task))
+                    bad("needs a task");
+                break;
             case Op::Strobe:
             case Op::Monitor:
                 if (nOps(1) &&

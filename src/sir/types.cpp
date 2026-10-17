@@ -181,6 +181,10 @@ const char* opName(Op op) {
         case Op::StoreOverride: return "store.override";
         case Op::Strobe: return "strobe";
         case Op::Monitor: return "monitor";
+        case Op::ScopeEnter: return "scope.enter";
+        case Op::ScopeLeave: return "scope.leave";
+        case Op::DisableScope: return "disable.scope";
+        case Op::DisableTask: return "disable.task";
         case Op::Resolve: return "resolve";
         case Op::Br: return "br";
         case Op::BrIf: return "br.if";
