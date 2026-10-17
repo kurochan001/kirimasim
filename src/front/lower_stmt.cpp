@@ -121,8 +121,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             // The default initial value (6.8, table 6-7): x, 0, 0.0 or "".
             const auto initial = [&](Type t) {
                 if (t.kind == sir::TypeKind::String) return stringConstant("");
-                return sir::isFourState(t) ? constant(t, ~std::uint64_t{0}, ~std::uint64_t{0})
-                                           : constant(t, 0);
+                return sir::isFourState(t) ? allXConstant(t) : constant(t, 0);
             };
             if (structElement(v.getType()) != nullptr) {
                 // One slot or frame variable per member (SIR_SPEC.md 4.2),
@@ -1083,7 +1082,7 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
             four = four || e->type->isFourState();
         }
     }
-    if (!inside && (width == 0 || width > 64)) unsupported(sl, "values wider than 64 bits");
+    if (!inside && width == 0) unsupported(sl, "a value of no bits");
     const Type ct = four ? (allSigned ? sir::s4(width) : sir::u4(width))
                          : (allSigned ? sir::s2(width) : sir::u2(width));
     const Val x = inside ? lowerExpr(s.expr) : coerce(lowerExpr(s.expr), ct, sl);

@@ -133,11 +133,11 @@ Method resolveMethod(std::string_view n) {
 
 /// The bytes of an integral value as a string (6.16): most significant
 /// first, zero bytes dropped; x and z bits read as 0.
-std::string integerToString(W4 v, unsigned width) {
-    const std::uint64_t a = v.a & ~v.b;
+std::string integerToString(const W4* v, unsigned width) {
     std::string s;
     for (unsigned k = (width + 7) / 8; k-- > 0;) {
-        const auto c = static_cast<char>(k * 8 < 64 ? (a >> (k * 8)) & 0xffU : 0);
+        const W4& w = v[k / 8];
+        const auto c = static_cast<char>(((w.a & ~w.b) >> (k % 8 * 8)) & 0xffU);
         if (c != 0) s.push_back(c);
     }
     return s;
@@ -145,11 +145,21 @@ std::string integerToString(W4 v, unsigned width) {
 
 /// A string as an integral value of `width` bits: the last character in
 /// the low byte (6.16).
+void stringToInteger(std::string_view s, unsigned width, W4* out) {
+    const unsigned words = (width + 63) / 64;
+    for (unsigned i = 0; i < words; ++i)
+        out[i] = {0, 0};
+    unsigned byte = 0;
+    for (auto c = s.rbegin(); c != s.rend() && byte * 8 < width; ++c, ++byte)
+        out[byte / 8].a |= std::uint64_t{static_cast<unsigned char>(*c)} << (byte % 8 * 8);
+    if (width % 64 != 0) out[words - 1].a &= kernel::mask(width % 64);
+}
+
+/// The same for a value of at most 64 bits.
 W4 stringToInteger(std::string_view s, unsigned width) {
-    std::uint64_t a = 0;
-    for (const char c : s)
-        a = (a << 8) | static_cast<unsigned char>(c);
-    return {a & kernel::mask(width), 0};
+    W4 r{0, 0};
+    stringToInteger(s, width, &r);
+    return r;
 }
 
 /// atoi and friends (6.16.9): digits of the base and underscores only, no
@@ -799,6 +809,7 @@ private:
     /// Released frames to reuse, frames to look at again, and the frame
     /// running now (SCHEDULER_SPEC.md 10.8).
     std::vector<Frame*> freeFrames_;
+    std::vector<W4> retWide_;  ///< A function's result wider than 64 bits, at its ret.
     std::vector<Frame*> later_;
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
@@ -1111,6 +1122,21 @@ private:
         const std::uint32_t c = (w + 63) / 64;
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
         sched_.write(s, elem, lsb, width, buf.data());
+    }
+
+    /// A value laid out for the kernel's write() into the slot range
+    /// `target`: a and b words in turn for a four-state slot (store.h).
+    std::vector<std::uint64_t> slotWords(const Operand& target, const Operand& value) const {
+        const kernel::SlotLayout& l = store_.layout(target.id);
+        if (l.domain != kernel::Domain::Four && l.domain != kernel::Domain::Two) {
+            const W4 x = this->value(value);
+            return {x.a, x.b};
+        }
+        const std::uint32_t w = target.width == 0 ? l.width : target.width;
+        std::vector<W4> v((w + 63) / 64);
+        readOperand(value, v.data(), static_cast<std::uint32_t>(v.size()));
+        return packed(v.data(), static_cast<std::uint32_t>(v.size()),
+                      l.domain == kernel::Domain::Four);
     }
 
     void nbaSlotWide(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
@@ -1549,7 +1575,14 @@ private:
                         break;
                     }
                     case Op::Ret:
-                        if (!ops.empty()) ret = value(ops[0]);
+                        if (!ops.empty()) {
+                            ret = value(ops[0]);
+                            // A value wider than 64 bits goes back in retWide_.
+                            if (const std::uint32_t c = chunksOf(typeOf(ops[0])); c > 1) {
+                                retWide_.resize(c);
+                                readOperand(ops[0], retWide_.data(), c);
+                            }
+                        }
                         return Exit::Ret;
                     case Op::CallTask: enterTask(f, in); return Exit::Entered;
                     case Op::Call: {
@@ -1653,16 +1686,15 @@ private:
                     }
                     case Op::Builtin: builtin(in, info_[body][b][k]); break;
                     case Op::DriveDelay: {
-                        const W4 x = value(ops[1]);
-                        const std::uint64_t buf[2] = {x.a, x.b};
+                        const std::vector<std::uint64_t> buf = slotWords(ops[0], ops[1]);
                         // A delay with x or z bits is 0 (9.4.1).
                         const auto ticks = [&](std::size_t i) {
                             const W4 d = value(ops[i]);
                             return d.b != 0 ? std::uint64_t{0} : d.a;
                         };
                         sched_.driveDelayed(info_[body][b][k].driver, ops[0].id, ops[0].firstElem,
-                                            ops[0].lsb, ops[0].width, buf, ticks(2), ticks(3),
-                                            ticks(4));
+                                            ops[0].lsb, ops[0].width, buf.data(), ticks(2),
+                                            ticks(3), ticks(4));
                         break;
                     }
                     case Op::Resolve: resolve(in, info_[body][b][k]); break;
@@ -1696,10 +1728,9 @@ private:
                         break;
                     }
                     case Op::StoreOverride: {
-                        const W4 v = value(ops[2]);
-                        const std::uint64_t buf[2] = {v.a, v.b};
+                        const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
                         sched_.writeHeld(holdLevel(ops[0]), f.kernelId, ops[1].id, ops[1].firstElem,
-                                         ops[1].lsb, ops[1].width, buf);
+                                         ops[1].lsb, ops[1].width, buf.data());
                         break;
                     }
                     default:
@@ -1996,6 +2027,8 @@ private:
         ++callDepth_;
         f.syncCalls.push_back({body, f.births});
         const Exit e = runBody(f, 0, steps, ret);
+        std::vector<W4> wide;
+        if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
         f.syncCalls.pop_back();
         while (!f.scopes.empty() && f.scopes.back().calls == f.calls.size() &&
                f.scopes.back().sync > f.syncCalls.size())
@@ -2011,7 +2044,15 @@ private:
         }
         if (e != Exit::Ret) return e;
         writeOuts(s, ops, outs, *act_.vars, act_.body);
-        if (in.result != sir::kNone) temp(in.result) = ret;
+        if (in.result != sir::kNone) {
+            if (const std::uint32_t c = chunksOf(in.type); c > 1) {
+                W4* r = &temp(in.result);
+                for (std::uint32_t k = 0; k < c; ++k)
+                    r[k] = k < wide.size() ? wide[k] : W4{0, 0};
+            } else {
+                temp(in.result) = ret;
+            }
+        }
         return Exit::Ret;
     }
 
@@ -2063,6 +2104,27 @@ private:
     void resolve(const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const unsigned w = in.type.width;
+        if (const std::uint32_t c = chunksOf(in.type); c > 1) {
+            // Bit by bit (VALUE_SEMANTICS.md 5.4), so chunk by chunk. A net
+            // this wide has no side slots (front).
+            std::vector<std::vector<W4>> values;
+            std::vector<std::pair<std::uint8_t, std::uint8_t>> strengths;
+            for (std::size_t i = 1; i + 2 < ops.size(); i += 3) {
+                values.push_back(chunks(ops[i]));
+                strengths.emplace_back(static_cast<std::uint8_t>(value(ops[i + 1]).a),
+                                       static_cast<std::uint8_t>(value(ops[i + 2]).a));
+            }
+            W4* r = &temp(in.result);
+            for (std::uint32_t k = 0; k < c; ++k) {
+                drivers_.clear();
+                for (std::size_t d = 0; d < values.size(); ++d)
+                    drivers_.push_back({values[d][k], strengths[d].first, strengths[d].second});
+                r[k] = kernel::resolve4(info.netKind, drivers_.data(),
+                                        static_cast<unsigned>(drivers_.size()),
+                                        w - 64 * k < 64 ? w - 64 * k : 64);
+            }
+            return;
+        }
         drivers_.clear();
         for (std::size_t i = 1; i + 2 < ops.size();) {
             kernel::StrengthDriver d{value(ops[i]), static_cast<std::uint8_t>(value(ops[i + 1]).a),
@@ -2082,6 +2144,590 @@ private:
                                            static_cast<unsigned>(drivers_.size()), w);
     }
 
+    // --- Values wider than 64 bits (kernel/wide.h) ---
+
+    /// Whether an instruction has an integral operand or result wider than
+    /// 64 bits; those run in executeWide.
+    bool isWide(const sir::Instr& in) const {
+        if (chunksOf(in.type) > 1) return true;
+        for (const Operand& o : in.operands) {
+            if (o.kind != Operand::Kind::Temp && o.kind != Operand::Kind::Const &&
+                o.kind != Operand::Kind::Frame && o.kind != Operand::Kind::Slot)
+                continue;
+            if (chunksOf(typeOf(o)) > 1) return true;
+        }
+        return false;
+    }
+
+    /// The chunks of operand i, at its own width.
+    std::vector<W4> chunks(const Operand& o) const {
+        std::vector<W4> x(chunksOf(typeOf(o)));
+        readOperand(o, x.data(), static_cast<std::uint32_t>(x.size()));
+        return x;
+    }
+
+    /// The chunks of operand o resized to width w: extended by its own
+    /// signedness, or truncated.
+    std::vector<W4> chunksAt(const Operand& o, unsigned w) const {
+        const sir::Type t = typeOf(o);
+        const std::vector<W4> x = chunks(o);
+        std::vector<W4> r(kernel::wide::chunks(w));
+        kernel::wide::resize(r.data(), w, x.data(), t.width, sir::isSigned(t));
+        return r;
+    }
+
+    /// Writes a result of the instruction's type; a two-state type has no
+    /// x or z (VALUE_SEMANTICS.md 1.2).
+    void setWide(const sir::Instr& in, const std::vector<W4>& r) {
+        W4* p = &temp(in.result);
+        const sir::Type rt = in.type;
+        const std::uint32_t c = chunksOf(rt);
+        if (sir::isIntegral(rt) && !sir::isFourState(rt))
+            kernel::wide::to2(p, r.data(), rt.width);
+        else
+            for (std::uint32_t k = 0; k < c; ++k)
+                p[k] = k < r.size() ? r[k] : W4{0, 0};
+    }
+
+    /// An index operand's value, or nothing for x, z or a value beyond 63
+    /// bits (VALUE_SEMANTICS.md 3.11).
+    std::optional<std::int64_t> wideIndex(const Operand& o) const {
+        const sir::Type t = typeOf(o);
+        if (chunksOf(t) == 1) return indexValue(value(o), t);
+        const std::vector<W4> x = chunks(o);
+        if (kernel::wide::hasUnknown(x.data(), t.width)) return std::nullopt;
+        const bool neg = sir::isSigned(t) && ((x.back().a >> ((t.width - 1) % 64)) & 1U) != 0;
+        for (std::size_t k = 1; k < x.size(); ++k) {
+            const std::uint64_t fill =
+                neg ? (k + 1 == x.size() ? kernel::mask(t.width - 64 * k) : ~std::uint64_t{0}) : 0;
+            if (x[k].a != fill) return std::nullopt;
+        }
+        return static_cast<std::int64_t>(x[0].a);
+    }
+
+    bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in) {
+        namespace kw = kernel::wide;
+        const auto& ops = in.operands;
+        const sir::Type rt = in.type;
+        const unsigned w = rt.width;
+        const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
+        const auto get = [&](std::size_t i) { return chunks(ops[i]); };
+        std::vector<W4> r(chunksOf(rt));
+        const auto set1 = [&](W4 x) { temp(in.result) = x; };
+        const auto binary = [&](auto fn) {
+            const std::vector<W4> x = get(0);
+            const std::vector<W4> y = get(1);
+            fn(r.data(), x.data(), y.data(), w);
+            setWide(in, r);
+        };
+        const auto compare = [&](auto fn) {
+            const unsigned ow = t(0).width;
+            const std::vector<W4> x = get(0);
+            const std::vector<W4> y = get(1);
+            set1(fn(x.data(), y.data(), ow));
+        };
+        switch (in.op) {
+            case Op::Load:
+                readSlotWide(ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, r.data());
+                setWide(in, r);
+                return true;
+            case Op::Store: {
+                const std::vector<W4> x = get(1);
+                writeSlotWide(ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, x.data());
+                return true;
+            }
+            case Op::Nba:
+            case Op::NbaDelay: {
+                const std::vector<W4> x = get(1);
+                std::uint64_t delay = 0;
+                if (in.op == Op::NbaDelay) {
+                    const W4 d = value(ops[2]);
+                    delay = d.b != 0 ? 0 : d.a;
+                }
+                nbaSlotWide(f, ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, x.data(),
+                            delay);
+                return true;
+            }
+            case Op::Fload: {
+                const W4* src = &frameVar(ops[0].id);
+                for (std::size_t k = 0; k < r.size(); ++k)
+                    r[k] = src[k];
+                setWide(in, r);
+                return true;
+            }
+            case Op::Fstore: {
+                const std::vector<W4> x = get(1);
+                W4* dst = &frameVar(ops[0].id);
+                for (std::size_t k = 0; k < x.size(); ++k)
+                    dst[k] = x[k];
+                return true;
+            }
+            case Op::LoadElem: {
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const std::vector<sir::ArrayDim>& dims =
+                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);
+                if (!e) {
+                    fillDefault(r.data(), rt);  // VALUE_SEMANTICS.md 3.11
+                } else if (frame) {
+                    const W4* src = &frameElem(ops[0].id, *e);
+                    for (std::size_t k = 0; k < r.size(); ++k)
+                        r[k] = src[k];
+                } else {
+                    readSlotWide(ops[0].id, *e, 0, 0, r.data());
+                }
+                setWide(in, r);
+                return true;
+            }
+            case Op::StoreElem:
+            case Op::NbaElem: {
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const std::vector<sir::ArrayDim>& dims =
+                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);
+                if (!e) return true;  // an invalid index writes nothing
+                const std::vector<W4> x = get(ops.size() - 1);
+                if (frame) {
+                    W4* dst = &frameElem(ops[0].id, *e);
+                    for (std::size_t k = 0; k < x.size(); ++k)
+                        dst[k] = x[k];
+                } else if (in.op == Op::StoreElem) {
+                    writeSlotWide(ops[0].id, *e, 0, 0, x.data());
+                } else {
+                    nbaSlotWide(f, ops[0].id, *e, 0, 0, x.data());
+                }
+                return true;
+            }
+            case Op::StoreBits:
+            case Op::NbaBits: {
+                // A part at a run-time position: only the bits inside the
+                // element (VALUE_SEMANTICS.md 3.11).
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const std::vector<sir::ArrayDim>& dims =
+                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                std::uint32_t e = 0;
+                if (!dims.empty()) {
+                    const std::optional<std::uint32_t> el = elementOf(dims, ops, 1);
+                    if (!el) return true;
+                    e = *el;
+                }
+                const std::size_t n = dims.size();
+                const std::optional<std::int64_t> pos = wideIndex(ops[n + 1]);
+                if (!pos) return true;
+                const sir::Type et =
+                    frame ? bodyFrame(act_.body)[ops[0].id].type : d_.slots[ops[0].id].type;
+                const std::int64_t ew = et.width;
+                const unsigned vw = t(n + 2).width;
+                std::int64_t lo = *pos;
+                std::int64_t hi = *pos + vw;
+                if (lo >= ew || hi <= 0) return true;
+                const std::int64_t skip = lo < 0 ? -lo : 0;
+                lo = lo < 0 ? 0 : lo;
+                hi = hi > ew ? ew : hi;
+                const auto pw = static_cast<unsigned>(hi - lo);
+                const std::vector<W4> x = get(n + 2);
+                std::vector<W4> part(kw::chunks(pw));
+                kw::bits(part.data(), pw, x.data(), vw, skip);
+                if (frame) {
+                    W4* cell = dims.empty() ? &frameVar(ops[0].id) : &frameElem(ops[0].id, e);
+                    kw::put(cell, static_cast<unsigned>(lo), part.data(), pw);
+                } else if (in.op == Op::StoreBits) {
+                    writeSlotWide(ops[0].id, e, static_cast<std::uint32_t>(lo), pw, part.data());
+                } else {
+                    nbaSlotWide(f, ops[0].id, e, static_cast<std::uint32_t>(lo), pw, part.data());
+                }
+                return true;
+            }
+            case Op::Add: binary(kw::add); return true;
+            case Op::Sub: binary(kw::sub); return true;
+            case Op::Mul: binary(kw::mul); return true;
+            case Op::Div:
+                binary([&](W4* o, const W4* x, const W4* y, unsigned ww) {
+                    kw::div(o, x, y, ww, sir::isSigned(rt));
+                });
+                return true;
+            case Op::Mod:
+                binary([&](W4* o, const W4* x, const W4* y, unsigned ww) {
+                    kw::mod(o, x, y, ww, sir::isSigned(rt));
+                });
+                return true;
+            case Op::Pow: {
+                const std::vector<W4> x = get(0);
+                const std::vector<W4> y = get(1);
+                kw::pow(r.data(), x.data(), w, sir::isSigned(t(0)), y.data(), t(1).width,
+                        sir::isSigned(t(1)));
+                setWide(in, r);
+                return true;
+            }
+            case Op::Neg: {
+                const std::vector<W4> x = get(0);
+                kw::neg(r.data(), x.data(), w);
+                setWide(in, r);
+                return true;
+            }
+            case Op::And: binary(kw::bitAnd); return true;
+            case Op::Or: binary(kw::bitOr); return true;
+            case Op::Xor: binary(kw::bitXor); return true;
+            case Op::Xnor: binary(kw::bitXnor); return true;
+            case Op::Not: {
+                const std::vector<W4> x = get(0);
+                kw::bitNot(r.data(), x.data(), w);
+                setWide(in, r);
+                return true;
+            }
+            case Op::Lt:
+                compare([&](const W4* x, const W4* y, unsigned ow) {
+                    return kw::lt(x, y, ow, sir::isSigned(t(0)));
+                });
+                return true;
+            case Op::Le:
+                compare([&](const W4* x, const W4* y, unsigned ow) {
+                    return kw::le(x, y, ow, sir::isSigned(t(0)));
+                });
+                return true;
+            case Op::Gt:
+                compare([&](const W4* x, const W4* y, unsigned ow) {
+                    return kw::gt(x, y, ow, sir::isSigned(t(0)));
+                });
+                return true;
+            case Op::Ge:
+                compare([&](const W4* x, const W4* y, unsigned ow) {
+                    return kw::ge(x, y, ow, sir::isSigned(t(0)));
+                });
+                return true;
+            case Op::Eq: compare(kw::eq); return true;
+            case Op::Ne: compare(kw::ne); return true;
+            case Op::Ceq: compare(kw::ceq); return true;
+            case Op::Cne: compare(kw::cne); return true;
+            case Op::Weq: compare(kw::weq); return true;
+            case Op::Wne: compare(kw::wne); return true;
+            case Op::MatchMask: {
+                const bool ignoreX = ops[2].text == "casex";
+                compare([&](const W4* x, const W4* y, unsigned ow) {
+                    return kw::caseMatch(x, y, ow, ignoreX);
+                });
+                return true;
+            }
+            case Op::Truth: {
+                const std::vector<W4> x = get(0);
+                set1(kw::truth(x.data(), t(0).width));
+                return true;
+            }
+            case Op::Lnot: {
+                const std::vector<W4> x = get(0);
+                set1(kernel::lnot4(kw::truth(x.data(), t(0).width)));
+                return true;
+            }
+            case Op::Land:
+            case Op::Lor:
+            case Op::Limp:
+            case Op::Leqv: {
+                const std::vector<W4> x = get(0);
+                const std::vector<W4> y = get(1);
+                const W4 a = kw::truth(x.data(), t(0).width);
+                const W4 b = kw::truth(y.data(), t(1).width);
+                switch (in.op) {
+                    case Op::Land: set1(kernel::land4(a, b)); break;
+                    case Op::Lor: set1(kernel::lor4(a, b)); break;
+                    case Op::Limp: set1(kernel::lor4(kernel::lnot4(a), b)); break;
+                    default: {
+                        const W4 both = kernel::land4(a, b);
+                        const W4 neither = kernel::land4(kernel::lnot4(a), kernel::lnot4(b));
+                        set1(kernel::lor4(both, neither));
+                        break;
+                    }
+                }
+                return true;
+            }
+            case Op::Rand:
+            case Op::Rnand:
+            case Op::Ror:
+            case Op::Rnor:
+            case Op::Rxor:
+            case Op::Rxnor: {
+                const std::vector<W4> x = get(0);
+                const unsigned xw = t(0).width;
+                W4 v{0, 0};
+                switch (in.op) {
+                    case Op::Rand: v = kw::redAnd(x.data(), xw); break;
+                    case Op::Rnand: v = kernel::negate1(kw::redAnd(x.data(), xw)); break;
+                    case Op::Ror: v = kw::redOr(x.data(), xw); break;
+                    case Op::Rnor: v = kernel::negate1(kw::redOr(x.data(), xw)); break;
+                    case Op::Rxor: v = kw::redXor(x.data(), xw); break;
+                    default: v = kernel::negate1(kw::redXor(x.data(), xw)); break;
+                }
+                set1(v);
+                return true;
+            }
+            case Op::Shl:
+            case Op::Shr:
+            case Op::Ashr: {
+                const std::vector<W4> x = get(0);
+                const std::vector<W4> amount = get(1);
+                if (in.op == Op::Shl)
+                    kw::shl(r.data(), x.data(), w, amount.data(), t(1).width);
+                else
+                    kw::ashr(r.data(), x.data(), w, amount.data(), t(1).width,
+                             in.op == Op::Ashr && sir::isSigned(rt));
+                setWide(in, r);
+                return true;
+            }
+            case Op::Select: {
+                const std::vector<W4> x = get(1);
+                const std::vector<W4> y = get(2);
+                kw::select(r.data(), value(ops[0]), x.data(), y.data(), w);
+                setWide(in, r);
+                return true;
+            }
+            case Op::Bitsel: {
+                const std::optional<std::int64_t> pos = wideIndex(ops[1]);
+                const std::vector<W4> x = get(0);
+                if (!pos || *pos < 0 || *pos >= t(0).width) {
+                    set1(kernel::kW4X);
+                    if (!sir::isFourState(rt)) set1({0, 0});
+                    return true;
+                }
+                W4 bit{0, 0};
+                kw::bits(&bit, 1, x.data(), t(0).width, *pos);
+                set1(sir::isFourState(rt) ? bit : kernel::to2(bit));
+                return true;
+            }
+            case Op::Partsel:
+            case Op::IdxPartsel: {
+                const std::optional<std::int64_t> pos =
+                    in.op == Op::Partsel
+                        ? std::optional<std::int64_t>(static_cast<std::int64_t>(value(ops[1]).a))
+                        : wideIndex(ops[1]);
+                if (!pos) {
+                    kw::allX(r.data(), w);
+                } else {
+                    const std::vector<W4> x = get(0);
+                    kw::bits(r.data(), w, x.data(), t(0).width, *pos);
+                }
+                setWide(in, r);
+                return true;
+            }
+            case Op::Concat: {
+                // Most significant first (VALUE_SEMANTICS.md 7.1).
+                unsigned at = w;
+                for (std::size_t i = 0; i < ops.size(); ++i) {
+                    const unsigned ow = t(i).width;
+                    at -= ow;
+                    const std::vector<W4> x = get(i);
+                    kw::put(r.data(), at, x.data(), ow);
+                }
+                setWide(in, r);
+                return true;
+            }
+            case Op::Repl: {
+                const std::uint64_t n = value(ops[0]).a;
+                const unsigned ow = t(1).width;
+                const std::vector<W4> x = get(1);
+                for (std::uint64_t i = 0; i < n; ++i)
+                    kw::put(r.data(), static_cast<unsigned>(i * ow), x.data(), ow);
+                setWide(in, r);
+                return true;
+            }
+            case Op::Zext:
+            case Op::Sext:
+            case Op::Trunc:
+            case Op::To2:
+            case Op::To4: {
+                const std::vector<W4> x = get(0);
+                kw::resize(r.data(), w, x.data(), t(0).width, in.op == Op::Sext);
+                if (in.op == Op::To2) kw::to2(r.data(), r.data(), w);
+                if (chunksOf(rt) == 1)
+                    set1(r[0]);
+                else
+                    setWide(in, r);
+                return true;
+            }
+            case Op::Itor: {
+                const std::vector<W4> x = get(0);
+                temp(in.result) =
+                    fromReal(kw::toReal(x.data(), t(0).width, sir::isSigned(t(0))), rt);
+                return true;
+            }
+            case Op::Rtoi:
+                kw::fromReal(r.data(), w, toReal(value(ops[0]), t(0)));
+                setWide(in, r);
+                return true;
+            default: break;
+        }
+        fail(p, std::string("instruction ") + sir::opName(in.op) +
+                    " on values wider than 64 bits is not supported by the VM yet");
+        return false;
+    }
+
+    /// Reads and writes through a ref of a value wider than 64 bits: a
+    /// slot element, or the chunks of frame words a ref steps through.
+    /// Returns false for a narrower value, which the caller handles.
+    bool refWide(Frame& f, const sir::Process& p, const sir::Instr& in) {
+        namespace kw = kernel::wide;
+        const auto& ops = in.operands;
+        const bool load = in.op == Op::LoadRef || in.op == Op::LoadRefElem;
+        if (in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef) {
+            const sir::Type vt = load ? in.type : typeOf(ops.back());
+            const std::uint32_t c = chunksOf(vt);
+            if (c == 1) return false;
+            const W4 r = value(ops[0]);
+            const std::size_t n = ops.size() - (load ? 0 : 1);
+            const std::uint64_t k = n == 2 ? value(ops[1]).a : 0;
+            if (load) {
+                W4* out = &temp(in.result);
+                if (isFrameRef(r)) {
+                    for (std::uint32_t j = 0; j < c; ++j)
+                        out[j] = refWord(r, k + j);
+                } else {
+                    readSlotWide(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, out);
+                }
+                return true;
+            }
+            const std::vector<W4> x = chunks(ops.back());
+            if (isFrameRef(r)) {
+                if (in.op == Op::NbaRef) {
+                    fail(p, "nonblocking assignment to an automatic variable through a ref");
+                    return true;
+                }
+                for (std::uint32_t j = 0; j < c; ++j)
+                    refWord(r, k + j) = x[j];
+            } else if (in.op == Op::StoreRef) {
+                writeSlotWide(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, x.data());
+            } else {
+                nbaSlotWide(f, refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0,
+                            x.data());
+            }
+            return true;
+        }
+        const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].id];
+        const std::uint32_t c = chunksOf(fv.target);
+        if (c == 1) return false;
+        const W4 r = frameVar(ops[0].id);
+        std::uint32_t e = 0;
+        if (!fv.dims.empty()) {
+            const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
+            if (!el) {
+                // An invalid index reads the default and writes nothing
+                // (VALUE_SEMANTICS.md 3.11).
+                if (load) fillDefault(&temp(in.result), in.type);
+                return true;
+            }
+            e = *el;
+        }
+        const std::size_t n = fv.dims.size();
+        if (in.op == Op::LoadRefElem) {
+            W4* out = &temp(in.result);
+            if (isFrameRef(r)) {
+                for (std::uint32_t j = 0; j < c; ++j)
+                    out[j] = refWord(r, std::uint64_t{e} * c + j);
+            } else {
+                readSlotWide(refSlot(r), refElem(r) + e, 0, 0, out);
+            }
+            return true;
+        }
+        if (in.op == Op::StoreRefElem) {
+            const std::vector<W4> x = chunks(ops[n + 1]);
+            if (isFrameRef(r)) {
+                for (std::uint32_t j = 0; j < c; ++j)
+                    refWord(r, std::uint64_t{e} * c + j) = x[j];
+            } else {
+                writeSlotWide(refSlot(r), refElem(r) + e, 0, 0, x.data());
+            }
+            return true;
+        }
+        // A part at a run-time position: only the bits inside the element
+        // (VALUE_SEMANTICS.md 3.11).
+        const std::optional<std::int64_t> pos = wideIndex(ops[n + 1]);
+        if (!pos) return true;
+        const auto ew = static_cast<std::int64_t>(fv.target.width);
+        const unsigned vw = typeOf(ops[n + 2]).width;
+        std::int64_t lo = *pos;
+        std::int64_t hi = *pos + vw;
+        if (lo >= ew || hi <= 0) return true;
+        const std::int64_t skip = lo < 0 ? -lo : 0;
+        lo = lo < 0 ? 0 : lo;
+        hi = hi > ew ? ew : hi;
+        const auto pw = static_cast<unsigned>(hi - lo);
+        const std::vector<W4> x = chunks(ops[n + 2]);
+        std::vector<W4> part(kw::chunks(pw));
+        kw::bits(part.data(), pw, x.data(), vw, skip);
+        if (isFrameRef(r))
+            kw::put(&refWord(r, std::uint64_t{e} * c), static_cast<unsigned>(lo), part.data(), pw);
+        else
+            writeSlotWide(refSlot(r), refElem(r) + e, static_cast<std::uint32_t>(lo), pw,
+                          part.data());
+        return true;
+    }
+
+    /// The instructions executeWide carries out.
+    static bool wideHandles(Op op) {
+        switch (op) {
+            case Op::Add:
+            case Op::And:
+            case Op::Ashr:
+            case Op::Bitsel:
+            case Op::Ceq:
+            case Op::Cne:
+            case Op::Concat:
+            case Op::Div:
+            case Op::Eq:
+            case Op::Fload:
+            case Op::Fstore:
+            case Op::Ge:
+            case Op::Gt:
+            case Op::IdxPartsel:
+            case Op::Itor:
+            case Op::Land:
+            case Op::Le:
+            case Op::Leqv:
+            case Op::Limp:
+            case Op::Lnot:
+            case Op::Load:
+            case Op::LoadElem:
+            case Op::Lor:
+            case Op::Lt:
+            case Op::MatchMask:
+            case Op::Mod:
+            case Op::Mul:
+            case Op::Nba:
+            case Op::NbaBits:
+            case Op::NbaDelay:
+            case Op::NbaElem:
+            case Op::Ne:
+            case Op::Neg:
+            case Op::Not:
+            case Op::Or:
+            case Op::Partsel:
+            case Op::Pow:
+            case Op::Rand:
+            case Op::Repl:
+            case Op::Rnand:
+            case Op::Rnor:
+            case Op::Ror:
+            case Op::Rtoi:
+            case Op::Rxnor:
+            case Op::Rxor:
+            case Op::Select:
+            case Op::Sext:
+            case Op::Shl:
+            case Op::Shr:
+            case Op::Store:
+            case Op::StoreBits:
+            case Op::StoreElem:
+            case Op::Sub:
+            case Op::To2:
+            case Op::To4:
+            case Op::Trunc:
+            case Op::Truth:
+            case Op::Weq:
+            case Op::Wne:
+            case Op::Xnor:
+            case Op::Xor:
+            case Op::Zext: return true;
+            default: return false;
+        }
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in) {
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
@@ -2093,6 +2739,7 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
+        if (wideHandles(in.op) && isWide(in)) return executeWide(f, p, in);
         if (!ops.empty() &&
             (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
             // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the
@@ -2103,8 +2750,16 @@ private:
             };
             const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
             switch (in.op) {
-                case Op::Itos: put(integerToString(v(0), t(0).width)); return true;
-                case Op::Stoi: set(stringToInteger(str(0), w)); return true;
+                case Op::Itos: put(integerToString(chunks(ops[0]).data(), t(0).width)); return true;
+                case Op::Stoi:
+                    if (chunksOf(rt) > 1) {
+                        std::vector<W4> r(chunksOf(rt));
+                        stringToInteger(str(0), w, r.data());
+                        setWide(in, r);
+                    } else {
+                        set(stringToInteger(str(0), w));
+                    }
+                    return true;
                 case Op::Concat: {
                     std::string text;
                     for (std::size_t i = 0; i < ops.size(); ++i)
@@ -2363,19 +3018,16 @@ private:
                             return false;
                         }
                         if (isFrameRef(r))
-                            r.a += *el;
+                            r.a += std::uint64_t{*el} * chunksOf(fv.target);
                         else
                             r.b += std::uint64_t{*el} << 1;
                     }
                     set(r);
                     return true;
                 }
-                // A ref steps through words, one per leaf or element, so it
-                // reaches values of at most 64 bits.
-                if (chunksOf(fv.type) != 1) {
-                    fail(p, "ref to a value wider than 64 bits");
-                    return false;
-                }
+                // A ref steps through the words of a value's chunks; from
+                // one leaf of a structure to the next one word at a time
+                // (front keeps wider members out of those).
                 std::size_t at = layouts_[act_.body].offset[o.id];
                 if (!fv.dims.empty()) {
                     if (ops.size() > 1) {
@@ -2384,7 +3036,7 @@ private:
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
-                        at += *el;
+                        at += std::size_t{*el} * chunksOf(fv.type);
                     }
                 }
                 set(frameRef(act_.varsId, at));
@@ -2393,6 +3045,7 @@ private:
             case Op::LoadRef:
             case Op::StoreRef:
             case Op::NbaRef: {
+                if (refWide(f, p, in)) return true;
                 // The leaf of a structure: the next slots or frame words.
                 const W4 r = v(0);
                 const std::size_t n = ops.size() - (in.op == Op::LoadRef ? 0 : 1);
@@ -2420,6 +3073,7 @@ private:
             case Op::LoadRefElem:
             case Op::StoreRefElem:
             case Op::StoreRefBits: {
+                if (refWide(f, p, in)) return true;
                 const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].id];
                 const W4 r = frameVar(ops[0].id);
                 std::uint32_t e = 0;
@@ -2623,6 +3277,43 @@ private:
     /// (SYSTEM_TASKS.md 6.3, 9): the low bits of an integral value, a lone
     /// x or z in every bit, a string's characters, a real.
     W4 scanned(const kernel::ScanValue& v, sir::Type t) {
+        W4 r{0, 0};
+        scanned(v, t, &r);
+        return r;
+    }
+    /// The same into the chunks of an integral target of any width: the
+    /// value extended with 0, or negated for a decimal minus sign, and cut
+    /// to the width.
+    void scanned(const kernel::ScanValue& v, sir::Type t, W4* out) {
+        const std::uint32_t c = chunksOf(t);
+        if (c == 1 || !sir::isIntegral(t)) {
+            *out = scannedWord(v, t);
+            return;
+        }
+        std::vector<W4> r(c);
+        if (v.conv == 's') {
+            stringToInteger(v.text, t.width, r.data());
+        } else if (v.fill) {
+            for (W4& k : r)
+                k = {v.bits.a != 0 ? ~std::uint64_t{0} : 0, ~std::uint64_t{0}};
+        } else {
+            for (std::uint32_t k = 0; k < c && k < v.wide.size(); ++k)
+                r[k] = v.wide[k];
+            if (v.negative) {
+                std::vector<W4> zero(c);
+                kernel::wide::sub(r.data(), zero.data(), std::vector<W4>(r).data(), t.width);
+            }
+        }
+        if (t.width % 64 != 0) {
+            r.back().a &= kernel::mask(t.width % 64);
+            r.back().b &= kernel::mask(t.width % 64);
+        }
+        if (!sir::isFourState(t))
+            kernel::wide::to2(out, r.data(), t.width);
+        else
+            std::copy(r.begin(), r.end(), out);
+    }
+    W4 scannedWord(const kernel::ScanValue& v, sir::Type t) {
         if (t.kind == sir::TypeKind::String)
             return {strings_.intern(v.conv == 's' ? v.text : std::string()), 0};
         if (isRealType(t)) return fromReal(v.conv == 'f' ? v.real : 0.0, t);
@@ -2739,9 +3430,9 @@ private:
                                   : info.method == Method::OctToA ? 'o'
                                                                   : 'b';
                 const sir::Type at = t(2);
-                const W4 x = v(2);
-                const std::uint64_t words[2] = {x.a, x.b};
-                const kernel::IntValue iv{words, at.width, sir::isFourState(at), sir::isSigned(at)};
+                const std::vector<std::uint64_t> words = formatWords(ops[2]);
+                const kernel::IntValue iv{words.data(), at.width, sir::isFourState(at),
+                                          sir::isSigned(at)};
                 put(kernel::formatInt(iv, kernel::FormatSpec{conv, 0, {}}));
                 return;
             }
@@ -2751,6 +3442,34 @@ private:
             case Method::None:
             case Method::Triggered: return;  // handled above
         }
+    }
+
+    /// An integral operand's words laid out like a slot element, as
+    /// kernel::IntValue takes them: a and b words in turn when four-state.
+    std::vector<std::uint64_t> formatWords(const Operand& o) const {
+        const sir::Type t = typeOf(o);
+        const bool four = sir::isFourState(t);
+        std::vector<std::uint64_t> words;
+        for (const W4& c : chunks(o)) {
+            words.push_back(c.a);
+            words.push_back(four ? c.b : 0);
+        }
+        if (!four) {
+            // Two-state: the a words only.
+            for (std::size_t k = 0; k * 2 < words.size(); ++k)
+                words[k] = words[k * 2];
+            words.resize((words.size() + 1) / 2);
+        }
+        return words;
+    }
+
+    /// An operand as a real: a real's value, an integral one converted
+    /// (VALUE_SEMANTICS.md 1.5) at any width.
+    double realOf(const Operand& o) const {
+        const sir::Type t = typeOf(o);
+        if (sir::isIntegral(t) && chunksOf(t) > 1)
+            return kernel::wide::toReal(chunks(o).data(), t.width, sir::isSigned(t));
+        return toReal(value(o), t);
     }
 
     std::string formatValue(const Frame& f, const Operand& o,
@@ -2772,8 +3491,8 @@ private:
             const bool realSpec = spec.conv == 'e' || spec.conv == 'f' || spec.conv == 'g';
             return kernel::formatReal(toReal(x, t), realSpec ? spec : kernel::FormatSpec{});
         }
-        const std::uint64_t words[2] = {x.a, x.b};
-        const kernel::IntValue iv{words, t.width, sir::isFourState(t), sir::isSigned(t)};
+        const std::vector<std::uint64_t> words = formatWords(o);
+        const kernel::IntValue iv{words.data(), t.width, sir::isFourState(t), sir::isSigned(t)};
         if (spec.conv == 't')
             return kernel::formatTime(iv, d_.timePrecision, timeFormat_, spec.width);
         return kernel::formatInt(iv, spec);
@@ -2851,8 +3570,12 @@ private:
                     zs = zs || (!a && b);
                     xs = xs || (a && b);
                 }
+                const sir::Type ct = typeOf(ops[1]);
                 temp(in.result) = {
-                    kernel::countBits4(value(ops[1]), typeOf(ops[1]).width, zeros, ones, zs, xs),
+                    chunksOf(ct) > 1
+                        ? kernel::wide::countBits(chunks(ops[1]).data(), ct.width, zeros, ones, zs,
+                                                  xs)
+                        : kernel::countBits4(value(ops[1]), ct.width, zeros, ones, zs, xs),
                     0};
                 return true;
             }
@@ -2930,15 +3653,14 @@ private:
                 // x or z bits gives -1.
                 std::string input;
                 const sir::Type it = typeOf(ops[1]);
-                const W4 iv = value(ops[1]);
+                const std::vector<W4> iv = chunks(ops[1]);
                 int n = -1;
                 if (it.kind == sir::TypeKind::String) {
-                    input = strings_.get(iv.a);
-                } else if (iv.b == 0) {
+                    input = strings_.get(iv[0].a);
+                } else if (!kernel::wide::hasUnknown(iv.data(), it.width)) {
                     // The bytes from the most significant one, NULs kept.
                     for (unsigned k = (it.width + 7) / 8; k-- > 0;)
-                        input.push_back(
-                            static_cast<char>(k * 8 < 64 ? (iv.a >> (k * 8)) & 0xffU : 0));
+                        input.push_back(static_cast<char>((iv[k / 8].a >> (k % 8 * 8)) & 0xffU));
                 } else {
                     temp(in.result) = {0xffffffffU, 0};
                     return true;
@@ -2946,7 +3668,7 @@ private:
                 scanValues_.clear();
                 n = kernel::scanString(input, ops[2].text, scanValues_);
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
-                    frameVar(ops[3 + i].id) = scanned(scanValues_[i], typeOf(ops[3 + i]));
+                    scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].id));
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};
                 return true;
             }
@@ -2968,7 +3690,7 @@ private:
                 for (const std::string& a : options_.plusargs) {
                     if (!std::string_view(a).starts_with(name)) continue;
                     const kernel::ScanValue v = kernel::plusargValue(a.substr(name.size()), conv);
-                    frameVar(ops[2].id) = scanned(v, typeOf(ops[2]));
+                    scanned(v, typeOf(ops[2]), &frameVar(ops[2].id));
                     temp(in.result) = {1, 0};
                     break;
                 }
@@ -3010,24 +3732,33 @@ private:
                     case SysTask::ShortRealToBits:
                     case SysTask::BitsToReal:
                     case SysTask::BitsToShortReal: r = {arg(1).a & ~arg(1).b, 0}; break;
-                    case SysTask::Math1:
-                        r = fromReal(info.fn1(toReal(arg(1), argType(1))), rt);
-                        break;
+                    case SysTask::Math1: r = fromReal(info.fn1(realOf(ops[1])), rt); break;
                     case SysTask::Math2:
-                        r = fromReal(
-                            info.fn2(toReal(arg(1), argType(1)), toReal(arg(2), argType(2))), rt);
+                        r = fromReal(info.fn2(realOf(ops[1]), realOf(ops[2])), rt);
                         break;
                     case SysTask::Clog2: {
                         // ceil(log2(n)), and 0 for 0 and 1 (20.8.1); x for an
                         // unknown argument.
-                        const W4 n = arg(1);
-                        if (n.b != 0) {
+                        const std::vector<W4> n = chunks(ops[1]);
+                        if (kernel::wide::hasUnknown(n.data(), argType(1).width)) {
                             r = kernel::allX(rt.width);
                         } else {
-                            std::uint64_t k = 0;
-                            while (k < 64 && (std::uint64_t{1} << k) < n.a)
-                                ++k;
-                            r = {k, 0};
+                            // The highest 1 and whether any 1 is below it.
+                            std::uint64_t top = 0;
+                            bool found = false;
+                            bool below = false;
+                            for (std::size_t c = n.size(); c-- > 0;) {
+                                if (n[c].a == 0) continue;
+                                if (!found) {
+                                    top = 64 * c + 63 -
+                                          static_cast<std::uint64_t>(std::countl_zero(n[c].a));
+                                    found = true;
+                                    below = (n[c].a & (n[c].a - 1)) != 0;
+                                } else {
+                                    below = true;
+                                }
+                            }
+                            r = {!found ? 0 : top + (below ? 1 : 0), 0};
                         }
                         break;
                     }

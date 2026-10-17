@@ -22,7 +22,12 @@ struct ScanValue {
     /// b, o, h, d or c for an integral value; s for a string; f for a real
     /// (also %e and %g).
     char conv = 'd';
-    W4 bits{0, 0};      ///< b, o, h, d, c: the value's 64 low bits.
+    W4 bits{0, 0};  ///< b, o, h, d, c: the value's 64 low bits.
+    /// b, o, h, d: every bit read, least significant chunk first; for d the
+    /// magnitude, with `negative` for a minus sign. bits is its low chunk
+    /// (negated for d with a minus sign).
+    std::vector<W4> wide;
+    bool negative = false;
     bool fill = false;  ///< d: a lone x or z (in bits), which fills every bit.
     double real = 0;    ///< f
     std::string text;   ///< s

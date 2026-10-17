@@ -110,15 +110,25 @@ bool readField(std::string_view input, std::size_t& in, const Spec& s, ScanValue
             bool negative = false;
             if (more() && (input[in] == '+' || input[in] == '-')) negative = input[in++] == '-';
             bool digits = false;
-            std::uint64_t n = 0;
+            std::vector<W4> n{{0, 0}};
             while (more() && (isDigit(input[in]) || input[in] == '_')) {
                 if (input[in] != '_') {
-                    n = n * 10 + static_cast<std::uint64_t>(input[in] - '0');
+                    // n = n * 10 + digit, chunk by chunk, in 32-bit halves.
+                    auto carry = static_cast<std::uint64_t>(input[in] - '0');
+                    for (W4& c : n) {
+                        const std::uint64_t lo = (c.a & 0xffffffffU) * 10 + carry;
+                        const std::uint64_t hi = (c.a >> 32) * 10 + (lo >> 32);
+                        c.a = (hi << 32) | (lo & 0xffffffffU);
+                        carry = hi >> 32;
+                    }
+                    if (carry != 0) n.push_back({carry, 0});
                     digits = true;
                 }
                 ++in;
             }
-            v.bits = {negative ? ~n + 1 : n, 0};
+            v.bits = {negative ? ~n[0].a + 1 : n[0].a, 0};
+            v.wide = std::move(n);
+            v.negative = negative;
             return digits;
         }
         case 'f': {
@@ -159,7 +169,7 @@ bool readField(std::string_view input, std::size_t& in, const Spec& s, ScanValue
             // b, o, h: digits of the base and x, z, ? and _.
             const unsigned bits = s.conv == 'b' ? 1 : s.conv == 'o' ? 3 : 4;
             bool digits = false;
-            W4 acc{0, 0};
+            std::vector<W4> acc{{0, 0}};
             while (more()) {
                 W4 d{0, 0};
                 if (input[in] == '_') {
@@ -167,11 +177,20 @@ bool readField(std::string_view input, std::size_t& in, const Spec& s, ScanValue
                     continue;
                 }
                 if (!radixDigit(input[in], bits, d)) break;
-                acc = {(acc.a << bits) | d.a, (acc.b << bits) | d.b};
+                // acc = acc << bits | d, chunk by chunk.
+                const W4 top = acc.back();
+                for (std::size_t k = acc.size(); k-- > 0;) {
+                    const W4 below = k > 0 ? acc[k - 1] : d;
+                    acc[k] = {(acc[k].a << bits) | (k > 0 ? below.a >> (64 - bits) : d.a),
+                              (acc[k].b << bits) | (k > 0 ? below.b >> (64 - bits) : d.b)};
+                }
+                const W4 out{top.a >> (64 - bits), top.b >> (64 - bits)};
+                if (out.a != 0 || out.b != 0) acc.push_back(out);
                 digits = true;
                 ++in;
             }
-            v.bits = acc;
+            v.bits = acc[0];
+            v.wide = std::move(acc);
             return digits;
         }
     }

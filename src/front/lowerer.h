@@ -355,6 +355,10 @@ public:
     /// The same as a 64-bit integer, if it is one without x or z bits.
     std::optional<std::int64_t> constInt(const ast::Expression& e);
     Val constant(sir::Type t, std::uint64_t a, std::uint64_t b = 0);
+    /// A four-state constant of x in every bit, at any width.
+    Val allXConstant(sir::Type t);
+    /// A constant of any width, least significant word first.
+    Val constantWords(sir::Type t, std::vector<std::uint64_t> a, std::vector<std::uint64_t> b);
     Val realConstant(sir::Type t, double d);
     Val stringConstant(std::string bytes);
     /// Lowers a string method call (6.16) or a call of $sformatf.

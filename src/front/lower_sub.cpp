@@ -277,6 +277,18 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
         unsupported(sl, "a ref argument of an unpacked structure type");
     const std::optional<Storage> st = storageOf(*base, sl);
     if (!st || st->dynamic) unsupported(sl, "a ref argument of this actual");
+    if (st->frame) {
+        // A ref into a frame steps from leaf to leaf one word at a time.
+        const ast::Type* elem = base->type;
+        while (elem->isUnpackedArray())
+            elem = elem->getArrayElementType();
+        if (const ast::UnpackedStructType* us = unpackedStruct(*elem)) {
+            for (const ast::FieldSymbol* field : us->fields)
+                if (field->getType().getBitWidth() > 64)
+                    unsupported(sl, "a ref to an automatic structure with a member wider than "
+                                    "64 bits");
+        }
+    }
     ops.push_back(st->frame ? Operand::frame(st->id) : Operand::slot(st->id));
     ops.insert(ops.end(), st->elem.begin(), st->elem.end());
     for (const ast::Expression* ix : indices) {

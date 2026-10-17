@@ -123,11 +123,14 @@ std::optional<std::string> stringBytes(const slang::SVInt& v) {
 
 /// The bytes of an integral value as a string (6.16): the most significant
 /// byte first, zero bytes dropped.
-std::string integerToString(std::uint64_t a, std::uint64_t b, std::uint32_t width) {
-    a &= ~b;
+std::string integerToString(const std::vector<std::uint64_t>& a,
+                            const std::vector<std::uint64_t>& b, std::uint32_t width) {
     std::string s;
     for (std::uint32_t k = (width + 7) / 8; k-- > 0;) {
-        const auto c = static_cast<char>(k * 8 < 64 ? (a >> (k * 8)) & 0xffU : 0);
+        const std::size_t word = k / 8;
+        const std::uint64_t known =
+            (word < a.size() ? a[word] : 0) & ~(word < b.size() ? b[word] : 0);
+        const auto c = static_cast<char>((known >> (k % 8 * 8)) & 0xffU);
         if (c != 0) s.push_back(c);
     }
     return s;
@@ -425,14 +428,14 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
         // An integer constant used as a real: the integer first, then 1.5.
         const slang::SVInt& v = cv.integer();
         const std::uint32_t w = v.getBitWidth();
-        if (w == 0 || w > 64) unsupported(sl, "values wider than 64 bits");
+        if (w == 0) unsupported(sl, "a value of no bits");
         const Type it = v.hasUnknown() ? (v.isSigned() ? sir::s4(w) : sir::u4(w))
                                        : (v.isSigned() ? sir::s2(w) : sir::u2(w));
         return coerce(constantFrom(cv, it, sl), t, sl);
     }
     const slang::SVInt& v = cv.integer();
-    std::uint64_t a = 0;
-    std::uint64_t b = 0;
+    std::vector<std::uint64_t> a((t.width + 63) / 64, 0);
+    std::vector<std::uint64_t> b(a.size(), 0);
     const std::uint32_t have = v.getBitWidth();
     for (std::uint32_t i = 0; i < t.width; ++i) {
         // Bits beyond the constant's width extend it (they should not occur).
@@ -441,11 +444,11 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
             (i < have || v.isSigned()) ? v[static_cast<std::int32_t>(k)] : slang::logic_t(0);
         const bool x = bit.value == slang::logic_t::X_VALUE;
         const bool z = bit.value == slang::logic_t::Z_VALUE;
-        if (bit.value == 1 || x) a |= std::uint64_t{1} << i;
-        if (x || z) b |= std::uint64_t{1} << i;
+        if (bit.value == 1 || x) a[i / 64] |= std::uint64_t{1} << (i % 64);
+        if (x || z) b[i / 64] |= std::uint64_t{1} << (i % 64);
     }
-    if (!sir::isFourState(t)) b = 0;
-    return constant(t, a, b);
+    if (!sir::isFourState(t)) std::fill(b.begin(), b.end(), 0);
+    return constantWords(t, std::move(a), std::move(b));
 }
 
 Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
@@ -454,9 +457,7 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
         // Integer to string: its bytes, zero bytes dropped (6.16).
         if (v.op.kind == Operand::Kind::Const) {
             const sir::Constant& c = design().constants[v.op.id];
-            return stringConstant(integerToString(c.aWords.empty() ? 0 : c.aWords[0],
-                                                  c.bWords.empty() ? 0 : c.bWords[0],
-                                                  c.type.width));
+            return stringConstant(integerToString(c.aWords, c.bWords, c.type.width));
         }
         return emit(Op::Itos, want, {v.op}, sl);
     }
@@ -465,7 +466,9 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
         (sir::isIntegral(want) || isReal(want))) {
         // Between reals, and between reals and integers (VALUE_SEMANTICS.md
         // 1.5, 7.4). A constant is converted here.
-        if (v.op.kind == Operand::Kind::Const) {
+        // A value wider than 64 bits is converted by the instruction.
+        if (v.op.kind == Operand::Kind::Const && (isReal(v.type) || v.type.width <= 64) &&
+            (isReal(want) || want.width <= 64)) {
             const sir::Constant& c = design().constants[v.op.id];
             if (isReal(want)) {
                 const double d = isReal(c.type)
@@ -481,8 +484,9 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     }
     if (!sir::isIntegral(v.type) || !sir::isIntegral(want))
         unsupported(sl, "conversion from " + sir::toString(v.type) + " to " + sir::toString(want));
-    // A constant is converted here rather than by an instruction.
-    if (v.op.kind == Operand::Kind::Const) {
+    // A constant is converted here rather than by an instruction, when it
+    // fits in a word.
+    if (v.op.kind == Operand::Kind::Const && v.type.width <= 64 && want.width <= 64) {
         const sir::Constant& c = design().constants[v.op.id];
         std::uint64_t a = c.aWords.empty() ? 0 : c.aWords[0];
         std::uint64_t b = c.bWords.empty() ? 0 : c.bWords[0];
@@ -783,7 +787,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 width += v.type.width;
                 four = four || sir::isFourState(v.type);
             }
-            if (ops.empty() || width > 64) unsupported(sl, "values wider than 64 bits");
+            if (ops.empty()) unsupported(sl, "an empty pattern");
             const Val c = emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
             return coerce(c, typeOf(*e.type, sl), sl);
         }
@@ -882,7 +886,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 width += v.type.width;
                 four = four || sir::isFourState(v.type);
             }
-            if (width == 0 || width > 64) unsupported(sl, "values wider than 64 bits");
+            if (width == 0) unsupported(sl, "a value of no bits");
             const Val v = emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
             return coerce(v, typeOf(*e.type, sl), sl);
         }
@@ -898,7 +902,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (!n || *n <= 0) unsupported(sl, "replication with this count");
             const Val v = lowerExpr(r.concat());
             const std::uint64_t width = static_cast<std::uint64_t>(*n) * v.type.width;
-            if (width > 64) unsupported(sl, "values wider than 64 bits");
+            if (width > UINT32_MAX) unsupported(sl, "a replication this wide");
             const Val count = constant(sir::u2(32), static_cast<std::uint64_t>(*n));
             const Val rv =
                 emit(Op::Repl,
@@ -1359,7 +1363,7 @@ Val Lowerer::lowerStream(const ast::StreamingConcatenationExpression& s, slang::
         width += v.type.width;
         four = four || sir::isFourState(v.type);
     }
-    if (width == 0 || width > 64) unsupported(sl, "values wider than 64 bits");
+    if (width == 0) unsupported(sl, "a value of no bits");
     Val stream = emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
     if (s.getSliceSize() == 0) return stream;
     return reverseBlocks(stream, s.getSliceSize(), true, sl);
@@ -1445,7 +1449,7 @@ Val Lowerer::bitstreamOf(const ast::Expression& e, slang::SourceLocation sl) {
         width += v.type.width;
         four = four || sir::isFourState(v.type);
     }
-    if (width == 0 || width > 64) unsupported(sl, "values wider than 64 bits");
+    if (width == 0) unsupported(sl, "a value of no bits");
     if (ops.size() == 1) return vals[0];
     return emit(Op::Concat, integral(four, false, width), std::move(ops), sl);
 }
@@ -1493,7 +1497,7 @@ Lowerer::Place Lowerer::concatPlace(std::vector<Place> parts, Type like, slang::
         all.width += part.type.width;
         all.base.push_back(std::move(part));
     }
-    if (all.width == 0 || all.width > 64) unsupported(sl, "values wider than 64 bits");
+    if (all.width == 0) unsupported(sl, "a value of no bits");
     all.type = integral(sir::isFourState(like), false, all.width);
     return all;
 }
@@ -2618,7 +2622,7 @@ std::optional<Val> Lowerer::lowerEnumCall(const ast::CallExpression& call,
     // bits matches only a member with the same bits.
     const Val v = coerce(lowerExpr(*args[0]), vt, sl);
     Val result = isName                 ? stringConstant("")
-                 : sir::isFourState(vt) ? constant(vt, maskOf(vt.width), maskOf(vt.width))
+                 : sir::isFourState(vt) ? allXConstant(vt)
                                         : constant(vt, 0);
     for (std::size_t i = n; i-- > 0;) {
         const Val m = member(i);

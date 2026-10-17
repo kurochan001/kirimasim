@@ -419,7 +419,7 @@ sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
                    : sir::Type{sir::TypeKind::Real, 0};  // real and realtime (6.12)
     if (!t.isIntegral()) unsupported(sl, "type '" + t.toString() + "'");
     const std::uint32_t w = t.getBitWidth();
-    if (w == 0 || w > 64) unsupported(sl, "values wider than 64 bits");
+    if (w == 0) unsupported(sl, "a value of no bits");
     if (t.isFourState()) return t.isSigned() ? sir::s4(w) : sir::u4(w);
     return t.isSigned() ? sir::s2(w) : sir::u2(w);
 }
@@ -459,11 +459,33 @@ void Lowerer::terminate(sir::Op op, std::vector<sir::Operand> ops, slang::Source
 }
 
 Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
-    const std::uint64_t m = t.width >= 64 ? ~std::uint64_t{0} : (std::uint64_t{1} << t.width) - 1;
+    // A wider type gets a and b as its low word, zero above.
+    const std::size_t words = sir::isIntegral(t) ? (t.width + 63) / 64 : 1;
+    std::vector<std::uint64_t> aw(words, 0);
+    std::vector<std::uint64_t> bw(words, 0);
+    aw[0] = a;
+    bw[0] = b;
+    return constantWords(t, std::move(aw), std::move(bw));
+}
+
+Val Lowerer::allXConstant(sir::Type t) {
+    const std::size_t words = (t.width + 63) / 64;
+    return constantWords(t, std::vector<std::uint64_t>(words, ~std::uint64_t{0}),
+                         std::vector<std::uint64_t>(words, ~std::uint64_t{0}));
+}
+
+Val Lowerer::constantWords(sir::Type t, std::vector<std::uint64_t> a,
+                           std::vector<std::uint64_t> b) {
+    // The bits above the width are 0 (SIR_SPEC.md 6).
+    const std::uint32_t top = sir::isIntegral(t) ? t.width % 64 : 0;
+    if (top != 0) {
+        a.back() &= (std::uint64_t{1} << top) - 1;
+        b.back() &= (std::uint64_t{1} << top) - 1;
+    }
     sir::Constant c;
     c.type = t;
-    c.aWords = {a & m};
-    if (sir::isFourState(t)) c.bWords = {b & m};
+    c.aWords = std::move(a);
+    if (sir::isFourState(t)) c.bWords = std::move(b);
     const auto id = static_cast<sir::ConstId>(design_.constants.size());
     design_.constants.push_back(std::move(c));
     return {sir::Operand::constant(id), t};

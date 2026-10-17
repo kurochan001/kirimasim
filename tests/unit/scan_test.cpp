@@ -53,6 +53,31 @@ TEST(Scan, Radix) {
     scan("g", "%h", 0);
 }
 
+TEST(Scan, WideValues) {
+    // Every digit is kept, least significant chunk first; bits is the low
+    // chunk (SYSTEM_TASKS.md 6.3, 9).
+    auto v = scan("1_23456789abcdef0123456789", "%h", 1);
+    ASSERT_EQ(v[0].wide.size(), 2U);
+    EXPECT_EQ(v[0].wide[0].a, 0xabcdef0123456789U);
+    EXPECT_EQ(v[0].wide[1].a, 0x123456789U);
+    EXPECT_EQ(v[0].bits.a, 0xabcdef0123456789U);
+    // 2^70 + 5 in decimal, and with a minus sign: the magnitude, negative.
+    v = scan("1180591620717411303429 -1180591620717411303429", "%d %d", 2);
+    ASSERT_EQ(v[0].wide.size(), 2U);
+    EXPECT_EQ(v[0].wide[0].a, 5U);
+    EXPECT_EQ(v[0].wide[1].a, 64U);
+    EXPECT_FALSE(v[0].negative);
+    EXPECT_TRUE(v[1].negative);
+    EXPECT_EQ(v[1].wide[1].a, 64U);
+    EXPECT_EQ(v[1].bits.a, ~std::uint64_t{5} + 1);
+    // An x digit past the first chunk.
+    v = scan("x" + std::string(64, '0'), "%b", 1);
+    ASSERT_EQ(v[0].wide.size(), 2U);
+    EXPECT_EQ(v[0].wide[1].a, 1U);
+    EXPECT_EQ(v[0].wide[1].b, 1U);
+    EXPECT_EQ(v[0].wide[0].b, 0U);
+}
+
 TEST(Scan, CharsStringsReals) {
     auto v = scan(" ab cd", "%c%s %s", 3);
     EXPECT_EQ(v[0].bits.a, static_cast<unsigned>(' '));  // %c takes white space
