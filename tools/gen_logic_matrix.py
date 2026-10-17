@@ -33,8 +33,8 @@ import random
 import sys
 from pathlib import Path
 
-from gen_wide_matrix import (V, allx, arith, bitnot, bitwise, equality, reduce,
-                             relational, resize, shift)
+from gen_wide_matrix import (V, allx, arith, bitnot, bitwise, equality, land, lnot, lor,
+                             reduce, relational, resize, shift, truth)
 
 OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "logic_matrix"
@@ -62,33 +62,6 @@ def lit(x):
 
 
 ONE, ZERO, X1 = V(1, 1), V(1, 0), V(1, 1, 1)
-
-
-def truth(x):
-    """True with a 1 bit, false with all 0, else unknown (3.5)."""
-    m = x.mask
-    if x.a & ~x.b & m:
-        return ONE
-    return ZERO if (x.a | x.b) & m == 0 else X1
-
-
-def lnot(x):
-    t = truth(x)
-    return X1 if t.b else V(1, 1 - t.a)
-
-
-def land(x, y):
-    p, q = truth(x), truth(y)
-    if (not p.b and p.a == 0) or (not q.b and q.a == 0):
-        return ZERO
-    return X1 if p.b or q.b else ONE
-
-
-def lor(x, y):
-    p, q = truth(x), truth(y)
-    if (not p.b and p.a) or (not q.b and q.a):
-        return ONE
-    return X1 if p.b or q.b else ZERO
 
 
 def wildcard(op, x, y):

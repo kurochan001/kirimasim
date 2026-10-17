@@ -13,7 +13,8 @@ signed and unsigned; the operators (arithmetic, with an unknown operand
 and a zero divisor; bitwise with x and z; shifts by constants and by a
 variable, past 64; comparisons, equality and case equality; reductions;
 constant and variable part- and bit-selects; concatenation, replication;
-widening, narrowing and two-state conversion); the container (module
+widening, narrowing and two-state conversion; the logical operators and
+the truth of an if condition; conversion to a real); the container (module
 variables, kept in slots, and automatic variables of a task, kept in its
 frame). A second module writes and reads a value through every place it
 can live: an unpacked array element, a packed structure member, a
@@ -23,7 +24,7 @@ assignment to the whole and to a part, a continuous assignment, force and
 release, an input and an output port, and a part and a bit at a run-time
 position.
 
-The expected outputs follow from VALUE_SEMANTICS.md (2, 3) and the %h and
+The expected outputs follow from VALUE_SEMANTICS.md (2, 3, 7.4) and the %h and
 %d rules of SYSTEM_TASKS.md 3.2, computed below by a four-state model. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
 "人の抜き取り").
@@ -33,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import random
+import struct
 import sys
 from pathlib import Path
 
@@ -40,7 +42,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "wide_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 2
+VERSION = 3
 WIDTHS = [65, 100, 128, 200]
 
 
@@ -184,6 +186,57 @@ def reduce(op, x):
     return ONE if bin(x.a).count("1") % 2 else ZERO
 
 
+def truth(x):
+    """True with a 1 bit, false with all 0, else unknown (VALUE_SEMANTICS.md 3.5)."""
+    m = x.mask
+    if x.a & ~x.b & m:
+        return ONE
+    return ZERO if (x.a | x.b) & m == 0 else X1
+
+
+def lnot(x):
+    t = truth(x)
+    return X1 if t.b else V(1, 1 - t.a)
+
+
+def land(x, y):
+    p, q = truth(x), truth(y)
+    if (not p.b and p.a == 0) or (not q.b and q.a == 0):
+        return ZERO
+    return X1 if p.b or q.b else ONE
+
+
+def lor(x, y):
+    p, q = truth(x), truth(y)
+    if (not p.b and p.a) or (not q.b and q.a):
+        return ONE
+    return X1 if p.b or q.b else ZERO
+
+
+def leqv_imp(x, y):
+    """x -> y, which is !x || y (11.4.7)."""
+    return lor(lnot(x), y)
+
+
+def leqv(x, y):
+    """x <-> y, which is (x -> y) && (y -> x) (11.4.7)."""
+    return land(leqv_imp(x, y), leqv_imp(y, x))
+
+
+def taken(x):
+    """Which branch an if takes: the else branch unless x is true (12.4)."""
+    t = truth(x)
+    return "t" if t.a and not t.b else "f"
+
+
+def realbits(x):
+    """The bits of real'(x): x and z bits count as 0 (VALUE_SEMANTICS.md 7.4)."""
+    n = x.a & ~x.b & x.mask
+    if x.signed and n >> (x.w - 1):
+        n -= 1 << x.w
+    return struct.pack(">d", float(n)).hex()
+
+
 def select(x, lsb, w):
     return V(w, x.a >> lsb, x.b >> lsb)
 
@@ -254,6 +307,7 @@ def kval(w):
 def op_cases(w, four, signed, a, b, c, d):
     """(tag, expression over a b c d k, expected value, show width)."""
     zero = V(w, 0, 0, signed)
+    cx = bitwise("&", c, bitnot(c), w, signed)  # 0 where c is known, x elsewhere
     kv = kval(w)
     cases = [
         ("add", "a + b", arith("+", a, b, w, signed)),
@@ -295,6 +349,17 @@ def op_cases(w, four, signed, a, b, c, d):
         ("randx", "&c", reduce("&", c)),
         ("rxorx", "^c", reduce("^", c)),
         ("bit", "c[k]", select(c, kv, 1)),
+        ("lnot", "! c", lnot(c)),
+        ("lnotx", "! ( c & ~c )", lnot(cx)),
+        ("land", "a && c", land(a, c)),
+        ("landx", "a && ( c & ~c )", land(a, cx)),
+        ("land0", "( c & ~c ) && zero", land(cx, zero)),
+        ("lor", "c || zero", lor(c, zero)),
+        ("lorx", "zero || ( c & ~c )", lor(zero, cx)),
+        ("limp", "a -> c", leqv_imp(a, c)),
+        ("limpx", "( c & ~c ) -> zero", leqv_imp(cx, zero)),
+        ("leqv", "a <-> zero", leqv(a, zero)),
+        ("leqvx", "( c & ~c ) <-> a", leqv(cx, a)),
     ]
     out += [(t, e, v, 1) for t, e, v in one_bit]
     parts = [
@@ -351,7 +416,15 @@ def ops_module(w, four, signed, idx, rng):
                f"{pad}{names['s40']} = {names['c']}[{w - 1} -: 40];",
                f"{pad}{names['r']} = {names['s40']};",
                f"{pad}$display(\"{prefix} sext %h\", {names['r']});",
-               f"{pad}$display(\"{prefix} dec %0d\", {names['a']});"]
+               f"{pad}$display(\"{prefix} dec %0d\", {names['a']});",
+               f"{pad}$display(\"{prefix} itor %h\", $realtobits(real'({names['a']})));",
+               f"{pad}$display(\"{prefix} itorc %h\", $realtobits($itor({names['c']})));",
+               f"{pad}if ({names['c']}) $display(\"{prefix} ifc t\"); "
+               f"else $display(\"{prefix} ifc f\");",
+               f"{pad}if ({names['c']} & ~{names['c']}) $display(\"{prefix} ifx t\"); "
+               f"else $display(\"{prefix} ifx f\");",
+               f"{pad}if (!{names['zero']}) $display(\"{prefix} if0 t\"); "
+               f"else $display(\"{prefix} if0 f\");"]
         r2 = to2(c)
         s40 = select(c, w - 40, 40)
         s40.signed = True
@@ -359,7 +432,12 @@ def ops_module(w, four, signed, idx, rng):
         sext = sext if four else to2(sext)
         ex += [f"{prefix} to2 {hexdigits(V(w, r2.a, 0))}",
                f"{prefix} sext {hexdigits(V(w, sext.a, sext.b))}",
-               f"{prefix} dec {a.to_int()}"]
+               f"{prefix} dec {a.to_int()}",
+               f"{prefix} itor {realbits(a)}",
+               f"{prefix} itorc {realbits(c)}",
+               f"{prefix} ifc {taken(c)}",
+               f"{prefix} ifx {taken(bitwise('&', c, bitnot(c), w, signed))}",
+               f"{prefix} if0 t"]
         return st, ex
 
     names = {n: p + n for n in ("a", "b", "c", "d", "zero", "r", "r2", "s40")}
@@ -523,7 +601,7 @@ def places():
 
 
 def files():
-    rng = random.Random(VERSION * 7919)
+    rng = random.Random(2 * 7919)  # version 2's seed: new cases keep the earlier lines
     decls, tasks, lines, exp = [], [], [], []
     idx = 0
     for w in WIDTHS:
@@ -544,7 +622,7 @@ def files():
         "live",
         ":tags: values wide",
         ":type: simulation",
-        ":lrm: 1800-2023 6.11 11.4 11.5 11.8 21.2.1.2",
+        ":lrm: 1800-2023 6.11 6.12 11.4 11.4.7 11.5 11.8 12.4 21.2.1.2",
         ":oracle: spec",
         ":spec_check: ai",
         ":fourstate: yes",
