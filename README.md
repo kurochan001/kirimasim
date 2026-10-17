@@ -56,13 +56,61 @@ separate repository that is not public yet.
 
 ### Test results
 
-Measured on 2026-10-17 at the commit that added this section.
+Measured on 2026-10-17, against the newest development versions of Icarus
+Verilog and Verilator built from their main branches that day.
 
-| Test set | Tests | Pass | Not passing |
-| --- | --- | --- | --- |
-| This repository's tests (CTest) | 322 | 320 | 2 skipped: one needs clocking blocks (P3), one has drivers that meet through a port between parts of nets (not supported yet) |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 180 | Icarus Verilog passes 210 of them; see the table by chapter |
-| Own test suite, P1 population | 1,466 | 1,444 | 22 stop at constructs of later work; none fails |
+| Test set | Tests | kirimasim | Icarus Verilog | Verilator |
+| --- | --- | --- | --- | --- |
+| This repository's tests (CTest) | 322 | 320, 2 skipped | — | — |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 180 | 213 | 321 |
+| Own test suite, P1 population | 1,466 | 1,444 | 1,274 | 1,329 |
+
+The two skipped tests of this repository need clocking blocks (P3), or
+drivers that meet through a port between parts of nets (not supported
+yet). Verilator leads sv-tests by far. Most of the gap is dynamic arrays,
+queues, associative arrays, classes and UVM, which kirimasim leaves to P3;
+file I/O and `randsequence` come next.
+
+The own test suite was written together with kirimasim, so it is not a
+neutral comparison. Each test was checked against the clauses of the
+standard it cites, and its expected output matches Icarus Verilog 13.0, or
+Verilator 5.052 for the tests that Icarus Verilog 13.0 cannot compile; a
+few follow the standard where neither does. kirimasim is judged by the rule of the
+P1 criterion (output, exit code and kirimasim's own messages), the others
+by their output only, with the suite's runners. Verilator is a two-state
+simulator, so tests that show x or z values fail with it.
+
+**Time** (summed over the tests; 6 tests at a time; one run, not the
+median of five that [PERFORMANCE.md](docs/spec/PERFORMANCE.md) asks for
+benchmarks):
+
+| Test set | Simulator | Build step | Run step | Total |
+| --- | --- | --- | --- | --- |
+| sv-tests, 344 | kirimasim | 6.6 s | 0.1 s | 6.7 s |
+| | Icarus Verilog | 5.0 s | 33.3 s | 38.3 s |
+| | Verilator | 1,551.8 s | 59.7 s | 1,611.5 s |
+| Own test suite, 1,466 | kirimasim | 14.1 s | 0.3 s | 14.4 s |
+| | Icarus Verilog | 20.8 s | 8.9 s | 29.7 s |
+| | Verilator | 3,796.9 s | 291.7 s | 4,088.6 s |
+
+- The build step is the work before the simulation starts: for kirimasim,
+  reading, elaborating and lowering the design to SIR (timed as a run with
+  `--dump-sir`); for Icarus, `iverilog`; for Verilator, `verilator
+  --binary` with its C++ build. The run step is the simulation: for
+  kirimasim, its whole run less the build step; for Icarus, `vvp`; for
+  Verilator, the built program.
+- The tests are short, so the run steps mostly measure starting up.
+  kirimasim's run step is found by subtraction and is too small to tell
+  apart from noise; the run with `--dump-sir` also prints the SIR, so the
+  subtraction errs on the small side.
+- A test that a simulator cannot build counts with its build step only;
+  kirimasim stops early at an unsupported construct.
+- Verilator builds as each suite's runner does: sv-tests' runner builds
+  without C++ optimization (`-O0`); the own suite's runner uses Verilator's
+  default optimization and random initial values.
+- Versions and machine: kirimasim cc606e4 (release build), Icarus Verilog
+  14.0 (devel) f190dbb, Verilator 5.053 devel 8668340; Apple M5 Max (18
+  cores), 128 GB, macOS 27.0.1, Apple clang 21.
 
 <details>
 <summary>This repository's tests by kind</summary>
@@ -81,33 +129,35 @@ Measured on 2026-10-17 at the commit that added this section.
 <summary>sv-tests by chapter of IEEE 1800-2023</summary>
 
 Pinned sv-tests commit 15490e9, hand-written tests whose type includes
-simulation; Icarus Verilog is the 14.0 development build 04cc493 that the
-P1 criterion uses. Measured with `tools/svtests.py`.
+simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 
-| Chapter | Tests | kirimasim | Icarus | Where kirimasim stops |
-| --- | --- | --- | --- | --- |
-| 5 Lexical conventions | 1 | 1 | 1 | |
-| 6 Data types | 16 | 16 | 11 | |
-| 7 Aggregate data types | 91 | 31 | 44 | dynamic arrays (23), queues (17) and associative arrays (14), all P3; tagged unions |
-| 8 Classes | 15 | 9 | 12 | classes (P3) |
-| 9 Processes | 6 | 4 | 4 | sequences (P3); one test depends on the order of processes at time 0, which 4.7 leaves open (Icarus fails it too) |
-| 10 Assignment statements | 3 | 3 | 3 | |
-| 11 Operators and expressions | 51 | 41 | 37 | values wider than 64 bits (7, in progress), tagged unions (2) |
-| 12 Procedural programming statements | 2 | 2 | 2 | |
-| 13 Tasks and functions | 14 | 14 | 13 | |
-| 14 Clocking blocks | 1 | 1 | 1 | |
-| 15 Interprocess synchronization | 2 | 0 | 0 | mailboxes (P3) |
-| 16 Assertions | 6 | 0 | 3 | concurrent assertions (P3) |
-| 18 Constrained random value generation | 22 | 8 | 8 | `randsequence` (12), `randcase` (2) |
-| 20 Utility system tasks and functions | 38 | 29 | 34 | `$random` and the `$dist_` functions, `$coverage_control` |
-| 21 I/O system tasks and functions | 27 | 9 | 25 | file I/O (15), `$fstrobe`, `$dumpfile`, `$dumpports` |
-| 22 Compiler directives | 6 | 6 | 6 | |
-| 23 Modules and hierarchy | 1 | 1 | 1 | |
-| 24 Programs | 1 | 1 | 1 | |
-| 26 Packages | 1 | 1 | 1 | |
-| UVM | 37 | 0 | 0 | the UVM library needs classes (P3) |
-| UVM random | 3 | 3 | 3 | |
-| **Total** | **344** | **180** | **210** | |
+| Chapter | Tests | kirimasim | Icarus | Verilator | Where kirimasim stops |
+| --- | --- | --- | --- | --- | --- |
+| 5 Lexical conventions | 1 | 1 | 1 | 1 | |
+| 6 Data types | 16 | 16 | 11 | 14 | |
+| 7 Aggregate data types | 91 | 31 | 47 | 88 | dynamic arrays (23), queues (17) and associative arrays (14), all P3; tagged unions |
+| 8 Classes | 15 | 9 | 12 | 12 | classes (P3) |
+| 9 Processes | 6 | 4 | 4 | 6 | sequences (P3); one test depends on the order of processes at time 0, which 4.7 leaves open |
+| 10 Assignment statements | 3 | 3 | 3 | 3 | |
+| 11 Operators and expressions | 51 | 41 | 37 | 48 | values wider than 64 bits (7, in progress), tagged unions (2) |
+| 12 Procedural programming statements | 2 | 2 | 2 | 2 | |
+| 13 Tasks and functions | 14 | 14 | 13 | 14 | |
+| 14 Clocking blocks | 1 | 1 | 1 | 1 | |
+| 15 Interprocess synchronization | 2 | 0 | 0 | 2 | mailboxes (P3) |
+| 16 Assertions | 6 | 0 | 3 | 5 | concurrent assertions (P3) |
+| 18 Constrained random value generation | 22 | 8 | 8 | 22 | `randsequence` (12), `randcase` (2) |
+| 20 Utility system tasks and functions | 38 | 29 | 34 | 37 | `$random` and the `$dist_` functions, `$coverage_control` |
+| 21 I/O system tasks and functions | 27 | 9 | 25 | 26 | file I/O (15), `$fstrobe`, `$dumpfile`, `$dumpports` |
+| 22 Compiler directives | 6 | 6 | 6 | 6 | |
+| 23 Modules and hierarchy | 1 | 1 | 1 | 1 | |
+| 24 Programs | 1 | 1 | 1 | 1 | |
+| 26 Packages | 1 | 1 | 1 | 1 | |
+| UVM | 37 | 0 | 0 | 28 | the UVM library needs classes (P3) |
+| UVM random | 3 | 3 | 3 | 3 | |
+| **Total** | **344** | **180** | **213** | **321** | |
+
+The P1 criterion compares kirimasim with the Icarus build that sv-tests
+pins (04cc493), which passes 210; the newest Icarus passes 213.
 
 </details>
 
@@ -116,33 +166,33 @@ P1 criterion uses. Measured with `tools/svtests.py`.
 
 The P1 population of TEST_SUITE.md: 1,466 tests of the test suite,
 listed in `tests/gates/p1_population.txt`. The suite itself is not public
-yet.
+yet. The last column is where kirimasim stops; it fails no test.
 
-| Chapter | Tests | Pass | Stop at an unsupported construct | Fail |
-| --- | --- | --- | --- | --- |
-| 3 Design and verification building blocks | 3 | 3 | | 0 |
-| 4 Scheduling semantics | 13 | 13 | | 0 |
-| 5 Lexical conventions | 20 | 20 | | 0 |
-| 6 Data types | 226 | 223 | 3: values wider than 64 bits | 0 |
-| 7 Aggregate data types | 90 | 87 | 3: dynamic arrays, associative arrays, `sort` (P3) | 0 |
-| 9 Processes | 72 | 72 | | 0 |
-| 10 Assignment statements | 84 | 83 | 1: values wider than 64 bits | 0 |
-| 11 Operators and expressions | 347 | 347 | | 0 |
-| 12 Procedural programming statements | 106 | 106 | | 0 |
-| 13 Tasks and functions | 76 | 76 | | 0 |
-| 15 Interprocess synchronization | 3 | 3 | | 0 |
-| 16 Assertions | 21 | 18 | 3: `$sampled`, `$stable` (P3) | 0 |
-| 18 Constrained random value generation | 1 | 0 | 1: `randsequence` | 0 |
-| 20 Utility system tasks and functions | 149 | 147 | 2: values wider than 64 bits | 0 |
-| 21 I/O system tasks and functions | 57 | 56 | 1: values wider than 64 bits | 0 |
-| 22 Compiler directives | 14 | 14 | | 0 |
-| 23 Modules and hierarchy | 45 | 45 | | 0 |
-| 25 Interfaces | 29 | 26 | 3: virtual interfaces (P3) | 0 |
-| 26 Packages | 20 | 20 | | 0 |
-| 27 Generate constructs | 62 | 62 | | 0 |
-| 28 Gate-level and switch-level modeling | 22 | 17 | 5: MOS and bidirectional switches (P4) | 0 |
-| 29 User-defined primitives | 6 | 6 | | 0 |
-| **Total** | **1,466** | **1,444** | **22** | **0** |
+| Chapter | Tests | kirimasim | Icarus | Verilator | kirimasim stops at |
+| --- | --- | --- | --- | --- | --- |
+| 3 Design and verification building blocks | 3 | 3 | 1 | 3 | |
+| 4 Scheduling semantics | 13 | 13 | 13 | 9 | |
+| 5 Lexical conventions | 20 | 20 | 20 | 16 | |
+| 6 Data types | 226 | 223 | 187 | 200 | values wider than 64 bits (3) |
+| 7 Aggregate data types | 90 | 87 | 55 | 90 | dynamic arrays, associative arrays, `sort` (3, P3) |
+| 9 Processes | 72 | 72 | 71 | 65 | |
+| 10 Assignment statements | 84 | 83 | 77 | 81 | values wider than 64 bits (1) |
+| 11 Operators and expressions | 347 | 347 | 309 | 312 | |
+| 12 Procedural programming statements | 106 | 106 | 96 | 102 | |
+| 13 Tasks and functions | 76 | 76 | 50 | 76 | |
+| 15 Interprocess synchronization | 3 | 3 | 1 | 3 | |
+| 16 Assertions | 21 | 18 | 16 | 19 | `$sampled`, `$stable` (3, P3) |
+| 18 Constrained random value generation | 1 | 0 | 0 | 1 | `randsequence` (1) |
+| 20 Utility system tasks and functions | 149 | 147 | 144 | 117 | values wider than 64 bits (2) |
+| 21 I/O system tasks and functions | 57 | 56 | 56 | 52 | values wider than 64 bits (1) |
+| 22 Compiler directives | 14 | 14 | 14 | 14 | |
+| 23 Modules and hierarchy | 45 | 45 | 43 | 42 | |
+| 25 Interfaces | 29 | 26 | 18 | 29 | virtual interfaces (3, P3) |
+| 26 Packages | 20 | 20 | 16 | 20 | |
+| 27 Generate constructs | 62 | 62 | 62 | 53 | |
+| 28 Gate-level and switch-level modeling | 22 | 17 | 22 | 20 | MOS and bidirectional switches (5, P4) |
+| 29 User-defined primitives | 6 | 6 | 3 | 5 | |
+| **Total** | **1,466** | **1,444** | **1,274** | **1,329** | |
 
 </details>
 
