@@ -1,0 +1,5 @@
+tpd=10 twidth=20 tsum=30
+m1 D=7 W=16 K=1 bits=16
+m2 D=2 W=4 K=3 bits=4
+g W=32 K=1 bits=32
+after tpd at 10

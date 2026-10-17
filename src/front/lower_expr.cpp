@@ -377,7 +377,9 @@ std::optional<slang::ConstantValue> Lowerer::constantValue(const ast::Expression
     if (sideEffects(e) || untrustedConstant(e)) return std::nullopt;
     if (const slang::ConstantValue* cv = e.getConstant()) return *cv;
     if (evalSymbol_ == nullptr) return std::nullopt;
-    ast::EvalContext ctx(*evalSymbol_);
+    // A specparam is a constant here (6.20.5); slang already rejects it
+    // where a constant expression decides a type or a range.
+    ast::EvalContext ctx(*evalSymbol_, ast::EvalFlags::SpecparamsAllowed);
     slang::ConstantValue cv = e.eval(ctx);
     if (cv.bad()) return std::nullopt;
     return cv;
@@ -674,6 +676,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (const auto it = iterators_.find(&sym); it != iterators_.end()) return it->second;
             if (sym.kind == ast::SymbolKind::Parameter)
                 return constantFrom(sym.as<ast::ParameterSymbol>().getValue(), typeOf(*e.type, sl),
+                                    sl);
+            // A specparam is a constant like a parameter (6.20.5).
+            if (sym.kind == ast::SymbolKind::Specparam)
+                return constantFrom(sym.as<ast::SpecparamSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
             if (sym.kind == ast::SymbolKind::EnumValue)
                 return constantFrom(sym.as<ast::EnumValueSymbol>().getValue(), typeOf(*e.type, sl),

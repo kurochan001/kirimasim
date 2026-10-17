@@ -35,6 +35,7 @@
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
+#include "slang/ast/symbols/SpecifySymbols.h"
 #include "slang/ast/symbols/SubroutineSymbols.h"
 #include "slang/ast/types/AllTypes.h"
 #include "slang/ast/types/NetType.h"
@@ -1135,6 +1136,8 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
             case ast::SymbolKind::ExplicitImport:     // names resolved by slang
             case ast::SymbolKind::WildcardImport:
             case ast::SymbolKind::EmptyMember:
+            case ast::SymbolKind::DefParam:       // slang applied the value (23.10)
+            case ast::SymbolKind::Specparam:      // a constant, used where it is named (6.20.5)
             case ast::SymbolKind::NetAlias:       // one slot (aliasNets)
             case ast::SymbolKind::Port:           // connected by the parent (lowerPorts)
             case ast::SymbolKind::InterfacePort:  // names through it reach the interface
@@ -1178,6 +1181,16 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
             case ast::SymbolKind::ProceduralBlock:
                 lowerProcedure(member.as<ast::ProceduralBlockSymbol>(), prefix);
                 continue;
+            case ast::SymbolKind::SpecifyBlock: {
+                // A specify block with specparams alone does nothing; path
+                // delays and timing checks are not done yet (SIR_SPEC.md 6).
+                bool onlyParams = true;
+                for (const ast::Symbol& m : member.as<ast::SpecifyBlockSymbol>().members())
+                    onlyParams = onlyParams && m.kind == ast::SymbolKind::Specparam;
+                if (!onlyParams)
+                    report(member.location, "specify block with path delays or timing checks");
+                continue;
+            }
             case ast::SymbolKind::Instance: {
                 const auto& child = member.as<ast::InstanceSymbol>();
                 lowerPorts(child);
