@@ -75,7 +75,63 @@ _deps/slang-src/source/ast/builtins/ConversionFuncs.cpp:64:36: runtime error: -3
   or        %rax,%rdx         ; 0xFFFFFFFFFFFFFFFD | 0x8000000000000000 = 0xFFFFFFFFFFFFFFFD
   ```
 
-  負の値では、符号付きの変換の結果のビットの並びがそのまま残り、32 ビットに切り詰めると -3 になる。arm64 の符号なしの変換の命令は負の値を 0 にするので、結果が分かれる（arm64 の命令の動作は、この調べでは逆アセンブルしておらず未確認。Issue の報告の値 0 と合う）。release の構成（`-O3`）の命令列は見ていない（未確認）。
+  負の値では、符号付きの変換の結果のビットの並びがそのまま残り、32 ビットに切り詰めると -3 になる。arm64 の符号なしの変換の命令は負の値を 0 にするので、結果が分かれる（下の「arm64 で確かめた結果」）。release の構成（`-O3`）の命令列は見ていない（未確認）。
+
+## arm64 で確かめた結果（2026-10-17 に追記）
+
+### 環境
+
+- arm64、macOS 27
+- Apple clang 21.0.0
+- kirimasim `6cdbde8` の dev の構成（slang は `-O1`）
+
+### 結果
+
+| 構成 | 本文の例 | コメントの例 |
+| --- | --- | --- |
+| dev（`build/dev`） | `P = 0, Q = 3` | `P=0 assign=-3 var=-3` |
+| slang だけを `-fsanitize=float-cast-overflow` で作った CLI（下の「再現の手順」） | 検出される（値は `P = 0, Q = 3`） | — |
+
+- コメントの例の `assign` と `var` が -3 になるのは、`docs/spec/SIR_SPEC.md` の 6 節の方針で、`$rtoi` を含む式を実行時に計算するため。パラメータ P は slang が決めるので 0 のまま。
+- 検出の報告（パスは slang のソースの場所からの相対に直した）は、x86_64 と同じ箇所である。型の名前が違うのは、macOS では `uint64_t` が `unsigned long long` だから。
+
+  ```
+  source/ast/builtins/ConversionFuncs.cpp:64:36: runtime error: -3.7 is outside the range of representable values of type 'unsigned long long'
+  ```
+
+- dev の構成の `ConversionFuncs.cpp.o` を逆アセンブルすると、`RtoIFunction::eval` の中の `double` から `uint64_t` への変換は、次の 1 命令だった。
+
+  ```
+  fcvtzu    d0, d0           ; 符号なしの変換。負の値は 0 になる
+  ```
+
+  同じ命令になる小さなプログラム（負の `double` を `(uint64_t)` で変換するだけ）を、この Mac で動かした。-3.7 は 0 になった。x86_64 の命令列は符号付きの変換の結果を残すので -3 になり、arm64 のこの命令は 0 になる。これが、マシンによって結果が分かれる理由である。
+
+### arm64 での再現の手順
+
+slang だけの UBSan 付きの CLI は、kirimasim の dev の構成が取ってきた依存のソースを使って、ネットワークを使わずに作れる。`<dir>` は好きな作業用のディレクトリ。
+
+```sh
+D=build/dev/_deps
+cmake -S $D/slang-src -B <dir> -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DSLANG_INCLUDE_TOOLS=ON -DSLANG_INCLUDE_TESTS=OFF -DSLANG_USE_MIMALLOC=OFF \
+  -DCMAKE_CXX_FLAGS=-fsanitize=float-cast-overflow \
+  -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=float-cast-overflow \
+  -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
+  -DFETCHCONTENT_SOURCE_DIR_FMT=$PWD/$D/fmt-src \
+  -DFETCHCONTENT_SOURCE_DIR_BOOST_REGEX=$PWD/$D/boost_regex-src \
+  -DFETCHCONTENT_SOURCE_DIR_TOMLPLUSPLUS=$PWD/$D/tomlplusplus-src
+cmake --build <dir> --target slang_driver
+<dir>/bin/slang rtoi.sv
+```
+
+逆アセンブル（macOS の `objdump` は LLVM のもの）：
+
+```sh
+objdump -d --no-show-raw-insn -C \
+  build/dev/_deps/slang-build/source/CMakeFiles/slang_slang.dir/ast/builtins/ConversionFuncs.cpp.o \
+  | awk '/RtoIFunction::eval/{p=1} p{print} p&&/\tret/{exit}' | grep fcvtzu
+```
 
 ## kirimasim への影響
 
