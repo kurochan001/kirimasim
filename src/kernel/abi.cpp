@@ -28,6 +28,29 @@ SlotPart partOf(const kirima_slot_part& p) {
     return {p.slot, p.first_elem, p.num_elems, p.lsb, p.width};
 }
 
+std::vector<WaitItem> itemsOf(const kirima_wait_item* items, std::uint32_t n) {
+    std::vector<WaitItem> v;
+    v.reserve(n);
+    for (std::uint32_t i = 0; i < n; ++i)
+        v.push_back({partOf(items[i].part), static_cast<Edge>(items[i].edge), items[i].guard,
+                     items[i].guard_frame});
+    return v;
+}
+
+MonitorSpec specOf(const kirima_monitor& m) {
+    MonitorSpec spec;
+    for (std::uint32_t i = 0; i < m.num_slots; ++i)
+        spec.slots.push_back(partOf(m.slots[i]));
+    spec.events.assign(m.events, m.events + m.num_events);
+    spec.eval = m.eval;
+    spec.frame = m.frame;
+    spec.domain = static_cast<Domain>(m.domain);
+    spec.width = m.width;
+    spec.edge = static_cast<Edge>(m.edge);
+    spec.untilTrue = m.until_true != 0;
+    return spec;
+}
+
 constexpr kirima_kernel_api kApi = {
     KIRIMA_ABI_MAJOR,
     KIRIMA_ABI_MINOR,
@@ -37,25 +60,10 @@ constexpr kirima_kernel_api kApi = {
     [](kirima_context* c, std::uint32_t p) { sched(c).start(p); },
     [](kirima_context* c, std::uint32_t p, std::uint64_t ticks) { sched(c).waitDelay(p, ticks); },
     [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n) {
-        std::vector<WaitItem> v;
-        v.reserve(n);
-        for (std::uint32_t i = 0; i < n; ++i)
-            v.push_back({partOf(items[i].part), static_cast<Edge>(items[i].edge), items[i].guard,
-                         items[i].guard_frame});
-        sched(c).waitEvent(p, v);
+        sched(c).waitEvent(p, itemsOf(items, n));
     },
     [](kirima_context* c, std::uint32_t p, const kirima_monitor* m) {
-        MonitorSpec spec;
-        for (std::uint32_t i = 0; i < m->num_slots; ++i)
-            spec.slots.push_back(partOf(m->slots[i]));
-        spec.events.assign(m->events, m->events + m->num_events);
-        spec.eval = m->eval;
-        spec.frame = m->frame;
-        spec.domain = static_cast<Domain>(m->domain);
-        spec.width = m->width;
-        spec.edge = static_cast<Edge>(m->edge);
-        spec.untilTrue = m->until_true != 0;
-        sched(c).waitMonitor(p, spec);
+        sched(c).waitMonitor(p, specOf(*m));
     },
     [](kirima_context* c, std::uint32_t p, std::uint32_t e) { sched(c).waitNamed(p, e); },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
@@ -77,6 +85,17 @@ constexpr kirima_kernel_api kApi = {
     [](kirima_context* c, const char* message) { sched(c).fail(message); },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem) {
         return fromC(c).store().element(s, elem);
+    },
+    [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n,
+       const kirima_monitor_item* monitors, std::uint32_t m) {
+        std::vector<MonitorSpec> specs;
+        specs.reserve(m);
+        for (std::uint32_t i = 0; i < m; ++i) {
+            specs.push_back(specOf(monitors[i].monitor));
+            specs.back().guard = monitors[i].guard;
+            specs.back().guardFrame = monitors[i].guard_frame;
+        }
+        sched(c).waitAny(p, itemsOf(items, n), specs);
     },
 };
 

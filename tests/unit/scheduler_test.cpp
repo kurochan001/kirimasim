@@ -673,6 +673,79 @@ TEST(Scheduler, MonitorWakesOnlyWhenTheValueChanges) {
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
 
+TEST(Scheduler, MixedWaitEndsAtItsFirstItem) {
+    // @(posedge clk or (a & 1) or (b & 1)): a subscription and two monitor
+    // records; the first item that fires wakes the process once and ends
+    // the others (SCHEDULER_SPEC.md 9.5).
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::SlotId clk = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+    const k::SlotId a = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    const k::SlotId b = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    std::vector<std::string> log;
+    Waiter w{&log, "w"};
+    BitFrame fa{a};
+    BitFrame fb{b};
+    const k::ProcessId p = s.addProcess(&logOnce, &w, Group::Active);
+    const k::WaitItem item{{clk, 0, 0, 0, 0}, Edge::Pos, nullptr, nullptr};
+    std::vector<k::MonitorSpec> mons(2);
+    for (std::size_t i = 0; i < 2; ++i) {
+        mons[i].slots = {{i == 0 ? a : b, 0, 0, 0, 0}};
+        mons[i].eval = &evalBit0;
+        mons[i].frame = i == 0 ? &fa : &fb;
+        mons[i].domain = k::Domain::Two;
+        mons[i].width = 1;
+    }
+    s.waitAny(p, {&item, 1}, mons);
+    const std::uint64_t two = 2;
+    const std::uint64_t one = 1;
+    s.write(a, 0, 0, 0, &two);  // a & 1 stays 0
+    s.run();
+    EXPECT_TRUE(log.empty());
+    s.write(b, 0, 0, 0, &one);  // b & 1 becomes 1: wakes
+    s.write(a, 0, 0, 0, &one);  // the other items are gone
+    s.write(clk, 0, 0, 0, &one);
+    s.run();
+    EXPECT_EQ(log, std::vector<std::string>{"w@0"});
+}
+
+TEST(Scheduler, MonitorIffIsReadOnlyWhenItsEventOccurs) {
+    // @(posedge (a & 1) iff g): the guard is read on the expression's
+    // posedge alone (9.4.2.3).
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::SlotId a = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    std::vector<std::string> log;
+    Waiter w{&log, "w"};
+    BitFrame f{a};
+    GuardState g;
+    const k::ProcessId p = s.addProcess(&logOnce, &w, Group::Active);
+    k::MonitorSpec m;
+    m.slots = {{a, 0, 0, 0, 0}};
+    m.eval = &evalBit0;
+    m.frame = &f;
+    m.domain = k::Domain::Two;
+    m.width = 1;
+    m.edge = Edge::Pos;
+    m.guard = &guardFn;
+    m.guardFrame = &g;
+    s.waitAny(p, {}, {&m, 1});
+    const std::uint64_t two = 2;
+    const std::uint64_t one = 1;
+    const std::uint64_t zero = 0;
+    s.write(a, 0, 0, 0, &two);  // the value stays 0: guard not read
+    EXPECT_EQ(g.calls, 0);
+    s.write(a, 0, 0, 0, &one);  // posedge, guard false: keep waiting
+    EXPECT_EQ(g.calls, 1);
+    s.write(a, 0, 0, 0, &zero);  // negedge: guard not read
+    EXPECT_EQ(g.calls, 1);
+    g.value = true;
+    s.write(a, 0, 0, 0, &one);
+    EXPECT_EQ(g.calls, 2);
+    s.run();
+    EXPECT_EQ(log, std::vector<std::string>{"w@0"});
+}
+
 // --- The C function table -------------------------------------------------------
 
 struct AbiProcess {
@@ -711,6 +784,39 @@ TEST(KernelAbi, TableReachesTheScheduler) {
     // Run at 0, then at 3 after the NBA of 5 at time 2.
     EXPECT_EQ(p.seen, (std::vector<std::uint64_t>{0, 3, 5}));
     EXPECT_EQ(ctx.scheduler().level(), 0);
+}
+
+TEST(KernelAbi, WaitAnyTakesMonitorItemsWithIff) {
+    const kirima_kernel_api* api = kirima_get_kernel_api();
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::SlotId a = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    std::vector<std::string> log;
+    Waiter w{&log, "w"};
+    BitFrame f{a};
+    GuardState g;
+    const std::uint32_t p = api->add_process(k::toC(ctx), &logOnce, &w, KIRIMA_GROUP_ACTIVE);
+    const kirima_slot_part part{a, 0, 0, 0, 0};
+    kirima_monitor_item item{};
+    item.monitor.slots = &part;
+    item.monitor.num_slots = 1;
+    item.monitor.eval = &evalBit0;
+    item.monitor.frame = &f;
+    item.monitor.domain = KIRIMA_DOMAIN_TWO;
+    item.monitor.width = 1;
+    item.monitor.edge = KIRIMA_EDGE_POS;
+    item.guard = &guardFn;
+    item.guard_frame = &g;
+    api->wait_any(k::toC(ctx), p, nullptr, 0, &item, 1);
+    const std::uint64_t one = 1;
+    const std::uint64_t zero = 0;
+    s.write(a, 0, 0, 0, &one);  // guard false
+    s.write(a, 0, 0, 0, &zero);
+    g.value = true;
+    s.write(a, 0, 0, 0, &one);
+    s.run();
+    EXPECT_EQ(g.calls, 2);
+    EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
 
 // --- Random scripts against the reference model -----------------------------------

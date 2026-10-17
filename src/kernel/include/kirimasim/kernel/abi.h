@@ -22,7 +22,7 @@ extern "C" {
 
 /* ABI version (RUNTIME_ABI.md 2). 0.x while the table is a draft. */
 #define KIRIMA_ABI_MAJOR 0
-#define KIRIMA_ABI_MINOR 1
+#define KIRIMA_ABI_MINOR 2
 
 /* A simulation context; the kernel's Context behind an opaque pointer. */
 typedef struct kirima_context kirima_context;
@@ -88,6 +88,14 @@ typedef struct kirima_monitor {
     uint32_t until_true; /* nonzero for wait (expr) */
 } kirima_monitor;
 
+/* An item of an event control on an expression: a monitor record and the
+ * item's iff (guard NULL: none). Since ABI 0.2. */
+typedef struct kirima_monitor_item {
+    kirima_monitor monitor;
+    kirima_guard_fn guard;
+    void* guard_frame;
+} kirima_monitor_item;
+
 /* The kernel's function table. Fields are only ever added at the end
  * (a minor version step); anything else is a major step. */
 typedef struct kirima_kernel_api {
@@ -123,6 +131,13 @@ typedef struct kirima_kernel_api {
 
     /* Direct reads: the first word of element `elem` of a slot. */
     uint64_t* (*slot_words)(kirima_context* ctx, uint32_t slot, uint32_t elem);
+
+    /* Since ABI 0.2: an event control whose items are subscriptions and
+     * monitor records; the first item whose event occurs wakes the
+     * process. */
+    void (*wait_any)(kirima_context* ctx, uint32_t process, const kirima_wait_item* items,
+                     uint32_t num_items, const kirima_monitor_item* monitors,
+                     uint32_t num_monitors);
 } kirima_kernel_api;
 
 /* The kernel's table. */

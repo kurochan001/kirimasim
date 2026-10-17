@@ -560,6 +560,10 @@ MUTANTS = [
     ("front: an event on a part waits on its whole variable", "src/front/lower_expr.cpp",
      "        default: return std::nullopt;\n    }\n    return rangeOf(p);",
      "        default: return std::nullopt;\n    }\n    return sir::SlotRange{p.slot, 0, 0, 0, 0};"),
+    ("kernel: a monitor record's iff is not read", "src/kernel/sim.cpp",
+     "        if (fire && spec.guard != nullptr && spec.guard(toC(ctx_), spec.guardFrame) == 0)\n"
+     "            fire = false;\n",
+     ""),
 ]
 
 

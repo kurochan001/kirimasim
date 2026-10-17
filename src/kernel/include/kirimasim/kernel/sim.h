@@ -135,6 +135,10 @@ struct MonitorSpec {
     std::uint32_t width = 1;
     Edge edge = Edge::Any;   ///< For an event control.
     bool untilTrue = false;  ///< `wait (expr)`: wake when the value is true.
+    /// An event control item's iff, read when the item's event occurs
+    /// (9.4.2.3); null for none.
+    GuardFn guard = nullptr;
+    void* guardFrame = nullptr;
 };
 
 /// The levels of a procedural continuous assignment; force is above
@@ -182,6 +186,11 @@ public:
     void waitDelay(ProcessId p, std::uint64_t ticks);
     void waitEvent(ProcessId p, std::span<const WaitItem> items);
     void waitMonitor(ProcessId p, const MonitorSpec& m);
+    /// An event control whose items are subscriptions and monitor records:
+    /// the first item whose event occurs wakes the process and ends the
+    /// others (SCHEDULER_SPEC.md 9.5).
+    void waitAny(ProcessId p, std::span<const WaitItem> items,
+                 std::span<const MonitorSpec> monitors);
     void waitNamed(ProcessId p, EventId e);
 
     /// Writes bits [lsb, lsb + width) of element `elem` (width 0: all) from
@@ -346,8 +355,8 @@ private:
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
-        std::uint32_t gen = 0;               ///< Number of the current wait.
-        std::uint32_t monitor = UINT32_MAX;  ///< Monitor record of the current wait.
+        std::uint32_t gen = 0;                ///< Number of the current wait.
+        std::vector<std::uint32_t> monitors;  ///< Monitor records of the current wait.
         bool done = false;
         bool flushOnResume = false;          ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
@@ -361,6 +370,7 @@ private:
     };
     struct Monitor {
         ProcessId process = 0;
+        std::uint32_t gen = 0;     ///< The process's wait it belongs to.
         std::uint32_t serial = 0;  ///< Changes when the record is reused.
         MonitorSpec spec;
         std::vector<std::uint64_t> last;
@@ -503,6 +513,9 @@ private:
     bool showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
     void evaluateMonitor(std::uint32_t id);
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
+    /// Adds a monitor record to p's current wait.
+    void addMonitor(ProcessId p, const MonitorSpec& m);
+    /// Frees the monitor records of p's current wait.
     void freeMonitor(ProcessId p);
     void ensureSlotTables();
     void flushReports(ProcessId p);

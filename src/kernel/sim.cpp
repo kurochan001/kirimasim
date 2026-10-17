@@ -257,12 +257,13 @@ void Scheduler::runPostponed(ProcessId p) {
 
 void Scheduler::freeMonitor(ProcessId p) {
     Process& proc = processes_[p];
-    if (proc.monitor == UINT32_MAX) return;
-    Monitor& m = monitors_[proc.monitor];
-    m.serial = ++monitorSerial_;  // references from slots and events go stale
-    m.spec = {};
-    freeMonitors_.push_back(proc.monitor);
-    proc.monitor = UINT32_MAX;
+    for (const std::uint32_t id : proc.monitors) {
+        Monitor& m = monitors_[id];
+        m.serial = ++monitorSerial_;  // references from slots and events go stale
+        m.spec = {};
+        freeMonitors_.push_back(id);
+    }
+    proc.monitors.clear();
 }
 
 void Scheduler::wake(ProcessId p) {
@@ -559,21 +560,24 @@ void Scheduler::waitDelay(ProcessId p, std::uint64_t ticks) {
     }
 }
 
-void Scheduler::waitEvent(ProcessId p, std::span<const WaitItem> items) {
+void Scheduler::waitEvent(ProcessId p, std::span<const WaitItem> items) { waitAny(p, items, {}); }
+
+void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) { waitAny(p, {}, {&m, 1}); }
+
+void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
+                        std::span<const MonitorSpec> monitors) {
     ensureSlotTables();
     freeMonitor(p);
-    Process& proc = processes_[p];
-    ++proc.gen;
+    const std::uint32_t gen = ++processes_[p].gen;
     for (const WaitItem& item : items) {
-        subscriptions_[item.part.slot].push_back({p, proc.gen, item});
+        subscriptions_[item.part.slot].push_back({p, gen, item});
         counters_.increment(cSubscriptions_);
     }
+    for (const MonitorSpec& m : monitors)
+        addMonitor(p, m);
 }
 
-void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) {
-    ensureSlotTables();
-    freeMonitor(p);
-    ++processes_[p].gen;
+void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
     std::uint32_t id = 0;
     if (!freeMonitors_.empty()) {
         id = freeMonitors_.back();
@@ -582,9 +586,10 @@ void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) {
         id = static_cast<std::uint32_t>(monitors_.size());
         monitors_.emplace_back();
     }
-    processes_[p].monitor = id;
+    processes_[p].monitors.push_back(id);
     Monitor& mon = monitors_[id];
     mon.process = p;
+    mon.gen = processes_[p].gen;
     mon.serial = ++monitorSerial_;
     mon.spec = m;
     mon.last.assign(elementWords(m.domain, m.width), 0);
@@ -843,7 +848,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
 
 void Scheduler::evaluateMonitor(std::uint32_t id) {
     Monitor& m = monitors_[id];
-    if (processes_[m.process].monitor != id) return;  // already woken
+    if (processes_[m.process].gen != m.gen) return;  // already woken
     const MonitorSpec& spec = m.spec;
     scratch_.assign(m.last.size(), 0);
     spec.eval(toC(ctx_), spec.frame, scratch_.data());
@@ -855,6 +860,9 @@ void Scheduler::evaluateMonitor(std::uint32_t id) {
         fire =
             spec.edge == Edge::Any || edgeMatches(spec.edge, logicAt(spec.domain, m.last.data(), 0),
                                                   logicAt(spec.domain, scratch_.data(), 0));
+        // iff: read when the item's event occurs, and only then (9.4.2.3).
+        if (fire && spec.guard != nullptr && spec.guard(toC(ctx_), spec.guardFrame) == 0)
+            fire = false;
     }
     Monitor& again = monitors_[id];
     again.last = scratch_;
