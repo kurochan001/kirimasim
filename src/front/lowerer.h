@@ -181,6 +181,8 @@ public:
     /// from outside the block's body or that start processes or call
     /// tasks, before anything is lowered.
     void scanDisables(const ast::RootSymbol& root);
+    /// Whether a subroutine, or one it calls, has a fork.
+    bool mayFork(const ast::SubroutineSymbol& sub);
     /// The scope number of a named block, made on first use.
     std::uint32_t scopeOf(const ast::Symbol& block);
     /// scope.leave for the scoped named blocks from number `from` of the
@@ -677,6 +679,7 @@ private:
     std::set<const ast::Symbol*> disableTargets_;
     std::set<const ast::Symbol*> disabledFromOutside_;
     std::set<const ast::Symbol*> blocksThatSpawn_;
+    std::map<const ast::SubroutineSymbol*, bool> mayFork_;
     std::map<const ast::Symbol*, std::uint32_t> scopeIds_;
     /// Expressions that stand for values already evaluated: the arguments
     /// of a deferred assertion's action inside its function.

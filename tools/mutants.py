@@ -389,6 +389,12 @@ MUTANTS = [
      "    reportProgram(inst);\n", "    (void)inst;\n"),
     ("front: an anonymous program is not reported", "src/front/lower.cpp",
      "        report(s.location, \"anonymous program\");", "        (void)s;"),
+    ("front: a join whose branches start processes starts none", "src/front/lower_stmt.cpp",
+     "if (b.blockKind != ast::StatementBlockKind::JoinAll || spawns != before) spawn();",
+     "if (b.blockKind != ast::StatementBlockKind::JoinAll) spawn();"),
+    ("front: a function that forks starts no process", "src/front/lower_stmt.cpp",
+     "if (sub.subroutineKind == ast::SubroutineKind::Task || mayFork(sub)) spawn();",
+     "if (sub.subroutineKind == ast::SubroutineKind::Task) spawn();"),
 ]
 
 

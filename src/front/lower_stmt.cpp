@@ -552,9 +552,14 @@ void Lowerer::leaveScopes(std::size_t from, slang::SourceLocation sl) {
 
 void Lowerer::scanDisables(const ast::RootSymbol& root) {
     // The named blocks around the statement being visited, in its body: a
-    // procedure, a subroutine or a fork branch.
+    // procedure, a subroutine or a fork branch. A disable of a block ends
+    // every process started in it, with their descendants (9.6.2): a block
+    // where a process may start is one that spawns, and so is not left
+    // with a plain jump.
     std::vector<std::vector<const ast::Symbol*>> bodies(1);
+    std::size_t spawns = 0;
     const auto spawn = [&] {
+        ++spawns;
         for (const ast::Symbol* b : bodies.back())
             blocksThatSpawn_.insert(b);
     };
@@ -577,8 +582,8 @@ void Lowerer::scanDisables(const ast::RootSymbol& root) {
                 if (named) bodies.back().pop_back();
                 return;
             }
-            if (b.blockKind != ast::StatementBlockKind::JoinAll) spawn();
             // Each statement of a fork is a process of its own (9.3.2).
+            const std::size_t before = spawns;
             const auto branch = [&](const ast::Statement& st) {
                 bodies.emplace_back();
                 st.visit(v);
@@ -590,6 +595,9 @@ void Lowerer::scanDisables(const ast::RootSymbol& root) {
             } else {
                 branch(b.body);
             }
+            // join_any and join_none leave children running; a join leaves
+            // what its branches started without waiting (9.6.1).
+            if (b.blockKind != ast::StatementBlockKind::JoinAll || spawns != before) spawn();
         },
         [&](auto& v, const ast::DisableStatement& d) {
             if (d.target.kind == ast::ExpressionKind::ArbitrarySymbol) {
@@ -602,13 +610,33 @@ void Lowerer::scanDisables(const ast::RootSymbol& root) {
             v.visitDefault(d);
         },
         [&](auto& v, const ast::CallExpression& c) {
-            // A task may start processes it does not wait for.
-            if (!c.isSystemCall() &&
-                std::get<0>(c.subroutine)->subroutineKind == ast::SubroutineKind::Task)
-                spawn();
+            // A task may start processes it does not wait for, and so may a
+            // function with a fork-join_none (13.4.4).
+            if (!c.isSystemCall()) {
+                const ast::SubroutineSymbol& sub = *std::get<0>(c.subroutine);
+                if (sub.subroutineKind == ast::SubroutineKind::Task || mayFork(sub)) spawn();
+            }
             v.visitDefault(c);
         });
     root.visit(visitor);
+}
+
+bool Lowerer::mayFork(const ast::SubroutineSymbol& sub) {
+    if (const auto it = mayFork_.find(&sub); it != mayFork_.end()) return it->second;
+    mayFork_[&sub] = false;  // a recursive call adds nothing
+    bool forks = false;
+    auto visitor = ast::makeVisitor(
+        [&](auto& v, const ast::BlockStatement& b) {
+            if (b.blockKind != ast::StatementBlockKind::Sequential) forks = true;
+            v.visitDefault(b);
+        },
+        [&](auto& v, const ast::CallExpression& c) {
+            if (!c.isSystemCall() && mayFork(*std::get<0>(c.subroutine))) forks = true;
+            v.visitDefault(c);
+        });
+    sub.visit(visitor);
+    mayFork_[&sub] = forks;
+    return forks;
 }
 
 void Lowerer::lowerWait(const ast::WaitStatement& w) {
