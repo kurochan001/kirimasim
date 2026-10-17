@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 6
+VERSION = 7
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -74,7 +74,6 @@ STATEMENTS = [
     ("sdf_annotate", "", "«»$sdf_annotate(\"x.sdf\");", "system task $sdf_annotate", False),
     ("event_var_index", "  event ev[2];\n  int i;\n", "@(«»ev[i]);",
      "event selected by an index that is not constant", True),
-    # Edges that tools/gen_edge_matrix.py leaves out.
     # The kernel evaluates a wait condition in the middle of another write.
     ("wait_writes",
      "  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
@@ -86,12 +85,6 @@ STATEMENTS = [
     ("iff_writes",
      "  logic s;\n  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
      "@(posedge s iff «»wr());", "iff condition that writes a variable or net", True),
-    # An element at a run-time index: a change of the index changes the
-    # expression too (9.4.2), which needs a monitor record.
-    ("event_element_run_time", "  logic m[0:1];\n  int i = 1;\n", "@(«»posedge m[i]);",
-     "event control on an expression", True),
-    ("event_expression", "  logic s, en;\n", "@(«»posedge (s & en));",
-     "event control on an expression", True),
     ("stream_into_string", "  string s;\n  bit [15:0] a = 16'h4142;\n", "s = «»{>>{a}};",
      "streaming into this target", False),
     ("unpack_into_string", "  string s;\n", "«»{>>{s}} = 16'h4142;", "unpacking this stream",
