@@ -551,6 +551,62 @@ terms.
 | FST | A compact waveform file format (later) |
 | 規格で確認, 本書の決まり, 解釈, 未確認 | The notes of the specifications: checked against the clause of the standard; kirimasim's own rule where the standard leaves the choice to the implementation; a reading of text that allows two; not confirmed yet (with how to confirm it) |
 
+## FAQ
+
+**Can I use kirimasim on my project now?**
+Not yet. It is in early development (P1): its first tier, an interpreter,
+runs RTL and simple testbenches, and [What works](#what-works) and
+[What does not work yet](#what-does-not-work-yet) say how far it goes. You
+can try it on your design: anything it does not support yet stops the run
+with an error at its source position.
+
+**Why does it stop at an unsupported construct instead of skipping it?**
+A simulator that skips what it does not understand prints results that
+look right and are not. kirimasim reports every unsupported construct with
+its position and exits with code 2 before the simulation starts
+([CLI.md](docs/spec/CLI.md) 5).
+
+**How does it differ from Icarus Verilog and Verilator?**
+In two points of focus: four-state values by default, with no optimization
+that changes their meaning, and the scheduling of IEEE 1800-2023 with every
+region of the time slot. Both simulators are run on kirimasim's tests as
+evidence, but the expected results come from the standard
+([How it is tested](#how-it-is-tested)). Verilator compiles the design to
+C++ with two-state values and is far faster today
+([Simulation speed](#simulation-speed)); kirimasim's tier 2 (P2) will
+compile to C++ too.
+
+**Does it run UVM?**
+Not yet. UVM needs classes, dynamic arrays, queues and constrained
+randomization, which are planned for P3. UVM is then to run as ordinary
+SystemVerilog source, with no special handling of its classes.
+
+**Can it write waveforms?**
+Not yet. `$dumpvars` with VCD and FST output is planned for P1.
+
+**Which platforms does it run on?**
+It is developed on macOS (arm64), and CI builds and tests it on x86-64
+Linux; the nightly runs also build it on arm64 Linux and with GCC. Windows
+is not tested.
+
+**Is slang modified?**
+No. kirimasim uses [slang](https://github.com/MikePopoloski/slang)
+unmodified for parsing and elaboration, pinned to one commit. Bugs found in
+slang are reported upstream, and kirimasim works around them until the
+pinned commit has the fix ([SIR_SPEC.md](docs/spec/SIR_SPEC.md) 6).
+
+**Is the code written by AI?**
+Most of it, by Claude Code. Humans are responsible for the specifications,
+the tests and the review; [AI_POLICY.md](docs/spec/AI_POLICY.md) explains
+how AI is used.
+
+**How can I help?**
+For now, with issues: bug reports, wrong expected values, and proposals for
+the specifications under `docs/spec/`. Questions and ideas go to
+[Discussions](https://github.com/kurochan001/kirimasim/discussions). Code
+pull requests are not accepted yet
+([Contributions](#contributions-specification-proposals-and-issues-only-for-now)).
+
 ## License
 
 kirimasim is licensed under the Apache License 2.0 with LLVM Exceptions
