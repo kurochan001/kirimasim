@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 2
+VERSION = 3
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -74,6 +74,13 @@ STATEMENTS = [
     ("sdf_annotate", "", "«»$sdf_annotate(\"x.sdf\");", "system task $sdf_annotate", False),
     ("event_var_index", "  event ev[2];\n  int i;\n", "@(«»ev[i]);",
      "event selected by an index that is not constant", True),
+    # Edges that tools/gen_edge_matrix.py leaves out.
+    ("event_iff", "  logic s, en = 1'b1;\n", "@(«»posedge s iff en);",
+     "event control with iff", True),
+    ("event_unpacked_element", "  logic m[0:1];\n", "@(«»posedge m[1]);",
+     "event control on an expression", True),
+    ("event_expression", "  logic s, en;\n", "@(«»posedge (s & en));",
+     "event control on an expression", True),
     ("stream_into_string", "  string s;\n  bit [15:0] a = 16'h4142;\n", "s = «»{>>{a}};",
      "streaming into this target", False),
     ("unpack_into_string", "  string s;\n", "«»{>>{s}} = 16'h4142;", "unpacking this stream",
