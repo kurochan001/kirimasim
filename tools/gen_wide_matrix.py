@@ -11,8 +11,9 @@ chunks. The axes: the width (65, 100, 128, 200: one bit past a word, a
 partial second word, two full words, four words), two- and four-state,
 signed and unsigned; the operators (arithmetic, with an unknown operand
 and a zero divisor; bitwise with x and z; shifts by constants and by a
-variable, past 64; comparisons, equality and case equality; reductions;
-constant and variable part- and bit-selects; concatenation, replication;
+variable, past 64; comparisons, equality, case equality and wildcard
+equality; reductions and their negations; constant and variable part- and
+bit-selects; concatenation, replication;
 widening, narrowing and two-state conversion; the logical operators and
 the truth of an if condition; conversion to a real); the container (module
 variables, kept in slots, and automatic variables of a task, kept in its
@@ -42,7 +43,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "wide_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 3
+VERSION = 4
 WIDTHS = [65, 100, 128, 200]
 
 
@@ -184,6 +185,17 @@ def reduce(op, x):
     if x.b:
         return X1
     return ONE if bin(x.a).count("1") % 2 else ZERO
+
+
+def wildcard(op, x, y):
+    """==? and !=?: the x and z bits of the right side match anything
+    (VALUE_SEMANTICS.md 3.4)."""
+    w = max(x.w, y.w)
+    signed = x.signed and y.signed
+    x, y = resize(x, w, signed), resize(y, w, signed)
+    care = ~y.b & ((1 << w) - 1)
+    r = equality("==", V(w, x.a & care, x.b & care), V(w, y.a & care, y.b & care))
+    return r if op == "==?" or r.b else V(1, 1 - r.a)
 
 
 def truth(x):
@@ -360,6 +372,11 @@ def op_cases(w, four, signed, a, b, c, d):
         ("limpx", "( c & ~c ) -> zero", leqv_imp(cx, zero)),
         ("leqv", "a <-> zero", leqv(a, zero)),
         ("leqvx", "( c & ~c ) <-> a", leqv(cx, a)),
+        ("rnand", "~&a", bitnot(reduce("&", a))),
+        ("rnor", "~|c", bitnot(reduce("|", c))),
+        ("rxnor", "~^c", bitnot(reduce("^", c))),
+        ("wne", "a !=? c", wildcard("!=?", a, c)),
+        ("weqx", "c ==? a", wildcard("==?", c, a)),
     ]
     out += [(t, e, v, 1) for t, e, v in one_bit]
     parts = [

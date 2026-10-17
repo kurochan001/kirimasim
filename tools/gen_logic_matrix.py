@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 from gen_wide_matrix import (V, allx, arith, bitnot, bitwise, equality, land, lnot, lor,
-                             reduce, relational, resize, shift, truth)
+                             reduce, relational, resize, shift, truth, wildcard)
 
 OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "logic_matrix"
@@ -62,16 +62,6 @@ def lit(x):
 
 
 ONE, ZERO, X1 = V(1, 1), V(1, 0), V(1, 1, 1)
-
-
-def wildcard(op, x, y):
-    """==? and !=?: the x and z bits of the right side match anything (3.4)."""
-    w = max(x.w, y.w)
-    signed = x.signed and y.signed
-    x, y = resize(x, w, signed), resize(y, w, signed)
-    care = ~y.b & ((1 << w) - 1)
-    r = equality("==", V(w, x.a & care, x.b & care), V(w, y.a & care, y.b & care))
-    return r if op == "==?" or r.b else V(1, 1 - r.a)
 
 
 def select(cond, x, y):
