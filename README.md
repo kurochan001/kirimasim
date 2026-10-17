@@ -122,6 +122,13 @@ and 1,133 of the own test suite.
   Every run step of Verilator is such a first start, and so is Icarus's in
   sv-tests, whose runner starts the compiled file itself; the own suite's
   runner starts `vvp` with the file instead.
+- Most of Verilator's build step is compiling Verilator's own runtime
+  library, which each test builds again in its own directory. For a small
+  test, built one job at a time with optimization, that took about 2.2 s of
+  the 2.6 s of C++ build; making the C++ took 0.09 s, and compiling the
+  design's own C++ and linking 0.49 s. A compiled simulator earns its build
+  time back on long simulations; these tests are short, so they do not, and
+  they do not compare the speed of simulation.
 - In the first table, a test that a simulator cannot build counts with its
   build step only; kirimasim stops early at an unsupported construct.
 - Verilator builds as each suite's runner does: sv-tests' runner builds
