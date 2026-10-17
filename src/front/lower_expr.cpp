@@ -554,35 +554,46 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
 std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
     // A named event is waited on, not watched for changes (SCHEDULER_SPEC.md 9.5).
     if (e.type->isEvent()) return std::nullopt;
-    const ast::Expression* base = &e;
-    std::optional<std::int64_t> pos;
-    if (e.kind == ast::ExpressionKind::ElementSelect) {
-        const auto& es = e.as<ast::ElementSelectExpression>();
-        if (es.value().type->isUnpackedArray()) return std::nullopt;
-        const std::optional<std::int64_t> idx = constInt(es.selector());
-        if (!idx || e.type->getBitWidth() != 1) return std::nullopt;
-        pos = positionOf(*idx, es.value().type->getFixedRange());
-        if (!pos) return std::nullopt;
-        base = &es.value();
+    // A fixed signal: a static variable or net, or a part of one at a
+    // constant position (an element, a bit, a part or a member), whose
+    // bits a subscription watches (SCHEDULER_SPEC.md 9.5). Anything else,
+    // a run-time index included, is an expression.
+    if (unpackedStruct(*e.type) != nullptr || e.type->isUnpackedArray()) return std::nullopt;
+    const ast::Expression* x = &e;
+    for (;;) {
+        if (x->kind == ast::ExpressionKind::ElementSelect) {
+            const auto& es = x->as<ast::ElementSelectExpression>();
+            if (!constInt(es.selector())) return std::nullopt;
+            x = &es.value();
+        } else if (x->kind == ast::ExpressionKind::RangeSelect) {
+            const auto& rs = x->as<ast::RangeSelectExpression>();
+            if (!constInt(rs.left()) || !constInt(rs.right())) return std::nullopt;
+            x = &rs.value();
+        } else if (x->kind == ast::ExpressionKind::MemberAccess) {
+            x = &x->as<ast::MemberAccessExpression>().value();
+        } else {
+            break;
+        }
     }
-    const ast::Symbol* sym = namedSymbol(*base);
-    if (unpackedStruct(*base->type) != nullptr ||
-        (!isUnpackedMember(*base) && (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym))))
+    const ast::Symbol* sym = namedSymbol(*x);
+    if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym)) return std::nullopt;
+    // Its place, found as for a write: the meaning of the selects is the
+    // same (SIR_SPEC.md 1).
+    const Place p = placeOf(e, e.sourceRange.start());
+    if (p.home != Place::Home::Slot || p.pos || (!p.indices.empty() && !p.elem))
         return std::nullopt;
-    const std::optional<Storage> st = storageOf(*base, e.sourceRange.start());
-    if (!st || st->frame || st->dynamic || isArrayLeaf(*st)) return std::nullopt;
-    const sir::SlotId s = st->id;
-    // A member of an element of an array of structures: that element.
-    std::uint32_t first = 0;
-    std::uint32_t count = 0;
-    if (!st->elem.empty()) {
-        const std::optional<std::uint32_t> el = constElementOf(design().slots[s], st->constIdx);
-        if (!el) return std::nullopt;
-        first = *el;
-        count = 1;
+    const sir::Slot& slot = design().slots[p.slot];
+    switch (p.kind) {
+        case Place::Kind::Slot:
+            if (!slot.dims.empty()) return std::nullopt;
+            break;
+        case Place::Kind::Element: break;
+        case Place::Kind::Bits:
+            if (p.lsb < 0 || p.lsb + p.width > slot.type.width) return std::nullopt;
+            break;
+        default: return std::nullopt;
     }
-    if (pos) return sir::SlotRange{s, first, count, static_cast<std::uint32_t>(*pos), 1};
-    return sir::SlotRange{s, first, count, 0, 0};
+    return rangeOf(p);
 }
 
 Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl) {

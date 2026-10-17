@@ -557,6 +557,9 @@ MUTANTS = [
      '    }\n'
      '    if (fixed) p.elem = constElementOf(slot, idx);\n'
      '    p.type = slot.type;\n'),
+    ("front: an event on a part waits on its whole variable", "src/front/lower_expr.cpp",
+     "        default: return std::nullopt;\n    }\n    return rangeOf(p);",
+     "        default: return std::nullopt;\n    }\n    return sir::SlotRange{p.slot, 0, 0, 0, 0};"),
 ]
 
 

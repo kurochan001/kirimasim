@@ -558,7 +558,8 @@ public:
     sir::FrameVarId newFrameVar(sir::Type t);
 
     /// The slot range of an event-control expression on a fixed signal
-    /// (a static variable, or a constant bit of one), if it is one.
+    /// (a static variable or net, or an element, bit, part or member of
+    /// one at a constant position), if it is one.
     std::optional<sir::SlotRange> eventSlot(const ast::Expression& e);
     /// The event slot element that a named-event expression denotes.
     sir::Operand eventOperand(const ast::Expression& e, slang::SourceLocation sl);

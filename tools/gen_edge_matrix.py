@@ -11,8 +11,16 @@ x or z and x or z to 1; negedge is 1 to 0, x or z and x or z to 0; edge is
 either; a plain event control fires on any change of the value. An edge
 is judged on the least significant bit of what is waited on. (iff is
 checked by tools/gen_iff_matrix.py. Waiting on a compound expression such
-as (s & en) or on an element of an unpacked array is not implemented yet;
-tools/gen_unsupported_matrix.py checks that they are reported.)
+as (s & en), or on an element at a run-time index, is not implemented
+yet; tools/gen_unsupported_matrix.py checks that they are reported.)
+
+A second test, edge_matrix_parts, waits on parts of a variable at
+constant positions, which kirimasim watches like the variable itself
+(SCHEDULER_SPEC.md 9.5): an element of an unpacked array, a bit of an
+element, an element of a two-dimensional array, a part-select, a member
+of a packed structure, a member of an element of an array of packed
+structures, and a member of an unpacked structure; and, never waking, an
+element whose neighbour changes and bits whose neighbours change.
 
 The axes: the transition (every pair of 0, 1, x and z); the kind of wait
 (posedge, negedge, edge, any change); what is waited on (a variable, the
@@ -60,6 +68,30 @@ SOURCES = [
 ]
 
 
+# (name, the expression waited on, how a transition drives it, and the
+# declarations they need)
+PART_SOURCES = [
+    ("elem", "m[1]", ["m[1] = {{3'b101, {v}}};"]),
+    ("elem_bit", "m[2][3]", ["m[2][3] = {v};"]),
+    ("elem_2d", "mm[1][2]", ["mm[1][2] = {v};"]),
+    ("part", "p[5:4]", ["p[5:4] = {{1'b1, {v}}};"]),
+    ("member", "sv.b", ["sv.b = {v};"]),
+    ("elem_member", "sa[1].b", ["sa[1].b = {v};"]),
+    ("unpacked_member", "us.f", ["us.f = {v};"]),
+    ("other_elem", "m[0]", ["m[3] = {{3'b000, {v}}};"]),
+    ("other_bits", "p[7:6]", ["p[1:0] = {{{v}, {v}}};"]),
+]
+PART_DECL = [
+    "  logic [3:0] m [0:3];",
+    "  logic mm [0:1][0:2];",
+    "  logic [7:0] p;",
+    "  typedef struct packed { logic a; logic b; } s_t;",
+    "  s_t sv;",
+    "  s_t sa [0:1];",
+    "  struct { logic f; logic g; } us;",
+]
+
+
 def seen(src, v):
     """The value of the bit an edge is judged on when the source is driven
     to v."""
@@ -70,6 +102,8 @@ def seen(src, v):
 
 def expected(kind, src, a, b):
     """Whether the waiter fires on the transition from a to b."""
+    if src.startswith("other_"):
+        return False  # only its neighbours change
     if kind == "any" and src == "upper":
         return a != b  # any change of the whole value, the upper bits here
     return fires(kind, seen(src, a), seen(src, b))
@@ -83,17 +117,30 @@ def fires(kind, a, b):
 
 
 def files():
-    decl = [
+    out = build(NAME, SOURCES, [
         "  logic s, n;",
         "  logic [3:0] v, u, b;",
         "  wire w;",
         "  assign w = n;",
-        f"  int cnt[0:{len(SOURCES) * len(CONTAINERS) * len(KINDS) - 1}];",
-    ]
+    ], ":description: posedge, negedge, edge and any change on every transition among 0, 1, x "
+       "and z, on a variable, a vector's least significant bit, upper bits alone, a bit-select, "
+       "and a net, waited on in always, initial, automatic task and fork")
+    out.update(build(NAME + "_parts", PART_SOURCES, PART_DECL,
+                     ":description: posedge, negedge, edge and any change on every transition "
+                     "among 0, 1, x and z, on an element of an unpacked array, a bit of one, an "
+                     "element of a two-dimensional array, a part-select, a member of a packed "
+                     "structure, of an element of an array of them and of an unpacked "
+                     "structure, and on an element and bits whose neighbours change, waited on "
+                     "in always, initial, automatic task and fork"))
+    return out
+
+
+def build(name, sources, decl, description):
+    decl = decl + [f"  int cnt[0:{len(sources) * len(CONTAINERS) * len(KINDS) - 1}];"]
     waiters = []
     idx = {}
     k = 0
-    for src, expr, _ in SOURCES:
+    for src, expr, _ in sources:
         for cont in CONTAINERS:
             for kind, word in KINDS:
                 idx[(src, cont, kind)] = k
@@ -115,14 +162,14 @@ def files():
         for b in VALUES:
             def set_all(v):
                 out = []
-                for src, _, stmts in SOURCES:
+                for _, _, stmts in sources:
                     out += [s.format(v=lit(v)) for s in stmts]
                 return " ".join(out)
             drive.append(f"    #10 {set_all(a)}")
             drive.append("    #2 foreach (cnt[i]) cnt[i] = 0;")
             drive.append(f"    #2 {set_all(b)}")
             drive.append("    #2;")
-            for src, _, _ in SOURCES:
+            for src, _, _ in sources:
                 for cont in CONTAINERS:
                     counts = [idx[(src, cont, kind)] for kind, _ in KINDS]
                     args = ", ".join(f"cnt[{c}]" for c in counts)
@@ -133,11 +180,8 @@ def files():
                                f"any={vals[3]}")
     head = [
         "/*",
-        f":name: {NAME}",
-        ":description: posedge, negedge, edge and any change on every transition among 0, 1, x "
-        "and z, on a variable, a vector's least significant bit, upper bits alone, a bit-select, "
-        "and a net, waited on in always, "
-        "initial, automatic task and fork",
+        f":name: {name}",
+        description,
         ":tags: sched edge",
         ":type: simulation",
         ":lrm: 1800-2023 9.4.2 9.4.2.3",
@@ -147,7 +191,7 @@ def files():
         ":nondeterministic: no",
         f":generator: gen_edge_matrix.py@{VERSION}",
         ":top_module: top",
-        f":expected_stdout: @{NAME}.expected",
+        f":expected_stdout: @{name}.expected",
         "*/",
         "// Generated by tools/gen_edge_matrix.py; change the generator, not this file.",
         "`timescale 1ns/1ns",
@@ -155,7 +199,7 @@ def files():
     ]
     sv = head + decl + waiters + ["  initial begin"] + drive + ["    $finish;", "  end",
                                                               "endmodule", ""]
-    return {f"{NAME}.sv": "\n".join(sv), f"{NAME}.expected": "\n".join(exp) + "\n"}
+    return {f"{name}.sv": "\n".join(sv), f"{name}.expected": "\n".join(exp) + "\n"}
 
 
 def main():
