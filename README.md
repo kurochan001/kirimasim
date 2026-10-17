@@ -548,7 +548,7 @@ terms.
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
 | DPI-C / VPI | The standard interfaces to C code and to tools (P3) |
 | FST | A compact waveform file format (later) |
-| 規格で確認, 本書の決まり, 解釈, 未確認 | The notes of the specifications: checked against the clause of the standard; kirimasim's own rule where the standard leaves the choice to the implementation; a reading of text that allows two; not confirmed yet (with how to confirm it) |
+| Notes in the specifications | The specifications, written in Japanese, mark their statements with four kinds of notes: checked against a clause of the standard; kirimasim's own rule where the standard leaves the choice to the implementation; an interpretation of text that allows two readings; and not confirmed yet, with how to confirm it |
 
 ## FAQ
 
