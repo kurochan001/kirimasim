@@ -132,3 +132,7 @@ set_tests_properties(tools/gen_illegal_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_logic_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_logic_matrix.py --check)
 set_tests_properties(tools/gen_logic_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_loop_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_loop_matrix.py --check)
+set_tests_properties(tools/gen_loop_matrix PROPERTIES LABELS Tools)
