@@ -44,7 +44,7 @@ The criteria and how they are measured are fixed in
 
 | Criterion | Now | Met |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 185, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses) | Not yet |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 186, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses) | Not yet |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), none fails; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The fuzz tests pass in every build; the seven nightly runs are not done yet | Not measured |
@@ -61,8 +61,8 @@ Verilog and Verilator built from their main branches that day.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 375 | 373, 2 skipped | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 185 | 213 | 321 |
+| This repository's tests (CTest) | 380 | 378, 2 skipped | — | — |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 186 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
 The two skipped tests of this repository need clocking blocks (P3), or
@@ -135,8 +135,7 @@ and 1,133 of the own test suite.
   without C++ optimization (`-O0`); the own suite's runner uses Verilator's
   default optimization and random initial values.
 - Versions and machine: kirimasim 8500bdc (release build) for the times;
-  its pass counts were measured again at 4147358, which runs values wider
-  than 64 bits; Icarus Verilog 14.0 (devel) f190dbb, Verilator
+  its pass counts were measured again at c96993e; Icarus Verilog 14.0 (devel) f190dbb, Verilator
   5.053 devel 8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple
   clang 21.
 
@@ -145,10 +144,10 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 142 | SIR and its verifier (53), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (4), and more |
-| `tests/suite/` | 169 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (59), illegal designs (35), nets (23), procedures (18), scheduling (15), hierarchy (8), continuous assignments (7), and others |
+| Unit tests (GoogleTest) | 143 | SIR and its verifier (53), the scheduler against a reference model (21), `valsem` (14), output formats (10), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (5) and any width (5), and more |
+| `tests/suite/` | 171 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (61), illegal designs (35), nets (23), procedures (18), scheduling (15), hierarchy (8), continuous assignments (7), and others |
 | `tests/dump_sir/` | 27 | The intermediate representation that the front end makes |
-| Tools | 35 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Tools | 37 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages; the counts of a fixed run (PerfCount) |
 
 </details>
@@ -167,7 +166,7 @@ simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 | 8 Classes | 15 | 9 | 12 | 12 | classes (P3) |
 | 9 Processes | 6 | 4 | 4 | 6 | sequences (P3); one test depends on the order of processes at time 0, which 4.7 leaves open |
 | 10 Assignment statements | 3 | 3 | 3 | 3 | |
-| 11 Operators and expressions | 51 | 47 | 37 | 48 | tagged unions (2), streaming a dynamic array (P3); one test prints zero bytes inside a value with `%s`, a rule not decided yet |
+| 11 Operators and expressions | 51 | 48 | 37 | 48 | tagged unions (2), streaming a dynamic array (P3) |
 | 12 Procedural programming statements | 2 | 2 | 2 | 2 | |
 | 13 Tasks and functions | 14 | 14 | 13 | 14 | |
 | 14 Clocking blocks | 1 | 1 | 1 | 1 | |
@@ -182,7 +181,7 @@ simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 | 26 Packages | 1 | 1 | 1 | 1 | |
 | UVM | 37 | 0 | 0 | 28 | the UVM library needs classes (P3) |
 | UVM random | 3 | 3 | 3 | 3 | |
-| **Total** | **344** | **185** | **213** | **321** | |
+| **Total** | **344** | **186** | **213** | **321** | |
 
 The P1 criterion compares kirimasim with the Icarus build that sv-tests
 pins (04cc493), which passes 210; the newest Icarus passes 213.
@@ -431,9 +430,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 33 generators, 169 tests in `tests/suite/`, and 375
+  rules. There are 35 generators, 171 tests in `tests/suite/`, and 380
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 150 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 154 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
