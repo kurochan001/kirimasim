@@ -197,6 +197,11 @@ public:
     /// wait (expr): the condition becomes a guard that reads the frame of
     /// the body that waits (SIR_SPEC.md 7.2).
     void lowerWait(const ast::WaitStatement& w);
+    /// A guard: a subroutine that reads the frame of the body being
+    /// lowered and returns the truth of `cond` (SIR_SPEC.md 7.2), named
+    /// after `what` ("wait" or "iff").
+    sir::SubroutineId guardOf(const ast::Expression& cond, const char* what,
+                              slang::SourceLocation sl);
     /// Whether a subroutine, or one it calls, writes a slot that is not a
     /// variable or argument of a subroutine.
     bool writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const;
@@ -602,7 +607,7 @@ public:
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;  ///< For the sensitivity of always_comb.
         std::uint32_t forks = 0;            ///< Fork statements so far, for child names.
-        std::uint32_t waits = 0;            ///< wait statements so far, for guard names.
+        std::uint32_t guards = 0;           ///< Guards so far (wait and iff), for their names.
         std::uint32_t deferred = 0;         ///< Deferred assertion actions so far, for their names.
         bool fromAssertion = false;  ///< A procedure for an assertion written as a module item.
         /// The process's outermost block is a disable target: disabling it

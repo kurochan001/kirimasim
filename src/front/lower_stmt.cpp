@@ -639,16 +639,23 @@ bool Lowerer::mayFork(const ast::SubroutineSymbol& sub) {
 }
 
 void Lowerer::lowerWait(const ast::WaitStatement& w) {
-    // The condition is a guard: a subroutine that reads the frame of the
-    // body that waits and returns the truth of the expression. wait.cond
-    // goes on at once when it is true, and else when it becomes true
-    // (9.4.3, SIR_SPEC.md 7.2).
+    // wait.cond goes on at once when the guard is true, and else when it
+    // becomes true (9.4.3, SIR_SPEC.md 7.2).
     const slang::SourceLocation sl = w.sourceRange.start();
+    const sir::SubroutineId id = guardOf(w.cond, "wait", sl);
+    const sir::BlockId cont = newBlock();
+    terminate(Op::WaitCond, {Operand::subroutine(id), Operand::block(cont)}, sl);
+    setBlock(cont);
+    lowerStatement(w.stmt);
+}
+
+sir::SubroutineId Lowerer::guardOf(const ast::Expression& cond, const char* what,
+                                   slang::SourceLocation sl) {
     const sir::Owner owner{b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process,
                            b_.proc};
     sir::Subroutine g;
-    g.name = (b_.isSub ? design_.subroutines[b_.proc].name : proc().name) + ".wait" +
-             std::to_string(b_.waits++);
+    g.name = (b_.isSub ? design_.subroutines[b_.proc].name : proc().name) + "." + what +
+             std::to_string(b_.guards++);
     g.kind = sir::SubroutineKind::Guard;
     g.instance = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
     g.frameOf = owner;
@@ -667,7 +674,7 @@ void Lowerer::lowerWait(const ast::WaitStatement& w) {
     b_.scale = saved.scale;
     b_.scope = saved.scope;
     try {
-        const Val c = lowerCondition(w.cond);
+        const Val c = lowerCondition(cond);
         terminate(Op::Ret, {coerce(c, sir::u4(1), sl).op}, sl);
     } catch (const Unsupported&) {
         b_ = std::move(saved);
@@ -676,15 +683,13 @@ void Lowerer::lowerWait(const ast::WaitStatement& w) {
     b_ = std::move(saved);
     // What the guard's calls write counts as the waiting body's.
     callees_[{b_.isSub, b_.proc}].push_back(id);
-    // The kernel evaluates the condition again in the middle of the write
-    // that changed what it reads (SCHEDULER_SPEC.md 9.5), so it may not
-    // write a variable or a net itself.
+    // The kernel evaluates the condition in the middle of the write that
+    // changed what it reads (SCHEDULER_SPEC.md 9.5) or that made the
+    // event, so it may not write a variable or a net itself.
     std::set<sir::SubroutineId> seen;
-    if (writesOutside(id, seen)) unsupported(sl, "wait condition that writes a variable or net");
-    const sir::BlockId cont = newBlock();
-    terminate(Op::WaitCond, {Operand::subroutine(id), Operand::block(cont)}, sl);
-    setBlock(cont);
-    lowerStatement(w.stmt);
+    if (writesOutside(id, seen))
+        unsupported(sl, std::string(what) + " condition that writes a variable or net");
+    return id;
 }
 
 bool Lowerer::writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const {
@@ -1176,11 +1181,11 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                 if (i->kind != ast::TimingControlKind::SignalEvent)
                     unsupported(sl, "this event control");
                 const auto& se = i->as<ast::SignalEventControl>();
-                if (se.iffCondition != nullptr) unsupported(sl, "event control with iff");
                 if (se.expr.type->isEvent()) {
                     // @ev: wait for the next trigger of a named event
                     // (SCHEDULER_SPEC.md 9.4).
                     if (items.size() != 1) unsupported(sl, "event list with a named event");
+                    if (se.iffCondition != nullptr) unsupported(sl, "named event with iff");
                     const sir::BlockId cont = newBlock();
                     terminate(Op::WaitNamed, {eventOperand(se.expr, sl), Operand::block(cont)}, sl);
                     setBlock(cont);
@@ -1198,6 +1203,10 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                     case ast::EdgeKind::None: o.edge = sir::Edge::Any; break;
                 }
                 ops.push_back(o);
+                // iff: a guard after its item, evaluated when that item's
+                // event occurs and only then (9.4.2.3, SIR_SPEC.md 7.2).
+                if (const ast::Expression* c = se.iffCondition; c != nullptr)
+                    ops.push_back(Operand::subroutine(guardOf(*c, "iff", c->sourceRange.start())));
             }
             const sir::BlockId cont = newBlock();
             ops.push_back(Operand::block(cont));

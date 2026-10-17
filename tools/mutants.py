@@ -502,6 +502,19 @@ MUTANTS = [
      "        proc.gen = processes_[id].gen + 1;", "        proc.gen = 0;"),
     ("kernel: held reports go by place, not creation", "src/kernel/sim.cpp",
      "        return processes_[a].serial < processes_[b].serial;", "        return a < b;"),
+    ("front: an event control drops its iff", "src/front/lower_stmt.cpp",
+     "                if (const ast::Expression* c = se.iffCondition; c != nullptr)\n"
+     "                    ops.push_back(Operand::subroutine(guardOf(*c, \"iff\", c->sourceRange.start())));\n",
+     ""),
+    ("front: a trigger drops its iff", "src/front/lower.cpp",
+     "triggers[k].guard = guardOf(*c, \"iff\", c->sourceRange.start());", "(void)c;"),
+    ("vm: an iff guard is not given to the kernel", "src/vm/vm.cpp",
+     "        item.guard = &evalIff;\n", ""),
+    ("kernel: an item wakes when its iff is false", "src/kernel/sim.cpp",
+     "sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0)\n            continue;",
+     "sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0) {}"),
+    ("sir: verify lets a trigger's iff read another frame", "src/sir/verify.cpp",
+     'error(where, g + " reads another frame", p.loc);', "(void)0;"),
 ]
 
 

@@ -329,6 +329,7 @@ std::string toText(const Design& d) {
                 const Trigger& t = p.triggers[k];
                 if (k != 0) out += ",";
                 out += std::string(edgeName(t.edge)) + "(" + slotRef(t.range) + ")";
+                if (t.guard != kNone) out += " iff @" + std::to_string(t.guard);
             }
         }
         if (!p.writes.empty()) {

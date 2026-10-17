@@ -660,6 +660,39 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
     EXPECT_TRUE(mentions(verify(d), "reads another frame"));
 }
 
+TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
+    // always @(posedge clk iff rst_n): the trigger's guard reads the
+    // process's frame.
+    Design d = counter();
+    Subroutine g;
+    g.name = "ff_q.iff0";
+    g.kind = SubroutineKind::Guard;
+    g.returnType = u4(1);
+    g.frameOf = {Owner::Kind::Process, 0};
+    g.loc = at(3);
+    g.numTemps = 1;
+    g.blocks.resize(1);
+    g.blocks[0].instrs = {
+        make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
+        make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 3),
+    };
+    d.subroutines.push_back(std::move(g));
+    d.processes[0].triggers[0].guard = 0;
+    Process other = d.processes[0];
+    other.name = "ff_r";
+    other.triggers.clear();
+    d.processes.push_back(std::move(other));
+    expectClean(d);
+    EXPECT_NE(toText(d).find("trigger=posedge(%s0) iff @0 writes=%s2"), std::string::npos);
+    d.subroutines[0].frameOf = {Owner::Kind::Process, 1};
+    EXPECT_TRUE(mentions(verify(d), "trigger iff @0 reads another frame"));
+    d.subroutines[0].frameOf = {Owner::Kind::Process, 0};
+    d.subroutines[0].kind = SubroutineKind::Function;
+    EXPECT_TRUE(mentions(verify(d), "trigger iff @0 is not a guard"));
+    d.processes[0].triggers[0].guard = 9;
+    EXPECT_TRUE(mentions(verify(d), "trigger iff @9 is not a guard"));
+}
+
 TEST(Sir, ForkChildrenBelongToTheParent) {
     Design d = calls();
     Process child;

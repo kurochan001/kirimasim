@@ -473,8 +473,18 @@ private:
     void checkProcess(const Process& p, ProcessId id) {
         const std::string where = processWhere(id) + " " + p.name;
         if (p.instance >= d_.instances.size()) error(where, "instance out of range", p.loc);
-        for (const Trigger& t : p.triggers)
+        for (const Trigger& t : p.triggers) {
             if (!rangeOk(t.range)) error(where, "trigger slot range is invalid");
+            if (t.guard == kNone) continue;
+            // An iff guard reads the frame of the process (SIR_SPEC.md 7.2).
+            const std::string g = "trigger iff @" + std::to_string(t.guard);
+            if (t.guard >= d_.subroutines.size() ||
+                d_.subroutines[t.guard].kind != SubroutineKind::Guard)
+                error(where, g + " is not a guard", p.loc);
+            else if (const Owner& o = d_.subroutines[t.guard].frameOf;
+                     o.kind != Owner::Kind::Process || o.id != id)
+                error(where, g + " reads another frame", p.loc);
+        }
         for (const SlotRange& w : p.writes)
             if (!rangeOk(w)) error(where, "write range is invalid");
         if (p.kind == ProcessKind::Ff && p.triggers.empty())

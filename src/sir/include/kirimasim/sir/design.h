@@ -458,10 +458,12 @@ struct SlotRange {
     std::uint32_t width = 0;
 };
 
-/// One item of a process's sensitivity: a slot range and the edge.
+/// One item of a process's sensitivity: a slot range, the edge, and the
+/// iff guard, which reads the process's frame (SIR_SPEC.md 7.1, 7.2).
 struct Trigger {
     SlotRange range;
     Edge edge = Edge::Any;
+    SubroutineId guard = kNone;  ///< kNone: no iff.
 };
 
 /// Which process or subroutine something belongs to.

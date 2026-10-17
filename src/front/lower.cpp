@@ -1836,13 +1836,22 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                         }
                         const auto& se = t->as<ast::SignalEventControl>();
                         const std::optional<sir::SlotRange> r = eventSlot(se.expr);
-                        if (!r || se.iffCondition != nullptr) {
+                        if (!r) {
                             fixed = false;
                             break;
                         }
                         triggers.push_back({*r, edgeOf(se.edge)});
                     }
-                    if (fixed) inner = &ts.stmt;
+                    if (fixed) {
+                        inner = &ts.stmt;
+                        // The iff guards, made once the triggers are known
+                        // to be fixed (SIR_SPEC.md 7.2).
+                        for (std::size_t k = 0; k < items.size(); ++k)
+                            if (const ast::Expression* c =
+                                    items[k]->as<ast::SignalEventControl>().iffCondition;
+                                c != nullptr)
+                                triggers[k].guard = guardOf(*c, "iff", c->sourceRange.start());
+                    }
                 }
                 if (inner != nullptr) {
                     proc().kind = ff ? sir::ProcessKind::Ff : sir::ProcessKind::FfPlain;

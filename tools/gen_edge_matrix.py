@@ -9,10 +9,10 @@ An event control waits for a posedge, a negedge, an edge or any change
 (9.4.2, VALUE_SEMANTICS.md 4.3, SCHEDULER_SPEC.md 6): posedge is 0 to 1,
 x or z and x or z to 1; negedge is 1 to 0, x or z and x or z to 0; edge is
 either; a plain event control fires on any change of the value. An edge
-is judged on the least significant bit of what is waited on. (Waiting on
-a compound expression such as (s & en), on an element of an unpacked
-array, or with iff is not implemented yet; tools/gen_unsupported_matrix.py
-checks that they are reported.)
+is judged on the least significant bit of what is waited on. (iff is
+checked by tools/gen_iff_matrix.py. Waiting on a compound expression such
+as (s & en) or on an element of an unpacked array is not implemented yet;
+tools/gen_unsupported_matrix.py checks that they are reported.)
 
 The axes: the transition (every pair of 0, 1, x and z); the kind of wait
 (posedge, negedge, edge, any change); what is waited on (a variable, the

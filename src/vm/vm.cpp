@@ -437,6 +437,13 @@ struct Frame {
     kernel::Hold level = kernel::Hold::Assign;
     /// The guard of the wait.cond it waits at (SIR_SPEC.md 7.2).
     sir::SubroutineId cond = 0;
+    /// An iff guard of an item of the event control it waits at, which the
+    /// kernel calls with a pointer to it (SIR_SPEC.md 7.2).
+    struct Iff {
+        Frame* frame = nullptr;
+        sir::SubroutineId guard = 0;
+    };
+    std::vector<Iff> iffs;
 
     /// Calls of tasks that may wait, innermost last (SIR_SPEC.md 7.4): each
     /// keeps its frame variables and the block to go on at. Their temps do
@@ -694,6 +701,16 @@ public:
         std::uint64_t steps = 0;
         out[0] = vm.guard(*f, f->cond, steps).value_or(false) ? 1U : 0U;
         vm.counters_.increment(vm.cInstrs_, steps);
+    }
+
+    /// An iff guard of an event-control item: nonzero when true.
+    static int evalIff(kirima_context* /*ctx*/, void* iff) {
+        const auto* g = static_cast<const Frame::Iff*>(iff);
+        Interpreter& vm = *g->frame->vm;
+        std::uint64_t steps = 0;
+        const bool on = vm.guard(*g->frame, g->guard, steps).value_or(false);
+        vm.counters_.increment(vm.cInstrs_, steps);
+        return on ? 1 : 0;
     }
 
     /// A deferred assertion's call, confirmed (run) or dropped.
@@ -1228,16 +1245,26 @@ private:
             writeSlot(s, elem, in->lo, in->n, part);
     }
 
-    void waitTriggers(const Frame& f, const sir::Process& proc) {
+    void waitTriggers(Frame& f, const sir::Process& proc) {
         items_.clear();
+        f.iffs.clear();
+        f.iffs.reserve(proc.triggers.size());  // the kernel keeps pointers into it
         for (const sir::Trigger& t : proc.triggers) {
             kernel::WaitItem item;
             item.part = {t.range.slot, t.range.firstElem, t.range.numElems, t.range.lsb,
                          t.range.width};
             item.edge = kernelEdge(t.edge);
+            if (t.guard != sir::kNone) withIff(f, item, t.guard);
             items_.push_back(item);
         }
         sched_.waitEvent(f.kernelId, items_);
+    }
+
+    /// Gives an item its iff guard, which the kernel calls when the item's
+    /// event occurs and only then (9.4.2.3). f.iffs has room for it.
+    static void withIff(Frame& f, kernel::WaitItem& item, sir::SubroutineId g) {
+        item.guard = &evalIff;
+        item.guardFrame = &f.iffs.emplace_back(Frame::Iff{&f, g});
     }
 
     // --- Running ---
@@ -1625,12 +1652,13 @@ private:
                     }
                     case Op::WaitEvent: {
                         items_.clear();
+                        f.iffs.clear();
+                        f.iffs.reserve(ops.size());  // the kernel keeps pointers into it
                         for (std::size_t i = 0; i + 1 < ops.size(); ++i) {
                             const Operand& o = ops[i];
-                            if (o.kind != Operand::Kind::Slot) {
-                                fail(p, "wait.event with an iff guard is not supported by the "
-                                        "VM yet");
-                                return Exit::Error;
+                            if (o.kind == Operand::Kind::Subroutine) {  // the item's iff
+                                withIff(f, items_.back(), o.id);
+                                continue;
                             }
                             kernel::WaitItem item;
                             item.part = {o.id, o.firstElem, o.numElems, o.lsb, o.width};
