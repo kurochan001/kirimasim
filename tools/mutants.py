@@ -219,6 +219,9 @@ MUTANTS = [
      "src/front/lower_stmt.cpp",
      "                    for (Place& e : places)\n                        stores.emplace_back(std::move(e), initial(t));",
      "                    (void)places;"),
+    ("front: an alias gives each net its own slot", "src/front/lower.cpp",
+     "        if (member.kind == ast::SymbolKind::NetAlias) aliasNets(member.as<ast::NetAliasSymbol>());",
+     "        if (member.kind == ast::SymbolKind::NetAlias) (void)member;"),
     ("kernel: a delayed driver keeps an update of another value", "src/kernel/sim.cpp",
      "    if (d.pending && !std::equal(value, value + words, d.value.begin())) {\n"
      "        d.pending = false;",

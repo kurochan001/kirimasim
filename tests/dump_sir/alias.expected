@@ -1,0 +1,34 @@
+; sir format 0
+precision 1ns
+source 0 "alias.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.a" : i4<1> wire inst=0 flags(multi-driver)
+slot %s1 "top.p" : i4<1> var inst=0
+slot %s2 "top.q" : i4<1> var inst=0
+slot %s3 "top.a.$driver0" : i4<1> wire inst=0 driver-of=%s0 strength=(6,6)
+slot %s4 "top.a.$driver1" : i4<1> wire inst=0 driver-of=%s0 strength=(6,6)
+alias "top.b" -> %s0
+alias "top.c" -> %s0
+
+process @0 "top.assign0" kind=cont inst=0 trigger=any(%s1) writes=%s3 {  ; 0:7:10
+bb0:
+  %t0 = load i4<1> %s1  ; 0:7:14
+  store %s3, %t0  ; 0:7:10
+  ret  ; 0:7:10
+}
+
+process @1 "top.assign1" kind=cont inst=0 trigger=any(%s2) writes=%s4 {  ; 0:8:10
+bb0:
+  %t0 = load i4<1> %s2  ; 0:8:14
+  store %s4, %t0  ; 0:8:10
+  ret  ; 0:8:10
+}
+
+process @2 "top.a.$resolve" kind=cont inst=0 trigger=any(%s3),any(%s4) writes=%s0 {  ; 0:7:10
+bb0:
+  %t0 = load i4<1> %s3  ; 0:7:10
+  %t1 = load i4<1> %s4  ; 0:7:10
+  %t2 = resolve i4<1> "wire", %t0, const i2<3> 3'h6, const i2<3> 3'h6, %t1, const i2<3> 3'h6, const i2<3> 3'h6  ; 0:7:10
+  store %s0, %t2  ; 0:7:10
+  ret  ; 0:7:10
+}

@@ -1017,7 +1017,57 @@ void Lowerer::mergePorts(const ast::InstanceSymbol& child) {
     }
 }
 
+void Lowerer::aliasNets(const ast::NetAliasSymbol& alias) {
+    // alias makes whole nets of one type one net (10.11): they share the
+    // first one's slot, like nets merged through a port (SIR_SPEC.md 3.5).
+    // slang rejects nets of different kinds or widths and anything but
+    // nets.
+    const slang::SourceLocation sl = alias.location;
+    const std::span<const ast::Expression* const> refs = alias.getNetReferences();
+    std::optional<sir::SlotId> shared;
+    std::vector<const ast::NetSymbol*> nets;
+    for (const ast::Expression* e : refs) {
+        const ast::Symbol* s = namedSymbol(*e);
+        if (s == nullptr || s->kind != ast::SymbolKind::Net) {
+            report(sl, "an alias of a part or a concatenation of nets");
+            return;
+        }
+        const auto& n = s->as<ast::NetSymbol>();
+        if (n.getType().getCanonicalType().isUnpackedArray()) {
+            report(sl, "an alias of an array of nets");
+            return;
+        }
+        if (const auto it = slots_.find(&n); it != slots_.end()) {
+            if (shared && *shared != it->second) {
+                report(sl, "an alias of nets that other aliases or ports joined apart");
+                return;
+            }
+            shared = it->second;
+        }
+        nets.push_back(&n);
+    }
+    if (nets.empty()) return;
+    try {
+        const sir::SlotId s = shared ? *shared : slotOf(*nets.front(), sl);
+        for (const ast::NetSymbol* n : nets) {
+            if (slots_.contains(n)) continue;
+            if (typeOf(n->getType(), sl) != design_.slots[s].type ||
+                netKindOf(*n) != design_.slots[s].kind) {
+                report(sl, "an alias of nets of different types or kinds");
+                return;
+            }
+            slots_.emplace(n, s);
+            design_.names.push_back({n->getHierarchicalPath(), s});
+        }
+    } catch (const Unsupported&) {
+        return;  // already reported
+    }
+}
+
 void Lowerer::declareScope(const ast::Scope& scope) {
+    // Aliased nets first, so that they share one slot from the start.
+    for (const ast::Symbol& member : scope.members())
+        if (member.kind == ast::SymbolKind::NetAlias) aliasNets(member.as<ast::NetAliasSymbol>());
     for (const ast::Symbol& member : scope.members()) {
         switch (member.kind) {
             case ast::SymbolKind::Variable:
@@ -1085,6 +1135,7 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
             case ast::SymbolKind::ExplicitImport:     // names resolved by slang
             case ast::SymbolKind::WildcardImport:
             case ast::SymbolKind::EmptyMember:
+            case ast::SymbolKind::NetAlias:       // one slot (aliasNets)
             case ast::SymbolKind::Port:           // connected by the parent (lowerPorts)
             case ast::SymbolKind::InterfacePort:  // names through it reach the interface
             case ast::SymbolKind::Modport:        // a view of the interface's members (25.5)

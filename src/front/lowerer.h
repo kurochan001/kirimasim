@@ -31,6 +31,7 @@
 #include "slang/ast/statements/MiscStatements.h"
 #include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
+#include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/ast/types/AllTypes.h"
 #include "slang/numeric/ConstantValue.h"
@@ -609,6 +610,8 @@ private:
     /// The row of a package or compilation unit, made on first use.
     sir::InstanceId rowFor(const ast::Symbol& scope);
     void declareScope(const ast::Scope& scope);
+    /// The nets of an alias statement share one slot (SIR_SPEC.md 3.5).
+    void aliasNets(const ast::NetAliasSymbol& alias);
     void lowerInstance(const ast::InstanceSymbol& inst);
     void lowerScope(const ast::Scope& scope, const std::string& prefix);
     /// The implicit continuous assignments of a child's port connections
