@@ -124,3 +124,7 @@ set_tests_properties(tools/gen_process_lifetime_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_wide_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_wide_matrix.py --check)
 set_tests_properties(tools/gen_wide_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_illegal_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_illegal_matrix.py --check)
+set_tests_properties(tools/gen_illegal_matrix PROPERTIES LABELS Tools)
