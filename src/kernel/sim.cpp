@@ -147,6 +147,7 @@ void Scheduler::begin() {
     cWakeups_ = counters_.add("proc.wakeups");
     cCreated_ = counters_.add("proc.created");
     cFinished_ = counters_.add("proc.finished");
+    cKeptPeak_ = counters_.add("proc.kept_peak");
     cWrites_ = counters_.add("slot.writes");
     cChanges_ = counters_.add("slot.changes");
     cNbaScheduled_ = counters_.add("nba.scheduled");
@@ -158,13 +159,35 @@ void Scheduler::begin() {
 
 ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     begin();
+    ProcessId id = 0;
     Process proc;
+    if (freeProcesses_.empty()) {
+        id = static_cast<ProcessId>(processes_.size());
+        processes_.emplace_back();
+    } else {
+        // The wait numbers go on from the released process's, so that its
+        // stale wake-ups never match (SCHEDULER_SPEC.md 10.8).
+        id = freeProcesses_.back();
+        freeProcesses_.pop_back();
+        proc.gen = processes_[id].gen + 1;
+    }
     proc.fn = fn;
     proc.frame = frame;
     proc.group = group;
-    processes_.push_back(proc);
+    proc.serial = nextSerial_++;
+    processes_[id] = std::move(proc);
     counters_.increment(cCreated_);
-    return static_cast<ProcessId>(processes_.size() - 1);
+    if (++kept_ > counters_.value(cKeptPeak_)) counters_.set(cKeptPeak_, kept_);
+    return id;
+}
+
+void Scheduler::releaseProcess(ProcessId p) {
+    Process& proc = processes_[p];
+    proc.fn = nullptr;
+    proc.frame = nullptr;
+    proc.pending = {};
+    --kept_;
+    if (proc.gen < kReuseGenLimit) freeProcesses_.push_back(p);
 }
 
 void Scheduler::kill(ProcessId p) {
@@ -999,10 +1022,10 @@ void Scheduler::flushReports(ProcessId p) {
 
 void Scheduler::confirmReports() {
     // In the order of the processes' numbers, not of their first reports
-    // (SCHEDULER_SPEC.md 15.4); within a process, in the order held. A
-    // confirmed call runs in the Reactive region; final ones wait for the
-    // Postponed region (15.2).
-    std::sort(pendingOrder_.begin(), pendingOrder_.end());
+    // (SCHEDULER_SPEC.md 15.4; the numbers are the creation order, 10.8);
+    // within a process, in the order held. A confirmed call runs in the
+    // Reactive region; final ones wait for the Postponed region (15.2).
+    sortPending();
     std::vector<ProcessId> left;
     for (const ProcessId p : pendingOrder_) {
         std::vector<PendingReport> finals;
@@ -1032,8 +1055,14 @@ void Scheduler::confirmReports() {
     pendingProcesses_ = 0;
 }
 
+void Scheduler::sortPending() {
+    std::sort(pendingOrder_.begin(), pendingOrder_.end(), [&](ProcessId a, ProcessId b) {
+        return processes_[a].serial < processes_[b].serial;
+    });
+}
+
 void Scheduler::confirmFinals() {
-    std::sort(pendingOrder_.begin(), pendingOrder_.end());
+    sortPending();
     const std::vector<ProcessId> order = std::move(pendingOrder_);
     pendingOrder_.clear();
     for (const ProcessId p : order) {

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -772,6 +773,112 @@ TEST(Scheduler, MatchesTheReferenceModel) {
         for (std::uint32_t i = 0; i < 4; ++i)
             ASSERT_EQ(fast.read(i), ref.slot(i)) << "round " << round << " slot " << i;
     }
+}
+
+// --- Released processes (SCHEDULER_SPEC.md 10.8) -----------------------------------
+
+/// A process for the tests below: what it does when it runs, by role.
+struct Actor {
+    enum class Role : std::uint8_t {
+        Wait,    // waits `delay` once, then ends
+        End,     // ends at once
+        Report,  // holds a deferred call that logs `name`, then ends
+        Swap,    // releases `other` and starts `next` in its place
+    };
+    Role role = Role::End;
+    k::Scheduler* sched = nullptr;
+    k::ProcessId id = 0;
+    std::uint64_t delay = 0;
+    char name = '?';
+    Actor* other = nullptr;
+    Actor* next = nullptr;
+    std::string* log = nullptr;
+    int runs = 0;
+    std::vector<std::uint64_t> times;
+};
+
+void logCall(kirima_context* /*ctx*/, void* frame, std::uint32_t /*token*/, int run) {
+    auto* a = static_cast<Actor*>(frame);
+    if (run != 0) *a->log += a->name;
+}
+
+kirima_status act(kirima_context* /*ctx*/, void* frame) {
+    auto* a = static_cast<Actor*>(frame);
+    a->times.push_back(a->sched->time());
+    switch (a->role) {
+        case Actor::Role::Wait:
+            if (a->runs++ == 0) {
+                a->sched->waitDelay(a->id, a->delay);
+                return KIRIMA_WAITING;
+            }
+            return KIRIMA_DONE;
+        case Actor::Role::End: return KIRIMA_DONE;
+        case Actor::Role::Report:
+            a->sched->deferCall(a->id, false, &logCall, a, 0);
+            return KIRIMA_DONE;
+        case Actor::Role::Swap:
+            if (a->other->runs == 1) a->sched->kill(a->other->id);  // still waiting
+            a->sched->releaseProcess(a->other->id);
+            a->next->id = a->sched->addProcess(&act, a->next, Group::Active);
+            a->sched->start(a->next->id);
+            return KIRIMA_DONE;
+    }
+    return KIRIMA_DONE;
+}
+
+std::uint64_t counter(k::Context& ctx, std::string_view name) {
+    const k::Counters& c = ctx.counters();
+    for (k::CounterId i = 0; i < c.size(); ++i)
+        if (c.name(i) == name) return c.value(i);
+    return UINT64_MAX;
+}
+
+TEST(Scheduler, AReusedPlaceGetsNoStaleWakeUp) {
+    // a waits #10 and is killed at time 0; b takes its place and waits #20.
+    // a's wake-up at 10 must not reach b: b runs at 0 and 20 only.
+    k::Context ctx;
+    k::Scheduler& s = ctx.scheduler();
+    Actor a{Actor::Role::Wait, &s, 0, 10};
+    Actor b{Actor::Role::Wait, &s, 0, 20};
+    Actor swap{Actor::Role::Swap, &s};
+    swap.other = &a;
+    swap.next = &b;
+    a.id = s.addProcess(&act, &a, Group::Active);
+    swap.id = s.addProcess(&act, &swap, Group::Active);
+    s.start(a.id);
+    s.start(swap.id);
+    EXPECT_EQ(s.run(), EndReason::Quiescent);
+    EXPECT_EQ(b.id, a.id);  // the place was reused
+    EXPECT_EQ(b.times, (std::vector<std::uint64_t>{0, 20}));
+    EXPECT_EQ(counter(ctx, "proc.created"), 3U);
+    EXPECT_EQ(counter(ctx, "proc.kept_peak"), 2U);
+}
+
+TEST(Scheduler, HeldReportsGoInCreationOrder) {
+    // r1 is made before r2, which takes the place of the released e, a
+    // lower number: r1's report is still confirmed first (15.4, 10.8).
+    k::Context ctx;
+    k::Scheduler& s = ctx.scheduler();
+    std::string log;
+    Actor e{Actor::Role::End, &s};
+    Actor r1{Actor::Role::Report, &s};
+    Actor r2{Actor::Role::Report, &s};
+    Actor swap{Actor::Role::Swap, &s};
+    r1.name = '1';
+    r2.name = '2';
+    r1.log = &log;
+    r2.log = &log;
+    swap.other = &e;
+    swap.next = &r2;
+    e.id = s.addProcess(&act, &e, Group::Active);
+    r1.id = s.addProcess(&act, &r1, Group::Active);
+    swap.id = s.addProcess(&act, &swap, Group::Active);
+    s.start(e.id);
+    s.start(r1.id);
+    s.start(swap.id);
+    s.run();
+    EXPECT_LT(r2.id, r1.id);
+    EXPECT_EQ(log, "12");
 }
 
 }  // namespace

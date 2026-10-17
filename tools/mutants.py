@@ -395,6 +395,23 @@ MUTANTS = [
     ("front: a function that forks starts no process", "src/front/lower_stmt.cpp",
      "if (sub.subroutineKind == ast::SubroutineKind::Task || mayFork(sub)) spawn();",
      "if (sub.subroutineKind == ast::SubroutineKind::Task) spawn();"),
+    ("vm: the record of a finished process is never released", "src/vm/vm.cpp",
+     "if (f.released || !f.finished || !f.children.empty() || f.reports != 0) return;",
+     "if (f.released || f.finished || !f.children.empty() || f.reports != 0) return;"),
+    ("vm: a process is released while its children are kept", "src/vm/vm.cpp",
+     "if (f.released || !f.finished || !f.children.empty() || f.reports != 0) return;",
+     "if (f.released || !f.finished || f.reports != 0) return;"),
+    ("vm: a task call tells its children by their place", "src/vm/vm.cpp",
+     "        c.children = f.births;\n",
+     "        c.children = static_cast<std::uint32_t>(f.children.size());\n"),
+    ("vm: a block tells its children by their place", "src/vm/vm.cpp",
+     "static_cast<std::uint32_t>(f.syncCalls.size()), f.births});",
+     "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
+     "                             static_cast<std::uint32_t>(f.children.size())});"),
+    ("kernel: a reused place counts its waits from 0", "src/kernel/sim.cpp",
+     "        proc.gen = processes_[id].gen + 1;", "        proc.gen = 0;"),
+    ("kernel: held reports go by place, not creation", "src/kernel/sim.cpp",
+     "        return processes_[a].serial < processes_[b].serial;", "        return a < b;"),
 ]
 
 

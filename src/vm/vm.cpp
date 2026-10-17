@@ -402,10 +402,17 @@ struct Frame {
 
     // Process control (SCHEDULER_SPEC.md 10).
     enum class Join : std::uint8_t { None, All, Any, WaitFork };
-    Frame* parent = nullptr;       ///< The process that forked this one.
-    std::vector<Frame*> children;  ///< Every child, finished or not.
+    Frame* parent = nullptr;  ///< The process that forked this one.
+    /// The children whose records are kept: running, or ended with
+    /// descendants left (SCHEDULER_SPEC.md 10.8).
+    std::vector<Frame*> children;
     std::uint32_t liveChildren = 0;
+    std::uint32_t births = 0;   ///< Children made so far: the next one's birth number.
+    std::uint32_t birth = 0;    ///< Its birth number among its parent's children.
+    std::uint32_t place = 0;    ///< Its place in parent->children.
+    std::uint32_t reports = 0;  ///< Its deferred assertion calls on the kernel's queues.
     bool finished = false;
+    bool released = false;        ///< Its record was released; the frame waits to be reused.
     std::uint32_t group = 0;      ///< The parent's fork group it belongs to (0: none).
     std::uint32_t forkGroup = 0;  ///< This frame's latest join or join_any group.
     std::uint32_t groupSize = 0;
@@ -428,13 +435,13 @@ struct Frame {
         std::uint32_t varsId = 0;
         sir::BlockId block = 0;
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
-        std::uint32_t children = 0;        ///< The frame's children when it was called.
+        std::uint32_t children = 0;        ///< The frame's births when it was called.
     };
     std::vector<TaskCall> calls;
 
     // disable (SIR_SPEC.md 7.2, SCHEDULER_SPEC.md 10.4). Where the frame
     // stands: its task calls, and the calls run on the C++ stack (call)
-    // within the innermost one, each with the children the frame had.
+    // within the innermost one, each with the frame's births then.
     struct SyncCall {
         std::uint32_t body = 0;
         std::uint32_t children = 0;
@@ -684,19 +691,25 @@ public:
         Deferred d = std::move(vm.deferred_[token]);
         vm.deferred_[token] = {};
         vm.freeDeferred_.push_back(token);
-        if (run == 0) return;
-        std::uint64_t steps = 0;
-        vm.callWith(*f, d.subroutine, d.args, steps);
-        vm.counters_.increment(vm.cInstrs_, steps);
+        if (run != 0) {
+            std::uint64_t steps = 0;
+            vm.callWith(*f, d.subroutine, d.args, steps);
+            vm.counters_.increment(vm.cInstrs_, steps);
+        }
+        --f->reports;
+        vm.tryRelease(*f);
     }
 
     static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
+        vm.sweep();
         std::uint64_t steps = 0;
+        vm.running_ = f;
         const kernel::Status st = vm.runProcess(*f, steps);
         vm.counters_.increment(vm.cInstrs_, steps);
         if (st == kernel::Status::Done) vm.ended(*f);
+        vm.running_ = nullptr;
         return static_cast<kirima_status>(st);
     }
 
@@ -782,7 +795,13 @@ private:
         if (tempStack_.size() < a.base + bodyTemps(a.body))
             tempStack_.resize(a.base + bodyTemps(a.body));
     }
-    std::deque<Frame> frames_;                     ///< A deque, so that frames never move.
+    std::deque<Frame> frames_;  ///< A deque, so that frames never move.
+    /// Released frames to reuse, frames to look at again, and the frame
+    /// running now (SCHEDULER_SPEC.md 10.8).
+    std::vector<Frame*> freeFrames_;
+    std::vector<Frame*> later_;
+    Frame* running_ = nullptr;
+    std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
     std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
     std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
     std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
@@ -846,7 +865,16 @@ private:
     }
 
     Frame& newFrame(std::uint32_t process) {
-        Frame& f = frames_.emplace_back();
+        sweep();
+        Frame* place = nullptr;
+        if (freeFrames_.empty()) {
+            place = &frames_.emplace_back();
+        } else {
+            place = freeFrames_.back();
+            freeFrames_.pop_back();
+            *place = Frame{};
+        }
+        Frame& f = *place;
         f.vm = this;
         f.process = process;
         f.vars = newVars(process);
@@ -861,13 +889,69 @@ private:
     void ended(Frame& c) {
         if (c.finished) return;
         c.finished = true;
-        Frame* parent = c.parent;
-        if (parent == nullptr) return;
-        --parent->liveChildren;
-        if (c.group != 0 && c.group == parent->forkGroup) ++parent->groupDone;
-        if (parent->pending != Frame::Join::None && !parent->finished &&
-            parent->joinEvent != UINT32_MAX)
-            sched_.trigger(parent->joinEvent);
+        if (Frame* parent = c.parent; parent != nullptr) {
+            --parent->liveChildren;
+            if (c.group != 0 && c.group == parent->forkGroup) ++parent->groupDone;
+            if (parent->pending != Frame::Join::None && !parent->finished &&
+                parent->joinEvent != UINT32_MAX)
+                sched_.trigger(parent->joinEvent);
+        }
+        tryRelease(c);
+    }
+
+    /// Releases the record of a frame as soon as it may go (SCHEDULER_SPEC.md
+    /// 10.8): it has ended, its children's records are released, and no
+    /// report of it is left, then looks at its parent. The running frame,
+    /// which the kernel still marks after it returns, and a frame whose
+    /// reports the kernel still holds are looked at again later (sweep).
+    void tryRelease(Frame& f) {
+        if (f.released || !f.finished || !f.children.empty() || f.reports != 0) return;
+        if (&f == running_ || sched_.hasPending(f.kernelId)) {
+            later_.push_back(&f);
+            return;
+        }
+        f.released = true;
+        for (const Frame::TaskCall& c : f.calls)
+            retire(c.varsId);
+        retire(f.varsId);
+        if (f.joinEvent != UINT32_MAX) freeJoinEvents_.push_back(f.joinEvent);
+        sched_.releaseProcess(f.kernelId);
+        f.vars = {};
+        f.calls = {};
+        f.syncCalls = {};
+        f.scopes = {};
+        freeFrames_.push_back(&f);
+        if (Frame* parent = f.parent; parent != nullptr) {
+            Frame* last = parent->children.back();
+            parent->children[f.place] = last;
+            last->place = f.place;
+            parent->children.pop_back();
+            tryRelease(*parent);
+        }
+    }
+
+    /// Looks again at the frames tryRelease left for later.
+    void sweep() {
+        if (later_.empty()) return;
+        std::vector<Frame*> again;
+        again.swap(later_);
+        for (Frame* f : again)
+            tryRelease(*f);
+    }
+
+    /// The children of a frame from birth number `from` on, in the order
+    /// they were made: a copy, since ending them may release them.
+    static std::vector<Frame*> childrenFrom(const Frame& f, std::uint32_t from) {
+        std::vector<std::pair<std::uint32_t, Frame*>> born;
+        for (Frame* c : f.children)
+            if (c->birth >= from) born.emplace_back(c->birth, c);
+        std::sort(born.begin(), born.end(),
+                  [](const auto& a, const auto& b) { return a.first < b.first; });
+        std::vector<Frame*> kids;
+        kids.reserve(born.size());
+        for (const auto& [birth, c] : born)
+            kids.push_back(c);
+        return kids;
     }
 
     static bool joined(const Frame& f) {
@@ -887,7 +971,14 @@ private:
             f.pending = Frame::Join::None;
             return false;
         }
-        if (f.joinEvent == UINT32_MAX) f.joinEvent = sched_.addEvent();
+        if (f.joinEvent == UINT32_MAX) {
+            if (freeJoinEvents_.empty()) {
+                f.joinEvent = sched_.addEvent();
+            } else {
+                f.joinEvent = freeJoinEvents_.back();
+                freeJoinEvents_.pop_back();
+            }
+        }
         sched_.waitNamed(f.kernelId, f.joinEvent);
         return true;
     }
@@ -908,6 +999,8 @@ private:
             Frame& c = newFrame(ops[i].id);
             c.parent = &f;
             c.group = none ? 0 : f.forkGroup;
+            c.birth = f.births++;
+            c.place = static_cast<std::uint32_t>(f.children.size());
             c.kernelId = sched_.addProcess(&resume, &c, kernel::Group::Active);
             f.children.push_back(&c);
             ++f.liveChildren;
@@ -918,7 +1011,8 @@ private:
     /// disable fork: ends every descendant, also those of children that
     /// have already finished (9.6.3).
     void disableFork(Frame& f) {
-        for (Frame* c : f.children) {
+        for (Frame* c : childrenFrom(f, 0)) {
+            if (c->released) continue;
             if (!c->finished) {
                 sched_.kill(c->kernelId);
                 ended(*c);
@@ -1226,7 +1320,7 @@ private:
         Frame::TaskCall c;
         c.body = processCount() + ops[0].id;
         c.site = &in;
-        c.children = static_cast<std::uint32_t>(f.children.size());
+        c.children = f.births;
         c.vars = newVars(c.body);
         bindArgs(c.body, s, readArgs(s, ops), c.vars);
         c.varsId = enroll(c.vars);
@@ -1469,10 +1563,9 @@ private:
                         break;
                     }
                     case Op::ScopeEnter:
-                        f.scopes.push_back({ops[0].id, ops[1].id,
-                                            static_cast<std::uint32_t>(f.calls.size()),
-                                            static_cast<std::uint32_t>(f.syncCalls.size()),
-                                            static_cast<std::uint32_t>(f.children.size())});
+                        f.scopes.push_back(
+                            {ops[0].id, ops[1].id, static_cast<std::uint32_t>(f.calls.size()),
+                             static_cast<std::uint32_t>(f.syncCalls.size()), f.births});
                         break;
                     case Op::ScopeLeave: leaveScope(f, ops[0].id); break;
                     case Op::DisableScope:
@@ -1767,11 +1860,11 @@ private:
         }
     }
 
-    /// Ends the children a frame made from number `from` on, with their
-    /// descendants.
-    void killChildren(Frame& f, std::size_t from) {
-        for (std::size_t i = from; i < f.children.size(); ++i) {
-            Frame* c = f.children[i];
+    /// Ends the children a frame made from birth number `from` on, with
+    /// their descendants.
+    void killChildren(Frame& f, std::uint32_t from) {
+        for (Frame* c : childrenFrom(f, from)) {
+            if (c->released) continue;
             if (!c->finished) {
                 sched_.kill(c->kernelId);
                 ended(*c);
@@ -1901,7 +1994,7 @@ private:
         bindArgs(body, s, args, vars);
         W4 ret{0, 0};
         ++callDepth_;
-        f.syncCalls.push_back({body, static_cast<std::uint32_t>(f.children.size())});
+        f.syncCalls.push_back({body, f.births});
         const Exit e = runBody(f, 0, steps, ret);
         f.syncCalls.pop_back();
         while (!f.scopes.empty() && f.scopes.back().calls == f.calls.size() &&
@@ -1937,7 +2030,7 @@ private:
         enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars)});
         W4 ret{0, 0};
         ++callDepth_;
-        f.syncCalls.push_back({body, static_cast<std::uint32_t>(f.children.size())});
+        f.syncCalls.push_back({body, f.births});
         const Exit e = runBody(f, 0, steps, ret);
         f.syncCalls.pop_back();
         --callDepth_;
@@ -2376,6 +2469,7 @@ private:
                     token = static_cast<std::uint32_t>(deferred_.size());
                     deferred_.push_back(std::move(d));
                 }
+                ++f.reports;
                 sched_.deferCall(f.kernelId, ops[0].text == "final", &deferredCall, &f, token);
                 return true;
             }

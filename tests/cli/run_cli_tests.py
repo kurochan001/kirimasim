@@ -23,6 +23,7 @@ STRING_REPL = str(HERE / "string_repl.sv")
 PLUSARGS = str(HERE / "plusargs.sv")
 VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
 PROGRAM_MATRIX = HERE / "program_matrix.sv"
+LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 
 # The violation reports of violations.sv, exactly these and in this order
 # (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
@@ -141,6 +142,24 @@ def main() -> int:
         failures += 1
         print(f"FAIL: program matrix: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
               file=sys.stderr)
+
+    # The records of finished processes are released (SCHEDULER_SPEC.md
+    # 10.8): with twice the rounds of the process lifetime matrix, twice as
+    # many processes are made, but no more records are kept at once.
+    runs = []
+    for n in (4, 8):
+        proc = subprocess.run([args.kirimasim, "--stats=json", str(LIFETIME), f"+n={n}"],
+                              capture_output=True, text=True, check=False)
+        try:
+            stats = json.loads(proc.stdout.splitlines()[-1])
+            runs.append((stats["proc.created"], stats["proc.kept_peak"]))
+        except (IndexError, KeyError, ValueError) as e:
+            runs.append((0, 0))
+            print(f"FAIL: process lifetime +n={n}: {e}\n{proc.stderr}", file=sys.stderr)
+    if proc.returncode != 0 or runs[1][0] <= runs[0][0] or runs[1][1] != runs[0][1]:
+        failures += 1
+        print(f"FAIL: process records kept: (created, kept_peak) {runs[0]} with +n=4, "
+              f"{runs[1]} with +n=8", file=sys.stderr)
 
     return 1 if failures else 0
 

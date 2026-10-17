@@ -155,8 +155,15 @@ public:
 
     void setLimits(const Limits& l) { limits_ = l; }
 
-    /// Registers a process; it does not run until start() is called.
+    /// Registers a process; it does not run until start() is called. It
+    /// may get the place of a released process (SCHEDULER_SPEC.md 10.8).
     ProcessId addProcess(ResumeFn fn, void* frame, Group group);
+    /// Gives back the record of a process that has ended and holds no
+    /// report (SCHEDULER_SPEC.md 10.8). Not while the process is running:
+    /// the kernel marks it ended after it returns.
+    void releaseProcess(ProcessId p);
+    /// Whether a process holds reports not yet confirmed (SCHEDULER_SPEC.md 15).
+    [[nodiscard]] bool hasPending(ProcessId p) const { return !processes_[p].pending.empty(); }
     /// Schedules a process to run in the current time slot, in Active or
     /// Reactive by its group.
     void start(ProcessId p);
@@ -345,6 +352,7 @@ private:
         bool flushOnResume = false;          ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
         std::uint32_t observed = 0;          ///< Those confirmed in the Observed region.
+        std::uint64_t serial = 0;            ///< Creation order, for 15.4 (10.8).
     };
     struct Subscription {
         ProcessId process = 0;
@@ -414,6 +422,13 @@ private:
     Limits limits_;
 
     std::vector<Process> processes_;
+    /// Released places to reuse, and the number of records kept (10.8).
+    std::vector<ProcessId> freeProcesses_;
+    std::uint64_t kept_ = 0;
+    std::uint64_t nextSerial_ = 0;
+    /// A released place whose wait number reached this is not reused, so
+    /// that the next process has room to count its waits (10.8).
+    static constexpr std::uint32_t kReuseGenLimit = 1U << 31;
     std::deque<Event> regions_[kNumRegions];
     std::vector<std::vector<Future>> wheel_ = std::vector<std::vector<Future>>(kWheel);
     std::uint64_t wheelCount_ = 0;
@@ -460,12 +475,14 @@ private:
     bool begun_ = false;
     CounterId cTimeSlots_ = 0, cTimeAdvances_ = 0, cActiveLoops_ = 0, cReactiveLoops_ = 0;
     CounterId cEvents_[kNumRegions] = {};
-    CounterId cWakeups_ = 0, cCreated_ = 0, cFinished_ = 0, cWrites_ = 0, cChanges_ = 0,
-              cNbaScheduled_ = 0;
+    CounterId cWakeups_ = 0, cCreated_ = 0, cFinished_ = 0, cKeptPeak_ = 0, cWrites_ = 0,
+              cChanges_ = 0, cNbaScheduled_ = 0;
     CounterId cSubscriptions_ = 0, cMonitorEvals_ = 0, cEndTime_ = 0, cEndReason_ = 0;
 
     void begin();
     void wake(ProcessId p);
+    /// Puts pendingOrder_ in creation order (15.4, 10.8).
+    void sortPending();
     void schedule(Region r, Event e, std::uint64_t delay);
     void pushFuture(const Future& f);
     [[nodiscard]] bool futureEmpty() const { return wheelCount_ == 0 && heap_.empty(); }
