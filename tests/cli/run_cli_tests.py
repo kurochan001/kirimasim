@@ -22,6 +22,7 @@ WRITERS = str(HERE / "writers.sv")
 STRING_REPL = str(HERE / "string_repl.sv")
 PLUSARGS = str(HERE / "plusargs.sv")
 VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
+PROGRAM_MATRIX = HERE / "program_matrix.sv"
 
 # The violation reports of violations.sv, exactly these and in this order
 # (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
@@ -128,6 +129,18 @@ def main() -> int:
     if proc.returncode != 0 or proc.stdout != "h=8\n" or got != VIOLATION_LINES:
         failures += 1
         print(f"FAIL: violation reports\n{proc.stdout}{proc.stderr}", file=sys.stderr)
+
+    # Every program instance and anonymous program is reported as
+    # unsupported, wherever it is, and nothing runs (CLI.md 5; the lines come
+    # from tools/gen_program_matrix.py).
+    proc = subprocess.run([args.kirimasim, PROGRAM_MATRIX.name], cwd=HERE, capture_output=True,
+                          text=True, check=False)
+    want = PROGRAM_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
+    got = [line for line in proc.stderr.splitlines() if ": error: " in line]
+    if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
+        failures += 1
+        print(f"FAIL: program matrix: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
+              file=sys.stderr)
 
     return 1 if failures else 0
 

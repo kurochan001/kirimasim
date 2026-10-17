@@ -694,6 +694,11 @@ private:
     // (SIR_SPEC.md 1): first for the instance table, the slots of nets and
     // variables and the static initializers, then for the processes.
     void declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent);
+    /// Reports a program instance or an anonymous program as unsupported.
+    /// Program code runs in the reactive region set (24.3.1), which comes
+    /// with programs in P3 (SCHEDULER_SPEC.md, part 4); until then a program
+    /// is not run like a module.
+    void reportProgram(const ast::Symbol& s);
     /// The rows of the packages and compilation units that hold variables,
     /// nets or subroutines, in source order, with their slots and static
     /// initializers, before any instance (SIR_SPEC.md 2, 3.3, 7.1).

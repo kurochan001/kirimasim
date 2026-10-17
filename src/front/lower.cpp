@@ -688,6 +688,13 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     design_.timePrecision = precision_;
     root_ = &root;
     scanDisables(root);
+    // Anonymous programs hold items that only programs use (24.6).
+    for (const ast::CompilationUnitSymbol* unit : root.compilationUnits)
+        for (const ast::Symbol& m : unit->members())
+            reportProgram(m);
+    for (const ast::PackageSymbol* pkg : root.getCompilation().getPackages())
+        for (const ast::Symbol& m : pkg->members())
+            reportProgram(m);
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
@@ -1039,7 +1046,20 @@ std::optional<sir::InstanceId> Lowerer::rowOf(const ast::Symbol& s) {
     return rowFor(*scope);
 }
 
+void Lowerer::reportProgram(const ast::Symbol& s) {
+    if (s.kind == ast::SymbolKind::AnonymousProgram) {
+        report(s.location, "anonymous program");
+    } else if (s.kind == ast::SymbolKind::Instance &&
+               s.as<ast::InstanceSymbol>().getDefinition().definitionKind ==
+                   ast::DefinitionKind::Program) {
+        report(s.location, "program instance '" + s.getHierarchicalPath() + "'");
+    }
+}
+
 void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent) {
+    // Every instance comes here: at the top, in a module or a generate
+    // block, and as an element of an instance array.
+    reportProgram(inst);
     const auto id = static_cast<sir::InstanceId>(design_.instances.size());
     design_.instances.push_back(
         {inst.getHierarchicalPath(), std::string(inst.getDefinition().name), parent});

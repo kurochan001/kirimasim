@@ -385,6 +385,10 @@ MUTANTS = [
      "src/kernel/include/kirimasim/kernel/strength.h",
      "((drivers[d].one >> bit) & 1U) != 0 ? drivers[d].s1 : 0;",
      "((drivers[d].one >> bit) & 1U) != 0 ? drivers[d].s1 : drivers[d].s1;"),
+    ("front: a program instance runs like a module", "src/front/lower.cpp",
+     "    reportProgram(inst);\n", "    (void)inst;\n"),
+    ("front: an anonymous program is not reported", "src/front/lower.cpp",
+     "        report(s.location, \"anonymous program\");", "        (void)s;"),
 ]
 
 

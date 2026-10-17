@@ -112,3 +112,7 @@ add_test(NAME tools/bench_smoke
         --kirimasim $<TARGET_FILE:kirimasim> --n 100 --runs 1
         --out ${CMAKE_CURRENT_BINARY_DIR}/bench_smoke)
 set_tests_properties(tools/bench_smoke PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_program_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_program_matrix.py --check)
+set_tests_properties(tools/gen_program_matrix PROPERTIES LABELS Tools)
