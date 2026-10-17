@@ -1,3 +1,13 @@
+0.5 s1=x s2=x s3=x vv=x dw=x lv=x gn=x gt=x gi=x ud=x z0=0 cy=x gy=x
+1.5 s1=x s2=x s3=x vv=x dw=x lv=x gn=x gt=x gi=x ud=x z0=0 cy=x gy=x
+2.5 s1=x s2=x s3=x vv=x dw=x lv=0 gn=x gt=z gi=x ud=x z0=0 cy=0 gy=x
+3.5 s1=x s2=x s3=x vv=x dw=x lv=0 gn=0 gt=z gi=1 ud=x z0=0 cy=0 gy=x
+4.5 s1=x s2=x s3=x vv=x dw=x lv=0 gn=0 gt=z gi=1 ud=x z0=0 cy=0 gy=x
+5.5 s1=0 s2=x s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
+6.5 s1=0 s2=x s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
+7.5 s1=0 s2=0 s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
+8.5 s1=0 s2=0 s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
+9.5 s1=0 s2=0 s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
 10.5 s1=0 s2=0 s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
 11.5 s1=0 s2=0 s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
 12.5 s1=0 s2=0 s3=0 vv=0 dw=0 lv=0 gn=0 gt=z gi=1 ud=0 z0=0 cy=0 gy=0
