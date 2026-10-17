@@ -1,0 +1,62 @@
+b1: bit
+l1: logic
+r1: reg
+bs1: bit signed
+by: byte
+byu: byte unsigned
+si: shortint
+i: int
+is: int
+iu: int unsigned
+li: longint
+ig: integer
+igu: integer unsigned
+tm: time
+tms: time signed
+l8: logic [7:0]
+ls8: logic signed [7:0]
+b03: bit [0:3]
+l2d: logic [3:0][7:0]
+r: real
+sr: shortreal
+rt: realtime
+s: string
+ch: chandle
+ev: event
+t3: bit [2:0]
+t3b: bit [2:0]
+trio_t: bit [2:0]
+node: bit
+nib: logic [3:0]
+ab: struct{bit A;bit B;}top.AB_t$[0:9]
+abm: struct{bit A;bit B;}top.AB_t$[0:1][0:2]
+AB_t: struct{bit A;bit B;}top.AB_t
+sps: struct packed signed{logic [3:0] hi;logic [3:0] lo;}top.sps_t
+un: union packed{logic [7:0] u8;byte s8;}top.un_t
+st: enum logic [1:0]{IDLE=2'd0,RUN=2'd2}top.state_t
+IDLE: enum logic [1:0]{IDLE=2'd0,RUN=2'd2}top.state_t
+col: enum{RED=32'sd0,GREEN=32'sd5}pk::color_t
+pk::color_t: enum{RED=32'sd0,GREEN=32'sd5}pk::color_t
+pk::pk_anon: enum bit [1:0]{LO=2'd0,HI=2'd1}pk::e$1
+ut: struct{byte b;}$unit::unit_t
+anon1: enum{X1=32'sd0,X2=32'sd1}top.e$1
+anon2: struct{int a;enum{Y1=32'sd0}top.e$2 e;}top.s$1
+anon3: enum{Z1=32'sd0}top.e$3
+anon4: union packed{bit [1:0] p;bit [1:0] q;}top.u$1
+ua: int$[0:3]
+ub: logic [1:0]$[0:2][0:0]
+l8 + 1: logic [31:0]
+l8 + 8'd1: logic [7:0]
+{l8, b03}: logic [11:0]
+l8 == 0: logic
+b03 == 4'd1: bit
+l8[3:0]: logic [3:0]
+l8[2]: logic
+ua[1]: int
+r * 2: real
+iu + iu: int unsigned
+logic [7:0]: logic [7:0]
+int unsigned: int unsigned
+bit signed [3:0]: bit signed [3:0]
+bv: struct{int k;}top.blk.blk_t
+banon: enum{B1=32'sd0}top.blk.e$1

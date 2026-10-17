@@ -686,6 +686,7 @@ void Lowerer::noteRead(const sir::SlotRange& r) { b_.reads.push_back(r); }
 
 void Lowerer::lower(const ast::RootSymbol& root) {
     design_.timePrecision = precision_;
+    root_ = &root;
     scanDisables(root);
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)

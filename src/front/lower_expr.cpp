@@ -1001,6 +1001,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (among(name, kRealMath1) && args.size() == 1) return sys(rt, {arg(0, real).op});
             if (among(name, kRealMath2) && args.size() == 2)
                 return sys(rt, {arg(0, real).op, arg(1, real).op});
+            if (name == "$typename" && args.size() == 1)
+                return coerce(stringConstant(typeName(*args[0]->type, sl)), rt, sl);
             if (name == "$clog2" && args.size() == 1) {
                 const Val v = lowerExpr(*args[0]);
                 if (!sir::isIntegral(v.type)) unsupported(sl, "$clog2 of this type");

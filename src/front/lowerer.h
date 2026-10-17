@@ -149,6 +149,12 @@ public:
     /// subroutine call, or for $error when `action` is null (SIR_SPEC.md
     /// 5.7).
     void deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl);
+    // $typename (type_name.cpp, SYSTEM_TASKS.md 8).
+    std::string typeName(const ast::Type& type, slang::SourceLocation sl);
+    /// The typedef that declares a structure, union or enumeration, if any.
+    const ast::TypeAliasType* aliasDeclaring(const ast::Type& t);
+    /// The name of an anonymous structure, union or enumeration.
+    std::string anonymousName(const ast::Type& t);
     /// Whether a statement is a named block that a disable names.
     bool disabledBlock(const ast::Statement& s) const;
     /// Whether an expression names an automatic variable.
@@ -657,6 +663,12 @@ private:
     /// Expressions that stand for values already evaluated: the arguments
     /// of a deferred assertion's action inside its function.
     std::map<const ast::Expression*, Val> substitutions_;
+    const ast::RootSymbol* root_ = nullptr;
+    /// For $typename: the typedefs that declare structures, unions and
+    /// enumerations, and the anonymous ones of each namespace in order.
+    std::map<const ast::Type*, const ast::TypeAliasType*> typeAliases_;
+    bool aliasesScanned_ = false;
+    std::map<const ast::Scope*, std::vector<const ast::Type*>> anonymous_;
     const ast::Symbol* evalSymbol_ = nullptr;  ///< Where constants are evaluated.
     Body b_;
 
