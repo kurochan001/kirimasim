@@ -369,24 +369,34 @@ std::optional<std::int64_t> indexValue(W4 v, sir::Type t) {
     return static_cast<std::int64_t>(v.a);
 }
 
-/// v (an element of `ew` bits) with `width` bits of `part` written at the
-/// run-time position posv: only the bits inside the element
-/// (VALUE_SEMANTICS.md 3.11).
-W4 mergeBits(W4 v, std::uint32_t ew, W4 posv, sir::Type post, W4 part, std::uint32_t width) {
-    const std::optional<std::int64_t> pos = indexValue(posv, post);
-    if (!pos) return v;
-    std::int64_t lo = *pos;
-    std::int64_t hi = *pos + width;  // exclusive
-    if (lo >= static_cast<std::int64_t>(ew) || hi <= 0) return v;
+/// Where a part of `width` bits at position `pos` meets an element of `ew`
+/// bits: the first bit inside the element, how many bits, and how many low
+/// bits of the part fall below the element. Nothing when no bit is inside
+/// (VALUE_SEMANTICS.md 3.11). Every write of a part at a run-time position
+/// comes here; no position overflows it.
+struct Inside {
+    std::uint32_t lo = 0;
+    std::uint32_t n = 0;
     std::uint32_t skip = 0;
-    if (lo < 0) {
-        skip = static_cast<std::uint32_t>(-lo);
-        lo = 0;
-    }
-    if (hi > static_cast<std::int64_t>(ew)) hi = ew;
-    const std::uint64_t m = kernel::mask(static_cast<unsigned>(hi - lo)) << lo;
-    v.a = (v.a & ~m) | (((part.a >> skip) << lo) & m);
-    v.b = (v.b & ~m) | (((part.b >> skip) << lo) & m);
+};
+
+std::optional<Inside> inside(std::int64_t pos, std::uint32_t width, std::int64_t ew) {
+    if (pos >= ew || pos <= -static_cast<std::int64_t>(width)) return std::nullopt;
+    const std::int64_t lo = pos < 0 ? 0 : pos;
+    const std::int64_t hi = std::min<std::int64_t>(pos + width, ew);  // exclusive
+    return Inside{static_cast<std::uint32_t>(lo), static_cast<std::uint32_t>(hi - lo),
+                  static_cast<std::uint32_t>(lo - pos)};
+}
+
+/// v (an element of `ew` bits) with `width` bits of `part` written at
+/// position pos: only the bits inside the element.
+W4 mergeBits(W4 v, std::uint32_t ew, std::optional<std::int64_t> pos, W4 part,
+             std::uint32_t width) {
+    const std::optional<Inside> in = pos ? inside(*pos, width, ew) : std::nullopt;
+    if (!in) return v;
+    const std::uint64_t m = kernel::mask(in->n) << in->lo;
+    v.a = (v.a & ~m) | (((part.a >> in->skip) << in->lo) & m);
+    v.b = (v.b & ~m) | (((part.b >> in->skip) << in->lo) & m);
     return v;
 }
 
@@ -1190,7 +1200,7 @@ private:
         std::uint64_t elem = 0;
         for (std::size_t d = 0; d < dims.size(); ++d) {
             const Operand& o = ops[first + d];
-            const std::optional<std::int64_t> idx = indexValue(value(o), typeOf(o));
+            const std::optional<std::int64_t> idx = indexOf(o);
             if (!idx) return std::nullopt;
             const std::int64_t l = dims[d].left;
             const std::int64_t r = dims[d].right;
@@ -1205,26 +1215,17 @@ private:
 
     /// Writes `width` bits of v at a run-time position `pos` of an
     /// element; only the bits inside the element (VALUE_SEMANTICS.md 3.11).
-    void storeBits(const Frame& f, sir::SlotId s, std::uint32_t elem, W4 posv, sir::Type post, W4 v,
-                   std::uint32_t width, bool nba) {
-        const std::optional<std::int64_t> pos = indexValue(posv, post);
-        if (!pos) return;
-        const std::int64_t ew = d_.slots[s].type.width;
-        std::int64_t lo = *pos;
-        std::int64_t hi = *pos + width;  // exclusive
-        if (lo >= ew || hi <= 0) return;
-        std::uint32_t skip = 0;
-        if (lo < 0) {
-            skip = static_cast<std::uint32_t>(-lo);
-            lo = 0;
-        }
-        if (hi > ew) hi = ew;
-        const auto n = static_cast<std::uint32_t>(hi - lo);
-        const W4 part{(v.a >> skip) & kernel::mask(n), (v.b >> skip) & kernel::mask(n)};
+    void storeBits(const Frame& f, sir::SlotId s, std::uint32_t elem,
+                   std::optional<std::int64_t> pos, W4 v, std::uint32_t width, bool nba) {
+        const std::optional<Inside> in =
+            pos ? inside(*pos, width, d_.slots[s].type.width) : std::nullopt;
+        if (!in) return;
+        const W4 part{(v.a >> in->skip) & kernel::mask(in->n),
+                      (v.b >> in->skip) & kernel::mask(in->n)};
         if (nba)
-            nbaSlot(f, s, elem, static_cast<std::uint32_t>(lo), n, part);
+            nbaSlot(f, s, elem, in->lo, in->n, part);
         else
-            writeSlot(s, elem, static_cast<std::uint32_t>(lo), n, part);
+            writeSlot(s, elem, in->lo, in->n, part);
     }
 
     void waitTriggers(const Frame& f, const sir::Process& proc) {
@@ -2181,9 +2182,10 @@ private:
                 p[k] = k < r.size() ? r[k] : W4{0, 0};
     }
 
-    /// An index operand's value, or nothing for x, z or a value beyond 63
-    /// bits (VALUE_SEMANTICS.md 3.11).
-    std::optional<std::int64_t> wideIndex(const Operand& o) const {
+    /// An index or position operand's value, read at its whole width, or
+    /// nothing for x, z or a value that does not fit in 64 signed bits
+    /// (VALUE_SEMANTICS.md 3.11). Every index the VM reads comes here.
+    std::optional<std::int64_t> indexOf(const Operand& o) const {
         const sir::Type t = typeOf(o);
         if (chunksOf(t) == 1) return indexValue(value(o), t);
         const std::vector<W4> x = chunks(o);
@@ -2194,6 +2196,7 @@ private:
                 neg ? (k + 1 == x.size() ? kernel::mask(t.width - 64 * k) : ~std::uint64_t{0}) : 0;
             if (x[k].a != fill) return std::nullopt;
         }
+        if ((x[0].a >> 63) != (neg ? 1U : 0U)) return std::nullopt;  // past 64 signed bits
         return static_cast<std::int64_t>(x[0].a);
     }
 
@@ -2304,29 +2307,23 @@ private:
                     e = *el;
                 }
                 const std::size_t n = dims.size();
-                const std::optional<std::int64_t> pos = wideIndex(ops[n + 1]);
+                const std::optional<std::int64_t> pos = indexOf(ops[n + 1]);
                 if (!pos) return true;
                 const sir::Type et =
                     frame ? bodyFrame(act_.body)[ops[0].id].type : d_.slots[ops[0].id].type;
-                const std::int64_t ew = et.width;
                 const unsigned vw = t(n + 2).width;
-                std::int64_t lo = *pos;
-                std::int64_t hi = *pos + vw;
-                if (lo >= ew || hi <= 0) return true;
-                const std::int64_t skip = lo < 0 ? -lo : 0;
-                lo = lo < 0 ? 0 : lo;
-                hi = hi > ew ? ew : hi;
-                const auto pw = static_cast<unsigned>(hi - lo);
+                const std::optional<Inside> at = inside(*pos, vw, et.width);
+                if (!at) return true;
                 const std::vector<W4> x = get(n + 2);
-                std::vector<W4> part(kw::chunks(pw));
-                kw::bits(part.data(), pw, x.data(), vw, skip);
+                std::vector<W4> part(kw::chunks(at->n));
+                kw::bits(part.data(), at->n, x.data(), vw, at->skip);
                 if (frame) {
                     W4* cell = dims.empty() ? &frameVar(ops[0].id) : &frameElem(ops[0].id, e);
-                    kw::put(cell, static_cast<unsigned>(lo), part.data(), pw);
+                    kw::put(cell, at->lo, part.data(), at->n);
                 } else if (in.op == Op::StoreBits) {
-                    writeSlotWide(ops[0].id, e, static_cast<std::uint32_t>(lo), pw, part.data());
+                    writeSlotWide(ops[0].id, e, at->lo, at->n, part.data());
                 } else {
-                    nbaSlotWide(f, ops[0].id, e, static_cast<std::uint32_t>(lo), pw, part.data());
+                    nbaSlotWide(f, ops[0].id, e, at->lo, at->n, part.data());
                 }
                 return true;
             }
@@ -2472,7 +2469,7 @@ private:
                 return true;
             }
             case Op::Bitsel: {
-                const std::optional<std::int64_t> pos = wideIndex(ops[1]);
+                const std::optional<std::int64_t> pos = indexOf(ops[1]);
                 const std::vector<W4> x = get(0);
                 if (!pos || *pos < 0 || *pos >= t(0).width) {
                     set1(kernel::kW4X);
@@ -2489,7 +2486,7 @@ private:
                 const std::optional<std::int64_t> pos =
                     in.op == Op::Partsel
                         ? std::optional<std::int64_t>(static_cast<std::int64_t>(value(ops[1]).a))
-                        : wideIndex(ops[1]);
+                        : indexOf(ops[1]);
                 if (!pos) {
                     kw::allX(r.data(), w);
                 } else {
@@ -2629,25 +2626,18 @@ private:
         }
         // A part at a run-time position: only the bits inside the element
         // (VALUE_SEMANTICS.md 3.11).
-        const std::optional<std::int64_t> pos = wideIndex(ops[n + 1]);
+        const std::optional<std::int64_t> pos = indexOf(ops[n + 1]);
         if (!pos) return true;
-        const auto ew = static_cast<std::int64_t>(fv.target.width);
         const unsigned vw = typeOf(ops[n + 2]).width;
-        std::int64_t lo = *pos;
-        std::int64_t hi = *pos + vw;
-        if (lo >= ew || hi <= 0) return true;
-        const std::int64_t skip = lo < 0 ? -lo : 0;
-        lo = lo < 0 ? 0 : lo;
-        hi = hi > ew ? ew : hi;
-        const auto pw = static_cast<unsigned>(hi - lo);
+        const std::optional<Inside> at = inside(*pos, vw, fv.target.width);
+        if (!at) return true;
         const std::vector<W4> x = chunks(ops[n + 2]);
-        std::vector<W4> part(kw::chunks(pw));
-        kw::bits(part.data(), pw, x.data(), vw, skip);
+        std::vector<W4> part(kw::chunks(at->n));
+        kw::bits(part.data(), at->n, x.data(), vw, at->skip);
         if (isFrameRef(r))
-            kw::put(&refWord(r, std::uint64_t{e} * c), static_cast<unsigned>(lo), part.data(), pw);
+            kw::put(&refWord(r, std::uint64_t{e} * c), at->lo, part.data(), at->n);
         else
-            writeSlotWide(refSlot(r), refElem(r) + e, static_cast<std::uint32_t>(lo), pw,
-                          part.data());
+            writeSlotWide(refSlot(r), refElem(r) + e, at->lo, at->n, part.data());
         return true;
     }
 
@@ -2799,7 +2789,7 @@ private:
                 case Op::StrGet: {
                     // Outside the string: 0 (table 6-9).
                     const std::string_view text = str(0);
-                    const std::optional<std::int64_t> i = indexValue(v(1), t(1));
+                    const std::optional<std::int64_t> i = indexOf(ops[1]);
                     const bool inside = i && *i >= 0 && static_cast<std::size_t>(*i) < text.size();
                     temp(in.result) = {
                         inside ? static_cast<unsigned char>(text[static_cast<std::size_t>(*i)])
@@ -2953,11 +2943,11 @@ private:
                 const std::size_t n = dims.size();
                 if (frame) {
                     W4& cell = dims.empty() ? frameVar(ops[0].id) : frameElem(ops[0].id, e);
-                    cell = mergeBits(cell, bodyFrame(act_.body)[ops[0].id].type.width, v(n + 1),
-                                     t(n + 1), v(n + 2), t(n + 2).width);
+                    cell = mergeBits(cell, bodyFrame(act_.body)[ops[0].id].type.width,
+                                     indexOf(ops[n + 1]), v(n + 2), t(n + 2).width);
                     return true;
                 }
-                storeBits(f, ops[0].id, e, v(n + 1), t(n + 1), v(n + 2), t(n + 2).width,
+                storeBits(f, ops[0].id, e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
                           in.op == Op::NbaBits);
                 return true;
             }
@@ -3093,10 +3083,10 @@ private:
                         writeSlot(refSlot(r), refElem(r) + e, 0, 0, v(n + 1));
                 } else if (isFrameRef(r)) {
                     W4& cell = refWord(r, e);
-                    cell = mergeBits(cell, fv.target.width, v(n + 1), t(n + 1), v(n + 2),
+                    cell = mergeBits(cell, fv.target.width, indexOf(ops[n + 1]), v(n + 2),
                                      t(n + 2).width);
                 } else {
-                    storeBits(f, refSlot(r), refElem(r) + e, v(n + 1), t(n + 1), v(n + 2),
+                    storeBits(f, refSlot(r), refElem(r) + e, indexOf(ops[n + 1]), v(n + 2),
                               t(n + 2).width, false);
                 }
                 return true;
@@ -3210,13 +3200,13 @@ private:
                 return true;
             }
             case Op::IdxPartsel: {
-                const std::optional<std::int64_t> pos = indexValue(v(1), t(1));
-                if (!pos) {
-                    set(kernel::allX(w));
-                    return true;
-                }
                 const W4 x = v(0);
                 const std::int64_t xw = t(0).width;
+                const std::optional<std::int64_t> pos = indexOf(ops[1]);
+                if (!pos || *pos >= xw || *pos <= -static_cast<std::int64_t>(w)) {
+                    set(kernel::allX(w));  // wholly outside, or unknown
+                    return true;
+                }
                 W4 r{0, 0};
                 for (unsigned i = 0; i < w; ++i) {
                     const std::int64_t src = *pos + i;
@@ -3346,7 +3336,7 @@ private:
             W4 r{n & kernel::mask(rt.width), 0};
             temp(in.result) = r;
         };
-        const auto index = [&](std::size_t i) { return indexValue(v(i), t(i)); };
+        const auto index = [&](std::size_t i) { return indexOf(ops[i]); };
         switch (info.method) {
             case Method::Len: num(self.size()); return;
             case Method::Getc: {

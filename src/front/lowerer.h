@@ -211,6 +211,10 @@ public:
     Val lowerRangeSelect(const ast::Expression& e);
     Val lowerUnary(const ast::Expression& e);
     Val lowerBinary(const ast::Expression& e);
+    /// The type a run-time bit position is computed in, for an index of
+    /// type `index`, and a constant of it, sign-extended.
+    static sir::Type positionType(sir::Type index);
+    Val positionConstant(sir::Type t, std::int64_t k);
     /// The bit position, from the least significant bit, of element `idx`
     /// of a packed range whose elements are `elemWidth` bits wide. A
     /// constant past the end when a constant index is outside the range.

@@ -443,7 +443,14 @@ void select(W4* r, W4 cond, const W4* x, const W4* y, unsigned w) {
 
 void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb) {
     std::vector<W4> out(chunks(rw), W4{0, 0});
+    // Wholly outside: x, without computing lsb + i, which could overflow.
+    const bool outside =
+        lsb >= static_cast<std::int64_t>(xw) || lsb <= -static_cast<std::int64_t>(rw);
     for (unsigned i = 0; i < rw; ++i) {
+        if (outside) {
+            setBit(out.data(), i, true, true);
+            continue;
+        }
         const std::int64_t s = lsb + i;
         if (s < 0 || s >= xw)
             setBit(out.data(), i, true, true);

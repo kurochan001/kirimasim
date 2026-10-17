@@ -1079,6 +1079,22 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     }
 }
 
+/// The type a bit position is computed in from a run-time index, and a
+/// constant of it. 64 bits for an index of 32 bits or fewer; for a wider
+/// index, wide enough that the arithmetic never wraps (a declared bound
+/// takes 32 bits and an element at most 2^24), so that an index outside
+/// the range stays outside however large it is (VALUE_SEMANTICS.md 3.11).
+Type Lowerer::positionType(Type index) {
+    return integral(sir::isFourState(index), true, index.width <= 32 ? 64 : index.width + 32);
+}
+
+Val Lowerer::positionConstant(Type t, std::int64_t k) {
+    const std::size_t words = (t.width + 63) / 64;
+    std::vector<std::uint64_t> a(words, k < 0 ? ~std::uint64_t{0} : 0);
+    a[0] = static_cast<std::uint64_t>(k);
+    return constantWords(t, std::move(a), std::vector<std::uint64_t>(words, 0));
+}
+
 Val Lowerer::bitPosition(const ast::Expression& selector, const slang::ConstantRange& r,
                          std::uint32_t elemWidth) {
     const slang::SourceLocation sl = selector.sourceRange.start();
@@ -1094,12 +1110,12 @@ Val Lowerer::bitPosition(const ast::Expression& selector, const slang::ConstantR
     Val i = lowerExpr(selector);
     if (!sir::isIntegral(i.type)) unsupported(sl, "index of this type");
     if (r.left >= r.right && r.right == 0 && elemWidth == 1) return i;
-    const Type t64 = integral(sir::isFourState(i.type), true, 64);
-    i = coerce(i, t64, sl);
-    const Val right = constant(t64, static_cast<std::uint64_t>(std::int64_t{r.right}));
-    Val pos = r.left >= r.right ? emit(Op::Sub, t64, {i.op, right.op}, sl)
-                                : emit(Op::Sub, t64, {right.op, i.op}, sl);
-    if (elemWidth != 1) pos = emit(Op::Mul, t64, {pos.op, constant(t64, elemWidth).op}, sl);
+    const Type pt = positionType(i.type);
+    i = coerce(i, pt, sl);
+    const Val right = positionConstant(pt, r.right);
+    Val pos = r.left >= r.right ? emit(Op::Sub, pt, {i.op, right.op}, sl)
+                                : emit(Op::Sub, pt, {right.op, i.op}, sl);
+    if (elemWidth != 1) pos = emit(Op::Mul, pt, {pos.op, positionConstant(pt, elemWidth).op}, sl);
     return pos;
 }
 
@@ -1252,18 +1268,18 @@ Lowerer::Part Lowerer::partOf(const ast::Expression& e) {
     }
     Val b = lowerExpr(rs.left());
     if (!sir::isIntegral(b.type)) unsupported(sl, "part-select base of this type");
-    const Type t64 = integral(sir::isFourState(b.type), true, 64);
-    b = coerce(b, t64, sl);
+    const Type pt = positionType(b.type);
+    b = coerce(b, pt, sl);
     // lsb = (up ? base : base - w + 1) - right when the range goes down,
     //       right - (up ? base + w - 1 : base) when it goes up.
     std::int64_t k = 0;
     Val pos;
     if (down) {
         k = (up ? 0 : -(w - 1)) - r.right;
-        pos = emit(Op::Add, t64, {b.op, constant(t64, static_cast<std::uint64_t>(k)).op}, sl);
+        pos = emit(Op::Add, pt, {b.op, positionConstant(pt, k).op}, sl);
     } else {
         k = r.right - (up ? w - 1 : 0);
-        pos = emit(Op::Sub, t64, {constant(t64, static_cast<std::uint64_t>(k)).op, b.op}, sl);
+        pos = emit(Op::Sub, pt, {positionConstant(pt, k).op, b.op}, sl);
     }
     return {pos, 0, width};
 }
