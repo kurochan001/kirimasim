@@ -282,6 +282,27 @@ std::vector<Case> cases() {
         {"scope.leave", "needs a scope", add(none(Op::ScopeLeave, {A}))},
         {"disable.task", "needs a task", add(none(Op::DisableTask, {Operand::subroutine(0)}))},
         {"strobe", "needs a postponed process", add(none(Op::Strobe, {A}))},
+        {"udp kind", "needs a sequential UDP table",
+         add(make(Op::UdpSeq, u4(1), N, {Operand::typeRow(0), Bit, Bit, Bit}))},
+        {"drive.delay operands", "needs an integral slot range, a value of its type",
+         add(none(Op::DriveDelay, {A, A, C2, C2, C2}))},
+        {"block arguments", "block arguments are missing",
+         [](Design& d) {
+             Operand b = Operand::block(0);
+             b.count = 2;
+             add(none(Op::Br, {b})).apply(d);
+         }},
+        {"wait without a block", "needs a block", add(none(Op::WaitFork, {}))},
+        {"ref argument", "argument 'x' must be a ref",
+         [](Design& d) {
+             d.subroutines[0].params[0].dir = Direction::Ref;
+             add(none(Op::Call, {Operand::subroutine(0), Operand::temp(tA)})).apply(d);
+         }},
+        {"array argument", "argument 'x' must be an array of its shape",
+         [](Design& d) {
+             d.subroutines[0].frame[0].dims = {{0, 3}};
+             add(none(Op::Call, {Operand::subroutine(0), Operand::temp(tA)})).apply(d);
+         }},
         {"udp inputs", "needs one value per input",
          add(make(Op::Udp, u4(1), N, {Operand::typeRow(0), Bit}))},
         {"override.start", "needs \"assign\" or \"force\"",
@@ -386,6 +407,31 @@ std::vector<Case> cases() {
         {"b words", "wrong number of b words", [](Design& d) { d.constants[c5].bWords = {0, 0}; }},
         {"task value", "a task returns no value",
          [](Design& d) { d.subroutines[1].returnType = u4(8); }},
+        {"slot owner", "subroutine out of range", [](Design& d) { d.slots[sA].subroutine = 9; }},
+        {"guard result", "a guard returns a 1-bit value",
+         [](Design& d) { d.subroutines[2].returnType = u2(8); }},
+        {"argument of a static subroutine", "of a static subroutine is in the frame",
+         [](Design& d) { d.subroutines[0].automatic = false; }},
+        {"argument slot", "argument 'x' slot is invalid",
+         [](Design& d) {
+             d.subroutines[0].automatic = false;
+             d.subroutines[0].params[0].frameVar = kNone;
+             d.subroutines[0].params[0].slot = sR;
+         }},
+        {"store.override operands",
+         "a slot range marked as a force target and a value of its width",
+         [](Design& d) {
+             Process o;
+             o.name = "hold";
+             o.kind = ProcessKind::Override;
+             o.loc = at(1);
+             o.writes = {{sF, 0, 0, 0, 0}};
+             o.blocks = {{{},
+                          {none(Op::StoreOverride,
+                                {Operand::str("hold"), Operand::slot(sF), Operand::constant(c5)}),
+                           none(Op::Ret, {})}}};
+             d.processes.push_back(o);
+         }},
         {"guard owner", "a guard needs the process or subroutine whose frame it reads",
          [](Design& d) { d.subroutines[2].frameOf = {}; }},
         {"frame of another", "only guards read another frame",
