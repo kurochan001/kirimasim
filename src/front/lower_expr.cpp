@@ -1130,27 +1130,6 @@ Val Lowerer::bitPosition(const ast::Expression& selector, const slang::ConstantR
     return pos;
 }
 
-std::optional<std::uint32_t>
-Lowerer::constElement(const sir::Slot& slot, const std::vector<const ast::Expression*>& indices) {
-    std::optional<std::uint32_t> elem = 0;
-    for (std::size_t d = 0; d < indices.size() && d < slot.dims.size(); ++d) {
-        // Elements are numbered from the left bound (SIR_SPEC.md 4.2).
-        const std::optional<std::int64_t> c = constInt(*indices[d]);
-        const std::int64_t l = slot.dims[d].left;
-        const std::int64_t r = slot.dims[d].right;
-        const auto n = static_cast<std::uint32_t>(std::abs(l - r) + 1);
-        std::optional<std::int64_t> pos;
-        if (c) {
-            const std::int64_t off = l <= r ? *c - l : l - *c;
-            if (off >= 0 && off < n) pos = off;
-        }
-        elem = (elem && pos)
-                   ? std::optional<std::uint32_t>(*elem * n + static_cast<std::uint32_t>(*pos))
-                   : std::nullopt;
-    }
-    return elem;
-}
-
 std::optional<std::uint32_t> Lowerer::constElementOf(const sir::Slot& slot,
                                                      const std::vector<std::int64_t>& indices) {
     // The element number of constant declared indices, or nothing when one

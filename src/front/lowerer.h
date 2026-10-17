@@ -252,8 +252,6 @@ public:
     /// is outside its range.
     static std::optional<std::uint32_t> constElementOf(const sir::Slot& slot,
                                                        const std::vector<std::int64_t>& indices);
-    std::optional<std::uint32_t> constElement(const sir::Slot& slot,
-                                              const std::vector<const ast::Expression*>& indices);
     /// Converts a value to another integral type (VALUE_SEMANTICS.md 2).
     Val coerce(Val v, sir::Type want, slang::SourceLocation sl);
     /// lowerExpr, then the truth value as a 1-bit value for br.if.
