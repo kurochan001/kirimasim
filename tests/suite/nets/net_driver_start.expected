@@ -1,0 +1,6 @@
+0.5 assign=x declaration=x gate=x udp=x port=x part=zzxx against_weak=x pullup=x tri0=x undriven=z variable=x
+1.5 assign=x declaration=x gate=x udp=x port=x part=zzxx against_weak=x pullup=x tri0=x undriven=z variable=x
+2.5 assign=x declaration=x gate=x udp=x port=x part=zzxx against_weak=x pullup=x tri0=x undriven=z variable=x
+3.5 assign=1 declaration=1 gate=1 udp=1 port=1 part=zz10 against_weak=1 pullup=0 tri0=1 undriven=z variable=1
+4.5 assign=1 declaration=1 gate=1 udp=1 port=1 part=zz10 against_weak=1 pullup=0 tri0=1 undriven=z variable=1
+5.5 assign=1 declaration=1 gate=1 udp=1 port=1 part=zz10 against_weak=1 pullup=0 tri0=1 undriven=z variable=1

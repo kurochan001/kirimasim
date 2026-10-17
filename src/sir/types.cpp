@@ -59,6 +59,17 @@ InitValue initialValue(SlotKind k) {
     }
 }
 
+std::vector<SlotRange> unknownAtStart(const Design& d) {
+    std::vector<SlotRange> out;
+    for (const Process& p : d.processes) {
+        if (p.kind != ProcessKind::Cont) continue;
+        for (const SlotRange& w : p.writes)
+            if (d.slots[w.slot].kind != SlotKind::Var && isFourState(d.slots[w.slot].type))
+                out.push_back(w);
+    }
+    return out;
+}
+
 std::uint64_t elementCount(const Slot& s) {
     std::uint64_t n = 1;
     for (const ArrayDim& d : s.dims) {

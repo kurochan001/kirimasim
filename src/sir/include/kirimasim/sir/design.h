@@ -528,6 +528,11 @@ enum class InitValue : std::uint8_t { Zero, One, X, Z };
 /// 0 for tri0 and supply0, 1 for tri1 and supply1 (6.6.5, 28.15.3), z for
 /// the others (6.7.1). Every tier starts slots from this.
 InitValue initialValue(SlotKind k);
+/// The parts of nets and driver slots that start at x instead: the bits
+/// that cont processes write, which their drivers drive as x until they
+/// first write (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5). Every tier
+/// starts them so.
+std::vector<SlotRange> unknownAtStart(const Design& d);
 /// Number of elements of a slot (1 for a slot that is not an array).
 std::uint64_t elementCount(const Slot& s);
 /// Number of elements of a frame variable (1 if it is not an array).

@@ -487,6 +487,23 @@ public:
                        dom == sir::Domain::Four ? kernelInit(sir::initialValue(s.kind))
                                                 : kernel::Init::Zero);
         }
+        // The bits a driver drives are x until it first writes them
+        // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
+        for (const sir::SlotRange& r : sir::unknownAtStart(d_)) {
+            const kernel::SlotLayout& l = store_.layout(r.slot);
+            const std::uint32_t lsb = r.width == 0 ? 0 : r.lsb;
+            const std::uint32_t width = r.width == 0 ? l.width : r.width;
+            const std::uint32_t n = r.numElems == 0 ? l.elements : r.numElems;
+            for (std::uint32_t e = r.firstElem; e < r.firstElem + n; ++e) {
+                std::uint64_t* p = store_.element(r.slot, e);
+                for (std::uint32_t done = 0; done < width;) {
+                    const unsigned k = width - done < 64 ? width - done : 64U;
+                    kernel::writeField(p, 2, lsb + done, k, kernel::mask(k));
+                    kernel::writeField(p + 1, 2, lsb + done, k, kernel::mask(k));
+                    done += k;
+                }
+            }
+        }
         // Every element of an event slot holds its own event from the
         // start; the handle is the event's number plus 1, 0 being null
         // (SIR_SPEC.md 3.2.1).
