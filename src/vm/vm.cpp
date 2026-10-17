@@ -870,6 +870,15 @@ private:
     struct GuardDeps {
         std::vector<kernel::SlotPart> slots;
         std::vector<sir::SlotId> events;
+        /// What the body reads through a ref of the waiter's frame: the
+        /// frame variable, the leaf of a structure, and whether any element
+        /// of an array is read. Found when the wait starts (readsOf).
+        struct RefRead {
+            sir::FrameVarId var = 0;
+            std::uint32_t leaf = 0;
+            bool anyElement = false;
+        };
+        std::vector<RefRead> refs;
     };
     std::vector<std::optional<GuardDeps>> guardDeps_;  ///< By body.
 
@@ -1292,7 +1301,7 @@ private:
     kernel::MonitorSpec watchMonitor(Frame& f, const Operand& o) {
         const sir::Type t = d_.subroutines[o.id].returnType;
         kernel::MonitorSpec m;
-        readsOf(depsOf(processCount() + o.id), m);
+        readsOf(f, depsOf(processCount() + o.id), m);
         m.eval = &evalWatch;
         m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.id});
         m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
@@ -1872,10 +1881,23 @@ private:
     /// A subroutine's own variables are left out: a call sets them again.
     void collectReads(std::uint32_t body, GuardDeps& deps, std::vector<bool>& seen) const {
         if (seen[body]) return;
+        const bool own = std::none_of(seen.begin(), seen.end(), [](bool b) { return b; });
         seen[body] = true;
         for (const sir::BasicBlock& bb : bodyBlocks(body)) {
             for (const sir::Instr& in : bb.instrs) {
                 if (in.op == Op::Call) collectReads(processCount() + in.operands[0].id, deps, seen);
+                // A ref of the body's own frame (that of the waiter); the
+                // refs of the functions it calls are bound by the call.
+                if (own && (in.op == Op::LoadRef || in.op == Op::LoadRefElem) &&
+                    in.operands[0].kind == Operand::Kind::Frame) {
+                    std::uint32_t leaf = 0;
+                    if (in.op == Op::LoadRef && in.operands.size() == 2 &&
+                        in.operands[1].kind == Operand::Kind::Const) {
+                        const sir::Constant& c = d_.constants[in.operands[1].id];
+                        leaf = c.aWords.empty() ? 0 : static_cast<std::uint32_t>(c.aWords[0]);
+                    }
+                    deps.refs.push_back({in.operands[0].id, leaf, in.op == Op::LoadRefElem});
+                }
                 for (const Operand& o : in.operands) {
                     if (o.kind != Operand::Kind::Slot) continue;
                     const sir::Slot& slot = d_.slots[o.id];
@@ -1907,10 +1929,19 @@ private:
         std::copy(fresh.begin(), fresh.end(), f.vars.begin());
     }
 
-    /// What a monitor record depends on: the slot parts a body reads, and
-    /// for ev.triggered the events its event slots hold now (15.5.3).
-    void readsOf(const GuardDeps& deps, kernel::MonitorSpec& m) const {
+    /// What a monitor record of frame f depends on: the slot parts a body
+    /// reads, those its refs refer to now, and for ev.triggered the events
+    /// its event slots hold now (15.5.3). A ref to an automatic variable is
+    /// left out: only its own process writes it.
+    void readsOf(const Frame& f, const GuardDeps& deps, kernel::MonitorSpec& m) const {
         m.slots = deps.slots;
+        const std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
+        for (const GuardDeps::RefRead& rr : deps.refs) {
+            const W4 r = vars[rr.var];
+            if (isFrameRef(r)) continue;
+            m.slots.push_back({refSlot(r) + rr.leaf, rr.anyElement ? 0 : refElem(r),
+                               rr.anyElement ? 0U : 1U, 0, 0});
+        }
         for (const sir::SlotId s : deps.events) {
             const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
             for (std::uint32_t e = 0; e < n; ++e)
@@ -1927,7 +1958,7 @@ private:
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
         kernel::MonitorSpec m;
-        readsOf(depsOf(processCount() + g), m);
+        readsOf(f, depsOf(processCount() + g), m);
         m.eval = &evalCond;
         m.frame = &f;
         m.domain = kernel::Domain::Two;

@@ -565,6 +565,9 @@ MUTANTS = [
     ("vm: a watch's value is cut to one bit", "src/vm/vm.cpp",
      "        m.width = t.width;\n        m.edge = kernelEdge(o.edge);",
      "        m.width = 1;\n        m.edge = kernelEdge(o.edge);"),
+    ("vm: a monitor record leaves out what a ref refers to", "src/vm/vm.cpp",
+     "        for (const GuardDeps::RefRead& rr : deps.refs) {",
+     "        for (const GuardDeps::RefRead& rr : std::vector<GuardDeps::RefRead>{}) {"),
 ]
 
 
