@@ -1,0 +1,56 @@
+module itos0 [Hi!] 3
+module itos1 [AB] 2
+module itos2 [Hello, wide!] 12
+module itos3 [A] 1
+module itos4 [] 0
+module stoi0 00004142 0000000000000000000004142
+module stoi1 44454647 0000000000041424344454647
+module stoi2 00000000 0000000000000000000000000
+module cat [abCd!]
+module rep0 []
+module rep1 [Cd]
+module rep3 [CdCdCd]
+module index 101 0 0
+module indexw [jello]
+module putc [Hallo] 72 0
+module case [HALLO] [hallo]
+module compare -1 1 0 0 1
+module relational 111011
+module substr [str] [s] [] []
+module atoi0 12345
+module atoi1 0
+module atohex2 31
+module atooct3 15
+module atobin4 5
+module atoi5 0
+module atoreal 2500.000000
+module toa [-42] [ff] [10] [101]
+module realtoa [2.5]
+function itos0 [Hi!] 3
+function itos1 [AB] 2
+function itos2 [Hello, wide!] 12
+function itos3 [A] 1
+function itos4 [] 0
+function stoi0 00004142 0000000000000000000004142
+function stoi1 44454647 0000000000041424344454647
+function stoi2 00000000 0000000000000000000000000
+function cat [abCd!]
+function rep0 []
+function rep1 [Cd]
+function rep3 [CdCdCd]
+function index 101 0 0
+function indexw [jello]
+function putc [Hallo] 72 0
+function case [HALLO] [hallo]
+function compare -1 1 0 0 1
+function relational 111011
+function substr [str] [s] [] []
+function atoi0 12345
+function atoi1 0
+function atohex2 31
+function atooct3 15
+function atobin4 5
+function atoi5 0
+function atoreal 2500.000000
+function toa [-42] [ff] [10] [101]
+function realtoa [2.5]
