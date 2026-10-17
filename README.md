@@ -243,8 +243,10 @@ kirimasim is in early development, so for now it accepts **specification
 proposals and issues only**. It does not accept code pull requests: only
 collaborators can open pull requests. Use the issue forms to propose a
 change to a specification under `docs/spec/`, report a bug, or point out a
-wrong expected value. When the project starts accepting more, this section
-and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.
+wrong expected value, and use
+[Discussions](https://github.com/kurochan001/kirimasim/discussions) for
+questions (Q&A) and early ideas (Ideas). When the project starts accepting
+more, this section and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.
 
 ## Documentation
 

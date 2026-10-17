@@ -1,6 +1,7 @@
 # Contributing to kirimasim
 
-Thank you for your interest. kirimasim is in early development (P0).
+Thank you for your interest. kirimasim is in early development: phase P1,
+the first execution tier, is in progress. The README gives the status.
 
 ## What we accept for now
 
@@ -15,7 +16,8 @@ We accept:
 - **Bug reports**, through the "Bug report" issue form.
 - **Reports of wrong expected values** in tests, through the "Expected value
   change" issue form.
-- **Discussion** of questions and early ideas in GitHub Discussions.
+- **Discussion** in GitHub Discussions: questions in the Q&A category, and
+  ideas that are not yet a concrete proposal in the Ideas category.
 
 We do not accept:
 
@@ -116,9 +118,8 @@ the banned-feature check, clang-format and clang-tidy) in one go:
 python3 tools/local_ci.py
 ```
 
-Hosted macOS runners are not always available to this repository, so if
-you work on macOS, run `tools/local_ci.py` before pushing and paste its
-summary into the pull request.
+CI runs on Linux only, so if you work on macOS, run `tools/local_ci.py`
+before pushing and paste its summary into the pull request.
 
 ## Pull requests
 

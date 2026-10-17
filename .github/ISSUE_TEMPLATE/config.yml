@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and early ideas
-    url: https://github.com/kirimasim/kirimasim/discussions
+    url: https://github.com/kurochan001/kirimasim/discussions
     about: Ask questions, or discuss ideas that are not yet a concrete proposal, in GitHub Discussions.
   - name: Security vulnerability
-    url: https://github.com/kirimasim/kirimasim/security/policy
+    url: https://github.com/kurochan001/kirimasim/security/policy
     about: Do not open a public issue. Report vulnerabilities privately as described in SECURITY.md.
