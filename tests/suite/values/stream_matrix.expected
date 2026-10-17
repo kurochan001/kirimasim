@@ -1,0 +1,88 @@
+module struct pack 10x10110z01x1100
+module struct pack_l1 0011x10z01101x01
+module struct pack_l4 1100z01x011010x1
+module struct pack_l8 z01x110010x10110
+module struct cast 01x01001x10x0011
+module struct unpack 0z11 01x01001 1101
+module struct unpack_l4 1101 100101x0 0z11
+module struct unpack_l8 1001 11010z11 01x0
+module nested pack 10x10110z01x1100
+module nested pack_l1 0011x10z01101x01
+module nested pack_l4 1100z01x011010x1
+module nested pack_l8 z01x110010x10110
+module nested cast 01x01001x10x0011
+module nested unpack 0z11 01 x01001 1101
+module nested unpack_l4 1101 10 0101x0 0z11
+module nested unpack_l8 1001 11 010z11 01x0
+module array_member pack 10x10110z01x1100
+module array_member pack_l1 0011x10z01101x01
+module array_member pack_l4 1100z01x011010x1
+module array_member pack_l8 z01x110010x10110
+module array_member cast 01x01001x10x0011
+module array_member unpack 0z11 01 x0 10011101
+module array_member unpack_l4 1101 10 01 01x00z11
+module array_member unpack_l8 1001 11 01 0z1101x0
+module struct_array pack 10x10110z01x1100
+module struct_array pack_l1 0011x10z01101x01
+module struct_array pack_l4 1100z01x011010x1
+module struct_array pack_l8 z01x110010x10110
+module struct_array cast 01x01001x10x0011
+module struct_array unpack 0z11 01x0 1001 1101
+module struct_array unpack_l4 1101 1001 01x0 0z11
+module struct_array unpack_l8 1001 1101 0z11 01x0
+module struct_array_member pack 10x10110z01x1100
+module struct_array_member pack_l1 0011x10z01101x01
+module struct_array_member pack_l4 1100z01x011010x1
+module struct_array_member pack_l8 z01x110010x10110
+module struct_array_member cast 01x01001x10x0011
+module struct_array_member unpack 0z11 01 x0 10 01 1101
+module struct_array_member unpack_l4 1101 10 01 01 x0 0z11
+module struct_array_member unpack_l8 1001 11 01 0z 11 01x0
+module array_2d pack 10x10110z01x1100
+module array_2d pack_l1 0011x10z01101x01
+module array_2d pack_l4 1100z01x011010x1
+module array_2d pack_l8 z01x110010x10110
+module array_2d cast 01x01001x10x0011
+module array_2d unpack 0z11 01x0 1001 1101
+module array_2d unpack_l4 1101 1001 01x0 0z11
+module array_2d unpack_l8 1001 1101 0z11 01x0
+module array_down pack 10x10110z01x1100
+module array_down pack_l1 0011x10z01101x01
+module array_down pack_l4 1100z01x011010x1
+module array_down pack_l8 z01x110010x10110
+module array_down cast 01x01001x10x0011
+module array_down unpack 0z11 01x0 1001 1101
+module array_down unpack_l4 1101 1001 01x0 0z11
+module array_down unpack_l8 1001 1101 0z11 01x0
+automatic struct pack 10x10110z01x1100
+automatic struct pack_l1 0011x10z01101x01
+automatic struct pack_l4 1100z01x011010x1
+automatic struct pack_l8 z01x110010x10110
+automatic struct cast 01x01001x10x0011
+automatic struct unpack 0z11 01x01001 1101
+automatic struct unpack_l4 1101 100101x0 0z11
+automatic struct unpack_l8 1001 11010z11 01x0
+automatic nested pack 10x10110z01x1100
+automatic nested pack_l1 0011x10z01101x01
+automatic nested pack_l4 1100z01x011010x1
+automatic nested pack_l8 z01x110010x10110
+automatic nested cast 01x01001x10x0011
+automatic nested unpack 0z11 01 x01001 1101
+automatic nested unpack_l4 1101 10 0101x0 0z11
+automatic nested unpack_l8 1001 11 010z11 01x0
+automatic array_2d pack 10x10110z01x1100
+automatic array_2d pack_l1 0011x10z01101x01
+automatic array_2d pack_l4 1100z01x011010x1
+automatic array_2d pack_l8 z01x110010x10110
+automatic array_2d cast 01x01001x10x0011
+automatic array_2d unpack 0z11 01x0 1001 1101
+automatic array_2d unpack_l4 1101 1001 01x0 0z11
+automatic array_2d unpack_l8 1001 1101 0z11 01x0
+automatic array_down pack 10x10110z01x1100
+automatic array_down pack_l1 0011x10z01101x01
+automatic array_down pack_l4 1100z01x011010x1
+automatic array_down pack_l8 z01x110010x10110
+automatic array_down cast 01x01001x10x0011
+automatic array_down unpack 0z11 01x0 1001 1101
+automatic array_down unpack_l4 1101 1001 01x0 0z11
+automatic array_down unpack_l8 1001 1101 0z11 01x0
