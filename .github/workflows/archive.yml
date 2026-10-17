@@ -1,0 +1,69 @@
+name: Archive
+
+# Asks Software Heritage (https://www.softwareheritage.org/) to save the
+# repository, so that an independent archive keeps dated copies of its whole
+# history. The job only sends the request; Software Heritage loads the
+# repository later on its own servers.
+
+on:
+  schedule:
+    - cron: "41 15 * * *"  # once a day (15:41 UTC)
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: archive
+  cancel-in-progress: false
+
+jobs:
+  software-heritage:
+    # The self-hosted runner, as in ci.yml. The job runs no code of the
+    # repository; it only calls the Software Heritage API.
+    runs-on: [self-hosted, kirimasim-linux]
+    steps:
+      - name: Mask the runner's home directory
+        run: echo "::add-mask::$HOME"
+
+      # A daily run whose commit the last saved snapshot already holds sends
+      # nothing, so that unchanged days do not add requests.
+      - name: Request a save
+        env:
+          ORIGIN: ${{ github.server_url }}/${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          python3 -I - <<'EOF'
+          import json, os, sys, urllib.error, urllib.request
+
+          api = "https://archive.softwareheritage.org/api/1"
+          origin, event, sha = os.environ["ORIGIN"], os.environ["EVENT"], os.environ["SHA"]
+
+          def call(method, path):
+              req = urllib.request.Request(api + path, method=method,
+                                           headers={"Accept": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      return json.load(resp)
+              except urllib.error.HTTPError as e:
+                  if e.code == 404:
+                      return None
+                  sys.exit(f"{method} {path}: HTTP {e.code}: {e.read()[:500]!r}")
+
+          if event == "schedule":
+              visit = call("GET", f"/origin/{origin}/visit/latest/?require_snapshot=true")
+              if visit and visit.get("snapshot"):
+                  snap = call("GET", f"/snapshot/{visit['snapshot']}/?branches_count=1000")
+                  targets = {b["target"] for b in (snap or {}).get("branches", {}).values() if b}
+                  if sha in targets:
+                      print(f"{sha} is already in the snapshot of {visit['date']}; nothing to send.")
+                      sys.exit(0)
+
+          r = call("POST", f"/origin/save/git/url/{origin}/")
+          print(json.dumps(r, indent=2))
+          if not r or r.get("save_request_status") not in ("accepted", "pending"):
+              sys.exit("Software Heritage did not accept the save request.")
+          print(f"Status: {api}/origin/save/{r['id']}/")
+          EOF
