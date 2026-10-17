@@ -14,18 +14,15 @@ concurrency:
 
 jobs:
   build-test:
-    name: build-test (${{ matrix.os }}, ${{ matrix.preset }})
+    name: build-test (linux, ${{ matrix.preset }})
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-26, ubuntu-24.04]  # macos-26 is Apple Silicon (arm64)
         preset: [dev, release]
-    runs-on: ${{ matrix.os }}
-    # Hosted macOS arm64 runners are often unavailable for this private
-    # repository, and queued jobs get cancelled. Until the repository is
-    # public, macOS results come from tools/local_ci.py run before pushing,
-    # and a macOS failure here does not fail the workflow.
-    continue-on-error: ${{ startsWith(matrix.os, 'macos') }}
+    # The jobs run on the project's self-hosted Linux (x86-64) runner, which
+    # carries the kirimasim-linux label. macOS results come from
+    # tools/local_ci.py run before pushing.
+    runs-on: [self-hosted, kirimasim-linux]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -44,7 +41,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-${{ matrix.os }}-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-linux-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }}
@@ -60,7 +57,7 @@ jobs:
         run: python3 tools/check_release_flags.py
 
   lint:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, kirimasim-linux]
     steps:
       # The full history is needed by the PR history checks below. The default
       # checkout of a pull_request event fetches only GitHub's test merge commit.
@@ -68,16 +65,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # LLVM 22 from apt.llvm.org, the same major version as the Homebrew LLVM
-      # used on the development Mac. The runner's Clang 18 cannot use the
-      # std::expected of the runner's default libstdc++ (GCC 13), which slang
-      # needs.
-      - name: Install LLVM 22
+      # LLVM 22, the same major version as the Homebrew LLVM used on the
+      # development Mac, is installed on the runner from apt.llvm.org. The job
+      # does not install it, because that would need sudo on the runner.
+      - name: Show LLVM 22
         run: |
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 22
-          sudo apt-get install -y clang-tidy-22 clang-format-22
           clang-22 --version
           clang-tidy-22 --version
           clang-format-22 --version

@@ -50,7 +50,7 @@ ctest --preset dev -L PerfCount           # 回数の回帰だけ
 python3 tools/local_ci.py                 # 上の全部と clang-format・clang-tidy をまとめて
 ```
 
-- push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。GitHub の macOS のランナーはこのリポジトリでは取れないことが多いので、macOS の結果はこれで代える（CI の macOS のジョブは、失敗してもワークフロー全体を失敗にしない設定にしてある）。
+- push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。GitHub の macOS のランナーはこのリポジトリでは取れないことが多いので、macOS の結果はこれで代える（`ci.yml` のジョブは、ラベル `kirimasim-linux` の付いたセルフホストの Linux（x86-64）のランナーだけで動かし、macOS のジョブは持たない）。
 
 - テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。今は `kirimasim parse` が通るかだけを見る。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
 - PerfCount の期待値は `tests/perf_counts/expected.json`。更新の手順は `tests/perf_counts/README.md`。
