@@ -517,6 +517,9 @@ MUTANTS = [
      'error(where, g + " reads another frame", p.loc);', "(void)0;"),
     ("sir: verify counts a static subroutine's slots in rule 6", "src/sir/verify.cpp",
      "                        if (s.subroutine != kNone) continue;\n", ""),
+    ("front: an instance's scope name is a reference into the table", "src/front/lower.cpp",
+     "    const std::string scope = design_.instances[instance_].scopeName;",
+     "    const std::string& scope = design_.instances[instance_].scopeName;"),
 ]
 
 

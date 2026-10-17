@@ -1224,7 +1224,10 @@ void Lowerer::declareScope(const ast::Scope& scope) {
 void Lowerer::lowerInstance(const ast::InstanceSymbol& inst) {
     const sir::InstanceId saved = instance_;
     instance_ = instanceIds_.at(&inst);
-    lowerScope(inst.body, design_.instances[instance_].scopeName);
+    // A copy: the first use of a package adds its row to the table while
+    // the scope is lowered (rowFor).
+    const std::string scope = design_.instances[instance_].scopeName;
+    lowerScope(inst.body, scope);
     instance_ = saved;
 }
 
