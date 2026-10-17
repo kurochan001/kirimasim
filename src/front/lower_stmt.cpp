@@ -440,16 +440,22 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     std::string scope = b_.scope;  // a named fork is a scope (9.3.5)
     if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
         scope += "." + std::string(b.blockSymbol->name);
+    // The parent is the process, or the task, whose body holds the fork.
+    const std::string owner = b_.isSub ? design().subroutines[b_.proc].name : proc().name;
+    const sir::InstanceId instance =
+        b_.isSub ? design().subroutines[b_.proc].instance : proc().instance;
+    const sir::Owner::Kind ownerKind =
+        b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process;
     std::vector<Operand> ops;
     for (std::size_t i = 0; i < stmts.size(); ++i) {
         if (stmts[i]->kind == ast::StatementKind::VariableDeclaration)
             unsupported(stmts[i]->sourceRange.start(), "declarations in a fork block");
         if (stmts[i]->kind == ast::StatementKind::Empty) continue;
         sir::Process child;
-        child.name = proc().name + ".fork" + std::to_string(forkNumber) + "." + std::to_string(i);
+        child.name = owner + ".fork" + std::to_string(forkNumber) + "." + std::to_string(i);
         child.kind = sir::ProcessKind::General;
-        child.instance = proc().instance;
-        child.parent = {sir::Owner::Kind::Process, parent};
+        child.instance = instance;
+        child.parent = {ownerKind, parent};
         child.loc = loc(stmts[i]->sourceRange.start());
         child.blocks.resize(1);
         const auto id = static_cast<std::uint32_t>(design().processes.size());

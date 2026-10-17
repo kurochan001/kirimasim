@@ -1,0 +1,32 @@
+initial join 11
+initial join_any 1
+initial wait fork 2
+initial join_none 0
+initial later 5
+always join 11
+always join_any 1
+always wait fork 2
+always join_none 0
+always later 5
+fork branch join 11
+fork branch join_any 1
+fork branch wait fork 2
+fork branch join_none 0
+fork branch later 5
+static task join 11
+static task join_any 1
+static task wait fork 2
+static task join_none 0
+static task later 5
+automatic task join 11
+automatic task join_any 1
+automatic task wait fork 2
+automatic task join_none 0
+automatic task later 5
+task in a fork join 11
+task in a fork join_any 1
+task in a fork wait fork 2
+task in a fork join_none 0
+task in a fork later 5
+function returned 0
+function later 7
