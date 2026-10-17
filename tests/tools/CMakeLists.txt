@@ -104,3 +104,11 @@ set_tests_properties(tools/gen_typename_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_aggregate_call_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_aggregate_call_matrix.py --check)
 set_tests_properties(tools/gen_aggregate_call_matrix PROPERTIES LABELS Tools)
+
+# The benchmark designs still run, and tools/bench.py still measures them
+# (PERFORMANCE.md 5). A small count keeps it quick.
+add_test(NAME tools/bench_smoke
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/bench.py
+        --kirimasim $<TARGET_FILE:kirimasim> --n 100 --runs 1
+        --out ${CMAKE_CURRENT_BINARY_DIR}/bench_smoke)
+set_tests_properties(tools/bench_smoke PROPERTIES LABELS Tools)
