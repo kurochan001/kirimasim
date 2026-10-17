@@ -304,8 +304,11 @@ public:
                                const std::vector<sir::ArrayDim>& dims, slang::SourceLocation sl);
     void lowerReturn(const ast::Expression* e, slang::SourceLocation sl);
     /// The format and value arguments of $display, $write and $sformatf.
+    /// `radix` is how values without a specifier print: 'd', or 'b', 'o'
+    /// or 'h' for the forms with that suffix (SYSTEM_TASKS.md 3.1).
     void lowerFormatArgs(std::span<const ast::Expression* const> args,
-                         std::vector<sir::Operand>& ops, slang::SourceLocation sl);
+                         std::vector<sir::Operand>& ops, slang::SourceLocation sl,
+                         char radix = 'd');
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
 

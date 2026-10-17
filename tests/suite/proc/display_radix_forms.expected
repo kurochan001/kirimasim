@@ -1,0 +1,14 @@
+165  X
+10100101 10x1z0
+245 XZ
+a5 2X
+fd txt
+dec 165 hex  fd
+10100101|245 a5
+swriteb 10100101
+swriteo 165 245
+swriteh 2X
+Time scale of (top) is 1ns / 1ps
+Time scale of (top.c) is 1ns / 1ps
+Time scale of (top.o) is 10us / 1ns
+[  1.250 ns] [1.250 ns] [1.251 ns]

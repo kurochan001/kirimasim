@@ -70,4 +70,10 @@ struct TimeFormat {
 /// %t (3.7). `width` overrides the minimum width when it is not -1.
 std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width);
 
+/// Formats a real time given in ticks of the global precision with %t
+/// (3.7): rounded once to tf.decimals digits of tf.unit, half away from
+/// zero, on the shortest decimal text that reads back as the value (the
+/// rounding of real delays, SCHEDULER_SPEC.md 1).
+std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width);
+
 }  // namespace kirimasim::kernel

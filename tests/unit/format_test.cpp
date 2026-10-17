@@ -117,6 +117,27 @@ TEST(Format, Time) {
     EXPECT_EQ(formatTime(Num(0, 64).value, -12, tf, -1), "0");
 }
 
+// A real %t is rounded once, half away from zero, on its shortest decimal
+// text (SYSTEM_TASKS.md 3.7): 1250.5 ticks of 1ps is 1.2505 ns.
+TEST(Format, RealTimes) {
+    TimeFormat tf;
+    tf.unit = -9;
+    tf.decimals = 3;
+    tf.suffix = " ns";
+    tf.minWidth = 0;
+    EXPECT_EQ(formatTimeReal(1250.5, -12, tf, -1), "1.251 ns");
+    EXPECT_EQ(formatTimeReal(1250.4, -12, tf, -1), "1.250 ns");
+    EXPECT_EQ(formatTimeReal(-1250.5, -12, tf, -1), "-1.251 ns");
+    EXPECT_EQ(formatTimeReal(0.0, -12, tf, -1), "0.000 ns");
+    EXPECT_EQ(formatTimeReal(999999.5, -12, tf, -1), "1000.000 ns");
+    tf.decimals = 0;
+    EXPECT_EQ(formatTimeReal(1500.0, -12, tf, -1), "2 ns");
+    EXPECT_EQ(formatTimeReal(1499.0, -12, tf, -1), "1 ns");
+    EXPECT_EQ(formatTimeReal(0.4, -12, tf, -1), "0 ns");
+    tf.unit = -15;  // a unit finer than the precision
+    EXPECT_EQ(formatTimeReal(2.5, -12, tf, 8), " 2500 ns");
+}
+
 TEST(Format, Reals) {
     // 3.6: C's formats, with inf, -inf and nan spelled one way.
     std::vector<FormatPiece> p;

@@ -2619,7 +2619,7 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
 }
 
 void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
-                              std::vector<Operand>& ops, slang::SourceLocation sl) {
+                              std::vector<Operand>& ops, slang::SourceLocation sl, char radix) {
     // A string literal not taken by an earlier specifier is a format
     // (SYSTEM_TASKS.md 3.1); the VM parses it once when it loads the
     // design. A %t value is scaled from the caller's time unit to ticks of
@@ -2640,8 +2640,11 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             ops.push_back(Operand::str(withScope(text, b_.scope)));
             continue;
         }
-        const bool hasSpec = !pending.empty();
-        const char conv = hasSpec ? pending.front() : 'd';
+        // A value without a specifier prints in the radix of the task's
+        // form, like that specifier (SYSTEM_TASKS.md 3.1).
+        const bool explicitSpec = !pending.empty();
+        const bool hasSpec = explicitSpec || radix != 'd';
+        const char conv = explicitSpec ? pending.front() : radix;
         if (!pending.empty()) pending.pop_front();
         if (hasSpec && conv == 's' && arg->kind == ast::ExpressionKind::StringLiteral &&
             arg->type->getBitWidth() > 64) {
@@ -2659,11 +2662,24 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             // A real with an integer format goes through a 64-bit signed
             // integer; without a specifier the VM shows it like %g
             // (SYSTEM_TASKS.md 3.6).
-            if (conv == 't') unsupported(arg->sourceRange.start(), "%t of a real value");
+            // A real %t value, in the caller's time unit, becomes a real
+            // count of ticks of the global precision; the VM rounds it once
+            // (SYSTEM_TASKS.md 3.7).
+            if (conv == 't') {
+                const int shift = timeScale().unit - precision();
+                if (shift < 0 || shift > 19) unsupported(sl, "%t with this time unit");
+                v = coerce(v, Type{sir::TypeKind::Real, 0}, sl);
+                if (shift > 0)
+                    v = emit(Op::Mul, v.type,
+                             {v.op, realConstant(v.type, std::pow(10.0, shift)).op}, sl);
+                ops.push_back(v.op);
+                continue;
+            }
             if (hasSpec && !realFormat) v = coerce(v, sir::s2(64), sl);
         } else if (isString(v.type)) {
-            // A string with %s or no specifier prints its characters.
-            if (hasSpec && conv != 's')
+            // A string with %s or no specifier prints its characters, in
+            // the b, o and h forms too (SYSTEM_TASKS.md 3.1).
+            if (explicitSpec && conv != 's')
                 unsupported(arg->sourceRange.start(), "%" + std::string(1, conv) + " of a string");
         } else if (!sir::isIntegral(v.type)) {
             unsupported(arg->sourceRange.start(), "display of a value of this type");
@@ -2690,18 +2706,61 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const std::string name(call.getSubroutineName());
     const auto args = call.arguments();
-    if (name == "$display" || name == "$write") {
+    // The b, o and h forms print values without a specifier in that radix
+    // (SYSTEM_TASKS.md 3.1).
+    const char radix =
+        name.size() > 1 && (name.back() == 'b' || name.back() == 'o' || name.back() == 'h')
+            ? name.back()
+            : 'd';
+    const std::string base = radix == 'd' ? name : name.substr(0, name.size() - 1);
+    if (base == "$display" || base == "$write") {
         std::vector<Operand> ops{Operand::str(name)};
-        lowerFormatArgs(args, ops, sl);
+        lowerFormatArgs(args, ops, sl, radix);
         emitVoid(Op::Syscall, std::move(ops), sl);
         return;
     }
-    if ((name == "$sformat" || name == "$swrite") && !args.empty()) {
+    if (name == "$timeformat" && (args.empty() || args.size() == 4)) {
+        // The unit, digits, suffix and minimum width of %t (SYSTEM_TASKS.md
+        // 5.4); no arguments restore the defaults.
+        std::vector<Operand> ops{Operand::str(name)};
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            const Val v = lowerExpr(*args[i]);
+            ops.push_back((i == 2 ? coerce(v, Type{sir::TypeKind::String, 0}, sl)
+                                  : coerce(v, sir::s2(32), sl))
+                              .op);
+        }
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
+    if (name == "$printtimescale") {
+        // One line with the unit and precision of the caller's design
+        // element, or of the instance named (SYSTEM_TASKS.md 5.3, 20.4.2).
+        const ast::Symbol* at = nullptr;
+        if (args.size() == 1 && args[0]->kind == ast::ExpressionKind::ArbitrarySymbol) {
+            at = args[0]->as<ast::ArbitrarySymbolExpression>().symbol.get();
+        } else if (args.empty()) {
+            for (const ast::Symbol* s = evalSymbol_; s != nullptr && at == nullptr;
+                 s = s->getParentScope() != nullptr ? &s->getParentScope()->asSymbol() : nullptr)
+                if (s->kind == ast::SymbolKind::InstanceBody)
+                    at = s->as<ast::InstanceBodySymbol>().parentInstance;
+        }
+        if (at == nullptr || at->kind != ast::SymbolKind::Instance)
+            unsupported(sl, "$printtimescale here or of this argument");
+        const sir::TimeScale ts = timeScaleOf(at->as<ast::InstanceSymbol>().body);
+        const std::string line = "Time scale of (" + at->getHierarchicalPath() + ") is " +
+                                 sir::timeExponentText(ts.unit) + " / " +
+                                 sir::timeExponentText(ts.precision) + "\n";
+        emitVoid(Op::Syscall, {Operand::str("$write"), Operand::str(line)}, sl);
+        return;
+    }
+    if ((name == "$sformat" || base == "$swrite") && !args.empty()) {
         // $sformat(dest, format, ...) and $swrite(dest, ...): $sformatf
         // into dest (21.3.3); $swrite reads every string literal argument
         // not taken by a specifier as a format, as lowerFormatArgs does.
-        std::vector<Operand> ops{Operand::str("$sformatf")};
-        lowerFormatArgs(args.subspan(1), ops, sl);
+        // $swriteb, $swriteo and $swriteh keep their names for the radix.
+        std::vector<Operand> ops{
+            Operand::str(radix == 'd' || name == "$sformat" ? "$sformatf" : name)};
+        lowerFormatArgs(args.subspan(1), ops, sl, name == "$sformat" ? 'd' : radix);
         const Val v = emit(Op::Syscall, Type{sir::TypeKind::String, 0}, std::move(ops), sl);
         const ast::Expression* dest = args[0];
         if (dest->kind == ast::ExpressionKind::Assignment &&

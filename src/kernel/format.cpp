@@ -2,12 +2,14 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 namespace kirimasim::kernel {
@@ -343,6 +345,57 @@ std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& t
         digits.insert(digits.size() - d, ".");
     }
     return padLeft(digits + tf.suffix, w, ' ');
+}
+
+std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width) {
+    const std::size_t w = static_cast<std::size_t>(width >= 0 ? width : std::max(tf.minWidth, 0));
+    if (!std::isfinite(ticks)) return padLeft(formatReal(ticks, FormatSpec{}) + tf.suffix, w, ' ');
+    const bool negative = ticks < 0;
+    // The shortest decimal text of the value, d.ddde[+-]x: digits * 10^exp.
+    std::array<char, 64> buf{};
+    const auto res = std::to_chars(buf.data(), buf.data() + buf.size(), std::fabs(ticks),
+                                   std::chars_format::scientific);
+    if (res.ec != std::errc()) return padLeft(tf.suffix, w, ' ');
+    const std::string_view text(buf.data(), static_cast<std::size_t>(res.ptr - buf.data()));
+    const std::size_t epos = text.find('e');
+    std::string digits;
+    for (const char c : text.substr(0, epos))
+        if (c != '.') digits += c;
+    std::string_view es = text.substr(epos + 1);
+    if (es.starts_with("+")) es.remove_prefix(1);
+    int exp10 = 0;
+    std::from_chars(es.data(), es.data() + es.size(), exp10);
+    // The value in units of tf.unit with tf.decimals digits after the
+    // point, as a whole number: digits * 10^shift, rounded half away from
+    // zero.
+    const int shift =
+        exp10 - static_cast<int>(digits.size() - 1) + precision - tf.unit + tf.decimals;
+    std::string whole;
+    if (shift >= 0) {
+        whole = digits + std::string(static_cast<std::size_t>(shift), '0');
+    } else {
+        const auto drop = static_cast<std::size_t>(-shift);
+        const bool up = drop <= digits.size() && digits[digits.size() - drop] >= '5';
+        whole = drop < digits.size() ? digits.substr(0, digits.size() - drop) : "0";
+        if (up) {
+            std::size_t i = whole.size();
+            while (i > 0 && whole[i - 1] == '9')
+                whole[--i] = '0';
+            if (i == 0)
+                whole.insert(0, "1");
+            else
+                ++whole[i - 1];
+        }
+    }
+    const std::size_t lead = whole.find_first_not_of('0');
+    whole = lead == std::string::npos ? "0" : whole.substr(lead);
+    if (tf.decimals > 0) {
+        const auto d = static_cast<std::size_t>(tf.decimals);
+        whole = padLeft(std::move(whole), d + 1, '0');
+        whole.insert(whole.size() - d, ".");
+    }
+    if (negative && whole.find_first_not_of("0.") != std::string::npos) whole.insert(0, "-");
+    return padLeft(whole + tf.suffix, w, ' ');
 }
 
 }  // namespace kirimasim::kernel

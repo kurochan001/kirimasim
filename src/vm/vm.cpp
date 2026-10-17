@@ -58,6 +58,7 @@ enum class SysTask : std::uint8_t {
     TestPlusargs,
     Sscanf,
     ValuePlusargs,
+    TimeFormat,
     Unknown,
 };
 
@@ -206,8 +207,12 @@ constexpr MathName kMath[] = {
 // clang-format on
 
 SysTask resolveSysTask(std::string_view name) {
-    if (name == "$display") return SysTask::Display;
-    if (name == "$write") return SysTask::Write;
+    // The b, o and h forms differ only in their radix (InstrInfo).
+    if (name == "$display" || name == "$displayb" || name == "$displayo" || name == "$displayh")
+        return SysTask::Display;
+    if (name == "$write" || name == "$writeb" || name == "$writeo" || name == "$writeh")
+        return SysTask::Write;
+    if (name == "$swriteb" || name == "$swriteo" || name == "$swriteh") return SysTask::SFormatF;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -227,6 +232,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$test$plusargs") return SysTask::TestPlusargs;
     if (name == "$sscanf") return SysTask::Sscanf;
     if (name == "$value$plusargs") return SysTask::ValuePlusargs;
+    if (name == "$timeformat") return SysTask::TimeFormat;
     for (const MathName& m : kMath)
         if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
     return SysTask::Unknown;
@@ -281,7 +287,10 @@ struct InstrInfo {
     /// (empty for the others).
     std::vector<std::vector<kernel::FormatPiece>> formats;
     kernel::NetKind netKind = kernel::NetKind::Wire;  ///< For resolve.
-    std::uint32_t driver = 0;                         ///< For drive.delay: its kernel driver.
+    /// How values without a specifier print: 'd', or the radix of a b, o
+    /// or h form (SYSTEM_TASKS.md 3.1).
+    char radix = 'd';
+    std::uint32_t driver = 0;  ///< For drive.delay: its kernel driver.
 };
 
 /// The kind of net a resolve instruction names (SIR_SPEC.md 3.5).
@@ -686,6 +695,11 @@ private:
         }
         if (in.op != Op::Syscall || in.operands.empty()) return info;
         info.task = resolveSysTask(in.operands[0].text);
+        const std::string& n = in.operands[0].text;
+        if ((info.task == SysTask::Display || info.task == SysTask::Write ||
+             info.task == SysTask::SFormatF) &&
+            (n.back() == 'b' || n.back() == 'o' || n.back() == 'h'))
+            info.radix = n.back();
         for (const MathName& m : kMath) {
             if (m.name != in.operands[0].text) continue;
             info.fn1 = m.fn1;
@@ -2092,6 +2106,8 @@ private:
                 text.insert(0, static_cast<std::size_t>(spec.width) - text.size(), ' ');
             return text;
         }
+        if (isRealType(t) && spec.conv == 't')
+            return kernel::formatTimeReal(toReal(x, t), d_.timePrecision, timeFormat_, spec.width);
         if (isRealType(t)) {
             // front makes every other specifier take an integer; without
             // one, a real shows like %g (SYSTEM_TASKS.md 3.6).
@@ -2114,7 +2130,9 @@ private:
         std::string text;
         while (i < ops.size()) {
             if (ops[i].kind != Operand::Kind::Text) {
-                text += formatValue(f, ops[i], kernel::FormatSpec{});
+                kernel::FormatSpec spec;
+                spec.conv = info.radix;
+                text += formatValue(f, ops[i], spec);
                 ++i;
                 continue;
             }
@@ -2178,6 +2196,33 @@ private:
                 temp(in.result) = {
                     kernel::countBits4(value(ops[1]), typeOf(ops[1]).width, zeros, ones, zs, xs),
                     0};
+                return true;
+            }
+            case SysTask::TimeFormat: {
+                // The unit, digits, suffix and minimum width of every %t
+                // after it; with no arguments, the defaults (SYSTEM_TASKS.md
+                // 5.4).
+                kernel::TimeFormat tf;
+                tf.unit = d_.timePrecision;
+                if (ops.size() == 5) {
+                    const auto sint = [&](std::size_t i) {
+                        const W4 w = value(ops[i]);
+                        const unsigned bits = typeOf(ops[i]).width;
+                        std::uint64_t a = w.a;
+                        if (bits < 64 && ((a >> (bits - 1)) & 1U) != 0)
+                            a |= ~std::uint64_t{0} << bits;
+                        return static_cast<std::int64_t>(a);
+                    };
+                    tf.unit = static_cast<int>(sint(1));
+                    tf.decimals = static_cast<int>(sint(2));
+                    tf.suffix = std::string(strings_.get(value(ops[3]).a));
+                    tf.minWidth = static_cast<int>(sint(4));
+                    if (tf.unit < -15 || tf.unit > 2 || tf.decimals < 0 || tf.minWidth < 0) {
+                        fail(p, "$timeformat with these arguments");
+                        return false;
+                    }
+                }
+                timeFormat_ = tf;
                 return true;
             }
             case SysTask::Display:
