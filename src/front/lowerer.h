@@ -149,6 +149,8 @@ public:
     /// subroutine call, or for $error when `action` is null (SIR_SPEC.md
     /// 5.7).
     void deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl);
+    /// Whether a statement is a named block that a disable names.
+    bool disabledBlock(const ast::Statement& s) const;
     /// Whether an expression names an automatic variable.
     bool readsAutomatic(const ast::Expression& e) const;
     void lowerFork(const ast::BlockStatement& b);
@@ -572,7 +574,10 @@ public:
         std::uint32_t waits = 0;            ///< wait statements so far, for guard names.
         std::uint32_t deferred = 0;         ///< Deferred assertion actions so far, for their names.
         bool fromAssertion = false;  ///< A procedure for an assertion written as a module item.
-        bool isSub = false;          ///< proc is a subroutine number.
+        /// The process's outermost block is a disable target: disabling it
+        /// is a flush point of deferred assertions (SCHEDULER_SPEC.md 15.3).
+        bool outermostDisabled = false;
+        bool isSub = false;                       ///< proc is a subroutine number.
         const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         std::optional<sir::SlotId> retSlot;       ///< The same, static.

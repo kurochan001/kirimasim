@@ -1756,6 +1756,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
     evalSymbol_ = &pb;
 
     const ast::Statement& bodyStmt = pb.getBody();
+    b_.outermostDisabled = disabledBlock(bodyStmt);
     try {
         switch (pb.procedureKind) {
             case ast::ProceduralBlockKind::Initial:

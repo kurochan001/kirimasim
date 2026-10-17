@@ -486,6 +486,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         b_.proc = id;
         b_.scale = saved.scale;
         b_.scope = scope;
+        b_.outermostDisabled = disabledBlock(*stmts[i]);
         lowerStatement(*stmts[i]);
         if (!b_.dead) terminate(Op::Ret, {}, sl);
         b_ = std::move(saved);
@@ -942,7 +943,17 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
     setBlock(join);
 }
 
+bool Lowerer::disabledBlock(const ast::Statement& s) const {
+    if (s.kind != ast::StatementKind::Block) return false;
+    const auto& b = s.as<ast::BlockStatement>();
+    return b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol);
+}
+
 void Lowerer::deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl) {
+    // The queue would also be dropped when the process's outermost block is
+    // disabled (SCHEDULER_SPEC.md 15.3).
+    if (b_.outermostDisabled)
+        unsupported(sl, "deferred assertion in a process whose outermost block is disabled");
     // The action is one subroutine call (16.4): a function S runs it later
     // with the values passed by value, evaluated now. Outputs, inouts and
     // refs are written and read when S runs.
