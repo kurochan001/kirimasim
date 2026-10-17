@@ -693,6 +693,33 @@ TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
     EXPECT_TRUE(mentions(verify(d), "trigger iff @9 is not a guard"));
 }
 
+TEST(Sir, StaticSubroutineSlotsAreNotExclusive) {
+    // Rule 6 leaves out a static subroutine's variables and arguments: two
+    // always_comb calling the same static function both copy into its
+    // argument (SIR_SPEC.md 10).
+    Design d = calls();
+    d.processes.clear();
+    const auto arg = static_cast<SlotId>(d.slots.size());
+    d.slots.push_back({"top.f.x", u4(8), SlotKind::Var, {}, 0, 0, 0, kNone, 0});
+    d.names.push_back({"top.f.x", arg});
+    for (int i = 0; i < 2; ++i) {
+        Process c;
+        c.name = "comb" + std::to_string(i);
+        c.kind = ProcessKind::Comb;
+        c.writes = {{arg, 0, 0, 0, 0}};
+        c.loc = at(13);
+        c.blocks.resize(1);
+        c.blocks[0].instrs = {
+            make(Op::Store, voidType(), kNone, {Operand::slot(arg), Operand::constant(1)}, 13),
+            make(Op::Ret, voidType(), kNone, {}, 13),
+        };
+        d.processes.push_back(std::move(c));
+    }
+    expectClean(d);
+    d.slots[arg].subroutine = kNone;  // a variable of the module
+    EXPECT_TRUE(mentions(verify(d), "also writes"));
+}
+
 TEST(Sir, ForkChildrenBelongToTheParent) {
     Design d = calls();
     Process child;

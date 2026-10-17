@@ -1632,6 +1632,10 @@ private:
                             ps[j].kind == ProcessKind::Override)
                             continue;
                         const Slot& s = d_.slots[a.slot];
+                        // A static subroutine's variables and arguments:
+                        // a call copies into them, and slang reports the
+                        // assignments inside the function (SIR_SPEC.md 10).
+                        if (s.subroutine != kNone) continue;
                         const bool exclusive =
                             exclusiveWriter(ps[i].kind) || exclusiveWriter(ps[j].kind);
                         const bool bothCont =

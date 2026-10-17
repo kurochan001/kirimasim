@@ -515,6 +515,8 @@ MUTANTS = [
      "sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0) {}"),
     ("sir: verify lets a trigger's iff read another frame", "src/sir/verify.cpp",
      'error(where, g + " reads another frame", p.loc);', "(void)0;"),
+    ("sir: verify counts a static subroutine's slots in rule 6", "src/sir/verify.cpp",
+     "                        if (s.subroutine != kNone) continue;\n", ""),
 ]
 
 
