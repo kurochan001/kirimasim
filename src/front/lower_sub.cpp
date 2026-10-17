@@ -68,7 +68,11 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     s.loc = loc(sym.location);
     s.blocks.resize(1);
     const ast::Type& ret = sym.getReturnType();
-    s.returnType = ret.isVoid() ? sir::voidType() : typeOf(ret, sl);
+    // An unpacked structure or array comes back through $return
+    // (SIR_SPEC.md 8).
+    const bool aggregateRet =
+        unpackedStruct(ret) != nullptr || ret.getCanonicalType().isUnpackedArray();
+    s.returnType = ret.isVoid() || aggregateRet ? sir::voidType() : typeOf(ret, sl);
     // A task that may wait is called with call.task (SIR_SPEC.md 7.2, 8).
     s.mayWait = s.kind == sir::SubroutineKind::Task && mayWait(sym.getBody());
     const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
@@ -87,6 +91,34 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     b_.scope = sym.getHierarchicalPath();  // its own scope, also when called from elsewhere
     evalSymbol_ = &sym;
     try {
+        std::vector<std::pair<std::uint32_t, std::uint32_t>> shape;
+        // The arguments of an unpacked structure: one per leaf, named
+        // <argument>.<member> (SIR_SPEC.md 8).
+        const auto leafParams = [&](const ast::VariableSymbol& v, const std::string& name,
+                                    sir::Direction dir) {
+            std::vector<Leaf> leaves;
+            structLeaves(v.getType(), "", leaves);
+            const bool automatic = v.lifetime == ast::VariableLifetime::Automatic;
+            const std::uint32_t first =
+                automatic ? structFrameVars(v, v.location) : structSlots(v, v.location);
+            const auto at = static_cast<std::uint32_t>(design_.subroutines[id].params.size());
+            for (std::size_t k = 0; k < leaves.size(); ++k) {
+                sir::Param prm;
+                prm.name = name + leaves[k].path;
+                prm.dir = dir;
+                const auto leaf = static_cast<std::uint32_t>(first + k);
+                if (automatic) {
+                    prm.frameVar = leaf;
+                    prm.type = frameVars()[leaf].type;
+                } else {
+                    prm.slot = leaf;
+                    prm.type = design_.slots[leaf].type;
+                    noteWrite({leaf, 0, 0, 0, 0});
+                }
+                design_.subroutines[id].params.push_back(std::move(prm));
+            }
+            return std::make_pair(at, static_cast<std::uint32_t>(leaves.size()));
+        };
         for (const ast::FormalArgumentSymbol* a : sym.getArguments()) {
             sir::Param prm;
             prm.name = std::string(a->name);
@@ -95,9 +127,15 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             // type here is its element's (SIR_SPEC.md 8).
             std::vector<sir::ArrayDim> dims;
             const ast::Type& et = arrayElement(a->getType(), dims);
-            if (unpackedStruct(et) != nullptr)
-                unsupported(a->location,
-                            "argument '" + prm.name + "' of an unpacked structure type");
+            if (unpackedStruct(et) != nullptr) {
+                if (!dims.empty() || prm.dir == sir::Direction::Ref)
+                    unsupported(a->location, "argument '" + prm.name +
+                                                 "' of an array of structures or a ref structure");
+                shape.push_back(leafParams(*a, prm.name, prm.dir));
+                continue;
+            }
+            shape.emplace_back(static_cast<std::uint32_t>(design_.subroutines[id].params.size()),
+                               1U);
             prm.type = typeOf(et, a->location);
             if (prm.dir == sir::Direction::Ref) {
                 // A ref argument: a frame variable that holds a ref to the
@@ -117,7 +155,46 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             }
             design_.subroutines[id].params.push_back(std::move(prm));
         }
-        if (sym.returnValVar != nullptr && !ret.isVoid()) {
+        if (sym.returnValVar != nullptr && aggregateRet) {
+            // The function's own name as a variable (13.4.1), which slang
+            // makes automatic, holds the value; $return, a hidden output,
+            // gives it back: the same frame variables in an automatic
+            // function, slots of their own in a static one, which every
+            // return fills from it (SIR_SPEC.md 8).
+            const ast::VariableSymbol& rv = *sym.returnValVar;
+            const bool automatic = design_.subroutines[id].automatic;
+            const bool isStruct = unpackedStruct(ret) != nullptr;
+            std::vector<sir::ArrayDim> dims;
+            const ast::Type& et = arrayElement(ret, dims);
+            if (!isStruct && unpackedStruct(et) != nullptr)
+                unsupported(rv.location, "function returning an array of structures");
+            const std::uint32_t held =
+                isStruct ? structFrameVars(rv, rv.location) : frameVarOf(rv, rv.location);
+            std::vector<Leaf> leaves;
+            if (isStruct)
+                structLeaves(ret, "", leaves);
+            else
+                leaves.push_back({"", &ret, {}});
+            const auto at = static_cast<std::uint32_t>(design_.subroutines[id].params.size());
+            for (std::size_t k = 0; k < leaves.size(); ++k) {
+                sir::Param prm;
+                prm.name = "$return" + leaves[k].path;
+                prm.dir = sir::Direction::Output;
+                const auto leaf = static_cast<std::uint32_t>(held + k);
+                prm.type = frameVars()[leaf].type;
+                if (automatic) {
+                    prm.frameVar = leaf;
+                } else {
+                    prm.slot = newSlot(rv, "$return" + leaves[k].path, *leaves[k].type,
+                                       leaves[k].dims, rv.location);
+                    if (k == 0) b_.retSlots = prm.slot;
+                }
+                design_.subroutines[id].params.push_back(std::move(prm));
+            }
+            shape.emplace_back(at, static_cast<std::uint32_t>(leaves.size()));
+            b_.retAggregate = {held, true};
+            b_.retAggregateType = &ret;
+        } else if (sym.returnValVar != nullptr && !ret.isVoid()) {
             // The function's own name as a variable (13.4.1).
             const ast::VariableSymbol& rv = *sym.returnValVar;
             if (rv.lifetime == ast::VariableLifetime::Automatic)
@@ -125,6 +202,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             else
                 b_.retSlot = slotOf(rv, rv.location);
         }
+        argParams_[id] = std::move(shape);
         lowerStatement(sym.getBody());
         if (!b_.dead) lowerReturn(nullptr, sym.location);
     } catch (const Unsupported&) {
@@ -144,6 +222,28 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (!b_.isSub) unsupported(sl, "return outside a subroutine");
     leaveScopes(0, sl);
     const Type rt = design_.subroutines[b_.proc].returnType;
+    if (b_.retAggregate && b_.retAggregateType != nullptr) {
+        // The value goes to $return like an aggregate assignment
+        // (SIR_SPEC.md 8, VALUE_SEMANTICS.md 3.13).
+        Storage held;
+        held.id = b_.retAggregate->first;
+        held.frame = b_.retAggregate->second;
+        if (e != nullptr) {
+            Stores stores;
+            assignAggregate(held, *b_.retAggregateType, *e, stores, sl);
+            flushStores(stores, false, sl);
+        }
+        if (b_.retSlots) {
+            // A static function's $return slots.
+            Storage out;
+            out.id = *b_.retSlots;
+            Stores stores;
+            copyAggregate(out, held, *b_.retAggregateType, stores, sl);
+            flushStores(stores, false, sl);
+        }
+        terminate(Op::Ret, {}, sl);
+        return;
+    }
     if (rt.kind == sir::TypeKind::Void) {
         terminate(Op::Ret, {}, sl);
         return;
@@ -232,6 +332,45 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
 }
 
 Val Lowerer::lowerCall(const ast::CallExpression& call) {
+    const auto& sym = *std::get<0>(call.subroutine);
+    const ast::Type& ret = sym.getReturnType();
+    if (unpackedStruct(ret) != nullptr || ret.getCanonicalType().isUnpackedArray()) {
+        // An aggregate value not used: it still needs a place to go.
+        (void)callAggregate(call);
+        return {Operand::temp(0), sir::voidType()};
+    }
+    return lowerCallTo(call, nullptr);
+}
+
+Lowerer::Storage Lowerer::tempStorage(const ast::Type& t, slang::SourceLocation sl) {
+    Storage st;
+    st.frame = true;
+    st.id = static_cast<std::uint32_t>(frameVars().size());
+    if (unpackedStruct(t) != nullptr) {
+        std::vector<Leaf> leaves;
+        structLeaves(t, "", leaves);
+        for (const Leaf& l : leaves) {
+            if (l.type->getCanonicalType().isUnpackedArray() || !l.dims.empty())
+                unsupported(sl, "automatic unpacked array in a structure or of structures");
+            frameVars().push_back({"", typeOf(*l.type, sl), sir::kNone, {}, {}});
+        }
+        return st;
+    }
+    std::vector<sir::ArrayDim> dims;
+    const ast::Type& et = arrayElement(t, dims);
+    if (unpackedStruct(et) != nullptr) unsupported(sl, "array of structures held here");
+    frameVars().push_back({"", typeOf(et, sl), sir::kNone, std::move(dims), {}});
+    return st;
+}
+
+Lowerer::Storage Lowerer::callAggregate(const ast::CallExpression& call) {
+    const slang::SourceLocation sl = call.sourceRange.start();
+    const Storage tmp = tempStorage(std::get<0>(call.subroutine)->getReturnType(), sl);
+    (void)lowerCallTo(call, &tmp);
+    return tmp;
+}
+
+Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const auto& sym = *std::get<0>(call.subroutine);
     const sir::SubroutineId id = subroutineOf(sym, sl);
@@ -240,7 +379,10 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
     const Type rt = design_.subroutines[id].returnType;
     const bool waits = design_.subroutines[id].mayWait;
     const auto args = call.arguments();
-    if (args.size() != params.size()) unsupported(sl, "call with this argument list");
+    const auto formals = sym.getArguments();
+    const std::vector<std::pair<std::uint32_t, std::uint32_t>> shape = argParams_[id];
+    if (args.size() != formals.size() || shape.size() < args.size())
+        unsupported(sl, "call with this argument list");
 
     std::vector<Operand> ops{Operand::subroutine(id)};
     struct CopyBack {
@@ -249,8 +391,38 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
         Type type;
     };
     std::vector<CopyBack> copies;
-    for (std::size_t i = 0; i < params.size(); ++i) {
-        const sir::Param& prm = params[i];
+    /// Structures given back through frame variables: to where, from where.
+    std::vector<std::pair<Storage, Storage>> structOuts;
+    std::vector<const ast::Type*> structOutTypes;
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const auto [first, count] = shape[i];
+        const sir::Param& prm = params[first];
+        const ast::Type& ft = formals[i]->getType();
+        if (unpackedStruct(ft) != nullptr) {
+            // One operand per leaf (SIR_SPEC.md 8): the values of an input,
+            // frame variables for an output or inout, copied back after.
+            Storage tmp = tempStorage(ft, sl);
+            if (prm.dir != sir::Direction::Output) {
+                Stores stores;
+                assignAggregate(tmp, ft, *actualPlace(args[i]), stores, sl);
+                flushStores(stores, false, sl);
+            }
+            for (std::uint32_t k = 0; k < count; ++k) {
+                const Storage leaf = leafAt(tmp, k);
+                if (prm.dir == sir::Direction::Input)
+                    ops.push_back(
+                        coerce(loadPlace(storagePlace(leaf), sl), params[first + k].type, sl).op);
+                else
+                    ops.push_back(Operand::frame(leaf.id));
+            }
+            if (prm.dir != sir::Direction::Input) {
+                const std::optional<Storage> dst = storageOf(*actualPlace(args[i]), sl);
+                if (!dst) unsupported(sl, "this output or inout structure argument");
+                structOuts.emplace_back(*dst, tmp);
+                structOutTypes.push_back(&ft);
+            }
+            continue;
+        }
         if (prm.dir == sir::Direction::Ref || prm.dir == sir::Direction::ConstRef) {
             ops.push_back(refOf(*actualPlace(args[i]), prm.dir == sir::Direction::ConstRef, sl).op);
             continue;
@@ -296,6 +468,14 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
         ops.push_back(Operand::frame(fv));
         copies.push_back({&place, fv, prm.type});
     }
+    if (shape.size() > args.size()) {
+        // $return: the frame variables that receive the value.
+        if (retTo == nullptr || !retTo->frame) unsupported(sl, "call of this function here");
+        const auto [first, count] = shape[args.size()];
+        (void)first;
+        for (std::uint32_t k = 0; k < count; ++k)
+            ops.push_back(Operand::frame(retTo->id + k));
+    }
     Val result{Operand::temp(0), sir::voidType()};
     if (waits) {
         // call.task ends the block; the caller goes on in a new one.
@@ -311,6 +491,11 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
     for (const CopyBack& c : copies) {
         const Val v = emit(Op::Fload, c.type, {Operand::frame(c.fv)}, sl);
         lowerStore(*c.place, coerce(v, typeOf(*c.place->type, sl), sl), false, sl);
+    }
+    for (std::size_t k = 0; k < structOuts.size(); ++k) {
+        Stores stores;
+        copyAggregate(structOuts[k].first, structOuts[k].second, *structOutTypes[k], stores, sl);
+        flushStores(stores, false, sl);
     }
     return result;
 }

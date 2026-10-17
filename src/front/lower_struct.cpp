@@ -21,6 +21,7 @@
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
+#include "slang/ast/symbols/SubroutineSymbols.h"
 
 namespace kirimasim::front {
 
@@ -95,6 +96,15 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
 
 std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
                                                    slang::SourceLocation sl) {
+    if (e.kind == ast::ExpressionKind::Call && !e.as<ast::CallExpression>().isSystemCall()) {
+        // A function's aggregate value: the frame variables that receive it,
+        // the call made now (SIR_SPEC.md 8).
+        const auto& c = e.as<ast::CallExpression>();
+        const ast::Type& rt = std::get<0>(c.subroutine)->getReturnType();
+        if (unpackedStruct(rt) == nullptr && !rt.getCanonicalType().isUnpackedArray())
+            return std::nullopt;
+        return callAggregate(c);
+    }
     if (isUnpackedMember(e)) {
         // A member: the structure's leaves, from the member's first one.
         const auto& m = e.as<ast::MemberAccessExpression>();

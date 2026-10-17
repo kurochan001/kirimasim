@@ -1,0 +1,43 @@
+; sir format 0
+precision 1ns
+source 0 "aggregate_calls.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.p.a" : s2<32> var inst=0
+slot %s1 "top.p.b" : s2<32> var inst=0
+
+subroutine @0 "top.swap" function automatic inst=0 ret=void {  ; 0:8:29
+  param input "x.a" : s2<32> -> %f0
+  param input "x.b" : s2<32> -> %f1
+  param output "$return.a" : s2<32> -> %f2
+  param output "$return.b" : s2<32> -> %f3
+  frame %f0 "x.a" : s2<32>
+  frame %f1 "x.b" : s2<32>
+  frame %f2 "swap.a" : s2<32>
+  frame %f3 "swap.b" : s2<32>
+bb0:
+  %t0 = fload s2<32> %f1  ; 0:9:14
+  %t1 = fload s2<32> %f0  ; 0:9:19
+  fstore %f2, %t0  ; 0:9:5
+  fstore %f3, %t1  ; 0:9:5
+  ret  ; 0:9:5
+}
+
+process @0 "top.initial0" kind=initial inst=0 writes=%s0,%s1 {  ; 0:11:3
+  frame %f0 "" : s2<32>
+  frame %f1 "" : s2<32>
+  frame %f2 "" : s2<32>
+  frame %f3 "" : s2<32>
+bb0:
+  %t0 = load s2<32> %s0  ; 0:11:15
+  %t1 = load s2<32> %s1  ; 0:11:15
+  fstore %f2, %t0  ; 0:11:15
+  fstore %f3, %t1  ; 0:11:15
+  %t2 = fload s2<32> %f2  ; 0:11:15
+  %t3 = fload s2<32> %f3  ; 0:11:15
+  call @0, %t2, %t3, %f0, %f1  ; 0:11:15
+  %t4 = fload s2<32> %f0  ; 0:11:11
+  %t5 = fload s2<32> %f1  ; 0:11:11
+  store %s0, %t4  ; 0:11:11
+  store %s1, %t5  ; 0:11:11
+  ret  ; 0:11:3
+}

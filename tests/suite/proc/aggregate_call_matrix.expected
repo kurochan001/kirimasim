@@ -1,0 +1,59 @@
+static function input variable: 3
+static function input member: 30
+static function input element: 16
+static function input pattern: 7
+static function input call: 11
+static function output variable: 40 41
+static function inout variable: 41 40
+static function output member: 40 41
+static function inout member: 41 40
+static function output element: 40 41
+static function inout element: 41 40
+automatic function input variable: 3
+automatic function input member: 30
+automatic function input element: 16
+automatic function input pattern: 7
+automatic function input call: 11
+automatic function output variable: 40 41
+automatic function inout variable: 41 40
+automatic function output member: 40 41
+automatic function inout member: 41 40
+automatic function output element: 40 41
+automatic function inout element: 41 40
+static task input variable: 3
+static task input member: 30
+static task input element: 16
+static task input pattern: 7
+static task input call: 11
+static task output variable: 40 41
+static task inout variable: 41 40
+static task output member: 40 41
+static task inout member: 41 40
+static task output element: 40 41
+static task inout element: 41 40
+automatic task input variable: 3
+automatic task input member: 30
+automatic task input element: 16
+automatic task input pattern: 7
+automatic task input call: 11
+automatic task output variable: 40 41
+automatic task inout variable: 41 40
+automatic task output member: 40 41
+automatic task inout member: 41 40
+automatic task output element: 40 41
+automatic task inout element: 41 40
+automatic variable inout: 5 2
+automatic variable input: 7
+task that waits inout: 8 6
+return assigned: 3 4
+automatic return: 5 7
+nested return by name: 1 2 3
+array return: 10 11 12 13
+two-dimensional array return: 20 25
+compared: 1 0
+member of a call: 8
+passed on: 5
+recursion: 8 13
+early return: 5 25
+dropped value: done
+initializer: 4 7

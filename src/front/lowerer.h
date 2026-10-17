@@ -432,6 +432,15 @@ public:
         bool dynamic = false;
         std::vector<std::int64_t> constIdx;
     };
+    /// A call of a function that returns an unpacked structure or array:
+    /// the frame variables in the caller that receive its value
+    /// (SIR_SPEC.md 8).
+    Storage callAggregate(const ast::CallExpression& call);
+    /// Frame variables of the running body that hold a value of an
+    /// unpacked structure or array type, made now.
+    Storage tempStorage(const ast::Type& t, slang::SourceLocation sl);
+    /// The call itself; `ret` receives an aggregate return value.
+    Val lowerCallTo(const ast::CallExpression& call, const Storage* ret);
     /// The storage `off` leaves after s, in the same element.
     static Storage leafAt(Storage s, std::uint32_t off);
     /// s with one more constant element index.
@@ -586,8 +595,13 @@ public:
         bool isSub = false;                       ///< proc is a subroutine number.
         const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
-        std::optional<sir::SlotId> retSlot;       ///< The same, static.
-        std::vector<Val> lvalueRefs;  ///< The targets' values of the assignment operators.
+        /// A function's return variable of an unpacked structure or array
+        /// type: its storage and type ($return, SIR_SPEC.md 8).
+        std::optional<std::pair<std::uint32_t, bool>> retAggregate;  ///< (id, frame)
+        const ast::Type* retAggregateType = nullptr;
+        std::optional<sir::SlotId> retSlots;  ///< A static function's $return, the first slot.
+        std::optional<sir::SlotId> retSlot;   ///< The same, static.
+        std::vector<Val> lvalueRefs;          ///< The targets' values of the assignment operators.
         /// The hierarchical name of the scope being lowered, for the
         /// messages of $error and the like (SYSTEM_TASKS.md 10.1).
         std::string scope;
@@ -648,6 +662,10 @@ private:
     /// Subroutines lowered so far, per instance and symbol.
     std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subWrites_;
+    /// Each formal argument's SIR arguments: the first and how many; an
+    /// unpacked structure has one per leaf. An aggregate return value's
+    /// ($return) come after them (SIR_SPEC.md 8).
+    std::map<sir::SubroutineId, std::vector<std::pair<std::uint32_t, std::uint32_t>>> argParams_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subReads_;
     /// Calls made by each body: (is a subroutine, number) -> callees.
     std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> callees_;
