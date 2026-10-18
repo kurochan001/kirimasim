@@ -204,7 +204,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 ## ビルド
 
-必要なもの：CMake 3.28 以上、Ninja、Python 3、C++23 のコンパイラ（macOS arm64 の Apple clang 21 で開発。CI は x86-64 の Linux でビルドします）。最初の configure で slang と GoogleTest を取得します。
+必要なもの：CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 のコンパイラ（macOS arm64 の Apple clang 21 で開発。CI は x86-64 の Linux と arm64 の macOS でビルドします）。最初の configure で slang と GoogleTest を取得します。
 
 ```sh
 cmake --preset dev            # ほかに release、asan、ubsan

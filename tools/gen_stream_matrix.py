@@ -119,7 +119,7 @@ def statements(where, shape, leaves, var, w):
         tag = f"{where} {shape} {op}"
         if packs:
             for (path, _), bits in zip(leaves, split(SOURCE, leaves)):
-                lines.append(f"{path.replace("{n}", var)} = {len(bits)}'b{bits};")
+                lines.append(f"{path.replace('{n}', var)} = {len(bits)}'b{bits};")
             lines.append(form.format(x=var, w=w))
             lines.append(f'$display("{tag} %b", {w});')
             exp.append(f"{tag} {result(op)}")

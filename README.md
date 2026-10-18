@@ -319,8 +319,9 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 ## Building
 
-Requirements: CMake 3.28 or later, Ninja, Python 3, and a C++23 compiler
-(developed with Apple clang 21 on macOS arm64; CI builds on x86-64 Linux).
+Requirements: CMake 3.28 or later, Ninja, Python 3.10 or later, and a C++23
+compiler (developed with Apple clang 21 on macOS arm64; CI builds on x86-64
+Linux and arm64 macOS).
 The first configure downloads slang and GoogleTest.
 
 ```sh

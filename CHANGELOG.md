@@ -78,6 +78,8 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Changed
 
+- Building and testing need Python 3.10 or later (the test tools already
+  used its syntax; CMake asked for 3.8).
 - Run-time errors of the design end the run with exit code 2 and one line
   `<file>:<line>: error: <text> [<instance> @ <time>]` at the statement,
   and `final` still runs (CLI.md 5, SCHEDULER_SPEC.md 16.2): a write or an
