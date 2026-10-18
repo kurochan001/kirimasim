@@ -1,0 +1,1 @@
+runtime_error_disable_in_function.sv:27: error: disable in a function of a block or task outside the function [top @ 1ns]

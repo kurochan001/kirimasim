@@ -1,0 +1,1 @@
+runtime_error_wait_initial.sv:28: error: the delay takes the time past the largest time [top @ 1ns]

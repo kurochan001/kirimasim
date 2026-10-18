@@ -1,0 +1,1 @@
+runtime_error_nba_always.sv:30: error: the delay takes the time past the largest time [top @ 1ns]

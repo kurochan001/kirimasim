@@ -68,6 +68,16 @@ own. CONTRIBUTING.md says what goes in this file.
   the bit-vector functions, `$test$plusargs` and `$value$plusargs`
   (SYSTEM_TASKS.md).
 
+### Changed
+
+- Run-time errors of the design end the run with exit code 2 and one line
+  `<file>:<line>: error: <text> [<instance> @ <time>]` at the statement,
+  and `final` still runs (CLI.md 5, SCHEDULER_SPEC.md 16.2): a write or an
+  event from the Postponed region, which went unreported or stopped with an
+  internal error (code 3); a disable from a function of a block outside
+  it, an internal error before; and a delay that takes the time past the
+  largest time, whose event was lost without a word.
+
 ### Fixed
 
 - `$sformat` and `$sformatf` printed a format that is not a string

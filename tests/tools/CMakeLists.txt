@@ -225,3 +225,7 @@ set_tests_properties(tools/gen_array_argument_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_flush_point_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_flush_point_matrix.py --check)
 set_tests_properties(tools/gen_flush_point_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_runtime_error_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_runtime_error_matrix.py --check)
+set_tests_properties(tools/gen_runtime_error_matrix PROPERTIES LABELS Tools)

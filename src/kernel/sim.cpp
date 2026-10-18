@@ -282,7 +282,10 @@ void Scheduler::schedule(Region r, Event e, std::uint64_t delay) {
         regions_[static_cast<int>(r)].push_back(e);
         return;
     }
-    if (delay > UINT64_MAX - time_) return;  // beyond the end of time: never happens
+    if (delay > UINT64_MAX - time_) {  // past the largest time: an error of the design (8)
+        overflow_ = true;
+        return;
+    }
     pushFuture({time_ + delay, seq_++, r, e});
 }
 
@@ -383,7 +386,10 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
         processes_[p].done = true;
         ++processes_[p].gen;
         counters_.increment(cFinished_);
-        if (st == Status::Error && reason_ != EndReason::Internal) {
+        // A run-time error of the design that the final procedure made
+        // stays one (16.2); any other failure is internal.
+        const bool designError = ending_ && reason_ == EndReason::Error;
+        if (st == Status::Error && reason_ != EndReason::Internal && !designError) {
             if (error_.empty()) error_ = "a final procedure failed";
             reason_ = EndReason::Internal;
         }
@@ -458,11 +464,13 @@ void Scheduler::runSlot() {
     if (!ending_) {
         // The final assertions, then the monitor, then the strobes
         // (SCHEDULER_SPEC.md 15.2, SYSTEM_TASKS.md 4).
+        postponed_ = true;
         confirmFinals();
         const bool due = monitorDue_ && monitorOn_ && monitorProc_ != kNoHolder;
         monitorDue_ = false;
         if (due) runPostponed(monitorProc_);
         runRegion(Region::Postponed);
+        postponed_ = false;
     }
     // The arena of NBA values without a delay is freed with the slot.
     slotNbas_.clear();

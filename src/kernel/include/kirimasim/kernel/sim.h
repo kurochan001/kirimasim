@@ -306,6 +306,21 @@ public:
     void requestEnd(EndReason r, int level);
     /// Ends the simulation with an internal error.
     void fail(std::string message);
+    /// Ends the simulation with a run-time error of the design: the reason
+    /// error, code 2, and final still runs (SCHEDULER_SPEC.md 16.2, CLI.md
+    /// 5). The tier that found it has written its line.
+    void runtimeError() { requestEnd(EndReason::Error, 1); }
+    /// Whether the Postponed region of the time slot is running, where
+    /// nothing may be written or scheduled (SCHEDULER_SPEC.md 2.2).
+    [[nodiscard]] bool inPostponed() const { return postponed_; }
+    /// Whether something scheduled since the last call had a delay that took
+    /// the time past 64 bits, and was dropped (SCHEDULER_SPEC.md 8): the
+    /// tier reports it as a run-time error at its instruction.
+    [[nodiscard]] bool takeOverflow() {
+        const bool o = overflow_;
+        overflow_ = false;
+        return o;
+    }
     /// Which zero-time limit stopped the run, for the line the driver
     /// prints before the end-reason line (CLI.md 2.6). Empty otherwise.
     void setEndNote(std::string note) {
@@ -484,6 +499,8 @@ private:
     std::uint64_t time_ = 0;
     std::uint64_t movesThisSlot_ = 0;
     std::string error_;
+    bool postponed_ = false;  ///< The Postponed region is running (2.2).
+    bool overflow_ = false;   ///< A delay went past the largest time (8).
     std::string endNote_;
     std::vector<ProcessId> pendingOrder_;  ///< Processes that got a pending report.
     /// Processes with a report to confirm in the Observed region.

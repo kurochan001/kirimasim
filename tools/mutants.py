@@ -592,6 +592,18 @@ MUTANTS = [
      "        sched_.waitNamed(f.kernelId, f.joinEvent, true);"),
     ("kernel: going on after a disable is a flush point of the pending reports",
      "src/kernel/sim.cpp", "    begin();\n    wake(p, false);", "    begin();\n    wake(p, true);"),
+    ("vm: the Postponed region may write and schedule anything", "src/vm/vm.cpp",
+     "if (sched_.inPostponed() && changesState(in)) {", "if (sched_.inPostponed() && false) {"),
+    ("vm: the Postponed region may not write a function's static variables", "src/vm/vm.cpp",
+     "return s < d_.slots.size() && d_.slots[s].subroutine != sir::kNone;", "return false;"),
+    ("vm: the Postponed region may not write an element of a frame variable", "src/vm/vm.cpp",
+     "return ops[0].kind != Operand::Kind::Frame && !ownSlot(ops[0].id);",
+     "return ops[0].kind == Operand::Kind::Frame || !ownSlot(ops[0].id);"),
+    ("vm: the Postponed region may not write through a ref to a frame variable",
+     "src/vm/vm.cpp", "return !isFrameRef(r) && !ownSlot(refSlot(r));",
+     "return isFrameRef(r) || !ownSlot(refSlot(r));"),
+    ("kernel: a delay past the largest time is no error", "src/kernel/sim.cpp",
+     "if (delay > UINT64_MAX - time_) {", "if (false) {"),
 ]
 
 

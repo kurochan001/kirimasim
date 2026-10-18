@@ -1084,6 +1084,60 @@ private:
         return kernel::Status::Error;
     }
 
+    /// A run-time error of the design (SCHEDULER_SPEC.md 16.2): one line in
+    /// the form of the severity tasks, at the instruction's position and
+    /// with the instance's name, then the end of the run, reason error.
+    void designError(const Frame& f, const sir::Instr& in, const std::string& what) {
+        const sir::InstanceId inst =
+            isSubBody(act_.body) ? subOf(act_.body).instance : d_.processes[f.process].instance;
+        std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+        line += ":" + std::to_string(in.loc.line) + ": error: " + what + " [" +
+                d_.instances[inst].scopeName + " @ " +
+                messageTime(sched_.time(), d_.timePrecision) + "]";
+        output_.message(line);
+        sched_.runtimeError();
+    }
+
+    /// Whether the instruction writes a variable or schedules an event,
+    /// which the Postponed region forbids (SCHEDULER_SPEC.md 2.2). The
+    /// variables of subroutines, frame variables and the static variables
+    /// of functions, may be written: they hold the work of the functions
+    /// the region calls.
+    bool changesState(const sir::Instr& in) const {
+        const auto& ops = in.operands;
+        const auto ownSlot = [&](sir::SlotId s) {
+            return s < d_.slots.size() && d_.slots[s].subroutine != sir::kNone;
+        };
+        switch (in.op) {
+            case Op::Store: return !ownSlot(ops[0].id);
+            case Op::StoreElem:
+            case Op::StoreBits: return ops[0].kind != Operand::Kind::Frame && !ownSlot(ops[0].id);
+            case Op::StoreRef:
+            case Op::StoreRefElem:  // the reference is the frame variable's value
+            case Op::StoreRefBits: {
+                const W4 r = value(ops[0]);
+                return !isFrameRef(r) && !ownSlot(refSlot(r));
+            }
+            case Op::Nba:
+            case Op::NbaDelay:
+            case Op::DriveDelay:
+            case Op::NbaElem:
+            case Op::NbaBits:
+            case Op::NbaRef:
+            case Op::Trigger:
+            case Op::TriggerNb:
+            case Op::Disable:
+            case Op::DisableFork:
+            case Op::DisableScope:
+            case Op::DisableTask:
+            case Op::OverrideStart:
+            case Op::OverrideStop:
+            case Op::StoreOverride:
+            case Op::Fork: return true;
+            default: return false;
+        }
+    }
+
     // --- Values ---
 
     sir::Type typeOf(const Operand& o) const {
@@ -1626,6 +1680,12 @@ private:
                     sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
                     return Exit::Stop;
                 }
+                // Nothing may be written or scheduled from the Postponed
+                // region (4.4.2.9, SCHEDULER_SPEC.md 2.2): a run-time error.
+                if (sched_.inPostponed() && changesState(in)) {
+                    designError(f, in, "a write or an event in the Postponed region");
+                    return Exit::Error;
+                }
                 const auto& ops = in.operands;
                 switch (in.op) {
                     case Op::Br:
@@ -1691,6 +1751,10 @@ private:
                     case Op::WaitDelay: {
                         const W4 t = value(ops[0]);
                         sched_.waitDelay(f.kernelId, t.b != 0 ? 0 : t.a);  // x or z: 0 (9.4.1)
+                        if (sched_.takeOverflow()) {
+                            designError(f, in, "the delay takes the time past the largest time");
+                            return Exit::Error;
+                        }
                         resumeAt(f) = ops[1].id;
                         return Exit::Waiting;
                     }
@@ -1815,6 +1879,12 @@ private:
                         if (!execute(f, p, in)) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         break;
+                }
+                // An NBA, a ->> or a driver's update with a delay past the
+                // largest time (SCHEDULER_SPEC.md 8): a run-time error.
+                if (sched_.takeOverflow()) {
+                    designError(f, in, "the delay takes the time past the largest time");
+                    return Exit::Error;
                 }
             }
             if (!jumped) {
@@ -2064,8 +2134,7 @@ private:
             // A function may end only its own blocks (SCHEDULER_SPEC.md 10.4).
             if (inFunction &&
                 (&g != &f || to->calls != f.calls.size() || to->sync != f.syncCalls.size())) {
-                fail(d_.processes[f.process],
-                     "disable in a function of a block or task outside the function");
+                designError(f, in, "disable in a function of a block or task outside the function");
                 return Exit::Error;
             }
             g.scopes.resize(keep);

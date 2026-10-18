@@ -494,16 +494,11 @@ private:
             if (!rangeOk(w)) error(where, "write range is invalid");
         if (p.kind == ProcessKind::Ff && p.triggers.empty())
             error(where, "always_ff needs exactly one event control", p.loc);
-        // The Postponed region writes nothing (SCHEDULER_SPEC.md 2.1) but
-        // the variables of the functions it calls.
-        if (p.kind == ProcessKind::Postponed) {
-            bool writes = !p.triggers.empty();
-            for (const SlotRange& w : p.writes)
-                writes =
-                    writes || (w.slot < d_.slots.size() && d_.slots[w.slot].subroutine == kNone);
-            if (writes)
-                error(where, "a postponed process has no triggers and writes nothing", p.loc);
-        }
+        // A postponed process runs when $strobe or $monitor asks; a write
+        // it makes is the design's run-time error, which the run reports
+        // (SCHEDULER_SPEC.md 2.2).
+        if (p.kind == ProcessKind::Postponed && !p.triggers.empty())
+            error(where, "a postponed process has no triggers", p.loc);
         for (const FrameVar& f : p.frame)
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
         switch (p.parent.kind) {
