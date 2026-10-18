@@ -20,8 +20,9 @@ body:
       label: Document and section
       description: |
         The specification document and the section of it that your
-        proposal concerns. The specifications are written in Japanese;
-        proposals in English are welcome.
+        proposal concerns. The English text of each specification is the
+        main one (a Japanese version sits beside it); proposals in English
+        or Japanese are welcome.
       placeholder: "docs/spec/SCHEDULER_SPEC.md, section 4.2"
     validations:
       required: true
