@@ -1277,43 +1277,50 @@ Lowerer::Part Lowerer::partOf(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& rs = e.as<ast::RangeSelectExpression>();
     const ast::Type& vt = rs.value().type->getCanonicalType();
+    // The bounds are indices of the dimension the select indexes, whose
+    // elements may be several bits wide (7.4.1, 11.5.1): the element
+    // number nearest the right bound times the element width gives the
+    // lsb.
     const slang::ConstantRange r = vt.getFixedRange();
     const std::uint32_t width = e.type->getBitWidth();
+    const std::int64_t ew = vt.getBitWidth() / r.width();
     const bool down = r.left >= r.right;
     if (rs.getSelectionKind() == ast::RangeSelectionKind::Simple) {
         const std::optional<std::int64_t> l = constInt(rs.left());
         const std::optional<std::int64_t> rr = constInt(rs.right());
         if (!l || !rr) unsupported(sl, "part-select with unknown bounds");
-        // The bit nearest the right bound of the declared range.
+        // The element nearest the right bound of the declared range.
         const std::int64_t near = down ? std::min(*l, *rr) : std::max(*l, *rr);
-        const std::int64_t lsb = down ? near - r.right : r.right - near;
+        const std::int64_t lsb = (down ? near - r.right : r.right - near) * ew;
         return {std::nullopt, lsb, width};
     }
     const bool up = rs.getSelectionKind() == ast::RangeSelectionKind::IndexedUp;
-    // Declared indices covered: [base, base + w - 1] going up, [base - w + 1,
-    // base] going down. The one nearest the right bound gives the lsb.
-    const std::int64_t w = width;
+    // Declared indices covered, n elements: [base, base + n - 1] going up,
+    // [base - n + 1, base] going down. The one nearest the right bound
+    // gives the lsb.
+    const std::int64_t n = width / ew;
     if (const std::optional<std::int64_t> base = constInt(rs.left())) {
-        const std::int64_t lo = up ? *base : *base - w + 1;
-        const std::int64_t hi = up ? *base + w - 1 : *base;
-        const std::int64_t lsb = down ? lo - r.right : r.right - hi;
+        const std::int64_t lo = up ? *base : *base - n + 1;
+        const std::int64_t hi = up ? *base + n - 1 : *base;
+        const std::int64_t lsb = (down ? lo - r.right : r.right - hi) * ew;
         return {std::nullopt, lsb, width};
     }
     Val b = lowerExpr(rs.left());
     if (!sir::isIntegral(b.type)) unsupported(sl, "part-select base of this type");
     const Type pt = positionType(b.type);
     b = coerce(b, pt, sl);
-    // lsb = (up ? base : base - w + 1) - right when the range goes down,
-    //       right - (up ? base + w - 1 : base) when it goes up.
+    // lsb = ((up ? base : base - n + 1) - right) * ew when the range goes
+    // down, (right - (up ? base + n - 1 : base)) * ew when it goes up.
     std::int64_t k = 0;
     Val pos;
     if (down) {
-        k = (up ? 0 : -(w - 1)) - r.right;
+        k = (up ? 0 : -(n - 1)) - r.right;
         pos = emit(Op::Add, pt, {b.op, positionConstant(pt, k).op}, sl);
     } else {
-        k = r.right - (up ? w - 1 : 0);
+        k = r.right - (up ? n - 1 : 0);
         pos = emit(Op::Sub, pt, {positionConstant(pt, k).op, b.op}, sl);
     }
+    if (ew != 1) pos = emit(Op::Mul, pt, {pos.op, positionConstant(pt, ew).op}, sl);
     return {pos, 0, width};
 }
 

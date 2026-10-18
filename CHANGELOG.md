@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A range select of a packed array whose elements are wider than one bit,
+  such as `a[2:1]` or `a[i +: 2]` of `logic [3:0][7:0] a`, reads and
+  writes whole elements; it took the indices as bit positions (#3).
 - A wait in a task on a `ref` argument that comes after an argument or
   variable wider than 64 bits wakes when the variable it names changes;
   it waited on another variable, or could crash (#1).

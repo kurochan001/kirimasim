@@ -659,6 +659,14 @@ MUTANTS = [
      "                for (std::uint32_t k = 0; k < c; ++k) (&temp(params[a].temp))[k] = v[at + k];\n"),
     ("vm: a ref a wait reads is looked up by its variable's number", "src/vm/vm.cpp",
      "const W4 r = vars[layouts_[body].offset[rr.var]];", "const W4 r = vars[rr.var];"),
+    ("front: a constant packed range counts elements as bits", "src/front/lower_expr.cpp",
+     "const std::int64_t lsb = (down ? near - r.right : r.right - near) * ew;",
+     "const std::int64_t lsb = down ? near - r.right : r.right - near;"),
+    ("front: a packed range at a run-time base counts elements as bits",
+     "src/front/lower_expr.cpp",
+     "    if (ew != 1) pos = emit(Op::Mul, pt, {pos.op, positionConstant(pt, ew).op}, sl);\n"
+     "    return {pos, 0, width};",
+     "    return {pos, 0, width};"),
 ]
 
 

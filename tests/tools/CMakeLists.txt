@@ -253,3 +253,7 @@ set_tests_properties(tools/gen_cond_op_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_ref_wait_layout_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_ref_wait_layout_matrix.py --check)
 set_tests_properties(tools/gen_ref_wait_layout_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_packed_range_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_packed_range_matrix.py --check)
+set_tests_properties(tools/gen_packed_range_matrix PROPERTIES LABELS Tools)
