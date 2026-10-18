@@ -2,7 +2,7 @@
 
 [日本語](SIR_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved).
 
 **Amendment of M3b (approved 2026-10-15):** in stage M3b of the P1 plan, instructions for merging values, values across waits, unpacked arrays, the type table, subroutines and process control were added, and the text form was changed to refer to things by number. The sections changed say "amendment of M3b".
 
@@ -394,6 +394,7 @@ Amendment of M3b.
 - Each statement of a fork is a separate row of the process table (kind `general`), holding the number of its parent process (or subroutine). The `fork` instruction holds the sequence of the child processes' numbers.
 - Block item initializations of a fork are done by the parent before the `fork` instruction (checked: 9.3.2). Automatic variables of the fork block that children refer to are frame variables of the children, initialized by the `fork` instruction with the parent's values.
 - A child inherits its parent's thread set (active or reactive).
+- **Not implemented yet (noted 2026-10-18, approved):** declarations in a fork block, and the automatic variables of the enclosing scope (an automatic task or block) read or written from fork branches, are reported as unsupported (CLI.md 5). The second is not set by this section yet: the parent's frame has to live past its return while the children run (6.21), which comes with the frames of P3.
 
 ## 8. Subroutines
 
