@@ -8,11 +8,14 @@ TEST_SUITE.md ("Mechanism matrix") in tests/suite/values/.
 An integral value cast to a string becomes its bytes, the most
 significant first, after zero-extension to a whole number of bytes, and
 its zero bytes are dropped: a string holds no "\\0" (6.16,
-VALUE_SEMANTICS.md 7.6). Only known bits are used here; how x and z
-bits convert is not written in the specs.
+VALUE_SEMANTICS.md 7.6). x and z bits read as 0 before the zero bytes
+are dropped (a rule of VALUE_SEMANTICS.md 7.6; the standard does not say
+how 4-state values convert), so a byte of only x and z bits is dropped
+too.
 
 The axes: the value (16, 24, 32 and 12 bits, all zero, wider than 64
-bits, signed); where it is converted (a constant assigned to a string,
+bits, signed, and with x or z in a bit, a nibble, a whole byte, all
+bits, the top bits of a part byte and a signed value); where it is converted (a constant assigned to a string,
 an integral variable assigned to one, an argument of a string formal, a
 function's return value, a member of an unpacked structure, an element
 of an array of strings, and an automatic string of a task). Each line
@@ -33,10 +36,10 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "string_conversion_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 # (name, the declaration of the variable with {n}, the literal, its width
-# and value)
+# and value, with x and z bits read as 0)
 VALUES = [
     ("v16", "logic [15:0] {n};", "16'h4142", 16, 0x4142),
     ("v24_zero_inside", "logic [23:0] {n};", "24'h410042", 24, 0x410042),
@@ -46,8 +49,26 @@ VALUES = [
     ("v80", "logic [79:0] {n};", "80'h4100_4200_4300_0044_0045", 80,
      0x4100_4200_4300_0044_0045),
     ("signed16", "logic signed [15:0] {n};", "16'sh5a59", 16, 0x5A59),
+    ("x_byte", "logic [15:0] {n};", "16'h41xx", 16, 0x4100),
+    ("x_bit", "logic [15:0] {n};", "16'b0100_0001_0100_001x", 16, 0x4142),
+    ("z_nibble", "logic [23:0] {n};", "24'h4z4243", 24, 0x404243),
+    ("all_x", "logic [7:0] {n};", "8'hxx", 8, 0),
+    ("z_top_of_12", "logic [11:0] {n};", "12'hz41", 12, 0x041),
+    ("signed_x", "logic signed [15:0] {n};", "16'sh4x41", 16, 0x4041),
 ]
 PLACES = ["constant", "variable", "argument", "return", "member", "element", "automatic"]
+
+
+def known(literal):
+    """The value of a sized literal with its x and z bits read as 0."""
+    width, rest = literal.split("'")
+    base = {"h": 16, "b": 2}[rest.lstrip("s")[0]]
+    digits = rest.lstrip("s")[1:].replace("_", "")
+    bits = 4 if base == 16 else 1
+    value = 0
+    for c in digits:
+        value = (value << bits) | (0 if c in "xz" else int(c, base))
+    return value & ((1 << int(width)) - 1)
 
 
 def text(width, value):
@@ -73,6 +94,7 @@ def files():
         "  endfunction",
     ]
     for name, d, literal, width, value in VALUES:
+        assert known(literal) == value, name
         decl.append("  " + d.replace("{n}", name))
         funcs += [f"  function automatic string ret_{name}();",
                   f"    return string'({literal});", "  endfunction"]
@@ -99,15 +121,16 @@ def files():
         "/*",
         f":name: {NAME}",
         ":description: integral values converted to strings: bytes from the most significant, "
-        "zero-extended to whole bytes, zero bytes dropped, for constants, variables, arguments, "
-        "return values, structure members, array elements and automatic strings, values of 8 to "
-        "80 bits, signed and unsigned",
+        "zero-extended to whole bytes, x and z bits read as 0, zero bytes dropped, for "
+        "constants, variables, arguments, return values, structure members, array elements and "
+        "automatic strings, values of 8 to 80 bits, signed and unsigned, with and without x "
+        "and z",
         ":tags: values strings",
         ":type: simulation",
         ":lrm: 1800-2023 6.16 13.5",
         ":oracle: spec",
         ":spec_check: ai",
-        ":fourstate: no",
+        ":fourstate: yes",
         ":nondeterministic: no",
         f":generator: gen_string_conversion_matrix.py@{VERSION}",
         ":top_module: top",

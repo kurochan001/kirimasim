@@ -1,14 +1,14 @@
 /*
 :name: string_conversion_matrix
-:description: integral values converted to strings: bytes from the most significant, zero-extended to whole bytes, zero bytes dropped, for constants, variables, arguments, return values, structure members, array elements and automatic strings, values of 8 to 80 bits, signed and unsigned
+:description: integral values converted to strings: bytes from the most significant, zero-extended to whole bytes, x and z bits read as 0, zero bytes dropped, for constants, variables, arguments, return values, structure members, array elements and automatic strings, values of 8 to 80 bits, signed and unsigned, with and without x and z
 :tags: values strings
 :type: simulation
 :lrm: 1800-2023 6.16 13.5
 :oracle: spec
 :spec_check: ai
-:fourstate: no
+:fourstate: yes
 :nondeterministic: no
-:generator: gen_string_conversion_matrix.py@1
+:generator: gen_string_conversion_matrix.py@2
 :top_module: top
 :expected_stdout: @string_conversion_matrix.expected
 */
@@ -29,6 +29,12 @@ module top;
   logic [7:0] v8_zero;
   logic [79:0] v80;
   logic signed [15:0] signed16;
+  logic [15:0] x_byte;
+  logic [15:0] x_bit;
+  logic [23:0] z_nibble;
+  logic [7:0] all_x;
+  logic [11:0] z_top_of_12;
+  logic signed [15:0] signed_x;
   function automatic string ret_v16();
     return string'(16'h4142);
   endfunction
@@ -50,6 +56,24 @@ module top;
   function automatic string ret_signed16();
     return string'(16'sh5a59);
   endfunction
+  function automatic string ret_x_byte();
+    return string'(16'h41xx);
+  endfunction
+  function automatic string ret_x_bit();
+    return string'(16'b0100_0001_0100_001x);
+  endfunction
+  function automatic string ret_z_nibble();
+    return string'(24'h4z4243);
+  endfunction
+  function automatic string ret_all_x();
+    return string'(8'hxx);
+  endfunction
+  function automatic string ret_z_top_of_12();
+    return string'(12'hz41);
+  endfunction
+  function automatic string ret_signed_x();
+    return string'(16'sh4x41);
+  endfunction
   task automatic t;
     string as;
     v16 = 16'h4142; as = string'(v16); $display("automatic v16 %0d [%s]", as.len(), as);
@@ -59,6 +83,12 @@ module top;
     v8_zero = 8'h00; as = string'(v8_zero); $display("automatic v8_zero %0d [%s]", as.len(), as);
     v80 = 80'h4100_4200_4300_0044_0045; as = string'(v80); $display("automatic v80 %0d [%s]", as.len(), as);
     signed16 = 16'sh5a59; as = string'(signed16); $display("automatic signed16 %0d [%s]", as.len(), as);
+    x_byte = 16'h41xx; as = string'(x_byte); $display("automatic x_byte %0d [%s]", as.len(), as);
+    x_bit = 16'b0100_0001_0100_001x; as = string'(x_bit); $display("automatic x_bit %0d [%s]", as.len(), as);
+    z_nibble = 24'h4z4243; as = string'(z_nibble); $display("automatic z_nibble %0d [%s]", as.len(), as);
+    all_x = 8'hxx; as = string'(all_x); $display("automatic all_x %0d [%s]", as.len(), as);
+    z_top_of_12 = 12'hz41; as = string'(z_top_of_12); $display("automatic z_top_of_12 %0d [%s]", as.len(), as);
+    signed_x = 16'sh4x41; as = string'(signed_x); $display("automatic signed_x %0d [%s]", as.len(), as);
   endtask
   initial begin
     s = string'(16'h4142); $display("constant v16 %0d [%s]", s.len(), s);
@@ -103,6 +133,42 @@ module top;
     s = ret_signed16(); $display("return signed16 %0d [%s]", s.len(), s);
     signed16 = 16'sh5a59; r.m = string'(signed16); $display("member signed16 %0d [%s]", r.m.len(), r.m);
     signed16 = 16'sh5a59; sa[1] = string'(signed16); $display("element signed16 %0d [%s]", sa[1].len(), sa[1]);
+    s = string'(16'h41xx); $display("constant x_byte %0d [%s]", s.len(), s);
+    x_byte = 16'h41xx; s = string'(x_byte); $display("variable x_byte %0d [%s]", s.len(), s);
+    x_byte = 16'h41xx; s = pass(string'(x_byte)); $display("argument x_byte %0d [%s]", s.len(), s);
+    s = ret_x_byte(); $display("return x_byte %0d [%s]", s.len(), s);
+    x_byte = 16'h41xx; r.m = string'(x_byte); $display("member x_byte %0d [%s]", r.m.len(), r.m);
+    x_byte = 16'h41xx; sa[1] = string'(x_byte); $display("element x_byte %0d [%s]", sa[1].len(), sa[1]);
+    s = string'(16'b0100_0001_0100_001x); $display("constant x_bit %0d [%s]", s.len(), s);
+    x_bit = 16'b0100_0001_0100_001x; s = string'(x_bit); $display("variable x_bit %0d [%s]", s.len(), s);
+    x_bit = 16'b0100_0001_0100_001x; s = pass(string'(x_bit)); $display("argument x_bit %0d [%s]", s.len(), s);
+    s = ret_x_bit(); $display("return x_bit %0d [%s]", s.len(), s);
+    x_bit = 16'b0100_0001_0100_001x; r.m = string'(x_bit); $display("member x_bit %0d [%s]", r.m.len(), r.m);
+    x_bit = 16'b0100_0001_0100_001x; sa[1] = string'(x_bit); $display("element x_bit %0d [%s]", sa[1].len(), sa[1]);
+    s = string'(24'h4z4243); $display("constant z_nibble %0d [%s]", s.len(), s);
+    z_nibble = 24'h4z4243; s = string'(z_nibble); $display("variable z_nibble %0d [%s]", s.len(), s);
+    z_nibble = 24'h4z4243; s = pass(string'(z_nibble)); $display("argument z_nibble %0d [%s]", s.len(), s);
+    s = ret_z_nibble(); $display("return z_nibble %0d [%s]", s.len(), s);
+    z_nibble = 24'h4z4243; r.m = string'(z_nibble); $display("member z_nibble %0d [%s]", r.m.len(), r.m);
+    z_nibble = 24'h4z4243; sa[1] = string'(z_nibble); $display("element z_nibble %0d [%s]", sa[1].len(), sa[1]);
+    s = string'(8'hxx); $display("constant all_x %0d [%s]", s.len(), s);
+    all_x = 8'hxx; s = string'(all_x); $display("variable all_x %0d [%s]", s.len(), s);
+    all_x = 8'hxx; s = pass(string'(all_x)); $display("argument all_x %0d [%s]", s.len(), s);
+    s = ret_all_x(); $display("return all_x %0d [%s]", s.len(), s);
+    all_x = 8'hxx; r.m = string'(all_x); $display("member all_x %0d [%s]", r.m.len(), r.m);
+    all_x = 8'hxx; sa[1] = string'(all_x); $display("element all_x %0d [%s]", sa[1].len(), sa[1]);
+    s = string'(12'hz41); $display("constant z_top_of_12 %0d [%s]", s.len(), s);
+    z_top_of_12 = 12'hz41; s = string'(z_top_of_12); $display("variable z_top_of_12 %0d [%s]", s.len(), s);
+    z_top_of_12 = 12'hz41; s = pass(string'(z_top_of_12)); $display("argument z_top_of_12 %0d [%s]", s.len(), s);
+    s = ret_z_top_of_12(); $display("return z_top_of_12 %0d [%s]", s.len(), s);
+    z_top_of_12 = 12'hz41; r.m = string'(z_top_of_12); $display("member z_top_of_12 %0d [%s]", r.m.len(), r.m);
+    z_top_of_12 = 12'hz41; sa[1] = string'(z_top_of_12); $display("element z_top_of_12 %0d [%s]", sa[1].len(), sa[1]);
+    s = string'(16'sh4x41); $display("constant signed_x %0d [%s]", s.len(), s);
+    signed_x = 16'sh4x41; s = string'(signed_x); $display("variable signed_x %0d [%s]", s.len(), s);
+    signed_x = 16'sh4x41; s = pass(string'(signed_x)); $display("argument signed_x %0d [%s]", s.len(), s);
+    s = ret_signed_x(); $display("return signed_x %0d [%s]", s.len(), s);
+    signed_x = 16'sh4x41; r.m = string'(signed_x); $display("member signed_x %0d [%s]", r.m.len(), r.m);
+    signed_x = 16'sh4x41; sa[1] = string'(signed_x); $display("element signed_x %0d [%s]", sa[1].len(), sa[1]);
     t();
   end
 endmodule
