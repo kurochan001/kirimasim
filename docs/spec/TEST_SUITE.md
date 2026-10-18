@@ -1,291 +1,293 @@
-# TEST_SUITE：テストスイート
+# TEST_SUITE: the test suite
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘と、テストを書いた結果を反映した。同日、時刻の単位に依存するテストは timescale を書く規則を足した（承認済み）。「必須テストの一覧」は、一覧のテストをすべて書き、規格の節を確かめたうえで、2026-10-15 に確定した。同日、必須テストの一覧の P1 の合格条件から、実行が P3 のテストを除いた（承認済み）。また、`spec` の意味を「規格の節と照らして決めた」に改め、照らし合わせたのが AI か人かを示す `:spec_check:` を足した（承認済み）。2026-10-16 に、`:expected_exit:` と `:expected_stderr:` の項目と、P1 の合格条件の測り方を足した（承認済み）。同日、空行を除いて比べる決まり、`:issue:`、不具合のテストと陰性対照の決まり、対照のシミュレータの扱いを足した（承認済み）。同日、テストの足りないところと補う計画、人の抜き取りの割合と手順を足した（承認済み）。同日、`:generator:` の項目と、分類の一覧の更新を足した（承認済み）。同日、`:expected_stderr:` で fatal と info の行も比べることにした（承認済み）。
+[日本語](TEST_SUITE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、kirimasim のテストスイート（`tests/suite/`、将来は別リポジトリで公開する適合性テスト）の形式、区分、期待値の決まり、比べる相手を定める。ユニットテスト（`tests/unit/`）と PerfCount（`tests/perf_counts/`）は、期待値を守る決まりだけを共有する。
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review and the results of writing tests were applied to the version approved on 2026-10-14. The same day, the rule that tests depending on the unit of time write a timescale was added (approved). The "list of required tests" was fixed on 2026-10-15, after every test in it was written and the clauses of the standard checked. The same day, tests that run in P3 were removed from the P1 passing condition of the list of required tests (approved). Also, the meaning of `spec` was changed to "decided against the clause of the standard", and `:spec_check:`, which says whether an AI or a person did the checking, was added (approved). On 2026-10-16 the items `:expected_exit:` and `:expected_stderr:`, and how the P1 passing conditions are measured, were added (approved). The same day, the rule of comparing without blank lines, `:issue:`, the rules for bug tests and negative controls, and how the control simulators are treated were added (approved). The same day, the gaps in the tests and the plan to fill them, and the rate and procedure of sampling by people, were added (approved). The same day, the item `:generator:` and an update of the list of categories were added (approved). The same day, `:expected_stderr:` was made to compare fatal and info lines too (approved).
 
-## 目的
+This document sets the format, categories, rules of expected values and the simulators compared against for kirimasim's test suite (`tests/suite/`, and in future a conformance test suite published in a separate repository). Unit tests (`tests/unit/`) and PerfCount (`tests/perf_counts/`) share only the rules that protect expected values.
 
-- 正しさの基準を「出どころを記録した期待値」に置く。
-- kirimasim だけでなく、他のシミュレータの開発者も使える適合性テストにする。そのため、形式は sv-tests と互換にする。
-- 期待値をいつ、誰が、何を根拠に決めたかを、テストのファイルだけで追えるようにする。
+## Purpose
 
-## テストの形式
+- Base correctness on "expected values whose source is recorded".
+- Make a conformance test suite that developers of other simulators can use too, not only kirimasim. For that, the format is compatible with sv-tests.
+- Make it possible to trace, from the test file alone, when, by whom and on what grounds an expected value was decided.
 
-### ファイルの置き場所と粒度
+## Format of a test
 
-- 1 つのテストは、1 つの `.sv` ファイル（と、必要なら補助のファイル）。
-- 置き場所は `tests/suite/<分類>/<名前>.sv`。分類は、今は `sched`（スケジューリング）、`syntax`（構文）、`values`（値の意味）、`proc`（プロセスの制御）、`cb`（クロッキングブロック）、`smoke`（最小の動作確認）、`nets`（ネット）、`hier`（階層とポート）、`gen`（generate）、`cont`（連続代入）がある（2026-10-16 に承認）。分類の一覧は、テストが増えたときにこの文書へ足す。
-- 1 つのテストは 1 つの機能だけを確かめる（sv-tests の方針と同じ）。ほかの機能を使う必要があるときは、その機能のテストも別に置く。
-- テストの名前（`:name:`）はスイートの中で一意にする。ファイル名から拡張子を除いたものと同じにする。
+### Where files go, and their granularity
 
-### メタデータのヘッダ
+- One test is one `.sv` file (and helper files if needed).
+- It goes in `tests/suite/<category>/<name>.sv`. The categories now are `sched` (scheduling), `syntax` (syntax), `values` (value semantics), `proc` (process control), `cb` (clocking blocks), `smoke` (minimal checks that things work), `nets` (nets), `hier` (hierarchy and ports), `gen` (generate) and `cont` (continuous assignments) (approved 2026-10-16). When tests grow, categories are added to this list.
+- One test checks one feature only (as sv-tests does). When another feature has to be used, there is a separate test of that feature too.
+- The name of a test (`:name:`) is unique within the suite, and equals the file name without its extension.
 
-ファイルの先頭のコメントに、1 行に 1 項目ずつ `:項目名: 値` の形で書く。
+### Metadata header
 
-sv-tests で定義されている項目（sv-tests のツールが読む）：
+In the comment at the top of the file, one item per line in the form `:item: value`.
 
-| 項目 | 必須 | 意味 |
+Items defined by sv-tests (read by sv-tests' tools):
+
+| Item | Required | Meaning |
 | --- | --- | --- |
-| `:name:` | 必須 | テストの名前 |
-| `:description:` | 必須 | 何を確かめるかの短い説明 |
-| `:tags:` | 必須 | 確かめる機能の分類（空白区切り） |
-| `:type:` | 必須（本スイートの決まり） | `simulation`、`elaboration`、`parsing` など（空白区切り）。sv-tests の既定値は `parsing elaboration` なので、実行するテストは必ず `simulation` を書く |
-| `:should_fail_because:` | 失敗を期待するときだけ | 失敗する理由。これがあると、ツールが失敗したときに合格になる |
-| `:files:`、`:incdirs:`、`:defines:`、`:top_module:` | 任意 | 複数のファイル、include の場所、マクロ、トップのモジュール |
-| `:timeout:` | 任意 | 秒。sv-tests の既定値は 30 |
+| `:name:` | Required | The test's name |
+| `:description:` | Required | A short description of what it checks |
+| `:tags:` | Required | The features it checks (separated by spaces) |
+| `:type:` | Required (a rule of this suite) | `simulation`, `elaboration`, `parsing` and so on (separated by spaces). sv-tests' default is `parsing elaboration`, so a test that runs always writes `simulation` |
+| `:should_fail_because:` | Only when failure is expected | Why it fails. With it, the test passes when the tool fails |
+| `:files:`, `:incdirs:`, `:defines:`, `:top_module:` | Optional | Several files, include directories, macros, the top module |
+| `:timeout:` | Optional | Seconds. sv-tests' default is 30 |
 
-本スイートで足す項目（sv-tests のツールは「Unsupported test param」の警告を出して無視する。sv-tests の `tools/runner` の実装で確認した）：
+Items this suite adds (sv-tests' tools warn "Unsupported test param" and ignore them; checked in the implementation of sv-tests' `tools/runner`):
 
-| 項目 | 必須 | 意味 |
+| Item | Required | Meaning |
 | --- | --- | --- |
-| `:lrm:` | 必須 | 根拠の規格と節番号。例：`1800-2023 4.6`。複数の節は空白で区切る |
-| `:oracle:` | 必須 | 期待値の出どころ（下の「期待値の出どころ」） |
-| `:fourstate:` | 必須 | 4 値の値（X・Z）を使うか。`yes` か `no` |
-| `:nondeterministic:` | 必須 | 規格が順序を決めていない箇所に結果が依存しうるか。`yes` か `no` |
-| `:expected_stdout:` | `simulation` のとき必須 | 実行したときの標準出力の期待値（下の「標準出力の期待値」） |
-| `:expected_error:` | `:should_fail_because:` があるとき必須 | 意図した診断の位置と文。`<行>:<列>: error: <文>` |
-| `:spec_check:` | `:oracle:` に `spec` があるとき必須 | 規格と照らし合わせたのが AI か人か。`ai` か `human`（下の「期待値の出どころ」） |
-| `:issue:`（2026-10-16 に承認） | 任意 | そのテストを足すきっかけになった Issue の番号（空白区切り）。テストの名前と置き場所は規格の節と機構で決め、Issue の番号にしない |
-| `:expected_exit:`（2026-10-16 に承認） | 任意 | kirimasim の終了コード（CLI.md の 5 節）。書かなければ 0。kirimasim の決まりなので、他のシミュレータの判定には使わない |
-| `:generator:`（2026-10-16 に承認） | 生成器で作ったテストだけ必須 | 作った生成器と、その規則の表の版。`<tools の下のファイル名>@<版>`（例：`gen_net_matrix.py@1`）。版は 1 から始め、規則の表を変えたら上げる。生成したテストは手で直さず、生成器を直して作り直す |
-| `:expected_stderr:`（2026-10-16 に承認。同日、fatal と info の行を足した） | 任意 | `@<名前>.stderr` の形で、kirimasim が標準エラーに出す次の行の、完全な並びを書く：`: warning: ` か `: error: ` を含む行と、ソースの位置（`<ファイル>:<行>`）で始まり `: fatal: ` か `: info: ` を含む行（`$fatal` と `$info`。SYSTEM_TASKS.md の 10.1 節）。kirimasim 自身の `kirimasim: info:` の行（版の行、終了の理由の行）は比べない（版の行はコミットで変わるため）。ファイルのパスは、テストのファイル名から後だけを比べる。kirimasim の形に依存するので、他のシミュレータの判定には使わない。`.stderr` のファイルも期待値を守る決まりの対象 |
+| `:lrm:` | Required | The standard and clause numbers it rests on. Example: `1800-2023 4.6`. Several clauses are separated by spaces |
+| `:oracle:` | Required | The source of the expected values ("Source of expected values" below) |
+| `:fourstate:` | Required | Whether it uses 4-state values (X, Z). `yes` or `no` |
+| `:nondeterministic:` | Required | Whether the result may depend on a point whose order the standard does not set. `yes` or `no` |
+| `:expected_stdout:` | Required for `simulation` | The expected standard output of the run ("Expected standard output" below) |
+| `:expected_error:` | Required with `:should_fail_because:` | The position and text of the intended diagnostic. `<line>:<column>: error: <text>` |
+| `:spec_check:` | Required when `:oracle:` has `spec` | Whether an AI or a person checked against the standard. `ai` or `human` ("Source of expected values" below) |
+| `:issue:` (approved 2026-10-16) | Optional | The numbers of the issues that led to the test (separated by spaces). The test's name and place are decided by the clause of the standard and the mechanism, not by issue numbers |
+| `:expected_exit:` (approved 2026-10-16) | Optional | kirimasim's exit code (CLI.md 5). 0 if not written. It is kirimasim's rule, so it is not used to judge other simulators |
+| `:generator:` (approved 2026-10-16) | Required only for tests made by a generator | The generator that made it, and the version of its table of rules. `<file name under tools>@<version>` (for example `gen_net_matrix.py@1`). Versions start at 1 and rise when the table of rules changes. Generated tests are not edited by hand; the generator is fixed and they are made again |
+| `:expected_stderr:` (approved 2026-10-16; fatal and info lines added the same day) | Optional | In the form `@<name>.stderr`, the complete sequence of these lines kirimasim writes to standard error: lines containing `: warning: ` or `: error: `, and lines starting with a source position (`<file>:<line>`) and containing `: fatal: ` or `: info: ` (`$fatal` and `$info`; SYSTEM_TASKS.md 10.1). kirimasim's own `kirimasim: info:` lines (the version line, the line of the reason for ending) are not compared (the version line changes with each commit). Of a file's path, only the part from the test's file name on is compared. It depends on kirimasim's form, so it is not used to judge other simulators. `.stderr` files too fall under the rules protecting expected values |
 
-規則：
+Rules:
 
-- ヘッダの中に規格の本文を写さない。説明は自分の言葉で書く。
-- `:expected_error:` は、kirimasim が出す診断の形（slang の形：`<ファイル>:<行>:<列>: error: <文>`）に合わせている。他のシミュレータで同じ文が出ることは求めない。他のシミュレータでは、sv-tests の決まりどおり「失敗したか」だけで判定される。
-- `:should_fail_because:` のテストは、終了コードが 2 で、しかも標準エラーに `<ファイル名>:<:expected_error: の値>` が含まれることの両方で合格とする。無関係なエラーで失敗しても合格にはしない（`tools/run_suite_test.py`）。
-- 時刻の単位や精度で出力が変わるテスト（0 でない時刻を `%t` で表示する、`$timeformat`、`$printtimescale`、小数の遅延、単位付きの遅延を使う）は、最初の設計要素の前に `` `timescale `` を書く。timescale が無いときの時刻の単位と精度は処理系が決め（規格で確認：3.14.2.3）、`%t` の既定の単位は設計の中で最も小さい精度になる（規格で確認：20.4.3）ので、書かないと期待値が処理系に依存する。
+- Do not copy text of the standard into the header. Write descriptions in your own words.
+- `:expected_error:` follows the form of kirimasim's diagnostics (slang's form: `<file>:<line>:<column>: error: <text>`). Other simulators are not required to give the same text. They are judged only on "did it fail", as sv-tests' rules say.
+- A `:should_fail_because:` test passes only when the exit code is 2 and also standard error contains `<file name>:<value of :expected_error:>`. Failing with an unrelated error does not pass (`tools/run_suite_test.py`).
+- A test whose output changes with the unit or precision of time (one that prints a nonzero time with `%t`, or uses `$timeformat`, `$printtimescale`, fractional delays or delays with units) writes a `` `timescale `` before its first design element. Without a timescale, the unit and precision of time are up to the implementation (checked: 3.14.2.3), and the default unit of `%t` is the smallest precision in the design (checked: 20.4.3), so without one the expected values depend on the implementation.
 
-### 標準出力の期待値
+### Expected standard output
 
-- 1 行のときは `:expected_stdout:` に書く。
-- 複数行のときは、テストと同じ場所に `<名前>.expected` を置き、`:expected_stdout: @<名前>.expected` と書く。sv-tests のヘッダの読み方は、同じ項目を何度書くと最後の値だけが残るので、行ごとに項目を繰り返す書き方は使わない。
-- **空行（2026-10-16 に承認）：** 比べるときは、実行の結果と期待値の両方から、空行（空白だけの行を含む）を除く。テストスイートのリポジトリの README（`tools/normalize_output.py`）と同じ決まりにそろえる。そのリポジトリの期待値は空行を除いて作られており、末尾の空行だけを除く比べ方では、正しい出力のテストも不合格になるためである（2026-10-16 に、自前のテストの母集団の 4 本で確かめた）。空行の数そのものは比べない。
-- 比べるのは標準出力だけ。kirimasim が実行の冒頭に出す版とオプションの行は、比べる前に取り除く（取り除き方は CLI.md で決める）。
-- `:nondeterministic: yes` のテストは、許される結果の集合を `<名前>.expected` に書く。候補ごとに、`---` だけの行で区切って並べる。実行の結果がどれか 1 つと一致すれば合格とする。許される結果の集合は、観測した結果だけで決めず、人が規格で確かめて決める。
-- `<名前>.expected` は期待値なので、期待値を守る決まりの対象になる（`tools/check_expected_change.py` が検査する）。
+- A single line is written in `:expected_stdout:`.
+- Several lines go in `<name>.expected` next to the test, and the header says `:expected_stdout: @<name>.expected`. The way sv-tests reads headers keeps only the last value of an item written several times, so repeating the item line by line is not used.
+- **Blank lines (approved 2026-10-16):** when comparing, blank lines (including lines of only white space) are removed from both the result of the run and the expected values. This matches the rule of the test suite repository's README (`tools/normalize_output.py`). That repository's expected values were made without blank lines, and a comparison that removes only trailing blank lines would fail tests whose output is correct (checked on 2026-10-16 with 4 tests of our own population). The number of blank lines itself is not compared.
+- Only standard output is compared. The line of version and options kirimasim gives at the start of a run is removed before comparing (CLI.md decides how).
+- A `:nondeterministic: yes` test writes the set of allowed results in `<name>.expected`, the candidates separated by lines of only `---`. The run passes if its result equals any one of them. The set of allowed results is not decided from observed results alone; a person checks it against the standard.
+- `<name>.expected` holds expected values, so it falls under the rules protecting expected values (`tools/check_expected_change.py` checks).
 
-### sv-tests の自己検査との関係
+### Relation to sv-tests' self-checks
 
-sv-tests は、`simulation` のテストの合否を、シミュレータの出力に含まれる `:assert: <Python の式>` の行で判定する（sv-tests の `tools/logparser.py` で確認した。式が偽になる行が 1 つでもあれば不合格）。そのため、本スイートの `simulation` のテストは、`:expected_stdout:` で比べる行とは別に、期待値を自分で確かめる `:assert:` の行も出すことを勧める。必須にはしない。`:assert:` の行も標準出力の一部なので、出すときは `:expected_stdout:` にも含める。そうすれば、sv-tests に取り込んだときも意味のある判定になる。
+sv-tests judges a `simulation` test by the `:assert: <Python expression>` lines in the simulator's output (checked in sv-tests' `tools/logparser.py`: the test fails if any line's expression is false). So the `simulation` tests of this suite are encouraged to print, apart from the lines compared by `:expected_stdout:`, `:assert:` lines that check the expected values themselves. This is not required. `:assert:` lines are part of standard output too, so when printed they are also included in `:expected_stdout:`. Then the judgment is meaningful when the tests are taken into sv-tests as well.
 
-### 今の判定の範囲（2026-10-16 に承認）
+### What is judged now (approved 2026-10-16)
 
-- `simulation` のテストは、実行して `:expected_stdout:`、`:expected_exit:`、`:expected_stderr:` を比べる（`tools/run_suite_test.py`）。まだ対応していない構文を使うテスト（終了コード 2 と `unsupported` の診断）は、合格でも不合格でもなく skip として数える。
-- 失敗を期待するテストは、終了コード 2 と、意図した位置の診断の両方で合格とする（上の規則）。
+- A `simulation` test is run, and `:expected_stdout:`, `:expected_exit:` and `:expected_stderr:` are compared (`tools/run_suite_test.py`). A test using a construct not supported yet (exit code 2 and an `unsupported` diagnostic) counts as skipped, neither passed nor failed.
+- A test expected to fail passes on exit code 2 together with the diagnostic at the intended position (the rule above).
 
-## 区分
+## Categories
 
-| 区分 | 中身 | 扱い |
+| Category | Content | Treatment |
 | --- | --- | --- |
-| A | 自作のテスト | 公開する。ライセンスは Apache-2.0 |
-| B | 規格の例を写したもの | 公開しない。識別子・構造・値を変えて書き直し、A に移す |
-| C | 第三者の RTL（CVA6、Ibex、OpenTitan など） | 同梱しない。取得用のスクリプトで参照し、元のライセンスに従う |
+| A | Tests we wrote | Published. Licence Apache-2.0 |
+| B | Copies of examples in the standard | Not published. Rewritten with different identifiers, structure and values, and moved to A |
+| C | Third-party RTL (CVA6, Ibex, OpenTitan and so on) | Not bundled. Referred to by scripts that fetch them, under their own licences |
 
-公開するスイートに入れてよいのは区分 A だけ。区分 B を書き直すときは、元の例を見ながら書き換えるのではなく、確かめたい規則を自分の言葉で書き出してから、新しいテストを書く。
+Only category A may go in the published suite. When rewriting category B, do not rewrite while looking at the original example; first write down, in your own words, the rule to be checked, then write a new test.
 
-## 期待値の出どころ（`:oracle:`）
+## Source of expected values (`:oracle:`)
 
-| 値 | 意味 |
+| Value | Meaning |
 | --- | --- |
-| `spec` | 規格の該当節と照らして決めた。照らし合わせたのが人か AI かは `:spec_check:` で示す |
-| `iverilog@<版>` | その版の Icarus Verilog の実行結果 |
-| `verilator@<版>` | その版の Verilator の実行結果（2 値の範囲） |
-| `consensus` | 複数のシミュレータの一致と、規格の節による根拠 |
+| `spec` | Decided against the relevant clause of the standard. `:spec_check:` says whether a person or an AI did the checking |
+| `iverilog@<version>` | The result of that version of Icarus Verilog |
+| `verilator@<version>` | The result of that version of Verilator (2-state only) |
+| `consensus` | Agreement of several simulators, with grounds in a clause of the standard |
 
-規則：
+Rules:
 
-- 根拠が複数あるときは、空白で区切って並べる。例：`:oracle: spec iverilog@13.0`。
-- `spec` も `consensus` も含まず、シミュレータの結果が 1 つだけのものは「要確認」とみなす。規格で確かめたら `spec` を足す。要確認のテストの一覧は、ヘッダから機械的に作れる。
-- `spec` を書くテストには、`:spec_check:` を書く。値は、AI（Claude Code）が規格の節を読んで照らし合わせたものは `ai`、人が規格の節で確かめたものは `human`。人が確かめたら `ai` を `human` に替える。`ai` のテストの期待値は、AI_POLICY.md のとおり AI の案であり、1 本ずつ人が確かめたものではない。公開する README にもこのことを書く。
-- 版は必ず書く。版は下の「比べる相手」の「期待値の根拠用」で固定したリリース版を使う。
-- 商用シミュレータの出力は、公開する期待値に使わない。
-- 公開していないシミュレータの結果は、`:oracle:` に書かない。そうした結果は、非公開の棚卸しの表にだけ記録する。それしか根拠の無いテストは、人が規格か、上の公開のシミュレータで確かめるまで、公開のスイートに入れない。
-- 規格どおりでないことが分かっているシミュレータの結果は、根拠にしない。食い違いはテストのコメントに節番号付きで書く。
-- **対照のシミュレータは証拠の 1 つ（2026-10-16 に承認）：** Icarus Verilog と Verilator の結果は正解ではなく、証拠の 1 つとして扱う。対照どうしが食い違うとき、対照が対応していないとき（Icarus のクラス、Verilator の 4 値など）は、規格の節で決める。規格の例のうち、結果が書いてあるものは強い根拠になるので、区分 B の手順（自分の言葉で書き直す）でテストに起こす。
-- **期待値の誤りを前提にする（2026-10-16 に承認）：** 期待値を書いたのが AI でも人でも、誤りがありうる。`:spec_check: ai` のテストは、人が抜き取りで規格と照らす。割合と手順は「テストの足りないところと補う計画」の節で決める（2026-10-16 に承認）。
+- With several grounds, list them separated by spaces. Example: `:oracle: spec iverilog@13.0`.
+- A test with neither `spec` nor `consensus` and only one simulator's result is taken as "needs checking". When it is checked in the standard, `spec` is added. The list of tests needing checking can be made mechanically from the headers.
+- A test that writes `spec` writes `:spec_check:`. Its value is `ai` when an AI (Claude Code) read the clause of the standard and checked, and `human` when a person checked it in the clause. When a person checks it, `ai` is replaced by `human`. The expected values of `ai` tests are, as AI_POLICY.md says, the AI's proposals, not ones a person checked one by one. The published README says so too.
+- Always write the version. Use the release versions fixed under "For the grounds of expected values" in "Simulators compared against" below.
+- Output of commercial simulators is not used for published expected values.
+- Results of unpublished simulators are not written in `:oracle:`. Such results are recorded only in a private inventory table. A test with no other grounds stays out of the published suite until a person checks it in the standard or with the published simulators above.
+- Results of a simulator known not to follow the standard are not used as grounds. Differences are written in the test's comments with clause numbers.
+- **The control simulators are one piece of evidence (approved 2026-10-16):** the results of Icarus Verilog and Verilator are not the correct answer but one piece of evidence. When the controls disagree with each other, or a control does not support the feature (Icarus's classes, Verilator's 4 states and so on), the clause of the standard decides. Examples in the standard that state their results are strong grounds, so they are made into tests by category B's procedure (rewritten in our own words).
+- **Expected values are assumed to have errors (approved 2026-10-16):** whether an AI or a person wrote them, expected values can be wrong. `:spec_check: ai` tests are sampled by people and checked against the standard. The rate and procedure are set in "Gaps in the tests and the plan to fill them" (approved 2026-10-16).
 
-## 不具合のテストと、テストが落ちることの確認（2026-10-16 に承認）
+## Bug tests, and checking that tests fail (approved 2026-10-16)
 
-- **機構の行列：** 不具合を直すときは、再現例を 1 本足すのではなく、その機構の行列のテストを足す。行列の軸は、置き場所（module の変数、static と automatic のサブルーチンの変数、class のプロパティ、interface のメンバ、generate のスコープ、package の変数、配列の要素、部分選択、構造体のメンバなど）、読み書きの仕方（読む、ブロッキング代入、NBA、連続代入、force・release、階層参照、`ref` 引数、`@`・`wait` の感度、`$monitor`・VPI・波形）、名前の綴り（短い名前、階層名、`C::s` と `obj.s`、typedef 経由など）、器（module の手続き、class のメソッド、automatic の task、fork の枝、interface、generate、package）。行列は手で書かず、生成器で作る。生成器と、生成したテストの期待値の出どころを一緒に管理する。
-- **最初に行列を作る機構：** 階層名（23.6）、変数の寿命（6.21）、NBA（10.4.2）、イベント制御（9.4.2）、ビットと部分の選択（11.5.1）、プロセスの制御（9.7）、generate のループ（27.4）、virtual interface（25.9）、force と release（10.6.2）、package の参照（26.3）。どれも、変数がどこに置かれ、名前が何に結び付き、いつプロセスが起きるかに帰着する。該当する機能を実装する段で、その行列を合わせて作る。
-- **陰性対照：** 判定の道具とテストが、誤った実装で実際に落ちることを確かめる。夜間のジョブで、`valsem` と kernel の語演算、スケジューラに、決めておいた誤りを 1 つずつ入れたビルドを作り、それぞれで落ちるテストがあることを確かめる。落ちるテストが 1 本も無い誤りは、テストの穴として記録する。判定の道具は、期待値を 1 か所変えた写しで落ちることをテストで確かめる。
-- **走っていないテストを出さない：** `tests/suite/` の `.sv` は glob ですべて CTest に登録する。`.expected` と `.stderr` で、対になる `.sv` が無いものがあれば、CI を落とす。未対応で skip になったテストの数は、合格の数と並べて常に出す。
-- **判定の規則は 1 つの道具に置く：** 本スイートの合否は `tools/run_suite_test.py` だけが決める。sv-tests の比較（`tools/svtests.py`）は sv-tests の規則で判定する別の道具で、本スイートの判定には使わない。
-- **2 つの層の一致（P2 から）：** 第 2 層ができたら、本スイートの全テストを第 1 層と第 2 層の両方で走らせ、出力が一致することを CI の必須条件にする。片方の層でしか走らないテストの数を出す。
+- **Mechanism matrix:** when fixing a bug, add not one reproducing example but a matrix test of the mechanism. The matrix's axes are: the place (module variables, variables of static and automatic subroutines, class properties, interface members, generate scopes, package variables, array elements, part-selects, structure members and so on); the way of reading or writing (reads, blocking assignments, NBAs, continuous assignments, force and release, hierarchical references, `ref` arguments, sensitivity of `@` and `wait`, `$monitor`, VPI, waveforms); the spelling of the name (short names, hierarchical names, `C::s` and `obj.s`, through a typedef and so on); the container (module procedures, class methods, automatic tasks, fork branches, interfaces, generate, packages). Matrices are not written by hand but made by generators. Generators and the sources of the expected values of the tests they make are managed together.
+- **Mechanisms whose matrices are made first:** hierarchical names (23.6), lifetimes of variables (6.21), NBAs (10.4.2), event controls (9.4.2), bit- and part-selects (11.5.1), process control (9.7), generate loops (27.4), virtual interfaces (25.9), force and release (10.6.2), package references (26.3). All come down to where a variable is placed, what a name binds to, and when a process wakes. Each matrix is made in the stage that implements the feature.
+- **Negative controls:** check that the judging tools and the tests really fail on a wrong implementation. A nightly job makes builds with chosen errors put, one at a time, into `valsem`, the kernel's word operations and the scheduler, and checks that each makes some test fail. An error that makes no test fail is recorded as a hole in the tests. The judging tools are tested to fail on a copy with one expected value changed.
+- **No tests that do not run:** every `.sv` under `tests/suite/` is registered with CTest by glob. A `.expected` or `.stderr` with no matching `.sv` fails CI. The number of tests skipped as unsupported is always given next to the number passed.
+- **Judging rules live in one tool:** only `tools/run_suite_test.py` decides pass or fail for this suite. The sv-tests comparison (`tools/svtests.py`) is a separate tool that judges by sv-tests' rules, and is not used to judge this suite.
+- **Agreement of the two tiers (from P2):** once tier 2 exists, every test of this suite runs on both tier 1 and tier 2, and equal output is a required condition of CI. The number of tests that run on only one tier is given.
 
-## テストの足りないところと補う計画（2026-10-16 に承認）
+## Gaps in the tests and the plan to fill them (approved 2026-10-16)
 
-### 今の状態（2026-10-16 に数えた）
+### The present state (counted 2026-10-16)
 
-テストスイートのリポジトリ（kirimasim-tests の `823ef30`、`simulation` のテスト 1853 本）と、本体の `tests/suite/`（21 本）を、ヘッダの項目と、コメントと文字列を除いたソースの語で数えた。語で数えた行は目安である。
+The test suite repository (kirimasim-tests at `823ef30`, 1853 `simulation` tests) and `tests/suite/` of the main repository (21 tests) were counted by header items and by words in the source with comments and strings removed. Rows counted by words are rough.
 
-| 見たもの | 数 | 足りないところ |
+| What was looked at | Count | Gap |
 | --- | --- | --- |
-| `:spec_check:` | 1853 本すべて `ai`、`human` は 0 本 | 期待値を人が 1 本も確かめていない。AI と対照のシミュレータが同じ誤りをすると見つからない |
-| `:oracle:` | `spec iverilog@13.0` 1341 本、`spec verilator@5.052` 497 本、両方 5 本、`spec` だけ 10 本 | Verilator を根拠にした 502 本は、どれも `:fourstate: no` で、2 値の範囲だけを確かめている |
-| `:fourstate: yes` | 163 本（8.8%） | 4 値を既定とするシミュレータの適合性テストとして、X と Z を使うテストが少ない |
-| `:nondeterministic: yes` | 0 本 | 規格が順序を決めない箇所（4.7）の、許される結果の集合を確かめるテストが無い |
-| 4 章（スケジューリング）の節を最初に挙げるテスト | 13 本 | 領域の進め方（4.4.2 の各領域、4.5）を確かめるテストがほとんど無い。順序が規格で決まらないテストを取り除いた結果でもある |
-| `$strobe`、`$monitor`（21.2.2、21.2.3） | 2 本、1 本 | Postponed の領域で値を読むことを確かめるテストが少ない |
-| ファイルの入出力（21.3）、`$readmem`・`$writemem`（21.4）、`$dumpvars`（21.7）、DPI-C の import（35） | どれも 0 本 | P1 で作る機能のテストが無い |
-| `$test$plusargs`、`$value$plusargs`（21.6） | 6 本 | 少ない |
-| ネットの強さ、wand・wor（6.6.3）、trireg（6.6.4）、tri0・tri1（6.6.5）、スイッチ | 10 本、17 本（wand から tri1 まで合わせて）、5 本 | ネットの解決（28.12）と強さ（28.11〜28.15）の組み合わせが少ない |
-| `:should_fail_because:` | テストスイートのリポジトリは 0 本、本体は 1 本 | 違法な入力を拒否することを確かめるテストがほとんど無い |
-| 第三者の RTL（区分 C） | 0 本 | 実際の設計の大きさと書き方で動くかを確かめていない |
+| `:spec_check:` | All 1853 `ai`, 0 `human` | No expected value has been checked by a person. If the AI and the control simulator make the same error, it is not found |
+| `:oracle:` | `spec iverilog@13.0` 1341, `spec verilator@5.052` 497, both 5, `spec` alone 10 | The 502 based on Verilator are all `:fourstate: no` and check only the 2-state range |
+| `:fourstate: yes` | 163 (8.8%) | For a conformance suite of a simulator whose default is 4 states, few tests use X and Z |
+| `:nondeterministic: yes` | 0 | No test checks the set of allowed results where the standard does not set the order (4.7) |
+| Tests whose first clause is in chapter 4 (scheduling) | 13 | Almost no test checks how the regions proceed (each region of 4.4.2, 4.5). This is also the result of removing tests whose order the standard does not set |
+| `$strobe`, `$monitor` (21.2.2, 21.2.3) | 2, 1 | Few tests check that values are read in the Postponed region |
+| File I/O (21.3), `$readmem` and `$writemem` (21.4), `$dumpvars` (21.7), DPI-C import (35) | 0 each | No tests of features made in P1 |
+| `$test$plusargs`, `$value$plusargs` (21.6) | 6 | Few |
+| Net strengths, wand and wor (6.6.3), trireg (6.6.4), tri0 and tri1 (6.6.5), switches | 10, 17 (wand to tri1 together), 5 | Few combinations of net resolution (28.12) and strengths (28.11 to 28.15) |
+| `:should_fail_because:` | 0 in the test suite repository, 1 in the main one | Almost no test checks that illegal input is rejected |
+| Third-party RTL (category C) | 0 | Not checked whether it runs with the size and style of real designs |
 
-テストの増やし方：これまでの集め方で使える候補は、2026-10-15 に使い切った。今後は、規格の節から書くテストと、生成器で作る行列（上の「不具合のテストと、テストが落ちることの確認」の節）で足す。
+How tests grow: the candidates usable with the way tests were collected so far were used up on 2026-10-15. From now on, tests are added by writing them from clauses of the standard, and by matrices made by generators (the section "Bug tests, and checking that tests fail" above).
 
-### 人の抜き取り（`:spec_check: ai` の確認）
+### Sampling by people (checking `:spec_check: ai`)
 
-上の「期待値の誤りを前提にする」の、人の抜き取りの割合と手順を次のとおりにする。
+The rate and procedure of the sampling by people in "Expected values are assumed to have errors" above are these:
 
-- **全部を人が確かめるもの：** `:oracle:` が `spec` だけのテスト（シミュレータの裏付けが無い）、4 章の節を最初に挙げるテスト、`:nondeterministic: yes` のテスト、必須テストの一覧のテスト。2026-10-16 の時点で、テストスイートのリポジトリの 23 本と、本体の必須テスト 16 本の、合わせて 39 本。
-- **残りは無作為に 5%：** 固定したシードで選び、選んだテストの一覧とシードを記録する。2026-10-16 の時点で、テストスイートのリポジトリの残り 1830 本から 92 本。
-- **誤りが見つかったとき：** その章の抜き取りを 20% に上げ、同じ機構のテストを全部見直す。期待値の修正は、期待値を守る決まりどおり、実装とは別の PR にする。
-- **生成器の規則：** 生成器で作るテストは、生成器が持つ規則の表（真理値表、順序の表など）を人が規格の節と照らす。1 回の確認で、生成したテストの全部に効く。
-- **記録：** 人が確かめたテストは `:spec_check: human` に替える。抜き取りの結果（確かめた本数と、見つかった誤りの数）を、P1 の終わりの報告（M8）に載せる。照らし合わせに使う資料は、規格の本文を写すので公開しない。
-- 新しく足すテストにも同じ割合を当てる。
+- **Checked by people in full:** tests whose `:oracle:` is `spec` alone (no simulator backs them), tests whose first clause is in chapter 4, `:nondeterministic: yes` tests, and the tests in the list of required tests. As of 2026-10-16, 23 tests in the test suite repository and the 16 required tests of the main one, 39 in all.
+- **Of the rest, 5% at random:** chosen with a fixed seed; the list of chosen tests and the seed are recorded. As of 2026-10-16, 92 of the other 1830 tests in the test suite repository.
+- **When an error is found:** the sampling of that chapter rises to 20%, and every test of the same mechanism is reviewed. Corrections of expected values go, by the rules protecting expected values, in PRs separate from implementation.
+- **Rules of generators:** for tests made by a generator, a person checks the generator's table of rules (truth tables, tables of order and so on) against the clauses of the standard. One check covers every test it makes.
+- **Record:** tests checked by a person are changed to `:spec_check: human`. The results of the sampling (how many were checked, how many errors were found) go in the report at the end of P1 (M8). The material used for checking copies text of the standard, so it is not published.
+- Newly added tests get the same rate.
 
-### P1 のあいだに足すもの
+### What is added during P1
 
-どれも、該当する機能を実装する段で、実装と同じ PR で足す（新しいテストの追加なので、期待値を守る決まりに反しない）。
+Each is added in the stage that implements the feature, in the same PR as the implementation (they are new tests, so this does not break the rules protecting expected values).
 
-1. **スケジューリングの行列：** 規格で順序が決まる形（同じプロセスの文の順、Active・Inactive・NBA・Observed・Postponed の順、`#0` で Inactive へ移ること、NBA の反映の後に起きる評価、`$strobe` と `$monitor` が Postponed で読むこと、final の時点）を、生成器で組み合わせて作る。規格が順序を決めない形（4.7）は、`:nondeterministic: yes` と許される結果の集合で書く。集合は人が規格で確かめる（上の「標準出力の期待値」の決まり）。SCHEDULER_SPEC.md の各節に、少なくとも 1 本のテストが対応するようにする。
-2. **4 値の行列：** 演算子（11.4）、条件（12.4）、case の一致（12.5）、辺（9.4.2）、ネットの解決（6.6、28.12）について、X と Z の位置、幅、符号を軸にした行列を生成器で作る。期待値は、生成器が規格の表から計算し、Icarus 13.0 の結果と突き合わせる。食い違いは規格の節で決め、テストのコメントに書く。kirimasim の `valsem` からは期待値を作らない（判定する相手から正解を作ることになるため）。
-3. **P1 の機能のテスト：** ファイルの入出力（21.3）、`$readmem` と `$writemem`（21.4）、plusargs（21.6）、DPI-C の import（35）、波形。DPI-C の C のソースと、plusargs をテストに渡す方法は、sv-tests の形式にその項目があるかが未確認（sv-tests の `tools/runner` を読んで確かめる）。無ければ、本スイートの項目の案を、その機能を実装する段で出す。波形のテストは、下の「未確認・後で決めること」の、波形の要約の形式を決めてから書く。
-4. **失敗を期待するテスト：** 実装する機能ごとに、規格が違法とする形を少なくとも 1 本足す（`:should_fail_because:` と `:expected_error:`）。未対応の構文の診断は kirimasim だけの決まりなので、本スイートではなく `tests/cli/` で確かめる。
-5. **ネットの行列：** instance、ポート、ネットを実装する段で、ネットの種類（6.6.1〜6.6.6）、ドライバの数、強さ（28.11〜28.15）を軸にした行列を作る。
-6. **数え方の道具：** 上の表を作る道具を `tools/` に置き、夜間のジョブで表を出す。表は P1 の終わりの報告（M8）にも載せる。
+1. **Scheduling matrix:** forms whose order the standard sets (the order of statements in one process; the order Active, Inactive, NBA, Observed, Postponed; moving to Inactive by `#0`; evaluations after NBA updates; `$strobe` and `$monitor` reading in Postponed; the point of final) are combined by a generator. Forms whose order the standard does not set (4.7) are written with `:nondeterministic: yes` and the set of allowed results. A person checks the set in the standard (the rule of "Expected standard output" above). Each section of SCHEDULER_SPEC.md gets at least one test.
+2. **4-state matrix:** for operators (11.4), conditions (12.4), case matching (12.5), edges (9.4.2) and net resolution (6.6, 28.12), a generator makes matrices whose axes are the positions of X and Z, widths and signedness. The generator computes the expected values from the tables of the standard, and they are checked against Icarus 13.0's results. Differences are decided by the clause of the standard and written in the test's comments. Expected values are not made from kirimasim's `valsem` (that would make the answer from what is being judged).
+3. **Tests of P1's features:** file I/O (21.3), `$readmem` and `$writemem` (21.4), plusargs (21.6), DPI-C import (35), waveforms. Whether sv-tests' format has items for the C source of DPI-C and for passing plusargs to a test is not confirmed (check by reading sv-tests' `tools/runner`). If not, a proposal for items of this suite is made in the stage that implements the feature. Waveform tests are written after the format of waveform summaries in "Not confirmed, to be decided later" below is set.
+4. **Tests expected to fail:** for each feature implemented, add at least one form the standard makes illegal (`:should_fail_because:` and `:expected_error:`). Diagnostics of unsupported constructs are kirimasim's own rule, so they are checked in `tests/cli/`, not in this suite.
+5. **Net matrix:** in the stage that implements instances, ports and nets, make a matrix whose axes are the kinds of net (6.6.1 to 6.6.6), the number of drivers, and strengths (28.11 to 28.15).
+6. **Counting tool:** put the tool that makes the table above in `tools/`, and have a nightly job produce the table. The table also goes in the report at the end of P1 (M8).
 
-置き場所と期待値の扱い：
+Where they go and how their expected values are treated:
 
-- 生成器は本体のリポジトリの `tools/` に置き、生成したテストもコミットする。生成器を変えて既存のテストの期待値が変わるときは、期待値を守る決まりどおり、実装と別の PR にする。
-- 生成したテストのヘッダには、生成器の名前と、規則の表の版を `:generator:` に書く（上の「メタデータのヘッダ」の表（2026-10-16 に承認））。生成器は `--check` で、コミットしたテストが生成器の出力と同じかを確かめられるようにし、CTest に登録する。
+- Generators go in `tools/` of the main repository, and the tests they make are committed too. When changing a generator changes the expected values of existing tests, it goes, by the rules protecting expected values, in a PR separate from implementation.
+- The header of a generated test writes the generator's name and the version of its table of rules in `:generator:` (the table of "Metadata header" above (approved 2026-10-16)). A generator can check with `--check` that the committed tests equal its output, and that check is registered with CTest.
 
-### P2 以降に回すもの
+### What is left for P2 and later
 
-- 第三者の RTL（区分 C）：Ibex、CVA6、OpenTitan を、取得用のスクリプトで参照して走らせる。ライセンスを確かめてから使う。設計仕様書の「実設計」の層（毎週）にあたる。
-- 差分ファズ：ランダムに生成した小さな設計を、Icarus と、第 1 層と第 2 層の間で突き合わせる。生成器を採用するかは、設計仕様書のとおり P2 で決める。
+- Third-party RTL (category C): run Ibex, CVA6 and OpenTitan, referred to by scripts that fetch them, after checking their licences. This is the "real designs" layer (weekly) of the design specification.
+- Differential fuzzing: compare small randomly generated designs between Icarus, tier 1 and tier 2. Whether to adopt a generator is decided in P2, as the design specification says.
 
-### 合格条件との関係
+### Relation to the passing conditions
 
-- P1 の合格条件（「P1 の合格条件の測り方」の節）の数字と母集団は変えない。母集団の一覧は固定してあるので、新しく足したテストは 90% の分母に入らない。
-- 上の 1〜6 が済んだかと、人の抜き取りの結果は、P1 の終わりの報告（M8）に書く。合格条件には入れない。
+- The numbers and populations of the P1 passing conditions (the section "How the P1 passing conditions are measured") do not change. The list of the population is fixed, so newly added tests do not enter the denominator of the 90%.
+- Whether 1 to 6 above are done, and the results of the sampling by people, are written in the report at the end of P1 (M8). They are not part of the passing conditions.
 
-## 期待値を守る決まり
+## Rules protecting expected values
 
-- 既存のテストの期待値を変える・消す・緩める変更は、`src/` の実装の変更と別の PR にする。対象は次のとおり。
-  - `tests/perf_counts/expected.json` の既存の項目
-  - `tests/**/expected*` の既存の行
-  - `.sv` の `:expected_stdout:` と、既存のテストの本体
-  - 既存のテストファイルの削除と名前の変更
-- 新しいテストとその期待値の追加は、実装と同じ PR でよい。人が根拠を確かめる。
-- 期待値を変える PR には、理由と規格の節番号を書き、人が承認する。
-- CI の `tools/check_expected_change.py` が、base と head の merge-base から head までの差分で検査する。`tests/unit/` のユニットテストは、実装と一緒に直してよい。その場合、変わったアサーションは警告として出し、人がレビューで見る。
+- A change that changes, removes or loosens the expected values of existing tests goes in a PR separate from changes of the implementation in `src/`. This covers:
+  - existing items of `tests/perf_counts/expected.json`
+  - existing lines of `tests/**/expected*`
+  - `:expected_stdout:` in `.sv` files, and the bodies of existing tests
+  - removing or renaming existing test files
+- Adding new tests and their expected values may be in the same PR as the implementation. A person checks the grounds.
+- A PR that changes expected values states the reason and the clause numbers of the standard, and a person approves it.
+- CI's `tools/check_expected_change.py` checks the diff from the merge-base of base and head to head. Unit tests in `tests/unit/` may be fixed together with the implementation; then the changed assertions are shown as warnings, and a person looks at them in review.
 
-## 比べる相手（固定する版）
+## Simulators compared against (fixed versions)
 
-比べる目的は 2 つあり、目的ごとに使う版を分ける（2026-10-14 に確認）。どちらの版も、ブランチの名前ではなくコミットの SHA で固定する。版を上げるときは、この節を変える PR で行い、期待値と合格条件への影響を確かめる。
+There are two purposes of comparing, and each uses its own versions (checked 2026-10-14). Both are fixed by commit SHA, not by branch name. A version is raised by a PR that changes this section, after checking the effect on expected values and passing conditions.
 
-### 合格条件の比較用（sv-tests の通過率）
+### For passing conditions (sv-tests pass rate)
 
-「sv-tests のシミュレーション系のタグで Icarus 以上」「Verilator 以上」といった合格条件は、sv-tests が submodule で固定している開発版のコミットと比べる。公開されている sv-tests の結果の一覧と同じ条件にするためである。sv-tests のコミットを決めれば、Icarus Verilog と Verilator のコミットも決まる。この 3 つは必ず一緒に上げる。
+Passing conditions such as "as many as Icarus or more on sv-tests' simulation tags" and "as many as Verilator or more" are compared against the development commits sv-tests fixes as submodules, so that the conditions are the same as sv-tests' published results. Fixing the sv-tests commit fixes the Icarus Verilog and Verilator commits too. The three are always raised together.
 
-| 相手 | 版 | コミット | 確かめ方 |
+| Simulator | Version | Commit | How checked |
 | --- | --- | --- | --- |
-| sv-tests | master の 2026-10-14 時点 | `15490e95fd978ada1c1dc59b7c4b53a7edb23b78` | GitHub の API。ライセンスは ISC |
-| Icarus Verilog | 開発版（master、2026-10-10） | `04cc493506bd4d75c861cfc9961e2a56517d7cc6` | 上の sv-tests のコミットの `third_party/tools/icarus` |
-| Verilator | 開発版（master、2026-10-05） | `cb3a916d0c8972a6011ecea386202604c593e0ea` | 上の sv-tests のコミットの `third_party/tools/verilator` |
+| sv-tests | master as of 2026-10-14 | `15490e95fd978ada1c1dc59b7c4b53a7edb23b78` | The GitHub API. Licence ISC |
+| Icarus Verilog | development (master, 2026-10-10) | `04cc493506bd4d75c861cfc9961e2a56517d7cc6` | `third_party/tools/icarus` at the sv-tests commit above |
+| Verilator | development (master, 2026-10-05) | `cb3a916d0c8972a6011ecea386202604c593e0ea` | `third_party/tools/verilator` at the sv-tests commit above |
 
-### 期待値の根拠用（`:oracle:`）
+### For the grounds of expected values (`:oracle:`)
 
-テストの `:oracle: iverilog@<版>`、`verilator@<版>` には、リリース版を使う。公開のテストスイートを使う人が、パッケージで同じ版を入れて結果を再現できるようにするためである。開発版の途中の不具合を期待値に取り込まないためでもある。
+A test's `:oracle: iverilog@<version>` and `verilator@<version>` use release versions, so that people using the published suite can install the same version from a package and reproduce the results, and so that bugs in the middle of development are not taken into expected values.
 
-| 相手 | 版 | コミット | `:oracle:` に書く値 |
+| Simulator | Version | Commit | Value written in `:oracle:` |
 | --- | --- | --- | --- |
-| Icarus Verilog | 13.0（タグ `v13_0`、2026-03-02、最新のリリース） | `dfeee909ed9f20b4870dd93423156c0170c0e1ff` | `iverilog@13.0` |
-| Verilator | 5.052（タグ `v5.052`、2026-09-05、最新のリリース） | `ea338be98e1e838d3518809ce8899f85a009963c` | `verilator@5.052` |
+| Icarus Verilog | 13.0 (tag `v13_0`, 2026-03-02, the latest release) | `dfeee909ed9f20b4870dd93423156c0170c0e1ff` | `iverilog@13.0` |
+| Verilator | 5.052 (tag `v5.052`, 2026-09-05, the latest release) | `ea338be98e1e838d3518809ce8899f85a009963c` | `verilator@5.052` |
 
-### 使い方の注意
+### Notes on use
 
-- Icarus Verilog と Verilator は、実行ファイルを外部のコマンドとして実行するだけにする。ソースは読まない（クリーンルーム）。開発版を使うときも、固定したコミットから実行ファイルを作るだけにする。
-- リリース版と開発版で結果が違うテストは、どちらかが不具合を直したか、新しく入れた可能性がある。規格で確かめ、テストのコメントに節番号付きで書く。どちらの結果も、確かめるまでは期待値の根拠にしない。
-- Icarus Verilog の起動は `iverilog -g2012`、続けて `vvp -n` とする。Homebrew に 13.0 と開発版の両方が入っているときは、開発版にリンクされていることがある。期待値を作るときは、13.0 の実行ファイルを明示して使う（例：`$(brew --cellar icarus-verilog)/13.0/bin/iverilog`）。
-- Ubuntu 24.04 の apt で入る Icarus Verilog は 12.0 である（設計の調査で使った版）。CI で比べるときは、上の表の開発版のコミットから `tools/build_icarus.sh` でビルドする（2026-10-16 に承認。「P1 の合格条件の測り方」の節）。
-- Verilator は 2 値の範囲の比較にだけ使う。4 値を使うテスト（`:fourstate: yes`）の期待値の根拠にはしない。
-- 確認した例：`sched/nba_order_same_proc.sv` は、Icarus Verilog 13.0 と Verilator 5.052（`--binary`）のどちらでも `q=2` を出した（macOS arm64）。開発版のコミットでは未確認。
+- Icarus Verilog and Verilator are only run as external commands. Their source is not read (clean room). Development versions too are only built into executables from the fixed commit.
+- A test whose result differs between the release and the development version may be one where either fixed or introduced a bug. Check it in the standard and write it in the test's comments with clause numbers. Neither result is used as grounds of expected values until it is checked.
+- Icarus Verilog is started as `iverilog -g2012`, then `vvp -n`. When Homebrew has both 13.0 and a development version, the link may point to the development version. When making expected values, name 13.0's executable explicitly (for example `$(brew --cellar icarus-verilog)/13.0/bin/iverilog`).
+- Icarus Verilog from apt on Ubuntu 24.04 is 12.0 (the version used in the design survey). For comparisons in CI, build it from the development commit in the table above with `tools/build_icarus.sh` (approved 2026-10-16; the section "How the P1 passing conditions are measured").
+- Verilator is used only for comparisons in the 2-state range. It is not used as grounds of expected values for tests that use 4 states (`:fourstate: yes`).
+- Checked example: `sched/nba_order_same_proc.sv` printed `q=2` on both Icarus Verilog 13.0 and Verilator 5.052 (`--binary`) (macOS arm64). Not confirmed at the development commits.
 
-## 必須テストの一覧
+## List of required tests
 
-通過率とは別に、落としてはいけないテストを合格条件に含める。下の一覧は、設計で挙げた項目から作り、2026-10-15 に確定した（承認済み）。P1 の合格条件には「この一覧のうち、実行が P3 のもの（`cb/input_sample_1step`）を除いて、すべて通る」を入れる（2026-10-15 に承認）。P3 の合格条件には、一覧のすべてが通ることを入れる。項目を足す・外す・テストを替えるときは、この節を変える PR で行い、人が承認する。
+Apart from pass rates, tests that must not fail are included in the passing conditions. The list below was made from the items named in the design and fixed on 2026-10-15 (approved). The P1 passing condition includes "every test in this list passes, except those that run in P3 (`cb/input_sample_1step`)" (approved 2026-10-15). The P3 passing condition includes that every test in the list passes. Adding or removing items or replacing tests is done by a PR that changes this section, and a person approves it.
 
-| 分類 | テスト | 確かめること | 規格の節 | 状態 |
+| Group | Test | What it checks | Clause | State |
 | --- | --- | --- | --- | --- |
-| スケジューリング | `sched/nba_order_same_proc` | 同じプロセスの NBA は文の順に反映される | 4.6 | ある |
-| スケジューリング | `sched/comb_order` | always_comb の中の文の順序と、自分の書き込みで起き直さないこと | 9.2.2.2、9.2.2.2.1（規格で確認） | ある |
-| スケジューリング | `sched/pulse_history` | always_comb の途中の 0→1→0 で待っているプロセスが起きること | 4.3、4.7、9.4.2（規格で確認） | ある |
-| スケジューリング | `sched/zero_delay_forever` | `forever #0` が時刻を進めずに上限で止まり、診断が出ること | 12.7.6、9.2.3（規格で確認。上限は SCHEDULER_SPEC 16.2 の決まり） | ある（終了コードと診断の確認は P1） |
-| スケジューリング | `sched/empty_forever` | 空の `forever` が上限で止まり、診断が出ること | 12.7.6、9.2.3（規格で確認。上限は SCHEDULER_SPEC 16.2 の決まり） | ある（終了コードと診断の確認は P1） |
-| 4 値 | `values/cond_truth` | 条件の真偽への変換（1 が無く X・Z があると不定、`if` は不定を偽） | 12.4、11.4.5、11.4.7（規格で確認。真偽の決め方は VALUE_SEMANTICS 3.5 の解釈） | ある |
-| 4 値 | `values/known_inputs_x` | 入力が既知でも 0 での除算と範囲外の読み出しが X を作ること | 11.4.3、7.4.5（規格で確認） | ある |
-| 4 値 | `values/and_or_truth` | ビット演算の 4 値の真理値表 | 11.4.8（規格で確認） | ある |
-| 4 値 | `values/cond_op_ambiguous` | 条件が不定のときのビットごとの合わせ方（両側が z のビットは x） | 11.4.11（規格で確認） | ある |
-| 4 値 | `values/casez_expr_dontcare` | `casez` と `casex` が式の側の z や x も無視すること | 12.5.1（規格で確認） | ある |
-| 4 値 | `values/edge_table` | posedge と negedge の判定（x と z の間は辺にならない） | 9.4.2（規格で確認） | ある |
-| case | `values/unique_case_violation` | unique case の違反の報告の時点 | 12.5.3、12.5.3.1、12.4.2.1（規格で確認） | ある（標準エラーの報告の確認は P1） |
-| プロセス制御 | `proc/fork_join_any`、`proc/disable_fork` | fork の 3 種と disable fork | 9.3.2、9.6.3（規格で確認） | ある |
-| クロッキングブロック | `cb/input_sample_1step` | `#1step` の入力の標本化 | 14.4、14.10、14.13（規格で確認） | ある（実行は P3） |
-| 構文 | `syntax/missing_semicolon` | 構文エラーを意図した位置で報告する | 6.8 | ある |
+| Scheduling | `sched/nba_order_same_proc` | NBAs of one process take effect in statement order | 4.6 | Exists |
+| Scheduling | `sched/comb_order` | The order of statements in always_comb, and that it does not wake again on its own writes | 9.2.2.2, 9.2.2.2.1 (checked) | Exists |
+| Scheduling | `sched/pulse_history` | A process waiting on a 0→1→0 in the middle of always_comb wakes | 4.3, 4.7, 9.4.2 (checked) | Exists |
+| Scheduling | `sched/zero_delay_forever` | `forever #0` stops at the limit without advancing time, with a diagnostic | 12.7.6, 9.2.3 (checked; the limit is a rule of SCHEDULER_SPEC 16.2) | Exists (exit code and diagnostic checked in P1) |
+| Scheduling | `sched/empty_forever` | An empty `forever` stops at the limit, with a diagnostic | 12.7.6, 9.2.3 (checked; the limit is a rule of SCHEDULER_SPEC 16.2) | Exists (exit code and diagnostic checked in P1) |
+| 4-state | `values/cond_truth` | Conversion of a condition to true or false (with no 1 and some X or Z it is unknown, and `if` takes unknown as false) | 12.4, 11.4.5, 11.4.7 (checked; how truth is decided is the interpretation of VALUE_SEMANTICS 3.5) | Exists |
+| 4-state | `values/known_inputs_x` | Division by 0 and out-of-range reads make X even with known inputs | 11.4.3, 7.4.5 (checked) | Exists |
+| 4-state | `values/and_or_truth` | 4-state truth tables of the bitwise operators | 11.4.8 (checked) | Exists |
+| 4-state | `values/cond_op_ambiguous` | How bits are combined when the condition is unknown (a bit z on both sides is x) | 11.4.11 (checked) | Exists |
+| 4-state | `values/casez_expr_dontcare` | `casez` and `casex` also ignore z and x on the expression's side | 12.5.1 (checked) | Exists |
+| 4-state | `values/edge_table` | The decision of posedge and negedge (between x and z is not an edge) | 9.4.2 (checked) | Exists |
+| case | `values/unique_case_violation` | When a violation of unique case is reported | 12.5.3, 12.5.3.1, 12.4.2.1 (checked) | Exists (the report on standard error checked in P1) |
+| Process control | `proc/fork_join_any`, `proc/disable_fork` | The three kinds of fork, and disable fork | 9.3.2, 9.6.3 (checked) | Exists |
+| Clocking blocks | `cb/input_sample_1step` | Sampling of inputs with `#1step` | 14.4, 14.10, 14.13 (checked) | Exists (runs in P3) |
+| Syntax | `syntax/missing_semicolon` | A syntax error is reported at the intended position | 6.8 | Exists |
 
-「規格で確認」と書いた節は、VALUE_SEMANTICS.md を書くときか、テストを書くときに規格で確かめた。
+The clauses marked "checked" were checked in the standard while writing VALUE_SEMANTICS.md or the tests.
 
-## P1 の合格条件の測り方（2026-10-16 に承認）
+## How the P1 passing conditions are measured (approved 2026-10-16)
 
-設計仕様書は、P1 の合格条件を「sv-tests のシミュレーション系のタグで Icarus 以上」「自前の RTL のテストの 90% 以上が通る」「`valsem` の突き合わせで食い違いがない」としている。必須テストの一覧（上の節）も合格条件に含める。本節は、前の 3 つの母集団と判定の仕方を決める。
+The design specification sets the P1 passing conditions as "as many as Icarus or more on sv-tests' simulation tags", "90% or more of our own RTL tests pass" and "no differences in the cross-check with `valsem`". The list of required tests (the section above) is also part of the passing conditions. This section sets the populations of the first three and how they are judged.
 
-### sv-tests で Icarus 以上
+### As many as Icarus or more on sv-tests
 
-- **母集団：** 固定した sv-tests のコミット（「比べる相手」の表）の `tests/` の下にある手書きのテストのうち、`:type:` に `simulation` を含むもの。2026-10-16 に数えて 344 本（うち、失敗を期待するもの 53 本、UVM のタグのもの 79 本）。
-- **含めないもの：** `generators/` が submodule の外部のリポジトリから作るテスト（コアの RTL、UVM の例、Icarus のリポジトリの ivtest など）。外部のリポジトリの取得が要ることと、ivtest が Icarus のリポジトリの一部で、クリーンルームの決まり（Icarus のソースを読まない）との境目をはっきりさせるためである。sv-tests の公開の結果の一覧はこれらを含むので、本数は一覧と一致しない。
-- **判定：** sv-tests の `tools/runner` と同じ規則にする（2026-10-16 に固定したコミットで確認）。終了コードが 126 以上なら失敗（クラッシュ）。`:should_fail_because:` があるテストは終了コードが 0 でなければ合格、無いテストは 0 なら合格。`simulation` のテストは、さらに、標準出力と標準エラーを合わせた出力に、偽になる `:assert:` の行が無いこと。時間の制限は `:timeout:` の秒（既定 30 秒）で、超えたら失敗。
-- **kirimasim だけに足す条件：** 失敗を期待するテストで、kirimasim が未対応の構文（`unsupported` の診断）で失敗したものは、合格に数えない。意図した理由で失敗したとは言えないためである。
-- **起動：** kirimasim は `kirimasim [+incdir+<dir>]... [+define+<名前>]... [--top=<名前>] <ファイル>...`。Icarus は sv-tests の Icarus の runner と同じく `iverilog -g2012 -o <出力> ...` の後に実行する。
-- **Icarus の実行ファイル：** 「比べる相手」の表の開発版のコミットから、`tools/build_icarus.sh` でビルドしたものを使う（ソースは取得してビルドするだけで、読まない）。ビルドに使う autoconf、bison、flex、gperf は、手元の macOS に入っているもので足りることを確かめた（2026-10-16）。CI でも同じ手順でビルドし、結果をキャッシュする。
-- **合格：** 母集団の全体で、kirimasim の合格の数が Icarus の合格の数以上。章（`:tags:` の最初の数）ごとの数も表にして報告するが、合否には使わない。
-- 道具は `tools/svtests.py`（母集団を選び、両方を走らせて表を作る）。
+- **Population:** the handwritten tests under `tests/` of the fixed sv-tests commit (the table of "Simulators compared against") whose `:type:` contains `simulation`. Counted on 2026-10-16: 344 (of which 53 expected to fail, 79 with the UVM tag).
+- **Left out:** tests that `generators/` makes from external repositories that are submodules (core RTL, UVM examples, ivtest of the Icarus repository and so on). They need fetching external repositories, and ivtest is part of the Icarus repository, so leaving it out keeps the line with the clean-room rule (do not read Icarus's source) clear. sv-tests' published results include them, so the counts do not match those results.
+- **Judgment:** the same rules as sv-tests' `tools/runner` (checked at the fixed commit on 2026-10-16). An exit code of 126 or more fails (a crash). A test with `:should_fail_because:` passes when the exit code is not 0; one without it passes when it is 0. A `simulation` test further needs no false `:assert:` line in standard output and standard error together. The time limit is `:timeout:` seconds (default 30); exceeding it fails.
+- **Condition added for kirimasim only:** a test expected to fail that kirimasim fails with an unsupported construct (an `unsupported` diagnostic) does not count as passed, since it cannot be said to fail for the intended reason.
+- **Invocation:** kirimasim is `kirimasim [+incdir+<dir>]... [+define+<name>]... [--top=<name>] <file>...`. Icarus is run after `iverilog -g2012 -o <output> ...`, as sv-tests' Icarus runner does.
+- **Icarus executable:** the one built with `tools/build_icarus.sh` from the development commit in the table of "Simulators compared against" (the source is only fetched and built, not read). The autoconf, bison, flex and gperf used for the build were checked to suffice as installed on the local macOS (2026-10-16). CI builds it by the same procedure and caches the result.
+- **Pass:** over the whole population, kirimasim's passes are at least Icarus's. Counts per chapter (the first number of `:tags:`) are also tabled and reported, but not used to pass or fail.
+- The tool is `tools/svtests.py` (it selects the population, runs both and makes the table).
 
-### 自前のテストの 90%
+### 90% of our own tests
 
-- **母集団：** テストスイートのリポジトリ（kirimasim-tests）の固定したコミットの `simulation` のテストのうち、P3 の機能を使わないもの。「RTL のテスト」を、設計仕様書の P1 の範囲の機能だけで書かれたテストと読む（2026-10-15 に承認した方向）。
-- **P3 の機能の判定：** `tools/p1_population.py` が、コメントと文字列を除いたソースで次の語を探し、1 つでもあれば母集団から外す。クラス（`class`）、制約付き乱数（`rand`、`randc`、`randomize`、`constraint`）、カバレッジ（`covergroup`、`coverpoint`）、並行アサーション（`property`、`sequence`、`expect`）、クロッキングブロックとサイクル遅延（`clocking`、`##`）、`program`、`mailbox`、`semaphore`、`process` クラス、動的なデータ（`[$]`、`[]`、`new[`、連想配列の添字の型）、DPI-C の export、`checker`、`let`。
-- 2026-10-16 の時点（kirimasim-tests の `823ef30`）で、1853 本のうち 1466 本が母集団になる。
-- **固定：** 母集団の一覧（テストの名前の並び）と、もとにしたテストスイートのコミットを、`tests/gates/p1_population.txt` に置く。一覧を変えるときは、本節を変える PR で行い、人が承認する。テストの期待値を直しても、一覧はそのまま使う。
-- **判定：** 上の「今の判定の範囲」と同じ（`:expected_stdout:`、`:expected_exit:`、`:expected_stderr:`）。未対応の構文で skip になったものは、不合格に数える。
-- **合格：** 母集団の 90% 以上（1466 本なら 1320 本以上）。
+- **Population:** the `simulation` tests at the fixed commit of the test suite repository (kirimasim-tests) that use no feature of P3. "RTL tests" is read as tests written only with features within P1 of the design specification (the direction approved 2026-10-15).
+- **Deciding P3 features:** `tools/p1_population.py` searches the source, with comments and strings removed, for these words, and leaves out of the population any test with one of them: classes (`class`), constrained random (`rand`, `randc`, `randomize`, `constraint`), coverage (`covergroup`, `coverpoint`), concurrent assertions (`property`, `sequence`, `expect`), clocking blocks and cycle delays (`clocking`, `##`), `program`, `mailbox`, `semaphore`, the `process` class, dynamic data (`[$]`, `[]`, `new[`, index types of associative arrays), DPI-C export, `checker`, `let`.
+- As of 2026-10-16 (kirimasim-tests at `823ef30`), 1466 of 1853 tests are in the population.
+- **Fixed:** the list of the population (the sequence of test names) and the test suite commit it came from are kept in `tests/gates/p1_population.txt`. Changing the list is done by a PR that changes this section, and a person approves it. When the expected values of tests are corrected, the list stays as it is.
+- **Judgment:** the same as "What is judged now" above (`:expected_stdout:`, `:expected_exit:`, `:expected_stderr:`). Tests skipped as unsupported count as failed.
+- **Pass:** 90% or more of the population (1320 or more of 1466).
 
-### `valsem` との突き合わせ
+### Cross-check with `valsem`
 
-- **毎回の CI：** `valsem` と kernel の語演算を比べるファザ（`W4Ops.*`）、`valsem` の例のテスト（`Valsem.*`）、スケジューラの参照モデルとの突き合わせ（`Scheduler.*`）が、固定したシードで通る。
-- **夜間：** 同じファザと参照モデルとの突き合わせを、日付から作ったシードで、回数を 100 倍にして走らせる。
-- **合格：** P1 の終わりの判定の前の、続けて 7 回の夜間の実行で、食い違いが 1 件も無い。食い違いが出たら、シードを記録し、直してから数え直す。
+- **Every CI run:** the fuzzer comparing `valsem` with the kernel's word operations (`W4Ops.*`), the example tests of `valsem` (`Valsem.*`), and the cross-check with the scheduler's reference model (`Scheduler.*`) pass with fixed seeds.
+- **Nightly:** the same fuzzer and cross-check with the reference model run with seeds made from the date, 100 times as many iterations.
+- **Pass:** no difference at all in 7 consecutive nightly runs before the judgment at the end of P1. When a difference appears, its seed is recorded, it is fixed, and the count starts again.
 
-### 測る時期
+### When it is measured
 
-- P1 の終わりの判定（M8）で 3 つを測り、報告にまとめる。途中の段でも、夜間のジョブで同じ表を作り、進み具合を見る。
+- At the judgment at the end of P1 (M8), the three are measured and put together in a report. In intermediate stages too, a nightly job makes the same tables to watch progress.
 
-## 実行の仕方
+## How to run
 
 ```sh
-ctest --preset dev -L Suite      # テストスイートだけ
+ctest --preset dev -L Suite      # the test suite only
 ```
 
-各 `.sv` が 1 つの CTest のテスト（`suite/<分類>/<名前>`）になる。判定は `tools/run_suite_test.py` が行う。
+Each `.sv` is one CTest test (`suite/<category>/<name>`). `tools/run_suite_test.py` judges.
 
-## 未確認・後で決めること
+## Not confirmed, to be decided later
 
-- テストスイートを別リポジトリに分ける時期。
-- CI で Verilator の開発版を用意する方法（P3 の合格条件「Verilator 以上」の前に決める）。
-- 波形の要約と観測対象の事象の列の期待値の形式（P1 で足す。足したら期待値を守る決まりの対象に加える）。
+- When to split the test suite into a separate repository.
+- How to provide Verilator's development version in CI (decided before the P3 passing condition "as many as Verilator or more").
+- The format of expected values for waveform summaries and sequences of observed events (added in P1; once added, they fall under the rules protecting expected values).
