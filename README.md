@@ -85,19 +85,25 @@ simulator, so tests that show x or z values fail with it.
 
 **Time** (summed over the tests; 6 tests at a time; one run, not the
 median of five that [PERFORMANCE.md](docs/spec/PERFORMANCE.md) asks for
-benchmarks). Verilator is left out of these tables: each suite's runner
-builds every test in a directory of its own, so Verilator compiles its own
-runtime library again for every test (about 2.2 s of the 2.6 s C++ build
-of a small test), work that a project does only once, and its times would
-mostly measure that. [Simulation speed](#simulation-speed) compares the
-speed of the three simulators.
+benchmarks).
+
+> **Why Verilator is not in these tables.** Each test suite's runner builds
+> every test in a directory of its own, so Verilator compiles its own
+> runtime library again for every test: about 2.2 s of the 2.6 s C++ build
+> of a small test. A project builds that library once, so Verilator's times
+> here would mostly measure the rebuilding, not Verilator, and next to
+> kirimasim's they would read as a speed comparison that they are not. The
+> tests are also too short to compare the speed of simulation;
+> [Simulation speed](#simulation-speed) compares the three simulators.
 
 | Test set | Simulator | Build step | Run step | Total |
 | --- | --- | --- | --- | --- |
 | sv-tests, 344 | kirimasim | 6.6 s | 0.1 s | 6.7 s |
 | | Icarus Verilog | 5.0 s | 33.3 s | 38.3 s |
+| | Verilator | — | — | not listed (see above) |
 | Own test suite, 1,466 | kirimasim | 14.1 s | 0.3 s | 14.4 s |
 | | Icarus Verilog | 20.8 s | 8.9 s | 29.7 s |
+| | Verilator | — | — | not listed (see above) |
 
 Only the tests that all three simulators pass, from the same runs: 150
 tests of sv-tests (38 of them must be rejected, so they have no run step)
@@ -107,8 +113,10 @@ and 1,133 of the own test suite.
 | --- | --- | --- | --- | --- |
 | sv-tests, 150 | kirimasim | 1.4 s | 0.1 s | 1.5 s |
 | | Icarus Verilog | 2.3 s | 20.9 s | 23.2 s |
+| | Verilator | — | — | not listed (see above) |
 | Own test suite, 1,133 | kirimasim | 10.8 s | 0.2 s | 11.0 s |
 | | Icarus Verilog | 16.1 s | 7.9 s | 24.0 s |
+| | Verilator | — | — | not listed (see above) |
 
 - The build step is the work before the simulation starts: for kirimasim,
   reading, elaborating and lowering the design to SIR (timed as a run with
