@@ -129,3 +129,18 @@ jobs:
           python3 tools/check_expected_change.py
           --base ${{ github.event.pull_request.base.sha }}
           --head ${{ github.event.pull_request.head.sha }}
+
+      # A push to main has no PR, so each pushed commit is checked on its own:
+      # a commit may change the implementation or existing expectations, not
+      # both. A push that creates the branch has no previous commit to start
+      # from and is left out.
+      - name: Expected-value changes stay out of implementation commits
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          for c in $(git rev-list --reverse "$BEFORE..$AFTER"); do
+            echo "commit $c"
+            python3 tools/check_expected_change.py --base "$c^" --head "$c"
+          done
