@@ -1160,6 +1160,22 @@ private:
         }
     }
 
+    /// A delay operand in ticks of the precision (SIR_SPEC.md 1): 0 when
+    /// a bit is x or z (9.4.1), and nothing when it is 2^64 or more, which
+    /// takes the time past the largest time (SCHEDULER_SPEC.md 8).
+    std::optional<std::uint64_t> ticksOf(const Operand& o) const {
+        const sir::Type t = typeOf(o);
+        if (chunksOf(t) == 1) {
+            const W4 d = value(o);
+            return d.b != 0 ? 0 : d.a;
+        }
+        const std::vector<W4> c = chunks(o);
+        if (kernel::wide::hasUnknown(c.data(), t.width)) return 0;
+        for (std::size_t k = 1; k < c.size(); ++k)
+            if (c[k].a != 0) return std::nullopt;
+        return c[0].a;
+    }
+
     W4 readSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) const {
         const kernel::SlotLayout& l = store_.layout(s);
         if (width == 0) width = l.width;
@@ -1750,9 +1766,9 @@ private:
                     }
                     case Op::DisableFork: disableFork(f); break;
                     case Op::WaitDelay: {
-                        const W4 t = value(ops[0]);
-                        sched_.waitDelay(f.kernelId, t.b != 0 ? 0 : t.a);  // x or z: 0 (9.4.1)
-                        if (sched_.takeOverflow()) {
+                        const std::optional<std::uint64_t> t = ticksOf(ops[0]);
+                        if (t) sched_.waitDelay(f.kernelId, *t);
+                        if (!t || sched_.takeOverflow()) {
                             designError(f, in, "the delay takes the time past the largest time");
                             return Exit::Error;
                         }
@@ -1822,22 +1838,30 @@ private:
                         if (in.op == Op::Trigger) {
                             sched_.trigger(*e);
                         } else {
-                            const W4 t = ops.size() > 1 ? value(ops[1]) : W4{0, 0};
-                            sched_.triggerNb(f.kernelId, *e, t.b != 0 ? 0 : t.a);
+                            const std::optional<std::uint64_t> t =
+                                ops.size() > 1 ? ticksOf(ops[1]) : std::optional<std::uint64_t>(0);
+                            if (!t) {
+                                designError(f, in,
+                                            "the delay takes the time past the largest time");
+                                return Exit::Error;
+                            }
+                            sched_.triggerNb(f.kernelId, *e, *t);
                         }
                         break;
                     }
                     case Op::Builtin: builtin(in, info_[body][b][k]); break;
                     case Op::DriveDelay: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[0], ops[1]);
-                        // A delay with x or z bits is 0 (9.4.1).
-                        const auto ticks = [&](std::size_t i) {
-                            const W4 d = value(ops[i]);
-                            return d.b != 0 ? std::uint64_t{0} : d.a;
-                        };
+                        const std::optional<std::uint64_t> rise = ticksOf(ops[2]);
+                        const std::optional<std::uint64_t> fall = ticksOf(ops[3]);
+                        const std::optional<std::uint64_t> off = ticksOf(ops[4]);
+                        if (!rise || !fall || !off) {
+                            designError(f, in, "the delay takes the time past the largest time");
+                            return Exit::Error;
+                        }
                         sched_.driveDelayed(info_[body][b][k].driver, ops[0].id, ops[0].firstElem,
-                                            ops[0].lsb, ops[0].width, buf.data(), ticks(2),
-                                            ticks(3), ticks(4));
+                                            ops[0].lsb, ops[0].width, buf.data(), *rise, *fall,
+                                            *off);
                         break;
                     }
                     case Op::Resolve: resolve(in, info_[body][b][k]); break;
@@ -2464,13 +2488,14 @@ private:
             case Op::Nba:
             case Op::NbaDelay: {
                 const std::vector<W4> x = get(1);
-                std::uint64_t delay = 0;
-                if (in.op == Op::NbaDelay) {
-                    const W4 d = value(ops[2]);
-                    delay = d.b != 0 ? 0 : d.a;
+                const std::optional<std::uint64_t> delay =
+                    in.op == Op::NbaDelay ? ticksOf(ops[2]) : std::optional<std::uint64_t>(0);
+                if (!delay) {
+                    designError(f, in, "the delay takes the time past the largest time");
+                    return false;
                 }
                 nbaSlotWide(f, ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, x.data(),
-                            delay);
+                            *delay);
                 return true;
             }
             case Op::Fload: {
@@ -3131,8 +3156,12 @@ private:
                 // The update in the NBA region of the time slot `delay` ticks
                 // ahead (SCHEDULER_SPEC.md 13); x or z ticks are 0 (9.4.1).
                 const Operand& o = ops[0];
-                const W4 d = v(2);
-                nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), d.b != 0 ? 0 : d.a);
+                const std::optional<std::uint64_t> d = ticksOf(ops[2]);
+                if (!d) {
+                    designError(f, in, "the delay takes the time past the largest time");
+                    return false;
+                }
+                nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), *d);
                 return true;
             }
             case Op::LoadElem: {

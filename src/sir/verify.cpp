@@ -781,8 +781,9 @@ private:
             return ops.size() == n;
         };
         const Type rt = in.type;
-        // A delay is a count of ticks of 64 bits (SIR_SPEC.md 7.2, 5.4).
-        const auto delayOk = [&](std::size_t i) { return isIntegral(ty(i)) && ty(i).width <= 64; };
+        // A delay counts ticks, an integral value of any width; 2^64 or more
+        // takes the time past the largest time when it runs (SIR_SPEC.md 1).
+        const auto delayOk = [&](std::size_t i) { return isIntegral(ty(i)); };
 
         // Rule 2: slot operands refer to valid slots and ranges; frame,
         // subroutine and process operands are in their tables.
@@ -950,7 +951,7 @@ private:
                     else if (!fits(ty(0), ty(1)))
                         bad("value type " + toString(ty(1)) + " does not fit " + toString(ty(0)));
                     else if (!delayOk(2))
-                        bad("the delay must be integral, of at most 64 bits");
+                        bad("the delay must be integral");
                 }
                 break;
             case Op::DriveDelay:
@@ -962,7 +963,7 @@ private:
                     (ops[0].kind != Operand::Kind::Slot || !isValue(1) || !fits(ty(0), ty(1)) ||
                      !isIntegral(ty(0)) || !delayOk(2) || !delayOk(3) || !delayOk(4)))
                     bad("needs an integral slot range, a value of its type and three integral "
-                        "delays of at most 64 bits");
+                        "delays");
                 break;
             case Op::LoadElem:
             case Op::StoreElem:
@@ -1352,7 +1353,7 @@ private:
                 if (ops.empty() || ops.size() > 2 || ops[0].kind != Operand::Kind::Slot ||
                     slotValueType(ops[0]).kind != TypeKind::Event ||
                     (ops.size() == 2 && !delayOk(1)))
-                    bad("needs an event slot and an optional integral delay of at most 64 bits");
+                    bad("needs an event slot and an optional integral delay");
                 break;
             case Op::Disable:
                 if (nOps(1) && ops[0].kind != Operand::Kind::Process &&
@@ -1535,7 +1536,7 @@ private:
                 break;
             }
             case Op::WaitDelay:
-                if (nOps(2) && !delayOk(0)) bad("needs an integral delay of at most 64 bits");
+                if (nOps(2) && !delayOk(0)) bad("needs an integral delay");
                 continuation();
                 break;
             case Op::WaitEvent: {

@@ -1,0 +1,1 @@
+delay_overflow_assign_const_ns_over.sv:25: error: the delay takes the time past the largest time [top @ 0ns]

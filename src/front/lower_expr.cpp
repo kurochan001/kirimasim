@@ -683,35 +683,46 @@ Val Lowerer::lowerTriggered(const ast::Expression& ev, Type rt, slang::SourceLoc
     return coerce(emit(Op::Builtin, sir::u2(1), {Operand::str("triggered"), h.op}, sl), rt, sl);
 }
 
-std::uint64_t Lowerer::delayTicks(const ast::Expression& e, slang::SourceLocation sl) {
+std::optional<std::uint64_t> Lowerer::delayTicks(const ast::Expression& e,
+                                                 slang::SourceLocation sl) {
+    // Nothing for a delay of 2^64 ticks or more, which takes the time past
+    // the largest time (SCHEDULER_SPEC.md 8).
     const std::optional<slang::ConstantValue> cv = constantValue(e);
     if (!cv) unsupported(sl, "delay that is not a constant");
-    std::optional<std::uint64_t> ticks;
     if (cv->isInteger()) {
         // x or z: 0. Negative: read as an unsigned 64-bit time (9.4.1).
         const slang::SVInt& v = cv->integer();
-        if (v.hasUnknown()) {
-            ticks = 0;
-        } else {
-            const std::optional<std::int64_t> n = v.as<std::int64_t>();
-            if (n)
-                ticks = sir::delayTicks(static_cast<std::uint64_t>(*n), timeScale(), precision());
-        }
-    } else if (cv->isReal()) {
-        ticks = sir::delayTicksReal(cv->real(), timeScale(), precision());
+        if (v.hasUnknown()) return 0;
+        std::optional<std::uint64_t> n;
+        if (v.isSigned() && v.isNegative())
+            n = (v.getBitWidth() < 64 ? v.sext(64) : v.trunc(64)).as<std::uint64_t>();
+        else if (v.getActiveBits() <= 64)
+            n = v.as<std::uint64_t>();
+        if (!n) return std::nullopt;
+        return sir::delayTicks(*n, timeScale(), precision());
     }
-    if (!ticks) unsupported(sl, "this delay value");
-    return *ticks;
+    if (cv->isReal() && cv->real() >= 0 && !std::isinf(cv->real()))
+        return sir::delayTicksReal(cv->real(), timeScale(), precision());
+    unsupported(sl, "this delay value");
+}
+
+Val Lowerer::delayConstant(std::optional<std::uint64_t> ticks) {
+    // 2^64 for a delay past the largest time: a run-time error when it
+    // runs (SIR_SPEC.md 1).
+    if (!ticks) return constantWords(sir::u2(65), {0, 1}, {0, 0});
+    return constant(sir::u2(64), *ticks);
 }
 
 Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
-    if (constantValue(e)) return constant(sir::u2(64), delayTicks(e, sl));
+    if (constantValue(e)) return delayConstant(delayTicks(e, sl));
     // The same conversion at run time (SCHEDULER_SPEC.md 1, 8): an integral
     // delay is a count of time units, so it only scales to ticks; a real
     // one is rounded to the precision, half away from zero as any real to
     // integer conversion (VALUE_SEMANTICS.md 1.5), and then scaled. A
     // negative delay is read as a 64-bit unsigned value, and x or z as 0
-    // (wait.delay, 9.4.1).
+    // (wait.delay, 9.4.1). Nothing is cut off: the ticks are counted in as
+    // many bits as they need, and 2^64 or more takes the time past the
+    // largest time (SIR_SPEC.md 1).
     const auto pow10 = [](int n) {
         std::uint64_t f = 1;
         for (int i = 0; i < n; ++i)
@@ -728,15 +739,25 @@ Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
         v = emit(Op::Mul, real,
                  {v.op, realConstant(real, static_cast<double>(pow10(ts.unit - ts.precision))).op},
                  sl);
-        v = emit(Op::Rtoi, t64, {v.op}, sl);
+        // A real up to the largest one takes 1024 bits; a negative one is a
+        // 64-bit unsigned value as above.
+        const sir::Type wide = sir::u4(1088);
+        const Val all = emit(Op::Rtoi, wide, {v.op}, sl);
+        const Val low = coerce(emit(Op::Rtoi, t64, {v.op}, sl), wide, sl);
+        const Val negative = compareValues(Op::Lt, v, realConstant(real, 0.0), sl);
+        v = emit(Op::Select, wide, {negative.op, low.op, all.op}, sl);
         scale = ts.precision - precision();
     } else if (e.type->isIntegral()) {
-        v = coerce(v, t64, sl);
+        const std::uint32_t w = e.type->getBitWidth();
+        v = coerce(v, w <= 64 ? t64 : sir::u4(w), sl);
     } else {
         unsupported(sl, "delay of this type");
     }
     if (scale == 0) return v;
-    return emit(Op::Mul, t64, {v.op, constant(t64, pow10(scale)).op}, sl);
+    // pow10(scale) is below 2^64: 64 more bits hold the product.
+    const sir::Type wt = sir::u4(v.type.width + 64);
+    v = coerce(v, wt, sl);
+    return emit(Op::Mul, wt, {v.op, constant(wt, pow10(scale)).op}, sl);
 }
 
 // --- Expressions -------------------------------------------------------------

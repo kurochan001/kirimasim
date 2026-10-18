@@ -1705,18 +1705,22 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
 }
 
 std::array<Val, 3> Lowerer::delaysOf(const ast::TimingControl& t, slang::SourceLocation sl) {
-    std::uint64_t d[3] = {0, 0, 0};
+    // Nothing is a delay past the largest time, larger than any other.
+    std::optional<std::uint64_t> d[3] = {0, 0, 0};
+    const auto smaller = [](std::optional<std::uint64_t> a, std::optional<std::uint64_t> b) {
+        return !a ? b : !b ? a : std::min(a, b);
+    };
     if (t.kind == ast::TimingControlKind::Delay) {
         d[0] = d[1] = d[2] = delayTicks(t.as<ast::DelayControl>().expr, sl);
     } else if (t.kind == ast::TimingControlKind::Delay3) {
         const auto& d3 = t.as<ast::Delay3Control>();
         d[0] = delayTicks(d3.expr1, sl);
         d[1] = d3.expr2 != nullptr ? delayTicks(*d3.expr2, sl) : d[0];
-        d[2] = d3.expr3 != nullptr ? delayTicks(*d3.expr3, sl) : std::min(d[0], d[1]);
+        d[2] = d3.expr3 != nullptr ? delayTicks(*d3.expr3, sl) : smaller(d[0], d[1]);
     } else {
         unsupported(sl, "this delay");
     }
-    return {constant(sir::u2(64), d[0]), constant(sir::u2(64), d[1]), constant(sir::u2(64), d[2])};
+    return {delayConstant(d[0]), delayConstant(d[1]), delayConstant(d[2])};
 }
 
 template <typename F>

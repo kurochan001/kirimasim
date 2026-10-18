@@ -713,6 +713,13 @@ MUTANTS = [
     ("vm: static-init runs as no process of the kernel", "src/vm/vm.cpp",
      "            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);\n"
      "            running_ = &f;", "            running_ = &f;"),
+    ("vm: a delay of 2^64 ticks or more waits for its low 64 bits", "src/vm/vm.cpp",
+     "            if (c[k].a != 0) return std::nullopt;", "            if (false) return std::nullopt;"),
+    ("front: a run-time delay is scaled in its own width", "src/front/lower_expr.cpp",
+     "    const sir::Type wt = sir::u4(v.type.width + 64);", "    const sir::Type wt = v.type;"),
+    ("front: a constant delay past the largest time is 0", "src/front/lower_expr.cpp",
+     "    if (!ticks) return constantWords(sir::u2(65), {0, 1}, {0, 0});",
+     "    if (!ticks) return constant(sir::u2(64), 0);"),
 ]
 
 

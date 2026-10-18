@@ -2,7 +2,7 @@
 
 [日本語](SIR_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved). The same day, delay operands of any width were allowed (1, 7.2; approved).
 
 **Amendment of M3b (approved 2026-10-15):** in stage M3b of the P1 plan, instructions for merging values, values across waits, unpacked arrays, the type table, subroutines and process control were added, and the text form was changed to refer to things by number. The sections changed say "amendment of M3b".
 
@@ -41,7 +41,7 @@ Items marked "draft" are checked while implementing in P1, and this document is 
 - **Meaning is decided when SIR is made (approved 2026-10-16):** decisions about the meaning of constructs are made by `front` when it makes SIR, and the meaning of SIR's instructions is set by this document, VALUE_SEMANTICS.md and SCHEDULER_SPEC.md. Tiers 1 and 2 only execute and translate SIR's instructions mechanically, and do not vary behaviour by anything but the kind of instruction and the types of operands. The same statement becomes the same sequence of instructions in whatever container it is (module procedures, class methods, automatic tasks, fork branches, interfaces, generate, packages); only the place (slot or frame) differs.
 - System tasks, system functions and built-in methods (methods of strings and enumerated types and so on) are written by name in SIR. Each tier resolves names to numbers when it loads SIR, and does not compare names during execution (amendment of M3b).
 - Results of analysis (that X never arrives, static islands and so on) are not written in SIR. `analysis` keeps them as separate tables indexed by SIR's numbers (amendment of M3b). This keeps SIR a form decided uniquely by slang's result, so that fixing an analysis does not change the text of SIR.
-- Delay values are held in steps of the whole design's time precision. `front` converts from the module's time unit (7.2; amendment of M3b).
+- Delay values are held in steps of the whole design's time precision. `front` converts from the module's time unit (7.2; amendment of M3b). **A delay operand (of `wait.delay`, `nba.delay`, `trigger.nb` and `drive.delay`) is an integral value of any width (approved 2026-10-18):** `front` counts the steps in as many bits as they need, and a value of 2^64 steps or more takes the time past the largest time, a run-time error of the design when it runs (SCHEDULER_SPEC.md 8). A constant delay that does not fit in 64 bits is such a value, not an unsupported construct.
 - When the form of SIR changes, the value of `sir::formatVersion()` is raised. It stays 0 during P1, and becomes 1 when the text form is first fixed.
 
 ## 2. Overall structure
@@ -354,7 +354,7 @@ Approved 2026-10-17.
 
 | Instruction | Meaning |
 | --- | --- |
-| `wait.delay d, cont` | A wait for time. d is a value in steps of the whole design's time precision (SCHEDULER_SPEC.md 1). If d is x or z, 0; if negative, a large unsigned value (8 of the same) |
+| `wait.delay d, cont` | A wait for time. d is a value in steps of the whole design's time precision (SCHEDULER_SPEC.md 1), of any width (1). If d has x or z bits, 0; if negative, a large unsigned value (8 of the same); 2^64 or more, past the largest time |
 | `wait.event events, cont` | An event control (with edges, `iff` and `or`). Fixed signals are slot subscriptions; compound expressions are monitor records |
 | `wait.cond condition function, cont` | `wait (expr)`. The expression is represented by a function that receives the frame of the waiting process. If true, it proceeds without waiting |
 | `wait.named slot, cont` | Waits for a named event (`@ev`) |

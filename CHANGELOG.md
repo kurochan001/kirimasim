@@ -90,6 +90,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A delay that takes the time past the largest time is a run-time error of
+  the design whatever its form: one computed at run time wrapped around
+  silently when its conversion to steps did not fit in 64 bits, and a
+  constant one was reported as an unsupported delay value (#7).
 - A unique or priority violation in a function that the initializer of a
   static variable calls is reported at time 0, like any other; kirimasim
   crashed (#5).

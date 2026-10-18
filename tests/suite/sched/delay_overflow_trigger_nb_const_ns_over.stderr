@@ -1,0 +1,1 @@
+delay_overflow_trigger_nb_const_ns_over.sv:28: error: the delay takes the time past the largest time [top @ 0ns]

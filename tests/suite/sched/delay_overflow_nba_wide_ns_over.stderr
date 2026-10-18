@@ -1,0 +1,1 @@
+delay_overflow_nba_wide_ns_over.sv:29: error: the delay takes the time past the largest time [top @ 0ns]
