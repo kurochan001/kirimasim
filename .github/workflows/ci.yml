@@ -19,8 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         preset: [dev, release]
-    # GitHub's Linux (x86-64) runners. macOS results come from
-    # tools/local_ci.py run before pushing.
+    # GitHub's Linux (x86-64) runners; the macos job below covers macOS.
     runs-on: ubuntu-24.04
     # The compiler is named here rather than taken from the runner's default
     # c++, so that the build uses LLVM 22, the version lint uses and the
@@ -106,6 +105,48 @@ jobs:
 
       - name: Test
         run: ctest --preset ${{ matrix.preset }} --output-on-failure
+
+  # GitHub's standard macOS (arm64) runners, which this public repository
+  # can use, with the runner's Apple clang: the platform of the development
+  # Mac. tools/local_ci.py still runs the same checks before a push.
+  macos:
+    name: macos (${{ matrix.preset }})
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [dev, release, asan, ubsan]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show tool versions
+        run: |
+          c++ --version
+          cmake --version
+          python3 --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/${{ matrix.preset }}/_deps/*-src
+            build/${{ matrix.preset }}/_deps/*-subbuild
+            build/${{ matrix.preset }}/_deps/*-tmp
+            build/${{ matrix.preset }}/CMakeFiles/fc-stamp
+          key: fetchcontent-macos-26-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} --output-on-failure
+
+      - name: Check release optimization flags
+        if: matrix.preset == 'release'
+        run: python3 tools/check_release_flags.py
 
   lint:
     runs-on: ubuntu-24.04

@@ -314,7 +314,7 @@ flowchart TD
 - **機構の行列。** 1 つの機構を、それが現れうる所の組み合わせで確かめます（たとえば `disable` なら、ブロックの中、fork の枝、別のプロセス、タスクから、それぞれ手続き、タスク、fork の枝の中で）。テストは `tools/` の生成器が作り、期待値は書いた規則から決まります。生成器は 59 個、`tests/suite/` のテストは 261 本、CTest のテストは全部で 508 本です。
 - **陰性対照。** `tools/mutants.py` は、知られた誤り 204 個を 1 つずつコードに入れます。どの誤りでも、どれかのテストが落ちなければなりません。
 - **他のシミュレータは証拠であって正解ではない。** Icarus Verilog と Verilator でもテストを動かし、規格と違うところはテストのヘッダに書きます。
-- **サニタイザと静的な検査：** AddressSanitizer、UndefinedBehaviorSanitizer、clang-format、clang-tidy を push の前に毎回走らせ、CI でも Linux で走らせます（サニタイザは GCC でビルドします）。
+- **サニタイザと静的な検査：** AddressSanitizer、UndefinedBehaviorSanitizer、clang-format、clang-tidy を push の前に毎回走らせ、CI でも Linux（サニタイザは GCC でビルド）と macOS で走らせます。
 
 ## 貢献：今は仕様の提案と Issue だけを受け付けています
 

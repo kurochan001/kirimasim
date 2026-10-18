@@ -454,7 +454,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   test header says so.
 - **Sanitizers and static checks:** AddressSanitizer, UndefinedBehavior
   Sanitizer, clang-format and clang-tidy run before every push, and CI runs
-  them again on Linux, the sanitizers built with GCC.
+  them again on Linux (the sanitizers built with GCC) and on macOS.
 
 ## Contributions: specification proposals and issues only, for now
 

@@ -2,7 +2,7 @@
 
 [日本語](PERFORMANCE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved).
+Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved). The same day, the premise in 5.1 that macOS runners cannot be had was corrected (approved).
 
 This document sets kirimasim's performance goals, its event counters, the regression test by counts (PerfCount), and the conditions of wall-clock benchmarks. The reasons for ending follow SCHEDULER_SPEC.md 16, and the form of `--stats=json` follows CLI.md.
 
@@ -98,7 +98,7 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 
 Not implemented yet (as of 2026-10-18): no workflow measures the benchmarks; `tests/tools` only checks that the benchmark designs run.
 
-- A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. macOS runners are often unavailable, so macOS values are measured locally, as `tools/local_ci.py` is, and attached to reports (CLAUDE.md).
+- A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. Whether it also measures on GitHub's macOS runner, which this public repository can use (checked 2026-10-18), is decided when this is implemented; until then macOS values are measured on the developer's Mac and attached to reports.
 - What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken with Python's `resource.getrusage(RUSAGE_CHILDREN)`; no new tool is installed.
 - Each benchmark runs 5 times and the median is used. The results are kept as JSON among the workflow's artifacts.
 - **When to report (draft):** taking the median of the last 7 nightly results as the baseline, a warning is put in the workflow's summary when wall-clock time or the peak RSS worsens by 15% or more, or the build time by 25% or more. It does not pass or fail anything (the workflow does not fail). Shared runners swing widely, so the width of the swings is checked with the values during P1, and the thresholds reviewed.

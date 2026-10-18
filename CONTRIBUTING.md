@@ -122,8 +122,9 @@ commit not pushed yet keeps existing expectations) in one go:
 python3 tools/local_ci.py
 ```
 
-CI runs on Linux only, so if you work on macOS, run `tools/local_ci.py`
-before pushing and paste its summary into the pull request.
+CI runs on Linux and macOS after a push. Run `tools/local_ci.py` before
+pushing, to find failures first, and paste its summary into the pull
+request.
 
 ## Changelog
 

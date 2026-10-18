@@ -78,7 +78,7 @@ CI が走らせる検査のすべて（4 つのプリセット、release のフ�
 python3 tools/local_ci.py
 ```
 
-CI は Linux だけで走るので、macOS で作業するときは、push の前に `tools/local_ci.py` を走らせ、その要約をプルリクエストに貼ってください。
+CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を走らせて先に失敗を見つけ、その要約をプルリクエストに貼ってください。
 
 ## 変更の記録
 

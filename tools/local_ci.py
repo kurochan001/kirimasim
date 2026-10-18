@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Runs the CI checks on the local machine, mainly for macOS.
+"""Runs the CI checks on the local machine, before a push.
 
-GitHub's hosted macOS arm64 runners are often unavailable for private
-repositories, so the macOS results come from running this script on a
-developer's Mac before pushing. It runs, in order:
+CI runs them on GitHub's Linux and macOS runners after a push; main takes
+direct pushes, so this script is the check that comes first. It runs, in
+order:
 
 1. configure, build and ctest for each preset (default: dev, release,
    asan, ubsan),

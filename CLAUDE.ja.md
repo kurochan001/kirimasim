@@ -49,10 +49,10 @@ cmake --preset asan  && cmake --build --preset asan  && ctest --preset asan
 cmake --preset ubsan && cmake --build --preset ubsan && ctest --preset ubsan
 python3 tools/check_banned.py
 ctest --preset dev -L PerfCount           # 回数の回帰だけ
-python3 tools/local_ci.py                 # 上の全部と clang-format・clang-tidy をまとめて
+python3 tools/local_ci.py                 # 上の全部と clang-format・clang-tidy・まだ push していないコミットの check_expected_change をまとめて
 ```
 
-- push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。GitHub の macOS のランナーはこのリポジトリでは取れないことが多いので、macOS の結果はこれで代える（`ci.yml` のジョブは GitHub の Linux（x86-64）のランナー `ubuntu-24.04` で動かし、macOS のジョブは持たない）。ワークフローにセルフホストのランナーは使わない。ジョブの公開のログに、動かした機械の名前が出るため。
+- push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。`main` へは直接 push するので、CI より前に止める関所になる。CI（`ci.yml`）は GitHub の標準のランナー、Linux（x86-64、`ubuntu-24.04`）と macOS（`macos-26`）で動かす。公開のリポジトリなので無料で使える。ワークフローにセルフホストのランナーは使わない。ジョブの公開のログに、動かした機械の名前が出るため。
 
 - テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。どのテストもまず `kirimasim parse` にかけ、`simulation` のテストは続けて実行して、標準出力、終了コード、標準エラーを比べる（`tools/run_suite_test.py`。TEST_SUITE.md の「今の判定の範囲」）。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
 - PerfCount の期待値は `tests/perf_counts/expected.json`。更新の手順は `tests/perf_counts/README.md`。

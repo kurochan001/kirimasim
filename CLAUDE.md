@@ -49,10 +49,10 @@ cmake --preset asan  && cmake --build --preset asan  && ctest --preset asan
 cmake --preset ubsan && cmake --build --preset ubsan && ctest --preset ubsan
 python3 tools/check_banned.py
 ctest --preset dev -L PerfCount           # only the count regressions
-python3 tools/local_ci.py                 # all of the above plus clang-format and clang-tidy
+python3 tools/local_ci.py                 # all of the above plus clang-format, clang-tidy and check_expected_change on unpushed commits
 ```
 
-- Before pushing, run `tools/local_ci.py` and attach its summary to the report. GitHub's macOS runners are often unavailable for this repository, so macOS results are covered by this (the jobs of `ci.yml` run on GitHub's Linux (x86-64) runners, `ubuntu-24.04`, and there is no macOS job). Workflows do not use self-hosted runners: the public logs of a job name the machine that ran it.
+- Before pushing, run `tools/local_ci.py` and attach its summary to the report: `main` takes direct pushes, so it is the check that comes before CI. CI (`ci.yml`) runs on GitHub's standard runners, Linux (x86-64, `ubuntu-24.04`) and macOS (`macos-26`), which are free for this public repository. Workflows do not use self-hosted runners: the public logs of a job name the machine that ran it.
 
 - The test suite (`tests/suite/`) has headers compatible with sv-tests. Each test first goes through `kirimasim parse`; `simulation` tests are then run, and their standard output, exit code and standard error compared (`tools/run_suite_test.py`; TEST_SUITE.md "What is judged now"). Tests expected to fail write `:should_fail_because:` and `:expected_error:` (`<line>:<column>: error: <text>`), and both exit code 2 and the diagnostic at that position are checked.
 - PerfCount's expected values are in `tests/perf_counts/expected.json`. How to update them is in `tests/perf_counts/README.md`.
