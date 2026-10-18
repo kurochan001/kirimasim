@@ -453,7 +453,8 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   Verilator are run on the tests; where they differ from the standard, the
   test header says so.
 - **Sanitizers and static checks:** AddressSanitizer, UndefinedBehavior
-  Sanitizer, clang-format and clang-tidy run before every push.
+  Sanitizer, clang-format and clang-tidy run before every push, and CI runs
+  them again on Linux, the sanitizers built with GCC.
 
 ## Contributions: specification proposals and issues only, for now
 

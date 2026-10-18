@@ -69,6 +69,44 @@ jobs:
         if: matrix.preset == 'release'
         run: python3 tools/check_release_flags.py
 
+  # The sanitizers on every push, with the runner's own compiler (GCC):
+  # GCC evaluates function arguments in another order than clang, which is
+  # how the nightly asan job found a reference into a table that lowering
+  # had moved (2026-10-17). The nightly workflow runs them on macOS too.
+  sanitizers:
+    name: sanitizers (linux, gcc, ${{ matrix.preset }})
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [asan, ubsan]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show tool versions
+        run: |
+          c++ --version
+          cmake --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/${{ matrix.preset }}/_deps/*-src
+            build/${{ matrix.preset }}/_deps/*-subbuild
+            build/${{ matrix.preset }}/_deps/*-tmp
+            build/${{ matrix.preset }}/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} --output-on-failure
+
   lint:
     runs-on: ubuntu-24.04
     steps:
