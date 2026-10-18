@@ -96,6 +96,11 @@ own. CONTRIBUTING.md says what goes in this file.
   rejected as an event expression that writes a variable, or stopped as a
   write in the Postponed region, depending on which came first in the
   source.
+- A wait on an expression or on a condition, and `$monitor`, that read a
+  function's static variable by a hierarchical name wake when it changes;
+  they never woke. A function in a wait's expression that triggers an
+  event no longer makes the wait depend on that event, which could make
+  the run loop without end.
 - `$sformat` and `$sformatf` printed a format that is not a string
   literal, such as a string parameter, as a value to show. A constant
   format is now read as a format, and a wrong number of arguments for it

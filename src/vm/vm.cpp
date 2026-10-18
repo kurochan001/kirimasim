@@ -1948,8 +1948,26 @@ private:
         return e == Exit::Ret;
     }
 
+    /// The instructions whose first operand is the slot they write or the
+    /// event they trigger.
+    static bool isWriteTarget(Op op) {
+        switch (op) {
+            case Op::Store:
+            case Op::Nba:
+            case Op::NbaDelay:
+            case Op::DriveDelay:
+            case Op::StoreElem:
+            case Op::NbaElem:
+            case Op::StoreBits:
+            case Op::NbaBits:
+            case Op::Trigger:
+            case Op::TriggerNb: return true;
+            default: return false;
+        }
+    }
+
     /// The slot parts a body reads, with what the functions it calls read.
-    /// A subroutine's own variables are left out: a call sets them again.
+    /// depsOf leaves out the variables of the functions it calls.
     void collectReads(std::uint32_t body, GuardDeps& deps, std::vector<bool>& seen) const {
         if (seen[body]) return;
         const bool own = std::none_of(seen.begin(), seen.end(), [](bool b) { return b; });
@@ -1969,10 +1987,14 @@ private:
                     }
                     deps.refs.push_back({in.operands[0].id, leaf, in.op == Op::LoadRefElem});
                 }
-                for (const Operand& o : in.operands) {
-                    if (o.kind != Operand::Kind::Slot) continue;
+                // The target of a write or a trigger is not read: an
+                // expression whose function triggers an event does not wait
+                // on it, which would wake it again for its own trigger.
+                const bool target = isWriteTarget(in.op);
+                for (std::size_t i = 0; i < in.operands.size(); ++i) {
+                    const Operand& o = in.operands[i];
+                    if (o.kind != Operand::Kind::Slot || (target && i == 0)) continue;
                     const sir::Slot& slot = d_.slots[o.id];
-                    if (slot.subroutine != sir::kNone) continue;
                     const bool whole = in.op != Op::Load;
                     deps.slots.push_back({o.id, whole ? 0 : o.firstElem, whole ? 0 : o.numElems,
                                           whole ? 0 : o.lsb, whole ? 0 : o.width});
@@ -1991,6 +2013,16 @@ private:
         GuardDeps deps;
         std::vector<bool> seen(processCount() + d_.subroutines.size(), false);
         collectReads(body, deps, seen);
+        // The variables of a function the body calls are left out: the call
+        // sets them again. Those of another function, read by a
+        // hierarchical name, are what the body depends on (SCHEDULER_SPEC.md
+        // 9.5).
+        const auto called = [&](std::uint32_t s) {
+            const sir::SubroutineId g = d_.slots[s].subroutine;
+            return g != sir::kNone && seen[processCount() + g];
+        };
+        std::erase_if(deps.slots, [&](const kernel::SlotPart& p) { return called(p.slot); });
+        std::erase_if(deps.events, [&](auto e) { return called(e); });
         return cached.emplace(std::move(deps));
     }
 
