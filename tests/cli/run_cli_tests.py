@@ -28,6 +28,48 @@ FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
+END_TASKS = str(HERE / "end_tasks.sv")
+
+# Cases run in this directory, as -f reads the paths in its file from
+# the current directory (CLI.md 2.1): (arguments, exit code, text stdout
+# must contain, text stderr must contain), stdout starting with "=" to be
+# matched whole.
+CWD_CASES = [
+    (["-h"], 0, "usage: kirimasim [options]", ""),
+    (["--help"], 0, "usage: kirimasim [options]", ""),
+    ([], 2, "", "kirimasim: error: no input files\nusage: kirimasim"),
+    (["parse"], 2, "", "kirimasim: error: parse needs at least one file"),
+    (["-f", "files.f"], 0, "hello\n", "kirimasim: info: finish at 0 ns"),
+    (["parse", "-f", "files.f"], 0, "=", ""),
+    (["-f"], 2, "", "kirimasim: error: -f needs a value"),
+    (["--top"], 2, "", "kirimasim: error: --top needs a value"),
+    # Without --top, every module that nothing instantiates is a top.
+    (["two_tops.sv"], 0, "=first\nsecond\n", ""),
+    (["--top=second_top", "two_tops.sv"], 0, "=second\n", ""),
+    (["--top", "second_top", "two_tops.sv"], 0, "=second\n", ""),
+    (["--top=first_top", "--top=second_top", "two_tops.sv"], 0, "=first\nsecond\n", ""),
+    (["--top=no_such_top", "two_tops.sv"], 2, "=", "'no_such_top' is not a valid top-level"),
+    (["+incdir+include", "macros.sv"], 0, "=no greeting 7\n", ""),
+    (["+incdir+include", '+define+GREETING="hi"', "macros.sv"], 0, "=hi 7\n", ""),
+    (["parse", "+incdir+include", "macros.sv"], 0, "=", ""),
+    (["macros.sv"], 2, "=", "macros.sv:4:10: error: 'macros_inc.svh'"),
+]
+
+# (the plusarg that picks the call in end_tasks.sv, the reason for ending,
+# whether the line of the reason is left out). Argument 0 prints nothing,
+# that line included (SYSTEM_TASKS.md 10.2, SCHEDULER_SPEC.md 16.2).
+# kirimasim does not print yet the report of the call itself that 10.2
+# gives arguments 1 and 2; it is not checked here.
+END_CASES = [
+    ("finish", "finish", False),
+    ("finish0", "finish", True),
+    ("finish1", "finish", False),
+    ("finish2", "finish", False),
+    ("stop", "stop", False),
+    ("stop0", "stop", True),
+    ("stop1", "stop", False),
+    ("stop2", "stop", False),
+]
 
 # The violation reports of violations.sv, exactly these and in this order
 # (SYSTEM_TASKS.md 10.4): the glitch at 1ns is flushed, unique0 with no
@@ -98,8 +140,9 @@ def main() -> int:
     args = ap.parse_args()
 
     failures = 0
-    for argv, code, out, err in CASES:
-        proc = subprocess.run([args.kirimasim, *argv], capture_output=True, text=True,
+    cases = [(c, None) for c in CASES] + [(c, HERE) for c in CWD_CASES]
+    for (argv, code, out, err), cwd in cases:
+        proc = subprocess.run([args.kirimasim, *argv], cwd=cwd, capture_output=True, text=True,
                               check=False)
         problems = []
         if proc.returncode != code:
@@ -127,6 +170,34 @@ def main() -> int:
     except (IndexError, ValueError) as e:
         failures += 1
         print(f"FAIL: --stats=json: {e}\n{proc.stdout}", file=sys.stderr)
+
+    # $finish and $stop end the run at 5ns with exit code 0; final runs and
+    # nothing scheduled later does (SCHEDULER_SPEC.md 16.2, 9.2.3).
+    for plusarg, reason, quiet in END_CASES:
+        proc = subprocess.run([args.kirimasim, "--stats=json", END_TASKS, f"+{plusarg}"],
+                              capture_output=True, text=True, check=False)
+        lines = proc.stdout.splitlines()
+        problems = []
+        if proc.returncode != 0:
+            problems.append(f"exit code {proc.returncode}")
+        if lines[:-1] != ["final 5"]:
+            problems.append(f"stdout {lines[:-1]!r}")
+        try:
+            stats = json.loads(lines[-1])
+            got = (stats.get("sim.end_reason"), stats.get("sim.end_time"))
+            if got != (reason, 5):
+                problems.append(f"--stats=json gives {got}")
+        except (IndexError, ValueError) as e:
+            problems.append(f"--stats=json: {e}")
+        line = f"kirimasim: info: {reason} at 5 ns"
+        if quiet and f"kirimasim: info: {reason}" in proc.stderr:
+            problems.append("stderr has the line of the reason for ending")
+        if not quiet and line not in proc.stderr:
+            problems.append(f"stderr lacks {line!r}")
+        if problems:
+            failures += 1
+            print(f"FAIL: +{plusarg}: {'; '.join(problems)}\n{proc.stdout}{proc.stderr}",
+                  file=sys.stderr)
 
     proc = subprocess.run([args.kirimasim, VIOLATIONS], capture_output=True, text=True,
                           check=False)

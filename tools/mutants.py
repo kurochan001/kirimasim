@@ -667,6 +667,13 @@ MUTANTS = [
      "    if (ew != 1) pos = emit(Op::Mul, pt, {pos.op, positionConstant(pt, ew).op}, sl);\n"
      "    return {pos, 0, width};",
      "    return {pos, 0, width};"),
+    ("driver: $stop(0) writes the line of the reason for ending", "src/driver/main.cpp",
+     "reason == kirimasim::kernel::EndReason::Stop) &&", "false) &&"),
+    ("vm: $stop ends the run as $finish", "src/vm/vm.cpp",
+     "sched_.requestEnd(info.task == SysTask::Finish ? kernel::EndReason::Finish",
+     "sched_.requestEnd(true ? kernel::EndReason::Finish"),
+    ("driver: --top does not take the next argument", "src/driver/main.cpp",
+     '} else if (arg == "-f" || arg == "--top") {', '} else if (arg == "-f") {'),
 ]
 
 
