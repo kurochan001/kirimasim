@@ -8,7 +8,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 - **IEEE 1800-2023 どおりのスケジューリング**。時刻スロットのすべての領域と、規格の参照アルゴリズムに従う
 - **実用的な速さ**。X や Z が無いと証明できるとき、または実行時に確かめられるときは、2 値のコードで実行する
 
-**コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) と [CONTRIBUTING.md](CONTRIBUTING.md) を見てください。
+**コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
 ## 状況（2026-10-18）
 
@@ -26,7 +26,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ### P1 の合格条件
 
-条件と測り方は [docs/spec/TEST_SUITE.md](docs/spec/TEST_SUITE.md) で決めています。
+条件と測り方は [docs/spec/TEST_SUITE.ja.md](docs/spec/TEST_SUITE.ja.md) で決めています。
 
 | 条件 | 今 | 達成 |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列
 
 自前のテストスイートは kirimasim と一緒に書いたもので、中立な比較ではありません。どのテストも、挙げた規格の節と照らし合わせてあり、期待する出力は Icarus Verilog 13.0（Icarus Verilog 13.0 がコンパイルできないテストは Verilator 5.052）の出力と一致します。どちらも規格に従わない少数のテストは、規格に従っています。kirimasim は P1 の合格条件の決まり（出力、終了コード、kirimasim 自身のメッセージ）で、ほかの 2 つは出力だけで、テストスイートの道具で判定しています。Verilator は 2 値のシミュレータなので、x や z を表示するテストは通りません。
 
-**時間**（テストごとの時間の合計。6 本ずつ並べて実行。1 回の測定で、[PERFORMANCE.md](docs/spec/PERFORMANCE.md) がベンチマークに求める 5 回の中央値ではありません）：
+**時間**（テストごとの時間の合計。6 本ずつ並べて実行。1 回の測定で、[PERFORMANCE.ja.md](docs/spec/PERFORMANCE.ja.md) がベンチマークに求める 5 回の中央値ではありません）：
 
 | テストの集まり | シミュレータ | 準備 | 実行 | 合計 |
 | --- | --- | --- | --- | --- |
@@ -278,7 +278,7 @@ kirimasim: info: finish at 52 ns
 | `--stats=json` | 実行の回数のカウンタを JSON で出す |
 | `+<名前>[=<値>]` | `$test$plusargs` と `$value$plusargs` のためのプラスアーグ |
 
-終了コード：0 は `$finish`、`$stop`、事象が尽きた。1 は `$fatal`。2 は入力の誤り（未対応の構文を含む）。3 は内部エラー。4 は `--max-time` に達した。5 は時刻が進まない実行の上限に達した。コマンドラインのすべては [docs/spec/CLI.md](docs/spec/CLI.md) にあります。
+終了コード：0 は `$finish`、`$stop`、事象が尽きた。1 は `$fatal`。2 は入力の誤り（未対応の構文を含む）。3 は内部エラー。4 は `--max-time` に達した。5 は時刻が進まない実行の上限に達した。コマンドラインのすべては [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) にあります。
 
 ## 仕組み
 
@@ -291,7 +291,7 @@ SystemVerilog のソース
   -> 実行層。どれも共通の実行カーネルの上で動く
 ```
 
-[slang](https://github.com/MikePopoloski/slang) は改変せず、1 つのコミットに固定して使います。どの実行層も、1 つの実行カーネルにプロセスを登録します。スケジューラと値の演算はカーネルが持つので、別の層のプロセスを 1 つのシミュレーションで一緒に動かせ、層の違いは出力の違いとして表に出ます。詳しくは [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を見てください。
+[slang](https://github.com/MikePopoloski/slang) は改変せず、1 つのコミットに固定して使います。どの実行層も、1 つの実行カーネルにプロセスを登録します。スケジューラと値の演算はカーネルが持つので、別の層のプロセスを 1 つのシミュレーションで一緒に動かせ、層の違いは出力の違いとして表に出ます。詳しくは [docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) を見てください。
 
 ## テストのやり方
 
@@ -304,24 +304,26 @@ SystemVerilog のソース
 
 ## 貢献：今は仕様の提案と Issue だけを受け付けています
 
-kirimasim は開発の初期にあるため、今は**仕様の提案と Issue だけ**を受け付けています。コードの PR は受け付けていません（PR を作れるのは協力者だけという設定にしています）。`docs/spec/` の仕様書への提案、不具合の報告、期待値の誤りの指摘には Issue のフォームを、質問（Q&A）とまだ形になっていない案（Ideas）には [Discussions](https://github.com/kurochan001/kirimasim/discussions) を使ってください。受け付けを広げるときは、この節と [CONTRIBUTING.md](CONTRIBUTING.md) でお知らせします。
+kirimasim は開発の初期にあるため、今は**仕様の提案と Issue だけ**を受け付けています。コードの PR は受け付けていません（PR を作れるのは協力者だけという設定にしています）。`docs/spec/` の仕様書への提案、不具合の報告、期待値の誤りの指摘には Issue のフォームを、質問（Q&A）とまだ形になっていない案（Ideas）には [Discussions](https://github.com/kurochan001/kirimasim/discussions) を使ってください。受け付けを広げるときは、この節と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) でお知らせします。
 
 ## 文書
 
+どの文書も英語版が正本で、日本語版（`X.md` の隣の `X.ja.md`）を並べて置いています（変更の記録、ライセンス、GitHub の Issue と PR のフォームは英語だけです）。食い違ったときは英語版に従います。下の表のリンクは日本語版を指します。
+
 | 文書 | 内容 |
 | --- | --- |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | ライブラリの分割と実行の仕組み（英語） |
-| [docs/spec/VALUE_SEMANTICS.md](docs/spec/VALUE_SEMANTICS.md) | 値、演算、ネット、強さ、ゲート、UDP |
-| [docs/spec/SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) | 時刻スロット、領域、待ち、プロセス、disable、保留の報告 |
-| [docs/spec/SIR_SPEC.md](docs/spec/SIR_SPEC.md) | 中間表現 |
-| [docs/spec/SYSTEM_TASKS.md](docs/spec/SYSTEM_TASKS.md) | システムタスクと関数、メッセージの形 |
-| [docs/spec/CLI.md](docs/spec/CLI.md) | コマンドライン、終了コード |
-| [docs/spec/TEST_SUITE.md](docs/spec/TEST_SUITE.md) | テストの決まり、P1 の合格条件 |
-| [docs/spec/RUNTIME_ABI.md](docs/spec/RUNTIME_ABI.md) | カーネルと実行層の境界 |
-| [docs/spec/PERFORMANCE.md](docs/spec/PERFORMANCE.md) | 性能の目標と回数のカウンタ |
-| [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) | このプロジェクトでの AI の使い方 |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | 貢献の方法（英語） |
-| [CHANGELOG.md](CHANGELOG.md) | 変更の記録 |
+| [docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) | ライブラリの分割と実行の仕組み |
+| [docs/spec/VALUE_SEMANTICS.ja.md](docs/spec/VALUE_SEMANTICS.ja.md) | 値、演算、ネット、強さ、ゲート、UDP |
+| [docs/spec/SCHEDULER_SPEC.ja.md](docs/spec/SCHEDULER_SPEC.ja.md) | 時刻スロット、領域、待ち、プロセス、disable、保留の報告 |
+| [docs/spec/SIR_SPEC.ja.md](docs/spec/SIR_SPEC.ja.md) | 中間表現 |
+| [docs/spec/SYSTEM_TASKS.ja.md](docs/spec/SYSTEM_TASKS.ja.md) | システムタスクと関数、メッセージの形 |
+| [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) | コマンドライン、終了コード |
+| [docs/spec/TEST_SUITE.ja.md](docs/spec/TEST_SUITE.ja.md) | テストの決まり、P1 の合格条件 |
+| [docs/spec/RUNTIME_ABI.ja.md](docs/spec/RUNTIME_ABI.ja.md) | カーネルと実行層の境界 |
+| [docs/spec/PERFORMANCE.ja.md](docs/spec/PERFORMANCE.ja.md) | 性能の目標と回数のカウンタ |
+| [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) | このプロジェクトでの AI の使い方 |
+| [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) | 貢献の方法 |
+| [CHANGELOG.md](CHANGELOG.md) | 変更の記録（英語） |
 
 ## 用語集
 
@@ -335,7 +337,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | エラボレーション | ソースから、設計のインスタンスの木、パラメータ、型を組み立てること。slang が行う |
 | `front` | slang を呼び、その結果を SIR に変える kirimasim のライブラリ |
 | 下ろす（lowering） | slang がエラボレーションした設計を、SIR の命令に変えること |
-| SIR | kirimasim の中間表現。格納のスロットと、型の決まった命令でできていて、どの層が実行しても同じ（[SIR_SPEC.md](docs/spec/SIR_SPEC.md)） |
+| SIR | kirimasim の中間表現。格納のスロットと、型の決まった命令でできていて、どの層が実行しても同じ（[SIR_SPEC.ja.md](docs/spec/SIR_SPEC.ja.md)） |
 | `valsem` | 値の意味の参照実装。1 ビットずつ計算する、遅いが明らかに正しい実装。演算子、辺、case の一致の意味はここで決め、速い実装はすべてこれと突き合わせて確かめる |
 | カーネル（kernel） | すべての層が共有する実行カーネル。スケジューラ、値の演算、後で VPI、DPI-C、波形。利用者の設計と一緒にリンクするので、slang にも LLVM にも依存しない |
 | 第 1 層、VM | SIR をレジスタ方式のバイトコードとして実行するインタプリタ（P1） |
@@ -356,7 +358,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | 4 値、2 値 | ビットが 0・1・x・z を取る型（`logic`、`integer`）と、0・1 だけの型（`bit`、`int`）。2 値の変数に入れると x と z は 0 になる |
 | x、z | ビットの不明な値と、ハイインピーダンスの値 |
 | 強さ（strength） | ドライバがネットをどれだけ強く駆動するか（supply、strong、pull、weak など）。複数のドライバが出会うときに使う |
-| 解決（resolution） | ネットの値を、すべてのドライバとその強さから決めること（[VALUE_SEMANTICS.md](docs/spec/VALUE_SEMANTICS.md) の 5 節） |
+| 解決（resolution） | ネットの値を、すべてのドライバとその強さから決めること（[VALUE_SEMANTICS.ja.md](docs/spec/VALUE_SEMANTICS.ja.md) の 5 節） |
 | ワイヤード論理 | ドライバを AND か OR で合わせるネット（`wand`、`wor`） |
 | サイドスロット | ゲートが出力の横に書く 2 値のスロット。出力のどのビットを 1 の側と 0 の側で駆動するかを持ち、解決に使う |
 | UDP | 利用者定義のプリミティブ。真理値表で書くゲート（`primitive`） |
@@ -367,7 +369,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | 用語 | 意味 |
 | --- | --- |
 | 時刻スロット | 1 つのシミュレーション時刻に起きることのまとまり |
-| 領域（region） | 時刻スロットの中の 17 の列。規格が決めた順に処理する（Active、Inactive、NBA、Observed、Reactive、Postponed など。[SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) の 2 節） |
+| 領域（region） | 時刻スロットの中の 17 の列。規格が決めた順に処理する（Active、Inactive、NBA、Observed、Reactive、Postponed など。[SCHEDULER_SPEC.ja.md](docs/spec/SCHEDULER_SPEC.ja.md) の 2 節） |
 | active 側、reactive 側の領域の組 | 設計のコードを動かす領域（Active、Inactive、NBA）と、program と checker のコードを動かす領域（Reactive、Re-Inactive、Re-NBA） |
 | NBA | ノンブロッキング代入（`<=`）。更新は後で、NBA 領域で起きる |
 | 購読 | スロットのいくつかのビットの変化を、プロセスが待つこと |
@@ -377,7 +379,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | static-init のプロセス | 時刻 0 の手続きが始まる前に、static な変数の初期値を設定するプロセス |
 | quiescent | 事象が無くなって実行が終わったこと |
 | zero-time limit | 時刻が上限を超えて進まなかったので実行を止めたこと（`--max-steps`、`--max-zero-delay`） |
-| 記録の回収 | 終わったプロセスの記憶を返すこと（[SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) の 10.8 節） |
+| 記録の回収 | 終わったプロセスの記憶を返すこと（[SCHEDULER_SPEC.ja.md](docs/spec/SCHEDULER_SPEC.ja.md) の 10.8 節） |
 
 **テストと仕事の進め方**
 
@@ -398,7 +400,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | Icarus Verilog、Verilator | 比べるためと証拠として動かす、ほかのオープンソースのシミュレータ。正解としては扱わない |
 | DPI-C、VPI | C のコードと、ツールにつなぐ規格のインターフェース（P3） |
 | FST | 小さな波形のファイルの形式（後で） |
-| 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
+| 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記（英語版では checked、rule of this document、interpretation、not confirmed）。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
 
 ## よくある質問（FAQ）
 
@@ -408,7 +410,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ### 対応していない構文を、飛ばさずに止まるのはなぜですか？
 
-分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わります（[CLI.md](docs/spec/CLI.md) の 5 節）。
+分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わります（[CLI.ja.md](docs/spec/CLI.ja.md) の 5 節）。
 
 ### Icarus Verilog や Verilator と何が違いますか？
 
@@ -428,11 +430,11 @@ macOS（arm64）で開発し、CI で x86-64 の Linux でビルドとテスト�
 
 ### slang に手を加えていますか？
 
-いいえ。構文解析とエラボレーションには [slang](https://github.com/MikePopoloski/slang) を改変せずに使い、1 つのコミットに固定しています。slang で見つけた不具合は上流に報告し、固定したコミットに修正が入るまでは、kirimasim の側で回避します（[SIR_SPEC.md](docs/spec/SIR_SPEC.md) の 6 節）。
+いいえ。構文解析とエラボレーションには [slang](https://github.com/MikePopoloski/slang) を改変せずに使い、1 つのコミットに固定しています。slang で見つけた不具合は上流に報告し、固定したコミットに修正が入るまでは、kirimasim の側で回避します（[SIR_SPEC.ja.md](docs/spec/SIR_SPEC.ja.md) の 6 節）。
 
 ### コードは AI が書いているのですか？
 
-大部分は Claude Code が生成しています。仕様、テスト、レビューには人が責任を持ちます。AI の使い方は [AI_POLICY.md](docs/spec/AI_POLICY.md) に書いてあります。
+大部分は Claude Code が生成しています。仕様、テスト、レビューには人が責任を持ちます。AI の使い方は [AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) に書いてあります。
 
 ### どうすれば手伝えますか？
 
@@ -440,4 +442,4 @@ macOS（arm64）で開発し、CI で x86-64 の Linux でビルドとテスト�
 
 ## ライセンス
 
-kirimasim のライセンスは Apache License 2.0 with LLVM Exceptions（`Apache-2.0 WITH LLVM-exception`）です。[LICENSE](LICENSE) と [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を見てください。
+kirimasim のライセンスは Apache License 2.0 with LLVM Exceptions（`Apache-2.0 WITH LLVM-exception`）です。[LICENSE](LICENSE) と [THIRD_PARTY_NOTICES.ja.md](THIRD_PARTY_NOTICES.ja.md) を見てください。

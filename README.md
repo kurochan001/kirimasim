@@ -456,11 +456,14 @@ more, this section and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.
 
 ## Documentation
 
-The detailed specifications are written in Japanese.
+Every document is written in English, with a Japanese version beside it
+(`X.ja.md` next to `X.md`), except the changelog, the licence, and the
+GitHub issue and pull request forms. Where the two differ, the English text
+holds.
 
 | Document | Content |
 | --- | --- |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model (English) |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model |
 | [docs/spec/VALUE_SEMANTICS.md](docs/spec/VALUE_SEMANTICS.md) | Values, operators, nets, strengths, gates and UDPs |
 | [docs/spec/SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) | The time slot, regions, waits, processes, disable, pending reports |
 | [docs/spec/SIR_SPEC.md](docs/spec/SIR_SPEC.md) | The intermediate representation |
@@ -475,9 +478,8 @@ The detailed specifications are written in Japanese.
 
 ## Glossary
 
-Terms used in this README and in [docs/](docs/). The specifications are
-in Japanese; the Japanese README has the same table with the Japanese
-terms.
+Terms used in this README and in [docs/](docs/). The Japanese README has
+the same table with the Japanese terms.
 
 **Structure**
 
@@ -550,7 +552,7 @@ terms.
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
 | DPI-C / VPI | The standard interfaces to C code and to tools (P3) |
 | FST | A compact waveform file format (later) |
-| Notes in the specifications | The specifications, written in Japanese, mark their statements with four kinds of notes: checked against a clause of the standard; kirimasim's own rule where the standard leaves the choice to the implementation; an interpretation of text that allows two readings; and not confirmed yet, with how to confirm it |
+| checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |
 
 ## FAQ
 
