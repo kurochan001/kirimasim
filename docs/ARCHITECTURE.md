@@ -39,7 +39,7 @@ upstream.
 
 | Tier | What it is | Role |
 | --- | --- | --- |
-| 1: VM | Register-based bytecode interpreter built from SIR | Full feature coverage, instant start, the reference for correctness |
+| 1: VM | Interpreter of SIR: it runs SIR directly now; a register-based bytecode built from SIR comes later | Full feature coverage, instant start, the reference for correctness |
 | 2: C++ generation | SIR compiled ahead of time to C++ and built as a shared library | Speed for RTL (static islands and synthesizable processes) |
 | 3: JIT | Compiling hot testbench functions at run time | Later; decided after tier 2 |
 

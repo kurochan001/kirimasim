@@ -33,7 +33,7 @@ for the specification, the tests, and review.** See
 | Phase | Content | Status |
 | --- | --- | --- |
 | P0 | Groundwork: build, CI, detailed specifications, test suite | Done |
-| P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (bytecode interpreter) for RTL and simple testbenches | **In progress** |
+| P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (an interpreter of SIR) for RTL and simple testbenches | **In progress** |
 | P2 | Tier 2: SIR compiled ahead of time to C++, for speed | Planned |
 | P3 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks and programs, VPI, DPI-C | Planned |
 | P4 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned |
@@ -391,7 +391,7 @@ Options available now:
 | `-f <file>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `--top=<name>` | Sources, include directories, macros, the top module |
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
-| `--max-zero-delay=<n>`, `--max-steps=<n>`, `--max-scc-iter=<n>` | Limits on runs that do not advance time |
+| `--max-zero-delay=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
 | `--dump-sir` | Print the intermediate representation instead of simulating |
 | `--stats=json` | Print counters of the run as JSON |
 | `+<name>[=<value>]` | Plusargs for `$test$plusargs` and `$value$plusargs` |
