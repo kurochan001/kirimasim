@@ -359,9 +359,12 @@ public:
     /// The format and value arguments of $display, $write and $sformatf.
     /// `radix` is how values without a specifier print: 'd', or 'b', 'o'
     /// or 'h' for the forms with that suffix (SYSTEM_TASKS.md 3.1).
+    /// `formatOf` names the task when the first of `args` is its format
+    /// whatever its form ($sformat and $sformatf, SYSTEM_TASKS.md 3.13);
+    /// it is empty for the tasks that take only string literals as formats.
     void lowerFormatArgs(std::span<const ast::Expression* const> args,
-                         std::vector<sir::Operand>& ops, slang::SourceLocation sl,
-                         char radix = 'd');
+                         std::vector<sir::Operand>& ops, slang::SourceLocation sl, char radix = 'd',
+                         std::string_view formatOf = {});
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
     /// $strobe and $monitor and their b, o and h forms: a postponed process

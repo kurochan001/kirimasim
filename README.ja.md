@@ -195,7 +195,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 | まだのもの | 予定 |
 | --- | --- |
-| ファイルの入出力（`$fopen` など）、`$readmemh`・`$writememh`、`$random`・`$urandom`、波形（`$dumpvars`、VCD と FST）、`%p` の書式、`$stime`、`$timeunit`、`$timeprecision`、`$stacktrace` | P1 |
+| ファイルの入出力（`$fopen` など）、`$readmemh`・`$writememh`、`$random`・`$urandom`、波形（`$dumpvars`、VCD と FST）、`%p` の書式、`$stime`、`$timeunit`、`$timeprecision`、`$stacktrace`、実行時にしか決まらない書式（`$sformat`、`$sformatf`、`$sscanf`、`$value$plusargs`） | P1 |
 | クラス、動的配列、キュー、連想配列、乱数化と制約、`randsequence`、カバーグループ、並行アサーションと `$sampled`・`$stable`、クロッキングブロック、virtual interface、`let`、checker | P3 |
 | program ブロック。program のコードは reactive の領域の組で動くもの（24.3.1）なので、今は未対応として報告する | P3 |
 | VPI、DPI-C | P3 |

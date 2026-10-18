@@ -573,7 +573,14 @@ MUTANTS = [
     ("front: slang's constant of a unary plus is used", "src/front/lower_expr.cpp",
      "            if (u.op == ast::UnaryOperator::Plus && e.type->isFourState()) return true;\n", ""),
     ("front: a % without a conversion is reported as not implemented", "src/front/lower_expr.cpp",
-     "                if (bad == \"%\")\n", "                if (bad == \"no\")\n"),
+     "            if (bad == \"%\")\n", "            if (bad == \"no\")\n"),
+    ("front: a constant format of $sformatf that is not a literal prints as a value",
+     "src/front/lower_expr.cpp",
+     "        if (k == 0 && !formatOf.empty() && arg->kind != ast::ExpressionKind::StringLiteral) {",
+     "        if (false) {"),
+    ("front: extra arguments of a constant format that is not a literal are accepted",
+     "src/front/lower_expr.cpp",
+     "        if (counted && pending.empty())\n            error(", "        if (false)\n            error("),
 ]
 
 

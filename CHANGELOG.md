@@ -67,3 +67,11 @@ own. CONTRIBUTING.md says what goes in this file.
   `$typename`, the array queries, `$clog2` and the real math functions,
   the bit-vector functions, `$test$plusargs` and `$value$plusargs`
   (SYSTEM_TASKS.md).
+
+### Fixed
+
+- `$sformat` and `$sformatf` printed a format that is not a string
+  literal, such as a string parameter, as a value to show. A constant
+  format is now read as a format, and a wrong number of arguments for it
+  is an error; a format known only at run time is reported as not
+  supported yet (SYSTEM_TASKS.md 3.13).

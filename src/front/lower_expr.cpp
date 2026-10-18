@@ -2649,7 +2649,7 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
     const Type st{sir::TypeKind::String, 0};
     if (name == "$sformatf" || name == "$psprintf") {
         std::vector<Operand> ops{Operand::str("$sformatf")};
-        lowerFormatArgs(args, ops, sl);
+        lowerFormatArgs(args, ops, sl, 'd', name);
         return emit(Op::Syscall, st, std::move(ops), sl);
     }
     // The string methods (6.16): the string is the first argument.
@@ -2702,32 +2702,58 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
 }
 
 void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
-                              std::vector<Operand>& ops, slang::SourceLocation sl, char radix) {
+                              std::vector<Operand>& ops, slang::SourceLocation sl, char radix,
+                              std::string_view formatOf) {
     // A string literal not taken by an earlier specifier is a format
     // (SYSTEM_TASKS.md 3.1); the VM parses it once when it loads the
-    // design. A %t value is scaled from the caller's time unit to ticks of
-    // the global precision here, so the VM needs no unit.
+    // design. The format of $sformat and of $sformatf, then the first of
+    // `args`, is a format whatever its form (3.13): a constant one is read
+    // as a literal is, and as slang counts the arguments of literal formats
+    // only, a wrong count for it is reported here; one known only at run
+    // time is not implemented yet. A %t value is scaled from the caller's
+    // time unit to ticks of the global precision here, so the VM needs no
+    // unit.
     std::deque<char> pending;
-    for (const ast::Expression* arg : args) {
+    const auto takeFormat = [&](const std::string& text, slang::SourceLocation at) {
+        std::vector<char> convs;
+        std::string bad;
+        if (!scanFormat(text, convs, bad)) {
+            // A % with no conversion is an error of the input; any other
+            // specifier left is one not implemented yet (SYSTEM_TASKS.md 3.1).
+            if (bad == "%")
+                error(at, "format has a % without a conversion");
+            else
+                unsupported(at, "format specifier " + bad);
+        }
+        pending.assign(convs.begin(), convs.end());
+        ops.push_back(Operand::str(withScope(text, b_.scope)));
+    };
+    // Set by a constant format that is not a literal: every later argument
+    // fills one of its specifiers (3.13).
+    bool counted = false;
+    for (std::size_t k = 0; k < args.size(); ++k) {
+        const ast::Expression* arg = args[k];
+        if (k == 0 && !formatOf.empty() && arg->kind != ast::ExpressionKind::StringLiteral) {
+            const std::optional<slang::ConstantValue> cv = constantValue(*arg);
+            std::optional<std::string> text;
+            if (cv && cv->isString()) text = cv->str();
+            if (cv && cv->isInteger()) text = stringBytes(cv->integer());
+            if (!text)
+                unsupported(arg->sourceRange.start(),
+                            std::string(formatOf) + " with a format that is not a constant");
+            takeFormat(*text, arg->sourceRange.start());
+            counted = true;
+            continue;
+        }
+        if (counted && pending.empty())
+            error(arg->sourceRange.start(), "too many arguments for the format");
         if (arg->kind == ast::ExpressionKind::EmptyArgument) {
             ops.push_back(Operand::str(" "));
             continue;
         }
         if (arg->kind == ast::ExpressionKind::StringLiteral && pending.empty()) {
-            const std::string text(arg->as<ast::StringLiteral>().getValue());
-            std::vector<char> convs;
-            std::string bad;
-            if (!scanFormat(text, convs, bad)) {
-                // A % with no conversion is an error of the input; any
-                // other specifier left is one not implemented yet
-                // (SYSTEM_TASKS.md 3.1).
-                if (bad == "%")
-                    error(arg->sourceRange.start(), "format has a % without a conversion");
-                else
-                    unsupported(arg->sourceRange.start(), "format specifier " + bad);
-            }
-            pending.assign(convs.begin(), convs.end());
-            ops.push_back(Operand::str(withScope(text, b_.scope)));
+            takeFormat(std::string(arg->as<ast::StringLiteral>().getValue()),
+                       arg->sourceRange.start());
             continue;
         }
         // A value without a specifier prints in the radix of the task's
@@ -2790,6 +2816,9 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
         }
         ops.push_back(v.op);
     }
+    if (counted && !pending.empty())
+        error(args[0]->sourceRange.start(),
+              std::string("no argument for the format's %") + pending.front());
 }
 
 bool Lowerer::readsAutomatic(const ast::Expression& e) const {
@@ -2944,7 +2973,10 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         // $swriteb, $swriteo and $swriteh keep their names for the radix.
         std::vector<Operand> ops{
             Operand::str(radix == 'd' || name == "$sformat" ? "$sformatf" : name)};
-        lowerFormatArgs(args.subspan(1), ops, sl, name == "$sformat" ? 'd' : radix);
+        if (name == "$sformat")
+            lowerFormatArgs(args.subspan(1), ops, sl, 'd', name);
+        else
+            lowerFormatArgs(args.subspan(1), ops, sl, radix);
         const Val v = emit(Op::Syscall, Type{sir::TypeKind::String, 0}, std::move(ops), sl);
         const ast::Expression* dest = args[0];
         if (dest->kind == ast::ExpressionKind::Assignment &&

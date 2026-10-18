@@ -113,6 +113,17 @@ STATEMENTS = [
      "$value$plusargs with this format", False),
     ("sscanf_specifier", "  int a;\n", "void'(«»$sscanf(\"1\", \"%q\", a));",
      "format specifier %q in $sscanf", False),
+    # A format known only at run time (SYSTEM_TASKS.md 3.13), for every task
+    # whose format is an argument in a fixed place.
+    ("sformatf_runtime_format", "  string s, f = \"%0d\";\n  int a;\n", "s = $sformatf(«»f, a);",
+     "$sformatf with a format that is not a constant", False),
+    ("sformat_runtime_format", "  string s, f = \"%0d\";\n  int a;\n", "$sformat(s, «»f, a);",
+     "$sformat with a format that is not a constant", False),
+    ("sscanf_runtime_format", "  string f = \"%d\";\n  int a;\n",
+     "void'(«»$sscanf(\"1\", f, a));", "$sscanf with a format that is not a constant", False),
+    ("value_plusargs_runtime_format", "  string f = \"n=%d\";\n  int a;\n",
+     "void'(«»$value$plusargs(f, a));", "$value$plusargs with a format that is not a constant",
+     False),
     ("enum_next_count", "  typedef enum { A, B, C } e_t;\n  e_t e;\n  int n = 1;\n",
      "e = «»e.next(n);", "enumeration method next with a count known at run time", False),
     ("member_run_time_bit", "  struct packed { logic [3:0] f; } sp;\n  int i = 1;\n",
@@ -220,6 +231,12 @@ ERRORS = [
     ("format_percent_end", "", "$display(«»\"100%\");", "format has a % without a conversion"),
     ("format_percent_width", "  logic [3:0] v = 4'h5;\n", "$display(«»\"%5\", v);",
      "format has a % without a conversion"),
+    # A constant format that is not a literal, whose arguments slang does not
+    # count (SYSTEM_TASKS.md 3.13).
+    ("sformatf_const_too_few", "  localparam string F = \"%0d-%0h\";\n  string s;\n  int a;\n",
+     "s = $sformatf(«»F, a);", "no argument for the format's %h"),
+    ("sformat_const_too_many", "  localparam string F = \"%0d\";\n  string s;\n  int a;\n",
+     "$sformat(s, F, a, «»a);", "too many arguments for the format"),
 ]
 
 

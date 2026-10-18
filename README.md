@@ -310,7 +310,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 | Not yet | Planned |
 | --- | --- |
-| File I/O (`$fopen` and the rest), `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), the `%p` format, `$stime`, `$timeunit`, `$timeprecision`, `$stacktrace` | P1 |
+| File I/O (`$fopen` and the rest), `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), the `%p` format, `$stime`, `$timeunit`, `$timeprecision`, `$stacktrace`, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`) | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, `randsequence`, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let`, checkers | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
