@@ -4,7 +4,7 @@
 
 ## プロジェクトの目的
 
-kirimasim は、オープンソースの SystemVerilog シミュレータです。4 値（0・1・X・Z）を既定とし、IEEE 1800-2023 どおりのスケジューリング（時刻スロットの全領域と参照アルゴリズム）を守ったうえで、実用的な速さを目指します。フロントエンドは slang を改変せずに版を固定して使い、中間表現 SIR を経て、インタプリタ（第 1 層）と C++ 生成（第 2 層）が 1 つの実行カーネルを共有して動きます。今は P0（準備）の段階で、ビルドの土台と骨組みだけがあります。
+kirimasim は、オープンソースの SystemVerilog シミュレータです。4 値（0・1・X・Z）を既定とし、IEEE 1800-2023 どおりのスケジューリング（時刻スロットの全領域と参照アルゴリズム）を守ったうえで、実用的な速さを目指します。フロントエンドは slang を改変せずに版を固定して使い、中間表現 SIR を経て、インタプリタ（第 1 層）と C++ 生成（第 2 層）が 1 つの実行カーネルを共有して動きます。今は P1（最初の実行層）の段階です。`front` が SystemVerilog の広い範囲を SIR に変換し、カーネルがすべての領域を持つスケジューラを持ち、第 1 層が SIR を直接解釈して設計を実行します。状況は README に書いています。
 
 ## ライブラリの依存の規則
 
@@ -12,16 +12,16 @@ kirimasim は、オープンソースの SystemVerilog シミュレータです�
 
 | ライブラリ | 内容 | 依存してよいもの | 状態 |
 | --- | --- | --- | --- |
-| `front` | slang の呼び出しと、SIR への変換 | slang、`sir` | slang で読んでエラボレーションするだけ |
-| `sir` | SIR の定義、検証器、テキスト形式 | なし | 版を返す関数だけ |
+| `front` | slang の呼び出しと、SIR への変換 | slang、`sir` | P1 の範囲の構文を SIR に変換し、ほかは未対応として報告する |
+| `sir` | SIR の定義、検証器、テキスト形式 | なし | 定義、型の表、検証器、テキスト形式（`--dump-sir`） |
 | `analysis` | X 到達解析、静的な島、レベル化、可観測性 | `sir` | 空 |
-| `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | 空 |
+| `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | SIR を直接解釈する（バイトコードは後で） |
 | `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 空 |
-| `kernel` | 実行カーネル（スケジューラ、値の演算、GC、VPI、DPI-C、波形など） | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` に隔離し、`kernel` はその C++ のインターフェースだけを見る | 4 値の語と `and4`、回数カウンタ、Context |
+| `kernel` | 実行カーネル（スケジューラ、値の演算、GC、VPI、DPI-C、波形など） | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` に隔離し、`kernel` はその C++ のインターフェースだけを見る | すべての領域を持つスケジューラ、スロットの格納、4 値の語の演算、ネットの解決、UDP の表、書式と読み取り、文字列、回数カウンタ、Context |
 | `solver_adapter` | 制約ソルバの差し替え口 | `sir`、採用した外部のソルバ | P3 で作る |
 | `fiber_backend` | 時間を使う DPI-C の task を止めて再開するファイバー | 採用したライブラリだけ | P3 で作る |
-| `valsem` | 値の意味の参照実装（遅いが明らかに正しい） | なし | 1 ビットの 4 値と AND |
-| `driver` | 実行ファイル `kirimasim` | すべて | `--version`、`parse`、`--stats=json` |
+| `valsem` | 値の意味の参照実装（遅いが明らかに正しい） | なし | 値の命令、辺、強さのあるネットの解決、UDP の表 |
+| `driver` | 実行ファイル `kirimasim` | すべて | コンパイルと実行、`parse`、`--version`、CLI.md の 2 節のうち実装済みのオプション（`--dump-sir`、`--stats=json`、実行の上限など） |
 
 - `kernel` は利用者の設計と一緒にリンクされるので、slang や LLVM に依存させない。
 - `kernel` の公開ヘッダ（`src/kernel/include/kirimasim/kernel/`）は C++20 でコンパイルできること。新しいヘッダを足したら `tests/unit/kernel_headers_cxx20.cpp` にも足す。
@@ -54,7 +54,7 @@ python3 tools/local_ci.py                 # 上の全部と clang-format・clang
 
 - push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。GitHub の macOS のランナーはこのリポジトリでは取れないことが多いので、macOS の結果はこれで代える（`ci.yml` のジョブは、ラベル `kirimasim-linux` の付いたセルフホストの Linux（x86-64）のランナーだけで動かし、macOS のジョブは持たない）。
 
-- テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。今は `kirimasim parse` が通るかだけを見る。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
+- テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。どのテストもまず `kirimasim parse` にかけ、`simulation` のテストは続けて実行して、標準出力、終了コード、標準エラーを比べる（`tools/run_suite_test.py`。TEST_SUITE.md の「今の判定の範囲」）。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
 - PerfCount の期待値は `tests/perf_counts/expected.json`。更新の手順は `tests/perf_counts/README.md`。
 
 ## 意味は 1 か所で決め、症状の形ごとに直さない（2026-10-16 に承認）

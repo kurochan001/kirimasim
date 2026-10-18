@@ -4,7 +4,7 @@
 
 ## Purpose of the project
 
-kirimasim is an open-source SystemVerilog simulator. It takes 4 states (0, 1, X, Z) as the default and, while keeping scheduling exactly as IEEE 1800-2023 says (every region of the time slot and the reference algorithm), aims at practical speed. The front end uses slang unmodified at a pinned version; through the intermediate representation SIR, an interpreter (tier 1) and C++ generation (tier 2) run sharing one execution kernel. It is now at stage P0 (preparation), with only the foundations of the build and a skeleton.
+kirimasim is an open-source SystemVerilog simulator. It takes 4 states (0, 1, X, Z) as the default and, while keeping scheduling exactly as IEEE 1800-2023 says (every region of the time slot and the reference algorithm), aims at practical speed. The front end uses slang unmodified at a pinned version; through the intermediate representation SIR, an interpreter (tier 1) and C++ generation (tier 2) run sharing one execution kernel. It is now in stage P1 (the first execution tier): `front` lowers a broad subset of SystemVerilog to SIR, the kernel holds a scheduler with every region, and tier 1 runs designs by interpreting SIR directly. The README gives the status.
 
 ## Rules of library dependencies
 
@@ -12,16 +12,16 @@ Dependencies go only in the directions of the table below. Do not add to `target
 
 | Library | Content | May depend on | State |
 | --- | --- | --- | --- |
-| `front` | Calling slang, and lowering to SIR | slang, `sir` | Only reads and elaborates with slang |
-| `sir` | SIR's definition, verifier, text form | Nothing | Only a function returning the version |
+| `front` | Calling slang, and lowering to SIR | slang, `sir` | Lowers the constructs of the P1 range to SIR, and reports the others as unsupported |
+| `sir` | SIR's definition, verifier, text form | Nothing | Definitions, type table, verifier, text form (`--dump-sir`) |
 | `analysis` | X-reachability analysis, static islands, levelization, observability | `sir` | Empty |
-| `vm` | Tier 1 (making and running bytecode) | `sir`, `kernel` | Empty |
+| `vm` | Tier 1 (making and running bytecode) | `sir`, `kernel` | Interprets SIR directly (bytecode comes later) |
 | `codegen` | Tier 2 (generating and building C++) | `sir`, `analysis` | Empty |
-| `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (later). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | 4-state words and `and4`, event counters, Context |
+| `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (later). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | Scheduler with every region, slot storage, 4-state word operations, net resolution, UDP tables, formatting and scanning, strings, event counters, Context |
 | `solver_adapter` | The replaceable port for constraint solvers | `sir`, the external solver adopted | Made in P3 |
 | `fiber_backend` | Fibers that stop and resume time-consuming DPI-C tasks | Only the library adopted | Made in P3 |
-| `valsem` | Reference implementation of value semantics (slow but plainly correct) | Nothing | 1-bit 4-state values and AND |
-| `driver` | The executable `kirimasim` | Everything | `--version`, `parse`, `--stats=json` |
+| `valsem` | Reference implementation of value semantics (slow but plainly correct) | Nothing | Value instructions, edges, net resolution with strengths, UDP tables |
+| `driver` | The executable `kirimasim` | Everything | Compile and run, `parse`, `--version`, and the options of CLI.md 2 implemented so far (`--dump-sir`, `--stats=json`, the run limits and others) |
 
 - `kernel` is linked together with the user's design, so it must not depend on slang or LLVM.
 - `kernel`'s public headers (`src/kernel/include/kirimasim/kernel/`) must compile as C++20. When adding a new header, add it to `tests/unit/kernel_headers_cxx20.cpp` too.
@@ -54,7 +54,7 @@ python3 tools/local_ci.py                 # all of the above plus clang-format a
 
 - Before pushing, run `tools/local_ci.py` and attach its summary to the report. GitHub's macOS runners are often unavailable for this repository, so macOS results are covered by this (the jobs of `ci.yml` run only on self-hosted Linux (x86-64) runners with the label `kirimasim-linux`, and there is no macOS job).
 
-- The test suite (`tests/suite/`) has headers compatible with sv-tests. For now it only checks that `kirimasim parse` passes. Tests expected to fail write `:should_fail_because:` and `:expected_error:` (`<line>:<column>: error: <text>`), and both exit code 2 and the diagnostic at that position are checked.
+- The test suite (`tests/suite/`) has headers compatible with sv-tests. Each test first goes through `kirimasim parse`; `simulation` tests are then run, and their standard output, exit code and standard error compared (`tools/run_suite_test.py`; TEST_SUITE.md "What is judged now"). Tests expected to fail write `:should_fail_because:` and `:expected_error:` (`<line>:<column>: error: <text>`), and both exit code 2 and the diagnostic at that position are checked.
 - PerfCount's expected values are in `tests/perf_counts/expected.json`. How to update them is in `tests/perf_counts/README.md`.
 
 ## Decide meaning in one place, and do not fix by the shape of the symptom (approved 2026-10-16)

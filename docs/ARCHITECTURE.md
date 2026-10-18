@@ -3,7 +3,7 @@
 [日本語](ARCHITECTURE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
 This is a short overview. The detailed specifications live in
-[docs/spec/](spec/) (headings only during P0).
+[docs/spec/](spec/).
 
 ## Pipeline
 
@@ -65,24 +65,24 @@ Dependencies run only in the directions listed here.
 
 | Library | Contents | May depend on | Status |
 | --- | --- | --- | --- |
-| `front` | Calls slang and lowers its result to SIR | slang, `sir` | Parses and elaborates; no lowering yet |
-| `sir` | SIR definitions, verifier, text format | nothing | Version function only |
+| `front` | Calls slang and lowers its result to SIR | slang, `sir` | Lowers the constructs of the P1 range; reports the others as unsupported |
+| `sir` | SIR definitions, verifier, text format | nothing | Definitions, type table, verifier, text form |
 | `analysis` | X-reachability, static islands, levelization, observability | `sir` | Empty |
-| `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Empty |
+| `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
 | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Empty |
-| `kernel` | The execution kernel | libfstapi (later); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Four-state word, `and4`, event counters, context |
+| `kernel` | The execution kernel | libfstapi (later); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, formatting, strings, event counters, context |
 | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P3 |
 | `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P3 |
-| `valsem` | Reference implementations of value semantics | nothing | One-bit four-state AND |
-| `driver` | The `kirimasim` command line | everything | `--version`, `parse`, `--stats=json` |
+| `valsem` | Reference implementations of value semantics | nothing | Value instructions, edges, net resolution with strengths, UDP tables |
+| `driver` | The `kirimasim` command line | everything | Compile and run, `parse`, `--version`, `--dump-sir`, `--stats=json`, the run limits |
 
 Rules that follow from this layout:
 
 - `kernel` is linked together with users' designs, so it never depends on
   slang or LLVM. Its public headers are C++20 because generated code reads
   them.
-- `solver_adapter` and `fiber_backend` are not built during P0; they appear
-  here so that the dependency rules are complete.
+- `solver_adapter` and `fiber_backend` are not built yet (they come in P3);
+  they appear here so that the dependency rules are complete.
 
 ## Checking correctness and performance
 
