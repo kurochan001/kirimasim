@@ -1,15 +1,17 @@
-# ASSERTION_COVERAGE_SPEC：アサーションとカバレッジ
+# ASSERTION_COVERAGE_SPEC: assertions and coverage
 
-優先度：P2。この文書はまだ見出しだけです。
+[日本語](ASSERTION_COVERAGE_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-## アサーションの演算子と評価の時点
+Priority: P2. This document has headings only so far.
 
-未記入（表の優先度のフェーズで書く）
+## Assertion operators and when they are evaluated
 
-## カバレッジのモデル
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## The coverage model
 
-## カバレッジの JSON の形式
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## The JSON format of coverage
+
+Not written yet (to be written in the phase the priority table gives).

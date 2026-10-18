@@ -1,15 +1,17 @@
-# LIB_EXPORT_SPEC：DPI ライブラリの出力
+# LIB_EXPORT_SPEC: DPI library output
 
-優先度：P2。この文書はまだ見出しだけです。
+[日本語](LIB_EXPORT_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-## ラッパー
+Priority: P2. This document has headings only so far.
 
-未記入（表の優先度のフェーズで書く）
+## Wrappers
 
-## 呼び出しの規則
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## Calling rules
 
-## 境界の制限
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## Limits at the boundary
+
+Not written yet (to be written in the phase the priority table gives).

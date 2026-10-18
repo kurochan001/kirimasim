@@ -1,19 +1,21 @@
-# RANDOMIZE_SPEC：制約付き乱数
+# RANDOMIZE_SPEC: constrained randomization
 
-優先度：P2。この文書はまだ見出しだけです。
+[日本語](RANDOMIZE_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-## 制約の対応範囲
+Priority: P2. This document has headings only so far.
 
-未記入（表の優先度のフェーズで書く）
+## The constraints supported
 
-## ソルバの 2 段の境界
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## The two-stage boundary of the solver
 
-## 乱数の状態の形式
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## The format of the random state
 
-## 分布の検定
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## Tests of the distributions
+
+Not written yet (to be written in the phase the priority table gives).

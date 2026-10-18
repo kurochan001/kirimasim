@@ -1,15 +1,17 @@
-# CODEGEN_SPEC：C++ 生成の仕様
+# CODEGEN_SPEC: C++ generation
 
-優先度：P2（2026-10-15 に P1 から移した。C++ の生成は P2 の作業のため）。この文書はまだ見出しだけです。
+[日本語](CODEGEN_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-## C++ 生成の規則
+Priority: P2 (moved from P1 on 2026-10-15, since C++ generation is P2 work). This document has headings only so far.
 
-未記入（表の優先度のフェーズで書く）
+## Rules of C++ generation
 
-## 静的な島
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## Static islands
 
-## 2 版切り替え
+Not written yet (to be written in the phase the priority table gives).
 
-未記入（表の優先度のフェーズで書く）
+## Two-version switching
+
+Not written yet (to be written in the phase the priority table gives).
