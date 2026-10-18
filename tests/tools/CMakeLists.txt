@@ -285,3 +285,7 @@ set_tests_properties(tools/gen_static_init_report_matrix PROPERTIES LABELS Tools
 add_test(NAME tools/gen_delay_overflow_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delay_overflow_matrix.py --check)
 set_tests_properties(tools/gen_delay_overflow_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_zero_time_loop_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_zero_time_loop_matrix.py --check)
+set_tests_properties(tools/gen_zero_time_loop_matrix PROPERTIES LABELS Tools)

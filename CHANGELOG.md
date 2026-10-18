@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Processes that wake each other inside one region without time advancing
+  are stopped by the new limit `--max-slot-events`, the events run in one
+  time slot (100000000 by default), with exit code 5 and `final`; neither
+  `--max-zero-delay` nor `--max-steps` counted them, and the run never
+  ended (CLI.md 2.6; #8).
 - A delay that takes the time past the largest time is a run-time error of
   the design whatever its form: one computed at run time wrapped around
   silently when its conversion to steps did not fit in 64 bits, and a

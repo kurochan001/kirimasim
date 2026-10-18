@@ -472,6 +472,7 @@ bool Scheduler::moveFirst(Region first, Region last, Region to) {
 void Scheduler::runSlot() {
     counters_.increment(cTimeSlots_);
     movesThisSlot_ = 0;
+    eventsThisSlot_ = 0;
     runRegion(Region::Preponed);
     runRegion(Region::PreActive);
     // A pending report counts as an event of the Observed region (15.3).
@@ -515,6 +516,21 @@ void Scheduler::runSlot() {
 void Scheduler::runRegion(Region r) {
     auto& q = regions_[static_cast<int>(r)];
     while (!ending_ && !q.empty()) {
+        // The events of one time slot, in any region (CLI.md 2.6): this
+        // stops processes that wake each other inside one region, which
+        // move nothing between regions. The event past the limit does not
+        // run.
+        if (limits_.maxSlotEvents != 0 && eventsThisSlot_ == limits_.maxSlotEvents) {
+            const std::string n = std::to_string(limits_.maxSlotEvents);
+            std::string note = n;
+            note += " events ran in one time slot (--max-slot-events=";
+            note += n;
+            note += ")";
+            setEndNote(std::move(note));
+            requestEnd(EndReason::ZeroTimeLimit, 1);
+            return;
+        }
+        ++eventsThisSlot_;
         const Event e = q.front();
         q.pop_front();
         execute(e);

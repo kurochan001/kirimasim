@@ -5,8 +5,9 @@
 //   kirimasim --version | --help
 //
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
-// slang), --max-time, --max-time-ok, --max-zero-delay, --max-steps,
-// --max-scc-iter, --dump-sir and --stats=json. Exit codes are those of CLI.md 5.
+// slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
+// --max-steps, --max-scc-iter, --dump-sir and --stats=json. Exit codes are
+// those of CLI.md 5.
 
 #include <charconv>
 #include <cstdint>
@@ -38,8 +39,8 @@ void printUsage(std::FILE* out) {
                "       kirimasim --version\n"
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
-               "         --max-zero-delay=<n>, --max-steps=<n>, --max-scc-iter=<n>, --dump-sir,\n"
-               "         --stats=json\n",
+               "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
+               "         --max-scc-iter=<n>, --dump-sir, --stats=json\n",
                out);
 }
 
@@ -63,6 +64,7 @@ struct Options {
     std::string maxTime;  // as given; converted once the time precision is known
     bool maxTimeOk = false;
     std::uint64_t maxZeroDelay = 1000000;  // the defaults of CLI.md 2.6; 0: no limit
+    std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
 };
@@ -97,6 +99,7 @@ int parseArgs(int argc, char** argv, Options& o) {
         bool counted = false;
         for (const auto& [name, field] :
              {std::pair<std::string_view, std::uint64_t*>{"--max-zero-delay", &o.maxZeroDelay},
+              {"--max-slot-events", &o.maxSlotEvents},
               {"--max-steps", &o.maxSteps},
               {"--max-scc-iter", &o.maxSccIter}}) {
             if (!arg.starts_with(name) || arg.size() <= name.size() || arg[name.size()] != '=')
@@ -227,6 +230,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         limits.maxTime = *ticks;
     }
     limits.maxZeroDelay = o.maxZeroDelay;
+    limits.maxSlotEvents = o.maxSlotEvents;
     context.scheduler().setLimits(limits);
     kirimasim::vm::RunOptions run;
     run.maxSteps = o.maxSteps;

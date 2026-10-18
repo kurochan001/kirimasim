@@ -532,6 +532,51 @@ TEST(Scheduler, ZeroDelayLimit) {
     EXPECT_EQ(sim.run(), EndReason::ZeroTimeLimit);
 }
 
+TEST(Scheduler, SlotEventLimit) {
+    // A chain of processes that wake each other through named events stays
+    // in the Active region: 41 starts and 40 wakeups, and no moves, so only
+    // the limit on the events of a time slot stops it (CLI.md 2.6). The
+    // event past the limit does not run.
+    const auto chain = [] {
+        std::vector<Script> s;
+        s.reserve(41);
+        for (std::uint32_t i = 0; i < 40; ++i)
+            s.push_back({{waitNamed(i), trig(i + 1)}});
+        s.push_back({{trig(0)}});
+        return s;
+    };
+    const auto runs = [](const std::string& log) {
+        std::size_t n = 0;
+        for (std::size_t at = log.find(" run\n"); at != std::string::npos;
+             at = log.find(" run\n", at + 1))
+            ++n;
+        return n;
+    };
+    {
+        KernelSim sim(chain(), 4, 41);
+        sim.context().scheduler().setLimits({UINT64_MAX, 1, 81});
+        EXPECT_EQ(sim.run(), EndReason::Quiescent);
+        EXPECT_EQ(sim.context().scheduler().endNote(), "");
+        EXPECT_EQ(runs(sim.log()), 81U) << sim.log();
+    }
+    {
+        KernelSim sim(chain(), 4, 41);
+        sim.context().scheduler().setLimits({UINT64_MAX, 0, 80});
+        EXPECT_EQ(sim.run(), EndReason::ZeroTimeLimit);
+        EXPECT_EQ(sim.context().scheduler().endNote(),
+                  "80 events ran in one time slot (--max-slot-events=80)");
+        EXPECT_EQ(runs(sim.log()), 80U) << sim.log();
+    }
+    {
+        // The count starts again in each time slot: one event in each of
+        // ten slots stays under a limit of 2.
+        KernelSim sim({{std::vector<Step>(10, delay(1))}});
+        sim.context().scheduler().setLimits({UINT64_MAX, 0, 2});
+        EXPECT_EQ(sim.run(), EndReason::Quiescent);
+        EXPECT_EQ(sim.context().scheduler().time(), 10U);
+    }
+}
+
 TEST(Scheduler, FarFutureEventsUseTheHeap) {
     // Delays beyond the timing wheel (256 ticks) keep their order.
     KernelSim sim({{{delay(1000), log(0)}},

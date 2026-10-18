@@ -24,6 +24,7 @@ PLUSARGS = str(HERE / "plusargs.sv")
 VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
 PROGRAM_MATRIX = HERE / "program_matrix.sv"
 UNSUPPORTED_MATRIX = HERE / "unsupported_matrix"
+ZERO_TIME_LOOPS = HERE / "zero_time_loop_matrix"
 FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
@@ -96,6 +97,9 @@ CASES = [
     (["--max-steps=x", DESIGN], 2, "", "--max-steps=x needs a whole number"),
     (["--max-zero-delay=", DESIGN], 2, "", "needs a whole number"),
     (["--max-zero-delay=100", DESIGN], 0, "hello\n", ""),
+    (["--max-slot-events=", DESIGN], 2, "", "needs a whole number"),
+    (["--max-slot-events=100", DESIGN], 0, "hello\n", ""),
+    (["--max-slot-events=0", DESIGN], 0, "hello\n", ""),
     (["--max-scc-iter=3", DESIGN], 0, "hello\n", ""),
     (["--max-time-ok", DESIGN], 0, "hello\n", ""),
     (["--timescale=1ns/1ps", DESIGN], 0, "hello\n", ""),
@@ -121,6 +125,10 @@ CASES = [
      "kirimasim: error: time did not advance: 10 moves into the Active region in one time"
      " slot (--max-zero-delay=10)\nkirimasim: info: zero_time_limit at 0 ns"),
     ([ZERO_DELAY], 5, "=final ran\n", "(--max-zero-delay=1000000)"),
+    # Each #0 runs one event and moves one, so the smaller limit stops it.
+    (["--max-slot-events=10", ZERO_DELAY], 5, "=final ran\n",
+     "kirimasim: error: time did not advance: 10 events ran in one time slot"
+     " (--max-slot-events=10)\nkirimasim: info: zero_time_limit at 0 ns"),
     # Another writer of an always_comb variable is an error of the design
     # (SCHEDULER_SPEC.md 6.4), not an internal error; slang's analysis
     # reports it.
@@ -137,7 +145,25 @@ CASES = [
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
+    ap.add_argument("--slot-event-default", action="store_true",
+                    help="only run a loop to the default of --max-slot-events, which takes "
+                         "seconds (CLI.md 2.6)")
     args = ap.parse_args()
+
+    if args.slot_event_default:
+        # The default stops the loop of processes that wake each other
+        # through @(a) and @(b) (tools/gen_zero_time_loop_matrix.py).
+        rel = str((ZERO_TIME_LOOPS / "subscription.sv").relative_to(HERE))
+        proc = subprocess.run([args.kirimasim, rel], cwd=HERE, capture_output=True, text=True,
+                              check=False)
+        want = ("kirimasim: error: time did not advance: 100000000 events ran in one time slot"
+                " (--max-slot-events=100000000)\nkirimasim: info: zero_time_limit at 1 ns\n")
+        if (proc.returncode != 5 or proc.stdout != "started\nfinal ran\n" or
+                not proc.stderr.endswith(want)):
+            print(f"FAIL: {rel}: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
+                  file=sys.stderr)
+            return 1
+        return 0
 
     failures = 0
     cases = [(c, None) for c in CASES] + [(c, HERE) for c in CWD_CASES]
@@ -249,6 +275,26 @@ def main() -> int:
         extra = sorted(set(got) - set(want))
         print("FAIL: unsupported matrix:\n" + "".join(f"  missing: {x}\n" for x in missing) +
               "".join(f"  extra: {x}\n" for x in extra), file=sys.stderr)
+
+    # Processes that wake each other without time advancing, in each way
+    # they can (the files come from tools/gen_zero_time_loop_matrix.py):
+    # --max-slot-events stops each loop at time 1 and says so on the line
+    # before the reason, and final procedures still run (CLI.md 2.6).
+    loops = sorted(ZERO_TIME_LOOPS.glob("*.sv"))
+    if not loops:
+        failures += 1
+        print(f"FAIL: no files in {ZERO_TIME_LOOPS}", file=sys.stderr)
+    want = ("kirimasim: error: time did not advance: 1000 events ran in one time slot"
+            " (--max-slot-events=1000)\nkirimasim: info: zero_time_limit at 1 ns\n")
+    for sv in loops:
+        rel = str(sv.relative_to(HERE))
+        proc = subprocess.run([args.kirimasim, "--max-slot-events=1000", rel], cwd=HERE,
+                              capture_output=True, text=True, check=False)
+        if (proc.returncode != 5 or proc.stdout != "started\nfinal ran\n" or
+                not proc.stderr.endswith(want)):
+            failures += 1
+            print(f"FAIL: {rel}: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
+                  file=sys.stderr)
 
     # The format flags - and 0, which the standard does not define
     # (SYSTEM_TASKS.md 3.12; the files come from tools/gen_format_flag_matrix.py):

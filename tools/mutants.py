@@ -720,6 +720,14 @@ MUTANTS = [
     ("front: a constant delay past the largest time is 0", "src/front/lower_expr.cpp",
      "    if (!ticks) return constantWords(sir::u2(65), {0, 1}, {0, 0});",
      "    if (!ticks) return constant(sir::u2(64), 0);"),
+    ("kernel: the events of a time slot are not counted", "src/kernel/sim.cpp",
+     "        ++eventsThisSlot_;\n", ""),
+    ("kernel: the count of events runs on across time slots", "src/kernel/sim.cpp",
+     "    eventsThisSlot_ = 0;\n", ""),
+    ("kernel: the event past the limit of a time slot runs", "src/kernel/sim.cpp",
+     "eventsThisSlot_ == limits_.maxSlotEvents", "eventsThisSlot_ > limits_.maxSlotEvents"),
+    ("driver: --max-slot-events does not reach the kernel", "src/driver/main.cpp",
+     "    limits.maxSlotEvents = o.maxSlotEvents;\n", ""),
 ]
 
 

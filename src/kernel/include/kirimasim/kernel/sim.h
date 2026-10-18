@@ -145,10 +145,11 @@ struct MonitorSpec {
 /// assign (SCHEDULER_SPEC.md 14).
 enum class Hold : std::uint8_t { Assign, Force };
 
-/// Limits of a run (CLI.md 2.2). 0 means no limit for maxZeroDelay.
+/// Limits of a run (CLI.md 2.2, 2.6). 0 means no limit for the counts.
 struct Limits {
     std::uint64_t maxTime = UINT64_MAX;
-    std::uint64_t maxZeroDelay = 0;  ///< Moves into Active or Reactive per time slot.
+    std::uint64_t maxZeroDelay = 0;   ///< Moves into Active or Reactive per time slot.
+    std::uint64_t maxSlotEvents = 0;  ///< Events run per time slot, in any region.
 };
 
 /// The scheduler of one Context.
@@ -533,6 +534,7 @@ private:
     int level_ = 1;
     std::uint64_t time_ = 0;
     std::uint64_t movesThisSlot_ = 0;
+    std::uint64_t eventsThisSlot_ = 0;
     std::string error_;
     bool postponed_ = false;  ///< The Postponed region is running (2.2).
     bool overflow_ = false;   ///< A delay went past the largest time (8).

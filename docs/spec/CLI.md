@@ -2,7 +2,7 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
 
@@ -41,7 +41,7 @@ kirimasim --version | --help
 | --- | --- | --- |
 | `--max-time=<time>` | Stop when this time is reached (reason time_limit, code 4). The time has a unit (for example `10us`). Its form and how it stops: 2.5 | M4 |
 | `--max-time-ok` | Treat time_limit as code 0 | M4 |
-| `--max-scc-iter=<n>`, `--max-zero-delay=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (reason zero_time_limit, code 5). Their meaning and defaults: 2.6 | M4 |
+| `--max-scc-iter=<n>`, `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (reason zero_time_limit, code 5). Their meaning and defaults: 2.6 | M4 |
 | `--seed=<n>` | The random seed (the random-number section of SYSTEM_TASKS.md; to be written in P1) | M7 |
 | `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (the waveform document; to be written in P1) | M7 |
 
@@ -72,6 +72,7 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 | Option | What it counts | Default |
 | --- | --- | --- |
 | `--max-zero-delay=<n>` | Moves of events into the Active or the Reactive region within one time slot (the "moves" of SCHEDULER_SPEC.md 3; they grow with resumptions after `#0`, evaluations after NBA updates and the like) | 1000000 |
+| `--max-slot-events=<n>` | Events run in one time slot, in any region (the events that `--stats=json` counts as `sched.events.*`). They grow with every resumption, update and evaluation, also when processes wake each other inside one region, which `--max-zero-delay` does not count (added 2026-10-19, approved) | 100000000 |
 | `--max-steps=<n>` | Tier 1 instructions one process runs in a row without waiting (they grow in a loop with no wait, such as `forever begin end`) | 1000000000 |
 | `--max-scc-iter=<n>` | Iterations of a static island of tier 2 (P2) | Decided in P2 |
 
@@ -80,9 +81,11 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
   - Tier 1 in the release configuration ran about 350 million instructions a second in a loop with no wait. The dev configuration was about as fast, and the asan configuration about half as fast. Stopping at the default of `--max-steps` takes about 3 seconds in release and about 6 in asan.
   - A million resumptions after `#0` took about 0.04 seconds.
   - `--max-steps` is large so as not to stop, by mistake, a design that initializes a large memory in one loop in an `initial` (16 million words take about 100 million instructions).
+  - `--max-slot-events` (measured 2026-10-19): two processes that wake each other reached the default in about 7 seconds in release, 8 in dev, 14 in ubsan and 32 in asan. The default leaves a margin of 100 times over a time slot of a million events, such as a design where a million processes wake on one clock edge.
 - These defaults are reviewed in M6, when sv-tests and real designs are run. Changing them means changing this document, with a human's approval.
 - When a limit is reached, one line says which, on standard error, before the line of the reason for ending (4). Forms:
   - `kirimasim: error: time did not advance: <n> moves into the Active region in one time slot (--max-zero-delay=<n>)` (`Reactive` for the reactive set)
+  - `kirimasim: error: time did not advance: <n> events ran in one time slot (--max-slot-events=<n>)`
   - `kirimasim: error: time did not advance: process "<process name>" ran <n> instructions without waiting (--max-steps=<n>)`
   - The process name is the name of the SIR process (`top.initial0` and the like).
 

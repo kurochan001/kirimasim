@@ -273,7 +273,7 @@ kirimasim: info: finish at 52 ns
 | `-f <ファイル>`、`+incdir+<ディレクトリ>`、`+define+<名前>[=<値>]`、`--top=<名前>` | ソース、インクルードのディレクトリ、マクロ、最上位のモジュール |
 | `--timescale=<単位>/<精度>` | timescale を書いていない設計要素の時間の単位と精度（既定は `1ns/1ns`） |
 | `--max-time=<時刻>`、`--max-time-ok` | シミュレーションの時刻で止める。終了コードを 4 でなく 0 にする |
-| `--max-zero-delay=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P2 の第 2 層まで効果は無い） |
+| `--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P2 の第 2 層まで効果は無い） |
 | `--dump-sir` | シミュレーションの代わりに中間表現を出す |
 | `--stats=json` | 実行の回数のカウンタを JSON で出す |
 | `+<名前>[=<値>]` | `$test$plusargs` と `$value$plusargs` のためのプラスアーグ |
@@ -392,7 +392,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | 遅延即時アサーション | `assert #0` と `assert final`。時刻スロットが落ち着いてから動作を実行する |
 | static-init のプロセス | 時刻 0 の手続きが始まる前に、static な変数の初期値を設定するプロセス |
 | quiescent | 事象が無くなって実行が終わったこと |
-| zero-time limit | 時刻が上限を超えて進まなかったので実行を止めたこと（`--max-steps`、`--max-zero-delay`） |
+| zero-time limit | 時刻が上限を超えて進まなかったので実行を止めたこと（`--max-steps`、`--max-zero-delay`、`--max-slot-events`） |
 | 記録の回収 | 終わったプロセスの記憶を返すこと（[SCHEDULER_SPEC.ja.md](docs/spec/SCHEDULER_SPEC.ja.md) の 10.8 節） |
 
 **テストと仕事の進め方**

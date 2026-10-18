@@ -392,7 +392,7 @@ Options available now:
 | `-f <file>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `--top=<name>` | Sources, include directories, macros, the top module |
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
-| `--max-zero-delay=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
+| `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
 | `--dump-sir` | Print the intermediate representation instead of simulating |
 | `--stats=json` | Print counters of the run as JSON |
 | `+<name>[=<value>]` | Plusargs for `$test$plusargs` and `$value$plusargs` |
@@ -544,7 +544,7 @@ the same table with the Japanese terms.
 | deferred immediate assertion | `assert #0` or `assert final`: its action runs only once the time slot settles |
 | static-init process | The process that sets static variables' initial values before time 0's procedures start |
 | quiescent | The end of a run because no event is left |
-| zero-time limit | The end of a run because time stopped advancing past a limit (`--max-steps`, `--max-zero-delay`) |
+| zero-time limit | The end of a run because time stopped advancing past a limit (`--max-steps`, `--max-zero-delay`, `--max-slot-events`) |
 | record release | Giving back the memory of finished processes ([SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) 10.8) |
 
 **Testing and the way of working**
