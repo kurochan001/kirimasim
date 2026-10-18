@@ -5,8 +5,8 @@ Looks at the diff from merge-base(base, head) to head. If that diff touches
 the implementation (anything under src/), it must not also:
 
 * change or remove an existing entry of tests/perf_counts/expected.json,
-* change or remove an existing line of any other tests/**/expected* file or
-  tests/**/*.expected file,
+* change or remove an existing line of any other tests/**/expected* file,
+  tests/**/*.expected file or tests/**/*.stderr file,
 * change or remove an existing line of a test-suite file (tests/**/*.sv).
   This covers ":expected_stdout:" lines and also rewriting a test's body
   to get the same effect,
@@ -43,11 +43,12 @@ def git(*args: str) -> str:
 
 
 def is_expected_file(path: str) -> bool:
-    # expected* files, and <test name>.expected files that hold a test's
-    # multi-line expected output (see docs/spec/TEST_SUITE.md).
+    # expected* files, and the <test name>.expected and <test name>.stderr
+    # files that hold a test's expected output and messages (see
+    # docs/spec/TEST_SUITE.md).
     name = path.rsplit("/", 1)[-1]
     return path.startswith("tests/") and (name.startswith("expected")
-                                          or name.endswith(".expected"))
+                                          or name.endswith((".expected", ".stderr")))
 
 
 def is_test_source(path: str) -> bool:

@@ -18,8 +18,8 @@ TOOLS = ROOT / "tools"
 failures = []
 
 
-def expect(name: str, cmd: list[str], want_ok: bool) -> None:
-    p = subprocess.run(cmd, capture_output=True, text=True, check=False)
+def expect(name: str, cmd: list[str], want_ok: bool, cwd: Path | None = None) -> None:
+    p = subprocess.run(cmd, capture_output=True, text=True, check=False, cwd=cwd)
     if (p.returncode == 0) != want_ok:
         failures.append(f"{name}: exit code {p.returncode}, expected "
                         f"{'0' if want_ok else 'nonzero'}\n{p.stdout}{p.stderr}")
@@ -123,6 +123,43 @@ def perfcount(kirimasim: str, tmp: Path) -> None:
                 "--expected", str(exp), "--root", str(ROOT)], want_ok)
 
 
+def expected_change(tmp: Path) -> None:
+    """check_expected_change.py on a scratch repository: a change under src/
+    may not come with a change to an existing line of an expectation."""
+    repo = tmp / "expected_change"
+    repo.mkdir()
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=", *args], cwd=repo,
+                       check=True, capture_output=True)
+
+    def write(files: dict[str, str]) -> None:
+        for path, text in files.items():
+            (repo / path).parent.mkdir(parents=True, exist_ok=True)
+            (repo / path).write_text(text, encoding="utf-8")
+
+    git("init", "-q")
+    write({"src/a.cpp": "int a;\n", "tests/suite/t.sv": "module t; endmodule\n",
+           "tests/suite/t.expected": "out\n", "tests/suite/t.stderr": "warning\n"})
+    git("add", ".")
+    git("commit", "-qm", "base")
+    git("tag", "base")
+    src = {"src/a.cpp": "int b;\n"}
+    for name, files, want_ok in [
+        ("src_only", src, True),
+        ("expected_only", {"tests/suite/t.expected": "changed\n"}, True),
+        ("src_and_expected", {**src, "tests/suite/t.expected": "changed\n"}, False),
+        ("src_and_stderr", {**src, "tests/suite/t.stderr": "changed\n"}, False),
+        ("src_and_new_stderr_line", {**src, "tests/suite/t.stderr": "warning\nmore\n"}, True),
+    ]:
+        git("checkout", "-q", "-B", name, "base")
+        write(files)
+        git("commit", "-qam", name)
+        expect("check_expected_change " + name,
+               [sys.executable, str(TOOLS / "check_expected_change.py"), "--base", "base",
+                "--head", "HEAD"], want_ok, cwd=repo)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True)
@@ -134,6 +171,7 @@ def main() -> int:
         banned(tmp)
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
+        expected_change(tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)
     if failures:
