@@ -24,6 +24,19 @@ if(NOT KIRIMASIM_GIT_COMMIT)
     set(KIRIMASIM_GIT_COMMIT "unknown")
 endif()
 
+# Warnings for kirimasim's own code; the dependencies above keep their own
+# flags. An aggregate whose later members have default member initializers
+# is often written without them, so that is not warned of. With
+# KIRIMASIM_WERROR the warnings are errors: CI's clang builds and
+# tools/local_ci.py set it, while GCC builds only show them.
+option(KIRIMASIM_WERROR "Treat warnings in kirimasim's own code as errors" OFF)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    add_compile_options(-Wall -Wextra -Wpedantic -Wno-missing-field-initializers)
+    if(KIRIMASIM_WERROR)
+        add_compile_options(-Werror)
+    endif()
+endif()
+
 add_subdirectory(src/sir)
 add_subdirectory(src/kernel)
 add_subdirectory(src/valsem)

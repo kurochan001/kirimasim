@@ -1689,12 +1689,12 @@ private:
                 const auto& ops = in.operands;
                 switch (in.op) {
                     case Op::Br:
-                        b = takeBranch(f, ops, 0);
+                        b = takeBranch(ops, 0);
                         jumped = true;
                         break;
                     case Op::BrIf: {
                         const std::size_t second = 2 + ops[1].count;
-                        b = takeBranch(f, ops, isTrue(value(ops[0])) ? 1 : second);
+                        b = takeBranch(ops, isTrue(value(ops[0])) ? 1 : second);
                         jumped = true;
                         break;
                     }
@@ -1842,7 +1842,7 @@ private:
                     case Op::Resolve: resolve(in, info_[body][b][k]); break;
                     case Op::Syscall: {
                         const InstrInfo& info = info_[body][b][k];
-                        if (!syscall(f, p, in, info)) return Exit::Error;
+                        if (!syscall(p, in, info)) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         break;
                     }
@@ -2261,7 +2261,7 @@ private:
 
     /// Passes the arguments of the block operand at ops[i] to its
     /// parameters and returns the block.
-    sir::BlockId takeBranch(const Frame& f, const std::vector<Operand>& ops, std::size_t i) {
+    sir::BlockId takeBranch(const std::vector<Operand>& ops, std::size_t i) {
         const Operand& target = ops[i];
         const auto& params = bodyBlocks(act_.body)[target.id].params;
         if (target.count != 0) {
@@ -3644,8 +3644,7 @@ private:
         return toReal(value(o), t);
     }
 
-    std::string formatValue(const Frame& f, const Operand& o,
-                            const kernel::FormatSpec& spec) const {
+    std::string formatValue(const Operand& o, const kernel::FormatSpec& spec) const {
         const sir::Type t = typeOf(o);
         const W4 x = value(o);
         if (t.kind == sir::TypeKind::String) return kernel::formatString(strings_.get(x.a), spec);
@@ -3668,7 +3667,7 @@ private:
     /// The text of the format operands from `i` on: a text operand is a
     /// format; the values after it fill its specifiers, and values left
     /// over print in decimal (SYSTEM_TASKS.md 3.1).
-    std::optional<std::string> formatOperands(Frame& f, const sir::Process& p, const sir::Instr& in,
+    std::optional<std::string> formatOperands(const sir::Process& p, const sir::Instr& in,
                                               const InstrInfo& info, std::size_t i) {
         const auto& ops = in.operands;
         std::string text;
@@ -3676,7 +3675,7 @@ private:
             if (ops[i].kind != Operand::Kind::Text) {
                 kernel::FormatSpec spec;
                 spec.conv = info.radix;
-                text += formatValue(f, ops[i], spec);
+                text += formatValue(ops[i], spec);
                 ++i;
                 continue;
             }
@@ -3691,14 +3690,14 @@ private:
                     fail(p, "a format specifier has no argument");
                     return std::nullopt;
                 }
-                text += formatValue(f, ops[i], piece.spec);
+                text += formatValue(ops[i], piece.spec);
                 ++i;
             }
         }
         return text;
     }
 
-    bool syscall(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+    bool syscall(const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         switch (info.task) {
             case SysTask::Fatal:
@@ -3709,7 +3708,7 @@ private:
                 // on stderr (SYSTEM_TASKS.md 10.1); $fatal then ends the
                 // run like $finish with its level (20.10).
                 const std::optional<std::string> message =
-                    formatOperands(f, p, in, info, formatStart(info.task));
+                    formatOperands(p, in, info, formatStart(info.task));
                 if (!message) return false;
                 std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
                 line += ":" + std::to_string(in.loc.line) + ": ";
@@ -3784,7 +3783,7 @@ private:
             case SysTask::Write:
             case SysTask::SFormatF: {
                 const std::optional<std::string> formatted =
-                    formatOperands(f, p, in, info, formatStart(info.task));
+                    formatOperands(p, in, info, formatStart(info.task));
                 if (!formatted) return false;
                 std::string text = *formatted;
                 if (info.task == SysTask::SFormatF) {

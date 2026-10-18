@@ -27,6 +27,8 @@ jobs:
     env:
       CC: clang-22
       CXX: clang++-22
+      # Warnings in kirimasim's own code are errors with clang.
+      WERROR: -DKIRIMASIM_WERROR=ON
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -56,7 +58,7 @@ jobs:
           key: fetchcontent-ubuntu-24.04-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
 
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}
@@ -116,6 +118,8 @@ jobs:
       matrix:
         preset: [dev, release, asan, ubsan]
     runs-on: macos-26
+    env:
+      WERROR: -DKIRIMASIM_WERROR=ON
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -136,7 +140,7 @@ jobs:
           key: fetchcontent-macos-26-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
 
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}

@@ -997,14 +997,15 @@ private:
                 break;
             }
             case Op::Fload:
-                if (nOps(1) && (ops[0].kind != Operand::Kind::Frame || ty(0) != rt ||
-                                !(*body.frame)[ops[0].id].dims.empty() && rt.kind != TypeKind::Ref))
+                if (nOps(1) &&
+                    (ops[0].kind != Operand::Kind::Frame || ty(0) != rt ||
+                     (!(*body.frame)[ops[0].id].dims.empty() && rt.kind != TypeKind::Ref)))
                     bad("needs a frame variable of the result type that is not an array");
                 break;
             case Op::Fstore:
                 if (nOps(2) &&
                     (ops[0].kind != Operand::Kind::Frame || !isValue(1) || !fits(ty(0), ty(1)) ||
-                     !(*body.frame)[ops[0].id].dims.empty() && ty(0).kind != TypeKind::Ref))
+                     (!(*body.frame)[ops[0].id].dims.empty() && ty(0).kind != TypeKind::Ref)))
                     bad("needs a frame variable that is not an array and a value of its type");
                 break;
             case Op::RefMake: {

@@ -34,15 +34,6 @@ v::Value ref(const Wide& x, unsigned w, bool s) {
     return v::fromWords(a, b, w, s);
 }
 
-Wide fromRef(const v::Value& r) {
-    std::vector<std::uint64_t> a, b;
-    v::toWords(r, a, b);
-    Wide out(a.size());
-    for (std::size_t i = 0; i < a.size(); ++i)
-        out[i] = {a[i], b[i]};
-    return out;
-}
-
 /// Random values that often hit 0, 1, all ones, the sign bit, small
 /// numbers and a few X or Z bits.
 class Gen {

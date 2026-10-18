@@ -114,6 +114,10 @@ For release builds, also run `python3 tools/check_release_flags.py` after
 with sanitizers; `asan` builds slang without mimalloc, whose allocator the
 address sanitizer cannot see into.
 
+kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
+`-DKIRIMASIM_WERROR=ON` to make the warnings errors, as `tools/local_ci.py`
+and CI's clang builds do.
+
 To run every check that CI runs (all four presets, the release flag check,
 the banned-feature check, clang-format, clang-tidy, and the check that each
 commit not pushed yet keeps existing expectations) in one go:

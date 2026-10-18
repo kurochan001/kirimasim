@@ -126,7 +126,9 @@ def main() -> int:
     steps: list[Step] = []
 
     for preset in presets:
-        for kind, cmd in (("configure", ["cmake", "--preset", preset]),
+        # Warnings in kirimasim's own code are errors here, as in CI's clang
+        # builds (KIRIMASIM_WERROR in CMakeLists.txt).
+        for kind, cmd in (("configure", ["cmake", "--preset", preset, "-DKIRIMASIM_WERROR=ON"]),
                           ("build", ["cmake", "--build", "--preset", preset]),
                           ("test", ["ctest", "--preset", preset])):
             step = timed(f"{preset}: {kind}", cmd, logs / f"{preset}-{kind}.log")
