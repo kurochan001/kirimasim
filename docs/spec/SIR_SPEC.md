@@ -1,427 +1,429 @@
-# SIR_SPEC：中間表現 SIR の仕様
+# SIR_SPEC: specification of the intermediate representation SIR
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。「案」の項目は、P1 で実装しながら確かめてから確定する。
+[日本語](SIR_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-**M3b の改訂（2026-10-15 に承認）：** P1 の計画の段 M3b で、値の合流、待ちをまたぐ値、unpacked の配列、型の表、サブルーチン、プロセスの制御の命令を足し、テキスト形式を番号で引く形に改めた。改めた節には「M3b の改訂」と書いた。
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1.
 
-**static の初期化の追記（2026-10-16 に承認）：** 7.1 節に、プロセスの種類 `static-init` を足した。
+**Amendment of M3b (approved 2026-10-15):** in stage M3b of the P1 plan, instructions for merging values, values across waits, unpacked arrays, the type table, subroutines and process control were added, and the text form was changed to refer to things by number. The sections changed say "amendment of M3b".
 
-**意味を決める場所の追記（2026-10-16 に承認）：** 1 節に、意味は SIR を作るときに決め、層と器で変えない原則を足した。
+**Addition on static initialization (approved 2026-10-16):** the process kind `static-init` was added to 7.1.
 
-**slang の定数評価の例外（2026-10-16 に承認）：** 6 節に、slang の既知の誤りがあるシステム関数を含む式は実行時に計算することを足した。2026-10-17 に、パターンのある条件演算子を例外に加えた（承認済み）。2026-10-18 に、その slang の Issue の番号を記した（承認済み）。同日、2 つとも上流で直ったことを記し、slang を上げて一覧から外した（承認済み）。
+**Addition on where meaning is decided (approved 2026-10-16):** the principle that meaning is decided when SIR is made, and does not change with tier or container, was added to 1.
 
-**保留される報告の命令の追記（2026-10-16 に承認）：** 5.2 節の表に `report.defer` を足した。
+**Exceptions to slang's constant evaluation (approved 2026-10-16):** 6 gained the rule that expressions containing system functions with known errors in slang are computed at run time. On 2026-10-17, the conditional operator with patterns was added to the exceptions (approved). On 2026-10-18, the numbers of those slang issues were recorded (approved). The same day, it was recorded that both were fixed upstream, slang was raised, and they were removed from the list (approved).
 
-**設計全体の精度の追記（2026-10-16 に承認）：** 設計全体の時間の精度を SIR に持たせることを、2 節の表、9 節のテキスト形式、10 節の規則 10 に書き足した。
+**Addition of the instruction for pending reports (approved 2026-10-16):** `report.defer` was added to the table of 5.2.
 
-**解決が要るネットの表し方（2026-10-16 に承認）：** 3.5 節の最後の段落を、ドライバのスロットと `resolve` の命令による表し方に改めた。
+**Addition of the design's precision (approved 2026-10-16):** that SIR holds the time precision of the whole design was added to the table of 2, the text form of 9 and rule 10 of 10.
 
-**ポートの畳み込み、報告のスコープ、package の変数（2026-10-16 に承認）：** 3.5 節を、ネットどうしの接続を方向によらず畳み込む形に改めた（同日、slang の警告についての記述の誤りを訂正した）。5.2 節の `report.defer` にスコープの被演算子を足した。2 節、3.3 節、7.1 節に、package とコンパイル単位の変数の置き場所と初期化を足した。
+**How nets that need resolution are represented (approved 2026-10-16):** the last paragraph of 3.5 was changed to represent them with driver slots and the `resolve` instruction.
 
-**書き込みの制限の例外（2026-10-18 に承認）：** 10 節の規則 6 から、static なサブルーチンの変数と引数のスロットを除いた。
+**Collapsing ports, the scope of reports, package variables (approved 2026-10-16):** 3.5 was changed to collapse connections between nets whatever their direction (the same day, an error in the description of slang's warnings was corrected). `report.defer` in 5.2 gained a scope operand. 2, 3.3 and 7.1 gained where variables of packages and compilation units are placed and how they are initialized.
 
-**イベント制御の式の項（2026-10-18 に承認）：** 7.2 節に、`wait.event` の事象として、式の値を返す関数（種類 `watch`）で表す式の項を足した。
+**Exception to the write restriction (approved 2026-10-18):** the slots of variables and arguments of static subroutines were excluded from rule 6 of 10.
 
-**本書の読みが slang と違う定数（2026-10-18 に承認）：** 6 節に、slang の定数を使わずに計算するものとして、実数から整数への変換と、4 値の値の単項の `+` を足した。
+**Expression items of event controls (approved 2026-10-18):** 7.2 gained, as events of `wait.event`, expression items represented by a function that returns the expression's value (kind `watch`).
 
-SIR（slot-indexed IR）は、slang のエラボレーションの結果から作る kirimasim の中間表現である。実行に必要なことをすべて静的に決めた形で、第 1 層（VM）も第 2 層（C++ の生成）も、同じ SIR から作る。値の意味は VALUE_SEMANTICS.md、事象と時刻の扱いは SCHEDULER_SPEC.md に従う。規格（IEEE 1800-2023）の本文は写さず、根拠は節番号で示す。
+**Constants where this document's reading differs from slang (approved 2026-10-18):** 6 gained, as things computed without slang's constants, conversion from real to integer and unary `+` of 4-state values.
 
-「案」と書いた項目は、P1 で実装しながら確かめ、必要なら本書を直す（直すときは人の承認を受ける）。
+SIR (slot-indexed IR) is kirimasim's intermediate representation, made from the result of slang's elaboration. It is a form in which everything needed for execution is decided statically, and both tier 1 (the VM) and tier 2 (C++ generation) are made from the same SIR. The meaning of values follows VALUE_SEMANTICS.md, and events and time follow SCHEDULER_SPEC.md. The text of the standard (IEEE 1800-2023) is not copied; grounds are given by clause number.
 
-## 1. 設計の原則
+Items marked "draft" are checked while implementing in P1, and this document is corrected if needed (a correction needs a human's approval).
 
-- 実行中に名前で何かを引かない。信号と変数はスロット番号、関数は関数番号、クラスの仮想メソッドは表の番号で引く。名前の表は、VPI、波形、`$dumpvars`、`uvm_hdl_*`、診断のためだけに別に持つ。
-- 式の型（幅、符号、2 値か 4 値か）は静的に決める。幅と符号は slang の型付けの結果をそのまま使い、SIR で計算し直さない（VALUE_SEMANTICS.md の 2 節）。
-- すべての命令にソースの位置（ファイル番号、行、列）を付ける。
-- 同じ入力から作る SIR は、番号の振り方も含めて毎回同じにする（NFR-6）。番号は、slang がエラボレーションした木を決まった順（インスタンスの木の深さ優先、ソースに現れた順）にたどって振る。
-- **意味は SIR を作るときに決める（2026-10-16 に承認）：** 構文の意味の判断は `front` が SIR を作るときに行い、SIR の命令の意味は本書と VALUE_SEMANTICS.md、SCHEDULER_SPEC.md で決める。第 1 層と第 2 層は、SIR の命令を機械的に実行・翻訳するだけにし、命令の種類と被演算子の型以外で振る舞いを分けない。同じ文は、どの器（module の手続き、class のメソッド、automatic の task、fork の枝、interface、generate、package）の中にあっても同じ命令の並びになり、違うのは置き場所（スロットかフレームか）だけにする。
-- システムタスク、システム関数、組み込みのメソッド（文字列や列挙型のメソッドなど）は、SIR では名前で書く。各層は SIR を読み込むときに名前を番号に解決し、実行中に名前を比べない（M3b の改訂）。
-- 解析の結果（X が来ないこと、静的な島など）は SIR に書かない。`analysis` が SIR の番号を引く別の表として持つ（M3b の改訂）。SIR は slang の結果から一意に決まる形にとどめ、解析を直しても SIR のテキストが変わらないようにするためである。
-- 遅延の値は、設計全体の時間の精度の刻みで持つ。モジュールの時間の単位からの換算は `front` が行う（7.2。M3b の改訂）。
-- SIR の形を変えたら、`sir::formatVersion()` の値を上げる。P1 の間は 0 のままにし、テキスト形式を初めて固定するときに 1 にする。
+## 1. Design principles
 
-## 2. 全体の構成
+- Nothing is looked up by name during execution. Signals and variables are referred to by slot number, functions by function number, and virtual methods of classes by table index. The name table is kept separately, only for VPI, waveforms, `$dumpvars`, `uvm_hdl_*` and diagnostics.
+- The type of an expression (width, signedness, 2-state or 4-state) is decided statically. Width and signedness are slang's typing as it is, not computed again in SIR (VALUE_SEMANTICS.md 2).
+- Every instruction carries a source position (file number, line, column).
+- SIR made from the same input is the same every time, numbering included (NFR-6). Numbers are given by walking the tree slang elaborated in a fixed order (depth-first over the instance tree, in order of appearance in the source).
+- **Meaning is decided when SIR is made (approved 2026-10-16):** decisions about the meaning of constructs are made by `front` when it makes SIR, and the meaning of SIR's instructions is set by this document, VALUE_SEMANTICS.md and SCHEDULER_SPEC.md. Tiers 1 and 2 only execute and translate SIR's instructions mechanically, and do not vary behaviour by anything but the kind of instruction and the types of operands. The same statement becomes the same sequence of instructions in whatever container it is (module procedures, class methods, automatic tasks, fork branches, interfaces, generate, packages); only the place (slot or frame) differs.
+- System tasks, system functions and built-in methods (methods of strings and enumerated types and so on) are written by name in SIR. Each tier resolves names to numbers when it loads SIR, and does not compare names during execution (amendment of M3b).
+- Results of analysis (that X never arrives, static islands and so on) are not written in SIR. `analysis` keeps them as separate tables indexed by SIR's numbers (amendment of M3b). This keeps SIR a form decided uniquely by slang's result, so that fixing an analysis does not change the text of SIR.
+- Delay values are held in steps of the whole design's time precision. `front` converts from the module's time unit (7.2; amendment of M3b).
+- When the form of SIR changes, the value of `sir::formatVersion()` is raised. It stays 0 during P1, and becomes 1 when the text form is first fixed.
 
-1 つの設計の SIR は、次のもので構成する。
+## 2. Overall structure
 
-| 要素 | 内容 |
+The SIR of one design consists of the following.
+
+| Element | Content |
 | --- | --- |
-| 設計全体の時間の精度 | すべての設計要素の精度の最小（10 の何乗秒かで持つ）。遅延の値と時刻は、この刻みで数える（SCHEDULER_SPEC.md の 1 節。2026-10-16 に追記） |
-| スロット表 | すべての信号と変数の置き場所と属性（3 節） |
-| 名前の表 | 階層の名前 → スロット（と別名）。実行中は使わない |
-| インスタンス表 | インスタンスの番号、親、定義（モジュール × パラメータの組）、スコープの名前。package とコンパイル単位（`$unit`）も、変数か static なサブルーチンを持つものは 1 行ずつ持つ（種類 `package`、`unit`。2026-10-16 に承認） |
-| 型の表 | packed と unpacked の集合型、列挙型、クラスの配置（4.3） |
-| プロセスの表 | 各プロセスの種類、起動の条件、書き込みの範囲、フレームの変数の表、基本ブロックの列（7 節） |
-| サブルーチンの表 | 関数とタスクの引数、戻り値の型、フレームの変数の表、基本ブロックの列（8 節） |
-| 定数の表 | 大きな定数、実数、文字列の値（4 値を含む。6 節） |
-| ソースの表 | ファイル番号 → ファイルのパス |
+| Time precision of the whole design | The smallest precision of all design elements (held as a power of 10 seconds). Delay values and times are counted in these steps (SCHEDULER_SPEC.md 1; added 2026-10-16) |
+| Slot table | Where every signal and variable is placed, and its attributes (3) |
+| Name table | Hierarchical name → slot (and aliases). Not used during execution |
+| Instance table | Instance number, parent, definition (module × set of parameters), scope name. Packages and compilation units (`$unit`) that have variables or static subroutines also have one row each (kinds `package`, `unit`; approved 2026-10-16) |
+| Type table | Layouts of packed and unpacked aggregate types, enumerated types and classes (4.3) |
+| Process table | Each process's kind, starting condition, write ranges, table of frame variables, and sequence of basic blocks (7) |
+| Subroutine table | Arguments of functions and tasks, return type, table of frame variables, sequence of basic blocks (8) |
+| Constant table | Values of large constants, reals and strings (4-state included; 6) |
+| Source table | File number → file path |
 
-## 3. 格納領域とスロット
+## 3. Storage and slots
 
-### 3.1 スロット
+### 3.1 Slots
 
-- スロット番号（SlotId）は 32 ビットの符号なし整数で、スロット表の添字。
-- スロット表の各行が持つもの：
+- A slot number (SlotId) is a 32-bit unsigned integer, the index into the slot table.
+- Each row of the slot table holds:
 
-| 項目 | 内容 |
+| Item | Content |
 | --- | --- |
-| 領域 | 2 値、4 値、実数、ハンドル（3.2） |
-| オフセット | その領域の中の語のオフセット |
-| 幅と符号 | ビット幅、符号付きか |
-| 種類 | 変数、またはネット（ネットの種類：wire、tri、wand、triand、wor、trior、tri0、tri1、supply0、supply1、uwire） |
-| 配列の形 | 固定長の unpacked 配列なら、次元ごとの範囲（左と右の添字）。配列全体を 1 つのスロットにし、要素はスロットの中に連続して置く（M3b の改訂。4.2） |
-| 印 | 可観測、force の対象、複数ドライバ、駆動の強さが必要 |
-| 所属 | インスタンスの番号（static なサブルーチンの変数なら、サブルーチンの番号も） |
-| 名前 | 名前の表の行。診断と `--dump-sir` のためだけに使う |
+| Area | 2-state, 4-state, real, handle (3.2) |
+| Offset | The word offset within that area |
+| Width and signedness | Bit width, whether signed |
+| Kind | Variable, or net (kind of net: wire, tri, wand, triand, wor, trior, tri0, tri1, supply0, supply1, uwire) |
+| Array shape | For a fixed-size unpacked array, the range (left and right index) of each dimension. The whole array is one slot, with its elements placed contiguously in the slot (amendment of M3b; 4.2) |
+| Flags | Observable, force target, multiple drivers, needs drive strength |
+| Owner | Instance number (and the subroutine number for a variable of a static subroutine) |
+| Name | A row of the name table. Used only for diagnostics and `--dump-sir` |
 
-- 「X が来ないと証明済み」の印は持たない（M3b の改訂。1 節の解析の結果の扱い）。
+- There is no flag "proved never to receive X" (amendment of M3b; how results of analysis are treated in 1).
 
-### 3.2 領域
+### 3.2 Areas
 
-| 領域 | 置くもの | 1 つの値の表し方 |
+| Area | What it holds | How one value is represented |
 | --- | --- | --- |
-| 2 値 | 2 値の型の値 | 64 ビットの語の列（幅 64 以下は 1 語） |
-| 4 値 | 4 値の型の値 | 64 ビットごとの `(a, b)` の組の列。a と b は隣り合わせに置く（VALUE_SEMANTICS.md の 1.3 節） |
-| 実数 | `real`、`realtime`、`shortreal` | `double`（`shortreal` は `float`） |
-| ハンドル | クラス、文字列、動的配列、キュー、連想配列、event、chandle、virtual interface | 実行カーネルのオブジェクトへのポインタ。null は 0。既定値は 3.2.1 |
+| 2-state | Values of 2-state types | A sequence of 64-bit words (1 word for widths up to 64) |
+| 4-state | Values of 4-state types | A sequence of `(a, b)` pairs per 64 bits, a and b placed next to each other (VALUE_SEMANTICS.md 1.3) |
+| Real | `real`, `realtime`, `shortreal` | `double` (`float` for `shortreal`) |
+| Handle | Classes, strings, dynamic arrays, queues, associative arrays, events, chandles, virtual interfaces | A pointer to an object of the execution kernel. null is 0. Defaults in 3.2.1 |
 
-- 領域は宣言の型だけで決める（M3b の改訂）。解析で X が来ないと分かったスロットを 2 値の形で持つのは、第 2 層が自分の配置として行う（P2）。
+- The area is decided by the declared type alone (amendment of M3b). Holding slots that analysis showed never receive X in 2-state form is something tier 2 does as its own layout (P2).
 
-### 3.2.1 ハンドルの領域の既定値
+### 3.2.1 Defaults of the handle area
 
-- `event` 型のスロットは、エラボレーションのときに、カーネルのイベントのオブジェクトを 1 つずつ作って入れる。既定値は null ではない（規格で確認：6.8、表 6-7）。null になるのは、存在しない配列の要素を読んだとき（表 7-1）と、null を代入したとき（15.5.5。P3）だけ。
-- `string` 型の既定値は空の文字列。ハンドルの 0 を空の文字列とみなす（本書の決まり）。長さ 0 の文字列を作るたびにオブジェクトを確保しないためである。`len()`、連結、比較は、0 を長さ 0 の文字列として扱う。
-- クラス、interface class、chandle、virtual interface の既定値は null（0）。
-- 動的配列、キュー、連想配列の既定値は空（要素数 0）。ハンドルの 0 を空とみなす（本書の決まり。P3）。
+- Slots of type `event` each get one event object of the kernel, made at elaboration. The default is not null (checked: 6.8, Table 6-7). They become null only when reading an element of an array that does not exist (Table 7-1) and when null is assigned (15.5.5; P3).
+- The default of type `string` is the empty string. A handle of 0 is taken as the empty string (rule of this document), so that no object is allocated each time a string of length 0 is made. `len()`, concatenation and comparison treat 0 as a string of length 0.
+- The default of classes, interface classes, chandles and virtual interfaces is null (0).
+- The default of dynamic arrays, queues and associative arrays is empty (0 elements). A handle of 0 is taken as empty (rule of this document; P3).
 
-### 3.2.2 余ったビット
+### 3.2.2 Extra bits
 
-- 幅より上の余ったビットは常に 0（a も b も）。検証器と実行時の検査で確かめる。
-- packed の構造体と共用体、packed の多次元配列は、同じ幅のビットのベクタとして 1 つのスロットに置く。各フィールドと要素の位置は型の表に持つ（規格の 6.11.1 で、これらは単純なビットのベクタと等価とされている）。
+- Extra bits above the width are always 0 (both a and b). The verifier and run-time checks check this.
+- Packed structures and unions, and packed multidimensional arrays, are placed in one slot as a bit vector of the same width. The position of each field and element is held in the type table (6.11.1 of the standard makes these equivalent to simple bit vectors).
 
-### 3.3 変数の寿命と置き場所
+### 3.3 Lifetimes and placement of variables
 
-規格の決まり（規格で確認：6.21、13.3.1、13.3.2、13.4.2）：
+Rules of the standard (checked: 6.21, 13.3.1, 13.3.2, 13.4.2):
 
-- モジュール、インターフェース、program、checker の中で、サブルーチンとプロセスの外に宣言した変数は static。
-- モジュール、インターフェース、program、パッケージの中のタスクと関数は、既定で static。`automatic` を付けたもの、または `automatic` として宣言したモジュールなどの中にあるものは automatic。クラスの中のタスクと関数は常に automatic。
-- static なサブルーチンやブロックの中の変数は既定で static。automatic のものの中の変数は既定で automatic。どちらの中でも、個々の変数に `automatic` か `static` を付けて変えられる。
-- static なタスクの変数は、**引数（input、output、inout）も含めて**、同じタスクを同時に呼んでいるすべての呼び出しで共有し、呼び出しの間で値を保つ。ただし、モジュールのインスタンスごとに別に持つ。
-- automatic なサブルーチンの変数は、呼び出しのたびに確保し、スコープに入るたびに既定の初期値（output の引数を含む）で初期化する。input と inout の引数は、呼び出しの式の値で初期化する。
-- fork-join のブロックの寿命は、そこで作ったすべてのプロセスの実行を含む。
+- Variables declared in a module, interface, program or checker, outside subroutines and processes, are static.
+- Tasks and functions in a module, interface, program or package are static by default. Those marked `automatic`, or inside a module or the like declared `automatic`, are automatic. Tasks and functions in a class are always automatic.
+- Variables in a static subroutine or block are static by default; variables in an automatic one are automatic by default. In either, an individual variable can be changed by marking it `automatic` or `static`.
+- The variables of a static task, **arguments (input, output, inout) included**, are shared by all calls of the same task in progress at once, and keep their values between calls. They are held separately for each module instance, though.
+- The variables of an automatic subroutine are allocated for each call, and initialized to their default initial values (output arguments included) each time the scope is entered. input and inout arguments are initialized with the values of the call's expressions.
+- The lifetime of a fork-join block includes the execution of every process it made.
 
-SIR での置き場所（本書の決まり）：
+Placement in SIR (rule of this document):
 
-| 寿命 | 置き場所 |
+| Lifetime | Place |
 | --- | --- |
-| static（モジュールの変数、static なサブルーチンの変数と引数、static と宣言した変数） | スロット。static なサブルーチンの変数は、インスタンスごとに 1 つ。package とコンパイル単位のサブルーチンの変数は、設計全体で 1 つ |
-| package とコンパイル単位の変数とネット（2026-10-16 に承認） | その package かコンパイル単位の行に属するスロット。設計全体で 1 つ（規格で確認：26.2、3.12.1）。名前の表の名前は `<package 名>::<名前>`、`$unit::<名前>` |
-| automatic（automatic なサブルーチンの変数と引数、プロセスの中のブロックの automatic な変数） | 呼び出しかプロセスのフレーム（7.4 節） |
+| static (module variables, variables and arguments of static subroutines, variables declared static) | Slots. Variables of a static subroutine get one per instance. Variables of subroutines of packages and compilation units get one for the whole design |
+| Variables and nets of packages and compilation units (approved 2026-10-16) | Slots belonging to the row of that package or compilation unit. One for the whole design (checked: 26.2, 3.12.1). Their names in the name table are `<package name>::<name>` and `$unit::<name>` |
+| automatic (variables and arguments of automatic subroutines, automatic variables of blocks within processes) | The frame of the call or process (7.4) |
 
-automatic な変数と、大きさの変わる配列の要素への NBA は、規格で禁止されている（規格で確認：10.4.2）。automatic なタスクの変数については、手続きの連続代入、NBA の代入内のイベント制御での参照、`$monitor` と `$dumpvars` での追跡も禁止されている（規格で確認：13.3.2）。SIR を作るときに誤りとして報告する（slang がどこまで検出するかは P1 で確かめる）。
+NBAs to automatic variables and to elements of arrays whose size changes are forbidden by the standard (checked: 10.4.2). For variables of automatic tasks, procedural continuous assignments, references in event controls within NBA assignments, and tracing by `$monitor` and `$dumpvars` are also forbidden (checked: 13.3.2). They are reported as errors when SIR is made (how much slang detects is checked in P1).
 
-### 3.4 書き込みの範囲と感度の範囲
+### 3.4 Write ranges and sensitivity ranges
 
-- 1 つのスロットの別々のビット範囲に、別々のプロセスが書いてよい。どこまでを 1 つの書き込み先とみなすかは、最長の静的な接頭辞で決める（規格で確認：11.5.3。最長の静的な接頭辞は、エラボレーションの後に値が決まっている部分の選択の、最も長い部分）。
-- 各プロセスと連続代入について、書き込む範囲の集まり（書き込みの範囲）を SIR に持つ。1 つの範囲は、スロット、要素の範囲、ビット範囲の組（M3b の改訂）。添字と選択が定数なら正確な範囲、そうでなければ、その次元の全体とする。複数ドライバの検査（`always_comb`・`always_ff` の制限、`uwire`、変数への複数の連続代入）は、このビット範囲で行う。
-- 感度も、同じ組（スロット、要素の範囲、ビット範囲）で持つ。購読しているビット範囲が変わったときだけプロセスを起こす（SCHEDULER_SPEC.md の 9.5 節）。
+- Different processes may write different bit ranges of one slot. What counts as one target of a write is decided by the longest static prefix (checked: 11.5.3; the longest static prefix is the longest part of a select whose value is decided after elaboration).
+- For each process and continuous assignment, SIR holds the set of ranges it writes (its write ranges). A range is a triple of slot, element range and bit range (amendment of M3b). With constant indices and selects it is the exact range; otherwise the whole of that dimension. Checks of multiple drivers (the restrictions of `always_comb` and `always_ff`, `uwire`, several continuous assignments to a variable) are done on these bit ranges.
+- Sensitivity is held as the same triple (slot, element range, bit range) too. A process is woken only when a bit range it subscribes to changes (SCHEDULER_SPEC.md 9.5).
 
-### 3.5 ポートの畳み込み
+### 3.5 Collapsing ports
 
-親と子のポートの接続は、規格では暗黙の連続代入（input と output）か、強さを弱めない双方向の接続（inout）とみなす（規格で確認：4.9.6）。ネットどうしをつなぐポートでは、両側を 1 つのネットにまとめてよい（規格で確認：23.3.3.7）。
+The standard takes a connection between a parent's and a child's ports as an implicit continuous assignment (input and output) or as a bidirectional connection that does not weaken strength (inout) (checked: 4.9.6). For ports connecting nets to nets, the two sides may be merged into one net (checked: 23.3.3.7).
 
-- **畳み込む接続（2026-10-16 に承認）：** 両側がネット全体で、幅、符号、4 値かどうかが同じ接続は、方向（input、output、inout）によらず、親と子で同じスロットを共有する。両側のドライバは、そのスロットで解決する（VALUE_SEMANTICS.md の 5.3 節、5.5 節）。両側にドライバがある input と output は、規格では inout に変えてよく（23.3.3.1。slang は警告を出す）、この規則で inout と同じに扱われる。
-- **畳み込んだネットの種類：** 表 23-1 の規則で、外（親）か内（子）のネットの種類にする（規格で確認：23.3.3.7）。表が警告を求める組み合わせでは、slang が警告を出す（`-Wnet-inconsistent`。input と output のポートで、8 種類のネットの 56 通りを確かめた。slang v12）。inout のポートに `uwire` をつなぐと、slang は誤りにする。規格は、uwire をつないだポートを畳み込まないときに警告を求めるだけで（23.3.3.6）、誤りとは書いていない。slang の診断は緩めない（CLAUDE.md）ので、kirimasim でも誤りになる（2026-10-16 に訂正を承認）。
-- input と output の畳み込みは、規格では任意である（23.3.3.7）。畳み込まない処理系（Icarus 13.0 は input のポートを畳み込まない）とは、種類の違うネットの値が違いうる。テストスイートは、その場合は両方の結果を許す（`:nondeterministic: yes`）。
-- **畳み込まない条件（P3 で使う）：** 可観測の印（`--public` で VPI に見せるもの、`uvm_hdl_*` で force、release、deposit の対象になるもの）が付いているとき、畳み込むと force と release の見え方が変わるとき（SCHEDULER_SPEC.md の 14.4 節）。
-- **畳み込まない接続：** 上に当たらない input と output の接続（変数や式につながるもの、ネットの一部や連結につながるもの、幅や符号の違うネット）は、連続代入のプロセスとして SIR に置く。強さは (strong1, strong0)（VALUE_SEMANTICS.md の 5.3 節）。ただし、そのネットがほかのドライバと解決されるとき、ポートの反対側がネットなら、強さを運べないので、当面は未対応として報告する。上に当たらない inout の接続も、当面は未対応として報告する。
-- 畳み込むと、ポートの連続代入のプロセスが無くなり、子のネットが親のネットと同じ評価で変わる。同じ時刻の Active 領域の中の順序だけが変わり、規格はその順序を決めていない（4.7）。
+- **Connections collapsed (approved 2026-10-16):** a connection where both sides are whole nets with the same width, signedness and 4-stateness shares the same slot between parent and child, whatever the direction (input, output, inout). The drivers of both sides are resolved in that slot (VALUE_SEMANTICS.md 5.3, 5.5). input and output with drivers on both sides may be changed to inout by the standard (23.3.3.1; slang warns), and by this rule they are treated the same as inout.
+- **Kind of a collapsed net:** the outer (parent's) or inner (child's) kind of net, by the rules of Table 23-1 (checked: 23.3.3.7). For combinations where the table asks for a warning, slang warns (`-Wnet-inconsistent`; the 56 cases of 8 kinds of net were checked on input and output ports; slang v12). Connecting a `uwire` to an inout port is an error in slang. The standard only asks for a warning when a port connected to a uwire is not collapsed (23.3.3.6), and does not call it an error. slang's diagnostics are not loosened (CLAUDE.md), so it is an error in kirimasim too (correction approved 2026-10-16).
+- Collapsing input and output is optional in the standard (23.3.3.7). With implementations that do not collapse (Icarus 13.0 does not collapse input ports), values of nets of different kinds can differ. In that case the test suite allows both results (`:nondeterministic: yes`).
+- **When not to collapse (used in P3):** when an observable flag is set (made visible to VPI by `--public`, or a target of force, release or deposit by `uvm_hdl_*`), and when collapsing would change how force and release are seen (SCHEDULER_SPEC.md 14.4).
+- **Connections not collapsed:** input and output connections not covered above (those connected to variables or expressions, to parts of nets or concatenations, or to nets of different width or signedness) are placed in SIR as processes of continuous assignment. Their strength is (strong1, strong0) (VALUE_SEMANTICS.md 5.3). However, when such a net is resolved with other drivers and the other side of the port is a net, the strength cannot be carried, so for now it is reported as unsupported. inout connections not covered above are also reported as unsupported for now.
+- Collapsing removes the process of the port's continuous assignment, and the child's net changes in the same evaluation as the parent's net. Only the order within the Active region of the same time changes, and the standard does not set that order (4.7).
 
-解決が要るネット（VALUE_SEMANTICS.md の 5.5 節）は、次のように置く（2026-10-16 に承認）。
+Nets that need resolution (VALUE_SEMANTICS.md 5.5) are laid out as follows (approved 2026-10-16).
 
-- ネットのドライバ（連続代入、ネット宣言の代入、ポート、ゲート、`pullup`・`pulldown`）ごとに、ネットと同じ幅の 4 値のスロット（ドライバのスロット）を 1 つ置く。ドライバのプロセスは、ネットの代わりにドライバのスロットに書く。
-- ドライバのスロットは、ドライバの強さ (s1, s0) を静的な属性として持つ。
-- 値によって強さの片側が highz になるドライバ（3 状態ゲートの L と H。VALUE_SEMANTICS.md の 5.8 節）は、ドライバのスロットに加えて、幅 2w の 2 値のスロットを 1 つ持つ（側のスロット。2026-10-17 に承認）。下位の w ビットの各ビットは「1 の側を出す」、上位の w ビットの各ビットは「0 の側を出す」を表す。ゲートのプロセスは、1 回の実行の中で値と側の両方を書く。
-  - 「1 だけを出すドライバ」と「0 だけを出すドライバ」の 2 つのスロットに分ける方法は、s1 と s0 が違う x（例：(strong1, weak0) の x）で、解決の結果が 1 つのドライバのときと変わるので採らない。
-- 組み込みのゲートと UDP のインスタンスは、連続代入と同じく cont の種類のプロセスにする（7.1。2026-10-17 に承認）。出力のネットが解決を要しないとき（VALUE_SEMANTICS.md の 5.5 節）は、ネットに直接書き、L と H は x として書く。
-- ネットのスロットには、解決のプロセス（cont の種類）だけが書く。解決のプロセスは、ドライバのスロットを感度に持ち、`resolve` の命令で値を求めてネットに書く。
-- `resolve 型, ネットの種類, (ドライバの値, s1, s0)...`：VALUE_SEMANTICS.md の 5.4 節の規則で、4 値の値を返す。側のスロットを持つドライバの組は (ドライバの値, s1, s0, 側) で、ビットごとの強さは、側のビットが 0 の側を highz にしたもの（2026-10-17 に承認）。暗黙のドライバ（`tri0` などの pull と supply）は、ネットの種類から決まるので被演算子に書かない。意味は `valsem` の参照実装で定める。
-- **ネットの初めの値（2026-10-17 に承認）：** ネットのスロットと、ドライバのスロットは、cont のプロセスの書き込みの範囲（3.4）にあるビットを x から始め、ほかのビットを、ネットの種類の既定の値（VALUE_SEMANTICS.md の 1.4 節、5.4 節。ドライバのスロットは z）から始める（VALUE_SEMANTICS.md の 5.3 節の「ドライバの初めの値」）。
-  - 層は、この初めの値を SIR の書き込みの範囲から求める。SIR に別の項目は足さない。求め方は `sir` の 1 つの関数で定め、層はそれを使う。
-  - 解決のプロセスはネット全体を書くので、解決が要るネットは全体が x から始まる。時刻 0 に解決のプロセスが走ると、ドライバの値で解決した値になる。
+- For each driver of the net (continuous assignments, net declaration assignments, ports, gates, `pullup` and `pulldown`), one 4-state slot of the same width as the net (a driver slot) is placed. The driver's process writes the driver slot instead of the net.
+- A driver slot holds the driver's strength (s1, s0) as a static attribute.
+- A driver for which one side of the strength becomes highz depending on the value (L and H of three-state gates; VALUE_SEMANTICS.md 5.8) has, besides its driver slot, one 2-state slot of width 2w (a side slot; approved 2026-10-17). Each of the low w bits means "drive the 1 side", and each of the high w bits "drive the 0 side". The gate's process writes both value and side in one run.
+  - Splitting into two slots, "a driver that drives only 1" and "a driver that drives only 0", is not taken: for an x with s1 and s0 different (for example an x of (strong1, weak0)), the result of resolution would differ from that of one driver.
+- Instances of built-in gates and UDPs are processes of kind cont, like continuous assignments (7.1; approved 2026-10-17). When the output net does not need resolution (VALUE_SEMANTICS.md 5.5), they write the net directly, writing L and H as x.
+- Only the resolution process (kind cont) writes the net's slot. The resolution process has the driver slots as its sensitivity, computes the value with the `resolve` instruction and writes the net.
+- `resolve type, kind of net, (driver value, s1, s0)...`: returns a 4-state value by the rules of VALUE_SEMANTICS.md 5.4. For a driver with a side slot the tuple is (driver value, s1, s0, side), and the strength of each bit is that with the side whose side bit is 0 made highz (approved 2026-10-17). Implicit drivers (the pull and supply of `tri0` and the like) follow from the kind of net and are not written as operands. The meaning is set by the reference implementation in `valsem`.
+- **Initial value of nets (approved 2026-10-17):** net slots and driver slots start the bits within the write ranges (3.4) of cont processes as x, and the other bits as the default value of the kind of net (VALUE_SEMANTICS.md 1.4, 5.4; z for driver slots) ("initial value of drivers" in VALUE_SEMANTICS.md 5.3).
+  - Tiers find this initial value from SIR's write ranges. No separate item is added to SIR. How it is found is set by one function of `sir`, which the tiers use.
+  - The resolution process writes the whole net, so a net that needs resolution starts all x. When the resolution process runs at time 0, the net takes the value resolved from its drivers.
 
-畳み込んだときも、名前の表には親と子の両方の名前を、同じスロットの別名として残す。
+When collapsed, the name table keeps both the parent's and the child's names as aliases of the same slot.
 
-- **`alias` の文（2026-10-17 に承認）：** 両側がネット全体で、型が同じなら、ポートの畳み込みと同じく 1 つのスロットにまとめ、名前の表に両方の名前を残す。選択や連結の別名と、ネットの種類が違う別名は、当面は未対応として報告する。規格では、alias は名前を付けたネット（やそのビット）を双方向につなぎ、両側は同じネットの種類でなければならず、変数と階層名は使えない（規格で確認：10.11）。違法な組み合わせは slang が報告する。
+- **`alias` statements (approved 2026-10-17):** if both sides are whole nets of the same type, they are merged into one slot as when collapsing ports, and the name table keeps both names. Aliases of selects or concatenations, and aliases with different kinds of net, are reported as unsupported for now. In the standard, alias connects named nets (or their bits) bidirectionally, both sides must have the same kind of net, and variables and hierarchical names cannot be used (checked: 10.11). Illegal combinations are reported by slang.
 
-## 4. 型
+## 4. Types
 
-### 4.1 値の型
+### 4.1 Value types
 
-| 記法（テキスト形式） | 意味 |
+| Notation (text form) | Meaning |
 | --- | --- |
-| `i2<w>`、`s2<w>` | 2 値の w ビット（`s` は符号付き） |
-| `i4<w>`、`s4<w>` | 4 値の w ビット（`s` は符号付き） |
-| `real`、`shortreal` | 実数 |
-| `string` | 文字列（ハンドル） |
-| `handle<クラス番号>` | クラスのハンドル |
-| `chandle`、`event` | chandle、名前付きイベント |
-| `dynarray<要素型>`、`queue<要素型>`、`assoc<キー型, 要素型>` | 動的なデータ（P3。ハンドル） |
+| `i2<w>`, `s2<w>` | 2-state, w bits (`s` is signed) |
+| `i4<w>`, `s4<w>` | 4-state, w bits (`s` is signed) |
+| `real`, `shortreal` | Reals |
+| `string` | String (a handle) |
+| `handle<class number>` | Class handle |
+| `chandle`, `event` | chandle, named event |
+| `dynarray<element type>`, `queue<element type>`, `assoc<key type, element type>` | Dynamic data (P3; handles) |
 
-- 設計書の記法 `i4<w>` の符号付きは、`s4<w>` と書く（案）。
-- 列挙型は、基底の整数型の値として扱い、型の表に名前と値の表を持つ（`name()` などのメソッドは表を引く）。
-- 命令の型は値の型だけで、列挙型、packed の構造体、unpacked の配列は、型の表の番号として別に持つ（4.3）。たとえば、列挙型の値を読む `load` の結果の型は基底の型の `i4<w>` で、`name()` を呼ぶ命令が型の表の番号を被演算子に持つ（M3b の改訂）。
+- A signed `i4<w>` in the design specification's notation is written `s4<w>` (draft).
+- Enumerated types are handled as values of the base integral type, with the table of names and values in the type table (methods such as `name()` look up the table).
+- The type of an instruction is only a value type; enumerated types, packed structures and unpacked arrays are held separately as type-table numbers (4.3). For example, the result type of a `load` that reads a value of an enumerated type is the base type `i4<w>`, and the instruction that calls `name()` has the type-table number as an operand (amendment of M3b).
 
-### 4.2 集合型
+### 4.2 Aggregate types
 
-M3b の改訂：
+Amendment of M3b:
 
-- **packed の集合型：** ビットのベクタとして 1 つのスロットに置き、フィールドと要素のビット位置を型の表に持つ（3.2.2）。
-- **unpacked の固定長の配列：** 配列全体を 1 つのスロットにし、次元ごとの範囲をスロット表に持つ。要素は、最も右の次元が最も速く変わる順に、スロットの中に連続して置く。1 つの要素の大きさは、要素の型の領域の 1 つの値の大きさ（3.2）。要素の型は、packed の型、実数、ハンドルのどれか。要素は `load.elem` などで読み書きする（5.3）。
-  - 改訂前は、要素ごとに連続したスロットを置く案だった。それをやめるのは、添字が実行時に決まる読み書きを 1 つのスロットと位置の計算で表せるようにし、大きなメモリのスロット表を小さくするためである。
-- **unpacked の構造体：** メンバごとにスロットを置き、型の表でまとめる。構造体全体の代入と比較は、`front` がメンバごとの命令にほどく。
-- unpacked の構造体の細目（2026-10-17 に承認）：
-  - メンバのスロットの名前は `<変数の名前>.<メンバの名前>`。入れ子の構造体は、名前を `.` でつないで、いちばん内側のメンバごとにスロットを置く。
-  - automatic の変数は、メンバごとにフレームの変数を置く（3.3 の決まりどおり、違うのは置き場所だけ）。メンバが unpacked の配列なら、ほかの automatic の配列と同じく、当面は未対応として報告する。
-  - メンバの既定値（7.2.2）は、変数の宣言に初期値が無いときだけ入れる（規格で確認：7.2.2）。static の変数は static-init で、automatic の変数は宣言を実行するときに入れる。既定値の無いメンバは、型の既定の初期値（表 6-7）から始まる。
-  - 構造体全体を値として扱うもの（サブルーチンの引数と戻り値、ポート、unpacked の構造体のネット、`%p`、unpacked の共用体）は、それぞれを実装する段で決める。それまでは未対応として報告する。
-- **unpacked の構造体を要素とする固定長の配列（2026-10-17 に承認）：** いちばん内側のメンバごとに、配列の次元を持つスロットを 1 つ置く（メンバごとの配列として持つ）。`a[i].x` は、メンバ `x` のスロットの要素 `i` で、添字の計算は要素が構造体でない配列と同じ。メンバが unpacked の配列なら、配列の次元の後にメンバの次元を続けた多次元のスロットにする（`a[i].b[j]` は要素 `(i, j)`）。要素全体と配列全体の代入は、メンバごと・要素ごとの代入にほどく（VALUE_SEMANTICS.md の 3.13 節）。添字が実行時に決まる要素全体の代入（`a[i] = s`）は、添字の式を 1 回だけ評価し、その値でメンバごとに `store.elem` する。スロットの名前は `<配列の名前>.<メンバの名前>`。
-- **unpacked の共用体：** 置き方は後で決める（11 節）。P1 では未対応の構文として報告する。
-- **クラス：** フィールドの配置と、仮想メソッドの表（番号で引く）を型の表に持つ。パラメータ付きのクラスは、slang が作った特殊化ごとに別のクラスにする（P3）。
+- **Packed aggregate types:** placed in one slot as a bit vector, with the bit positions of fields and elements in the type table (3.2.2).
+- **Fixed-size unpacked arrays:** the whole array is one slot, with the range of each dimension in the slot table. Elements are placed contiguously in the slot, the rightmost dimension changing fastest. The size of one element is the size of one value in the area of the element type (3.2). The element type is a packed type, a real or a handle. Elements are read and written with `load.elem` and the like (5.3).
+  - Before the amendment, the draft placed consecutive slots per element. That was dropped so that reads and writes with indices decided at run time can be expressed by one slot and a position computation, and so that the slot table of large memories is smaller.
+- **Unpacked structures:** a slot per member, gathered by the type table. Assignment and comparison of whole structures are unfolded by `front` into instructions per member.
+- Details of unpacked structures (approved 2026-10-17):
+  - The name of a member's slot is `<variable name>.<member name>`. Nested structures join names with `.`, with a slot for each innermost member.
+  - An automatic variable gets a frame variable per member (as the rule of 3.3 says, only the place differs). If a member is an unpacked array, it is reported as unsupported for now, like other automatic arrays.
+  - A member's default (7.2.2) is put in only when the variable's declaration has no initial value (checked: 7.2.2). static variables get it in static-init, and automatic variables when the declaration runs. Members with no default start from the default initial value of their type (Table 6-7).
+  - What treats a whole structure as a value (subroutine arguments and return values, ports, nets of unpacked structures, `%p`, unpacked unions) is decided in the stage that implements each. Until then they are reported as unsupported.
+- **Fixed-size arrays whose elements are unpacked structures (approved 2026-10-17):** one slot with the array's dimensions for each innermost member (held as an array per member). `a[i].x` is element `i` of member `x`'s slot, and the index computation is the same as for arrays whose elements are not structures. If a member is an unpacked array, the slot is multidimensional, with the member's dimensions after the array's (`a[i].b[j]` is element `(i, j)`). Assignments of whole elements and whole arrays are unfolded into assignments per member and per element (VALUE_SEMANTICS.md 3.13). An assignment of a whole element with an index decided at run time (`a[i] = s`) evaluates the index expression once and does `store.elem` per member with that value. The slot's name is `<array name>.<member name>`.
+- **Unpacked unions:** their layout is decided later (11). In P1 they are reported as unsupported constructs.
+- **Classes:** the layout of fields and the table of virtual methods (indexed by number) are held in the type table. A parameterized class becomes a separate class for each specialization slang made (P3).
 
-### 4.3 型の表
+### 4.3 Type table
 
-M3b の改訂。型の表の各行は、番号（TypeId）で引く。
+Amendment of M3b. Each row of the type table is referred to by its number (TypeId).
 
-| 種類 | 持つもの |
+| Kind | What it holds |
 | --- | --- |
-| 列挙型 | 名前、基底の値の型、要素の並び（名前と値。宣言の順） |
-| packed の構造体と共用体 | 名前、全体の値の型、フィールドの並び（名前、最下位のビットの位置、幅、フィールドの型の番号）。共用体はすべてのフィールドが位置 0 から始まる |
-| unpacked の構造体 | 名前、メンバの並び（名前、型の番号） |
-| unpacked の配列 | 要素の型の番号、次元ごとの範囲 |
-| UDP（2026-10-17 に承認） | 名前、入力の数、順序かどうか、表の行の並び（各行は、入力ごとの記号、順序なら今の状態の記号、出力の記号）、初期値（順序の UDP） |
-| クラス | P3 |
+| Enumerated type | Name, base value type, sequence of members (name and value, in declaration order) |
+| Packed structures and unions | Name, value type of the whole, sequence of fields (name, position of the least significant bit, width, type number of the field). For unions every field starts at position 0 |
+| Unpacked structure | Name, sequence of members (name, type number) |
+| Unpacked array | Type number of the element, range of each dimension |
+| UDP (approved 2026-10-17) | Name, number of inputs, whether sequential, sequence of table rows (each row: the symbol for each input, the symbol of the present state if sequential, the symbol of the output), initial value (sequential UDPs) |
+| Class | P3 |
 
-- スロット表とフレームの変数の表は、宣言の型の番号を持つ（値の型だけで足りるものは持たない）。
-- 列挙型の要素の値は、基底の型の幅と符号に合わせた定数で持つ。
+- The slot table and the tables of frame variables hold the type number of the declaration (not for those where the value type suffices).
+- The values of members of an enumerated type are held as constants matching the width and signedness of the base type.
 
-## 5. 式と命令
+## 5. Expressions and instructions
 
-### 5.1 形
+### 5.1 Form
 
-- 基本ブロックの中は、型付きの SSA（静的単一代入）の命令の列。値は一時の名前（`%t0` など）に入れる。
-- 基本ブロックは、分岐か待ちか戻りで終わる。待ちの命令はブロックの最後にだけ置く（7.2）。
-- 各命令は、結果の型と、被演算子の型を持つ。実行時に型を調べない。
-- **値の合流（M3b の改訂）：** 基本ブロックは、型付きの引数（ブロックの引数）を持てる。制御フローが合流するところの値は、分岐の命令（`br`、`br.if`）が行き先のブロックに引数として渡す。φ 関数は置かない。
-- **一時の値は待ちをまたがない（M3b の改訂）：** 一時の値とブロックの引数は、待ちの命令（7.2）と `call.task`（8 節）をまたいで使えない。待ちの命令の行き先のブロックは、引数を持たない。待ちをまたいで生きる値は、フレームの変数（`%f0` など。7.4）に `fstore` で書き、待ちの後で `fload` で読む。`front` がこの形を作る。
-  - こうすると、フレームの配置が SIR だけで決まり、層によらず同じになる（RUNTIME_ABI.md の 4.3 節）。待ちをまたがない一時の値の置き場所は、層ごとの実装に任せられる。
+- Inside a basic block is a sequence of typed SSA (static single assignment) instructions. Values go into temporary names (`%t0` and so on).
+- A basic block ends with a branch, a wait or a return. Wait instructions are placed only at the end of a block (7.2).
+- Each instruction has the type of its result and of its operands. Types are not examined at run time.
+- **Merging values (amendment of M3b):** basic blocks can have typed arguments (block arguments). Values where control flow merges are passed as arguments to the destination block by branch instructions (`br`, `br.if`). No φ functions are placed.
+- **Temporaries do not cross waits (amendment of M3b):** temporaries and block arguments cannot be used across wait instructions (7.2) or `call.task` (8). The continuation block of a wait instruction has no arguments. Values that live across a wait are written to a frame variable (`%f0` and so on; 7.4) with `fstore`, and read after the wait with `fload`. `front` makes this form.
+  - This way, the layout of frames is decided by SIR alone and is the same whatever the tier (RUNTIME_ABI.md 4.3). Where temporaries that do not cross waits are placed is left to each tier's implementation.
 
-### 5.2 命令の種類
+### 5.2 Kinds of instruction
 
-| 分類 | 命令（例） | 意味の根拠 |
+| Group | Instructions (examples) | Grounds of meaning |
 | --- | --- | --- |
-| 読み書き | `load`、`store`（ブロッキング代入）、`nba`、`nba.delay`、`load.elem`、`store.elem`、`nba.elem`、`store.bits`、`nba.bits`（5.3）、`fload`、`fstore`（7.4） | SCHEDULER_SPEC.md の 5 節、13 節 |
-| 算術 | `add`、`sub`、`mul`、`div`、`mod`、`pow`、`neg` | VALUE_SEMANTICS.md の 3.2 節 |
-| 比較 | `lt`、`le`、`gt`、`ge`（符号付きと符号なし） | 3.3 節 |
-| 等価 | `eq`、`ne`、`ceq`（`===`）、`cne`、`weq`（`==?`）、`wne` | 3.4 節 |
-| 論理 | `lnot`、`land`、`lor`、`limp`、`leqv`、`truth`（真偽への変換） | 3.5 節 |
-| ビット演算 | `and`、`or`、`xor`、`xnor`、`not` | 3.6 節 |
-| 縮約 | `rand`、`ror`、`rxor`（と否定） | 3.7 節 |
-| シフト | `shl`、`shr`、`ashr` | 3.8 節 |
-| 条件 | `select`（条件演算子。条件が不定なら両側を合わせる） | 3.9 節 |
-| 所属と照合 | `inside`、`match.mask`（`casez`、`casex`、`==?` のマスク比較） | 3.10 節、4.2 節 |
-| 選択 | `bitsel`、`partsel`、`idxpartsel`（範囲の外と x・z の添字を含む） | 3.11 節 |
-| 連結 | `concat`（被演算子は 1 つ以上）、`repl`（掛ける数は命令に書く定数。文字列の繰り返しでは被演算子） | 7.1 節〜7.3 節 |
-| 変換 | `zext`、`sext`、`trunc`、`to2`（x・z を 0 に）、`to4`、`itor`、`rtoi`、`rconv`（`real` と `shortreal` の間）、`itos`、`stoi`（整数と文字列の間） | 1.2 節、1.5 節、2 節、7.4 節 |
-| 実数 | 算術と比較の命令を、実数の型で使う（ビット演算と縮約は使えない） | 7.5 節 |
-| 文字列 | 等価と比較の命令を、文字列の型で使う。`str.get`（`s[i]`） | 7.6 節 |
-| イベント | `trigger`（`->`）、`trigger.nb`（`->>`。遅延を被演算子に持てる） | SCHEDULER_SPEC.md の 9.4 節 |
-| プロセスの制御 | `fork`、`wait.fork`（待ち。7.2）、`disable`、`disable.fork` | SCHEDULER_SPEC.md の 10 節 |
-| 呼び出し | `call`（関数と、待ちを含まないタスク）、`call.task`（待ちを含みうるタスク。終端の命令）、`syscall`（システム関数とタスク）、`builtin`（組み込みのメソッド） | 8 節 |
-| 遅延のある書き込み（2026-10-17 に承認） | `drive.delay`（5.4） | SCHEDULER_SPEC.md の 12 節 |
-| UDP（2026-10-17 に承認） | `udp`、`udp.seq`（5.5） | VALUE_SEMANTICS.md の 5.9 節 |
-| 手続きの連続代入（2026-10-17 に承認） | `override.start`、`override.stop`、`store.override`（5.6） | SCHEDULER_SPEC.md の 14 節 |
-| 参照（2026-10-17 に承認） | `ref.make`、`load.ref`、`store.ref`、`nba.ref`、`load.ref.elem`、`store.ref.elem`、`store.ref.bits`（8 節） | 8 節 |
-| 遅れた表示と監視（2026-10-17 に承認） | `strobe @P`、`monitor @P`（7.1 の `postponed`） | SYSTEM_TASKS.md の 4 節 |
-| disable の対象のブロック（2026-10-17 に承認） | `scope.enter #n, 出口`、`scope.leave #n`、`disable.scope #n`、`disable.task @T`（7.2） | SCHEDULER_SPEC.md の 10.4 節、10.7 節 |
-| 保留される呼び出し（2026-10-17 に承認） | `report.call "#0"\|"final", @S, 引数...`（5.7） | SCHEDULER_SPEC.md の 15.2〜15.4 節 |
-| 保留される報告（2026-10-16 に承認。同日、スコープの被演算子を足した） | `report.defer "<構文>", "<内容>", "<スコープ>"`：unique・unique0・priority の違反を、実行しているプロセスの保留の列に入れる。報告の位置は命令のソースの位置、階層名は `<スコープ>`（文を含むスコープの階層名。名前付きのブロックとサブルーチンを含む）。`<構文>` と `<内容>` は SYSTEM_TASKS.md の 10.4 節の文字列 | SCHEDULER_SPEC.md の 15 節 |
+| Reads and writes | `load`, `store` (blocking assignment), `nba`, `nba.delay`, `load.elem`, `store.elem`, `nba.elem`, `store.bits`, `nba.bits` (5.3), `fload`, `fstore` (7.4) | SCHEDULER_SPEC.md 5, 13 |
+| Arithmetic | `add`, `sub`, `mul`, `div`, `mod`, `pow`, `neg` | VALUE_SEMANTICS.md 3.2 |
+| Relational | `lt`, `le`, `gt`, `ge` (signed and unsigned) | 3.3 |
+| Equality | `eq`, `ne`, `ceq` (`===`), `cne`, `weq` (`==?`), `wne` | 3.4 |
+| Logical | `lnot`, `land`, `lor`, `limp`, `leqv`, `truth` (conversion to a truth value) | 3.5 |
+| Bitwise | `and`, `or`, `xor`, `xnor`, `not` | 3.6 |
+| Reduction | `rand`, `ror`, `rxor` (and negations) | 3.7 |
+| Shifts | `shl`, `shr`, `ashr` | 3.8 |
+| Conditional | `select` (the conditional operator; combines both sides when the condition is unknown) | 3.9 |
+| Membership and matching | `inside`, `match.mask` (masked comparison of `casez`, `casex`, `==?`) | 3.10, 4.2 |
+| Selects | `bitsel`, `partsel`, `idxpartsel` (including out-of-range and x/z indices) | 3.11 |
+| Concatenation | `concat` (one or more operands), `repl` (the multiplier is a constant written in the instruction; an operand for string replication) | 7.1 to 7.3 |
+| Conversion | `zext`, `sext`, `trunc`, `to2` (x and z to 0), `to4`, `itor`, `rtoi`, `rconv` (between `real` and `shortreal`), `itos`, `stoi` (between integers and strings) | 1.2, 1.5, 2, 7.4 |
+| Reals | The arithmetic and relational instructions used with real types (bitwise and reduction cannot be used) | 7.5 |
+| Strings | The equality and relational instructions used with string types. `str.get` (`s[i]`) | 7.6 |
+| Events | `trigger` (`->`), `trigger.nb` (`->>`; may have a delay operand) | SCHEDULER_SPEC.md 9.4 |
+| Process control | `fork`, `wait.fork` (a wait; 7.2), `disable`, `disable.fork` | SCHEDULER_SPEC.md 10 |
+| Calls | `call` (functions, and tasks with no wait), `call.task` (tasks that may wait; a terminator), `syscall` (system functions and tasks), `builtin` (built-in methods) | 8 |
+| Delayed writes (approved 2026-10-17) | `drive.delay` (5.4) | SCHEDULER_SPEC.md 12 |
+| UDPs (approved 2026-10-17) | `udp`, `udp.seq` (5.5) | VALUE_SEMANTICS.md 5.9 |
+| Procedural continuous assignments (approved 2026-10-17) | `override.start`, `override.stop`, `store.override` (5.6) | SCHEDULER_SPEC.md 14 |
+| References (approved 2026-10-17) | `ref.make`, `load.ref`, `store.ref`, `nba.ref`, `load.ref.elem`, `store.ref.elem`, `store.ref.bits` (8) | 8 |
+| Delayed display and monitoring (approved 2026-10-17) | `strobe @P`, `monitor @P` (`postponed` of 7.1) | SYSTEM_TASKS.md 4 |
+| Blocks that are targets of disable (approved 2026-10-17) | `scope.enter #n, exit`, `scope.leave #n`, `disable.scope #n`, `disable.task @T` (7.2) | SCHEDULER_SPEC.md 10.4, 10.7 |
+| Pending calls (approved 2026-10-17) | `report.call "#0"\|"final", @S, args...` (5.7) | SCHEDULER_SPEC.md 15.2 to 15.4 |
+| Pending reports (approved 2026-10-16; the scope operand added the same day) | `report.defer "<construct>", "<content>", "<scope>"`: puts a violation of unique, unique0 or priority on the pending queue of the running process. The position of the report is the instruction's source position, and the hierarchical name is `<scope>` (the hierarchical name of the scope containing the statement, including named blocks and subroutines). `<construct>` and `<content>` are the strings of SYSTEM_TASKS.md 10.4 | SCHEDULER_SPEC.md 15 |
 
-- **短絡の命令は置かない。** `&&`、`||`、`->`、`?:` の短絡評価は、基本ブロックの分岐で表す（VALUE_SEMANTICS.md の 3.1 節）。こうすると、評価しなかった側の副作用が起きないことが、SIR の形で保証できる。
-- **x を作りうる命令**（`div`、`mod`、`pow`、範囲の外を読みうる選択と `load.elem`、存在しないキーの連想配列の読み出し、空のキューの取り出し）には、印を付ける。解析（X 到達解析）と第 2 層の 2 版切り替えは、この印を使う。
-- **比較のマスク：** `casez`、`casex`、`==?`、`inside` の定数の要素の x・z・? は、値ではなく比較のマスクとして持つ。`casez` と `casex` は、式の側の z（`casex` は x も）も無視するので、4 値版のマスクは式と項の両方から作る（VALUE_SEMANTICS.md の 4.2 節）。
-- 各命令の 4 値の意味は、`valsem` の参照実装で定める。2 値版は、4 値版の入力に x・z が無い場合と同じ結果になる。
-- **実数と文字列（M3b の改訂）：** 実数と文字列の演算は、整数と同じ命令の名前を、被演算子の型で区別して使う。整数と実数が混ざる演算は、`front` が `itor` で実数にそろえてから置く（VALUE_SEMANTICS.md の 7.5 節）。文字列の連結は、結果の型が `string` の `concat` で表す。
+- **There are no short-circuit instructions.** The short-circuit evaluation of `&&`, `||`, `->` and `?:` is expressed with branches between basic blocks (VALUE_SEMANTICS.md 3.1). This way, the form of SIR guarantees that the side effects of the side not evaluated do not happen.
+- **Instructions that can make x** (`div`, `mod`, `pow`, selects and `load.elem` that may read out of range, reads of associative arrays with keys that do not exist, taking from an empty queue) are flagged. Analysis (X-reachability analysis) and tier 2's switching between two versions use this flag.
+- **Comparison masks:** x, z and ? in the constant items of `casez`, `casex`, `==?` and `inside` are held not as values but as comparison masks. `casez` and `casex` also ignore z on the expression's side (and x too for `casex`), so the 4-state version's masks are made from both the expression and the item (VALUE_SEMANTICS.md 4.2).
+- The 4-state meaning of each instruction is set by the reference implementation in `valsem`. The 2-state version gives the same result as the 4-state version when its inputs have no x or z.
+- **Reals and strings (amendment of M3b):** operations on reals and strings use the same instruction names as integers, told apart by the types of the operands. An operation mixing integers and reals is placed after `front` converts to real with `itor` (VALUE_SEMANTICS.md 7.5). String concatenation is expressed by a `concat` whose result type is `string`.
 
-### 5.3 配列の要素と、添字が実行時に決まる部分の書き込み
+### 5.3 Array elements, and writes of parts decided at run time
 
-M3b の改訂。
+Amendment of M3b.
 
-| 命令 | 意味 |
+| Instruction | Meaning |
 | --- | --- |
-| `load.elem 型, スロット, 添字...` | unpacked の配列の要素を読む。添字は次元ごとに 1 つ。無効な添字（範囲の外、x・z を含む）なら要素の型の既定の値（VALUE_SEMANTICS.md の 3.11 節）。x を作りうる命令の印を付ける |
-| `store.elem スロット, 添字..., 値` | 要素に書く。無効な添字なら何もしない（同） |
-| `nba.elem スロット, 添字..., 値` | 要素への NBA。添字は命令を実行した時点の値で決める（7.3） |
-| `store.bits スロット, [添字...,] 位置, 値` | スロット（配列なら、その要素）の、`位置` のビットから値の幅だけのビットに書く。`位置` は実行時の値。範囲の外と x・z の扱いは VALUE_SEMANTICS.md の 3.11 節 |
-| `nba.bits スロット, [添字...,] 位置, 値` | `store.bits` の NBA 版 |
+| `load.elem type, slot, index...` | Reads an element of an unpacked array. One index per dimension. With an invalid index (out of range, containing x or z), the default value of the element type (VALUE_SEMANTICS.md 3.11). Flagged as an instruction that can make x |
+| `store.elem slot, index..., value` | Writes an element. Does nothing with an invalid index (likewise) |
+| `nba.elem slot, index..., value` | NBA to an element. The indices are decided by their values when the instruction runs (7.3) |
+| `store.bits slot, [index...,] position, value` | Writes, in the slot (or the element of an array), as many bits as the value's width starting at bit `position`. `position` is a run-time value. Out of range and x/z are handled as in VALUE_SEMANTICS.md 3.11 |
+| `nba.bits slot, [index...,] position, value` | The NBA version of `store.bits` |
 
-- 添字と位置が定数の書き込みは、ふつうの `store` と `nba` に、スロットのビット範囲（`%s3[7:4]` など）と、要素の添字の定数を書いて表す。
-- 添字が実行時に決まる部分の読み出しは、`load` か `load.elem` で全体を読んでから `idxpartsel` で選ぶ。
-- 最初の被演算子には、スロットの代わりに、配列のフレームの変数（7.4）も書ける（2026-10-17 に承認）。
+- A write with constant indices and position is expressed by an ordinary `store` or `nba` with the slot's bit range (`%s3[7:4]` and the like) and constant element indices.
+- A read of a part decided at run time reads the whole with `load` or `load.elem`, then selects with `idxpartsel`.
+- The first operand can be, instead of a slot, a frame variable that is an array (7.4) (approved 2026-10-17).
 
-### 5.4 遅延のある連続代入の書き込み
+### 5.4 Writes of continuous assignments with delays
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- `drive.delay 先, 値, 上がり, 下がり, 切れ`：遅延のある連続代入、ゲート、UDP の出力の書き込み。cont の種類のプロセスだけが使う。SCHEDULER_SPEC.md の 12 節の手順（予定の取り消しと、新しい予定）を、命令ごとに 1 つの予定を持ってカーネルが行う。遅延の選び方も同節による。
-- 遅延の無い書き込みは、これまでどおり `store` で表す。
+- `drive.delay target, value, rise, fall, turn-off`: a write of a continuous assignment, gate or UDP output with a delay. Used only by processes of kind cont. The kernel carries out the procedure of SCHEDULER_SPEC.md 12 (cancelling the scheduled event and scheduling a new one), keeping one scheduled event per instruction. How the delay is chosen follows the same section.
+- A write with no delay is expressed by `store` as before.
 
-### 5.5 UDP の命令
+### 5.5 UDP instructions
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- `%r = udp !表, 入力...`：組み合わせの UDP。入力の値に合う行の出力を返す（VALUE_SEMANTICS.md の 5.9 節）。
-- `%r = udp.seq !表, 状態, 前の入力..., 今の入力...`：順序の UDP。前の入力から今の入力への変化を、VALUE_SEMANTICS.md の 5.9 節の規則で 1 つずつ当てた後の状態を返す。
-- `!表` は型の表の UDP の行（4.3。テキスト形式の型の表の行の番号 `!N`。2026-10-17 に `@表` から改めた。`@N` はプロセスとサブルーチンの番号に使う）。順序の UDP のインスタンスは、状態と前の入力を、インスタンスごとのスロットに持つ（`<インスタンス>.$state`、`<インスタンス>.$prev`）。状態のスロットの初期値は、static-init で入れる（VALUE_SEMANTICS.md の 5.9 節の初期値）。
+- `%r = udp !table, input...`: a combinational UDP. Returns the output of the row matching the input values (VALUE_SEMANTICS.md 5.9).
+- `%r = udp.seq !table, state, previous input..., present input...`: a sequential UDP. Returns the state after applying, one at a time, the changes from the previous inputs to the present inputs by the rules of VALUE_SEMANTICS.md 5.9.
+- `!table` is the UDP row of the type table (4.3; the number `!N` of a row of the type table in the text form; changed from `@table` on 2026-10-17, since `@N` is used for numbers of processes and subroutines). An instance of a sequential UDP keeps its state and previous inputs in slots per instance (`<instance>.$state`, `<instance>.$prev`). The initial value of the state slot is put in by static-init (the initial value of VALUE_SEMANTICS.md 5.9).
 
-### 5.6 手続きの連続代入の命令
+### 5.6 Instructions of procedural continuous assignments
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- `override.start "assign"|"force", @P, 先...`：その先（左辺のスロットの範囲。連結なら複数）に、その段（assign か force）でプロセス P（種類 `override`。7.1）の値を当て、P を 1 回実行する。同じ先に同じ段の別のプロセスが当たっていれば、先にそれを止める（規格で確認：10.6.1、10.6.2）。
-- `override.stop "assign"|"force", 先...`：その段の当てを外し、SCHEDULER_SPEC.md の 14 節の規則で値を戻す（変数は、連続代入も効いている assign も無ければ、次の手続きの代入まで今の値を保つ。あればそれを評価し直す。ネットはドライバで決まる値にする）。
-- `store.override "assign"|"force", 先, 値`：override のプロセスだけが使う。その段より下の書き込みに勝つ。
-- 当てられうるスロットには、force の対象の印（3.1）を付ける（SCHEDULER_SPEC.md の 14.4 節）。カーネルは、印のあるスロットに、段ごとのビットの覆い（どのビットが今当てられているか）を持つ。ふつうの書き込み（`store`、`nba`、cont の書き込み、解決のプロセス）は、覆われたビットを変えない。force の覆いは assign の覆いより強い。
-- 当てられうるネットが、畳み込んだポートの接続にかかわるときは、当面は未対応として報告する（SCHEDULER_SPEC.md の 14.4 節の「畳み込まない場合と同じ見え方」は、そこで実装する）。
+- `override.start "assign"|"force", @P, target...`: applies to the targets (ranges of slots of the left side; several for a concatenation), at that level (assign or force), the value of process P (kind `override`; 7.1), and runs P once. If another process of the same level is applied to the same target, that one is stopped first (checked: 10.6.1, 10.6.2).
+- `override.stop "assign"|"force", target...`: removes the application at that level and restores the value by the rules of SCHEDULER_SPEC.md 14 (a variable keeps its present value until the next procedural assignment if neither a continuous assignment nor an active assign applies; if one does, it is evaluated again. A net takes the value decided by its drivers).
+- `store.override "assign"|"force", target, value`: used only by override processes. It wins over writes at lower levels.
+- Slots that may be overridden get the force-target flag (3.1) (SCHEDULER_SPEC.md 14.4). For flagged slots, the kernel keeps a mask of bits per level (which bits are overridden now). Ordinary writes (`store`, `nba`, cont writes, resolution processes) do not change masked bits. The force mask is stronger than the assign mask.
+- When a net that may be overridden is involved in a collapsed port connection, it is reported as unsupported for now ("the same view as when not collapsed" of SCHEDULER_SPEC.md 14.4 is implemented then).
 
-### 5.7 保留される呼び出し
+### 5.7 Pending calls
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- `report.call "#0"|"final", @S, 引数...`：遅延即時アサーション（SCHEDULER_SPEC.md の 15.2 節）の動作。front は、動作ブロックの 1 つの呼び出し（else の無い assert と assume の失敗では `$error`）を、引数を受け取って呼ぶだけの関数 S に包む。値渡しの引数は、式を評価した時点の値を渡す（規格で確認：16.4）。カーネルは、実行しているプロセスの保留の列に入れ、確定したら、`#0` は Reactive、`final` は Postponed で S を呼ぶ。
-- ref の実引数（static な変数だけ。規格で確認：16.4）は、S を呼んだ時点の値を使う。
-- 動作ブロックが待ちを含みうるタスクのときと、モジュールの項目として書いた遅延アサーション（16.4.3）は、当面は未対応として報告する。
+- `report.call "#0"|"final", @S, args...`: the action of a deferred immediate assertion (SCHEDULER_SPEC.md 15.2). front wraps the one call of the action block (`$error` for the failure of an assert or assume with no else) in a function S that only takes the arguments and makes the call. By-value arguments pass their values at the time the expression is evaluated (checked: 16.4). The kernel puts it on the pending queue of the running process, and once it is settled calls S in Reactive for `#0` and in Postponed for `final`.
+- ref actual arguments (static variables only; checked: 16.4) use their values at the time S is called.
+- When the action block is a task that may wait, and deferred assertions written as module items (16.4.3), are reported as unsupported for now.
 
-## 6. 定数
+## 6. Constants
 
-- 小さい定数は命令の被演算子に直接書き、大きい定数は定数の表に置く。
-- 定数は slang の定数評価の結果を使う。SIR で計算し直さない。
-- **slang の定数評価の既知の誤り（2026-10-16 に承認。2026-10-17 に 2 つ目を追加し、承認）：** 次のものを含む式は、slang が畳み込んだ定数を使わず、命令として置いて実行時に計算する。slang で直ったら、その版に上げるときに一覧から外す。パラメータの値は slang が決めるので、この例外では直らない。
-  - 今は無い。2026-10-18 に slang を main のコミット b7f11c1 に上げ、`$rtoi` の負の値（slang の Issue #2023）と、パターンのある条件演算子の畳み込み（同 #2029）の 2 つを外した。
-- **本書の読みが slang と違う定数（2026-10-18 に追記。承認済み）：** 規格の文面が 2 通りに読めるところで、本書の読み（VALUE_SEMANTICS.md）が slang の定数評価と違うものも、slang が畳み込んだ定数を使わず、命令として置いて計算する。パラメータの値は slang が決めるので、この例外では直らない。
-  - 実数から整数への変換（VALUE_SEMANTICS.md の 7.4 節：NaN と無限大）。
-  - 4 値の値の単項の `+`（同 3.2 節：x か z のビットがあれば全ビットを x にする。slang は値をそのまま返す）。
-- unpacked の配列のパラメータ（`parameter`、`localparam`）を実行時の添字で読むときは、front がその値を持つスロット（名前は `<スコープ>.<名前>`、変数）を置き、static-init で入れる。ほかからは書かない。定数の添字の要素は、slang の定数のまま使う（2026-10-17 に承認）。
-- specparam は、parameter と同じく定数として読む（規格で確認：6.20.5）。specify ブロックは当面の対象外（設計書の決まり）。ただし、specparam の宣言だけを持つ specify ブロックは何もしないので読み飛ばす。モジュールのパスの遅延とタイミングチェックを持つものは、未対応として報告する（読み飛ばすと遅延が変わるため）（2026-10-17 に承認）。
-- 実数（`real` は 64 ビット、`shortreal` は 32 ビットの IEEE 754 の値）と文字列（バイトの列）の定数も置ける（M3b の改訂）。
-- x・z を含む定数（`'x`、`8'b1z0x` など）も表せる。値として使う x・z と、比較のマスクとしての x・z・?（5.2）は区別する。
+- Small constants are written directly as operands of instructions; large ones are placed in the constant table.
+- Constants are the results of slang's constant evaluation. They are not computed again in SIR.
+- **Known errors of slang's constant evaluation (approved 2026-10-16; a second added and approved 2026-10-17):** expressions containing the following do not use the constants slang folded; they are placed as instructions and computed at run time. When slang fixes one, it is removed from the list when raising to that version. Parameter values are decided by slang, so this exception does not fix them.
+  - None now. On 2026-10-18 slang was raised to main commit b7f11c1, and the two, negative values of `$rtoi` (slang issue #2023) and folding of the conditional operator with patterns (likewise #2029), were removed.
+- **Constants where this document's reading differs from slang (added 2026-10-18, approved):** where the wording of the standard can be read two ways, and this document's reading (VALUE_SEMANTICS.md) differs from slang's constant evaluation, the constants slang folded are not used either; they are placed as instructions and computed. Parameter values are decided by slang, so this exception does not fix them.
+  - Conversion from real to integer (VALUE_SEMANTICS.md 7.4: NaN and infinities).
+  - Unary `+` of 4-state values (3.2 of the same: any x or z bit makes every bit x; slang returns the value as it is).
+- When an unpacked-array parameter (`parameter`, `localparam`) is read with a run-time index, front places a slot holding its value (named `<scope>.<name>`, a variable) and fills it in static-init. Nothing else writes it. Elements with constant indices use slang's constants as they are (approved 2026-10-17).
+- specparams are read as constants, like parameters (checked: 6.20.5). specify blocks are out of scope for now (a rule of the design specification). However, a specify block holding only specparam declarations does nothing, so it is skipped. One with module path delays or timing checks is reported as unsupported (skipping it would change delays) (approved 2026-10-17).
+- Constants of reals (`real` is a 64-bit and `shortreal` a 32-bit IEEE 754 value) and strings (sequences of bytes) can be placed too (amendment of M3b).
+- Constants containing x and z (`'x`, `8'b1z0x` and so on) can be represented. x and z used as values are distinguished from x, z and ? as comparison masks (5.2).
 
-## 7. プロセス
+## 7. Processes
 
-### 7.1 種類
+### 7.1 Kinds
 
-| 種類 | 元の構文 | 起動の規則（SCHEDULER_SPEC.md） |
+| Kind | Source construct | Starting rule (SCHEDULER_SPEC.md) |
 | --- | --- | --- |
-| `cont` | 連続代入（ポートの暗黙のものを含む）、組み込みのゲート、UDP のインスタンス（2026-10-17 に承認） | 右辺の被演算子が変わったとき。時刻 0 に 1 回（5 節、6.1 節、12 節） |
-| `comb` | `always_comb` | 時刻 0 に 1 回と、暗黙の感度の変化（6.2 節、6.3 節） |
-| `latch` | `always_latch` | `comb` と同じ。ラッチとして区別する |
-| `comb-at` | `always @*` | 時刻 0 には起動しない。感度は 9.2 節の規則 |
-| `ff` | `always_ff` | 辺の待ち。9.2.2.4 の制限（ほかのプロセスから書かない、イベント制御はちょうど 1 つ）を当てる |
-| `ff-plain` | 先頭が辺の待ちだけで、ほかに待ちを含まないふつうの `always`。呼ぶタスクが待ちを含みうるものは除く（`general` にする） | 辺の待ち。9.2.2.4 の制限は当てない（ふつうの `always` には無い。9.2.2.1） |
-| `initial`、`final` | `initial`、`final` | 6.2 節 |
-| `general` | そのほかの `always`、fork の中の文 | 一般のプロセス |
-| `postponed`（2026-10-17 に承認） | `$strobe` と `$monitor` の文 1 つにつき 1 つ。本体は、引数を評価して表示する（`$display` と同じ syscall）。待ちを含まない | Postponed 領域でだけ実行する（SCHEDULER_SPEC.md の 2.1 節）。`strobe @P` は、P を今の時刻スロットの Postponed で 1 回実行するよう予定する。同じ時刻に何度実行しても、その回数だけ表示する（規格で確認：21.2.2）。`monitor @P` は、有効な監視を P に入れ替え（規格で確認：21.2.3）、P は呼んだ時刻の Postponed で 1 回、その後は、引数が読むスロットが変わった時刻スロットの Postponed で 1 回ずつ実行される |
-| `override`（2026-10-17 に承認） | 手続きの `assign` と `force` の文 1 つにつき 1 つ。右辺を求めて `store.override` で左辺に書く | `override.start` で始まり、`override.stop` で止まる。その間は cont と同じく、右辺が読むものの変化で起動する（SCHEDULER_SPEC.md の 14 節。5.6） |
-| `static-init`（2026-10-16 に承認） | static な変数の宣言にある初期値（モジュールの変数、手続きのブロックとサブルーチンの中の static な変数。クラスの static なメンバは P3） | 時刻 0 に、ほかのどのプロセスを始めるよりも前に、1 回だけ実行する（SCHEDULER_SPEC.md の 6.1 節の手順 1） |
+| `cont` | Continuous assignments (including the implicit ones of ports), built-in gates, UDP instances (approved 2026-10-17) | When an operand of the right side changes. Once at time 0 (5, 6.1, 12) |
+| `comb` | `always_comb` | Once at time 0, and on changes of the implicit sensitivity (6.2, 6.3) |
+| `latch` | `always_latch` | The same as `comb`; distinguished as a latch |
+| `comb-at` | `always @*` | Not started at time 0. Sensitivity by the rules of 9.2 |
+| `ff` | `always_ff` | Waits for an edge. The restrictions of 9.2.2.4 (no other process writes, exactly one event control) apply |
+| `ff-plain` | An ordinary `always` that starts with only an edge wait and has no other wait. Excluded if it calls a task that may wait (then `general`) | Waits for an edge. The restrictions of 9.2.2.4 do not apply (ordinary `always` has none; 9.2.2.1) |
+| `initial`, `final` | `initial`, `final` | 6.2 |
+| `general` | Other `always`, statements in fork | General processes |
+| `postponed` (approved 2026-10-17) | One per `$strobe` or `$monitor` statement. Its body evaluates the arguments and prints (the same syscall as `$display`). Contains no wait | Runs only in the Postponed region (SCHEDULER_SPEC.md 2.1). `strobe @P` schedules P to run once in the Postponed region of the present time slot. However many times it runs at one time, it prints that many times (checked: 21.2.2). `monitor @P` replaces the active monitor with P (checked: 21.2.3); P runs once in the Postponed region of the time it was called, then once in the Postponed region of each time slot in which a slot read by its arguments changed |
+| `override` (approved 2026-10-17) | One per procedural `assign` or `force` statement. Computes the right side and writes the left side with `store.override` | Starts with `override.start` and stops with `override.stop`. In between, like cont, it starts on changes of what the right side reads (SCHEDULER_SPEC.md 14; 5.6) |
+| `static-init` (approved 2026-10-16) | Initial values in declarations of static variables (module variables, static variables inside procedural blocks and subroutines; static members of classes are P3) | Runs exactly once at time 0, before any other process starts (step 1 of SCHEDULER_SPEC.md 6.1) |
 
-- **`static-init` の形（2026-10-16 に承認）：** インスタンスごとに 1 つ置き、名前は `<インスタンスの階層名>.$static`。本体は、初期値の式を評価してスロットに書く命令の並びで、初期値のある static な変数を、そのスコープの中の宣言の順に並べる（SCHEDULER_SPEC.md の 3 節）。待ちの命令を含まない。層は、すべての `static-init` を SIR のプロセスの番号の順に、事象として予定せずにその場で実行し、終わってからほかのプロセスを始める。まだ何も待っていないので、この書き込みで起きるプロセスは無い。初期値の無い static な変数は、領域ごとの既定の値（VALUE_SEMANTICS.md の 1.4 節）のままにする。
-- **package とコンパイル単位の `static-init`（2026-10-16 に承認）：** package とコンパイル単位にも、初期値のある変数を持つものごとに `static-init` を 1 つ置き、名前は `<package 名>::$static`、`$unit::$static` とする。これらは、ソースに書かれた順に、インスタンスの `static-init` より前に並べる（本書の決まり）。規格は、static な変数の初期値を「どの initial と always を始めるよりも前に」入れると決めるだけで（規格で確認：6.8、10.5）、変数どうしの順を決めていない。package はそれを import するスコープより先にコンパイルする決まりがある（規格で確認：26.3）ので、ソースの順なら、package の初期値の式が読む別の package の変数は、もう初期値を持っている。
-  - コンパイル単位は、slang の既定のとおり、ファイルごとに 1 つとする（slang は `--single-unit` を付けないとき、ファイルごとに分ける。CLI.md にオプションを足すかは、CLI.md の改訂と一緒に決める）。コンパイル単位が 2 つ以上あるときの名前は、2 つ目から `$unit#2` のように番号を付ける（名前は診断と名前の表のためだけ）。
-  - package の中に、暗黙の連続代入のあるネットは書けない（規格で確認：26.2）。package のネットは、既定の初期値（VALUE_SEMANTICS.md の 1.4 節）から始まり、ほかのネットと同じく、モジュールの連続代入などで駆動される。
-- 感度の情報（スロット、ビット範囲、辺の種類、`iff` の式）は、プロセスの表に持つ。`comb`、`latch`、`comb-at` の暗黙の感度は、SIR を作るときに規格の規則で計算する。
-- `always_ff` と書いたかどうかを `ff` と `ff-plain` で区別するのは、規格の制限を当てる範囲を正しくするためである。最適化（静的な島）では、`ff-plain` も `ff` と同じに扱ってよい。
-- 呼ぶタスクの中身に待ちがあるかは、SIR を作るときにタスクの本体を調べて決める。関数は待ちを含まないので、関数の呼び出しは種類に影響しない。
-- 静的な島の候補（`cont`、`comb`、`latch`、`ff`、`ff-plain` のうち、遅延、途中のイベント制御、副作用のある呼び出しを含まないもの）は、解析で判定する。SIR では印を付けない（解析の結果として別に持つ）。
+- **Form of `static-init` (approved 2026-10-16):** one per instance, named `<hierarchical name of the instance>.$static`. Its body is a sequence of instructions that evaluate initial-value expressions and write slots, covering the static variables with initial values in declaration order within the scope (SCHEDULER_SPEC.md 3). It contains no wait instruction. Tiers run every `static-init` in the order of SIR's process numbers, on the spot without scheduling them as events, and start the other processes after they finish. Nothing is waiting yet, so no process is woken by these writes. static variables with no initial value keep the default value of their area (VALUE_SEMANTICS.md 1.4).
+- **`static-init` of packages and compilation units (approved 2026-10-16):** packages and compilation units also get one `static-init` each if they have variables with initial values, named `<package name>::$static` and `$unit::$static`. They are placed in source order, before the `static-init` of instances (rule of this document). The standard only says that initial values of static variables are set "before any initial or always starts" (checked: 6.8, 10.5), and does not set the order between variables. A package must be compiled before the scopes that import it (checked: 26.3), so in source order, variables of another package read by a package's initial-value expressions already have their initial values.
+  - Compilation units are one per file, as slang's default (slang splits by file when `--single-unit` is not given; whether to add an option to CLI.md is decided together with an amendment of CLI.md). When there are two or more compilation units, from the second on they are numbered, as `$unit#2` (the names are only for diagnostics and the name table).
+  - A package cannot contain nets with implicit continuous assignments (checked: 26.2). Package nets start from the default initial value (VALUE_SEMANTICS.md 1.4) and, like other nets, are driven by continuous assignments of modules and the like.
+- Sensitivity information (slot, bit range, kind of edge, `iff` expression) is held in the process table. The implicit sensitivity of `comb`, `latch` and `comb-at` is computed by the rules of the standard when SIR is made.
+- Telling `ff` from `ff-plain` by whether `always_ff` was written is to apply the restrictions of the standard to exactly the right range. Optimization (static islands) may treat `ff-plain` the same as `ff`.
+- Whether a called task's body has a wait is decided when SIR is made, by examining the task's body. Functions contain no waits, so function calls do not affect the kind.
+- Candidates for static islands (among `cont`, `comb`, `latch`, `ff` and `ff-plain`, those with no delays, no event controls in the middle and no calls with side effects) are decided by analysis. SIR does not flag them (they are held separately as results of analysis).
 
-### 7.2 待ちの命令と基本ブロック
+### 7.2 Wait instructions and basic blocks
 
-- 手続きの文の列を、待ちの点で区切った基本ブロックの列にする。待ちの命令は基本ブロックを終える命令で、待った後に続ける基本ブロック（続きのブロック）を指す。続きのブロックは引数を持たない（5.1）。
-- 待ちの命令（M3b の改訂で、行き先と `iff` を明確にした）：
+- A sequence of procedural statements becomes a sequence of basic blocks cut at the points of waits. A wait instruction ends a basic block and points to the basic block that continues after the wait (the continuation block). Continuation blocks have no arguments (5.1).
+- Wait instructions (the amendment of M3b made the destinations and `iff` clear):
 
-| 命令 | 意味 |
+| Instruction | Meaning |
 | --- | --- |
-| `wait.delay d, 続き` | 時間の待ち。d は設計全体の時間の精度の刻みで表した値（SCHEDULER_SPEC.md の 1 節）。d が x・z なら 0、負なら大きな符号なしの値（同 8 節） |
-| `wait.event 事象の並び, 続き` | イベント制御（辺、`iff`、`or` を含む）。固定した信号はスロットの購読、複合式は監視レコード |
-| `wait.cond 条件の関数, 続き` | `wait (式)`。式を、待っているプロセスのフレームを受け取る関数で表す。真なら待たずに進む |
-| `wait.named スロット, 続き` | 名前付きイベントを待つ（`@ev`） |
-| `fork 子の並び, join の種類, 続き` | 子のプロセスを作る（7.5）。`join` と `join_any` なら待ちとして働き、`join_none` ならすぐに続きへ進む |
-| `wait.fork 続き` | 直接の子がすべて終わるまで待つ |
-| `call.task サブルーチン, 引数..., 続き` | 待ちを含みうるタスクを呼ぶ（8 節）。タスクが戻ったら続きへ進む |
+| `wait.delay d, cont` | A wait for time. d is a value in steps of the whole design's time precision (SCHEDULER_SPEC.md 1). If d is x or z, 0; if negative, a large unsigned value (8 of the same) |
+| `wait.event events, cont` | An event control (with edges, `iff` and `or`). Fixed signals are slot subscriptions; compound expressions are monitor records |
+| `wait.cond condition function, cont` | `wait (expr)`. The expression is represented by a function that receives the frame of the waiting process. If true, it proceeds without waiting |
+| `wait.named slot, cont` | Waits for a named event (`@ev`) |
+| `fork children, kind of join, cont` | Makes child processes (7.5). Acts as a wait for `join` and `join_any`, and proceeds to the continuation at once for `join_none` |
+| `wait.fork cont` | Waits until all direct children have ended |
+| `call.task subroutine, args..., cont` | Calls a task that may wait (8). When the task returns, proceeds to the continuation |
 
-- **`iff`：** `wait.event` の各事象は、`iff` の条件を持てる。条件は、待っているプロセスのフレームを受け取る、待ちを含まない関数（サブルーチンの表に置く）で表し、**その事象が起きたときだけ**評価する（規格で確認：9.4.2.3）。「待ってから条件を調べ、偽なら待ち直す」ループに直すと、`or` で並べた別の事象が起きたときにも条件を調べてしまい、誤る。
-- **式の項（2026-10-18 に追記。承認済み）：** `wait.event` の事象は、スロットの範囲か、式の項のどちらか。式の項は、事象の式の値を返す関数（サブルーチンの表に置く、種類 `watch`）で表す。この関数は、待っているプロセスのフレームを受け取り、待ちを含まず、変数とネットに書かない（`iff` の条件と同じ）。被演算子に辺を持ち、`iff` を続けられる。テキストでは `wait.event posedge @E iff @G, bb2` と書く。層は、関数が読むスロットとイベントを依存先とする監視レコードにする。比べる前回の値は待ち始めた時点の値で、辺は値の最下位ビットで判定する（SCHEDULER_SPEC.md の 9.1 節、9.5 節）。固定した信号（定数の位置の要素、ビット、範囲、メンバを含む）は、今までどおりスロットの範囲で表す。
-- **遅延の換算：** 定数の遅延は、`front` が書いた場所の時間の単位から、丸めて精度の刻みに換算する（SCHEDULER_SPEC.md の 1 節）。定数でない遅延は、`front` が換算の命令（実数の乗算と丸め、または整数の乗算）を待ちの前に置く。
-- `disable 名前`、`disable fork`、イベントのトリガ（`->`、`->>`）は、待ちではない普通の命令にする。
-- **disable の対象のブロック（2026-10-17 に承認）：** disable の対象になる名前付きブロックに番号を振り、入口に `scope.enter #n, 出口のブロック`、出口に `scope.leave #n` を置く。front は、ブロックから抜けるほかの道（break、continue、return、外側のブロックへの disable）にも `scope.leave` を置く。
-  - `disable.scope #n`：その番号のブロックの、すべてのプロセスの今の活動を終わらせる。それぞれのプロセスは、活動の中で呼んだタスクの呼び出しを捨て（output と inout を写し戻さない）、活動の中で fork した子のプロセスを終わらせ、待ちを外して、出口のブロックから続ける（SCHEDULER_SPEC.md の 10.4 節、10.7 節）。disable を実行したプロセスが活動の中にいれば、そのプロセスはその場で出口へ進む。
-  - `disable.task @T`：タスク T のすべての呼び出しを、同じように終わらせ、それぞれ呼んだ文の次から続ける。
-  - 関数の中から、その関数の外のブロックやタスクを disable したら、実行時のエラー（SCHEDULER_SPEC.md の 10.4 節）。
-  - サブルーチンと fork の中に無く、ブロックの外から disable されず、ブロックの中でプロセスが始まりえない（fork も、タスクの呼び出しも、fork する関数の呼び出しも無い）ブロックは、今までどおり出口への `br` で表してよい（同じ意味になる）。ブロックの中で始めたプロセスは、disable で終わらせなければならないため（規格で確認：9.6.2）（2026-10-17 に条件を足した。承認済み）。
-- **監視のプロセス（2026-10-17 に承認）：** `monitor` の `postponed` のプロセスの本体は、引数の値を前回の値（P のフレームの変数）と比べ、どれかが違うか最初の回なら表示する。`$time`、`$stime`、`$realtime` の引数は比べない（SYSTEM_TASKS.md の 4 節）。`$monitoron` と `$monitoroff` は syscall のまま。Postponed の中の順序は、SYSTEM_TASKS.md の 4 節のとおり（監視が先、`$strobe` は呼んだ順）。`$strobe` の引数が automatic の変数を読むときは、当面は未対応として報告する（P は呼んだプロセスのフレームを読めないため）。`$monitor` の automatic の変数は誤り（規格で確認：13.3.2）。
+- **`iff`:** each event of `wait.event` can have an `iff` condition. The condition is represented by a function with no waits (placed in the subroutine table) that receives the frame of the waiting process, and it is evaluated **only when that event occurs** (checked: 9.4.2.3). Rewriting it as a loop that "waits, then checks the condition and waits again if false" would check the condition also when another event listed with `or` occurs, which is wrong.
+- **Expression items (added 2026-10-18, approved):** an event of `wait.event` is either a slot range or an expression item. An expression item is represented by a function returning the value of the event's expression (placed in the subroutine table, kind `watch`). This function receives the frame of the waiting process, contains no waits, and writes no variables or nets (as `iff` conditions). It takes an edge as an operand and can be followed by `iff`. In text it is written `wait.event posedge @E iff @G, bb2`. Tiers make it a monitor record whose dependencies are the slots and events the function reads. The previous value compared against is the value when the wait started, and edges are decided on the least significant bit of the value (SCHEDULER_SPEC.md 9.1, 9.5). Fixed signals (including elements, bits, ranges and members at constant positions) are expressed as slot ranges as before.
+- **Converting delays:** constant delays are converted by `front` from the time unit of where they are written to steps of the precision, with rounding (SCHEDULER_SPEC.md 1). For delays that are not constant, `front` places conversion instructions (real multiplication and rounding, or integer multiplication) before the wait.
+- `disable name`, `disable fork` and event triggers (`->`, `->>`) are ordinary instructions, not waits.
+- **Blocks that are targets of disable (approved 2026-10-17):** named blocks that are targets of disable are numbered, with `scope.enter #n, exit block` at the entry and `scope.leave #n` at the exit. front also places `scope.leave` on the other ways out of the block (break, continue, return, a disable of an outer block).
+  - `disable.scope #n`: ends the present activity of every process in the block with that number. Each process discards the task calls made within the activity (without copying back output and inout), ends the child processes forked within the activity, drops its wait, and continues from the exit block (SCHEDULER_SPEC.md 10.4, 10.7). If the process that ran the disable is within the activity, it goes to the exit on the spot.
+  - `disable.task @T`: ends every call of task T in the same way, each continuing after the statement that called it.
+  - Disabling, from inside a function, a block or task outside that function is a run-time error (SCHEDULER_SPEC.md 10.4).
+  - A block that is not inside a subroutine or fork, is not disabled from outside the block, and within which no process can start (no fork, no task call, no call of a function that forks) may be expressed by a `br` to the exit as before (it means the same). Processes started within a block have to be ended by the disable (checked: 9.6.2) (condition added 2026-10-17, approved).
+- **Monitor processes (approved 2026-10-17):** the body of the `postponed` process of a `monitor` compares the argument values with their previous values (frame variables of P), and prints if any differs or on the first round. Arguments `$time`, `$stime` and `$realtime` are not compared (SYSTEM_TASKS.md 4). `$monitoron` and `$monitoroff` stay syscalls. The order within Postponed is as in SYSTEM_TASKS.md 4 (monitors first, `$strobe` in the order called). When an argument of `$strobe` reads an automatic variable, it is reported as unsupported for now (P cannot read the calling process's frame). An automatic variable in `$monitor` is an error (checked: 13.3.2).
 
 ### 7.3 NBA
 
-- `nba 先, 値` は、更新先（スロットとビット範囲、添字は実行した時点の値）と値を持つ。遅延付きは `nba.delay 先, 値, 遅延` にする（SCHEDULER_SPEC.md の 5 節、13 節）。
-- 右辺を先に、左辺の添字を後に評価する（SCHEDULER_SPEC.md の 13 節の決まり）。SIR の命令の並びも、この順にする。
+- `nba target, value` holds the target of the update (slot and bit range, with indices at their values when it runs) and the value. With a delay it is `nba.delay target, value, delay` (SCHEDULER_SPEC.md 5, 13).
+- The right side is evaluated first and the left side's indices after (the rule of SCHEDULER_SPEC.md 13). The order of SIR's instructions follows this too.
 
-### 7.4 フレーム
+### 7.4 Frames
 
-- プロセスの状態（automatic な変数、待ちをまたぐ値、再開の位置、unique・priority と遅延アサーションの保留の列）は、フレームに置く。フレームの配置は、層によらず同じにする（RUNTIME_ABI.md の 4.3 節）。
-- **フレームの変数の表（M3b の改訂）：** 各プロセスとサブルーチンは、フレームの変数の表を持つ。各行は、番号（`%f0` など）、型、名前（automatic な変数なら宣言の名前。`front` が作った待ちをまたぐ値なら空）を持つ。フレームの中の位置は、表の順に、型の大きさとそろえの規則で決める（規則は RUNTIME_ABI.md で決める）。読み書きは `fload` と `fstore` で行う。
-- automatic な変数は、スコープに入るたびに `fstore` で既定の初期値か初期化の式の値を入れる（3.3）。`front` がこの命令を置く。
-- フレームの変数は、固定長の unpacked の配列でもよい（2026-10-17 に承認）。行は、スロットと同じく次元ごとの範囲を持ち、要素は最も右の次元が最も速く変わる順に並ぶ（4.2）。要素の読み書きは、`load.elem`、`store.elem`、`store.bits` の最初の被演算子にフレームの変数を書く（5.3。automatic の変数への NBA は誤り。規格で確認：10.4.2）。スコープに入るたびに、すべての要素を既定の初期値にする（3.3）。
-- 待ちを含むタスクを呼ぶと、呼び出しごとのフレームを、プロセスのフレームの上に積む。タスクがさらにタスクを呼べば、さらに積む。automatic なタスクの再帰では、積む深さが実行時に決まる（規格で確認：13.3.1、13.3.2）。プロセスのフレームは、この呼び出しの連鎖の先頭を持つ（RUNTIME_ABI.md の 4.3 節）。
-- 一時の値は待ちをまたがない（5.1）ので、一時の値はフレームに置かない。
+- The state of a process (automatic variables, values across waits, the resume position, the pending queues of unique, priority and deferred assertions) is placed in its frame. The layout of frames is the same whatever the tier (RUNTIME_ABI.md 4.3).
+- **Table of frame variables (amendment of M3b):** each process and subroutine has a table of frame variables. Each row holds a number (`%f0` and so on), a type, and a name (the declared name for an automatic variable; empty for a value across waits made by `front`). The position within the frame is decided in table order by the rules of size and alignment of types (the rules are set in RUNTIME_ABI.md). Reads and writes are done with `fload` and `fstore`.
+- Automatic variables get, with `fstore`, their default initial value or the value of their initializer each time the scope is entered (3.3). `front` places these instructions.
+- A frame variable may be a fixed-size unpacked array (approved 2026-10-17). Its row holds the range of each dimension like a slot, and its elements are ordered with the rightmost dimension changing fastest (4.2). Elements are read and written by writing the frame variable as the first operand of `load.elem`, `store.elem` and `store.bits` (5.3; NBA to automatic variables is an error, checked: 10.4.2). Each time the scope is entered, every element is set to its default initial value (3.3).
+- Calling a task that may wait pushes a frame per call on top of the process's frame. If that task calls another task, another is pushed. In recursion of automatic tasks, the depth is decided at run time (checked: 13.3.1, 13.3.2). The process's frame holds the head of this chain of calls (RUNTIME_ABI.md 4.3).
+- Temporaries do not cross waits (5.1), so temporaries are not placed in frames.
 
-### 7.5 fork と子のプロセス
+### 7.5 fork and child processes
 
-M3b の改訂。
+Amendment of M3b.
 
-- fork の各文は、プロセスの表の別の行（種類 `general`）にし、親のプロセス（またはサブルーチン）の番号を持つ。`fork` の命令は、子のプロセスの番号の並びを持つ。
-- fork のブロック項目の初期化は、`fork` の命令の前に親が行う（規格で確認：9.3.2）。子が参照する、fork のブロックの automatic な変数は、子のフレームの変数にし、`fork` の命令が親の値で初期化する。
-- 子は親のスレッドの組（active か reactive）を引き継ぐ。
+- Each statement of a fork is a separate row of the process table (kind `general`), holding the number of its parent process (or subroutine). The `fork` instruction holds the sequence of the child processes' numbers.
+- Block item initializations of a fork are done by the parent before the `fork` instruction (checked: 9.3.2). Automatic variables of the fork block that children refer to are frame variables of the children, initialized by the `fork` instruction with the parent's values.
+- A child inherits its parent's thread set (active or reactive).
 
-## 8. サブルーチン
+## 8. Subroutines
 
-- **サブルーチンの表（M3b の改訂）：** 各行は、番号、名前、種類（関数かタスク）、寿命（static か automatic）、待ちを含みうるか、引数の並び（方向、型、置き場所。static ならスロット、automatic ならフレームの変数）、戻り値の型（関数。`void` を含む）、フレームの変数の表、基本ブロックの列を持つ。
-- **呼び出しの命令：** 関数と、待ちを含まないタスクは `call`（基本ブロックの途中に置く普通の命令）で呼ぶ。待ちを含みうるタスクは `call.task`（終端の命令。7.2）で呼ぶ。待ちを含みうるかは、本体と、本体から呼ぶタスクを調べて `front` が決める（7.1）。
-- **出力の引数を持つシステム関数（2026-10-17 に承認）：** `$sscanf`、`$fscanf`、`$fgets`、`$value$plusargs`、`$ferror` などの出力の引数は、front がその引数の型のフレームの変数を用意し、`syscall` の被演算子に渡す（フレームの変数の被演算子は、syscall では出力を表す）。syscall はそこに値を書き、戻り値で何を書いたかを示す。front は syscall の後で、書かれたフレームの変数を、利用者の書いた代入先へ、ブロッキングの代入と同じに写す（サブルーチンの output の引数の写し戻しと同じ形。規格で確認：4.9.7 は output の引数について。システム関数の出力の代入の時点は、規格に書かれていないので本書の決まり）。
-  - `$sscanf` と `$fscanf` は、書式の順に、一致して代入した項目の数を返す。代入するのは、`*` の無い変換のうち先頭から戻り値の数だけで、front はそれらだけを写す。残りの代入先は変えない（規格で確認：21.3.4.3。読めなかった項目の代入先が変わらないことは規格に書かれていないので本書の決まり）。
-  - 書式の変換と代入先の型の組み合わせのうち、`%f`・`%e`・`%g` で整数型に読むものは、当面は未対応として報告する（規格は実数を整数型へどう入れるかを書いていない）。`%t`・`%u`・`%z`・`%v`・`%m` も当面は未対応として報告する。
-- **関数：** 待ちを含まない。static な関数の変数はスロットに、automatic な関数の変数はフレームに置く（3.3）。関数から `fork-join_none`、NBA、イベントのトリガを行ってよい。ただし、関数が戻った後に事象を予定するものは、`initial`・`always`・それらの中の fork で作ったスレッドから呼んだときだけ許される（規格で確認：13.4.4）。
-- **タスク：** 待ちを含みうるので、呼び出しごとにフレームを確保する。static なタスクの変数と引数は共有のスロットに置き、同時の呼び出しで共有する（3.3）。
-- **引数の受け渡し：** 値渡しは、呼び出しで写し、戻るときに output と inout を写し戻す。写し戻しはブロッキング代入と同じ（規格で確認：4.9.7）。`ref` と `const ref` は参照を渡す（次の項）。
-- **ref 引数（2026-10-17 に承認）：** ref と const ref の形式引数は、呼ばれる側のフレームの変数で、型は参照（`ref`。ハンドルの領域）。呼ぶ側は `%r = ref.make 元, [添字...]` で参照を作り、`call` と `call.task` の被演算子に渡す。元は、スロット（static の変数）かフレームの変数（automatic の変数）。添字は、配列の要素や構造体の配列の要素を選ぶもので、作ったときに評価する。構造体の参照は、その最初の葉を指す（葉は続く。4.2）。
-  - 参照を通した読み書きは、`load.ref %r, +k`、`store.ref %r, +k, 値`、`nba.ref %r, +k, 値`（k は構造体の中の葉の番号。0 なら省く）と、配列の要素とビットのための `load.ref.elem`、`store.ref.elem`、`store.ref.bits`。書き込みは元への書き込みと同じで、待っているプロセスを起こす（規格で確認：13.5.2 は、参照を通した書き込みが呼んだ側にすぐ見えるとする）。
-  - 参照は、それを受け取った呼び出しが戻るまで有効。呼ぶ側のフレームの変数を指す参照も、呼ぶ側のフレームは呼び出しの間ずっと生きているので有効（待つタスクでも同じ。7.4）。fork-join_any と fork-join_none の中では、ref の形式引数はブロック項目の初期化式でしか参照できない（規格で確認：9.3.2）ので、子のプロセスが呼び出しより長く参照を使うことはない。
-  - 書き込みの範囲（感度の計算と、always_comb の書き手の検査。3.4）：ref 引数に書くかもしれない呼び出しは、呼ぶ側が実引数の範囲に書くものとして扱う（const ref を除く）。
-  - 規格では、ref は automatic なサブルーチンだけに使え、渡せるのは変数、クラスのプロパティ、unpacked の構造体のメンバ、unpacked の配列の要素で、ネットと選択は渡せない（規格で確認：13.5.2）。`ref static`（13.5.2）とクラスのプロパティの参照は P3。
-- **固定長の unpacked の配列の引数（2026-10-17 に承認）：** 値渡しの配列の引数は、`call` と `call.task` の被演算子に配列全体（次元を持つスロットかフレームの変数）を書く。呼ぶときに要素ごとに写し、戻るときに output と inout を要素ごとに写し戻す（4.9.7 と同じ）。実引数が代入パターンなどの式なら、front が呼ぶ側のフレームの配列に求めてから渡す。
-- **構造体の引数と、集合の戻り値（2026-10-17 に承認）：**
-  - unpacked の構造体の引数は、葉ごとの引数に分ける（名前は `<引数>.<メンバ>`、順は 4.2 の葉の順）。
-  - 戻り値が unpacked の配列か構造体の関数は、戻り値を隠れた output の引数（名前 `$return`。構造体は葉ごと、配列は配列のまま）で返し、関数の戻り値の型を void にする。
-  - 呼ぶ側は、受け取る場所（フレームの変数）を被演算子に書き、呼び出しの後で、利用者の代入先へ集合の代入（VALUE_SEMANTICS.md の 3.13 節）として写す。
-  - 構造体の配列の引数、ref の構造体の引数は、当面は未対応として報告する。
-- **disable：** タスクとブロックの disable は、SCHEDULER_SPEC.md の 10.4 節に従う。
+- **Subroutine table (amendment of M3b):** each row holds a number, a name, a kind (function or task), a lifetime (static or automatic), whether it may wait, a sequence of arguments (direction, type, place: a slot if static, a frame variable if automatic), the return type (functions; `void` included), a table of frame variables, and a sequence of basic blocks.
+- **Call instructions:** functions and tasks with no wait are called with `call` (an ordinary instruction placed in the middle of a basic block). Tasks that may wait are called with `call.task` (a terminator; 7.2). Whether it may wait is decided by `front` by examining the body and the tasks it calls (7.1).
+- **System functions with output arguments (approved 2026-10-17):** for the output arguments of `$sscanf`, `$fscanf`, `$fgets`, `$value$plusargs`, `$ferror` and so on, front provides a frame variable of the argument's type and passes it as an operand of `syscall` (a frame-variable operand of a syscall denotes an output). The syscall writes a value there and says by its return value what it wrote. After the syscall, front copies the written frame variables to the targets the user wrote, as blocking assignments (the same form as copying back output arguments of subroutines; checked: 4.9.7 on output arguments; when outputs of system functions are assigned is not written in the standard, so it is a rule of this document).
+  - `$sscanf` and `$fscanf` return the number of items matched and assigned, in the order of the format. What they assign is, among the conversions without `*`, the leading ones up to the return value, and front copies only those. The other targets are not changed (checked: 21.3.4.3; that the targets of items not read do not change is not written in the standard, so it is a rule of this document).
+  - Among combinations of conversion and target type, reading into an integral type with `%f`, `%e` or `%g` is reported as unsupported for now (the standard does not say how a real is put into an integral type). `%t`, `%u`, `%z`, `%v` and `%m` are also reported as unsupported for now.
+- **Functions:** contain no waits. Variables of static functions are placed in slots, those of automatic functions in frames (3.3). Functions may do `fork-join_none`, NBAs and event triggers. But those that schedule events after the function returns are allowed only when called from threads made by `initial`, `always` or a fork within them (checked: 13.4.4).
+- **Tasks:** may wait, so a frame is allocated per call. Variables and arguments of static tasks are placed in shared slots and shared by calls at the same time (3.3).
+- **Passing arguments:** by-value arguments are copied at the call, and output and inout are copied back on return. Copying back is the same as a blocking assignment (checked: 4.9.7). `ref` and `const ref` pass a reference (the next item).
+- **ref arguments (approved 2026-10-17):** a ref or const ref formal argument is a frame variable of the callee whose type is a reference (`ref`; the handle area). The caller makes the reference with `%r = ref.make source, [index...]` and passes it as an operand of `call` or `call.task`. The source is a slot (a static variable) or a frame variable (an automatic variable). The indices select an element of an array or of an array of structures, and are evaluated when the reference is made. A reference to a structure points to its first leaf (the leaves follow; 4.2).
+  - Reads and writes through a reference are `load.ref %r, +k`, `store.ref %r, +k, value`, `nba.ref %r, +k, value` (k is the number of the leaf within the structure; omitted if 0), and `load.ref.elem`, `store.ref.elem`, `store.ref.bits` for array elements and bits. A write is the same as a write to the source, and wakes waiting processes (checked: 13.5.2 says a write through a reference is seen by the caller at once).
+  - A reference is valid until the call that received it returns. A reference to a frame variable of the caller is valid too, since the caller's frame lives for the whole call (the same for tasks that wait; 7.4). Inside fork-join_any and fork-join_none, ref formal arguments can be referred to only in block item initializers (checked: 9.3.2), so no child process uses a reference longer than the call.
+  - Write ranges (for computing sensitivity, and the check of writers of always_comb; 3.4): a call that may write a ref argument is treated as the caller writing the range of the actual argument (except for const ref).
+  - In the standard, ref can be used only for automatic subroutines, and what can be passed is variables, class properties, members of unpacked structures and elements of unpacked arrays, not nets or selects (checked: 13.5.2). `ref static` (13.5.2) and references to class properties are P3.
+- **Fixed-size unpacked array arguments (approved 2026-10-17):** a by-value array argument is written as an operand of `call` and `call.task` as the whole array (a slot or frame variable with dimensions). At the call it is copied element by element, and on return output and inout are copied back element by element (as 4.9.7). If the actual argument is an expression such as an assignment pattern, front computes it into an array in the caller's frame before passing it.
+- **Structure arguments, and aggregate return values (approved 2026-10-17):**
+  - An unpacked structure argument is split into an argument per leaf (named `<argument>.<member>`, in the leaf order of 4.2).
+  - A function whose return value is an unpacked array or structure returns it in a hidden output argument (named `$return`; per leaf for a structure, as the array for an array), and the function's return type becomes void.
+  - The caller writes the receiving place (a frame variable) as an operand, and after the call copies it to the user's target as an aggregate assignment (VALUE_SEMANTICS.md 3.13).
+  - Arguments that are arrays of structures, and ref structure arguments, are reported as unsupported for now.
+- **disable:** disabling tasks and blocks follows SCHEDULER_SPEC.md 10.4.
 
-## 9. テキスト形式（案）
+## 9. Text form (draft)
 
-- `--dump-sir` で書き出し、読み戻せる形にする。変換のテストは、このテキストを期待値にする（TEST_SUITE.md の期待値を守る決まりの対象に加える）。
-- 書き出しは決まった順（番号の順）で行い、同じ SIR からは同じテキストを出す。
-- **番号で引く（M3b の改訂）：** スロットは `%s<番号>`、一時の値は `%t<番号>`、フレームの変数は `%f<番号>`、プロセスとサブルーチンは `@<番号>`、型の表は `!<番号>`、基本ブロックは `bb<番号>` で引く。名前は宣言の行にだけ、引用符で囲んで書く。SystemVerilog の名前には、エスケープした識別子（`\a+b `）のように、そのままでは区切りと紛れるものがあるためである。
-- **ブロックの引数：** `bb3(%t5: i4<8>):` のように宣言し、`br bb3(%t9)` のように渡す。
-- **精度の行（2026-10-16 に追記）：** 先頭の `; sir format 0` の次の行に、設計全体の時間の精度を `precision 1ns` の形で書く（単位は `1`・`10`・`100` と `s`・`ms`・`us`・`ns`・`ps`・`fs` の組み合わせ）。
-- 記法の例（確定ではない）：
+- Written by `--dump-sir`, in a form that can be read back. Tests of the lowering use this text as their expected values (added to what TEST_SUITE.md's rules protecting expected values cover).
+- It is written in a fixed order (number order), and the same SIR gives the same text.
+- **Referring by number (amendment of M3b):** slots are referred to as `%s<number>`, temporaries `%t<number>`, frame variables `%f<number>`, processes and subroutines `@<number>`, the type table `!<number>`, and basic blocks `bb<number>`. Names are written only on declaration lines, in quotes. This is because SystemVerilog names include ones that, as they are, would be confused with separators, such as escaped identifiers (`\a+b `).
+- **Block arguments:** declared like `bb3(%t5: i4<8>):` and passed like `br bb3(%t9)`.
+- **The precision line (added 2026-10-16):** the line after the leading `; sir format 0` gives the time precision of the whole design in the form `precision 1ns` (the unit is a combination of `1`, `10` or `100` with `s`, `ms`, `us`, `ns`, `ps` or `fs`).
+- Example of the notation (not fixed):
 
 ```text
 ; module counter: always @(posedge clk) if (!rst_n) q <= '0; else q <= q + 1;
@@ -432,9 +434,9 @@ slot %s2 "counter.q"     : i4<8> var inst=0 flags(observable)
 process @0 "counter.always0" kind=ff-plain inst=0 trigger=posedge(%s0) writes=%s2 {
 bb0:
   %t0 = load i4<1> %s1
-  %t1 = lnot i4<1> %t0            ; !rst_n（rst_n が x なら x）
-  %t2 = truth i4<1> %t1           ; 1 ビットの真偽（1 / 0 / x）
-  br.if %t2, bb1, bb2             ; 真なら bb1、偽と不定は bb2（if の規則）
+  %t1 = lnot i4<1> %t0            ; !rst_n (x if rst_n is x)
+  %t2 = truth i4<1> %t1           ; truth value of 1 bit (1 / 0 / x)
+  br.if %t2, bb1, bb2             ; bb1 if true, bb2 if false or unknown (the rule of if)
 bb1:
   nba %s2, const i4<8> 8'h00
   ret
@@ -446,10 +448,10 @@ bb2:
 }
 ```
 
-- 値の合流と、待ちをまたぐ値の例：
+- An example of merging values, and of values across waits:
 
 ```text
-; initial for (int i = 0; i < 3; i++) #5 q = i;   （i は automatic。12.7.1）
+; initial for (int i = 0; i < 3; i++) #5 q = i;   (i is automatic; 12.7.1)
 process @1 "counter.initial0" kind=initial inst=0 writes=%s2 {
   frame %f0 "i" : s2<32>
 bb0:
@@ -460,10 +462,10 @@ bb1:
   %t1 = lt i2<1> %t0, const s2<32> 32'h00000003
   br.if %t1, bb2, bb4
 bb2:
-  wait.delay const i2<64> 64'd5, bb3   ; 精度の刻みに換算した値
+  wait.delay const i2<64> 64'd5, bb3   ; the value converted to steps of the precision
 bb3:
-  %t2 = fload s2<32> %f0              ; 待ちの後は読み直す（%t0 は使えない）
-  %t3 = trunc i2<8> %t2             ; 代入の変換（左辺の幅と符号へ）
+  %t2 = fload s2<32> %f0              ; read again after the wait (%t0 cannot be used)
+  %t3 = trunc i2<8> %t2             ; conversion of the assignment (to the left side's width and sign)
   %t4 = to4 i4<8> %t3
   store %s2, %t4
   %t5 = add s2<32> %t2, const s2<32> 32'h00000001
@@ -473,7 +475,7 @@ bb4:
   ret
 }
 
-; 待ちを含まないループ（関数の中など）では、ブロックの引数で値を合流させる
+; a loop with no wait (inside a function and so on) merges values with block arguments
 bb0:
   br bb1(const s2<32> 32'h00000000)
 bb1(%t0: s2<32>):
@@ -486,33 +488,33 @@ bb3:
   ret
 ```
 
-- 設計書の例の `br.xfalse`（x を偽として分岐）は、`truth` で真偽に変換してから `br.if` で分岐する形に分けた（案）。`if` と、`while` などのループの条件で、不定を偽として扱う規則を 1 か所（`br.if`）にまとめるためである。`for`、`while`、`do...while` の条件も、真偽は `if` と同じ規則で決まる（規格で確認：12.7.1、12.7.4、12.7.5）。`repeat (n)` の n は、ループの前に 1 回だけ評価し、負、x、z なら 0 回とする（規格で確認：12.7.2）。
-- テキスト形式を番号で引く形に改めると、`tests/dump_sir/` の期待値の書き方が変わる。期待値の変更は、実装と別のコミットにする（CLAUDE.md の期待値の決まり）。
+- `br.xfalse` (branch taking x as false) in the design specification's example was split into converting to a truth value with `truth`, then branching with `br.if` (draft). This gathers in one place (`br.if`) the rule that conditions of `if` and of loops such as `while` take unknown as false. The truth of the conditions of `for`, `while` and `do...while` too is decided by the same rule as `if` (checked: 12.7.1, 12.7.4, 12.7.5). The n of `repeat (n)` is evaluated once before the loop, and is 0 times if negative, x or z (checked: 12.7.2).
+- Changing the text form to refer by number changes how the expected values of `tests/dump_sir/` are written. Changes of expected values go in a commit separate from the implementation (the rules on expected values in CLAUDE.md).
 
-## 10. 検証器
+## 10. Verifier
 
-SIR の検証器は、デバッグビルドと CI で常に動かす。次のことを確かめる。
+The SIR verifier always runs in debug builds and CI. It checks the following.
 
-1. **型の整合：** 各命令の被演算子と結果の型が、命令の定義に合う。2 値と 4 値の混在は、明示的な変換の命令を通す。
-2. **スロットの範囲：** 参照するスロット番号がスロット表の中にあり、ビット範囲がスロットの幅の中にある。
-3. **制御フローの形：** 各基本ブロックは、分岐、待ち、戻りのどれか 1 つで終わる。分岐と待ちの行き先は、同じプロセスかサブルーチンの中のブロック。分岐が渡す引数の数と型は、行き先のブロックの引数と合う。待ちの続きのブロックは引数を持たない（M3b の改訂）。到達できないブロックが無い（slang の結果に残る到達できないコード、たとえば `return`・`disable`・`forever` の後の文や `if (0)` の枝は、`front` が SIR を作るときに落とす）。
-4. **SSA：** 一時の値は 1 回だけ定義され、定義が使う場所より先にある（支配の関係）。一時の値とブロックの引数を使う場所から定義まで、待ちの命令をまたがない（M3b の改訂。5.1）。
-5. **待ちの位置：** 待ちの命令（7.2 の表のすべて。`call.task` と、`join` か `join_any` の `fork` を含む）は、`cont`、`comb`、`latch`、`ff`、`ff-plain`、`final`、関数、待ちを含まないとしたタスクの中に無い（`ff` と `ff-plain` の先頭の辺の待ちを除く）。`ff` のイベント制御はちょうど 1 つ。
-6. **書き込みの制限：** `comb`、`latch`、`ff`（`always_ff`）が書くビット範囲を、ほかのプロセスが書いていない（SCHEDULER_SPEC.md の 6.4 節）。`ff-plain`（ふつうの `always`）には当てない。`uwire` と変数への複数の連続代入も同じ。static なサブルーチンの変数と引数のスロットは除く（2026-10-18 に追記。承認済み）。呼び出しが引数に値を写し込む書き込みは、手続きとそれが呼ぶ関数の中の代入の左辺ではないので、規格の制限に当たらない。関数の中の代入で書くものの重なりは、slang の解析の段が誤りとして報告する（SCHEDULER_SPEC.md の 6.4 節）。
-7. **automatic な変数の制限：** 3.3 の禁止事項に当たる参照が無い。
-8. **余ったビット：** 定数の表の値で、幅より上のビットが 0。
-9. **ソースの位置：** すべての命令にソースの位置がある。
-10. **表の整合（M3b の改訂）：** 型の表の番号、フレームの変数の番号、サブルーチンとプロセスの番号が、表の中にある。フレームの変数は、それを持つプロセスかサブルーチンの中でだけ使う。列挙型の要素の値が基底の型に収まり、packed の型のフィールドが全体の幅の中にある。`call` と `call.task` の引数の数と型が、サブルーチンの引数と合う。設計全体の時間の精度が 1fs から 100s の間にある（2026-10-16 に追記）。
-11. **配列の添字：** `load.elem`、`store.elem`、`nba.elem` の添字の数が、スロットの次元の数と同じ（M3b の改訂）。
+1. **Type consistency:** the types of each instruction's operands and result fit the instruction's definition. Mixing 2-state and 4-state goes through explicit conversion instructions.
+2. **Slot ranges:** referenced slot numbers are within the slot table, and bit ranges within the slot's width.
+3. **Shape of control flow:** each basic block ends with exactly one of a branch, a wait or a return. The destinations of branches and waits are blocks within the same process or subroutine. The number and types of arguments a branch passes match the destination block's arguments. Continuation blocks of waits have no arguments (amendment of M3b). There are no unreachable blocks (unreachable code left in slang's result, such as statements after `return`, `disable` or `forever`, or the branch of `if (0)`, is dropped by `front` when making SIR).
+4. **SSA:** each temporary is defined exactly once, and its definition comes before its uses (dominance). From a use of a temporary or block argument back to its definition, no wait instruction is crossed (amendment of M3b; 5.1).
+5. **Position of waits:** wait instructions (everything in the table of 7.2, `call.task` and a `fork` with `join` or `join_any` included) are not in `cont`, `comb`, `latch`, `ff`, `ff-plain`, `final`, functions, or tasks taken to have no wait (except the leading edge wait of `ff` and `ff-plain`). An `ff` has exactly one event control.
+6. **Write restrictions:** the bit ranges written by `comb`, `latch` and `ff` (`always_ff`) are not written by any other process (SCHEDULER_SPEC.md 6.4). Not applied to `ff-plain` (ordinary `always`). The same for `uwire` and for several continuous assignments to a variable. Slots of variables and arguments of static subroutines are excluded (added 2026-10-18, approved). The write that copies values into arguments at a call is not the left side of an assignment in the procedure or the functions it calls, so it is not under the restriction of the standard. Overlaps among what assignments in functions write are reported as errors by slang's analysis stage (SCHEDULER_SPEC.md 6.4).
+7. **Restrictions on automatic variables:** no reference falls under the prohibitions of 3.3.
+8. **Extra bits:** values in the constant table have 0 above their width.
+9. **Source positions:** every instruction has a source position.
+10. **Consistency of tables (amendment of M3b):** type-table numbers, frame-variable numbers, and numbers of subroutines and processes are within their tables. A frame variable is used only within the process or subroutine that has it. Values of members of enumerated types fit the base type, and fields of packed types are within the whole width. The number and types of arguments of `call` and `call.task` match the subroutine's arguments. The time precision of the whole design is between 1fs and 100s (added 2026-10-16).
+11. **Array indices:** the number of indices of `load.elem`, `store.elem` and `nba.elem` equals the number of dimensions of the slot (amendment of M3b).
 
-6 と 7 は M3b で実装する（それまでは 1〜5、8、9 だけ）。
+6 and 7 are implemented in M3b (until then only 1 to 5, 8 and 9).
 
-## 11. 未確認・後で書くこと
+## 11. Not confirmed, to be written later
 
-- ストリーミングと代入パターンの命令（P1。VALUE_SEMANTICS.md の 8 節と一緒に）。
-- unpacked の共用体の置き方（4.2）。
-- フレームの中の位置を決める、大きさとそろえの規則（RUNTIME_ABI.md）。
-- クラス、動的なデータ、制約付き乱数、アサーション、カバレッジの命令（P3）。
-- 階層参照（上方・下方、`$root`、generate のスコープ）を、エラボレーションの時点でスロットに解決する方法と、解決できない場合（P1）。
-- テキスト形式の文法の確定（P1 の終わりまでに。確定したら `formatVersion` を 1 にする）。
-- slang の API から各要素を作る対応表（`front` の実装と一緒に P1 で書く）。
+- Instructions for streaming and assignment patterns (P1; together with VALUE_SEMANTICS.md 8).
+- Layout of unpacked unions (4.2).
+- The rules of size and alignment that decide positions within frames (RUNTIME_ABI.md).
+- Instructions for classes, dynamic data, constrained random, assertions and coverage (P3).
+- How hierarchical references (upward, downward, `$root`, generate scopes) are resolved to slots at elaboration, and what happens when they cannot be (P1).
+- Fixing the grammar of the text form (by the end of P1; once fixed, `formatVersion` becomes 1).
+- The table of correspondence for making each element from slang's API (written in P1 together with the implementation of `front`).
