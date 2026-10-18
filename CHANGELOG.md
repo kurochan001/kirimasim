@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A `case` on a real compares the expression and the items as reals; they
+  were rounded to integers first, so 1.6 matched 2.0. A `case` on a string
+  compares strings; it was reported as an unsupported value of no bits (#10).
 - A DPI-C import (`import "DPI-C" ...`) is reported as not supported yet at
   its declaration, whether it is called or not; it ran as an empty
   subroutine that returned at once (#11).

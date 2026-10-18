@@ -1088,8 +1088,13 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
     // order until one matches (12.5). All take the width of the widest, and
     // are unsigned unless all are signed (VALUE_SEMANTICS.md 4.2). An item
     // of case inside matches as the set of an inside operator does, and
-    // only when that gives 1 (12.5.4).
+    // only when that gives 1 (12.5.4). slang has given the expression and
+    // the items their common type; a real, shortreal or string one is
+    // compared with == in that type, not bit by bit (VALUE_SEMANTICS.md
+    // 4.2).
     const bool inside = s.condition == ast::CaseStatementCondition::Inside;
+    const ast::Type& common = s.expr.type->getCanonicalType();
+    const bool byValue = !inside && (common.isFloating() || common.isString());
     std::uint32_t width = s.expr.type->getBitWidth();
     bool allSigned = s.expr.type->isSigned();
     bool four = s.expr.type->isFourState();
@@ -1101,10 +1106,10 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
             four = four || e->type->isFourState();
         }
     }
-    if (!inside && width == 0) unsupported(sl, "a value of no bits");
+    if (!inside && !byValue && width == 0) unsupported(sl, "a value of no bits");
     const Type ct = four ? (allSigned ? sir::s4(width) : sir::u4(width))
                          : (allSigned ? sir::s2(width) : sir::u2(width));
-    const Val x = inside ? lowerExpr(s.expr) : coerce(lowerExpr(s.expr), ct, sl);
+    const Val x = inside || byValue ? lowerExpr(s.expr) : coerce(lowerExpr(s.expr), ct, sl);
     std::vector<sir::BlockId> bodies;
     bodies.reserve(s.items.size());
     for (std::size_t g = 0; g < s.items.size(); ++g)
@@ -1115,6 +1120,7 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
             const ast::Expression* const item[] = {&e};
             return coerce(lowerInside(x, item, isl), sir::u2(1), isl);
         }
+        if (byValue) return compareValues(Op::Eq, x, lowerExpr(e), isl);
         const Val v = coerce(lowerExpr(e), ct, isl);
         if (s.condition == ast::CaseStatementCondition::Normal)
             return emit(Op::Ceq, sir::u2(1), {x.op, v.op}, isl);

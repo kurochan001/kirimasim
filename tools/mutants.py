@@ -705,6 +705,9 @@ MUTANTS = [
     ("front: a DPI-C import declared in two instances is reported twice", "src/front/lower.cpp",
      "    if (std::find(dpiReported_.begin(), dpiReported_.end(), s.location) == dpiReported_.end()) {",
      "    if (true) {"),
+    ("front: a case on reals or strings compares integers made of them", "src/front/lower_stmt.cpp",
+     "const bool byValue = !inside && (common.isFloating() || common.isString());",
+     "const bool byValue = !inside && common.isString();"),
 ]
 
 

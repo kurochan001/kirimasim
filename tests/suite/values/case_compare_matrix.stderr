@@ -1,0 +1,7 @@
+case_compare_matrix.sv:2901: warning: unique case violation: no item matches [top @ 1ns]
+case_compare_matrix.sv:2908: warning: unique case violation: more than one item matches [top @ 1ns]
+case_compare_matrix.sv:2915: warning: priority case violation: no item matches [top @ 1ns]
+case_compare_matrix.sv:2927: warning: unique case violation: no item matches [top @ 1ns]
+case_compare_matrix.sv:2934: warning: unique case violation: no item matches [top @ 1ns]
+case_compare_matrix.sv:2940: warning: unique case violation: more than one item matches [top @ 1ns]
+case_compare_matrix.sv:2947: warning: priority case violation: no item matches [top @ 1ns]
