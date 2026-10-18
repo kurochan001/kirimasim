@@ -1,0 +1,34 @@
+; sir format 0
+precision 100ps
+source 0 "delay_values.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.d" : s2<32> var inst=0
+slot %s1 "top.r" : real var inst=0
+
+process @0 "top.$static" kind=static-init inst=0 writes=%s0,%s1 {  ; 0:5:7
+bb0:
+  store %s0, const s2<32> 32'h00000003  ; 0:5:7
+  store %s1, const real 2.75  ; 0:6:8
+  ret  ; 0:4:8
+}
+
+process @1 "top.initial0" kind=initial inst=0 {  ; 0:7:3
+bb0:
+  %t0 = load s2<32> %s0  ; 0:8:6
+  %t1 = sext i2<64> %t0  ; 0:8:5
+  %t2 = to4 i4<64> %t1  ; 0:8:5
+  %t3 = zext i4<128> %t2  ; 0:8:5
+  %t4 = mul i4<128> %t3, const i4<128> 128'h0000000000000000000000000000000a  ; 0:8:5
+  wait.delay %t4, bb1  ; 0:8:5
+bb1:
+  %t5 = load real %s1  ; 0:9:6
+  %t6 = mul real %t5, const real 10  ; 0:9:5
+  %t7 = rtoi i4<1088> %t6  ; 0:9:5
+  %t8 = rtoi i4<64> %t6  ; 0:9:5
+  %t9 = zext i4<1088> %t8  ; 0:9:5
+  %t10 = lt i2<1> %t6, const real 0  ; 0:9:5
+  %t11 = select i4<1088> %t10, %t9, %t7  ; 0:9:5
+  wait.delay %t11, bb2  ; 0:9:5
+bb2:
+  ret  ; 0:7:3
+}
