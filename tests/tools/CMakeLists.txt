@@ -233,3 +233,7 @@ set_tests_properties(tools/gen_runtime_error_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_format_flag_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_format_flag_matrix.py --check)
 set_tests_properties(tools/gen_format_flag_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_subroutine_variable_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_subroutine_variable_matrix.py --check)
+set_tests_properties(tools/gen_subroutine_variable_matrix PROPERTIES LABELS Tools)

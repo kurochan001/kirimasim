@@ -353,6 +353,8 @@ public:
     /// The subroutine row of a function or task for the current instance,
     /// lowered on its first call.
     sir::SubroutineId subroutineOf(const ast::SubroutineSymbol& sym, slang::SourceLocation sl);
+    /// The subroutine that declares a symbol, if any (within its instance).
+    static const ast::SubroutineSymbol* declaringSubroutine(const ast::Symbol& s);
     Val lowerCall(const ast::CallExpression& call);
     /// A ref to the actual of a ref argument (SIR_SPEC.md 8).
     Val refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl);

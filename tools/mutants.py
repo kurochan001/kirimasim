@@ -625,6 +625,9 @@ MUTANTS = [
      "const bool late = watched && walking_ > 0;", "const bool late = false;"),
     ("kernel: a trigger made during a walk is made at once", "src/kernel/sim.cpp",
      "if (walking_ > 0) {  // made during a walk: after it", "if (false) {"),
+    ("front: a function's variable named from outside first belongs to no function",
+     "src/front/lower.cpp", "sub != nullptr && (!b_.isSub || b_.subSymbol != sub)) {",
+     "false && sub != nullptr) {"),
 ]
 
 

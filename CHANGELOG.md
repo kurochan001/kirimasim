@@ -90,6 +90,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A static variable of a function named by a hierarchical name before the
+  function is called stays the function's own: an event expression or a
+  `$strobe` argument that calls the function may write it. It was
+  rejected as an event expression that writes a variable, or stopped as a
+  write in the Postponed region, depending on which came first in the
+  source.
 - `$sformat` and `$sformatf` printed a format that is not a string
   literal, such as a string parameter, as a value to show. A constant
   format is now read as a format, and a wrong number of arguments for it

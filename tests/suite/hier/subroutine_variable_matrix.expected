@@ -1,0 +1,10 @@
+10 case 0 event_control process woke t=10
+20 case 1 event_control event_expression woke t=20
+31 case 2 read process read t=30
+41 case 3 read event_expression read t=40
+50 case 4 read strobe strobe f=50
+51 case 4 read strobe read t=50
+61 case 5 write process read t=60
+71 case 6 write event_expression read t=70
+80 case 7 write strobe strobe f=80
+81 case 7 write strobe read t=80

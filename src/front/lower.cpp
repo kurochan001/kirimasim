@@ -515,11 +515,32 @@ std::string Lowerer::scopeNameOf(const ast::Symbol& sym) const {
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
+    // A static variable of a subroutine belongs to it (SIR_SPEC.md 3.3),
+    // whether the subroutine or a hierarchical name from outside it (13.3.1,
+    // 23.6) is lowered first: the subroutine is lowered here, which makes
+    // the variable when its body uses it.
+    std::optional<sir::SubroutineId> owner;
+    if (const ast::SubroutineSymbol* sub = declaringSubroutine(v);
+        sub != nullptr && (!b_.isSub || b_.subSymbol != sub)) {
+        owner = subroutineOf(*sub, sl);
+        if (auto it = slots_.find(&v); it != slots_.end()) return it->second;
+    }
     if (structElement(v.getType()) != nullptr)
         unsupported(sl, "unpacked structure used as a whole here");
     const sir::SlotId id = newSlot(v, "", v.getType(), {}, sl);
+    if (owner) design_.slots[id].subroutine = *owner;
     slots_.emplace(&v, id);
     return id;
+}
+
+const ast::SubroutineSymbol* Lowerer::declaringSubroutine(const ast::Symbol& s) {
+    for (const ast::Scope* sc = s.getParentScope(); sc != nullptr;
+         sc = sc->asSymbol().getParentScope()) {
+        const ast::Symbol& scope = sc->asSymbol();
+        if (scope.kind == ast::SymbolKind::Subroutine) return &scope.as<ast::SubroutineSymbol>();
+        if (scope.kind == ast::SymbolKind::InstanceBody) return nullptr;
+    }
+    return nullptr;
 }
 
 std::optional<sir::InstanceId> Lowerer::declaringInstance(const ast::Symbol& s) {
