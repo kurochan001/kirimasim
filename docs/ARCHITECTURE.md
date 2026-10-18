@@ -1,5 +1,7 @@
 # kirimasim architecture
 
+[日本語](ARCHITECTURE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
+
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/) (headings only during P0).
 
