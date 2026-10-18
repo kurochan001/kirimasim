@@ -1,416 +1,418 @@
-# VALUE_SEMANTICS：値の意味論
+# VALUE_SEMANTICS: the semantics of values
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。7 節（連結、変換、実数、文字列、列挙型）は P1 で書き、2026-10-15 に承認した。2026-10-16 に、5 節（ネットの解決と駆動の強さ）を書き直し、3.12 節（代入演算子と、増減の演算子）を足した（承認済み）。同日、3.9 節に整数型でない値の条件演算子を書いた（承認済み）。2026-10-17 に、3.13 節（集合の代入）と 3.14 節（集合の比較）を足し、8 節のストリーミング演算子の項を書き直した（承認済み）。同日、7.4 節の実数から整数への変換を、大きさによらない切り詰めと、NaN と無限大の扱いに改めた（承認済み）。2026-10-18 に、7.6 節に x と z を持つ整数から文字列への変換を足した（承認済み）。
+[日本語](VALUE_SEMANTICS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、kirimasim が値をどう表し、演算をどう計算するかを定める。規格（IEEE 1800-2023）の本文は写さず、本書の言葉で要約し、根拠の節番号を示す。「規格で確認」と書いた項目は、規格の該当節を読んで確かめたもの。「解釈」と書いた項目は、規格の文面だけでは決まらず、本書で決めたもの。
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Section 7 (concatenation, conversion, reals, strings, enumerated types) was written in P1 and approved on 2026-10-15. On 2026-10-16, section 5 (net resolution and drive strength) was rewritten and 3.12 (assignment operators, and increment and decrement operators) added (approved). The same day, the conditional operator on values that are not integral was written in 3.9 (approved). On 2026-10-17, 3.13 (aggregate assignment) and 3.14 (aggregate comparison) were added and the item on streaming operators in 8 rewritten (approved). The same day, the conversion from real to integer in 7.4 was changed to truncation regardless of size, with the handling of NaN and infinities (approved). On 2026-10-18, the conversion of integers with x and z to strings was added to 7.6 (approved).
 
-意味の定義は `valsem` の参照実装 1 か所に置く。実行カーネルや生成コードの高速版は、`valsem` と突き合わせるテストを必ず持つ。
+This document sets how kirimasim represents values and computes operations. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "interpretation" are not settled by the wording of the standard alone, and this document decides them.
 
-## 1. 値の集合と表現
+The definition of meaning lives in one place, the reference implementation `valsem`. Fast versions in the execution kernel and generated code always have tests that cross-check them with `valsem`.
 
-### 1.1 4 つの値
+## 1. The set of values and their representation
 
-1 ビットは 0、1、x（不明）、z（高インピーダンス）のどれかを取る。ゲートの入力や式の中に z が来たときは、ほとんどの場合 x と同じに扱う。規格が z をそのまま通す例外として挙げるのは、MOS のプリミティブである（規格で確認：6.3.1）。このほか、ネットの解決（5 節）と条件演算子で両側が同じ値のとき（3.9）にも、z が結果に残る（本書の補足。それぞれの節の規則から従う）。
+### 1.1 The four values
 
-### 1.2 4 値の型と 2 値の型
+One bit takes one of 0, 1, x (unknown) and z (high impedance). When a z reaches a gate's input or an expression, it is in most cases treated like x. The exception the standard names, which passes z through, is the MOS primitives (checked: 6.3.1). Besides these, z stays in the result of net resolution (5) and of the conditional operator when both sides have the same value (3.9) (a note of this document; it follows from the rules of those sections).
 
-- 4 値の型：`logic`（= `reg`）、`integer`、`time`、およびそれらからなる packed の型。
-- 2 値の型：`bit`、`byte`、`shortint`、`int`、`longint`、およびそれらからなる packed の型。
-- 既定の符号：`byte`、`shortint`、`int`、`integer`、`longint` は符号付き。`bit`、`logic`、`reg`、`time` は符号なし（規格で確認：6.11、6.11.2、6.11.3）。
-- 4 値から 2 値へ暗黙に変換するときは、x と z のビットを 0 にする（規格で確認：6.11.2）。
+### 1.2 4-state and 2-state types
 
-### 1.3 内部の表現
+- 4-state types: `logic` (= `reg`), `integer`, `time`, and packed types made of them.
+- 2-state types: `bit`, `byte`, `shortint`, `int`, `longint`, and packed types made of them.
+- Default signedness: `byte`, `shortint`, `int`, `integer` and `longint` are signed. `bit`, `logic`, `reg` and `time` are unsigned (checked: 6.11, 6.11.2, 6.11.3).
+- An implicit conversion from 4 states to 2 states makes x and z bits 0 (checked: 6.11.2).
 
-64 ビットの語の組 `(a, b)` を、幅に応じて並べて持つ。1 ビットの符号は次のとおり（規格で確認：38.15 の `s_vpi_vecval` の注記と、H.10.1.2 の `svLogicVecVal`。VPI と DPI は同じ符号を使う）。
+### 1.3 Internal representation
 
-| 値 | a | b |
+Values are held as pairs of 64-bit words `(a, b)`, as many as the width needs. One bit is encoded as follows (checked: the note on `s_vpi_vecval` in 38.15, and `svLogicVecVal` in H.10.1.2; VPI and DPI use the same encoding).
+
+| Value | a | b |
 | --- | --- | --- |
 | 0 | 0 | 0 |
 | 1 | 1 | 0 |
 | z | 0 | 1 |
 | x | 1 | 1 |
 
-- VPI と DPI は 32 ビットごとの組で、最下位ビットは添字 0 の要素の最下位ビットに置く（規格で確認：38.15、H.10.1.2）。kirimasim の内部は 64 ビットごとなので、境界では並べ替えだけをする。ビットの意味は同じなので、1 ビットずつの変換は要らない。
-- ただし、DPI の正規の表現では、最後の要素の幅より上の未使用のビットの内容は決まっておらず、マスクや符号拡張は受け取る側の責任とされている（規格で確認：H.7.7）。そのため、DPI と VPI から値を**取り込む**とき（import 関数の output と戻り値、open array、`vpi_put_value`）は、並べ替えた後に a も b も幅でマスクして、余ったビットを 0 にする。渡すときは、余ったビットを 0 にしたまま渡す。境界の突き合わせのテスト（幅 1、31、32、33、63、64、65、127、128、129）には、未使用のビットにでたらめな値を入れた入力も加える。
-- 幅より上の余ったビットは、a も b も常に 0 にする（本書の決まり。検証器で確かめる）。
-- 2 値の型と、X が来ないと証明できたスロットは、a だけを持つ。
+- VPI and DPI use pairs of 32 bits, with the least significant bit in the least significant bit of the element at index 0 (checked: 38.15, H.10.1.2). kirimasim's internal words are 64 bits, so at the boundary only rearranging is needed. The meaning of the bits is the same, so no conversion bit by bit is needed.
+- However, in DPI's canonical representation, the content of unused bits above the width of the last element is not defined, and masking or sign extension is the receiver's responsibility (checked: H.7.7). So when **taking in** values from DPI and VPI (the outputs and return values of import functions, open arrays, `vpi_put_value`), after rearranging, both a and b are masked by the width and the extra bits made 0. When giving values, the extra bits are passed as 0. The cross-check tests of the boundary (widths 1, 31, 32, 33, 63, 64, 65, 127, 128, 129) include inputs with random values in the unused bits.
+- Extra bits above the width are always 0 in both a and b (rule of this document; checked by the verifier).
+- 2-state types, and slots proved never to receive X, hold only a.
 
-### 1.4 既定の初期値
+### 1.4 Default initial values
 
-初期値の指定の無い変数は、4 値の整数型なら全ビット x、2 値の整数型なら 0、実数は 0.0、文字列は空、クラス・interface class・chandle・virtual interface は null で始まる。**`event` は null ではなく、新しいイベント（同期のオブジェクト）で始まる**。列挙型は基底の型の既定値に従う（規格で確認：6.8、表 6-7）。
+A variable with no initial value starts as: all bits x for 4-state integral types, 0 for 2-state integral types, 0.0 for reals, empty for strings, and null for classes, interface classes, chandles and virtual interfaces. **An `event` starts not as null but as a new event (synchronization object).** Enumerated types follow the default of their base type (checked: 6.8, Table 6-7).
 
-### 1.5 実数
+### 1.5 Reals
 
-- `real` は C の `double`、`shortreal` は C の `float` と同じ。`realtime` は `real` と同じ（規格で確認：6.12）。
-- 実数から整数への変換は、最も近い整数への丸め。小数部がちょうど 0.5 のときは 0 から遠い方へ丸める（規格で確認：6.12.1。Icarus 13.0 で、-1.5 は -2、2.5 は 3 になることも確かめた）。
-- 整数から実数への変換では、x と z のビットを 0 とみなす（規格で確認：6.12.1。Icarus 13.0 で、`...1x` が 2.0 になることを確かめた）。
-- 実数に使えない演算と構文（辺の待ち、ビットや部分の選択など）は、エラボレーションのエラーにする。これは slang が判定する（規格で確認：6.12、11.3.1）。
+- `real` is the same as C's `double`, and `shortreal` as C's `float`. `realtime` is the same as `real` (checked: 6.12).
+- Conversion from real to integer rounds to the nearest integer. A fraction of exactly 0.5 rounds away from zero (checked: 6.12.1; also checked with Icarus 13.0 that -1.5 becomes -2 and 2.5 becomes 3).
+- Conversion from integer to real takes x and z bits as 0 (checked: 6.12.1; checked with Icarus 13.0 that `...1x` becomes 2.0).
+- Operations and constructs that cannot be used on reals (waiting for edges, bit- and part-selects and so on) are errors of elaboration. slang decides these (checked: 6.12, 11.3.1).
 
-## 2. 式の型と幅
+## 2. Types and widths of expressions
 
-- 式の幅と符号は、slang の型付けの結果に従い、kirimasim では計算し直さない（規格の 11.6、11.7、11.8.1、11.8.2）。
-- 符号付きの値を広げるときは、符号のビットで埋める。符号のビットが x なら x で、z なら z で埋める（規格で確認：11.8.4。Icarus 13.0 で、`4'sbz111` を 8 ビットに広げると `zzzzz111` になることを確かめた）。
-- ビットや部分の選択、連結、比較、縮約の結果は、常に符号なし（規格で確認：11.8.1）。
+- The width and signedness of an expression follow slang's typing; kirimasim does not compute them again (11.6, 11.7, 11.8.1, 11.8.2 of the standard).
+- Widening a signed value fills with the sign bit. If the sign bit is x it fills with x, if z with z (checked: 11.8.4; checked with Icarus 13.0 that widening `4'sbz111` to 8 bits gives `zzzzz111`).
+- The results of bit- and part-selects, concatenation, comparison and reduction are always unsigned (checked: 11.8.1).
 
-## 3. 演算
+## 3. Operations
 
-### 3.1 共通の規則
+### 3.1 Common rules
 
-- 2 値と 4 値が混ざった演算は、すべてを 4 値とみなして計算する。入力がすべて 2 値なら、結果もふつうは 2 値の範囲に収まる。例外は、0 での除算のように 2 値の入力から x を作る演算である（規格で確認：11.3.4）。結果を 2 値の型に入れるときは、1.2 の変換で x が 0 になる。
-- 短絡評価をするのは `&&`、`||`、`->`、`?:` だけ。ほかの演算子は、すべての被演算子を必ず評価する。短絡で評価しなかった被演算子の副作用（関数呼び出しなど）と実行時のエラーは起きない（規格で確認：11.3.5）。`<->` は短絡せず、両辺をちょうど 1 回ずつ評価する（規格で確認：11.4.7）。
-- 呼び出しの回数や順序が変わる最適化は、副作用が無いと証明できるときだけ行う（規格は、結果と副作用が規則どおりなら評価を省いてよいとしている。11.3.5）。
+- An operation mixing 2-state and 4-state values is computed taking everything as 4-state. If every input is 2-state, the result normally stays within 2 states. The exceptions are operations that make x from 2-state inputs, such as division by 0 (checked: 11.3.4). When the result is put in a 2-state type, the conversion of 1.2 makes x 0.
+- Only `&&`, `||`, `->` and `?:` short-circuit. Every other operator always evaluates all its operands. The side effects (function calls and the like) and run-time errors of operands not evaluated because of short-circuiting do not happen (checked: 11.3.5). `<->` does not short-circuit and evaluates each side exactly once (checked: 11.4.7).
+- Optimizations that change the number or order of calls are done only when they are proved free of side effects (the standard allows skipping evaluation if the results and side effects are as the rules say; 11.3.5).
 
-### 3.2 算術（`+ - * / % **`、単項の `+ -`）
+### 3.2 Arithmetic (`+ - * / % **`, unary `+ -`)
 
-- 被演算子のどれかのビットに x か z があれば、結果の全ビットを x にする（規格で確認：11.4.3）。
-- 整数の除算は 0 の方向に切り捨てる。`/` と `%` で除数が 0 なら、結果の全ビットを x にする。`%` の結果の符号は、被除数（左の被演算子）の符号に従う（規格で確認：11.4.3）。
-- 整数のべき乗の規則（規格で確認：11.4.3、表 11-4）：
-  - 指数が 0 なら、底によらず結果は 1（0 の 0 乗も 1）。
-  - 底が 0 で指数が負なら、結果の全ビットを x にする。
-  - 底が 1 なら、結果は 1。底が -1 なら、指数が偶数で 1、奇数で -1。
-  - 底の絶対値が 2 以上で指数が負なら、結果は 0。
-  - 指数は自己決定の文脈で評価し、結果の型には影響しない。
-- 実数のべき乗で、底が 0 で指数が負の場合と、底が負で指数が整数でない場合は、規格が結果を定めていない（規格で確認：11.4.3）。kirimasim は C の `pow` の結果を返す（解釈。NFR-2 の数学関数の例外と同じ扱い）。
-- 符号付きの演算は 2 の補数で計算する。符号付きと符号なしの間の変換は、ビットの並びを変えず、解釈だけを変える（規格で確認：11.4.3.1）。
-- 生成コードの 64 ビットの高速経路では、C++ の未定義動作を起こさない。符号付きの加減乗は符号なしで計算してから戻し、`INT64_MIN / -1` と 0 での除算は条件で分ける（本書の決まり）。
+- If any bit of any operand is x or z, every bit of the result is x (checked: 11.4.3).
+- Integer division truncates toward zero. For `/` and `%`, a divisor of 0 makes every bit of the result x. The sign of the result of `%` follows the sign of the dividend (the left operand) (checked: 11.4.3).
+- Rules of integer power (checked: 11.4.3, Table 11-4):
+  - If the exponent is 0, the result is 1 whatever the base (0 to the 0 is 1 too).
+  - If the base is 0 and the exponent negative, every bit of the result is x.
+  - If the base is 1, the result is 1. If the base is -1, the result is 1 for an even exponent and -1 for an odd one.
+  - If the absolute value of the base is 2 or more and the exponent negative, the result is 0.
+  - The exponent is evaluated in a self-determined context and does not affect the type of the result.
+- For real power, the standard does not set the result when the base is 0 and the exponent negative, or when the base is negative and the exponent not an integer (checked: 11.4.3). kirimasim returns the result of C's `pow` (interpretation; treated like the exception of math functions in NFR-2).
+- Signed operations are computed in two's complement. Conversion between signed and unsigned keeps the bit pattern and changes only the interpretation (checked: 11.4.3.1).
+- The 64-bit fast paths of generated code cause no undefined behaviour of C++. Signed addition, subtraction and multiplication are computed unsigned and converted back; `INT64_MIN / -1` and division by 0 are split off by conditions (rule of this document).
 
-### 3.3 比較（`< > <= >=`）
+### 3.3 Relational (`< > <= >=`)
 
-- 結果は 1 ビット。どちらかの被演算子に x か z が 1 ビットでもあれば、結果は x にする。既知のビットだけで大小が決まる場合でも x にする（規格で確認：11.4.4。Icarus 13.0 で、`2'b1x > 2'b00` が x になることを確かめた）。
-- どちらかが符号なしなら符号なしの比較、両方が符号付きなら符号付きの比較。どちらかが実数なら実数の比較（規格で確認：11.4.4）。
+- The result is 1 bit. If either operand has even one x or z bit, the result is x, even when the known bits alone would decide the order (checked: 11.4.4; checked with Icarus 13.0 that `2'b1x > 2'b00` is x).
+- If either is unsigned the comparison is unsigned; if both are signed it is signed. If either is real it is a real comparison (checked: 11.4.4).
 
-### 3.4 等価（`== != === !==`）と、ワイルドカードの等価（`==? !=?`）
+### 3.4 Equality (`== != === !==`) and wildcard equality (`==? !=?`)
 
-- `==` と `!=` はビットごとに比べる。x か z のせいで結果が決まらないときだけ x にする。既知のビットで食い違いがあれば、ほかのビットに x があっても結果は 0（`!=` なら 1）（規格で確認：11.4.5。Icarus 13.0 で、`2'b1x == 2'b0x` が 0 になることを確かめた）。
-- `===` と `!==` は、x と z も値として比べる。結果は必ず 0 か 1（規格で確認：11.4.5）。
-- `==?` と `!=?` は、**右の被演算子**の x と z のビットだけを「どの値とも一致する」ビットとして扱う。左の被演算子の x と z は、ワイルドカードにならない。そのほかのビットは `==` と同じ規則で比べ、決まらなければ x（規格で確認：11.4.6）。
-- クラスのハンドル、chandle、null の比較は、ハンドルの値の比較（規格で確認：11.4.5、11.4.6）。
+- `==` and `!=` compare bit by bit. The result is x only when x or z leaves it undecided. If known bits differ, the result is 0 (1 for `!=`) even if other bits are x (checked: 11.4.5; checked with Icarus 13.0 that `2'b1x == 2'b0x` is 0).
+- `===` and `!==` compare x and z as values too. The result is always 0 or 1 (checked: 11.4.5).
+- `==?` and `!=?` treat only the x and z bits of **the right operand** as bits that "match any value". x and z of the left operand are not wildcards. The other bits are compared by the same rule as `==`; if undecided, x (checked: 11.4.6).
+- Comparisons of class handles, chandles and null compare the values of the handles (checked: 11.4.5, 11.4.6).
 
-### 3.5 論理演算（`! && || -> <->`）
+### 3.5 Logical operations (`! && || -> <->`)
 
-- 被演算子の真偽を次のように決める（解釈。根拠は下のとおり）：
-  - 1 のビットが 1 つでもあれば、真。
-  - すべてのビットが 0 なら、偽。
-  - 1 のビットが無く、x か z のビットがあれば、不定。
-  - 根拠：12.4 は、偽を「0 の値、または x か z の値」とし、`if (式)` と `if (式 != 0)` を同じ意味としている。12.7.1 も、`for` の条件の真偽を 12.4 の意味で決め、条件の値が不明か高インピーダンスなら 0 とみなすとしている（ここでも「不明な値」の範囲は文面からは決まらない）。`!= 0` の結果は、3.4 の規則のとおり、1 のビットがあれば 1、すべて 0 なら 0、それ以外は x になる。11.4.7 は、真なら 1、偽なら 0、決まらなければ x としている。Icarus 13.0 の結果（`!(2'b0x)` は x）も、この解釈と一致する。
-- `!` は、真を 0、偽を 1、不定を x にする（規格で確認：11.4.7）。
-- `&&` と `||` は、3 値（真・偽・不定）の論理積と論理和。`a -> b` は `!a || b` と、`a <-> b` は `(a -> b) && (b -> a)` と同じ意味（規格で確認：11.4.7）。
-- 短絡評価：`&&` と `->` は、左が偽なら右を評価しない。`||` は、左が真なら右を評価しない。左が不定なら右を評価する（規格で確認：11.4.7）。
+- The truth of an operand is decided as follows (interpretation; grounds below):
+  - If any bit is 1, true.
+  - If every bit is 0, false.
+  - If no bit is 1 and some bit is x or z, unknown.
+  - Grounds: 12.4 gives false as "a value of 0, or a value of x or z", and makes `if (expr)` mean the same as `if (expr != 0)`. 12.7.1 too decides the truth of a `for` condition in the sense of 12.4, taking an unknown or high-impedance condition as 0 (here too the range of "unknown value" is not settled by the wording). By the rules of 3.4, the result of `!= 0` is 1 if some bit is 1, 0 if all are 0, and x otherwise. 11.4.7 gives 1 for true, 0 for false, and x when undecided. Icarus 13.0's result (`!(2'b0x)` is x) agrees with this interpretation too.
+- `!` makes true 0, false 1, and unknown x (checked: 11.4.7).
+- `&&` and `||` are the 3-valued (true, false, unknown) AND and OR. `a -> b` means the same as `!a || b`, and `a <-> b` the same as `(a -> b) && (b -> a)` (checked: 11.4.7).
+- Short-circuiting: `&&` and `->` do not evaluate the right side if the left is false. `||` does not evaluate the right side if the left is true. If the left is unknown, the right is evaluated (checked: 11.4.7).
 
-### 3.6 ビット演算（`& | ^ ~^ ~`）
+### 3.6 Bitwise operations (`& | ^ ~^ ~`)
 
-ビットごとに次の規則で計算する（規格で確認：11.4.8、表 11-11〜11-15）。z は入力では x と同じに扱い、出力に z は出ない。
+Computed bit by bit by these rules (checked: 11.4.8, Tables 11-11 to 11-15). z in an input is treated like x, and no z comes out.
 
-| 演算 | 規則 |
+| Operation | Rule |
 | --- | --- |
-| `&` | どちらかが 0 なら 0。両方が 1 なら 1。それ以外は x |
-| `\|` | どちらかが 1 なら 1。両方が 0 なら 0。それ以外は x |
-| `^` | 両方が既知（0 か 1）なら排他的論理和。それ以外は x |
-| `~^`、`^~` | 両方が既知なら排他的論理和の否定。それ以外は x |
-| `~` | 0 と 1 を入れ替える。x と z は x |
+| `&` | 0 if either is 0. 1 if both are 1. Otherwise x |
+| `\|` | 1 if either is 1. 0 if both are 0. Otherwise x |
+| `^` | Exclusive OR if both are known (0 or 1). Otherwise x |
+| `~^`, `^~` | The negation of exclusive OR if both are known. Otherwise x |
+| `~` | Swaps 0 and 1. x and z give x |
 
-- 幅が違うときは、どちらかが符号なしならゼロで、両方が符号付きなら符号で広げる（規格で確認：11.4.8）。
-- 符号付きの値に x か z があるときの扱い：11.8.4 は、符号付きの値に x か z のビットがあれば、「論理的でない演算」の結果の全ビットを x にするとしている。この「論理的でない演算」にビット演算が入るかは、文面からは決まらない。kirimasim は、ビット演算と縮約はビットごとに計算し、算術と比較は全ビットを x にする（解釈。2026-10-14 に承認。Icarus 13.0 も、`4'sb10x1 & 4'sb1111` を `10x1` とビットごとに計算した）。
-- 参照実装：`valsem::logicAnd`（`&` の 1 ビット）。高速版：`kernel::and4`（64 ビット）。全 16 通りと乱数の語で突き合わせ済み（`tests/unit/and4_test.cpp`）。ほかの演算子も同じ形で足す。
+- When widths differ, operands are extended with zeros if either is unsigned, and with the sign if both are signed (checked: 11.4.8).
+- Signed values with x or z: 11.8.4 says that if a signed value has x or z bits, every bit of the result of a "non-logical operation" is x. Whether bitwise operations are among those "non-logical operations" is not settled by the wording. kirimasim computes bitwise operations and reductions bit by bit, and makes every bit x for arithmetic and comparison (interpretation; approved 2026-10-14; Icarus 13.0 too computed `4'sb10x1 & 4'sb1111` bit by bit as `10x1`).
+- Reference implementation: `valsem::logicAnd` (one bit of `&`). Fast version: `kernel::and4` (64 bits). Cross-checked on all 16 cases and random words (`tests/unit/and4_test.cpp`). Other operators are added in the same form.
 
-### 3.7 縮約（`& ~& | ~| ^ ~^`）
+### 3.7 Reduction (`& ~& | ~| ^ ~^`)
 
-最初の 2 ビットに 3.6 の規則を当て、その結果と次のビットに同じ規則を当てることを繰り返す。`~&`、`~|`、`~^` は、それぞれ `&`、`|`、`^` の結果を反転する（規格で確認：11.4.9）。結果は 1 ビットで符号なし。
+The rule of 3.6 is applied to the first 2 bits, then the same rule to that result and the next bit, and so on. `~&`, `~|` and `~^` invert the results of `&`, `|` and `^` (checked: 11.4.9). The result is 1 bit, unsigned.
 
-### 3.8 シフト（`<< >> <<< >>>`）
+### 3.8 Shifts (`<< >> <<< >>>`)
 
-- 左シフトは、どちらの種類も下を 0 で埋める。`>>` は上を 0 で埋める。`>>>` は、結果の型が符号付きなら左の被演算子の最上位ビットで、符号なしなら 0 で埋める（規格で確認：11.4.10）。
-- シフト量（右の被演算子）は常に符号なしとして扱い、結果の符号には影響しない（規格で確認：11.4.10）。
-- シフト量に x か z があれば、結果は不明とする。kirimasim は全ビットを x にする（規格で確認：11.4.10。「不明」を全ビット x と読むのは解釈。Icarus 13.0 も全ビット x を出した）。
-- 幅以上のシフトは、左シフトと `>>` では全ビット 0。符号付きの `>>>` では全ビットが符号のビットになる（本書の決まり。生成コードではこれを条件で分けて、C++ の未定義動作を避ける）。
+- Both kinds of left shift fill the bottom with 0. `>>` fills the top with 0. `>>>` fills with the most significant bit of the left operand if the result type is signed, and with 0 if unsigned (checked: 11.4.10).
+- The shift amount (the right operand) is always treated as unsigned and does not affect the sign of the result (checked: 11.4.10).
+- If the shift amount has x or z, the result is unknown. kirimasim makes every bit x (checked: 11.4.10; reading "unknown" as all bits x is interpretation; Icarus 13.0 also gave all bits x).
+- A shift by the width or more gives all bits 0 for left shifts and `>>`, and all bits equal to the sign bit for a signed `>>>` (rule of this document; generated code splits this off by a condition to avoid undefined behaviour of C++).
 
-### 3.9 条件演算子（`?:`）
+### 3.9 Conditional operator (`?:`)
 
-- 条件が真なら 1 つ目の式だけを、偽なら 2 つ目の式だけを評価して返す（規格で確認：11.4.11）。
-- 条件が不定（x か z）なら、両方の式を評価する。2 つが `==` で等しい（結果が 1）なら、その値を返す。そうでなければ、整数型の場合は両者を同じ幅に広げ、ビットごとに合わせる：両方 0 なら 0、両方 1 なら 1、それ以外は x。**両方が z のビットも x になる**（規格で確認：11.4.11、表 11-20）。
-- 整数型でない場合（規格で確認：11.4.11）。2026-10-16 に承認：
-  - 結果の型：両方が実数なら real。片方が real で、もう片方が shortreal か整数型なら、もう片方を real に変換する。片方が shortreal で、もう片方が整数型なら、整数型を shortreal に変換する。片方が整数型で、もう片方を整数型に暗黙に変換できるなら、整数型として扱う。クラスとインターフェースクラスは 11.4.11 の a〜e（P3）。それ以外は、2 つの型が同値（6.22.2）でなければならない（slang が検査する）。
-  - 条件が不定で、2 つの値が `==`（11.4.5）で等しくないとき：要素の数が同じ配列（連想配列を除く）は要素ごとに合わせ、等しい要素はその値、違う要素は表 7-1 の値にする。それ以外の型は、結果の型の表 7-1 の値にする。実数は 0.0、文字列は空の文字列、クラスのハンドルなどは null。
-  - 実数と文字列は P1 で実装する。配列とハンドルは、それらを実装する段で実装する。
-  - Icarus 13.0 は、条件が x の文字列の `?:` で内部エラーになる（確かめた）。期待値は規格に従う。
-- Icarus 13.0 との差：`1'bx ? 2'bz1 : 2'bz0` に対し、Icarus 13.0 は `zx` を出した。規格の表 11-20 では z と z は x なので、規格どおりの結果は `xx` である。期待値は規格に従う（`oracle: spec`）。
+- If the condition is true, only the first expression is evaluated and returned; if false, only the second (checked: 11.4.11).
+- If the condition is unknown (x or z), both expressions are evaluated. If the two are equal by `==` (the result is 1), that value is returned. Otherwise, for integral types, both are widened to the same width and combined bit by bit: 0 if both are 0, 1 if both are 1, x otherwise. **A bit that is z on both sides becomes x too** (checked: 11.4.11, Table 11-20).
+- Types that are not integral (checked: 11.4.11). Approved 2026-10-16:
+  - The result type: real if both are real. If one is real and the other shortreal or integral, the other is converted to real. If one is shortreal and the other integral, the integral one is converted to shortreal. If one is integral and the other can be implicitly converted to an integral type, it is treated as integral. Classes and interface classes follow a to e of 11.4.11 (P3). Otherwise the two types must be equivalent (6.22.2) (slang checks).
+  - When the condition is unknown and the two values are not equal by `==` (11.4.5): arrays with the same number of elements (associative arrays excepted) are combined element by element, equal elements keeping their value and differing ones taking the value of Table 7-1. Other types take the value of Table 7-1 for the result type: 0.0 for reals, the empty string for strings, null for class handles and the like.
+  - Reals and strings are implemented in P1. Arrays and handles are implemented in the stages that implement them.
+  - Icarus 13.0 hits an internal error on `?:` of strings with an x condition (checked). Expected values follow the standard.
+- Difference from Icarus 13.0: for `1'bx ? 2'bz1 : 2'bz0`, Icarus 13.0 gave `zx`. In Table 11-20 of the standard, z and z give x, so the result by the standard is `xx`. Expected values follow the standard (`oracle: spec`).
 
-### 3.10 集合の所属（`inside`）
+### 3.10 Set membership (`inside`)
 
-- 左の式を、右の並びの各要素と比べ、どれかと一致すれば 1 を返す。整数型の要素は `==?` で比べるので、要素の側の x と z は「どの値とも一致する」ビットになる。左の式の x と z はワイルドカードにならない。整数型でない要素は `==` で比べる（規格で確認：11.4.13）。
-- 一致が無く、比べた結果のどれかが x なら x を返す。全体は、すべての比較の結果の論理和と同じ（規格で確認：11.4.13）。
-- 範囲 `[lo:hi]` は、`>=` と `<=` で比べる。`$` は左の式の型の最小か最大の値。lo が hi より大きい範囲は空（規格で確認：11.4.13）。範囲の比較には 3.3 の規則が当たるので、左の式に x か z があれば、その範囲の比較は x になる（解釈）。
-- 許容範囲の書き方 `[A +/- B]`（絶対の許容幅）と `[A +%- B]`（A に対する割合の許容幅）がある。2 つの境界は、A と B の符号によらず、必要なら入れ替えて [下限:上限] にする。範囲の型は A の型。整数の A のときは、許容幅を丸めずに切り捨てる（規格で確認：11.4.13。1800-2017 にあったかどうかは未確認）。
-- 並びの要素が unpacked の配列なら、単一の値に達するまで要素をたどって比べる（規格で確認：11.4.13。動的な配列は P3）。
-- 要素の評価の順序は規格で決まっていない（規格で確認：11.4.13）。kirimasim は書かれた順に評価する（本書の決まり）。
-- Icarus 13.0 は `inside` に対応していない（実行して確認した）。
+- The left expression is compared with each element of the list on the right, and the result is 1 if it matches any. Integral elements are compared with `==?`, so x and z on the element's side are bits that "match any value". x and z of the left expression are not wildcards. Elements that are not integral are compared with `==` (checked: 11.4.13).
+- If nothing matches and any of the comparisons is x, the result is x. The whole is the same as the OR of the results of all comparisons (checked: 11.4.13).
+- A range `[lo:hi]` is compared with `>=` and `<=`. `$` is the smallest or largest value of the left expression's type. A range with lo greater than hi is empty (checked: 11.4.13). The rules of 3.3 apply to comparisons with ranges, so if the left expression has x or z, the comparison with the range is x (interpretation).
+- There are tolerance forms `[A +/- B]` (an absolute tolerance) and `[A +%- B]` (a tolerance as a percentage of A). Whatever the signs of A and B, the two bounds are swapped if needed to make [low:high]. The type of the range is A's type. For an integral A, the tolerance is truncated, not rounded (checked: 11.4.13; whether this was in 1800-2017 is not confirmed).
+- If an element of the list is an unpacked array, its elements are followed down to single values and compared (checked: 11.4.13; dynamic arrays in P3).
+- The order of evaluating elements is not set by the standard (checked: 11.4.13). kirimasim evaluates them in the order written (rule of this document).
+- Icarus 13.0 does not support `inside` (checked by running it).
 
-### 3.11 ビットと部分の選択
+### 3.11 Bit- and part-selects
 
-- packed の値のビットの選択で、添字が範囲の外か、x か z のビットを含むときは、読み出しの値を、4 値なら x、2 値なら 0 にする（規格で確認：11.5.1）。
-- 部分の選択が全部範囲の外か、位置に x か z があるときは、読み出しの値を x にする（2 値の型では、1.2 の変換で 0 になる）。書き込みは何もしない（規格で確認：11.5.1）。
-- 部分の選択が一部だけ範囲の外のときは、範囲の外のビットを x として読み、書き込みは範囲の中のビットだけに行う（規格で確認：11.5.1。Icarus 13.0 で、`8'hA5` の `[6 +: 4]` が `xx10` になることを確かめた）。
-- unpacked の配列を無効な添字（範囲の外、または x か z を含む添字）で読むと、要素の型の既定の値を返す。4 値の整数型なら x、2 値なら 0、実数は 0.0、文字列は空、ハンドルは null（規格で確認：7.4.5、表 7-1）。無効な添字への書き込みは何もしない。ただし、キューの `[$+1]` への書き込みと、連想配列の新しい要素の作成は除く（規格で確認：7.4.5）。
+- When a bit-select of a packed value has an index out of range or containing x or z bits, the value read is x for 4-state and 0 for 2-state (checked: 11.5.1).
+- When a part-select is entirely out of range, or its position has x or z, the value read is x (for 2-state types, 0 by the conversion of 1.2). A write does nothing (checked: 11.5.1).
+- When a part-select is only partly out of range, the bits out of range read as x, and a write goes only to the bits in range (checked: 11.5.1; checked with Icarus 13.0 that `[6 +: 4]` of `8'hA5` is `xx10`).
+- Reading an unpacked array with an invalid index (out of range, or containing x or z) returns the default value of the element type: x for 4-state integral types, 0 for 2-state, 0.0 for reals, empty for strings, null for handles (checked: 7.4.5, Table 7-1). A write to an invalid index does nothing, except a write to `[$+1]` of a queue and making a new element of an associative array (checked: 7.4.5).
 
-### 3.12 代入演算子と、増減の演算子
+### 3.12 Assignment operators, and increment and decrement operators
 
-2026-10-16 に承認。
+Approved 2026-10-16.
 
-- `a op= b` は `a = a op (b)` と同じ。ただし、`a` の添字の式は 1 回だけ評価する（規格で確認：11.4.1）。
-- 評価の順は、`a` の添字と位置、`a` の今の値、`b`、演算、書き込みとする（本書の決まり。規格は式の中の代入の順を決めていない：11.4.2）。
-- `++` と `--` も、オペランドを 1 つの代入先として、添字の式を 1 回だけ評価する（解釈。11.4.2 は「blocking assignment のようにふるまう」とだけ書き、添字の評価の回数を書かない。ソースに 1 回だけ書かれた式を 2 回評価する読み方はとらない）。実数は 1.0 だけ増減する（規格で確認：11.4.2）。
-  - 対照：Icarus 13.0 は `a[f()]++` で f を 1 回呼ぶ。Verilator 5.052 は `y = a[f()]--` で 3 回、`m[f()-1][7:4] -= 1` で 2 回呼ぶ（後者は 11.4.1 にも反する）。
-- 文字列を変えるメソッド（`putc`、`itoa`、`hextoa`、`octtoa`、`bintoa`、`realtoa`）と `s[i] = c` も、文字列を 1 つの代入先として扱い、その添字を 1 回だけ評価する。
+- `a op= b` is the same as `a = a op (b)`, except that the index expressions of `a` are evaluated only once (checked: 11.4.1).
+- The order of evaluation is: the indices and position of `a`, the present value of `a`, `b`, the operation, the write (rule of this document; the standard does not set the order of assignments within expressions: 11.4.2).
+- `++` and `--` too take the operand as one target and evaluate its index expressions only once (interpretation; 11.4.2 says only that they "behave like a blocking assignment" and does not give the number of evaluations of the indices; a reading that evaluates twice an expression written once in the source is not taken). Reals change by exactly 1.0 (checked: 11.4.2).
+  - Controls: Icarus 13.0 calls f once for `a[f()]++`. Verilator 5.052 calls it 3 times for `y = a[f()]--` and twice for `m[f()-1][7:4] -= 1` (the latter breaks 11.4.1 too).
+- The methods that change a string (`putc`, `itoa`, `hextoa`, `octtoa`, `bintoa`, `realtoa`) and `s[i] = c` also treat the string as one target and evaluate its index only once.
 
-### 3.13 集合の代入（unpacked の配列と構造体）
+### 3.13 Aggregate assignment (unpacked arrays and structures)
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- 右辺の値をすべて求めてから、左辺の要素とメンバに書く。右辺が左辺の要素やメンバを読んでも、代入の前の値を読む。根拠：規格は代入の右辺を「左辺に代入する値」とし（規格で確認：10.4.1）、unpacked の配列と構造体の代入パターンを、値を組み立てる式（集合の式）として扱う（規格で確認：11.2.2、10.9.1、10.9.2）。packed の代入パターンと連結も、値を求めてから書く。
-- 要素とメンバの式は、要素の順に評価する。配列は左の境界から、多次元なら最も右の次元が最も速く変わる順。構造体は宣言の順（本書の決まり。規格は決めていない）。
-- `default:`、型のキー、繰り返しの式は、それが埋める要素とメンバごとに 1 回評価する（本書の決まり。規格は、副作用のある式の評価の回数を決めないとしている：10.9.1）。
-- 非ブロッキングの代入（`<=`）も、値は文を実行したときに求める（規格で確認：10.4.2）。
-- 規格の 10.9 の冒頭は「代入パターンは、構造体のフィールドと配列の要素への代入の型を表す」とも書いていて、要素ごとの代入と読む余地がある。本書は 10.4.1 と 11.2.2 を根拠に「値を作ってから代入する」と読む。参考（2026-10-17 に確かめた）：Icarus 13.0、Icarus の開発版、Verilator 5.052 は、`a` が `'{10, 11, 12}` のとき `a = '{a[1], a[2], a[0]}` で `11 12 11` を出す（要素を 1 つずつ書いている）。本書では `11 12 10` になる。
+- Every value of the right side is computed before any element or member of the left side is written. Even if the right side reads elements or members of the left side, it reads the values before the assignment. Grounds: the standard takes the right side of an assignment as "the value to be assigned to the left side" (checked: 10.4.1), and treats assignment patterns of unpacked arrays and structures as expressions that build a value (aggregate expressions) (checked: 11.2.2, 10.9.1, 10.9.2). Packed assignment patterns and concatenations too compute the value before writing.
+- The expressions of elements and members are evaluated in element order: arrays from the left bound, multidimensional ones with the rightmost dimension changing fastest; structures in declaration order (rule of this document; the standard does not set it).
+- `default:`, type keys and replication expressions are evaluated once for each element and member they fill (rule of this document; the standard says it does not set the number of evaluations of expressions with side effects: 10.9.1).
+- Nonblocking assignments (`<=`) too compute the value when the statement runs (checked: 10.4.2).
+- The opening of 10.9 of the standard also says that "an assignment pattern expresses a kind of assignment to structure fields and array elements", which leaves room to read it as assignment element by element. This document reads it, on the grounds of 10.4.1 and 11.2.2, as "build the value, then assign". For reference (checked 2026-10-17): with `a` equal to `'{10, 11, 12}`, Icarus 13.0, Icarus's development version and Verilator 5.052 print `11 12 11` for `a = '{a[1], a[2], a[0]}` (they write the elements one at a time). By this document it is `11 12 10`.
 
-### 3.14 集合の比較
+### 3.14 Aggregate comparison
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-unpacked の配列と構造体の `==`、`!=`、`===`、`!==`（規格で確認：11.2.2、7.4.6。2 つの型は同値でなければならない：6.22.2。slang が検査する）：
+`==`, `!=`, `===` and `!==` on unpacked arrays and structures (checked: 11.2.2, 7.4.6; the two types must be equivalent: 6.22.2, which slang checks):
 
-- 対応する要素どうし、メンバどうしを、その型の同じ演算子で比べる。入れ子の集合には同じ規則を使う。
-- `==`：どれかが 0 なら 0。そうでなく、どれかが x なら x。すべて 1 なら 1。`!=` はその否定（x は x のまま）。
-- `===`：すべて 1 なら 1、そうでなければ 0。`!==` はその否定。
-- 根拠：規格は、x と z のために関係が決まらないときだけ `==` を x にする（規格で確認：11.4.5）。packed のベクタでは、どこかのビットが確かに違えば 0 になる。集合も、どれかの要素かメンバが確かに違えば関係は決まる（本書の決まり。規格は集合の比較での x の扱いを書いていない）。
-- 参考（2026-10-17 に確かめた）：Icarus 13.0 と開発版は unpacked の構造体を受け付けない。Verilator 5.052 は 2 値で、x を含まない比較ではこの規則と同じ結果を出した。
+- Corresponding elements, and corresponding members, are compared with the same operator of their type. Nested aggregates use the same rule.
+- `==`: 0 if any is 0. Otherwise x if any is x. 1 if all are 1. `!=` is its negation (x stays x).
+- `===`: 1 if all are 1, otherwise 0. `!==` is its negation.
+- Grounds: the standard makes `==` x only when x and z leave the relation undecided (checked: 11.4.5). For packed vectors, the result is 0 if some bit surely differs. For aggregates too, the relation is decided if some element or member surely differs (rule of this document; the standard does not describe x in aggregate comparison).
+- For reference (checked 2026-10-17): Icarus 13.0 and its development version do not accept unpacked structures. Verilator 5.052 is 2-state, and in comparisons without x gave the same results as this rule.
 
-## 4. 制御の構文での値
+## 4. Values in control constructs
 
-### 4.1 `if` の条件
+### 4.1 The condition of `if`
 
-- 条件が真のときだけ 1 つ目の文を実行する。偽と不定は、どちらも「真でない」とみなして else の側を実行する（規格で確認：12.4。真偽の決め方は 3.5 の解釈による）。
-- 例：`if (2'b1x)` は真（1 のビットがある）、`if (2'b0x)` は偽（不定なので）。Icarus 13.0 でも同じ結果を確かめた。
-- 12.4 の文面は、真を「0 でない既知の値」、偽を「0 の値、または x か z の値」と書いている。`2'b1x` を「既知の値」と読まず、x を含むので偽とする解釈もありうる。kirimasim は、12.4 自身が示す `if (式 != 0)` との同値性を優先する（解釈）。
+- The first statement runs only when the condition is true. False and unknown are both taken as "not true", and the else side runs (checked: 12.4; how truth is decided follows the interpretation of 3.5).
+- Example: `if (2'b1x)` is true (there is a 1 bit), `if (2'b0x)` is false (since it is unknown). The same results were checked with Icarus 13.0.
+- The wording of 12.4 gives true as "a nonzero known value" and false as "a value of 0, or of x or z". It is possible to read `2'b1x` as not a "known value" and so false, since it contains x. kirimasim gives priority to the equivalence with `if (expr != 0)` that 12.4 itself states (interpretation).
 
-### 4.2 `case`、`casez`、`casex`
+### 4.2 `case`, `casez`, `casex`
 
-- `case` は、式と各項を、0・1・x・z を値として完全に一致するかで比べる（`===` と同じ）。すべての式は、最も長いものの幅にそろえる。どれかが符号なしなら、すべて符号なしとして扱う（規格で確認：12.5）。
-- 式は 1 回だけ、項より先に評価する。項は書かれた順に評価して比べ、最初に一致したものを実行する（規格で確認：12.5）。
-- `casez` は z のビットを、`casex` は x と z のビットを、比べないビットとして扱う。**式の側と項の側のどちらにあっても無視する**（規格で確認：12.5.1）。この点が `==?` と違う。`==?` は右の被演算子の x と z だけを無視する。
-- 数値の中の `?` は z と同じ（規格で確認：12.5.1）。
-- `case ... inside` は、各項を `inside` で比べる。結果が 1 なら一致、0 か x なら不一致（規格で確認：12.5.4）。
-- `unique`、`unique0`、`priority` の違反の報告の時点は、SCHEDULER_SPEC で定める。
+- `case` compares the expression with each item for an exact match with 0, 1, x and z as values (the same as `===`). All expressions are brought to the width of the longest. If any is unsigned, all are treated as unsigned (checked: 12.5).
+- The expression is evaluated once, before the items. Items are evaluated and compared in the order written, and the first that matches runs (checked: 12.5).
+- `casez` treats z bits, and `casex` x and z bits, as bits not compared. **They are ignored on both the expression's side and the item's side** (checked: 12.5.1). This differs from `==?`, which ignores only x and z of the right operand.
+- `?` in a number is the same as z (checked: 12.5.1).
+- `case ... inside` compares each item with `inside`. A result of 1 is a match; 0 or x is not (checked: 12.5.4).
+- When violations of `unique`, `unique0` and `priority` are reported is set in SCHEDULER_SPEC.
 
-### 4.3 辺（`posedge`、`negedge`、`edge`）
+### 4.3 Edges (`posedge`, `negedge`, `edge`)
 
-- posedge になる変化：0 から 1・x・z へ、x か z から 1 へ。
-- negedge になる変化：1 から 0・x・z へ、x か z から 0 へ。
-- edge：posedge か negedge のどちらか。
-- 上のどれにも当たらない変化（x と z の間の変化を含む）は、辺にならない。
-- 辺の判定は、式の最下位ビットだけで行う。辺を指定しない待ちは、式の値が変わったときに起きる。被演算子が変わっても式の値が変わらなければ起きない（規格で確認：9.4.2、表 9-2）。
-- 辺の判定は `valsem` の 1 つの関数だけで行い、ほかの実装はそれと突き合わせる。
+- Changes that are posedge: from 0 to 1, x or z; from x or z to 1.
+- Changes that are negedge: from 1 to 0, x or z; from x or z to 0.
+- edge: either posedge or negedge.
+- A change that is none of the above (including changes between x and z) is not an edge.
+- Edges are decided on the least significant bit of the expression only. A wait with no edge wakes when the value of the expression changes. It does not wake if operands change but the expression's value does not (checked: 9.4.2, Table 9-2).
+- Edges are decided by one function of `valsem` only, and other implementations are cross-checked with it.
 
-## 5. ネットの解決
+## 5. Net resolution
 
-2026-10-16 に書き直し、承認。
+Rewritten and approved 2026-10-16.
 
-### 5.1 P1 で扱う範囲
+### 5.1 Scope in P1
 
-- 扱う：連続代入とネット宣言の代入の駆動の強さ（10.3.4）、組み込みのゲートと利用者定義のプリミティブの出力の強さ（28.3.2、29 章。5.8 節、5.9 節）、`pullup` と `pulldown`（28.10）、`tri0`・`tri1`・`supply0`・`supply1` の強さ（28.15）、`wand`・`triand`・`wor`・`trior` の解決（6.6.3、28.12.4）。
-- 扱わない（使われていたら未対応として報告する）：MOS スイッチと双方向のスイッチ、それらによる強さの低下（28.7〜28.9、28.13、28.14。設計書の決まりでフェーズ 4）、`trireg`（5.7）、利用者定義の nettype（6.6.7）。
-- `%v` の表示は、SYSTEM_TASKS.md の 3.10 節による（P4。それまでは暫定の表示）。
+- Covered: drive strengths of continuous assignments and net declaration assignments (10.3.4), output strengths of built-in gates and user-defined primitives (28.3.2, chapter 29; 5.8, 5.9), `pullup` and `pulldown` (28.10), strengths of `tri0`, `tri1`, `supply0` and `supply1` (28.15), resolution of `wand`, `triand`, `wor` and `trior` (6.6.3, 28.12.4).
+- Not covered (reported as unsupported if used): MOS switches and bidirectional switches, and the reduction of strength through them (28.7 to 28.9, 28.13, 28.14; phase 4 by the design specification's rules), `trireg` (5.7), user-defined nettypes (6.6.7).
+- Display with `%v` follows SYSTEM_TASKS.md 3.10 (P4; a provisional display until then).
 
-### 5.2 強さの尺度と信号
+### 5.2 The strength scale and signals
 
-- 強さは 0（highz）から 7（supply）までの 8 段で、0 の側と 1 の側がある（規格で確認：28.11、表 28-7、図 28-2）。
-- ネットの 1 ビットの信号は、尺度の上の連続した範囲で表す。本書では、0 の側の強さ s を −s、1 の側の強さ s を +s、highz を 0 とする −7〜+7 の数直線の上の両端 [lo, hi] とする（規格で確認：28.11、28.12）。
-- 範囲から値を決める（規格で確認：28.11、28.12.2）：
+- Strength has 8 levels, from 0 (highz) to 7 (supply), with a 0 side and a 1 side (checked: 28.11, Table 28-7, Figure 28-2).
+- The signal of one bit of a net is represented by a contiguous range on the scale. In this document it is the pair of ends [lo, hi] on a number line from −7 to +7, where strength s on the 0 side is −s, strength s on the 1 side is +s, and highz is 0 (checked: 28.11, 28.12).
+- The value is decided from the range (checked: 28.11, 28.12.2):
 
-| 範囲 | 値 |
+| Range | Value |
 | --- | --- |
 | lo = hi = 0 | z |
 | hi < 0 | 0 |
-| hi = 0 かつ lo < 0 | L |
+| hi = 0 and lo < 0 | L |
 | lo > 0 | 1 |
-| lo = 0 かつ hi > 0 | H |
+| lo = 0 and hi > 0 | H |
 | lo < 0 < hi | x |
 
-- 4 値の値として読むときは、L と H を x とする（解釈。L と H は強さの範囲として定められ（28.12.2）、4 値の値には無い。Icarus 13.0 も x として読む）。
-- ベクタのネットは、ビットごとに解決する。
+- When read as a 4-state value, L and H are x (interpretation; L and H are defined as ranges of strength (28.12.2) and are not among the 4-state values; Icarus 13.0 too reads them as x).
+- Vector nets are resolved bit by bit.
 
-### 5.3 ドライバの信号
+### 5.3 Signals of drivers
 
-1 つのドライバの 1 ビットの出力は、値と、0 の強さ s0 と、1 の強さ s1 で決まる（規格で確認：10.3.4、28.12.2、図 28-6）：0 は [−s0, −s0]、1 は [+s1, +s1]、x は [−s0, +s1]、z は [0, 0]。s0 が highz（0）なら、0 は z に、x は H になる。s1 も同様。
+The output of one bit of one driver is decided by its value, its 0 strength s0 and its 1 strength s1 (checked: 10.3.4, 28.12.2, Figure 28-6): 0 is [−s0, −s0], 1 is [+s1, +s1], x is [−s0, +s1], z is [0, 0]. If s0 is highz (0), 0 becomes z and x becomes H. Likewise for s1.
 
-| ドライバ | (s1, s0) | 根拠 |
+| Driver | (s1, s0) | Grounds |
 | --- | --- | --- |
-| 連続代入、ネット宣言の代入 | 指定のとおり。無指定なら (strong1, strong0)。(highz1, highz0) と (highz0, highz1) は誤り（slang が報告する） | 10.3.4 |
-| 組み込みのゲート | 指定のとおり。無指定なら (strong1, strong0) | 28.3.2 |
-| `pullup`、`pulldown` | 指定のとおり。無指定なら pull。`pullup` の strength0 と `pulldown` の strength1 の指定は無視する | 28.10 |
-| `tri0`、`tri1` | ネットに pull0、pull1 のドライバが 1 つ加わったものとみなす | 28.15.1 |
-| `supply0`、`supply1` | ネットに supply0、supply1 のドライバが 1 つ加わったものとみなす | 28.15.3 |
-| 変数につながるポートと、式につながるポート | 暗黙の連続代入なので (strong1, strong0) | 4.9.6 |
+| Continuous assignments, net declaration assignments | As specified. If unspecified, (strong1, strong0). (highz1, highz0) and (highz0, highz1) are errors (slang reports them) | 10.3.4 |
+| Built-in gates | As specified. If unspecified, (strong1, strong0) | 28.3.2 |
+| `pullup`, `pulldown` | As specified. If unspecified, pull. A strength0 given to `pullup` and a strength1 given to `pulldown` are ignored | 28.10 |
+| `tri0`, `tri1` | Taken as the net with one more driver of pull0 or pull1 | 28.15.1 |
+| `supply0`, `supply1` | Taken as the net with one more driver of supply0 or supply1 | 28.15.3 |
+| Ports connected to variables, and ports connected to expressions | Implicit continuous assignments, so (strong1, strong0) | 4.9.6 |
 
-- 強さの指定は、ベクタのネットのすべてのビットに効く（解釈。10.3.4 は「スカラのネットへの代入にだけ」と書くが、slang はベクタへの指定を受け付け、Icarus 13.0 もビットごとに効かせる）。
-- ネットとネットをつなぐポートは、両側を 1 つのネットとして畳み込み、両側のドライバをまとめて解決する（規格で確認：23.3.3.7。4.9.6 の inout は強さを変えない接続）。両側にドライバがある output と input は、slang が inout に変える（23.3.3.1）。畳み込めない接続（SIR_SPEC.md の 3.5 節）は、上の表の暗黙の連続代入とする。
-- **ドライバの初めの値（2026-10-17 に承認）：** 連続代入、ネット宣言の代入、ポート、ゲート、UDP、`pullup`・`pulldown` の各ドライバは、最初に書くまで、自分が書くビットに x を出す。強さは、そのドライバの (s1, s0)。書かないビットには何も出さない（z。6.6）。
-  - 解釈：6.6 と 6.7.1 は、ドライバのあるネットの値をドライバの出力で決めるとするが、まだ評価していないドライバの出力の値は書いていない。Icarus 13.0 も x を出す（2026-10-17 に確かめた）。古い版（IEEE 1364）に「ドライバの出力の既定は x」という文があったかは未確認。
-  - これが見えるのは、遅延のあるドライバが最初に書くまでの間と、時刻 0 にドライバが初めて評価される前に読んだときである。後者は時刻 0 のプロセスの順に依存し、規格はその順を決めていない（4.7。SCHEDULER_SPEC.md の 6.1 節）。
-  - 5.4 節の最後の項（ドライバが 1 つも無いネット）は変えない。ドライバが書かないビットも、ドライバが無いのと同じに扱う。
+- A strength specification applies to every bit of a vector net (interpretation; 10.3.4 says "only to assignments to scalar nets", but slang accepts a specification on vectors, and Icarus 13.0 too applies it bit by bit).
+- A port connecting a net to a net collapses both sides into one net, and the drivers of both sides are resolved together (checked: 23.3.3.7; the inout of 4.9.6 is a connection that does not change strength). output and input ports with drivers on both sides are changed to inout by slang (23.3.3.1). Connections that cannot be collapsed (SIR_SPEC.md 3.5) are implicit continuous assignments as in the table above.
+- **Initial value of drivers (approved 2026-10-17):** each driver (continuous assignments, net declaration assignments, ports, gates, UDPs, `pullup` and `pulldown`) drives x on the bits it writes until it first writes. Its strength is that driver's (s1, s0). On bits it does not write it drives nothing (z; 6.6).
+  - Interpretation: 6.6 and 6.7.1 say the value of a net with drivers is decided by the drivers' outputs, but do not say what a driver not yet evaluated outputs. Icarus 13.0 too gives x (checked 2026-10-17). Whether an older edition (IEEE 1364) had a sentence like "the default output of a driver is x" is not confirmed.
+  - This is visible between time 0 and the first write of a driver with a delay, and when the net is read at time 0 before its driver is first evaluated. The latter depends on the order of processes at time 0, which the standard does not set (4.7; SCHEDULER_SPEC.md 6.1).
+  - The last item of 5.4 (nets with no driver at all) does not change. Bits a driver does not write are treated the same as having no driver.
 
-### 5.4 解決の規則
+### 5.4 Rules of resolution
 
-ネットの 1 ビットの範囲は、そのネットのすべてのドライバ（5.3 の暗黙のドライバを含む）から次のように決める。
+The range of one bit of a net is decided from all the drivers of the net (including the implicit drivers of 5.3) as follows.
 
-1. 各ドライバの範囲を、そこに含まれる強さの点（−7〜+7 の整数）に分ける。
-2. 各ドライバから点を 1 つずつ選ぶ、すべての選び方について、選んだ点を組み合わせる。強さ（絶対値）が最大の点が勝つ。最大の強さ s の点が両方の側にあるときは、ネットの種類で決める：
-   - `wire`、`tri`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`：x。範囲は [−s, +s]（規格で確認：28.12.2。同じ強さの逆の値は、両方の強さとそれより弱いすべての強さを持つ x になる）。
-   - `wand`、`triand`：0。範囲は [−s, −s]（規格で確認：28.12.4）。
-   - `wor`、`trior`：1。範囲は [+s, +s]（同）。
-3. 2 の結果をすべて含む、最も狭い範囲を、ネットの範囲とする。
+1. Split each driver's range into the points of strength it contains (integers from −7 to +7).
+2. For every way of choosing one point from each driver, combine the chosen points. The point of largest strength (absolute value) wins. When points of the largest strength s are on both sides, the kind of net decides:
+   - `wire`, `tri`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`: x. The range is [−s, +s] (checked: 28.12.2; opposite values of the same strength give an x with both strengths and every weaker strength).
+   - `wand`, `triand`: 0. The range is [−s, −s] (checked: 28.12.4).
+   - `wor`, `trior`: 1. The range is [+s, +s] (likewise).
+3. The narrowest range that contains every result of 2 is the net's range.
 
-- この規則は、規格の次の規則と例を再現し、ドライバの順によらない：強さの違う信号は強いほうが勝つ（28.12.1）、あいまいな強さの信号と、あいまいでない信号の組み合わせの規則 a〜c（28.12.3）、あいまいな強さの信号の wired logic（28.12.4、図 28-25 の表）。
-- あいまいな強さの信号どうしの組み合わせについて、規格は「両方の強さを含む範囲になる」と書く（28.12.2）。この規則は、文字どおりの「両方の範囲を含む最も狭い範囲」ではなく、「組み合わせで起こりうる結果を含む最も狭い範囲」をとる（解釈）。規格の例（図 28-9〜図 28-19）では両者が一致する。一致しないのは、片方がもう片方より常に強い場合（例：[St0, Su0] の範囲と [Pu1, We1] の範囲。文字どおりなら x、この規則なら 0）で、28.12.1 の「強いほうが勝つ」に合うのはこの規則である。
-- 28.12.3 の規則 b は「あいまいでない信号の強さ以下の点は消える」と書くが、逆の値で同じ強さの点は、28.12.2 の「同じ強さの逆の値は x」の規則で x の範囲になる（解釈。Icarus 13.0 も、StL と St1 から StX を出した）。この読みで、規則 a〜c と、この節の規則は、無作為の 20000 通りで一致した。
-- wired logic は、最大の強さが等しいときだけ働く（規格で確認：28.12.4 の本文と、図 28-25 の表の「St0 と Pu1 の or は St0」）。**Icarus 13.0 との差：** Icarus 13.0 は、強さが違っても wired logic を当てはめる（`wand` で We0 と St1 から St0、`wor` で Pu1 と St0 から St1 を出した）。期待値は規格に従う（`:oracle: spec`）。
-- ドライバが 1 つも無いネットは、1.4 節の既定の初期値（`wire` は z など）を持つ。
+- This rule reproduces the following rules and examples of the standard, and does not depend on the order of drivers: of signals with different strengths, the stronger wins (28.12.1); rules a to c for combining a signal of ambiguous strength with one of unambiguous strength (28.12.3); wired logic on signals of ambiguous strength (28.12.4, the table of Figure 28-25).
+- For combining signals of ambiguous strength with each other, the standard says "the result is a range containing both strengths" (28.12.2). This rule takes not the literal "narrowest range containing both ranges" but "the narrowest range containing the results the combination can give" (interpretation). In the standard's examples (Figures 28-9 to 28-19) the two agree. They disagree when one is always stronger than the other (for example the range [St0, Su0] and the range [Pu1, We1]: x literally, 0 by this rule), and it is this rule that fits "the stronger wins" of 28.12.1.
+- Rule b of 28.12.3 says "points at or below the strength of the unambiguous signal disappear", but a point of the opposite value at the same strength becomes a range of x by the rule of 28.12.2, "opposite values of the same strength give x" (interpretation; Icarus 13.0 too gave StX from StL and St1). With this reading, rules a to c and the rule of this section agreed on 20000 random cases.
+- Wired logic acts only when the largest strengths are equal (checked: the text of 28.12.4, and "the or of St0 and Pu1 is St0" in the table of Figure 28-25). **Difference from Icarus 13.0:** Icarus 13.0 applies wired logic even when strengths differ (it gave St0 from We0 and St1 on `wand`, and St1 from Pu1 and St0 on `wor`). Expected values follow the standard (`:oracle: spec`).
+- A net with no driver at all has the default initial value of 1.4 (z for `wire` and so on).
 
-### 5.5 解決が要るネット
+### 5.5 Nets that need resolution
 
-次のネットだけ、ドライバごとの値を持ち、5.4 の規則で解決する。それ以外のネットの値は、ただ 1 つのドライバの値（無ければ既定の初期値）であり、強さを持たない。
+Only these nets hold a value per driver and are resolved by the rules of 5.4. The value of any other net is the value of its single driver (or the default initial value if it has none), with no strength.
 
-- ドライバが 2 つ以上あるネット（5.3 のポートの畳み込みで集まったものを含む）。
-- ドライバが 1 つ以上ある `tri0`、`tri1`、`supply0`、`supply1`。
+- Nets with two or more drivers (including those gathered by collapsing ports in 5.3).
+- `tri0`, `tri1`, `supply0` and `supply1` with one or more drivers.
 
-`uwire` に 2 つ以上のドライバをつなぐのは誤り（slang の解析の段が報告する。規格で確認：6.6.2）。
+Connecting two or more drivers to a `uwire` is an error (reported by slang's analysis stage; checked: 6.6.2).
 
-### 5.6 解決の時点
+### 5.6 When resolution happens
 
-ドライバの値が変わったら、同じ時刻の Active 領域で、ネットの値を求め直して更新する（SCHEDULER_SPEC.md の 6.4 節の連続代入と同じ）。ネットの値が変わったときだけ、そのネットを待つプロセスを起こす。
+When a driver's value changes, the net's value is computed again and updated in the Active region of the same time (as continuous assignments in SCHEDULER_SPEC.md 6.4). Only when the net's value changes are the processes waiting on the net woken.
 
 ### 5.7 `trireg`
 
-電荷の保持と減衰は 4 値の解決とは別の仕組みなので、当面の対象外とし、使われていたら未対応の構文として報告する（設計書の決まり）。
+Holding and decay of charge are a mechanism separate from 4-state resolution, so it is out of scope for now, and reported as an unsupported construct if used (a rule of the design specification).
 
-### 5.8 組み込みのゲート
+### 5.8 Built-in gates
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- P1 で扱うのは `and`、`nand`、`or`、`nor`、`xor`、`xnor`、`buf`、`not`、`bufif0`、`bufif1`、`notif0`、`notif1`、`pullup`、`pulldown`。MOS とスイッチはフェーズ 4（5.1）。
-- 論理ゲートの出力は、入力を順に 3.6 節のビットごとの演算（`&`、`|`、`^` と、その否定）でまとめた値と同じ。z の入力は x と同じに扱う（規格で確認：28.4）。`buf` と `not` は、最後の端子を入力とし、ほかの端子すべてに同じ値を出す（規格で確認：28.5）。
-- 3 状態ゲートの出力（規格で確認：28.6）：制御が出力を許すときはデータ（`notif` はその否定。データの x と z は x）、禁じるときは z。制御が x か z のときは、データが 0 なら L、1 なら H（`notif` は逆）、x か z なら x。
-- L と H は、ドライバの片側の強さを highz にした x として表す。L は (s1, s0) を (highz, s0) にした x、H は (s1, highz) にした x（5.3 で、x は [−s0, +s1]）。ほかのドライバと解決するときはこの範囲で解決し（5.4）、4 値の値として読むときは x とする（5.2）。
-  - 2026-10-17 に確かめた：Icarus 13.0 で、H（データ 1、制御 x の `bufif1`）と強い 1 を解決すると 1、H だけなら x（`%v` は `StH`）、H と弱い 0 は x。この規則と同じ。L と H を単に x として扱うと、強い 1 と解決したときに 1 にならず x になる。
-- `pullup` は 1 を、`pulldown` は 0 を、その端子のすべてのネットに出す。強さは 5.3 の表のとおり（規格で確認：28.10）。
-- ゲートの端子は 1 ビット。ゲートの配列（28.3.6）は、インスタンスの配列と同じく、要素ごとに 1 つのゲートとし、接続の切り分けは slang の結果に従う。
-- ゲートの遅延は SCHEDULER_SPEC.md の 12 節による。
+- P1 covers `and`, `nand`, `or`, `nor`, `xor`, `xnor`, `buf`, `not`, `bufif0`, `bufif1`, `notif0`, `notif1`, `pullup` and `pulldown`. MOS and switches are phase 4 (5.1).
+- The output of a logic gate is the same as combining its inputs in order with the bitwise operations of 3.6 (`&`, `|`, `^` and their negations). A z input is treated like x (checked: 28.4). `buf` and `not` take their last terminal as the input and drive the same value on every other terminal (checked: 28.5).
+- Outputs of three-state gates (checked: 28.6): when the control enables the output, the data (its negation for `notif`; x and z of the data give x); when it disables, z. When the control is x or z: L if the data is 0, H if 1 (the reverse for `notif`), x if x or z.
+- L and H are represented as an x with one side of the driver's strength made highz: L is an x with (s1, s0) made (highz, s0), and H an x with (s1, highz) (by 5.3, x is [−s0, +s1]). When resolved with other drivers, they are resolved with this range (5.4); when read as a 4-state value, they are x (5.2).
+  - Checked 2026-10-17: with Icarus 13.0, resolving H (data 1, control x on `bufif1`) with a strong 1 gives 1, H alone gives x (`%v` is `StH`), and H with a weak 0 gives x. The same as this rule. Treating L and H simply as x would give x, not 1, when resolved with a strong 1.
+- `pullup` drives 1 and `pulldown` 0 on every net of their terminals. The strength is as in the table of 5.3 (checked: 28.10).
+- Gate terminals are 1 bit. An array of gates (28.3.6), like an array of instances, is one gate per element, and the splitting of connections follows slang's result.
+- Gate delays follow SCHEDULER_SPEC.md 12.
 
-### 5.9 利用者定義のプリミティブ（UDP）
+### 5.9 User-defined primitives (UDPs)
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- 出力は 0、1、x のどれか。入力の z は x として扱う（規格で確認：29.2、29.3.5）。
-- 組み合わせの UDP：入力の値に合う行の出力。合う行が無ければ x（規格で確認：29.4）。
-- 順序の UDP：内部の状態（出力と同じ値）を持つ。入力が変わったとき、その入力の変化（辺）と、ほかの入力の値と、今の状態に合う行の次の状態にする。`-` は変えない。合う行が無ければ x（規格で確認：29.5、29.6）。辺の行とレベルの行の両方が合い、結果が違うときは、レベルの行が決める（規格で確認：29.9）。
-- 記号（`0`、`1`、`x`、`?`、`b`、`-`、`(vw)`、`r`、`f`、`p`、`n`、`*`）の意味は表 29-1 のとおり（規格で確認：29.3.6）。
-- 初期値：`initial` 文があればその値、無ければ x から始まる。この初期値は、インスタンスの遅延によらず時刻 0 の初めに入る（規格で確認：29.7）。
-- 同じ時刻に、1 回の起動の中で 2 つ以上の入力が変わっていたときは、変わった入力を UDP の端子の順に 1 つずつ処理し、それぞれは、それより前に処理した変化を反映した値で評価する（本書の決まり。29 章に記述が見つからない。2026-10-17 に「simultaneous」「at the same time」「more than one input」を検索して確かめた）。
-  - **Icarus 13.0 との差：** データとクロックの端子の順の UDP（立ち上がりで取り込む D フリップフロップ）で、1 つの代入でデータとクロックを同時に 1 にすると、Icarus 13.0 はクロックの辺をデータの前の値で評価した（2026-10-17 に確かめた）。この決まりでは、データを先に処理するので、新しい値を取り込む。同時の変化に依存するテストは `:nondeterministic: yes` にする。
-- 出力の駆動の強さと解決は、ゲートと同じ（5.3、5.8）。遅延は SCHEDULER_SPEC.md の 12 節による。
-- 表の照合の意味は `valsem` の参照実装 1 か所で定め、カーネルの実装はそれと突き合わせる。
+- The output is one of 0, 1 and x. A z input is treated as x (checked: 29.2, 29.3.5).
+- Combinational UDPs: the output of the row matching the input values. If no row matches, x (checked: 29.4).
+- Sequential UDPs: they hold an internal state (the same value as the output). When an input changes, the state becomes the next state of the row matching that input's change (edge), the values of the other inputs and the present state. `-` keeps it. If no row matches, x (checked: 29.5, 29.6). When both an edge row and a level row match with different results, the level row decides (checked: 29.9).
+- The meanings of the symbols (`0`, `1`, `x`, `?`, `b`, `-`, `(vw)`, `r`, `f`, `p`, `n`, `*`) are as in Table 29-1 (checked: 29.3.6).
+- Initial value: the value of the `initial` statement if there is one, otherwise x. This initial value is set at the start of time 0 whatever the instance's delay (checked: 29.7).
+- When two or more inputs changed at the same time within one activation, the changed inputs are processed one at a time in the order of the UDP's terminals, each evaluated with values that reflect the changes processed before it (rule of this document; no text found in chapter 29; checked on 2026-10-17 by searching for "simultaneous", "at the same time" and "more than one input").
+  - **Difference from Icarus 13.0:** in a UDP with the data terminal before the clock (a D flip-flop capturing on the rising edge), when one assignment makes data and clock 1 at once, Icarus 13.0 evaluated the clock's edge with the previous value of the data (checked 2026-10-17). By this rule the data is processed first, so the new value is captured. Tests that depend on simultaneous changes are made `:nondeterministic: yes`.
+- The drive strength and resolution of the output are the same as gates (5.3, 5.8). Delays follow SCHEDULER_SPEC.md 12.
+- The meaning of table matching is set in one place, the reference implementation in `valsem`, and the kernel's implementation is cross-checked with it.
 
-## 6. 規格で確かめた結果、設計書と違っていた点
+## 6. Points where checking the standard showed the design specification was different
 
-次の点は、人の承認を受けて設計書（v0.6）に反映した。
+The following points were applied to the design specification (v0.6) with a human's approval.
 
-1. **`casez` と `casex` は、式の側の z や x も無視する**（12.5.1）。設計書の表は、パターンの側だけを無視するように読める。2 値版は式の側に x と z が無いので影響しないが、4 値版のマスクは、式と項の両方から作る必要がある。
-2. **条件演算子で、両側が z のビットは x になる**（11.4.11、表 11-20）。設計書の「一致しないビットを X にする」だけでは、z と z の場合が決まらない。
-3. **短絡評価は `->` も行い、`<->` は行わない**（11.3.5、11.4.7）。設計書は、論理演算をまとめて扱っている。
-4. **比較（`<` など）は、既知のビットで決まる場合でも、x か z があれば x になる**（11.4.4）。`==` とは規則が違う。
-5. **`if` の条件の真偽**（12.4）：設計書の説明は、本書の解釈（3.5）と同じだが、規格の文面には別の読み方の余地がある。解釈として記録した。
+1. **`casez` and `casex` ignore z and x on the expression's side too** (12.5.1). The design specification's table reads as if only the pattern's side were ignored. The 2-state version has no x or z on the expression's side and is not affected, but the masks of the 4-state version must be made from both the expression and the item.
+2. **In the conditional operator, a bit that is z on both sides becomes x** (11.4.11, Table 11-20). The design specification's "make the differing bits X" alone does not decide the case of z and z.
+3. **`->` short-circuits too, and `<->` does not** (11.3.5, 11.4.7). The design specification treats the logical operations together.
+4. **Relational operators (`<` and the like) give x if there is x or z, even when known bits decide the result** (11.4.4). The rule differs from `==`.
+5. **The truth of the condition of `if`** (12.4): the design specification's explanation is the same as this document's interpretation (3.5), but the wording of the standard leaves room for another reading. It is recorded as an interpretation.
 
-## 7. 連結、変換、実数、文字列、列挙型
+## 7. Concatenation, conversion, reals, strings, enumerated types
 
-この節は P1 で書いた（2026-10-15 に承認）。
+This section was written in P1 (approved 2026-10-15).
 
-### 7.1 連結（`{a, b, ...}`）
+### 7.1 Concatenation (`{a, b, ...}`)
 
-- 結果は、被演算子のビットを左から順に上位に並べた packed のベクタで、符号なし。幅は被演算子の幅の和（規格で確認：11.4.12、11.8.1）。
-- 各被演算子は自己決定の文脈で評価する。大きさの無い定数は連結に書けない（規格で確認：11.4.12。slang が判定する）。
-- どれかの被演算子が 4 値なら結果は 4 値。x と z のビットはそのまま並ぶ（本書の補足。連結はビットを並べるだけなので、値を変えない）。
-- 連結の結果からビットや部分を選んで読むこと（`{a, b}[3:0]` など）はできるが、それを書き込み先にはできない（規格で確認：11.4.12）。
-- 連結を代入の左辺に書いたときは、右辺の値を左辺の幅にそろえてから（10.7）、上位のビットから順に左の要素へ割り当てる（規格で確認：11.4.12 の例）。
+- The result is a packed vector with the operands' bits placed from the left toward the top, unsigned. Its width is the sum of the operands' widths (checked: 11.4.12, 11.8.1).
+- Each operand is evaluated in a self-determined context. Unsized constants cannot be written in a concatenation (checked: 11.4.12; slang decides).
+- If any operand is 4-state, the result is 4-state. x and z bits are placed as they are (a note of this document; concatenation only places bits and does not change values).
+- Bits or parts can be selected and read from the result of a concatenation (`{a, b}[3:0]` and so on), but that cannot be a target of a write (checked: 11.4.12).
+- When a concatenation is written as the left side of an assignment, the value of the right side is brought to the width of the left side (10.7), and then given to the elements from the left, starting from the top bits (checked: the example of 11.4.12).
 
-### 7.2 繰り返し（`{n{...}}`）
+### 7.2 Replication (`{n{...}}`)
 
-- 掛ける数は、負でなく x でも z でもない定数式（規格で確認：11.4.12.1。slang が判定する）。結果は、中の連結を掛ける数だけ並べたもの。
-- 掛ける数 0 は、幅 0 として無視する。ただし、正の幅を持つ被演算子のある連結の中でだけ書ける（規格で確認：11.4.12.1）。
-- 繰り返しを含む式は、代入の左辺と、output・inout のポートにつなげない（規格で確認：11.4.12.1）。
+- The multiplier is a constant expression that is not negative and not x or z (checked: 11.4.12.1; slang decides). The result is the inner concatenation placed multiplier times.
+- A multiplier of 0 is ignored as width 0, but can only be written inside a concatenation that has an operand of positive width (checked: 11.4.12.1).
+- An expression containing a replication cannot be the left side of an assignment, or be connected to an output or inout port (checked: 11.4.12.1).
 
-### 7.3 文字列の連結と繰り返し
+### 7.3 Concatenation and replication of strings
 
-- 被演算子に文字列型の式が 1 つでもあれば、連結は文字列の連結になり、文字列リテラルは文字列型に変換してから連結する。すべてが文字列リテラルなら、整数の連結と同じ（規格で確認：11.4.12.2、6.16 の表 6-9）。
-- 文字列の繰り返しでは、掛ける数は定数でなくてよい。0 なら空の文字列（規格で確認：表 6-9）。掛ける数が負か、x か z を含むときの結果は、規格の文面からは決まらない（表 6-9 は「負でなく、x・z でない式」を求めるだけ）。kirimasim は空の文字列にし、実行時の警告を 1 回出す（本書の決まり）。
-- 結果の文字列は切り詰めない（規格で確認：11.4.12.2）。
+- If any operand is an expression of string type, the concatenation is a string concatenation, and string literals are converted to string type before concatenating. If all are string literals, it is the same as an integral concatenation (checked: 11.4.12.2, Table 6-9 of 6.16).
+- In a replication of strings, the multiplier need not be constant. 0 gives the empty string (checked: Table 6-9). The result when the multiplier is negative, or contains x or z, is not settled by the wording of the standard (Table 6-9 only requires "an expression that is not negative and not x or z"). kirimasim makes it the empty string and gives one warning at run time (rule of this document).
+- The resulting string is not truncated (checked: 11.4.12.2).
 
-### 7.4 型の変換
+### 7.4 Type conversion
 
-- **静的なキャスト（`T'(e)`）：** 代入の互換があるなら、型 T の変数に e を代入したときの値と同じ（規格で確認：6.24.1）。列挙型への互換の無いキャストは 6.19.4、ビットストリーム型へは 6.24.3 に従う。
-- **代入での幅の調整：** 右辺が狭ければ、右辺が符号付きなら符号のビットで、符号なしなら 0 で広げる。右辺が広ければ、上位のビットを捨てる（規格で確認：10.7、6.11）。符号のビットが x か z なら、その値で広げる（2 節。11.8.4）。符号なしの値の最上位が x か z でも、広げる部分は 0 にする（規格で確認：6.11 は符号なしの変換を 0 で広げるとしている）。
-- **幅のキャスト（`n'(e)`）：** e は整数型。単一の次元 `[n-1:0]` の packed の配列に代入した値を返す。符号は e の自己決定の符号のまま。要素は、e が 2 値なら `bit`、4 値なら `logic`（規格で確認：6.24.1）。
-- **符号のキャスト（`signed'(e)`、`unsigned'(e)`、`$signed`、`$unsigned`）：** ビットを変えず、解釈だけを変える（規格で確認：6.24.1、11.4.3.1）。
-- **4 値から 2 値：** x と z のビットを 0 にする（1.2）。
-- **整数から実数：** x と z のビットを 0 とみなし、符号付きなら符号付きの値として変換する（1.5）。
-- **実数から整数（2026-10-17 に改め、承認）：** 最も近い整数に丸め、ちょうど 0.5 は 0 から遠い方へ（1.5）。その整数を、変換先の幅の 2 の補数として、上位のビットを捨てて入れる。整数の大きさに上限は無く、64 ビットを超える値も同じに扱う（解釈。10.7 の切り詰めを、丸めた整数に当てたもの。参考：2026-10-17 に、Icarus 14.0 devel と Verilator 5.053 devel が、定数でも実行時でもこの結果を出すことを確かめた。slang の定数の評価も同じ）。NaN と無限大の結果は、規格の文面からは決まらない。kirimasim は、4 値の変換先では全ビットを x、2 値の変換先では 0 にする（本書の決まり。参考：Icarus は x を出し、2 値のシミュレータの Verilator は 0 を出した）。`$rtoi` は SYSTEM_TASKS.md の 9 節で別に扱う。
-- **`real` と `shortreal` の間：** C の `double` と `float` の間の変換と同じ（6.12）。
-- **列挙型へのキャスト：** 値が列挙の要素でなくても、値はそのまま残す（規格で確認：6.19.4）。
-- **ビットストリームのキャスト（6.24.3）：** P1 では、packed の型どうしの、幅の等しいキャストだけを扱う（ビットの並びはそのまま）。unpacked の型を含むものは P3。
+- **Static cast (`T'(e)`):** if assignment-compatible, the same value as assigning e to a variable of type T (checked: 6.24.1). Casts to enumerated types without compatibility follow 6.19.4, and to bit-stream types 6.24.3.
+- **Width adjustment in assignment:** if the right side is narrower, it is extended with the sign bit if signed and with 0 if unsigned. If wider, the top bits are dropped (checked: 10.7, 6.11). If the sign bit is x or z, it extends with that value (2; 11.8.4). Even if the top bit of an unsigned value is x or z, the extension is 0 (checked: 6.11 extends unsigned conversions with 0).
+- **Width cast (`n'(e)`):** e is integral. It returns the value assigned to a packed array with the single dimension `[n-1:0]`. Signedness stays as e's self-determined signedness. The elements are `bit` if e is 2-state and `logic` if 4-state (checked: 6.24.1).
+- **Sign casts (`signed'(e)`, `unsigned'(e)`, `$signed`, `$unsigned`):** they keep the bits and change only the interpretation (checked: 6.24.1, 11.4.3.1).
+- **4-state to 2-state:** x and z bits become 0 (1.2).
+- **Integer to real:** x and z bits are taken as 0, and a signed value is converted as signed (1.5).
+- **Real to integer (changed and approved 2026-10-17):** round to the nearest integer, exactly 0.5 away from zero (1.5). That integer is put in as two's complement in the width of the destination, dropping the top bits. The size of the integer has no limit, and values over 64 bits are treated the same (interpretation; the truncation of 10.7 applied to the rounded integer; for reference, on 2026-10-17 Icarus 14.0 devel and Verilator 5.053 devel were checked to give this result both for constants and at run time; slang's constant evaluation does the same). The result for NaN and infinities is not settled by the wording of the standard. kirimasim makes every bit x for a 4-state destination, and 0 for a 2-state destination (rule of this document; for reference, Icarus gave x, and Verilator, a 2-state simulator, gave 0). `$rtoi` is treated separately in SYSTEM_TASKS.md 9.
+- **Between `real` and `shortreal`:** the same as conversion between C's `double` and `float` (6.12).
+- **Casts to enumerated types:** the value is kept as it is even if it is not a member of the enumeration (checked: 6.19.4).
+- **Bit-stream casts (6.24.3):** P1 covers only casts between packed types of equal width (the bit pattern stays as it is). Those involving unpacked types are P3.
 
-### 7.5 実数の演算
+### 7.5 Real operations
 
-- 実数に使える演算は表 11-1 のとおり。論理演算子、比較演算子、`inside` の結果は 1 ビット。それ以外は、`?` の前を除く被演算子のどれかが `real` なら結果は `real`、そうでなく `shortreal` があれば `shortreal`（規格で確認：11.3.1）。
-- 整数と実数が混ざった演算では、整数の被演算子を 7.4 の規則で実数に変換してから計算する（規格で確認：11.3.1。変換の規則は 1.5）。
-- `real` の演算は C の `double`、`shortreal` の演算は C の `float` の精度で行う（解釈。6.12 が両者を C の型と同じとしていることから）。0 での除算、オーバーフロー、NaN は、C（IEEE 754）の結果のまま（本書の決まり）。
-- 実数の真偽（`if`、`!`、`&&` など）は、0.0 なら偽、それ以外は真。NaN は真（解釈。C の `x != 0` と同じ）。
-- 実数のべき乗は 3.2 のとおり。
+- The operations usable on reals are as in Table 11-1. The results of logical operators, relational operators and `inside` are 1 bit. Otherwise, if any operand (except the one before `?`) is `real` the result is `real`, otherwise if there is a `shortreal` it is `shortreal` (checked: 11.3.1).
+- In an operation mixing integers and reals, the integer operands are converted to real by the rules of 7.4 before computing (checked: 11.3.1; the conversion rule is 1.5).
+- `real` operations are done in the precision of C's `double`, and `shortreal` operations in that of C's `float` (interpretation; from 6.12 making them the same as the C types). Division by 0, overflow and NaN give C's (IEEE 754's) results as they are (rule of this document).
+- The truth of a real (`if`, `!`, `&&` and so on) is false for 0.0 and true otherwise. NaN is true (interpretation; the same as C's `x != 0`).
+- Real power is as in 3.2.
 
-### 7.6 文字列の演算
+### 7.6 String operations
 
-- `==` と `!=` は、文字列が等しいかで 1 か 0 を返す（x にならない）。比較演算子は、`compare` メソッドの辞書順で決める（規格で確認：表 6-9）。両方が文字列リテラルなら、整数の演算子と同じ（同）。
-- `s[i]` は i 番目の文字のバイトを返す。範囲の外なら 0（規格で確認：表 6-9）。`s[i] = 0`（`"\0"`）の書き込みは無視する（規格で確認：6.16）。
-- 文字列は文字 `"\0"` を含まない。整数から文字列への変換では、値の 0 のバイトを捨てる（規格で確認：6.16）。
-- **x と z のビットを持つ整数から文字列への変換（2026-10-18 に承認）：** x と z のビットを 0 と読んで（1.2 節の 2 値への変換と同じ）から、0 のバイトを捨てる（本書の決まり。規格は 4 値の値の変換を書いていない。参考：2026-10-18 に確かめたところ、Icarus 14.0 devel と Verilator 5.053 devel も同じ結果を出した）。
-- メソッド（`len`、`putc`、`getc`、`toupper`、`tolower`、`compare`、`icompare`、`substr`、`atoi` など）は 6.16.1〜6.16.15 のとおり。規格が決めていない点の本書の決まり：
-  - `atoi`、`atohex`、`atooct`、`atobin` は、数字と下線だけを読み、符号と先頭の空白も読まない（規格で確認：6.16.9）。
-  - `hextoa` の文字は小文字にする（本書の決まり。SYSTEM_TASKS.md の 3.2 節の 16 進の文字と同じ）。
-  - `compare` と `icompare` の戻り値は、負、0、正のどれかとだけ決まっている（6.16.6）。kirimasim は -1、0、1 を返す（本書の決まり）。
-  - `realtoa` の書き方は規格で決まっていない（6.16.13）。kirimasim は `$sformatf("%g")` と同じにする（本書の決まり。未確認：Icarus 13.0 と比べる）。
+- `==` and `!=` return 1 or 0 by whether the strings are equal (never x). Relational operators decide by the lexical order of the `compare` method (checked: Table 6-9). If both are string literals, they are the same as the integral operators (likewise).
+- `s[i]` returns the byte of the i-th character; 0 if out of range (checked: Table 6-9). A write `s[i] = 0` (`"\0"`) is ignored (checked: 6.16).
+- Strings do not contain the character `"\0"`. Conversion from an integer to a string drops the value's zero bytes (checked: 6.16).
+- **Conversion of integers with x and z bits to strings (approved 2026-10-18):** x and z bits are read as 0 (the same as the conversion to 2 states of 1.2), then zero bytes are dropped (rule of this document; the standard does not describe conversion of 4-state values; for reference, checked 2026-10-18, Icarus 14.0 devel and Verilator 5.053 devel gave the same result).
+- The methods (`len`, `putc`, `getc`, `toupper`, `tolower`, `compare`, `icompare`, `substr`, `atoi` and so on) are as in 6.16.1 to 6.16.15. This document's rules where the standard does not decide:
+  - `atoi`, `atohex`, `atooct` and `atobin` read only digits and underscores, and read neither a sign nor leading white space (checked: 6.16.9).
+  - The letters of `hextoa` are lower case (rule of this document; the same as the hexadecimal letters of SYSTEM_TASKS.md 3.2).
+  - The return value of `compare` and `icompare` is only set to be negative, 0 or positive (6.16.6). kirimasim returns -1, 0 and 1 (rule of this document).
+  - How `realtoa` writes is not set by the standard (6.16.13). kirimasim makes it the same as `$sformatf("%g")` (rule of this document; not confirmed: compare with Icarus 13.0).
 
-### 7.7 列挙型
+### 7.7 Enumerated types
 
-- 列挙型の値は、基底の型の値として持つ。名前と値の表は SIR の型の表に置く（SIR_SPEC.md）。
-- `first()` と `last()` は最初と最後の要素。`next(N)` と `prev(N)` は N 個先と前の要素で、端では反対の端へ回る。今の値が要素でなければ、列挙型の既定の初期値（基底の型の既定値。表 6-7）を返す（規格で確認：6.19.5.1〜6.19.5.4）。
-- `num()` は要素の数。`name()` は値の名前で、要素でなければ空の文字列（規格で確認：6.19.5.5、6.19.5.6）。
+- A value of an enumerated type is held as a value of the base type. The table of names and values is in SIR's type table (SIR_SPEC.md).
+- `first()` and `last()` are the first and last members. `next(N)` and `prev(N)` are the members N after and before, wrapping around to the other end at the ends. If the present value is not a member, they return the default initial value of the enumerated type (the default of the base type; Table 6-7) (checked: 6.19.5.1 to 6.19.5.4).
+- `num()` is the number of members. `name()` is the name of the value, or the empty string if it is not a member (checked: 6.19.5.5, 6.19.5.6).
 
 ### 7.8 chandle
 
-2026-10-17 に承認。
+Approved 2026-10-17.
 
-- DPI（P3）で値が入るまでは、null だけを持つ（規格で確認：6.14 は、初めの値を null とし、使い方を代入と比較に限っている）。
-- 代入は、ほかの chandle か null から。
-- 比較は `==`、`!=`、`===`、`!==`（どれも同じ意味）で、ほかの chandle か null と比べる。
-- 真偽値は、null なら 0、そうでなければ 1。
-- P1 では、ハンドルの領域の 0 を null とする（SIR_SPEC.md の 3.2.1 節）。
+- Until DPI (P3) puts a value in, it holds only null (checked: 6.14 makes the initial value null and limits its use to assignment and comparison).
+- Assignment is from another chandle or null.
+- Comparison is with `==`, `!=`, `===` and `!==` (all with the same meaning), against another chandle or null.
+- As a truth value, null is 0 and anything else 1.
+- In P1, 0 of the handle space is null (SIR_SPEC.md 3.2.1).
 
-## 8. 未確認・後で書くこと
+## 8. Not confirmed, to be written later
 
-- スイッチ（MOS と双方向）による強さの低下と、双方向の解決（28.7〜28.9、28.13、28.14。フェーズ 4。5.1 節）。
-- ストリーミング演算子（11.4.14。2026-10-17 に承認）：
-  - packed の型の被演算子は 11.4.14 のとおり（左寄せと右の 0 埋めは、テストのリポジトリの見直しで確かめた）。
-  - 固定長の unpacked の配列と unpacked の構造体の被演算子も P1 で扱う。配列は foreach の順（左の境界から、最も右の次元が最も速く変わる順）、構造体は宣言の順に、要素とメンバを並べる（規格で確認：11.4.14.1）。代入先のときも同じ順に取り出す。
-  - 代入先の `<<`（取り出し）は、詰める操作の逆とする：`{<< k {t}} = v` の後で、`{<< k {t}}` の値が `v` の上位の同じ幅になる。最後のブロックが短い（幅が k の倍数でない）ときは、v を左の端から k ビットずつ切り、その並びを逆にしたものを t に入れる（本書の決まり。規格は「逆の操作」とだけ書く：11.4.14.3）。参考（2026-10-17 に確かめた）：Verilator 5.052 は、短いブロックの取り出しで詰めるときと同じ切り方を当て、詰め直すと元の値に戻らない。Icarus 13.0 と開発版はストリーミングを受け付けない。
-  - 動的な配列、キュー、連想配列、クラスを含むものと、`with` は P3。
-- 代入パターン（10.9）の値の決め方は、SIR では要素ごとの代入にほどいて表す。unpacked の配列と構造体の代入パターンは、SIR_SPEC.md の配列と構造体の置き方と一緒に書く。
-- クラスのハンドルの演算（P3）。
-- `$random` と `$dist_*` の計算（附属書 N。写さずに書き起こす方法を、法的な扱いも含めて決める。SYSTEM_TASKS.md の乱数の節と一緒に）。
-- 7.3、7.4、7.6 の「未確認」の項目を、Icarus 13.0 の結果と比べる。
+- Reduction of strength through switches (MOS and bidirectional), and bidirectional resolution (28.7 to 28.9, 28.13, 28.14; phase 4; 5.1).
+- Streaming operators (11.4.14; approved 2026-10-17):
+  - Operands of packed types are as in 11.4.14 (left alignment and zero filling on the right were checked in a review of the test repository).
+  - Operands that are fixed-size unpacked arrays and unpacked structures are covered in P1 too. Elements and members are placed in foreach order for arrays (from the left bound, the rightmost dimension changing fastest) and in declaration order for structures (checked: 11.4.14.1). As targets, they are taken out in the same order.
+  - `<<` as a target (unpacking) is the inverse of packing: after `{<< k {t}} = v`, the value of `{<< k {t}}` equals the top bits of `v` of the same width. When the last block is short (the width is not a multiple of k), v is cut from its left end into k bits each, and that sequence reversed is put in t (rule of this document; the standard says only "the reverse operation": 11.4.14.3). For reference (checked 2026-10-17): Verilator 5.052 applies the same cutting as packing when unpacking a short block, and packing again does not give back the original value. Icarus 13.0 and its development version do not accept streaming.
+  - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P3.
+- How the values of assignment patterns (10.9) are decided is expressed in SIR by unfolding them into assignments element by element. Assignment patterns of unpacked arrays and structures are written together with how arrays and structures are laid out in SIR_SPEC.md.
+- Operations on class handles (P3).
+- The computation of `$random` and `$dist_*` (Annex N; how to write it without copying, including the legal side, is decided together with the random-number section of SYSTEM_TASKS.md).
+- Compare the "not confirmed" items of 7.3, 7.4 and 7.6 with Icarus 13.0's results.
