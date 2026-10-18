@@ -269,3 +269,7 @@ set_tests_properties(tools/gen_string_char_op_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_signed_cast_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_signed_cast_matrix.py --check)
 set_tests_properties(tools/gen_signed_cast_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_math_wide_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_math_wide_matrix.py --check)
+set_tests_properties(tools/gen_math_wide_matrix PROPERTIES LABELS Tools)

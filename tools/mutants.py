@@ -684,6 +684,10 @@ MUTANTS = [
      "                return coerce(lowerExpr(*call.arguments()[0]), typeOf(*e.type, sl), sl);\n"
      "            if (name == \"$time\") {",
      "                return lowerExpr(*call.arguments()[0]);\n            if (name == \"$time\") {"),
+    ("vm: $clog2 misses a 1 in a lower chunk", "src/vm/vm.cpp",
+     "                                } else {\n                                    below = true;\n"
+     "                                }\n",
+     "                                }\n"),
 ]
 
 
