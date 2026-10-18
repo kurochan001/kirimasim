@@ -650,6 +650,13 @@ MUTANTS = [
     ("front: a call with a string first argument is a string method", "src/front/lower_expr.cpp",
      "if (!isBuiltinMethod(call, ast::SymbolKind::StringType) || args.empty()) return std::nullopt;",
      "if (args.empty() || !args[0]->type->isString()) return std::nullopt;"),
+    ("vm: a block argument passes only its low chunk", "src/vm/vm.cpp",
+     "                for (std::uint32_t k = 0; k < c; ++k)\n                    p[k] = v[at + k];",
+     "                p[0] = v[at];"),
+    ("vm: block arguments are copied one after another", "src/vm/vm.cpp",
+     "                readOperand(ops[i + 1 + a], v + at, c);\n",
+     "                readOperand(ops[i + 1 + a], v + at, c);\n"
+     "                for (std::uint32_t k = 0; k < c; ++k) (&temp(params[a].temp))[k] = v[at + k];\n"),
 ]
 
 

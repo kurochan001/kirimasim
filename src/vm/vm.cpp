@@ -2283,14 +2283,29 @@ private:
         const Operand& target = ops[i];
         const auto& params = bodyBlocks(act_.body)[target.id].params;
         if (target.count != 0) {
-            // Read every argument before writing any parameter.
+            // Read every chunk of every argument before writing any
+            // parameter; a parameter wider than 64 bits takes all of its
+            // chunks (SIR_SPEC.md 5.1).
+            std::uint32_t total = 0;
+            for (std::uint32_t a = 0; a < target.count; ++a)
+                total += chunksOf(params[a].type);
             W4 vals[16];
             std::vector<W4> many;
-            W4* v = target.count <= 16 ? vals : (many.resize(target.count), many.data());
-            for (std::uint32_t a = 0; a < target.count; ++a)
-                v[a] = value(ops[i + 1 + a]);
-            for (std::uint32_t a = 0; a < target.count; ++a)
-                temp(params[a].temp) = v[a];
+            W4* v = total <= 16 ? vals : (many.resize(total), many.data());
+            std::uint32_t at = 0;
+            for (std::uint32_t a = 0; a < target.count; ++a) {
+                const std::uint32_t c = chunksOf(params[a].type);
+                readOperand(ops[i + 1 + a], v + at, c);
+                at += c;
+            }
+            at = 0;
+            for (std::uint32_t a = 0; a < target.count; ++a) {
+                const std::uint32_t c = chunksOf(params[a].type);
+                W4* p = &temp(params[a].temp);
+                for (std::uint32_t k = 0; k < c; ++k)
+                    p[k] = v[at + k];
+                at += c;
+            }
         }
         return target.id;
     }

@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A conditional operator (`?:`) wider than 64 bits with a function call
+  or an assignment in an operand keeps its whole value; the bits above
+  the lowest 64 were lost (#2).
 - A system task or function whose first argument is a string, such as
   `$fopen`, `$dumpfile` or `$readmemh`, is reported as an unsupported
   system task or function; it was reported as a string method.

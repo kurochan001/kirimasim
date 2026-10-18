@@ -245,3 +245,7 @@ set_tests_properties(tools/gen_watch_reads_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_builtin_call_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_builtin_call_matrix.py --check)
 set_tests_properties(tools/gen_builtin_call_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_cond_op_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_cond_op_matrix.py --check)
+set_tests_properties(tools/gen_cond_op_matrix PROPERTIES LABELS Tools)
