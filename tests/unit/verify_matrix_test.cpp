@@ -440,13 +440,13 @@ std::vector<Case> cases() {
          [](Design& d) { d.subroutines[0].params[0].slot = sA; }},
         {"argument frame variable", "frame variable is invalid",
          [](Design& d) { d.subroutines[0].params[0].frameVar = 7; }},
-        {"postponed process", "a postponed process has no triggers and writes nothing",
+        {"postponed process", "a postponed process has no triggers",
          [](Design& d) {
              Process p;
              p.name = "post";
              p.kind = ProcessKind::Postponed;
              p.loc = at(1);
-             p.writes = {{sA, 0, 0, 0, 0}};
+             p.triggers = {{{sA, 0, 0, 0, 0}, Edge::Any}};
              p.blocks = {{{}, {none(Op::Ret, {})}}};
              d.processes.push_back(p);
          }},
