@@ -1,107 +1,109 @@
-# CLAUDE.md：kirimasim で作業する Claude Code への決まり
+# CLAUDE.md: rules for Claude Code working on kirimasim
 
-## プロジェクトの目的
+[日本語](CLAUDE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-kirimasim は、オープンソースの SystemVerilog シミュレータです。4 値（0・1・X・Z）を既定とし、IEEE 1800-2023 どおりのスケジューリング（時刻スロットの全領域と参照アルゴリズム）を守ったうえで、実用的な速さを目指します。フロントエンドは slang を改変せずに版を固定して使い、中間表現 SIR を経て、インタプリタ（第 1 層）と C++ 生成（第 2 層）が 1 つの実行カーネルを共有して動きます。今は P0（準備）の段階で、ビルドの土台と骨組みだけがあります。
+## Purpose of the project
 
-## ライブラリの依存の規則
+kirimasim is an open-source SystemVerilog simulator. It takes 4 states (0, 1, X, Z) as the default and, while keeping scheduling exactly as IEEE 1800-2023 says (every region of the time slot and the reference algorithm), aims at practical speed. The front end uses slang unmodified at a pinned version; through the intermediate representation SIR, an interpreter (tier 1) and C++ generation (tier 2) run sharing one execution kernel. It is now at stage P0 (preparation), with only the foundations of the build and a skeleton.
 
-依存は下の表の向きだけにします。`target_link_libraries` に表に無い依存を足さないこと。
+## Rules of library dependencies
 
-| ライブラリ | 内容 | 依存してよいもの | 状態 |
+Dependencies go only in the directions of the table below. Do not add to `target_link_libraries` a dependency not in the table.
+
+| Library | Content | May depend on | State |
 | --- | --- | --- | --- |
-| `front` | slang の呼び出しと、SIR への変換 | slang、`sir` | slang で読んでエラボレーションするだけ |
-| `sir` | SIR の定義、検証器、テキスト形式 | なし | 版を返す関数だけ |
-| `analysis` | X 到達解析、静的な島、レベル化、可観測性 | `sir` | 空 |
-| `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | 空 |
-| `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 空 |
-| `kernel` | 実行カーネル（スケジューラ、値の演算、GC、VPI、DPI-C、波形など） | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` に隔離し、`kernel` はその C++ のインターフェースだけを見る | 4 値の語と `and4`、回数カウンタ、Context |
-| `solver_adapter` | 制約ソルバの差し替え口 | `sir`、採用した外部のソルバ | P3 で作る |
-| `fiber_backend` | 時間を使う DPI-C の task を止めて再開するファイバー | 採用したライブラリだけ | P3 で作る |
-| `valsem` | 値の意味の参照実装（遅いが明らかに正しい） | なし | 1 ビットの 4 値と AND |
-| `driver` | 実行ファイル `kirimasim` | すべて | `--version`、`parse`、`--stats=json` |
+| `front` | Calling slang, and lowering to SIR | slang, `sir` | Only reads and elaborates with slang |
+| `sir` | SIR's definition, verifier, text form | Nothing | Only a function returning the version |
+| `analysis` | X-reachability analysis, static islands, levelization, observability | `sir` | Empty |
+| `vm` | Tier 1 (making and running bytecode) | `sir`, `kernel` | Empty |
+| `codegen` | Tier 2 (generating and building C++) | `sir`, `analysis` | Empty |
+| `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (later). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | 4-state words and `and4`, event counters, Context |
+| `solver_adapter` | The replaceable port for constraint solvers | `sir`, the external solver adopted | Made in P3 |
+| `fiber_backend` | Fibers that stop and resume time-consuming DPI-C tasks | Only the library adopted | Made in P3 |
+| `valsem` | Reference implementation of value semantics (slow but plainly correct) | Nothing | 1-bit 4-state values and AND |
+| `driver` | The executable `kirimasim` | Everything | `--version`, `parse`, `--stats=json` |
 
-- `kernel` は利用者の設計と一緒にリンクされるので、slang や LLVM に依存させない。
-- `kernel` の公開ヘッダ（`src/kernel/include/kirimasim/kernel/`）は C++20 でコンパイルできること。新しいヘッダを足したら `tests/unit/kernel_headers_cxx20.cpp` にも足す。
-- 名前空間は `kirimasim::<ライブラリ名>`。
+- `kernel` is linked together with the user's design, so it must not depend on slang or LLVM.
+- `kernel`'s public headers (`src/kernel/include/kirimasim/kernel/`) must compile as C++20. When adding a new header, add it to `tests/unit/kernel_headers_cxx20.cpp` too.
+- Namespaces are `kirimasim::<library name>`.
 
-## C++ の版と禁止事項
+## C++ versions and prohibitions
 
-- 本体は C++23。C++26 の機能は、使えるコンパイラでだけ機能検出マクロを通して使う。
-- `kernel` の公開ヘッダと生成コードは C++20。生成コードは例外と RTTI を使わない。
-- `src/kernel/` と `src/vm/`（と将来の生成コード）で禁止：`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid`。`tools/check_banned.py` が検査する。コメントの中の語も検出されるので、説明文では別の書き方をする。
-- `std::unordered_map` と `std::unordered_set` は、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` を書いたときだけ使ってよい。結果に影響する箇所で走査しない。
-- 書き換え可能な大域変数・static 変数・シングルトンを持たない。状態は Context が持つ。
-- 実行中に環境変数を読まない。設定は起動時に 1 回だけ読む（`driver` も今は環境変数を読まない）。
-- 実行中に文字列で信号を引かない（名前の表は VPI・波形・診断のためだけ）。
-- 実行カーネルの境界を越えて例外を投げない。エラーは戻り値で返す。
-- 演算・辺の判定・case の一致の意味は `valsem` の参照実装 1 か所で定め、高速版はそれと突き合わせるテストを持つ。
+- The main body is C++23. C++26 features are used only with compilers that have them, through feature-test macros.
+- `kernel`'s public headers and generated code are C++20. Generated code uses no exceptions or RTTI.
+- Forbidden in `src/kernel/` and `src/vm/` (and in future generated code): `std::shared_ptr`, `dynamic_cast`, `std::function`, `getenv`, `typeid`. `tools/check_banned.py` checks this. Words inside comments are detected too, so explanations use other wordings.
+- `std::unordered_map` and `std::unordered_set` may be used only with `// kirimasim: unordered-ok <reason>` on the same line or the line before. Do not iterate over them where it affects results.
+- No mutable global variables, static variables or singletons. State belongs to the Context.
+- Do not read environment variables during execution. Settings are read once at startup (`driver` too reads no environment variables now).
+- Do not look up signals by string during execution (name tables are only for VPI, waveforms and diagnostics).
+- Do not throw exceptions across the boundary of the execution kernel. Errors are returned as values.
+- The meaning of operations, edge detection and case matching is set in one place, the reference implementation `valsem`, and fast versions have tests that cross-check them with it.
 
-## ビルドとテストのコマンド
+## Build and test commands
 
 ```sh
 cmake --preset dev && cmake --build --preset dev && ctest --preset dev
 cmake --preset release && cmake --build --preset release && ctest --preset release
-python3 tools/check_release_flags.py      # release の構成のあとで
+python3 tools/check_release_flags.py      # after configuring release
 cmake --preset asan  && cmake --build --preset asan  && ctest --preset asan
 cmake --preset ubsan && cmake --build --preset ubsan && ctest --preset ubsan
 python3 tools/check_banned.py
-ctest --preset dev -L PerfCount           # 回数の回帰だけ
-python3 tools/local_ci.py                 # 上の全部と clang-format・clang-tidy をまとめて
+ctest --preset dev -L PerfCount           # only the count regressions
+python3 tools/local_ci.py                 # all of the above plus clang-format and clang-tidy
 ```
 
-- push の前に `tools/local_ci.py` を走らせ、要約を報告に添える。GitHub の macOS のランナーはこのリポジトリでは取れないことが多いので、macOS の結果はこれで代える（`ci.yml` のジョブは、ラベル `kirimasim-linux` の付いたセルフホストの Linux（x86-64）のランナーだけで動かし、macOS のジョブは持たない）。
+- Before pushing, run `tools/local_ci.py` and attach its summary to the report. GitHub's macOS runners are often unavailable for this repository, so macOS results are covered by this (the jobs of `ci.yml` run only on self-hosted Linux (x86-64) runners with the label `kirimasim-linux`, and there is no macOS job).
 
-- テストスイート（`tests/suite/`）は sv-tests 互換のヘッダを持つ。今は `kirimasim parse` が通るかだけを見る。失敗を期待するテストは `:should_fail_because:` と `:expected_error:`（`<行>:<列>: error: <文>`）を書き、終了コード 2 と、その位置の診断の両方を確かめる。
-- PerfCount の期待値は `tests/perf_counts/expected.json`。更新の手順は `tests/perf_counts/README.md`。
+- The test suite (`tests/suite/`) has headers compatible with sv-tests. For now it only checks that `kirimasim parse` passes. Tests expected to fail write `:should_fail_because:` and `:expected_error:` (`<line>:<column>: error: <text>`), and both exit code 2 and the diagnostic at that position are checked.
+- PerfCount's expected values are in `tests/perf_counts/expected.json`. How to update them is in `tests/perf_counts/README.md`.
 
-## 意味は 1 か所で決め、症状の形ごとに直さない（2026-10-16 に承認）
+## Decide meaning in one place, and do not fix by the shape of the symptom (approved 2026-10-16)
 
-不具合を症状の形ごとの分岐で直すと、隣の形が壊れたまま残り、分岐どうしの相互作用で直したはずの不具合が戻る。それを防ぐための決まり。
+Fixing a bug with a branch for the shape of the symptom leaves the neighbouring shapes broken, and the interactions between branches bring back bugs that were fixed. These rules prevent that.
 
-- **意味を決める場所：** 構文の意味は `front`（SIR を作るとき）と `kernel`、値の意味は `valsem` で決める。`vm` と `codegen` は SIR の命令を機械的に実行・翻訳するだけにし、「この形なら特別に」という判断を置かない。
-- **器で意味を変えない：** module の `initial`・`always`、class のメソッド、automatic の task、fork の枝、interface、generate、package のどの中で実行しても、同じ文は同じ SIR になる。違ってよいのは置き場所（スロットかフレームか）だけ。
-- **症状の形を条件にしない：** Issue の番号や、特定のテストの形を `if` の条件にしない。不具合を直すコミットには、次の 3 つを書く。
-  1. 破っていた規則（規格の節と、`docs/spec/` のどの項か）
-  2. その規則を実装している 1 か所（関数の名前）
-  3. 同じ規則を通るほかの入口（ほかの構文や器から来ても、その 1 か所を通ることの説明）
-- **利用者のソースを文字列として書き換えない：** slang の構文木と意味のモデルの上だけで処理する。
-- **ライブラリを特別扱いしない：** UVM などのクラスの名前を C++ 側で見分ける分岐を作らない。uvm-core はそのまま SystemVerilog として実行する。性能のために一部を置き換えるときは、元の SystemVerilog の実行を参照として残し、突き合わせるテストを持つ。
-- **隠れたつまみを作らない：** 挙動を切り替えるのは、CLI.md に載せたオプションだけにする。
-- **シミュレータにテストスイートの知識を入れない：** 本体は合否の文字列（PASS・FAIL）を出さない。ファイルの名前やパスで挙動を変えない。テストのメタデータ（`:should_fail_because:` など）を読まない。合否は `tools/` の判定の道具だけが決める。`tools/check_banned.py` で検査する。
-- **違法な入力は既定で拒否する：** slang の診断を緩めない。互換のために緩めるときは、既定は厳格のままにし、緩めるオプションとその一覧を CLI.md に載せる。
-- **不具合のテストは機構の行列で足す：** 再現例 1 本ではなく、その機構の行列（置き場所 × 読み書きの仕方 × 名前の綴り × 器）のテストを、生成器で作って足す（TEST_SUITE.md）。テストの名前は規格の節と機構で決め、Issue の番号にしない（番号はヘッダの `:issue:` に書く）。
-- **機構ごとにまとめて直す：** 同じ機構（同じ節）の不具合が 3 件たまったら、1 件ずつ直すのをやめ、その機構の行列を作ってから直す。
-- **Issue を閉じる条件：** 本文が挙げた症状の数と、テストの検査点の数が一致し、隣の形を行列で確かめた結果を閉じるときのコメントに書いたときだけ閉じる。「残りは後で」と書いて閉じない（残すなら別の Issue にする）。
+- **Where meaning is decided:** the meaning of constructs is decided in `front` (when making SIR) and `kernel`, and the meaning of values in `valsem`. `vm` and `codegen` only execute and translate SIR's instructions mechanically, and hold no judgment of the form "special case for this shape".
+- **The container does not change meaning:** in a module's `initial` or `always`, a class method, an automatic task, a fork branch, an interface, generate or a package, the same statement becomes the same SIR. Only the place (slot or frame) may differ.
+- **Do not make the shape of a symptom a condition:** do not put issue numbers or the shapes of particular tests in `if` conditions. A commit that fixes a bug states these three things:
+  1. The rule it broke (the clause of the standard, and which item of `docs/spec/`)
+  2. The one place that implements that rule (the function's name)
+  3. The other entries through the same rule (an explanation that, coming from other constructs or containers, they pass through that one place)
+- **Do not rewrite the user's source as strings:** work only on slang's syntax tree and semantic model.
+- **Do not treat libraries specially:** do not make branches on the C++ side that recognize class names of UVM and the like. uvm-core runs as SystemVerilog as it is. When part of it is replaced for performance, the execution of the original SystemVerilog is kept as the reference, with tests that cross-check them.
+- **No hidden knobs:** behaviour is switched only by options listed in CLI.md.
+- **Do not put knowledge of the test suite in the simulator:** the main body prints no pass/fail strings (PASS, FAIL). It does not change behaviour by file names or paths. It does not read test metadata (`:should_fail_because:` and the like). Pass or fail is decided only by the judging tools in `tools/`. `tools/check_banned.py` checks this.
+- **Reject illegal input by default:** do not loosen slang's diagnostics. When loosening for compatibility, keep strict as the default, and list the loosening option and what it covers in CLI.md.
+- **Add bug tests as a matrix of the mechanism:** add not one reproducing example but a matrix test of the mechanism (place × way of reading or writing × spelling of the name × container), made by a generator (TEST_SUITE.md). Name tests by the clause of the standard and the mechanism, not by issue numbers (numbers go in the header's `:issue:`).
+- **Fix mechanism by mechanism:** when 3 bugs of the same mechanism (the same clause) have gathered, stop fixing them one by one; make the mechanism's matrix first, then fix.
+- **When to close an issue:** only when the number of symptoms the issue lists equals the number of check points of the tests, and the closing comment states the result of checking the neighbouring shapes with the matrix. Do not close with "the rest later" (if something remains, make it a separate issue).
 
-## コミットの書き方
+## How to write commits
 
-- 1 つの目的ごとに 1 コミット。メッセージは英語で、1 行目は 72 文字以内。
-- AI が手伝ったら、トレーラーに `Assisted-by: Claude Code:<モデル名と版>` を付ける。`Co-Authored-By` は付けない。
-- `Signed-off-by` は付けない。今は DCO の運用をしていない（外部からのコードの PR を受け付けるときに、DCO または CLA を導入する）。
-- コミットの作者のメールアドレスは GitHub の noreply アドレスにする。
+- One commit per purpose. Messages in English, the first line at most 72 characters.
+- When an AI helped, add the trailer `Assisted-by: Claude Code:<model name and version>`. Do not add `Co-Authored-By`.
+- Do not add `Signed-off-by`. DCO is not in operation now (DCO or a CLA will be introduced when PRs of code from outside are accepted).
+- The author email of commits is the GitHub noreply address.
 
-## 期待値を変える変更は別の PR にする
+## Changes of expected values go in separate PRs
 
-既存の期待値（`tests/perf_counts/expected.json` の既存の項目、`tests/**/expected*` の既存の行、`:expected_stdout:` の行、`tests/suite/` の既存のテストの本体）を変える・消す・緩める変更と、既存のテストファイルの削除・名前の変更は、`src/` の変更と同じ PR に入れない。`tests/unit/` のユニットテストは、関数名の変更などに合わせて実装と同じ PR で直してよいが、`EXPECT_*` と `ASSERT_*` を弱めてはいけない（CI が変わったアサーションを警告に出し、人がレビューで見る）。理由と規格の節番号を書いた別の PR にする。新しいテストと新しい期待値の追加は、実装と同じ PR でよい。テストを通すために期待値やテストを書き換えてはいけない。食い違ったら、まず実装と期待値のどちらが規格どおりかを人に示す。`tools/check_expected_change.py` が CI で検査する。
+Changes that change, remove or loosen existing expected values (existing items of `tests/perf_counts/expected.json`, existing lines of `tests/**/expected*`, `:expected_stdout:` lines, the bodies of existing tests in `tests/suite/`), and removing or renaming existing test files, do not go in the same PR as changes of `src/`. Unit tests in `tests/unit/` may be fixed in the same PR as the implementation to follow a renamed function and the like, but `EXPECT_*` and `ASSERT_*` must not be weakened (CI shows changed assertions as warnings, and a person looks at them in review). Make a separate PR stating the reason and the clause number of the standard. Adding new tests and new expected values may be in the same PR as the implementation. Do not rewrite expected values or tests to make tests pass. When they disagree, first show a person which of the implementation and the expected value follows the standard. `tools/check_expected_change.py` checks this in CI.
 
-## 公開リポジトリに入れてはいけないもの
+## What must not go in the public repository
 
-- 非公開の設計資料（設計仕様書の原本、図、報告）。リポジトリの文書は、それを要約して書き直したものにする。
-- 非公開の前身プロジェクトの名前、コード、内部の情報。
-- IEEE 1800 の本文、図、例のコードの引き写し（節番号を示し、自分の言葉で要約するのはよい）。
-- ホームディレクトリの絶対パス、ユーザー名、メールアドレス（GitHub の noreply と、`CODE_OF_CONDUCT.md` の連絡先を除く）、機械の識別子。
-- 勤務先や業務に関する情報。
-- 商用シミュレータの出力。
+- Private design material (the originals of design specifications, figures, reports). Documents in the repository are summaries rewritten from them.
+- The name, code or internal information of the private predecessor project.
+- Copies of the text, figures or example code of IEEE 1800 (giving clause numbers and summarizing in your own words is fine).
+- Absolute paths of home directories, user names, email addresses (except GitHub noreply addresses and the contact in `CODE_OF_CONDUCT.md`), machine identifiers.
+- Information about workplaces or work.
+- Output of commercial simulators.
 
-## 他のシミュレータのソースを読まない
+## Do not read the source of other simulators
 
-Icarus Verilog と Verilator のソースコードは読まない（クリーンルーム）。動作は規格と、実行した結果から知る。slang は依存なので読んでよい。
+Do not read the source code of Icarus Verilog and Verilator (clean room). Learn their behaviour from the standard and from the results of running them. slang is a dependency, so it may be read.
 
-## 分からないことは「未確認」と書く
+## Write "not confirmed" for what is not known
 
-版の番号、ライセンス、規格の解釈、ツールの動作など、確かめていないことを推測で埋めない。文書と報告には「未確認」と書き、確かめる方法を添える。版の番号は実際に調べた値を使う。
+Do not fill in by guessing what has not been checked: version numbers, licences, interpretations of the standard, the behaviour of tools and so on. Documents and reports say "not confirmed", with a way to check it. Version numbers use values actually looked up.
 
-## 仕様と食い違う変更
+## Changes that disagree with the specification
 
-`docs/spec/` の詳細仕様書と食い違う変更が必要になったら、実装する前に、仕様書の修正案として人に提案し、承認を受けてから実装する。正式な文面が決まっている文書（ライセンス、行動規範など）は記憶から書かず、公式の配布元から取得する。新しい依存を足すときと、新しいツールをインストールする必要があるときは、止まって人に確かめる。
+When a change that disagrees with the detailed specifications in `docs/spec/` is needed, propose it to a person as an amendment of the specification before implementing, and implement after it is approved. Documents with official wording (licences, codes of conduct and so on) are not written from memory but fetched from the official source. When adding a new dependency, or when a new tool needs to be installed, stop and ask a person.
