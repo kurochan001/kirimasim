@@ -21,7 +21,8 @@ for the specification, the tests, and review.** See
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
-> first execution tier, a bytecode interpreter. Classes, dynamic arrays,
+> first execution tier, an interpreter that for now runs SIR directly
+> (compiling SIR to bytecode comes later). Classes, dynamic arrays,
 > queues, randomization, concurrent assertions, file I/O, VPI and DPI-C are
 > not there yet, and no work on speed has started. Anything kirimasim does
 > not support yet stops the run with an "unsupported" error at its source
@@ -492,7 +493,7 @@ the same table with the Japanese terms.
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](docs/spec/SIR_SPEC.md)) |
 | `valsem` | The reference implementation of value semantics: slow, one bit at a time, and obviously correct. It decides what the operators, edges and case matches mean; every fast version is tested against it |
 | kernel | The execution kernel shared by every tier: scheduler, value operations, and later VPI, DPI-C and waveforms. It is linked with the user's design, so it depends on neither slang nor LLVM |
-| tier 1 / VM | The interpreter that runs SIR as register-based bytecode (P1) |
+| tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P2) |
 | Context | The object that holds all run-time state of one simulation; kirimasim has no global state |
 | `analysis` | Analyses for tier 2 (P2): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
