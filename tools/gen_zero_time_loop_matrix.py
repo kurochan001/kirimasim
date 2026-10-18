@@ -22,9 +22,9 @@ named events, a ring of two continuous assignments, always_comb, always @*
 (whose variables start at 0, as it does not run before its first change),
 a continuous assignment and an always procedure together, and a
 nonblocking assignment, whose update comes back through the NBA region. A
-continuous assignment that reads its own net is left out: kirimasim does
-not evaluate it again after its own change, against SCHEDULER_SPEC.md 12,
-a fault of its own. Each loop is held back by en, or by an event, until
+continuous assignment that reads its own net is left out until #15 is
+fixed: kirimasim does not evaluate it again after its own change, against
+SCHEDULER_SPEC.md 12. Each loop is held back by en, or by an event, until
 time 1, so the run stops at 1 ns. The Reactive side comes with programs,
 which kirimasim reports as unsupported for now (tools/gen_program_matrix.py).
 """
