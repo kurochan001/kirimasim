@@ -1342,7 +1342,7 @@ private:
     kernel::MonitorSpec watchMonitor(Frame& f, const Operand& o) {
         const sir::Type t = d_.subroutines[o.id].returnType;
         kernel::MonitorSpec m;
-        readsOf(f, depsOf(processCount() + o.id), m);
+        readsOf(f, processCount() + o.id, m);
         m.eval = &evalWatch;
         m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.id});
         m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
@@ -2018,15 +2018,19 @@ private:
         std::copy(fresh.begin(), fresh.end(), f.vars.begin());
     }
 
-    /// What a monitor record of frame f depends on: the slot parts a body
-    /// reads, those its refs refer to now, and for ev.triggered the events
-    /// its event slots hold now (15.5.3). A ref to an automatic variable is
-    /// left out: only its own process writes it.
-    void readsOf(const Frame& f, const GuardDeps& deps, kernel::MonitorSpec& m) const {
+    /// What a monitor record of frame f depends on: the slot parts guard or
+    /// watch `body` reads, those its refs refer to now, and for
+    /// ev.triggered the events its event slots hold now (15.5.3). A ref to
+    /// an automatic variable is left out: only its own process writes it.
+    /// The body reads the frame of the activation that waits, so a ref is
+    /// found where the body's own reads find it, by its layout (SIR_SPEC.md
+    /// 7.4).
+    void readsOf(const Frame& f, std::uint32_t body, kernel::MonitorSpec& m) {
+        const GuardDeps& deps = depsOf(body);
         m.slots = deps.slots;
         const std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         for (const GuardDeps::RefRead& rr : deps.refs) {
-            const W4 r = vars[rr.var];
+            const W4 r = vars[layouts_[body].offset[rr.var]];
             if (isFrameRef(r)) continue;
             m.slots.push_back({refSlot(r) + rr.leaf, rr.anyElement ? 0 : refElem(r),
                                rr.anyElement ? 0U : 1U, 0, 0});
@@ -2047,7 +2051,7 @@ private:
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
         kernel::MonitorSpec m;
-        readsOf(f, depsOf(processCount() + g), m);
+        readsOf(f, processCount() + g, m);
         m.eval = &evalCond;
         m.frame = &f;
         m.domain = kernel::Domain::Two;

@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A wait in a task on a `ref` argument that comes after an argument or
+  variable wider than 64 bits wakes when the variable it names changes;
+  it waited on another variable, or could crash (#1).
 - A conditional operator (`?:`) wider than 64 bits with a function call
   or an assignment in an operand keeps its whole value; the bits above
   the lowest 64 were lost (#2).
