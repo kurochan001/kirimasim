@@ -64,7 +64,7 @@ slang moved to a newer commit, and did not change.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 516 | 514, 2 skipped | — | — |
+| This repository's tests (CTest) | 531 | 529, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 186 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -136,7 +136,7 @@ and 1,133 of the own test suite.
   build step only; kirimasim stops early at an unsupported construct.
 - Versions and machine: kirimasim 8500bdc (release build) for the times;
   its pass counts were measured again at 15b76df, and the CTest row at
-  262202c; Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
+  ff8c53d; Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
   8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple clang 21.
 
 <details>
@@ -144,11 +144,11 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 158 | SIR and its verifier (59), the scheduler against a reference model (24), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
-| `tests/suite/` | 263 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (68), scheduling (55), procedures (47), illegal designs (35), hierarchy (24), nets (23), continuous assignments (7), and others |
+| Unit tests (GoogleTest) | 159 | SIR and its verifier (59), the scheduler against a reference model (24), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
+| `tests/suite/` | 270 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (74), scheduling (56), procedures (47), illegal designs (35), hierarchy (24), nets (23), continuous assignments (7), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
-| Tools | 64 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
-| Command line, event counts | 2 | Options and messages, the matrix of unsupported constructs (66 designs: each one reported with its position in every container), the format flags that the standard does not define, and system calls that take a string first; the counts of a fixed run (PerfCount) |
+| Tools | 71 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Command line, event counts | 2 | Options and messages, the matrix of unsupported constructs (66 designs: each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`); the counts of a fixed run (PerfCount) |
 
 </details>
 
@@ -446,9 +446,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 62 generators, 263 tests in `tests/suite/`, and 516
+  rules. There are 69 generators, 270 tests in `tests/suite/`, and 531
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 217 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 229 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
