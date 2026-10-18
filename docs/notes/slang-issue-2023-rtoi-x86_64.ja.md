@@ -2,7 +2,7 @@
 
 [English](slang-issue-2023-rtoi-x86_64.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-調べた日：2026-10-17。対象：slang v12.0（`545f88b2e`、`cmake/Dependencies.cmake` で固定している版）。
+調べた日：2026-10-17。対象：slang v12.0（`545f88b2e`、その日に `cmake/Dependencies.cmake` で固定していた版。2026-10-18 からは、修正を含む main の `b7f11c1` を固定している。末尾の追記を参照）。
 
 ## 背景
 
@@ -135,7 +135,9 @@ objdump -d --no-show-raw-insn -C \
   | awk '/RtoIFunction::eval/{p=1} p{print} p&&/\tret/{exit}' | grep fcvtzu
 ```
 
-## kirimasim への影響
+## kirimasim への影響（2026-10-17 の時点）
+
+この節は、このメモを書いたときの kirimasim のことを書いている。ここに出てくる回避策は、2026-10-18 に外した（末尾の追記）。
 
 - `docs/spec/SIR_SPEC.md` の 6 節は、`$rtoi` を含む式を slang の畳み込んだ定数に頼らず、実行時に計算すると決めている。`$rtoi` を含む式はこの方針で、どのマシンでも正しい値になる。
 - 同じ節は、パラメータの値は slang が決めるのでこの方針では直らない、と書いている。パラメータの値はマシンによって違う。x86_64 では偶然 -3 になり、arm64 では 0 になる。x86_64 だけで確かめると、この誤りは見えない。
@@ -180,6 +182,6 @@ objdump -d --no-show-raw-insn -C \
 
 ## 追記（2026-10-18）
 
-上流では、2026-10-17 にコミット 145b57c で直った。`(uint64_t)val.real()` を、slang 自身の変換 `SVInt::fromDouble(32, val.real(), true, false)`（丸めずに切り捨てる）に置き換えた。kirimasim が固定している slang v12.0 には入っていないので、SIR_SPEC.md の 6 節の回避策はそのまま残す。
+上流では、2026-10-17 にコミット 145b57c で直った。`(uint64_t)val.real()` を、slang 自身の変換 `SVInt::fromDouble(32, val.real(), true, false)`（丸めずに切り捨てる）に置き換えた。そのとき kirimasim が固定していた slang v12.0 には入っていなかったので、SIR_SPEC.md の 6 節の回避策は、はじめはそのまま残した。
 
 2026-10-18 に、kirimasim は slang を main のコミット b7f11c1（この修正を含む）に上げ、SIR_SPEC.md の 6 節の回避策と、ubsan の構成の slang への例外を外した。

@@ -2,7 +2,7 @@
 
 [日本語](slang-issue-2023-rtoi-x86_64.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Date checked: 2026-10-17. Subject: slang v12.0 (`545f88b2e`, the version pinned in `cmake/Dependencies.cmake`).
+Date checked: 2026-10-17. Subject: slang v12.0 (`545f88b2e`, the version `cmake/Dependencies.cmake` pinned on that date; since 2026-10-18 it pins main `b7f11c1`, which has the fix: see the addendum at the end).
 
 ## Background
 
@@ -135,7 +135,9 @@ objdump -d --no-show-raw-insn -C \
   | awk '/RtoIFunction::eval/{p=1} p{print} p&&/\tret/{exit}' | grep fcvtzu
 ```
 
-## Effect on kirimasim
+## Effect on kirimasim (as of 2026-10-17)
+
+This section describes kirimasim when the note was written. The workarounds it names were removed on 2026-10-18 (the addendum at the end).
 
 - Section 6 of `docs/spec/SIR_SPEC.md` decides that expressions containing `$rtoi` are computed at run time, without relying on the constants slang folded. By this policy, expressions containing `$rtoi` get the right value on every machine.
 - The same section says that parameter values are decided by slang, so this policy does not fix them. Parameter values differ by machine: -3 by chance on x86_64, 0 on arm64. Checking only on x86_64 does not reveal this error.
@@ -180,6 +182,6 @@ objdump -d --no-show-raw-insn -C \
 
 ## Addendum (2026-10-18)
 
-Upstream, it was fixed on 2026-10-17 by commit 145b57c, which replaced `(uint64_t)val.real()` with slang's own conversion `SVInt::fromDouble(32, val.real(), true, false)` (truncating, not rounding). It is not in slang v12.0, which kirimasim pins, so the workaround of section 6 of SIR_SPEC.md stays as it is.
+Upstream, it was fixed on 2026-10-17 by commit 145b57c, which replaced `(uint64_t)val.real()` with slang's own conversion `SVInt::fromDouble(32, val.real(), true, false)` (truncating, not rounding). It was not in slang v12.0, which kirimasim pinned then, so at first the workaround of section 6 of SIR_SPEC.md stayed as it was.
 
 On 2026-10-18, kirimasim raised slang to main commit b7f11c1 (which includes this fix), and removed the workaround of section 6 of SIR_SPEC.md and the exception for slang in the ubsan configuration.
