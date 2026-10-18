@@ -210,6 +210,7 @@ unsupported_matrix/nonblocking_event.sv:17:5: error: unsupported: nonblocking as
 unsupported_matrix/nonblocking_event.sv:22:7: error: unsupported: nonblocking assignment with an event control (not implemented yet)
 unsupported_matrix/nonblocking_event.sv:27:7: error: unsupported: nonblocking assignment with an event control (not implemented yet)
 unsupported_matrix/nonblocking_event.sv:7:5: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+unsupported_matrix/output_array_slice.sv:8:11: error: unsupported: an output or inout array argument of this actual (not implemented yet)
 unsupported_matrix/parameter_struct_index.sv:11:9: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)
 unsupported_matrix/parameter_struct_index.sv:14:9: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)
 unsupported_matrix/parameter_struct_index.sv:17:9: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)

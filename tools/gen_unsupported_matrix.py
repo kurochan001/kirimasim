@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 8
+VERSION = 9
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -200,6 +200,10 @@ OTHERS = [
      "  p «»«»row[1:0](ys, a, );\n  if (1) begin : g\n    p «»v(, 1'b0, 1'b1);\n  end\n"
      "  sub s();\n  initial #1 $display(\"%b %b\", y, ys);\nendmodule\n",
      "a UDP instance with an unconnected port"),
+    ("output_array_slice",
+     "module top;\n  logic [7:0] m [0:3];\n  task automatic t(output logic [7:0] o [0:1]);\n"
+     "    o[0] = 1;\n    o[1] = 2;\n  endtask\n  initial «»t(m[1:2]);\nendmodule\n",
+     "an output or inout array argument of this actual"),
     ("deferred_waiting_task",
      "module top;\n  task t;\n    #1;\n  endtask\n  initial «»assert #0 (0) else t();\nendmodule\n",
      "deferred assertion whose action is a task that may wait"),
