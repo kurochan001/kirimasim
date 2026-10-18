@@ -1,335 +1,337 @@
-# SYSTEM_TASKS：システムタスクと関数
+# SYSTEM_TASKS: system tasks and functions
 
-優先度：P0（P1 の着手前）。状態：**承認済み（2026-10-15）**。2026-10-16 に、書式指定に渡す文字列リテラル（3.1 節）と、unique・priority の違反の報告の形（10.4 節）を足した（承認済み）。同日、書式指定の無い実数と、整数と実数の書式の入れ替えの扱い（3.6 節）を足した（承認済み）。2026-10-17 に、`%E` と `%G` の大文字の扱い（3 節、3.6 節）を足した（承認済み）。同日、`%s` で値の途中にある 0 のバイトの出し方（3.5 節）を足した（承認済み）。同日、`$rtoi` に NaN、無限大、範囲外の値を渡したときの結果（8 節）を決めた（承認済み）。2026-10-18 に、変換の指定の無い `%` の扱い（3.1 節）を決めた（承認済み）。解釈と本書の決まりは、2026-10-15 に人が承認した。
+[日本語](SYSTEM_TASKS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、kirimasim のシステムタスクとシステム関数が何をするかを定める。テストスイートは標準出力で合否を決めるので、表示の書式の細部まで決めておく。規格（IEEE 1800-2023）の本文は写さず、本書の言葉で要約し、根拠の節番号を示す。
+Priority: P0 (before P1 starts). Status: **approved (2026-10-15)**. On 2026-10-16, string literals passed to format specifiers (3.1) and the form of reports of unique and priority violations (10.4) were added (approved). The same day, reals with no format specifier, and swapping integer and real formats (3.6), were added (approved). On 2026-10-17, upper-case `%E` and `%G` (3, 3.6) were added (approved). The same day, how `%s` prints zero bytes in the middle of a value (3.5) was added (approved). The same day, the result of `$rtoi` for NaN, infinities and out-of-range values (8) was decided (approved). On 2026-10-18, a `%` with no conversion (3.1) was decided (approved). The interpretations and the rules of this document were approved by a human on 2026-10-15.
 
-- 「規格で確認」と書いた項目は、規格の該当節を読んで確かめたもの。
-- 「解釈」と書いた項目は、規格の文面だけでは決まらず、本書で読み方を決めたもの。
-- 「本書の決まり」と書いた項目は、規格が処理系に任せているところを、本書で決めたもの。
-- 「参考」として、Icarus Verilog 13.0 と Verilator 5.052（macOS arm64、2026-10-15）で走らせた結果を添えたところがある。参考は根拠ではない。
+This document sets what kirimasim's system tasks and system functions do. The test suite passes or fails on standard output, so the details of display formats are set too. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on.
 
-実行の制御（`$finish`、`$stop`、`$exit`、`$fatal`）の意味と終了コードは SCHEDULER_SPEC.md の 16 節で定めた。この文書は、それらが出すメッセージの形だけを扱う（10 節）。乱数のシステム関数（`$random`、`$urandom`、`$urandom_range`、`$dist_*`）は P1 で本書に足す（設計仕様書で P1 の範囲。2026-10-15 に承認）。制約付き乱数は RANDOMIZE_SPEC.md、アサーションの関数（`$sampled`、`$past` など）と制御（`$assertoff` など）は ASSERTION_COVERAGE_SPEC.md、波形（`$dump*`）は P1 で書く波形の文書で扱う。
+- Items marked "checked" were checked by reading the relevant clause of the standard.
+- Items marked "interpretation" are not settled by the wording of the standard alone; this document decides how to read them.
+- Items marked "rule of this document" are where the standard leaves the choice to the implementation, and this document makes it.
+- Some places add, "for reference", the results of running Icarus Verilog 13.0 and Verilator 5.052 (macOS arm64, 2026-10-15). A reference is not grounds.
 
-## 1. 対象と対応の時期
+The meaning and exit codes of execution control (`$finish`, `$stop`, `$exit`, `$fatal`) are set in SCHEDULER_SPEC.md 16. This document covers only the form of the messages they give (10). The random-number system functions (`$random`, `$urandom`, `$urandom_range`, `$dist_*`) are added to this document in P1 (within P1 in the design specification; approved 2026-10-15). Constrained random is in RANDOMIZE_SPEC.md; assertion functions (`$sampled`, `$past` and so on) and controls (`$assertoff` and so on) are in ASSERTION_COVERAGE_SPEC.md; waveforms (`$dump*`) are in the waveform document written in P1.
 
-設計書の一覧の案を規格と照らし、次の表にまとめた。フェーズは設計書の段階（1：P1〜P2、3：P3、4：P4）。
+## 1. Scope and timing
 
-| 分類 | 名前 | 規格 | フェーズ |
+The draft list of the design specification was checked against the standard and put in the table below. The phases are the design specification's stages (1: P1 to P2, 3: P3, 4: P4).
+
+| Group | Names | Standard | Phase |
 | --- | --- | --- | --- |
-| 表示 | `$display`、`$write`（b・o・h の付いた形も） | 21.2.1 | 1 |
-| 遅れた表示と監視 | `$strobe`、`$monitor`、`$monitoron`、`$monitoroff`（b・o・h の付いた形も） | 21.2.2、21.2.3 | 1 |
-| 文字列への書式 | `$swrite`（b・o・h の付いた形も）、`$sformat`、`$sformatf` | 21.3.3 | 1 |
-| ファイルの開閉 | `$fopen`、`$fclose` | 21.3.1 | 1 |
-| ファイルへの出力 | `$fdisplay`、`$fwrite`（b・o・h の付いた形も）、`$fflush` | 21.3.2、21.3.6 | 1 |
-| ファイルへの監視 | `$fstrobe`、`$fmonitor` | 21.3.2 | 3 |
-| ファイルからの読み込み | `$fgets`、`$fscanf`、`$sscanf`、`$fread`、`$fgetc`、`$ungetc` | 21.3.4 | 1（`$fgetc`、`$ungetc` は 3） |
-| 位置と状態 | `$ftell`、`$fseek`、`$rewind`、`$ferror`、`$feof` | 21.3.5〜21.3.8 | 1 |
-| メモリ | `$readmemb`、`$readmemh`、`$writememb`、`$writememh` | 21.4、21.5 | 1 |
-| 時刻 | `$time`、`$stime`、`$realtime`、`$timeunit`、`$timeprecision`、`$printtimescale`、`$timeformat` | 20.3、20.4 | 1 |
-| 変換 | `$rtoi`、`$itor`、`$realtobits`、`$bitstoreal`、`$shortrealtobits`、`$bitstoshortreal`、`$signed`、`$unsigned` | 20.5 | 1 |
-| 問い合わせ | `$bits`、`$isunbounded`、`$typename` | 20.6 | 1（`$typename` は 2026-10-17 に 3 から前倒し） |
-| 配列の問い合わせ | `$left`、`$right`、`$low`、`$high`、`$increment`、`$size`、`$dimensions`、`$unpacked_dimensions` | 20.7 | 1 |
-| 数学 | `$clog2` と、実数の 20 の関数（`$ln` から `$atanh`） | 20.8 | 1 |
-| ビットベクタ | `$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown` | 20.9 | 1 |
-| 重大度 | `$fatal`、`$error`、`$warning`、`$info`（実行時とエラボレーション時） | 20.10、20.10.1 | 1 |
-| プラスアーグ | `$test$plusargs`、`$value$plusargs` | 21.6 | 1 |
-| その他 | `$stacktrace` | 20.17.2 | 1 |
+| Display | `$display`, `$write` (and the forms with b, o, h) | 21.2.1 | 1 |
+| Delayed display and monitoring | `$strobe`, `$monitor`, `$monitoron`, `$monitoroff` (and the forms with b, o, h) | 21.2.2, 21.2.3 | 1 |
+| Formatting to strings | `$swrite` (and the forms with b, o, h), `$sformat`, `$sformatf` | 21.3.3 | 1 |
+| Opening and closing files | `$fopen`, `$fclose` | 21.3.1 | 1 |
+| Output to files | `$fdisplay`, `$fwrite` (and the forms with b, o, h), `$fflush` | 21.3.2, 21.3.6 | 1 |
+| Monitoring to files | `$fstrobe`, `$fmonitor` | 21.3.2 | 3 |
+| Reading from files | `$fgets`, `$fscanf`, `$sscanf`, `$fread`, `$fgetc`, `$ungetc` | 21.3.4 | 1 (`$fgetc`, `$ungetc` in 3) |
+| Position and status | `$ftell`, `$fseek`, `$rewind`, `$ferror`, `$feof` | 21.3.5 to 21.3.8 | 1 |
+| Memories | `$readmemb`, `$readmemh`, `$writememb`, `$writememh` | 21.4, 21.5 | 1 |
+| Time | `$time`, `$stime`, `$realtime`, `$timeunit`, `$timeprecision`, `$printtimescale`, `$timeformat` | 20.3, 20.4 | 1 |
+| Conversion | `$rtoi`, `$itor`, `$realtobits`, `$bitstoreal`, `$shortrealtobits`, `$bitstoshortreal`, `$signed`, `$unsigned` | 20.5 | 1 |
+| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | 1 (`$typename` brought forward from 3 on 2026-10-17) |
+| Array queries | `$left`, `$right`, `$low`, `$high`, `$increment`, `$size`, `$dimensions`, `$unpacked_dimensions` | 20.7 | 1 |
+| Math | `$clog2` and the 20 real functions (`$ln` to `$atanh`) | 20.8 | 1 |
+| Bit vectors | `$countbits`, `$countones`, `$onehot`, `$onehot0`, `$isunknown` | 20.9 | 1 |
+| Severity | `$fatal`, `$error`, `$warning`, `$info` (at run time and at elaboration) | 20.10, 20.10.1 | 1 |
+| Plusargs | `$test$plusargs`, `$value$plusargs` | 21.6 | 1 |
+| Other | `$stacktrace` | 20.17.2 | 1 |
 
-設計書の一覧に無く、規格にあるものの扱い（2026-10-15 に人が承認）：
+Those in the standard but not in the design specification's list (approved by a human 2026-10-15):
 
-- `$system`（20.17.1）：任意のシェルのコマンドを実行する。テストの再現性（NFR-2）を壊しうるので、既定では誤りにし、`--allow-system` を付けたときだけ実行する。
-- `$dumplimit`（21.7.1.5）、拡張 VCD の `$dumpports` 系（21.7.3）：波形の文書で扱う。
-- 確率的な解析のタスク `$q_*`（20.15）と PLA のタスク（20.16）：対応しない。呼んだら誤りにする。どちらも使う設計がまれで、テストの棚卸しでも、名前だけで中身の無いテストしか見つからなかった。
+- `$system` (20.17.1): runs any shell command. It can break the reproducibility of tests (NFR-2), so by default it is an error, and it runs only with `--allow-system`.
+- `$dumplimit` (21.7.1.5) and the `$dumpports` family of extended VCD (21.7.3): covered by the waveform document.
+- The stochastic analysis tasks `$q_*` (20.15) and the PLA tasks (20.16): not supported; calling one is an error. Designs that use them are rare, and the inventory of tests found only tests with their names and no substance.
 
-## 2. 出力の行き先
+## 2. Where output goes
 
-- `$display`、`$write`、`$strobe`、`$monitor` は標準出力に書く（規格で確認：21.2）。
-- 多チャネルの記述子（mcd）のビット 0 と、ファイル記述子 `32'h8000_0001`（STDOUT）は、同じ標準出力を指す。`32'h8000_0002`（STDERR）は標準エラーを指す（規格で確認：21.3.1）。どの道で書いても、書いた順に並ぶ（本書の決まり。1 つのバッファを共有する）。
-- kirimasim 自身のメッセージ（診断、重大度のタスク、`$finish` の報告、終了の理由）は、すべて標準エラーに書く（本書の決まり）。標準出力には、設計が書いたものだけが出る。テストスイートは標準出力を比べるので、処理系ごとに形の違うメッセージが比べる対象に混ざらない。
-- 標準エラーに書く前に、標準出力のバッファを流す（本書の決まり）。端末で見たときに順序が崩れない。
+- `$display`, `$write`, `$strobe` and `$monitor` write to standard output (checked: 21.2).
+- Bit 0 of a multichannel descriptor (mcd) and the file descriptor `32'h8000_0001` (STDOUT) point to the same standard output. `32'h8000_0002` (STDERR) points to standard error (checked: 21.3.1). Whichever path is used, output appears in the order written (rule of this document; they share one buffer).
+- Every message of kirimasim itself (diagnostics, severity tasks, the report of `$finish`, the reason for ending) is written to standard error (rule of this document). Standard output holds only what the design wrote. The test suite compares standard output, so messages whose form differs between implementations do not get mixed into what is compared.
+- Before writing to standard error, the standard output buffer is flushed (rule of this document), so the order is kept when viewed on a terminal.
 
-## 3. 表示と書式
+## 3. Display and formats
 
-### 3.1 引数の扱い
+### 3.1 Arguments
 
-- `$display` は最後に改行を足し、`$write` は足さない。それ以外は同じ（規格で確認：21.2.1）。
-- 引数の文字列リテラルは、どれも書式として読む（`$display` と `$write` の系統。`$sformat` は 3.13）。`\` の拡張表記（5.9.1）と `%` の書式指定を解釈する。`%%` は `%` を 1 つ出す（規格で確認：21.2.1）。
-- 書式指定の無い式の引数は、`$display` と `$write` では 10 進、`b`・`o`・`h` の付いた形ではそれぞれ 2 進・8 進・16 進で、自動の幅（3.3）で出す。string 型と byte の unpacked 配列は文字列として出す。それ以外の unpacked の型を書式指定なしで渡すのは誤り（規格で確認：21.2.1.1）。
-- 空の引数（先頭か末尾のカンマ、続いたカンマ）は空白 1 文字を出す。カンマ 1 つだけの引数の並びは、空の引数 2 つとみなす（規格で確認：21.2.1）。
-- 引数の無い `$display` は改行だけを出し、引数の無い `$write` は何も出さない（規格で確認：21.2.1）。
-- **書式指定に渡す文字列リテラル（2026-10-16 に承認）：** 書式の中の、まだ引数を受け取っていない書式指定があるときは、その後の文字列リテラルは書式ではなく、その指定に渡す値として扱う（例：`$display("%s", "abc")` は `abc` を出す）。規格は、`%` の書式指定ごとに対応する式の引数を書式の後に置くとしており（規格で確認：21.2.1）、文字列リテラルも式なので、こう読む（解釈。参考：Icarus 13.0 と Verilator 5.052 も同じ。2026-10-16 に確かめた）。上の「どれも書式として読む」は、受け取る書式指定が残っていない文字列リテラルのことである。
-- **変換の指定の無い `%`（2026-10-18 に承認）：** 書式の文字列で、`%` の後に変換の指定が無いもの（末尾の `%`、`%5` など）は、入力の誤りとして報告する（終了コード 2。本書の決まり。規格は決めていない。slang は警告を出す。参考：2026-10-18 に確かめたところ、Icarus 14.0 devel は `%` をそのまま出し、Verilator 5.053 devel は `%` を消した）。
-- 定義されていない書式指定は誤り（規格で確認：21.2.1.1）。書式が定数なら、エラボレーションの誤りにする。`%m`、`%l`、`%%` 以外の書式指定に対応する引数が無いときも誤り（規格で確認：21.2.1）。定数でない書式（`$sformat` の書式など）の不足と余りは 3.13 による。
+- `$display` adds a newline at the end and `$write` does not; otherwise they are the same (checked: 21.2.1).
+- Every string literal argument is read as a format (the `$display` and `$write` families; `$sformat` is 3.13). Escapes with `\` (5.9.1) and `%` format specifiers are interpreted. `%%` prints one `%` (checked: 21.2.1).
+- An expression argument with no format specifier is printed in decimal for `$display` and `$write`, and in binary, octal and hexadecimal for the forms with `b`, `o` and `h`, with the automatic width (3.3). The string type and unpacked arrays of byte are printed as strings. Passing any other unpacked type with no format specifier is an error (checked: 21.2.1.1).
+- An empty argument (a leading or trailing comma, or consecutive commas) prints one space. An argument list of a single comma counts as two empty arguments (checked: 21.2.1).
+- `$display` with no arguments prints only a newline, and `$write` with no arguments prints nothing (checked: 21.2.1).
+- **String literals passed to format specifiers (approved 2026-10-16):** when the format has a specifier that has not yet taken an argument, a following string literal is not a format but the value passed to that specifier (for example `$display("%s", "abc")` prints `abc`). The standard puts, after the format, an expression argument for each `%` specifier (checked: 21.2.1), and a string literal is an expression too, so it is read this way (interpretation; for reference, Icarus 13.0 and Verilator 5.052 do the same, checked 2026-10-16). "Every string literal is read as a format" above means string literals for which no specifier is left to take them.
+- **A `%` with no conversion (approved 2026-10-18):** a `%` in a format string with no conversion after it (a trailing `%`, `%5` and so on) is reported as an error of the input (exit code 2; rule of this document; the standard does not decide it, and slang gives a warning; for reference, checked 2026-10-18, Icarus 14.0 devel printed the `%` as it is and Verilator 5.053 devel dropped it).
+- An undefined format specifier is an error (checked: 21.2.1.1). If the format is constant, it is an error of elaboration. It is also an error when a specifier other than `%m`, `%l` and `%%` has no argument (checked: 21.2.1). Missing and extra arguments for formats that are not constant (the format of `$sformat` and the like) follow 3.13.
 
-### 3.2 書式指定
+### 3.2 Format specifiers
 
-| 指定 | 意味 | 節 |
+| Specifier | Meaning | Clause |
 | --- | --- | --- |
-| `%h` `%x` | 16 進 | 21.2.1.1 |
-| `%d` | 10 進 | 21.2.1.1 |
-| `%o` | 8 進 | 21.2.1.1 |
-| `%b` | 2 進 | 21.2.1.1 |
-| `%c` | 1 文字 | 21.2.1.1 |
-| `%s` | 文字列 | 21.2.1.7 |
-| `%t` | 時刻の書式（`$timeformat`） | 21.2.1.1、20.4.3 |
-| `%m` | 呼んだ場所の階層名（引数を取らない） | 21.2.1.5 |
-| `%l` | ライブラリの結び付き（引数を取らない） | 21.2.1.1 |
-| `%p` | 代入パターンの形 | 21.2.1.6 |
-| `%v` | ネットの強さ | 21.2.1.4 |
-| `%u` `%z` | 書式なしの 2 値・4 値のデータ | 21.2.1.1 |
-| `%e` `%f` `%g` | 実数 | 21.2.1.1 |
+| `%h` `%x` | Hexadecimal | 21.2.1.1 |
+| `%d` | Decimal | 21.2.1.1 |
+| `%o` | Octal | 21.2.1.1 |
+| `%b` | Binary | 21.2.1.1 |
+| `%c` | One character | 21.2.1.1 |
+| `%s` | String | 21.2.1.7 |
+| `%t` | Time format (`$timeformat`) | 21.2.1.1, 20.4.3 |
+| `%m` | The hierarchical name of where it was called (takes no argument) | 21.2.1.5 |
+| `%l` | The library binding (takes no argument) | 21.2.1.1 |
+| `%p` | The form of an assignment pattern | 21.2.1.6 |
+| `%v` | Net strength | 21.2.1.4 |
+| `%u` `%z` | Unformatted 2-state and 4-state data | 21.2.1.1 |
+| `%e` `%f` `%g` | Real | 21.2.1.1 |
 
-- 大文字と小文字のどちらで書いても同じ意味（規格で確認：表 21-1）。ただし実数の `%E` と `%G` は、C の書式と同じく、指数の文字を大文字の `E` で出す（3.6。2026-10-17 に承認）。
-- 整数の書式（`%h`、`%x`、`%d`、`%o`、`%b`、`%c`、`%u`、`%z`）は、整数型、列挙型、packed の集まりの型に使える。unpacked の集まりの型には使えない（規格で確認：21.2.1.1）。
-- 16 進の a〜f の文字は、`%H` や `%X` で書いても小文字で出す（本書の決まり。規格に記述が見つからない。参考：Icarus と Verilator も小文字）。x と z の文字の大小は 3.4 による。
+- Upper and lower case mean the same (checked: Table 21-1). But the real `%E` and `%G` print the exponent letter as upper-case `E`, as C's formats do (3.6; approved 2026-10-17).
+- The integer formats (`%h`, `%x`, `%d`, `%o`, `%b`, `%c`, `%u`, `%z`) can be used for integral types, enumerated types and packed aggregate types. Not for unpacked aggregate types (checked: 21.2.1.1).
+- The hexadecimal letters a to f are printed in lower case even when written `%H` or `%X` (rule of this document; no text found in the standard; for reference, Icarus and Verilator also use lower case). The case of the letters x and z follows 3.4.
 
-### 3.3 表示の幅
+### 3.3 Display width
 
-- **自動の幅：** 幅を書かないときは、式の幅から、その式が取りうる最大の値に要る桁数を求め、その桁数で出す。10 進では先頭の 0 を空白にし、ほかの基数では先頭の 0 も出す（規格で確認：21.2.1.2）。例：32 ビットの値 10 は、`%d` で `        10`（10 桁）、`%h` で `0000000a`（8 桁）。符号付きの値も、パラメータの値も同じ（本書の補足。規格の規則に例外が無い）。
-- **10 進の桁数：** 符号付きの値では、符号の分も含めて最大の桁数を数える（解釈。32 ビットの `int` は `-2147483648` の 11 文字）。参考：Icarus と Verilator は、32 ビットの符号付きの値を 11 桁で出す。
-- **幅 0：** `%0d` や `%0h` は、先頭の空白も 0 も付けない最小の幅で出す（規格で確認：21.2.1.2）。
-- **明示の幅：** 幅を書くと自動の幅の代わりに使う。値の桁がそれより少なければ左を埋め、多ければ広げる。切り詰めはしない。埋める文字は、10 進と文字列は空白、16 進・8 進・2 進は 0（規格で確認：21.2.1.2）。たとえば 32 ビットの 5 は、`%3h` で `005`、`%12b` で `000000000101`。参考：Verilator は規格どおり。Icarus 13.0 は、自動の幅より狭い幅を無視して `00000005` を出し、広い幅の 2 進・8 進・16 進を空白で埋める。テストスイートの期待値は規格に合わせる。
-- 実数の書式の幅と精度は、C の書式と同じ（3.6）。
+- **Automatic width:** with no width written, the number of digits needed for the largest value the expression can take is found from its width, and the value is printed with that many digits. Decimal replaces leading zeros by spaces; other radixes print leading zeros too (checked: 21.2.1.2). Example: a 32-bit value 10 is `        10` (10 digits) with `%d` and `0000000a` (8 digits) with `%h`. The same for signed values and for parameter values (a note of this document; the rule of the standard has no exception).
+- **Decimal digits:** for signed values, the largest number of digits counts the sign too (interpretation; a 32-bit `int` is the 11 characters of `-2147483648`). For reference, Icarus and Verilator print 32-bit signed values in 11 digits.
+- **Width 0:** `%0d` and `%0h` print in the smallest width, with no leading spaces or zeros (checked: 21.2.1.2).
+- **Explicit width:** a written width is used instead of the automatic width. If the value has fewer digits, it is padded on the left; if more, the field widens. Nothing is truncated. The padding is spaces for decimal and strings, and 0 for hexadecimal, octal and binary (checked: 21.2.1.2). For example, a 32-bit 5 is `005` with `%3h` and `000000000101` with `%12b`. For reference, Verilator follows the standard. Icarus 13.0 ignores a width narrower than the automatic width and prints `00000005`, and pads wide binary, octal and hexadecimal widths with spaces. The test suite's expected values follow the standard.
+- The width and precision of real formats are the same as C's formats (3.6).
 
-### 3.4 x と z の表示
+### 3.4 Printing x and z
 
-規格で確認（21.2.1.3）：
+Checked (21.2.1.3):
 
-- `%d`：全ビットが x なら小文字の `x`、全ビットが z なら小文字の `z` を 1 文字出す。一部が x なら大文字の `X`、x が無く一部が z なら大文字の `Z` を出す。どの場合も、自動の幅の欄に右寄せで置く。
-- `%h` と `%o`：4 ビット（8 進は 3 ビット）のまとまりごとに、全部 x なら `x`、全部 z なら `z`、一部が x なら `X`、x が無く一部が z なら `Z` を出す。
-- `%b`：1 ビットずつ `0`、`1`、`x`、`z` を出す。
+- `%d`: if every bit is x, one lower-case `x`; if every bit is z, one lower-case `z`. If some bits are x, an upper-case `X`; if no bit is x and some are z, an upper-case `Z`. In each case it is right-aligned in the field of the automatic width.
+- `%h` and `%o`: for each group of 4 bits (3 for octal), `x` if all are x, `z` if all are z, `X` if some are x, `Z` if none is x and some are z.
+- `%b`: one bit at a time, `0`, `1`, `x`, `z`.
 
-### 3.5 文字と文字列
+### 3.5 Characters and strings
 
-- `%c` は値の下位 8 ビットを 1 文字として出す（解釈。規格は「ASCII の文字」とだけ書いている。参考：Icarus と Verilator も下位 8 ビット）。
-- `%s` は、整数の値を 8 ビットごとの文字コードの並びとして、最下位の 8 ビットが最後の文字になるように出す（規格で確認：21.2.1.7）。自動の幅は値の幅を 8 で割って切り上げた文字数で、先頭の 0 のバイトは文字として出さず、空白で埋める（解釈。21.2.1.2 の「文字列は空白で埋める」と、21.2.1.7 の「先頭の 0 は出さない」を合わせて読んだ。参考：Icarus と Verilator も同じ）。`%0s` では空白を付けない。値の途中（最初の 0 でないバイトより後）にある 0 のバイトは、`%s` でも `%0s` でも空白として出す（本書の決まり。規格の文面からは決まらない。参考：2026-10-17 に、Icarus 14.0 devel と Verilator 5.053 devel も空白を出すことを確かめた。2026-10-17 に承認）。
-- string 型と byte の unpacked 配列は、その中身をそのまま出す。配列は左の境界から右の境界の順（規格で確認：21.2.1.7）。
+- `%c` prints the low 8 bits of the value as one character (interpretation; the standard says only "an ASCII character"; for reference, Icarus and Verilator also use the low 8 bits).
+- `%s` prints an integer value as a sequence of character codes of 8 bits each, the lowest 8 bits being the last character (checked: 21.2.1.7). The automatic width is the width of the value divided by 8, rounded up, in characters; leading zero bytes are not printed as characters but padded with spaces (interpretation; read from "strings are padded with spaces" in 21.2.1.2 together with "leading zeros are not printed" in 21.2.1.7; for reference, Icarus and Verilator do the same). `%0s` adds no spaces. A zero byte in the middle of the value (after the first nonzero byte) is printed as a space by both `%s` and `%0s` (rule of this document; the wording of the standard does not settle it; for reference, on 2026-10-17 Icarus 14.0 devel and Verilator 5.053 devel were checked to print a space too; approved 2026-10-17).
+- The string type and unpacked arrays of byte print their contents as they are. Arrays go from the left bound to the right bound (checked: 21.2.1.7).
 
-### 3.6 実数
+### 3.6 Reals
 
-- `%e`、`%f`、`%g` は C の書式と同じ。幅、精度、`-`、`+`、`0`、空白、`#` の飾りも C と同じに扱う（規格で確認：21.2.1.1）。指数は少なくとも 2 桁で出す（C の決まり）。
-- `%E` と `%G` は C の `%E` と `%G` と同じ（指数の文字が `E`）。`%F` は `%f` と同じ。無限大と NaN は、大文字の書式でも `inf`、`-inf`、`nan` と出す（下の項）。根拠：実数の書式（表 21-2）は C 言語の書式のすべての機能を持つ（規格で確認：21.2.1.1）。参考（2026-10-17 に確かめた）：Icarus 13.0 と開発版は大文字、Verilator 5.052 は小文字を出す（2026-10-17 に承認）。
-- 実装は、C の `snprintf` に書式を渡して作る。macOS と Linux の C ライブラリは、有限の値を正しく丸めて出す（NFR-2 の例外にしない）。
-- 無限大は `inf` と `-inf`、NaN は符号によらず `nan` と出す（本書の決まり。C の書式では NaN の符号の扱いがライブラリで違いうるので、そろえる。参考：Icarus と Verilator も同じ）。
-- **書式指定の無い実数（2026-10-16 に承認）：** `$display` と `$write` で、受け取る書式指定の無い実数の値は、`%g` と同じ形で出す（本書の決まり）。規格は書式指定の無い実数の形を決めていない（21.2.1.1 で確かめた）。`%p` の実数の形（3.9）とそろえる。参考：Verilator 5.052 は `%g` と同じ形（`1.5`）、Icarus 13.0 は小数点以下を埋めた形（`1.50000`）を出す（2026-10-16 に確かめた）。
-- **整数の書式と実数の書式の入れ替え（2026-10-16 に承認）：** 実数を整数の書式（`%d`、`%h`、`%o`、`%b` など）で出すときは、値を 1.5 節の規則（VALUE_SEMANTICS.md）で 64 ビットの符号付きの整数に変換し、その整数を出す。自動の幅は 64 ビットの符号付きの値のもの（`%d` なら 20 文字）。整数を実数の書式で出すときは、7.4 節の規則で `real` に変換して出す（解釈。規格は 21.2.1.1 で、実数の書式を real と shortreal に使うとだけ書いている）。参考：Verilator 5.052 はこの形、Icarus 13.0 は `%d` の自動の幅を付けない（2026-10-16 に確かめた）。
+- `%e`, `%f` and `%g` are the same as C's formats. Width, precision and the flags `-`, `+`, `0`, space and `#` are handled as in C too (checked: 21.2.1.1). The exponent has at least 2 digits (C's rule).
+- `%E` and `%G` are the same as C's `%E` and `%G` (the exponent letter is `E`). `%F` is the same as `%f`. Infinities and NaN are printed `inf`, `-inf` and `nan` even in upper-case formats (the item below). Grounds: the real formats (Table 21-2) have all the features of the C language's formats (checked: 21.2.1.1). For reference (checked 2026-10-17): Icarus 13.0 and its development version print upper case, Verilator 5.052 lower case (approved 2026-10-17).
+- The implementation passes the format to C's `snprintf`. The C libraries of macOS and Linux round finite values correctly (not made an exception to NFR-2).
+- Infinities are printed `inf` and `-inf`, and NaN `nan` whatever its sign (rule of this document; C's formats may treat the sign of NaN differently by library, so it is made uniform; for reference, Icarus and Verilator do the same).
+- **Reals with no format specifier (approved 2026-10-16):** in `$display` and `$write`, a real value with no specifier to take it is printed in the same form as `%g` (rule of this document). The standard does not set the form of a real with no specifier (checked in 21.2.1.1). This matches the form of reals in `%p` (3.9). For reference: Verilator 5.052 prints the same form as `%g` (`1.5`), Icarus 13.0 a form with the fraction padded (`1.50000`) (checked 2026-10-16).
+- **Swapping integer and real formats (approved 2026-10-16):** when a real is printed with an integer format (`%d`, `%h`, `%o`, `%b` and so on), the value is converted to a 64-bit signed integer by the rule of 1.5 (VALUE_SEMANTICS.md), and that integer is printed. The automatic width is that of a 64-bit signed value (20 characters for `%d`). When an integer is printed with a real format, it is converted to `real` by the rule of 7.4 and printed (interpretation; the standard says in 21.2.1.1 only that the real formats are used for real and shortreal). For reference: Verilator 5.052 uses this form, and Icarus 13.0 does not apply the automatic width of `%d` (checked 2026-10-16).
 
 ### 3.7 `%t`
 
-- `%t` は、`$timeformat`（5.4 節）で決めた単位、小数点以下の桁数、接尾の文字列、最小の幅で時刻を出す（規格で確認：21.2.1.1、20.4.3）。
-- 渡す値は、呼んだ設計要素の時間の単位で表した時刻とみなし、`$timeformat` の単位に換算する。小数点以下の桁数で丸める（丸めの向きは SCHEDULER_SPEC.md の 1 節と同じく、ちょうど中間は 0 から遠い方。本書の決まり）。
-- 最小の幅は、接尾の文字列も含めた文字数で数え、右寄せで空白を足す（規格で確認：20.4.3 の例）。
-- **`%t` に書いた幅：** `%5t` のように幅を書くと、`$timeformat` の最小の幅の代わりにその幅を使う。`%0t` は最小の幅で出す（解釈。21.2.1.2 の幅の規則は「基数の文字」との間に書く幅を定めており、`%t` に当てはまるかは文面からは決まらない。参考：Icarus と Verilator は、どちらもこの読み方をする）。
+- `%t` prints a time with the unit, number of digits after the decimal point, suffix string and minimum width set by `$timeformat` (5.4) (checked: 21.2.1.1, 20.4.3).
+- The value passed is taken as a time in the time unit of the design element that called it, and converted to the unit of `$timeformat`. It is rounded to the number of digits after the decimal point (the direction of rounding as in SCHEDULER_SPEC.md 1: exactly half goes away from zero; rule of this document).
+- The minimum width counts characters including the suffix string, and spaces are added on the left to right-align (checked: the example of 20.4.3).
+- **A width written in `%t`:** a width such as `%5t` is used instead of the minimum width of `$timeformat`. `%0t` prints in the minimum width (interpretation; the width rule of 21.2.1.2 sets a width written between `%` and the "radix letter", and whether it applies to `%t` is not settled by the wording; for reference, Icarus and Verilator both read it this way).
 
-### 3.8 `%m` と `%l`
+### 3.8 `%m` and `%l`
 
-- `%m` は、そのタスクを呼んだ設計要素、サブルーチン、名前付きのブロック、ラベル付きの文の階層名を出す（規格で確認：21.2.1.5）。名前の無い `begin`〜`end` と `fork`〜`join` は階層に含めない（解釈。規格が挙げる中に入っていない）。名前の無い生成ブロックは、規格の決まった名前（`genblk<n>`、27.6）で出す。
-- `%l` は `<ライブラリ名>.<セル名>` を出す（規格で確認：21.2.1.1）。ライブラリの機能（33 章）ができるまでは、ライブラリ名を `work` にする（本書の決まり）。
+- `%m` prints the hierarchical name of the design element, subroutine, named block or labelled statement that called the task (checked: 21.2.1.5). Unnamed `begin`–`end` and `fork`–`join` are not part of the hierarchy (interpretation; they are not among those the standard lists). Unnamed generate blocks are printed with the names the standard sets (`genblk<n>`, 27.6).
+- `%l` prints `<library name>.<cell name>` (checked: 21.2.1.1). Until the library features (chapter 33) exist, the library name is `work` (rule of this document).
 
-### 3.9 `%p` と `%0p`
+### 3.9 `%p` and `%0p`
 
-規格で確認（21.2.1.6）：unpacked の構造体は名前付きの代入パターン、配列は代入パターン（添字のラベルを含めてもよい）で出す。共用体は最初のメンバだけ、タグ付きの共用体は `tag:value` の形。列挙型は名前（範囲外の値なら基底の型の値）、string は引用符で囲む。null のハンドルは `null`。空白の入れ方は処理系に任せられている。
+Checked (21.2.1.6): unpacked structures are printed as named assignment patterns, and arrays as assignment patterns (index labels may be included). Unions print only their first member; tagged unions use the form `tag:value`. Enumerated types print the name (the value of the base type if out of range); strings are quoted. A null handle is `null`. How spaces are placed is left to the implementation.
 
-kirimasim の形（本書の決まり）：
+kirimasim's form (rule of this document):
 
-- 構造体：`'{a:1, s:"x"}`。packed の構造体も、要素の名前を付けて同じ形にする。
-- 配列（固定の大きさ、動的、キュー）：`'{1, 2, 3}`。連想配列：`'{key:value, ...}`（鍵の順）。空の動的配列とキュー：`'{}`。
-- 区切りは `, `（カンマと空白 1 つ）。括弧の内側には空白を入れない。
-- 整数の要素は 10 進の最小の幅で出す（`%0d` と同じ。x と z は 3.4 の規則で 1 文字）。実数は `%g` と同じ。
-- クラスのハンドルは `<クラス名>@<番号>` の形。番号は、そのクラスの型でオブジェクトを作った順の通し番号で、同じ入力なら毎回同じになる（NFR-2）。chandle は 16 進のアドレスではなく `chandle@<番号>`。event と virtual interface も同じ形。
-- `%0p`：名前を付けない位置の形（構造体も `'{1, "x"}`）。
-- 出力の長さに上限は設けない（規格は 1024 文字以上の上限を許している）。
+- Structures: `'{a:1, s:"x"}`. Packed structures too take the same form with member names.
+- Arrays (fixed size, dynamic, queues): `'{1, 2, 3}`. Associative arrays: `'{key:value, ...}` (in key order). Empty dynamic arrays and queues: `'{}`.
+- The separator is `, ` (a comma and one space). No spaces inside the braces.
+- Integral elements are printed in decimal in the smallest width (as `%0d`; x and z are one character by the rule of 3.4). Reals as `%g`.
+- A class handle has the form `<class name>@<number>`. The number counts the objects made of that class type in order, and is the same every time for the same input (NFR-2). A chandle is `chandle@<number>`, not a hexadecimal address. Events and virtual interfaces take the same form.
+- `%0p`: the positional form with no names (structures too: `'{1, "x"}`).
+- There is no limit on the length of the output (the standard allows a limit of 1024 characters or more).
 
-テストスイートでは `%p` の空白は処理系によるので、期待値に `%p` の出力を入れない（TEST_SUITE.md の決まりを続ける）。
+In the test suite, the spaces of `%p` depend on the implementation, so `%p` output is not put in expected values (continuing TEST_SUITE.md's rule).
 
 ### 3.10 `%v`
 
-ネットの強さを 3 文字で出す（規格で確認：21.2.1.4）。強さのモデル（28.11〜28.12）と一緒に P4 で書く。それまでは、駆動の強さを Strong とみなして `St0`、`St1`、`StX`、`HiZ` を出す（本書の決まり。暫定）。
+Prints the net's strength in 3 characters (checked: 21.2.1.4). Written in P4 together with the strength model (28.11 to 28.12). Until then, the drive strength is taken as Strong, and `St0`, `St1`, `StX`, `HiZ` are printed (rule of this document; provisional).
 
-### 3.11 `%u` と `%z`
+### 3.11 `%u` and `%z`
 
-値の 2 値（`%u`）か 4 値（`%z`）の表現を、32 ビットごとに、最下位の語から先に、ホストのバイト順で書く。`%u` では x と z を 0 にする。`%z` の 4 値の表現は VPI の `s_vpi_vecval`（38.15）と同じ（規格で確認：21.2.1.1）。
+Writes the 2-state (`%u`) or 4-state (`%z`) representation of the value in 32-bit words, least significant word first, in the host's byte order. `%u` makes x and z 0. The 4-state representation of `%z` is the same as VPI's `s_vpi_vecval` (38.15) (checked: 21.2.1.1).
 
-### 3.12 規格に無い飾り
+### 3.12 Flags not in the standard
 
-整数と文字列の書式の `-`（左寄せ）と `0`（0 で埋める）は、規格に定めが無い（規格で確認：21.2.1.2 は幅だけを定める）。kirimasim は C と同じに扱う：`%-5d` は左寄せで右を空白で埋め、`%05d` は 10 進を 0 で埋める（本書の決まり。参考：Icarus と Verilator も同じ）。規格に無い書式なので、書式が定数なら、エラボレーションのときに警告を 1 回出す（ID は P1 で決める）。テストスイートは、この飾りの結果を期待値に入れない。
+The standard sets nothing for `-` (left-align) and `0` (pad with 0) in integer and string formats (checked: 21.2.1.2 sets only the width). kirimasim treats them as C does: `%-5d` left-aligns and pads with spaces on the right, and `%05d` pads decimal with 0 (rule of this document; for reference, Icarus and Verilator do the same). They are formats not in the standard, so if the format is constant, one warning is given at elaboration (its ID decided in P1). The test suite does not put the results of these flags in expected values.
 
-### 3.13 文字列への書式
+### 3.13 Formatting to strings
 
-- `$swrite` の系統は `$fwrite` と同じく、文字列リテラルの引数をどれも書式として読む。結果は最初の引数に、文字列リテラルの代入の規則（5.9）で入れる（規格で確認：21.3.3）。
-- `$sformat` は 2 番目の引数だけを書式として読む。書式は定数でなくてもよい（規格で確認：21.3.3）。`$sformatf` は同じことをして、結果を string で返す。
-- `$sformat` と `$sformatf` で、書式の指定に対して引数が足りないか余るときは、警告を出して続ける（規格で確認：21.3.3）。足りない指定は何も出さず、余った引数は捨てる（本書の決まり）。書式が定数なら、エラボレーションのときに誤りにする（規格で確認：21.3.3 は、静的に分かるなら誤りにしてよいとしている）。
+- The `$swrite` family, like `$fwrite`, reads every string literal argument as a format. The result goes into the first argument by the rules of assigning a string literal (5.9) (checked: 21.3.3).
+- `$sformat` reads only its second argument as a format. The format need not be constant (checked: 21.3.3). `$sformatf` does the same and returns the result as a string.
+- In `$sformat` and `$sformatf`, when there are too few or too many arguments for the format's specifiers, a warning is given and the run continues (checked: 21.3.3). A specifier with no argument prints nothing, and extra arguments are dropped (rule of this document). If the format is constant, it is an error at elaboration (checked: 21.3.3 allows making it an error when it is known statically).
 
-## 4. 遅れた表示と監視
+## 4. Delayed display and monitoring
 
-- `$strobe` は、呼んだ時刻のすべての事象が終わった後、時刻を進める直前に、その時点の値で表示する（規格で確認：21.2.2）。SCHEDULER_SPEC.md の Postponed 領域で行う。
-- `$monitor` は、引数のどれかの値が変わった時刻の終わりに、引数全体を `$display` と同じ形で 1 回表示する。`$time`、`$stime`、`$realtime` の変化は数えない。同時に有効な `$monitor` は 1 つだけで、新しく呼ぶと前のものと入れ替わる（規格で確認：21.2.3）。
-- `$monitor` を呼んだ時刻の終わりに、最初の表示を 1 回行う（解釈。規格は変化のたびに表示すると書いており、最初の表示の時点は書いていない。参考：Icarus と Verilator は、呼んだ時刻に 1 回表示する）。
-- `$monitoroff` で止め、`$monitoron` で再開する。`$monitoron` は、値が変わったかによらず 1 回表示する。その表示は、`$monitoron` を呼んだ時刻の終わりに行う（解釈。規格は「呼んだ直後に」と書いているが、`$monitor` の表示はどれも時刻の終わりに行うので、そろえた。参考：Icarus は時刻の終わりに表示し、Verilator 5.052 は表示しない）。既定では有効（規格で確認：21.2.3）。
-- **同じ時刻の順序（本書の決まり）：** Postponed 領域では、先に `$monitor` と `$fmonitor` の表示を行い（`$fmonitor` は作った順、最後に `$monitor`）、次に `$strobe` と `$fstrobe` を呼んだ順に行う。規格はこの順序を決めていない（4.4.2.9 は Postponed 領域の中の順序を定めない）。参考：Icarus と Verilator は、どちらも `$monitor` を先に出す。テストスイートは、同じ時刻の `$monitor` と `$strobe` の順序に頼らない。
-- automatic の変数を `$monitor` の引数にするのは誤り（規格で確認：13.3.2。SIR_SPEC.md の 3 節と同じ）。
+- `$strobe` prints with the values at the point after every event of the time it was called has finished, just before time advances (checked: 21.2.2). It is done in the Postponed region of SCHEDULER_SPEC.md.
+- `$monitor` prints all its arguments once, in the same form as `$display`, at the end of a time when the value of any argument changed. Changes of `$time`, `$stime` and `$realtime` are not counted. Only one `$monitor` is active at a time; a new call replaces the previous one (checked: 21.2.3).
+- The first print is done once at the end of the time `$monitor` was called (interpretation; the standard says it prints on each change and does not say when the first print is; for reference, Icarus and Verilator print once at the time it is called).
+- `$monitoroff` stops it and `$monitoron` resumes it. `$monitoron` prints once whether or not a value changed. That print is done at the end of the time `$monitoron` was called (interpretation; the standard says "immediately after the call", but every print of `$monitor` is at the end of the time, so this is made uniform; for reference, Icarus prints at the end of the time and Verilator 5.052 does not print). It is enabled by default (checked: 21.2.3).
+- **Order within one time (rule of this document):** in the Postponed region, the prints of `$monitor` and `$fmonitor` come first (`$fmonitor` in the order made, `$monitor` last), then `$strobe` and `$fstrobe` in the order called. The standard does not set this order (4.4.2.9 sets no order within the Postponed region). For reference, Icarus and Verilator both print `$monitor` first. The test suite does not depend on the order of `$monitor` and `$strobe` at the same time.
+- An automatic variable as an argument of `$monitor` is an error (checked: 13.3.2; as SIR_SPEC.md 3).
 
-## 5. 時刻
+## 5. Time
 
-### 5.1 `$time`、`$stime`、`$realtime`
+### 5.1 `$time`, `$stime`, `$realtime`
 
-- `$time` は、呼んだ設計要素の時間の単位で表した時刻を、64 ビットの整数に丸めて返す（規格で確認：20.3.1）。ちょうど中間は 0 から遠い方に丸める（本書の決まり。SCHEDULER_SPEC.md の 1 節と同じ）。
-- `$stime` は同じ値を 32 ビットの符号なし整数で返す。32 ビットに入らなければ下位 32 ビット（規格で確認：20.3.2）。
-- `$realtime` は、同じ時刻を実数で返す（規格で確認：20.3.3）。内部の 64 ビットの時刻を単位の比で割った値を、倍精度で計算する（本書の決まり）。
+- `$time` returns the time in the time unit of the calling design element, rounded to a 64-bit integer (checked: 20.3.1). Exactly half goes away from zero (rule of this document; as SCHEDULER_SPEC.md 1).
+- `$stime` returns the same value as a 32-bit unsigned integer; if it does not fit in 32 bits, the low 32 bits (checked: 20.3.2).
+- `$realtime` returns the same time as a real (checked: 20.3.3). The internal 64-bit time divided by the ratio of units is computed in double precision (rule of this document).
 
-### 5.2 `$timeunit` と `$timeprecision`
+### 5.2 `$timeunit` and `$timeprecision`
 
-引数が無ければ呼んだ設計要素の、階層名なら指した設計要素の、`$unit` ならコンパイル単位の、`$root` ならシミュレーションの時間の単位と精度を、10 の冪の指数（2 から -15）で返す（規格で確認：20.4.1）。
+They return, as an exponent of a power of 10 (2 to -15), the time unit and precision of: the calling design element with no argument; the design element named by a hierarchical name; the compilation unit for `$unit`; the simulation for `$root` (checked: 20.4.1).
 
 ### 5.3 `$printtimescale`
 
-5.2 と同じ対象の単位と精度を、`Time scale of (<名前>) is <単位> / <精度>` の 1 行で出す。`$unit` と `$root` のときは、名前をそれぞれ `$unit` と `$root` にする（規格で確認：20.4.2）。単位は `1ns`、`100ps` のように数と記号の間に空白を入れない（規格で確認：20.4.2 の例）。名前は、引数が無いときは呼んだ設計要素の階層名、階層名の引数ならその名前（解釈）。
+Prints the unit and precision of the same targets as 5.2 in one line, `Time scale of (<name>) is <unit> / <precision>`. For `$unit` and `$root`, the name is `$unit` and `$root` (checked: 20.4.2). A unit has no space between number and symbol, as in `1ns` and `100ps` (checked: the example of 20.4.2). The name is the hierarchical name of the calling design element with no argument, and the name given for a hierarchical-name argument (interpretation).
 
 ### 5.4 `$timeformat`
 
-- 4 つの引数（単位、小数点以下の桁数、接尾の文字列、最小の幅）で、それ以降のすべての `%t` の形を決める（規格で確認：20.4.3）。
-- 既定値は、単位が設計の中の最も細かい精度、桁数が 0、接尾が空、最小の幅が 20（規格で確認：表 20-3）。規格は単位の既定値を「`` `timescale `` の精度の最小」と書いている。kirimasim は `timeprecision` の宣言も含めた設計全体の最小の精度（シミュレーションの時間の単位）を使う（解釈）。
-- 引数を省いて呼んだときは、既定値に戻す（解釈。規格は省略の意味を書いていない。P1 で Icarus 13.0 と照合する。未確認）。
+- Its four arguments (unit, digits after the decimal point, suffix string, minimum width) set the form of every later `%t` (checked: 20.4.3).
+- The defaults are: the unit is the finest precision in the design, 0 digits, an empty suffix, a minimum width of 20 (checked: Table 20-3). The standard gives the default unit as "the smallest precision of `` `timescale ``". kirimasim uses the smallest precision of the whole design including `timeprecision` declarations (the simulation's time unit) (interpretation).
+- A call with the arguments omitted restores the defaults (interpretation; the standard does not say what omission means; to be checked against Icarus 13.0 in P1; not confirmed).
 
-## 6. ファイルの入出力
+## 6. File input and output
 
-### 6.1 開閉と記述子
+### 6.1 Opening, closing and descriptors
 
-- `$fopen(name)` は書き込み用に開いて mcd を返す。`$fopen(name, type)` は表 21-6 の形で開いてファイル記述子（fd）を返す。開けなければ 0 を返す（規格で確認：21.3.1）。
-- mcd はビットが 1 つ立った 32 ビットの値で、ビット 0 は標準出力、ビット 31 は使わない（規格で確認：21.3.1）。kirimasim は、空いているビットの最も小さいものから割り当てる（本書の決まり）。
-- fd はビット 31 が立った値で、`32'h8000_0000`〜`32'h8000_0002` は標準入力・標準出力・標準エラー（規格で確認：21.3.1）。kirimasim は、`32'h8000_0003` から、空いている最も小さい番号を割り当てる（本書の決まり）。閉じた番号は使い回す（規格で確認：21.3.1）。
-- ファイル名は、kirimasim を起動した作業ディレクトリからの相対で解釈する（本書の決まり）。
-- `$fclose` は、その記述子の `$fmonitor` と `$fstrobe` を取り消す（規格で確認：21.3.1）。閉じた記述子への入出力は誤りにし、警告を出して何もしない（本書の決まり）。
+- `$fopen(name)` opens for writing and returns an mcd. `$fopen(name, type)` opens in a form of Table 21-6 and returns a file descriptor (fd). If it cannot open, it returns 0 (checked: 21.3.1).
+- An mcd is a 32-bit value with one bit set; bit 0 is standard output, and bit 31 is not used (checked: 21.3.1). kirimasim assigns the lowest free bit (rule of this document).
+- An fd is a value with bit 31 set; `32'h8000_0000` to `32'h8000_0002` are standard input, standard output and standard error (checked: 21.3.1). kirimasim assigns the lowest free number from `32'h8000_0003` (rule of this document). Closed numbers are reused (checked: 21.3.1).
+- File names are taken relative to the working directory kirimasim was started in (rule of this document).
+- `$fclose` cancels the `$fmonitor` and `$fstrobe` of the descriptor (checked: 21.3.1). Input or output on a closed descriptor is an error: a warning is given and nothing is done (rule of this document).
 
-### 6.2 出力
+### 6.2 Output
 
-- `$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor` は、最初の引数の mcd か fd に書く。それ以外は対応する表示のタスクと同じ（規格で確認：21.3.2）。mcd はビットごとに複数のファイルへ書ける。`$fmonitor` は同時にいくつでも有効にできる（規格で確認：21.3.2）。
-- `$fflush` は、引数の記述子か、引数が無ければ開いているすべてのファイルのバッファを流す（規格で確認：21.3.6）。
+- `$fdisplay`, `$fwrite`, `$fstrobe` and `$fmonitor` write to the mcd or fd of their first argument. Otherwise they are the same as the corresponding display tasks (checked: 21.3.2). An mcd can write to several files, one per bit. Any number of `$fmonitor`s can be active at once (checked: 21.3.2).
+- `$fflush` flushes the buffer of the descriptor given, or of every open file with no argument (checked: 21.3.6).
 
-### 6.3 読み込み
+### 6.3 Input
 
-- `$fgetc` は 1 バイトを返し、誤りか EOF なら -1 を返す。`$ungetc` は 1 文字を押し戻す（規格で確認：21.3.4.1）。
-- `$fgets` は、変数が埋まるか、改行（改行も入れる）か、EOF まで読み、読んだ文字数を返す。誤りなら 0（規格で確認：21.3.4.2）。
-- `$fread` は 2 値のデータをバイトごとに、大きい桁から読む。メモリに読むときは start と count に従う（規格で確認：21.3.4.4）。
-- `$fscanf` と `$sscanf`（規格で確認：21.3.4.3）：
-  - 書式の空白は、入力の空白を読み飛ばす。`$sscanf` では NUL の文字も空白とみなす。
-  - 普通の文字は、入力の同じ文字と一致しなければならない。
-  - `%` の後に、代入を省く `*`、最大の幅、変換の文字が続く。`%c` 以外は、入力の先頭の空白を読み飛ばす。
-  - 各変換が読む文字の集合は表 21-7 のとおり。`%b`・`%o`・`%h`（`%x`）は、その基数の数字のほかに `x`、`X`、`z`、`Z`、`?`、`_` を数字として読む。`%d` は、省略できる符号（`+` か `-`）に続く 10 進の数字と `_`、または `x`・`X`・`z`・`Z`・`?` の 1 文字を読む。**基数を示す接頭辞（`0x`、`0o`、`0b`）は無い。**`"0xCAFE"` を `%h` で読むと、`0`、`x`、`C`、`A`、`F`、`E` の 6 桁と読み、4 値の変数には `32'h000xcafe` が入る。`"0o777"` を `%o` で読むと、`o` で欄が終わり、値は 0。
-  - `%f`・`%e`・`%g` は C の浮動小数点の形を読む。`%t` は同じ形を読み、`$timeformat` で換算する。
-  - 変数に入りきらない値は、下位のビットを入れる。行き先が実数で値が表せなければ、`+Inf` か `-Inf` を入れる。
-  - 書式か `$sscanf` の入力の文字列に x か z のビットがあれば、-1 を返す。
-  - 戻り値は、一致して代入できた項目の数。最初の変換の前に入力が尽きたら -1（EOF）。
-  - 書式に対して引数が足りないときの動作は、規格では決まっていない。kirimasim は誤りにする（本書の決まり。書式が定数ならエラボレーションのとき、そうでなければ実行時に警告を出して、足りない分は読まない）。
+- `$fgetc` returns one byte, or -1 on an error or EOF. `$ungetc` pushes back one character (checked: 21.3.4.1).
+- `$fgets` reads until the variable is full, a newline (which is included), or EOF, and returns the number of characters read; 0 on an error (checked: 21.3.4.2).
+- `$fread` reads 2-state data byte by byte, most significant first. When reading into a memory it follows start and count (checked: 21.3.4.4).
+- `$fscanf` and `$sscanf` (checked: 21.3.4.3):
+  - White space in the format skips white space in the input. For `$sscanf`, NUL characters count as white space too.
+  - An ordinary character must match the same character in the input.
+  - A `%` is followed by `*` to suppress the assignment, a maximum width, and the conversion character. Except for `%c`, leading white space of the input is skipped.
+  - The set of characters each conversion reads is as in Table 21-7. `%b`, `%o` and `%h` (`%x`) read, besides the digits of their radix, `x`, `X`, `z`, `Z`, `?` and `_` as digits. `%d` reads an optional sign (`+` or `-`) followed by decimal digits and `_`, or a single one of `x`, `X`, `z`, `Z`, `?`. **There are no radix prefixes (`0x`, `0o`, `0b`).** Reading `"0xCAFE"` with `%h` reads the 6 digits `0`, `x`, `C`, `A`, `F`, `E`, and a 4-state variable gets `32'h000xcafe`. Reading `"0o777"` with `%o` ends the field at `o`, and the value is 0.
+  - `%f`, `%e` and `%g` read C's floating-point form. `%t` reads the same form and converts it by `$timeformat`.
+  - A value that does not fit the variable puts its low bits in. If the destination is a real and the value cannot be represented, `+Inf` or `-Inf` is put in.
+  - If the format or `$sscanf`'s input string has x or z bits, -1 is returned.
+  - The return value is the number of items matched and assigned; -1 (EOF) if the input ran out before the first conversion.
+  - What happens when there are too few arguments for the format is not set by the standard. kirimasim makes it an error (rule of this document; at elaboration if the format is constant, otherwise a warning at run time, and the missing ones are not read).
 
-### 6.4 位置、状態、EOF
+### 6.4 Position, status, EOF
 
-- `$ftell`、`$fseek`、`$rewind` は C の `ftell` と `fseek` と同じ（規格で確認：21.3.5）。位置を変えると `$ungetc` の押し戻しは消える。
-- `$ferror` は、最後の入出力の誤りの番号を返し、説明の文字列を引数に入れる。誤りが無ければ 0 を返し、文字列を空にする（規格で確認：21.3.7）。番号と文字列は OS の `errno` と `strerror` をそのまま使う（本書の決まり。OS によって違いうるので、テストスイートは 0 かどうかだけを見る）。
-- `$feof` は、EOF をすでに検出していれば 0 でない値を返す（規格で確認：21.3.8）。
+- `$ftell`, `$fseek` and `$rewind` are the same as C's `ftell` and `fseek` (checked: 21.3.5). Changing the position discards what `$ungetc` pushed back.
+- `$ferror` returns the error number of the last input or output and puts a description string in its argument. With no error it returns 0 and empties the string (checked: 21.3.7). The number and string are the OS's `errno` and `strerror` as they are (rule of this document; they can differ by OS, so the test suite looks only at whether it is 0).
+- `$feof` returns nonzero if EOF has already been detected (checked: 21.3.8).
 
-## 7. メモリの読み書き
+## 7. Reading and writing memories
 
-### 7.1 `$readmemb` と `$readmemh`
+### 7.1 `$readmemb` and `$readmemh`
 
-規格で確認（21.4）：
+Checked (21.4):
 
-- ファイルには、空白、コメント（2 種類とも）、2 進か 16 進の数だけを書ける。数に幅と基数は付けない。`x`、`z`、`_` を使える。
-- 数は、次のアドレスの語に順に入る。`@` に続く 16 進の数でアドレスを指定できる（`@` と数の間に空白を入れない）。
-- 引数のアドレスが無ければ、メモリの最も小さいアドレスから上へ読む。開始だけなら、そこから上へ。開始と終わりの両方なら、開始から終わりへ（開始が大きければ下へ）。この向きは、ファイルの中のアドレス指定の後も変わらない。
-- 引数でアドレスの範囲を指定し、ファイルの中のアドレスがその外にあれば、誤りにして読み込みをやめる。
-- ファイルの中にアドレス指定が無く、語の数が範囲の語の数と違えば警告を出す。足りない語は変えない。
-- 2 値の型では x と z を 0 にする。列挙型の範囲外の値は誤りにして、そこで読むのをやめる（21.4.2）。
-- 多次元の unpacked 配列は、行の順（右端の次元が最も速く変わる）で読む。アドレス指定は最も上の次元の語を指す（21.4.3）。
-- 動的配列とキューは大きさを変えない。連想配列は、読んだアドレスの要素を作る（21.4.1）。
-- ファイルが開けないときは誤りにして、メモリを変えない（本書の決まり）。
+- A file can contain only white space, comments (both kinds), and binary or hexadecimal numbers. Numbers have no width or radix. `x`, `z` and `_` may be used.
+- Numbers go into the words of successive addresses. An address can be given by `@` followed by a hexadecimal number (no space between `@` and the number).
+- With no address arguments, reading goes up from the lowest address of the memory. With a start only, up from there. With start and end, from start to end (down if start is larger). This direction stays the same after an address in the file.
+- If an address range is given by the arguments and an address in the file is outside it, it is an error and reading stops.
+- If the file has no addresses and the number of words differs from the number of words in the range, a warning is given. Words not given are not changed.
+- For 2-state types, x and z become 0. A value out of range of an enumerated type is an error, and reading stops there (21.4.2).
+- Multidimensional unpacked arrays are read in row order (the rightmost dimension changes fastest). An address points to a word of the topmost dimension (21.4.3).
+- Dynamic arrays and queues do not change size. Associative arrays get elements made at the addresses read (21.4.1).
+- If the file cannot be opened, it is an error and the memory is not changed (rule of this document).
 
-### 7.2 `$writememb` と `$writememh`
+### 7.2 `$writememb` and `$writememh`
 
-- 同じ名前のファイルがあれば上書きする（規格で確認：21.5）。
-- 1 行に 1 語を書く。16 進は小文字で、語の幅の全部の桁を先頭の 0 も含めて書く。x と z は 3.4 の規則で書く（本書の決まり。規格は行の形を決めていない）。
-- unpacked 配列と動的配列ではアドレス指定を書かず、連想配列では各語の前に `@<アドレス>` の行を書く（規格で確認：21.5.3）。列挙型は数値で書く（21.5.2）。
+- A file of the same name is overwritten (checked: 21.5).
+- One word per line. Hexadecimal is lower case, with every digit of the word's width including leading zeros. x and z are written by the rule of 3.4 (rule of this document; the standard does not set the form of a line).
+- For unpacked arrays and dynamic arrays no addresses are written; for associative arrays a line `@<address>` precedes each word (checked: 21.5.3). Enumerated types are written as numbers (21.5.2).
 
-## 8. 変換と問い合わせ
+## 8. Conversion and queries
 
-- `$rtoi` は 0 の方へ切り捨てる。キャストと代入は丸める（規格で確認：20.5。丸めは VALUE_SEMANTICS.md の 1.5 節）。切り捨てた整数は、VALUE_SEMANTICS.md の 7.4 節の変換と同じく、大きさによらず結果の型（`integer`）の幅の 2 の補数として下位のビットを残す。NaN と無限大は、結果の全ビットを x にする（本書の決まり。2026-10-17 に承認。規格の文面からは決まらない。参考：2026-10-17 に確かめたところ、Icarus 14.0 devel は NaN と無限大で x、1e20 で `ffffffff` を出し、Verilator 5.053 devel は 32 ビットの範囲の端の値に張り付けた。kirimasim は、変換と同じ決まりにそろえる）。
-- `$realtobits` と `$bitstoreal`、`$shortrealtobits` と `$bitstoshortreal` は、IEEE 754 の倍精度と単精度のビット列と相互に変換する（規格で確認：20.5）。
-- `$signed` と `$unsigned` は、幅と値を変えずに符号の有無だけを変える（規格で確認：20.5、11.7）。
-- `$bits` は bit-stream 型（6.24.3）の式か型だけを取り、ビットの数を返す。4 値の 1 ビットも 1 と数える。式は評価しない。空の動的な式は 0。動的な型の名前を直接渡すのと、interface class のオブジェクトを渡すのは誤り（規格で確認：20.6.2）。real を渡すのも誤り（6.24.3 の bit-stream 型に real は入らない）。
-- `$isunbounded` は、パラメータの値が `$` なら 1 を返す（規格で確認：20.6.3）。
-- `$typename`（規格で確認：20.6.1）：typedef を元の型に戻し、既定の符号を外し、名前の無い構造体・共用体・列挙型には処理系が名前を付け、列挙の定数には値を添え、利用者の型名にはパッケージかスコープの名前を付け、配列の範囲は大きさの無い 10 進で書く。空白の扱いは、規則（トークンの間に空白 1 つ）と例（`bit [2:0]`）の間で読みが分かれる。kirimasim は例に従い、キーワードか識別子と、それに続く packed の範囲の間に空白を 1 つ入れる（解釈。参考：Verilator 5.052 は `logic[7:0]`）。テストスイートは、型の同一性（同じ型なら同じ文字列）だけを確かめる。名前の無い列挙型・構造体・共用体は、宣言した場所の名前空間と、その中で現れた順の番号で、`e$1`、`s$1`、`u$1` のように名付ける（本書の決まり。20.6.1 の例の形。2026-10-17 に承認）。文字列は front が slang の型から作る。slang の定数評価の文字列は、packed の範囲の前に空白を入れない（`logic[7:0]`）ので、この節の決まりとは違う（2026-10-17 に確かめた）。
-- 配列の問い合わせ（規格で確認：20.7）：次元の番号は、最も遅く変わる次元を 1 とする。整数型（`int` など）は `[n-1:0]` の packed の次元 1 つとみなす。`$dimensions` は、配列なら次元の総数、string と単純なビットベクタの型なら 1、それ以外は 0。次元の番号が範囲外か、`$dimensions` が 0 になる型なら `'x` を返す。動的配列とキューの次元は今の状態を返す（`$left` は 0、空なら `$right` は -1、`$increment` は -1）。連想配列の規則は 20.7 のとおり。
-- `$clog2` は、引数を符号なしとみなして、2 を底とする対数を切り上げた整数を返す。0 なら 0（規格で確認：20.8.1）。引数に x か z があれば `'x` を返す（本書の決まり）。
-- 実数の数学関数は、表 20-4 の C の関数と同じ結果を返す（規格で確認：20.8.2）。kirimasim はホストの C ライブラリを呼ぶ。最後の桁はライブラリによって違いうるので、NFR-2 の例外とする（設計書の決まり）。テストスイートは、`$sqrt`、`$floor`、`$ceil` 以外を許容幅で比べる。
-- ビットベクタの関数（規格で確認：20.9）：`$countbits` は、式をストリーミング演算子で同じ幅のベクタにしたときに、制御のビット（それぞれの最下位ビットだけを使う）のどれかと一致するビットの数を返す。`$countones`、`$onehot`、`$onehot0`、`$isunknown` はそれを使って定義される。x と z のビットは `'1` に一致しないので、`$onehot(8'b0001x000)` は 1 になる。
+- `$rtoi` truncates toward zero. Casts and assignments round (checked: 20.5; rounding is VALUE_SEMANTICS.md 1.5). The truncated integer, like the conversion of VALUE_SEMANTICS.md 7.4, keeps its low bits as two's complement in the width of the result type (`integer`) whatever its size. NaN and infinities make every bit of the result x (rule of this document; approved 2026-10-17; the wording of the standard does not settle it; for reference, checked 2026-10-17, Icarus 14.0 devel gave x for NaN and infinities and `ffffffff` for 1e20, and Verilator 5.053 devel clamped to the ends of the 32-bit range; kirimasim follows the same rule as conversion).
+- `$realtobits` and `$bitstoreal`, and `$shortrealtobits` and `$bitstoshortreal`, convert to and from the bit patterns of IEEE 754 double and single precision (checked: 20.5).
+- `$signed` and `$unsigned` change only signedness, not width or value (checked: 20.5, 11.7).
+- `$bits` takes only an expression or type of a bit-stream type (6.24.3) and returns the number of bits. One 4-state bit counts as 1. The expression is not evaluated. An empty dynamic expression is 0. Passing the name of a dynamic type directly, or an interface class object, is an error (checked: 20.6.2). Passing a real is an error too (real is not among the bit-stream types of 6.24.3).
+- `$isunbounded` returns 1 if the value of the parameter is `$` (checked: 20.6.3).
+- `$typename` (checked: 20.6.1): typedefs are resolved to the original type, default signedness is removed, the implementation names unnamed structures, unions and enumerated types, enumeration constants get their values, user type names get their package or scope name, and array ranges are written in decimal without sizes. On spaces, the rule (one space between tokens) and the example (`bit [2:0]`) read differently. kirimasim follows the example and puts one space between a keyword or identifier and the packed range after it (interpretation; for reference, Verilator 5.052 gives `logic[7:0]`). The test suite checks only the identity of types (the same type gives the same string). Unnamed enumerated types, structures and unions are named by the namespace where they were declared and their order of appearance in it, as `e$1`, `s$1`, `u$1` (rule of this document; the form of the example of 20.6.1; approved 2026-10-17). The string is made by front from slang's type. The strings of slang's constant evaluation put no space before the packed range (`logic[7:0]`), so they differ from the rule of this section (checked 2026-10-17).
+- Array queries (checked: 20.7): dimensions are numbered with the slowest-varying dimension as 1. Integer types (`int` and the like) are taken as one packed dimension `[n-1:0]`. `$dimensions` is the total number of dimensions for an array, 1 for string and simple bit-vector types, and 0 otherwise. If the dimension number is out of range, or the type has `$dimensions` 0, `'x` is returned. Dynamic arrays and queues return their present state (`$left` is 0; when empty, `$right` is -1 and `$increment` -1). The rules of associative arrays are as in 20.7.
+- `$clog2` takes its argument as unsigned and returns the base-2 logarithm rounded up to an integer; 0 for 0 (checked: 20.8.1). If the argument has x or z, it returns `'x` (rule of this document).
+- The real math functions return the same results as the C functions of Table 20-4 (checked: 20.8.2). kirimasim calls the host's C library. The last digit may differ by library, so this is an exception to NFR-2 (a rule of the design specification). The test suite compares all but `$sqrt`, `$floor` and `$ceil` with a tolerance.
+- Bit-vector functions (checked: 20.9): `$countbits` returns the number of bits that match any of the control bits (only the least significant bit of each is used) when the expression is made into a vector of the same width by the streaming operator. `$countones`, `$onehot`, `$onehot0` and `$isunknown` are defined with it. x and z bits do not match `'1`, so `$onehot(8'b0001x000)` is 1.
 
-## 9. プラスアーグ
+## 9. Plusargs
 
-規格で確認（21.6）：
+Checked (21.6):
 
-- `$test$plusargs(s)` は、コマンドラインのプラスアーグ（先頭の `+` を除いたもの）のどれかが s で始まれば 0 でない値を、無ければ 0 を返す。整数の変数で渡したときは、先頭の NUL を無視する。
-- `$value$plusargs("名前書式", v)` は、名前で始まる最初のプラスアーグの残りを、書式（`%d`、`%o`、`%h`、`%x`、`%b`、`%e`、`%f`、`%g`、`%s`。大文字と `%0` の形も可）で変換して v に入れ、0 でない値を返す。見つからなければ 0 を返し、v を変えず、警告も出さない。
-- 残りが空なら、0 か空の文字列を入れる。変数より狭い値は 0 で広げ、広い値は切り詰める。負の値は変数より広いとみなす。変換できない文字があれば `'bx` を入れる。
-- 空の文字列 `""` は、どのプラスアーグにも一致する（解釈。「s で始まる」の規則から従う）。プラスアーグが 1 つも無ければ 0 を返す。
+- `$test$plusargs(s)` returns nonzero if any plusarg on the command line (with its leading `+` removed) starts with s, and 0 otherwise. When an integral variable is passed, leading NULs are ignored.
+- `$value$plusargs("name format", v)` converts the rest of the first plusarg starting with the name by the format (`%d`, `%o`, `%h`, `%x`, `%b`, `%e`, `%f`, `%g`, `%s`; upper case and `%0` forms allowed), puts it in v, and returns nonzero. If none is found it returns 0, leaves v unchanged and gives no warning.
+- If the rest is empty, 0 or an empty string is put in. A value narrower than the variable is extended with 0, and a wider one truncated. A negative value counts as wider than the variable. If there is a character that cannot be converted, `'bx` is put in.
+- The empty string `""` matches every plusarg (interpretation; it follows from the rule "starts with s"). With no plusargs at all, 0 is returned.
 
-プラスアーグの渡し方は CLI.md で定める。
+How plusargs are passed is set in CLI.md.
 
-## 10. メッセージの形
+## 10. Form of messages
 
-### 10.1 重大度のタスク
+### 10.1 Severity tasks
 
-`$fatal`、`$error`、`$warning`、`$info` は、ファイル名と行番号（`` `__FILE__ `` と `` `__LINE__ `` と同じ）、呼んだスコープの階層名、シミュレーション時刻、利用者のメッセージを含むメッセージを出す（規格で確認：20.10）。利用者のメッセージは `$display` と同じ書式で作る。
+`$fatal`, `$error`, `$warning` and `$info` give a message containing the file name and line number (the same as `` `__FILE__ `` and `` `__LINE__ ``), the hierarchical name of the calling scope, the simulation time, and the user's message (checked: 20.10). The user's message is made with the same format as `$display`.
 
-kirimasim の形（本書の決まり）。標準エラーに 1 行で書く：
+kirimasim's form (rule of this document), one line on standard error:
 
 ```text
-<ファイル>:<行>: <fatal|error|warning|info>: <利用者のメッセージ> [<階層名> @ <時刻>]
+<file>:<line>: <fatal|error|warning|info>: <user's message> [<hierarchical name> @ <time>]
 ```
 
-- 時刻は、シミュレーションの時間の単位の整数に単位を付けて書く（例：`@ 15000ps`）。
-- 利用者のメッセージが無ければ、`<重さ>:` の後を空にする。
-- エラボレーション時の重大度のタスク（20.10.1）は、時刻を書かない。
+- The time is written as an integer of the simulation's time unit with the unit (for example `@ 15000ps`).
+- With no user's message, what follows `<severity>:` is empty.
+- Elaboration-time severity tasks (20.10.1) write no time.
 
-### 10.2 `$finish` と `$stop` の報告
+### 10.2 Reports of `$finish` and `$stop`
 
-- 引数 0 は何も出さない。1（既定）は時刻と呼んだ位置を、2 はそれに加えてメモリと CPU 時間を出す（規格で確認：20.2。SCHEDULER_SPEC.md の 16 節）。
-- kirimasim の形（本書の決まり）。標準エラーに書く：`<ファイル>:<行>: $finish at <時刻>`。2 では続けて `--stats=json` と同じ値の要約を 1 行出す。
-- `$finish(0)` と `$stop(0)` のときは、SCHEDULER_SPEC.md の 16.2 節の終了の理由の行も出さない（20.2 の「何も出さない」に合わせる。2026-10-15 に承認し、SCHEDULER_SPEC.md も改訂した）。終了の理由は `--stats=json` には残す。
+- Argument 0 prints nothing. 1 (the default) prints the time and the place of the call; 2 also prints memory and CPU time (checked: 20.2; SCHEDULER_SPEC.md 16).
+- kirimasim's form (rule of this document), on standard error: `<file>:<line>: $finish at <time>`. With 2, one more line follows with a summary of the same values as `--stats=json`.
+- For `$finish(0)` and `$stop(0)`, the line of the reason for ending of SCHEDULER_SPEC.md 16.2 is not printed either (matching "prints nothing" of 20.2; approved 2026-10-15, with SCHEDULER_SPEC.md amended too). The reason for ending is kept in `--stats=json`.
 
 ### 10.3 `$stacktrace`
 
-タスクとして呼ぶと呼び出しの連なりを表示し、関数として呼ぶと同じ内容を string で返す。内容は処理系に任されている（規格で確認：20.17.2）。kirimasim は、最も内側から順に `<スコープの階層名> (<ファイル>:<行>)` を 1 行ずつ並べる（本書の決まり）。タスクとして呼んだときは標準出力に書く（`$display` と同じ。利用者が求めた出力なので）。テストスイートは、`$stacktrace` の内容を期待値に入れない。
+Called as a task it prints the chain of calls; called as a function it returns the same content as a string. The content is left to the implementation (checked: 20.17.2). kirimasim lists, from the innermost, one line each of `<hierarchical name of the scope> (<file>:<line>)` (rule of this document). Called as a task it writes to standard output (as `$display`; it is output the user asked for). The test suite does not put the content of `$stacktrace` in expected values.
 
-### 10.4 unique・unique0・priority の違反の報告（2026-10-16 に承認）
+### 10.4 Reports of unique, unique0 and priority violations (approved 2026-10-16)
 
-規格は、違反を Observed の領域で確定したあとの報告の手段を処理系に任せている（規格で確認：12.4.2.1）。kirimasim は、確定した違反を 1 件につき 1 行、標準エラーに書く（本書の決まり）。
+The standard leaves to the implementation how a violation is reported after it is settled in the Observed region (checked: 12.4.2.1). kirimasim writes one line per settled violation on standard error (rule of this document).
 
 ```text
-<ファイル>:<行>: warning: <構文> violation: <内容> [<階層名> @ <時刻>]
+<file>:<line>: warning: <construct> violation: <content> [<hierarchical name> @ <time>]
 ```
 
-- `<ファイル>:<行>` は、`unique`、`unique0`、`priority` のキーワードを書いた `if` か `case` の位置。
-- `<構文>` は `unique case`、`unique0 case`、`priority case`、`unique if`、`unique0 if`、`priority if` のどれか。
-- `<内容>` は、どれにも当たらないときは `no item matches`（case）か `no condition is true`（if）、2 つ以上が当たるときは `more than one item matches`（case）か `more than one condition is true`（if）。
-- `[<階層名> @ <時刻>]` は 10.1 と同じ形（時刻は `@ 15000ps` の形）。階層名は、その文を含むインスタンスの階層名（名前付きのブロックの中なら、ブロックの名前まで含む）。
-- 重さは warning にする。終了コードには影響しない（規格は違反を誤りとしていない）。`$error` を数えるオプション（CLI.md の 6 節）でも数えない。
-- 違反の判定と、保留と確定の時点は SCHEDULER_SPEC.md の 15 節による。
+- `<file>:<line>` is the position of the `if` or `case` with the keyword `unique`, `unique0` or `priority`.
+- `<construct>` is one of `unique case`, `unique0 case`, `priority case`, `unique if`, `unique0 if`, `priority if`.
+- `<content>` is `no item matches` (case) or `no condition is true` (if) when none applies, and `more than one item matches` (case) or `more than one condition is true` (if) when two or more apply.
+- `[<hierarchical name> @ <time>]` has the same form as 10.1 (the time in the form `@ 15000ps`). The hierarchical name is that of the instance containing the statement (inside a named block, including the block's name).
+- The severity is warning. It does not affect the exit code (the standard does not make a violation an error). The option that counts `$error` (CLI.md 6) does not count it either.
+- How violations are decided, and when they are pending and settled, follow SCHEDULER_SPEC.md 15.
 
-## 11. テストスイートへの影響
+## 11. Effect on the test suite
 
-この文書を承認すると、テストスイートについて次のことが決まる。
+Approving this document settles these points for the test suite:
 
-- `%0t` の最小の幅（3.7）。リポジトリの期待値は、すでにこの読み方に合っている。
-- 明示の幅が自動の幅より狭いとき（3.3）。Icarus 13.0 は規格と違う。期待値の出どころが Icarus 13.0 のテストでは、この形を避ける（今の決まりを続ける）。
-- 規格に無い飾り（3.12）、`%p` の空白（3.9）、`$ferror` の番号（6.4）、重大度のタスクの形（10.1）、`$stacktrace`（10.3）は、期待値に入れない（今の決まりを続ける）。
-- `$sscanf` の数字の集合（6.3）は規格で決まるので、期待値に入れてよい。
+- The minimum width of `%0t` (3.7). The repository's expected values already match this reading.
+- When an explicit width is narrower than the automatic width (3.3). Icarus 13.0 differs from the standard. Tests whose expected values come from Icarus 13.0 avoid this form (continuing the present rule).
+- Flags not in the standard (3.12), the spaces of `%p` (3.9), the numbers of `$ferror` (6.4), the form of severity tasks (10.1) and `$stacktrace` (10.3) are not put in expected values (continuing the present rule).
+- The digit sets of `$sscanf` (6.3) are set by the standard, so they may be put in expected values.
 
-## 12. 未確認・後で書くこと
+## 12. Not confirmed, to be written later
 
-- 実数を整数の書式で出す（とその逆の）ときの変換（3.6）。
-- 引数を省いた `$timeformat` の意味（5.4）を、Icarus 13.0 と照合する。
-- `$monitor` の最初の表示の時点と `$monitoron` の表示の時点（4 節）を、P1 で Icarus 13.0 と照合する。
-- `%v` と強さのモデル（3.10。P4）。
-- `$fmonitor`、`$fstrobe`、`$fgetc`、`$ungetc`（P3）の、同じ時刻での順序の細部。
-- 波形のタスク（`$dumpfile` など）は、波形の文書で書く。
+- The conversion when a real is printed with an integer format (and the reverse) (3.6).
+- The meaning of `$timeformat` with its arguments omitted (5.4), to be checked against Icarus 13.0.
+- When `$monitor` first prints and when `$monitoron` prints (4), to be checked against Icarus 13.0 in P1.
+- `%v` and the strength model (3.10; P4).
+- Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc` (P3).
+- The waveform tasks (`$dumpfile` and so on) are written in the waveform document.
