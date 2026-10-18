@@ -2,7 +2,7 @@
 
 [日本語](VALUE_SEMANTICS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Section 7 (concatenation, conversion, reals, strings, enumerated types) was written in P1 and approved on 2026-10-15. On 2026-10-16, section 5 (net resolution and drive strength) was rewritten and 3.12 (assignment operators, and increment and decrement operators) added (approved). The same day, the conditional operator on values that are not integral was written in 3.9 (approved). On 2026-10-17, 3.13 (aggregate assignment) and 3.14 (aggregate comparison) were added and the item on streaming operators in 8 rewritten (approved). The same day, the conversion from real to integer in 7.4 was changed to truncation regardless of size, with the handling of NaN and infinities (approved). On 2026-10-18, the conversion of integers with x and z to strings was added to 7.6 (approved). The same day, the section 7.4 cites for `$rtoi` was corrected from SYSTEM_TASKS.md 9 to 8 (approved).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Section 7 (concatenation, conversion, reals, strings, enumerated types) was written in P1 and approved on 2026-10-15. On 2026-10-16, section 5 (net resolution and drive strength) was rewritten and 3.12 (assignment operators, and increment and decrement operators) added (approved). The same day, the conditional operator on values that are not integral was written in 3.9 (approved). On 2026-10-17, 3.13 (aggregate assignment) and 3.14 (aggregate comparison) were added and the item on streaming operators in 8 rewritten (approved). The same day, the conversion from real to integer in 7.4 was changed to truncation regardless of size, with the handling of NaN and infinities (approved). On 2026-10-18, the conversion of integers with x and z to strings was added to 7.6 (approved). The same day, the section 7.4 cites for `$rtoi` was corrected from SYSTEM_TASKS.md 9 to 8 (approved). The same day, a table of the strength line was added to 5.2, and a diagram and examples of the rule to 5.4 (approved).
 
 This document sets how kirimasim represents values and computes operations. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "interpretation" are not settled by the wording of the standard alone, and this document decides them.
 
@@ -240,6 +240,13 @@ Rewritten and approved 2026-10-16.
 - When read as a 4-state value, L and H are x (interpretation; L and H are defined as ranges of strength (28.12.2) and are not among the 4-state values; Icarus 13.0 too reads them as x).
 - Vector nets are resolved bit by bit.
 
+The strength line, with the names `%v` prints for each point (21.2.1.4):
+
+| Point | −7 | −6 | −5 | −4 | −3 | −2 | −1 | 0 | +1 | +2 | +3 | +4 | +5 | +6 | +7 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Name | Su0 | St0 | Pu0 | La0 | We0 | Me0 | Sm0 | HiZ | Sm1 | Me1 | We1 | La1 | Pu1 | St1 | Su1 |
+| Strength | supply | strong | pull | large | weak | medium | small | highz | small | medium | weak | large | pull | strong | supply |
+
 ### 5.3 Signals of drivers
 
 The output of one bit of one driver is decided by its value, its 0 strength s0 and its 1 strength s1 (checked: 10.3.4, 28.12.2, Figure 28-6): 0 is [−s0, −s0], 1 is [+s1, +s1], x is [−s0, +s1], z is [0, 0]. If s0 is highz (0), 0 becomes z and x becomes H. Likewise for s1.
@@ -271,11 +278,52 @@ The range of one bit of a net is decided from all the drivers of the net (includ
    - `wor`, `trior`: 1. The range is [+s, +s] (likewise).
 3. The narrowest range that contains every result of 2 is the net's range.
 
+The same steps as a diagram (where it differs from the steps, the steps hold):
+
+```mermaid
+flowchart TD
+    drv["the drivers of one bit of the net,<br/>each a range on the line from -7 to +7"]
+    split["split each range into its strength points"]
+    each["for every way of choosing one point from each driver:<br/>the point of largest strength wins"]
+    tie{"are points of the largest<br/>strength s on both sides?"}
+    single["that point"]
+    kind["the kind of net decides:<br/>wire, tri, tri0, tri1, supply0, supply1, uwire: x over -s to +s<br/>wand, triand: 0 at -s<br/>wor, trior: 1 at +s"]
+    union["the net's range: the narrowest range<br/>that holds every result"]
+    val["its value, read from the range (5.2)"]
+    drv --> split --> each --> tie
+    tie -- "no" --> single --> union
+    tie -- "yes" --> kind --> union
+    union --> val
+```
+
 - This rule reproduces the following rules and examples of the standard, and does not depend on the order of drivers: of signals with different strengths, the stronger wins (28.12.1); rules a to c for combining a signal of ambiguous strength with one of unambiguous strength (28.12.3); wired logic on signals of ambiguous strength (28.12.4, the table of Figure 28-25).
 - For combining signals of ambiguous strength with each other, the standard says "the result is a range containing both strengths" (28.12.2). This rule takes not the literal "narrowest range containing both ranges" but "the narrowest range containing the results the combination can give" (interpretation). In the standard's examples (Figures 28-9 to 28-19) the two agree. They disagree when one is always stronger than the other (for example the range [St0, Su0] and the range [Pu1, We1]: x literally, 0 by this rule), and it is this rule that fits "the stronger wins" of 28.12.1.
 - Rule b of 28.12.3 says "points at or below the strength of the unambiguous signal disappear", but a point of the opposite value at the same strength becomes a range of x by the rule of 28.12.2, "opposite values of the same strength give x" (interpretation; Icarus 13.0 too gave StX from StL and St1). With this reading, rules a to c and the rule of this section agreed on 20000 random cases.
 - Wired logic acts only when the largest strengths are equal (checked: the text of 28.12.4, and "the or of St0 and Pu1 is St0" in the table of Figure 28-25). **Difference from Icarus 13.0:** Icarus 13.0 applies wired logic even when strengths differ (it gave St0 from We0 and St1 on `wand`, and St1 from Pu1 and St0 on `wor`). Expected values follow the standard (`:oracle: spec`).
 - A net with no driver at all has the default initial value of 1.4 (z for `wire` and so on).
+
+Examples of the rule (where they differ from the rules above, the rules hold):
+
+| # | Net | Drivers (ranges) | Result range | Value | Why |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `wire` | St0 [−6, −6], Pu1 [+5, +5] | [−6, −6] | 0 (St0) | The stronger point wins |
+| 2 | `wire` | St0 [−6, −6], St1 [+6, +6] | [−6, +6] | x (StX) | Opposite values of equal strength give x over both |
+| 3 | `wand` | St0 [−6, −6], St1 [+6, +6] | [−6, −6] | 0 (St0) | Wired AND at equal strength |
+| 4 | `wand` | We0 [−3, −3], St1 [+6, +6] | [+6, +6] | 1 (St1) | Wired logic acts only at equal strength |
+| 5 | `wire` | H of a strong `bufif1` with data 1 and control x [0, +6], St1 [+6, +6] | [+6, +6] | 1 (St1) | Every choice gives +6 |
+| 6 | `wire` | H [0, +6], We0 [−3, −3] | [−3, +6] | x | Points 0 to +2 of H lose to −3, +3 ties into [−3, +3], +4 to +6 win |
+| 7 | `wire` | [−7, −6] (Su0 to St0), [+3, +5] (We1 to Pu1) | [−7, −6] | 0 | The 0 side is always stronger (the reading of 28.12.2 above) |
+
+Examples 6 and 7 on the strength line (■ marks the points in a range):
+
+| Range | −7 | −6 | −5 | −4 | −3 | −2 | −1 | 0 | +1 | +2 | +3 | +4 | +5 | +6 | +7 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 6: H |   |   |   |   |   |   |   | ■ | ■ | ■ | ■ | ■ | ■ | ■ |   |
+| 6: We0 |   |   |   |   | ■ |   |   |   |   |   |   |   |   |   |   |
+| 6: result, x |   |   |   |   | ■ | ■ | ■ | ■ | ■ | ■ | ■ | ■ | ■ | ■ |   |
+| 7: Su0 to St0 | ■ | ■ |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| 7: We1 to Pu1 |   |   |   |   |   |   |   |   |   |   | ■ | ■ | ■ |   |   |
+| 7: result, 0 | ■ | ■ |   |   |   |   |   |   |   |   |   |   |   |   |   |
 
 ### 5.5 Nets that need resolution
 
