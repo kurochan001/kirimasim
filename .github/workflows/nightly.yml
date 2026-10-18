@@ -155,6 +155,16 @@ jobs:
           python3 tools/svtests.py --sv-tests sv-tests --kirimasim build/release/src/driver/kirimasim \
             --iverilog "$iverilog" --out build/svtests | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # The other sv-tests, without simulation, read by kirimasim parse: no
+      # gate, a warning when fewer pass than tests/gates/svtests_parse.txt,
+      # so that a change of slang or of how kirimasim reads its options that
+      # stops reading valid sources is seen.
+      - name: sv-tests without simulation, read by kirimasim parse
+        run: |
+          python3 tools/svtests.py --sv-tests sv-tests --kirimasim build/release/src/driver/kirimasim \
+            --parse-only --baseline tests/gates/svtests_parse.txt --out build/svtests-parse \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
       # Own-suite gate: needs read access to the test-suite repository while
       # it is private (secret KIRIMASIM_TESTS_TOKEN); skipped without it.
       - name: Own suite, P1 population

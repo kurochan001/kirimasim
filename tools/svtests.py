@@ -31,6 +31,17 @@ The first step builds: kirimasim reads, elaborates and lowers the design
 The second step runs: Icarus's and Verilator's programs, and for
 kirimasim its whole run less the first step. With --gate, the exit
 code is 1 when kirimasim passes fewer tests than Icarus.
+
+With --parse-only, the population is the other hand-written tests, those
+whose :type: has no "simulation" (parsing, elaboration, preprocessing),
+and only kirimasim runs, as `kirimasim parse` with the same files,
+include directories, macros and libraries. kirimasim has no mode that
+stops after preprocessing, so the tests whose only kind is
+"preprocessing" are left out and counted apart. It is no gate: with
+--baseline, a file whose last line is a number, it prints a warning
+(a GitHub annotation) when fewer tests pass than that number, so that a
+change of slang or of kirimasim's reading of options that silently stops
+reading valid sources is seen, and the exit code stays 0.
 """
 
 import argparse
@@ -102,6 +113,14 @@ def run_kirimasim(exe: str, files, incdirs, defines, top, cwd, timeout):
     return rc, log, build, max(0.0, whole - build)
 
 
+def run_kirimasim_parse(exe: str, files, incdirs, defines, top, cwd, timeout):
+    cmd = [exe, "parse"] + [f"+incdir+{d}" for d in incdirs] + [f"+define+{d}" for d in defines]
+    if top:
+        cmd.append(f"--top={top}")
+    rc, log, build = timed(cmd + files, cwd, timeout)
+    return rc, log, build, 0.0
+
+
 def run_icarus(exe: str, files, incdirs, defines, top, cwd, timeout):
     cmd = [exe, "-g2012", "-o", "iverilog.out"]
     if top:
@@ -155,6 +174,10 @@ def main() -> int:
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
     ap.add_argument("--filter", default="", help="only tests whose path contains this")
     ap.add_argument("--gate", action="store_true", help="exit 1 if kirimasim < Icarus")
+    ap.add_argument("--parse-only", action="store_true",
+                    help="the tests without simulation, with kirimasim parse only")
+    ap.add_argument("--baseline", type=Path,
+                    help="with --parse-only: warn when fewer pass than this file's number")
     args = ap.parse_args()
 
     root = args.sv_tests.resolve()
@@ -165,17 +188,23 @@ def main() -> int:
     libs = json.loads((root / "conf/runners/libs.json").read_text(encoding="utf-8"))
 
     tests = []
+    preprocessing_only = 0
     for path in sorted((root / "tests").rglob("*.sv")):
         params = read_params(path)
-        if "name" not in params or "simulation" not in params["type"].split():
+        kinds = params["type"].split()
+        if "name" not in params or ("simulation" in kinds) == args.parse_only:
             continue
         if args.filter and args.filter not in str(path):
+            continue
+        if args.parse_only and set(kinds) == {"preprocessing"}:
+            preprocessing_only += 1
             continue
         tests.append((path, params))
 
     tools = {}
     if args.kirimasim:
-        tools["kirimasim"] = (run_kirimasim, str(Path(args.kirimasim).resolve()))
+        run_fn = run_kirimasim_parse if args.parse_only else run_kirimasim
+        tools["kirimasim"] = (run_fn, str(Path(args.kirimasim).resolve()))
     if args.iverilog:
         tools["icarus"] = (run_icarus, str(Path(args.iverilog).resolve()))
     if args.verilator:
@@ -214,7 +243,9 @@ def main() -> int:
     names = list(tools)
     chapters = sorted({r["chapter"] for r in results},
                       key=lambda c: (not c.isdigit(), int(c) if c.isdigit() else 0, c))
-    lines = [f"sv-tests {head[:12]}: {len(results)} simulation tests", "",
+    population = "tests without simulation, read by kirimasim parse" if args.parse_only \
+        else "simulation tests"
+    lines = [f"sv-tests {head[:12]}: {len(results)} {population}", "",
              "| chapter | tests | " + " | ".join(names) + " |",
              "| --- | --- | " + " | ".join("---" for _ in names) + " |"]
     for c in chapters + ["total"]:
@@ -225,12 +256,24 @@ def main() -> int:
     for step in ("build", "run"):
         times = [f"{sum(r[n][step + '_seconds'] for r in results):.1f}" for n in names]
         lines.append(f"| {step} seconds, summed | | " + " | ".join(times) + " |")
-    if "kirimasim" in tools:
+    if "kirimasim" in tools and not args.parse_only:
         unsupported = sum(1 for r in results if r["kirimasim"]["unsupported"])
         lines += ["", f"kirimasim stopped at an unsupported construct in {unsupported} tests."]
+    if args.parse_only:
+        failed = [r["test"] for r in results if not r["kirimasim"]["pass"]]
+        lines += ["", f"Left out: {preprocessing_only} tests of preprocessing only (kirimasim has "
+                  "no mode that stops after preprocessing).",
+                  "", f"Not passing ({len(failed)}):"] + [f"- {t}" for t in failed]
     summary = "\n".join(lines) + "\n"
     (args.out / "summary.md").write_text(summary, encoding="utf-8")
     print(summary, end="")
+
+    if args.parse_only and args.baseline and "kirimasim" in tools:
+        want = int(args.baseline.read_text(encoding="utf-8").split()[-1])
+        got = sum(1 for r in results if r["kirimasim"]["pass"])
+        if got < want:
+            print(f"::warning::sv-tests read by kirimasim parse: {got} pass, fewer than the "
+                  f"{want} of {args.baseline}")
 
     if args.gate and "kirimasim" in tools and "icarus" in tools:
         h = sum(1 for r in results if r["kirimasim"]["pass"])

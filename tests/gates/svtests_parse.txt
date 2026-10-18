@@ -1,0 +1,5 @@
+# sv-tests 15490e9: the hand-written tests whose :type: has no simulation and is not only
+# preprocessing (593), read by kirimasim parse with their libraries (tools/svtests.py
+# --parse-only); the number that pass with the release build, measured 2026-10-18. The nightly
+# job warns when fewer pass; raise the number when more do.
+593
