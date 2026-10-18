@@ -2,7 +2,7 @@
 
 [日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
 
 This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
@@ -83,6 +83,20 @@ typedef kirima_status (*kirima_resume_fn)(kirima_context* ctx, void* frame);
   - **The process frame:** holds the thread set (active or reactive), the pending report queues, the head of the chain of calls, and the process's own resume position and automatic variables.
   - **The call frame:** one is allocated each time a task containing a wait is called, and they are chained. Each frame holds its own resume position (the number of a basic block), automatic variables and arguments, temporaries that live across waits, and a reference to the caller's frame. In recursion of automatic tasks, the length of the chain is decided at run time (SIR_SPEC.md 7.4).
 - Resuming continues from the deepest frame of the chain. When a task returns, its frame is taken off and execution goes back to the caller's resume position.
+
+The chain of frames while a process is inside task B, which task A called (where the diagram differs from the text, the text holds):
+
+```mermaid
+flowchart LR
+    pf["process frame<br/>thread set, pending report queues,<br/>its own resume position and automatic variables,<br/>head of the call chain"]
+    ta["call frame of task A<br/>resume position, automatic variables<br/>and arguments, values across waits"]
+    tb["call frame of task B<br/>the deepest frame:<br/>resuming continues here"]
+    pf -->|"calls A, which may wait"| ta
+    ta -->|"calls B, which may wait"| tb
+    tb -.->|"caller"| ta
+    ta -.->|"caller"| pf
+```
+
 - A call of a function with no wait is an ordinary C call (not pushed on the chain). The layout is decided from the SIR and is the same whatever the tier. So a process that ran on tier 1 up to some wait can run on tier 2 from then on (whether to use this is decided in P2).
 - A resume function runs until it enters the next wait or ends, and returns. Its return value (`kirima_status`) tells apart: it entered a wait; it ended normally; **it ended by kill or disable** (when it `kill()`ed itself, or `disable`d a block containing itself); an error; a request to stop was received.
 - C++20 coroutines are not used (the design specification's rules for tier 2).

@@ -2,7 +2,7 @@
 
 [English](RUNTIME_ABI.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。「案」の項目は、P1 と P2 で実装しながら確かめてから確定する。
+優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。2026-10-18 に、4.3 節にフレームの連鎖の図を足した（承認済み）。「案」の項目は、P1 と P2 で実装しながら確かめてから確定する。
 
 この文書は、実行カーネル（`kernel`）と、第 1 層（VM）・第 2 層（生成した C++）・将来の第 3 層（JIT）との境界と、その版の管理を定める。「案」と書いた項目は、P1（第 1 層）と P2（第 2 層）で実装しながら確かめ、必要なら本書を直す（直すときは人の承認を受ける）。
 
@@ -83,6 +83,20 @@ typedef kirima_status (*kirima_resume_fn)(kirima_context* ctx, void* frame);
   - **プロセスのフレーム：** スレッドの組（active か reactive）、保留の報告の列、呼び出しの連鎖の先頭、プロセス自身の再開の位置と automatic な変数を置く。
   - **呼び出しのフレーム：** 待ちを含むタスクを呼ぶたびに 1 つ確保し、連鎖でつなぐ。各フレームは、自分の再開の位置（基本ブロックの番号）、automatic な変数と引数、待ちをまたぐ一時の値、呼び出し元のフレームへの参照を持つ。automatic なタスクの再帰では、連鎖の長さが実行時に決まる（SIR_SPEC.md の 7.4 節）。
 - 再開するときは、連鎖の最も深いフレームから続ける。タスクが戻ったら、そのフレームを外して呼び出し元の再開の位置へ戻る。
+
+タスク A が呼んだタスク B の中にプロセスがいるときの、フレームの連鎖を図にしたもの（図と本文が食い違ったときは本文に従う）：
+
+```mermaid
+flowchart LR
+    pf["process frame<br/>thread set, pending report queues,<br/>its own resume position and automatic variables,<br/>head of the call chain"]
+    ta["call frame of task A<br/>resume position, automatic variables<br/>and arguments, values across waits"]
+    tb["call frame of task B<br/>the deepest frame:<br/>resuming continues here"]
+    pf -->|"calls A, which may wait"| ta
+    ta -->|"calls B, which may wait"| tb
+    tb -.->|"caller"| ta
+    ta -.->|"caller"| pf
+```
+
 - 待ちを含まない関数の呼び出しは、ふつうの C の呼び出しにする（連鎖に積まない）。配置は SIR から決まり、層によらず同じにする。そのため、ある待ちまで第 1 層で動かしたプロセスを、次から第 2 層で動かすこともできる（P2 で使うかを決める）。
 - 再開関数は、次の待ちに入るか終わるまで実行して戻る。戻り値（`kirima_status`）で、待ちに入った、正常に終わった、**kill か disable で終わった**（自分自身を `kill()` したときや、自分を含むブロックを `disable` したとき）、エラー、停止の要求を受けた、を区別する。
 - C++20 のコルーチンは使わない（設計書の第 2 層の決まり）。
