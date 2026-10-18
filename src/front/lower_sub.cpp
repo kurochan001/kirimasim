@@ -331,7 +331,13 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     const auto fv = static_cast<sir::FrameVarId>(frameVars().size());
     frameVars().push_back({"", prm.type, sir::kNone, dims, {}});
     Stores stores;
-    assignArray(ArrayBase{Place::Home::Frame, fv}, {}, actual, stores, sl);
+    // What arrayTarget found is copied from: lowering the actual again
+    // would evaluate it twice, a function's value calling the function
+    // again (4.9.7: an input is evaluated once, at the call).
+    if (a)
+        copyArray(ArrayBase{Place::Home::Frame, fv}, {}, baseOf(*a), a->indices, stores, sl);
+    else
+        assignArray(ArrayBase{Place::Home::Frame, fv}, {}, actual, stores, sl);
     flushStores(stores, false, sl);
     return Operand::frame(fv);
 }

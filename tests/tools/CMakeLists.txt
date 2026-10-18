@@ -217,3 +217,7 @@ set_tests_properties(tools/gen_time_format_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_hier_call_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_hier_call_matrix.py --check)
 set_tests_properties(tools/gen_hier_call_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_array_argument_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_array_argument_matrix.py --check)
+set_tests_properties(tools/gen_array_argument_matrix PROPERTIES LABELS Tools)

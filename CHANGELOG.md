@@ -79,3 +79,6 @@ own. CONTRIBUTING.md says what goes in this file.
   (`m1.f()`) was a second copy of it, whose static variables were
   initialized once more. It is now the declaring instance's subroutine,
   with its static variables initialized once (SIR_SPEC.md 3.3).
+- An element of a function's array value passed as an array argument
+  (`sum(g()[1])`) called the function twice. An input argument is now
+  evaluated once, at the call (SIR_SPEC.md 8).

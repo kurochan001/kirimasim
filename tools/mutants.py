@@ -585,6 +585,8 @@ MUTANTS = [
      "src/front/lower_sub.cpp",
      "    const sir::InstanceId owner = declaringInstance(sym).value_or(instance_);",
      "    const sir::InstanceId owner = row.value_or(instance_);"),
+    ("front: an array input argument found by arrayTarget is lowered again",
+     "src/front/lower_sub.cpp", "    if (a)\n        copyArray(", "    if (false)\n        copyArray("),
 ]
 
 
