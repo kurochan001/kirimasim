@@ -621,6 +621,10 @@ MUTANTS = [
      "    if (std::find(warned_.begin(), warned_.end(), sl) != warned_.end()) return;\n", ""),
     ("front: the + flag of %d is taken", "src/front/lower_expr.cpp",
      "                if (c != '-') {", "                if (false) {"),
+    ("kernel: a change made during a walk is announced at once", "src/kernel/sim.cpp",
+     "const bool late = watched && walking_ > 0;", "const bool late = false;"),
+    ("kernel: a trigger made during a walk is made at once", "src/kernel/sim.cpp",
+     "if (walking_ > 0) {  // made during a walk: after it", "if (false) {"),
 ]
 
 

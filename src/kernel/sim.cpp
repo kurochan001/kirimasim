@@ -582,8 +582,12 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
         subscriptions_[item.part.slot].push_back({p, gen, item});
         counters_.increment(cSubscriptions_);
     }
+    // The monitors' first evaluation may write or trigger: announced once
+    // the whole wait is registered.
+    beginWalk();
     for (const MonitorSpec& m : monitors)
         addMonitor(p, m);
+    endWalk();
 }
 
 void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
@@ -766,7 +770,13 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     }
     std::uint64_t* p = store_.element(s, elem);
     const bool watched = !subscriptions_[s].empty() || !slotMonitors_[s].empty() || monitorSlot_[s];
-    if (watched) old_.assign(p, p + l.elemWords);
+    // During a walk, the change waits for its end with its own copies.
+    const bool late = watched && walking_ > 0;
+    LateChange change;
+    if (late)
+        change.old.assign(p, p + l.elemWords);
+    else if (watched)
+        old_.assign(p, p + l.elemWords);
     bool changed = false;
     switch (l.domain) {
         case Domain::Four:
@@ -788,13 +798,38 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cWrites_);
     if (!changed) return false;
     counters_.increment(cChanges_);
-    if (watched) notify(s, elem, lsb, width);
+    if (late) {
+        change.slot = s;
+        change.elem = elem;
+        change.lsb = lsb;
+        change.width = width;
+        change.now.assign(p, p + l.elemWords);
+        lateChanges_.push_back(std::move(change));
+    } else if (watched) {
+        now_.assign(p, p + l.elemWords);
+        notify(s, elem, lsb, width, old_.data(), now_.data());
+    }
     return true;
 }
 
-void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) {
+void Scheduler::endWalk() {
+    if (--walking_ != 0 || draining_) return;
+    draining_ = true;
+    for (std::size_t i = 0; i < lateChanges_.size(); ++i) {  // grows while announcing
+        LateChange c = std::move(lateChanges_[i]);
+        if (c.trigger)
+            trigger(c.event);
+        else
+            notify(c.slot, c.elem, c.lsb, c.width, c.old.data(), c.now.data());
+    }
+    lateChanges_.clear();
+    draining_ = false;
+}
+
+void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                       const std::uint64_t* old, const std::uint64_t* now) {
+    beginWalk();
     const SlotLayout& l = store_.layout(s);
-    const std::uint64_t* now = store_.element(s, elem);
     // Subscriptions. Waking a process makes its other items stale; they
     // are dropped here or on the next write of their slot.
     auto& subs = subscriptions_[s];
@@ -809,10 +844,9 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         if (!overlaps(part.firstElem, part.numElems, elem, 1) ||
             !overlaps(plsb, pwidth, lsb, width))
             continue;
-        if (sameBits(l.domain, old_.data(), now, plsb, pwidth)) continue;
+        if (sameBits(l.domain, old, now, plsb, pwidth)) continue;
         if (sub.item.edge != Edge::Any &&
-            !edgeMatches(sub.item.edge, logicAt(l.domain, old_.data(), plsb),
-                         logicAt(l.domain, now, plsb)))
+            !edgeMatches(sub.item.edge, logicAt(l.domain, old, plsb), logicAt(l.domain, now, plsb)))
             continue;
         if (sub.item.guard != nullptr && sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0)
             continue;
@@ -827,8 +861,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
             const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
             const std::uint32_t pwidth = part.width == 0 ? l.width : part.width;
             if (part.slot == s && overlaps(part.firstElem, part.numElems, elem, 1) &&
-                overlaps(plsb, pwidth, lsb, width) &&
-                !sameBits(l.domain, old_.data(), now, plsb, pwidth))
+                overlaps(plsb, pwidth, lsb, width) && !sameBits(l.domain, old, now, plsb, pwidth))
                 monitorDue_ = true;
         }
     }
@@ -853,6 +886,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         if (depends) evaluateMonitor(id);
     }
     slotMonitors_[s].resize(kept);
+    endWalk();
 }
 
 void Scheduler::evaluateMonitor(std::uint32_t id) {
@@ -972,6 +1006,14 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotId s, std::uint32_t elem,
 }
 
 void Scheduler::trigger(EventId e) {
+    if (walking_ > 0) {  // made during a walk: after it
+        LateChange c;
+        c.trigger = true;
+        c.event = e;
+        lateChanges_.push_back(std::move(c));
+        return;
+    }
+    beginWalk();
     NamedEvent& ev = events_[e];
     ev.triggeredAt = time_;
     const auto waiters = std::move(ev.waiters);
@@ -991,6 +1033,7 @@ void Scheduler::trigger(EventId e) {
                          }) == keep.end())
             keep.push_back(ref);
     events_[e].monitors = std::move(keep);
+    endWalk();
 }
 
 void Scheduler::triggerNb(ProcessId p, EventId e, std::uint64_t delay) {

@@ -479,7 +479,26 @@ private:
     std::vector<std::uint64_t> arena_;    ///< Their values.
     std::vector<NbaRecord> delayedNbas_;  ///< Updates with a delay.
     std::vector<std::uint32_t> freeDelayedNbas_;
-    std::vector<std::uint64_t> old_;     ///< Scratch: an element before a write.
+    std::vector<std::uint64_t> old_;  ///< Scratch: an element before a write.
+    std::vector<std::uint64_t> now_;  ///< Scratch: the element after it.
+    /// A change of a watched slot, or a trigger, made while the kernel walks
+    /// its lists of waiters and monitor records: by an eval or guard
+    /// function, which may write the variables of the functions it calls
+    /// and trigger events. It is announced when the outermost walk ends, so
+    /// that no list changes under a walk (RUNTIME_ABI.md 5).
+    struct LateChange {
+        bool trigger = false;
+        EventId event = 0;
+        SlotId slot = 0;
+        std::uint32_t elem = 0;
+        std::uint32_t lsb = 0;
+        std::uint32_t width = 0;
+        std::vector<std::uint64_t> old;
+        std::vector<std::uint64_t> now;
+    };
+    std::vector<LateChange> lateChanges_;
+    std::uint32_t walking_ = 0;          ///< Walks in progress.
+    bool draining_ = false;              ///< lateChanges_ is being announced.
     std::vector<std::uint32_t> heldOf_;  ///< By slot: its row in held_; empty if none is marked.
     std::vector<Held> held_;
     std::vector<std::uint64_t> shown_;    ///< Scratch: a held part's value.
@@ -531,7 +550,14 @@ private:
     bool moveFirst(Region first, Region last, Region to);
     void execute(const Event& e);
     void runPostponed(ProcessId p);
-    void notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
+    /// Announces a change of bits [lsb, lsb + width) of element elem of s
+    /// from `old` to `now` (whole elements) to its waiters and monitors.
+    void notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                const std::uint64_t* old, const std::uint64_t* now);
+    /// A walk of the lists of waiters or monitor records begins or ends;
+    /// the end of the outermost one announces the late changes.
+    void beginWalk() { ++walking_; }
+    void endWalk();
     /// write() without looking at holds.
     bool writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                   const std::uint64_t* value);

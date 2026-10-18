@@ -644,6 +644,138 @@ void evalBit0(kirima_context* ctx, void* frame, std::uint64_t* out) {
     out[0] = k::fromC(ctx).store().element(f->slot, 0)[0] & 1U;
 }
 
+/// Slots of an expression whose function writes a variable or triggers an
+/// event while the kernel walks its lists (RUNTIME_ABI.md 5).
+struct WritingFrame {
+    k::SlotId read;
+    k::SlotId written;
+    k::EventId event;
+};
+
+/// `read & 1`, which also writes `(read & 1) + 1` to another slot after
+/// computing its value.
+void evalAndWrite(kirima_context* ctx, void* frame, std::uint64_t* out) {
+    const auto* f = static_cast<WritingFrame*>(frame);
+    out[0] = k::fromC(ctx).store().element(f->read, 0)[0] & 1U;
+    const std::uint64_t v = out[0] + 1;
+    k::fromC(ctx).scheduler().write(f->written, 0, 0, 0, &v);
+}
+
+/// An iff that also triggers a named event.
+int guardAndTrigger(kirima_context* ctx, void* frame) {
+    k::fromC(ctx).scheduler().trigger(static_cast<WritingFrame*>(frame)->event);
+    return 1;
+}
+
+/// `read & 1`, which also triggers a named event after computing its value.
+void evalAndTrigger(kirima_context* ctx, void* frame, std::uint64_t* out) {
+    const auto* f = static_cast<WritingFrame*>(frame);
+    out[0] = k::fromC(ctx).store().element(f->read, 0)[0] & 1U;
+    k::fromC(ctx).scheduler().trigger(f->event);
+}
+
+/// An expression on an event whose value stays 0.
+void evalZero(kirima_context*, void*, std::uint64_t* out) { out[0] = 0; }
+
+TEST(Scheduler, ChangesMadeWhileWalkingAreAnnouncedAfterTheWalk) {
+    // An eval or guard function may write the variables of the functions it
+    // calls and trigger events (RUNTIME_ABI.md 5). Such a change is
+    // announced after the walk of waiters or monitor records that called the
+    // function, so no list changes under the walk and no evaluation
+    // overwrites another's value.
+    {
+        // @((a & 1)) whose function writes b, and @((b & 1)): the second
+        // monitor's evaluation must not take the place of the first's.
+        k::Context ctx;
+        auto& s = ctx.scheduler();
+        const k::SlotId a = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+        const k::SlotId b = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+        std::vector<std::string> log;
+        Waiter wp{&log, "p"};
+        Waiter wq{&log, "q"};
+        WritingFrame f{a, b, 0};
+        BitFrame fb{b};
+        const k::ProcessId p = s.addProcess(&logOnce, &wp, Group::Active);
+        const k::ProcessId q = s.addProcess(&logOnce, &wq, Group::Active);
+        k::MonitorSpec mb;
+        mb.slots = {{b, 0, 0, 0, 0}};
+        mb.eval = &evalBit0;
+        mb.frame = &fb;
+        mb.domain = k::Domain::Two;
+        mb.width = 1;
+        s.waitMonitor(q, mb);  // b & 1 is 0
+        k::MonitorSpec ma = mb;
+        ma.slots = {{a, 0, 0, 0, 0}};
+        ma.eval = &evalAndWrite;
+        ma.frame = &f;
+        s.waitMonitor(p, ma);  // a & 1 is 0; writes b = 1: b & 1 becomes 1
+        s.run();
+        EXPECT_EQ(log, std::vector<std::string>{"q@0"});
+        log.clear();
+        Waiter wq2{&log, "q2"};
+        const k::ProcessId q2 = s.addProcess(&logOnce, &wq2, Group::Active);
+        s.waitMonitor(q2, mb);  // b & 1 is 1
+        const std::uint64_t one = 1;
+        s.write(a, 0, 0, 0, &one);  // a & 1 becomes 1; writes b = 2: b & 1 becomes 0
+        s.run();
+        std::sort(log.begin(), log.end());
+        EXPECT_EQ(log, (std::vector<std::string>{"p@0", "q2@0"}));
+    }
+    {
+        // @(a iff (-> e, 1)) and @(e): the trigger made by the iff wakes the
+        // waiter of e after the walk of a's subscriptions.
+        k::Context ctx;
+        auto& s = ctx.scheduler();
+        const k::SlotId a = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+        const k::EventId e = s.addEvent();
+        std::vector<std::string> log;
+        Waiter wp{&log, "p"};
+        Waiter wr{&log, "r"};
+        WritingFrame f{a, a, e};
+        const k::ProcessId p = s.addProcess(&logOnce, &wp, Group::Active);
+        const k::ProcessId r = s.addProcess(&logOnce, &wr, Group::Active);
+        s.waitNamed(r, e);
+        const k::WaitItem item{{a, 0, 0, 0, 0}, Edge::Any, &guardAndTrigger, &f};
+        s.waitAny(p, {&item, 1}, {});
+        const std::uint64_t one = 1;
+        s.write(a, 0, 0, 0, &one);
+        s.run();
+        std::sort(log.begin(), log.end());
+        EXPECT_EQ(log, (std::vector<std::string>{"p@0", "r@0"}));
+    }
+    {
+        // @((a & 1)) whose function triggers e, and a wait on an expression
+        // of e: the second evaluation must not take the place of the first's.
+        k::Context ctx;
+        auto& s = ctx.scheduler();
+        const k::SlotId a = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+        const k::EventId e = s.addEvent();
+        std::vector<std::string> log;
+        Waiter wp{&log, "p"};
+        Waiter wq{&log, "q"};
+        WritingFrame f{a, a, e};
+        const k::ProcessId p = s.addProcess(&logOnce, &wp, Group::Active);
+        const k::ProcessId q = s.addProcess(&logOnce, &wq, Group::Active);
+        k::MonitorSpec me;
+        me.events = {e};
+        me.eval = &evalZero;
+        me.domain = k::Domain::Two;
+        me.width = 1;
+        s.waitMonitor(q, me);
+        k::MonitorSpec ma;
+        ma.slots = {{a, 0, 0, 0, 0}};
+        ma.eval = &evalAndTrigger;
+        ma.frame = &f;
+        ma.domain = k::Domain::Two;
+        ma.width = 1;
+        s.waitMonitor(p, ma);  // a & 1 is 0
+        const std::uint64_t one = 1;
+        s.write(a, 0, 0, 0, &one);  // a & 1 becomes 1, and e is triggered
+        s.run();
+        EXPECT_EQ(log, std::vector<std::string>{"p@0"});
+    }
+}
+
 TEST(Scheduler, MonitorWakesOnlyWhenTheValueChanges) {
     // @(a & 1): a change of a that keeps a & 1 does not wake the process,
     // even though the operand changed (9.4.2).
