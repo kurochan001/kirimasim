@@ -790,7 +790,21 @@ private:
     std::vector<W4*> varSets_;
     std::vector<std::uint32_t> freeVarSets_;
     Act act_;
-    std::uint32_t callDepth_ = 0;
+    std::uint32_t callDepth_ = 0;  ///< Calls running on the C++ stack.
+
+    /// How deep the calls of one process may nest: the calls of tasks that
+    /// wait, which the frame chains, and the others, which run on the C++
+    /// stack, together (SCHEDULER_SPEC.md 16.2). The driver gives the
+    /// simulation a stack that holds this many (RUNTIME_ABI.md 5).
+    static constexpr std::size_t kMaxCallDepth = 10000;
+
+    /// One more call of f would nest deeper than kMaxCallDepth: reports the
+    /// run-time error of the design at the call (SCHEDULER_SPEC.md 16.2).
+    bool tooDeep(const Frame& f, const sir::Instr& in) {
+        if (f.calls.size() + callDepth_ < kMaxCallDepth) return false;
+        designError(f, in, "calls nested more than " + std::to_string(kMaxCallDepth) + " deep");
+        return true;
+    }
     bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.
 
     std::uint32_t processCount() const { return static_cast<std::uint32_t>(d_.processes.size()); }
@@ -1474,8 +1488,10 @@ private:
     }
 
     /// call.task: copies the inputs in and makes the call the innermost
-    /// one; the caller goes on at the block the instruction names.
-    void enterTask(Frame& f, const sir::Instr& in) {
+    /// one; the caller goes on at the block the instruction names. False
+    /// when the call would nest too deep.
+    bool enterTask(Frame& f, const sir::Instr& in) {
+        if (tooDeep(f, in)) return false;
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutines[ops[0].id];
         Frame::TaskCall c;
@@ -1487,6 +1503,7 @@ private:
         c.varsId = enroll(c.vars);
         resumeAt(f) = ops.back().id;
         f.calls.push_back(std::move(c));
+        return true;
     }
 
     // --- Frames and arguments (SIR_SPEC.md 7.4, 8) ---
@@ -1729,7 +1746,7 @@ private:
                             }
                         }
                         return Exit::Ret;
-                    case Op::CallTask: enterTask(f, in); return Exit::Entered;
+                    case Op::CallTask: return enterTask(f, in) ? Exit::Entered : Exit::Error;
                     case Op::Call: {
                         const Exit e = call(f, in, steps);
                         if (e == Exit::Disabled && unwindsHere(f)) {
@@ -2256,10 +2273,7 @@ private:
     Exit call(Frame& f, const sir::Instr& in, std::uint64_t& steps) {
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutines[ops[0].id];
-        if (callDepth_ >= 10000) {
-            fail(d_.processes[f.process], "calls nested more than 10000 deep");
-            return Exit::Error;
-        }
+        if (tooDeep(f, in)) return Exit::Error;
         const Act caller = act_;
         const std::uint32_t body = processCount() + ops[0].id;
         std::vector<W4> vars = newVars(body);

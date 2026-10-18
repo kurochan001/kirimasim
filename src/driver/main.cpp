@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include <pthread.h>
+
 #include "build_info.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
@@ -303,15 +305,47 @@ int run(int argc, char** argv) {
     return code;
 }
 
-}  // namespace
+/// The stack of the thread that compiles and runs the design: calls nested
+/// as deep as tier 1 allows (SCHEDULER_SPEC.md 16.2) need more than a main
+/// thread has (RUNTIME_ABI.md 5).
+constexpr std::size_t kStackBytes = std::size_t{512} << 20;
 
-int main(int argc, char** argv) {
+struct Job {
+    int argc;
+    char** argv;
+    int code = kExitInternalError;
+};
+
+void runJob(Job& job) {
     try {
-        return run(argc, argv);
+        job.code = run(job.argc, job.argv);
     } catch (const std::exception& e) {
         std::fprintf(stderr, "kirimasim: internal error: %s\n", e.what());
     } catch (...) {
         std::fputs("kirimasim: internal error: unknown exception\n", stderr);
     }
-    return kExitInternalError;
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    Job job{argc, argv};
+    pthread_attr_t attr;
+    pthread_t thread;
+    bool started = pthread_attr_init(&attr) == 0;
+    started = started && pthread_attr_setstacksize(&attr, kStackBytes) == 0 &&
+              pthread_create(
+                  &thread, &attr,
+                  [](void* j) -> void* {
+                      runJob(*static_cast<Job*>(j));
+                      return nullptr;
+                  },
+                  &job) == 0;
+    pthread_attr_destroy(&attr);
+    if (!started) {
+        std::fputs("kirimasim: internal error: no thread with a stack for the run\n", stderr);
+        return kExitInternalError;
+    }
+    pthread_join(thread, nullptr);
+    return job.code;
 }

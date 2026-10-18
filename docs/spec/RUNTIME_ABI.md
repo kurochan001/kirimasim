@@ -2,7 +2,7 @@
 
 [日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), and where SIGINT is checked to 4.4 (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
 
 This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
@@ -109,6 +109,7 @@ flowchart LR
 ## 5. Rules of threads and calls
 
 - Simulation proceeds on one thread. VPI and DPI-C calls are made synchronously from the execution kernel's thread. They cannot be called from other threads (a rule of the design specification).
+- **The thread of the simulation (approved 2026-10-18):** the driver compiles and runs the design on one thread of its own, with a stack of 512 MiB, and the main thread only waits for it. Tier 1 runs a call that does not wait on the C++ stack, and lets the calls of one process nest 10000 deep (SCHEDULER_SPEC.md 16.2). Calls nested 10000 deep took about 11 MiB of memory in release, 20 in dev and 68 in asan (measured 2026-10-19), more than the 8 MiB a main thread often has.
 - Generated code is built (the C++ compiled) in a process separate from the simulation.
 - Future multithreaded execution (P4) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
 - **Functions the kernel calls for waits (added 2026-10-18, approved):** the eval and guard functions of waits (the expressions of monitor records, and `iff`) may write the variables of the subroutines they call and trigger events, as the SystemVerilog they come from may; front rejects other writes (SCHEDULER_SPEC.md 9.5). The kernel calls them while it walks its lists of waiters and monitor records, so it keeps such a change or trigger and announces it, in the order made, when the outermost walk ends, in the same time slot. These functions do not wait, and do not call the table's functions that run processes.

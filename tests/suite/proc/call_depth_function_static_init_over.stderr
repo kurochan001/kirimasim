@@ -1,0 +1,1 @@
+call_depth_function_static_init_over.sv:21: error: calls nested more than 10000 deep [top @ 0ns]

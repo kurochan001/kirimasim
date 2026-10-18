@@ -1,0 +1,1 @@
+call_depth_task_fork_over.sv:23: error: calls nested more than 10000 deep [top @ 0ns]

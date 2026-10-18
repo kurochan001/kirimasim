@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Calls nested more than 10000 deep in one process are a run-time error of
+  the design at the call, with exit code 2 and `final`; they were an
+  internal error (code 3), the calls of tasks that wait had no limit, and
+  builds whose stack ran out first, such as asan, crashed. The simulation
+  runs on a thread with a stack of 512 MiB (RUNTIME_ABI.md 5; #6).
 - SIGINT (Ctrl-C) stops a run before the next event or at the next branch
   of a loop, runs `final`, keeps the output written so far and ends with
   exit code 130; a second SIGINT ends at once. kirimasim was killed at
