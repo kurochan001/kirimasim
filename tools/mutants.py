@@ -765,6 +765,31 @@ MUTANTS = [
      "                   std::tie(y.first, y.second, y.firstIndex, y.secondIndex);",
      "return std::tie(x.second, x.first, x.firstIndex, x.secondIndex) <\n"
      "                   std::tie(y.second, y.first, y.firstIndex, y.secondIndex);"),
+    ("vm: a continuous assignment waits on its triggers only after it runs", "src/vm/vm.cpp",
+     "        return p.kind == sir::ProcessKind::Cont ||\n"
+     "               (p.kind == sir::ProcessKind::Override && f.holding);",
+     "        return p.kind == sir::ProcessKind::Override && f.holding;"),
+    ("vm: a procedural assign or force waits on its triggers only after it runs again",
+     "src/vm/vm.cpp",
+     "(p.kind == sir::ProcessKind::Override && f.holding);",
+     "(p.kind == sir::ProcessKind::Override && f.holding && false);"),
+    ("vm: override.start waits on its triggers only after the first run", "src/vm/vm.cpp",
+     "        waitTriggers(o, d_.processes[ops[1].id]);\n"
+     "        const Act caller = act_;\n"
+     "        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
+     "        W4 ret{0, 0};\n"
+     "        const Exit e = runBody(o, 0, steps, ret);\n"
+     "        act_ = caller;\n",
+     "        const Act caller = act_;\n"
+     "        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
+     "        W4 ret{0, 0};\n"
+     "        const Exit e = runBody(o, 0, steps, ret);\n"
+     "        act_ = caller;\n"
+     "        waitTriggers(o, d_.processes[ops[1].id]);\n"),
+    ("vm: always @* and always @(...) wait on their triggers while they run", "src/vm/vm.cpp",
+     "        return p.kind == sir::ProcessKind::Cont ||\n",
+     "        return p.kind == sir::ProcessKind::Cont || p.kind == sir::ProcessKind::CombAt ||\n"
+     "               p.kind == sir::ProcessKind::FfPlain ||\n"),
 ]
 
 

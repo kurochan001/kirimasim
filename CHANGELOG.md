@@ -90,6 +90,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A continuous assignment, gate or UDP instance that reads what it
+  drives, and a procedural `assign` or `force` that reads what it holds,
+  are evaluated again when their own change alters what they read, as
+  for any other change. They changed their target once and stopped, so
+  `assign a = en ? ~a : 1'b0;` settled instead of looping until
+  `--max-slot-events` (SCHEDULER_SPEC.md 5, 12; #15).
 - Compiling a design with many processes no longer takes time that grows
   with the square of their number: the SIR verifier's check of what
   processes write in common (SIR_SPEC.md 10, rule 6) sorts the writes of

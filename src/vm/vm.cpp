@@ -1358,6 +1358,18 @@ private:
             writeSlot(s, elem, in->lo, in->n, part);
     }
 
+    /// Whether a process waits on its triggers from before its body runs,
+    /// so that a change it makes to what it reads starts it again: a
+    /// continuous assignment, gate or UDP, and a procedural assign or force
+    /// while it holds its targets, are processes sensitive to the elements
+    /// of their right side (SCHEDULER_SPEC.md 5, 12; 4.9.1, 4.9.2). The
+    /// others wait on their triggers once their body has run, as a
+    /// procedure reaches its event control only then (9.4.2).
+    static bool sensitiveWhileRunning(const sir::Process& p, const Frame& f) {
+        return p.kind == sir::ProcessKind::Cont ||
+               (p.kind == sir::ProcessKind::Override && f.holding);
+    }
+
     void waitTriggers(Frame& f, const sir::Process& proc) {
         items_.clear();
         f.iffs.clear();
@@ -1405,6 +1417,8 @@ private:
         const sir::Process& p = d_.processes[f.process];
         // Woken at a join or wait fork: wait again until it is satisfied.
         if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
+        const bool early = sensitiveWhileRunning(p, f);
+        if (early) waitTriggers(f, p);
         W4 ret{0, 0};
         for (;;) {
             Exit e = Exit::Ret;
@@ -1440,12 +1454,12 @@ private:
             case sir::ProcessKind::FfPlain:
             case sir::ProcessKind::CombAt:
                 f.block = 0;
-                waitTriggers(f, p);
+                if (!early) waitTriggers(f, p);
                 return kernel::Status::Waiting;
             case sir::ProcessKind::Override:
                 // Idle once it holds nothing, until override.start again.
                 f.block = 0;
-                if (f.holding) waitTriggers(f, p);
+                if (f.holding && !early) waitTriggers(f, p);
                 return kernel::Status::Waiting;
             case sir::ProcessKind::Postponed:
                 // Runs again from its start, each time the kernel runs it.
@@ -1960,16 +1974,17 @@ private:
         for (std::size_t i = 2; i < ops.size(); ++i)
             sched_.hold(level, o.kernelId, partOf(ops[i]));
         dropIdle(level);
+        // It holds its targets from now, and so waits on its triggers
+        // before it runs (sensitiveWhileRunning).
+        o.holding = true;
+        o.level = level;
+        waitTriggers(o, d_.processes[ops[1].id]);
         const Act caller = act_;
         enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});
         W4 ret{0, 0};
         const Exit e = runBody(o, 0, steps, ret);
         act_ = caller;
-        if (e != Exit::Ret) return e;
-        o.holding = true;
-        o.level = level;
-        waitTriggers(o, d_.processes[ops[1].id]);
-        return Exit::Ret;
+        return e;
     }
 
     // --- wait (expr) (SIR_SPEC.md 7.2) ---
