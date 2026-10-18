@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdint>
 #include <deque>
+#include <limits>
 #include <optional>
 #include <span>
 #include <string>
@@ -137,6 +138,13 @@ std::string integerToString(const std::vector<std::uint64_t>& a,
 }
 
 bool isReal(Type t) { return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal; }
+
+// shortreal is C's float and real C's double (VALUE_SEMANTICS.md 1, 7.4). A
+// double out of float's range becomes an infinity, as IEEE 754 rounds it;
+// C++ leaves that to the implementation only when the infinities are
+// values of float, which they are with IEEE 754.
+static_assert(std::numeric_limits<float>::is_iec559 && std::numeric_limits<double>::is_iec559,
+              "shortreal and real need IEEE 754 float and double");
 
 /// The bits a real constant keeps: a double, or a float for shortreal
 /// (SIR_SPEC.md 6).

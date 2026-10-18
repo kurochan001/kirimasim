@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <deque>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -292,6 +293,13 @@ double toReal(W4 v, sir::Type t) {
         return std::bit_cast<float>(static_cast<std::uint32_t>(v.a));
     return std::bit_cast<double>(v.a);
 }
+
+// shortreal is C's float and real C's double (VALUE_SEMANTICS.md 1, 7.4). A
+// double out of float's range becomes an infinity, as IEEE 754 rounds it;
+// C++ leaves that to the implementation only when the infinities are
+// values of float, which they are with IEEE 754.
+static_assert(std::numeric_limits<float>::is_iec559 && std::numeric_limits<double>::is_iec559,
+              "shortreal and real need IEEE 754 float and double");
 
 W4 fromReal(double d, sir::Type t) {
     if (t.kind == sir::TypeKind::ShortReal)
