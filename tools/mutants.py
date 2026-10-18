@@ -512,7 +512,8 @@ MUTANTS = [
     ("sir: verify lets a trigger's iff read another frame", "src/sir/verify.cpp",
      'error(where, g + " reads another frame", p.loc);', "(void)0;"),
     ("sir: verify counts a static subroutine's slots in rule 6", "src/sir/verify.cpp",
-     "                        if (s.subroutine != kNone) continue;\n", ""),
+     "if (r.slot >= d_.slots.size() || d_.slots[r.slot].subroutine != kNone) continue;",
+     "if (r.slot >= d_.slots.size()) continue;"),
     ("front: an instance's scope name is a reference into the table", "src/front/lower.cpp",
      "    const std::string scope = design_.instances[instance_].scopeName;",
      "    const std::string& scope = design_.instances[instance_].scopeName;"),
@@ -750,6 +751,20 @@ MUTANTS = [
      "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"
      "                        if (sched_.takeInterrupt()) return Exit::Stop;\n",
      "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"),
+    ("sir verify rule 6: writes of adjacent bits overlap", "src/sir/verify.cpp",
+     "if (q.bitHi <= w.bitLo) {", "if (q.bitHi < w.bitLo) {"),
+    ("sir verify rule 6: groups of adjacent elements are swept together", "src/sir/verify.cpp",
+     "return h.writes.front().elemHi <= elemLo;", "return h.writes.front().elemHi < elemLo;"),
+    ("sir verify rule 6: groups of other elements are not swept together", "src/sir/verify.cpp",
+     "if (may) sweepBits(h.writes, g.writes, kind, found);", "(void)may;"),
+    ("sir verify rule 6: a write meets only the writes of its own group", "src/sir/verify.cpp",
+     "const std::size_t other = within ? 0 : 1 - side;",
+     "const std::size_t other = within ? 0 : side;"),
+    ("sir verify rule 6: the errors come by the later process", "src/sir/verify.cpp",
+     "return std::tie(x.first, x.second, x.firstIndex, x.secondIndex) <\n"
+     "                   std::tie(y.first, y.second, y.firstIndex, y.secondIndex);",
+     "return std::tie(x.second, x.first, x.firstIndex, x.secondIndex) <\n"
+     "                   std::tie(y.second, y.first, y.firstIndex, y.secondIndex);"),
 ]
 
 

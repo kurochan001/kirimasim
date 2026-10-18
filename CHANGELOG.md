@@ -90,6 +90,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Compiling a design with many processes no longer takes time that grows
+  with the square of their number: the SIR verifier's check of what
+  processes write in common (SIR_SPEC.md 10, rule 6) sorts the writes of
+  each slot instead of comparing every pair of processes. 40000 `always`
+  blocks that each write one bit of a vector took 1.8 s to compile and now
+  take 0.12 s; the errors are the same, in the same order (#14).
 - Calls nested more than 10000 deep in one process are a run-time error of
   the design at the call, with exit code 2 and `final`; they were an
   internal error (code 3), the calls of tasks that wait had no limit, and

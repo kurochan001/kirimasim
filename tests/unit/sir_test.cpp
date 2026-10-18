@@ -1,11 +1,14 @@
 // Tests for the SIR data structures, the text writer and the verifier.
 
 #include <cstdint>
+#include <iterator>
+#include <random>
 #include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 
+#include "fuzz.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
@@ -474,6 +477,131 @@ TEST(Sir, TwoContinuousAssignmentsToAVariable) {
     EXPECT_TRUE(mentions(verify(d), "also writes"));
     d.slots[2].kind = SlotKind::Wire;  // nets may have several drivers
     expectClean(d);
+}
+
+/// Rule 6 as it was first checked: every pair of processes, and every pair
+/// of their writes. The reference for the sweep the verifier does instead.
+std::vector<std::string> conflictsByPairs(const Design& d) {
+    const auto overlap = [](std::uint32_t a, std::uint32_t na, std::uint32_t b, std::uint32_t nb) {
+        return na == 0 || nb == 0 || (a < b + nb && b < a + na);
+    };
+    const auto exclusive = [](ProcessKind k) {
+        return k == ProcessKind::Comb || k == ProcessKind::Latch || k == ProcessKind::Ff;
+    };
+    const auto unchecked = [](ProcessKind k) {
+        return k == ProcessKind::StaticInit || k == ProcessKind::Override;
+    };
+    const auto& ps = d.processes;
+    std::vector<std::string> out;
+    for (std::size_t i = 0; i < ps.size(); ++i) {
+        for (std::size_t j = i + 1; j < ps.size(); ++j) {
+            for (const SlotRange& a : ps[i].writes) {
+                for (const SlotRange& b : ps[j].writes) {
+                    if (a.slot != b.slot || a.slot >= d.slots.size() ||
+                        !overlap(a.firstElem, a.numElems, b.firstElem, b.numElems) ||
+                        !overlap(a.lsb, a.width, b.lsb, b.width))
+                        continue;
+                    const Slot& s = d.slots[a.slot];
+                    if (unchecked(ps[i].kind) || unchecked(ps[j].kind) || s.subroutine != kNone)
+                        continue;
+                    const bool bothCont =
+                        ps[i].kind == ProcessKind::Cont && ps[j].kind == ProcessKind::Cont;
+                    if (exclusive(ps[i].kind) || exclusive(ps[j].kind) ||
+                        s.kind == SlotKind::Uwire || (bothCont && s.kind == SlotKind::Var))
+                        out.push_back("process @" + std::to_string(j) + " " + ps[j].name +
+                                      ": writes %s" + std::to_string(a.slot) + " (" + s.name +
+                                      "), which process @" + std::to_string(i) + " also writes");
+                }
+            }
+        }
+    }
+    return out;
+}
+
+std::vector<std::string> conflictsOf(const std::vector<VerifyError>& errors) {
+    std::vector<std::string> out;
+    for (const VerifyError& e : errors)
+        if (e.message.find("also writes") != std::string::npos)
+            out.push_back(e.where + ": " + e.message);
+    return out;
+}
+
+/// A process of the kind that writes the ranges; its body only returns.
+Process writer(const std::string& name, ProcessKind kind, std::vector<SlotRange> writes) {
+    Process p;
+    p.name = name;
+    p.kind = kind;
+    p.writes = std::move(writes);
+    p.loc = at(1);
+    p.blocks.resize(1);
+    p.blocks[0].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
+    return p;
+}
+
+TEST(Sir, WriteConflictsAreThoseOfEveryPair) {
+    // Rule 6 on random designs: every kind of process, writes of the whole
+    // slot or of its parts in either dimension, the kinds of slot that the
+    // rule tells apart, a static subroutine's variable and a slot past the
+    // table. The same errors as the check of every pair, in the same order.
+    const ProcessKind kinds[] = {
+        ProcessKind::Cont,       ProcessKind::Comb,     ProcessKind::Latch,
+        ProcessKind::CombAt,     ProcessKind::Ff,       ProcessKind::FfPlain,
+        ProcessKind::Initial,    ProcessKind::Final,    ProcessKind::General,
+        ProcessKind::StaticInit, ProcessKind::Override, ProcessKind::Postponed,
+    };
+    const std::uint64_t seed = kirimasim::test::fuzzSeed(0x72756c6536ULL);
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+    std::mt19937_64 rng{seed};
+    const auto pick = [&](std::uint64_t n) { return static_cast<std::uint32_t>(rng() % n); };
+    const std::uint64_t rounds = 400 * kirimasim::test::fuzzScale();
+    std::size_t found = 0;
+    for (std::uint64_t round = 0; round < rounds; ++round) {
+        Design d = counter();
+        d.slots = {
+            {"top.v", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, kNone, kNone, 0},
+            {"top.w", u4(8), SlotKind::Wire, {{0, 3}}, 0, 0, kNone, kNone, 0},
+            {"top.u", u4(8), SlotKind::Uwire, {{0, 3}}, 0, 0, kNone, kNone, 0},
+            {"top.f.x", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, 0, kNone, 0},
+        };
+        d.processes.clear();
+        const std::uint32_t n = 2 + pick(12);
+        for (std::uint32_t i = 0; i < n; ++i) {
+            std::vector<SlotRange> writes;
+            for (std::uint32_t k = pick(5); k > 0; --k)
+                writes.push_back({pick(5), pick(4), pick(4), pick(8), pick(5)});
+            d.processes.push_back(
+                writer("p" + std::to_string(i), kinds[pick(std::size(kinds))], std::move(writes)));
+        }
+        const std::vector<std::string> got = conflictsOf(verify(d));
+        EXPECT_EQ(got, conflictsByPairs(d)) << "round " << round;
+        found += got.size();
+    }
+    EXPECT_GT(found, 1000U);  // the rounds do find conflicts
+}
+
+TEST(Sir, ManyWritersOfOneSlot) {
+    // 20000 always_ff each write one bit of q, and 20000 more one element
+    // of mem: no conflict. Then one more writes a bit of q and an element
+    // of mem that are taken: one error each, naming the first writer.
+    constexpr std::uint32_t kN = 20000;
+    Design d = counter();
+    d.slots = {
+        {"top.q", u4(kN), SlotKind::Var, {}, 0, 0, kNone, kNone, 0},
+        {"top.mem", u4(8), SlotKind::Var, {{0, kN - 1}}, 0, 0, kNone, kNone, 0},
+    };
+    d.processes.clear();
+    for (std::uint32_t i = 0; i < kN; ++i)
+        d.processes.push_back(writer("q" + std::to_string(i), ProcessKind::Ff, {{0, 0, 0, i, 1}}));
+    for (std::uint32_t i = 0; i < kN; ++i)
+        d.processes.push_back(writer("m" + std::to_string(i), ProcessKind::Ff, {{1, i, 1, 0, 0}}));
+    EXPECT_TRUE(conflictsOf(verify(d)).empty());
+    d.processes.push_back(
+        writer("both", ProcessKind::FfPlain, {{0, 0, 0, 1234, 1}, {1, 4321, 1, 2, 3}}));
+    const std::vector<std::string> want = {
+        "process @40000 both: writes %s0 (top.q), which process @1234 also writes",
+        "process @40000 both: writes %s1 (top.mem), which process @24321 also writes",
+    };
+    EXPECT_EQ(conflictsOf(verify(d)), want);
 }
 
 /// mem is logic [7:0] mem [0:3]; the process reads mem[i] and writes it back.

@@ -1,13 +1,16 @@
 #include "kirimasim/sir/verify.h"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -106,14 +109,82 @@ bool width1(Type t) { return isIntegral(t) && t.width == 1; }
 /// same type up to signedness (SIR_SPEC.md 5.1; conversions are explicit).
 bool fits(Type p, Type v) { return v.kind != TypeKind::Void && unsignedOf(p) == unsignedOf(v); }
 
-bool overlaps(std::uint32_t a, std::uint32_t na, std::uint32_t b, std::uint32_t nb) {
-    if (na == 0 || nb == 0) return true;  // 0 means "all"
-    return a < b + nb && b < a + na;
+/// The writers that rule 6 tells apart.
+enum class Writer : std::uint8_t { Exclusive, Cont, Other };
+constexpr std::size_t kWriters = 3;
+
+Writer writerOf(ProcessKind k) {
+    if (exclusiveWriter(k)) return Writer::Exclusive;
+    return k == ProcessKind::Cont ? Writer::Cont : Writer::Other;
 }
 
-bool overlaps(const SlotRange& x, const SlotRange& y) {
-    return x.slot == y.slot && overlaps(x.firstElem, x.numElems, y.firstElem, y.numElems) &&
-           overlaps(x.lsb, x.width, y.lsb, y.width);
+/// Whether rule 6 forbids two writers to write the same bits of a slot.
+bool clash(Writer a, Writer b, SlotKind k) {
+    return a == Writer::Exclusive || b == Writer::Exclusive || k == SlotKind::Uwire ||
+           (a == Writer::Cont && b == Writer::Cont && k == SlotKind::Var);
+}
+
+/// A write range of a process, with its elements and bits as half-open
+/// intervals; a count or width of 0 means all, which overlaps everything.
+struct WriteExtent {
+    SlotId slot = 0;
+    std::uint64_t elemLo = 0, elemHi = 0, bitLo = 0, bitHi = 0;
+    ProcessId process = 0;
+    std::uint32_t index = 0;  ///< Its place in the process's writes.
+    Writer writer = Writer::Other;
+};
+
+std::pair<std::uint64_t, std::uint64_t> extent(std::uint32_t first, std::uint32_t count) {
+    constexpr std::uint64_t kAll = std::uint64_t{1} << 33;  // past every first + count
+    if (count == 0) return {0, kAll};
+    return {first, std::uint64_t{first} + count};
+}
+
+/// Two writes that rule 6 forbids: processes first < second, and the places
+/// of the ranges in their writes.
+struct Clash {
+    ProcessId first = 0, second = 0;
+    std::uint32_t firstIndex = 0, secondIndex = 0;
+    SlotId slot = 0;
+};
+
+/// Adds to `found` the pairs of writes whose bits overlap and that rule 6
+/// forbids: one of `a` and one of `b`, or two of `a` when `b` is empty.
+/// Each list is sorted by bitLo, and the elements of all overlap. The
+/// writes still open are kept by writer, so a write looks only at those it
+/// may clash with, and the time grows with the writes and the pairs found.
+void sweepBits(std::span<const WriteExtent> a, std::span<const WriteExtent> b, SlotKind kind,
+               std::vector<Clash>& found) {
+    const bool within = b.empty();
+    std::array<std::vector<const WriteExtent*>, 2 * kWriters> open;  // by side, then writer
+    std::size_t ia = 0;
+    std::size_t ib = 0;
+    while (ia < a.size() || ib < b.size()) {
+        const bool fromA = ib == b.size() || (ia < a.size() && a[ia].bitLo <= b[ib].bitLo);
+        const WriteExtent& w = fromA ? a[ia++] : b[ib++];
+        const std::size_t side = fromA ? 0 : 1;
+        const std::size_t other = within ? 0 : 1 - side;
+        for (std::size_t c = 0; c < kWriters; ++c) {
+            if (!clash(w.writer, static_cast<Writer>(c), kind)) continue;
+            std::vector<const WriteExtent*>& list = open[other * kWriters + c];
+            for (std::size_t n = 0; n < list.size();) {
+                const WriteExtent& q = *list[n];
+                if (q.bitHi <= w.bitLo) {  // closed for this write and every later one
+                    list[n] = list.back();
+                    list.pop_back();
+                    continue;
+                }
+                if (q.process != w.process) {
+                    const bool qFirst = q.process < w.process;
+                    const WriteExtent& x = qFirst ? q : w;
+                    const WriteExtent& y = qFirst ? w : q;
+                    found.push_back({x.process, y.process, x.index, y.index, w.slot});
+                }
+                ++n;
+            }
+        }
+        open[side * kWriters + static_cast<std::size_t>(w.writer)].push_back(&w);
+    }
 }
 
 /// Whether range `outer` covers all of `inner`.
@@ -1643,44 +1714,85 @@ private:
 
     // Rule 6, second half: what an always_comb, always_latch or always_ff
     // writes, no other process writes; a uwire has one driver; a variable
-    // has at most one continuous assignment.
+    // has at most one continuous assignment. The writes of each slot are
+    // sorted by place and swept, rather than every pair of processes
+    // compared; the errors come in the order of the processes and of their
+    // writes, first by the earlier process.
     void checkWriteConflicts() {
         const auto& ps = d_.processes;
+        std::vector<WriteExtent> writes;
         for (std::size_t i = 0; i < ps.size(); ++i) {
-            for (std::size_t j = i + 1; j < ps.size(); ++j) {
-                for (const SlotRange& a : ps[i].writes) {
-                    for (const SlotRange& b : ps[j].writes) {
-                        if (!overlaps(a, b) || a.slot >= d_.slots.size()) continue;
-                        // Initial values of declarations are written by no
-                        // process (6.8).
-                        if (ps[i].kind == ProcessKind::StaticInit ||
-                            ps[j].kind == ProcessKind::StaticInit)
-                            continue;
-                        // assign and force hold a target over its other
-                        // writers (SCHEDULER_SPEC.md 14).
-                        if (ps[i].kind == ProcessKind::Override ||
-                            ps[j].kind == ProcessKind::Override)
-                            continue;
-                        const Slot& s = d_.slots[a.slot];
-                        // A static subroutine's variables and arguments:
-                        // a call copies into them, and slang reports the
-                        // assignments inside the function (SIR_SPEC.md 10).
-                        if (s.subroutine != kNone) continue;
-                        const bool exclusive =
-                            exclusiveWriter(ps[i].kind) || exclusiveWriter(ps[j].kind);
-                        const bool bothCont =
-                            ps[i].kind == ProcessKind::Cont && ps[j].kind == ProcessKind::Cont;
-                        const bool conflict = exclusive || s.kind == SlotKind::Uwire ||
-                                              (bothCont && s.kind == SlotKind::Var);
-                        if (conflict)
-                            error(processWhere(static_cast<ProcessId>(j)) + " " + ps[j].name,
-                                  "writes %s" + std::to_string(a.slot) + " (" + s.name +
-                                      "), which " + processWhere(static_cast<ProcessId>(i)) +
-                                      " also writes",
-                                  ps[j].loc);
-                    }
-                }
+            // Initial values of declarations are written by no process
+            // (6.8). assign and force hold a target over its other writers
+            // (SCHEDULER_SPEC.md 14).
+            if (ps[i].kind == ProcessKind::StaticInit || ps[i].kind == ProcessKind::Override)
+                continue;
+            for (std::size_t k = 0; k < ps[i].writes.size(); ++k) {
+                const SlotRange& r = ps[i].writes[k];
+                // A static subroutine's variables and arguments: a call
+                // copies into them, and slang reports the assignments
+                // inside the function (SIR_SPEC.md 10).
+                if (r.slot >= d_.slots.size() || d_.slots[r.slot].subroutine != kNone) continue;
+                const auto [elemLo, elemHi] = extent(r.firstElem, r.numElems);
+                const auto [bitLo, bitHi] = extent(r.lsb, r.width);
+                writes.push_back({r.slot, elemLo, elemHi, bitLo, bitHi, static_cast<ProcessId>(i),
+                                  static_cast<std::uint32_t>(k), writerOf(ps[i].kind)});
             }
+        }
+        std::ranges::sort(writes, [](const WriteExtent& x, const WriteExtent& y) {
+            return std::tie(x.slot, x.elemLo, x.elemHi, x.bitLo) <
+                   std::tie(y.slot, y.elemLo, y.elemHi, y.bitLo);
+        });
+        std::vector<Clash> found;
+        for (std::size_t b = 0; b < writes.size();) {
+            std::size_t e = b;
+            while (e < writes.size() && writes[e].slot == writes[b].slot)
+                ++e;
+            sweepSlot(std::span(writes).subspan(b, e - b), found);
+            b = e;
+        }
+        std::ranges::sort(found, [](const Clash& x, const Clash& y) {
+            return std::tie(x.first, x.second, x.firstIndex, x.secondIndex) <
+                   std::tie(y.first, y.second, y.firstIndex, y.secondIndex);
+        });
+        for (const Clash& c : found)
+            error(processWhere(c.second) + " " + ps[c.second].name,
+                  "writes %s" + std::to_string(c.slot) + " (" + d_.slots[c.slot].name +
+                      "), which " + processWhere(c.first) + " also writes",
+                  ps[c.second].loc);
+    }
+
+    /// The writes of one slot, sorted by elements and then bits. Writes
+    /// with the same elements form a group; each group is swept on its own
+    /// and with each earlier group whose elements overlap its own.
+    void sweepSlot(std::span<const WriteExtent> slotWrites, std::vector<Clash>& found) const {
+        const SlotKind kind = d_.slots[slotWrites.front().slot].kind;
+        struct Group {
+            std::span<const WriteExtent> writes;
+            std::array<bool, kWriters> has{};
+        };
+        std::vector<Group> open;
+        for (std::size_t b = 0; b < slotWrites.size();) {
+            std::size_t e = b;
+            while (e < slotWrites.size() && slotWrites[e].elemLo == slotWrites[b].elemLo &&
+                   slotWrites[e].elemHi == slotWrites[b].elemHi)
+                ++e;
+            Group g{slotWrites.subspan(b, e - b), {}};
+            for (const WriteExtent& w : g.writes)
+                g.has[static_cast<std::size_t>(w.writer)] = true;
+            const std::uint64_t elemLo = g.writes.front().elemLo;
+            std::erase_if(open, [&](const Group& h) { return h.writes.front().elemHi <= elemLo; });
+            for (const Group& h : open) {
+                bool may = false;
+                for (std::size_t x = 0; x < kWriters; ++x)
+                    for (std::size_t y = 0; y < kWriters; ++y)
+                        may = may || (h.has[x] && g.has[y] &&
+                                      clash(static_cast<Writer>(x), static_cast<Writer>(y), kind));
+                if (may) sweepBits(h.writes, g.writes, kind, found);
+            }
+            sweepBits(g.writes, {}, kind, found);
+            open.push_back(g);
+            b = e;
         }
     }
 };
