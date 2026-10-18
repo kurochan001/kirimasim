@@ -1,531 +1,533 @@
-# SCHEDULER_SPEC：スケジューラの仕様
+# SCHEDULER_SPEC: specification of the scheduler
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。同日、静的変数の初期値の評価の順序（3 節）を追記した（承認済み）。同日、`$finish(0)` と `$stop(0)` のときに終了の理由を標準エラーに出さないことを 16.2 節に追記した（承認済み）。2026-10-16 に、timescale の既定値と設計全体の精度を 1 節に足した（承認済み）。同日、`final` の中の `$finish` の扱いを 16.2 節に足した（承認済み）。同日、6.4 節と 12 節の書き込みとドライバの検査を slang の解析の段に任せることを足した（承認済み）。同日、12 節と 19 節の駆動の強さの記述を、VALUE_SEMANTICS.md の 5 節への参照に改めた（承認済み）。2026-10-17 に、終わったプロセスの記録の回収を 10.8 節に足した（承認済み）。同日、10.8 節の 3 番目の条件を、確定した報告の呼び出しまで含むように改めた（承認済み）。第 4 部の後半（P3 の機能）は未記入。
+[日本語](SCHEDULER_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、kirimasim の実行カーネルが時刻と事象をどう進めるかを定める。規格（IEEE 1800-2023）の本文は写さず、本書の言葉で要約し、根拠の節番号を示す。「規格で確認」と書いた項目は、規格の該当節を読んで確かめたもの。「本書の決まり」と書いた項目は、規格が実装に任せている点を kirimasim として決めたもの。
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. The same day, the order of evaluating initial values of static variables (3) was added (approved). The same day, not writing the reason for ending to standard error for `$finish(0)` and `$stop(0)` was added to 16.2 (approved). On 2026-10-16, the default timescale and the design's precision were added to 1 (approved). The same day, `$finish` inside `final` was added to 16.2 (approved). The same day, leaving the checks of writes and drivers in 6.4 and 12 to slang's analysis stage was added (approved). The same day, the descriptions of drive strength in 12 and 19 were changed to references to VALUE_SEMANTICS.md 5 (approved). On 2026-10-17, reclaiming the records of ended processes was added to 10.8 (approved). The same day, the third condition of 10.8 was changed to include the calls of settled reports (approved). The second half of part 4 (P3 features) is not written yet.
 
-分量が多いので、次の順に分けて書く。
+This document sets how kirimasim's execution kernel advances time and events. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "rule of this document" are points the standard leaves to the implementation, decided for kirimasim.
 
-| 部 | 内容 | 状態 |
+It is long, so it is written in these parts.
+
+| Part | Content | State |
 | --- | --- | --- |
-| 第 1 部 | 時刻スロットと領域、参照アルゴリズム、決まっている順序、代入と事象、手続きの起動、PLI コールバックの領域（1〜7 節） | 承認済み |
-| 第 2 部 | 待ちと通知（遅延、イベント制御、`wait`、名前付きイベント、監視レコード）、プロセス制御（fork、disable、process クラス）（8〜11 節） | 承認済み |
-| 第 3 部 | 連続代入とその遅延、NBA の詳細、手続きの連続代入（assign、force など）（12〜14 節。手続きの遅延と代入内の遅延は 8 節） | 承認済み |
-| 第 4 部 | unique・priority の違反と遅延即時アサーション（15 節。承認済み）。並行アサーションの領域、クロッキングブロック、program（P3 で書く。未記入） | 前半は承認済み |
-| 第 5 部 | 終了の条件と上限、VPI の時刻のコールバック（16〜17 節） | 承認済み |
+| Part 1 | Time slots and regions, the reference algorithm, orders that are set, assignments and events, starting procedures, the regions of PLI callbacks (1 to 7) | Approved |
+| Part 2 | Waits and notification (delays, event controls, `wait`, named events, monitor records), process control (fork, disable, the process class) (8 to 11) | Approved |
+| Part 3 | Continuous assignments and their delays, details of NBA, procedural continuous assignments (assign, force and so on) (12 to 14; procedural delays and intra-assignment delays are in 8) | Approved |
+| Part 4 | Violations of unique and priority, and deferred immediate assertions (15; approved). The regions of concurrent assertions, clocking blocks, program (written in P3; not written yet) | First half approved |
+| Part 5 | Conditions and limits of ending, VPI time callbacks (16 to 17) | Approved |
 
-## 1. 時刻と時刻スロット
+## 1. Time and time slots
 
-- 事象はどれも、ちょうど 1 つの実行時刻を持つ。同じ時刻に予定された事象の集まりを時刻スロットと呼ぶ。シミュレーションは、今の時刻スロットの事象をすべて実行して取り除いてから、事象のある次の時刻スロットへ進む。時刻は戻らない（規格で確認：4.4）。
-- 時刻は、設計全体の最小の精度を単位とした符号なし 64 ビット整数で持つ。`timeunit` からの換算と丸めは整数の分数で計算し、桁あふれはエラーにする（本書の決まり。設計書の決まりを引き継ぐ）。
-- 遅延の値は、その遅延を書いた設計要素（モジュール、program、インターフェースなど）の時間の精度に丸めてから使う。精度が時間の単位と同じなら整数に、1 桁細かければ小数 1 桁に丸める（規格で確認：3.14.1。例：単位 1ns、精度 100ps なら、2.75ns は 2.8ns）。時間の単位と精度は、`` `timescale `` か `timeunit`・`timeprecision` で決まり、指定が無ければ既定の値を使う（規格で確認：3.14.2。どの指定が効くかは slang の結果を使う）。
-- 丸めた値を、設計全体の最小の精度の刻みに換算する。この換算は、精度が細かくなる向きなので割り切れ、丸めは起きない。
-- ちょうど中間の値の丸めの向きは、規格の文面からは決まらない。kirimasim は、実数から整数への変換（VALUE_SEMANTICS.md の 1.5 節）と同じく、0 から遠い方へ丸める（本書の決まり。P1 で Icarus 13.0 の結果と照合する）。
-- `#1step` は、設計全体の最小の精度の 1 刻み。標本化の意味は第 4 部（P3）で書く。
-- **timescale の既定値（2026-10-16 に承認）：** `` `timescale `` も `timeunit`・`timeprecision` も効いていない設計要素の時間の単位と精度は、`--timescale` で指定が無ければ 1ns / 1ns とする（本書の決まり）。規格は既定値を処理系に任せている（規格で確認：3.14.2.3）。実際に走らせて確かめたところ、Icarus 13.0 は 1s / 1s、Verilator 5.052 は 1ps / 1ps で、どちらに合わせてももう一方とは違う。テストスイートは、時刻の単位で出力が変わるテストに timescale を書く決まり（TEST_SUITE.md）なので、この既定値はテストの期待値に影響しない。
-- **混在：** timescale を指定した設計要素と、しない設計要素が混ざっていたら誤り（規格で確認：3.14.2.3）。slang がこれをエラーにし、kirimasim はコード 2 で終わる（2026-10-16 に確かめた）。`--timescale` を付けると、指定の無い設計要素にその値が入るので、誤りにならない（slang の動作。同日に確かめた）。
-- **設計全体の精度（2026-10-16 に承認）：** すべての設計要素の精度の最小を、設計全体の精度（時刻の 1 刻み）にする（規格で確認：3.14.3）。どの設計要素も指定しないときは、既定値（`--timescale` か 1ns / 1ns）の精度になる。`front` が求めて SIR に持たせる。
+- Every event has exactly one execution time. The set of events scheduled for the same time is called a time slot. Simulation runs and removes every event of the present time slot before moving to the next time slot with events. Time does not go back (checked: 4.4).
+- Time is held as an unsigned 64-bit integer whose unit is the smallest precision of the whole design. Conversion from `timeunit` and rounding are computed with integer fractions, and overflow is an error (rule of this document; carried over from the design specification's rules).
+- A delay value is rounded to the time precision of the design element (module, program, interface and so on) where the delay is written before it is used. If the precision equals the time unit it is rounded to an integer; if one digit finer, to one decimal place (checked: 3.14.1; for example, with unit 1ns and precision 100ps, 2.75ns becomes 2.8ns). The time unit and precision are decided by `` `timescale `` or `timeunit` and `timeprecision`; without them the defaults are used (checked: 3.14.2; which specification takes effect is taken from slang's result).
+- The rounded value is converted to steps of the smallest precision of the whole design. This conversion goes toward a finer precision, so it divides exactly and no rounding happens.
+- The direction of rounding of a value exactly halfway is not settled by the wording of the standard. kirimasim rounds away from zero, as in conversion from real to integer (VALUE_SEMANTICS.md 1.5) (rule of this document; to be checked against Icarus 13.0's results in P1).
+- `#1step` is one step of the smallest precision of the whole design. The meaning of sampling is written in part 4 (P3).
+- **Default timescale (approved 2026-10-16):** the time unit and precision of a design element on which neither `` `timescale `` nor `timeunit` and `timeprecision` take effect are 1ns / 1ns unless `--timescale` gives them (rule of this document). The standard leaves the default to the implementation (checked: 3.14.2.3). Running them showed Icarus 13.0 uses 1s / 1s and Verilator 5.052 1ps / 1ps, so matching either differs from the other. The test suite's rule is that tests whose output changes with the unit of time write a timescale (TEST_SUITE.md), so this default does not affect the tests' expected values.
+- **Mixing:** mixing design elements with a timescale and design elements without one is an error (checked: 3.14.2.3). slang makes this an error, and kirimasim ends with code 2 (checked 2026-10-16). With `--timescale`, design elements with no specification get that value, so it is not an error (slang's behaviour; checked the same day).
+- **Precision of the whole design (approved 2026-10-16):** the smallest precision of all design elements is the precision of the whole design (one step of time) (checked: 3.14.3). When no design element specifies one, it is the precision of the default (`--timescale` or 1ns / 1ns). `front` computes it and puts it in SIR.
 
-## 2. 領域
+## 2. Regions
 
-### 2.1 17 の領域と順序
+### 2.1 The 17 regions and their order
 
-1 つの時刻スロットは、次の 17 の領域に、この順で分かれる（規格で確認：4.4）。
+One time slot is divided into these 17 regions, in this order (checked: 4.4).
 
-| # | 領域 | 種類 | 組 | 主に置くもの |
+| # | Region | Kind | Set | Mainly holds |
 | --- | --- | --- | --- | --- |
-| 1 | Preponed | シミュレーションと PLI | — | `#1step` の標本化（前の時刻スロットの Postponed で標本化するのと同じ） |
-| 2 | Pre-Active | PLI | — | PLI のコールバック |
-| 3 | Active | シミュレーション | active | 設計のプロセスの評価と、値の更新 |
-| 4 | Inactive | シミュレーション | active | active の組で `#0` で止まったプロセスの再開 |
-| 5 | Pre-NBA | PLI | active | PLI のコールバック |
-| 6 | NBA | シミュレーション | active | active の組で実行した非ブロッキング代入の更新 |
-| 7 | Post-NBA | PLI | active | PLI のコールバック |
-| 8 | Pre-Observed | PLI | — | PLI のコールバック（読み出しだけ） |
-| 9 | Observed | シミュレーション | — | 並行アサーションの評価 |
-| 10 | Post-Observed | PLI | — | PLI のコールバック |
-| 11 | Reactive | シミュレーション | reactive | program と checker の中の代入、並行アサーションの動作ブロック |
-| 12 | Re-Inactive | シミュレーション | reactive | reactive の組で `#0` で止まったプロセスの再開 |
-| 13 | Pre-Re-NBA | PLI | reactive | PLI のコールバック |
-| 14 | Re-NBA | シミュレーション | reactive | reactive の組で実行した非ブロッキング代入の更新 |
-| 15 | Post-Re-NBA | PLI | reactive | PLI のコールバック |
-| 16 | Pre-Postponed | PLI | — | PLI のコールバック |
-| 17 | Postponed | シミュレーションと PLI | — | `$monitor`、`$strobe`、読み出しだけのコールバック |
+| 1 | Preponed | Simulation and PLI | — | Sampling of `#1step` (the same as sampling in the Postponed region of the previous time slot) |
+| 2 | Pre-Active | PLI | — | PLI callbacks |
+| 3 | Active | Simulation | active | Evaluation of the design's processes, and updates of values |
+| 4 | Inactive | Simulation | active | Resumption of processes of the active set stopped by `#0` |
+| 5 | Pre-NBA | PLI | active | PLI callbacks |
+| 6 | NBA | Simulation | active | Updates of nonblocking assignments run in the active set |
+| 7 | Post-NBA | PLI | active | PLI callbacks |
+| 8 | Pre-Observed | PLI | — | PLI callbacks (read only) |
+| 9 | Observed | Simulation | — | Evaluation of concurrent assertions |
+| 10 | Post-Observed | PLI | — | PLI callbacks |
+| 11 | Reactive | Simulation | reactive | Assignments in programs and checkers, action blocks of concurrent assertions |
+| 12 | Re-Inactive | Simulation | reactive | Resumption of processes of the reactive set stopped by `#0` |
+| 13 | Pre-Re-NBA | PLI | reactive | PLI callbacks |
+| 14 | Re-NBA | Simulation | reactive | Updates of nonblocking assignments run in the reactive set |
+| 15 | Post-Re-NBA | PLI | reactive | PLI callbacks |
+| 16 | Pre-Postponed | PLI | — | PLI callbacks |
+| 17 | Postponed | Simulation and PLI | — | `$monitor`, `$strobe`, read-only callbacks |
 
-- active の組は Active、Inactive、Pre-NBA、NBA、Post-NBA。reactive の組は Reactive、Re-Inactive、Pre-Re-NBA、Re-NBA、Post-Re-NBA（規格で確認：4.4.1）。
-- 繰り返しの対象になる領域は、Active から Pre-Postponed までの 14 個（規格で確認：4.4.1、4.5）。Preponed、Pre-Active、Postponed は、時刻スロットごとに 1 回だけ実行する。
-- Observed では PLI のコールバックを呼ばない。Observed で評価したアサーションの成否のコードは、同じ時刻スロットの Reactive に入れる（規格で確認：4.4.2.5）。
+- The active set is Active, Inactive, Pre-NBA, NBA and Post-NBA. The reactive set is Reactive, Re-Inactive, Pre-Re-NBA, Re-NBA and Post-Re-NBA (checked: 4.4.1).
+- The regions that are iterated are the 14 from Active to Pre-Postponed (checked: 4.4.1, 4.5). Preponed, Pre-Active and Postponed run only once per time slot.
+- No PLI callbacks are called in Observed. The pass/fail code of assertions evaluated in Observed is put in the Reactive region of the same time slot (checked: 4.4.2.5).
 
-### 2.2 領域ごとの禁止事項
+### 2.2 What is forbidden in each region
 
-- Preponed（PLI）：ネットや変数への書き込みと、今の時刻スロットへの事象の追加は禁止（規格で確認：4.4.3.1）。
-- Pre-Observed（PLI）：同じく、書き込みと、今の時刻スロットへの事象の追加は禁止（規格で確認：4.4.3.5）。
-- Postponed：書き込みと、今の時刻スロットの前の領域への事象の追加は禁止。値の変化はもう起きない（規格で確認：4.4.2.9）。
-- kirimasim は、これらの領域での禁止された書き込みや事象の追加を、実行時のエラーとして報告する（本書の決まり）。
+- Preponed (PLI): writing nets or variables, and adding events to the present time slot, are forbidden (checked: 4.4.3.1).
+- Pre-Observed (PLI): likewise, writing and adding events to the present time slot are forbidden (checked: 4.4.3.5).
+- Postponed: writing, and adding events to earlier regions of the present time slot, are forbidden. No more value changes happen (checked: 4.4.2.9).
+- kirimasim reports forbidden writes and additions of events in these regions as run-time errors (rule of this document).
 
-## 3. 時刻スロットの進め方（参照アルゴリズム）
+## 3. How a time slot proceeds (the reference algorithm)
 
-規格は、準拠するシミュレータが実装すべき参照アルゴリズムを示している。利用者から見える結果がそれと同じなら、別のアルゴリズムを使ってよい（規格で確認：4.3、4.5）。kirimasim は、次の手順をそのまま実装する。
+The standard gives a reference algorithm that a conforming simulator should implement. Another algorithm may be used if the results the user sees are the same (checked: 4.3, 4.5). kirimasim implements the following steps as they are.
 
-1. 時刻 0 に、すべてのネットと変数の値を初期化し、初期化の事象を時刻 0 の時刻スロットに入れる。
-   - 静的変数の宣言の初期値は、initial と always を始める前に評価する（規格で確認：6.8、10.5）。静的変数どうしの評価の順序は、規格に記述が見当たらない（未確認）。kirimasim は、1 つのスコープの中では宣言の順に評価する（本書の決まり）。別のスコープの静的変数を読む初期値は、順序が決まらないので警告を出す（本書の決まり）。
-2. 事象のある時刻スロットがある間、最も早いものに進み、その時刻スロットを実行する。
-3. 時刻スロットの実行：
-   1. Preponed を実行する。
-   2. Pre-Active を実行する。
-   3. Active から Pre-Postponed までのどれかに事象がある間、次を繰り返す。
-      1. **active 側：** Active から Post-Observed までのどれかに事象がある間、次を繰り返す：Active を実行し、そのあと Active から Post-Observed までで最初に事象のある領域の事象を、すべて Active へ移す。
-      2. **reactive 側：** Reactive から Post-Re-NBA までのどれかに事象がある間、次を繰り返す：Reactive を実行し、そのあと Reactive から Post-Re-NBA までで最初に事象のある領域の事象を、すべて Reactive へ移す。
-      3. Active から Post-Re-NBA までがすべて空なら、Pre-Postponed を実行する。
-   4. Postponed を実行する。
-4. 領域の実行：領域が空になるまで事象を 1 つずつ取り出す。値の更新の事象なら、値を更新して、その値に反応するプロセスの評価の事象を予定する。評価の事象なら、そのプロセスを評価する（評価の中で、さらに事象を予定することがある）。
+1. At time 0, initialize the values of all nets and variables, and put the initialization events in the time slot of time 0.
+   - Initial values in declarations of static variables are evaluated before initial and always start (checked: 6.8, 10.5). No text was found in the standard on the order of evaluation among static variables (not confirmed). kirimasim evaluates them in declaration order within one scope (rule of this document). An initial value that reads a static variable of another scope has no set order, so a warning is given (rule of this document).
+2. While there is a time slot with events, move to the earliest and run that time slot.
+3. Running a time slot:
+   1. Run Preponed.
+   2. Run Pre-Active.
+   3. While any region from Active to Pre-Postponed has events, repeat:
+      1. **Active side:** while any region from Active to Post-Observed has events, repeat: run Active, then move all events of the first region from Active to Post-Observed that has events into Active.
+      2. **Reactive side:** while any region from Reactive to Post-Re-NBA has events, repeat: run Reactive, then move all events of the first region from Reactive to Post-Re-NBA that has events into Reactive.
+      3. If every region from Active to Post-Re-NBA is empty, run Pre-Postponed.
+   4. Run Postponed.
+4. Running a region: take events out one at a time until the region is empty. An update event updates the value and schedules evaluation events for the processes sensitive to that value. An evaluation event evaluates the process (which may schedule more events).
 
-（規格で確認：4.5）
+(checked: 4.5)
 
-注意点：
+Notes:
 
-- **reactive 側の処理を始めたら、reactive の組の 5 つの領域が空になるまで、active 側には戻らない。** reactive 側の処理中に Active に事象ができても、その事象を実行するのは reactive の組が空になってからである（規格で確認：4.5 の後の説明）。
-- Observed と Post-Observed は、active 側の繰り返しに含まれる（規格で確認：4.5）。
-- 図は設計書のものを使う（規格の図 4-1 は写さない）。
+- **Once the reactive side starts, it does not go back to the active side until the five regions of the reactive set are empty.** Even if events appear in Active while the reactive side is running, they run only after the reactive set is empty (checked: the explanation after 4.5).
+- Observed and Post-Observed are part of the active side's iteration (checked: 4.5).
+- The design specification's figure is used (Figure 4-1 of the standard is not copied).
 
-## 4. 決まっている順序と、決まっていない順序
+## 4. Orders that are set, and orders that are not
 
-### 4.1 規格が保証する順序
+### 4.1 Orders the standard guarantees
 
-- 1 つの begin-end の中の文は、書かれた順に実行する。途中でほかのプロセスに実行を譲ることはあっても、順序は入れ替えない（規格で確認：4.6）。
-- 非ブロッキング代入（NBA）の更新は、その代入文を実行した順に行う。同じプロセスの `q <= 1; q <= 2;` の後、q は 2 になる（規格で確認：4.6。テスト `sched/nba_order_same_proc`）。
+- Statements within one begin-end run in the order written. Execution may yield to other processes in between, but the order is not changed (checked: 4.6).
+- Updates of nonblocking assignments (NBAs) happen in the order the assignment statements ran. After `q <= 1; q <= 2;` in the same process, q is 2 (checked: 4.6; test `sched/nba_order_same_proc`).
 
-### 4.2 規格が決めていない順序
+### 4.2 Orders the standard does not set
 
-- Active と Reactive の領域から事象を取り出す順序（規格で確認：4.4.2.2、4.4.2.6、4.7）。
-- 時間の待ちを含まない文の並びを、1 つの事象として実行し切るかどうか。規格は、評価の途中でプロセスを止めて、ほかのプロセスと交互に実行することを許している（規格で確認：4.7）。
-- 値の更新と、その値に反応するプロセスの評価が交互に起こるため、競合が起こりうる（規格で確認：4.8）。
+- The order in which events are taken from the Active and Reactive regions (checked: 4.4.2.2, 4.4.2.6, 4.7).
+- Whether a sequence of statements with no time wait is run through as one event. The standard allows stopping a process in the middle of evaluation and interleaving it with other processes (checked: 4.7).
+- Updates of values and evaluations of processes sensitive to them alternate, so races can occur (checked: 4.8).
 
-### 4.3 kirimasim の決まった順序
+### 4.3 kirimasim's fixed order
 
-- 各領域は、事象を積んだ順（連番の順）に取り出す。同じ入力なら、何度走らせても同じ順になる（本書の決まり。NFR-2）。
-- プロセスは、時間の待ち（`#`、`@`、`wait` など）に入るか終わるまで、途中で止めずに実行する（本書の決まり）。
-- 競合探索モード（`--race-check`）は、4.2 の自由度のうち、領域の中の事象の取り出し順だけを、シードに従って乱す。手順は第 2 部で書く。
+- Each region takes events out in the order they were added (sequence-number order). For the same input, the order is the same however many times it runs (rule of this document; NFR-2).
+- A process runs without being stopped until it enters a time wait (`#`, `@`, `wait` and so on) or ends (rule of this document).
+- Race exploration mode (`--race-check`) perturbs, according to a seed, only the order of taking events out within a region, among the freedoms of 4.2. The procedure is written in part 2.
 
-## 5. 代入と事象
+## 5. Assignments and events
 
-| 代入 | 事象の扱い | 根拠 |
+| Assignment | How events are handled | Grounds |
 | --- | --- | --- |
-| 連続代入（`assign`、ポートの暗黙の連続代入を含む） | 右辺の要素に反応するプロセスとして扱う。右辺の値が変わったら、Active に値の更新を予定する。代入先は、その時点の値で決める。**時刻 0 にも 1 回評価する**（定数を伝えるため） | 規格で確認：4.9.1 |
-| 手続きの連続代入（`assign`、`force`） | 右辺の要素に反応するプロセスとして扱う。`deassign` と `release` で止める | 規格で確認：4.9.2 |
-| ブロッキング代入で、代入内の遅延があるもの（`a = #d b`） | 右辺を今の値で計算してからプロセスを止め、未来の事象として予定する。遅延が 0 なら、active の組からは Inactive、reactive の組からは Re-Inactive に予定する。**代入先は、再開した時点の値で決める** | 規格で確認：4.9.3 |
-| 非ブロッキング代入（`a <= b`、`a <= #d b`） | 更新の値を計算し、遅延が 0 なら今の時刻スロットの NBA（reactive の組からは Re-NBA）に、0 でなければ未来の事象として予定する。**右辺の値も代入先も、文を実行した時点の値で決める**（`a[i] <= #d v` の i も実行した時点の値） | 規格で確認：4.9.4、4.4.2.4、4.4.2.8 |
-| 双方向のスイッチ | 接続されたスイッチ全体を考えてから値を決める。いつ処理してもよい | 規格で確認：4.9.5（P4） |
-| ポートの接続 | input と output は暗黙の連続代入、inout は強さを弱めない双方向の接続とみなす | 規格で確認：4.9.6 |
-| サブルーチンの引数 | 値渡し。呼び出しのときに写し、戻るときに写し戻す。写し戻しはブロッキング代入と同じ | 規格で確認：4.9.7 |
+| Continuous assignments (`assign`, including the implicit continuous assignments of ports) | Treated as a process sensitive to the elements of the right side. When the value of the right side changes, an update is scheduled in Active. The target is decided by the values at that time. **Also evaluated once at time 0** (to propagate constants) | Checked: 4.9.1 |
+| Procedural continuous assignments (`assign`, `force`) | Treated as a process sensitive to the elements of the right side. Stopped by `deassign` and `release` | Checked: 4.9.2 |
+| Blocking assignments with an intra-assignment delay (`a = #d b`) | The right side is computed with the present values, then the process is stopped and a future event scheduled. With a delay of 0, it is scheduled in Inactive from the active set and in Re-Inactive from the reactive set. **The target is decided by the values at the time it resumes** | Checked: 4.9.3 |
+| Nonblocking assignments (`a <= b`, `a <= #d b`) | The update value is computed and, with a delay of 0, scheduled in the NBA region of the present time slot (Re-NBA from the reactive set), otherwise as a future event. **Both the value of the right side and the target are decided by the values when the statement runs** (the i of `a[i] <= #d v` too is the value when it runs) | Checked: 4.9.4, 4.4.2.4, 4.4.2.8 |
+| Bidirectional switches | The value is decided after considering all connected switches. May be processed at any time | Checked: 4.9.5 (P4) |
+| Port connections | input and output are taken as implicit continuous assignments, and inout as a bidirectional connection that does not weaken strength | Checked: 4.9.6 |
+| Subroutine arguments | By value. Copied at the call and copied back on return. Copying back is the same as a blocking assignment | Checked: 4.9.7 |
 
-- ポートの畳み込み（設計書の「ポートの畳み込み」）は、4.9.6 の暗黙の連続代入と、利用者から見える結果が同じになる場合に限って行う（本書の決まり）。条件と、force と release での見え方は、第 3 部で書く。
-- 遅延付きの NBA の値と更新先は、未来の事象の記録に持たせ、その事象を実行してから解放する。遅延の無い NBA の値は時刻スロットごとのアリーナに置き、時刻スロットの終わりにまとめて解放する（本書の決まり。設計書のデータ構造を引き継ぐ）。
+- Collapsing ports (the design specification's "port collapsing") is done only when the results the user sees are the same as the implicit continuous assignments of 4.9.6 (rule of this document). The conditions, and how force and release look, are written in part 3.
+- The value and target of an NBA with a delay are kept in the record of the future event, and freed after that event runs. Values of NBAs with no delay are placed in an arena per time slot, and freed together at the end of the time slot (rule of this document; carried over from the design specification's data structures).
 
-## 6. 手続きの起動
+## 6. Starting procedures
 
-### 6.1 時刻 0 の順序
+### 6.1 Order at time 0
 
-1. static な変数の宣言にある初期値を入れる。どの `initial` や `always` を始めるよりも前に行う。クラスの static なメンバも含む（規格で確認：6.8、10.5）。これは 1364-2005 とは違う点である（1364-2005 では、宣言の初期値は `initial` からの代入と同じ扱いだった）。
-2. 設計のすべての `initial` と `always` の手続きを始める。始める順は、規格では決まっていない（4.2）。kirimasim は SIR のプロセス番号の順（インスタンスの木の深さ優先、各インスタンスの中はソースに現れた順。SIR_SPEC.md の 1 節）にする（本書の決まり）。program の `initial` は時刻 0 から Reactive に入れる（規格で確認：24.3.1。P3 で扱う）。
-3. `always_comb` と `always_latch` は、すべての `initial` と `always` を始めた後に、自動で 1 回起動する（規格で確認：9.2.2.2、9.2.2.3）。
-4. 連続代入も時刻 0 に 1 回評価する（規格で確認：4.9.1）。時刻 0 のどの時点で評価するかは、規格では決まっていない。kirimasim は、手順 2 で始めるプロセスと同じく、Active に入れる（本書の決まり）。
+1. Initial values in declarations of static variables are set, before any `initial` or `always` starts. Static members of classes are included (checked: 6.8, 10.5). This differs from 1364-2005 (where declaration initial values were treated the same as assignments from an `initial`).
+2. Every `initial` and `always` procedure of the design starts. The order of starting is not set by the standard (4.2). kirimasim uses the order of SIR's process numbers (depth-first over the instance tree, and within each instance the order of appearance in the source; SIR_SPEC.md 1) (rule of this document). An `initial` of a program goes into Reactive from time 0 (checked: 24.3.1; handled in P3).
+3. `always_comb` and `always_latch` start automatically once, after every `initial` and `always` has started (checked: 9.2.2.2, 9.2.2.3).
+4. Continuous assignments too are evaluated once at time 0 (checked: 4.9.1). When during time 0 they are evaluated is not set by the standard. kirimasim puts them in Active, like the processes started in step 2 (rule of this document).
 
-### 6.2 手続きの種類ごとの起動の規則
+### 6.2 Starting rules by kind of procedure
 
-| 手続き | 起動の規則 | 根拠 |
+| Procedure | Starting rule | Grounds |
 | --- | --- | --- |
-| `initial` | 1 回だけ実行し、文が終わったら止まる | 規格で確認：9.2.1 |
-| `always` | 終わったら最初から繰り返す。時間を進める制御が無いと、ゼロ時間の無限ループになる（kirimasim は第 5 部の上限で止める） | 規格で確認：9.2.2.1 |
-| `always_comb` | 時刻 0 に 1 回起動し、以後は暗黙の感度のどれかが変わったときに起動する。ブロックの中で、ブロックを止める制御（時間の待ち、イベントの待ち、fork-join）は使えない | 規格で確認：9.2.2.2、9.2.2.2.2 |
-| `always_latch` | 起動の規則は `always_comb` と同じ（違いは、ツールが行う警告の検査だけ） | 規格で確認：9.2.2.3 |
-| `always_ff` | イベントの制御をちょうど 1 つだけ持ち、時間を止める制御は持たない | 規格で確認：9.2.2.4 |
-| `always @*` | 時刻 0 には起動せず、感度のどれかが変わるまで待つ | 規格で確認：9.2.2.2.2 |
-| `final` | シミュレーションの終わりに、遅延なしで実行する。独立したプロセスではなく、1 つのプロセスからの関数呼び出しの並びとして実行する。複数の `final` の順序は規格では決まっていない（kirimasim はソースに現れた順）。すべての `final` を実行した後は、残った事象を実行しない。`final` はシミュレーションの終わりを示す PLI のコールバック（`cbEndOfSimulation`）より前に実行する。`final` の中の `$finish` と `vpi_control(vpiFinish)` は、その場でシミュレーションを終わらせる。`final` は 1 回しか起動しない。規格は、`final` の順序を決めないが、実行ごとに同じ順にすることを求めている（kirimasim のソースの順はこれに合う） | 規格で確認：9.2.3 |
+| `initial` | Runs only once and stops when its statement ends | Checked: 9.2.1 |
+| `always` | Repeats from the start when it ends. With no control that advances time it becomes an infinite loop in zero time (kirimasim stops it at the limits of part 5) | Checked: 9.2.2.1 |
+| `always_comb` | Starts once at time 0, and afterwards whenever any of its implicit sensitivity changes. Controls that block the block (time waits, event waits, fork-join) cannot be used inside | Checked: 9.2.2.2, 9.2.2.2.2 |
+| `always_latch` | The same starting rule as `always_comb` (the only difference is the warning checks tools do) | Checked: 9.2.2.3 |
+| `always_ff` | Has exactly one event control, and no control that blocks for time | Checked: 9.2.2.4 |
+| `always @*` | Not started at time 0; waits until any of its sensitivity changes | Checked: 9.2.2.2.2 |
+| `final` | Runs at the end of simulation, with no delays. It runs not as an independent process but as a sequence of function calls from one process. The order of several `final`s is not set by the standard (kirimasim uses the order of appearance in the source). After every `final` has run, remaining events are not run. `final` runs before the PLI callback marking the end of simulation (`cbEndOfSimulation`). `$finish` and `vpi_control(vpiFinish)` inside a `final` end the simulation on the spot. `final` is started only once. The standard does not set the order of `final`s but requires the same order on every run (kirimasim's source order satisfies this) | Checked: 9.2.3 |
 
-### 6.3 `always_comb` の暗黙の感度
+### 6.3 The implicit sensitivity of `always_comb`
 
-`always_comb`（と `always_latch`）の感度は、ブロックの中と、ブロックから呼ぶ関数の中で読む、ネットと変数（と選択の式）の最長の静的な接頭辞からなる。ただし、次のものは除く（規格で確認：9.2.2.2.1）。
+The sensitivity of `always_comb` (and `always_latch`) consists of the longest static prefixes of the nets and variables (and select expressions) read within the block and within the functions the block calls, except the following (checked: 9.2.2.2.1):
 
-- ブロックの中か、呼ぶ関数の中で宣言した変数。
-- ブロックの中か、呼ぶ関数の中で**書き込む**式。
-- 時間の制御（`wait`、イベント、遅延）の式の中にだけ現れる識別子。
+- Variables declared within the block or within the functions called.
+- Expressions **written** within the block or within the functions called.
+- Identifiers that appear only in expressions of timing controls (`wait`, events, delays).
 
-そのほかの規則（規格で確認：9.2.2.2.1）：
+Other rules (checked: 9.2.2.2.1):
 
-- 階層をまたぐ関数、パッケージの関数、クラスの static な関数の呼び出しも、ふつうの関数と同じく中身を調べる。
-- クラスのオブジェクトの参照とメソッドの呼び出しは、引数の式の分だけを感度に足す。
-- タスクの呼び出しは、引数を感度に足すが、中身は調べない。
-- ブロックの中（と呼ぶ関数の中）の即時アサーションの式は、`if` の条件と同じく感度に足す。アサーションの動作ブロックの中の式は足さない。
+- Calls of functions across hierarchy, package functions and static functions of classes are looked into like ordinary functions.
+- References to class objects and calls of methods add only their argument expressions to the sensitivity.
+- Task calls add their arguments to the sensitivity, but their bodies are not looked into.
+- Expressions of immediate assertions within the block (and within the functions called) are added to the sensitivity, like `if` conditions. Expressions within action blocks of assertions are not.
 
-`always @*` との違い：`always @*` は、呼ぶ関数の中で読む変数には反応せず、関数の引数にだけ反応する。即時アサーションの式も、ブロックの中のものだけに反応する（規格で確認：9.2.2.2.2）。
+The difference from `always @*`: `always @*` does not react to variables read inside called functions, only to the functions' arguments. For immediate assertions too, it reacts only to those within the block (checked: 9.2.2.2.2).
 
-確かめる例（テストスイートに入れる）：`always_comb` の中で `c = b; b = a;` と書くと、b はブロックの中で書き込むので感度から除かれる。a を変えると b が変わるが、c はその実行で b に代入する前の値になり、ブロックは起き直さない（設計書の `comb_order.sv`。iverilog 12.0 で確認済み）。
+An example to check (put in the test suite): writing `c = b; b = a;` in an `always_comb`, b is written within the block and so excluded from the sensitivity. Changing a changes b, but c gets b's value before the assignment in that run, and the block does not wake again (the design specification's `comb_order.sv`; checked with iverilog 12.0).
 
-### 6.4 書き込みの制限
+### 6.4 Write restrictions
 
-この制限は、`always_comb`、`always_latch`、`always_ff` のキーワードで書いた手続きだけに当てる。ふつうの `always`（`always @(posedge clk)` など）には無い（規格で確認：9.2.2.1、9.2.2.4）。`initial q = 0; always @(posedge clk) q <= d;` のように、ふつうの `always` と別のプロセスが同じ変数に書くのは正しい。
+These restrictions apply only to procedures written with the keywords `always_comb`, `always_latch` and `always_ff`. Ordinary `always` (`always @(posedge clk)` and the like) has none (checked: 9.2.2.1, 9.2.2.4). It is correct for an ordinary `always` and another process to write the same variable, as in `initial q = 0; always @(posedge clk) q <= d;`.
 
-`always_comb`、`always_latch`、`always_ff` の左辺の変数は、ほかのプロセスから書き込んではいけない。呼ぶ関数の中で書く変数も含む（タスクの中で書くものは含まない）。最長の静的な接頭辞が重ならない、変数の別々の要素への書き込みは許される（規格で確認：9.2.2.2、9.2.2.4）。この検査は slang の解析の段が行う。kirimasim は、`kirimasim parse` でも設計の実行でも解析の段を走らせ、違反を誤り（終了コード 2）として報告する。同じ検査を kirimasim の側には持たない（2026-10-16 に、`always_comb` とほかのプロセス、`always_ff` どうしの違反を slang が報告することを確かめた）（2026-10-16 に承認）。
+Variables on the left side of `always_comb`, `always_latch` and `always_ff` must not be written by other processes, including variables written inside the functions they call (not those written inside tasks). Writes to separate elements of a variable whose longest static prefixes do not overlap are allowed (checked: 9.2.2.2, 9.2.2.4). This check is done by slang's analysis stage. kirimasim runs the analysis stage both for `kirimasim parse` and for running a design, and reports violations as errors (exit code 2). kirimasim does not keep the same check on its own side (checked on 2026-10-16 that slang reports violations between `always_comb` and other processes, and between `always_ff`s) (approved 2026-10-16).
 
-## 7. PLI コールバックの領域
+## 7. Regions of PLI callbacks
 
-規格は、主な VPI コールバックをどの領域で呼ぶかを次のように定めている（規格で確認：4.10、表 4-1）。詳細と、cocotb が使うコールバックの時点は、第 5 部で書く。
+The standard sets in which region the main VPI callbacks are called, as follows (checked: 4.10, Table 4-1). The details, and when the callbacks cocotb uses are called, are written in part 5.
 
-| コールバック | 領域 |
+| Callback | Region |
 | --- | --- |
-| `cbAfterDelay`、`cbNextSimTime`、`cbAtStartOfSimTime` | Pre-Active |
+| `cbAfterDelay`, `cbNextSimTime`, `cbAtStartOfSimTime` | Pre-Active |
 | `cbNBASynch` | Pre-NBA |
-| `cbReadWriteSynch` | Pre-NBA か Post-NBA |
+| `cbReadWriteSynch` | Pre-NBA or Post-NBA |
 | `cbAtEndOfSimTime` | Pre-Postponed |
 | `cbReadOnlySynch` | Postponed |
 
-`cbReadWriteSynch` を Pre-NBA と Post-NBA のどちらで呼ぶかは、規格では決まっていない。kirimasim の選択は第 5 部で決める。
+Whether `cbReadWriteSynch` is called in Pre-NBA or Post-NBA is not set by the standard. kirimasim's choice is made in part 5.
 
-## 8. 時間の待ち（遅延）
+## 8. Waits for time (delays)
 
-- `#d` の後の文は、その直前の文から d だけ遅れて実行する（規格で確認：9.4.1）。
-- 遅延の式が x か z を含むときは、遅延 0 とみなす（規格で確認：9.4.1）。
-- 遅延の式が負のときは、`time` と同じ幅の符号なし整数（2 の補数）として読む。つまり、非常に大きな遅延になる（規格で確認：9.4.1）。
-- 遅延 0（`#0`）は、active の組なら Inactive、reactive の組なら Re-Inactive で再開する（規格で確認：4.4.2.3、4.4.2.7）。
-- 代入内の遅延とイベント制御（`a = #d b`、`a = @(e) b`、`a <= #d b`）は、右辺を待つ前に評価し、左辺への代入だけを遅らせる（規格で確認：9.4.5）。代入先を決める時点は 5 節のとおり（ブロッキングは再開した時点、NBA は文を実行した時点）。
-- `repeat (n) @(e)` の n は、予定するときに 1 回だけ評価する。n が 0 以下、x、z のときは、`repeat` が無いのと同じに扱う（規格で確認：9.4.5）。
-- 未来の事象は、近い時刻用のタイミングホイールと、遠い時刻用の 4 分ヒープに置き、（時刻、領域、連番）の順に並べる（本書の決まり。設計書のデータ構造を引き継ぐ）。
+- The statement after `#d` runs d later than the statement just before it (checked: 9.4.1).
+- If the delay expression contains x or z, the delay is taken as 0 (checked: 9.4.1).
+- If the delay expression is negative, it is read as an unsigned integer (two's complement) of the same width as `time`, that is, a very large delay (checked: 9.4.1).
+- A delay of 0 (`#0`) resumes in Inactive for the active set and in Re-Inactive for the reactive set (checked: 4.4.2.3, 4.4.2.7).
+- Intra-assignment delays and event controls (`a = #d b`, `a = @(e) b`, `a <= #d b`) evaluate the right side before waiting and delay only the assignment to the left side (checked: 9.4.5). When the target is decided is as in 5 (blocking: when it resumes; NBA: when the statement runs).
+- The n of `repeat (n) @(e)` is evaluated only once, when scheduling. If n is 0 or less, x or z, it is treated as if there were no `repeat` (checked: 9.4.5).
+- Future events are placed in a timing wheel for near times and a 4-ary heap for far times, ordered by (time, region, sequence number) (rule of this document; carried over from the design specification's data structures).
 
-## 9. 待ちの種類と起こし方
+## 9. Kinds of wait and how they wake
 
-### 9.1 イベント制御（`@`）
+### 9.1 Event controls (`@`)
 
-- 辺を指定しない `@(式)` は、式の**値**が変わったときに起きる。被演算子が変わっても、式の値が変わらなければ起きない（規格で確認：9.4.2）。
-- 辺の待ち（`posedge`、`negedge`、`edge`）は、式の最下位ビットの変化だけで判定する。判定の表は VALUE_SEMANTICS.md の 4.3 節のとおり（規格で確認：9.4.2）。
-- `or` とコンマは同じ意味で、どれか 1 つの事象で起きる（規格で確認：9.4.2.1）。
-- `iff` 付きの待ちは、イベントの式が変わったときに `iff` の式を評価し、真（12.4 の意味）のときだけ起きる。`iff` の式だけが変わっても起きない。`iff` は `or` より強く結び付く（規格で確認：9.4.2.3）。
-- クラスのハンドルや chandle の変数そのものへの待ちは、書き込まれた値が前の値と違うときに起きる（規格で確認：9.4.2）。
-- 式の中で、オブジェクトのフィールド、集合データの要素、動的な配列の大きさを参照しているときは、それらが変わったら式を評価し直す。参照していないものの変化で評価し直してもよい（規格で確認：9.4.2）。
+- `@(expr)` with no edge wakes when the **value** of the expression changes. It does not wake if operands change but the expression's value does not (checked: 9.4.2).
+- Edge waits (`posedge`, `negedge`, `edge`) are decided only by changes of the least significant bit of the expression. The table of decisions is as in VALUE_SEMANTICS.md 4.3 (checked: 9.4.2).
+- `or` and comma mean the same, and any one of the events wakes it (checked: 9.4.2.1).
+- A wait with `iff` evaluates the `iff` expression when the event expression changes, and wakes only if it is true (in the sense of 12.4). It does not wake when only the `iff` expression changes. `iff` binds more tightly than `or` (checked: 9.4.2.3).
+- A wait on a variable of class handle or chandle itself wakes when the value written differs from the previous value (checked: 9.4.2).
+- When an expression refers to fields of objects, elements of aggregate data or sizes of dynamic arrays, the expression is evaluated again when they change. It may also be evaluated again on changes of things it does not refer to (checked: 9.4.2).
 
-### 9.2 `@*` の暗黙の感度
+### 9.2 The implicit sensitivity of `@*`
 
-`@*` は、続く文の中に現れるネットと変数の識別子をすべて感度に加える。除くのは、次の 2 つだけ（規格で確認：9.4.2.2）。
+`@*` adds to the sensitivity every identifier of a net or variable that appears in the statement that follows. Only these two are excluded (checked: 9.4.2.2):
 
-- 時間の制御（`wait`、イベント、遅延）の式の中にだけ現れるもの。
-- 代入の左辺の変数としてだけ現れるもの。
+- Those that appear only in expressions of timing controls (`wait`, events, delays).
+- Those that appear only as variables on the left side of assignments.
 
-`always_comb`（6.3 節）と違い、ブロックの中で書き込む変数でも、右辺で読めば感度に入る。左辺の添字に使う変数、case の項の変数、サブルーチンの呼び出しの引数も感度に入る（規格で確認：9.4.2.2）。関数の中身は調べない（規格で確認：9.2.2.2.2）。
+Unlike `always_comb` (6.3), a variable written within the block is in the sensitivity if it is read on a right side. Variables used in indices of left sides, variables in case items, and arguments of subroutine calls are in the sensitivity too (checked: 9.4.2.2). The bodies of functions are not looked into (checked: 9.2.2.2.2).
 
-### 9.3 条件の待ち（`wait`）
+### 9.3 Condition waits (`wait`)
 
-- `wait (式)` は、式を評価して真（12.4 の意味）ならすぐに進む。真でなければ、真になるまで止まる（規格で確認：9.4.3）。
-- 待ちの式は、式の被演算子が変わったときだけ評価し直す（規格で確認：15.5.3 の後半）。
+- `wait (expr)` evaluates the expression and proceeds at once if it is true (in the sense of 12.4). Otherwise it stops until it becomes true (checked: 9.4.3).
+- The expression of the wait is evaluated again only when its operands change (checked: the second half of 15.5.3).
 
-### 9.4 名前付きイベント
+### 9.4 Named events
 
-- `->` は、そのイベントを今待っているすべてのプロセスを起こす。トリガそのものは一瞬で、状態として観測できない（規格で確認：15.5.1）。
-- `@ev` で起きるには、待つ側が `@` を、トリガする側の `->` より**先に**実行している必要がある。トリガが先なら、待つ側は止まったまま（規格で確認：15.5.2）。
-- `->>` は止まらずに進み、遅延か制御が満ちた時刻の **NBA 領域**でトリガする（規格で確認：15.5.1）。
-- `ev.triggered` は、そのイベントが今の時刻スロットでトリガされていれば真。時刻が進むまで真のまま。null のイベントでは偽（規格で確認：15.5.3）。`wait (ev.triggered)` は、**同じ時刻スロットの中で**あれば、`wait` とトリガのどちらが先に実行されても起きる。前の時刻スロットのトリガでは起きない。
-- `triggered` が時刻の終わりで 1 から 0 に戻っても、その変化で待ちを評価し直すことはない（規格で確認：15.5.3）。
-- イベントの配列の添字を変えても、トリガは起きない（規格で確認：15.5.1）。
-- `wait_order`、イベントの併合、比較は、P3 で書く（規格の 15.5.4〜15.5.5）。
+- `->` wakes every process waiting on the event at that moment. The trigger itself is instantaneous and cannot be observed as a state (checked: 15.5.1).
+- To wake on `@ev`, the waiting side must have run the `@` **before** the triggering side's `->`. If the trigger comes first, the waiting side stays stopped (checked: 15.5.2).
+- `->>` proceeds without stopping, and triggers in the **NBA region** of the time when the delay or control is satisfied (checked: 15.5.1).
+- `ev.triggered` is true if the event was triggered in the present time slot, and stays true until time advances. It is false for a null event (checked: 15.5.3). `wait (ev.triggered)` wakes **within the same time slot** whether the `wait` or the trigger ran first. A trigger of an earlier time slot does not wake it.
+- When `triggered` goes back from 1 to 0 at the end of the time, that change does not cause waits to be evaluated again (checked: 15.5.3).
+- Changing the index into an array of events does not trigger anything (checked: 15.5.1).
+- `wait_order`, merging of events and comparison are written in P3 (15.5.4 to 15.5.5 of the standard).
 
-### 9.5 kirimasim での表し方（本書の決まり）
+### 9.5 Representation in kirimasim (rule of this document)
 
-設計書の「待ちの 2 段」を引き継ぐ。
+The design specification's "two levels of waits" are carried over.
 
-| 待ち | 表し方 | 起こす条件 |
+| Wait | Representation | Wakes when |
 | --- | --- | --- |
-| 固定した信号の値の変化と辺（`iff` を含む） | スロットの購読（プロセス番号、ビット範囲、辺の種類、`iff` の式） | スロットの、購読するビット範囲の値が変わったとき。辺は、イベントの式の値の最下位ビットで判定する（`@(posedge v[3])` なら v のビット 3） |
-| 複合式（`@(a == b)`、`@(posedge (clk & en))`）と `wait` | 監視レコード（依存するスロット、式、前回の値、辺、`iff`） | 依存するスロットが変わったら式を評価し直し、式の値が変わったとき（`wait` は真になったとき） |
-| オブジェクトのフィールド、キューの大きさ、動的配列の要素（P3） | 監視レコードと、オブジェクトと容器の「監視中」のビット | 内容か大きさが変わったとき。ハンドルの差し替えや添字の変化では、依存先を付け替えて評価し直す |
-| 名前付きイベント | イベントのオブジェクトの待ち行列 | `->` のとき、そのとき待ち行列にいるプロセスだけを起こす |
-| `ev.triggered` を含む式（`wait (ev.triggered)` など） | 監視レコード。依存先にイベントのオブジェクトを含める | `->` と `->>` のトリガで、そのイベントに依存する監視レコードにも通知して、式を評価し直す。`triggered` の状態は時刻が進むときに 0 に戻すが、この戻りでは評価し直さない（規格で確認：15.5.3） |
-| 時間 | 未来の事象 | 時刻に達したとき |
+| Changes and edges of fixed signals (`iff` included) | Slot subscriptions (process number, bit range, kind of edge, `iff` expression) | The value of the subscribed bit range of the slot changes. Edges are decided on the least significant bit of the value of the event expression (bit 3 of v for `@(posedge v[3])`) |
+| Compound expressions (`@(a == b)`, `@(posedge (clk & en))`) and `wait` | Monitor records (slots depended on, expression, previous value, edge, `iff`) | When a slot depended on changes, the expression is evaluated again, and it wakes when the expression's value changed (for `wait`, when it became true) |
+| Fields of objects, sizes of queues, elements of dynamic arrays (P3) | Monitor records, with "being watched" bits on objects and containers | When content or size changes. When a handle is replaced or an index changes, the dependencies are re-attached and evaluated again |
+| Named events | Wait queues of event objects | On `->`, only the processes in the wait queue at that moment are woken |
+| Expressions containing `ev.triggered` (`wait (ev.triggered)` and so on) | Monitor records whose dependencies include the event object | Triggers by `->` and `->>` also notify the monitor records depending on the event, and the expressions are evaluated again. The `triggered` state goes back to 0 when time advances, but that does not cause evaluation (checked: 15.5.3) |
+| Time | Future events | When the time is reached |
 
-- 起こしたプロセスを入れる領域は、**起こされるプロセスのスレッドがどちらの組に属するか**で決める。起こした事象を実行している領域では決めない（規格で確認：24.3.1）。
-  - 設計のスレッド（モジュール、インターフェースの `initial`、`always`、連続代入と、それらから fork したもの）は Active に入れる。
-  - program の `initial` から始まったスレッド（と、そこから fork したもの）は Reactive に入れる（P3）。
-  - サブルーチンは、呼び出したスレッドの組を引き継ぐ。モジュールやパッケージで宣言したタスクでも、program のスレッドから呼べば reactive の組で動く（規格で確認：24.3.1）。
-  - 例：Reactive で動く program のコードの書き込みで、モジュールの `always` が起きたとき、その `always` は Reactive では動かず、次の繰り返しの Active で動く（規格で確認：24.3.1）。
-- スレッドの組は、スレッドを作るときに決めてフレームに持たせる。`#0` の再開先（Inactive か Re-Inactive）と NBA の行き先（NBA か Re-NBA）も、この組で決める。
-- 待ちが kill や disable で解かれたときは、購読と監視レコードも外す。
-- 1 つのイベント制御の待ちは、スロットの購読と、複数の監視レコードを混ぜて持てる（`@(posedge clk or (a == b))` など）。どの項にも `iff` を付けられ、`iff` は、その項の事象が起きたときだけ評価する。どれか 1 つの項で起きたら、残りの項は外す（2026-10-18 に追記。承認済み）。
+- The region a woken process is put in is decided by **which set the woken process's thread belongs to**, not by the region running the event that woke it (checked: 24.3.1).
+  - Design threads (`initial`, `always` and continuous assignments of modules and interfaces, and those forked from them) go into Active.
+  - Threads started from an `initial` of a program (and those forked from them) go into Reactive (P3).
+  - Subroutines take over the set of the calling thread. Even a task declared in a module or package runs in the reactive set when called from a program thread (checked: 24.3.1).
+  - Example: when a write by program code running in Reactive wakes an `always` of a module, that `always` does not run in Reactive but in Active of the next iteration (checked: 24.3.1).
+- A thread's set is decided when the thread is made and kept in its frame. Where `#0` resumes (Inactive or Re-Inactive) and where NBAs go (NBA or Re-NBA) are decided by this set too.
+- When a wait is undone by kill or disable, its subscriptions and monitor records are removed too.
+- The wait of one event control can mix slot subscriptions and several monitor records (`@(posedge clk or (a == b))` and so on). Any item can have `iff`, and `iff` is evaluated only when that item's event occurs. When it wakes on any one item, the other items are removed (added 2026-10-18, approved).
 
-## 10. プロセスの生成と終了
+## 10. Making and ending processes
 
-### 10.1 プロセスになるもの
+### 10.1 What becomes a process
 
-次のものが、それぞれ 1 つのプロセス（実行の流れ）になる（規格で確認：9.5）。`initial`、`final`、各種の `always`、fork-join の中の並列の文 1 つずつ、動的なプロセス。連続代入も、それぞれ 1 つのプロセスとみなせる。
+Each of the following is one process (flow of execution) (checked: 9.5): `initial`, `final`, each kind of `always`, each parallel statement within a fork-join, and dynamic processes. Each continuous assignment can be taken as a process too.
 
-### 10.2 fork と join
+### 10.2 fork and join
 
-- fork の中の文は、それぞれ別のプロセスとして並行に実行する。各文の遅延は、fork に入った時刻からの相対で数える（規格で確認：9.3.2）。
-- 親が再開する時点（規格で確認：9.3.2、表 9-1）：
-  - `join`：作ったプロセスがすべて終わったら。
-  - `join_any`：作ったプロセスのどれか 1 つが終わったら。
-  - `join_none`：親はすぐに続きを実行する。
-- **fork で作ったプロセスは、どの種類の join でも、親が止まるか終わるまで実行を始めない**（規格で確認：9.3.2）。kirimasim は、作ったプロセスを、親のスレッドの組の評価の領域（設計なら Active、program なら Reactive）に作った順に積み、親が止まるか終わった後に実行する（本書の決まり）。子のスレッドの組は親と同じ。
-- fork のブロック項目（`fork` の直後に宣言した変数）の初期化式は、スコープに入ったときに、子を作る**前に**評価する（規格で確認：9.3.2）。`for` の中の `fork automatic int k = j; ... join_none` は、この規則で各子が自分の `j` の値を持つ。kirimasim では、親がこの初期化を行ってから子を作る。
-- fork-join_any と fork-join_none の中では、参照渡し（`ref`）の形式引数を参照できるのは、ブロック項目の初期化式の中だけ（`ref static` を除く。規格で確認：9.3.2）。
-- fork の中の文全体を begin-end で包むと、全体が 1 つのプロセスになる（規格で確認：9.3.2）。
+- Each statement in a fork runs concurrently as a separate process. Delays in each statement are counted relative to the time the fork was entered (checked: 9.3.2).
+- When the parent resumes (checked: 9.3.2, Table 9-1):
+  - `join`: when every process it made has ended.
+  - `join_any`: when any one of the processes it made has ended.
+  - `join_none`: the parent continues at once.
+- **Processes made by fork do not start running until the parent stops or ends, whatever the kind of join** (checked: 9.3.2). kirimasim puts the processes it made, in the order made, in the evaluation region of the parent's thread set (Active for the design, Reactive for programs), and runs them after the parent stops or ends (rule of this document). A child's thread set is the same as its parent's.
+- Initializers of fork block items (variables declared right after `fork`) are evaluated when the scope is entered, **before** the children are made (checked: 9.3.2). With `fork automatic int k = j; ... join_none` inside a `for`, by this rule each child has its own value of `j`. In kirimasim, the parent does this initialization, then makes the children.
+- Inside fork-join_any and fork-join_none, formal arguments passed by reference (`ref`) can be referred to only in initializers of block items (except `ref static`; checked: 9.3.2).
+- Wrapping all the statements of a fork in a begin-end makes the whole one process (checked: 9.3.2).
 
 ### 10.3 `wait fork`
 
-今のプロセスが直接作った子プロセス（孫以下は含まない）がすべて終わるまで止まる（規格で確認：9.6.1）。
+Stops until all child processes made directly by the present process (not grandchildren and below) have ended (checked: 9.6.1).
 
 ### 10.4 `disable`
 
-- `disable 名前` は、名前の付いたブロックかタスクの実行を終わらせ、そのブロックの次の文か、タスクを呼んだ文の次から続ける。その中で始めたすべての活動も終わらせる（規格で確認：9.6.2）。
-- 親子関係に関係なく働く。子が親を、あるいは無関係なプロセスを終わらせることもできる（規格で確認：9.6）。
-- タスクを入れ子に呼んでいるときは、途中のタスクを disable すると、そこから下の呼び出しもすべて終わる。同じタスクを複数回呼んでいるときは、すべての呼び出しを終わらせる。automatic のタスクも同じ（規格で確認：9.6.2）。
-- disable したタスクの output と inout の引数、まだ実行していない NBA、手続きの連続代入の結果は、規格では決まっていない（規格で確認：9.6.2）。kirimasim は、output と inout を写し戻さず、すでに予定した NBA はそのまま実行する（本書の決まり）。
-- 関数は disable できない。関数の中から、その関数を呼んだブロックやタスクを disable したときの動作は、規格では決まっていない（規格で確認：9.6.2）。kirimasim はこれを実行時のエラーにする（本書の決まり）。
+- `disable name` ends the execution of a named block or task, and continues after the block, or after the statement that called the task. All activity started within it is ended too (checked: 9.6.2).
+- It works regardless of parent and child. A child can end its parent, or an unrelated process (checked: 9.6).
+- With nested task calls, disabling a task in the middle ends every call below it too. When the same task is called several times, every call is ended. The same for automatic tasks (checked: 9.6.2).
+- The output and inout arguments of a disabled task, NBAs not yet run, and the results of procedural continuous assignments are not set by the standard (checked: 9.6.2). kirimasim does not copy back output and inout, and runs NBAs already scheduled as they are (rule of this document).
+- Functions cannot be disabled. What happens when, from inside a function, the block or task that called the function is disabled is not set by the standard (checked: 9.6.2). kirimasim makes it a run-time error (rule of this document).
 
 ### 10.5 `disable fork`
 
-今のプロセスのすべての子孫（直接の子だけでなく、すでに終わった子が作ったものも含む）を終わらせる（規格で確認：9.6.3）。
+Ends every descendant of the present process (not only direct children, but also those made by children that have already ended) (checked: 9.6.3).
 
-### 10.6 process クラス
+### 10.6 The process class
 
-- process のオブジェクトはプロセスを作るときに内部で作る。利用者は `new` で作れず、継承もできない（規格で確認：9.7）。
-- `self()` は今のプロセスのハンドルを返す。`status()` は、FINISHED、RUNNING、WAITING、SUSPENDED、KILLED のどれかを返す。KILLED は、`kill()` だけでなく `disable` で終わったときも返す（規格で確認：9.7）。
-- `kill()` は、そのプロセスとすべての子孫を、`kill()` から戻る前に終わらせる。FINISHED か KILLED のプロセスに対して呼んでも、終わっていない子孫は終わらせる（規格で確認：9.7）。
-- `await()` は、そのプロセスが（正常にでも強制的にでも）終わるまで待つ。自分自身を待つのはエラー（規格で確認：9.7）。
-- `suspend()` は、自分か別のプロセスを止める。SUSPENDED、FINISHED、KILLED のプロセスに対しては何もしない。WAITING のプロセスを止めると、待っていたイベント、条件、遅延に反応しなくなる。関数の中で自分自身を止めるのはエラー（規格で確認：9.7）。
-- `resume()`（規格で確認：9.7）：
-  - RUNNING の状態で止められていたプロセスは、今の時刻の Active か Reactive に入れて続きを実行する。
-  - WAITING の状態で止められていたプロセスは、再び待ちに反応するようにする。条件がすでに真か、元の遅延がすでに過ぎていれば、今の時刻の Active か Reactive に入れる。
-  - SUSPENDED でないプロセスに対しては何もしない。
-- `kill()`、`await()`、`suspend()`、`resume()` は、`initial`、`always`、およびそれらの中の fork で作ったプロセスに対してだけ使える（規格で確認：9.7）。
+- Process objects are made internally when processes are made. Users cannot make them with `new`, and cannot extend the class (checked: 9.7).
+- `self()` returns the handle of the present process. `status()` returns one of FINISHED, RUNNING, WAITING, SUSPENDED and KILLED. KILLED is returned not only after `kill()` but also when ended by `disable` (checked: 9.7).
+- `kill()` ends the process and all its descendants before `kill()` returns. Called on a FINISHED or KILLED process, it still ends descendants that have not ended (checked: 9.7).
+- `await()` waits until the process ends (normally or by force). Waiting on oneself is an error (checked: 9.7).
+- `suspend()` stops oneself or another process. It does nothing to SUSPENDED, FINISHED or KILLED processes. Stopping a WAITING process makes it stop reacting to the event, condition or delay it waited on. Stopping oneself inside a function is an error (checked: 9.7).
+- `resume()` (checked: 9.7):
+  - A process stopped while RUNNING is put in Active or Reactive of the present time and continues.
+  - A process stopped while WAITING reacts to its wait again. If the condition is already true, or the original delay has already passed, it is put in Active or Reactive of the present time.
+  - It does nothing to a process that is not SUSPENDED.
+- `kill()`, `await()`, `suspend()` and `resume()` can be used only on processes made by `initial`, `always`, and forks within them (checked: 9.7).
 
-### 10.7 kill と disable の後始末（本書の決まり）
+### 10.7 Cleaning up after kill and disable (rule of this document)
 
-プロセスが kill、disable、disable fork で終わったときは、次のものをすべて外す。
+When a process ends by kill, disable or disable fork, all of the following are removed:
 
-- スロットの購読と監視レコード。
-- 名前付きイベントの待ち行列への登録。
-- semaphore と mailbox の待ち行列への登録（P3）。外さないと、後で鍵や値を受け取ってしまうため。
-- まだ来ていない時間の待ちの事象。
+- Slot subscriptions and monitor records.
+- Registrations in wait queues of named events.
+- Registrations in wait queues of semaphores and mailboxes (P3). Otherwise it would receive keys or values later.
+- Events of time waits not yet reached.
 
-そのプロセスが予定した NBA は、10.4 の決まりどおり、そのまま実行する。
+NBAs the process scheduled are run as they are, by the rule of 10.4.
 
-### 10.8 終わったプロセスの記録の回収（本書の決まり。2026-10-17 に承認）
+### 10.8 Reclaiming records of ended processes (rule of this document; approved 2026-10-17)
 
-- **プロセスの記録：** カーネルの記録（状態、待ちの番号、保留の報告の列）と、第 1 層のフレーム（フレームの変数、タスクの呼び出しと名前付きブロックの活動、子の一覧、join の待ちに使うイベント）をいう。第 2 層（P2）も同じ決まりに従う。
-- **解放の条件：** プロセスの記録は、次のすべてが成り立ったときに解放する。
-  1. そのプロセスが終わっている（正常に、または kill、disable、disable fork で）。
-  2. そのプロセスが作った子の記録が、すべて解放されている。終わった子の子孫にも disable fork（10.5）と `kill()`（10.6）が届くように、子孫が残っている間は途中の記録をつないでおく。
-  3. 保留の報告の列（15.4）が空で、確定した報告の呼び出しも実行し終えている。確定した呼び出しは、列を出た後に Reactive（final の報告は Postponed）で実行し、そのときにフレームを使う。
-  4. （P3）process のハンドルが指していない。ハンドルが残っている間は、状態と子孫へのつながりだけを残し、フレームの変数は解放してよい。
-- **解放の時点：** 条件がそろったら、すぐに解放する。調べるのは、プロセスが終わったとき、子の記録を解放したとき、保留の列が空になったとき。親の条件もそろえば、続けて親も解放する。
-- **子の見分け方：** 解放した子は、親の子の一覧から外す。子は、親が作った順の番号を持つ。タスクの呼び出しや名前付きブロックの活動の中で作った子を、disable のときに見分けるには、この番号を使う（10.4）。一覧の中の位置は使わない。
-- **位置の使い回し：**
-  - カーネルのプロセスの表の位置とフレームの場所は、解放した後に使い回してよい。
-  - 使い回した位置の待ちの番号は、前のプロセスの続きから数え、0 に戻さない。前のプロセスの待ちの事象、購読、イベントの待ちが後から来ても、番号が合わないので捨てられる（10.7 と同じ仕組み）。待ちの番号が上限に達した位置は使い回さない。
-  - 15.4 の「連番」は、プロセスを作った順の通し番号（64 ビット）とする。表の位置を使い回しても変わらない。
-  - join の待ちに使うイベントの位置も、フレームと一緒に解放して使い回す。
-- **振る舞いは変えない：** 解放は、観測できる振る舞いを変えない。出力、終了の理由と時刻、PERFORMANCE.md の回数（`proc.kept_peak` を除く）は、解放しない実行と同じにする。
-- **保証：** fork を繰り返す設計の記憶の量と、`disable` の手間は、残っている記録の数（生きているプロセスと、子孫の残る終わったプロセス）に比例する。fork を繰り返した回数には比例しない。
-- **後で足す形：** fork の外で宣言した automatic な変数を子が参照する形は、今は未対応（SIR_SPEC.md の 7.5 節は、fork のブロック項目だけを子のフレームに写す）。これを足すときは、その変数を持つ活動を、参照する子がすべて終わるまで残す決まりを、そのときに本節に足す。
+- **Records of a process:** the kernel's record (state, wait number, pending report queues) and tier 1's frame (frame variables, activities of task calls and named blocks, the list of children, events used for waits of join). Tier 2 (P2) follows the same rules.
+- **Conditions for freeing:** a process's records are freed when all of the following hold.
+  1. The process has ended (normally, or by kill, disable or disable fork).
+  2. The records of every child it made have been freed. So that disable fork (10.5) and `kill()` (10.6) reach the descendants of ended children too, intermediate records stay linked while descendants remain.
+  3. Its pending report queue (15.4) is empty, and the calls of settled reports have also finished running. A settled call runs, after leaving the queue, in Reactive (Postponed for final reports), and uses the frame then.
+  4. (P3) No process handle points to it. While a handle remains, only the state and the link to descendants are kept, and frame variables may be freed.
+- **When freed:** as soon as the conditions hold. They are checked when the process ends, when a child's records are freed, and when the pending queue becomes empty. If the parent's conditions hold too, the parent is freed next.
+- **Telling children apart:** a freed child is removed from its parent's list of children. Children carry numbers in the order the parent made them. To tell, at a disable, which children were made within an activity of a task call or named block, these numbers are used (10.4), not positions in the list.
+- **Reusing positions:**
+  - Positions in the kernel's process table and places of frames may be reused after they are freed.
+  - The wait number of a reused position continues from the previous process's and does not go back to 0. If a wait event, subscription or event wait of the previous process arrives later, the number does not match and it is discarded (the same mechanism as 10.7). A position whose wait number has reached its limit is not reused.
+  - The "sequence number" of 15.4 is a running number (64 bits) in the order processes were made. It does not change when table positions are reused.
+  - Positions of events used for waits of join are freed with the frame and reused too.
+- **Behaviour does not change:** freeing does not change observable behaviour. Output, the reason and time of ending, and the counts of PERFORMANCE.md (except `proc.kept_peak`) are the same as a run that does not free.
+- **Guarantee:** the memory of a design that forks repeatedly, and the work of `disable`, are proportional to the number of records remaining (live processes, and ended processes whose descendants remain), not to the number of times it forked.
+- **A form to add later:** children referring to automatic variables declared outside the fork is unsupported now (SIR_SPEC.md 7.5 copies only fork block items into children's frames). When it is added, a rule that keeps the activity holding such a variable until every child referring to it has ended is added to this section then.
 
-## 11. 競合探索モード（`--race-check`）
+## 11. Race exploration mode (`--race-check`)
 
-- 規格が順序を決めていない箇所のうち、**同じ領域の中の事象を取り出す順**だけを、シード（`--race-seed`）に従って乱して、指定した回数だけ実行し直す（本書の決まり）。
-- 規格が保証する順序（4.1 節）、fork で作ったプロセスが親の止まった後に始まること（10.2 節）、NBA の更新の順序は乱さない。
-- 実行ごとの出力と観測対象の事象の列を比べ、最初に違いが出た時刻と、関わったプロセスとソースの位置を報告する。何度実行して違いが無くても、競合が無いことの証明にはならない（設計書の決まり）。
-- 乱数のシード（`--seed`）と、競合探索のシードは分ける（設計書の決まり）。
+- Among the places where the standard does not set the order, only **the order of taking events out within the same region** is perturbed according to a seed (`--race-seed`), and the run is repeated a given number of times (rule of this document).
+- Orders the standard guarantees (4.1), processes made by fork starting after the parent stops (10.2), and the order of NBA updates are not perturbed.
+- The output and sequence of observed events of each run are compared, and the first time a difference appeared, with the processes and source positions involved, is reported. No difference after any number of runs is not a proof that there is no race (a rule of the design specification).
+- The random seed (`--seed`) and the seed of race exploration are separate (a rule of the design specification).
 
-## 12. 連続代入とその遅延
+## 12. Continuous assignments and their delays
 
-- 連続代入は、右辺の被演算子のどれかの値が変わると右辺全体を評価し、新しい値が前の値と違うときだけ左辺に代入する（規格で確認：10.3.2）。
-- ネットには、複数の連続代入、プリミティブの出力、モジュールの出力から駆動してよい（解決は VALUE_SEMANTICS.md の 5 節）。変数は、1 つの連続代入か、1 つのプリミティブの出力かモジュールの出力からしか駆動できない。連続代入か出力で駆動する変数に、宣言の初期値や手続きの代入があれば誤り（規格で確認：10.3.2）。この検査は、6.4 節と同じく slang の解析の段が行う（2026-10-16 に、変数への 2 つの連続代入、連続代入と手続きの代入の混在、宣言の初期値と連続代入、2 つの出力ポートからの駆動を、slang が報告することを確かめた）（2026-10-16 に承認）。
-- 遅延付きの連続代入（規格で確認：10.3.3）：
-  - 遅延は、右辺の被演算子が変わってから左辺に代入するまでの時間。
-  - ベクタのネットには最大 3 つの遅延を付けられる。右辺が 0 でない値から 0 に変わるときは下がりの遅延、z に変わるときは切れの遅延、それ以外は上がりの遅延を使う。スカラのネットは、ゲートの遅延と同じ規則（規格の 28.16）。
-  - 前の変化が左辺に伝わる前に右辺がまた変わったときは、次の手順をとる。
-    1. 右辺を評価する。
-    2. その値が、すでに予定している伝搬の値と違えば、予定を取り消す。
-    3. その値が今の左辺の値と同じなら、何も予定しない。
-    4. 違えば、今の左辺の値と新しい右辺の値から遅延を計算し、新しい伝搬を予定する。
+- A continuous assignment evaluates the whole right side when the value of any operand of the right side changes, and assigns to the left side only when the new value differs from the previous one (checked: 10.3.2).
+- Nets may be driven by several continuous assignments, primitive outputs and module outputs (resolution is VALUE_SEMANTICS.md 5). A variable can be driven only by one continuous assignment, or one primitive output or module output. A variable driven by a continuous assignment or output having a declaration initial value or procedural assignments is an error (checked: 10.3.2). This check, as in 6.4, is done by slang's analysis stage (checked on 2026-10-16 that slang reports two continuous assignments to a variable, a mix of continuous and procedural assignments, a declaration initial value with a continuous assignment, and driving from two output ports) (approved 2026-10-16).
+- Continuous assignments with delays (checked: 10.3.3):
+  - The delay is the time from a change of an operand of the right side to the assignment to the left side.
+  - Vector nets can have up to 3 delays. When the right side changes from a nonzero value to 0 the fall delay is used, when it changes to z the turn-off delay, and otherwise the rise delay. Scalar nets follow the same rules as gate delays (28.16 of the standard).
+  - When the right side changes again before the previous change has reached the left side, these steps are taken.
+    1. Evaluate the right side.
+    2. If that value differs from the value of the propagation already scheduled, cancel the scheduled one.
+    3. If that value equals the present value of the left side, schedule nothing.
+    4. Otherwise, compute the delay from the present value of the left side and the new value of the right side, and schedule a new propagation.
 
-    つまり、遅延より短いパルスは消える（慣性遅延）。
-  - ネットの宣言に付けた遅延（`wire #10 w;`）は、そのネットへの**すべての**変化を遅らせる。宣言と一緒に書いた連続代入（`wire #10 w = a;`）の遅延は、その連続代入だけの遅延で、ほかのドライバには足さない。ベクタのネットの宣言と一緒に書いた連続代入では、上がりと下がりの遅延をビットごとには当てない（規格で確認：10.3.3）。
-- 遅延の選び方の細目（2026-10-17 に承認）：
-  - ベクタのネットの連続代入で「z に変わる」は、全ビットが z になることと読む（解釈。10.3.3 はベクタの一部のビットだけが z になる場合を書いていない）。
-  - スカラのネットの連続代入と、ゲートと UDP の出力は、1 になれば上がり、0 なら下がり、z なら切れ、x（と L、H）なら指定した遅延のうち最も小さいものを使う（規格で確認：28.16、表 28-9。L と H は 28.6）。
-  - 遅延を 1 つだけ指定したら、それをすべてに使う。2 つなら、切れの遅延と x への遅延は 2 つの小さい方とする（規格で確認：28.16）。
-- 遅延が 0（`#0`）の連続代入とゲートの更新は、今の時刻の Inactive 領域に予定する（本書の決まり。手続きの `#0` と同じ領域。2026-10-17 に承認）。
-- ネットの宣言だけに付けた遅延（`wire #10 w;`）は、当面は未対応として報告する（2026-10-17 に承認）。
-- SIR では `drive.delay` で表す（SIR_SPEC.md の 5.4 節）。
-- 連続代入の駆動の強さ（10.3.4）は、VALUE_SEMANTICS.md の 5 節による（2026-10-16 に承認）。
+    So pulses shorter than the delay disappear (inertial delay).
+  - A delay given in a net declaration (`wire #10 w;`) delays **every** change to that net. The delay of a continuous assignment written with the declaration (`wire #10 w = a;`) is the delay of that continuous assignment only, and is not added to other drivers. For a continuous assignment written with the declaration of a vector net, the rise and fall delays are not applied bit by bit (checked: 10.3.3).
+- Details of choosing delays (approved 2026-10-17):
+  - "Changes to z" for a continuous assignment of a vector net is read as every bit becoming z (interpretation; 10.3.3 does not describe the case where only some bits of the vector become z).
+  - Continuous assignments of scalar nets, and outputs of gates and UDPs, use the rise delay on becoming 1, the fall delay on 0, the turn-off delay on z, and the smallest of the given delays on x (and L, H) (checked: 28.16, Table 28-9; L and H are 28.6).
+  - With one delay given, it is used for everything. With two, the turn-off delay and the delay to x are the smaller of the two (checked: 28.16).
+- Updates of continuous assignments and gates with a delay of 0 (`#0`) are scheduled in the Inactive region of the present time (rule of this document; the same region as procedural `#0`; approved 2026-10-17).
+- A delay given only in a net declaration (`wire #10 w;`) is reported as unsupported for now (approved 2026-10-17).
+- In SIR it is expressed with `drive.delay` (SIR_SPEC.md 5.4).
+- The drive strength of continuous assignments (10.3.4) follows VALUE_SEMANTICS.md 5 (approved 2026-10-16).
 
-## 13. 非ブロッキング代入（NBA）の詳細
+## 13. Details of nonblocking assignments (NBAs)
 
-- 自動変数（automatic）と、大きさの変わる配列の要素への NBA は誤り（規格で確認：10.4.2）。エラボレーションで検出する。
-- 左辺に評価が要るもの（添字、クラスのハンドル、virtual interface の参照）は、右辺と同じ時点（文を実行した時点）で評価する。左辺と右辺のどちらを先に評価するかは、規格では決まっていない（規格で確認：10.4.2、4.9.4）。kirimasim は、右辺を先に、左辺を後に評価する（本書の決まり）。
-- NBA の更新は時刻スロットの最後の代入になるが、例外がある。NBA の更新で起きたプロセスがブロッキング代入を行うことがあり、それは NBA の後に処理する（規格で確認：10.4.2）。これは参照アルゴリズム（3 節）で、NBA の後に Active に戻ることから自然に従う。
-- 実行の順序がはっきりしている NBA どうしは、その順序のとおりに更新する（4.1 節）。2 つの並行なプロセスが同じ変数に NBA で書くとき、最終的な値は規格では決まっていない（規格で確認：10.4.2）。kirimasim は、連番の順（4.3 節）で決まった結果を出す。競合探索モードはこの順序を乱しうる。
-- 遅延付きの NBA は、遅延の後の時刻の NBA 領域に更新を予定する（規格で確認：4.9.4）。値と更新先は、文を実行した時点で決めて記録に持たせる（5 節）。
+- NBAs to automatic variables and to elements of arrays whose size changes are errors (checked: 10.4.2). They are detected at elaboration.
+- What needs evaluation on the left side (indices, class handles, virtual interface references) is evaluated at the same time as the right side (when the statement runs). Whether the left or the right side is evaluated first is not set by the standard (checked: 10.4.2, 4.9.4). kirimasim evaluates the right side first and the left side after (rule of this document).
+- An NBA update is the last assignment of the time slot, with an exception: a process woken by an NBA update may do blocking assignments, which are processed after the NBA (checked: 10.4.2). This follows naturally from the reference algorithm (3) returning to Active after NBA.
+- NBAs whose order of execution is clear are updated in that order (4.1). When two concurrent processes write the same variable by NBA, the final value is not set by the standard (checked: 10.4.2). kirimasim gives the result decided by sequence-number order (4.3). Race exploration mode may perturb this order.
+- An NBA with a delay schedules its update in the NBA region of the time after the delay (checked: 4.9.4). The value and target are decided when the statement runs and kept in the record (5).
 
-## 14. 手続きの連続代入（`assign`、`deassign`、`force`、`release`）
+## 14. Procedural continuous assignments (`assign`, `deassign`, `force`, `release`)
 
-### 14.1 共通
+### 14.1 Common
 
-- `assign` と `force` の右辺は、効いている間ずっと連続代入と同じに扱う。右辺の変数が変わるたびに評価し直す（規格で確認：10.6）。
+- The right side of `assign` and `force` is treated like a continuous assignment for as long as it is in effect. It is evaluated again each time a variable of the right side changes (checked: 10.6).
 
-### 14.2 `assign` と `deassign`
+### 14.2 `assign` and `deassign`
 
-- `assign` は、変数への手続きの代入をすべて上書きする。`deassign` で終わり、変数は次に代入されるまで今の値を保つ（規格で確認：10.6.1）。
-- 左辺は、変数そのものか、変数の連結だけ。ビットや部分の選択は使えない（規格で確認：10.6.1）。
-- `assign` 中の変数にもう一度 `assign` すると、前のものを `deassign` してから新しいものを始める（規格で確認：10.6.1）。
-- 規格は、`assign` と `deassign` を将来廃止する候補としている（規格で確認：10.6.1 の注記、C.4.2）。設計書は P3 で force と一緒に扱うとしていたが、テストスイートの母集団が使うので、force と一緒に P1 に前倒しした（2026-10-17 に承認）。
+- `assign` overrides every procedural assignment to the variable. It ends with `deassign`, and the variable keeps its present value until it is next assigned (checked: 10.6.1).
+- The left side can only be a variable itself, or a concatenation of variables. Bit- and part-selects cannot be used (checked: 10.6.1).
+- `assign` again to a variable under `assign` deassigns the previous one before starting the new one (checked: 10.6.1).
+- The standard lists `assign` and `deassign` as candidates for future removal (checked: the note of 10.6.1, C.4.2). The design specification planned to handle them in P3 together with force, but the test suite's population uses them, so they were brought forward to P1 together with force (approved 2026-10-17).
 
-### 14.3 `force` と `release`
+### 14.3 `force` and `release`
 
-- 左辺にできるもの：変数そのもの、ネット、ベクタのネットの**定数の**ビットの選択と部分の選択、それらの連結（規格で確認：10.6.2）。
-- 左辺にできないもの：変数のビットの選択と部分の選択、利用者定義の nettype のネットのビットの選択と部分の選択（規格で確認：10.6.2）。
-- 連続代入と手続きの代入の両方で書かれている変数には、`force` も `release` も使えない（規格で確認：10.6.2）。
-- 変数への `force` は、手続きの代入、連続代入、`assign` をすべて上書きする（規格で確認：10.6.2）。
-- 変数を `release` したとき（規格で確認：10.6.2）：
-  - 連続代入も、効いている `assign` も無ければ、値はすぐには変わらず、次の手続きの代入まで今の値を保つ。
-  - 連続代入か効いている `assign` があれば、それを戻し、その連続代入が予定される領域で評価し直す。
-- ネットへの `force` は、そのネットのすべてのドライバ（ゲートの出力、モジュールの出力、連続代入）を上書きする。`release` したら、ネットはすぐにドライバで決まる値になる（規格で確認：10.6.2）。
+- What can be a left side: a variable itself, a net, **constant** bit- and part-selects of a vector net, and concatenations of these (checked: 10.6.2).
+- What cannot: bit- and part-selects of variables, and bit- and part-selects of nets of user-defined nettypes (checked: 10.6.2).
+- Neither `force` nor `release` can be used on a variable written by both continuous and procedural assignments (checked: 10.6.2).
+- `force` on a variable overrides all procedural assignments, continuous assignments and `assign` (checked: 10.6.2).
+- When a variable is `release`d (checked: 10.6.2):
+  - If there is neither a continuous assignment nor an `assign` in effect, the value does not change at once, and it keeps its present value until the next procedural assignment.
+  - If there is a continuous assignment or an `assign` in effect, it is restored and evaluated again in the region where that continuous assignment is scheduled.
+- `force` on a net overrides every driver of the net (gate outputs, module outputs, continuous assignments). When `release`d, the net takes at once the value decided by its drivers (checked: 10.6.2).
 
-### 14.4 kirimasim での扱い（本書の決まり）
+### 14.4 Handling in kirimasim (rule of this document)
 
-- `force` の対象になりうるスロットには、エラボレーションのときに印を付ける（設計書のスロット表の「force の対象」）。VPI と `uvm_hdl_*` から force されうるものは、`--public` の範囲に含める。
-- 印の付いたスロットへの書き込みは、force 中かどうかを確かめてから行う。印の無いスロットの書き込みには、この確かめを入れない。
-- 畳み込んだポート（5 節）で force と release をしたときの見え方は、畳み込まない場合と同じにする。同じにできない接続は畳み込まない。
-- SIR での表し方は、SIR_SPEC.md の 5.6 節と 7.1 節（プロセスの種類 `override`）による（2026-10-17 に承認）。
+- Slots that may be targets of `force` are flagged at elaboration (the "force target" of the design specification's slot table). What may be forced from VPI and `uvm_hdl_*` is included in the scope of `--public`.
+- A write to a flagged slot checks whether it is under force before writing. Writes to unflagged slots have no such check.
+- How force and release look on collapsed ports (5) is the same as when not collapsed. Connections where this cannot be made the same are not collapsed.
+- The representation in SIR follows SIR_SPEC.md 5.6 and 7.1 (process kind `override`) (approved 2026-10-17).
 
-## 15. 保留される報告：unique・priority の違反と、遅延即時アサーション
+## 15. Pending reports: violations of unique and priority, and deferred immediate assertions
 
-`unique`、`unique0`、`priority` の if と case の違反と、遅延即時アサーション（`assert #0`、`assert final` など）は、どちらも「その場で判定し、報告は後でまとめて行う」仕組みで扱う。active の組の中のゼロ遅延のグリッチ（途中の値）で、誤った報告をしないためである（規格で確認：12.4.2.1、16.4）。
+Violations of `unique`, `unique0` and `priority` if and case, and deferred immediate assertions (`assert #0`, `assert final` and so on), are both handled by a mechanism that "decides on the spot and reports together later". This avoids false reports on zero-delay glitches (intermediate values) within the active set (checked: 12.4.2.1, 16.4).
 
-### 15.1 unique・unique0・priority の判定
+### 15.1 Deciding unique, unique0 and priority
 
-- `unique` と `priority`：どの条件にも当たらず、明示的な else（case なら default）も無ければ違反（規格で確認：12.4.2）。
-- `unique0`：どれにも当たらなくても違反にはしない（規格で確認：12.4.2）。
-- `unique` と `unique0`：2 つ以上の条件が真なら違反。条件はどの順で評価してもよいが、真の条件が見つかった後も評価を続ける。違反のときも、**最初に書かれた**真の条件の文だけを実行する。違反を見つけた後は評価をやめてよく、評価の順を何通りも試す必要はない（規格で確認：12.4.2）。kirimasim は、書かれた順にすべての条件を評価する（本書の決まり。条件に副作用がある場合の結果を決めるため）。
-- `priority`：書かれた順に評価する（規格で確認：12.4.2）。
-- case の場合（規格で確認：12.5.3、12.5.3.1、12.5.3.2）：
-  - 式は、項より先に 1 回だけ評価する。`unique` と `unique0` では、項はどの順で評価して比べてもよく、一致を見つけた後も続ける。2 つ以上の項が一致したら違反で、最初に書かれた一致した項の文だけを実行する。
-  - 1 つの項の中の複数の式が一致しても、違反ではない。項の中の 1 つの式が一致したら、同じ項の残りの式は評価しなくてよい。
-  - `unique` と `priority` は、どの項にも一致しなければ違反（`unique0` は違反にしない）。コンパイル時に決まる違反は、コンパイル時に報告してもよい。
-  - `priority` は最初の一致だけに作用する。
-  - グリッチの扱い（保留と flush point）は if と同じ（15.3）。
-  - kirimasim は、書かれた順にすべての項と式を評価する（本書の決まり。if と同じ）。
+- `unique` and `priority`: a violation if no condition matches and there is no explicit else (default for case) (checked: 12.4.2).
+- `unique0`: no violation even if none matches (checked: 12.4.2).
+- `unique` and `unique0`: a violation if two or more conditions are true. Conditions may be evaluated in any order, and evaluation continues after a true condition is found. Even on a violation, only the statement of the **first written** true condition runs. After finding a violation, evaluation may stop, and there is no need to try many evaluation orders (checked: 12.4.2). kirimasim evaluates every condition in the order written (rule of this document; to fix the result when conditions have side effects).
+- `priority`: evaluated in the order written (checked: 12.4.2).
+- For case (checked: 12.5.3, 12.5.3.1, 12.5.3.2):
+  - The expression is evaluated once, before the items. For `unique` and `unique0`, items may be evaluated and compared in any order, continuing after a match is found. If two or more items match it is a violation, and only the statement of the first written matching item runs.
+  - Several expressions within one item matching is not a violation. Once one expression of an item matches, the rest of the same item need not be evaluated.
+  - `unique` and `priority` are violated if no item matches (`unique0` is not). Violations decided at compile time may be reported at compile time.
+  - `priority` acts only on the first match.
+  - Glitches (pending and the flush point) are handled as for if (15.3).
+  - kirimasim evaluates every item and expression in the order written (rule of this document; as for if).
 
-### 15.2 遅延即時アサーション
+### 15.2 Deferred immediate assertions
 
-- `assert #0`（Observed の遅延アサーション）と `assert final`（final の遅延アサーション）がある。`assume` と `cover` にも同じ形がある（規格で確認：16.4）。
-- 式は文を実行した時点で評価する。動作ブロックは、1 つのサブルーチン呼び出しだけに限られる。値渡しの引数は、式を評価した時点で評価し切る（規格で確認：16.4）。
-- 成否の報告の行き先（規格で確認：16.4.1）：
-  - `#0` の報告は、Observed で確定し、サブルーチンを Reactive で実行する。
-  - `final` の報告は、Postponed で確定し、サブルーチンを同じ Postponed で実行する。
-  - else の無い assert と assume が失敗したときは、サブルーチンの代わりに `$error` を呼ぶ。
+- There are `assert #0` (observed deferred assertions) and `assert final` (final deferred assertions). `assume` and `cover` have the same forms (checked: 16.4).
+- The expression is evaluated when the statement runs. The action block is limited to a single subroutine call. By-value arguments are fully evaluated when the expression is evaluated (checked: 16.4).
+- Where the pass/fail reports go (checked: 16.4.1):
+  - A `#0` report is settled in Observed, and the subroutine runs in Reactive.
+  - A `final` report is settled in Postponed, and the subroutine runs in the same Postponed.
+  - When an assert or assume with no else fails, `$error` is called instead of the subroutine.
 
-### 15.3 保留の列と flush point
+### 15.3 The pending queue and the flush point
 
-- 違反や報告を見つけたら、**今実行しているプロセス**の保留の列に入れる。関数やタスクの中で見つけたものも、呼び出したプロセスの列に入る。プロセスごとに独立している（規格で確認：12.4.2.1、12.4.2.2、16.4.1、16.4.5）。
-- プロセスが flush point に達したら、そのプロセスの保留の列を**すべて捨てる**（規格で確認：12.4.2.1、16.4.2）。flush point は次のとき。
-  - イベント制御か `wait` で止まっていたプロセスが、再開するとき。
-  - `always_comb` か `always_latch` のプロセスが、依存する信号の変化で再び起動するとき。
-  - （遅延即時アサーションだけ）プロセスの最も外側のスコープが `disable` されたとき。
-- 保留の報告は、Observed の事象として扱う（規格で確認：12.4.2.1。違反を見つけた時点で、保留の報告を今の時刻スロットの Observed に予定する）。そのため、空でない保留の列を持つプロセスが 1 つでもあれば、Observed は空でない領域とみなす。3 節の手順で Observed に達したとき（Active から Pre-Observed までが空になったとき）に、捨てられずに残っている保留の報告を確定する。`final` の遅延アサーションは Postponed で確定する。確定した報告はもう捨てない（規格で確認：12.4.2.1、16.4.1）。
-- 確定した後の行き先は、種類で違う。unique・priority の違反は、確定したときに報告する。`#0` の遅延アサーションは、サブルーチン（か `$error`）を Reactive に予定する。`final` の遅延アサーションは、同じ Postponed で実行する（規格で確認：12.4.2.1、16.4.1）。
-- 確定した後でも、Reactive からの書き込みで active 側がもう一度回れば、同じ文が再び実行されて新しい報告が生まれうる。`#0` の遅延アサーションは、この種のグリッチまでは防がない（規格で確認：16.4.1）。
-- unique・priority の違反の報告は、アサーションの制御のシステムタスクで止められる（規格で確認：12.4.2.1。20.11 の詳細は P3）。
+- A violation or report found is put on the pending queue of **the process now running**. Those found inside functions and tasks also go on the calling process's queue. Each process is independent (checked: 12.4.2.1, 12.4.2.2, 16.4.1, 16.4.5).
+- When a process reaches a flush point, **everything** on its pending queue is discarded (checked: 12.4.2.1, 16.4.2). Flush points are:
+  - When a process stopped on an event control or `wait` resumes.
+  - When an `always_comb` or `always_latch` process starts again on a change of a signal it depends on.
+  - (Deferred immediate assertions only) when the outermost scope of the process is `disable`d.
+- Pending reports are treated as events of Observed (checked: 12.4.2.1; when a violation is found, the pending report is scheduled in Observed of the present time slot). So if any process has a non-empty pending queue, Observed is taken as a non-empty region. When Observed is reached by the steps of 3 (when everything from Active to Pre-Observed is empty), the pending reports left undiscarded are settled. Deferred assertions of `final` are settled in Postponed. Settled reports are no longer discarded (checked: 12.4.2.1, 16.4.1).
+- Where they go after being settled depends on the kind. Violations of unique and priority are reported when settled. Deferred assertions of `#0` schedule the subroutine (or `$error`) in Reactive. Deferred assertions of `final` run in the same Postponed (checked: 12.4.2.1, 16.4.1).
+- Even after settling, if writes from Reactive make the active side run once more, the same statement can run again and produce new reports. `#0` deferred assertions do not prevent glitches of this kind (checked: 16.4.1).
+- Reports of unique and priority violations can be stopped by the assertion-control system tasks (checked: 12.4.2.1; details of 20.11 in P3).
 
-### 15.4 kirimasim での表し方（本書の決まり）
+### 15.4 Representation in kirimasim (rule of this document)
 
-- 保留の列はプロセスのフレームに持たせる。列の要素は、報告の種類、ソースの位置、確定のときに呼ぶサブルーチンと評価済みの引数。
-- プロセスを再開するときと、`always_comb`・`always_latch` を起動するときに、列を空にする。
-- 空でない保留の列を持つプロセスの数を Context が数え、0 でなければ Observed を空でないとみなす。
-- Observed（と Postponed）に達したら、列が空でないプロセスを順に（連番の順に）確定する。1 つのプロセスの中では、報告が保留された順にする。
+- The pending queue is kept in the process's frame. An element of the queue is the kind of report, the source position, and the subroutine to call when settled with its evaluated arguments.
+- The queue is emptied when a process resumes, and when `always_comb` or `always_latch` starts.
+- The Context counts the processes with non-empty pending queues, and if it is not 0, Observed is taken as non-empty.
+- When Observed (or Postponed) is reached, the processes with non-empty queues are settled in turn (in sequence-number order). Within one process, in the order the reports were made pending.
 
-## 16. シミュレーションの終了
+## 16. End of simulation
 
-### 16.1 規格の決まり
+### 16.1 Rules of the standard
 
-- `$finish` はシミュレータを終わらせ、制御を OS に戻す。`$stop` はシミュレーションを一時停止する。`$exit` は、すべての program ブロックが終わるのを待ってから、暗黙に `$finish` を呼ぶ（規格で確認：20.2）。
-- `$finish` と `$stop` は、0、1、2 の引数で診断の量を選ぶ。0 は何も出さず、1（既定）は時刻と位置を、2 はそれに加えてメモリと CPU 時間の統計を出す（規格で確認：20.2、表 20-1）。
-- `$fatal` は実行時の致命的なエラーを出し、暗黙に `$finish` を呼ぶ。最初の引数は `$finish` の引数と同じ意味（規格で確認：20.10）。
-- `$fatal`、`$error`、`$warning`、`$info` のメッセージには、呼んだ場所のファイル名と行番号、呼んだスコープの階層名、シミュレーション時刻を含める（規格で確認：20.10）。
-- 事象がまったく無くなったとき、シミュレーションは自動的に終わる（規格で確認：9.6.1）。
-- program ブロックが 1 つ以上あり、そのすべての `initial` が終わったときは、各 program が自分の子孫のスレッドを終わらせたうえで、暗黙の `$finish` で終わる（規格で確認：24.3、24.7 の詳細は P3）。
-- `cbEndOfSimulation` は、事象が尽きたときと `$finish` のときに呼ぶ（規格で確認：38.36.3）。
-- `final` は、明示的か暗黙の `$finish` で終わるときに実行する。すべての `final` を実行した後は、残った事象を実行しない（規格で確認：9.2.3）。
+- `$finish` ends the simulator and returns control to the OS. `$stop` suspends the simulation. `$exit` waits until every program block has ended, then implicitly calls `$finish` (checked: 20.2).
+- `$finish` and `$stop` choose the amount of diagnostics with the argument 0, 1 or 2. 0 prints nothing, 1 (the default) the time and position, and 2 also statistics of memory and CPU time (checked: 20.2, Table 20-1).
+- `$fatal` gives a fatal run-time error and implicitly calls `$finish`. Its first argument means the same as `$finish`'s (checked: 20.10).
+- The messages of `$fatal`, `$error`, `$warning` and `$info` include the file name and line number of the call, the hierarchical name of the calling scope, and the simulation time (checked: 20.10).
+- When there are no events at all, the simulation ends automatically (checked: 9.6.1).
+- When there are one or more program blocks and all their `initial`s have ended, each program ends its descendant threads and the simulation ends by an implicit `$finish` (checked: 24.3; details of 24.7 in P3).
+- `cbEndOfSimulation` is called when events run out and on `$finish` (checked: 38.36.3).
+- `final` runs when ending by an explicit or implicit `$finish`. After every `final` has run, remaining events are not run (checked: 9.2.3).
 
-### 16.2 kirimasim の決まり
+### 16.2 kirimasim's rules
 
-設計書の「終了の条件と理由」と終了コードを引き継ぐ。
+The design specification's "conditions and reasons of ending" and exit codes are carried over.
 
-| 理由 | きっかけ | 既定の終了コード | `final` を実行するか |
+| Reason | Trigger | Default exit code | Runs `final` |
 | --- | --- | --- | --- |
-| finish | `$finish`、`$exit`、すべての program の終わり（暗黙の `$finish`） | 0 | する |
-| quiescent | 事象が尽きた（未来の事象も無い） | 0 | する（解釈。下を参照） |
-| stop | `$stop`（対話的なデバッガが無いので、メッセージを出して終わる。オプションで無視できる） | 0 | する（本書の決まり。下を参照） |
-| fatal | `$fatal`。`$error` を数えるオプションが有効なら、`$error` が 1 件以上 | 1 | する |
-| time_limit | `--max-time` の時刻に達した（`--max-time-ok` で 0） | 4 | する |
-| zero_time_limit | 時刻が進まないまま、3 つの上限のどれかに達した | 5 | する |
-| interrupted | SIGINT の 1 回目（2 回目は即時に終わり、`final` を実行しない） | 130 | する（1 回目） |
+| finish | `$finish`, `$exit`, the end of every program (an implicit `$finish`) | 0 | Yes |
+| quiescent | Events ran out (no future events either) | 0 | Yes (interpretation; see below) |
+| stop | `$stop` (there is no interactive debugger, so it prints a message and ends; an option can ignore it) | 0 | Yes (rule of this document; see below) |
+| fatal | `$fatal`. With the option that counts `$error` enabled, one or more `$error` | 1 | Yes |
+| time_limit | The time of `--max-time` was reached (0 with `--max-time-ok`) | 4 | Yes |
+| zero_time_limit | One of the 3 limits was reached without time advancing | 5 | Yes |
+| interrupted | The first SIGINT (the second ends at once without running `final`) | 130 | Yes (the first) |
 
-- **事象が尽きたときにも `final` を実行するか：** 規格は「明示的か暗黙の `$finish` で終わるとき」と書いている。事象が尽きたときの終了を、暗黙の `$finish` とみなすかは文面からは決まらない。kirimasim はこれも暗黙の `$finish` とみなし、`final` を実行する（解釈。2026-10-14 に承認）。38.36.3 が `cbEndOfSimulation` を「事象が尽きたか `$finish`」の両方で呼ぶとしていることも、この解釈の支えになる。
-- **`$stop` での終わり方：** 規格は `$stop` を一時停止としており（20.2）、`final` を実行する場合として挙げるのは `$finish` だけ（9.2.3）。kirimasim は対話的なデバッガを持たないので、`$stop` で終わり、そのときも `final` を実行し、終了コードは 0 にする（本書の決まり）。
-- **`final` の中の `$finish`（2026-10-16 に承認）：** 残りの `final` を実行せずに終わる（規格で確認：9.2.3）。終了の理由と終了コードは、`final` を始める前に決まったもの（事象が尽きたなら quiescent、`--max-time` なら time_limit）のまま変えない（本書の決まり）。シミュレーションは `final` を始める前にすでに終わっているためである。`final` の中で内部エラーが起きたときだけ、理由を internal にする。
-- **時刻が進まない実行の上限：** 設計書の 3 つの上限（`--max-scc-iter`、`--max-zero-delay`、`--max-steps`）を使う。停止の確認は、第 1 層ではループの戻りで、第 2 層の生成コードではループの戻りと一定の命令数ごとに行う。
-- **SIGINT：** 1 回目は時刻スロットの境界か停止の確認点で止め、`final` を実行して波形とカバレッジを書き出してから終わる。戻ってこない DPI-C の呼び出しの最中は止められないので、2 回目で即時に終わる。
-- 終了の理由は、標準エラーの 1 行と `--stats=json` の項目の両方に出す。ただし `$finish(0)` と `$stop(0)` で終わるときは、標準エラーの行を出さない（20.2 の引数 0 は何も出さないため。SYSTEM_TASKS.md の 10.2 節。2026-10-15 に承認）。
+- **Whether `final` runs when events run out:** the standard says "when ending by an explicit or implicit `$finish`". Whether ending because events ran out counts as an implicit `$finish` is not settled by the wording. kirimasim takes this as an implicit `$finish` too, and runs `final` (interpretation; approved 2026-10-14). That 38.36.3 calls `cbEndOfSimulation` both "when events run out and on `$finish`" supports this interpretation too.
+- **How `$stop` ends:** the standard makes `$stop` a suspension (20.2), and names only `$finish` as a case that runs `final` (9.2.3). kirimasim has no interactive debugger, so it ends on `$stop`, runs `final` then too, and the exit code is 0 (rule of this document).
+- **`$finish` inside `final` (approved 2026-10-16):** it ends without running the remaining `final`s (checked: 9.2.3). The reason for ending and the exit code stay as they were decided before `final` started (quiescent if events ran out, time_limit for `--max-time`) (rule of this document), since the simulation has already ended before `final` starts. Only when an internal error occurs inside `final` does the reason become internal.
+- **Limits on runs where time does not advance:** the design specification's 3 limits (`--max-scc-iter`, `--max-zero-delay`, `--max-steps`) are used. Stopping is checked at the back edges of loops in tier 1, and at the back edges of loops and every so many instructions in tier 2's generated code.
+- **SIGINT:** the first stops at a time-slot boundary or a stop check point, runs `final`, writes out waveforms and coverage, then ends. It cannot stop in the middle of a DPI-C call that does not return, so the second ends at once.
+- The reason for ending is given both as one line on standard error and as an item of `--stats=json`. But when ending by `$finish(0)` or `$stop(0)`, the line on standard error is not written (argument 0 of 20.2 prints nothing; SYSTEM_TASKS.md 10.2; approved 2026-10-15).
 
-## 17. VPI の時刻のコールバック
+## 17. VPI time callbacks
 
-### 17.1 規格の決まり
+### 17.1 Rules of the standard
 
-時刻にかかわるコールバックの意味（規格で確認：38.36.2）と、呼ぶ領域（規格で確認：4.10、表 4-1）：
+The meaning of the time-related callbacks (checked: 38.36.2), and the regions in which they are called (checked: 4.10, Table 4-1):
 
-| コールバック | 意味 | 領域 |
+| Callback | Meaning | Region |
 | --- | --- | --- |
-| `cbAtStartOfSimTime` | 指定した時刻の事象を実行する前。事象が無い時刻にも設定できる | Pre-Active |
-| `cbAfterDelay` | 指定した遅延の後、その時刻の事象を実行する前。事象が無い時刻にも設定できる | Pre-Active |
-| `cbNextSimTime` | 次の時刻の事象を実行する前（時刻の指定は無視） | Pre-Active |
-| `cbNBASynch` | NBA の事象を処理する直前 | Pre-NBA |
-| `cbReadWriteSynch` | 指定した時刻の事象を実行した後。NBA の前でも後でもよい | Pre-NBA か Post-NBA |
-| `cbAtEndOfSimTime` | NBA の後、読み出しだけの段階に入る前 | Pre-Postponed |
-| `cbReadOnlySynch` | `cbReadWriteSynch` と同じ時点だが、書き込みと事象の予定はできない | Postponed |
+| `cbAtStartOfSimTime` | Before the events of the given time run. Can be set for times with no events | Pre-Active |
+| `cbAfterDelay` | After the given delay, before the events of that time run. Can be set for times with no events | Pre-Active |
+| `cbNextSimTime` | Before the events of the next time run (the time given is ignored) | Pre-Active |
+| `cbNBASynch` | Just before the NBA events are processed | Pre-NBA |
+| `cbReadWriteSynch` | After the events of the given time have run. May be before or after NBA | Pre-NBA or Post-NBA |
+| `cbAtEndOfSimTime` | After NBA, before entering the read-only phase | Pre-Postponed |
+| `cbReadOnlySynch` | The same point as `cbReadWriteSynch`, but no writes or scheduling of events are possible | Postponed |
 
-- 時刻の型には `vpiScaledRealTime` か `vpiSimTime` を指定する。`vpiSuppressTime` か NULL はエラー（規格で確認：38.36.2）。
-- 次の場合はエラーで、コールバックを作らない（規格で確認：38.36.2）。
-  - 時刻スロットの途中で、`cbAtStartOfSimTime` のコールバックの中でもないのに、遅延 0 の `cbAtStartOfSimTime` を置こうとした。
-  - 読み出しだけの段階で、遅延 0 の `cbReadWriteSynch` を置こうとした。
-- `cbAtStartOfSimTime` のコールバックの中で、遅延 0 の `cbAtStartOfSimTime` を置くと、同じ時刻スロットの中でもう一度呼ぶ（規格で確認：38.36.2）。
-- `cbStartOfSimulation` は時刻 0 のサイクルの始め、`cbEndOfSimulation` はシミュレーションの終わりに呼ぶ（規格で確認：38.36.3）。`cbEndOfSimulation` は、すべての `final` を実行した後に呼ぶ（規格で確認：9.2.3）。
+- The time type given is `vpiScaledRealTime` or `vpiSimTime`. `vpiSuppressTime` or NULL is an error (checked: 38.36.2).
+- The following are errors, and no callback is made (checked: 38.36.2):
+  - Placing a `cbAtStartOfSimTime` with delay 0 in the middle of a time slot, other than inside a `cbAtStartOfSimTime` callback.
+  - Placing a `cbReadWriteSynch` with delay 0 in the read-only phase.
+- Placing a `cbAtStartOfSimTime` with delay 0 inside a `cbAtStartOfSimTime` callback calls it once more within the same time slot (checked: 38.36.2).
+- `cbStartOfSimulation` is called at the start of the cycle of time 0, and `cbEndOfSimulation` at the end of simulation (checked: 38.36.3). `cbEndOfSimulation` is called after every `final` has run (checked: 9.2.3).
 
-### 17.2 kirimasim の決まり
+### 17.2 kirimasim's rules
 
-- **`cbReadWriteSynch` は Post-NBA で呼ぶ**（本書の決まり）。NBA の更新を見たうえで値を読み書きでき、書き込みはもう一度 active 側の繰り返しを起こす。cocotb のテスト（設計書の合格条件）で確かめ、問題があれば見直す。
-- 同じ領域に複数のコールバックがあるときは、登録した順に呼ぶ（本書の決まり。NFR-2）。
-- VPI と DPI の呼び出しは、実行カーネルのスレッドから同期的に行う（設計書の決まり）。
-- `cbValueChange` などの値の変化のコールバック（38.36.1）と、cocotb が使う 17 の関数の細部は、VPI_SPEC.md（P3）で書く。
+- **`cbReadWriteSynch` is called in Post-NBA** (rule of this document). It can read and write values having seen the NBA updates, and writes cause another iteration of the active side. This is checked with cocotb's tests (a passing condition of the design specification), and reviewed if there is a problem.
+- When several callbacks are in the same region, they are called in the order registered (rule of this document; NFR-2).
+- VPI and DPI calls are made synchronously from the execution kernel's thread (a rule of the design specification).
+- Value-change callbacks such as `cbValueChange` (38.36.1), and the details of the 17 functions cocotb uses, are written in VPI_SPEC.md (P3).
 
-## 18. 規格で確かめた結果、設計書と違っていた点
+## 18. Points where checking the standard showed the design specification was different
 
-次の点は、人の承認を受けて設計書（v0.6）に反映した。
+The following points were applied to the design specification (v0.6) with a human's approval.
 
-1. **reactive 側から active 側へ戻る時点**（4.5）。設計書の図は「Active 側に事象ができたら戻る」と読めるが、規格では、reactive の組の 5 つの領域が空になるまで active 側へは戻らない。
-2. **連続代入の時刻 0 での評価**（4.9.1）。設計書は「規格で確かめる」としていた。規格は時刻 0 に 1 回評価することを求めているが、評価の時点は決めていない。本書は Active に入れることにした（6.1）。
-3. **`always_latch` の起動の規則**（9.2.2.3）。設計書は「規格で確かめる」としていた。`always_comb` と同じであることを確かめた。
-4. **`@*` の感度**（9.4.2.2）。`always_comb` と違い、ブロックの中で書き込む変数でも、右辺で読めば感度に入る。設計書の「comb-at」の種類の説明に、この違いを足すことを提案する。
-5. **fork で作ったプロセスが始まる時点**（9.3.2）。親が止まるか終わるまで、どの join の種類でも子は始まらない。設計書には記述が無い。
-6. **force の左辺**（10.6.2）。変数のビットや部分の選択は force できない（ネットの定数の選択はできる）。設計書の FR-20 は「部分選択」の force を挙げているが、対象はネットに限られる。VPI からの force（`vpiForceFlag`）の範囲は第 5 部で確かめる。
-7. **unique・priority の違反の flush point**（12.4.2.1）。設計書は、flush point を「そのプロセスが次の待ちに入るとき」とし、保留を捨てるのは「同じプロセスが flush point の前に同じ文をもう一度実行したときだけ」としていた。規格では、flush point は「待ちから**再開する**とき」と「`always_comb`・`always_latch` が再び起動するとき」で、そのとき、そのプロセスの保留を**すべて**捨てる。別のプロセスの実行で捨てないことは、設計書と同じ。
-8. **`$exit`**（20.2）。program ブロックの終わりを待ってから `$finish` を呼ぶシステムタスクで、設計書のシステムタスクの一覧に無い。P3（program と一緒に）で足すことを提案する。
-9. **事象が尽きたときの `final` の実行**（9.2.3）。設計書は「即時の終了を除き、どの終了でも final ブロックを実行する」としている。規格の文面からは決まらないので、16.2 で解釈として記録した。
+1. **When the reactive side returns to the active side** (4.5). The design specification's figure reads as "return when events appear on the Active side", but in the standard the active side is not returned to until the five regions of the reactive set are empty.
+2. **Evaluation of continuous assignments at time 0** (4.9.1). The design specification said "check in the standard". The standard requires one evaluation at time 0 but does not set when. This document puts it in Active (6.1).
+3. **The starting rule of `always_latch`** (9.2.2.3). The design specification said "check in the standard". It was checked to be the same as `always_comb`.
+4. **The sensitivity of `@*`** (9.4.2.2). Unlike `always_comb`, a variable written within the block is in the sensitivity if it is read on a right side. It is proposed to add this difference to the description of the kind "comb-at" in the design specification.
+5. **When processes made by fork start** (9.3.2). For every kind of join, children do not start until the parent stops or ends. The design specification had no description.
+6. **The left side of force** (10.6.2). Bit- and part-selects of variables cannot be forced (constant selects of nets can). The design specification's FR-20 lists force of "part-selects", but the targets are limited to nets. The scope of force from VPI (`vpiForceFlag`) is checked in part 5.
+7. **The flush point of unique and priority violations** (12.4.2.1). The design specification took the flush point as "when the process enters its next wait", and discarded pending reports "only when the same process ran the same statement again before the flush point". In the standard, the flush points are "when resuming from a wait" and "when `always_comb` or `always_latch` starts again", and then **all** of that process's pending reports are discarded. Not discarding them on the execution of another process is the same as the design specification.
+8. **`$exit`** (20.2). A system task that waits for program blocks to end and then calls `$finish`; it is not in the design specification's list of system tasks. It is proposed to add it in P3 (together with program).
+9. **Running `final` when events run out** (9.2.3). The design specification says "final blocks run on every ending except an immediate one". The wording of the standard does not settle it, so it was recorded in 16.2 as an interpretation.
 
-## 19. 未確認・後で書くこと
+## 19. Not confirmed, to be written later
 
-- 第 4 部の後半（並行アサーションの領域、クロッキングブロック、program。P3 で書く）。
-- 17.2 の `cbReadWriteSynch` の時点を、cocotb のテストで確かめる。
-- `case ... inside` での unique・priority の扱い。
-- 10.4 と 10.7 の本書の決まり（disable したときの NBA と引数）を、Icarus 13.0 の結果と比べる。
-- 6.1 の時刻 0 の順序を、Icarus 13.0 と Verilator 5.052 の実行結果と比べるテスト。
-- 6.4 の書き込みの制限を、slang がどこまで検査するか。
-- 6.3 の「書き込む式」の除外が、ビット範囲の一部だけを書く場合にどう働くか（11.5.3 の最長の静的な接頭辞との関係）。
+- The second half of part 4 (the regions of concurrent assertions, clocking blocks, program; written in P3).
+- Check when `cbReadWriteSynch` of 17.2 is called, with cocotb's tests.
+- unique and priority with `case ... inside`.
+- Compare this document's rules of 10.4 and 10.7 (NBAs and arguments on disable) with Icarus 13.0's results.
+- A test comparing the order at time 0 of 6.1 with the results of Icarus 13.0 and Verilator 5.052.
+- How far slang checks the write restrictions of 6.4.
+- How the exclusion of "expressions written" in 6.3 works when only part of a bit range is written (its relation to the longest static prefix of 11.5.3).
