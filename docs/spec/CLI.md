@@ -1,118 +1,120 @@
-# CLI：コマンドライン
+# CLI: the command line
 
-優先度：P1。状態：**承認済み（2026-10-15）**。2026-10-16 に、`--max-time` の書き方と打ち切り方（2.5 節）と、終了の理由の行の時刻の書き方（4 節）を足した（承認済み）。同日、時刻が進まない実行の上限の既定値（2.6 節）と、slang の言語の版（2.1 節）を足した（承認済み）。設計仕様書の「外部インターフェース」の案を、実装する段階ごとに整理し、決まっていなかった点（出力の行き先、`--dump-sir`、プラスアーグ）を足した。
+[日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、kirimasim のコマンドラインの形、オプション、終了コード、kirimasim 自身が出すメッセージの形を定める。終了の理由とコードの意味は SCHEDULER_SPEC.md の 16 節、システムタスクの出力は SYSTEM_TASKS.md に従う。
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
-## 1. コマンドの形
+This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
+
+## 1. Form of the command
 
 ```text
-kirimasim [オプション] <ファイル>... [+プラスアーグ]...     コンパイルして実行する（既定）
-kirimasim parse [オプション] <ファイル>...                  構文の解析とエラボレーションだけを行う
+kirimasim [options] <file>... [+plusarg]...     compile and run (the default)
+kirimasim parse [options] <file>...            only parse and elaborate
 kirimasim --version | --help
 ```
 
-- サブコマンドを書かないときは、コンパイルして実行する。
-- `parse` は、P0 からある形のまま残す（テストスイートの P0 の確認に使う）。
-- コンパイル済みのモデルを使い回す `build` と `run <モデル>` は P2、DPI ライブラリを作る `lib-create` は P4 で足す（設計仕様書の「外部インターフェース」）。
+- Without a subcommand, kirimasim compiles and runs.
+- `parse` stays as it has been since P0 (the test suite's P0 checks use it).
+- `build` and `run <model>`, which reuse a compiled model, come in P2, and `lib-create`, which makes a DPI library, in P4 (the design specification's "external interface").
 
-## 2. オプション
+## 2. Options
 
-「段」は、P1 の中で実装する順（M3a、M4、M7 など）。その段より前には受け付けない（知らないオプションとして誤りにする）。
+"Stage" is the order of implementation within P1 (M3a, M4, M7 and so on). Before its stage an option is not accepted (it is an error, as an unknown option).
 
-### 2.1 入力（slang にそのまま渡す）
+### 2.1 Input (passed to slang as it is)
 
-- **言語の版（2026-10-16 に承認）：** kirimasim は、slang を常に IEEE 1800-2023 の版（slang の `--std=1800-2023`）で動かす。slang の既定は 1800-2017 で、その版では、大きさの指定の無い 32 ビットを超える 10 進のリテラルを 32 ビットに切り詰めるなど、規格の 2023 年版と違う扱いがある（5.7.1。slang v12.0 で確かめた）。版を選ぶオプションは置かない（CLAUDE.md の「隠れたつまみを作らない」）。
+- **Language version (approved 2026-10-16):** kirimasim always runs slang with the IEEE 1800-2023 version (slang's `--std=1800-2023`). slang's default is 1800-2017, which in places differs from the 2023 edition of the standard, for example by truncating an unsized decimal literal wider than 32 bits to 32 bits (5.7.1; checked with slang v12.0). There is no option to choose the version (CLAUDE.md: "no hidden knobs").
 
-| オプション | 意味 | 段 |
+| Option | Meaning | Stage |
 | --- | --- | --- |
-| `-f <file>` | ファイルの一覧を読む | M3a |
-| `+incdir+<dir>`、`+define+<名前>[=<値>]` | インクルードの場所と、マクロの定義 | M3a |
-| `--top=<名前>` | トップのモジュール。複数書ける。書かなければ slang が選ぶ（どこからも参照されないモジュール） | M3a |
-| `-y <dir>`、`+libext+<ext>`、`--libdir=<dir>` | ライブラリの検索 | M7 |
-| `-W<名前>`、`--compat=<名前>` | slang の警告と互換モード | M7 |
-| `--timescale=<単位>/<精度>` | timescale の指定が無いファイルの既定（SCHEDULER_SPEC.md の 1 節） | M4 |
+| `-f <file>` | Read a list of files | M3a |
+| `+incdir+<dir>`, `+define+<name>[=<value>]` | Include directories and macro definitions | M3a |
+| `--top=<name>` | The top module. May be given more than once. Without it, slang chooses (the modules no other module refers to) | M3a |
+| `-y <dir>`, `+libext+<ext>`, `--libdir=<dir>` | Library search | M7 |
+| `-W<name>`, `--compat=<name>` | slang's warnings and compatibility modes | M7 |
+| `--timescale=<unit>/<precision>` | The default for files with no timescale (SCHEDULER_SPEC.md 1) | M4 |
 
-### 2.2 実行
+### 2.2 Running
 
-| オプション | 意味 | 段 |
+| Option | Meaning | Stage |
 | --- | --- | --- |
-| `--max-time=<時刻>` | この時刻に達したら打ち切る（理由 time_limit、コード 4）。時刻は単位付き（例 `10us`）。書き方と打ち切り方は 2.5 | M4 |
-| `--max-time-ok` | time_limit をコード 0 として扱う | M4 |
-| `--max-scc-iter=<n>`、`--max-zero-delay=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（理由 zero_time_limit、コード 5）。意味と既定の値は 2.6 | M4 |
-| `--seed=<n>` | 乱数のシード（SYSTEM_TASKS.md の乱数の節。P1 で書く） | M7 |
-| `--wave=<file>.fst\|.vcd`、`--wave-scope=<パターン>` | 波形の出力と範囲（波形の文書。P1 で書く） | M7 |
+| `--max-time=<time>` | Stop when this time is reached (reason time_limit, code 4). The time has a unit (for example `10us`). Its form and how it stops: 2.5 | M4 |
+| `--max-time-ok` | Treat time_limit as code 0 | M4 |
+| `--max-scc-iter=<n>`, `--max-zero-delay=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (reason zero_time_limit, code 5). Their meaning and defaults: 2.6 | M4 |
+| `--seed=<n>` | The random seed (the random-number section of SYSTEM_TASKS.md; to be written in P1) | M7 |
+| `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (the waveform document; to be written in P1) | M7 |
 
-### 2.3 出力と開発用
+### 2.3 Output and development
 
-| オプション | 意味 | 段 |
+| Option | Meaning | Stage |
 | --- | --- | --- |
-| `--dump-sir` | SIR を作り、検証器を通したあと、テキスト形式（SIR_SPEC.md の 9 節）で標準出力に書いて終わる。実行はしない。検証器が誤りを見つけたら、標準エラーに書いてコード 3 で終わる | M3a |
-| `--stats=json` | 回数カウンタを、終わったときに JSON で標準出力の最後に書く（PERFORMANCE.md）。テストスイートの標準出力の比較では使わない | M3a |
-| `--log=<file>` | 標準出力の写しをファイルにも書く | M7 |
-| `--diag-format=json` | エラーと警告を、ID と規格の節番号付きの JSON で標準エラーに書く | M7 |
+| `--dump-sir` | Make SIR, pass it through the verifier, write it in the text form (SIR_SPEC.md 9) to standard output and end, without running. If the verifier finds an error, write it to standard error and end with code 3 | M3a |
+| `--stats=json` | Write the event counters as JSON at the end of standard output when the run ends (PERFORMANCE.md). Not used when the test suite compares standard output | M3a |
+| `--log=<file>` | Also write a copy of standard output to a file | M7 |
+| `--diag-format=json` | Write errors and warnings to standard error as JSON with an ID and the clause of the standard | M7 |
 
-P2 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt`、`--race-check`、`--race-seed`、`--public`、`--preserve`、`--disable-pass`、`--cxx`、`--cache-dir`）は、その段で本書に足す。
+The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--public`, `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`) are added to this document in their stage.
 
-### 2.4 プラスアーグ
+### 2.4 Plusargs
 
-- `+` で始まる引数のうち、`+incdir+`、`+define+`、`+libext+` でないものは、実行時のプラスアーグとする。書かれた順のまま、`$test$plusargs` と `$value$plusargs` に渡す（SYSTEM_TASKS.md の 9 節）。
-- プラスアーグはファイルの名前として扱わない。
+- An argument that starts with `+` and is not `+incdir+`, `+define+` or `+libext+` is a run-time plusarg. They are given, in the order written, to `$test$plusargs` and `$value$plusargs` (SYSTEM_TASKS.md 9).
+- A plusarg is not taken as a file name.
 
-### 2.5 `--max-time` の書き方と打ち切り方（2026-10-16 に承認）
+### 2.5 The form of `--max-time` and how it stops a run (approved 2026-10-16)
 
-- 書き方：0 以上の 10 進の数（小数を含んでよい）と、単位 `s`、`ms`、`us`、`ns`、`ps`、`fs` のどれか。間に空白を入れない（例：`10us`、`1.5ns`）。それ以外はコード 2 の誤りにする。
-- 値は、設計全体の精度（SCHEDULER_SPEC.md の 1 節）の刻みに換算する。刻みに割り切れなければ、遅延と同じく、0 から遠い方へ丸める（SCHEDULER_SPEC.md の 1 節。64 ビットに収まらなければコード 2）。
-- 打ち切り方：その時刻**以下**の事象はすべて実行する。その時刻より後の事象が次に来るとき、時刻を `--max-time` の値にして、理由 time_limit で終わる。`final` は実行する（SCHEDULER_SPEC.md の 16.2 節）。
+- Form: a decimal number of 0 or more (a fraction is allowed) followed by one of the units `s`, `ms`, `us`, `ns`, `ps`, `fs`, with no space between (for example `10us`, `1.5ns`). Anything else is an error with code 2.
+- The value is converted to steps of the design's precision (SCHEDULER_SPEC.md 1). If it is not a whole number of steps, it is rounded away from zero, as delays are (SCHEDULER_SPEC.md 1; code 2 if it does not fit in 64 bits).
+- How it stops: every event at that time **or before** runs. When the next event is after that time, the time is set to the value of `--max-time` and the run ends with reason time_limit. `final` runs (SCHEDULER_SPEC.md 16.2).
 
-### 2.6 時刻が進まない実行の上限（2026-10-16 に承認）
+### 2.6 Limits on runs that do not advance time (approved 2026-10-16)
 
-| オプション | 数えるもの | 既定の値 |
+| Option | What it counts | Default |
 | --- | --- | --- |
-| `--max-zero-delay=<n>` | 1 つの時刻スロットの中で、事象を Active か Reactive の領域へ移した回数（SCHEDULER_SPEC.md の 3 節の「移す」の回数。`#0` の再開、NBA の反映の後の評価などで増える） | 1000000 |
-| `--max-steps=<n>` | 1 つのプロセスが、待たずに続けて実行した第 1 層の命令の数（`forever begin end` のように、待ちの無いループで増える） | 1000000000 |
-| `--max-scc-iter=<n>` | 第 2 層の静的な島の繰り返し（P2） | P2 で決める |
+| `--max-zero-delay=<n>` | Moves of events into the Active or the Reactive region within one time slot (the "moves" of SCHEDULER_SPEC.md 3; they grow with resumptions after `#0`, evaluations after NBA updates and the like) | 1000000 |
+| `--max-steps=<n>` | Tier 1 instructions one process runs in a row without waiting (they grow in a loop with no wait, such as `forever begin end`) | 1000000000 |
+| `--max-scc-iter=<n>` | Iterations of a static island of tier 2 (P2) | Decided in P2 |
 
-- `0` は「上限なし」を表す。
-- 既定の値の根拠（2026-10-16 に測った）：
-  - release の構成の第 1 層は、待ちの無いループで毎秒およそ 3.5 億命令を実行した。dev の構成もほぼ同じで、asan の構成ではおよそ半分の速さだった。`--max-steps` の既定で止まるまでの時間は、release でおよそ 3 秒、asan でおよそ 6 秒になる。
-  - `#0` の再開は、100 万回でおよそ 0.04 秒だった。
-  - `--max-steps` を大きめにしたのは、`initial` の中で大きなメモリを 1 つのループで初期化する設計（1600 万語なら、およそ 1 億命令）を誤って止めないためである。
-- この既定の値は、M6 で sv-tests と実設計を走らせたときに見直す。変えるときは本書を直し、人の承認を受ける。
-- 上限に達したら、終了の理由の行（4 節）の前に、どの上限に達したかを 1 行で標準エラーに書く。形：
-  - `kirimasim: error: time did not advance: <n> moves into the Active region in one time slot (--max-zero-delay=<n>)`（reactive の組なら `Reactive`）
-  - `kirimasim: error: time did not advance: process "<プロセスの名前>" ran <n> instructions without waiting (--max-steps=<n>)`
-  - プロセスの名前は SIR のプロセスの名前（`top.initial0` など）。
+- `0` means no limit.
+- Grounds for the defaults (measured 2026-10-16):
+  - Tier 1 in the release configuration ran about 350 million instructions a second in a loop with no wait. The dev configuration was about as fast, and the asan configuration about half as fast. Stopping at the default of `--max-steps` takes about 3 seconds in release and about 6 in asan.
+  - A million resumptions after `#0` took about 0.04 seconds.
+  - `--max-steps` is large so as not to stop, by mistake, a design that initializes a large memory in one loop in an `initial` (16 million words take about 100 million instructions).
+- These defaults are reviewed in M6, when sv-tests and real designs are run. Changing them means changing this document, with a human's approval.
+- When a limit is reached, one line says which, on standard error, before the line of the reason for ending (4). Forms:
+  - `kirimasim: error: time did not advance: <n> moves into the Active region in one time slot (--max-zero-delay=<n>)` (`Reactive` for the reactive set)
+  - `kirimasim: error: time did not advance: process "<process name>" ran <n> instructions without waiting (--max-steps=<n>)`
+  - The process name is the name of the SIR process (`top.initial0` and the like).
 
-## 3. 出力の行き先
+## 3. Where output goes
 
-- **標準出力：** 設計が出すもの（`$display`、`$write`、`$strobe`、`$monitor` など）だけを書く。テストスイートは標準出力だけを比べる（TEST_SUITE.md）。例外は `--dump-sir` の SIR と、`--stats=json` の JSON（最後に書く）。
-- **標準エラー：** kirimasim 自身のメッセージ（診断、版の行、終了の理由の行など）をすべて書く（SYSTEM_TASKS.md の 2 節）。標準エラーに書く前に、標準出力を流す。
+- **Standard output:** only what the design prints (`$display`, `$write`, `$strobe`, `$monitor` and so on). The test suite compares standard output only (TEST_SUITE.md). The exceptions are the SIR of `--dump-sir` and the JSON of `--stats=json` (written last).
+- **Standard error:** every message of kirimasim itself (diagnostics, the version line, the line of the reason for ending and so on; SYSTEM_TASKS.md 2). Standard output is flushed before anything is written to standard error.
 
-## 4. kirimasim 自身のメッセージ
+## 4. Messages of kirimasim itself
 
-- 形は `kirimasim: <種類>: <内容>`。種類は `error`、`warning`、`note`、`info` のどれか。ソースの位置があるものは、slang の診断と同じ `<ファイル>:<行>:<列>: <種類>: <内容>` の形にする。
-- **版の行：** 実行の冒頭に、版、コミット、オプション、シードを 1 行で標準エラーに書く（あとから同じ条件で再現するため）。例：`kirimasim: info: kirimasim 0.1.0 (commit 0123456789ab) seed=1 args: --top=tb a.sv`。標準出力には書かないので、テストスイートで取り除く必要は無い。
-- **終了の理由の行：** 終わるときに、理由と時刻を 1 行で標準エラーに書く。例：`kirimasim: info: finish at 120 ns`。`$finish(0)` と `$stop(0)` のときは書かない（SCHEDULER_SPEC.md の 16.2 節）。
-- **時刻の書き方（2026-10-16 に承認）：** 整数と単位を空白 1 つで区切って書く。単位は `s`、`ms`、`us`、`ns`、`ps`、`fs` のうち、その時刻を整数で正確に表せる最も大きいもの（例：精度 1ps で 120000 刻みなら `120 ns`、1500 刻みなら `1500 ps`）。時刻 0 は、設計全体の精度の単位で書く（精度 1ps なら `0 ps`、10ps なら `0 ps`）。丸めないので、表示から刻みの数を正確に戻せる。
+- The form is `kirimasim: <kind>: <text>`, the kind one of `error`, `warning`, `note`, `info`. A message with a source position has the form of slang's diagnostics, `<file>:<line>:<column>: <kind>: <text>`.
+- **Version line:** at the start of a run, one line on standard error gives the version, the commit, the options and the seed (so that the same conditions can be reproduced later). Example: `kirimasim: info: kirimasim 0.1.0 (commit 0123456789ab) seed=1 args: --top=tb a.sv`. It is not written to standard output, so the test suite has no need to remove it.
+- **Line of the reason for ending:** at the end, one line on standard error gives the reason and the time. Example: `kirimasim: info: finish at 120 ns`. It is not written for `$finish(0)` and `$stop(0)` (SCHEDULER_SPEC.md 16.2).
+- **How times are written (approved 2026-10-16):** an integer and a unit separated by one space. The unit is the largest of `s`, `ms`, `us`, `ns`, `ps`, `fs` that gives the time exactly as an integer (for example, with a precision of 1ps, 120000 steps are `120 ns` and 1500 steps are `1500 ps`). Time 0 is written in the unit of the design's precision (`0 ps` for a precision of 1ps, `0 ps` for 10ps). Nothing is rounded, so the number of steps can be read back exactly.
 
-## 5. 終了コード
+## 5. Exit codes
 
-SCHEDULER_SPEC.md の 16.2 節の表と同じ。理由の名前は `--stats=json` にも同じ名前で入れる。
+The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go into `--stats=json` under the same names.
 
-| コード | 理由 | 意味 |
+| Code | Reason | Meaning |
 | --- | --- | --- |
-| 0 | finish、quiescent、stop | `$finish`、事象が尽きた、`$stop`。`--max-time-ok` 付きの time_limit も 0 |
-| 1 | fatal | `$fatal`。`$error` を数えるオプションが有効なら、`$error` が 1 件以上 |
-| 2 | error | コマンドラインや入力の誤り（構文エラー、未対応の構文を含む） |
-| 3 | internal | kirimasim の内部エラー（SIR の検証器の失敗など） |
-| 4 | time_limit | `--max-time` に達した |
-| 5 | zero_time_limit | 時刻が進まないまま上限に達した |
+| 0 | finish, quiescent, stop | `$finish`, no events left, `$stop`. time_limit with `--max-time-ok` is also 0 |
+| 1 | fatal | `$fatal`. With the option that counts `$error`, one or more `$error` |
+| 2 | error | An error in the command line or the input (syntax errors and unsupported constructs included) |
+| 3 | internal | An internal error of kirimasim (a failure of the SIR verifier and the like) |
+| 4 | time_limit | `--max-time` reached |
+| 5 | zero_time_limit | A limit reached without time advancing |
 | 130 | interrupted | SIGINT |
 
-- **未対応の構文：** P1 の途中では、まだ実装していない構文が多い。SIR を作るときに未対応の構文に会ったら、その位置を示す診断を出してコード 2 で終わる（設計仕様書の終了コードの表の 2 のとおり）。黙って無視しない。
+- **Unsupported constructs:** during P1 many constructs are not implemented yet. When making SIR meets one, kirimasim gives a diagnostic at its position and ends with code 2 (as row 2 of the design specification's table of exit codes says). It is never ignored silently.
 
-## 6. 未確認・後で書くこと
+## 6. Not confirmed, to be written later
 
-- `$error` を数えるオプションの名前と既定。
-- `--diag-format=json` の項目と、診断の ID の体系（M7。RUNTIME_ABI.md の `kirima_status` と一緒に）。
+- The name and default of the option that counts `$error`.
+- The fields of `--diag-format=json` and the scheme of diagnostic IDs (M7; together with RUNTIME_ABI.md's `kirima_status`).
