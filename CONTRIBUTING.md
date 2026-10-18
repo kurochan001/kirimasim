@@ -1,5 +1,7 @@
 # Contributing to kirimasim
 
+[日本語](CONTRIBUTING.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
+
 Thank you for your interest. kirimasim is in early development: phase P1,
 the first execution tier, is in progress. The README gives the status.
 
