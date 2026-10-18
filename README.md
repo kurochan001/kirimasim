@@ -85,16 +85,19 @@ simulator, so tests that show x or z values fail with it.
 
 **Time** (summed over the tests; 6 tests at a time; one run, not the
 median of five that [PERFORMANCE.md](docs/spec/PERFORMANCE.md) asks for
-benchmarks):
+benchmarks). Verilator is left out of these tables: each suite's runner
+builds every test in a directory of its own, so Verilator compiles its own
+runtime library again for every test (about 2.2 s of the 2.6 s C++ build
+of a small test), work that a project does only once, and its times would
+mostly measure that. [Simulation speed](#simulation-speed) compares the
+speed of the three simulators.
 
 | Test set | Simulator | Build step | Run step | Total |
 | --- | --- | --- | --- | --- |
 | sv-tests, 344 | kirimasim | 6.6 s | 0.1 s | 6.7 s |
 | | Icarus Verilog | 5.0 s | 33.3 s | 38.3 s |
-| | Verilator | 1,551.8 s | 59.7 s | 1,611.5 s |
 | Own test suite, 1,466 | kirimasim | 14.1 s | 0.3 s | 14.4 s |
 | | Icarus Verilog | 20.8 s | 8.9 s | 29.7 s |
-| | Verilator | 3,796.9 s | 291.7 s | 4,088.6 s |
 
 Only the tests that all three simulators pass, from the same runs: 150
 tests of sv-tests (38 of them must be rejected, so they have no run step)
@@ -104,17 +107,13 @@ and 1,133 of the own test suite.
 | --- | --- | --- | --- | --- |
 | sv-tests, 150 | kirimasim | 1.4 s | 0.1 s | 1.5 s |
 | | Icarus Verilog | 2.3 s | 20.9 s | 23.2 s |
-| | Verilator | 127.0 s | 19.3 s | 146.3 s |
 | Own test suite, 1,133 | kirimasim | 10.8 s | 0.2 s | 11.0 s |
 | | Icarus Verilog | 16.1 s | 7.9 s | 24.0 s |
-| | Verilator | 3,006.7 s | 229.4 s | 3,236.1 s |
 
 - The build step is the work before the simulation starts: for kirimasim,
   reading, elaborating and lowering the design to SIR (timed as a run with
-  `--dump-sir`); for Icarus, `iverilog`; for Verilator, `verilator
-  --binary` with its C++ build. The run step is the simulation: for
-  kirimasim, its whole run less the build step; for Icarus, `vvp`; for
-  Verilator, the built program.
+  `--dump-sir`); for Icarus, `iverilog`. The run step is the simulation:
+  for kirimasim, its whole run less the build step; for Icarus, `vvp`.
 - The tests are short, so the run steps mostly measure starting up.
   kirimasim's run step is found by subtraction and is too small to tell
   apart from noise; the run with `--dump-sir` also prints the SIR, so the
@@ -122,21 +121,11 @@ and 1,133 of the own test suite.
 - On this machine, the first start of a newly built program took about
   0.2 s, and the next start of the same file under 0.01 s (tried with three
   files that Icarus made; why macOS takes that time is not confirmed).
-  Every run step of Verilator is such a first start, and so is Icarus's in
-  sv-tests, whose runner starts the compiled file itself; the own suite's
-  runner starts `vvp` with the file instead.
-- Most of Verilator's build step is compiling Verilator's own runtime
-  library, which each test builds again in its own directory. For a small
-  test, built one job at a time with optimization, that took about 2.2 s of
-  the 2.6 s of C++ build; making the C++ took 0.09 s, and compiling the
-  design's own C++ and linking 0.49 s. A compiled simulator earns its build
-  time back on long simulations; these tests are short, so they do not, and
-  they do not compare the speed of simulation.
+  Icarus's run step in sv-tests is such a first start, since its runner
+  starts the compiled file itself; the own suite's runner starts `vvp` with
+  the file instead.
 - In the first table, a test that a simulator cannot build counts with its
   build step only; kirimasim stops early at an unsupported construct.
-- Verilator builds as each suite's runner does: sv-tests' runner builds
-  without C++ optimization (`-O0`); the own suite's runner uses Verilator's
-  default optimization and random initial values.
 - Versions and machine: kirimasim 8500bdc (release build) for the times;
   its pass counts were measured again at 15b76df; Icarus Verilog 14.0 (devel) f190dbb, Verilator
   5.053 devel 8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple
