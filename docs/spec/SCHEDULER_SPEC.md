@@ -2,7 +2,7 @@
 
 [日本語](SCHEDULER_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. The same day, the order of evaluating initial values of static variables (3) was added (approved). The same day, not writing the reason for ending to standard error for `$finish(0)` and `$stop(0)` was added to 16.2 (approved). On 2026-10-16, the default timescale and the design's precision were added to 1 (approved). The same day, `$finish` inside `final` was added to 16.2 (approved). The same day, leaving the checks of writes and drivers in 6.4 and 12 to slang's analysis stage was added (approved). The same day, the descriptions of drive strength in 12 and 19 were changed to references to VALUE_SEMANTICS.md 5 (approved). On 2026-10-17, reclaiming the records of ended processes was added to 10.8 (approved). The same day, the third condition of 10.8 was changed to include the calls of settled reports (approved). The second half of part 4 (P3 features) is not written yet.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. The same day, the order of evaluating initial values of static variables (3) was added (approved). The same day, not writing the reason for ending to standard error for `$finish(0)` and `$stop(0)` was added to 16.2 (approved). On 2026-10-16, the default timescale and the design's precision were added to 1 (approved). The same day, `$finish` inside `final` was added to 16.2 (approved). The same day, leaving the checks of writes and drivers in 6.4 and 12 to slang's analysis stage was added (approved). The same day, the descriptions of drive strength in 12 and 19 were changed to references to VALUE_SEMANTICS.md 5 (approved). On 2026-10-17, reclaiming the records of ended processes was added to 10.8 (approved). The same day, the third condition of 10.8 was changed to include the calls of settled reports (approved). On 2026-10-18, diagrams of the steps of 3 and of waking in 9.5 were added (approved). The second half of part 4 (P3 features) is not written yet.
 
 This document sets how kirimasim's execution kernel advances time and events. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "rule of this document" are points the standard leaves to the implementation, decided for kirimasim.
 
@@ -84,11 +84,42 @@ The standard gives a reference algorithm that a conforming simulator should impl
 
 (checked: 4.5)
 
+The same steps as a diagram (where it differs from the steps, the steps hold):
+
+```mermaid
+flowchart TD
+    init["time 0: initialize every net and variable,<br/>and schedule the initialization events"]
+    more{"Is there a time slot<br/>with events?"}
+    done(["the simulation ends (16.2)"])
+    adv["advance to the earliest such time slot"]
+    prep["run Preponed"]
+    preact["run Pre-Active"]
+    anyev{"events in any region<br/>from Active to Pre-Postponed?"}
+    post["run Postponed"]
+    act{"events in any region<br/>from Active to Post-Observed?"}
+    runact["run Active, then move the events of the<br/>first non-empty region from Active to<br/>Post-Observed into Active"]
+    rea{"events in any region<br/>from Reactive to Post-Re-NBA?"}
+    runrea["run Reactive, then move the events of the<br/>first non-empty region from Reactive to<br/>Post-Re-NBA into Reactive"]
+    allempty{"every region from Active<br/>to Post-Re-NBA empty?"}
+    prepost["run Pre-Postponed"]
+    init --> more
+    more -- "no" --> done
+    more -- "yes" --> adv --> prep --> preact --> anyev
+    anyev -- "no" --> post --> more
+    anyev -- "yes" --> act
+    act -- "yes" --> runact --> act
+    act -- "no" --> rea
+    rea -- "yes" --> runrea --> rea
+    rea -- "no" --> allempty
+    allempty -- "yes" --> prepost --> anyev
+    allempty -- "no" --> anyev
+```
+
 Notes:
 
 - **Once the reactive side starts, it does not go back to the active side until the five regions of the reactive set are empty.** Even if events appear in Active while the reactive side is running, they run only after the reactive set is empty (checked: the explanation after 4.5).
 - Observed and Post-Observed are part of the active side's iteration (checked: 4.5).
-- The design specification's figure is used (Figure 4-1 of the standard is not copied).
+- The diagram above draws the steps of this section in this document's own form; Figure 4-1 of the standard is not copied.
 
 ## 4. Orders that are set, and orders that are not
 
@@ -241,6 +272,26 @@ The design specification's "two levels of waits" are carried over.
 | Named events | Wait queues of event objects | On `->`, only the processes in the wait queue at that moment are woken |
 | Expressions containing `ev.triggered` (`wait (ev.triggered)` and so on) | Monitor records whose dependencies include the event object | Triggers by `->` and `->>` also notify the monitor records depending on the event, and the expressions are evaluated again. The `triggered` state goes back to 0 when time advances, but that does not cause evaluation (checked: 15.5.3) |
 | Time | Future events | When the time is reached |
+
+How a change of a slot's value wakes the processes waiting on it (where the diagram differs from the table and the items below, they hold):
+
+```mermaid
+flowchart TD
+    chg["the value of a slot changes"]
+    subs["slot subscriptions<br/>on the changed bits"]
+    mons["monitor records<br/>that depend on the slot"]
+    subq{"does the change match:<br/>any change, or the edge<br/>on the least significant bit?"}
+    reeval["evaluate the expression again"]
+    monq{"did its value change?<br/>for wait: did it become true?"}
+    iffq{"no iff,<br/>or the iff is true?"}
+    wake["wake the process<br/>and remove its other items"]
+    queue["queue it in Active or Reactive,<br/>by the thread set of the woken process"]
+    chg --> subs --> subq
+    chg --> mons --> reeval --> monq
+    subq -- "yes" --> iffq
+    monq -- "yes" --> iffq
+    iffq -- "yes" --> wake --> queue
+```
 
 - The region a woken process is put in is decided by **which set the woken process's thread belongs to**, not by the region running the event that woke it (checked: 24.3.1).
   - Design threads (`initial`, `always` and continuous assignments of modules and interfaces, and those forked from them) go into Active.

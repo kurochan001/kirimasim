@@ -2,7 +2,7 @@
 
 [English](SCHEDULER_SPEC.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。同日、静的変数の初期値の評価の順序（3 節）を追記した（承認済み）。同日、`$finish(0)` と `$stop(0)` のときに終了の理由を標準エラーに出さないことを 16.2 節に追記した（承認済み）。2026-10-16 に、timescale の既定値と設計全体の精度を 1 節に足した（承認済み）。同日、`final` の中の `$finish` の扱いを 16.2 節に足した（承認済み）。同日、6.4 節と 12 節の書き込みとドライバの検査を slang の解析の段に任せることを足した（承認済み）。同日、12 節と 19 節の駆動の強さの記述を、VALUE_SEMANTICS.md の 5 節への参照に改めた（承認済み）。2026-10-17 に、終わったプロセスの記録の回収を 10.8 節に足した（承認済み）。同日、10.8 節の 3 番目の条件を、確定した報告の呼び出しまで含むように改めた（承認済み）。第 4 部の後半（P3 の機能）は未記入。
+優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。同日、静的変数の初期値の評価の順序（3 節）を追記した（承認済み）。同日、`$finish(0)` と `$stop(0)` のときに終了の理由を標準エラーに出さないことを 16.2 節に追記した（承認済み）。2026-10-16 に、timescale の既定値と設計全体の精度を 1 節に足した（承認済み）。同日、`final` の中の `$finish` の扱いを 16.2 節に足した（承認済み）。同日、6.4 節と 12 節の書き込みとドライバの検査を slang の解析の段に任せることを足した（承認済み）。同日、12 節と 19 節の駆動の強さの記述を、VALUE_SEMANTICS.md の 5 節への参照に改めた（承認済み）。2026-10-17 に、終わったプロセスの記録の回収を 10.8 節に足した（承認済み）。同日、10.8 節の 3 番目の条件を、確定した報告の呼び出しまで含むように改めた（承認済み）。2026-10-18 に、3 節の手順と 9.5 節の起こし方の図を足した（承認済み）。第 4 部の後半（P3 の機能）は未記入。
 
 この文書は、kirimasim の実行カーネルが時刻と事象をどう進めるかを定める。規格（IEEE 1800-2023）の本文は写さず、本書の言葉で要約し、根拠の節番号を示す。「規格で確認」と書いた項目は、規格の該当節を読んで確かめたもの。「本書の決まり」と書いた項目は、規格が実装に任せている点を kirimasim として決めたもの。
 
@@ -84,11 +84,42 @@
 
 （規格で確認：4.5）
 
+同じ手順を図にしたもの（図と手順が食い違ったときは手順に従う）：
+
+```mermaid
+flowchart TD
+    init["time 0: initialize every net and variable,<br/>and schedule the initialization events"]
+    more{"Is there a time slot<br/>with events?"}
+    done(["the simulation ends (16.2)"])
+    adv["advance to the earliest such time slot"]
+    prep["run Preponed"]
+    preact["run Pre-Active"]
+    anyev{"events in any region<br/>from Active to Pre-Postponed?"}
+    post["run Postponed"]
+    act{"events in any region<br/>from Active to Post-Observed?"}
+    runact["run Active, then move the events of the<br/>first non-empty region from Active to<br/>Post-Observed into Active"]
+    rea{"events in any region<br/>from Reactive to Post-Re-NBA?"}
+    runrea["run Reactive, then move the events of the<br/>first non-empty region from Reactive to<br/>Post-Re-NBA into Reactive"]
+    allempty{"every region from Active<br/>to Post-Re-NBA empty?"}
+    prepost["run Pre-Postponed"]
+    init --> more
+    more -- "no" --> done
+    more -- "yes" --> adv --> prep --> preact --> anyev
+    anyev -- "no" --> post --> more
+    anyev -- "yes" --> act
+    act -- "yes" --> runact --> act
+    act -- "no" --> rea
+    rea -- "yes" --> runrea --> rea
+    rea -- "no" --> allempty
+    allempty -- "yes" --> prepost --> anyev
+    allempty -- "no" --> anyev
+```
+
 注意点：
 
 - **reactive 側の処理を始めたら、reactive の組の 5 つの領域が空になるまで、active 側には戻らない。** reactive 側の処理中に Active に事象ができても、その事象を実行するのは reactive の組が空になってからである（規格で確認：4.5 の後の説明）。
 - Observed と Post-Observed は、active 側の繰り返しに含まれる（規格で確認：4.5）。
-- 図は設計書のものを使う（規格の図 4-1 は写さない）。
+- 上の図は、この節の手順を本書の形で描いたもの。規格の図 4-1 は写さない。
 
 ## 4. 決まっている順序と、決まっていない順序
 
@@ -241,6 +272,26 @@
 | 名前付きイベント | イベントのオブジェクトの待ち行列 | `->` のとき、そのとき待ち行列にいるプロセスだけを起こす |
 | `ev.triggered` を含む式（`wait (ev.triggered)` など） | 監視レコード。依存先にイベントのオブジェクトを含める | `->` と `->>` のトリガで、そのイベントに依存する監視レコードにも通知して、式を評価し直す。`triggered` の状態は時刻が進むときに 0 に戻すが、この戻りでは評価し直さない（規格で確認：15.5.3） |
 | 時間 | 未来の事象 | 時刻に達したとき |
+
+スロットの値の変化で、待っているプロセスが起きるまでを図にしたもの（図が表と下の項目と食い違ったときは、表と項目に従う）：
+
+```mermaid
+flowchart TD
+    chg["the value of a slot changes"]
+    subs["slot subscriptions<br/>on the changed bits"]
+    mons["monitor records<br/>that depend on the slot"]
+    subq{"does the change match:<br/>any change, or the edge<br/>on the least significant bit?"}
+    reeval["evaluate the expression again"]
+    monq{"did its value change?<br/>for wait: did it become true?"}
+    iffq{"no iff,<br/>or the iff is true?"}
+    wake["wake the process<br/>and remove its other items"]
+    queue["queue it in Active or Reactive,<br/>by the thread set of the woken process"]
+    chg --> subs --> subq
+    chg --> mons --> reeval --> monq
+    subq -- "yes" --> iffq
+    monq -- "yes" --> iffq
+    iffq -- "yes" --> wake --> queue
+```
 
 - 起こしたプロセスを入れる領域は、**起こされるプロセスのスレッドがどちらの組に属するか**で決める。起こした事象を実行している領域では決めない（規格で確認：24.3.1）。
   - 設計のスレッド（モジュール、インターフェースの `initial`、`always`、連続代入と、それらから fork したもの）は Active に入れる。
