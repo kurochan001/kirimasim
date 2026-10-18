@@ -672,6 +672,10 @@ MUTANTS = [
     ("vm: $stop ends the run as $finish", "src/vm/vm.cpp",
      "sched_.requestEnd(info.task == SysTask::Finish ? kernel::EndReason::Finish",
      "sched_.requestEnd(true ? kernel::EndReason::Finish"),
+    ("front: an assignment operator reads a string's character as 0", "src/front/lower_expr.cpp",
+     "            return emit(Op::StrGet, p.type, {str.op, p.indices[0]}, sl);\n        }\n"
+     "        case Place::Kind::Element:",
+     "            return constant(p.type, 0);\n        }\n        case Place::Kind::Element:"),
     ("vm: $sscanf %s into a wide variable reads nothing", "src/vm/vm.cpp",
      "            kernel::wide::fromText(r.data(), t.width, v.text);", "            ;"),
     ("driver: --top does not take the next argument", "src/driver/main.cpp",

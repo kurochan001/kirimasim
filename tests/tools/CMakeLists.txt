@@ -261,3 +261,7 @@ set_tests_properties(tools/gen_packed_range_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_scan_wide_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_scan_wide_matrix.py --check)
 set_tests_properties(tools/gen_scan_wide_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_string_char_op_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_string_char_op_matrix.py --check)
+set_tests_properties(tools/gen_string_char_op_matrix PROPERTIES LABELS Tools)

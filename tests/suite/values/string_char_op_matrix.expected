@@ -1,0 +1,324 @@
+module p1 add 4 97 50 66 37
+module p1 sub 4 97 47 66 37
+module p1 mul 4 97 96 66 37
+module p1 div 4 97 24 66 37
+module p1 mod 4 97 6 66 37
+module p1 and 4 97 16 66 37
+module p1 or 4 97 49 66 37
+module p1 xor 4 97 17 66 37
+module p1 shl 4 97 96 66 37
+module p1 shr 4 97 24 66 37
+module p1 ashl 4 97 96 66 37
+module p1 ashr 4 97 24 66 37
+module p1 post_inc 48 4 97 49 66 37
+module p1 pre_inc 49 4 97 49 66 37
+module p1 post_dec 48 4 97 47 66 37
+module p1 pre_dec 47 4 97 47 66 37
+module p1 zero 4 97 48 66 37
+module p3 add 4 97 48 66 39
+module p3 sub 4 97 48 66 36
+module p3 mul 4 97 48 66 74
+module p3 div 4 97 48 66 18
+module p3 mod 4 97 48 66 2
+module p3 and 4 97 48 66 5
+module p3 or 4 97 48 66 37
+module p3 xor 4 97 48 66 4
+module p3 shl 4 97 48 66 74
+module p3 shr 4 97 48 66 18
+module p3 ashl 4 97 48 66 74
+module p3 ashr 4 97 48 66 18
+module p3 post_inc 37 4 97 48 66 38
+module p3 pre_inc 38 4 97 48 66 38
+module p3 post_dec 37 4 97 48 66 36
+module p3 pre_dec 36 4 97 48 66 36
+module end add 4 97 48 66 37
+module end sub 4 97 48 66 37
+module end mul 4 97 48 66 37
+module end div 4 97 48 66 37
+module end mod 4 97 48 66 37
+module end and 4 97 48 66 37
+module end or 4 97 48 66 37
+module end xor 4 97 48 66 37
+module end shl 4 97 48 66 37
+module end shr 4 97 48 66 37
+module end ashl 4 97 48 66 37
+module end ashr 4 97 48 66 37
+module end post_inc 4 97 48 66 37
+module end pre_inc 4 97 48 66 37
+module end post_dec 4 97 48 66 37
+module end pre_dec 4 97 48 66 37
+module neg add 4 97 48 66 37
+module neg sub 4 97 48 66 37
+module neg mul 4 97 48 66 37
+module neg div 4 97 48 66 37
+module neg mod 4 97 48 66 37
+module neg and 4 97 48 66 37
+module neg or 4 97 48 66 37
+module neg xor 4 97 48 66 37
+module neg shl 4 97 48 66 37
+module neg shr 4 97 48 66 37
+module neg ashl 4 97 48 66 37
+module neg ashr 4 97 48 66 37
+module neg post_inc 4 97 48 66 37
+module neg pre_inc 4 97 48 66 37
+module neg post_dec 4 97 48 66 37
+module neg pre_dec 4 97 48 66 37
+module x add 4 97 48 66 37
+module x sub 4 97 48 66 37
+module x mul 4 97 48 66 37
+module x div 4 97 48 66 37
+module x mod 4 97 48 66 37
+module x and 4 97 48 66 37
+module x or 4 97 48 66 37
+module x xor 4 97 48 66 37
+module x shl 4 97 48 66 37
+module x shr 4 97 48 66 37
+module x ashl 4 97 48 66 37
+module x ashr 4 97 48 66 37
+module x post_inc 4 97 48 66 37
+module x pre_inc 4 97 48 66 37
+module x post_dec 4 97 48 66 37
+module x pre_dec 4 97 48 66 37
+element p1 add 4 97 50 66 37
+element p1 sub 4 97 47 66 37
+element p1 mul 4 97 96 66 37
+element p1 div 4 97 24 66 37
+element p1 mod 4 97 6 66 37
+element p1 and 4 97 16 66 37
+element p1 or 4 97 49 66 37
+element p1 xor 4 97 17 66 37
+element p1 shl 4 97 96 66 37
+element p1 shr 4 97 24 66 37
+element p1 ashl 4 97 96 66 37
+element p1 ashr 4 97 24 66 37
+element p1 post_inc 48 4 97 49 66 37
+element p1 pre_inc 49 4 97 49 66 37
+element p1 post_dec 48 4 97 47 66 37
+element p1 pre_dec 47 4 97 47 66 37
+element p1 zero 4 97 48 66 37
+element p3 add 4 97 48 66 39
+element p3 sub 4 97 48 66 36
+element p3 mul 4 97 48 66 74
+element p3 div 4 97 48 66 18
+element p3 mod 4 97 48 66 2
+element p3 and 4 97 48 66 5
+element p3 or 4 97 48 66 37
+element p3 xor 4 97 48 66 4
+element p3 shl 4 97 48 66 74
+element p3 shr 4 97 48 66 18
+element p3 ashl 4 97 48 66 74
+element p3 ashr 4 97 48 66 18
+element p3 post_inc 37 4 97 48 66 38
+element p3 pre_inc 38 4 97 48 66 38
+element p3 post_dec 37 4 97 48 66 36
+element p3 pre_dec 36 4 97 48 66 36
+element end add 4 97 48 66 37
+element end sub 4 97 48 66 37
+element end mul 4 97 48 66 37
+element end div 4 97 48 66 37
+element end mod 4 97 48 66 37
+element end and 4 97 48 66 37
+element end or 4 97 48 66 37
+element end xor 4 97 48 66 37
+element end shl 4 97 48 66 37
+element end shr 4 97 48 66 37
+element end ashl 4 97 48 66 37
+element end ashr 4 97 48 66 37
+element end post_inc 4 97 48 66 37
+element end pre_inc 4 97 48 66 37
+element end post_dec 4 97 48 66 37
+element end pre_dec 4 97 48 66 37
+element neg add 4 97 48 66 37
+element neg sub 4 97 48 66 37
+element neg mul 4 97 48 66 37
+element neg div 4 97 48 66 37
+element neg mod 4 97 48 66 37
+element neg and 4 97 48 66 37
+element neg or 4 97 48 66 37
+element neg xor 4 97 48 66 37
+element neg shl 4 97 48 66 37
+element neg shr 4 97 48 66 37
+element neg ashl 4 97 48 66 37
+element neg ashr 4 97 48 66 37
+element neg post_inc 4 97 48 66 37
+element neg pre_inc 4 97 48 66 37
+element neg post_dec 4 97 48 66 37
+element neg pre_dec 4 97 48 66 37
+element x add 4 97 48 66 37
+element x sub 4 97 48 66 37
+element x mul 4 97 48 66 37
+element x div 4 97 48 66 37
+element x mod 4 97 48 66 37
+element x and 4 97 48 66 37
+element x or 4 97 48 66 37
+element x xor 4 97 48 66 37
+element x shl 4 97 48 66 37
+element x shr 4 97 48 66 37
+element x ashl 4 97 48 66 37
+element x ashr 4 97 48 66 37
+element x post_inc 4 97 48 66 37
+element x pre_inc 4 97 48 66 37
+element x post_dec 4 97 48 66 37
+element x pre_dec 4 97 48 66 37
+task p1 add 4 97 50 66 37
+task p1 sub 4 97 47 66 37
+task p1 mul 4 97 96 66 37
+task p1 div 4 97 24 66 37
+task p1 mod 4 97 6 66 37
+task p1 and 4 97 16 66 37
+task p1 or 4 97 49 66 37
+task p1 xor 4 97 17 66 37
+task p1 shl 4 97 96 66 37
+task p1 shr 4 97 24 66 37
+task p1 ashl 4 97 96 66 37
+task p1 ashr 4 97 24 66 37
+task p1 post_inc 48 4 97 49 66 37
+task p1 pre_inc 49 4 97 49 66 37
+task p1 post_dec 48 4 97 47 66 37
+task p1 pre_dec 47 4 97 47 66 37
+task p1 zero 4 97 48 66 37
+task p3 add 4 97 48 66 39
+task p3 sub 4 97 48 66 36
+task p3 mul 4 97 48 66 74
+task p3 div 4 97 48 66 18
+task p3 mod 4 97 48 66 2
+task p3 and 4 97 48 66 5
+task p3 or 4 97 48 66 37
+task p3 xor 4 97 48 66 4
+task p3 shl 4 97 48 66 74
+task p3 shr 4 97 48 66 18
+task p3 ashl 4 97 48 66 74
+task p3 ashr 4 97 48 66 18
+task p3 post_inc 37 4 97 48 66 38
+task p3 pre_inc 38 4 97 48 66 38
+task p3 post_dec 37 4 97 48 66 36
+task p3 pre_dec 36 4 97 48 66 36
+task end add 4 97 48 66 37
+task end sub 4 97 48 66 37
+task end mul 4 97 48 66 37
+task end div 4 97 48 66 37
+task end mod 4 97 48 66 37
+task end and 4 97 48 66 37
+task end or 4 97 48 66 37
+task end xor 4 97 48 66 37
+task end shl 4 97 48 66 37
+task end shr 4 97 48 66 37
+task end ashl 4 97 48 66 37
+task end ashr 4 97 48 66 37
+task end post_inc 4 97 48 66 37
+task end pre_inc 4 97 48 66 37
+task end post_dec 4 97 48 66 37
+task end pre_dec 4 97 48 66 37
+task neg add 4 97 48 66 37
+task neg sub 4 97 48 66 37
+task neg mul 4 97 48 66 37
+task neg div 4 97 48 66 37
+task neg mod 4 97 48 66 37
+task neg and 4 97 48 66 37
+task neg or 4 97 48 66 37
+task neg xor 4 97 48 66 37
+task neg shl 4 97 48 66 37
+task neg shr 4 97 48 66 37
+task neg ashl 4 97 48 66 37
+task neg ashr 4 97 48 66 37
+task neg post_inc 4 97 48 66 37
+task neg pre_inc 4 97 48 66 37
+task neg post_dec 4 97 48 66 37
+task neg pre_dec 4 97 48 66 37
+task x add 4 97 48 66 37
+task x sub 4 97 48 66 37
+task x mul 4 97 48 66 37
+task x div 4 97 48 66 37
+task x mod 4 97 48 66 37
+task x and 4 97 48 66 37
+task x or 4 97 48 66 37
+task x xor 4 97 48 66 37
+task x shl 4 97 48 66 37
+task x shr 4 97 48 66 37
+task x ashl 4 97 48 66 37
+task x ashr 4 97 48 66 37
+task x post_inc 4 97 48 66 37
+task x pre_inc 4 97 48 66 37
+task x post_dec 4 97 48 66 37
+task x pre_dec 4 97 48 66 37
+ref p1 add 4 97 50 66 37
+ref p1 sub 4 97 47 66 37
+ref p1 mul 4 97 96 66 37
+ref p1 div 4 97 24 66 37
+ref p1 mod 4 97 6 66 37
+ref p1 and 4 97 16 66 37
+ref p1 or 4 97 49 66 37
+ref p1 xor 4 97 17 66 37
+ref p1 shl 4 97 96 66 37
+ref p1 shr 4 97 24 66 37
+ref p1 ashl 4 97 96 66 37
+ref p1 ashr 4 97 24 66 37
+ref p1 post_inc 48 4 97 49 66 37
+ref p1 pre_inc 49 4 97 49 66 37
+ref p1 post_dec 48 4 97 47 66 37
+ref p1 pre_dec 47 4 97 47 66 37
+ref p1 zero 4 97 48 66 37
+ref p3 add 4 97 48 66 39
+ref p3 sub 4 97 48 66 36
+ref p3 mul 4 97 48 66 74
+ref p3 div 4 97 48 66 18
+ref p3 mod 4 97 48 66 2
+ref p3 and 4 97 48 66 5
+ref p3 or 4 97 48 66 37
+ref p3 xor 4 97 48 66 4
+ref p3 shl 4 97 48 66 74
+ref p3 shr 4 97 48 66 18
+ref p3 ashl 4 97 48 66 74
+ref p3 ashr 4 97 48 66 18
+ref p3 post_inc 37 4 97 48 66 38
+ref p3 pre_inc 38 4 97 48 66 38
+ref p3 post_dec 37 4 97 48 66 36
+ref p3 pre_dec 36 4 97 48 66 36
+ref end add 4 97 48 66 37
+ref end sub 4 97 48 66 37
+ref end mul 4 97 48 66 37
+ref end div 4 97 48 66 37
+ref end mod 4 97 48 66 37
+ref end and 4 97 48 66 37
+ref end or 4 97 48 66 37
+ref end xor 4 97 48 66 37
+ref end shl 4 97 48 66 37
+ref end shr 4 97 48 66 37
+ref end ashl 4 97 48 66 37
+ref end ashr 4 97 48 66 37
+ref end post_inc 4 97 48 66 37
+ref end pre_inc 4 97 48 66 37
+ref end post_dec 4 97 48 66 37
+ref end pre_dec 4 97 48 66 37
+ref neg add 4 97 48 66 37
+ref neg sub 4 97 48 66 37
+ref neg mul 4 97 48 66 37
+ref neg div 4 97 48 66 37
+ref neg mod 4 97 48 66 37
+ref neg and 4 97 48 66 37
+ref neg or 4 97 48 66 37
+ref neg xor 4 97 48 66 37
+ref neg shl 4 97 48 66 37
+ref neg shr 4 97 48 66 37
+ref neg ashl 4 97 48 66 37
+ref neg ashr 4 97 48 66 37
+ref neg post_inc 4 97 48 66 37
+ref neg pre_inc 4 97 48 66 37
+ref neg post_dec 4 97 48 66 37
+ref neg pre_dec 4 97 48 66 37
+ref x add 4 97 48 66 37
+ref x sub 4 97 48 66 37
+ref x mul 4 97 48 66 37
+ref x div 4 97 48 66 37
+ref x mod 4 97 48 66 37
+ref x and 4 97 48 66 37
+ref x or 4 97 48 66 37
+ref x xor 4 97 48 66 37
+ref x shl 4 97 48 66 37
+ref x shr 4 97 48 66 37
+ref x ashl 4 97 48 66 37
+ref x ashr 4 97 48 66 37
+ref x post_inc 4 97 48 66 37
+ref x pre_inc 4 97 48 66 37
+ref x post_dec 4 97 48 66 37
+ref x pre_dec 4 97 48 66 37
