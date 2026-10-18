@@ -2,7 +2,7 @@
 
 [日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), and where SIGINT is checked to 4.4 (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
 
 This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
@@ -104,7 +104,7 @@ flowchart LR
 ### 4.4 Errors and stopping
 
 - The boundary's functions return errors as values. The details of an error (ID, message, source position) are put in the Context, where the driver takes them out.
-- Requests to stop (SIGINT, and the limits on runs where time does not advance) are checked by looking at a flag in the Context: in tier 1 at the back edges of loops, in tier 2 at the back edges of loops and every so many instructions (SCHEDULER_SPEC.md 16.2).
+- Requests to stop (SIGINT, and the limits on runs where time does not advance) are checked by looking at a flag in the Context: in tier 1 at the back edges of loops, in tier 2 at the back edges of loops and every so many instructions (SCHEDULER_SPEC.md 16.2). The kernel also looks at the SIGINT request before each event it runs, and tier 1 at each branch (approved 2026-10-18). The flag of SIGINT is the one variable outside the Context (CLAUDE.md): the driver's signal handler sets it, and the Context holds a pointer to it.
 
 ## 5. Rules of threads and calls
 

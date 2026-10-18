@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- SIGINT (Ctrl-C) stops a run before the next event or at the next branch
+  of a loop, runs `final`, keeps the output written so far and ends with
+  exit code 130; a second SIGINT ends at once. kirimasim was killed at
+  once, losing `final` and the buffered output (SCHEDULER_SPEC.md 16.2;
+  #9).
 - Processes that wake each other inside one region without time advancing
   are stopped by the new limit `--max-slot-events`, the events run in one
   time slot (100000000 by default), with exit code 5 and `final`; neither

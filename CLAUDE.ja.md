@@ -33,7 +33,7 @@ kirimasim は、オープンソースの SystemVerilog シミュレータです�
 - `kernel` の公開ヘッダと生成コードは C++20。生成コードは例外と RTTI を使わない。
 - `src/kernel/` と `src/vm/`（と将来の生成コード）で禁止：`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid`。`tools/check_banned.py` が検査する。コメントの中の語も検出されるので、説明文では別の書き方をする。
 - `std::unordered_map` と `std::unordered_set` は、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` を書いたときだけ使ってよい。結果に影響する箇所で走査しない。
-- 書き換え可能な大域変数・static 変数・シングルトンを持たない。状態は Context が持つ。
+- 書き換え可能な大域変数・static 変数・シングルトンを持たない。状態は Context が持つ。ただ 1 つの例外は、driver の SIGINT のハンドラーが立てる旗で、`src/driver/` に置く `volatile std::sig_atomic_t` 1 つだけとする。シグナルのハンドラーは他の何にも届かないためである。driver は Context にその旗へのポインターを渡し、kernel と VM は Context を通してだけそれを読む（2026-10-18 に承認）。
 - 実行中に環境変数を読まない。設定は起動時に 1 回だけ読む（`driver` も今は環境変数を読まない）。
 - 実行中に文字列で信号を引かない（名前の表は VPI・波形・診断のためだけ）。
 - 実行カーネルの境界を越えて例外を投げない。エラーは戻り値で返す。

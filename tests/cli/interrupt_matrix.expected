@@ -1,0 +1,9 @@
+{"file": "interrupt_matrix/wakeups.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": "1 ns"}
+{"file": "interrupt_matrix/assign_ring.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": "1 ns"}
+{"file": "interrupt_matrix/initial.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": "1 ns"}
+{"file": "interrupt_matrix/function.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": "1 ns"}
+{"file": "interrupt_matrix/task.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": "1 ns"}
+{"file": "interrupt_matrix/fork.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": "1 ns"}
+{"file": "interrupt_matrix/static_init.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "final ran\n", "end": "0 ns"}
+{"file": "interrupt_matrix/time.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping"], "stdout": "started\nfinal ran\n", "end": ""}
+{"file": "interrupt_matrix/second.sv", "args": ["--max-slot-events=0", "--max-steps=0"], "markers": ["looping", "final looping"], "stdout": "started\n", "end": null}

@@ -7,8 +7,13 @@ the exit code, and text that stdout or stderr must contain.
 
 import argparse
 import json
+import os
+import queue
+import signal
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -25,6 +30,7 @@ VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
 PROGRAM_MATRIX = HERE / "program_matrix.sv"
 UNSUPPORTED_MATRIX = HERE / "unsupported_matrix"
 ZERO_TIME_LOOPS = HERE / "zero_time_loop_matrix"
+INTERRUPTS = HERE / "interrupt_matrix.expected"
 FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
@@ -140,6 +146,65 @@ CASES = [
     ([FINAL], 0, "=a\nfinal 1 n=5\nfinal 2\n", "kirimasim: info: quiescent at 1 ns"),
     (["--max-time=0ns", FINAL], 4, "=final 1 n=0\nfinal 2\n", "time_limit at 0 ns"),
 ]
+
+
+def run_interrupt(kirimasim: str, case: dict) -> list[str]:
+    """Runs one case of interrupt_matrix.expected: waits for each $info
+    line on stderr and sends SIGINT after it. Returns the problems."""
+    proc = subprocess.Popen([kirimasim, *case["args"], case["file"]], cwd=HERE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    out: list[str] = []
+    err: list[str] = []
+    lines: queue.Queue = queue.Queue()
+
+    def read_err():
+        for line in proc.stderr:
+            err.append(line)
+            lines.put(line)
+        lines.put(None)
+
+    readers = [threading.Thread(target=lambda: out.extend(proc.stdout), daemon=True),
+               threading.Thread(target=read_err, daemon=True)]
+    for r in readers:
+        r.start()
+    problems = []
+    for marker in case["markers"]:
+        deadline = time.monotonic() + 30
+        while not problems:
+            try:
+                line = lines.get(timeout=max(0.0, deadline - time.monotonic()))
+            except queue.Empty:
+                line = None
+            if line is None:
+                problems.append(f"no line with info: {marker}")
+            elif f": info: {marker} [" in line:
+                break
+        if problems:
+            break
+        proc.send_signal(signal.SIGINT)
+    try:
+        proc.wait(timeout=20)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        problems.append("did not end")
+    for r in readers:
+        r.join(timeout=10)
+    if proc.returncode != 130:
+        problems.append(f"exit code {proc.returncode}, expected 130")
+    if "".join(out) != case["stdout"]:
+        problems.append(f"stdout is {''.join(out)!r}, expected {case['stdout']!r}")
+    ends = [line for line in err if line.startswith("kirimasim: info: interrupted at ")]
+    if case["end"] is None:
+        if ends:
+            problems.append(f"an end line after the second SIGINT: {ends[0]!r}")
+    elif not err or not err[-1].startswith("kirimasim: info: interrupted at ") or (
+            case["end"] and err[-1] != f"kirimasim: info: interrupted at {case['end']}\n"):
+        problems.append(f"the last line of stderr is {err[-1:]!r}, expected the end line at "
+                        f"{case['end'] or 'some time'}")
+    if problems:
+        problems.append("stderr:\n" + "".join(err))
+    return problems
 
 
 def main() -> int:
@@ -347,6 +412,17 @@ def main() -> int:
         failures += 1
         print(f"FAIL: process records kept: (created, kept_peak) {runs[0]} with +n=4, "
               f"{runs[1]} with +n=8", file=sys.stderr)
+
+    # SIGINT, on POSIX systems (the files come from tools/gen_interrupt_matrix.py):
+    # the first stops the run, final runs, the output is kept and the code is
+    # 130; a second one ends kirimasim at once (SCHEDULER_SPEC.md 16.2).
+    if os.name == "posix":
+        for line in INTERRUPTS.read_text(encoding="utf-8").splitlines():
+            case = json.loads(line)
+            problems = run_interrupt(args.kirimasim, case)
+            if problems:
+                failures += 1
+                print(f"FAIL: SIGINT {case['file']}: " + "; ".join(problems), file=sys.stderr)
 
     return 1 if failures else 0
 

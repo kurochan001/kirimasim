@@ -10,8 +10,10 @@
 // those of CLI.md 5.
 
 #include <charconv>
+#include <csignal>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <exception>
 #include <memory>
 #include <string>
@@ -32,6 +34,24 @@ namespace {
 constexpr int kExitOk = 0;
 constexpr int kExitInputError = 2;
 constexpr int kExitInternalError = 3;
+
+// The one variable outside the Context (CLAUDE.md): the flag of SIGINT, as
+// a signal handler can reach nothing else. The scheduler reads it through
+// the pointer the driver gives it (RUNTIME_ABI.md 4.4).
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): the exception
+volatile std::sig_atomic_t interruptRequested = 0;
+
+}  // namespace
+
+// The first SIGINT asks the run to stop; a second one ends kirimasim at
+// once, with the code of the reason interrupted (SCHEDULER_SPEC.md 16.2,
+// CLI.md 5).
+extern "C" void kirimasimOnInterrupt(int /*signal*/) {
+    if (interruptRequested != 0) std::_Exit(130);
+    interruptRequested = 1;
+}
+
+namespace {
 
 void printUsage(std::FILE* out) {
     std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
@@ -236,6 +256,10 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.maxSteps = o.maxSteps;
     for (const std::string& a : o.plusargs)
         run.plusargs.push_back(a.substr(1));
+    // SIGINT stops the run from here on; before, while compiling, it ends
+    // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).
+    context.scheduler().setInterruptFlag(&interruptRequested);
+    std::signal(SIGINT, kirimasimOnInterrupt);
     const auto result = kirimasim::vm::run(compiled.design, context, run);
     context.output().flush();
     const auto reason = result.reason;

@@ -33,7 +33,7 @@ Dependencies go only in the directions of the table below. Do not add to `target
 - `kernel`'s public headers and generated code are C++20. Generated code uses no exceptions or RTTI.
 - Forbidden in `src/kernel/` and `src/vm/` (and in future generated code): `std::shared_ptr`, `dynamic_cast`, `std::function`, `getenv`, `typeid`. `tools/check_banned.py` checks this. Words inside comments are detected too, so explanations use other wordings.
 - `std::unordered_map` and `std::unordered_set` may be used only with `// kirimasim: unordered-ok <reason>` on the same line or the line before. Do not iterate over them where it affects results.
-- No mutable global variables, static variables or singletons. State belongs to the Context.
+- No mutable global variables, static variables or singletons. State belongs to the Context. The one exception is the flag that the driver's SIGINT handler sets, a single `volatile std::sig_atomic_t` in `src/driver/`, as a signal handler can reach nothing else; the driver gives the Context a pointer to it, and the kernel and the VM read it only through the Context (approved 2026-10-18).
 - Do not read environment variables during execution. Settings are read once at startup (`driver` too reads no environment variables now).
 - Do not look up signals by string during execution (name tables are only for VPI, waveforms and diagnostics).
 - Do not throw exceptions across the boundary of the execution kernel. Errors are returned as values.

@@ -728,6 +728,19 @@ MUTANTS = [
      "eventsThisSlot_ == limits_.maxSlotEvents", "eventsThisSlot_ > limits_.maxSlotEvents"),
     ("driver: --max-slot-events does not reach the kernel", "src/driver/main.cpp",
      "    limits.maxSlotEvents = o.maxSlotEvents;\n", ""),
+    ("driver: SIGINT sets no flag", "src/driver/main.cpp",
+     "    interruptRequested = 1;\n", ""),
+    ("driver: a second SIGINT does not end at once", "src/driver/main.cpp",
+     "    if (interruptRequested != 0) std::_Exit(130);\n", ""),
+    ("kernel: SIGINT is not looked at between events", "src/kernel/sim.cpp",
+     "        if (takeInterrupt()) return;\n", ""),
+    ("kernel: SIGINT is taken again in final procedures",
+     "src/kernel/include/kirimasim/kernel/sim.h",
+     "        interruptTaken_ = true;\n", ""),
+    ("vm: SIGINT is not looked at on a branch", "src/vm/vm.cpp",
+     "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"
+     "                        if (sched_.takeInterrupt()) return Exit::Stop;\n",
+     "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"),
 ]
 
 

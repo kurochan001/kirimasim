@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <csignal>
 #include <cstdint>
 #include <deque>
 #include <span>
@@ -159,6 +160,18 @@ public:
         : ctx_(ctx), store_(store), counters_(counters) {}
 
     void setLimits(const Limits& l) { limits_ = l; }
+    /// The flag that the driver's SIGINT handler sets (CLAUDE.md,
+    /// RUNTIME_ABI.md 4.4); nothing when no handler is installed.
+    void setInterruptFlag(const volatile std::sig_atomic_t* flag) { interruptFlag_ = flag; }
+    /// Ends the run with the reason interrupted when SIGINT has come and the
+    /// run has not taken it yet (SCHEDULER_SPEC.md 16.2). Taken once, so
+    /// that final procedures run to their end. True when it ends the run.
+    bool takeInterrupt() {
+        if (interruptTaken_ || interruptFlag_ == nullptr || *interruptFlag_ == 0) return false;
+        interruptTaken_ = true;
+        requestEnd(EndReason::Interrupted, 1);
+        return true;
+    }
 
     /// Registers a process; it does not run until start() is called. It
     /// may get the place of a released process (SCHEDULER_SPEC.md 10.8).
@@ -535,6 +548,8 @@ private:
     std::uint64_t time_ = 0;
     std::uint64_t movesThisSlot_ = 0;
     std::uint64_t eventsThisSlot_ = 0;
+    const volatile std::sig_atomic_t* interruptFlag_ = nullptr;
+    bool interruptTaken_ = false;
     std::string error_;
     bool postponed_ = false;  ///< The Postponed region is running (2.2).
     bool overflow_ = false;   ///< A delay went past the largest time (8).

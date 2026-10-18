@@ -516,6 +516,9 @@ void Scheduler::runSlot() {
 void Scheduler::runRegion(Region r) {
     auto& q = regions_[static_cast<int>(r)];
     while (!ending_ && !q.empty()) {
+        // SIGINT is looked at before each event, so at every time-slot
+        // boundary too (SCHEDULER_SPEC.md 16.2).
+        if (takeInterrupt()) return;
         // The events of one time slot, in any region (CLI.md 2.6): this
         // stops processes that wake each other inside one region, which
         // move nothing between regions. The event past the limit does not

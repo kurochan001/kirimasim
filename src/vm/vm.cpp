@@ -1705,14 +1705,18 @@ private:
                 }
                 const auto& ops = in.operands;
                 switch (in.op) {
+                    // SIGINT is looked at on each branch, which includes the
+                    // back edges of loops (RUNTIME_ABI.md 4.4).
                     case Op::Br:
                         b = takeBranch(ops, 0);
                         jumped = true;
+                        if (sched_.takeInterrupt()) return Exit::Stop;
                         break;
                     case Op::BrIf: {
                         const std::size_t second = 2 + ops[1].count;
                         b = takeBranch(ops, isTrue(value(ops[0])) ? 1 : second);
                         jumped = true;
+                        if (sched_.takeInterrupt()) return Exit::Stop;
                         break;
                     }
                     case Op::Ret:
