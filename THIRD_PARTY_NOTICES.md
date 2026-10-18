@@ -1,5 +1,7 @@
 # Third-party notices
 
+[日本語](THIRD_PARTY_NOTICES.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
+
 kirimasim itself is licensed under the Apache License 2.0 with LLVM
 Exceptions (see `LICENSE`). It does not include copies of third-party
 sources in this repository. The components below are downloaded at configure
