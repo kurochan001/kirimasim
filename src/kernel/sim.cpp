@@ -13,6 +13,20 @@ namespace kirimasim::kernel {
 
 namespace {
 
+/// Adds x to a wait list. A wait that one of its items wakes leaves its
+/// other items behind (SCHEDULER_SPEC.md 9.5); they are swept out when the
+/// list has doubled since its last sweep, so that a list holds at most
+/// about twice its live entries, at a cost of O(1) a push on average. Only
+/// waits push, and no wait runs while a list is walked.
+template <typename T, typename Stale>
+void pushSwept(std::vector<T>& list, std::uint32_t& limit, const T& x, Stale stale) {
+    if (list.size() >= limit) {
+        std::erase_if(list, stale);
+        limit = static_cast<std::uint32_t>(std::max<std::size_t>(16, 2 * list.size()));
+    }
+    list.push_back(x);
+}
+
 bool overlaps(std::uint32_t a, std::uint32_t na, std::uint32_t b, std::uint32_t nb) {
     if (na == 0 || nb == 0) return true;  // 0 means "all"
     return a < b + nb && b < a + na;
@@ -216,9 +230,22 @@ EventId Scheduler::addEvent() {
 void Scheduler::ensureSlotTables() {
     if (subscriptions_.size() < store_.size()) {
         subscriptions_.resize(store_.size());
+        subscriptionLimit_.resize(store_.size());
         slotMonitors_.resize(store_.size());
+        slotMonitorLimit_.resize(store_.size());
         monitorSlot_.resize(store_.size());
     }
+}
+
+std::size_t Scheduler::waitListEntries() const {
+    std::size_t n = 0;
+    for (const auto& l : subscriptions_)
+        n += l.size();
+    for (const auto& l : slotMonitors_)
+        n += l.size();
+    for (const NamedEvent& e : events_)
+        n += e.waiters.size() + e.monitors.size();
+    return n;
 }
 
 // --- $strobe and $monitor ----------------------------------------------------
@@ -541,7 +568,9 @@ void Scheduler::execute(const Event& e) {
             r.fn(toC(ctx_), r.frame, r.token, 1);
             return;
         }
-        case Kind::Show: showHeld(e.id, e.gen, 0, store_.layout(e.id).width); return;
+        case Kind::Show:
+            showHeld(e.id, static_cast<std::uint32_t>(e.gen), 0, store_.layout(e.id).width);
+            return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
             if (!d.pending || d.gen != e.gen) return;  // dropped
@@ -577,9 +606,11 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
                         std::span<const MonitorSpec> monitors) {
     ensureSlotTables();
     freeMonitor(p);
-    const std::uint32_t gen = ++processes_[p].gen;
+    const std::uint64_t gen = ++processes_[p].gen;
     for (const WaitItem& item : items) {
-        subscriptions_[item.part.slot].push_back({p, gen, item});
+        const SlotId s = item.part.slot;
+        pushSwept(subscriptions_[s], subscriptionLimit_[s], Subscription{p, gen, item},
+                  [&](const Subscription& x) { return processes_[x.process].gen != x.gen; });
         counters_.increment(cSubscriptions_);
     }
     // The monitors' first evaluation may write or trigger: announced once
@@ -612,17 +643,20 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
     for (const SlotPart& part : m.slots) {
         auto& list = slotMonitors_[part.slot];
         if (list.empty() || list.back().id != id || list.back().serial != ref.serial)
-            list.push_back(ref);
+            pushSwept(list, slotMonitorLimit_[part.slot], ref,
+                      [&](const MonitorRef& r) { return !live(r); });
     }
     for (const EventId e : m.events)
-        events_[e].monitors.push_back(ref);
+        pushSwept(events_[e].monitors, events_[e].monitorLimit, ref,
+                  [&](const MonitorRef& r) { return !live(r); });
 }
 
 void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
     freeMonitor(p);
     Process& proc = processes_[p];
     ++proc.gen;
-    events_[e].waiters.push_back({p, proc.gen, flushPoint});
+    pushSwept(events_[e].waiters, events_[e].waiterLimit, Waiter{p, proc.gen, flushPoint},
+              [&](const Waiter& w) { return processes_[w.process].gen != w.gen; });
 }
 
 // --- Effects -----------------------------------------------------------------

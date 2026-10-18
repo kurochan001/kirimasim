@@ -179,6 +179,11 @@ public:
     void kill(ProcessId p);
     /// Whether a process has finished or been killed.
     [[nodiscard]] bool finished(ProcessId p) const { return processes_[p].done; }
+    /// The entries the wait lists hold, live ones and those that waits left
+    /// when another of their items woke them: slot subscriptions, monitor
+    /// references from slots and named events, and named-event waiters
+    /// (SCHEDULER_SPEC.md 9.5). For tests.
+    [[nodiscard]] std::size_t waitListEntries() const;
 
     // Waits. A running process calls one of these and then returns
     // Status::Waiting. A later wait replaces nothing: a process has one
@@ -362,7 +367,7 @@ private:
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
         std::uint32_t id = 0;            ///< Process, NBA record or event object.
-        std::uint32_t gen = 0;           ///< Resume: the wait it ends.
+        std::uint64_t gen = 0;           ///< Resume: the wait it ends.
     };
     struct Future {
         std::uint64_t time = 0;
@@ -374,7 +379,7 @@ private:
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
-        std::uint32_t gen = 0;                ///< Number of the current wait.
+        std::uint64_t gen = 0;                ///< Number of the current wait.
         std::vector<std::uint32_t> monitors;  ///< Monitor records of the current wait.
         bool done = false;
         bool flushOnResume = false;          ///< Woken by an event: a flush point.
@@ -384,13 +389,13 @@ private:
     };
     struct Subscription {
         ProcessId process = 0;
-        std::uint32_t gen = 0;
+        std::uint64_t gen = 0;
         WaitItem item;
     };
     struct Monitor {
         ProcessId process = 0;
-        std::uint32_t gen = 0;     ///< The process's wait it belongs to.
-        std::uint32_t serial = 0;  ///< Changes when the record is reused.
+        std::uint64_t gen = 0;     ///< The process's wait it belongs to.
+        std::uint64_t serial = 0;  ///< Changes when the record is reused.
         MonitorSpec spec;
         std::vector<std::uint64_t> last;
     };
@@ -398,16 +403,18 @@ private:
     /// the record's serial has changed.
     struct MonitorRef {
         std::uint32_t id = 0;
-        std::uint32_t serial = 0;
+        std::uint64_t serial = 0;
     };
     struct Waiter {
         ProcessId process = 0;
-        std::uint32_t gen = 0;
+        std::uint64_t gen = 0;
         bool flushPoint = true;
     };
     struct NamedEvent {
         std::vector<Waiter> waiters;
         std::vector<MonitorRef> monitors;
+        std::uint32_t waiterLimit = 0;  ///< Sizes that start a sweep (pushSwept).
+        std::uint32_t monitorLimit = 0;
         std::uint64_t triggeredAt = UINT64_MAX;
     };
     /// An NBA update. Without a delay, the value lives in the time slot's
@@ -462,7 +469,7 @@ private:
     std::uint64_t nextSerial_ = 0;
     /// A released place whose wait number reached this is not reused, so
     /// that the next process has room to count its waits (10.8).
-    static constexpr std::uint32_t kReuseGenLimit = 1U << 31;
+    static constexpr std::uint64_t kReuseGenLimit = std::uint64_t{1} << 63;
     std::deque<Event> regions_[kNumRegions];
     std::vector<std::vector<Future>> wheel_ = std::vector<std::vector<Future>>(kWheel);
     std::uint64_t wheelCount_ = 0;
@@ -470,10 +477,14 @@ private:
     std::uint64_t seq_ = 0;
 
     std::vector<std::vector<Subscription>> subscriptions_;  ///< By slot.
+    /// By slot: the sizes of subscriptions_ and slotMonitors_ that start a
+    /// sweep of their stale entries (pushSwept).
+    std::vector<std::uint32_t> subscriptionLimit_;
+    std::vector<std::uint32_t> slotMonitorLimit_;
     std::vector<Monitor> monitors_;
     std::vector<std::uint32_t> freeMonitors_;
     std::vector<std::vector<MonitorRef>> slotMonitors_;  ///< By slot.
-    std::uint32_t monitorSerial_ = 0;
+    std::uint64_t monitorSerial_ = 0;
     std::vector<NamedEvent> events_;
     std::vector<NbaRecord> slotNbas_;     ///< Updates without a delay, this slot.
     std::vector<std::uint64_t> arena_;    ///< Their values.

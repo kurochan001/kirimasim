@@ -841,6 +841,86 @@ TEST(Scheduler, MixedWaitEndsAtItsFirstItem) {
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
 
+/// A process that waits again on the same items every time it wakes, as
+/// always_ff @(posedge clk or negedge rst_n) does: slot items, and
+/// optionally a monitor record on a slot or on a named event.
+struct Rewaiter {
+    std::vector<k::WaitItem> items;
+    std::vector<k::MonitorSpec> monitors;
+    k::ProcessId self = 0;
+    int wakes = 0;
+};
+
+kirima_status rewait(kirima_context* ctx, void* frame) {
+    auto* r = static_cast<Rewaiter*>(frame);
+    ++r->wakes;
+    k::fromC(ctx).scheduler().waitAny(r->self, r->items, r->monitors);
+    return KIRIMA_WAITING;
+}
+
+TEST(Scheduler, WaitListsDoNotGrowWithTheItemsLeftBehind) {
+    // SCHEDULER_SPEC.md 9.5: a wait that one item wakes ends its other
+    // items. Processes woken by clk over and over, whose other items (a
+    // slot, a monitor on a slot, a monitor on a named event) never fire,
+    // leave those items behind on every clock; the lists keep about as many
+    // entries after 2N clocks as after N. And processes killed while they
+    // wait on a named event leave their waiters behind just as well.
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::SlotId clk = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+    const k::SlotId rst = ctx.store().add(k::Domain::Two, 1, 1, k::Init::One);
+    const k::SlotId a = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    const k::EventId ev = s.addEvent();
+    const k::WaitItem posClk{{clk, 0, 0, 0, 0}, Edge::Pos, nullptr, nullptr};
+    const k::WaitItem negRst{{rst, 0, 0, 0, 0}, Edge::Neg, nullptr, nullptr};
+    BitFrame fa{a};
+    k::MonitorSpec onSlot;
+    onSlot.slots = {{a, 0, 0, 0, 0}};
+    onSlot.eval = &evalBit0;
+    onSlot.frame = &fa;
+    onSlot.domain = k::Domain::Two;
+    k::MonitorSpec onEvent = onSlot;
+    onEvent.slots = {};
+    onEvent.events = {ev};
+    std::vector<Rewaiter> rs(12);
+    for (std::size_t i = 0; i < rs.size(); ++i) {
+        rs[i].items = {posClk};
+        if (i % 3 == 0) rs[i].items.push_back(negRst);  // the slot kind
+        if (i % 3 == 1) rs[i].monitors = {onSlot};      // a monitor on a slot
+        if (i % 3 == 2) rs[i].monitors = {onEvent};     // a monitor on an event
+        rs[i].self = s.addProcess(&rewait, &rs[i], Group::Active);
+        s.waitAny(rs[i].self, rs[i].items, rs[i].monitors);
+    }
+    std::vector<std::string> log;
+    Waiter w{&log, "w"};
+    const std::uint64_t one = 1;
+    const std::uint64_t zero = 0;
+    const auto clocks = [&](int n) {
+        for (int c = 0; c < n; ++c) {
+            s.write(clk, 0, 0, 0, &one);
+            s.run();
+            s.write(clk, 0, 0, 0, &zero);
+            s.run();
+            // A process killed while it waits on the event.
+            const k::ProcessId q = s.addProcess(&logOnce, &w, Group::Active);
+            s.waitNamed(q, ev, true);
+            s.kill(q);
+        }
+    };
+    // Live: 12 clk items, and 4 each of rst items, slot monitor and event
+    // monitor references. A list is swept when it reaches twice its live
+    // entries or 16, so the 12 of clk keep at most 24 and the four other
+    // lists, the event's waiters among them, 16 each.
+    const std::size_t bound = 2 * 12 + 4 * 16;
+    clocks(500);
+    EXPECT_LE(s.waitListEntries(), bound);
+    clocks(500);
+    EXPECT_LE(s.waitListEntries(), bound);
+    EXPECT_EQ(rs[0].wakes, 1000);
+    EXPECT_EQ(rs[2].wakes, 1000);
+    EXPECT_TRUE(log.empty());
+}
+
 TEST(Scheduler, MonitorIffIsReadOnlyWhenItsEventOccurs) {
     // @(posedge (a & 1) iff g): the guard is read on the expression's
     // posedge alone (9.4.2.3).

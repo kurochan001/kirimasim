@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A wait on several items, such as `@(posedge clk or negedge rst_n)`, no
+  longer keeps the items that did not wake it: memory grew with every
+  clock for as long as the other signal stayed still (#4).
 - A `case` on a real compares the expression and the items as reals; they
   were rounded to integers first, so 1.6 matched 2.0. A `case` on a string
   compares strings; it was reported as an unsupported value of no bits (#10).

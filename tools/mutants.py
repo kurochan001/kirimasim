@@ -708,6 +708,8 @@ MUTANTS = [
     ("front: a case on reals or strings compares integers made of them", "src/front/lower_stmt.cpp",
      "const bool byValue = !inside && (common.isFloating() || common.isString());",
      "const bool byValue = !inside && common.isString();"),
+    ("kernel: a wait list keeps the items that waits left behind", "src/kernel/sim.cpp",
+     "    if (list.size() >= limit) {", "    if (false) {"),
 ]
 
 
