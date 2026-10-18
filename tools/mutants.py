@@ -672,6 +672,8 @@ MUTANTS = [
     ("vm: $stop ends the run as $finish", "src/vm/vm.cpp",
      "sched_.requestEnd(info.task == SysTask::Finish ? kernel::EndReason::Finish",
      "sched_.requestEnd(true ? kernel::EndReason::Finish"),
+    ("vm: $sscanf %s into a wide variable reads nothing", "src/vm/vm.cpp",
+     "            kernel::wide::fromText(r.data(), t.width, v.text);", "            ;"),
     ("driver: --top does not take the next argument", "src/driver/main.cpp",
      '} else if (arg == "-f" || arg == "--top") {', '} else if (arg == "-f") {'),
 ]
