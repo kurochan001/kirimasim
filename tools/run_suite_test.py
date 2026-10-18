@@ -13,7 +13,11 @@ comment) decides what is expected:
   :expected_exit: (0 when absent) and, with :expected_stderr:, kirimasim's
   own warning and error lines with the given file (TEST_SUITE.md). A design that
   uses a construct kirimasim does not support yet (exit code 2 with an
-  "unsupported" error, CLI.md 5) is reported as skipped, not as passed.
+  "unsupported" error, CLI.md 5) is reported as skipped, not as passed,
+  when tests/suite/skips.txt lists it; otherwise it fails. A listed test
+  that runs and passes fails too, until it is taken off the list. The list
+  covers the tests under its own directory; any other test (the own test
+  suite's, which tools/p1_population.py counts) is skipped as before.
 
 Standard output is compared line by line without empty lines (lines of
 only white space included), as the test-suite repository does
@@ -28,6 +32,7 @@ import sys
 from pathlib import Path
 
 from suite_header import read_header
+from suite_skips import SKIPS, read_skips, skip_name
 
 EXIT_INPUT_ERROR = 2
 SKIP = 77  # CTest's SKIP_RETURN_CODE for this test
@@ -111,7 +116,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     ap.add_argument("test", type=Path, help="test-suite .sv file")
+    ap.add_argument("--skips", type=Path, default=SKIPS,
+                    help="the list of allowed skips (default: tests/suite/skips.txt)")
     args = ap.parse_args()
+    # tools/check_suite_files.py checks the list itself.
+    skips, _ = read_skips(args.skips)
+    name = skip_name(args.test, args.skips)
+    covered = name is not None
+    listed = name in skips
 
     meta, problems = read_header(args.test)
     if problems:
@@ -141,9 +153,14 @@ def main() -> int:
         check=False,
     )
     if run.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in run.stderr:
-        print("SKIP: uses a construct that is not supported yet", file=sys.stderr)
+        if listed or not covered:
+            print("SKIP: uses a construct that is not supported yet", file=sys.stderr)
+            print(run.stderr, file=sys.stderr)
+            return SKIP
+        print(f"FAIL: uses a construct that is not supported yet, and {args.skips.name} does not "
+              "list it as a skip", file=sys.stderr)
         print(run.stderr, file=sys.stderr)
-        return SKIP
+        return 1
     try:
         expected = expected_outputs(args.test, meta)
     except ValueError as e:
@@ -167,6 +184,10 @@ def main() -> int:
             problems.append("warning and error lines differ\n--- expected ---\n" +
                             "\n".join(want_err) + "\n--- got ---\n" + "\n".join(got_err))
     if not problems:
+        if listed:
+            print(f"FAIL: runs and passes, but {args.skips.name} lists it as a skip; take it off "
+                  "the list", file=sys.stderr)
+            return 1
         return 0
     for p in problems:
         print("FAIL: " + p, file=sys.stderr)

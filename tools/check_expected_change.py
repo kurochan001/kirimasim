@@ -11,7 +11,10 @@ the implementation (anything under src/), it must not also:
   This covers ":expected_stdout:" lines and also rewriting a test's body
   to get the same effect,
 * delete or rename an existing file under tests/ (other than CMakeLists.txt
-  and README.md).
+  and README.md),
+* add a test to tests/suite/skips.txt, the list of tests allowed to be
+  skipped: allowing a skip loosens what the test expects (taking one off
+  the list does not).
 
 Unit test sources (tests/unit/) often have to change together with the
 code they call, for example when a function is renamed, so editing them
@@ -36,6 +39,7 @@ UNIT_TEST_PATTERNS = ("tests/unit/*.cpp", "tests/unit/*.h")
 ASSERTION = re.compile(r"\b(?:EXPECT|ASSERT)_[A-Z_]+\s*\(")
 NOT_PROTECTED = {"CMakeLists.txt", "README.md"}
 PERF_EXPECTED = "tests/perf_counts/expected.json"
+SKIPS = "tests/suite/skips.txt"
 
 
 def git(*args: str) -> str:
@@ -68,6 +72,14 @@ def removed_lines(base: str, head: str, path: str) -> list[str]:
     out = git("diff", "--no-color", "-U0", base, head, "--", path)
     return [line[1:] for line in out.splitlines()
             if line.startswith("-") and not line.startswith("---")]
+
+
+def added_skips(base: str, head: str) -> list[str]:
+    out = git("diff", "--no-color", "-U0", base, head, "--", SKIPS)
+    added = [line[1:].strip() for line in out.splitlines()
+             if line.startswith("+") and not line.startswith("+++")]
+    return [f"{SKIPS}: test allowed to be skipped: {line.split('#')[0].strip()}"
+            for line in added if line and not line.startswith("#")]
 
 
 def perf_violations(base: str, head: str) -> list[str]:
@@ -108,6 +120,8 @@ def main() -> int:
         old_path = paths[0]
         if any(p.startswith("src/") for p in paths):
             impl_changed.append(paths[-1])
+        if paths[-1] == SKIPS and code in ("A", "M"):
+            errors += added_skips(base, args.head)
         if not is_protected(old_path):
             continue
         if code == "D":

@@ -25,6 +25,39 @@ def expect(name: str, cmd: list[str], want_ok: bool, cwd: Path | None = None) ->
                         f"{'0' if want_ok else 'nonzero'}\n{p.stdout}{p.stderr}")
 
 
+def expect_code(name: str, cmd: list[str], code: int) -> None:
+    p = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if p.returncode != code:
+        failures.append(f"{name}: exit code {p.returncode}, expected {code}\n{p.stdout}{p.stderr}")
+
+
+def skips_test(kirimasim: str, tmp: Path) -> None:
+    """run_suite_test.py with a list of allowed skips (TEST_SUITE.md, "What
+    is judged now"): an unsupported test skips only when listed, and a
+    listed test that passes fails."""
+    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
+    for name, test, listed, code in [
+        ("unsupported_listed", "cb/input_sample_1step", True, 77),
+        ("unsupported_not_listed", "cb/input_sample_1step", False, 1),
+        ("listed_but_passes", "values/unique_case_violation", True, 1),
+        ("passes_not_listed", "values/unique_case_violation", False, 0),
+    ]:
+        d = tmp / ("skips_" + name)
+        d.mkdir()
+        src = ROOT / "tests/suite" / test
+        for f in src.parent.glob(src.name + ".*"):
+            shutil.copy(f, d / f.name)
+        skips = d / "skips.txt"
+        skips.write_text(f"{src.name}  # a reason\n" if listed else "", encoding="utf-8")
+        expect_code("run_suite_test skips " + name,
+                    run + ["--skips", str(skips), str(d / (src.name + ".sv"))], code)
+    # A test outside the list's directory is skipped as before.
+    outside = tmp / "skips_unsupported_listed" / "skips.txt"
+    expect_code("run_suite_test skips outside_the_list",
+                run + ["--skips", str(tmp / "skips_passes_not_listed" / "skips.txt"),
+                       str(outside.parent / "input_sample_1step.sv")], 77)
+
+
 def suite_test(kirimasim: str, tmp: Path) -> None:
     """run_suite_test.py on a copy of values/unique_case_violation."""
     src = ROOT / "tests/suite/values/unique_case_violation"
@@ -149,13 +182,22 @@ def banned_kernel(tmp: Path) -> None:
 
 
 def suite_files(tmp: Path) -> None:
-    for name, files, want_ok in [("paired", ["a.sv", "a.expected", "a.stderr"], True),
-                                 ("orphan", ["a.sv", "b.expected"], False)]:
+    for name, files, skips, want_ok in [
+        ("paired", ["a.sv", "a.expected", "a.stderr"], "", True),
+        ("orphan", ["a.sv", "b.expected"], "", False),
+        # The list of allowed skips names tests that exist, once, with a reason.
+        ("skip_listed", ["a.sv"], "x/a  # a reason\n", True),
+        ("skip_of_no_test", ["a.sv"], "x/b  # a reason\n", False),
+        ("skip_without_reason", ["a.sv"], "x/a\n", False),
+        ("skip_twice", ["a.sv"], "x/a  # a reason\nx/a  # again\n", False),
+    ]:
         root = tmp / ("files_" + name)
         (root / "tests/suite/x").mkdir(parents=True)
         (root / "tests/dump_sir").mkdir(parents=True)
         for f in files:
             (root / "tests/suite/x" / f).write_text("", encoding="utf-8")
+        if skips:
+            (root / "tests/suite/skips.txt").write_text(skips, encoding="utf-8")
         expect("check_suite_files " + name,
                [sys.executable, str(TOOLS / "check_suite_files.py"), "--root", str(root)],
                want_ok)
@@ -204,7 +246,8 @@ def expected_change(tmp: Path) -> None:
 
     git("init", "-q")
     write({"src/a.cpp": "int a;\n", "tests/suite/t.sv": "module t; endmodule\n",
-           "tests/suite/t.expected": "out\n", "tests/suite/t.stderr": "warning\n"})
+           "tests/suite/t.expected": "out\n", "tests/suite/t.stderr": "warning\n",
+           "tests/suite/skips.txt": "# allowed skips\nu  # a reason\n"})
     git("add", ".")
     git("commit", "-qm", "base")
     git("tag", "base")
@@ -215,6 +258,12 @@ def expected_change(tmp: Path) -> None:
         ("src_and_expected", {**src, "tests/suite/t.expected": "changed\n"}, False),
         ("src_and_stderr", {**src, "tests/suite/t.stderr": "changed\n"}, False),
         ("src_and_new_stderr_line", {**src, "tests/suite/t.stderr": "warning\nmore\n"}, True),
+        # Allowing a skip loosens an expectation; taking one off does not.
+        ("src_and_new_skip",
+         {**src, "tests/suite/skips.txt": "# allowed skips\nu  # a reason\nt  # new\n"}, False),
+        ("src_and_skip_removed", {**src, "tests/suite/skips.txt": "# allowed skips\n"}, True),
+        ("new_skip_only", {"tests/suite/skips.txt": "# allowed skips\nu  # a reason\nt  # new\n"},
+         True),
     ]:
         git("checkout", "-q", "-B", name, "base")
         write(files)
@@ -231,6 +280,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         suite_test(args.kirimasim, tmp)
+        skips_test(args.kirimasim, tmp)
         severity_test(args.kirimasim, tmp)
         banned(tmp)
         banned_kernel(tmp)

@@ -1,0 +1,8 @@
+# The tests of tests/suite/ that may be skipped as unsupported (TEST_SUITE.md,
+# "What is judged now"): the path under tests/suite/ without .sv, then the
+# reason after #. A test not on this list that stops at an unsupported
+# construct fails, and a listed test that runs fails until it is taken off.
+# Adding a test here loosens what it expects (the rules protecting expected
+# values).
+cb/input_sample_1step  # a clocking block (P3)
+nets/net_port_drivers_part  # drivers of a net that meet through a port joining parts of nets (not implemented yet)
