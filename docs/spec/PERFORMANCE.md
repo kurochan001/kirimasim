@@ -1,122 +1,124 @@
-# PERFORMANCE：性能
+# PERFORMANCE: performance
 
-優先度：P1。状態：**承認済み（2026-10-15）**。設計仕様書の「性能の目標と計測」を要約して書き直し、決まっていなかった点（カウンタの名前と出し方、PerfCount で実行まで測る形、夜間の計測のしきい値）を足した。2026-10-17 に、カウンタ `proc.kept_peak` を 3.2 節に足した（承認済み）。
+[日本語](PERFORMANCE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、kirimasim の性能の目標、回数カウンタ、回数による回帰テスト（PerfCount）、実時間のベンチマークの条件を定める。終了の理由は SCHEDULER_SPEC.md の 16 節、`--stats=json` の出し方は CLI.md に従う。
+Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved).
 
-## 1. 考え方
+This document sets kirimasim's performance goals, its event counters, the regression test by counts (PerfCount), and the conditions of wall-clock benchmarks. The reasons for ending follow SCHEDULER_SPEC.md 16, and the form of `--stats=json` follows CLI.md.
 
-- **CI の合否は回数で決める。** 実時間は、機械の負荷、最適化の度合い、CI のランナーの違いで大きく揺れる。評価や代入の回数は、同じ入力と同じオプションなら毎回同じになる。正しさの修正が、テストを通したまま評価の回数を何倍にも増やすことがあり、実時間を時々測るだけではそれに気づきにくい（設計書の決まり）。
-- **実時間は記録して知らせるが、合否には使わない。** 回数では、1 回の演算の重さやメモリの増え方は分からない。そこで夜間に実時間と最大 RSS とビルドの時間を測り、悪くなったら知らせる（5 節）。
-- **性能の予算は人が決める。** PerfCount の期待値の変更と、しきい値の変更は、人の承認を受ける（AI_POLICY.md、TEST_SUITE.md の期待値の決まり）。
+## 1. Approach
 
-## 2. 目標（案）
+- **CI passes or fails by counts.** Wall-clock time swings widely with the machine's load, the level of optimization and the CI runner. The number of evaluations and assignments is the same every time for the same input and the same options. A fix of correctness can multiply the number of evaluations while the tests still pass, and measuring wall-clock time now and then hardly notices it (a rule of the design specification).
+- **Wall-clock time is recorded and reported, but not used to pass or fail.** Counts do not show the cost of one operation or how memory grows. So wall-clock time, the peak RSS and the build time are measured nightly, and a worsening is reported (5).
+- **People set the performance budget.** Changes to PerfCount's expected values and to thresholds need a human's approval (AI_POLICY.md; TEST_SUITE.md's rules on expected values).
 
-数値は目安。P1 の M6 で基準を測ってから見直し、P2 の終わりに確定する。
+## 2. Goals (draft)
 
-| 指標 | 目標（案） | 測り方 | 測り始める段 |
+The numbers are rough aims. They are reviewed after the baseline is measured in M6 of P1, and fixed at the end of P2.
+
+| Measure | Goal (draft) | How measured | Stage measurement starts |
 | --- | --- | --- | --- |
-| sv-tests | シミュレーション系のタグで、Verilator 以上の通過数 | sv-tests のハーネス。タグの定義は M6 の前に TEST_SUITE.md の改訂案で決める | P1（M6） |
-| 4 値の正しさ | 自前のテストスイートの 4 値のテストで、期待値と一致する。食い違いは理由を説明できる | テストスイート | P1 |
-| 速度（2 値の RTL） | Verilator の単一スレッドの 0.5〜1 倍 | Ibex で CoreMark、CVA6 | P2 |
-| 速度（4 値の RTL） | Icarus の 10 倍以上 | 同じ | P1 で第 1 層の基準を測り、P2 で比べる |
-| 速度（UVM） | CIRCT を元にした別のシミュレータ（Normal Computing のフォーク）の 100 倍以上 | 同じ UVM の AVIP | P3 |
-| 実行開始までの時間 | 第 1 層ならエラボレーションの直後に始まる。第 2 層でも Verilator より短い | 同じ設計で、ファイルを読み始めてから時刻 0 の最初の評価までの時間 | P1（第 1 層）、P2（第 2 層） |
+| sv-tests | On the simulation tags, as many passes as Verilator or more | The sv-tests harness. The tags are defined by an amendment to TEST_SUITE.md before M6 | P1 (M6) |
+| 4-state correctness | The 4-state tests of our own test suite match their expected values; any difference can be explained | The test suite | P1 |
+| Speed (2-state RTL) | 0.5 to 1 times Verilator single-threaded | CoreMark on Ibex, CVA6 | P2 |
+| Speed (4-state RTL) | 10 times Icarus or more | The same | Tier 1 baseline in P1, compared in P2 |
+| Speed (UVM) | 100 times or more another simulator based on CIRCT (Normal Computing's fork) | The same UVM AVIPs | P3 |
+| Time to start running | Tier 1 starts right after elaboration. Tier 2 too is faster than Verilator | The same design, from starting to read the files to the first evaluation at time 0 | P1 (tier 1), P2 (tier 2) |
 
-- 速度は、実行の時間だけでなく総所要時間でも比べる。総所要時間は、エラボレーションの時間と、ビルドの時間と、テストの本数 × 1 本の実行時間の和。第 2 層はビルドの分だけ出だしが遅れるが、本数が多い回帰では逆転する。
-- 比べる相手の版は、テストスイートの照合に使う版と同じにする（Icarus Verilog 13.0、Verilator 5.052。TEST_SUITE.md）。
-- Verilator と比べるときは、kirimasim の 2 値の近似（`--state=2`。P2）と厳密な 4 値（`--state=4`、既定）を別の条件として扱う。
-- 商用シミュレータの結果は、利用規約を確かめられない限り公開しない。
+- Speed is compared not only by run time but also by total time. The total is the time of elaboration, plus the build time, plus the number of tests times the run time of one. Tier 2 starts later by its build, but overtakes in regressions with many tests.
+- The versions compared against are the ones the test suite uses for cross-checking (Icarus Verilog 13.0, Verilator 5.052; TEST_SUITE.md).
+- When comparing with Verilator, kirimasim's 2-state approximation (`--state=2`; P2) and exact 4-state (`--state=4`, the default) are treated as separate conditions.
+- Results of commercial simulators are not published unless their terms of use can be checked.
 
-## 3. 回数カウンタ
+## 3. Event counters
 
-### 3.1 形と出し方
+### 3.1 Form and output
 
-- カウンタは、名前と符号なし 64 ビットの値の組。名前は `<領域>.<内容>` の形にし、小文字、数字、`_`、`.` だけを使う（例：`sched.time_advances`）。
-- カウンタの表は Context が持つ。大域のカウンタは置かない（CLAUDE.md）。
-- `--stats=json` を付けると、終わったときに、すべてのカウンタを 1 つの JSON のオブジェクトにして、**標準出力の最後の 1 行**に書く（CLI.md の 3 節）。項目の順は、カウンタを足した順で、毎回同じ。
-- 数でない項目は、終了の理由 `sim.end_reason`（文字列。SCHEDULER_SPEC.md の 16.2 節の名前）だけにする。PerfCount では、文字列の項目は完全な一致で比べる（4 節）。
-- カウンタは、release を含むすべてのビルドで常に数える。数えるのは、kernel、VM、front の中の 1 回の加算だけにする。
-- **決定性：** 同じ kirimasim の版、同じ入力、同じオプションなら、OS、コンパイラ、ビルドの種類（dev、release、asan、ubsan）によらず同じ値になること。そのため、標準ライブラリの中の動き（`std::vector` の確保の回数、ハッシュ表の大きさなど）に依存する量は数えない。メモリの確保は、kernel が自分で確保するオブジェクトの数だけを数える（P3）。
+- A counter is a pair of a name and an unsigned 64-bit value. The name has the form `<area>.<content>` and uses only lower-case letters, digits, `_` and `.` (for example `sched.time_advances`).
+- The table of counters belongs to the Context. There are no global counters (CLAUDE.md).
+- With `--stats=json`, when the run ends, all counters are written as one JSON object on **the last line of standard output** (CLI.md 3). The items are in the order the counters were added, the same every time.
+- The only item that is not a number is the reason for ending, `sim.end_reason` (a string; the names of SCHEDULER_SPEC.md 16.2). PerfCount compares string items for exact equality (4).
+- Counters are always counted, in every build including release. Counting is one addition only, inside kernel, VM or front.
+- **Determinism:** for the same version of kirimasim, the same input and the same options, the values are the same whatever the OS, the compiler or the kind of build (dev, release, asan, ubsan). So nothing is counted that depends on the workings of the standard library (how many times a `std::vector` allocates, the size of a hash table and so on). Of memory allocation, only the objects the kernel allocates itself are counted (P3).
 
-### 3.2 カウンタの一覧
+### 3.2 List of counters
 
-「段」は、そのカウンタを足す段。表に無いカウンタを足すときは、本書に足す（同じ PR でよい）。
+"Stage" is the stage that adds the counter. A counter not in the table is added to this document when it is added (in the same PR is fine).
 
-| 名前 | 数えるもの | 段 |
+| Name | What it counts | Stage |
 | --- | --- | --- |
-| `front.files`、`front.syntax_trees`、`front.errors`、`front.warnings` | 読んだファイル、構文木、エラーと警告の数（今あるもの） | P0 |
-| `sir.slots`、`sir.processes`、`sir.subroutines`、`sir.blocks`、`sir.instrs` | 作った SIR の大きさ。`front` の変換が無駄な命令を増やしたことに気づくため | M4 |
-| `sched.time_slots` | 実行した時刻スロットの数 | M4 |
-| `sched.time_advances` | 時刻が進んだ回数 | M4 |
-| `sched.active_loops`、`sched.reactive_loops` | 参照アルゴリズム（SCHEDULER_SPEC.md の 3 節）の active 側と reactive 側の繰り返しの回数 | M4（reactive は P3） |
-| `sched.events.<領域>` | 領域ごとに実行した事象の数。`<領域>` は `active`、`inactive`、`nba`、`observed`、`reactive`、`re_inactive`、`re_nba`、`postponed` など、SCHEDULER_SPEC.md の 2.1 節の名前を小文字と `_` にしたもの。事象の無い領域も 0 として出す | M4 |
-| `proc.wakeups` | プロセスを評価のために起こした回数（時刻 0 の起動を含む） | M4 |
-| `proc.created`、`proc.finished` | 作ったプロセス（fork の子を含む）と、終わったプロセスの数 | M5 |
-| `proc.kept_peak` | 同時に残っていたプロセスの記録の数の最大（生きているものと、終わったが解放していないもの。SCHEDULER_SPEC.md の 10.8 節） | P1 |
-| `slot.writes` | スロットへの書き込み（ブロッキング代入、連続代入、NBA の更新）の回数 | M4 |
-| `slot.changes` | 書き込みのうち、値が実際に変わった回数 | M4 |
-| `nba.scheduled` | 予定した NBA の更新の数 | M4 |
-| `wait.subscriptions`、`wait.monitor_evals` | スロットの購読の登録と、監視レコードの式を評価し直した回数（SCHEDULER_SPEC.md の 9.5 節） | M4 |
-| `vm.instrs` | 第 1 層が実行した命令の数 | M5 |
-| `sim.end_time` | 終わったときの時刻（設計全体の精度の刻み） | M4 |
-| `sim.end_reason` | 終了の理由（文字列） | M4 |
-| `island.evals2`、`island.evals4` | 静的な島の評価の回数（2 値版と 4 値版） | P2 |
-| `mem.objects`、`gc.runs` | kernel が確保したオブジェクトの数と、GC の実行の回数 | P3 |
+| `front.files`, `front.syntax_trees`, `front.errors`, `front.warnings` | Files read, syntax trees, errors and warnings (those there now) | P0 |
+| `sir.slots`, `sir.processes`, `sir.subroutines`, `sir.blocks`, `sir.instrs` | The size of the SIR made, to notice when `front`'s lowering adds needless instructions | M4 |
+| `sched.time_slots` | Time slots run | M4 |
+| `sched.time_advances` | Times the time advanced | M4 |
+| `sched.active_loops`, `sched.reactive_loops` | Iterations of the active and reactive sides of the reference algorithm (SCHEDULER_SPEC.md 3) | M4 (reactive in P3) |
+| `sched.events.<region>` | Events run in each region. `<region>` is a name of SCHEDULER_SPEC.md 2.1 in lower case with `_`: `active`, `inactive`, `nba`, `observed`, `reactive`, `re_inactive`, `re_nba`, `postponed` and so on. A region with no events is written as 0 | M4 |
+| `proc.wakeups` | Times a process was woken to be evaluated (including the start at time 0) | M4 |
+| `proc.created`, `proc.finished` | Processes made (children of fork included) and processes that ended | M5 |
+| `proc.kept_peak` | The most process records kept at once (live ones, and ended ones not yet freed; SCHEDULER_SPEC.md 10.8) | P1 |
+| `slot.writes` | Writes to slots (blocking assignments, continuous assignments, NBA updates) | M4 |
+| `slot.changes` | Of those writes, the ones that actually changed the value | M4 |
+| `nba.scheduled` | NBA updates scheduled | M4 |
+| `wait.subscriptions`, `wait.monitor_evals` | Registrations of slot subscriptions, and re-evaluations of the expression of a monitor record (SCHEDULER_SPEC.md 9.5) | M4 |
+| `vm.instrs` | Instructions tier 1 ran | M5 |
+| `sim.end_time` | The time at the end (in steps of the design's precision) | M4 |
+| `sim.end_reason` | The reason for ending (a string) | M4 |
+| `island.evals2`, `island.evals4` | Evaluations of static islands (2-state and 4-state versions) | P2 |
+| `mem.objects`, `gc.runs` | Objects the kernel allocated, and runs of the GC | P3 |
 
-- `vm.instrs` は、第 1 層のバイトコードの作り方を変えると変わる。下がる変更は歓迎し、上がる変更は理由をコミットに書く（4.3）。
-- 層をまたいで比べてよいのは、層によらない回数（`sched.*`、`proc.*`、`slot.*`、`nba.*`、`wait.*`、`sim.*`）だけ。`vm.instrs` と `island.*` は層ごとの回数。
+- `vm.instrs` changes when the way tier 1's bytecode is made changes. A change that lowers it is welcome; a change that raises it states the reason in its commit (4.3).
+- Only counts that do not depend on the tier (`sched.*`, `proc.*`, `slot.*`, `nba.*`, `wait.*`, `sim.*`) may be compared across tiers. `vm.instrs` and `island.*` are counts of one tier.
 
-## 4. PerfCount（回数の回帰テスト）
+## 4. PerfCount (regression test by counts)
 
-### 4.1 今の形（P0）
+### 4.1 The present form (P0)
 
-- `tests/perf_counts/expected.json` に、テストのファイルごとに、カウンタの期待値を書く。`tools/perfcount_check.py` が `kirimasim --stats=json parse <file>` を走らせて比べる（CTest のラベル `PerfCount`）。
-- 失敗にするもの：期待値の **10% 以上の増加**（期待値 0 からの増加はすべて）、期待値にあるカウンタが無いこと、期待値に無いカウンタがあること。
-- 減るのは失敗にしない。減ったら、別の変更で期待値を下げて固定する。
+- `tests/perf_counts/expected.json` holds, for each test file, the expected values of the counters. `tools/perfcount_check.py` runs `kirimasim --stats=json parse <file>` and compares (CTest label `PerfCount`).
+- What fails: an **increase of 10% or more** over the expected value (any increase from an expected 0), a counter in the expected values that is missing, a counter not in the expected values.
+- A decrease does not fail. When a value decreases, the expected value is lowered and fixed in a separate change.
 
-### 4.2 P1 で変えること（M4〜M6）
+### 4.2 What changes in P1 (M4 to M6)
 
-- **実行まで測る：** `:type:` に `simulation` を含むテストは、`parse` ではなく、設計を実行して（`kirimasim --stats=json <file>`）回数を比べる。JSON は標準出力の最後の行から読む。
-- **対象のテスト：** 必須テスト（TEST_SUITE.md）のうち実行できるものと、ベンチマーク用の小さな設計（5.2）。テストスイートの全部は対象にしない（実行できるテストが増えるたびに期待値の変更が要り、CI が重くなるため）。
-- **文字列の項目：** `sim.end_reason` は完全な一致で比べる。違えば失敗にする。
-- **しきい値：** 10% のまま、カウンタごとの例外は置かない（案）。例外が要る場合は、本書の改訂として人に提案する。
-- 未対応の構文で実行できないテスト（終了コード 2 と `error: unsupported:`）は、期待値に登録しない。
+- **Measuring runs:** a test whose `:type:` contains `simulation` is run (`kirimasim --stats=json <file>`) instead of `parse`, and its counts compared. The JSON is read from the last line of standard output.
+- **Tests covered:** the required tests (TEST_SUITE.md) that can run, and the small designs for benchmarks (5.2). Not the whole test suite (every new runnable test would need a change of expected values, and CI would grow heavy).
+- **String items:** `sim.end_reason` is compared for exact equality. A difference fails.
+- **Threshold:** stays at 10%, with no exceptions per counter (draft). If an exception is needed, it is proposed to a human as an amendment to this document.
+- Tests that cannot run because of unsupported constructs (exit code 2 and `error: unsupported:`) are not registered in the expected values.
 
-### 4.3 期待値の変え方
+### 4.3 How expected values change
 
-- 新しいテストと新しいカウンタの登録は、実装と同じ PR でよい（人がレビューで根拠を見る）。
-- 既存の期待値を上げる、消す、緩める変更は、実装と別の PR にし、なぜ増えたか、なぜ受け入れるかを書く（`tools/check_expected_change.py` が検査する）。
-- 回数が減ったら、別の PR で期待値を下げる。手順は `tests/perf_counts/README.md`。
+- Registering new tests and new counters may be in the same PR as the implementation (a human reviews the grounds).
+- A change that raises, removes or loosens an existing expected value goes in a PR separate from the implementation, and says why the count grew and why it is accepted (`tools/check_expected_change.py` checks this).
+- When a count decreases, the expected value is lowered in a separate PR. The procedure is in `tests/perf_counts/README.md`.
 
-## 5. 実時間のベンチマーク
+## 5. Wall-clock benchmarks
 
-### 5.1 夜間の計測（P1 の M6 から）
+### 5.1 Nightly measurement (from M6 of P1)
 
-- GitHub Actions の定時のワークフローで、Linux（x86-64）のランナーで毎晩 1 回測る。macOS のランナーは取れないことが多いので、macOS の値は `tools/local_ci.py` と同じく手元で測ったものを報告に添える（CLAUDE.md）。
-- 測るもの：ベンチマークごとの実行の実時間、最大 RSS、kirimasim 自身のビルドの時間（release）。最大 RSS は Python の `resource.getrusage(RUSAGE_CHILDREN)` で取り、新しいツールは入れない。
-- 各ベンチマークを 5 回走らせて中央値を使う。結果は JSON にしてワークフローの成果物として残す。
-- **知らせる条件（案）：** 直近 7 回の夜間の結果の中央値を基準にし、実時間か最大 RSS が 15% 以上、ビルドの時間が 25% 以上悪くなったら、ワークフローの要約に警告を出す。合否には使わない（ワークフローを失敗にしない）。共有のランナーは揺れが大きいので、P1 の間の値で揺れの幅を確かめ、しきい値を見直す。
+- A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. macOS runners are often unavailable, so macOS values are measured locally, as `tools/local_ci.py` is, and attached to reports (CLAUDE.md).
+- What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken with Python's `resource.getrusage(RUSAGE_CHILDREN)`; no new tool is installed.
+- Each benchmark runs 5 times and the median is used. The results are kept as JSON among the workflow's artifacts.
+- **When to report (draft):** taking the median of the last 7 nightly results as the baseline, a warning is put in the workflow's summary when wall-clock time or the peak RSS worsens by 15% or more, or the build time by 25% or more. It does not pass or fail anything (the workflow does not fail). Shared runners swing widely, so the width of the swings is checked with the values during P1, and the thresholds reviewed.
 
-### 5.2 ベンチマークの設計
+### 5.2 Benchmark designs
 
-- P1：リポジトリに置く小さな合成の設計（`bench/`。区分 A として自作する）。少なくとも次の 4 つ。
-  - 4 値の算術と比較が多い組合せ回路（`always_comb` の連鎖）
-  - NBA が多いシフトレジスタとカウンタ（`always_ff`）
-  - 多数の小さなプロセスと、イベントの待ちと時間の待ち（`initial` と `#`、`@`）
-  - fork と join、名前付きイベント
-- P2 以降：Ibex（CoreMark）、CVA6、OpenTitan の IP、UVM の AVIP、競合や組合せループを含む小さな合成テスト。第三者の設計は同梱せず、取得用のスクリプトで参照する（設計書の区分 C）。
+- P1: small synthetic designs kept in the repository (`bench/`; written by us, as category A). At least these four:
+  - A combinational circuit with much 4-state arithmetic and comparison (a chain of `always_comb`)
+  - Shift registers and counters with many NBAs (`always_ff`)
+  - Many small processes, with waits for events and for time (`initial` with `#` and `@`)
+  - fork and join, named events
+- P2 and later: Ibex (CoreMark), CVA6, OpenTitan IPs, UVM AVIPs, and small synthetic tests with races and combinational loops. Third-party designs are not bundled; scripts that fetch them refer to them (category C of the design specification).
 
-### 5.3 記録の決まり
+### 5.3 What is recorded
 
-- 記録するもの：CPU の型番、コア数、メモリの量、OS、コンパイラの版、kirimasim のコミットとオプション、比べる相手の版とオプション、計測の前の負荷の平均。
-- 機械を特定できるもの（ホスト名、シリアル番号、利用者の名前、ホームディレクトリのパス）は記録しない（CLAUDE.md）。
-- 各 5 回の中央値を使う。比べるときは、キャッシュなしの総所要時間、キャッシュありの再ビルドの時間、実行の時間だけ、の 3 つの条件に分ける（キャッシュは P2）。
+- Recorded: the CPU model, the number of cores, the amount of memory, the OS, the compiler version, kirimasim's commit and options, the versions and options of the simulators compared against, and the load average before measuring.
+- Nothing that identifies the machine (host name, serial number, user name, home directory path) is recorded (CLAUDE.md).
+- The median of 5 runs is used each time. Comparisons are split into three conditions: total time without a cache, rebuild time with a cache, and run time alone (the cache is P2).
 
-## 6. 未確認・後で書くこと
+## 6. Not confirmed, to be written later
 
-- 2 節の目標の数値の確定（M6 で基準を測った後に見直し、P2 の終わりに確定）。
-- sv-tests の「シミュレーション系のタグ」の定義（M6 の前に、TEST_SUITE.md の改訂案として出す）。
-- 5.1 の知らせる条件の見直し（P1 の間の揺れの幅を見てから）。
-- GitHub の Linux のランナーで、定時のワークフローを毎晩動かせるか（未確認。M6 で試す。動かせなければ手元で測る形に変える案を出す）。
-- 第 2 層の生成コードで、カウンタをどこまで数えるか（P2。数えることで速度が落ちすぎないか測ってから決める）。
+- Fixing the numbers of the goals in 2 (reviewed after the baseline is measured in M6, fixed at the end of P2).
+- The definition of the "simulation tags" of sv-tests (put forward as an amendment to TEST_SUITE.md before M6).
+- Reviewing the reporting conditions of 5.1 (after seeing the width of the swings during P1).
+- Whether a scheduled workflow can run every night on GitHub's Linux runner (not confirmed; tried in M6; if it cannot, a proposal to measure locally instead).
+- How much of the counters the generated code of tier 2 counts (P2; decided after measuring whether counting slows it too much).
