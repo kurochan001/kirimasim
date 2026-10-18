@@ -1,0 +1,350 @@
+initial $display between [  5   5
+]
+initial $display leading [   5
+]
+initial $display trailing [  5 
+]
+initial $display one_comma [  
+]
+initial $display two_commas [   
+]
+initial $display literals [< >
+]
+initial $display after_spec [[5]   5
+]
+initial $write between [  5   5]
+initial $write leading [   5]
+initial $write trailing [  5 ]
+initial $write one_comma [  ]
+initial $write two_commas [   ]
+initial $write literals [< >]
+initial $write after_spec [[5]   5]
+initial $displayb between [00000101 00000101
+]
+initial $displayb leading [ 00000101
+]
+initial $displayb trailing [00000101 
+]
+initial $displayb one_comma [  
+]
+initial $displayb two_commas [   
+]
+initial $displayb literals [< >
+]
+initial $displayb after_spec [[5] 00000101
+]
+initial $displayo between [005 005
+]
+initial $displayo leading [ 005
+]
+initial $displayo trailing [005 
+]
+initial $displayo one_comma [  
+]
+initial $displayo two_commas [   
+]
+initial $displayo literals [< >
+]
+initial $displayo after_spec [[5] 005
+]
+initial $displayh between [05 05
+]
+initial $displayh leading [ 05
+]
+initial $displayh trailing [05 
+]
+initial $displayh one_comma [  
+]
+initial $displayh two_commas [   
+]
+initial $displayh literals [< >
+]
+initial $displayh after_spec [[5] 05
+]
+initial $swrite between [  5   5]
+initial $swrite leading [   5]
+initial $swrite trailing [  5 ]
+initial $swrite one_comma [  ]
+initial $swrite two_commas [   ]
+initial $swrite literals [< >]
+initial $swrite after_spec [[5]   5]
+task $display between [  5   5
+]
+task $display leading [   5
+]
+task $display trailing [  5 
+]
+task $display one_comma [  
+]
+task $display two_commas [   
+]
+task $display literals [< >
+]
+task $display after_spec [[5]   5
+]
+task $write between [  5   5]
+task $write leading [   5]
+task $write trailing [  5 ]
+task $write one_comma [  ]
+task $write two_commas [   ]
+task $write literals [< >]
+task $write after_spec [[5]   5]
+task $displayb between [00000101 00000101
+]
+task $displayb leading [ 00000101
+]
+task $displayb trailing [00000101 
+]
+task $displayb one_comma [  
+]
+task $displayb two_commas [   
+]
+task $displayb literals [< >
+]
+task $displayb after_spec [[5] 00000101
+]
+task $displayo between [005 005
+]
+task $displayo leading [ 005
+]
+task $displayo trailing [005 
+]
+task $displayo one_comma [  
+]
+task $displayo two_commas [   
+]
+task $displayo literals [< >
+]
+task $displayo after_spec [[5] 005
+]
+task $displayh between [05 05
+]
+task $displayh leading [ 05
+]
+task $displayh trailing [05 
+]
+task $displayh one_comma [  
+]
+task $displayh two_commas [   
+]
+task $displayh literals [< >
+]
+task $displayh after_spec [[5] 05
+]
+task $swrite between [  5   5]
+task $swrite leading [   5]
+task $swrite trailing [  5 ]
+task $swrite one_comma [  ]
+task $swrite two_commas [   ]
+task $swrite literals [< >]
+task $swrite after_spec [[5]   5]
+function $display between [  5   5
+]
+function $display leading [   5
+]
+function $display trailing [  5 
+]
+function $display one_comma [  
+]
+function $display two_commas [   
+]
+function $display literals [< >
+]
+function $display after_spec [[5]   5
+]
+function $write between [  5   5]
+function $write leading [   5]
+function $write trailing [  5 ]
+function $write one_comma [  ]
+function $write two_commas [   ]
+function $write literals [< >]
+function $write after_spec [[5]   5]
+function $displayb between [00000101 00000101
+]
+function $displayb leading [ 00000101
+]
+function $displayb trailing [00000101 
+]
+function $displayb one_comma [  
+]
+function $displayb two_commas [   
+]
+function $displayb literals [< >
+]
+function $displayb after_spec [[5] 00000101
+]
+function $displayo between [005 005
+]
+function $displayo leading [ 005
+]
+function $displayo trailing [005 
+]
+function $displayo one_comma [  
+]
+function $displayo two_commas [   
+]
+function $displayo literals [< >
+]
+function $displayo after_spec [[5] 005
+]
+function $displayh between [05 05
+]
+function $displayh leading [ 05
+]
+function $displayh trailing [05 
+]
+function $displayh one_comma [  
+]
+function $displayh two_commas [   
+]
+function $displayh literals [< >
+]
+function $displayh after_spec [[5] 05
+]
+function $swrite between [  5   5]
+function $swrite leading [   5]
+function $swrite trailing [  5 ]
+function $swrite one_comma [  ]
+function $swrite two_commas [   ]
+function $swrite literals [< >]
+function $swrite after_spec [[5]   5]
+fork $display between [  5   5
+]
+fork $display leading [   5
+]
+fork $display trailing [  5 
+]
+fork $display one_comma [  
+]
+fork $display two_commas [   
+]
+fork $display literals [< >
+]
+fork $display after_spec [[5]   5
+]
+fork $write between [  5   5]
+fork $write leading [   5]
+fork $write trailing [  5 ]
+fork $write one_comma [  ]
+fork $write two_commas [   ]
+fork $write literals [< >]
+fork $write after_spec [[5]   5]
+fork $displayb between [00000101 00000101
+]
+fork $displayb leading [ 00000101
+]
+fork $displayb trailing [00000101 
+]
+fork $displayb one_comma [  
+]
+fork $displayb two_commas [   
+]
+fork $displayb literals [< >
+]
+fork $displayb after_spec [[5] 00000101
+]
+fork $displayo between [005 005
+]
+fork $displayo leading [ 005
+]
+fork $displayo trailing [005 
+]
+fork $displayo one_comma [  
+]
+fork $displayo two_commas [   
+]
+fork $displayo literals [< >
+]
+fork $displayo after_spec [[5] 005
+]
+fork $displayh between [05 05
+]
+fork $displayh leading [ 05
+]
+fork $displayh trailing [05 
+]
+fork $displayh one_comma [  
+]
+fork $displayh two_commas [   
+]
+fork $displayh literals [< >
+]
+fork $displayh after_spec [[5] 05
+]
+fork $swrite between [  5   5]
+fork $swrite leading [   5]
+fork $swrite trailing [  5 ]
+fork $swrite one_comma [  ]
+fork $swrite two_commas [   ]
+fork $swrite literals [< >]
+fork $swrite after_spec [[5]   5]
+final $display between [  5   5
+]
+final $display leading [   5
+]
+final $display trailing [  5 
+]
+final $display one_comma [  
+]
+final $display two_commas [   
+]
+final $display literals [< >
+]
+final $display after_spec [[5]   5
+]
+final $write between [  5   5]
+final $write leading [   5]
+final $write trailing [  5 ]
+final $write one_comma [  ]
+final $write two_commas [   ]
+final $write literals [< >]
+final $write after_spec [[5]   5]
+final $displayb between [00000101 00000101
+]
+final $displayb leading [ 00000101
+]
+final $displayb trailing [00000101 
+]
+final $displayb one_comma [  
+]
+final $displayb two_commas [   
+]
+final $displayb literals [< >
+]
+final $displayb after_spec [[5] 00000101
+]
+final $displayo between [005 005
+]
+final $displayo leading [ 005
+]
+final $displayo trailing [005 
+]
+final $displayo one_comma [  
+]
+final $displayo two_commas [   
+]
+final $displayo literals [< >
+]
+final $displayo after_spec [[5] 005
+]
+final $displayh between [05 05
+]
+final $displayh leading [ 05
+]
+final $displayh trailing [05 
+]
+final $displayh one_comma [  
+]
+final $displayh two_commas [   
+]
+final $displayh literals [< >
+]
+final $displayh after_spec [[5] 05
+]
+final $swrite between [  5   5]
+final $swrite leading [   5]
+final $swrite trailing [  5 ]
+final $swrite one_comma [  ]
+final $swrite two_commas [   ]
+final $swrite literals [< >]
+final $swrite after_spec [[5]   5]
