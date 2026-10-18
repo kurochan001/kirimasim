@@ -124,6 +124,31 @@ python3 tools/local_ci.py
 CI runs on Linux only, so if you work on macOS, run `tools/local_ci.py`
 before pushing and paste its summary into the pull request.
 
+## Changelog
+
+[CHANGELOG.md](CHANGELOG.md) is for people who use kirimasim. It lists what
+changed as they see it; the commit history has the details.
+
+- Record, in the Keep a Changelog sections: **Added** (constructs, system
+  tasks and options that now work), **Changed** (the same input now gives
+  different output, exit code or messages, including changes to a rule of
+  the specifications, to the ABI version, and visible changes in speed or
+  memory), **Fixed** (results that were wrong), **Removed** and
+  **Deprecated**, and **Security** (fixes of reports made through
+  SECURITY.md).
+- Do not record new tests, CI, internal restructuring, changes to
+  documents alone, or changes to PerfCount counts.
+- One line per entry, in the user's words, citing the section of the
+  specification it rests on, for example `(VALUE_SEMANTICS.md 3.2)`. The
+  file is in English only.
+- Add the entry under `[Unreleased]` in the same commit as the change.
+  Reviewers check it; no tool enforces it, because most changes under
+  `src/` are internal.
+- The first release is planned as 0.1.0 at the end of phase P1. Then
+  `[Unreleased]` becomes `[0.1.0] - <date>`, and comparison links go at
+  the end of the file. While the version is 0.x, a new minor version may
+  break compatibility, as Semantic Versioning allows.
+
 ## Pull requests
 
 Pull requests come from collaborators only for now. Fill in the pull
