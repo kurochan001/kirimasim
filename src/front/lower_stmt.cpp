@@ -731,6 +731,12 @@ std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs
         }
         if (p.kind == Place::Kind::Frame)
             unsupported(sl, "an automatic variable as the target of assign or force");
+        // A whole slot, or an element or bits of one: the other places have
+        // no slot to look up.
+        const bool ofSlot = p.kind == Place::Kind::Slot ||
+                            ((p.kind == Place::Kind::Element || p.kind == Place::Kind::Bits) &&
+                             p.home == Place::Home::Slot);
+        if (!ofSlot) unsupported(sl, "this target of assign or force");
         sir::Slot& slot = design_.slots[p.slot];
         if (!sir::isIntegral(slot.type))
             unsupported(sl, "assign or force of a value that is not integral");
@@ -741,14 +747,10 @@ std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs
         Operand o = Operand::slot(p.slot);
         std::uint32_t w = slot.type.width;
         sir::Type type = slot.type;
-        if (p.kind == Place::Kind::Element || p.kind == Place::Kind::Bits) {
-            if (!p.indices.empty()) {
-                if (!p.elem) unsupported(sl, "an element selected at run time here");
-                o.firstElem = *p.elem;
-                o.numElems = 1;
-            }
-        } else if (p.kind != Place::Kind::Slot) {
-            unsupported(sl, "this target of assign or force");
+        if ((p.kind == Place::Kind::Element || p.kind == Place::Kind::Bits) && !p.indices.empty()) {
+            if (!p.elem) unsupported(sl, "an element selected at run time here");
+            o.firstElem = *p.elem;
+            o.numElems = 1;
         }
         if (p.kind == Place::Kind::Bits) {
             if (p.pos || p.lsb < 0 || p.lsb + p.width > w)

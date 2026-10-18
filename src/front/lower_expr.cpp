@@ -2510,10 +2510,14 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
     // A delayed continuous assignment, gate or UDP output writes a slot
     // range with drive.delay (SIR_SPEC.md 5.4).
     if (b_.delays) {
-        const sir::Slot& slot = design().slots[p.slot];
+        // A whole slot or constant bits of one; the other places have no
+        // slot to look up.
         const bool whole = p.kind == Place::Kind::Slot;
-        const bool part = p.kind == Place::Kind::Bits && p.home == Place::Home::Slot && !p.pos &&
-                          p.indices.empty() && p.lsb >= 0 && p.lsb + p.width <= slot.type.width;
+        const bool bits = p.kind == Place::Kind::Bits && p.home == Place::Home::Slot && !p.pos &&
+                          p.indices.empty();
+        if (!whole && !bits) unsupported(sl, "a delayed write of this target");
+        const sir::Slot& slot = design().slots[p.slot];
+        const bool part = bits && p.lsb >= 0 && p.lsb + p.width <= slot.type.width;
         if (!whole && !part) unsupported(sl, "a delayed write of this target");
         const Val dv = coerce(v, p.type, sl);
         const Operand target =
