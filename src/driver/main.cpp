@@ -249,6 +249,13 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
                          kirimasim::kernel::endReasonName(reason),
                          kirimasim::sir::timeText(context.scheduler().time(), precision).c_str());
         }
+        // $finish(2) and $stop(2): the statistics, the values of
+        // --stats=json once the run has ended (SYSTEM_TASKS.md 10.2).
+        if ((reason == kirimasim::kernel::EndReason::Finish ||
+             reason == kirimasim::kernel::EndReason::Stop) &&
+            context.scheduler().level() == 2)
+            std::fprintf(stderr, "kirimasim: info: statistics %s",
+                         context.counters().toJson().c_str());
     }
     if (reason == kirimasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;
     return kirimasim::kernel::exitCode(reason);

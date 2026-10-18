@@ -688,6 +688,10 @@ MUTANTS = [
      "                                } else {\n                                    below = true;\n"
      "                                }\n",
      "                                }\n"),
+    ("vm: $finish(1) and $stop(1) report nothing", "src/vm/vm.cpp",
+     "                if (level >= 1) {", "                if (level >= 3) {"),
+    ("driver: $finish(2) and $stop(2) write no statistics", "src/driver/main.cpp",
+     "context.scheduler().level() == 2)", "context.scheduler().level() == 3)"),
 ]
 
 

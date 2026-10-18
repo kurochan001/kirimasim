@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- `$finish` and `$stop` with 1 (the default) or 2 report the call on standard error,
+  `<file>:<line>: $finish at <time>`, and with 2 write the statistics at the
+  end of the run (SYSTEM_TASKS.md 10.2); they reported nothing.
 - A range select of a packed array whose elements are wider than one bit,
   such as `a[2:1]` or `a[i +: 2]` of `logic [3:0][7:0] a`, reads and
   writes whole elements; it took the indices as bit positions (#3).

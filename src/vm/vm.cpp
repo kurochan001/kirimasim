@@ -22,6 +22,7 @@
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"
+#include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
 
 namespace kirimasim::vm {
@@ -3793,7 +3794,18 @@ private:
             }
             case SysTask::Finish:
             case SysTask::Stop: {
+                // 1 and 2 report the time and the place of the call, at the
+                // call; 2 also the statistics, which come at the end of the
+                // run (SYSTEM_TASKS.md 10.2).
                 const auto level = static_cast<int>(value(ops[1]).a);
+                if (level >= 1) {
+                    std::string line =
+                        in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+                    line += ":" + std::to_string(in.loc.line) + ": ";
+                    line += info.task == SysTask::Finish ? "$finish" : "$stop";
+                    line += " at " + sir::timeText(sched_.time(), d_.timePrecision);
+                    output_.message(line);
+                }
                 sched_.requestEnd(info.task == SysTask::Finish ? kernel::EndReason::Finish
                                                                : kernel::EndReason::Stop,
                                   level);

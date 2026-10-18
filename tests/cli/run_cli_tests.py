@@ -56,19 +56,19 @@ CWD_CASES = [
 ]
 
 # (the plusarg that picks the call in end_tasks.sv, the reason for ending,
-# whether the line of the reason is left out). Argument 0 prints nothing,
-# that line included (SYSTEM_TASKS.md 10.2, SCHEDULER_SPEC.md 16.2).
-# kirimasim does not print yet the report of the call itself that 10.2
-# gives arguments 1 and 2; it is not checked here.
+# the argument, the line of the call). 1, the default, reports the call
+# with its place and time and writes the line of the reason for ending; 2
+# adds the statistics at the end; 0 prints nothing (SYSTEM_TASKS.md 10.2,
+# SCHEDULER_SPEC.md 16.2).
 END_CASES = [
-    ("finish", "finish", False),
-    ("finish0", "finish", True),
-    ("finish1", "finish", False),
-    ("finish2", "finish", False),
-    ("stop", "stop", False),
-    ("stop0", "stop", True),
-    ("stop1", "stop", False),
-    ("stop2", "stop", False),
+    ("finish", "finish", 1, 12),
+    ("finish0", "finish", 0, 9),
+    ("finish1", "finish", 1, 10),
+    ("finish2", "finish", 2, 11),
+    ("stop", "stop", 1, 16),
+    ("stop0", "stop", 0, 13),
+    ("stop1", "stop", 1, 14),
+    ("stop2", "stop", 2, 15),
 ]
 
 # The violation reports of violations.sv, exactly these and in this order
@@ -173,7 +173,7 @@ def main() -> int:
 
     # $finish and $stop end the run at 5ns with exit code 0; final runs and
     # nothing scheduled later does (SCHEDULER_SPEC.md 16.2, 9.2.3).
-    for plusarg, reason, quiet in END_CASES:
+    for plusarg, reason, level, line_no in END_CASES:
         proc = subprocess.run([args.kirimasim, "--stats=json", END_TASKS, f"+{plusarg}"],
                               capture_output=True, text=True, check=False)
         lines = proc.stdout.splitlines()
@@ -189,11 +189,22 @@ def main() -> int:
                 problems.append(f"--stats=json gives {got}")
         except (IndexError, ValueError) as e:
             problems.append(f"--stats=json: {e}")
-        line = f"kirimasim: info: {reason} at 5 ns"
-        if quiet and f"kirimasim: info: {reason}" in proc.stderr:
-            problems.append("stderr has the line of the reason for ending")
-        if not quiet and line not in proc.stderr:
-            problems.append(f"stderr lacks {line!r}")
+        report = f"end_tasks.sv:{line_no}: ${reason} at 5 ns"
+        reason_line = f"kirimasim: info: {reason} at 5 ns"
+        for text, want in ((report, level >= 1), (reason_line, level >= 1)):
+            if (text in proc.stderr) != want:
+                problems.append(f"stderr {'lacks' if want else 'has'} {text!r}")
+        stats = [x for x in proc.stderr.splitlines()
+                 if x.startswith("kirimasim: info: statistics ")]
+        if len(stats) != (1 if level == 2 else 0):
+            problems.append(f"{len(stats)} lines of statistics")
+        elif stats:
+            try:
+                got = json.loads(stats[0][len("kirimasim: info: statistics "):])
+                if got != json.loads(lines[-1]):
+                    problems.append("the statistics differ from --stats=json")
+            except (IndexError, ValueError) as e:
+                problems.append(f"statistics: {e}")
         if problems:
             failures += 1
             print(f"FAIL: +{plusarg}: {'; '.join(problems)}\n{proc.stdout}{proc.stderr}",
