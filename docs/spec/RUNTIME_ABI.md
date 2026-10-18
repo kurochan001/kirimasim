@@ -1,117 +1,119 @@
-# RUNTIME_ABI：実行カーネルと生成コードの境界
+# RUNTIME_ABI: the boundary between the execution kernel and generated code
 
-優先度：P0。状態：**承認済み（2026-10-15 に改訂を承認）**。2026-10-14 に承認した版に、独立レビューの指摘を反映した。「案」の項目は、P1 と P2 で実装しながら確かめてから確定する。
+[日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-この文書は、実行カーネル（`kernel`）と、第 1 層（VM）・第 2 層（生成した C++）・将来の第 3 層（JIT）との境界と、その版の管理を定める。「案」と書いた項目は、P1（第 1 層）と P2（第 2 層）で実装しながら確かめ、必要なら本書を直す（直すときは人の承認を受ける）。
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
 
-## 1. 目的と原則
+This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
-- **どの層も同じ形で登録する：** プロセスは「再開関数へのポインタとフレーム」として実行カーネルに登録する。カーネルからは、中身がインタプリタか生成コードかを区別できない。そのため、層をプロセスごとに混ぜられる（SCHEDULER_SPEC.md、SIR_SPEC.md の 7 節）。
-- **境界は C の関数表にする：** 生成コードは共有ライブラリ（macOS は `.dylib`、Linux は `.so`）にビルドして、driver が読み込む。境界は、版番号付きの C の関数表と、C の構造体だけで表す。C++ の型（クラス、テンプレート、例外、RTTI）は境界を越えない。
-- **大域の状態を持たない：** すべての状態は Context（`kernel::Context`）に置く。1 つのプロセスの中に、複数の Context と、版の違う複数の kirimasim のライブラリを置けるようにする（設計書の「分離」）。
-- **例外を越えさせない：** エラーは戻り値で返す。生成コードは例外を使わない（設計書の C++ の規則）。
-- **境界の名前の接頭辞：** 境界の C の型と関数の名前は `kirima_`、定数とマクロの名前は `KIRIMA_` で始める。利用者の設計や DPI-C のコードと同じ実行ファイルにリンクされるので、短い接頭辞は他のライブラリと重なりやすいため、プロジェクトの名前から取った長めの接頭辞にする（2026-10-16、人が決めた）。
+## 1. Purpose and principles
 
-## 2. 版
+- **Every tier registers in the same form:** a process is registered with the execution kernel as "a pointer to a resume function, and a frame". The kernel cannot tell whether what is inside is the interpreter or generated code. So tiers can be mixed process by process (SCHEDULER_SPEC.md; SIR_SPEC.md 7).
+- **The boundary is a table of C functions:** generated code is built into a shared library (`.dylib` on macOS, `.so` on Linux) that the driver loads. The boundary is expressed only by a versioned table of C functions and C structures. No C++ type (classes, templates, exceptions, RTTI) crosses the boundary.
+- **No global state:** all state is in the Context (`kernel::Context`). One process can hold several Contexts and several kirimasim libraries of different versions (the design specification's "isolation").
+- **No exception crosses:** errors are returned as values. Generated code uses no exceptions (the design specification's C++ rules).
+- **Prefix of the boundary's names:** the names of the boundary's C types and functions start with `kirima_`, and the names of its constants and macros with `KIRIMA_`. They are linked into the same executable as the user's design and DPI-C code, where a short prefix easily collides with other libraries, so the prefix is a longer one taken from the project's name (decided by a human, 2026-10-16).
 
-- **ABI の版**は、kirimasim 本体の版（セマンティックバージョニング）とは別に持つ。`(major, minor)` の 2 つの整数（案）。
-  - major：互換性の無い変更（関数表の欄の削除と並べ替え、構造体の配置の変更、意味の変更）で上げる。
-  - minor：互換性のある追加（関数表の末尾への欄の追加）で上げる。
-- 生成コードは、作ったときの ABI の版を、読み込みの入口の関数で返す。driver は読み込むときに検査し、major が違えば読み込まない。minor は、生成コードの値がカーネルの値以下なら読み込む（案）。
-- 生成コードのキャッシュの鍵には、次のものをすべて含める。どれか 1 つでも違えば作り直す（設計書の第 2 層の決まり）。
-  - 生成した C++ の内容のハッシュ
-  - コンパイラの名前と版
-  - 対象（OS と CPU）
-  - コンパイルのオプション
-  - ABI の版
-  - `kernel` の公開ヘッダの内容のハッシュ
+## 2. Version
 
-## 3. 公開ヘッダ
+- The **ABI version** is kept separate from the version of kirimasim itself (semantic versioning). Two integers, `(major, minor)` (draft).
+  - major: raised by incompatible changes (removing or reordering fields of the function table, changing the layout of a structure, changing a meaning).
+  - minor: raised by compatible additions (adding fields at the end of the function table).
+- Generated code returns the ABI version it was made with from its loading entry function. The driver checks it when loading, and does not load it if major differs. As for minor, it loads the code if the code's value is at most the kernel's (draft).
+- The key of the cache of generated code contains all of the following. If any one differs, the code is made again (the design specification's rules for tier 2).
+  - A hash of the content of the generated C++
+  - The compiler's name and version
+  - The target (OS and CPU)
+  - The compile options
+  - The ABI version
+  - A hash of the content of `kernel`'s public headers
 
-- 生成コードが読むのは `src/kernel/include/kirimasim/kernel/` の公開ヘッダだけ。C++20 の保守的な範囲で書き、例外と RTTI を使わない（設計書の C++ の規則。`tests/unit/kernel_headers_cxx20.cpp` で C++20 としてコンパイルできることを確かめている）。
-- 公開ヘッダに置くのは、次のものに限る。
-  - 値の表現（`W4` など）と、インライン化してよい高速版の演算（`and4` など）。
-  - 境界の C の構造体と関数表の宣言。
-  - 生成コードの未定義動作を避けるための補助（幅のマスク、安全なシフトと除算）。
-- 公開ヘッダの内容は、生成コードの意味に直接効くので、変えたら ABI の版を見直す。
+## 3. Public headers
 
-## 4. 境界の形（案）
+- Generated code reads only the public headers in `src/kernel/include/kirimasim/kernel/`. They are written in a conservative part of C++20, without exceptions or RTTI (the design specification's C++ rules; `tests/unit/kernel_headers_cxx20.cpp` checks that they compile as C++20).
+- The public headers hold only these:
+  - The representation of values (`W4` and the like), and fast versions of operations that may be inlined (`and4` and the like).
+  - Declarations of the boundary's C structures and function table.
+  - Helpers that keep generated code from undefined behaviour (width masks, safe shifts and division).
+- The content of the public headers bears directly on the meaning of generated code, so when it changes, the ABI version is reviewed.
 
-### 4.1 生成コードの入口
+## 4. Form of the boundary (draft)
 
-生成した共有ライブラリは、外に見せる記号を 1 つだけ持つ（案）。
+### 4.1 Entry of generated code
+
+A generated shared library makes only one symbol visible (draft).
 
 ```c
-/* 生成コードが外に見せる唯一の記号（名前は案） */
+/* The only symbol generated code makes visible (the name is a draft) */
 const kirima_module_table* kirima_get_module_table(uint32_t kernel_abi_major,
                                                    uint32_t kernel_abi_minor);
 ```
 
-- 戻り値の `kirima_module_table` は、ABI の版、プロセスとサブルーチンの再開関数の表、フレームの大きさと配置、生成コードが前提とするスロットの配置の識別子（SIR の内容のハッシュ）を持つ。
-- ABI の版が合わなければ NULL を返す。
-- ほかの記号はすべて隠す（`-fvisibility=hidden`）。複数のライブラリを 1 つのプロセスに読み込んでも衝突しないようにする。
-- DPI-C の export（P3）では、C から呼ぶ関数の記号を外に見せる必要があり、「記号は 1 つ」の方針と両立しない。P3 で、export の記号だけを追加で見せる形に見直す。
+- The returned `kirima_module_table` holds the ABI version, the table of resume functions of processes and subroutines, the sizes and layouts of frames, and an identifier of the slot layout the generated code assumes (a hash of the content of the SIR).
+- If the ABI version does not match, it returns NULL.
+- All other symbols are hidden (`-fvisibility=hidden`), so that several libraries loaded into one process do not collide.
+- DPI-C exports (P3) need symbols of functions called from C to be visible, which does not fit "one symbol". In P3 this is reviewed so that only the symbols of exports are made visible in addition.
 
-### 4.2 カーネルの関数表
+### 4.2 The kernel's function table
 
-カーネルは、生成コードとインタプリタに、関数のポインタを並べた表（`kirima_kernel_api`）を渡す。生成コードは、カーネルの関数をこの表だけを通して呼ぶ（記号で直接リンクしない）。表に入れるもの（案）：
+The kernel gives generated code and the interpreter a table of function pointers (`kirima_kernel_api`). Generated code calls kernel functions only through this table (it does not link to them by symbol). What goes in the table (draft):
 
-| 分類 | 内容 |
+| Group | Content |
 | --- | --- |
-| 待ちと予定 | 時間の待ち、イベントの待ち（購読と監視レコード）、`wait` の条件、名前付きイベントのトリガ、NBA の予定、fork と join、disable |
-| 値の書き込み | スロットへの書き込みと変化の通知（force の印のあるスロットの検査を含む） |
-| 時刻と終了 | 今の時刻、`$finish`・`$stop`・`$fatal` の要求、停止の確認点 |
-| システムタスク | 表示とファイル、`$readmem` など（重いものはカーネルに置き、生成コードからは呼ぶだけ） |
-| オブジェクト | 確保、GC のセーフポイント（P3） |
-| 報告 | unique・priority と遅延アサーションの保留の列への追加（SCHEDULER_SPEC.md の 15 節） |
+| Waits and scheduling | Waits for time, waits for events (subscriptions and monitor records), the condition of `wait`, triggering named events, scheduling NBAs, fork and join, disable |
+| Writing values | Writing a slot and announcing its change (including the check of slots marked by force) |
+| Time and ending | The current time, requests of `$finish`, `$stop` and `$fatal`, the check points for stopping |
+| System tasks | Display and files, `$readmem` and so on (heavy ones live in the kernel; generated code only calls them) |
+| Objects | Allocation, GC safepoints (P3) |
+| Reports | Adding to the pending queues of unique, priority and deferred assertions (SCHEDULER_SPEC.md 15) |
 
-- **混ぜた待ち（2026-10-18 に追記。承認済み）：** 1 つのイベント制御の待ちは、スロットの購読の項と、監視レコードの項を混ぜて 1 回の呼び出しで頼む（`wait_any`）。監視レコードの項も、購読の項と同じく `iff` の関数を持てる。既存の構造体の配置は変えず、関数表の末尾に足すので、ABI の minor を上げる（2 節）。
-- 第 1 層（`vm`）は `kernel` と一緒にビルドされるので、この表を通さず、`kernel` の C++ の API を直接呼ぶ（本書の決まり。`vm` は `kernel` に依存してよい。ARCHITECTURE.md）。表を通すのは、別にビルドして読み込む生成コード（第 2 層と第 3 層）だけ。ただし、表の関数と C++ の API は同じ実装を呼び、意味を 2 つ持たない。
-- 値の読み出しと、静的な島の中の計算は、表を通さず、スロットの格納領域を直接読む（速さのため）。格納領域の先頭のポインタと、スロットのオフセットの表を、Context から渡す。
-- 静的な島の中の書き込みも、島の出力への書き込みは、まとめて確定するときに表の関数を通す（設計書の 2 版切り替えの決まり）。
+- **Mixed waits (added 2026-10-18, approved):** the wait of one event control asks, in one call, for slot-subscription items and monitor-record items mixed (`wait_any`). A monitor-record item can have an `iff` function, as a subscription item can. The layout of existing structures does not change, and the function is added at the end of the table, so the ABI minor is raised (2).
+- Tier 1 (`vm`) is built together with `kernel`, so it calls `kernel`'s C++ API directly, not through this table (rule of this document; `vm` may depend on `kernel`; ARCHITECTURE.md). Only generated code built separately and loaded (tiers 2 and 3) goes through the table. The table's functions and the C++ API call the same implementation, though; there are not two meanings.
+- Reading values, and computing inside static islands, do not go through the table; they read the slot storage directly (for speed). The Context gives the pointer to the start of the storage and the table of slot offsets.
+- Writes inside a static island to the island's outputs go through the table's functions when they are committed together (the design specification's rule of switching between two versions).
 
-### 4.3 再開関数とフレーム
+### 4.3 Resume functions and frames
 
 ```c
-/* 再開関数の形（案） */
+/* The form of a resume function (draft) */
 typedef kirima_status (*kirima_resume_fn)(kirima_context* ctx, void* frame);
 ```
 
-- フレームは 2 段にする（案）。
-  - **プロセスのフレーム：** スレッドの組（active か reactive）、保留の報告の列、呼び出しの連鎖の先頭、プロセス自身の再開の位置と automatic な変数を置く。
-  - **呼び出しのフレーム：** 待ちを含むタスクを呼ぶたびに 1 つ確保し、連鎖でつなぐ。各フレームは、自分の再開の位置（基本ブロックの番号）、automatic な変数と引数、待ちをまたぐ一時の値、呼び出し元のフレームへの参照を持つ。automatic なタスクの再帰では、連鎖の長さが実行時に決まる（SIR_SPEC.md の 7.4 節）。
-- 再開するときは、連鎖の最も深いフレームから続ける。タスクが戻ったら、そのフレームを外して呼び出し元の再開の位置へ戻る。
-- 待ちを含まない関数の呼び出しは、ふつうの C の呼び出しにする（連鎖に積まない）。配置は SIR から決まり、層によらず同じにする。そのため、ある待ちまで第 1 層で動かしたプロセスを、次から第 2 層で動かすこともできる（P2 で使うかを決める）。
-- 再開関数は、次の待ちに入るか終わるまで実行して戻る。戻り値（`kirima_status`）で、待ちに入った、正常に終わった、**kill か disable で終わった**（自分自身を `kill()` したときや、自分を含むブロックを `disable` したとき）、エラー、停止の要求を受けた、を区別する。
-- C++20 のコルーチンは使わない（設計書の第 2 層の決まり）。
+- Frames have two levels (draft).
+  - **The process frame:** holds the thread set (active or reactive), the pending report queues, the head of the chain of calls, and the process's own resume position and automatic variables.
+  - **The call frame:** one is allocated each time a task containing a wait is called, and they are chained. Each frame holds its own resume position (the number of a basic block), automatic variables and arguments, temporaries that live across waits, and a reference to the caller's frame. In recursion of automatic tasks, the length of the chain is decided at run time (SIR_SPEC.md 7.4).
+- Resuming continues from the deepest frame of the chain. When a task returns, its frame is taken off and execution goes back to the caller's resume position.
+- A call of a function with no wait is an ordinary C call (not pushed on the chain). The layout is decided from the SIR and is the same whatever the tier. So a process that ran on tier 1 up to some wait can run on tier 2 from then on (whether to use this is decided in P2).
+- A resume function runs until it enters the next wait or ends, and returns. Its return value (`kirima_status`) tells apart: it entered a wait; it ended normally; **it ended by kill or disable** (when it `kill()`ed itself, or `disable`d a block containing itself); an error; a request to stop was received.
+- C++20 coroutines are not used (the design specification's rules for tier 2).
 
-### 4.4 エラーと停止
+### 4.4 Errors and stopping
 
-- 境界の関数は、エラーを戻り値で返す。エラーの詳細（ID、メッセージ、ソースの位置）は Context に置き、driver が取り出す。
-- 停止の要求（SIGINT と、時刻が進まない実行の上限）は、第 1 層ではループの戻りで、第 2 層ではループの戻りと一定の命令数ごとに、Context の旗を見て確かめる（SCHEDULER_SPEC.md の 16.2 節）。
+- The boundary's functions return errors as values. The details of an error (ID, message, source position) are put in the Context, where the driver takes them out.
+- Requests to stop (SIGINT, and the limits on runs where time does not advance) are checked by looking at a flag in the Context: in tier 1 at the back edges of loops, in tier 2 at the back edges of loops and every so many instructions (SCHEDULER_SPEC.md 16.2).
 
-## 5. スレッドと呼び出しの決まり
+## 5. Rules of threads and calls
 
-- シミュレーションは 1 つのスレッドで進める。VPI と DPI-C の呼び出しは、実行カーネルのスレッドから同期的に行う。ほかのスレッドからは呼べない（設計書の決まり）。
-- 生成コードのビルド（C++ のコンパイル）は、シミュレーションとは別のプロセスで行う。
-- 将来のマルチスレッドでの実行（P4）は、静的な島の中の並列化に限り、境界の形は変えない方針にする（案）。
+- Simulation proceeds on one thread. VPI and DPI-C calls are made synchronously from the execution kernel's thread. They cannot be called from other threads (a rule of the design specification).
+- Generated code is built (the C++ compiled) in a process separate from the simulation.
+- Future multithreaded execution (P4) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
 
-## 6. GC とセーフポイント（P3）
+## 6. GC and safepoints (P3)
 
-- GC は、決めたセーフポイント（時刻スロットの間や、領域の境界）でだけ走らせる。条件は、生成コードの一時の値がフレームの外に残っていないことと、DPI の呼び出しの最中でないこと。
-- 時間を使う DPI-C の task をファイバーで止めている間も、「DPI の最中」として GC を走らせない。
-- GC の根：プロセスのフレーム、クラスの static なメンバ、ハンドル型のスロット、未処理の事象と NBA の値、mailbox の中身、監視レコード。
-- `weak_reference` の参照は、印付けでたどらず、印付けの後に参照先が生きていなければ null にする。
-- 詳細は P3 で書く（設計書の「オブジェクトモデルと GC」）。
+- GC runs only at chosen safepoints (between time slots, or at the boundaries of regions). The conditions are that no temporary of generated code is left outside a frame, and that no DPI call is in progress.
+- While a time-consuming DPI-C task is stopped on a fiber, it counts as "in a DPI call", and GC does not run.
+- Roots of GC: process frames, static members of classes, slots of handle types, the values of pending events and NBAs, the contents of mailboxes, monitor records.
+- References of `weak_reference` are not followed by marking; after marking, if the object referred to is not alive, the reference is made null.
+- The details are written in P3 (the design specification's "object model and GC").
 
-## 7. 他のシミュレータに組み込むライブラリ（P4）
+## 7. Libraries embedded in other simulators (P4)
 
-`kirimasim lib-create` で作るライブラリは、本書の境界の上に、DPI-C の入口とラッパーを足したものにする。外に見せる記号は DPI の入口だけにし、ほかは隠す。詳細は LIB_EXPORT_SPEC.md（P2）で書く。
+A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P2).
 
-## 8. 未確認・後で書くこと
+## 8. Not confirmed, to be written later
 
-- 関数表の欄の確定と、C の構造体の配置（P1 の第 1 層と、P2 の第 2 層の実装で確かめる）。
-- `kirima_status` の値の一覧と、エラーの ID の体系（CLI.md と一緒に）。
-- フレームの配置を層の間で共有するときの、一時の値の割り当ての決め方。
-- Windows（生成コードを MSVC でコンパイルするだけの範囲）での境界の扱い。
-- GC、ファイバー、DPI-C の task の詳細（P3）。
+- Fixing the fields of the function table and the layout of the C structures (checked in the implementations of tier 1 in P1 and tier 2 in P2).
+- The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
+- How temporaries are allocated when the frame layout is shared between tiers.
+- The boundary on Windows (to the extent of compiling generated code with MSVC).
+- The details of GC, fibers and DPI-C tasks (P3).
