@@ -253,6 +253,34 @@ SysTask resolveSysTask(std::string_view name) {
     return SysTask::Unknown;
 }
 
+/// The operands of a system task's syscall that its handler reads by
+/// position: the name, then those.
+std::size_t minOperands(SysTask t) {
+    switch (t) {
+        case SysTask::Fatal:
+        case SysTask::Math2:
+        case SysTask::Sscanf:
+        case SysTask::ValuePlusargs: return 3;
+        case SysTask::Error:
+        case SysTask::Warning:
+        case SysTask::Info:
+        case SysTask::CountBits:
+        case SysTask::Finish:
+        case SysTask::Stop:
+        case SysTask::Time:
+        case SysTask::Realtime:
+        case SysTask::TestPlusargs:
+        case SysTask::Rtoi:
+        case SysTask::RealToBits:
+        case SysTask::BitsToReal:
+        case SysTask::ShortRealToBits:
+        case SysTask::BitsToShortReal:
+        case SysTask::Math1:
+        case SysTask::Clog2: return 2;
+        default: return 1;
+    }
+}
+
 bool isRealType(sir::Type t) {
     return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal;
 }
@@ -298,6 +326,9 @@ struct InstrInfo {
     /// or h form (SYSTEM_TASKS.md 3.1).
     char radix = 'd';
     std::uint32_t driver = 0;  ///< For drive.delay: its kernel driver.
+    /// The kind a text operand names, read once: "force" of an override
+    /// instruction, "casex" of match.mask, "final" of report.call.
+    bool textFlag = false;
 };
 
 /// The kind of net a resolve instruction names (SIR_SPEC.md 3.5).
@@ -896,8 +927,25 @@ private:
                 loadError_ = "method " + in.operands[0].text + " is not supported by the VM yet";
             return info;
         }
+        switch (in.op) {
+            case Op::OverrideStart:
+            case Op::OverrideStop:
+            case Op::StoreOverride:
+                info.textFlag = !in.operands.empty() && in.operands[0].text == "force";
+                return info;
+            case Op::MatchMask:
+                info.textFlag = in.operands.size() > 2 && in.operands[2].text == "casex";
+                return info;
+            case Op::ReportCall:
+                info.textFlag = !in.operands.empty() && in.operands[0].text == "final";
+                return info;
+            default: break;
+        }
         if (in.op != Op::Syscall || in.operands.empty()) return info;
         info.task = resolveSysTask(in.operands[0].text);
+        // The handler reads these operands by position.
+        if (in.operands.size() < minOperands(info.task) && loadError_.empty())
+            loadError_ = "syscall " + in.operands[0].text + " with too few operands";
         const std::string& n = in.operands[0].text;
         if ((info.task == SysTask::Display || info.task == SysTask::Write ||
              info.task == SysTask::SFormatF) &&
@@ -1847,7 +1895,7 @@ private:
                         break;
                     }
                     case Op::OverrideStart: {
-                        const Exit e = overrideStart(in, steps);
+                        const Exit e = overrideStart(in, info_[body][b][k], steps);
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
                         break;
@@ -1863,7 +1911,7 @@ private:
                         break;
                     }
                     case Op::OverrideStop: {
-                        const kernel::Hold level = holdLevel(ops[0]);
+                        const kernel::Hold level = holdLevel(info_[body][b][k]);
                         for (std::size_t i = 1; i < ops.size(); ++i)
                             sched_.release(level, partOf(ops[i]));
                         dropIdle(level);
@@ -1871,12 +1919,12 @@ private:
                     }
                     case Op::StoreOverride: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
-                        sched_.writeHeld(holdLevel(ops[0]), f.kernelId, ops[1].id, ops[1].firstElem,
-                                         ops[1].lsb, ops[1].width, buf.data());
+                        sched_.writeHeld(holdLevel(info_[body][b][k]), f.kernelId, ops[1].id,
+                                         ops[1].firstElem, ops[1].lsb, ops[1].width, buf.data());
                         break;
                     }
                     default:
-                        if (!execute(f, p, in)) return Exit::Error;
+                        if (!execute(f, p, in, info_[body][b][k])) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         break;
                 }
@@ -1896,8 +1944,8 @@ private:
 
     // --- Procedural continuous assignments (SIR_SPEC.md 5.6) ---
 
-    static kernel::Hold holdLevel(const Operand& o) {
-        return o.text == "force" ? kernel::Hold::Force : kernel::Hold::Assign;
+    static kernel::Hold holdLevel(const InstrInfo& info) {
+        return info.textFlag ? kernel::Hold::Force : kernel::Hold::Assign;
     }
 
     static kernel::SlotPart partOf(const Operand& o) {
@@ -1907,9 +1955,9 @@ private:
     /// override.start: the targets go to the override process, which runs
     /// once now and then whenever what it reads changes. A process that no
     /// longer holds anything stops (10.6.1, 10.6.2).
-    Exit overrideStart(const sir::Instr& in, std::uint64_t& steps) {
+    Exit overrideStart(const sir::Instr& in, const InstrInfo& info, std::uint64_t& steps) {
         const auto& ops = in.operands;
-        const kernel::Hold level = holdLevel(ops[0]);
+        const kernel::Hold level = holdLevel(info);
         Frame& o = *overrides_[ops[1].id];
         for (std::size_t i = 2; i < ops.size(); ++i)
             sched_.hold(level, o.kernelId, partOf(ops[i]));
@@ -2418,7 +2466,7 @@ private:
         return static_cast<std::int64_t>(x[0].a);
     }
 
-    bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in) {
+    bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         namespace kw = kernel::wide;
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
@@ -2609,7 +2657,7 @@ private:
             case Op::Weq: compare(kw::weq); return true;
             case Op::Wne: compare(kw::wne); return true;
             case Op::MatchMask: {
-                const bool ignoreX = ops[2].text == "casex";
+                const bool ignoreX = info.textFlag;  // casex
                 compare([&](const W4* x, const W4* y, unsigned ow) {
                     return kw::caseMatch(x, y, ow, ignoreX);
                 });
@@ -2928,7 +2976,7 @@ private:
         }
     }
 
-    bool execute(Frame& f, const sir::Process& p, const sir::Instr& in) {
+    bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
         const unsigned w = rt.width;
@@ -2939,7 +2987,7 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
-        if (wideHandles(in.op) && isWide(in)) return executeWide(f, p, in);
+        if (wideHandles(in.op) && isWide(in)) return executeWide(f, p, in, info);
         if (!ops.empty() &&
             (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
             // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the
@@ -3328,7 +3376,7 @@ private:
                     deferred_.push_back(std::move(d));
                 }
                 ++f.reports;
-                sched_.deferCall(f.kernelId, ops[0].text == "final", &deferredCall, &f, token);
+                sched_.deferCall(f.kernelId, info.textFlag, &deferredCall, &f, token);  // final
                 return true;
             }
             case Op::ReportDefer: {
@@ -3372,7 +3420,7 @@ private:
             case Op::Weq: set(kernel::weq4(v(0), v(1))); return true;
             case Op::Wne: set(kernel::wne4(v(0), v(1))); return true;
             case Op::MatchMask:
-                set(kernel::caseMatch4(v(0), v(1), ops[2].text == "casex"));
+                set(kernel::caseMatch4(v(0), v(1), info.textFlag));  // casex
                 return true;
             case Op::Lnot: set(kernel::lnot4(v(0))); return true;
             case Op::Truth: set(kernel::truth4(v(0))); return true;
