@@ -164,10 +164,10 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
 }
 
 /// Whether an expression contains something whose slang constant is not
-/// used and that is computed at run time instead: a conversion of a real to
-/// an integer, whose result kirimasim decides (VALUE_SEMANTICS.md 7.4: NaN
-/// and the infinities). SIR_SPEC.md 6 lists the constants of slang known to
-/// be wrong; there are none now.
+/// used and that is computed at run time instead, where kirimasim reads the
+/// standard otherwise than slang (SIR_SPEC.md 6): a conversion of a real to
+/// an integer (VALUE_SEMANTICS.md 7.4: NaN and the infinities) and a unary
+/// plus of a four-state value (3.2: x or z makes every bit x).
 bool untrustedConstant(const ast::Expression& e) {
     const auto any = [](std::span<const ast::Expression* const> es) {
         for (const ast::Expression* x : es)
@@ -176,8 +176,13 @@ bool untrustedConstant(const ast::Expression& e) {
     };
     switch (e.kind) {
         case ast::ExpressionKind::Call: return any(e.as<ast::CallExpression>().arguments());
-        case ast::ExpressionKind::UnaryOp:
-            return untrustedConstant(e.as<ast::UnaryExpression>().operand());
+        case ast::ExpressionKind::UnaryOp: {
+            // slang folds +v as v; x or z makes every bit x
+            // (VALUE_SEMANTICS.md 3.2).
+            const auto& u = e.as<ast::UnaryExpression>();
+            if (u.op == ast::UnaryOperator::Plus && e.type->isFourState()) return true;
+            return untrustedConstant(u.operand());
+        }
         case ast::ExpressionKind::BinaryOp: {
             const auto& b = e.as<ast::BinaryExpression>();
             return untrustedConstant(b.left()) || untrustedConstant(b.right());
@@ -1289,7 +1294,13 @@ Val Lowerer::lowerUnary(const ast::Expression& e) {
     const auto& u = e.as<ast::UnaryExpression>();
     const Type rt = typeOf(*e.type, sl);
     switch (u.op) {
-        case ast::UnaryOperator::Plus: return coerce(lowerExpr(u.operand()), rt, sl);
+        case ast::UnaryOperator::Plus: {
+            // An arithmetic operator: x or z in any bit makes every bit x
+            // (VALUE_SEMANTICS.md 3.2), which adding 0 does.
+            Val v = coerce(lowerExpr(u.operand()), rt, sl);
+            if (!sir::isFourState(rt)) return v;
+            return emit(Op::Add, rt, {v.op, constant(rt, 0).op}, sl);
+        }
         case ast::UnaryOperator::Minus:
             return emit(Op::Neg, rt, {coerce(lowerExpr(u.operand()), rt, sl).op}, sl);
         case ast::UnaryOperator::BitwiseNot:

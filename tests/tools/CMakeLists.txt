@@ -58,6 +58,9 @@ set_tests_properties(tools/gen_ref_wait_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_static_call_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_static_call_matrix.py --check)
 set_tests_properties(tools/gen_static_call_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_unary_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_unary_matrix.py --check)
+set_tests_properties(tools/gen_unary_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_value_argument_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_value_argument_matrix.py --check)
 set_tests_properties(tools/gen_value_argument_matrix PROPERTIES LABELS Tools)

@@ -568,6 +568,10 @@ MUTANTS = [
     ("vm: a monitor record leaves out what a ref refers to", "src/vm/vm.cpp",
      "        for (const GuardDeps::RefRead& rr : deps.refs) {",
      "        for (const GuardDeps::RefRead& rr : std::vector<GuardDeps::RefRead>{}) {"),
+    ("front: a unary plus passes x and z through", "src/front/lower_expr.cpp",
+     "            return emit(Op::Add, rt, {v.op, constant(rt, 0).op}, sl);", "            return v;"),
+    ("front: slang's constant of a unary plus is used", "src/front/lower_expr.cpp",
+     "            if (u.op == ast::UnaryOperator::Plus && e.type->isFourState()) return true;\n", ""),
 ]
 
 
