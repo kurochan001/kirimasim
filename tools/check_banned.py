@@ -2,7 +2,10 @@
 """Fails if src/ uses something banned (CLAUDE.md).
 
 Banned in src/kernel/ and src/vm/: std::shared_ptr, dynamic_cast,
-std::function, getenv, typeid.
+std::function, getenv, typeid. Shared ownership is banned in every
+spelling: shared_ptr, weak_ptr, make_shared, allocate_shared,
+enable_shared_from_this and the pointer casts, with or without std::
+(after a using declaration); so is function<...> without std::.
 
 Banned in all of src/ (the simulator must know nothing of test suites):
 pass/fail strings such as "TEST PASSED", the names of test metadata
@@ -31,9 +34,11 @@ DIRS = ("src/kernel", "src/vm")
 SUFFIXES = {".h", ".hpp", ".cpp", ".cc", ".cxx", ".inc", ".ipp"}
 
 BANNED = [
-    (re.compile(r"\bstd\s*::\s*shared_ptr\b"), "std::shared_ptr"),
+    (re.compile(r"\b(?:shared_ptr|weak_ptr|make_shared|allocate_shared|enable_shared_from_this"
+                r"|(?:static|dynamic|const|reinterpret)_pointer_cast)\b"),
+     "shared ownership (std::shared_ptr and its family)"),
     (re.compile(r"\bdynamic_cast\b"), "dynamic_cast"),
-    (re.compile(r"\bstd\s*::\s*function\b"), "std::function"),
+    (re.compile(r"\bstd\s*::\s*function\b|(?<![\w:])function\s*<"), "std::function"),
     (re.compile(r"\b(?:std\s*::\s*)?(?:secure_)?getenv\b"), "getenv"),
     (re.compile(r"\btypeid\b"), "typeid"),
 ]

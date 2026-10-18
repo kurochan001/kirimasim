@@ -94,6 +94,35 @@ def banned(tmp: Path) -> None:
                [sys.executable, str(TOOLS / "check_banned.py"), "--root", str(root)], want_ok)
 
 
+def banned_kernel(tmp: Path) -> None:
+    """The constructs banned in src/kernel and src/vm, in every spelling
+    (CLAUDE.md), and prose that only names them."""
+    for name, line, want_ok in [
+        ("shared_ptr", "std::shared_ptr<int> p;", False),
+        ("shared_ptr_using", "using namespace std;\nshared_ptr<int> p;", False),
+        ("make_shared", "auto p = std::make_shared<int>(1);", False),
+        ("weak_ptr", "std::weak_ptr<int> w;", False),
+        ("shared_from_this", "struct S : std::enable_shared_from_this<S> {};", False),
+        ("pointer_cast", "auto q = std::static_pointer_cast<int>(p);", False),
+        ("dynamic_cast", "auto* d = dynamic_cast<D*>(b);", False),
+        ("function", "std::function<void()> f;", False),
+        ("function_using", "using namespace std;\nfunction<void()> f;", False),
+        ("getenv", 'const char* e = std::getenv("X");', False),
+        ("typeid", "auto& t = typeid(x);", False),
+        ("unordered", "std::unordered_map<int, int> m;", False),
+        ("unordered_waived",
+         "// kirimasim: unordered-ok lookup only\nstd::unordered_map<int, int> m;", True),
+        ("prose", "// a shared pointer would do; a function takes it", True),
+        ("longer_name", "auto f = make_function<int>();", True),
+    ]:
+        for where in ("src/kernel", "src/vm"):
+            root = tmp / ("banned_" + name + "_" + where.split("/")[1])
+            (root / where).mkdir(parents=True)
+            (root / where / "x.cpp").write_text(line + "\n", encoding="utf-8")
+            expect(f"check_banned {name} in {where}",
+                   [sys.executable, str(TOOLS / "check_banned.py"), "--root", str(root)], want_ok)
+
+
 def suite_files(tmp: Path) -> None:
     for name, files, want_ok in [("paired", ["a.sv", "a.expected", "a.stderr"], True),
                                  ("orphan", ["a.sv", "b.expected"], False)]:
@@ -169,6 +198,7 @@ def main() -> int:
         suite_test(args.kirimasim, tmp)
         severity_test(args.kirimasim, tmp)
         banned(tmp)
+        banned_kernel(tmp)
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)
