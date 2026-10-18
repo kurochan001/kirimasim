@@ -8,13 +8,27 @@
 
 処理は一方向に流れます。
 
-```text
-SystemVerilog のソース
-  -> slang（構文解析、前処理、型検査、エラボレーション）
-  -> front   （slang がエラボレーションした設計を SIR に変換する）
-  -> SIR     （slot-indexed IR：格納のスロットと、静的に型の決まった命令）
-  -> analysis（X 到達解析、静的な島、レベル化、可観測性）
-  -> 実行の層。どれも共有の実行カーネルの上で動く
+```mermaid
+flowchart TD
+    src["SystemVerilog sources"]
+    slang["slang<br/>parsing, preprocessing,<br/>type checking, elaboration"]
+    front["front<br/>lowers the elaborated design to SIR"]
+    sir["SIR<br/>storage slots and statically typed instructions"]
+    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
+    subgraph tiers["Execution tiers"]
+        t1["tier 1: VM<br/>interprets SIR (P1)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t3["tier 3: JIT<br/>(later)"]
+    end
+    kernel["Execution kernel<br/>scheduler with every region, value operations<br/>(later: objects and GC, VPI, DPI-C, waveforms)"]
+    src --> slang --> front --> sir
+    sir --> t1
+    sir --> analysis --> t2
+    sir --> t2
+    sir --> t3
+    t1 -->|"resume function and frame"| kernel
+    t2 -->|"resume function and frame"| kernel
+    t3 -->|"resume function and frame"| kernel
 ```
 
 slang は改変せず、1 つのコミットに固定したライブラリとして使います。修正は上流に送ります。
@@ -53,6 +67,38 @@ slang は改変せず、1 つのコミットに固定したライブラリとし
 | `fiber_backend` | 時間を使う DPI-C のタスクのためのファイバー | 選んだファイバーのライブラリだけ | P3 の予定 |
 | `valsem` | 値の意味の参照実装 | なし | 値の命令、辺、強さのあるネットの解決、UDP の表 |
 | `driver` | `kirimasim` のコマンドライン | すべて | コンパイルと実行、`parse`、`--version`、`--dump-sir`、`--stats=json`、実行の上限 |
+
+同じ向きを図にしたもの（矢印は「依存する」。表と食い違ったときは表に従います）：
+
+```mermaid
+flowchart TD
+    driver["driver<br/>the kirimasim command"]
+    front["front"]
+    vm["vm<br/>tier 1"]
+    codegen["codegen<br/>tier 2"]
+    analysis["analysis"]
+    kernel["kernel"]
+    valsem["valsem"]
+    sir["sir"]
+    slang["slang<br/>(external, pinned)"]
+    solver["solver_adapter (P3)"]
+    fiber["fiber_backend (P3)"]
+    driver --> front
+    driver --> vm
+    driver --> codegen
+    driver --> kernel
+    driver --> valsem
+    front --> slang
+    front --> sir
+    vm --> sir
+    vm --> kernel
+    codegen --> sir
+    codegen --> analysis
+    analysis --> sir
+    solver --> sir
+    kernel -.->|"C++ interface only"| solver
+    kernel -.->|"C++ interface only"| fiber
+```
 
 この配置から従う決まり：
 
