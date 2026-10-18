@@ -14,7 +14,9 @@ comment) decides what is expected:
   own warning and error lines with the given file (TEST_SUITE.md). A design that
   uses a construct kirimasim does not support yet (exit code 2 with an
   "unsupported" error, CLI.md 5) is reported as skipped, not as passed,
-  when tests/suite/skips.txt lists it; otherwise it fails. A listed test
+  when tests/suite/skips.txt lists it; otherwise it fails. With :timeout:,
+  kirimasim must finish within that many seconds, or the test fails (CTest
+  stops any test after 300 seconds, CMakePresets.json). A listed test
   that runs and passes fails too, until it is taken off the list. The list
   covers the tests under its own directory; any other test (the own test
   suite's, which tools/p1_population.py counts) is skipped as before.
@@ -130,11 +132,22 @@ def main() -> int:
         for p in problems:
             print(f"FAIL: header: {p}", file=sys.stderr)
         return 1
+    timeout = int(meta["timeout"]) if "timeout" in meta else None
+    try:
+        return judge(args, meta, listed, covered, timeout)
+    except subprocess.TimeoutExpired:
+        print(f"FAIL: kirimasim did not finish within {timeout} s (:timeout:)", file=sys.stderr)
+        return 1
+
+
+def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int | None) -> int:
+    """Parses, and runs a simulation test, and compares what it expects."""
     proc = subprocess.run(
         [args.kirimasim, "parse", str(args.test)],
         capture_output=True,
         text=True,
         check=False,
+        timeout=timeout,
     )
 
     if "should_fail_because" in meta:
@@ -151,6 +164,7 @@ def main() -> int:
         capture_output=True,
         text=True,
         check=False,
+        timeout=timeout,
     )
     if run.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in run.stderr:
         if listed or not covered:

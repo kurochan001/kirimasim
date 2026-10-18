@@ -58,6 +58,24 @@ def skips_test(kirimasim: str, tmp: Path) -> None:
                        str(outside.parent / "input_sample_1step.sv")], 77)
 
 
+def timeout_test(kirimasim: str, tmp: Path) -> None:
+    """run_suite_test.py with :timeout: on a copy of sched/empty_forever,
+    which runs to the zero-time limit (seconds)."""
+    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
+    src = ROOT / "tests/suite/sched/empty_forever"
+    for name, value, code in [("too_short", "1", 1), ("not_a_number", "soon", 1),
+                              ("long_enough", "600", 0)]:
+        d = tmp / ("timeout_" + name)
+        d.mkdir()
+        for f in src.parent.glob(src.name + ".*"):
+            shutil.copy(f, d / f.name)
+        f = d / "empty_forever.sv"
+        text = f.read_text(encoding="utf-8")
+        header = f":nondeterministic: no\n:timeout: {value}"
+        f.write_text(text.replace(":nondeterministic: no", header, 1), encoding="utf-8")
+        expect_code("run_suite_test timeout " + name, run + [str(f)], code)
+
+
 def suite_test(kirimasim: str, tmp: Path) -> None:
     """run_suite_test.py on a copy of values/unique_case_violation."""
     src = ROOT / "tests/suite/values/unique_case_violation"
@@ -281,6 +299,7 @@ def main() -> int:
         tmp = Path(t)
         suite_test(args.kirimasim, tmp)
         skips_test(args.kirimasim, tmp)
+        timeout_test(args.kirimasim, tmp)
         severity_test(args.kirimasim, tmp)
         banned(tmp)
         banned_kernel(tmp)

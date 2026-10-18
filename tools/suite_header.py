@@ -5,9 +5,10 @@ The header is the comment at the top of the file: the file starts with
 /* (blank lines before it are allowed), and each line inside of the form
 :item: value gives one item. A header that is not at the top, an item
 whose name is not in TEST_SUITE.md, a :type: word that is not a kind of
-test, a missing required item and a yes/no item with another value are
-problems: a misspelled item would otherwise be dropped without a word,
-and the test judged by less than it says.
+test, a missing required item, a yes/no item with another value and a
+:timeout: that is not a number of seconds are problems: a misspelled item
+would otherwise be dropped without a word, and the test judged by less
+than it says.
 """
 
 from __future__ import annotations
@@ -53,6 +54,8 @@ def read_header(path: Path) -> tuple[dict[str, str], list[str]]:
     for item in YES_NO:
         if item in meta and meta[item] not in ("yes", "no"):
             problems.append(f":{item}: is {meta[item]!r}, not yes or no")
+    if "timeout" in meta and not (meta["timeout"].isdigit() and int(meta["timeout"]) > 0):
+        problems.append(f":timeout: is {meta['timeout']!r}, not a number of seconds")
     if "spec" in meta.get("oracle", "").split() and "spec_check" not in meta:
         problems.append("the header has :oracle: spec but no :spec_check:")
     return meta, problems
