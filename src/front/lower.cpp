@@ -369,6 +369,20 @@ void Lowerer::error(slang::SourceLocation sl, std::string_view what) {
     throw Unsupported{};
 }
 
+void Lowerer::warning(slang::SourceLocation sl, std::string_view what) {
+    if (std::find(warned_.begin(), warned_.end(), sl) != warned_.end()) return;
+    warned_.push_back(sl);
+    ++numWarnings_;
+    if (sl.valid())
+        diags_ += std::string(sm_.getFileName(sl)) + ":" + std::to_string(sm_.getLineNumber(sl)) +
+                  ":" + std::to_string(sm_.getColumnNumber(sl)) + ": ";
+    else
+        diags_ += "kirimasim: ";
+    diags_ += "warning: ";
+    diags_ += what;
+    diags_ += "\n";
+}
+
 void Lowerer::report(slang::SourceLocation sl, std::string_view what) {
     ++numErrors_;
     if (sl.valid()) {
@@ -1948,6 +1962,7 @@ CompileResult compile(std::span<const std::string> args) {
     Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation));
     lowerer.lower(compilation->getRoot());
     result.diagnostics += lowerer.diagnostics();
+    result.numWarnings += lowerer.numWarnings();
     if (lowerer.numErrors() != 0) {
         result.numErrors += lowerer.numErrors();
         result.unsupported = true;

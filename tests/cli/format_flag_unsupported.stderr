@@ -1,0 +1,6 @@
+format_flag_unsupported.sv:12:25: error: unsupported: format flag '+' with %d (not implemented yet)
+format_flag_unsupported.sv:13:23: error: unsupported: format flag ' ' with %d (not implemented yet)
+format_flag_unsupported.sv:14:25: error: unsupported: format flag '#' with %h (not implemented yet)
+format_flag_unsupported.sv:15:23: error: unsupported: format flag '+' with %s (not implemented yet)
+format_flag_unsupported.sv:16:25: error: unsupported: format precision with %d (not implemented yet)
+format_flag_unsupported.sv:17:23: error: unsupported: format precision with %t (not implemented yet)

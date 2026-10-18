@@ -279,9 +279,14 @@ std::optional<std::int64_t> positionOf(std::int64_t idx, const slang::ConstantRa
 }
 
 /// The specifiers of a $display format, in order, with %x as h. Returns
-/// false and the offending specifier for one that is not supported yet,
-/// or "%" for a % with no conversion after it.
-bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) {
+/// false and what is wrong in `bad`: "%" for a % with no conversion after
+/// it, else a specifier or a flag that is not supported yet. `extra` gets
+/// the first flag that the standard does not define, a - or a 0 in a
+/// format other than %e, %f and %g, as "'-' with %d" (SYSTEM_TASKS.md
+/// 3.12).
+bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
+                std::string& extra) {
+    const auto digit = [&](std::size_t i) { return i < f.size() && f[i] >= '0' && f[i] <= '9'; };
     for (std::size_t i = 0; i < f.size(); ++i) {
         if (f[i] != '%') continue;
         if (++i >= f.size()) {
@@ -289,10 +294,19 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
             return false;
         }
         if (f[i] == '%') continue;
+        std::string flags;
         while (i < f.size() && std::string_view("-+ #").find(f[i]) != std::string_view::npos)
-            ++i;
-        while (i < f.size() && ((f[i] >= '0' && f[i] <= '9') || f[i] == '.'))
-            ++i;
+            flags += f[i++];
+        // A width that starts with 0 and is not 0 is the 0 flag; %0d is the
+        // width 0 (3.3).
+        const bool leadingZero = i < f.size() && f[i] == '0';
+        bool zeroFlag = false;
+        for (; digit(i); ++i)
+            zeroFlag = zeroFlag || (leadingZero && f[i] != '0');
+        const bool precision = i < f.size() && f[i] == '.';
+        if (precision)
+            for (++i; digit(i); ++i) {
+            }
         if (i >= f.size()) {
             bad = "%";
             return false;
@@ -301,8 +315,23 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) 
         if (conv == 'x') conv = 'h';
         if (conv == 'm') continue;  // takes no argument (withScope)
         if (std::string_view("bohdcstefg").find(conv) == std::string_view::npos) {
-            bad = std::string("%") + f[i];
+            bad = std::string("format specifier %") + f[i];
             return false;
+        }
+        // The real formats take C's flags and a precision (3.6).
+        if (std::string_view("efg").find(conv) == std::string_view::npos) {
+            const std::string with = std::string(" with %") + f[i];
+            for (const char c : flags)
+                if (c != '-') {
+                    bad = std::string("format flag '") + c + "'" + with;
+                    return false;
+                }
+            if (precision) {
+                bad = "format precision" + with;
+                return false;
+            }
+            if (extra.empty() && flags.find('-') != std::string::npos) extra = "'-'" + with;
+            if (extra.empty() && zeroFlag) extra = "'0'" + with;
         }
         convs.push_back(conv);
     }
@@ -2717,14 +2746,19 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
     const auto takeFormat = [&](const std::string& text, slang::SourceLocation at) {
         std::vector<char> convs;
         std::string bad;
-        if (!scanFormat(text, convs, bad)) {
+        std::string extra;
+        if (!scanFormat(text, convs, bad, extra)) {
             // A % with no conversion is an error of the input; any other
-            // specifier left is one not implemented yet (SYSTEM_TASKS.md 3.1).
+            // specifier or flag left is one not implemented yet
+            // (SYSTEM_TASKS.md 3.1, 3.12).
             if (bad == "%")
                 error(at, "format has a % without a conversion");
             else
-                unsupported(at, "format specifier " + bad);
+                unsupported(at, bad);
         }
+        // A flag the standard does not define: one warning for the format
+        // (3.12).
+        if (!extra.empty()) warning(at, "format flag " + extra + " is not in IEEE 1800-2023");
         pending.assign(convs.begin(), convs.end());
         ops.push_back(Operand::str(withScope(text, b_.scope)));
     };

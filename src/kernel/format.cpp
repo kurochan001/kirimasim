@@ -89,6 +89,15 @@ std::string padLeft(std::string s, std::size_t width, char fill) {
     return s;
 }
 
+/// Puts the text of a value in its field of `width` characters: at the
+/// right after `fill`, or, with the - flag, at the left before spaces
+/// (3.12). A field narrower than the text widens.
+std::string place(std::string s, std::size_t width, bool left, char fill) {
+    if (!left) return padLeft(std::move(s), width, fill);
+    if (s.size() < width) s.append(width - s.size(), ' ');
+    return s;
+}
+
 std::string stripLeadingZeros(std::string_view s) {
     const std::size_t first = s.find_first_not_of('0');
     if (first == std::string_view::npos) return "0";
@@ -127,7 +136,7 @@ std::string radixDigits(const IntValue& v, std::uint32_t bitsPerDigit) {
     return out;
 }
 
-std::string formatDecimal(const IntValue& v, int width) {
+std::string formatDecimal(const IntValue& v, int width, bool left, bool zero) {
     std::string digits;
     if (hasUnknown(v)) {
         bool allX = true;
@@ -156,10 +165,16 @@ std::string formatDecimal(const IntValue& v, int width) {
     }
     const std::size_t w =
         width < 0 ? autoDecimalWidth(v.width, v.isSigned) : static_cast<std::size_t>(width);
-    return padLeft(std::move(digits), w, ' ');
+    // The 0 flag pads with 0 after the sign, and a lone x or z too; - wins
+    // over it (3.12).
+    if (zero && !left && width > 0) {
+        if (digits.starts_with("-")) return "-" + padLeft(digits.substr(1), w - 1, '0');
+        return padLeft(std::move(digits), w, '0');
+    }
+    return place(std::move(digits), w, left, ' ');
 }
 
-std::string formatChars(const IntValue& v, int width) {
+std::string formatChars(const IntValue& v, int width, bool left) {
     // Bytes from the most significant end; leading zero bytes are not
     // printed, and a zero byte after the first nonzero one prints as a
     // space (3.5).
@@ -173,7 +188,7 @@ std::string formatChars(const IntValue& v, int width) {
         bytes.push_back(c == 0 ? ' ' : static_cast<char>(c));
     }
     const std::size_t w = width < 0 ? n : static_cast<std::size_t>(width);
-    return padLeft(std::move(bytes), w, ' ');
+    return place(std::move(bytes), w, left, ' ');
 }
 
 }  // namespace
@@ -201,14 +216,22 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             literal.push_back('%');
             continue;
         }
-        // Flags and a precision are kept only for the real formats.
+        // The real formats keep every flag and a precision for C (3.6); the
+        // others take only - and 0 (3.12).
         const std::size_t start = i;
+        bool left = false;
+        bool otherFlag = false;
         while (i < format.size() &&
-               std::string_view("-+ #").find(format[i]) != std::string_view::npos)
+               std::string_view("-+ #").find(format[i]) != std::string_view::npos) {
+            left = left || format[i] == '-';
+            otherFlag = otherFlag || format[i] != '-';
             ++i;
-        const bool flags = i != start;
+        }
+        // A written width that starts with 0 and is not 0 is the 0 flag;
+        // %0d is the width 0 (3.3).
+        const bool leadingZero = i < format.size() && format[i] == '0';
         int width = -1;
-        if (format[i] >= '0' && format[i] <= '9') {
+        if (i < format.size() && format[i] >= '0' && format[i] <= '9') {
             width = 0;
             while (i < format.size() && format[i] >= '0' && format[i] <= '9') {
                 width = width * 10 + (format[i] - '0');
@@ -249,15 +272,18 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
                 return false;
         }
         const bool real = conv == 'e' || conv == 'f' || conv == 'g';
-        if ((flags || precision) && !real) {
-            error = "flags and precisions are for %e, %f and %g only";
+        if ((otherFlag || precision) && !real) {
+            error = "the flags +, space and # and a precision are for %e, %f and %g only";
             return false;
         }
         flush();
         FormatPiece p;
         p.isSpec = true;
         p.spec = {conv, width, {}};
-        if (real) {
+        if (!real) {
+            p.spec.left = left;
+            p.spec.zero = leadingZero && width > 0;
+        } else {
             // %E and %G keep their capital E, as in C; %F is %f (3.6).
             p.spec.cformat = "%";
             p.spec.cformat += format.substr(start, i - start);
@@ -271,21 +297,33 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
 
 std::string formatInt(const IntValue& v, const FormatSpec& spec) {
     switch (spec.conv) {
-        case 'd': return formatDecimal(v, spec.width);
+        case 'd': return formatDecimal(v, spec.width, spec.left, spec.zero);
         case 'c': {
             unsigned c = 0;
             for (std::uint32_t i = 0; i < 8 && i < v.width; ++i)
                 if (bitOf(v, i).a) c |= 1U << i;
-            return padLeft(std::string(1, static_cast<char>(c)),
-                           spec.width < 0 ? 1 : static_cast<std::size_t>(spec.width), ' ');
+            return place(std::string(1, static_cast<char>(c)),
+                         spec.width < 0 ? 1 : static_cast<std::size_t>(spec.width), spec.left, ' ');
         }
-        case 's': return formatChars(v, spec.width);
+        case 's': return formatChars(v, spec.width, spec.left);
         default: break;
     }
     const std::uint32_t bits = spec.conv == 'b' ? 1 : spec.conv == 'o' ? 3 : 4;
     std::string digits = radixDigits(v, bits);
+    // The - flag: the value in the smallest width at the left of the field,
+    // the automatic width or the written one (3.12).
+    if (spec.left)
+        return place(stripLeadingZeros(digits),
+                     spec.width < 0 ? digits.size() : static_cast<std::size_t>(spec.width), true,
+                     ' ');
     if (spec.width < 0) return digits;  // the automatic width keeps leading zeros
     return padLeft(stripLeadingZeros(digits), static_cast<std::size_t>(spec.width), '0');
+}
+
+std::string formatString(std::string_view text, const FormatSpec& spec) {
+    // The characters as they are, in a written width (3.5).
+    return place(std::string(text), spec.width > 0 ? static_cast<std::size_t>(spec.width) : 0,
+                 spec.left, ' ');
 }
 
 std::string formatReal(double v, const FormatSpec& spec) {
@@ -319,9 +357,11 @@ std::string formatReal(double v, const FormatSpec& spec) {
     return big;
 }
 
-std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width) {
+std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width,
+                       bool left) {
     const std::size_t w = static_cast<std::size_t>(width >= 0 ? width : std::max(tf.minWidth, 0));
-    if (hasUnknown(ticks)) return padLeft(formatDecimal(ticks, 0) + tf.suffix, w, ' ');
+    if (hasUnknown(ticks))
+        return place(formatDecimal(ticks, 0, false, false) + tf.suffix, w, left, ' ');
     const std::uint64_t t = ticks.words[0];  // a time fits in 64 bits
     // The value in units of tf.unit, with tf.decimals digits after the
     // point, as a whole number: t * 10^k.
@@ -345,18 +385,20 @@ std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& t
         digits = padLeft(std::move(digits), d + 1, '0');
         digits.insert(digits.size() - d, ".");
     }
-    return padLeft(digits + tf.suffix, w, ' ');
+    return place(digits + tf.suffix, w, left, ' ');
 }
 
-std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width) {
+std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width,
+                           bool left) {
     const std::size_t w = static_cast<std::size_t>(width >= 0 ? width : std::max(tf.minWidth, 0));
-    if (!std::isfinite(ticks)) return padLeft(formatReal(ticks, FormatSpec{}) + tf.suffix, w, ' ');
+    if (!std::isfinite(ticks))
+        return place(formatReal(ticks, FormatSpec{}) + tf.suffix, w, left, ' ');
     const bool negative = ticks < 0;
     // The shortest decimal text of the value, d.ddde[+-]x: digits * 10^exp.
     std::array<char, 64> buf{};
     const auto res = std::to_chars(buf.data(), buf.data() + buf.size(), std::fabs(ticks),
                                    std::chars_format::scientific);
-    if (res.ec != std::errc()) return padLeft(tf.suffix, w, ' ');
+    if (res.ec != std::errc()) return place(tf.suffix, w, left, ' ');
     const std::string_view text(buf.data(), static_cast<std::size_t>(res.ptr - buf.data()));
     const std::size_t epos = text.find('e');
     std::string digits;
@@ -396,7 +438,7 @@ std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, in
         whole.insert(whole.size() - d, ".");
     }
     if (negative && whole.find_first_not_of("0.") != std::string::npos) whole.insert(0, "-");
-    return padLeft(whole + tf.suffix, w, ' ');
+    return place(whole + tf.suffix, w, left, ' ');
 }
 
 }  // namespace kirimasim::kernel

@@ -604,6 +604,23 @@ MUTANTS = [
      "return isFrameRef(r) || !ownSlot(refSlot(r));"),
     ("kernel: a delay past the largest time is no error", "src/kernel/sim.cpp",
      "if (delay > UINT64_MAX - time_) {", "if (false) {"),
+    ("kernel: %d ignores the - flag", "src/kernel/format.cpp",
+     "formatDecimal(v, spec.width, spec.left, spec.zero)",
+     "formatDecimal(v, spec.width, false, spec.zero)"),
+    ("kernel: the 0 flag pads before the sign", "src/kernel/format.cpp",
+     'if (digits.starts_with("-")) return', 'if (false) return'),
+    ("kernel: - keeps the leading zeros of %h, %o and %b", "src/kernel/format.cpp",
+     "return place(stripLeadingZeros(digits),", "return place(digits,"),
+    ("kernel: a string value ignores the - flag", "src/kernel/format.cpp",
+     "                 spec.left, ' ');\n}", "                 false, ' ');\n}"),
+    ("front: no warning for a flag the standard does not define", "src/front/lower_expr.cpp",
+     "if (!extra.empty()) warning(at,", "if (false) warning(at,"),
+    ("front: a width that starts with 0 is no 0 flag", "src/front/lower_expr.cpp",
+     "zeroFlag = zeroFlag || (leadingZero && f[i] != '0');", "zeroFlag = false;"),
+    ("front: a format warns once for each instance", "src/front/lower.cpp",
+     "    if (std::find(warned_.begin(), warned_.end(), sl) != warned_.end()) return;\n", ""),
+    ("front: the + flag of %d is taken", "src/front/lower_expr.cpp",
+     "                if (c != '-') {", "                if (false) {"),
 ]
 
 

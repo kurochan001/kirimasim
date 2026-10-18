@@ -24,6 +24,8 @@ PLUSARGS = str(HERE / "plusargs.sv")
 VALUE_PLUSARGS = str(HERE / "value_plusargs.sv")
 PROGRAM_MATRIX = HERE / "program_matrix.sv"
 UNSUPPORTED_MATRIX = HERE / "unsupported_matrix"
+FLAG_MATRIX = HERE / "format_flag_matrix.sv"
+FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 
 # The violation reports of violations.sv, exactly these and in this order
@@ -164,6 +166,28 @@ def main() -> int:
         extra = sorted(set(got) - set(want))
         print("FAIL: unsupported matrix:\n" + "".join(f"  missing: {x}\n" for x in missing) +
               "".join(f"  extra: {x}\n" for x in extra), file=sys.stderr)
+
+    # The format flags - and 0, which the standard does not define
+    # (SYSTEM_TASKS.md 3.12; the files come from tools/gen_format_flag_matrix.py):
+    # what they print, and one warning for each format that uses them, in
+    # any order; the flags that are not supported yet stop before the run.
+    proc = subprocess.run([args.kirimasim, FLAG_MATRIX.name], cwd=HERE, capture_output=True,
+                          text=True, check=False)
+    want_out = FLAG_MATRIX.with_suffix(".expected").read_text(encoding="utf-8")
+    want = FLAG_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
+    got = [line for line in proc.stderr.splitlines() if ": warning: " in line]
+    if proc.returncode != 0 or proc.stdout != want_out or sorted(got) != sorted(want):
+        failures += 1
+        print(f"FAIL: format flag matrix: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
+              file=sys.stderr)
+    proc = subprocess.run([args.kirimasim, FLAG_UNSUPPORTED.name], cwd=HERE, capture_output=True,
+                          text=True, check=False)
+    want = FLAG_UNSUPPORTED.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
+    got = [line for line in proc.stderr.splitlines() if ": error: " in line]
+    if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
+        failures += 1
+        print(f"FAIL: unsupported format flags: exit code {proc.returncode}\n{proc.stdout}"
+              f"{proc.stderr}", file=sys.stderr)
 
     # The records of finished processes are released (SCHEDULER_SPEC.md
     # 10.8): with twice the rounds of the process lifetime matrix, twice as

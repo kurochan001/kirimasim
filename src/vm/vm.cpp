@@ -3648,15 +3648,10 @@ private:
                             const kernel::FormatSpec& spec) const {
         const sir::Type t = typeOf(o);
         const W4 x = value(o);
-        if (t.kind == sir::TypeKind::String) {
-            // The characters, padded to an explicit width (3.5).
-            std::string text(strings_.get(x.a));
-            if (spec.width > 0 && text.size() < static_cast<std::size_t>(spec.width))
-                text.insert(0, static_cast<std::size_t>(spec.width) - text.size(), ' ');
-            return text;
-        }
+        if (t.kind == sir::TypeKind::String) return kernel::formatString(strings_.get(x.a), spec);
         if (isRealType(t) && spec.conv == 't')
-            return kernel::formatTimeReal(toReal(x, t), d_.timePrecision, timeFormat_, spec.width);
+            return kernel::formatTimeReal(toReal(x, t), d_.timePrecision, timeFormat_, spec.width,
+                                          spec.left);
         if (isRealType(t)) {
             // front makes every other specifier take an integer; without
             // one, a real shows like %g (SYSTEM_TASKS.md 3.6).
@@ -3666,7 +3661,7 @@ private:
         const std::vector<std::uint64_t> words = formatWords(o);
         const kernel::IntValue iv{words.data(), t.width, sir::isFourState(t), sir::isSigned(t)};
         if (spec.conv == 't')
-            return kernel::formatTime(iv, d_.timePrecision, timeFormat_, spec.width);
+            return kernel::formatTime(iv, d_.timePrecision, timeFormat_, spec.width, spec.left);
         return kernel::formatInt(iv, spec);
     }
 

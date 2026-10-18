@@ -68,6 +68,14 @@ own. CONTRIBUTING.md says what goes in this file.
   the bit-vector functions, `$test$plusargs` and `$value$plusargs`
   (SYSTEM_TASKS.md).
 
+- The format flags `-` (the value at the left of its field, the written
+  width or the automatic one) and `0` (`%d` padded with 0 after the sign)
+  in `%d`, `%h`, `%o`, `%b`, `%c`, `%s` and `%t`, with one warning for each
+  format that uses them, as the standard does not define them; `+`, space,
+  `#` and a precision outside `%e`, `%f` and `%g` are reported as
+  unsupported (SYSTEM_TASKS.md 3.12). Before, `-` stopped the run with an
+  internal error (code 3), and `0` was read as part of the width.
+
 ### Changed
 
 - Run-time errors of the design end the run with exit code 2 and one line

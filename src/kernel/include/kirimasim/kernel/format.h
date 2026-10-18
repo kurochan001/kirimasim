@@ -25,15 +25,20 @@ struct IntValue {
     bool isSigned = false;
 };
 
-/// One format specifier: %<width><conv>, conv in lower case. width is -1
-/// when none is written (the automatic width, 3.3) and 0 for %0d and the
-/// like.
+/// One format specifier: %<flags><width><conv>, conv in lower case. width
+/// is -1 when none is written (the automatic width, 3.3) and 0 for %0d and
+/// the like.
 struct FormatSpec {
     char conv = 'd';
     int width = -1;
     /// %e, %f and %g: the whole specifier in the form of C's printf, with
     /// its flags, width and precision (3.6). Empty for the others.
     std::string cformat;
+    /// The flags of the other formats, which the standard does not define
+    /// (3.12): - puts the value at the left of its field, and 0 (a written
+    /// width that starts with 0) pads %d with 0.
+    bool left = false;
+    bool zero = false;
 };
 
 /// A piece of a parsed format: literal text, or a specifier that takes
@@ -66,14 +71,21 @@ struct TimeFormat {
     int minWidth = 20;
 };
 
+/// Formats a value of the string type with %s: its characters, in the
+/// written width if there is one (3.5, 3.12).
+std::string formatString(std::string_view text, const FormatSpec& spec);
+
 /// Formats a time given in ticks of the global precision `precision` with
-/// %t (3.7). `width` overrides the minimum width when it is not -1.
-std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width);
+/// %t (3.7). `width` overrides the minimum width when it is not -1; `left`
+/// is the - flag (3.12).
+std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width,
+                       bool left = false);
 
 /// Formats a real time given in ticks of the global precision with %t
 /// (3.7): rounded once to tf.decimals digits of tf.unit, half away from
 /// zero, on the shortest decimal text that reads back as the value (the
 /// rounding of real delays, SCHEDULER_SPEC.md 1).
-std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width);
+std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width,
+                           bool left = false);
 
 }  // namespace kirimasim::kernel

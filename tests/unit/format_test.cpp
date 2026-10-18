@@ -198,4 +198,95 @@ TEST(Format, Parse) {
     EXPECT_FALSE(parseFormat("100%", p, error));
 }
 
+TEST(Format, FlagsParse) {
+    // 3.12: - and a width that starts with 0 and is not 0; %0d is the width
+    // 0; the other flags and a precision are for the real formats only.
+    struct Case {
+        const char* format;
+        int width;
+        bool left;
+        bool zero;
+    };
+    const Case cases[] = {
+        {"%-d", -1, true, false},  {"%-5h", 5, true, false}, {"%05d", 5, false, true},
+        {"%005d", 5, false, true}, {"%-05d", 5, true, true}, {"%0d", 0, false, false},
+        {"%00d", 0, false, false}, {"%-0s", 0, true, false}, {"%010t", 10, false, true},
+    };
+    for (const Case& c : cases) {
+        std::vector<FormatPiece> p;
+        std::string error;
+        ASSERT_TRUE(parseFormat(c.format, p, error)) << c.format << ": " << error;
+        ASSERT_EQ(p.size(), 1U) << c.format;
+        EXPECT_EQ(p[0].spec.width, c.width) << c.format;
+        EXPECT_EQ(p[0].spec.left, c.left) << c.format;
+        EXPECT_EQ(p[0].spec.zero, c.zero) << c.format;
+    }
+    for (const char* bad : {"%+d", "% d", "%#h", "%+s", "%.3t", "%-.2b"}) {
+        std::vector<FormatPiece> p;
+        std::string error;
+        EXPECT_FALSE(parseFormat(bad, p, error)) << bad;
+    }
+    // The real formats keep their flags for C, and not as left or zero.
+    std::vector<FormatPiece> p;
+    std::string error;
+    ASSERT_TRUE(parseFormat("%-08.2f", p, error));
+    EXPECT_EQ(p[0].spec.cformat, "%-08.2f");
+    EXPECT_FALSE(p[0].spec.left);
+    EXPECT_FALSE(p[0].spec.zero);
+}
+
+TEST(Format, LeftFlag) {
+    // 3.12: the value in the smallest width at the left of its field, the
+    // written width or the automatic one.
+    const auto left = [](const IntValue& v, char conv, int width) {
+        FormatSpec s{conv, width};
+        s.left = true;
+        return formatInt(v, s);
+    };
+    const Num five(5, 32, true);
+    EXPECT_EQ(left(five.value, 'd', 4), "5   ");
+    EXPECT_EQ(left(five.value, 'd', -1), "5          ");  // 11, with room for the sign
+    EXPECT_EQ(left(five.value, 'h', -1), "5       ");
+    EXPECT_EQ(left(five.value, 'o', 3), "5  ");
+    EXPECT_EQ(left(Num(5, 4).value, 'b', -1), "101 ");
+    EXPECT_EQ(left(five.value, 'd', 0), "5");
+    EXPECT_EQ(left(five.value, 'd', 1), "5");
+    EXPECT_EQ(left(Num(static_cast<std::uint32_t>(-3), 32, true).value, 'd', 5), "-3   ");
+    EXPECT_EQ(left(Bits("xxxxxxxx").value, 'd', -1), "x  ");
+    EXPECT_EQ(left(Bits("0000x101").value, 'h', -1), "X ");
+    EXPECT_EQ(left(Num(65, 8).value, 'c', 3), "A  ");
+    EXPECT_EQ(left(Num(0x006869, 24).value, 's', -1), "hi ");
+    EXPECT_EQ(left(Num(0x6162, 16).value, 's', 5), "ab   ");
+    FormatSpec s{'s', 5};
+    s.left = true;
+    EXPECT_EQ(formatString("abc", s), "abc  ");
+    EXPECT_EQ(formatString("abc", FormatSpec{'s', 5}), "  abc");
+    EXPECT_EQ(formatString("abc", FormatSpec{'s', -1}), "abc");
+    const TimeFormat tf;
+    EXPECT_EQ(formatTime(Num(3, 64).value, -9, tf, -1, true), "3" + std::string(19, ' '));
+    EXPECT_EQ(formatTime(Num(3, 64).value, -9, tf, 4, true), "3   ");
+    EXPECT_EQ(formatTimeReal(3.0, -9, tf, 4, true), "3   ");
+}
+
+TEST(Format, ZeroFlag) {
+    // 3.12: %d pads with 0 after the sign, a lone x or z too; the other
+    // formats do not change, and - wins.
+    const auto zero = [](const IntValue& v, char conv, int width, bool left = false) {
+        FormatSpec s{conv, width};
+        s.zero = true;
+        s.left = left;
+        return formatInt(v, s);
+    };
+    EXPECT_EQ(zero(Num(5, 32, true).value, 'd', 5), "00005");
+    EXPECT_EQ(zero(Num(static_cast<std::uint32_t>(-3), 32, true).value, 'd', 5), "-0003");
+    EXPECT_EQ(zero(Bits("xxxxxxxx").value, 'd', 5), "0000x");
+    EXPECT_EQ(zero(Bits("zzzzzzzz").value, 'd', 5), "0000z");
+    EXPECT_EQ(zero(Bits("0000x101").value, 'd', 5), "0000X");
+    EXPECT_EQ(zero(Num(123456, 32).value, 'd', 3), "123456");
+    EXPECT_EQ(zero(Num(5, 32).value, 'h', 5), "00005");
+    EXPECT_EQ(zero(Num(65, 8).value, 'c', 3), "  A");
+    EXPECT_EQ(zero(Num(0x6162, 16).value, 's', 4), "  ab");
+    EXPECT_EQ(zero(Num(5, 32, true).value, 'd', 5, true), "5    ");
+}
+
 }  // namespace

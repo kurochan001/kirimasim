@@ -128,6 +128,7 @@ public:
     sir::Design takeDesign() { return std::move(design_); }
     const std::string& diagnostics() const { return diags_; }
     std::size_t numErrors() const { return numErrors_; }
+    std::size_t numWarnings() const { return numWarnings_; }
 
     // --- Used by the statement and expression lowering. ---
 
@@ -138,6 +139,9 @@ public:
     /// Reports an error in the design that slang does not find and throws
     /// Unsupported, which drops the procedure.
     [[noreturn]] void error(slang::SourceLocation sl, std::string_view what);
+    /// Reports a warning, once for each source position however many
+    /// instances lower it.
+    void warning(slang::SourceLocation sl, std::string_view what);
     /// $sscanf and $value$plusargs: system functions with output arguments
     /// (SIR_SPEC.md 8).
     Val lowerScanCall(const ast::CallExpression& call, sir::Type rt, slang::SourceLocation sl);
@@ -650,6 +654,8 @@ private:
     sir::Design design_;
     std::string diags_;
     std::size_t numErrors_ = 0;
+    std::size_t numWarnings_ = 0;
+    std::vector<slang::SourceLocation> warned_;
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<const ast::Symbol*, sir::SlotId> structSlots_;  ///< The first leaf's slot.
