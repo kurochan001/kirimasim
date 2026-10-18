@@ -216,6 +216,14 @@ void Scheduler::kill(ProcessId p) {
     counters_.increment(cFinished_);
 }
 
+void Scheduler::ended(ProcessId p) {
+    freeMonitor(p);
+    Process& proc = processes_[p];
+    if (!proc.done) counters_.increment(cFinished_);
+    proc.done = true;
+    ++proc.gen;
+}
+
 void Scheduler::start(ProcessId p) {
     // A start, or going on after a disable, is no flush point (15.4).
     begin();
@@ -524,17 +532,12 @@ void Scheduler::execute(const Event& e) {
                 flushReports(e.id);
             }
             counters_.increment(cWakeups_);
+            // proc may be stale after the call: the table may have grown.
             const auto st = static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
-            Process& after = processes_[e.id];  // the table may have grown
             switch (st) {
                 case Status::Waiting: break;
                 case Status::Done:
-                case Status::Killed:
-                    freeMonitor(e.id);
-                    if (!after.done) counters_.increment(cFinished_);
-                    after.done = true;
-                    ++after.gen;
-                    break;
+                case Status::Killed: ended(e.id); break;
                 case Status::Error:
                     if (error_.empty()) error_ = "a process failed";
                     requestEnd(EndReason::Internal, 1);

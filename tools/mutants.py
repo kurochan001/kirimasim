@@ -710,6 +710,9 @@ MUTANTS = [
      "const bool byValue = !inside && common.isString();"),
     ("kernel: a wait list keeps the items that waits left behind", "src/kernel/sim.cpp",
      "    if (list.size() >= limit) {", "    if (false) {"),
+    ("vm: static-init runs as no process of the kernel", "src/vm/vm.cpp",
+     "            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);\n"
+     "            running_ = &f;", "            running_ = &f;"),
 ]
 
 

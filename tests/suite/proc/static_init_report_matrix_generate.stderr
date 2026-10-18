@@ -1,0 +1,5 @@
+static_init_report_matrix_generate.sv:21: warning: unique case violation: no item matches [top.f_unique_none @ 0ns]
+static_init_report_matrix_generate.sv:25: warning: unique case violation: more than one item matches [top.f_unique_two @ 0ns]
+static_init_report_matrix_generate.sv:33: warning: priority case violation: no item matches [top.f_priority_none @ 0ns]
+static_init_report_matrix_generate.sv:37: warning: unique if violation: more than one condition is true [top.f_unique_if_two @ 0ns]
+static_init_report_matrix_generate.sv:41: warning: priority if violation: no condition is true [top.f_priority_if_none @ 0ns]

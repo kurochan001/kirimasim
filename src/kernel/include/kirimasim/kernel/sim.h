@@ -179,6 +179,11 @@ public:
     void kill(ProcessId p);
     /// Whether a process has finished or been killed.
     [[nodiscard]] bool finished(ProcessId p) const { return processes_[p].done; }
+    /// A process that its tier ran outside the scheduler, as static-init
+    /// before time 0 starts (SCHEDULER_SPEC.md 6.1), has run to its end: as
+    /// when a resumption returns Status::Done. What it put on its pending
+    /// queue is settled as for any process (15.3).
+    void ended(ProcessId p);
     /// The entries the wait lists hold, live ones and those that waits left
     /// when another of their items woke them: slot subscriptions, monitor
     /// references from slots and named events, and named-event waiters

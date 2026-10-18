@@ -594,20 +594,39 @@ public:
                 sched_.markHeld(s, d_.slots[s].kind != sir::SlotKind::Var, driven[s]);
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
+        // Each is a process of the kernel, with a pending queue whose
+        // reports are settled in the Observed region of time 0 (15.3). A
+        // run-time error of the design ends the run with the reason error,
+        // after which no other process runs but final does (16.2).
         std::uint64_t initSteps = 0;
+        // The processes of $strobe and $monitor first: an initializer's
+        // function may call them, and they wait on nothing until then.
+        overrides_.assign(d_.processes.size(), nullptr);
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
+            if (d_.processes[p].kind != sir::ProcessKind::Postponed) continue;
+            Frame& f = newFrame(p);
+            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+            overrides_[p] = &f;
+        }
+        for (std::uint32_t p = 0; p < d_.processes.size() && !sched_.ending(); ++p) {
             if (d_.processes[p].kind != sir::ProcessKind::StaticInit) continue;
             Frame& f = newFrame(p);
+            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+            running_ = &f;
             const kernel::Status st = runProcess(f, initSteps);
-            if (st == kernel::Status::Error) return {kernel::EndReason::Internal, sched_.error()};
+            running_ = nullptr;
+            if (st == kernel::Status::Error && sched_.reason() == kernel::EndReason::Internal)
+                return {kernel::EndReason::Internal, sched_.error()};
+            ended(f);
+            sched_.ended(f.kernelId);
         }
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
-        overrides_.assign(d_.processes.size(), nullptr);
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
             if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
             if (proc.kind == sir::ProcessKind::StaticInit) continue;   // already run
+            if (proc.kind == sir::ProcessKind::Postponed) continue;    // registered above
             Frame& f = newFrame(p);
             switch (proc.kind) {
                 case sir::ProcessKind::Initial:
@@ -639,11 +658,6 @@ public:
                     break;
                 case sir::ProcessKind::Override:
                     // Runs from override.start to override.stop.
-                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
-                    overrides_[p] = &f;
-                    break;
-                case sir::ProcessKind::Postponed:
-                    // Runs from strobe and monitor, in the Postponed region.
                     f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
                     overrides_[p] = &f;
                     break;

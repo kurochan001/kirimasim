@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A unique or priority violation in a function that the initializer of a
+  static variable calls is reported at time 0, like any other; kirimasim
+  crashed (#5).
 - A wait on several items, such as `@(posedge clk or negedge rst_n)`, no
   longer keeps the items that did not wake it: memory grew with every
   clock for as long as the other signal stayed still (#4).
