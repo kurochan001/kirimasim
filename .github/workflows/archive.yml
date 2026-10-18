@@ -20,13 +20,10 @@ concurrency:
 
 jobs:
   software-heritage:
-    # The self-hosted runner, as in ci.yml. The job runs no code of the
-    # repository; it only calls the Software Heritage API.
-    runs-on: [self-hosted, kirimasim-linux]
+    # The job runs no code of the repository; it only calls the Software
+    # Heritage API.
+    runs-on: ubuntu-24.04
     steps:
-      - name: Mask the runner's home directory
-        run: echo "::add-mask::$HOME"
-
       # A daily run whose commit the last saved snapshot already holds sends
       # nothing, so that unchanged days do not add requests.
       - name: Request a save

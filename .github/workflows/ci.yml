@@ -19,26 +19,23 @@ jobs:
       fail-fast: false
       matrix:
         preset: [dev, release]
-    # The jobs run on the project's self-hosted Linux (x86-64) runner, which
-    # carries the kirimasim-linux label. macOS results come from
-    # tools/local_ci.py run before pushing. A pull request from a fork would
-    # run its own code on that machine, so only pushes and pull requests from
-    # branches of this repository run here; the repository also requires
-    # approval before any workflow of an outside contributor runs.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, kirimasim-linux]
+    # GitHub's Linux (x86-64) runners. macOS results come from
+    # tools/local_ci.py run before pushing.
+    runs-on: ubuntu-24.04
     # The compiler is named here rather than taken from the runner's default
-    # c++, so that the build uses LLVM 22, the version lint uses, whatever the
-    # machine's default points to.
+    # c++, so that the build uses LLVM 22, the version lint uses and the
+    # development Mac has.
     env:
       CC: clang-22
       CXX: clang++-22
     steps:
-      # The runner's home directory stays out of the public logs.
-      - name: Mask the runner's home directory
-        run: echo "::add-mask::$HOME"
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install LLVM 22 (apt.llvm.org packages)
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
 
       - name: Show tool versions
         run: |
@@ -47,6 +44,8 @@ jobs:
           ninja --version
           python3 --version
 
+      # The keys name the runner image: a cache saved on another machine holds
+      # that machine's paths, which stop the configure step.
       - name: Cache FetchContent downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -55,7 +54,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-linux-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }}
@@ -71,13 +70,8 @@ jobs:
         run: python3 tools/check_release_flags.py
 
   lint:
-    # The same rule as build-test: never a fork's code on the self-hosted runner.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, kirimasim-linux]
+    runs-on: ubuntu-24.04
     steps:
-      - name: Mask the runner's home directory
-        run: echo "::add-mask::$HOME"
-
       # The full history is needed by the PR history checks below. The default
       # checkout of a pull_request event fetches only GitHub's test merge commit.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -85,10 +79,13 @@ jobs:
           fetch-depth: 0
 
       # LLVM 22, the same major version as the Homebrew LLVM used on the
-      # development Mac, is installed on the runner from apt.llvm.org. The job
-      # does not install it, because that would need sudo on the runner.
-      - name: Show LLVM 22
+      # development Mac, from apt.llvm.org.
+      - name: Install LLVM 22 (apt.llvm.org packages)
         run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+          sudo apt-get install -y clang-tidy-22 clang-format-22
           clang-22 --version
           clang-tidy-22 --version
           clang-format-22 --version
@@ -110,7 +107,7 @@ jobs:
             build/dev/_deps/*-subbuild
             build/dev/_deps/*-tmp
             build/dev/CMakeFiles/fc-stamp
-          key: fetchcontent-lint-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-lint-ubuntu-24.04-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configure for clang-tidy
         env:
