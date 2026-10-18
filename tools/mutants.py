@@ -572,6 +572,8 @@ MUTANTS = [
      "            return emit(Op::Add, rt, {v.op, constant(rt, 0).op}, sl);", "            return v;"),
     ("front: slang's constant of a unary plus is used", "src/front/lower_expr.cpp",
      "            if (u.op == ast::UnaryOperator::Plus && e.type->isFourState()) return true;\n", ""),
+    ("front: a % without a conversion is reported as not implemented", "src/front/lower_expr.cpp",
+     "                if (bad == \"%\")\n", "                if (bad == \"no\")\n"),
 ]
 
 

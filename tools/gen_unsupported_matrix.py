@@ -216,6 +216,10 @@ OTHERS = [
 ERRORS = [
     ("sscanf_fewer_targets", "  int a;\n", "void'(«»$sscanf(\"1 2\", \"%d %d\", a));",
      "$sscanf has fewer arguments than its format has conversions"),
+    # A % with no conversion after it (SYSTEM_TASKS.md 3.1).
+    ("format_percent_end", "", "$display(«»\"100%\");", "format has a % without a conversion"),
+    ("format_percent_width", "  logic [3:0] v = 4'h5;\n", "$display(«»\"%5\", v);",
+     "format has a % without a conversion"),
 ]
 
 

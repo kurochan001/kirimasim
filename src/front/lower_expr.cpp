@@ -279,7 +279,8 @@ std::optional<std::int64_t> positionOf(std::int64_t idx, const slang::ConstantRa
 }
 
 /// The specifiers of a $display format, in order, with %x as h. Returns
-/// false and the offending specifier for one that is not supported yet.
+/// false and the offending specifier for one that is not supported yet,
+/// or "%" for a % with no conversion after it.
 bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad) {
     for (std::size_t i = 0; i < f.size(); ++i) {
         if (f[i] != '%') continue;
@@ -2716,8 +2717,15 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             const std::string text(arg->as<ast::StringLiteral>().getValue());
             std::vector<char> convs;
             std::string bad;
-            if (!scanFormat(text, convs, bad))
-                unsupported(arg->sourceRange.start(), "format specifier " + bad);
+            if (!scanFormat(text, convs, bad)) {
+                // A % with no conversion is an error of the input; any
+                // other specifier left is one not implemented yet
+                // (SYSTEM_TASKS.md 3.1).
+                if (bad == "%")
+                    error(arg->sourceRange.start(), "format has a % without a conversion");
+                else
+                    unsupported(arg->sourceRange.start(), "format specifier " + bad);
+            }
             pending.assign(convs.begin(), convs.end());
             ops.push_back(Operand::str(withScope(text, b_.scope)));
             continue;
