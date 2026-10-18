@@ -1,0 +1,54 @@
+; sir format 0
+precision 1ns
+source 0 "event_controls.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.clk" : i4<1> var inst=0
+slot %s1 "top.en" : i4<1> var inst=0
+slot %s2 "top.a" : i4<1> var inst=0
+slot %s3 "top.b" : i4<1> var inst=0
+slot %s4 "top.q" : i4<1> var inst=0
+slot %s5 "top.m" : i4<4> [0:3] var inst=0
+
+subroutine @0 "top.always_ff0.iff0" guard static inst=0 ret=i4<1> frame-of=process @0 {  ; 0:7:31
+bb0:
+  %t0 = load i4<1> %s1  ; 0:7:31
+  ret %t0  ; 0:7:31
+}
+
+subroutine @1 "top.initial0.iff0" guard static inst=0 ret=i4<1> frame-of=process @1 {  ; 0:9:23
+bb0:
+  %t0 = load i4<1> %s1  ; 0:9:23
+  ret %t0  ; 0:9:23
+}
+
+subroutine @2 "top.initial0.event1" watch static inst=0 ret=i4<1> frame-of=process @1 {  ; 0:11:16
+bb0:
+  %t0 = load i4<1> %s2  ; 0:11:16
+  %t1 = load i4<1> %s3  ; 0:11:20
+  %t2 = and i4<1> %t0, %t1  ; 0:11:16
+  ret %t2  ; 0:11:16
+}
+
+subroutine @3 "top.initial0.iff2" guard static inst=0 ret=i4<1> frame-of=process @1 {  ; 0:11:27
+bb0:
+  %t0 = load i4<1> %s1  ; 0:11:27
+  ret %t0  ; 0:11:27
+}
+
+process @0 "top.always_ff0" kind=ff inst=0 trigger=posedge(%s0) iff @0 writes=%s4 {  ; 0:7:3
+bb0:
+  %t0 = load i4<1> %s2  ; 0:7:40
+  nba %s4, %t0  ; 0:7:35
+  ret  ; 0:7:3
+}
+
+process @1 "top.initial0" kind=initial inst=0 {  ; 0:8:3
+bb0:
+  wait.event posedge %s0 iff @1, bb1  ; 0:9:7
+bb1:
+  wait.event negedge %s5{2}[1:1], bb2  ; 0:10:7
+bb2:
+  wait.event posedge @2 iff @3, %s0, bb3  ; 0:11:6
+bb3:
+  ret  ; 0:8:3
+}

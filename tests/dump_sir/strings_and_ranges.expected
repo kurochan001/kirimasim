@@ -1,0 +1,21 @@
+; sir format 0
+precision 1ns
+source 0 "strings_and_ranges.sv"
+instance 0 "top" def="top" parent=-
+slot %s0 "top.mm" : i4<4> [0:1] [0:2] var inst=0
+
+subroutine @0 "top.t" task automatic inst=0 ret=void {  ; 0:6:18
+  param input "row" : i4<4> -> %f0
+  frame %f0 "row" : i4<4> [0:2]
+bb0:
+  %t0 = load.elem i4<4> %f0, const s2<32> 32'h00000000  ; 0:7:20
+  syscall "$display", "%h", %t0  ; 0:7:5
+  ret  ; 0:6:18
+}
+
+process @0 "top.initial0" kind=initial inst=0 {  ; 0:9:3
+bb0:
+  syscall "$display", "a\tb\\c\n"  ; 0:10:5
+  call @0, %s0{3..5}  ; 0:11:5
+  ret  ; 0:9:3
+}

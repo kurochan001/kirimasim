@@ -660,6 +660,35 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
     EXPECT_TRUE(mentions(verify(d), "reads another frame"));
 }
 
+TEST(Sir, StructureRowsOfTheTypeTable) {
+    // The text of a packed structure (fields with their bits), an unpacked
+    // one (members, a member's own row) and an array of it (SIR_SPEC.md
+    // 4.3, 9).
+    Design d = counter();
+    TypeEntry p;
+    p.kind = TypeEntryKind::PackedStruct;
+    p.name = "p_t";
+    p.value = u4(8);
+    p.fields = {{"a", 4, 4, kNone}, {"b", 0, 4, kNone}};
+    TypeEntry u;
+    u.kind = TypeEntryKind::UnpackedStruct;
+    u.name = "u_t";
+    u.fields = {{"x", 0, 0, kNone}, {"y", 0, 0, 0}};
+    TypeEntry a;
+    a.kind = TypeEntryKind::Array;
+    a.name = "u_t$[0:1]";
+    a.element = 1;
+    a.dims = {{0, 1}};
+    d.types = {p, u, a};
+    expectClean(d);
+    const std::string text = toText(d);
+    EXPECT_NE(text.find("type !0 struct.packed \"p_t\" : i4<8> { \"a\" [7:4], \"b\" [3:0] }"),
+              std::string::npos)
+        << text;
+    EXPECT_NE(text.find("type !1 struct \"u_t\" { \"x\", \"y\" !0 }"), std::string::npos) << text;
+    EXPECT_NE(text.find("type !2 array \"u_t$[0:1]\" elem=!1 [0:1]"), std::string::npos) << text;
+}
+
 TEST(Sir, WatchItemBelongsToTheWaiter) {
     // @(posedge (clk & rst_n) iff rst_n): a watch, the item on the
     // expression, and its guard read the waiting process's frame
