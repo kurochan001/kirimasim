@@ -1,6 +1,8 @@
 
 # Contributor Covenant Code of Conduct
 
+[日本語](CODE_OF_CONDUCT.ja.md) · This English text is the main version; the Japanese version is the Contributor Covenant's official translation, and where they differ, this text holds.
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
