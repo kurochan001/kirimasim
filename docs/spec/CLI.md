@@ -2,7 +2,7 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
 
@@ -106,13 +106,14 @@ The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go int
 | --- | --- | --- |
 | 0 | finish, quiescent, stop | `$finish`, no events left, `$stop`. time_limit with `--max-time-ok` is also 0 |
 | 1 | fatal | `$fatal`. With the option that counts `$error`, one or more `$error` |
-| 2 | error | An error in the command line or the input (syntax errors and unsupported constructs included) |
-| 3 | internal | An internal error of kirimasim (a failure of the SIR verifier and the like) |
+| 2 | error | An error in the command line or the input (syntax errors and unsupported constructs included), or a run-time error of the design (SCHEDULER_SPEC.md 16.2) |
+| 3 | internal | An internal error of kirimasim (a failure of the SIR verifier and the like); never an error of the design |
 | 4 | time_limit | `--max-time` reached |
 | 5 | zero_time_limit | A limit reached without time advancing |
 | 130 | interrupted | SIGINT |
 
 - **Unsupported constructs:** during P1 many constructs are not implemented yet. When making SIR meets one, kirimasim gives a diagnostic at its position and ends with code 2 (as row 2 of the design specification's table of exit codes says). It is never ignored silently.
+- **Run-time errors of the design (added 2026-10-18, approved):** an error the design makes while it runs ends the run with code 2, with one line on standard error at the statement's position (SCHEDULER_SPEC.md 16.2). Code 3 is only for faults of kirimasim itself.
 
 ## 6. Not confirmed, to be written later
 
