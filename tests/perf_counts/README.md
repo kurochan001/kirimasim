@@ -1,5 +1,7 @@
 # PerfCount: event-count regression tests
 
+[日本語](README.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
+
 `expected.json` records, for each listed test file, the counters that
 kirimasim reports with `--stats=json`: a test whose `:type:` includes
 `simulation` is run to its end (`kirimasim --stats=json <file>`), any other
