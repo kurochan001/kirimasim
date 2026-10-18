@@ -1,6 +1,7 @@
 #!/bin/sh
 # Builds the Icarus Verilog development version that the P1 gate compares
-# against (TEST_SUITE.md, "比べる相手" and "P1 の合格条件の測り方").
+# against (TEST_SUITE.md, "Simulators compared against" and "How the P1
+# passing conditions are measured").
 #
 #   tools/build_icarus.sh [<install dir>]
 #

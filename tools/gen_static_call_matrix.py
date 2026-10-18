@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix test of static subroutines called from several
-processes of TEST_SUITE.md ("機構の行列") in tests/suite/proc/.
+processes of TEST_SUITE.md ("Mechanism matrix") in tests/suite/proc/.
 
   tools/gen_static_call_matrix.py           # writes the files
   tools/gen_static_call_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -23,7 +23,7 @@ input, makes a clock edge, and prints every output.
 
 The expected outputs follow from the rules above, computed below. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the $strobe and $monitor matrix test of TEST_SUITE.md ("機構の行列")
-in tests/suite/proc/.
+"""Generates the $strobe and $monitor matrix test of TEST_SUITE.md
+("Mechanism matrix") in tests/suite/proc/.
 
   tools/gen_postponed_matrix.py           # writes the files
   tools/gen_postponed_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -27,7 +27,7 @@ monitoring is off, two changes in one slot, none, and none with
 $monitoroff and $monitoron).
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

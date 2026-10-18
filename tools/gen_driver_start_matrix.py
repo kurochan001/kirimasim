@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the driver start matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the driver start matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/nets/.
 
   tools/gen_driver_start_matrix.py           # writes the files
@@ -18,7 +18,7 @@ and the lines are read half a step apart from time 0.
 The expected outputs follow from the rule above and the resolution of
 VALUE_SEMANTICS.md 5.4 (the rule of gen_resolution_matrix.py), written
 without reading kirimasim's code. A person checks them once for all the
-tests made from them (TEST_SUITE.md, "人の抜き取り").
+tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

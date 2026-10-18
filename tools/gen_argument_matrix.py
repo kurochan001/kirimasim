@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the argument matrix tests of TEST_SUITE.md ("機構の行列") in
+"""Generates the argument matrix tests of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/proc/: ref arguments, fixed-size unpacked array arguments and
 automatic arrays.
 
@@ -30,7 +30,7 @@ Each runs in several containers (an initial procedure, a static task, an
 always procedure and a branch of a fork). The expected outputs follow
 from the rules above, worked out below without reading kirimasim's code.
 A person checks them once for all the tests made from them
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

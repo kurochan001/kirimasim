@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the process lifetime matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the process lifetime matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/sched/.
 
   tools/gen_process_lifetime_matrix.py           # writes the files
@@ -44,7 +44,7 @@ tests/cli/run_cli_tests.py also runs the design with two counts and checks
 that proc.kept_peak (PERFORMANCE.md 3.2) does not grow with the count.
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 from __future__ import annotations

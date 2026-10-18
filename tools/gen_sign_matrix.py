@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the sign propagation matrix tests of TEST_SUITE.md ("4 値の行列")
+"""Generates the sign propagation matrix tests of TEST_SUITE.md ("4-state matrix")
 in tests/suite/values/.
 
   tools/gen_sign_matrix.py           # writes the files
@@ -18,7 +18,7 @@ static task and of an automatic function).
 
 The expected outputs follow from the model below. A person checks the
 model against the standard once for all the tests made from it
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

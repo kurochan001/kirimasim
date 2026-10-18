@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the program matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the program matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/cli/.
 
   tools/gen_program_matrix.py           # writes the files

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""Generates the wait (expression) matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the wait (expression) matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/sched/.
 
   tools/gen_wait_matrix.py           # writes the files
   tools/gen_wait_matrix.py --check   # exit 1 if a file differs from what it would write
 
-wait (expr) goes on at once when expr is true (12.4: 1, not 0, x or z),
-and else waits until a change of what expr reads makes it true (9.4.3,
+wait (expr) goes on at once when expr is true (12.4: 1, not 0, x or z), and
+else waits until a change of what expr reads makes it true (9.4.3,
 SCHEDULER_SPEC.md 9.3, 9.5). The same waits run in every container
-(CLAUDE.md, "器で意味を変えない"): an initial procedure, an always
-procedure, a branch of a fork, a static task, an automatic task, and a
-task called from a branch of a fork. What the conditions read: a
-variable, a bit and a part of a vector, an array element at a constant
-index and at a variable index (the index changing), a net of a
-continuous assignment, a variable of the container (static or
-automatic), what an automatic and a static function read, a value that
-is x, then z, then 1, ev.triggered, a variable of a child instance by its
-hierarchical name, and a package variable.
+(CLAUDE.md, "The container does not change meaning"): an initial procedure,
+an always procedure, a branch of a fork, a static task, an automatic task,
+and a task called from a branch of a fork. What the conditions read: a
+variable, a bit and a part of a vector, an array element at a constant index
+and at a variable index (the index changing), a net of a continuous
+assignment, a variable of the container (static or automatic), what an
+automatic and a static function read, a value that is x, then z, then 1,
+ev.triggered, a variable of a child instance by its hierarchical name, and a
+package variable.
 
 Step i of a container starts waiting 2(i - 1) steps after the container
 starts; a driver then changes what it reads 2i - 1 steps after the start,
@@ -25,7 +25,7 @@ true at once. Each container gets its own window, and everything is set
 back before it.
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

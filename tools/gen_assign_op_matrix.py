@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the assignment operator matrix tests of TEST_SUITE.md ("4 値の
-行列", "機構の行列") in tests/suite/values/.
+"""Generates the assignment operator matrix tests of TEST_SUITE.md
+("4-state matrix", "Mechanism matrix") in tests/suite/values/.
 
   tools/gen_assign_op_matrix.py           # writes the files
   tools/gen_assign_op_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -22,7 +22,7 @@ target once too (VALUE_SEMANTICS.md 3.12).
 
 The expected outputs follow from the model below (11.4.1 to 11.4.3,
 11.4.8, 11.4.10, 11.8). A person checks the model against the standard
-once for all the tests made from it (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from it (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

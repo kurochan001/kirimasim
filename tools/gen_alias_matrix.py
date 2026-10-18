@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the net alias matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the net alias matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/nets/.
 
   tools/gen_alias_matrix.py           # writes the files
@@ -16,8 +16,8 @@ others.
 
 The expected outputs follow from the rule above and the resolution of
 VALUE_SEMANTICS.md 5.4 (the rule of gen_resolution_matrix.py). A person
-checks them once for all the tests made from them (TEST_SUITE.md, "人の抜
-き取り").
+checks them once for all the tests made from them (TEST_SUITE.md, "Sampling
+by people").
 """
 
 import argparse

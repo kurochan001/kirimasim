@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Generates the tests of illegal designs of TEST_SUITE.md ("失敗を期待する
-テスト") in tests/suite/illegal/.
+"""Generates the tests of illegal designs of TEST_SUITE.md ("Tests expected
+to fail") in tests/suite/illegal/.
 
   tools/gen_illegal_matrix.py           # writes the files
   tools/gen_illegal_matrix.py --check   # exit 1 if a file differs from what it would write
 
 For each feature kirimasim runs, at least one form that the standard makes
-illegal (TEST_SUITE.md, P1 のあいだに足すもの 4): `kirimasim parse` must
-exit with code 2 and report the error at the position of the illegal
-construct. kirimasim leaves these checks to slang and never relaxes them
-(CLAUDE.md, 違法な入力は既定で拒否する); the expected text is slang's.
-One file per form, so that one error cannot hide another. The clause
-numbers were checked against the standard; each description says why the
-form is illegal, in our own words.
+illegal (TEST_SUITE.md, "What is added during P1", item 4): `kirimasim
+parse` must exit with code 2 and report the error at the position of the
+illegal construct. kirimasim leaves these checks to slang and never relaxes
+them (CLAUDE.md, "Reject illegal input by default"); the expected text is
+slang's. One file per form, so that one error cannot hide another. The
+clause numbers were checked against the standard; each description says why
+the form is illegal, in our own words.
 """
 
 import argparse

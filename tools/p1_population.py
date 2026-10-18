@@ -7,7 +7,7 @@
 select prints the population: the simulation tests of the test-suite
 repository that use no P3 feature. A test is out when its source, without
 comments and string literals, contains one of the words of TEST_SUITE.md
-("自前のテストの 90%"). The first line records the repository commit.
+("90% of our own tests"). The first line records the repository commit.
 
 run runs every test of the frozen list (tests/gates/p1_population.txt) with
 tools/run_suite_test.py and reports the pass rate. A test skipped as

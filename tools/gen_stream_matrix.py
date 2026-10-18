@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix test of streaming unpacked aggregates of
-TEST_SUITE.md ("機構の行列") in tests/suite/values/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_stream_matrix.py           # writes the files
   tools/gen_stream_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -24,7 +24,7 @@ of a task for the shapes an automatic variable may have).
 
 The expected outputs follow from the rules above, computed below. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

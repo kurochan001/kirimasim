@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix test of waits through ref arguments of
-TEST_SUITE.md ("機構の行列") in tests/suite/sched/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/sched/.
 
   tools/gen_ref_wait_matrix.py           # writes the files
   tools/gen_ref_wait_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -22,7 +22,7 @@ what waiter k's ref refers to; each waiter prints the time it goes on.
 
 The expected outputs follow from the rules above, computed below. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

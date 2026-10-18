@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the slot range matrix tests of TEST_SUITE.md ("機構の行列") in
+"""Generates the slot range matrix tests of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/values/.
 
   tools/gen_range_matrix.py           # writes the files
@@ -14,7 +14,7 @@ depends on the order of processes in a time step). Each line shows the
 value after both writes, which is the second write's.
 
 The expected outputs follow from the order of the writes. A person checks
-them once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+them once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

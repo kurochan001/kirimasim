@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the %s matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the %s matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/values/.
 
   tools/gen_string_format_matrix.py           # writes the files
@@ -14,7 +14,7 @@ the specifier (%s, %0s, %12s), the width of the value (one and two
 words), and the task ($display, and $sformatf into a string).
 
 A person checks the expected output once for all the tests made from it
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

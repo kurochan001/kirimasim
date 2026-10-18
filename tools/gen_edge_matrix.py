@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the edge matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the edge matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/sched/.
 
   tools/gen_edge_matrix.py           # writes the files
@@ -33,7 +33,7 @@ no line depends on the order of processes in a time step.
 
 The expected outputs follow from the rules above, computed below. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

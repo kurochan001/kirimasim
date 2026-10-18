@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the real number matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the real number matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/values/.
 
   tools/gen_real_matrix.py           # writes the files
@@ -23,7 +23,7 @@ The expected outputs are computed with Python's math, which gives the C
 results. A math result is printed only with as many digits as stay the
 same when the result moves by a few units in the last place, so that
 another platform's library gives the same text. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

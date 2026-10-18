@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix test of unsupported constructs of TEST_SUITE.md
-("機構の行列") in tests/cli/unsupported_matrix/.
+("Mechanism matrix") in tests/cli/unsupported_matrix/.
 
   tools/gen_unsupported_matrix.py           # writes the files
   tools/gen_unsupported_matrix.py --check   # exit 1 if a file differs from what it would write

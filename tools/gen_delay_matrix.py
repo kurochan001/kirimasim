@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the continuous assignment and gate delay matrix test of
-TEST_SUITE.md ("機構の行列") in tests/suite/cont/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/cont/.
 
   tools/gen_delay_matrix.py           # writes the files
   tools/gen_delay_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -25,7 +25,7 @@ fall, to z turn-off, to x the least; for a vector, fall from a value
 that is not 0 to 0, turn-off to all z, else rise. Until its first update,
 a driver drives x (VALUE_SEMANTICS.md 5.3), so a net reads x until then. A
 person checks the model once for all the tests made from it (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 import argparse

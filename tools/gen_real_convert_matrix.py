@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the real to integer conversion matrix test of TEST_SUITE.md
-("機構の行列") in tests/suite/values/.
+("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_real_convert_matrix.py           # writes the files
   tools/gen_real_convert_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -18,8 +18,8 @@ initializer of a declaration); and the container (module variables and
 automatic variables of a function).
 
 The expected outputs are computed with Python's exact integers. A person
-checks them once for all the tests made from them (TEST_SUITE.md, "人の抜
-き取り").
+checks them once for all the tests made from them (TEST_SUITE.md, "Sampling
+by people").
 """
 
 import argparse

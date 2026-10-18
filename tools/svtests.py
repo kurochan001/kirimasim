@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Runs the sv-tests simulation tests with kirimasim, Icarus and Verilator and compares.
 
-This is the first P1 gate of TEST_SUITE.md ("sv-tests で Icarus 以上"):
+This is the first P1 gate of TEST_SUITE.md ("As many as Icarus or more on
+sv-tests"):
 
 * The population is the hand-written tests under tests/ of the pinned
   sv-tests commit whose :type: includes "simulation". Generated tests are

@@ -108,9 +108,9 @@ jobs:
       - run: cmake --build --preset dev
       - run: ctest --preset dev --output-on-failure
 
-  # The P1 gates of TEST_SUITE.md ("P1 の合格条件の測り方"). The tables go to
-  # the job summary. Gates that are not met yet do not fail the job; the
-  # decision is made at the end of P1 (M8).
+  # The P1 gates of TEST_SUITE.md ("How the P1 passing conditions are
+  # measured"). The tables go to the job summary. Gates that are not met yet
+  # do not fail the job; the decision is made at the end of P1 (M8).
   p1-gates:
     runs-on: ubuntu-24.04
     steps:

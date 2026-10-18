@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the procedural continuous assignment matrix test of
-TEST_SUITE.md ("機構の行列") in tests/suite/proc/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/proc/.
 
   tools/gen_override_matrix.py           # writes the files
   tools/gen_override_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -26,7 +26,7 @@ value at once; a released variable that a continuous assignment drives,
 or that an assign still holds, takes that value when it is evaluated
 again in the Active region; any other released variable keeps its value
 until the next write. A person checks the model once for all the tests
-made from it (TEST_SUITE.md, "人の抜き取り").
+made from it (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

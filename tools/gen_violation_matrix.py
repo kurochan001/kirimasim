@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the violation report matrix tests of TEST_SUITE.md ("機構の
-行列") in tests/suite/values/.
+"""Generates the violation report matrix tests of TEST_SUITE.md
+("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_violation_matrix.py           # writes the files
   tools/gen_violation_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -16,7 +16,7 @@ numbers, whatever order they ran in.
 
 The expected reports follow from the rules below. A person checks them
 against the standard and the spec once for all the tests made from them
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

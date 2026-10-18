@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the net resolution matrix tests of TEST_SUITE.md ("ネットの行列",
-"4 値の行列") in tests/suite/nets/.
+"""Generates the net resolution matrix tests of TEST_SUITE.md ("Net matrix",
+"4-state matrix") in tests/suite/nets/.
 
   tools/gen_resolution_matrix.py           # writes the files
   tools/gen_resolution_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -20,7 +20,7 @@ of the kind of table 23-1 (SIR_SPEC.md 3.5).
 The expected outputs follow from the rule of VALUE_SEMANTICS.md 5.4,
 written again below without reading kirimasim's code. A person checks
 the rule against the standard once for all the tests made from it
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

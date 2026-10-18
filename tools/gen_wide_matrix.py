@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix test of integral values wider than 64 bits of
-TEST_SUITE.md ("機構の行列") in tests/suite/values/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_wide_matrix.py           # writes the files
   tools/gen_wide_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -28,7 +28,7 @@ position.
 The expected outputs follow from VALUE_SEMANTICS.md (2, 3, 7.4) and the %h and
 %d rules of SYSTEM_TASKS.md 3.2, computed below by a four-state model. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

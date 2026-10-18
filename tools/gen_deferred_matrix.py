@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the deferred assertion matrix test of TEST_SUITE.md ("機構の行列")
-in tests/suite/proc/.
+"""Generates the deferred assertion matrix test of TEST_SUITE.md ("Mechanism
+matrix") in tests/suite/proc/.
 
   tools/gen_deferred_matrix.py           # writes the files
   tools/gen_deferred_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -24,7 +24,7 @@ resume after the Observed region caused by an Observed action), and
 the $error of an action left out. Each case has its own time window.
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the structure argument and aggregate return matrix test of
-TEST_SUITE.md ("機構の行列") in tests/suite/proc/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/proc/.
 
   tools/gen_aggregate_call_matrix.py           # writes the files
   tools/gen_aggregate_call_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -18,7 +18,7 @@ initializer, compared, a member read, passed on, a function name assigned
 in place of return, recursion, a dropped value).
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

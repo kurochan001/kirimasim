@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the user-defined primitive matrix tests of TEST_SUITE.md
-("機構の行列", "4 値の行列") in tests/suite/nets/.
+("Mechanism matrix", "4-state matrix") in tests/suite/nets/.
 
   tools/gen_udp_matrix.py           # writes the files
   tools/gen_udp_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -19,7 +19,7 @@ which order they are seen, so it allows both (VALUE_SEMANTICS.md 5.9).
 The expected outputs follow from the rules of VALUE_SEMANTICS.md 5.9,
 written again below without reading kirimasim's code. A person checks
 the rules against chapter 29 once for all the tests made from them
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

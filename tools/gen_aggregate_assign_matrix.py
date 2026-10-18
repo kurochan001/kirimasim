@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the aggregate assignment matrix test of TEST_SUITE.md ("機構の
-行列") in tests/suite/values/.
+"""Generates the aggregate assignment matrix test of TEST_SUITE.md
+("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_aggregate_assign_matrix.py           # writes the files
   tools/gen_aggregate_assign_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -20,7 +20,7 @@ and each line shows the target after the assignment.
 
 The expected outputs follow from the old values by the rule above. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 import argparse

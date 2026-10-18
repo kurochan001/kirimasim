@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix tests of the first call of a static function of
-TEST_SUITE.md ("機構の行列") in tests/suite/proc/.
+TEST_SUITE.md ("Mechanism matrix") in tests/suite/proc/.
 
   tools/gen_first_call_matrix.py           # writes the files
   tools/gen_first_call_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -24,7 +24,7 @@ the design held before.
 
 The expected outputs follow from the rules above, computed below. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

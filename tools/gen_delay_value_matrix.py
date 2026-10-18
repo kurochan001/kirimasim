@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the delay value matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the delay value matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/sched/.
 
   tools/gen_delay_value_matrix.py           # writes the files
@@ -21,7 +21,7 @@ child module, so that the design's precision is 100ps). Negative delays
 must not come before the end.
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

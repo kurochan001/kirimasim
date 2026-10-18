@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the default initial value matrix test of TEST_SUITE.md ("機構の
-行列") in tests/suite/values/.
+"""Generates the default initial value matrix test of TEST_SUITE.md
+("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_default_init_matrix.py           # writes the files
   tools/gen_default_init_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -16,7 +16,7 @@ entered twice by a loop, and a branch of a fork. The second entry must
 not see the value written by the first.
 
 The expected outputs follow from table 6-7. A person checks them once for
-all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

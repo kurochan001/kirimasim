@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the $typename matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the $typename matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/values/.
 
   tools/gen_typename_matrix.py           # writes the files
@@ -20,7 +20,7 @@ where the type is declared (the module, a package, a named block, the
 compilation unit).
 
 The expected strings follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

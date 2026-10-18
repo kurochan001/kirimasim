@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generates the matrix test of comparing unpacked arrays and structures
-of TEST_SUITE.md ("機構の行列") in tests/suite/values/.
+of TEST_SUITE.md ("Mechanism matrix") in tests/suite/values/.
 
   tools/gen_aggregate_compare_matrix.py           # writes the files
   tools/gen_aggregate_compare_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -19,7 +19,7 @@ same x on both sides); the four operators.
 
 The expected outputs follow from the rules above, computed below. A
 person checks them once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 from __future__ import annotations

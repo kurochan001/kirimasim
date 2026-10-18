@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the $rtoi matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the $rtoi matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/values/.
 
   tools/gen_rtoi_matrix.py           # writes the files
@@ -14,7 +14,7 @@ a constant expression); the container (module variables and automatic
 variables of a function).
 
 A person checks the expected output once for all the tests made from it
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

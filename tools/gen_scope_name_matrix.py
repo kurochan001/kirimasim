@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the scope name matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the scope name matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/proc/.
 
   tools/gen_scope_name_matrix.py           # writes the files
@@ -16,7 +16,7 @@ assignment ($sformatf), and a statement run there ($sformat). Every name is kept
 process, so that no line depends on the order of processes.
 
 The expected outputs follow from the rule above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

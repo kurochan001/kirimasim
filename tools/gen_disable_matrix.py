@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the disable matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the disable matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/sched/.
 
   tools/gen_disable_matrix.py           # writes the files
@@ -23,7 +23,7 @@ ended from a task it called, two calls at once, a task ending itself,
 and a recursive task whose block ends at its deepest call.
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

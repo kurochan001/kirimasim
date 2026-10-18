@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Generates the fork container matrix test of TEST_SUITE.md ("機構の行列")
+"""Generates the fork container matrix test of TEST_SUITE.md ("Mechanism matrix")
 in tests/suite/sched/.
 
   tools/gen_fork_matrix.py           # writes the files
   tools/gen_fork_matrix.py --check   # exit 1 if a file differs from what it would write
 
-A fork statement does the same in every container (CLAUDE.md, "器で意味を
-変えない"; SIR_SPEC.md 7.5): its children start when the parent waits or
-ends, join waits for all of them, join_any for one, join_none for none,
-and wait fork for every child still running (9.3.1, 9.3.2, 9.6.1). The
-containers: an initial procedure, an always procedure, a branch of
-another fork, a static task, an automatic task, and a task called from a
-branch of a fork; a function starts a join_none fork whose children run
-after it returns (13.4.4).
+A fork statement does the same in every container (CLAUDE.md, "The
+container does not change meaning"; SIR_SPEC.md 7.5): its children start
+when the parent waits or ends, join waits for all of them, join_any for
+one, join_none for none, and wait fork for every child still running
+(9.3.1, 9.3.2, 9.6.1). The containers: an initial procedure, an always
+procedure, a branch of another fork, a static task, an automatic task,
+and a task called from a branch of a fork; a function starts a join_none
+fork whose children run after it returns (13.4.4).
 
 The expected outputs follow from the rules above. A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

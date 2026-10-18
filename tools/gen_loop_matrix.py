@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""Generates the loop control matrix test of TEST_SUITE.md ("機構の行列") in
+"""Generates the loop control matrix test of TEST_SUITE.md ("Mechanism matrix") in
 tests/suite/proc/.
 
   tools/gen_loop_matrix.py           # writes the files
   tools/gen_loop_matrix.py --check   # exit 1 if a file differs from what it would write
 
-continue goes to the next iteration (the step of a for, the condition of
-a while or do-while, the next element of a foreach), break leaves the
-innermost loop, and return leaves the subroutine (12.8). The same
-statements do the same in every container (CLAUDE.md, 器で意味を変えない).
-The axes: the loop (for, while, do-while, repeat, forever, foreach); where
-the statement is (directly in the body, in a named block in the body, or
-in a named block that is the target of a disable, which a task, a
-function and a fork branch keep as a scope that the statement leaves,
-SIR_SPEC.md 7.2); the container (an initial procedure, an automatic task,
-a function, a fork branch); and how the loop ends (break, or return from
-the task or the function).
+continue goes to the next iteration (the step of a for, the condition of a
+while or do-while, the next element of a foreach), break leaves the
+innermost loop, and return leaves the subroutine (12.8). The same statements
+do the same in every container (CLAUDE.md, "The container does not change
+meaning"). The axes: the loop (for, while, do-while, repeat, forever,
+foreach); where the statement is (directly in the body, in a named block in
+the body, or in a named block that is the target of a disable, which a task,
+a function and a fork branch keep as a scope that the statement leaves,
+SIR_SPEC.md 7.2); the container (an initial procedure, an automatic task, a
+function, a fork branch); and how the loop ends (break, or return from the
+task or the function).
 
 Each case runs five iterations, i = 0 to 4, adding (i + 1) * 10 to a sum:
 it continues at i = 1 and leaves at i = 3, so the sum is 10 + 30 = 40.
 A person checks the expected output once for all the tests made from it
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

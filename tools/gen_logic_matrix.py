@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the four-state matrix test of TEST_SUITE.md ("4 値の行列") for
+"""Generates the four-state matrix test of TEST_SUITE.md ("4-state matrix") for
 values of 64 bits or fewer in tests/suite/values/.
 
   tools/gen_logic_matrix.py           # writes the files
@@ -22,7 +22,7 @@ event control.
 
 The expected outputs come from the four-state model below (the one of
 gen_wide_matrix.py, with the rules this test adds). A person checks them
-once for all the tests made from them (TEST_SUITE.md, "人の抜き取り").
+once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
 """
 
 from __future__ import annotations

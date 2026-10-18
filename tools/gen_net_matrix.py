@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the net matrix tests of TEST_SUITE.md ("ネットの行列") in
+"""Generates the net matrix tests of TEST_SUITE.md ("Net matrix") in
 tests/suite/nets/.
 
   tools/gen_net_matrix.py           # writes the files
@@ -15,7 +15,7 @@ their own pull or supply are in tools/gen_resolution_matrix.py
 
 The expected outputs follow from the rule tables below. A person checks the
 tables against the standard once for all the tests made from them
-(TEST_SUITE.md, "人の抜き取り").
+(TEST_SUITE.md, "Sampling by people").
 """
 
 import argparse

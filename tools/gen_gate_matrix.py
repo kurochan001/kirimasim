@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generates the built-in gate matrix tests of TEST_SUITE.md ("機構の行列",
-"4 値の行列") in tests/suite/nets/.
+"""Generates the built-in gate matrix tests of TEST_SUITE.md ("Mechanism matrix",
+"4-state matrix") in tests/suite/nets/.
 
   tools/gen_gate_matrix.py           # writes the files
   tools/gen_gate_matrix.py --check   # exit 1 if a file differs from what it would write
@@ -21,7 +21,7 @@ The expected outputs follow from the rules of VALUE_SEMANTICS.md 5.8 and
 5.4, written again below without reading kirimasim's code (the resolution
 rule is the one of gen_resolution_matrix.py). A person checks the rules
 against the standard once for all the tests made from them (TEST_SUITE.md,
-"人の抜き取り").
+"Sampling by people").
 """
 
 import argparse
