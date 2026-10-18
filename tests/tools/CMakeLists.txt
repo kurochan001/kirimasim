@@ -76,6 +76,9 @@ add_test(NAME tools/gen_scope_name_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_scope_name_matrix.py --check)
 set_tests_properties(tools/gen_scope_name_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_aggregate_compare_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_aggregate_compare_matrix.py --check)
+set_tests_properties(tools/gen_aggregate_compare_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_aggregate_assign_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_aggregate_assign_matrix.py --check)
 set_tests_properties(tools/gen_aggregate_assign_matrix PROPERTIES LABELS Tools)
