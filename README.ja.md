@@ -282,13 +282,27 @@ kirimasim: info: finish at 52 ns
 
 ## 仕組み
 
-```text
-SystemVerilog のソース
-  -> slang（字句と構文の解析、プリプロセス、型の検査、エラボレーション）
-  -> front    （slang のエラボレーションの結果を SIR に変換する）
-  -> SIR      （スロットで引く中間表現：記憶のスロットと、型の決まった命令）
-  -> analysis （X の到達、静的な島、レベル化、可観測性）
-  -> 実行層。どれも共通の実行カーネルの上で動く
+```mermaid
+flowchart TD
+    src["SystemVerilog sources"]
+    slang["slang<br/>parsing, preprocessing,<br/>type checking, elaboration"]
+    front["front<br/>lowers the elaborated design to SIR"]
+    sir["SIR<br/>storage slots and statically typed instructions"]
+    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
+    subgraph tiers["Execution tiers"]
+        t1["tier 1: VM<br/>interprets SIR (P1)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t3["tier 3: JIT<br/>(later)"]
+    end
+    kernel["Execution kernel<br/>scheduler with every region, value operations<br/>(later: objects and GC, VPI, DPI-C, waveforms)"]
+    src --> slang --> front --> sir
+    sir --> t1
+    sir --> analysis --> t2
+    sir --> t2
+    sir --> t3
+    t1 -->|"resume function and frame"| kernel
+    t2 -->|"resume function and frame"| kernel
+    t3 -->|"resume function and frame"| kernel
 ```
 
 [slang](https://github.com/MikePopoloski/slang) は改変せず、1 つのコミットに固定して使います。どの実行層も、1 つの実行カーネルにプロセスを登録します。スケジューラと値の演算はカーネルが持つので、別の層のプロセスを 1 つのシミュレーションで一緒に動かせ、層の違いは出力の違いとして表に出ます。詳しくは [docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) を見てください。

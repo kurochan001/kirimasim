@@ -406,13 +406,27 @@ reached. The full command line is in [docs/spec/CLI.md](docs/spec/CLI.md).
 
 ## How it works
 
-```text
-SystemVerilog sources
-  -> slang (parsing, preprocessing, type checking, elaboration)
-  -> front   (lowers slang's elaborated design to SIR)
-  -> SIR     (slot-indexed IR: storage slots and statically typed instructions)
-  -> analysis (X-reachability, static islands, levelization, observability)
-  -> execution tiers, all running on the shared execution kernel
+```mermaid
+flowchart TD
+    src["SystemVerilog sources"]
+    slang["slang<br/>parsing, preprocessing,<br/>type checking, elaboration"]
+    front["front<br/>lowers the elaborated design to SIR"]
+    sir["SIR<br/>storage slots and statically typed instructions"]
+    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
+    subgraph tiers["Execution tiers"]
+        t1["tier 1: VM<br/>interprets SIR (P1)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t3["tier 3: JIT<br/>(later)"]
+    end
+    kernel["Execution kernel<br/>scheduler with every region, value operations<br/>(later: objects and GC, VPI, DPI-C, waveforms)"]
+    src --> slang --> front --> sir
+    sir --> t1
+    sir --> analysis --> t2
+    sir --> t2
+    sir --> t3
+    t1 -->|"resume function and frame"| kernel
+    t2 -->|"resume function and frame"| kernel
+    t3 -->|"resume function and frame"| kernel
 ```
 
 [slang](https://github.com/MikePopoloski/slang) is used unmodified, pinned
