@@ -51,6 +51,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     const sir::InstanceId owner = declaringInstance(sym).value_or(instance_);
     const auto key = std::make_pair(owner, static_cast<const ast::Symbol*>(&sym));
     if (auto it = subs_.find(key); it != subs_.end()) return it->second;
+    // Its body is not SystemVerilog: a call stops here, the import reported.
+    if (reportDpiImport(sym)) throw Unsupported{};
 
     sir::Subroutine s;
     s.name = design_.instances[owner].scopeName + (row ? "::" : ".") + std::string(sym.name);

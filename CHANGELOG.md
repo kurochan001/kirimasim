@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A DPI-C import (`import "DPI-C" ...`) is reported as not supported yet at
+  its declaration, whether it is called or not; it ran as an empty
+  subroutine that returned at once (#11).
 - `$finish` and `$stop` with 1 (the default) or 2 report the call on standard error,
   `<file>:<line>: $finish at <time>`, and with 2 write the statistics at the
   end of the run (SYSTEM_TASKS.md 10.2); they reported nothing.

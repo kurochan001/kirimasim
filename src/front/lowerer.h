@@ -658,6 +658,7 @@ private:
     std::size_t numErrors_ = 0;
     std::size_t numWarnings_ = 0;
     std::vector<slang::SourceLocation> warned_;
+    std::vector<slang::SourceLocation> dpiReported_;  // DPI-C imports reported
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<const ast::Symbol*, sir::SlotId> structSlots_;  ///< The first leaf's slot.
@@ -741,6 +742,10 @@ private:
     /// with programs in P3 (SCHEDULER_SPEC.md, part 4); until then a program
     /// is not run like a module.
     void reportProgram(const ast::Symbol& s);
+    /// Whether s is a DPI-C import, which is not implemented yet (P3,
+    /// 35.5): one is reported at its declaration, once, whether it is
+    /// called or not (CLI.md 5), and never lowered to a body.
+    bool reportDpiImport(const ast::Symbol& s);
     /// The rows of the packages and compilation units that hold variables,
     /// nets or subroutines, in source order, with their slots and static
     /// initializers, before any instance (SIR_SPEC.md 2, 3.3, 7.1).

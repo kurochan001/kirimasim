@@ -699,6 +699,12 @@ MUTANTS = [
      "    if (c == 'x' || c == 'X') {", "    if (c == 'x' || c == 'X' || c == '?') {"),
     ("kernel: a wide integer rounds to real without the bits below the 64 it keeps",
      "src/kernel/wide.cpp", "    if (sticky) m |= 1;\n", ""),
+    ("front: a DPI-C import runs as an empty subroutine", "src/front/lower.cpp",
+     "        !s.as<ast::SubroutineSymbol>().flags.has(ast::MethodFlags::DPIImport))",
+     "        true)"),
+    ("front: a DPI-C import declared in two instances is reported twice", "src/front/lower.cpp",
+     "    if (std::find(dpiReported_.begin(), dpiReported_.end(), s.location) == dpiReported_.end()) {",
+     "    if (true) {"),
 ]
 
 

@@ -220,6 +220,54 @@ OTHERS = [
     ("deferred_waiting_task",
      "module top;\n  task t;\n    #1;\n  endtask\n  initial «»assert #0 (0) else t();\nendmodule\n",
      "deferred assertion whose action is a task that may wait"),
+] + [
+    # A DPI-C import (35.5): reported once at its declaration, at its name,
+    # whether it is called or not, wherever it is declared; never run.
+    (f"dpi_{name}", text, f"DPI-C import '{sub}'") for name, text, sub in [
+        ("void_function",
+         "module top;\n  import \"DPI-C\" function void «»get(output int x);\n  int v = 7;\n"
+         "  initial begin\n    get(v);\n    $display(\"%0d\", v);\n  end\nendmodule\n", "get"),
+        ("int_function",
+         "module top;\n  import \"DPI-C\" function int «»add_one(input int x);\n"
+         "  initial $display(\"%0d\", add_one(1));\nendmodule\n", "add_one"),
+        ("task",
+         "module top;\n  import \"DPI-C\" task «»wait_cycles(input int n);\n"
+         "  initial wait_cycles(3);\nendmodule\n", "wait_cycles"),
+        ("pure",
+         "module top;\n  import \"DPI-C\" pure function int «»twice(input int x);\n"
+         "  int v;\n  initial v = twice(2);\nendmodule\n", "twice"),
+        ("context",
+         "module top;\n  import \"DPI-C\" context task «»ctx();\n  initial ctx();\nendmodule\n",
+         "ctx"),
+        ("c_name",
+         "module top;\n  import \"DPI-C\" c_get = function int «»get();\n"
+         "  initial $display(\"%0d\", get());\nendmodule\n", "get"),
+        ("inout_open_array",
+         "module top;\n  import \"DPI-C\" function void «»fill(inout int a[]);\n"
+         "  int m [0:3];\n  initial fill(m);\nendmodule\n", "fill"),
+        ("uncalled",
+         "module top;\n  import \"DPI-C\" function void «»never();\n"
+         "  initial $display(\"ran\");\nendmodule\n", "never"),
+        ("called_first",
+         "module top;\n  initial early();\n  import \"DPI-C\" function void «»early();\n"
+         "endmodule\n", "early"),
+        ("package",
+         "package p;\n  import \"DPI-C\" function int «»from_c();\nendpackage\n\n"
+         "module top;\n  import p::*;\n  initial $display(\"%0d %0d\", p::from_c(), from_c());\n"
+         "endmodule\n", "from_c"),
+        ("unit",
+         "import \"DPI-C\" function void «»unit_level();\n\nmodule top;\n"
+         "  initial unit_level();\nendmodule\n", "unit_level"),
+        ("interface",
+         "interface bus;\n  import \"DPI-C\" function void «»poke();\nendinterface\n\n"
+         "module top;\n  bus b();\n  initial b.poke();\nendmodule\n", "poke"),
+        ("generate",
+         "module top;\n  if (1) begin : g\n    import \"DPI-C\" function void «»inner();\n"
+         "    initial inner();\n  end\nendmodule\n", "inner"),
+        ("two_instances",
+         "module sub;\n  import \"DPI-C\" function void «»each();\n  initial each();\n"
+         "endmodule\n\nmodule top;\n  sub a();\n  sub b();\nendmodule\n", "each"),
+    ]
 ]
 
 # (name, declarations, statement, whole error text): an error, not an

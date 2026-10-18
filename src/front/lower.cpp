@@ -737,12 +737,18 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     root_ = &root;
     scanDisables(root);
     // Anonymous programs hold items that only programs use (24.6).
-    for (const ast::CompilationUnitSymbol* unit : root.compilationUnits)
-        for (const ast::Symbol& m : unit->members())
+    for (const ast::CompilationUnitSymbol* unit : root.compilationUnits) {
+        for (const ast::Symbol& m : unit->members()) {
             reportProgram(m);
-    for (const ast::PackageSymbol* pkg : root.getCompilation().getPackages())
-        for (const ast::Symbol& m : pkg->members())
+            reportDpiImport(m);
+        }
+    }
+    for (const ast::PackageSymbol* pkg : root.getCompilation().getPackages()) {
+        for (const ast::Symbol& m : pkg->members()) {
             reportProgram(m);
+            reportDpiImport(m);
+        }
+    }
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
@@ -1104,6 +1110,18 @@ void Lowerer::reportProgram(const ast::Symbol& s) {
     }
 }
 
+bool Lowerer::reportDpiImport(const ast::Symbol& s) {
+    if (s.kind != ast::SymbolKind::Subroutine ||
+        !s.as<ast::SubroutineSymbol>().flags.has(ast::MethodFlags::DPIImport))
+        return false;
+    // One declaration is one symbol in every instance of its module.
+    if (std::find(dpiReported_.begin(), dpiReported_.end(), s.location) == dpiReported_.end()) {
+        dpiReported_.push_back(s.location);
+        report(s.location, "DPI-C import '" + std::string(s.name) + "'");
+    }
+    return true;
+}
+
 void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent) {
     // Every instance comes here: at the top, in a module or a generate
     // block, and as an element of an instance array.
@@ -1287,7 +1305,9 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
             case ast::SymbolKind::InterfacePort:  // names through it reach the interface
             case ast::SymbolKind::Modport:        // a view of the interface's members (25.5)
             case ast::SymbolKind::StatementBlock: continue;  // scopes inside procedures
-            case ast::SymbolKind::Subroutine: continue;      // lowered when first called
+            case ast::SymbolKind::Subroutine:                // lowered when first called
+                reportDpiImport(member);
+                continue;
             case ast::SymbolKind::Net: {
                 const auto& n = member.as<ast::NetSymbol>();
                 const ast::Expression* init = n.getInitializer();
