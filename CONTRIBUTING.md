@@ -115,7 +115,8 @@ with sanitizers; `asan` builds slang without mimalloc, whose allocator the
 address sanitizer cannot see into.
 
 To run every check that CI runs (all four presets, the release flag check,
-the banned-feature check, clang-format and clang-tidy) in one go:
+the banned-feature check, clang-format, clang-tidy, and the check that each
+commit not pushed yet keeps existing expectations) in one go:
 
 ```sh
 python3 tools/local_ci.py

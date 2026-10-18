@@ -11,7 +11,10 @@ developer's Mac before pushing. It runs, in order:
 3. tools/check_banned.py and tools/check_suite_files.py,
 4. clang-format --dry-run --Werror on all tracked .cpp and .h files,
 5. clang-tidy on all tracked .cpp files under src/ and tests/ (using the
-   dev build's compile_commands.json).
+   dev build's compile_commands.json),
+6. tools/check_expected_change.py on each commit that is not on the
+   upstream branch yet, as CI checks each pushed commit (nothing to check
+   without an upstream branch).
 
 clang-format and clang-tidy are taken from --llvm-bin, then from PATH,
 then from Homebrew's LLVM (/opt/homebrew/opt/llvm/bin). A missing tool is
@@ -83,6 +86,31 @@ def git_files(*patterns: str) -> list[str]:
     return out.split()
 
 
+def expected_changes(logs: Path) -> Step:
+    """check_expected_change.py on each commit not on the upstream branch yet."""
+    start = time.monotonic()
+    upstream = subprocess.run(["git", "rev-parse", "--verify", "--quiet", "@{upstream}"],
+                              cwd=ROOT, capture_output=True, text=True, check=False)
+    if upstream.returncode != 0:
+        return Step("check_expected_change", "ok", 0.0, "no upstream branch: nothing to check")
+    commits = subprocess.run(["git", "rev-list", "--reverse", "@{upstream}..HEAD"], cwd=ROOT,
+                             capture_output=True, text=True, check=True).stdout.split()
+    log = logs / "check_expected_change.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    ok = True
+    with log.open("w", encoding="utf-8") as f:
+        for c in commits:
+            f.write(f"commit {c}\n")
+            f.flush()
+            proc = subprocess.run([sys.executable, "tools/check_expected_change.py",
+                                   "--base", c + "^", "--head", c], cwd=ROOT, stdout=f,
+                                  stderr=subprocess.STDOUT, check=False)
+            ok = ok and proc.returncode == 0
+    detail = f"{len(commits)} commit(s) not pushed" if ok else f"see {log.relative_to(ROOT)}"
+    return Step("check_expected_change", "ok" if ok else "FAILED", time.monotonic() - start,
+                detail)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--presets", default=",".join(DEFAULT_PRESETS),
@@ -114,6 +142,7 @@ def main() -> int:
                        logs / "check_banned.log"))
     steps.append(timed("check_suite_files", [sys.executable, "tools/check_suite_files.py"],
                        logs / "check_suite_files.log"))
+    steps.append(expected_changes(logs))
 
     clang_format = clang_tidy = None
     if not args.skip_lint:
