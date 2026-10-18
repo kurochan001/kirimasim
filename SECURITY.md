@@ -1,5 +1,7 @@
 # Security policy
 
+[日本語](SECURITY.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
+
 ## Reporting a vulnerability
 
 Please report security vulnerabilities privately through GitHub's private
