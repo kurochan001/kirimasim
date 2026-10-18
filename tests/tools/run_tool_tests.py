@@ -55,6 +55,31 @@ def suite_test(kirimasim: str, tmp: Path) -> None:
     case("stderr_line_added", sub(".stderr", "\n", "\nunique_case_violation.sv:1: warning: x\n"),
          False)
 
+    def both(*edits):
+        def edit(base: Path) -> None:
+            for e in edits:
+                e(base)
+        return edit
+
+    # A header that is not read as written (tools/suite_header.py); the
+    # lines stay where they were, so that nothing else fails.
+    case("header_not_first", sub(".sv", "/*\n", "/* note */ /*\n"), False)
+    case("type_misspelt", sub(".sv", ":type: simulation", ":type: simulaton"), False)
+    case("item_misspelt", sub(".sv", ":expected_stderr:", ":expected_sterr:"), False)
+    case("required_missing", sub(".sv", ":lrm: 1800-2023", "lrm 1800-2023"), False)
+    case("yes_no", sub(".sv", ":fourstate: no", ":fourstate: maybe"), False)
+    # Allowed outputs of a nondeterministic test: an empty one is a mistake.
+    nondeterministic = sub(".sv", ":nondeterministic: no", ":nondeterministic: yes")
+
+    def before(text: str):
+        def edit(base: Path) -> None:
+            f = base.with_suffix(".expected")
+            f.write_text(text + f.read_text(encoding="utf-8"), encoding="utf-8")
+        return edit
+
+    case("other_allowed_output", both(nondeterministic, before("x\n---\n")), True)
+    case("empty_allowed_output", both(nondeterministic, before("---\n")), False)
+
 
 def severity_test(kirimasim: str, tmp: Path) -> None:
     """run_suite_test.py on a copy of proc/severity_tasks: the fatal and info
@@ -140,16 +165,26 @@ def perfcount(kirimasim: str, tmp: Path) -> None:
     test = "tests/suite/sched/nba_order_same_proc.sv"
     real = json.loads((ROOT / "tests/perf_counts/expected.json").read_text(encoding="utf-8"))
     base = real[test]
-    for name, change, want_ok in [
-        ("unchanged", {}, True),
-        ("budget_exceeded", {"proc.wakeups": base["proc.wakeups"] // 2}, False),
-        ("end_reason", {"sim.end_reason": "finish"}, False),
+    for name, change, header, want_ok in [
+        ("unchanged", {}, None, True),
+        ("budget_exceeded", {"proc.wakeups": base["proc.wakeups"] // 2}, None, False),
+        ("end_reason", {"sim.end_reason": "finish"}, None, False),
+        # The exit code of the run, and the header, are checked too.
+        ("exit_code", {}, (":nondeterministic:", ":expected_exit: 1\n:nondeterministic:"), False),
+        ("header", {}, (":lrm:", ":lrn:"), False),
     ]:
+        root = ROOT
+        if header:
+            root = tmp / f"perf_{name}_root"
+            (root / test).parent.mkdir(parents=True)
+            text = (ROOT / test).read_text(encoding="utf-8")
+            assert header[0] in text, header
+            (root / test).write_text(text.replace(header[0], header[1], 1), encoding="utf-8")
         exp = tmp / f"perf_{name}.json"
         exp.write_text(json.dumps({test: {**base, **change}}), encoding="utf-8")
         expect("perfcount_check " + name,
                [sys.executable, str(TOOLS / "perfcount_check.py"), "--kirimasim", kirimasim,
-                "--expected", str(exp), "--root", str(ROOT)], want_ok)
+                "--expected", str(exp), "--root", str(root)], want_ok)
 
 
 def expected_change(tmp: Path) -> None:

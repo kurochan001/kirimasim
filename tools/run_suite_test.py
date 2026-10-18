@@ -27,21 +27,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from suite_header import read_header
+
 EXIT_INPUT_ERROR = 2
 SKIP = 77  # CTest's SKIP_RETURN_CODE for this test
-
-
-def read_metadata(path: Path) -> dict[str, str]:
-    text = path.read_text(encoding="utf-8")
-    m = re.search(r"/\*(.*?)\*/", text, re.DOTALL)
-    meta: dict[str, str] = {}
-    if not m:
-        return meta
-    for line in m.group(1).splitlines():
-        fm = re.match(r"^:([A-Za-z_]+):\s?(.*)$", line.strip())
-        if fm:
-            meta[fm.group(1)] = fm.group(2).strip()
-    return meta
 
 
 def normalize(text: str) -> list[str]:
@@ -57,7 +46,12 @@ def expected_outputs(test: Path, meta: dict[str, str]) -> list[list[str]] | None
     else:
         text = value + "\n"
     if meta.get("nondeterministic") == "yes":
-        return [normalize(part) for part in re.split(r"(?m)^---\s*$", text)]
+        # An empty candidate, as from a stray --- at the end, would pass a
+        # run that prints nothing.
+        parts = [normalize(part) for part in re.split(r"(?m)^---\s*$", text)]
+        if any(not part for part in parts):
+            raise ValueError(f"{value[1:]} has an empty allowed output (a stray ---?)")
+        return parts
     return [normalize(text)]
 
 
@@ -119,7 +113,11 @@ def main() -> int:
     ap.add_argument("test", type=Path, help="test-suite .sv file")
     args = ap.parse_args()
 
-    meta = read_metadata(args.test)
+    meta, problems = read_header(args.test)
+    if problems:
+        for p in problems:
+            print(f"FAIL: header: {p}", file=sys.stderr)
+        return 1
     proc = subprocess.run(
         [args.kirimasim, "parse", str(args.test)],
         capture_output=True,
@@ -146,7 +144,11 @@ def main() -> int:
         print("SKIP: uses a construct that is not supported yet", file=sys.stderr)
         print(run.stderr, file=sys.stderr)
         return SKIP
-    expected = expected_outputs(args.test, meta)
+    try:
+        expected = expected_outputs(args.test, meta)
+    except ValueError as e:
+        print(f"FAIL: {e}", file=sys.stderr)
+        return 1
     if expected is None:
         print("FAIL: a simulation test needs :expected_stdout:", file=sys.stderr)
         return 1

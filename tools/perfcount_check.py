@@ -4,9 +4,12 @@
 For every test file listed in expected.json, runs kirimasim with
 --stats=json and compares each counter with its expected value
 (PERFORMANCE.md 4). A test whose :type: includes "simulation" is run to its
-end (`kirimasim --stats=json <file>`), any other only parsed
-(`kirimasim --stats=json parse <file>`); the JSON is the last line of
-standard output. The check fails when a counter is 10% or more above its
+end (`kirimasim --stats=json <file>`) and must end with the exit code of
+its :expected_exit: (0 when absent); any other is only parsed
+(`kirimasim --stats=json parse <file>`) and must end with 0, or with 2
+for a test with :should_fail_because:. The JSON is
+the last line of standard output. A header with problems
+(tools/suite_header.py) fails the check. The check fails when a counter is 10% or more above its
 expected value (any increase from an expected 0 counts), when a text
 counter such as sim.end_reason differs, when an expected counter is
 missing, or when the run reports a counter that expected.json does not
@@ -18,25 +21,17 @@ separate change, with the reason in the commit message.
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
+
+from suite_header import read_header
 
 THRESHOLD_NUM, THRESHOLD_DEN = 11, 10  # fail at >= 110% of the expected count
 
 
 def too_high(actual: int, expected: int) -> bool:
     return actual > expected and actual * THRESHOLD_DEN >= expected * THRESHOLD_NUM
-
-
-def is_simulation(path: Path) -> bool:
-    m = re.search(r"/\*(.*?)\*/", path.read_text(encoding="utf-8"), re.DOTALL)
-    for line in (m.group(1) if m else "").splitlines():
-        fm = re.match(r"^:type:\s*(.*)$", line.strip())
-        if fm:
-            return "simulation" in fm.group(1).split()
-    return False
 
 
 def main() -> int:
@@ -51,10 +46,21 @@ def main() -> int:
     failures: list[str] = []
     for test, expected in sorted(expected_all.items()):
         path = args.root / test
+        meta, problems = read_header(path)
+        if problems:
+            failures += [f"{test}: header: {p}" for p in problems]
+            continue
         cmd = [args.kirimasim, "--stats=json"]
-        if not is_simulation(path):
+        simulation = "simulation" in meta["type"].split()
+        if not simulation:
             cmd.append("parse")
         proc = subprocess.run(cmd + [str(path)], capture_output=True, text=True, check=False)
+        if simulation:
+            want_exit = int(meta.get("expected_exit", "0"))
+        else:
+            want_exit = 2 if "should_fail_because" in meta else 0
+        if proc.returncode != want_exit:
+            failures.append(f"{test}: exit code {proc.returncode}, expected {want_exit}")
         lines = proc.stdout.splitlines()
         try:
             actual = json.loads(lines[-1] if lines else "")
