@@ -680,6 +680,10 @@ MUTANTS = [
      "            kernel::wide::fromText(r.data(), t.width, v.text);", "            ;"),
     ("driver: --top does not take the next argument", "src/driver/main.cpp",
      '} else if (arg == "-f" || arg == "--top") {', '} else if (arg == "-f") {'),
+    ("front: $signed and $unsigned keep the operand's signedness", "src/front/lower_expr.cpp",
+     "                return coerce(lowerExpr(*call.arguments()[0]), typeOf(*e.type, sl), sl);\n"
+     "            if (name == \"$time\") {",
+     "                return lowerExpr(*call.arguments()[0]);\n            if (name == \"$time\") {"),
 ]
 
 
