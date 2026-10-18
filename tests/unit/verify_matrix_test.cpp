@@ -178,6 +178,31 @@ std::vector<Case> cases() {
          }},
         {"result without type", "result and result type must come together",
          add(make(Op::Add, voidType(), N, {A, A}))},
+        {"result of width 0", "the result has width 0", add(make(Op::Add, u2(0), N, {B, B}))},
+        {"frame variable of width 0", "integral frame variable has width 0",
+         [](Design& d) { d.processes[0].frame.push_back({"z", u2(0), kNone, {}, {}}); }},
+        // A delay is a count of ticks of 64 bits.
+        {"nba.delay of 65 bits", "the delay must be integral, of at most 64 bits",
+         [](Design& d) {
+             const auto c = static_cast<ConstId>(d.constants.size());
+             d.constants.push_back({u2(65), {5, 0}, {}});
+             add(none(Op::NbaDelay, {Operand::slot(sA), Operand::temp(tA), Operand::constant(c)}))
+                 .apply(d);
+         }},
+        {"trigger.nb of 65 bits", "optional integral delay of at most 64 bits",
+         [](Design& d) {
+             const auto c = static_cast<ConstId>(d.constants.size());
+             d.constants.push_back({u2(65), {5, 0}, {}});
+             add(none(Op::TriggerNb, {Operand::slot(sE), Operand::constant(c)})).apply(d);
+         }},
+        {"wait.delay of 65 bits", "needs an integral delay of at most 64 bits",
+         [](Design& d) {
+             const auto c = static_cast<ConstId>(d.constants.size());
+             d.constants.push_back({u2(65), {5, 0}, {}});
+             auto& instrs = d.processes[0].blocks[0].instrs;
+             instrs.back() = none(Op::WaitDelay, {Operand::constant(c), Operand::block(1)});
+             d.processes[0].blocks.push_back({{}, {none(Op::Ret, {})}});
+         }},
         {"no result", "needs a result", add(make(Op::Add, voidType(), kNone, {A, A}))},
         {"br without block", "needs a block", add(none(Op::Br, {A}))},
         {"store", "bad operands", add(none(Op::Store, {A, A}))},

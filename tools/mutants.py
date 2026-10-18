@@ -632,6 +632,11 @@ MUTANTS = [
      "return g != sir::kNone && seen[processCount() + g];", "return g != sir::kNone;"),
     ("vm: the event a wait's function triggers is read", "src/vm/vm.cpp",
      "const bool target = isWriteTarget(in.op);", "const bool target = false;"),
+    ("sir verify: a delay may be wider than 64 bits", "src/sir/verify.cpp",
+     "return isIntegral(ty(i)) && ty(i).width <= 64;", "return isIntegral(ty(i));"),
+    ("sir verify: a result may have width 0", "src/sir/verify.cpp",
+     "} else if (in.result != kNone && isIntegral(in.type) && in.type.width == 0) {",
+     "} else if (false) {"),
 ]
 
 

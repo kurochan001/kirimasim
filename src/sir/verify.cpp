@@ -428,8 +428,11 @@ private:
         if (s.mayWait && s.kind != SubroutineKind::Task) error(where, "only tasks may wait", s.loc);
         if (s.kind == SubroutineKind::Task && s.returnType.kind != TypeKind::Void)
             error(where, "a task returns no value", s.loc);
-        for (const FrameVar& f : s.frame)
+        for (const FrameVar& f : s.frame) {
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
+            if (isIntegral(f.type) && f.type.width == 0)
+                error(where, "integral frame variable has width 0");
+        }
         if (readsWaiterFrame(s.kind)) {
             const std::string a = std::string("a ") + kindName(s.kind);
             if (!s.params.empty()) error(where, a + " has no arguments", s.loc);
@@ -499,8 +502,11 @@ private:
         // (SCHEDULER_SPEC.md 2.2).
         if (p.kind == ProcessKind::Postponed && !p.triggers.empty())
             error(where, "a postponed process has no triggers", p.loc);
-        for (const FrameVar& f : p.frame)
+        for (const FrameVar& f : p.frame) {
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
+            if (isIntegral(f.type) && f.type.width == 0)
+                error(where, "integral frame variable has width 0");
+        }
         switch (p.parent.kind) {
             case Owner::Kind::None: break;
             case Owner::Kind::Process:
@@ -760,6 +766,8 @@ private:
             bad("result and result type must come together");
         } else if (in.result == kNone && !resultOptional(in.op)) {
             bad("needs a result");
+        } else if (in.result != kNone && isIntegral(in.type) && in.type.width == 0) {
+            bad("the result has width 0");
         }
 
         const auto& ops = in.operands;
@@ -773,6 +781,8 @@ private:
             return ops.size() == n;
         };
         const Type rt = in.type;
+        // A delay is a count of ticks of 64 bits (SIR_SPEC.md 7.2, 5.4).
+        const auto delayOk = [&](std::size_t i) { return isIntegral(ty(i)) && ty(i).width <= 64; };
 
         // Rule 2: slot operands refer to valid slots and ranges; frame,
         // subroutine and process operands are in their tables.
@@ -939,8 +949,8 @@ private:
                         bad("bad operands");
                     else if (!fits(ty(0), ty(1)))
                         bad("value type " + toString(ty(1)) + " does not fit " + toString(ty(0)));
-                    else if (!isIntegral(ty(2)))
-                        bad("the delay must be integral");
+                    else if (!delayOk(2))
+                        bad("the delay must be integral, of at most 64 bits");
                 }
                 break;
             case Op::DriveDelay:
@@ -948,11 +958,11 @@ private:
                 // delays (SIR_SPEC.md 5.4).
                 if (body.process == nullptr || body.process->kind != ProcessKind::Cont)
                     bad("only a cont process writes with it");
-                if (nOps(5) && (ops[0].kind != Operand::Kind::Slot || !isValue(1) ||
-                                !fits(ty(0), ty(1)) || !isIntegral(ty(0)) || !isIntegral(ty(2)) ||
-                                !isIntegral(ty(3)) || !isIntegral(ty(4))))
+                if (nOps(5) &&
+                    (ops[0].kind != Operand::Kind::Slot || !isValue(1) || !fits(ty(0), ty(1)) ||
+                     !isIntegral(ty(0)) || !delayOk(2) || !delayOk(3) || !delayOk(4)))
                     bad("needs an integral slot range, a value of its type and three integral "
-                        "delays");
+                        "delays of at most 64 bits");
                 break;
             case Op::LoadElem:
             case Op::StoreElem:
@@ -1341,8 +1351,8 @@ private:
             case Op::TriggerNb:
                 if (ops.empty() || ops.size() > 2 || ops[0].kind != Operand::Kind::Slot ||
                     slotValueType(ops[0]).kind != TypeKind::Event ||
-                    (ops.size() == 2 && !isIntegral(ty(1))))
-                    bad("needs an event slot and an optional integral delay");
+                    (ops.size() == 2 && !delayOk(1)))
+                    bad("needs an event slot and an optional integral delay of at most 64 bits");
                 break;
             case Op::Disable:
                 if (nOps(1) && ops[0].kind != Operand::Kind::Process &&
@@ -1525,7 +1535,7 @@ private:
                 break;
             }
             case Op::WaitDelay:
-                if (nOps(2) && !isIntegral(ty(0))) bad("needs an integral delay");
+                if (nOps(2) && !delayOk(0)) bad("needs an integral delay of at most 64 bits");
                 continuation();
                 break;
             case Op::WaitEvent: {
