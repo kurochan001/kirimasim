@@ -90,6 +90,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A system task or function whose first argument is a string, such as
+  `$fopen`, `$dumpfile` or `$readmemh`, is reported as an unsupported
+  system task or function; it was reported as a string method.
 - A static variable of a function named by a hierarchical name before the
   function is called stays the function's own: an event expression or a
   `$strobe` argument that calls the function may write it. It was

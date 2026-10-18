@@ -647,6 +647,9 @@ MUTANTS = [
      "return {(lw >= 64 ? 0 : hi.a << lw) | lo.a,", "return {(lw >= 64 ? 0 : lo.a << lw) | hi.a,"),
     ("kernel: a zero byte is kept in text", "src/kernel/wide.cpp",
      "        if (ch != 0) s.push_back(ch);", "        s.push_back(ch);"),
+    ("front: a call with a string first argument is a string method", "src/front/lower_expr.cpp",
+     "if (!isBuiltinMethod(call, ast::SymbolKind::StringType) || args.empty()) return std::nullopt;",
+     "if (args.empty() || !args[0]->type->isString()) return std::nullopt;"),
 ]
 
 

@@ -372,6 +372,18 @@ std::string withScope(std::string_view f, std::string_view scope) {
     return out;
 }
 
+/// Whether a call is the built-in method of a type of kind k (the string
+/// methods of 6.16, the enumeration methods of 6.19.5), and not a system
+/// task or function, whatever its first argument: slang gives the object
+/// of a method as the first argument, and a system function may take a
+/// string or an enumeration there too.
+bool isBuiltinMethod(const ast::CallExpression& call, ast::SymbolKind k) {
+    if (!call.isSystemCall()) return false;
+    const auto& info = std::get<ast::CallExpression::SystemCallInfo>(call.subroutine);
+    return info.subroutine.get() ==
+           info.scope->getCompilation().getSystemMethod(k, call.getSubroutineName());
+}
+
 }  // namespace
 
 bool isPattern(const ast::Expression& e) {
@@ -2637,7 +2649,7 @@ std::optional<Val> Lowerer::lowerEnumCall(const ast::CallExpression& call,
                                           slang::SourceLocation sl) {
     // The enumeration methods (6.19.5): the value is the first argument.
     const auto args = call.arguments();
-    if (args.empty() || !args[0]->type->getCanonicalType().isEnum()) return std::nullopt;
+    if (!isBuiltinMethod(call, ast::SymbolKind::EnumType) || args.empty()) return std::nullopt;
     const std::string name(call.getSubroutineName());
     const ast::Type& et = args[0]->type->getCanonicalType();
     std::vector<const ast::EnumValueSymbol*> members;
@@ -2694,7 +2706,7 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
         return emit(Op::Syscall, st, std::move(ops), sl);
     }
     // The string methods (6.16): the string is the first argument.
-    if (args.empty() || !args[0]->type->isString()) return std::nullopt;
+    if (!isBuiltinMethod(call, ast::SymbolKind::StringType) || args.empty()) return std::nullopt;
     // A method that changes the string gets it as an lvalue argument.
     const ast::Expression* selfExpr = args[0];
     if (selfExpr->kind == ast::ExpressionKind::Assignment &&

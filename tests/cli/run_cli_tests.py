@@ -26,6 +26,7 @@ PROGRAM_MATRIX = HERE / "program_matrix.sv"
 UNSUPPORTED_MATRIX = HERE / "unsupported_matrix"
 FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
+BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 
 # The violation reports of violations.sv, exactly these and in this order
@@ -187,6 +188,18 @@ def main() -> int:
     if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
         failures += 1
         print(f"FAIL: unsupported format flags: exit code {proc.returncode}\n{proc.stdout}"
+              f"{proc.stderr}", file=sys.stderr)
+
+    # A system task or function whose first argument is a string is reported
+    # as one, not as a string method (the files come from
+    # tools/gen_builtin_call_matrix.py).
+    proc = subprocess.run([args.kirimasim, BUILTIN_CALLS.name], cwd=HERE, capture_output=True,
+                          text=True, check=False)
+    want = BUILTIN_CALLS.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
+    got = [line for line in proc.stderr.splitlines() if ": error: " in line]
+    if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
+        failures += 1
+        print(f"FAIL: builtin call matrix: exit code {proc.returncode}\n{proc.stdout}"
               f"{proc.stderr}", file=sys.stderr)
 
     # The records of finished processes are released (SCHEDULER_SPEC.md
