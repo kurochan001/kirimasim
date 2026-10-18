@@ -1,3 +1,39 @@
+final report 44 at 793
+final report 44 at 799
+final report 44 at 805
+final report 45 at 811
+final report 45 at 817
+final report 45 at 823
+final report 56 at 1009
+final report 56 at 1015
+final report 56 at 1021
+final report 118 at 2125
+final report 118 at 2131
+final report 118 at 2137
+final report 119 at 2143
+final report 119 at 2149
+final report 119 at 2155
+final report 137 at 2467
+final report 137 at 2473
+final report 137 at 2479
+final report 183 at 3295
+final report 183 at 3301
+final report 183 at 3307
+final report 184 at 3313
+final report 184 at 3319
+final report 184 at 3325
+final report 195 at 3511
+final report 195 at 3517
+final report 195 at 3523
+final report 241 at 4339
+final report 241 at 4345
+final report 241 at 4351
+final report 242 at 4357
+final report 242 at 4363
+final report 242 at 4369
+final report 253 at 4555
+final report 253 at 4561
+final report 253 at 4567
 initial join normal child sb=3 ch=3 gc=0 rp=0
 initial join normal grandchild sb=3 ch=3 gc=3 rp=0
 initial join_any normal child sb=3 ch=3 gc=0 rp=0
@@ -42,8 +78,8 @@ initial function disable_block@2 grandchild sb=3 ch=0 gc=0 rp=0
 initial function disable_block@4 grandchild sb=3 ch=3 gc=0 rp=0
 initial join normal child report#0 sb=3 ch=0 gc=0 rp=3
 initial join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
-initial join normal child reportfinal sb=3 ch=0 gc=0 rp=3
-initial join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+initial join normal child reportfinal sb=3 ch=0 gc=0 rp=0
+initial join_none normal child reportfinal sb=3 ch=0 gc=0 rp=0
 initial join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 initial join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
 initial join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
@@ -54,7 +90,7 @@ initial function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 initial join normal child reportunique sb=3 ch=0 gc=0 rp=0
 initial join_none normal child reportunique sb=3 ch=0 gc=0 rp=0
 initial join_none normal child report#0 refork sb=3 ch=0 gc=0 rp=3 rf=3
-initial join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=3 rf=3
+initial join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=0 rf=3
 initial join_none normal child reportunique refork sb=3 ch=0 gc=0 rp=0 rf=3
 task join normal child sb=3 ch=3 gc=0 rp=0
 task join normal grandchild sb=3 ch=3 gc=3 rp=0
@@ -116,8 +152,8 @@ task function disable_task@2 grandchild sb=3 ch=0 gc=0 rp=0
 task function disable_task@4 grandchild sb=3 ch=3 gc=0 rp=0
 task join normal child report#0 sb=3 ch=0 gc=0 rp=3
 task join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
-task join normal child reportfinal sb=3 ch=0 gc=0 rp=3
-task join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+task join normal child reportfinal sb=3 ch=0 gc=0 rp=0
+task join_none normal child reportfinal sb=3 ch=0 gc=0 rp=0
 task join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 task join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
 task join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
@@ -135,7 +171,7 @@ task function disable_task@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 task join normal child reportunique sb=3 ch=0 gc=0 rp=0
 task join_none normal child reportunique sb=3 ch=0 gc=0 rp=0
 task join_none normal child report#0 refork sb=3 ch=0 gc=0 rp=3 rf=3
-task join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=3 rf=3
+task join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=0 rf=3
 task join_none normal child reportunique refork sb=3 ch=0 gc=0 rp=0 rf=3
 always join normal child sb=3 ch=3 gc=0 rp=0
 always join normal grandchild sb=3 ch=3 gc=3 rp=0
@@ -181,8 +217,8 @@ always function disable_block@2 grandchild sb=3 ch=0 gc=0 rp=0
 always function disable_block@4 grandchild sb=3 ch=3 gc=0 rp=0
 always join normal child report#0 sb=3 ch=0 gc=0 rp=3
 always join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
-always join normal child reportfinal sb=3 ch=0 gc=0 rp=3
-always join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+always join normal child reportfinal sb=3 ch=0 gc=0 rp=0
+always join_none normal child reportfinal sb=3 ch=0 gc=0 rp=0
 always join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 always join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
 always join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
@@ -193,7 +229,7 @@ always function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 always join normal child reportunique sb=3 ch=0 gc=0 rp=0
 always join_none normal child reportunique sb=3 ch=0 gc=0 rp=0
 always join_none normal child report#0 refork sb=3 ch=0 gc=0 rp=3 rf=3
-always join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=3 rf=3
+always join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=0 rf=3
 always join_none normal child reportunique refork sb=3 ch=0 gc=0 rp=0 rf=3
 branch join normal child sb=3 ch=3 gc=0 rp=0
 branch join normal grandchild sb=3 ch=3 gc=3 rp=0
@@ -239,8 +275,8 @@ branch function disable_block@2 grandchild sb=3 ch=0 gc=0 rp=0
 branch function disable_block@4 grandchild sb=3 ch=3 gc=0 rp=0
 branch join normal child report#0 sb=3 ch=0 gc=0 rp=3
 branch join_none normal child report#0 sb=3 ch=0 gc=0 rp=3
-branch join normal child reportfinal sb=3 ch=0 gc=0 rp=3
-branch join_none normal child reportfinal sb=3 ch=0 gc=0 rp=3
+branch join normal child reportfinal sb=3 ch=0 gc=0 rp=0
+branch join_none normal child reportfinal sb=3 ch=0 gc=0 rp=0
 branch join disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 branch join_any disable_block@2 child elder sb=3 ch=0 gc=0 rp=0 el=3
 branch join_any disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
@@ -251,5 +287,5 @@ branch function disable_block@4 child elder sb=3 ch=3 gc=0 rp=0 el=3
 branch join normal child reportunique sb=3 ch=0 gc=0 rp=0
 branch join_none normal child reportunique sb=3 ch=0 gc=0 rp=0
 branch join_none normal child report#0 refork sb=3 ch=0 gc=0 rp=3 rf=3
-branch join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=3 rf=3
+branch join_none normal child reportfinal refork sb=3 ch=0 gc=0 rp=0 rf=3
 branch join_none normal child reportunique refork sb=3 ch=0 gc=0 rp=0 rf=3

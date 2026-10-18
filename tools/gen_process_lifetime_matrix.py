@@ -29,9 +29,11 @@ SCHEDULER_SPEC.md 10.4, 10.5), so the grandchild never counts after a
 disable. wait fork waits only for the direct children (9.6.1).
 
 Further cases. A child that holds a report and ends at once: a deferred
-assertion (#0 or final) whose action counts (rp), or a unique case
-violation, a warning line on stderr at the time of the round (16.4,
-12.5.3; SCHEDULER_SPEC.md 15); the report is still confirmed. With a
+assertion, #0, whose action counts (rp), or final, whose action prints a
+line at the time of the round, since nothing may be written from the
+Postponed region where it runs (4.4.2.9, SCHEDULER_SPEC.md 2.2), or a
+unique case violation, a warning line on stderr at the time of the round
+(16.4, 12.5.3; SCHEDULER_SPEC.md 15); the report is still confirmed. With a
 refork, the parent starts a new child in the same time slot, before the
 report is confirmed (#0, then a fork whose child counts at time 2, rf):
 a record released too early would be reused under the report. And a
@@ -60,7 +62,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "sched"
 NAME = "process_lifetime"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 3
+VERSION = 4
 DEFAULT_N = 3
 ROUND = 6
 
@@ -120,7 +122,7 @@ def label(case):
 def expected(case, n):
     ch = 0 if case.report or case.time == 2 else n
     gc = n if case.grandchild and case.end == "normal" else 0
-    rp = n if case.report in ("#0", "final") else 0
+    rp = n if case.report == "#0" else 0
     line = f"{label(case)} sb={n} ch={ch} gc={gc} rp={rp}"
     if case.elder:
         line += f" el={n}"
@@ -139,6 +141,9 @@ def fork_lines(k, case, pad, join):
     lines = [f"{pad}fork", f"{pad}  begin"]
     if case.report == "unique":
         lines.append(f"{pad}    unique case (sb[{k}] < 0) 1'b1: ; endcase  // violation {k}")
+    elif case.report == "final":
+        lines.append(f"{pad}    assert final (sb[{k}] >= 0) "
+                     f'$display("final report {k} at %0t", $time);')
     elif case.report:
         lines.append(f"{pad}    assert {case.report} (sb[{k}] >= 0) note({k});")
     else:
@@ -276,7 +281,12 @@ def files():
         for i in range(DEFAULT_N):
             err.append(f"{NAME}.sv:{where[k]}: warning: unique case violation: no item matches "
                        f"[{scope} @ {1 + ROUND * (DEFAULT_N * k + i)}ns]")
-    exp = [expected(case, DEFAULT_N) for case in all_cases]
+    # The final reports print in the Postponed region of their rounds, before
+    # the counts at the end; the cases run one after another.
+    exp = [f"final report {k} at {1 + ROUND * (DEFAULT_N * k + i)}"
+           for k, case in enumerate(all_cases) if case.report == "final"
+           for i in range(DEFAULT_N)]
+    exp += [expected(case, DEFAULT_N) for case in all_cases]
     return {f"{NAME}.sv": "\n".join(sv) + "\n", f"{NAME}.expected": "\n".join(exp) + "\n",
             f"{NAME}.stderr": "\n".join(err) + "\n"}
 

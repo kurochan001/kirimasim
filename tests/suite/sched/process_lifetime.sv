@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: no
 :nondeterministic: no
-:generator: gen_process_lifetime_matrix.py@3
+:generator: gen_process_lifetime_matrix.py@4
 :expected_stdout: @process_lifetime.expected
 :expected_stderr: @process_lifetime.stderr
 */
@@ -876,7 +876,7 @@ module top;
   task automatic round118();
     fork
       begin
-        assert final (sb[118] >= 0) note(118);
+        assert final (sb[118] >= 0) $display("final report 118 at %0t", $time);
       end
       #1 sb[118]++;
     join
@@ -885,7 +885,7 @@ module top;
   task automatic round119();
     fork
       begin
-        assert final (sb[119] >= 0) note(119);
+        assert final (sb[119] >= 0) $display("final report 119 at %0t", $time);
       end
       #1 sb[119]++;
     join_none
@@ -1105,7 +1105,7 @@ module top;
   task automatic round137();
     fork
       begin
-        assert final (sb[137] >= 0) note(137);
+        assert final (sb[137] >= 0) $display("final report 137 at %0t", $time);
       end
       #1 sb[137]++;
     join_none
@@ -1868,7 +1868,7 @@ module top;
     for (int i = 0; i < n; i++) begin
       fork
         begin
-          assert final (sb[183] >= 0) note(183);
+          assert final (sb[183] >= 0) $display("final report 183 at %0t", $time);
         end
         #1 sb[183]++;
       join
@@ -1881,7 +1881,7 @@ module top;
     for (int i = 0; i < n; i++) begin
       fork
         begin
-          assert final (sb[184] >= 0) note(184);
+          assert final (sb[184] >= 0) $display("final report 184 at %0t", $time);
         end
         #1 sb[184]++;
       join_none
@@ -2076,7 +2076,7 @@ module top;
     for (int i = 0; i < n; i++) begin
       fork
         begin
-          assert final (sb[195] >= 0) note(195);
+          assert final (sb[195] >= 0) $display("final report 195 at %0t", $time);
         end
         #1 sb[195]++;
       join_none
@@ -2686,7 +2686,7 @@ module top;
     for (int i = 0; i < n; i++) begin
       fork
         begin
-          assert final (sb[44] >= 0) note(44);
+          assert final (sb[44] >= 0) $display("final report 44 at %0t", $time);
         end
         #1 sb[44]++;
       join
@@ -2695,7 +2695,7 @@ module top;
     for (int i = 0; i < n; i++) begin
       fork
         begin
-          assert final (sb[45] >= 0) note(45);
+          assert final (sb[45] >= 0) $display("final report 45 at %0t", $time);
         end
         #1 sb[45]++;
       join_none
@@ -2830,7 +2830,7 @@ module top;
     for (int i = 0; i < n; i++) begin
       fork
         begin
-          assert final (sb[56] >= 0) note(56);
+          assert final (sb[56] >= 0) $display("final report 56 at %0t", $time);
         end
         #1 sb[56]++;
       join_none
@@ -3812,7 +3812,7 @@ module top;
       for (int i = 0; i < n; i++) begin
         fork
           begin
-            assert final (sb[241] >= 0) note(241);
+            assert final (sb[241] >= 0) $display("final report 241 at %0t", $time);
           end
           #1 sb[241]++;
         join
@@ -3823,7 +3823,7 @@ module top;
       for (int i = 0; i < n; i++) begin
         fork
           begin
-            assert final (sb[242] >= 0) note(242);
+            assert final (sb[242] >= 0) $display("final report 242 at %0t", $time);
           end
           #1 sb[242]++;
         join_none
@@ -3980,7 +3980,7 @@ module top;
       for (int i = 0; i < n; i++) begin
         fork
           begin
-            assert final (sb[253] >= 0) note(253);
+            assert final (sb[253] >= 0) $display("final report 253 at %0t", $time);
           end
           #1 sb[253]++;
         join_none
