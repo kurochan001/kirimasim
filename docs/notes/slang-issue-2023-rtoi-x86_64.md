@@ -1,22 +1,24 @@
-# slang の Issue #2023（`$rtoi` の定数評価）を x86_64 で確かめた結果
+# slang issue #2023 (constant evaluation of `$rtoi`) checked on x86_64
 
-調べた日：2026-10-17。対象：slang v12.0（`545f88b2e`、`cmake/Dependencies.cmake` で固定している版）。
+[日本語](slang-issue-2023-rtoi-x86_64.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-## 背景
+Date checked: 2026-10-17. Subject: slang v12.0 (`545f88b2e`, the version pinned in `cmake/Dependencies.cmake`).
 
-[slang の Issue #2023](https://github.com/MikePopoloski/slang/issues/2023) は、slang が `$rtoi` を定数評価するとき、負の引数で 0 を返すという報告である。`$rtoi` は 0 の方向に切り捨てる（IEEE 1800-2023 の 20.5 節）ので、`$rtoi(-3.7)` は -3 になるべきである。原因は `source/ast/builtins/ConversionFuncs.cpp` の `RtoIFunction::eval` が `(uint64_t)val.real()` と書いていることで、負の `double` を直接 `uint64_t` に変換するのは C++ の未定義動作である。報告は macOS（arm64）での結果だった。
+## Background
 
-この文書は、同じ版の slang を x86_64 の Linux で動かした結果をまとめる。
+[slang issue #2023](https://github.com/MikePopoloski/slang/issues/2023) reports that slang returns 0 for a negative argument when it evaluates `$rtoi` as a constant. `$rtoi` truncates toward zero (IEEE 1800-2023 clause 20.5), so `$rtoi(-3.7)` should be -3. The cause is that `RtoIFunction::eval` in `source/ast/builtins/ConversionFuncs.cpp` writes `(uint64_t)val.real()`; converting a negative `double` directly to `uint64_t` is undefined behaviour in C++. The report was a result on macOS (arm64).
 
-## 環境
+This document gathers the results of running the same version of slang on x86_64 Linux.
 
-- x86_64、Linux（WSL2 の上の Ubuntu）
+## Environment
+
+- x86_64, Linux (Ubuntu on WSL2)
 - Ubuntu clang 20.1.8
-- kirimasim `f73226a` の dev と ubsan の構成
+- The dev and ubsan configurations of kirimasim `f73226a`
 
-## 使った入力
+## Inputs used
 
-Issue の本文の例（定数評価だけ）：
+The example in the issue's text (constant evaluation only):
 
 ```systemverilog
 module top;
@@ -26,7 +28,7 @@ module top;
 endmodule
 ```
 
-Issue のコメントの例（パラメータ、定数の呼び出しの代入、real 変数での呼び出し）：
+The example in the issue's comment (a parameter, an assignment of a constant call, a call on a real variable):
 
 ```systemverilog
 module top;
@@ -41,75 +43,75 @@ module top;
 endmodule
 ```
 
-前者は `kirimasim parse`、後者は `kirimasim` で実行した。
+The first was run with `kirimasim parse`, the second with `kirimasim`.
 
-## 結果
+## Results
 
-| 構成 | 本文の例 | コメントの例 |
+| Configuration | Example in the text | Example in the comment |
 | --- | --- | --- |
-| dev（`build/dev`） | `P = -3, Q = 3` | `P=-3 assign=-3 var=-3` |
-| ubsan プリセット（`build/ubsan`、slang だけ `-fno-sanitize=float-cast-overflow`） | `P = -3, Q = 3`、検出なし | `P=-3 assign=-3 var=-3`、検出なし |
-| ubsan の回避策を外した構成（下の「再現の手順」） | ubsan が検出して止まる | ubsan が検出して止まる |
+| dev (`build/dev`) | `P = -3, Q = 3` | `P=-3 assign=-3 var=-3` |
+| ubsan preset (`build/ubsan`, with `-fno-sanitize=float-cast-overflow` for slang only) | `P = -3, Q = 3`, nothing detected | `P=-3 assign=-3 var=-3`, nothing detected |
+| ubsan with the workaround removed ("Steps to reproduce" below) | ubsan detects it and stops | ubsan detects it and stops |
 
-回避策を外した構成で ubsan が出した報告（パスはビルドの場所からの相対に直した）：
+The report ubsan gave with the workaround removed (paths made relative to the build directory):
 
 ```
 _deps/slang-src/source/ast/builtins/ConversionFuncs.cpp:64:36: runtime error: -3.7 is outside the range of representable values of type 'unsigned long'
 ```
 
-`-fno-sanitize-recover=all` を付けているので、ここで処理が止まり、`$info` と `$display` の行は出ない。
+`-fno-sanitize-recover=all` is set, so processing stops here, and the `$info` and `$display` lines are not printed.
 
-## 分かったこと
+## What was found
 
-- **x86_64 では値が偶然正しい。** macOS（arm64）では `P = 0` になるが、x86_64 では -3 になる。
-- **未定義動作は x86_64 でも起きている。** clang の `-fsanitize=undefined` には float-cast-overflow の検査が含まれており、回避策を外すと Issue の箇所（`ConversionFuncs.cpp:64`）で検出される。Issue の主張は、x86_64 でも裏付けられた。
-- **x86_64 で -3 になる理由。** dev の構成（`-O1`）で `RtoIFunction::eval` を逆アセンブルすると、`double` から `uint64_t` への変換は分岐の無い次の形になっていた。
+- **On x86_64 the value happens to be right.** On macOS (arm64) it is `P = 0`, but on x86_64 it is -3.
+- **The undefined behaviour happens on x86_64 too.** clang's `-fsanitize=undefined` includes the float-cast-overflow check, and with the workaround removed it is detected at the place named in the issue (`ConversionFuncs.cpp:64`). The issue's claim was confirmed on x86_64 too.
+- **Why it is -3 on x86_64.** Disassembling `RtoIFunction::eval` in the dev configuration (`-O1`), the conversion from `double` to `uint64_t` had this branch-free form.
 
   ```
-  cvttsd2si %xmm0,%rax        ; 符号付きの変換：-3.7 → -3（0xFFFFFFFFFFFFFFFD）
+  cvttsd2si %xmm0,%rax        ; signed conversion: -3.7 → -3 (0xFFFFFFFFFFFFFFFD)
   mov       %rax,%rcx
   subsd     <2^63>,%xmm0      ; x - 2^63
-  sar       $0x3f,%rcx        ; 最初の結果の符号で、全ビット 1 か 0 の覆いを作る
-  cvttsd2si %xmm0,%rdx        ; 範囲外なので 0x8000000000000000
+  sar       $0x3f,%rcx        ; a mask of all ones or all zeros from the sign of the first result
+  cvttsd2si %xmm0,%rdx        ; out of range, so 0x8000000000000000
   and       %rcx,%rdx
   or        %rax,%rdx         ; 0xFFFFFFFFFFFFFFFD | 0x8000000000000000 = 0xFFFFFFFFFFFFFFFD
   ```
 
-  負の値では、符号付きの変換の結果のビットの並びがそのまま残り、32 ビットに切り詰めると -3 になる。arm64 の符号なしの変換の命令は負の値を 0 にするので、結果が分かれる（下の「arm64 で確かめた結果」）。release の構成（`-O3`）の命令列は見ていない（未確認）。
+  For negative values the bit pattern of the signed conversion's result is kept as it is, and truncated to 32 bits it is -3. arm64's unsigned conversion instruction makes negative values 0, so the results differ ("Results checked on arm64" below). The instruction sequence of the release configuration (`-O3`) was not looked at (not confirmed).
 
-## arm64 で確かめた結果（2026-10-17 に追記）
+## Results checked on arm64 (added 2026-10-17)
 
-### 環境
+### Environment
 
-- arm64、macOS 27
+- arm64, macOS 27
 - Apple clang 21.0.0
-- kirimasim `6cdbde8` の dev の構成（slang は `-O1`）
+- The dev configuration of kirimasim `6cdbde8` (slang at `-O1`)
 
-### 結果
+### Results
 
-| 構成 | 本文の例 | コメントの例 |
+| Configuration | Example in the text | Example in the comment |
 | --- | --- | --- |
-| dev（`build/dev`） | `P = 0, Q = 3` | `P=0 assign=-3 var=-3` |
-| slang だけを `-fsanitize=float-cast-overflow` で作った CLI（下の「再現の手順」） | 検出される（値は `P = 0, Q = 3`） | — |
+| dev (`build/dev`) | `P = 0, Q = 3` | `P=0 assign=-3 var=-3` |
+| A CLI with only slang built with `-fsanitize=float-cast-overflow` ("Steps to reproduce" below) | Detected (the values are `P = 0, Q = 3`) | — |
 
-- コメントの例の `assign` と `var` が -3 になるのは、`docs/spec/SIR_SPEC.md` の 6 節の方針で、`$rtoi` を含む式を実行時に計算するため。パラメータ P は slang が決めるので 0 のまま。
-- 検出の報告（パスは slang のソースの場所からの相対に直した）は、x86_64 と同じ箇所である。型の名前が違うのは、macOS では `uint64_t` が `unsigned long long` だから。
+- In the comment's example, `assign` and `var` are -3 because, by the policy of section 6 of `docs/spec/SIR_SPEC.md`, expressions containing `$rtoi` are computed at run time. The parameter P is decided by slang, so it stays 0.
+- The detection report (paths made relative to slang's source directory) is at the same place as on x86_64. The type name differs because on macOS `uint64_t` is `unsigned long long`.
 
   ```
   source/ast/builtins/ConversionFuncs.cpp:64:36: runtime error: -3.7 is outside the range of representable values of type 'unsigned long long'
   ```
 
-- dev の構成の `ConversionFuncs.cpp.o` を逆アセンブルすると、`RtoIFunction::eval` の中の `double` から `uint64_t` への変換は、次の 1 命令だった。
+- Disassembling `ConversionFuncs.cpp.o` of the dev configuration, the conversion from `double` to `uint64_t` within `RtoIFunction::eval` was this single instruction.
 
   ```
-  fcvtzu    d0, d0           ; 符号なしの変換。負の値は 0 になる
+  fcvtzu    d0, d0           ; unsigned conversion; negative values become 0
   ```
 
-  同じ命令になる小さなプログラム（負の `double` を `(uint64_t)` で変換するだけ）を、この Mac で動かした。-3.7 は 0 になった。x86_64 の命令列は符号付きの変換の結果を残すので -3 になり、arm64 のこの命令は 0 になる。これが、マシンによって結果が分かれる理由である。
+  A small program that compiles to the same instruction (it only converts a negative `double` with `(uint64_t)`) was run on this Mac. -3.7 became 0. The x86_64 sequence keeps the result of the signed conversion and so gives -3, while this arm64 instruction gives 0. This is why the result differs by machine.
 
-### arm64 での再現の手順
+### Steps to reproduce on arm64
 
-slang だけの UBSan 付きの CLI は、kirimasim の dev の構成が取ってきた依存のソースを使って、ネットワークを使わずに作れる。`<dir>` は好きな作業用のディレクトリ。
+A CLI of slang alone with UBSan can be built without the network, using the dependency sources the dev configuration of kirimasim fetched. `<dir>` is any working directory.
 
 ```sh
 D=build/dev/_deps
@@ -125,7 +127,7 @@ cmake --build <dir> --target slang_driver
 <dir>/bin/slang rtoi.sv
 ```
 
-逆アセンブル（macOS の `objdump` は LLVM のもの）：
+Disassembly (`objdump` on macOS is LLVM's):
 
 ```sh
 objdump -d --no-show-raw-insn -C \
@@ -133,22 +135,22 @@ objdump -d --no-show-raw-insn -C \
   | awk '/RtoIFunction::eval/{p=1} p{print} p&&/\tret/{exit}' | grep fcvtzu
 ```
 
-## kirimasim への影響
+## Effect on kirimasim
 
-- `docs/spec/SIR_SPEC.md` の 6 節は、`$rtoi` を含む式を slang の畳み込んだ定数に頼らず、実行時に計算すると決めている。`$rtoi` を含む式はこの方針で、どのマシンでも正しい値になる。
-- 同じ節は、パラメータの値は slang が決めるのでこの方針では直らない、と書いている。パラメータの値はマシンによって違う。x86_64 では偶然 -3 になり、arm64 では 0 になる。x86_64 だけで確かめると、この誤りは見えない。
-- `cmake/Dependencies.cmake` の回避策（ubsan の構成で slang にだけ `-fno-sanitize=float-cast-overflow` を付ける）は、意図どおり、この検出を抑えている。slang を直った版に上げたら、回避策を外して、ubsan で検出が出ないことを確かめる。
+- Section 6 of `docs/spec/SIR_SPEC.md` decides that expressions containing `$rtoi` are computed at run time, without relying on the constants slang folded. By this policy, expressions containing `$rtoi` get the right value on every machine.
+- The same section says that parameter values are decided by slang, so this policy does not fix them. Parameter values differ by machine: -3 by chance on x86_64, 0 on arm64. Checking only on x86_64 does not reveal this error.
+- The workaround in `cmake/Dependencies.cmake` (adding `-fno-sanitize=float-cast-overflow` only to slang in the ubsan configuration) suppresses this detection, as intended. When slang is raised to a fixed version, remove the workaround and check that ubsan detects nothing.
 
-## 再現の手順
+## Steps to reproduce
 
-dev と ubsan のプリセットは、ふつうに作る。
+Build the dev and ubsan presets as usual.
 
 ```sh
 cmake --preset dev   && cmake --build --preset dev   --target kirimasim
 cmake --preset ubsan && cmake --build --preset ubsan --target kirimasim
 ```
 
-回避策を外した構成は、ubsan のフラグを `CMAKE_CXX_FLAGS_DEBUG` ではなく `CMAKE_CXX_FLAGS` に置いて作る。`cmake/Dependencies.cmake` の回避策は `CMAKE_CXX_FLAGS_DEBUG` を見て付くので、この置き方では付かない。リポジトリのファイルは変えない。
+The configuration with the workaround removed is made by putting the ubsan flags in `CMAKE_CXX_FLAGS` instead of `CMAKE_CXX_FLAGS_DEBUG`. The workaround in `cmake/Dependencies.cmake` is added by looking at `CMAKE_CXX_FLAGS_DEBUG`, so with this placement it is not added. No file of the repository is changed.
 
 ```sh
 F="-O1 -g -fsanitize=undefined -fno-sanitize-recover=all"
@@ -158,17 +160,17 @@ cmake -S . -B build/ubsan-noworkaround -G Ninja -DCMAKE_BUILD_TYPE=Debug \
   -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=undefined \
   -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=undefined
 cmake --build build/ubsan-noworkaround --target kirimasim
-grep -c float-cast-overflow build/ubsan-noworkaround/build.ninja   # 0 なら回避策は付いていない
+grep -c float-cast-overflow build/ubsan-noworkaround/build.ninja   # 0 means the workaround is not added
 ```
 
-実行：
+Running:
 
 ```sh
-build/<構成>/src/driver/kirimasim parse rtoi.sv   # 本文の例
-build/<構成>/src/driver/kirimasim rtoi2.sv        # コメントの例
+build/<configuration>/src/driver/kirimasim parse rtoi.sv   # the example in the text
+build/<configuration>/src/driver/kirimasim rtoi2.sv        # the example in the comment
 ```
 
-逆アセンブル：
+Disassembly:
 
 ```sh
 objdump -d --no-show-raw-insn -C \
@@ -176,8 +178,8 @@ objdump -d --no-show-raw-insn -C \
   | awk '/RtoIFunction::eval/{p=1} p{print} p&&/ret/{exit}'
 ```
 
-## 追記（2026-10-18）
+## Addendum (2026-10-18)
 
-上流では、2026-10-17 にコミット 145b57c で直った。`(uint64_t)val.real()` を、slang 自身の変換 `SVInt::fromDouble(32, val.real(), true, false)`（丸めずに切り捨てる）に置き換えた。kirimasim が固定している slang v12.0 には入っていないので、SIR_SPEC.md の 6 節の回避策はそのまま残す。
+Upstream, it was fixed on 2026-10-17 by commit 145b57c, which replaced `(uint64_t)val.real()` with slang's own conversion `SVInt::fromDouble(32, val.real(), true, false)` (truncating, not rounding). It is not in slang v12.0, which kirimasim pins, so the workaround of section 6 of SIR_SPEC.md stays as it is.
 
-2026-10-18 に、kirimasim は slang を main のコミット b7f11c1（この修正を含む）に上げ、SIR_SPEC.md の 6 節の回避策と、ubsan の構成の slang への例外を外した。
+On 2026-10-18, kirimasim raised slang to main commit b7f11c1 (which includes this fix), and removed the workaround of section 6 of SIR_SPEC.md and the exception for slang in the ubsan configuration.
