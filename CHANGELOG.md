@@ -82,3 +82,8 @@ own. CONTRIBUTING.md says what goes in this file.
 - An element of a function's array value passed as an array argument
   (`sum(g()[1])`) called the function twice. An input argument is now
   evaluated once, at the call (SIR_SPEC.md 8).
+- A pending unique or priority violation, or failed deferred assertion,
+  was dropped when its process went on after a `fork`'s `join` or
+  `join_any`, after `wait fork`, or after a block was disabled. Only
+  resuming from an event control or `wait`, or a new start of
+  `always_comb`, drops it now (SCHEDULER_SPEC.md 15.4).

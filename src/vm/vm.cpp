@@ -1036,7 +1036,8 @@ private:
                 freeJoinEvents_.pop_back();
             }
         }
-        sched_.waitNamed(f.kernelId, f.joinEvent);
+        // Children ending is no flush point of the pending reports (15.4).
+        sched_.waitNamed(f.kernelId, f.joinEvent, false);
         return true;
     }
 

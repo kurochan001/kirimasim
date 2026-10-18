@@ -191,7 +191,11 @@ public:
     /// others (SCHEDULER_SPEC.md 9.5).
     void waitAny(ProcessId p, std::span<const WaitItem> items,
                  std::span<const MonitorSpec> monitors);
-    void waitNamed(ProcessId p, EventId e);
+    /// `flushPoint`: whether the trigger that ends the wait is a flush point
+    /// of the process's pending reports (SCHEDULER_SPEC.md 15.3, 15.4): true
+    /// for an event control on a named event, false for a wait for children
+    /// to end (join, join_any, wait fork).
+    void waitNamed(ProcessId p, EventId e, bool flushPoint = true);
 
     /// Writes bits [lsb, lsb + width) of element `elem` (width 0: all) from
     /// `value`, laid out like a slot element from bit 0, and wakes the
@@ -381,8 +385,13 @@ private:
         std::uint32_t id = 0;
         std::uint32_t serial = 0;
     };
+    struct Waiter {
+        ProcessId process = 0;
+        std::uint32_t gen = 0;
+        bool flushPoint = true;
+    };
     struct NamedEvent {
-        std::vector<std::pair<ProcessId, std::uint32_t>> waiters;
+        std::vector<Waiter> waiters;
         std::vector<MonitorRef> monitors;
         std::uint64_t triggeredAt = UINT64_MAX;
     };
@@ -490,7 +499,9 @@ private:
     CounterId cSubscriptions_ = 0, cMonitorEvals_ = 0, cEndTime_ = 0, cEndReason_ = 0;
 
     void begin();
-    void wake(ProcessId p);
+    /// Resumes a process. `flushPoint`: whether resuming empties its queue of
+    /// pending reports (SCHEDULER_SPEC.md 15.4).
+    void wake(ProcessId p, bool flushPoint);
     /// Puts pendingOrder_ in creation order (15.4, 10.8).
     void sortPending();
     void schedule(Region r, Event e, std::uint64_t delay);

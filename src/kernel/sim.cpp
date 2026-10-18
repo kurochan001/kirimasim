@@ -203,8 +203,9 @@ void Scheduler::kill(ProcessId p) {
 }
 
 void Scheduler::start(ProcessId p) {
+    // A start, or going on after a disable, is no flush point (15.4).
     begin();
-    wake(p);
+    wake(p, false);
 }
 
 EventId Scheduler::addEvent() {
@@ -266,10 +267,10 @@ void Scheduler::freeMonitor(ProcessId p) {
     proc.monitors.clear();
 }
 
-void Scheduler::wake(ProcessId p) {
+void Scheduler::wake(ProcessId p, bool flushPoint) {
     freeMonitor(p);
     Process& proc = processes_[p];
-    proc.flushOnResume = true;
+    proc.flushOnResume = flushPoint;
     ++proc.gen;  // ends every other item of the wait
     const Region r = proc.group == Group::Active ? Region::Active : Region::Reactive;
     schedule(r, {Kind::Resume, r, p, proc.gen}, 0);
@@ -605,11 +606,11 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
         events_[e].monitors.push_back(ref);
 }
 
-void Scheduler::waitNamed(ProcessId p, EventId e) {
+void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
     freeMonitor(p);
     Process& proc = processes_[p];
     ++proc.gen;
-    events_[e].waiters.emplace_back(p, proc.gen);
+    events_[e].waiters.push_back({p, proc.gen, flushPoint});
 }
 
 // --- Effects -----------------------------------------------------------------
@@ -807,8 +808,8 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
             continue;
         if (sub.item.guard != nullptr && sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0)
             continue;
-        wake(sub.process);
-        --keep;  // this item is used up
+        wake(sub.process, true);  // an event control: a flush point (15.4)
+        --keep;                   // this item is used up
     }
     subscriptions_[s].resize(keep);
 
@@ -866,7 +867,7 @@ void Scheduler::evaluateMonitor(std::uint32_t id) {
     }
     Monitor& again = monitors_[id];
     again.last = scratch_;
-    if (fire) wake(again.process);  // frees the record
+    if (fire) wake(again.process, true);  // frees the record; a flush point (15.4)
 }
 
 void Scheduler::scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint32_t lsb,
@@ -967,8 +968,8 @@ void Scheduler::trigger(EventId e) {
     ev.triggeredAt = time_;
     const auto waiters = std::move(ev.waiters);
     events_[e].waiters.clear();
-    for (const auto& [p, gen] : waiters)
-        if (processes_[p].gen == gen) wake(p);
+    for (const Waiter& w : waiters)
+        if (processes_[w.process].gen == w.gen) wake(w.process, w.flushPoint);
     const auto mons = events_[e].monitors;
     std::vector<MonitorRef> keep;
     for (const MonitorRef ref : mons) {

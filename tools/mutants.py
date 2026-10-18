@@ -587,6 +587,11 @@ MUTANTS = [
      "    const sir::InstanceId owner = row.value_or(instance_);"),
     ("front: an array input argument found by arrayTarget is lowered again",
      "src/front/lower_sub.cpp", "    if (a)\n        copyArray(", "    if (false)\n        copyArray("),
+    ("vm: a join's end is a flush point of the pending reports", "src/vm/vm.cpp",
+     "        sched_.waitNamed(f.kernelId, f.joinEvent, false);",
+     "        sched_.waitNamed(f.kernelId, f.joinEvent, true);"),
+    ("kernel: going on after a disable is a flush point of the pending reports",
+     "src/kernel/sim.cpp", "    begin();\n    wake(p, false);", "    begin();\n    wake(p, true);"),
 ]
 
 

@@ -1,0 +1,16 @@
+10 case 0 resumed
+20 case 1 resumed
+30 case 2 resumed
+40 case 3 resumed
+40 case 3 deferred fired
+50 case 4 resumed
+50 case 4 deferred fired
+60 case 5 resumed
+60 case 5 deferred fired
+70 case 6 resumed
+70 case 6 deferred fired
+80 case 7 resumed
+80 case 7 deferred fired
+90 case 8 resumed
+90 case 8 deferred fired
+110 case 10 deferred fired
