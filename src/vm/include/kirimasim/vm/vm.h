@@ -1,11 +1,8 @@
 // vm: tier 1, which runs SIR processes on the shared kernel.
 //
-// This version interprets SIR directly. It runs initial, always, always_comb
-// and always_ff processes with integral values of up to 64 bits: loads and
-// stores (also of array elements and run-time bit positions), NBAs, the
-// value instructions, branches, delays and event controls on fixed signals,
-// and $display, $write, $finish, $stop and $time. Bytecode, fork, final,
-// wider values and the other instructions come in later stages.
+// This version interprets SIR directly. It runs the SIR that front makes
+// today; front reports the constructs not supported yet before anything
+// runs (CLI.md 5). Compiling SIR to bytecode comes later.
 
 #pragma once
 
