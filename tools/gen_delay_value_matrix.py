@@ -17,8 +17,10 @@ the container), where it is used (a
 delay control, a blocking and a nonblocking intra-assignment delay, ->>),
 the container (an initial procedure, a static and an automatic task, a
 fork branch), and the module's timescale (1ns/100ps, and 10ns/1ns in a
-child module, so that the design's precision is 100ps). Negative delays
-must not come before the end.
+child module, so that the design's precision is 100ps). A negative delay
+is not among them: as a 64-bit unsigned time it takes the time past the
+largest time here, a run-time error of the design that would end the run
+(SCHEDULER_SPEC.md 8); gen_runtime_error_matrix.py checks it.
 
 The expected outputs follow from the rules above. A person checks them
 once for all the tests made from them (TEST_SUITE.md, "Sampling by people").
@@ -34,7 +36,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "sched"
 NAME = "delay_value_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 2
+VERSION = 3
 
 GLOBAL = -10  # the design's precision: 100ps
 
@@ -118,12 +120,12 @@ def files():
           "file.\n"
           "// Icarus Verilog 13.0 does not take ->>; with fork #(d) -> e; join_none in its\n"
           "// place, it gives these lines. Verilator 5.052 gives the lines before the ->> ones\n"
-          "// and no more, and lets the negative delays come; 9.4.1 reads them as unsigned.\n"
+          "// and no more.\n"
           "`timescale 1ns/100ps\n"
           "module top;\n"
           "  int d = 3;\n  real r = 2.75;\n  real r2 = 1.04;\n  shortreal sr = 0.5;\n"
           "  logic [7:0] dx = 8'bx;\n  logic [7:0] dz = 8'bz;\n  logic [3:0] d4 = 4'hf;\n"
-          "  logic signed [3:0] ds = 4'sd5;\n  int neg = -1;\n  real rneg = -2.0;\n"
+          "  logic signed [3:0] ds = 4'sd5;\n"
           "  int q;\n  event e;\n  child c();\n"
           "  function int twice(int v);\n    return 2 * v;\n  endfunction\n")
     # The order they run in: the initial procedure's own steps, the tasks,
@@ -146,9 +148,6 @@ def files():
            "\n  endtask\n")
     sv += ("  task automatic ta(int own);\n" + "\n".join(auto_steps) + "\n  endtask\n")
     sv += "  initial begin : in_initial\n    int own;\n"
-    # Negative delays wait for a time past the end.
-    sv += ("    fork\n      #(neg) $display(\"negative int came\");\n"
-           "      #(rneg) $display(\"negative real came\");\n    join_none\n")
     sv += "    own = 2;\n" + "\n".join(initial_steps) + "\n"
     sv += "    ts();\n    ta(2);\n"
     sv += ("    fork\n      begin : in_fork\n        int own;\n        own = 2;\n" +
