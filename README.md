@@ -448,7 +448,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   generators under `tools/` whose expected output follows from the written
   rules. There are 69 generators, 270 tests in `tests/suite/`, and 531
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 229 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 234 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the

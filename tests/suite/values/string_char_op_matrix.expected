@@ -79,6 +79,34 @@ module x post_inc 4 97 48 66 37
 module x pre_inc 4 97 48 66 37
 module x post_dec 4 97 48 66 37
 module x pre_dec 4 97 48 66 37
+module neg3 add 4 97 48 66 -58
+module neg3 sub 4 97 48 66 -61
+module neg3 mul 4 97 48 66 -120
+module neg3 div 4 97 48 66 -30
+module neg3 mod 4 97 48 66 -4
+module neg3 and 4 97 48 66 68
+module neg3 or 4 97 48 66 -27
+module neg3 xor 4 97 48 66 -27
+module neg3 shl 4 97 48 66 -120
+module neg3 shr 4 97 48 66 98
+module neg3 ashl 4 97 48 66 -120
+module neg3 ashr 4 97 48 66 -30
+module neg3 post_inc -60 4 97 48 66 -59
+module neg3 pre_inc -59 4 97 48 66 -59
+module neg3 post_dec -60 4 97 48 66 -61
+module neg3 pre_dec -61 4 97 48 66 -61
+module end post_inc value 0 4 97 48 66 37
+module end pre_inc value 1 4 97 48 66 37
+module end post_dec value 0 4 97 48 66 37
+module end pre_dec value -1 4 97 48 66 37
+module neg post_inc value 0 4 97 48 66 37
+module neg pre_inc value 1 4 97 48 66 37
+module neg post_dec value 0 4 97 48 66 37
+module neg pre_dec value -1 4 97 48 66 37
+module x post_inc value 0 4 97 48 66 37
+module x pre_inc value 1 4 97 48 66 37
+module x post_dec value 0 4 97 48 66 37
+module x pre_dec value -1 4 97 48 66 37
 element p1 add 4 97 50 66 37
 element p1 sub 4 97 47 66 37
 element p1 mul 4 97 96 66 37
@@ -160,6 +188,34 @@ element x post_inc 4 97 48 66 37
 element x pre_inc 4 97 48 66 37
 element x post_dec 4 97 48 66 37
 element x pre_dec 4 97 48 66 37
+element neg3 add 4 97 48 66 -58
+element neg3 sub 4 97 48 66 -61
+element neg3 mul 4 97 48 66 -120
+element neg3 div 4 97 48 66 -30
+element neg3 mod 4 97 48 66 -4
+element neg3 and 4 97 48 66 68
+element neg3 or 4 97 48 66 -27
+element neg3 xor 4 97 48 66 -27
+element neg3 shl 4 97 48 66 -120
+element neg3 shr 4 97 48 66 98
+element neg3 ashl 4 97 48 66 -120
+element neg3 ashr 4 97 48 66 -30
+element neg3 post_inc -60 4 97 48 66 -59
+element neg3 pre_inc -59 4 97 48 66 -59
+element neg3 post_dec -60 4 97 48 66 -61
+element neg3 pre_dec -61 4 97 48 66 -61
+element end post_inc value 0 4 97 48 66 37
+element end pre_inc value 1 4 97 48 66 37
+element end post_dec value 0 4 97 48 66 37
+element end pre_dec value -1 4 97 48 66 37
+element neg post_inc value 0 4 97 48 66 37
+element neg pre_inc value 1 4 97 48 66 37
+element neg post_dec value 0 4 97 48 66 37
+element neg pre_dec value -1 4 97 48 66 37
+element x post_inc value 0 4 97 48 66 37
+element x pre_inc value 1 4 97 48 66 37
+element x post_dec value 0 4 97 48 66 37
+element x pre_dec value -1 4 97 48 66 37
 task p1 add 4 97 50 66 37
 task p1 sub 4 97 47 66 37
 task p1 mul 4 97 96 66 37
@@ -241,6 +297,34 @@ task x post_inc 4 97 48 66 37
 task x pre_inc 4 97 48 66 37
 task x post_dec 4 97 48 66 37
 task x pre_dec 4 97 48 66 37
+task neg3 add 4 97 48 66 -58
+task neg3 sub 4 97 48 66 -61
+task neg3 mul 4 97 48 66 -120
+task neg3 div 4 97 48 66 -30
+task neg3 mod 4 97 48 66 -4
+task neg3 and 4 97 48 66 68
+task neg3 or 4 97 48 66 -27
+task neg3 xor 4 97 48 66 -27
+task neg3 shl 4 97 48 66 -120
+task neg3 shr 4 97 48 66 98
+task neg3 ashl 4 97 48 66 -120
+task neg3 ashr 4 97 48 66 -30
+task neg3 post_inc -60 4 97 48 66 -59
+task neg3 pre_inc -59 4 97 48 66 -59
+task neg3 post_dec -60 4 97 48 66 -61
+task neg3 pre_dec -61 4 97 48 66 -61
+task end post_inc value 0 4 97 48 66 37
+task end pre_inc value 1 4 97 48 66 37
+task end post_dec value 0 4 97 48 66 37
+task end pre_dec value -1 4 97 48 66 37
+task neg post_inc value 0 4 97 48 66 37
+task neg pre_inc value 1 4 97 48 66 37
+task neg post_dec value 0 4 97 48 66 37
+task neg pre_dec value -1 4 97 48 66 37
+task x post_inc value 0 4 97 48 66 37
+task x pre_inc value 1 4 97 48 66 37
+task x post_dec value 0 4 97 48 66 37
+task x pre_dec value -1 4 97 48 66 37
 ref p1 add 4 97 50 66 37
 ref p1 sub 4 97 47 66 37
 ref p1 mul 4 97 96 66 37
@@ -322,3 +406,31 @@ ref x post_inc 4 97 48 66 37
 ref x pre_inc 4 97 48 66 37
 ref x post_dec 4 97 48 66 37
 ref x pre_dec 4 97 48 66 37
+ref neg3 add 4 97 48 66 -58
+ref neg3 sub 4 97 48 66 -61
+ref neg3 mul 4 97 48 66 -120
+ref neg3 div 4 97 48 66 -30
+ref neg3 mod 4 97 48 66 -4
+ref neg3 and 4 97 48 66 68
+ref neg3 or 4 97 48 66 -27
+ref neg3 xor 4 97 48 66 -27
+ref neg3 shl 4 97 48 66 -120
+ref neg3 shr 4 97 48 66 98
+ref neg3 ashl 4 97 48 66 -120
+ref neg3 ashr 4 97 48 66 -30
+ref neg3 post_inc -60 4 97 48 66 -59
+ref neg3 pre_inc -59 4 97 48 66 -59
+ref neg3 post_dec -60 4 97 48 66 -61
+ref neg3 pre_dec -61 4 97 48 66 -61
+ref end post_inc value 0 4 97 48 66 37
+ref end pre_inc value 1 4 97 48 66 37
+ref end post_dec value 0 4 97 48 66 37
+ref end pre_dec value -1 4 97 48 66 37
+ref neg post_inc value 0 4 97 48 66 37
+ref neg pre_inc value 1 4 97 48 66 37
+ref neg post_dec value 0 4 97 48 66 37
+ref neg pre_dec value -1 4 97 48 66 37
+ref x post_inc value 0 4 97 48 66 37
+ref x pre_inc value 1 4 97 48 66 37
+ref x post_dec value 0 4 97 48 66 37
+ref x pre_dec value -1 4 97 48 66 37

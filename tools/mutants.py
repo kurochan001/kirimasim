@@ -692,6 +692,13 @@ MUTANTS = [
      "                if (level >= 1) {", "                if (level >= 3) {"),
     ("driver: $finish(2) and $stop(2) write no statistics", "src/driver/main.cpp",
      "context.scheduler().level() == 2)", "context.scheduler().level() == 3)"),
+    ("front: a string's character reads as unsigned", "src/front/lower_expr.cpp",
+     "        return coerce(emit(Op::StrGet, sir::u2(8), {v.op, i.op}, sl), typeOf(*e.type, sl), sl);",
+     "        return emit(Op::StrGet, sir::u2(8), {v.op, i.op}, sl);"),
+    ("kernel: $sscanf reads ? as x", "src/kernel/scan.cpp",
+     "    if (c == 'x' || c == 'X') {", "    if (c == 'x' || c == 'X' || c == '?') {"),
+    ("kernel: a wide integer rounds to real without the bits below the 64 it keeps",
+     "src/kernel/wide.cpp", "    if (sticky) m |= 1;\n", ""),
 ]
 
 

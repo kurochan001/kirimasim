@@ -7,25 +7,28 @@ tests/suite/values/.
   tools/gen_math_wide_matrix.py --check   # exit 1 if a file differs from what it would write
 
 $clog2 gives the ceiling of the base-2 logarithm of its argument, taken
-as unsigned, and 0 for 0 and 1 (20.8.1). The real functions convert an
-integral argument to real first, as an assignment does: signed or
-unsigned by its type, x and z bits taken as 0 (20.8.2,
-VALUE_SEMANTICS.md 1.5). Both hold at any width.
+as unsigned, and 0 for 0 and 1 (20.8.1), and x for an argument with x
+or z (SYSTEM_TASKS.md 8). The real functions convert an integral
+argument to real first, as an assignment does: signed or unsigned by its
+type, x and z bits taken as 0, and a value a real cannot hold exactly
+rounded to the nearest one, ties to the even one (20.8.2,
+VALUE_SEMANTICS.md 1.5). All of it holds at any width.
 
 The axes: the width (65, 100, 128, 200), two- and four-state, signed and
 unsigned; the argument (0, 1, 2, 2**64, 2**64 + 1, the top bit alone,
-every bit 1, and in a four-state value x and z in the top bit over 1);
-the function ($clog2, $sqrt, $ln, $log10, $floor, $ceil, $pow with 0.5);
-the container (an initial procedure and an automatic task). Every
-argument converts to a real exactly (a power of two, or below 2**53),
-since which way a conversion that loses bits rounds is not written down
-yet (not confirmed); $clog2 of x or z is left out for the same reason.
-Reals print with %e, six digits, which no difference in the last bits
-of a math library changes here.
+every bit 1, 2**64 + 2**11 and 2**64 + 3 * 2**11, which lie halfway
+between two reals, 2**64 + 2**11 + 1 just above halfway, and in a
+four-state value x and z in the top bit over 1); the function ($clog2, $sqrt, $ln, $log10, $floor, $ceil, $pow with
+0.5); the container (an initial procedure and an automatic task). Reals
+print with %e, six digits, which no difference in the last bits of a
+math library changes here; $floor prints once more with %0.1f, every
+digit of the real the argument converts to.
 
 The expected outputs follow from the rules above, computed below. For
 reference (checked 2026-10-18): Icarus Verilog 13.0 prints every line as
-expected, and Verilator 5.052 every line of the two-state variables.
+expected, and Verilator 5.052 every line of the two-state variables but
+those printing every digit of 2**64 + 2**11 + 1, which it rounds as if
+the value were halfway.
 """
 
 from __future__ import annotations
@@ -39,17 +42,20 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "math_wide_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 WIDTHS = [65, 100, 128, 200]
 TYPES = [(four, signed) for four in (True, False) for signed in (False, True)]
 CONTAINERS = ["initial", "task"]
+# (name, the call with V for the argument, the function, the format)
 FUNCS = [
-    ("sqrt", "$sqrt(V)", math.sqrt),
-    ("ln", "$ln(V)", math.log),
-    ("log10", "$log10(V)", math.log10),
-    ("floor", "$floor(V)", math.floor),
-    ("ceil", "$ceil(V)", math.ceil),
-    ("pow", "$pow(V, 0.5)", lambda r: r ** 0.5),
+    ("sqrt", "$sqrt(V)", math.sqrt, "%e"),
+    ("ln", "$ln(V)", math.log, "%e"),
+    ("log10", "$log10(V)", math.log10, "%e"),
+    ("floor", "$floor(V)", math.floor, "%e"),
+    ("ceil", "$ceil(V)", math.ceil, "%e"),
+    ("pow", "$pow(V, 0.5)", lambda r: r ** 0.5, "%e"),
+    # Every digit of the real the argument converts to.
+    ("floor_digits", "$floor(V)", math.floor, "%0.1f"),
 ]
 
 
@@ -57,12 +63,12 @@ def clog2(n):
     return 0 if n <= 1 else (n - 1).bit_length()
 
 
-def exact_real(n, w, signed):
-    """The real that the w-bit value n converts to, or None where it is not
-    exact."""
+def to_real(n, w, signed):
+    """The real that the w-bit value n converts to: the nearest, ties to
+    the even one, as Python's conversion rounds."""
     if signed and n >> (w - 1):
         n -= 1 << w
-    return float(n) if float(n) == n else None
+    return float(n)
 
 
 def args(w, four, signed):
@@ -71,17 +77,20 @@ def args(w, four, signed):
     every = (1 << w) - 1
     out = []
     for name, n in [("zero", 0), ("one", 1), ("two", 2), ("p64", 1 << 64),
-                    ("p64p1", (1 << 64) + 1), ("top", top), ("ones", every)]:
-        out.append((name, f"{w}'h{n:x}", n, exact_real(n, w, signed)))
+                    ("p64p1", (1 << 64) + 1), ("top", top), ("ones", every),
+                    ("tie", (1 << 64) + (1 << 11)), ("tie3", (1 << 64) + (3 << 11)),
+                    ("above_tie", (1 << 64) + (1 << 11) + 1)]:
+        out.append((name, f"{w}'h{n:x}", n, to_real(n, w, signed)))
     if four:
         # x and z in the top bit count as 0 for a real.
-        out.append(("topx", f"{w}'b{'x' + '0' * (w - 2)}1", None, 1.0))
-        out.append(("topz", f"{w}'b{'z' + '0' * (w - 2)}1", None, 1.0))
+        out.append(("topx", f"{w}'b{'x' + '0' * (w - 2)}1", "x", 1.0))
+        out.append(("topz", f"{w}'b{'z' + '0' * (w - 2)}1", "x", 1.0))
     return out
 
 
-def real_text(f, r):
-    """%e of f(r), or None where the function has no real value."""
+def real_text(f, r, fmt):
+    """f(r) printed with fmt, or None where the function has no real
+    value."""
     if r is None:
         return None
     try:
@@ -94,7 +103,7 @@ def real_text(f, r):
         return None
     if r == 0 and f in (math.log, math.log10):
         return None
-    return "%e" % v
+    return fmt % v
 
 
 def tname(w, four, signed):
@@ -115,16 +124,15 @@ def files():
                     lines = initial if container == "initial" else task
                     out = exp if container == "initial" else task_exp
                     lines.append(f"{ind}{var} = {lit};")
-                    if unsigned is not None:
-                        tag = f"{container} {key} {name} clog2"
-                        lines.append(f'{ind}$display("{tag} %0d", $clog2({var}));')
-                        out.append(f"{tag} {clog2(unsigned)}")
-                    for fname, text, f in FUNCS:
-                        want = real_text(f, real)
+                    tag = f"{container} {key} {name} clog2"
+                    lines.append(f'{ind}$display("{tag} %0d", $clog2({var}));')
+                    out.append(f"{tag} {unsigned if unsigned == 'x' else clog2(unsigned)}")
+                    for fname, text, f, fmt in FUNCS:
+                        want = real_text(f, real, fmt)
                         if want is None:
                             continue
                         tag = f"{container} {key} {name} {fname}"
-                        lines.append(f'{ind}$display("{tag} %e", {text.replace("V", var)});')
+                        lines.append(f'{ind}$display("{tag} {fmt}", {text.replace("V", var)});')
                         out.append(f"{tag} {want}")
             task.append("    end")
     head = [

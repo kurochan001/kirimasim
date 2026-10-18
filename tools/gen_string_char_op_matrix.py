@@ -19,17 +19,18 @@ where nothing changes); the place (a module variable, an element of a
 module's array of strings, an automatic variable of a task, and a string
 through a ref argument). Each line prints the value an increment gives
 inside the string, and the length and the bytes of the string after it.
-
-Two things are left out, as no document of kirimasim decides them yet
-(not confirmed): whether s[i] is signed, as a byte is (6.11; it matters
-for bytes of 128 and more), and the value of ++s[i] and --s[i] where the
-write changes nothing. Every character and result here is from 1 to 127.
+Two more parts: every operator on a character from 128 to 255, which
+s[i] reads as a negative byte (VALUE_SEMANTICS.md 7.6), and the value of
+++ and -- where the write changes nothing, which is the value written
+all the same (VALUE_SEMANTICS.md 3.12).
 
 The expected outputs follow from the rules above, computed below. For
 reference (checked 2026-10-18): Icarus Verilog 13.0 and Verilator 5.052
 do not take these forms (++ on a character, and some of the operators);
 with each operator written out as an assignment, both print the 65 lines
-of the module variable at the positions other than x as expected.
+of the module variable at the positions other than x as expected, and
+read the negative character as unsigned (VALUE_SEMANTICS.md 7.6 takes
+the byte of the standard, which is signed).
 """
 
 from __future__ import annotations
@@ -42,11 +43,14 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "string_char_op_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
-# The string each case starts from.
+# The string each case starts from, and the one of the negative character
+# (8'hc4, -60) at position 3.
 BASE = [0x61, 0x30, 0x42, 0x25]
 BASE_TEXT = "a0B%"
+NEG = [0x61, 0x30, 0x42, 0xC4]
+NEG_TEXT = "a0B\\304"
 # (name, the operator, its right side, the operation on a signed byte and
 # the right side)
 OPS = [
@@ -82,10 +86,11 @@ def sbyte(v):
     return v - 256 if v & 0x80 else v
 
 
-def apply(pos, op):
+def apply(pos, op, base=None):
     """The bytes after `op` at `pos`, and the value of the expression."""
-    after = list(BASE)
-    old = sbyte(BASE[pos]) if pos is not None else 0
+    base = BASE if base is None else base
+    after = list(base)
+    old = sbyte(base[pos]) if pos is not None else 0
     new, value = op(old)
     if pos is not None and new & 0xFF != 0:
         after[pos] = new & 0xFF
@@ -109,6 +114,29 @@ def cases():
 
 def files():
     module, run, helpers, exp, run_exp = [], [], [], [], []
+
+    def row(place, target, lines, tag, ix, pos, stmt, shows, f, base, text):
+        after, value = apply(pos, f, base)
+        lines.append(f'    {target} = "{text}";')
+        if place == "ref":
+            # The operation in a task of its own, on what its ref argument
+            # names.
+            k = len(helpers)
+            helpers.append(f"  task automatic r{k}(ref string r);\n"
+                           f"    {stmt.replace('S', f'r[{ix}]')}\n  endtask")
+            lines.append(f"    r{k}({target});")
+        else:
+            lines.append(f"    {stmt.replace('S', f'{target}[{ix}]')}")
+        bytes_ = ", ".join(f"{target}[{k}]" for k in range(4))
+        fmt = "%0d " * 4 + "%0d"
+        if shows:
+            lines.append(f'    $display("{tag} %0d {fmt}", n, {target}.len(), {bytes_});')
+            want = f"{tag} {value} {show(after)}"
+        else:
+            lines.append(f'    $display("{tag} {fmt}", {target}.len(), {bytes_});')
+            want = f"{tag} {show(after)}"
+        (run_exp if place in ("task", "ref") else exp).append(want)
+
     for place in PLACES:
         lines = run if place in ("task", "ref") else module
         target = {"module": "s", "element": "sa[1]", "task": "t", "ref": "t"}[place]
@@ -116,28 +144,22 @@ def files():
             for name, stmt, shows, f in cases():
                 if name == "zero" and pos != 1:
                     continue
-                shows = shows and pos is not None
-                tag = f"{place} {pname} {name}"
-                after, value = apply(pos, f)
-                lines.append(f'    {target} = "{BASE_TEXT}";')
-                if place == "ref":
-                    # The operation in a task of its own, on what its ref
-                    # argument names.
-                    k = len(helpers)
-                    helpers.append(f"  task automatic r{k}(ref string r);\n"
-                                   f"    {stmt.replace('S', f'r[{ix}]')}\n  endtask")
-                    lines.append(f"    r{k}({target});")
-                else:
-                    lines.append(f"    {stmt.replace('S', f'{target}[{ix}]')}")
-                bytes_ = ", ".join(f"{target}[{k}]" for k in range(4))
-                fmt = "%0d " * 4 + "%0d"
+                row(place, target, lines, f"{place} {pname} {name}", ix, pos, stmt,
+                    shows and pos is not None, f, BASE, BASE_TEXT)
+        # The negative character: every operator, and the increments'
+        # values.
+        for name, stmt, shows, f in cases():
+            if name != "zero":
+                row(place, target, lines, f"{place} neg3 {name}", "3", 3, stmt, shows, f, NEG,
+                    NEG_TEXT)
+        # The value of an increment where the write changes nothing.
+        for pname, ix, pos in POSITIONS:
+            if pos is not None:
+                continue
+            for name, stmt, shows, f in cases():
                 if shows:
-                    lines.append(f'    $display("{tag} %0d {fmt}", n, {target}.len(), {bytes_});')
-                    want = f"{tag} {value} {show(after)}"
-                else:
-                    lines.append(f'    $display("{tag} {fmt}", {target}.len(), {bytes_});')
-                    want = f"{tag} {show(after)}"
-                (run_exp if place in ("task", "ref") else exp).append(want)
+                    row(place, target, lines, f"{place} {pname} {name} value", ix, pos, stmt,
+                        True, f, BASE, BASE_TEXT)
     head = [
         "/*",
         f":name: {NAME}",
