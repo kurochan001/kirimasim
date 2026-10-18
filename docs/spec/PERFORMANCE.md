@@ -2,7 +2,7 @@
 
 [日本語](PERFORMANCE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved).
+Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved).
 
 This document sets kirimasim's performance goals, its event counters, the regression test by counts (PerfCount), and the conditions of wall-clock benchmarks. The reasons for ending follow SCHEDULER_SPEC.md 16, and the form of `--stats=json` follows CLI.md.
 
@@ -82,6 +82,7 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 - **Measuring runs:** a test whose `:type:` contains `simulation` is run (`kirimasim --stats=json <file>`) instead of `parse`, and its counts compared. The JSON is read from the last line of standard output.
 - **Tests covered:** the required tests (TEST_SUITE.md) that can run, and the small designs for benchmarks (5.2). Not the whole test suite (every new runnable test would need a change of expected values, and CI would grow heavy).
 - **String items:** `sim.end_reason` is compared for exact equality. A difference fails.
+- **Exit code (added 2026-10-18, approved):** the exit code of the run is compared too: that of `:expected_exit:` (0 when absent) for a `simulation` test, and for a test that is only parsed 0, or 2 with `:should_fail_because:`. A test whose header cannot be read as written (TEST_SUITE.md, "What is judged now") fails.
 - **Threshold:** stays at 10%, with no exceptions per counter (draft). If an exception is needed, it is proposed to a human as an amendment to this document.
 - Tests that cannot run because of unsupported constructs (exit code 2 and `error: unsupported:`) are not registered in the expected values.
 
