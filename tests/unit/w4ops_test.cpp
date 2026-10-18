@@ -3,6 +3,7 @@
 // to 64, with and without X and Z bits (VALUE_SEMANTICS.md 3).
 
 #include <cstdint>
+#include <optional>
 #include <random>
 #include <string>
 
@@ -166,6 +167,54 @@ TEST(W4Ops, Select) {
         ASSERT_TRUE(same(k::select4(c, x, y, w),
                          v::select(ref(c, cw, false), ref(x, w, false), ref(y, w, false)),
                          "select " + show(c, cw) + " ? " + show(x, w) + " : " + show(y, w)));
+    }
+}
+
+TEST(W4Ops, SelectsConcatenationAndWrites) {
+    // Positions, selects, concatenation, replication and writes of parts
+    // (VALUE_SEMANTICS.md 3.11, 7.1, 7.2): the ones the VM uses for values
+    // of at most 64 bits.
+    Gen g;
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));
+    for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
+        const unsigned w = g.width();
+        const W4 x = g.next(w);
+        const v::Value rx = ref(x, w, false);
+        // An index of 1 to 64 bits, signed or not, often a small number.
+        const unsigned iw = g.width();
+        const bool is = g.flip();
+        W4 index = g.next(iw);
+        if (n % 2 == 0 && index.b == 0) index.a = (index.a % (w + 8)) & k::mask(iw);
+        const v::Value ri = ref(index, iw, is);
+        const std::optional<std::int64_t> pos = k::position4(index, iw, is);
+        ASSERT_EQ(pos, v::positionOf(ri)) << "position of " << v::toBinary(ri);
+        const std::string ctx = show(x, w) + " at " + v::toBinary(ri);
+        ASSERT_TRUE(same(pos ? k::bits4(x, w, *pos, 1) : k::kW4X, v::bitSelect(rx, ri),
+                         "bit select " + ctx));
+        const unsigned pw = g.width();
+        ASSERT_TRUE(same(pos ? k::bits4(x, w, *pos, pw) : k::allX(pw),
+                         v::indexedPartSelect(rx, ri, pw),
+                         "part select of " + std::to_string(pw) + " " + ctx));
+        const std::int64_t lsb =
+            static_cast<std::int64_t>(n % (w + 70)) - 70 + (n % 3 == 0 ? 0 : 64);
+        ASSERT_TRUE(same(k::bits4(x, w, lsb, pw), v::bits(rx, lsb, pw),
+                         "bits " + std::to_string(lsb) + " +: " + std::to_string(pw) + " of " +
+                             show(x, w)));
+        const unsigned vw = g.width();
+        const W4 val = g.next(vw);
+        ASSERT_TRUE(same(pos ? k::writeBits4(x, w, *pos, val, vw) : x,
+                         v::writeBits(rx, ri, ref(val, vw, false)),
+                         "write " + show(val, vw) + " to " + ctx));
+        // Parts of at most 64 bits in all, concatenated and replicated.
+        const unsigned aw = 1 + static_cast<unsigned>(n % 32);
+        const unsigned bw = 1 + static_cast<unsigned>((n / 32) % (64 - aw));
+        const W4 a = g.next(aw);
+        const W4 b = g.next(bw);
+        ASSERT_TRUE(same(k::concat4(a, b, bw), v::concat({ref(a, aw, false), ref(b, bw, false)}),
+                         "{" + show(a, aw) + ", " + show(b, bw) + "}"));
+        const unsigned times = 1 + static_cast<unsigned>(n % (64 / aw));
+        ASSERT_TRUE(same(k::repl4(a, aw, times), v::replicate(times, ref(a, aw, false)),
+                         "{" + std::to_string(times) + "{" + show(a, aw) + "}}"));
     }
 }
 

@@ -462,6 +462,47 @@ void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb) {
         r[k] = out[k];
 }
 
+std::optional<std::int64_t> position(const W4* x, unsigned w, bool s) {
+    if (hasUnknown(x, w)) return std::nullopt;
+    if (w <= 64) return position4(x[0], w, s);
+    const unsigned n = chunks(w);
+    const bool neg = s && ((x[n - 1].a >> ((w - 1) % 64)) & 1U) != 0;
+    for (unsigned k = 1; k < n; ++k) {
+        const std::uint64_t fill = neg ? (k + 1 == n ? mask(w - 64 * k) : ~std::uint64_t{0}) : 0;
+        if (x[k].a != fill) return std::nullopt;
+    }
+    if ((x[0].a >> 63) != (neg ? 1U : 0U)) return std::nullopt;  // past 64 signed bits
+    return static_cast<std::int64_t>(x[0].a);
+}
+
+void writeBits(W4* x, unsigned xw, std::int64_t pos, const W4* v, unsigned vw) {
+    const std::optional<Inside> in = inside(pos, vw, xw);
+    if (!in) return;
+    std::vector<W4> part(chunks(in->n));
+    bits(part.data(), in->n, v, vw, in->skip);
+    put(x, in->lo, part.data(), in->n);
+}
+
+std::string toText(const W4* x, unsigned w) {
+    std::string s;
+    for (unsigned k = (w + 7) / 8; k-- > 0;) {
+        const W4& c = x[k / 8];
+        const auto ch = static_cast<char>(((c.a & ~c.b) >> (k % 8 * 8)) & 0xffU);
+        if (ch != 0) s.push_back(ch);
+    }
+    return s;
+}
+
+void fromText(W4* r, unsigned w, std::string_view s) {
+    const unsigned n = chunks(w);
+    for (unsigned i = 0; i < n; ++i)
+        r[i] = {0, 0};
+    unsigned byte = 0;
+    for (auto c = s.rbegin(); c != s.rend() && byte * 8 < w; ++c, ++byte)
+        r[byte / 8].a |= std::uint64_t{static_cast<unsigned char>(*c)} << (byte % 8 * 8);
+    if (w % 64 != 0) r[n - 1].a &= mask(w % 64);
+}
+
 void put(W4* r, unsigned lsb, const W4* x, unsigned xw) {
     for (unsigned i = 0; i < xw; ++i)
         setBit(r, lsb + i, bitA(x, i), bitB(x, i));

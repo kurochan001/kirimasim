@@ -13,6 +13,7 @@
 
 #include <bit>
 #include <cstdint>
+#include <optional>
 
 #include "kirimasim/kernel/w4.h"
 
@@ -290,5 +291,84 @@ inline W4 trunc4(W4 x, unsigned to) { return {x.a & mask(to), x.b & mask(to)}; }
 
 /// Four-state to two-state: X and Z become 0.
 inline W4 to2(W4 x) { return {x.a & ~x.b, 0}; }
+
+// --- Selects (3.11), concatenation and replication (7.1, 7.2). -------------
+
+/// The value of an index or a position of w bits, signed when s: nothing
+/// when it has X or Z bits or lies beyond 64 signed bits, which is outside
+/// any value.
+inline std::optional<std::int64_t> position4(W4 v, unsigned w, bool s) {
+    if (v.b != 0) return std::nullopt;
+    if (s) return asSigned(v.a, w);
+    if (v.a > static_cast<std::uint64_t>(INT64_MAX)) return std::nullopt;
+    return static_cast<std::int64_t>(v.a);
+}
+
+/// Bits [lsb, lsb + w) of x (xw bits), w at most 64; a bit outside x is X.
+inline W4 bits4(W4 x, unsigned xw, std::int64_t lsb, unsigned w) {
+    // Wholly outside: X, without computing lsb + i, which could overflow.
+    if (lsb >= static_cast<std::int64_t>(xw) || lsb <= -static_cast<std::int64_t>(w))
+        return allX(w);
+    if (lsb >= 0 && lsb + w <= xw) {
+        const auto s = static_cast<unsigned>(lsb);
+        return {(x.a >> s) & mask(w), (x.b >> s) & mask(w)};
+    }
+    W4 r{0, 0};
+    for (unsigned i = 0; i < w; ++i) {
+        const std::int64_t at = lsb + i;
+        if (at < 0 || at >= static_cast<std::int64_t>(xw)) {
+            r.a |= std::uint64_t{1} << i;
+            r.b |= std::uint64_t{1} << i;
+            continue;
+        }
+        const auto s = static_cast<unsigned>(at);
+        r.a |= ((x.a >> s) & 1U) << i;
+        r.b |= ((x.b >> s) & 1U) << i;
+    }
+    return r;
+}
+
+/// {hi, lo}, lo of lw bits; the result has at most 64 bits.
+inline W4 concat4(W4 hi, W4 lo, unsigned lw) {
+    return {(lw >= 64 ? 0 : hi.a << lw) | lo.a, (lw >= 64 ? 0 : hi.b << lw) | lo.b};
+}
+
+/// {n{x}} of an xw-bit x; n * xw is at most 64.
+inline W4 repl4(W4 x, unsigned xw, std::uint64_t n) {
+    W4 r{0, 0};
+    for (std::uint64_t i = 0; i < n; ++i)
+        r = concat4(r, x, xw);
+    return r;
+}
+
+/// Where a write of w bits from position pos meets a value of xw bits: the
+/// first bit inside it, how many bits, and how many low bits of the written
+/// part fall below it (3.11). Every write of a part at a run-time position
+/// comes here; no position overflows it.
+struct Inside {
+    std::uint32_t lo = 0;
+    std::uint32_t n = 0;
+    std::uint32_t skip = 0;
+};
+
+/// Nothing when no bit is inside.
+inline std::optional<Inside> inside(std::int64_t pos, std::uint32_t w, std::int64_t xw) {
+    if (pos >= xw || pos <= -static_cast<std::int64_t>(w)) return std::nullopt;
+    const std::int64_t lo = pos < 0 ? 0 : pos;
+    const std::int64_t hi = pos + w < xw ? pos + w : xw;  // exclusive
+    return Inside{static_cast<std::uint32_t>(lo), static_cast<std::uint32_t>(hi - lo),
+                  static_cast<std::uint32_t>(lo - pos)};
+}
+
+/// x (xw bits) with the w bits of v written from bit pos: only the bits
+/// inside x.
+inline W4 writeBits4(W4 x, unsigned xw, std::int64_t pos, W4 v, unsigned w) {
+    const std::optional<Inside> in = inside(pos, w, xw);
+    if (!in) return x;
+    const std::uint64_t m = mask(in->n) << in->lo;
+    x.a = (x.a & ~m) | (((v.a >> in->skip) << in->lo) & m);
+    x.b = (x.b & ~m) | (((v.b >> in->skip) << in->lo) & m);
+    return x;
+}
 
 }  // namespace kirimasim::kernel

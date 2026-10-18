@@ -637,6 +637,16 @@ MUTANTS = [
     ("sir verify: a result may have width 0", "src/sir/verify.cpp",
      "} else if (in.result != kNone && isIntegral(in.type) && in.type.width == 0) {",
      "} else if (false) {"),
+    ("kernel: bits4 reads a bit outside the value as 1", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "            r.b |= std::uint64_t{1} << i;\n            continue;", "            continue;"),
+    ("kernel: a part written below a value is not shifted", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "static_cast<std::uint32_t>(lo - pos)};", "0};"),
+    ("kernel: an unsigned position is read as signed", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "    if (s) return asSigned(v.a, w);", "    if (s || true) return asSigned(v.a, w);"),
+    ("kernel: concat4 puts the first part lowest", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "return {(lw >= 64 ? 0 : hi.a << lw) | lo.a,", "return {(lw >= 64 ? 0 : lo.a << lw) | hi.a,"),
+    ("kernel: a zero byte is kept in text", "src/kernel/wide.cpp",
+     "        if (ch != 0) s.push_back(ch);", "        s.push_back(ch);"),
 ]
 
 

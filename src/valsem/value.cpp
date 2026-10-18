@@ -440,6 +440,91 @@ Value sext(const Value& x, std::uint32_t width, bool isSigned) {
 
 Value trunc(const Value& x, std::uint32_t width, bool isSigned) { return zext(x, width, isSigned); }
 
+std::optional<std::int64_t> positionOf(const Value& v) {
+    if (v.hasUnknown()) return std::nullopt;
+    const bool negative = v.isSigned && v.bits.back() == Logic::One;
+    // Beyond 64 signed bits, every bit above 62 equals the sign.
+    for (std::size_t i = 63; i < v.bits.size(); ++i)
+        if ((v.bits[i] == Logic::One) != negative) return std::nullopt;
+    std::uint64_t u = 0;
+    for (std::size_t i = 0; i < 64; ++i) {
+        const Logic b = i < v.bits.size() ? v.bits[i] : (negative ? Logic::One : Logic::Zero);
+        if (b == Logic::One) u |= std::uint64_t{1} << i;
+    }
+    if (!negative && (u >> 63) != 0) return std::nullopt;
+    return static_cast<std::int64_t>(u);
+}
+
+Value bits(const Value& x, std::int64_t lsb, std::uint32_t width) {
+    Value out = filled(Logic::X, width, false);
+    // Wholly outside, without computing lsb + i, which could overflow.
+    if (lsb >= static_cast<std::int64_t>(x.width()) || lsb <= -static_cast<std::int64_t>(width))
+        return out;
+    for (std::uint32_t i = 0; i < width; ++i) {
+        const std::int64_t at = lsb + i;
+        if (at >= 0 && at < static_cast<std::int64_t>(x.width()))
+            out.bits[i] = x.bits[static_cast<std::size_t>(at)];
+    }
+    return out;
+}
+
+Value bitSelect(const Value& x, const Value& index) {
+    const std::optional<std::int64_t> at = positionOf(index);
+    if (!at) return filled(Logic::X, 1, false);
+    return bits(x, *at, 1);
+}
+
+Value indexedPartSelect(const Value& x, const Value& pos, std::uint32_t width) {
+    const std::optional<std::int64_t> at = positionOf(pos);
+    if (!at) return filled(Logic::X, width, false);
+    return bits(x, *at, width);
+}
+
+Value concat(const std::vector<Value>& parts) {
+    Value out;
+    for (auto p = parts.rbegin(); p != parts.rend(); ++p)
+        out.bits.insert(out.bits.end(), p->bits.begin(), p->bits.end());
+    return out;
+}
+
+Value replicate(std::uint32_t n, const Value& x) { return concat(std::vector<Value>(n, x)); }
+
+Value writeBits(const Value& x, const Value& pos, const Value& v) {
+    Value out = x;
+    const std::optional<std::int64_t> at = positionOf(pos);
+    // Nothing inside x, without computing *at + i, which could overflow.
+    if (!at || *at >= static_cast<std::int64_t>(x.width()) ||
+        *at <= -static_cast<std::int64_t>(v.width()))
+        return out;
+    for (std::uint32_t i = 0; i < v.width(); ++i) {
+        const std::int64_t to = *at + i;
+        if (to >= 0 && to < static_cast<std::int64_t>(x.width()))
+            out.bits[static_cast<std::size_t>(to)] = v.bits[i];
+    }
+    return out;
+}
+
+std::string toText(const Value& x) {
+    std::string s;
+    for (std::uint32_t k = (x.width() + 7) / 8; k-- > 0;) {
+        unsigned c = 0;
+        for (std::uint32_t i = 0; i < 8 && 8 * k + i < x.width(); ++i)
+            if (x.bits[8 * k + i] == Logic::One) c |= 1U << i;
+        if (c != 0) s.push_back(static_cast<char>(c));
+    }
+    return s;
+}
+
+Value fromText(const std::string& s, std::uint32_t width) {
+    Value out = filled(Logic::Zero, width, false);
+    std::uint32_t byte = 0;
+    for (auto c = s.rbegin(); c != s.rend() && 8 * byte < width; ++c, ++byte)
+        for (std::uint32_t i = 0; i < 8 && 8 * byte + i < width; ++i)
+            if (((static_cast<unsigned char>(*c) >> i) & 1U) != 0)
+                out.bits[8 * byte + i] = Logic::One;
+    return out;
+}
+
 Value to2(const Value& x) {
     Value out = x;
     for (Logic& b : out.bits)

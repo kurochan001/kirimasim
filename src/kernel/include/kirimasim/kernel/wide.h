@@ -11,6 +11,9 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include <string>
+#include <string_view>
 
 #include "kirimasim/kernel/w4.h"
 
@@ -92,6 +95,21 @@ void select(W4* r, W4 cond, const W4* x, const W4* y, unsigned w);
 void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb);
 /// Writes the xw bits of x into r at bit lsb, leaving the others.
 void put(W4* r, unsigned lsb, const W4* x, unsigned xw);
+/// The value of an index or a position of w bits, signed when s: nothing
+/// when it has X or Z bits or lies beyond 64 signed bits.
+std::optional<std::int64_t> position(const W4* x, unsigned w, bool s);
+/// x (xw bits) with the vw bits of v written from bit pos: only the bits
+/// inside x (w4ops.h inside()).
+void writeBits(W4* x, unsigned xw, std::int64_t pos, const W4* v, unsigned vw);
+
+// --- Strings (6.16). --------------------------------------------------------
+
+/// The bytes of x as characters, the most significant first; zero bytes
+/// are dropped, and X and Z bits read as 0.
+std::string toText(const W4* x, unsigned w);
+/// A string as a two-state value of w bits: the last character in the low
+/// byte; characters that do not fit are dropped.
+void fromText(W4* r, unsigned w, std::string_view s);
 
 // --- Reals (1.5). -----------------------------------------------------------
 

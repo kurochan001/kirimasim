@@ -132,37 +132,6 @@ Method resolveMethod(std::string_view n) {
     return Method::None;
 }
 
-/// The bytes of an integral value as a string (6.16): most significant
-/// first, zero bytes dropped; x and z bits read as 0.
-std::string integerToString(const W4* v, unsigned width) {
-    std::string s;
-    for (unsigned k = (width + 7) / 8; k-- > 0;) {
-        const W4& w = v[k / 8];
-        const auto c = static_cast<char>(((w.a & ~w.b) >> (k % 8 * 8)) & 0xffU);
-        if (c != 0) s.push_back(c);
-    }
-    return s;
-}
-
-/// A string as an integral value of `width` bits: the last character in
-/// the low byte (6.16).
-void stringToInteger(std::string_view s, unsigned width, W4* out) {
-    const unsigned words = (width + 63) / 64;
-    for (unsigned i = 0; i < words; ++i)
-        out[i] = {0, 0};
-    unsigned byte = 0;
-    for (auto c = s.rbegin(); c != s.rend() && byte * 8 < width; ++c, ++byte)
-        out[byte / 8].a |= std::uint64_t{static_cast<unsigned char>(*c)} << (byte % 8 * 8);
-    if (width % 64 != 0) out[words - 1].a &= kernel::mask(width % 64);
-}
-
-/// The same for a value of at most 64 bits.
-W4 stringToInteger(std::string_view s, unsigned width) {
-    W4 r{0, 0};
-    stringToInteger(s, width, &r);
-    return r;
-}
-
 /// atoi and friends (6.16.9): digits of the base and underscores only, no
 /// sign and no leading space (VALUE_SEMANTICS.md 7.6).
 std::uint64_t parseDigits(std::string_view s, unsigned base) {
@@ -399,45 +368,6 @@ std::string messageTime(std::uint64_t ticks, int precision) {
 
 /// Whether a 1-bit condition is true: a known 1 (x and z are false).
 bool isTrue(W4 c) { return (c.a & ~c.b & 1U) != 0; }
-
-/// The value of an index: nothing if it has x or z bits or does not fit.
-std::optional<std::int64_t> indexValue(W4 v, sir::Type t) {
-    if (v.b != 0) return std::nullopt;
-    if (sir::isSigned(t)) return kernel::asSigned(v.a, t.width);
-    if (v.a > static_cast<std::uint64_t>(INT64_MAX)) return std::nullopt;
-    return static_cast<std::int64_t>(v.a);
-}
-
-/// Where a part of `width` bits at position `pos` meets an element of `ew`
-/// bits: the first bit inside the element, how many bits, and how many low
-/// bits of the part fall below the element. Nothing when no bit is inside
-/// (VALUE_SEMANTICS.md 3.11). Every write of a part at a run-time position
-/// comes here; no position overflows it.
-struct Inside {
-    std::uint32_t lo = 0;
-    std::uint32_t n = 0;
-    std::uint32_t skip = 0;
-};
-
-std::optional<Inside> inside(std::int64_t pos, std::uint32_t width, std::int64_t ew) {
-    if (pos >= ew || pos <= -static_cast<std::int64_t>(width)) return std::nullopt;
-    const std::int64_t lo = pos < 0 ? 0 : pos;
-    const std::int64_t hi = std::min<std::int64_t>(pos + width, ew);  // exclusive
-    return Inside{static_cast<std::uint32_t>(lo), static_cast<std::uint32_t>(hi - lo),
-                  static_cast<std::uint32_t>(lo - pos)};
-}
-
-/// v (an element of `ew` bits) with `width` bits of `part` written at
-/// position pos: only the bits inside the element.
-W4 mergeBits(W4 v, std::uint32_t ew, std::optional<std::int64_t> pos, W4 part,
-             std::uint32_t width) {
-    const std::optional<Inside> in = pos ? inside(*pos, width, ew) : std::nullopt;
-    if (!in) return v;
-    const std::uint64_t m = kernel::mask(in->n) << in->lo;
-    v.a = (v.a & ~m) | (((part.a >> in->skip) << in->lo) & m);
-    v.b = (v.b & ~m) | (((part.b >> in->skip) << in->lo) & m);
-    return v;
-}
 
 class Interpreter;
 
@@ -1372,8 +1302,8 @@ private:
     /// element; only the bits inside the element (VALUE_SEMANTICS.md 3.11).
     void storeBits(const Frame& f, sir::SlotId s, std::uint32_t elem,
                    std::optional<std::int64_t> pos, W4 v, std::uint32_t width, bool nba) {
-        const std::optional<Inside> in =
-            pos ? inside(*pos, width, d_.slots[s].type.width) : std::nullopt;
+        const std::optional<kernel::Inside> in =
+            pos ? kernel::inside(*pos, width, d_.slots[s].type.width) : std::nullopt;
         if (!in) return;
         const W4 part{(v.a >> in->skip) & kernel::mask(in->n),
                       (v.b >> in->skip) & kernel::mask(in->n)};
@@ -2461,17 +2391,9 @@ private:
     /// (VALUE_SEMANTICS.md 3.11). Every index the VM reads comes here.
     std::optional<std::int64_t> indexOf(const Operand& o) const {
         const sir::Type t = typeOf(o);
-        if (chunksOf(t) == 1) return indexValue(value(o), t);
+        if (chunksOf(t) == 1) return kernel::position4(value(o), t.width, sir::isSigned(t));
         const std::vector<W4> x = chunks(o);
-        if (kernel::wide::hasUnknown(x.data(), t.width)) return std::nullopt;
-        const bool neg = sir::isSigned(t) && ((x.back().a >> ((t.width - 1) % 64)) & 1U) != 0;
-        for (std::size_t k = 1; k < x.size(); ++k) {
-            const std::uint64_t fill =
-                neg ? (k + 1 == x.size() ? kernel::mask(t.width - 64 * k) : ~std::uint64_t{0}) : 0;
-            if (x[k].a != fill) return std::nullopt;
-        }
-        if ((x[0].a >> 63) != (neg ? 1U : 0U)) return std::nullopt;  // past 64 signed bits
-        return static_cast<std::int64_t>(x[0].a);
+        return kernel::wide::position(x.data(), t.width, sir::isSigned(t));
     }
 
     bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
@@ -2586,7 +2508,7 @@ private:
                 const sir::Type et =
                     frame ? bodyFrame(act_.body)[ops[0].id].type : d_.slots[ops[0].id].type;
                 const unsigned vw = t(n + 2).width;
-                const std::optional<Inside> at = inside(*pos, vw, et.width);
+                const std::optional<kernel::Inside> at = kernel::inside(*pos, vw, et.width);
                 if (!at) return true;
                 const std::vector<W4> x = get(n + 2);
                 std::vector<W4> part(kw::chunks(at->n));
@@ -2903,7 +2825,7 @@ private:
         const std::optional<std::int64_t> pos = indexOf(ops[n + 1]);
         if (!pos) return true;
         const unsigned vw = typeOf(ops[n + 2]).width;
-        const std::optional<Inside> at = inside(*pos, vw, fv.target.width);
+        const std::optional<kernel::Inside> at = kernel::inside(*pos, vw, fv.target.width);
         if (!at) return true;
         const std::vector<W4> x = chunks(ops[n + 2]);
         std::vector<W4> part(kw::chunks(at->n));
@@ -3006,14 +2928,18 @@ private:
             };
             const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
             switch (in.op) {
-                case Op::Itos: put(integerToString(chunks(ops[0]).data(), t(0).width)); return true;
+                case Op::Itos:
+                    put(kernel::wide::toText(chunks(ops[0]).data(), t(0).width));
+                    return true;
                 case Op::Stoi:
                     if (chunksOf(rt) > 1) {
                         std::vector<W4> r(chunksOf(rt));
-                        stringToInteger(str(0), w, r.data());
+                        kernel::wide::fromText(r.data(), w, str(0));
                         setWide(in, r);
                     } else {
-                        set(stringToInteger(str(0), w));
+                        W4 r{0, 0};
+                        kernel::wide::fromText(&r, w, str(0));
+                        set(r);
                     }
                     return true;
                 case Op::Concat: {
@@ -3026,7 +2952,7 @@ private:
                 case Op::Repl: {
                     // A negative, x or z count gives the empty string, with
                     // one warning per run (VALUE_SEMANTICS.md 7.3).
-                    const std::optional<std::int64_t> n = indexValue(v(0), t(0));
+                    const std::optional<std::int64_t> n = indexOf(ops[0]);
                     if ((!n || *n < 0) && !warnedRepl_) {
                         warnedRepl_ = true;
                         std::string line =
@@ -3217,8 +3143,9 @@ private:
                 const std::size_t n = dims.size();
                 if (frame) {
                     W4& cell = dims.empty() ? frameVar(ops[0].id) : frameElem(ops[0].id, e);
-                    cell = mergeBits(cell, bodyFrame(act_.body)[ops[0].id].type.width,
-                                     indexOf(ops[n + 1]), v(n + 2), t(n + 2).width);
+                    if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
+                        cell = kernel::writeBits4(cell, bodyFrame(act_.body)[ops[0].id].type.width,
+                                                  *pos, v(n + 2), t(n + 2).width);
                     return true;
                 }
                 storeBits(f, ops[0].id, e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
@@ -3357,8 +3284,9 @@ private:
                         writeSlot(refSlot(r), refElem(r) + e, 0, 0, v(n + 1));
                 } else if (isFrameRef(r)) {
                     W4& cell = refWord(r, e);
-                    cell = mergeBits(cell, fv.target.width, indexOf(ops[n + 1]), v(n + 2),
-                                     t(n + 2).width);
+                    if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
+                        cell = kernel::writeBits4(cell, fv.target.width, *pos, v(n + 2),
+                                                  t(n + 2).width);
                 } else {
                     storeBits(f, refSlot(r), refElem(r) + e, indexOf(ops[n + 1]), v(n + 2),
                               t(n + 2).width, false);
@@ -3456,69 +3384,30 @@ private:
             case Op::Shr: set(kernel::shr4(v(0), v(1), w)); return true;
             case Op::Ashr: set(kernel::ashr4(v(0), v(1), w, sir::isSigned(rt))); return true;
             case Op::Select: set(kernel::select4(v(0), v(1), v(2), w)); return true;
+            // Selects, concatenation and replication (VALUE_SEMANTICS.md
+            // 3.11, 7.1, 7.2); X for no position, which to2 makes 0 for a
+            // two-state result.
             case Op::Bitsel: {
-                const std::optional<std::int64_t> pos = indexValue(v(1), t(1));
-                const W4 x = v(0);
-                if (!pos || *pos < 0 || *pos >= t(0).width) {
-                    set(kernel::kW4X);  // to2 makes it 0 for two-state
-                    return true;
-                }
-                const auto s = static_cast<unsigned>(*pos);
-                set({(x.a >> s) & 1U, (x.b >> s) & 1U});
-                return true;
-            }
-            case Op::Partsel: {
-                const W4 x = v(0);
-                const auto s = static_cast<unsigned>(v(1).a);
-                set({(x.a >> s) & kernel::mask(w), (x.b >> s) & kernel::mask(w)});
-                return true;
-            }
-            case Op::IdxPartsel: {
-                const W4 x = v(0);
-                const std::int64_t xw = t(0).width;
                 const std::optional<std::int64_t> pos = indexOf(ops[1]);
-                if (!pos || *pos >= xw || *pos <= -static_cast<std::int64_t>(w)) {
-                    set(kernel::allX(w));  // wholly outside, or unknown
-                    return true;
-                }
-                W4 r{0, 0};
-                for (unsigned i = 0; i < w; ++i) {
-                    const std::int64_t src = *pos + i;
-                    if (src < 0 || src >= xw) {
-                        r.a |= std::uint64_t{1} << i;  // outside: x
-                        r.b |= std::uint64_t{1} << i;
-                        continue;
-                    }
-                    const auto s = static_cast<unsigned>(src);
-                    r.a |= ((x.a >> s) & 1U) << i;
-                    r.b |= ((x.b >> s) & 1U) << i;
-                }
-                set(r);
+                set(pos ? kernel::bits4(v(0), t(0).width, *pos, 1) : kernel::kW4X);
+                return true;
+            }
+            case Op::Partsel:
+                set(kernel::bits4(v(0), t(0).width, static_cast<std::int64_t>(v(1).a), w));
+                return true;
+            case Op::IdxPartsel: {
+                const std::optional<std::int64_t> pos = indexOf(ops[1]);
+                set(pos ? kernel::bits4(v(0), t(0).width, *pos, w) : kernel::allX(w));
                 return true;
             }
             case Op::Concat: {
                 W4 r{0, 0};
-                for (std::size_t i = 0; i < ops.size(); ++i) {
-                    const unsigned ow = t(i).width;
-                    const W4 x = v(i);
-                    r.a = (ow >= 64 ? 0 : r.a << ow) | x.a;
-                    r.b = (ow >= 64 ? 0 : r.b << ow) | x.b;
-                }
+                for (std::size_t i = 0; i < ops.size(); ++i)
+                    r = kernel::concat4(r, v(i), t(i).width);
                 set(r);
                 return true;
             }
-            case Op::Repl: {
-                const std::uint64_t n = v(0).a;
-                const unsigned ow = t(1).width;
-                const W4 x = v(1);
-                W4 r{0, 0};
-                for (std::uint64_t i = 0; i < n; ++i) {
-                    r.a = (ow >= 64 ? 0 : r.a << ow) | x.a;
-                    r.b = (ow >= 64 ? 0 : r.b << ow) | x.b;
-                }
-                set(r);
-                return true;
-            }
+            case Op::Repl: set(kernel::repl4(v(1), t(1).width, v(0).a)); return true;
             case Op::Zext:
             case Op::To2:
             case Op::To4: set(v(0)); return true;
@@ -3552,7 +3441,7 @@ private:
         }
         std::vector<W4> r(c);
         if (v.conv == 's') {
-            stringToInteger(v.text, t.width, r.data());
+            kernel::wide::fromText(r.data(), t.width, v.text);
         } else if (v.fill) {
             for (W4& k : r)
                 k = {v.bits.a != 0 ? ~std::uint64_t{0} : 0, ~std::uint64_t{0}};
@@ -3577,7 +3466,8 @@ private:
         if (t.kind == sir::TypeKind::String)
             return {strings_.intern(v.conv == 's' ? v.text : std::string()), 0};
         if (isRealType(t)) return fromReal(v.conv == 'f' ? v.real : 0.0, t);
-        W4 r = v.conv == 's' ? stringToInteger(v.text, t.width) : v.bits;
+        W4 r = v.bits;
+        if (v.conv == 's') kernel::wide::fromText(&r, t.width, v.text);
         if (v.fill) r = {v.bits.a != 0 ? ~std::uint64_t{0} : 0, ~std::uint64_t{0}};
         r = {r.a & kernel::mask(t.width), r.b & kernel::mask(t.width)};
         return sir::isFourState(t) ? r : kernel::to2(r);

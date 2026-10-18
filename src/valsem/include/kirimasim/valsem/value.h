@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -120,5 +121,35 @@ Value zext(const Value& x, std::uint32_t width, bool isSigned);
 Value sext(const Value& x, std::uint32_t width, bool isSigned);  ///< Fills with the sign bit.
 Value trunc(const Value& x, std::uint32_t width, bool isSigned);
 Value to2(const Value& x);  ///< X and Z become 0.
+
+// Selects (3.11), concatenation and replication (7.1, 7.2). An index or a
+// position is signed when its value is.
+
+/// The value of an index or a position: nothing when it has X or Z bits or
+/// lies beyond 64 signed bits, which is outside any value.
+std::optional<std::int64_t> positionOf(const Value& v);
+/// Bits [lsb, lsb + width) of x, unsigned; a bit outside x is X.
+Value bits(const Value& x, std::int64_t lsb, std::uint32_t width);
+/// x[index], 1 bit, unsigned: X when the index has no position or is
+/// outside x.
+Value bitSelect(const Value& x, const Value& index);
+/// x[pos +: width]: every bit X when pos has no position, else bits().
+Value indexedPartSelect(const Value& x, const Value& pos, std::uint32_t width);
+/// {parts...}: the first is the most significant; unsigned.
+Value concat(const std::vector<Value>& parts);
+/// {n{x}}, n at least 1; unsigned.
+Value replicate(std::uint32_t n, const Value& x);
+/// x with the bits of v written from bit pos: only the bits inside x;
+/// nothing when pos has no position.
+Value writeBits(const Value& x, const Value& pos, const Value& v);
+
+// Strings (6.16).
+
+/// The bytes of x as characters, the most significant first; zero bytes
+/// are dropped, and X and Z bits read as 0.
+std::string toText(const Value& x);
+/// A string as an unsigned two-state value of `width` bits: the last
+/// character in the low byte; characters that do not fit are dropped.
+Value fromText(const std::string& s, std::uint32_t width);
 
 }  // namespace kirimasim::valsem

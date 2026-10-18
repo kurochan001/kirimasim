@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <random>
 #include <string>
 #include <vector>
@@ -220,6 +221,47 @@ TEST(Wide, ShiftsSelectsAndPower) {
         const v::Value ry = ref(y, yw, ys);
         kw::pow(r.data(), x.data(), w, s, y.data(), yw, ys);
         ASSERT_TRUE(same(r, v::pow(rx, ry), "** " + v::toBinary(ry) + " " + ctx));
+    }
+}
+
+TEST(Wide, PositionsWritesAndText) {
+    // Positions and writes of parts (VALUE_SEMANTICS.md 3.11), and the
+    // conversions between integral values and strings (6.16), as the VM
+    // uses them for values of any width.
+    Gen g;
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77696465ULL)));
+    for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
+        const unsigned w = g.width();
+        const Wide x = g.next(w);
+        const v::Value rx = ref(x, w, false);
+        // An index of 1 to 130 bits, signed or not, often a small number.
+        const unsigned iw = 1 + static_cast<unsigned>(g.raw() % 130);
+        const bool is = g.flip();
+        Wide index = g.next(iw);
+        if (n % 2 == 0) {
+            for (W4& c : index)
+                c = {0, 0};
+            index[0].a = g.raw() % (w + 8);
+            if (iw < 64) index[0].a &= k::mask(iw);
+        }
+        const v::Value ri = ref(index, iw, is);
+        const std::optional<std::int64_t> pos = kw::position(index.data(), iw, is);
+        ASSERT_EQ(pos, v::positionOf(ri)) << "position of " << v::toBinary(ri);
+        const unsigned vw = 1 + static_cast<unsigned>(g.raw() % 200);
+        const Wide val = g.next(vw);
+        Wide written = x;
+        if (pos) kw::writeBits(written.data(), w, *pos, val.data(), vw);
+        ASSERT_TRUE(same(written, v::writeBits(rx, ri, ref(val, vw, false)),
+                         "write " + v::toBinary(ref(val, vw, false)) + " at " + v::toBinary(ri) +
+                             " to " + v::toBinary(rx)));
+        // Text: the bytes of x, and a string of up to 40 characters back.
+        ASSERT_EQ(kw::toText(x.data(), w), v::toText(rx)) << "text of " << v::toBinary(rx);
+        std::string s;
+        for (std::uint64_t i = 0, len = g.raw() % 41; i < len; ++i)
+            s.push_back(static_cast<char>(g.raw() % 256));
+        Wide r(kw::chunks(w));
+        kw::fromText(r.data(), w, s);
+        ASSERT_TRUE(same(r, v::fromText(s, w), "from text of " + std::to_string(s.size())));
     }
 }
 
