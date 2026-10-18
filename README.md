@@ -150,7 +150,7 @@ and 1,133 of the own test suite.
 | `tests/suite/` | 223 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: values (67), procedures (44), illegal designs (35), nets (23), hierarchy (22), scheduling (21), continuous assignments (7), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
 | Tools | 53 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
-| Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (58 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
+| Command line, event counts | 2 | Options and messages, and the matrix of unsupported constructs (60 designs: each one reported with its position in every container); the counts of a fixed run (PerfCount) |
 
 </details>
 
@@ -435,7 +435,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   generators under `tools/` whose expected output follows from the written
   rules. There are 51 generators, 223 tests in `tests/suite/`, and 459
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 184 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 185 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
