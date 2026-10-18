@@ -11,8 +11,9 @@ design's finest precision; x or z is 0 and a negative value is a 64-bit
 unsigned one (3.14.1, 9.4.1, SCHEDULER_SPEC.md 1, 8). A constant delay
 and one known only when it runs give the same time (SIR_SPEC.md 7.2).
 The axes: what the delay is (a literal, a variable, an expression, a
-function call, a real rounded up and down, a shortreal, x, z, an unsigned
-and a signed vector, a variable of the container), where it is used (a
+function call, a real rounded up and down, a shortreal, x and z in a
+variable and in a literal, an unsigned and a signed vector, a variable of
+the container), where it is used (a
 delay control, a blocking and a nonblocking intra-assignment delay, ->>),
 the container (an initial procedure, a static and an automatic task, a
 fork branch), and the module's timescale (1ns/100ps, and 10ns/1ns in a
@@ -33,7 +34,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "sched"
 NAME = "delay_value_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 GLOBAL = -10  # the design's precision: 100ps
 
@@ -61,6 +62,8 @@ KINDS = [
     ("shortreal", "sr", Fraction(1, 2)),
     ("x", "dx", None),
     ("z", "dz", None),
+    ("x literal", "8'bx", None),
+    ("z literal", "4'b1z01", None),
     ("unsigned vector", "d4", 15),
     ("signed vector", "ds", 5),
 ]
