@@ -439,6 +439,10 @@ public:
     /// known when it runs, filled by the static-init of the scope it is
     /// declared in (SIR_SPEC.md 6); made on first use.
     sir::SlotId paramSlot(const ast::ParameterSymbol& p, slang::SourceLocation sl);
+    /// The instance whose body declares a symbol: a package or compilation
+    /// unit's row, or else the nearest instance body above it (slang gives
+    /// every instance a body of its own). Nothing for a symbol outside both.
+    std::optional<sir::InstanceId> declaringInstance(const ast::Symbol& s);
     /// A new slot for variable v, or for the member of it at path `member`
     /// (empty for v itself) of the given type, inside arrays of structures
     /// of dimensions `outer`.

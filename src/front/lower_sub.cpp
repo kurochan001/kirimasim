@@ -43,10 +43,12 @@ sir::Direction directionOf(ast::ArgumentDirection d) {
 sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                                         slang::SourceLocation sl) {
     // A subroutine of a package or compilation unit is one in the design
-    // and belongs to its row (SIR_SPEC.md 3.3); the others, to the
-    // instance they are lowered for.
+    // and belongs to its row (SIR_SPEC.md 3.3); the others, to the instance
+    // that declares them, whichever scope calls them, so that one called
+    // by a hierarchical name is the same subroutine with the same static
+    // variables (6.21).
     const std::optional<sir::InstanceId> row = rowOf(sym);
-    const sir::InstanceId owner = row.value_or(instance_);
+    const sir::InstanceId owner = declaringInstance(sym).value_or(instance_);
     const auto key = std::make_pair(owner, static_cast<const ast::Symbol*>(&sym));
     if (auto it = subs_.find(key); it != subs_.end()) return it->second;
 

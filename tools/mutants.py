@@ -581,6 +581,10 @@ MUTANTS = [
     ("front: extra arguments of a constant format that is not a literal are accepted",
      "src/front/lower_expr.cpp",
      "        if (counted && pending.empty())\n            error(", "        if (false)\n            error("),
+    ("front: a subroutine called by a hierarchical name belongs to the caller's instance",
+     "src/front/lower_sub.cpp",
+     "    const sir::InstanceId owner = declaringInstance(sym).value_or(instance_);",
+     "    const sir::InstanceId owner = row.value_or(instance_);"),
 ]
 
 

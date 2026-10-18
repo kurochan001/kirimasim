@@ -75,3 +75,7 @@ own. CONTRIBUTING.md says what goes in this file.
   format is now read as a format, and a wrong number of arguments for it
   is an error; a format known only at run time is reported as not
   supported yet (SYSTEM_TASKS.md 3.13).
+- A function or task called by a hierarchical name from another instance
+  (`m1.f()`) was a second copy of it, whose static variables were
+  initialized once more. It is now the declaring instance's subroutine,
+  with its static variables initialized once (SIR_SPEC.md 3.3).

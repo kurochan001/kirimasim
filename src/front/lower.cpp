@@ -508,6 +508,19 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
     return id;
 }
 
+std::optional<sir::InstanceId> Lowerer::declaringInstance(const ast::Symbol& s) {
+    if (const std::optional<sir::InstanceId> row = rowOf(s)) return row;
+    for (const ast::Scope* sc = s.getParentScope(); sc != nullptr;
+         sc = sc->asSymbol().getParentScope()) {
+        if (sc->asSymbol().kind != ast::SymbolKind::InstanceBody) continue;
+        const ast::InstanceSymbol* inst =
+            sc->asSymbol().as<ast::InstanceBodySymbol>().parentInstance;
+        if (const auto it = instanceIds_.find(inst); it != instanceIds_.end()) return it->second;
+        return std::nullopt;
+    }
+    return std::nullopt;
+}
+
 sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocation sl) {
     if (auto it = slots_.find(&p); it != slots_.end()) return it->second;
     std::vector<sir::ArrayDim> dims;
@@ -517,19 +530,7 @@ sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocat
     // Its scope: a package or compilation unit, or else the instance whose
     // body declares it.
     const sir::InstanceId saved = instance_;
-    if (const std::optional<sir::InstanceId> row = rowOf(p)) {
-        instance_ = *row;
-    } else {
-        for (const ast::Scope* sc = p.getParentScope(); sc != nullptr;
-             sc = sc->asSymbol().getParentScope()) {
-            if (sc->asSymbol().kind != ast::SymbolKind::InstanceBody) continue;
-            const ast::InstanceSymbol* inst =
-                sc->asSymbol().as<ast::InstanceBodySymbol>().parentInstance;
-            if (const auto it = instanceIds_.find(inst); it != instanceIds_.end())
-                instance_ = it->second;
-            break;
-        }
-    }
+    instance_ = declaringInstance(p).value_or(instance_);
     const sir::SlotId id = slotOf(p, sl);
     design_.slots[id].instance = instance_;
     // The elements in slot order: the rightmost dimension fastest (4.2).
