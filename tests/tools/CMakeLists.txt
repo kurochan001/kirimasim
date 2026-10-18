@@ -209,3 +209,7 @@ set_tests_properties(tools/gen_format_source_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_empty_argument_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_empty_argument_matrix.py --check)
 set_tests_properties(tools/gen_empty_argument_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_time_format_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_time_format_matrix.py --check)
+set_tests_properties(tools/gen_time_format_matrix PROPERTIES LABELS Tools)
