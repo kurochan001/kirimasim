@@ -67,7 +67,7 @@ suite's P1 population was run again, with the same result.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 804 | 802, 2 skipped | — | — |
+| This repository's tests (CTest) | 861 | 859, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 186 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -147,10 +147,10 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 163 | SIR and its verifier (59), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
-| `tests/suite/` | 526 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: scheduling (162), procedures (169), values (75), hierarchy (51), illegal designs (35), nets (23), continuous assignments (7), and others |
+| Unit tests (GoogleTest) | 165 | SIR and its verifier (61), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
+| `tests/suite/` | 579 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: scheduling (183), procedures (169), values (75), hierarchy (51), continuous assignments (39), illegal designs (35), nets (23), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
-| Tools | 84 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
+| Tools | 86 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages, the matrix of unsupported constructs (80 designs: each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`), loops that never advance time (9 designs, stopped by `--max-slot-events`), SIGINT (9 designs, on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them (141 calls in 2 designs); the counts of a fixed run (PerfCount) |
 
 </details>
@@ -470,9 +470,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 82 generators, 526 tests in `tests/suite/`, and 804
+  rules. There are 84 generators, 579 tests in `tests/suite/`, and 861
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 279 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 284 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
