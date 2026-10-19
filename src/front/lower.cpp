@@ -357,16 +357,22 @@ void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
     throw Unsupported{};
 }
 
-void Lowerer::error(slang::SourceLocation sl, std::string_view what) {
+void Lowerer::error(slang::SourceLocation sl, std::string_view what, slang::SourceLocation noteAt,
+                    std::string_view note) {
     ++numErrors_;
-    if (sl.valid())
-        diags_ += std::string(sm_.getFileName(sl)) + ":" + std::to_string(sm_.getLineNumber(sl)) +
-                  ":" + std::to_string(sm_.getColumnNumber(sl)) + ": ";
-    else
-        diags_ += "kirimasim: ";
-    diags_ += "error: ";
-    diags_ += what;
-    diags_ += "\n";
+    const auto line = [&](slang::SourceLocation at, std::string_view kind, std::string_view text) {
+        if (at.valid())
+            diags_ += std::string(sm_.getFileName(at)) + ":" +
+                      std::to_string(sm_.getLineNumber(at)) + ":" +
+                      std::to_string(sm_.getColumnNumber(at)) + ": ";
+        else
+            diags_ += "kirimasim: ";
+        diags_ += kind;
+        diags_ += text;
+        diags_ += "\n";
+    };
+    line(sl, "error: ", what);
+    if (noteAt.valid()) line(noteAt, "note: ", note);
     throw Unsupported{};
 }
 

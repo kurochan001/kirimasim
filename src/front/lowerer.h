@@ -149,9 +149,11 @@ public:
     [[noreturn]] void unsupported(slang::SourceLocation sl, std::string_view what);
     /// Reports an unsupported construct without throwing.
     void report(slang::SourceLocation sl, std::string_view what);
-    /// Reports an error in the design that slang does not find and throws
-    /// Unsupported, which drops the procedure.
-    [[noreturn]] void error(slang::SourceLocation sl, std::string_view what);
+    /// Reports an error in the design that slang does not find, with a note
+    /// at `noteAt` if it is valid, and throws Unsupported, which drops the
+    /// procedure.
+    [[noreturn]] void error(slang::SourceLocation sl, std::string_view what,
+                            slang::SourceLocation noteAt = {}, std::string_view note = {});
     /// Reports a warning, once for each source position however many
     /// instances lower it.
     void warning(slang::SourceLocation sl, std::string_view what);
@@ -492,6 +494,15 @@ public:
     Storage tempStorage(const ast::Type& t, slang::SourceLocation sl);
     /// The call itself; `ret` receives an aggregate return value.
     Val lowerCallTo(const ast::CallExpression& call, const Storage* ret);
+    /// A statement of a function that schedules work to run after the
+    /// function returns: where it is, and what it is.
+    struct LaterWork {
+        slang::SourceLocation at;
+        std::string what;
+    };
+    /// The first such statement in `f` or in a function it calls, if any
+    /// (13.4.4, SCHEDULER_SPEC.md 6.5).
+    std::optional<LaterWork> laterWork(const ast::SubroutineSymbol& f);
     /// The storage `off` leaves after s, in the same element.
     static Storage leafAt(Storage s, std::uint32_t off);
     /// s with one more constant element index.
@@ -727,6 +738,8 @@ private:
     std::vector<std::pair<const ast::VariableSymbol*, std::uint32_t>> staticInits_;
     /// Subroutines lowered so far, per instance and symbol.
     std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
+    /// laterWork of each function looked at so far.
+    std::map<const ast::SubroutineSymbol*, std::optional<LaterWork>> laterWork_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subWrites_;
     /// Each formal argument's SIR arguments: the first and how many; an
     /// unpacked structure has one per leaf. An aggregate return value's

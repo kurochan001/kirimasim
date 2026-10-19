@@ -1,0 +1,138 @@
+later_work_matrix.sv:28:19: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:29:23: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:30:20: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:31:19: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:32:23: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:33:20: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:36:17: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:37:21: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:38:18: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:39:17: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:40:21: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:41:18: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:45:19: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:46:23: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:47:20: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:48:19: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:49:23: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:50:20: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:55:19: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:56:23: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:57:20: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:58:19: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:59:23: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:60:20: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:62:15: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:65:15: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:68:15: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:71:15: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:74:15: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:77:15: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:80:22: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:83:22: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:86:22: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:89:22: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:92:22: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:95:22: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:98:22: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:103:22: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:108:22: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:113:22: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:118:22: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:123:22: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:128:20: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:130:24: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:132:21: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:134:20: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:136:24: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:138:21: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:139:18: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:140:22: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:141:19: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:142:18: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:143:22: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:144:19: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:145:22: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:146:26: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:147:23: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:148:22: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:149:26: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:150:23: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:151:15: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a final procedure
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:152:15: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a final procedure
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:153:15: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a final procedure
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:154:15: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a final procedure
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:155:15: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a final procedure
+later_work_matrix.sv:10:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_matrix.sv:156:15: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a final procedure
+later_work_matrix.sv:14:5: note: a fork with join_none in 'f_fork'
+later_work_matrix.sv:158:22: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the initial value of a static variable
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:167:14: error: 'm_auto' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'
+later_work_matrix.sv:174:14: error: 'n_auto' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from a continuous assignment
+later_work_matrix.sv:6:5: note: a nonblocking assignment in 'f_nba'

@@ -821,6 +821,23 @@ MUTANTS = [
      "src/front/lower.cpp", "    ensureStaticInit(v, sl);\n    Body saved = std::move(b_);",
      "    ensureStaticInit(v, sl);\n    staticInits_.emplace_back(&v, staticInit_.at(instance_));\n"
      "    Body saved = std::move(b_);"),
+    ("front: a function that schedules work after it returns may be called from anywhere",
+     "src/front/lower_sub.cpp", "        if (caller != nullptr)", "        if (false)"),
+    ("front: a final procedure may call a function that schedules work", "src/front/lower_sub.cpp",
+     ": k == sir::ProcessKind::Final ? \"a final procedure\"",
+     ": k == sir::ProcessKind::Initial ? \"a final procedure\""),
+    ("front: a nonblocking assignment in a function schedules no work", "src/front/lower_sub.cpp",
+     "if (a.isNonBlocking()) take(", "if (false) take("),
+    ("front: the functions a function calls are not followed", "src/front/lower_sub.cpp",
+     "if (callee.subroutineKind == ast::SubroutineKind::Function)", "if (false)"),
+    ("front: a static variable's initial value counts as the function's work",
+     "src/front/lower_sub.cpp",
+     "if (s.lifetime == ast::VariableLifetime::Automatic) v.visitDefault(s);",
+     "v.visitDefault(s);"),
+    ("front: an automatic variable's initial value is not the function's work",
+     "src/front/lower_sub.cpp",
+     "if (s.lifetime == ast::VariableLifetime::Automatic) v.visitDefault(s);",
+     "if (false) v.visitDefault(s);"),
 ]
 
 

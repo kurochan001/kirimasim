@@ -15,10 +15,12 @@
 #include <vector>
 
 #include "lowerer.h"
+#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/statements/LoopStatements.h"
 #include "slang/ast/symbols/SubroutineSymbols.h"
 #include "slang/ast/types/Type.h"
+#include "slang/syntax/AllSyntax.h"
 
 namespace kirimasim::front {
 
@@ -383,9 +385,74 @@ Lowerer::Storage Lowerer::callAggregate(const ast::CallExpression& call) {
     return tmp;
 }
 
+std::optional<Lowerer::LaterWork> Lowerer::laterWork(const ast::SubroutineSymbol& f) {
+    if (const auto it = laterWork_.find(&f); it != laterWork_.end()) return it->second;
+    laterWork_[&f] = std::nullopt;  // a recursive call adds nothing
+    std::optional<LaterWork> found;
+    const auto take = [&](slang::SourceLocation at, const std::string& what) {
+        if (!found) found = LaterWork{at, what + " in '" + std::string(f.name) + "'"};
+    };
+    // A blocking ->, $strobe, $monitor and deferred assertions do not
+    // count (SCHEDULER_SPEC.md 6.5), nor the initial value of a static
+    // variable, which static initialization runs, not the call.
+    auto visitor = ast::makeVisitor(
+        [&](auto& v, const ast::VariableSymbol& s) {
+            if (s.lifetime == ast::VariableLifetime::Automatic) v.visitDefault(s);
+        },
+        [&](auto& v, const ast::AssignmentExpression& a) {
+            if (a.isNonBlocking()) take(a.sourceRange.start(), "a nonblocking assignment");
+            v.visitDefault(a);
+        },
+        [&](auto& v, const ast::EventTriggerStatement& t) {
+            if (t.isNonBlocking) take(t.sourceRange.start(), "a nonblocking event trigger");
+            v.visitDefault(t);
+        },
+        [&](auto& v, const ast::BlockStatement& b) {
+            // slang's range of a fork starts at its first statement; the
+            // syntax starts at the fork.
+            if (b.blockKind == ast::StatementBlockKind::JoinNone)
+                take(b.syntax != nullptr ? b.syntax->getFirstToken().location()
+                                         : b.sourceRange.start(),
+                     "a fork with join_none");
+            v.visitDefault(b);
+        },
+        [&](auto& v, const ast::CallExpression& c) {
+            if (!c.isSystemCall()) {
+                const ast::SubroutineSymbol& callee = *std::get<0>(c.subroutine);
+                if (callee.subroutineKind == ast::SubroutineKind::Function)
+                    if (const std::optional<LaterWork> inner = laterWork(callee); inner && !found)
+                        found = inner;
+            }
+            v.visitDefault(c);
+        });
+    f.visit(visitor);  // its declarations and its body
+    laterWork_[&f] = found;
+    return found;
+}
+
 Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const auto& sym = *std::get<0>(call.subroutine);
+    // A function that schedules work after it returns may be called only
+    // from a thread of an initial or always procedure (13.4.4,
+    // SCHEDULER_SPEC.md 6.5); a call inside a function counts where that
+    // function is called.
+    if (!b_.isSub && sym.subroutineKind == ast::SubroutineKind::Function) {
+        const sir::ProcessKind k = proc().kind;
+        const char* caller = k == sir::ProcessKind::StaticInit
+                                 ? "the initial value of a static variable"
+                             : k == sir::ProcessKind::Cont  ? "a continuous assignment"
+                             : k == sir::ProcessKind::Final ? "a final procedure"
+                                                            : nullptr;
+        if (caller != nullptr)
+            if (const std::optional<LaterWork> w = laterWork(sym))
+                error(sl,
+                      "'" + std::string(sym.name) +
+                          "' schedules work that runs after it returns, so it can be called only "
+                          "from an initial or always procedure, not from " +
+                          caller,
+                      w->at, w->what);
+    }
     const sir::SubroutineId id = subroutineOf(sym, sl);
     callees_[{b_.isSub, b_.proc}].push_back(id);
     const std::vector<sir::Param> params = design_.subroutines[id].params;

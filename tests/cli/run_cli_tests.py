@@ -34,6 +34,7 @@ INTERRUPTS = HERE / "interrupt_matrix.expected"
 FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
+LATER_WORK = HERE / "later_work_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 END_TASKS = str(HERE / "end_tasks.sv")
 
@@ -393,6 +394,19 @@ def main() -> int:
     if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
         failures += 1
         print(f"FAIL: builtin call matrix: exit code {proc.returncode}\n{proc.stdout}"
+              f"{proc.stderr}", file=sys.stderr)
+
+    # A function that schedules work after it returns, called where 13.4.4
+    # does not allow it, is an error at the call with a note at the
+    # statement (SCHEDULER_SPEC.md 6.5; the files come from
+    # tools/gen_later_work_matrix.py).
+    proc = subprocess.run([args.kirimasim, LATER_WORK.name], cwd=HERE, capture_output=True,
+                          text=True, check=False)
+    want = LATER_WORK.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
+    got = [line for line in proc.stderr.splitlines() if ": error: " in line or ": note: " in line]
+    if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
+        failures += 1
+        print(f"FAIL: later work matrix: exit code {proc.returncode}\n{proc.stdout}"
               f"{proc.stderr}", file=sys.stderr)
 
     # The records of finished processes are released (SCHEDULER_SPEC.md
