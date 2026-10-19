@@ -2,7 +2,7 @@
 
 [日本語](UNSPECIFIED_BEHAVIOR.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **proposed, awaiting approval**. On 2026-10-19, this document was written (proposed, awaiting approval). The same day, a person chose the approved rules for the four differences of 9: for J3 and A13 as they are, for A2 with a lint warning, and for P4 with the memory's bounds where the arguments give none.
+Priority: P1. Status: **proposed, awaiting approval**. On 2026-10-19, this document was written (proposed, awaiting approval). The same day, a person chose the approved rules for the four differences of 9: for J3 and A13 as they are, for A2 with a lint warning, and for P4 with the memory's bounds where the arguments give none. The same day, the options of slang's limits for A11 and A12 were set (CLI.md 2.1; approved).
 
 This document lists the places where IEEE 1800-2023 does not set an order or a result, leaves it to the implementation, or where following its wording literally would break practical code, and says what kirimasim does at each. The text of the standard is not copied; clause numbers are given. Most rules this document relies on are written in other specifications. This document gives them as references, and writes here only what has no other home: the principles (1), the kinds of diagnostics (4), the status of each item (6), and the lists of 7 and 8.
 
@@ -85,8 +85,8 @@ Found at elaboration where possible, stopped at a limit at run time, and reporte
 | A9 | Lint for an `always` that waits on a variable it writes itself (`always @(x) x <= ~x;`) | `kirima-self-trigger` | 4.5 | P1 | proposed 2026-10-19 |
 | A10 | Loop variables are in the sensitivity as the standard says. There is no option to leave them out | — | 9.4.2.2 | P1 | in force (SCHEDULER_SPEC.md 9.2) |
 | A10 | Warn about a module variable used as the loop variable of two or more `always @*` | `kirima-shared-loop-var` | 9.4.2.2 | P1 | proposed 2026-10-19 |
-| A11 | Endless recursion of a constant function is left to slang, and slang's limit options are passed through. Which options CLI.md takes, and in which stage, is not set yet | slang's `--max-constexpr-depth` and others | 13.4.3 | P1 | proposed 2026-10-19 |
-| A12 | Endless recursion of instances is left to slang, and slang's limit is passed through (as A11) | slang's `--max-hierarchy-depth` | 27 | P1 | proposed 2026-10-19 |
+| A11 | Endless recursion of a constant function is left to slang, and slang's limits on constant evaluation are passed through | slang's `--max-constexpr-depth`, `--max-constexpr-steps` | 13.4.3 | P1 | approved 2026-10-19 (CLI.md 2.1) |
+| A12 | Endless recursion of instances, and generate blocks that do not end, are left to slang, and slang's limits are passed through (as A11) | slang's `--max-hierarchy-depth`, `--max-generate-steps` | 27 | P1 | approved 2026-10-19 (CLI.md 2.1) |
 | A13 | Nothing is written in the Postponed region; a forbidden write is a run-time error | Run-time error `kirima-readonly-write` | 4.4.2.9 | P1 | in force (SCHEDULER_SPEC.md 2.2, 16.2) |
 | A13 | A function called from the arguments of `$monitor` or `$strobe` may write its own variables (its arguments, its automatic and static variables); any other write is a run-time error | — | 4.4.2.9, 21.2.2, 21.2.3 | P1 | in force (SCHEDULER_SPEC.md 2.2) |
 | A13 | `vpi_put_value` in a read-only callback fails, and `vpi_chk_error` gives the reason | — | 38 | P4 | later (P4) |
@@ -363,6 +363,7 @@ The meaning, default and stage of each option are in CLI.md. None changes the re
 | `--max-scc-iter`, `--max-zero-delay`, `--max-slot-events`, `--max-steps` | A1, A6, A9, A14 | CLI.md 2.6 | in force |
 | `--max-procs`, `--max-call-depth`, `--max-wall-time` | A5, A15, I8 | CLI.md 2.7 | proposed 2026-10-19 |
 | `--stop`, `--init-values`, `--cond-x`, `--bounds-check`, `--autoflush`, `--mintypmax`, `--report-pulses`, `--wave-glitches` | I6, E9, E1, E2, F7, P3, C5, D3 | CLI.md 2.2 | proposed 2026-10-19 |
+| `--max-hierarchy-depth`, `--max-generate-steps`, `--max-constexpr-depth`, `--max-constexpr-steps` (slang's) | A11, A12 | CLI.md 2.1 | approved 2026-10-19 |
 | `--race-nba`, `--randomize-fail`, `--assert-incomplete` | B1, K5, L4 | CLI.md 2.3 (options of P2 and later) | proposed 2026-10-19 (P2 and later) |
 
 ### 7.2 Reasons for ending

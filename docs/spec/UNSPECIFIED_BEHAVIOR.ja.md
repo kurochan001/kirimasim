@@ -2,7 +2,7 @@
 
 [English](UNSPECIFIED_BEHAVIOR.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**提案（承認待ち）**。2026-10-19 にこの文書を書いた（提案、承認待ち）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。
+優先度：P1。状態：**提案（承認待ち）**。2026-10-19 にこの文書を書いた（提案、承認待ち）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。同日、A11 と A12 で渡す slang の上限のオプションを決めた（CLI.md 2.1。承認済み）。
 
 この文書は、IEEE 1800-2023 が順序や結果を決めていない所、実装に任せている所、文言どおりに実装すると実用のコードが壊れる所を挙げ、それぞれで kirimasim がどうするかを書きます。規格の本文は写さず、節番号を示します。この文書が頼る決まりの多くは、ほかの詳細仕様書に書いてあります。この文書はそれを参照として示し、ほかに置き場の無いもの（基本の方針（1）、診断の種類（4）、項目ごとの状態（6）、7 と 8 の一覧）だけをここに書きます。
 
@@ -85,8 +85,8 @@
 | A9 | 自分が書く変数を待つ `always`（`always @(x) x <= ~x;`）の lint | `kirima-self-trigger` | 4.5 | P1 | proposed 2026-10-19 |
 | A10 | ループ変数は規格どおり感度に入る。外すオプションは作らない | — | 9.4.2.2 | P1 | in force（SCHEDULER_SPEC.md 9.2） |
 | A10 | モジュールの変数を 2 つ以上の `always @*` のループ変数に使っているときの警告 | `kirima-shared-loop-var` | 9.4.2.2 | P1 | proposed 2026-10-19 |
-| A11 | 定数関数の終わらない再帰は slang に任せ、slang の上限のオプションをそのまま渡す。CLI.md がどのオプションをどの段階で受け付けるかは、まだ決めていない | slang の `--max-constexpr-depth` など | 13.4.3 | P1 | proposed 2026-10-19 |
-| A12 | インスタンスの終わらない再帰は slang に任せ、slang の上限をそのまま渡す（A11 と同じ） | slang の `--max-hierarchy-depth` | 27 | P1 | proposed 2026-10-19 |
+| A11 | 定数関数の終わらない再帰は slang に任せ、slang の定数の評価の上限をそのまま渡す | slang の `--max-constexpr-depth`、`--max-constexpr-steps` | 13.4.3 | P1 | approved 2026-10-19（CLI.md 2.1） |
+| A12 | インスタンスの終わらない再帰と、終わらない generate ブロックは slang に任せ、slang の上限をそのまま渡す（A11 と同じ） | slang の `--max-hierarchy-depth`、`--max-generate-steps` | 27 | P1 | approved 2026-10-19（CLI.md 2.1） |
 | A13 | Postponed 領域では何も書かない。禁止の書き込みは実行時のエラー | 実行時のエラー `kirima-readonly-write` | 4.4.2.9 | P1 | in force（SCHEDULER_SPEC.md 2.2、16.2） |
 | A13 | `$monitor` や `$strobe` の引数から呼ばれた関数は、自分の変数（引数、automatic と static の変数）に書いてよい。ほかへの書き込みは実行時のエラー | — | 4.4.2.9、21.2.2、21.2.3 | P1 | in force（SCHEDULER_SPEC.md 2.2） |
 | A13 | 読み出し専用のコールバックの中の `vpi_put_value` は失敗を返し、`vpi_chk_error` が理由を返す | — | 38 | P4 | later (P4) |
@@ -363,6 +363,7 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | `--max-scc-iter`、`--max-zero-delay`、`--max-slot-events`、`--max-steps` | A1、A6、A9、A14 | CLI.md 2.6 | in force |
 | `--max-procs`、`--max-call-depth`、`--max-wall-time` | A5、A15、I8 | CLI.md 2.7 | proposed 2026-10-19 |
 | `--stop`、`--init-values`、`--cond-x`、`--bounds-check`、`--autoflush`、`--mintypmax`、`--report-pulses`、`--wave-glitches` | I6、E9、E1、E2、F7、P3、C5、D3 | CLI.md 2.2 | proposed 2026-10-19 |
+| `--max-hierarchy-depth`、`--max-generate-steps`、`--max-constexpr-depth`、`--max-constexpr-steps`（slang のもの） | A11、A12 | CLI.md 2.1 | approved 2026-10-19 |
 | `--race-nba`、`--randomize-fail`、`--assert-incomplete` | B1、K5、L4 | CLI.md 2.3（P2 以降のオプション） | proposed 2026-10-19（P2 以降） |
 
 ### 7.2 終了の理由
