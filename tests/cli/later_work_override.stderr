@@ -1,0 +1,144 @@
+later_work_override.sv:31:22: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:32:22: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:33:22: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:34:22: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:35:22: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:36:22: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:37:21: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:38:21: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:39:21: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:40:21: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:41:21: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:42:21: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:43:22: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:44:22: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:45:22: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:46:22: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:47:22: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:48:22: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:49:26: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:50:26: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:51:26: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:52:26: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:53:26: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:54:26: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:55:25: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:56:25: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:57:25: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:58:25: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:59:25: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:60:25: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:61:26: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:62:26: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:63:26: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:64:26: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:65:26: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:66:26: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:68:16: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:72:16: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:76:16: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:80:16: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:84:16: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:88:16: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:92:15: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:96:15: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:100:15: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:104:15: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:108:15: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:112:15: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:116:16: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:120:16: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:124:16: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:128:16: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:132:16: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:136:16: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:140:16: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:143:16: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:146:16: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:149:16: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:152:16: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:155:16: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:158:15: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:161:15: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:164:15: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:167:15: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:170:15: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:173:15: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:176:16: error: 'f_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:179:16: error: 'f_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:182:16: error: 'f_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'
+later_work_override.sv:185:16: error: 'g_nba' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:9:5: note: a nonblocking assignment in 'f_nba'
+later_work_override.sv:188:16: error: 'g_trigger' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:13:5: note: a nonblocking event trigger in 'f_trigger'
+later_work_override.sv:191:16: error: 'g_fork' schedules work that runs after it returns, so it can be called only from an initial or always procedure, not from the right side of a procedural assign or force
+later_work_override.sv:17:5: note: a fork with join_none in 'f_fork'

@@ -93,9 +93,10 @@ own. CONTRIBUTING.md says what goes in this file.
 - A function that schedules work to run after it returns (a nonblocking
   assignment, `->>` or `fork ... join_none`, in it or in a function it
   calls) is an error at compile time when the initial value of a static
-  variable, a continuous assignment or a `final` procedure calls it, as
-  13.4.4 asks (SCHEDULER_SPEC.md 6.5). Such calls ran, or in `final` did
-  nothing, without a word (#13).
+  variable, a continuous assignment, the right side of a procedural
+  `assign` or `force`, or a `final` procedure calls it, as 13.4.4 asks
+  (SCHEDULER_SPEC.md 6.5). Such calls ran, or in `final` did nothing,
+  without a word (#13).
 - The initial value of a static variable that may read another static
   variable before that one is set gets a warning, as SCHEDULER_SPEC.md 3
   says: a variable of another instance, or one of its own instance,

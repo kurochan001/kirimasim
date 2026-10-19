@@ -439,11 +439,12 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
     // function is called.
     if (!b_.isSub && sym.subroutineKind == ast::SubroutineKind::Function) {
         const sir::ProcessKind k = proc().kind;
-        const char* caller = k == sir::ProcessKind::StaticInit
-                                 ? "the initial value of a static variable"
-                             : k == sir::ProcessKind::Cont  ? "a continuous assignment"
-                             : k == sir::ProcessKind::Final ? "a final procedure"
-                                                            : nullptr;
+        const char* caller =
+            k == sir::ProcessKind::StaticInit ? "the initial value of a static variable"
+            : k == sir::ProcessKind::Cont     ? "a continuous assignment"
+            : k == sir::ProcessKind::Final    ? "a final procedure"
+            : k == sir::ProcessKind::Override ? "the right side of a procedural assign or force"
+                                              : nullptr;
         if (caller != nullptr)
             if (const std::optional<LaterWork> w = laterWork(sym))
                 error(sl,
