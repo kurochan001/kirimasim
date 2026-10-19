@@ -2,7 +2,7 @@
 
 [日本語](VALUE_SEMANTICS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Section 7 (concatenation, conversion, reals, strings, enumerated types) was written in P1 and approved on 2026-10-15. On 2026-10-16, section 5 (net resolution and drive strength) was rewritten and 3.12 (assignment operators, and increment and decrement operators) added (approved). The same day, the conditional operator on values that are not integral was written in 3.9 (approved). On 2026-10-17, 3.13 (aggregate assignment) and 3.14 (aggregate comparison) were added and the item on streaming operators in 8 rewritten (approved). The same day, the conversion from real to integer in 7.4 was changed to truncation regardless of size, with the handling of NaN and infinities (approved). On 2026-10-18, the conversion of integers with x and z to strings was added to 7.6 (approved). The same day, the section 7.4 cites for `$rtoi` was corrected from SYSTEM_TASKS.md 9 to 8 (approved). The same day, a table of the strength line was added to 5.2, and a diagram and examples of the rule to 5.4 (approved). The same day, the reference results for Verilator in 7.6 were corrected (approved). The same day, the rounding of integers that a real cannot hold exactly (1.5), the value of an assignment operator and of `++` and `--` used in an expression (3.12), and the signedness of `s[i]` (7.6) were written down (approved). The same day, how a `case` on reals or strings compares (4.2) was written down (approved).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Section 7 (concatenation, conversion, reals, strings, enumerated types) was written in P1 and approved on 2026-10-15. On 2026-10-16, section 5 (net resolution and drive strength) was rewritten and 3.12 (assignment operators, and increment and decrement operators) added (approved). The same day, the conditional operator on values that are not integral was written in 3.9 (approved). On 2026-10-17, 3.13 (aggregate assignment) and 3.14 (aggregate comparison) were added and the item on streaming operators in 8 rewritten (approved). The same day, the conversion from real to integer in 7.4 was changed to truncation regardless of size, with the handling of NaN and infinities (approved). On 2026-10-18, the conversion of integers with x and z to strings was added to 7.6 (approved). The same day, the section 7.4 cites for `$rtoi` was corrected from SYSTEM_TASKS.md 9 to 8 (approved). The same day, a table of the strength line was added to 5.2, and a diagram and examples of the rule to 5.4 (approved). The same day, the reference results for Verilator in 7.6 were corrected (approved). The same day, the rounding of integers that a real cannot hold exactly (1.5), the value of an assignment operator and of `++` and `--` used in an expression (3.12), and the signedness of `s[i]` (7.6) were written down (approved). The same day, how a `case` on reals or strings compares (4.2) was written down (approved). On 2026-10-19, `--init-values`, `--cond-x` and `--bounds-check` were referred to from 1.4, 3.9, 3.11, 4.1 and 4.2 (proposed, awaiting approval).
 
 This document sets how kirimasim represents values and computes operations. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "interpretation" are not settled by the wording of the standard alone, and this document decides them.
 
@@ -40,6 +40,8 @@ Values are held as pairs of 64-bit words `(a, b)`, as many as the width needs. O
 ### 1.4 Default initial values
 
 A variable with no initial value starts as: all bits x for 4-state integral types, 0 for 2-state integral types, 0.0 for reals, empty for strings, and null for classes, interface classes, chandles and virtual interfaces. **An `event` starts not as null but as a new event (synchronization object).** Enumerated types follow the default of their base type (checked: 6.8, Table 6-7).
+
+- `--init-values` (CLI.md 2.2; proposed 2026-10-19) can start the 4-state variables and memories that have no initial value as 0, 1 or random bits instead of x, to find resets that x hides. It is not the standard's rule, so a run with it says so at its start (CLI.md 4). Nets and 2-state variables are not affected.
 
 ### 1.5 Reals
 
@@ -137,6 +139,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
   - Reals and strings are implemented in P1. Arrays and handles are implemented in the stages that implement them.
   - Icarus 13.0 hits an internal error on `?:` of strings with an x condition (checked). Expected values follow the standard.
 - Difference from Icarus 13.0: for `1'bx ? 2'bz1 : 2'bz0`, Icarus 13.0 gave `zx`. In Table 11-20 of the standard, z and z give x, so the result by the standard is `xx`. Expected values follow the standard (`oracle: spec`).
+- `--cond-x` (CLI.md 2.2; proposed 2026-10-19) reports a condition that had x or z bits. It changes no result.
 
 ### 3.10 Set membership (`inside`)
 
@@ -154,6 +157,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - When a part-select is entirely out of range, or its position has x or z, the value read is x (for 2-state types, 0 by the conversion of 1.2). A write does nothing (checked: 11.5.1).
 - When a part-select is only partly out of range, the bits out of range read as x, and a write goes only to the bits in range (checked: 11.5.1; checked with Icarus 13.0 that `[6 +: 4]` of `8'hA5` is `xx10`).
 - Reading an unpacked array with an invalid index (out of range, or containing x or z) returns the default value of the element type: x for 4-state integral types, 0 for 2-state, 0.0 for reals, empty for strings, null for handles (checked: 7.4.5, Table 7-1). A write to an invalid index does nothing, except a write to `[$+1]` of a queue and making a new element of an associative array (checked: 7.4.5).
+- `--bounds-check` (CLI.md 2.2; proposed 2026-10-19) reports, once per place, an index or position out of range at run time, or with x or z bits. It changes no value read or written.
 
 ### 3.12 Assignment operators, and increment and decrement operators
 
@@ -195,6 +199,7 @@ Approved 2026-10-17.
 - The first statement runs only when the condition is true. False and unknown are both taken as "not true", and the else side runs (checked: 12.4; how truth is decided follows the interpretation of 3.5).
 - Example: `if (2'b1x)` is true (there is a 1 bit), `if (2'b0x)` is false (since it is unknown). The same results were checked with Icarus 13.0.
 - The wording of 12.4 gives true as "a nonzero known value" and false as "a value of 0, or of x or z". It is possible to read `2'b1x` as not a "known value" and so false, since it contains x. kirimasim gives priority to the equivalence with `if (expr != 0)` that 12.4 itself states (interpretation).
+- `--cond-x` (CLI.md 2.2; proposed 2026-10-19) reports a condition that had x or z bits. It changes no result.
 
 ### 4.2 `case`, `casez`, `casex`
 
@@ -205,6 +210,7 @@ Approved 2026-10-17.
 - `?` in a number is the same as z (checked: 12.5.1).
 - `case ... inside` compares each item with `inside`. A result of 1 is a match; 0 or x is not (checked: 12.5.4).
 - When violations of `unique`, `unique0` and `priority` are reported is set in SCHEDULER_SPEC.
+- `--cond-x` (CLI.md 2.2; proposed 2026-10-19) reports a `case` expression that had x or z bits. It changes no result.
 
 ### 4.3 Edges (`posedge`, `negedge`, `edge`)
 
