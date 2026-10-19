@@ -2,7 +2,7 @@
 
 [English](UNSPECIFIED_BEHAVIOR.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**提案（承認待ち）**。2026-10-19 にこの文書を書いた（提案、承認待ち）。同日、J3 で人が承認済みの決まりを選んだ（9 節）。
+優先度：P1。状態：**提案（承認待ち）**。2026-10-19 にこの文書を書いた（提案、承認待ち）。同日、J3 で人が承認済みの決まりを選んだ（9 節）。A2 では、承認済みの決まりに lint の警告を足すことを選んだ（9 節）。
 
 この文書は、IEEE 1800-2023 が順序や結果を決めていない所、実装に任せている所、文言どおりに実装すると実用のコードが壊れる所を挙げ、それぞれで kirimasim がどうするかを書きます。規格の本文は写さず、節番号を示します。この文書が頼る決まりの多くは、ほかの詳細仕様書に書いてあります。この文書はそれを参照として示し、ほかに置き場の無いもの（基本の方針（1）、診断の種類（4）、項目ごとの状態（6）、7 と 8 の一覧）だけをここに書きます。
 
@@ -71,7 +71,7 @@
 | A1 | `#0` は Inactive（program の中は Re-Inactive）で再開する。1 つの時刻スロットで Active か Reactive の領域に移した回数を数え、上限で止める | 理由 zero_time_limit、コード 5。`--max-zero-delay` | 4.4.2.3、9.4.1 | P1 | in force（SCHEDULER_SPEC.md 8、16.2。CLI.md 2.6） |
 | A1 | 上限の報告に、最後のプロセスと直前の事象を足す | CLI.md 2.6 | — | P1 | proposed 2026-10-19 |
 | A1 | 時間制御が `#0` だけのループの lint | `kirima-zero-delay-loop` | 4.4.2.3 | P1 | proposed 2026-10-19 |
-| A2 | `$finish`、`$fatal`、disable に届かないどの経路にも時間制御の無い `always` を、エラボレーションのエラーにするか、今のように警告にとどめる（実行して上限で止める）か | `kirima-always-no-wait`、`kirima-always-no-wait-path` | 9.2.2.1 | P1 | not decided（9） |
+| A2 | `$finish`、`$fatal`、disable に届かないどの経路にも時間制御の無い `always` には lint の警告を出し、次の行のとおり実行する。時間制御の無い経路が一部だけのものにも lint の警告を出す | `kirima-always-no-wait`、`kirima-always-no-wait-path` | 9.2.2.1 | P1 | approved 2026-10-19（SCHEDULER_SPEC.md 6.2） |
 | A2 | 実行時は A14 の上限で止まる | `--max-steps` | 9.2.2.1 | P1 | in force（SCHEDULER_SPEC.md 6.2、16.2） |
 | A3 | 感度が空の `always @*` は一度も起動しない | — | 9.4.2.2 | P1 | in force（SCHEDULER_SPEC.md 6.2、9.2） |
 | A3 | `always_comb` を勧める警告を出す | `kirima-empty-sensitivity` | 9.4.2.2 | P1 | proposed 2026-10-19 |
@@ -381,8 +381,8 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 
 | 種類 | 名前（項目） |
 | --- | --- |
-| エラボレーションのエラー | `kirima-always-no-wait`（A2。not decided）、`kirima-vif-in-sensitivity`（D10）、`kirima-constraint-unsupported`（K4）。`always_comb` などの複数の書き手と `uwire` の多重駆動は slang の診断（B4、E8） |
-| lint の警告 | `kirima-zero-delay-loop`（A1）、`kirima-always-no-wait-path`（A2）、`kirima-empty-sensitivity`（A3）、`kirima-const-wait`（A4）、`kirima-comb-loop`（A6）、`kirima-self-trigger`（A9）、`kirima-shared-loop-var`（A10）、`kirima-monitor-side-effect`（A13）、`kirima-race-blocking`（B3、B6）、`kirima-multi-write`（B4）、`kirima-blk-nblk-mix`（B5）、`kirima-comb-read-before-write`（B12）、`kirima-comb-nba`（C7）、`kirima-final-nba`（C8）、`kirima-comb-dynamic-read`（D4）、`kirima-casex`（E6）、`kirima-const-out-of-range`（F7）、`kirima-side-effect-in-index`（G2）、`kirima-multi-side-effect`（G4）、`kirima-fork-loop-var`（H2）、`kirima-static-init-order`（J3）、`kirima-never-match`（L6）、`kirima-delay-rounded-zero`（O2）、`kirima-latch-inferred`、`kirima-no-latch`（R1）、`kirima-nonstandard`（R4） |
+| エラボレーションのエラー | `kirima-vif-in-sensitivity`（D10）、`kirima-constraint-unsupported`（K4）。`always_comb` などの複数の書き手と `uwire` の多重駆動は slang の診断（B4、E8） |
+| lint の警告 | `kirima-zero-delay-loop`（A1）、`kirima-always-no-wait`、`kirima-always-no-wait-path`（A2）、`kirima-empty-sensitivity`（A3）、`kirima-const-wait`（A4）、`kirima-comb-loop`（A6）、`kirima-self-trigger`（A9）、`kirima-shared-loop-var`（A10）、`kirima-monitor-side-effect`（A13）、`kirima-race-blocking`（B3、B6）、`kirima-multi-write`（B4）、`kirima-blk-nblk-mix`（B5）、`kirima-comb-read-before-write`（B12）、`kirima-comb-nba`（C7）、`kirima-final-nba`（C8）、`kirima-comb-dynamic-read`（D4）、`kirima-casex`（E6）、`kirima-const-out-of-range`（F7）、`kirima-side-effect-in-index`（G2）、`kirima-multi-side-effect`（G4）、`kirima-fork-loop-var`（H2）、`kirima-static-init-order`（J3）、`kirima-never-match`（L6）、`kirima-delay-rounded-zero`（O2）、`kirima-latch-inferred`、`kirima-no-latch`（R1）、`kirima-nonstandard`（R4） |
 | 情報 | `kirima-comb-loop-unsplit`（A7）、`wait(0)` の `kirima-const-wait`（A4）、消したパルス（C5） |
 | 実行時の警告 | `kirima-event-missed`（D8）、`kirima-cond-x`（E1、E2）、`kirima-out-of-range`（F7）、`kirima-static-task-reentry`（H1）、`kirima-randomize-failed`（K5）、`kirima-modport-violation`（N8）、`kirima-delay-unknown`、`kirima-delay-negative`（O4）、`kirima-readmem-range`、`kirima-readmem-short`（P4）、`kirima-dump-not-preserved`（P5） |
 | 実行時のエラー | `kirima-readonly-write`（A13）、`kirima-ref-stale`（H4）、`kirima-dpi-not-context`（M4）、`kirima-dpi-task-wait`（M5）、`kirima-null-deref`（J2）、`kirima-time-overflow`（O3） |
@@ -414,7 +414,7 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 この文書の最初の提案と承認済みの詳細仕様書は、次の 4 点で違っていました。人が選んだと書いた項目はそれに従い、ほかの項目は人が選ぶまで承認済みの詳細仕様書に従います。
 
 1. **static の初期化子を評価する順（J3。SCHEDULER_SPEC.md 6.1 の手順 1）。** 最初の提案は依存の順（依存が無ければ宣言の順）で、循環があれば警告を出して宣言の順にするものだった。承認済みの決まりは、スコープの中は宣言の順で、パッケージとコンパイル単位をソースの順で先にする（SCHEDULER_SPEC.md 3、6.1。SIR_SPEC.md 7.1）。規格はこれらの間の順を決めておらず（6.8、10.5）、パッケージをそれを読むスコープより先にコンパイルすることを求める（26.3）。**2026-10-19 に人が選んだもの：承認済みの決まり。** ほかのシミュレータの扱いも分かれている（Icarus Verilog 14.0 (devel) は宣言の順、Verilator 5.052 は依存の順）。そのため大事なのは、ほかのスコープの static 変数を読む初期値に、承認済みの決まりが出す警告（`kirima-static-init-order`）である。
-2. **どの経路にも時間制御の無い `always`（A2）。** 提案はエラボレーションのエラーにする。承認済みの決まりは、実行して `--max-steps` で止める（SCHEDULER_SPEC.md 6.2、16.2）。規格は、そのような `always` が同じ時刻で回り続けると述べるが、違反とはしていない（9.2.2.1）。
+2. **どの経路にも時間制御の無い `always`（A2）。** 最初の提案はエラボレーションのエラーにするものだった。承認済みの決まりは、実行して `--max-steps` で止める（SCHEDULER_SPEC.md 6.2、16.2）。規格は、そのような `always` が同じ時刻で回り続けると述べるが、違反とはしていない（9.2.2.1）。**2026-10-19 に人が選んだもの：承認済みの決まりに lint の警告を足す。** 規格が許すので、拒まない（方針 1）。これまでどおり実行して `--max-steps` で止め（方針 7）、エラボレーションの時点で lint の警告 `kirima-always-no-wait` で知らせる（方針 8）。
 3. **`$monitor` や `$strobe` の引数から呼ばれた関数の書き込み（A13）。** 提案はどの書き込みもエラーにする。承認済みの解釈では、その関数は自分の引数と、automatic と static の変数に書ける（SCHEDULER_SPEC.md 2.2）。規格は Postponed 領域でネットや変数に書くことを禁じる（4.4.2.9）。
 4. **`$readmemb` と `$readmemh` の範囲外のアドレス（P4）。** 提案は無視する。承認済みの決まりは、引数で与えた範囲の外にあるファイルの中のアドレスをエラーにし、読むのをやめる（SYSTEM_TASKS.md 7.1）。範囲を与えないときにメモリの宣言の範囲の外にあるアドレスは、どちらも決めていない。
 
