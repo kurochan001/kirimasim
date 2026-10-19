@@ -851,6 +851,17 @@ MUTANTS = [
     ("sir: a real delay is rounded to the unit", "src/sir/timescale.cpp",
      "    for (int i = scale.precision; i < scale.unit; ++i)\n        unitSteps *= 10;",
      "    for (int i = scale.unit; i < scale.unit; ++i)\n        unitSteps *= 10;"),
+    ("front: a cont process drives what the functions it calls write", "src/front/lower.cpp",
+     "add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);",
+     "add(cont && false ? callWrites_[key.second] : design_.processes[key.second].writes, r);"),
+    ("vm: a variable that a function of a cont process writes is driven", "src/vm/vm.cpp",
+     "            for (const sir::SlotRange& w : proc.drives)\n                driven[w.slot] = true;",
+     "            if (proc.kind == sir::ProcessKind::Cont)\n"
+     "                for (const sir::SlotRange& w : proc.writes)\n"
+     "                    driven[w.slot] = true;"),
+    ("sir: verify takes every write of a cont process as continuous", "src/sir/verify.cpp",
+     "p.kind == ProcessKind::Cont && std::ranges::find(p.drives, r) != p.drives.end()",
+     "p.kind == ProcessKind::Cont && (std::ranges::find(p.drives, r) != p.drives.end() || true)"),
 ]
 
 

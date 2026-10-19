@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A function that writes a variable can be called from several continuous
+  assignments: its writes are procedural (6.5), so the variable takes the
+  value written last, where kirimasim stopped with an internal error of
+  the SIR verifier. Such a variable also keeps its value when released
+  after `force` (10.6.2), where it lost the forced value (#19).
 - A real constant delay is rounded to the precision as the same value in a
   variable is, from the double times the power of ten, half away from
   zero (SCHEDULER_SPEC.md 1). The constant was rounded as its decimal

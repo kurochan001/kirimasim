@@ -457,6 +457,8 @@ struct SlotRange {
     std::uint32_t numElems = 0;
     std::uint32_t lsb = 0;
     std::uint32_t width = 0;
+
+    bool operator==(const SlotRange&) const = default;
 };
 
 /// One item of a process's sensitivity: a slot range, the edge, and the
@@ -481,6 +483,10 @@ struct Process {
     InstanceId instance = 0;
     std::vector<Trigger> triggers;
     std::vector<SlotRange> writes;  ///< Everything the process may write (SIR_SPEC.md 3.4).
+    /// What a cont process's own instructions write, the targets of its
+    /// continuous assignment, each one of `writes`; not what the functions
+    /// it calls write (SIR_SPEC.md 3.4). Empty for other kinds.
+    std::vector<SlotRange> drives;
     std::vector<FrameVar> frame;
     std::vector<BasicBlock> blocks;
     std::uint32_t numTemps = 0;

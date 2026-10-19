@@ -341,6 +341,13 @@ std::string toText(const Design& d) {
             for (std::size_t k = 0; k < p.writes.size(); ++k)
                 out += (k == 0 ? "" : ",") + slotRef(p.writes[k]);
         }
+        // What a cont process drives, when it is not all it writes (SIR_SPEC.md
+        // 9); no other process drives.
+        if (p.kind == ProcessKind::Cont ? p.drives != p.writes : !p.drives.empty()) {
+            out += " drives=";
+            for (std::size_t k = 0; k < p.drives.size(); ++k)
+                out += (k == 0 ? "" : ",") + slotRef(p.drives[k]);
+        }
         out += " {" + locText(p.loc) + "\n" + frameText(p.frame) + blocksText(d, p.blocks) + "}\n";
     }
     return out;

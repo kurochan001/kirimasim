@@ -1,5 +1,6 @@
 // Tests for the SIR data structures, the text writer and the verifier.
 
+#include <algorithm>
 #include <cstdint>
 #include <iterator>
 #include <random>
@@ -466,6 +467,7 @@ TEST(Sir, TwoContinuousAssignmentsToAVariable) {
         c.name = "assign" + std::to_string(i);
         c.kind = ProcessKind::Cont;
         c.writes = {{2, 0, 0, 0, 0}};
+        c.drives = c.writes;
         c.loc = at(8);
         c.blocks.resize(1);
         c.blocks[0].instrs = {
@@ -477,6 +479,40 @@ TEST(Sir, TwoContinuousAssignmentsToAVariable) {
     EXPECT_TRUE(mentions(verify(d), "also writes"));
     d.slots[2].kind = SlotKind::Wire;  // nets may have several drivers
     expectClean(d);
+}
+
+TEST(Sir, WritesOfFunctionsContinuousAssignmentsCall) {
+    // Two continuous assignments drive slots 0 and 1, and a function each
+    // calls writes slot 2: a procedural write of each, no clash (6.5,
+    // SIR_SPEC.md 3.4). Driving slot 2 too would be one.
+    Design d = counter();
+    d.processes.clear();
+    for (std::uint32_t i = 0; i < 2; ++i) {
+        Process c;
+        c.name = "assign" + std::to_string(i);
+        c.kind = ProcessKind::Cont;
+        c.writes = {{i, 0, 0, 0, 0}, {2, 0, 0, 0, 0}};
+        c.drives = {{i, 0, 0, 0, 0}};
+        c.loc = at(8);
+        c.blocks.resize(1);
+        c.blocks[0].instrs = {make(Op::Ret, voidType(), kNone, {}, 8)};
+        d.processes.push_back(std::move(c));
+    }
+    expectClean(d);
+    d.processes[1].drives.push_back({2, 0, 0, 0, 0});
+    expectClean(d);  // one continuous assignment and procedural writes
+    d.processes[0].drives.push_back({2, 0, 0, 0, 0});
+    EXPECT_TRUE(mentions(verify(d), "also writes"));
+}
+
+TEST(Sir, OnlyContinuousAssignmentsDriveWhatTheyWrite) {
+    Design d = counter();
+    d.processes[0].drives = {{2, 0, 0, 0, 0}};
+    EXPECT_TRUE(mentions(verify(d), "only a cont process drives"));
+    d.processes[0].kind = ProcessKind::Cont;
+    d.processes[0].triggers.clear();
+    d.processes[0].drives = {{0, 0, 0, 0, 0}};
+    EXPECT_TRUE(mentions(verify(d), "drives a range it does not write"));
 }
 
 /// Rule 6 as it was first checked: every pair of processes, and every pair
@@ -504,8 +540,12 @@ std::vector<std::string> conflictsByPairs(const Design& d) {
                     const Slot& s = d.slots[a.slot];
                     if (unchecked(ps[i].kind) || unchecked(ps[j].kind) || s.subroutine != kNone)
                         continue;
+                    // A cont process writes as a continuous assignment only
+                    // what it drives (SIR_SPEC.md 3.4).
                     const bool bothCont =
-                        ps[i].kind == ProcessKind::Cont && ps[j].kind == ProcessKind::Cont;
+                        ps[i].kind == ProcessKind::Cont && ps[j].kind == ProcessKind::Cont &&
+                        std::ranges::find(ps[i].drives, a) != ps[i].drives.end() &&
+                        std::ranges::find(ps[j].drives, b) != ps[j].drives.end();
                     if (exclusive(ps[i].kind) || exclusive(ps[j].kind) ||
                         s.kind == SlotKind::Uwire || (bothCont && s.kind == SlotKind::Var))
                         out.push_back("process @" + std::to_string(j) + " " + ps[j].name +
@@ -571,6 +611,12 @@ TEST(Sir, WriteConflictsAreThoseOfEveryPair) {
                 writes.push_back({pick(5), pick(4), pick(4), pick(8), pick(5)});
             d.processes.push_back(
                 writer("p" + std::to_string(i), kinds[pick(std::size(kinds))], std::move(writes)));
+            // A cont process drives some of what it writes; the rest is
+            // what the functions it calls write.
+            Process& p = d.processes.back();
+            if (p.kind == ProcessKind::Cont)
+                for (const SlotRange& w : p.writes)
+                    if (pick(3) != 0) p.drives.push_back(w);
         }
         const std::vector<std::string> got = conflictsOf(verify(d));
         EXPECT_EQ(got, conflictsByPairs(d)) << "round " << round;

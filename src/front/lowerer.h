@@ -736,6 +736,9 @@ private:
     /// The static variables put into static-init processes, in the order of
     /// their stores there: each with its process.
     std::vector<std::pair<const ast::VariableSymbol*, std::uint32_t>> staticInits_;
+    /// What the subroutines a cont process calls write, by process, until
+    /// finishDrives adds them to its writes.
+    std::map<std::uint32_t, std::vector<sir::SlotRange>> callWrites_;
     /// Subroutines lowered so far, per instance and symbol.
     std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
     /// laterWork of each function looked at so far.
@@ -848,6 +851,9 @@ private:
     /// After every body is lowered: the write sets and the always_comb
     /// sensitivity, including what called subroutines read and write.
     void finishDesign();
+    /// After the nets are resolved: what each cont process drives, and then
+    /// what the functions it calls write (SIR_SPEC.md 3.4).
+    void finishDrives();
     void lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::string& prefix);
 };
 

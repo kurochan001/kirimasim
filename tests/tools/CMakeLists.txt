@@ -329,3 +329,7 @@ set_tests_properties(tools/gen_later_work_override_matrix PROPERTIES LABELS Tool
 add_test(NAME tools/gen_real_delay_rounding_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_real_delay_rounding_matrix.py --check)
 set_tests_properties(tools/gen_real_delay_rounding_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_cont_function_write_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_cont_function_write_matrix.py --check)
+set_tests_properties(tools/gen_cont_function_write_matrix PROPERTIES LABELS Tools)

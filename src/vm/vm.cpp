@@ -583,12 +583,12 @@ public:
         }
         // The slots assign and force may hold (SCHEDULER_SPEC.md 14.4). A
         // net, or a variable that a continuous assignment drives, gets its
-        // drivers' value back when released.
+        // drivers' value back when released; what a function the assignment
+        // calls writes is not driven (14.3, SIR_SPEC.md 3.4).
         std::vector<bool> driven(d_.slots.size(), false);
         for (const sir::Process& proc : d_.processes)
-            if (proc.kind == sir::ProcessKind::Cont)
-                for (const sir::SlotRange& w : proc.writes)
-                    driven[w.slot] = true;
+            for (const sir::SlotRange& w : proc.drives)
+                driven[w.slot] = true;
         for (sir::SlotId s = 0; s < d_.slots.size(); ++s)
             if ((d_.slots[s].flags & sir::kForceTarget) != 0)
                 sched_.markHeld(s, d_.slots[s].kind != sir::SlotKind::Var, driven[s]);

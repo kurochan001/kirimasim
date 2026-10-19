@@ -113,9 +113,14 @@ bool fits(Type p, Type v) { return v.kind != TypeKind::Void && unsignedOf(p) == 
 enum class Writer : std::uint8_t { Exclusive, Cont, Other };
 constexpr std::size_t kWriters = 3;
 
-Writer writerOf(ProcessKind k) {
-    if (exclusiveWriter(k)) return Writer::Exclusive;
-    return k == ProcessKind::Cont ? Writer::Cont : Writer::Other;
+/// The writer of a write range of p: a cont process writes as a continuous
+/// assignment only what it drives; what the functions it calls write are
+/// procedural writes (SIR_SPEC.md 3.4).
+Writer writerOf(const Process& p, const SlotRange& r) {
+    if (exclusiveWriter(p.kind)) return Writer::Exclusive;
+    return p.kind == ProcessKind::Cont && std::ranges::find(p.drives, r) != p.drives.end()
+               ? Writer::Cont
+               : Writer::Other;
 }
 
 /// Whether rule 6 forbids two writers to write the same bits of a slot.
@@ -566,6 +571,13 @@ private:
         }
         for (const SlotRange& w : p.writes)
             if (!rangeOk(w)) error(where, "write range is invalid");
+        // Only a cont process drives, and only what it writes (SIR_SPEC.md
+        // 3.4, 10).
+        for (const SlotRange& w : p.drives)
+            if (p.kind != ProcessKind::Cont)
+                error(where, "only a cont process drives", p.loc);
+            else if (std::ranges::find(p.writes, w) == p.writes.end())
+                error(where, "drives a range it does not write", p.loc);
         if (p.kind == ProcessKind::Ff && p.triggers.empty())
             error(where, "always_ff needs exactly one event control", p.loc);
         // A postponed process runs when $strobe or $monitor asks; a write
@@ -1736,7 +1748,7 @@ private:
                 const auto [elemLo, elemHi] = extent(r.firstElem, r.numElems);
                 const auto [bitLo, bitHi] = extent(r.lsb, r.width);
                 writes.push_back({r.slot, elemLo, elemHi, bitLo, bitHi, static_cast<ProcessId>(i),
-                                  static_cast<std::uint32_t>(k), writerOf(ps[i].kind)});
+                                  static_cast<std::uint32_t>(k), writerOf(ps[i], r)});
             }
         }
         std::ranges::sort(writes, [](const WriteExtent& x, const WriteExtent& y) {

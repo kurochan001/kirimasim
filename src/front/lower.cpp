@@ -778,6 +778,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     if (numErrors_ != 0) return;
     finishDesign();
     resolveNets();
+    finishDrives();
 }
 
 std::string Lowerer::whereOf(const sir::SourceLoc& l) const {
@@ -835,12 +836,14 @@ void Lowerer::finishDesign() {
     }
     // A process writes what the subroutines it calls write; always_comb and
     // always_latch are sensitive to what they read there too (9.2.2.2.1,
-    // SCHEDULER_SPEC.md 6.3, 6.4).
+    // SCHEDULER_SPEC.md 6.3, 6.4). A cont process takes them after its own
+    // writes are known as what it drives (finishDrives).
     for (const auto& [key, called] : callees_) {
         if (key.first) continue;
+        const bool cont = design_.processes[key.second].kind == sir::ProcessKind::Cont;
         for (const sir::SubroutineId c : called) {
             for (const sir::SlotRange& r : writes[c])
-                add(design_.processes[key.second].writes, r);
+                add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);
             if (combReads_.count(key.second) != 0)
                 for (const sir::SlotRange& r : reads[c])
                     combReads_[key.second].push_back(r);
@@ -861,6 +864,24 @@ void Lowerer::finishDesign() {
                 skip = skip || sir::covers(s, t.range, r);
             if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
         }
+    }
+}
+
+void Lowerer::finishDrives() {
+    // What a cont process drives is what its own instructions write, once
+    // resolveNets has moved them to the driver slots; what the functions it
+    // calls write are procedural writes (6.5, SIR_SPEC.md 3.4).
+    for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
+        sir::Process& proc = design_.processes[p];
+        if (proc.kind != sir::ProcessKind::Cont) continue;
+        proc.drives = proc.writes;
+        const auto it = callWrites_.find(p);
+        if (it == callWrites_.end()) continue;
+        for (const sir::SlotRange& r : it->second)
+            if (std::ranges::none_of(proc.writes, [&](const sir::SlotRange& w) {
+                    return sir::covers(design_.slots[r.slot], w, r);
+                }))
+                proc.writes.push_back(r);
     }
 }
 
