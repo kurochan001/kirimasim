@@ -2,7 +2,7 @@
 
 [日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (proposed, awaiting approval). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (proposed, awaiting approval). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (proposed, awaiting approval). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (proposed, awaiting approval). The same day, three items were added to 8 (proposed, awaiting approval). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
 
 This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
@@ -135,3 +135,6 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 - How temporaries are allocated when the frame layout is shared between tiers.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).
 - The details of GC, fibers and DPI-C tasks (P3).
+- (Proposed 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P3; 6).
+- (Proposed 2026-10-19.) `$finish` called inside a DPI-C export is marked and returned to C, and the run starts to end at the end of the SystemVerilog statement; `svLogicVecVal` arguments and the storage of open arrays are valid only during the call (P3).
+- (Proposed 2026-10-19.) Only static islands with no side effects run in parallel; processes with `$display`, DPI-C, random numbers or `$finish` run on the main thread in the default order, so that results do not change with the number of threads (P4).
