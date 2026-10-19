@@ -2,7 +2,7 @@
 
 [日本語](UNSPECIFIED_BEHAVIOR.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-19)**. On 2026-10-19, this document was written (approved). The same day, a person chose the approved rules for the four differences of 9: for J3 and A13 as they are, for A2 with a lint warning, and for P4 with the memory's bounds where the arguments give none. The same day, the options of slang's limits for A11 and A12 were set (CLI.md 2.1; approved).
+Priority: P1. Status: **approved (2026-10-19)**. On 2026-10-19, this document was written (approved). The same day, a person chose the approved rules for the four differences of 9: for J3 and A13 as they are, for A2 with a lint warning, and for P4 with the memory's bounds where the arguments give none. The same day, the options of slang's limits for A11 and A12 were set (CLI.md 2.1; approved). The same day, N9 (the top from configs in the sources) was added (CLI.md 2.1; approved).
 
 This document lists the places where IEEE 1800-2023 does not set an order or a result, leaves it to the implementation, or where following its wording literally would break practical code, and says what kirimasim does at each. The text of the standard is not copied; clause numbers are given. Most rules this document relies on are written in other specifications. This document gives them as references, and writes here only what has no other home: the principles (1), the kinds of diagnostics (4), the status of each item (6), and the lists of 7 and 8.
 
@@ -304,6 +304,7 @@ The same seed gives the same result, across versions too. Only `$random` and `$d
 | N6 | Unnamed generate blocks take the names slang gives (`genblk`); VPI and waveforms use them too | — | 27.6, 23.11 | P1 | in force (SIR_SPEC.md 1) |
 | N7 | `inout` connections are resolution points | — | 23.3.3, 28 | P1 | in force (VALUE_SEMANTICS.md 5.3); switches later (P4) |
 | N8 | A modport direction broken through a virtual interface and not found at elaboration is a run-time warning (not confirmed) | `kirima-modport-violation` | 25.5, 25.9 | P3 | later (P3) |
+| N9 | Without `--top`, one config in the sources gives the top; with more than one, the standard does not say which is meant, so it is an error that asks for `--top` | `--top` | 33.5.4 | P1 | approved 2026-10-19 (CLI.md 2.1) |
 
 ### 6.15 O: timescales and time
 
