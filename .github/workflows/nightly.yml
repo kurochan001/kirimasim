@@ -165,18 +165,12 @@ jobs:
             --parse-only --baseline tests/gates/svtests_parse.txt --out build/svtests-parse \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
-      # Own-suite gate: needs read access to the test-suite repository while
-      # it is private (secret KIRIMASIM_TESTS_TOKEN); skipped without it.
+      # Own-suite gate: the test-suite repository is public, so it is cloned
+      # without a token, at the commit the first line of the list names.
       - name: Own suite, P1 population
-        env:
-          TOKEN: ${{ secrets.KIRIMASIM_TESTS_TOKEN }}
         run: |
-          if [ -z "$TOKEN" ]; then
-            echo "skipped: no KIRIMASIM_TESTS_TOKEN" | tee -a "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
           commit=$(head -1 tests/gates/p1_population.txt | sed -n 's/.*kirimasim-tests \([0-9a-f]*\),.*/\1/p')
-          git clone -q "https://x-access-token:${TOKEN}@github.com/kurochan001/kirimasim-tests.git" suite
+          git clone -q https://github.com/kurochan001/kirimasim-tests.git suite
           git -C suite checkout -q "$commit"
           python3 tools/p1_population.py run --tests-repo suite \
             --kirimasim build/release/src/driver/kirimasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
