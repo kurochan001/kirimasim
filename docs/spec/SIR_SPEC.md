@@ -2,7 +2,7 @@
 
 [日本語](SIR_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved). The same day, delay operands of any width were allowed (1, 7.2; approved).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved). The same day, delay operands of any width were allowed (1, 7.2; approved). On 2026-10-19, the instruction `cond.x` for `--cond-x` was added to 5.2 (proposed, awaiting approval).
 
 **Amendment of M3b (approved 2026-10-15):** in stage M3b of the P1 plan, instructions for merging values, values across waits, unpacked arrays, the type table, subroutines and process control were added, and the text form was changed to refer to things by number. The sections changed say "amendment of M3b".
 
@@ -27,6 +27,8 @@ Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points o
 **Constants where this document's reading differs from slang (approved 2026-10-18):** 6 gained, as things computed without slang's constants, conversion from real to integer and unary `+` of 4-state values.
 
 **When the copy back of an argument finds its target (approved 2026-10-18):** 8 says that the indices of an output or inout actual are evaluated on return, and those of an inout actual also at the call.
+
+**Marking the conditions `--cond-x` reports (proposed 2026-10-19, awaiting approval):** 5.2 gains `cond.x`. Which conditions `--cond-x` reports (those of `if` and `?:`, and the expressions of `case`; CLI.md 2.2) is a decision about constructs, so `front` marks them when it makes SIR; a tier cannot tell them from the same instructions made for loops and waits, and a 1-bit condition has no `truth` instruction at all.
 
 SIR (slot-indexed IR) is kirimasim's intermediate representation, made from the result of slang's elaboration. It is a form in which everything needed for execution is decided statically, and both tier 1 (the VM) and tier 2 (C++ generation) are made from the same SIR. The meaning of values follows VALUE_SEMANTICS.md, and events and time follow SCHEDULER_SPEC.md. The text of the standard (IEEE 1800-2023) is not copied; grounds are given by clause number.
 
@@ -250,6 +252,7 @@ Amendment of M3b. Each row of the type table is referred to by its number (TypeI
 | Blocks that are targets of disable (approved 2026-10-17) | `scope.enter #n, exit`, `scope.leave #n`, `disable.scope #n`, `disable.task @T` (7.2) | SCHEDULER_SPEC.md 10.4, 10.7 |
 | Pending calls (approved 2026-10-17) | `report.call "#0"\|"final", @S, args...` (5.7) | SCHEDULER_SPEC.md 15.2 to 15.4 |
 | Pending reports (approved 2026-10-16; the scope operand added the same day) | `report.defer "<construct>", "<content>", "<scope>"`: puts a violation of unique, unique0 or priority on the pending queue of the running process. The position of the report is the instruction's source position, and the hierarchical name is `<scope>` (the hierarchical name of the scope containing the statement, including named blocks and subroutines). `<construct>` and `<content>` are the strings of SYSTEM_TASKS.md 10.4 | SCHEDULER_SPEC.md 15 |
+| Checks of conditions (proposed 2026-10-19) | `cond.x "<construct>", <value>`: placed by `front` right after the condition of an `if` or a `?:`, or the expression of a `case`, is evaluated; `<construct>` is `if`, `?:` or `case`, and the value is integral. It has no result and changes nothing. When `--cond-x` is not `off`, a tier reports it if the value has x or z bits, once per instruction (its source position is the place); otherwise it does nothing, and tier 2 may leave it out | VALUE_SEMANTICS.md 3.9, 4.1, 4.2; CLI.md 2.2 |
 
 - **There are no short-circuit instructions.** The short-circuit evaluation of `&&`, `||`, `->` and `?:` is expressed with branches between basic blocks (VALUE_SEMANTICS.md 3.1). This way, the form of SIR guarantees that the side effects of the side not evaluated do not happen.
 - **Instructions that can make x** (`div`, `mod`, `pow`, selects and `load.elem` that may read out of range, reads of associative arrays with keys that do not exist, taking from an empty queue) are flagged. Analysis (X-reachability analysis) and tier 2's switching between two versions use this flag.
