@@ -2,7 +2,7 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (proposed, awaiting approval). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (proposed, awaiting approval). The same day, `--stop` was added to 2.2 and 5 (proposed, awaiting approval). The same day, `--race-nba` was added to the options of P2 and later (2.3; proposed, awaiting approval). The same day, `--init-values`, `--cond-x` and `--bounds-check` were added to 2.2, and the line `--init-values` writes to 4 (proposed, awaiting approval). The same day, `--autoflush` was added to 2.2 (proposed, awaiting approval). The same day, `--mintypmax`, `--report-pulses` and `--wave-glitches` were added to 2.2 (proposed, awaiting approval). The same day, `--randomize-fail` and `--assert-incomplete` were added to the options of P2 and later (2.3; proposed, awaiting approval). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (proposed, awaiting approval). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (proposed, awaiting approval). The same day, `--stop` was added to 2.2 and 5 (proposed, awaiting approval). The same day, `--race-nba` was added to the options of P2 and later (2.3; proposed, awaiting approval). The same day, `--init-values`, `--cond-x` and `--bounds-check` were added to 2.2, and the line `--init-values` writes to 4 (proposed, awaiting approval). The same day, `--autoflush` was added to 2.2 (proposed, awaiting approval). The same day, `--mintypmax`, `--report-pulses` and `--wave-glitches` were added to 2.2 (proposed, awaiting approval). The same day, `--randomize-fail` and `--assert-incomplete` were added to the options of P2 and later (2.3; proposed, awaiting approval). The same day, the last process and the latest events in the report of a limit (2.6), and a scheme of names for diagnostics (6), were proposed (awaiting approval). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
 
@@ -98,6 +98,17 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
   - `kirimasim: error: time did not advance: <n> events ran in one time slot (--max-slot-events=<n>)`
   - `kirimasim: error: time did not advance: process "<process name>" ran <n> instructions without waiting (--max-steps=<n>)`
   - The process name is the name of the SIR process (`top.initial0` and the like).
+- **The last process and the latest events (proposed 2026-10-19):** after that first line, whose form does not change, the report gives the last process that put an event in the time slot, and the latest events of the time slot, newest first, at most 32, each with its region, its process, its source position and what it does. For example:
+
+  ```text
+  kirimasim: error: time did not advance: 1000000 moves into the Active region in one time slot (--max-zero-delay=1000000)
+    last process: top.u_ctl.always0 (always at ctl.sv:12)
+    last events (newest first):
+      Inactive  top.u_ctl.always0  ctl.sv:15  resume after #0
+      Active    top.u_ctl.always0  ctl.sv:14  blocking assignment
+  ```
+
+  The added lines are indented and contain no `: error: `, so `:expected_stderr:` (TEST_SUITE.md) does not compare them.
 
 ### 2.7 Limits on resources and on wall-clock time (proposed 2026-10-19)
 
@@ -151,3 +162,4 @@ The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go int
 
 - The name and default of the option that counts `$error`.
 - The fields of `--diag-format=json` and the scheme of diagnostic IDs (M7; together with RUNTIME_ABI.md's `kirima_status`).
+- **A scheme of names (proposed 2026-10-19; fixed in M7):** kirimasim's own diagnostics are named `kirima-<words>`, in lower case with hyphens (for example `kirima-zero-time-loop`), in the form of slang's warning names. `-W<name>`, `-Wno-<name>` and `-Werror=<name>` (2.1) then take them as they take slang's, and the prefix keeps them apart from slang's. Run-time errors and limits cannot be turned off; a limit can only be raised.

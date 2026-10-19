@@ -2,7 +2,7 @@
 
 [English](CLI.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**承認済み（2026-10-15）**。2026-10-16 に、`--max-time` の書き方と打ち切り方（2.5 節）と、終了の理由の行の時刻の書き方（4 節）を足した（承認済み）。同日、時刻が進まない実行の上限の既定値（2.6 節）と、slang の言語の版（2.1 節）を足した（承認済み）。2026-10-18 に、コード 2 に設計が起こす実行時の誤りを含めた（5 節。承認済み）。同日、4 節の版の行の例を、シードの無い今の形にした（承認済み）。2026-10-19 に、2.6 節の上限に `--max-slot-events` を足した（承認済み）。同日、資源の上限（2.2 節、2.7 節）と終了コード 6（5 節）を足した（提案、承認待ち）。同日、壁時計の上限を 2.2 節、2.7 節、5 節に足した（提案、承認待ち）。同日、`--stop` を 2.2 節と 5 節に足した（提案、承認待ち）。同日、P2 以降のオプションに `--race-nba` を足した（2.3 節。提案、承認待ち）。同日、`--init-values`、`--cond-x`、`--bounds-check` を 2.2 節に、`--init-values` が書く行を 4 節に足した（提案、承認待ち）。同日、`--autoflush` を 2.2 節に足した（提案、承認待ち）。同日、`--mintypmax`、`--report-pulses`、`--wave-glitches` を 2.2 節に足した（提案、承認待ち）。同日、P2 以降のオプションに `--randomize-fail` と `--assert-incomplete` を足した（2.3 節。提案、承認待ち）。設計仕様書の「外部インターフェース」の案を、実装する段階ごとに整理し、決まっていなかった点（出力の行き先、`--dump-sir`、プラスアーグ）を足した。
+優先度：P1。状態：**承認済み（2026-10-15）**。2026-10-16 に、`--max-time` の書き方と打ち切り方（2.5 節）と、終了の理由の行の時刻の書き方（4 節）を足した（承認済み）。同日、時刻が進まない実行の上限の既定値（2.6 節）と、slang の言語の版（2.1 節）を足した（承認済み）。2026-10-18 に、コード 2 に設計が起こす実行時の誤りを含めた（5 節。承認済み）。同日、4 節の版の行の例を、シードの無い今の形にした（承認済み）。2026-10-19 に、2.6 節の上限に `--max-slot-events` を足した（承認済み）。同日、資源の上限（2.2 節、2.7 節）と終了コード 6（5 節）を足した（提案、承認待ち）。同日、壁時計の上限を 2.2 節、2.7 節、5 節に足した（提案、承認待ち）。同日、`--stop` を 2.2 節と 5 節に足した（提案、承認待ち）。同日、P2 以降のオプションに `--race-nba` を足した（2.3 節。提案、承認待ち）。同日、`--init-values`、`--cond-x`、`--bounds-check` を 2.2 節に、`--init-values` が書く行を 4 節に足した（提案、承認待ち）。同日、`--autoflush` を 2.2 節に足した（提案、承認待ち）。同日、`--mintypmax`、`--report-pulses`、`--wave-glitches` を 2.2 節に足した（提案、承認待ち）。同日、P2 以降のオプションに `--randomize-fail` と `--assert-incomplete` を足した（2.3 節。提案、承認待ち）。同日、上限の報告の最後のプロセスと直前の事象（2.6 節）と、診断の名前の付け方（6 節）を提案した（承認待ち）。設計仕様書の「外部インターフェース」の案を、実装する段階ごとに整理し、決まっていなかった点（出力の行き先、`--dump-sir`、プラスアーグ）を足した。
 
 この文書は、kirimasim のコマンドラインの形、オプション、終了コード、kirimasim 自身が出すメッセージの形を定める。終了の理由とコードの意味は SCHEDULER_SPEC.md の 16 節、システムタスクの出力は SYSTEM_TASKS.md に従う。
 
@@ -98,6 +98,17 @@ P2 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt
   - `kirimasim: error: time did not advance: <n> events ran in one time slot (--max-slot-events=<n>)`
   - `kirimasim: error: time did not advance: process "<プロセスの名前>" ran <n> instructions without waiting (--max-steps=<n>)`
   - プロセスの名前は SIR のプロセスの名前（`top.initial0` など）。
+- **最後のプロセスと直前の事象（2026-10-19 に提案）：** 形を変えない 1 行目の後に、その時刻スロットに最後に事象を積んだプロセスと、その時刻スロットの直前の事象を新しい順に最大 32 件、それぞれの領域、プロセス、ソースの位置、何をするかとともに出す。例：
+
+  ```text
+  kirimasim: error: time did not advance: 1000000 moves into the Active region in one time slot (--max-zero-delay=1000000)
+    last process: top.u_ctl.always0 (always at ctl.sv:12)
+    last events (newest first):
+      Inactive  top.u_ctl.always0  ctl.sv:15  resume after #0
+      Active    top.u_ctl.always0  ctl.sv:14  blocking assignment
+  ```
+
+  足した行は字下げし、`: error: ` を含まないので、`:expected_stderr:`（TEST_SUITE.md）は比べない。
 
 ### 2.7 資源と壁時計の上限（2026-10-19 に提案）
 
@@ -151,3 +162,4 @@ SCHEDULER_SPEC.md の 16.2 節の表と同じ。理由の名前は `--stats=json
 
 - `$error` を数えるオプションの名前と既定。
 - `--diag-format=json` の項目と、診断の ID の体系（M7。RUNTIME_ABI.md の `kirima_status` と一緒に）。
+- **名前の付け方（2026-10-19 に提案。M7 で確定）：** kirimasim 自身の診断には、slang の警告の名前と同じ形で、小文字をハイフンでつないだ `kirima-<語>` の名前を付ける（例：`kirima-zero-time-loop`）。こうすると `-W<名前>`、`-Wno-<名前>`、`-Werror=<名前>`（2.1）が slang の名前と同じように受け取り、接頭辞で slang の診断と分けられる。実行時の誤りと上限は消せない。上限は上げることだけができる。
