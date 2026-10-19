@@ -22,7 +22,7 @@ bb1:
   ret  ; 0:7:5
 }
 
-process @2 "top.initial0.fork0.1" kind=general inst=0 parent=process @0 writes=%s0 {  ; 0:10:9
+process @2 "top.initial0.fork0.1" kind=general inst=0 parent=process @0 writes=%s0 {  ; 0:9:7
 bb0:
   wait.delay const i2<64> 64'h0000000000000002, bb1  ; 0:10:9
 bb1:
