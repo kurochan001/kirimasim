@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- The initial value of a static variable that may read another static
+  variable before that one is set gets a warning, as SCHEDULER_SPEC.md 3
+  says: a variable of another instance, or one of its own instance,
+  package or compilation unit set after it in kirimasim's order. The
+  value read depended on that order without a word (#16).
 - A negative real constant delay, such as `#(-2.0)`, waits as the same
   value held in a real variable does: rounded to the precision, then read
   as an unsigned 64-bit count of its steps (9.4.1, SCHEDULER_SPEC.md 8).

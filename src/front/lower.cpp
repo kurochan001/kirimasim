@@ -26,6 +26,7 @@
 #include "kirimasim/sir/verify.h"
 #include "lowerer.h"
 #include "slang/analysis/AnalysisManager.h"
+#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
@@ -767,6 +768,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
         body = std::move(b_);
         b_ = std::move(saved);
     }
+    checkStaticInitOrder();
     if (numErrors_ != 0) return;
     finishDesign();
     resolveNets();
@@ -789,6 +791,7 @@ void Lowerer::dropProcesses(std::size_t first) {
     netPorts_.erase(netPorts_.lower_bound(static_cast<std::uint32_t>(first)), netPorts_.end());
     sides_.erase(sides_.lower_bound(static_cast<std::uint32_t>(first)), sides_.end());
     // A static-init process made while lowering the dropped ones goes too.
+    std::erase_if(staticInits_, [&](const auto& s) { return s.second >= first; });
     for (auto it = staticInit_.begin(); it != staticInit_.end();) {
         if (it->second >= first) {
             staticBody_.erase(it->first);
@@ -1834,6 +1837,59 @@ void Lowerer::ensureStaticInit(const ast::Symbol& at, slang::SourceLocation sl) 
     }
 }
 
+void Lowerer::checkStaticInitOrder() {
+    // Static-init processes run in the order of their numbers, and each
+    // runs its stores in order (SIR_SPEC.md 7.1): packages and compilation
+    // units first, then the instances.
+    std::map<const ast::Symbol*, std::pair<std::uint32_t, std::size_t>> when;
+    for (std::size_t i = 0; i < staticInits_.size(); ++i)
+        when.try_emplace(staticInits_[i].first, staticInits_[i].second, i);
+    const auto instanceOf = [&](const ast::Symbol& s) -> std::optional<sir::InstanceId> {
+        for (const auto* m : {&slots_, &structSlots_})
+            if (const auto it = m->find(&s); it != m->end())
+                return design_.slots[it->second].instance;
+        return std::nullopt;
+    };
+    for (std::size_t i = 0; i < staticInits_.size(); ++i) {
+        const ast::VariableSymbol& v = *staticInits_[i].first;
+        const ast::Expression* init = v.getInitializer();
+        const std::optional<sir::InstanceId> own = instanceOf(v);
+        if (init == nullptr || !own) continue;
+        const std::pair<std::uint32_t, std::size_t> mine{staticInits_[i].second, i};
+        // Only the variables the expression names count, not those read
+        // inside the functions it calls (P1).
+        std::vector<const ast::Symbol*> early;
+        const auto read = [&](const ast::Symbol& s) {
+            if (s.kind != ast::SymbolKind::Variable || &s == &v || !inSlot(s)) return;
+            const std::optional<sir::InstanceId> inst = instanceOf(s);
+            if (!inst) return;
+            // Another instance's variable: the standard sets no order
+            // between instances. Any other: when its own is set later.
+            const bool other =
+                *inst != *own && design_.instances[*inst].kind == sir::InstanceKind::Module;
+            const auto it = when.find(&s);
+            if ((other || (it != when.end() && it->second > mine)) &&
+                std::find(early.begin(), early.end(), &s) == early.end())
+                early.push_back(&s);
+        };
+        auto visitor = ast::makeVisitor(
+            [&](auto&, const ast::NamedValueExpression& e) { read(e.symbol); },
+            [&](auto&, const ast::HierarchicalValueExpression& e) { read(e.symbol); });
+        init->visit(visitor);
+        if (early.empty()) continue;
+        std::string names;
+        for (std::size_t k = 0; k < early.size(); ++k)
+            names += (k == 0                  ? ""
+                      : k + 1 == early.size() ? " and "
+                                              : ", ") +
+                     std::string("'") + early[k]->getHierarchicalPath() + "'";
+        warning(init->sourceRange.start(),
+                "the initial value of '" + std::string(v.name) + "' reads " + names + ", whose " +
+                    (early.size() == 1 ? "initial value" : "initial values") +
+                    " may not be set yet");
+    }
+}
+
 void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
                               slang::SourceLocation sl) {
     ensureStaticInit(v, sl);
@@ -1872,6 +1928,9 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
         restore();
         throw;
     }
+    // In the order of the stores: a subroutine lowered while this initial
+    // value is (slotOf) puts its static variables' stores first.
+    staticInits_.emplace_back(&v, staticInit_.at(instance_));
     restore();
 }
 

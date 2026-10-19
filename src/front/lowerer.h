@@ -608,6 +608,10 @@ public:
     /// Puts the initializer of a static variable into the static-init
     /// process of the current instance (SIR_SPEC.md 7.1).
     void lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot, slang::SourceLocation sl);
+    /// The warning on initial values that may read a static variable
+    /// before its initial value is set (SCHEDULER_SPEC.md 3, step 1), once
+    /// every static-init process is complete.
+    void checkStaticInitOrder();
 
     void noteWrite(const sir::SlotRange& r);
     void noteRead(const sir::SlotRange& r);
@@ -718,6 +722,9 @@ private:
     std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
     std::map<sir::InstanceId, Body> staticBody_;           ///< Its lowering state.
     std::map<sir::InstanceId, slang::SourceLocation> staticLoc_;  ///< Its first initializer.
+    /// The static variables put into static-init processes, in the order of
+    /// their stores there: each with its process.
+    std::vector<std::pair<const ast::VariableSymbol*, std::uint32_t>> staticInits_;
     /// Subroutines lowered so far, per instance and symbol.
     std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subWrites_;

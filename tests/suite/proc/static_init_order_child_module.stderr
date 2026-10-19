@@ -1,0 +1,1 @@
+static_init_order_child_module.sv:33:11: warning: the initial value of 'x' reads 'top.ub.y', whose initial value may not be set yet

@@ -1,0 +1,1 @@
+static_init_order_generate_after_module.sv:32:11: warning: the initial value of 'x' reads 'top.g.w', whose initial value may not be set yet

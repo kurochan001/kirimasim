@@ -1,0 +1,1 @@
+static_init_order_sibling_after_function.sv:33:20: warning: the initial value of 'x' reads 'top.ub.y', whose initial value may not be set yet

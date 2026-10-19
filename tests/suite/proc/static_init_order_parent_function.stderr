@@ -1,0 +1,1 @@
+static_init_order_parent_function.sv:33:20: warning: the initial value of 'x' reads 'top.v', whose initial value may not be set yet

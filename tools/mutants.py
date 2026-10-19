@@ -811,6 +811,16 @@ MUTANTS = [
     ("front: a NaN or infinite real constant delay is past the largest time",
      "src/front/lower_expr.cpp", "if (std::isnan(r) || std::isinf(r)) return 0;",
      "if (std::isnan(r) || std::isinf(r)) return std::nullopt;"),
+    ("front: another instance's static variable read in an initial value is not reported",
+     "src/front/lower.cpp",
+     "                *inst != *own && design_.instances[*inst].kind == sir::InstanceKind::Module;",
+     "                false && design_.instances[*inst].kind == sir::InstanceKind::Module;"),
+    ("front: an initial value is reported for reading an earlier variable", "src/front/lower.cpp",
+     "it != when.end() && it->second > mine", "it != when.end() && it->second < mine"),
+    ("front: the order of static initial values is taken from the calls, not the stores",
+     "src/front/lower.cpp", "    ensureStaticInit(v, sl);\n    Body saved = std::move(b_);",
+     "    ensureStaticInit(v, sl);\n    staticInits_.emplace_back(&v, staticInit_.at(instance_));\n"
+     "    Body saved = std::move(b_);"),
 ]
 
 
