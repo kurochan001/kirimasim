@@ -800,6 +800,11 @@ MUTANTS = [
     ("front: a second config in the sources is ignored", "src/front/front.cpp",
      "            if (first == nullptr) {\n                first = &config;",
      "            if (first == nullptr || true) {\n                if (first == nullptr) first = &config;"),
+    ("front: `unconnected_drive does not pull unconnected inputs", "src/front/lower.cpp",
+     "    if (drive == ast::UnconnectedDrive::None || ps.direction",
+     "    if (true || ps.direction"),
+    ("front: the pull of `unconnected_drive is strong", "src/front/lower.cpp",
+     "              {5, 5});", "              {6, 6});"),
 ]
 
 

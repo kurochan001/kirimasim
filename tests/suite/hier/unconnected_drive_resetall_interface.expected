@@ -1,0 +1,5 @@
+named, left out: a1=z a4=zzzz a70=zzzzzzzzzzzzzzzzzz c=0 y=zzzzzzzzzzzzzzzzzzz
+named, empty: a1=z a4=zzzz a70=zzzzzzzzzzzzzzzzzz c=0 y=zzzzzzzzzzzzzzzzzzz
+ordered, empty: a1=z a4=zzzz a70=zzzzzzzzzzzzzzzzzz c=0 y=zzzzzzzzzzzzzzzzzzz
+no list: a1=z a4=zzzz a70=zzzzzzzzzzzzzzzzzz c=z y=zzzzzzzzzzzzzzzzzzz
+array, no list: a1=z a4=zzzz a70=zzzzzzzzzzzzzzzzzz c=z y=zzzzzzzzzzzzzzzzzzz

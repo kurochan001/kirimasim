@@ -782,6 +782,10 @@ private:
     /// The implicit continuous assignments of a child's port connections
     /// (4.9.6, SIR_SPEC.md 3.5).
     void lowerPorts(const ast::InstanceSymbol& child);
+    /// The pull on an input port of `child` left unconnected where
+    /// `unconnected_drive is in effect (22.9, VALUE_SEMANTICS.md 5.3); a
+    /// variable port is not pulled (UNSPECIFIED_BEHAVIOR.md N10).
+    void pullUnconnected(const ast::InstanceSymbol& child, const ast::PortSymbol& ps);
     /// A built-in gate or pull (VALUE_SEMANTICS.md 5.8), or one element of an
     /// array of them.
     void lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix);

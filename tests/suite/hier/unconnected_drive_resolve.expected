@@ -1,0 +1,12 @@
+weak0_in=1
+strong0_in=0
+pull0_in=x
+weak1_in=0
+strong1_in=1
+tri0_pull1=x
+tri1_pull1=1
+tri0_pull0=0
+tri1_pull0=x
+wand_pull1=0
+wor_pull0=1
+wand_weak=1

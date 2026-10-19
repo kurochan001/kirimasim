@@ -1415,9 +1415,11 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         const ast::Expression* ext = conn->getExpression();
         if (ext == nullptr) {
             // Unconnected: the port's net or variable keeps its initial
-            // value, unless the port has a default (23.2.2.4).
+            // value, unless the port has a default (23.2.2.4) or is pulled.
             if (ps.getInitializer() != nullptr)
                 report(ps.location, "default value of an unconnected port");
+            else
+                pullUnconnected(child, ps);
             continue;
         }
         const ast::Symbol* internal = ps.internalSymbol;
@@ -1462,6 +1464,46 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         if (betweenNets && design_.processes.size() > before)
             netPorts_.insert(static_cast<std::uint32_t>(before));
     }
+}
+
+void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortSymbol& ps) {
+    // slang records the directive in effect where the definition was
+    // declared. Only input ports are pulled, by their declared direction.
+    const ast::UnconnectedDrive drive = child.getDefinition().unconnectedDrive;
+    if (drive == ast::UnconnectedDrive::None || ps.direction != ast::ArgumentDirection::In) return;
+    const ast::Symbol* internal = ps.internalSymbol;
+    if (internal == nullptr || !inSlot(*internal)) {
+        report(ps.location, "port expression left unconnected under `unconnected_drive");
+        return;
+    }
+    if (internal->kind != ast::SymbolKind::Net) {
+        // A pull is a driver with a strength, which a variable does not
+        // have; 23.3.3.2 gives it the initial value of its type.
+        warning(ps.location, "`unconnected_drive does not pull input port '" +
+                                 std::string(ps.name) +
+                                 "', a variable; it keeps the initial value of its type");
+        return;
+    }
+    const auto it = slots_.find(internal);
+    if (it == slots_.end()) return;  // its declaration was reported
+    const sir::SlotId s = it->second;
+    const sir::Type t = design_.slots[s].type;
+    if (!design_.slots[s].dims.empty() || !sir::isIntegral(t)) {
+        report(ps.location, "unpacked array port left unconnected under `unconnected_drive");
+        return;
+    }
+    // A pullup or pulldown on every bit: 1 or 0 at pull strength (28.10).
+    const std::uint64_t word = drive == ast::UnconnectedDrive::Pull1 ? ~std::uint64_t{0} : 0;
+    const std::size_t words = (t.width + 63) / 64;
+    const std::string scope = design_.instances[instanceIds_.at(&child)].scopeName;
+    lowerCont(scope + ".$pull." + std::string(ps.name), ps.location, child,
+              [&] {
+                  const Val v = constantWords(t, std::vector<std::uint64_t>(words, word),
+                                              std::vector<std::uint64_t>(words, 0));
+                  emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, ps.location);
+                  noteWrite({s, 0, 0, 0, 0});
+              },
+              {5, 5});
 }
 
 void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {

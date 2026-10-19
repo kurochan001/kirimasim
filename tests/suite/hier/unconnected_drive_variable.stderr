@@ -1,0 +1,3 @@
+unconnected_drive_variable.sv:19:19: warning: `unconnected_drive does not pull input port 'a', a variable; it keeps the initial value of its type
+unconnected_drive_variable.sv:20:25: warning: `unconnected_drive does not pull input port 'b', a variable; it keeps the initial value of its type
+unconnected_drive_variable.sv:21:23: warning: `unconnected_drive does not pull input port 'c', a variable; it keeps the initial value of its type

@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- An input port left unconnected where `` `unconnected_drive pull1`` or
+  `pull0` is in effect is pulled up or down, as 22.9 says: a `pullup` or
+  `pulldown` on every bit of its net (VALUE_SEMANTICS.md 5.3). It stayed
+  `z` without a word. A variable input port keeps the initial value of
+  its type, with a warning (UNSPECIFIED_BEHAVIOR.md N10; #17).
 - Without `--top`, a config in the sources gives the top, as 33.5.4
   says: the cells its design statement names are the tops, and its rules
   bind the instances. The config was ignored without a word, and every
