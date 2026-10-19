@@ -175,6 +175,18 @@ jobs:
           python3 tools/p1_population.py run --tests-repo suite \
             --kirimasim build/release/src/driver/kirimasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
 
+      # Every test of the suite's latest main, so that tests added after the
+      # population was chosen run too. Reported only: not a gate, and the
+      # gate figure in the line it prints does not apply.
+      - name: Own suite, latest main, every test (report only)
+        run: |
+          git -C suite checkout -q origin/main
+          { echo "# every test of kirimasim-tests $(git -C suite rev-parse --short=12 HEAD), report only"
+            (cd suite/tests && find . -name '*.sv' | sed 's|^\./||; s|\.sv$||' | LC_ALL=C sort)
+          } > build/suite_all.txt
+          python3 tools/p1_population.py run --tests-repo suite --list build/suite_all.txt \
+            --kirimasim build/release/src/driver/kirimasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
+
   # Negative controls (TEST_SUITE.md): each known mistake put into the
   # sources must make some test fail.
   mutants:
