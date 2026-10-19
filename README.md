@@ -53,7 +53,7 @@ The criteria and how they are measured are fixed in
 Most of the sv-tests gap is in chapters 7, 8, 16 and 21: dynamic arrays,
 queues, associative arrays and classes (P3), concurrent assertions (P3), and
 file I/O and `$random` (P1, not done yet). The own test suite is kept in a
-separate repository that is not public yet.
+separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests).
 
 ### Test results
 
@@ -195,8 +195,9 @@ pins (04cc493), which passes 210; the newest Icarus passes 213.
 <summary>Own test suite by chapter of IEEE 1800-2023</summary>
 
 The P1 population of TEST_SUITE.md: 1,466 tests of the test suite,
-listed in `tests/gates/p1_population.txt`. The suite itself is not public
-yet. The last column is where kirimasim stops; it fails no test.
+listed in `tests/gates/p1_population.txt`. The suite itself is in
+[kirimasim-tests](https://github.com/kurochan001/kirimasim-tests). The last column is where
+kirimasim stops; it fails no test.
 
 | Chapter | Tests | kirimasim | Icarus | Verilator | kirimasim stops at |
 | --- | --- | --- | --- | --- | --- |

@@ -35,7 +35,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 | 必須のテストの一覧（P3 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | ファジングのテストはどのビルドでも通る。夜間の 7 回はまだ | 未測定 |
 
-sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列、キュー、連想配列、クラス（P3）、並行アサーション（P3）、ファイルの入出力と `$random`（P1、まだ）です。自前のテストスイートは別のリポジトリにあり、まだ公開していません。
+sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列、キュー、連想配列、クラス（P3）、並行アサーション（P3）、ファイルの入出力と `$random`（P1、まだ）です。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
 
 ### テストの結果
 
@@ -131,7 +131,7 @@ P1 の合格条件は、sv-tests が固定している Icarus の版（04cc493�
 <details>
 <summary>自前のテストスイートの、IEEE 1800-2023 の章ごとの内訳</summary>
 
-TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で、一覧は `tests/gates/p1_population.txt` にあります。テストスイート自体は、まだ公開していません。最後の列は kirimasim が止まる所です。kirimasim が失敗するテストはありません。
+TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で、一覧は `tests/gates/p1_population.txt` にあります。テストスイート自体は [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。最後の列は kirimasim が止まる所です。kirimasim が失敗するテストはありません。
 
 | 章 | 本数 | kirimasim | Icarus | Verilator | kirimasim が止まる所 |
 | --- | --- | --- | --- | --- | --- |
