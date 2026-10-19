@@ -90,6 +90,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A `fork` or a named block with one statement is placed at its first
+  token, not at that statement: a run-time error at such a `fork` named
+  the statement's line, and `--dump-sir` placed the `fork`, the processes
+  of its statements and the block's scope instructions there (#20).
 - A function that writes a variable can be called from several continuous
   assignments: its writes are procedural (6.5), so the variable takes the
   value written last, where kirimasim stopped with an internal error of

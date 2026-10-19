@@ -21,6 +21,7 @@
 #include "slang/ast/statements/LoopStatements.h"
 #include "slang/ast/statements/MiscStatements.h"
 #include "slang/ast/types/Type.h"
+#include "slang/syntax/AllSyntax.h"
 
 namespace kirimasim::front {
 
@@ -56,9 +57,15 @@ void Lowerer::endLoop(std::size_t loop) {
     setBlock(exit);
 }
 
+slang::SourceLocation Lowerer::startOf(const ast::Statement& s) {
+    if (s.kind == ast::StatementKind::Block && s.syntax != nullptr)
+        return s.syntax->getFirstToken().location();
+    return s.sourceRange.start();
+}
+
 void Lowerer::lowerStatement(const ast::Statement& s) {
     if (b_.dead) return;  // unreachable code is dropped
-    const slang::SourceLocation sl = s.sourceRange.start();
+    const slang::SourceLocation sl = startOf(s);
     switch (s.kind) {
         case ast::StatementKind::Empty: return;
         case ast::StatementKind::List:
@@ -442,7 +449,7 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
 }
 
 void Lowerer::lowerFork(const ast::BlockStatement& b) {
-    const slang::SourceLocation sl = b.sourceRange.start();
+    const slang::SourceLocation sl = startOf(b);
     // Each statement of the fork is a child process (SIR_SPEC.md 7.5).
     std::vector<const ast::Statement*> stmts;
     if (b.body.kind == ast::StatementKind::List) {
@@ -476,7 +483,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         child.kind = sir::ProcessKind::General;
         child.instance = instance;
         child.parent = {ownerKind, parent};
-        child.loc = loc(stmts[i]->sourceRange.start());
+        child.loc = loc(startOf(*stmts[i]));
         child.blocks.resize(1);
         const auto id = static_cast<std::uint32_t>(design().processes.size());
         design().processes.push_back(std::move(child));

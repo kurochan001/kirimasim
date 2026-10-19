@@ -408,12 +408,8 @@ std::optional<Lowerer::LaterWork> Lowerer::laterWork(const ast::SubroutineSymbol
             v.visitDefault(t);
         },
         [&](auto& v, const ast::BlockStatement& b) {
-            // slang's range of a fork starts at its first statement; the
-            // syntax starts at the fork.
             if (b.blockKind == ast::StatementBlockKind::JoinNone)
-                take(b.syntax != nullptr ? b.syntax->getFirstToken().location()
-                                         : b.sourceRange.start(),
-                     "a fork with join_none");
+                take(startOf(b), "a fork with join_none");
             v.visitDefault(b);
         },
         [&](auto& v, const ast::CallExpression& c) {

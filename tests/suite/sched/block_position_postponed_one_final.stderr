@@ -1,0 +1,1 @@
+block_position_postponed_one_final.sv:23: error: a write or an event in the Postponed region [top @ 1ns]

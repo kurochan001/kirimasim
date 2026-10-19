@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import queue
+import re
 import signal
 import subprocess
 import sys
@@ -35,6 +36,7 @@ FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
 LATER_WORK = [HERE / "later_work_matrix.sv", HERE / "later_work_override.sv"]
+BLOCK_POSITIONS = HERE / "block_position_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 END_TASKS = str(HERE / "end_tasks.sv")
 
@@ -411,6 +413,30 @@ def main() -> int:
             failures += 1
             print(f"FAIL: {design.stem}: exit code {proc.returncode}\n{proc.stdout}"
                   f"{proc.stderr}", file=sys.stderr)
+
+    # A block statement is placed at its first token, whatever its body:
+    # the fork instruction, the process of each statement of a fork, and
+    # the scope instructions of a named block (the files come from
+    # tools/gen_block_position_matrix.py).
+    proc = subprocess.run([args.kirimasim, "--dump-sir", BLOCK_POSITIONS.name], cwd=HERE,
+                          capture_output=True, text=True, check=False)
+    got = []
+    for line in proc.stdout.splitlines():
+        at = line.rsplit("; ", 1)[-1]
+        if line.startswith("  fork "):
+            got.append(f"fork {at}")
+        elif line.startswith(("  scope.enter ", "  scope.leave ")):
+            got.append(f"{line.split()[0]} {at}")
+        elif line.startswith("process ") and re.search(r'\.fork\d+\.\d+" ', line):
+            got.append(f"branch {at}")
+    want = BLOCK_POSITIONS.with_suffix(".expected").read_text(encoding="utf-8").splitlines()
+    if proc.returncode != 0 or sorted(got) != want:
+        failures += 1
+        missing = sorted(set(want) - set(got))
+        extra = sorted(set(got) - set(want))
+        print(f"FAIL: block positions: exit code {proc.returncode}\n" +
+              "".join(f"  missing: {x}\n" for x in missing) +
+              "".join(f"  extra: {x}\n" for x in extra) + proc.stderr, file=sys.stderr)
 
     # The records of finished processes are released (SCHEDULER_SPEC.md
     # 10.8): with twice the rounds of the process lifetime matrix, twice as

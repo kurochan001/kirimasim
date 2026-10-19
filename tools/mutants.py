@@ -862,6 +862,9 @@ MUTANTS = [
     ("sir: verify takes every write of a cont process as continuous", "src/sir/verify.cpp",
      "p.kind == ProcessKind::Cont && std::ranges::find(p.drives, r) != p.drives.end()",
      "p.kind == ProcessKind::Cont && (std::ranges::find(p.drives, r) != p.drives.end() || true)"),
+    ("front: a block starts where slang's range of it starts", "src/front/lower_stmt.cpp",
+     "    if (s.kind == ast::StatementKind::Block && s.syntax != nullptr)\n",
+     "    if (s.kind == ast::StatementKind::Block && s.syntax != nullptr && false)\n"),
 ]
 
 

@@ -185,6 +185,10 @@ public:
     /// Whether an expression names an automatic variable.
     bool readsAutomatic(const ast::Expression& e) const;
     void lowerFork(const ast::BlockStatement& b);
+    /// Where a statement starts: a block at its first token (begin, fork or
+    /// its label), as slang gives a block the range of its body, which is
+    /// the one statement's when it has one.
+    static slang::SourceLocation startOf(const ast::Statement& s);
     /// One target of assign, force, deassign or release: a slot range and
     /// the type of its value (SIR_SPEC.md 5.6).
     struct HeldTarget {
