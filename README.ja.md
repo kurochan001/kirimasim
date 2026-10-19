@@ -196,11 +196,23 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 | まだのもの | 予定 |
 | --- | --- |
 | ファイルの入出力（`$fopen` など）、`$readmemh`・`$writememh`、`$random`・`$urandom`、波形（`$dumpvars`、VCD と FST）、`%p` の書式、`$stime`、`$timeunit`、`$timeprecision`、`$stacktrace`、実行時にしか決まらない書式（`$sformat`、`$sformatf`、`$sscanf`、`$value$plusargs`） | P1 |
-| クラス、動的配列、キュー、連想配列、乱数化と制約、`randsequence`、カバーグループ、並行アサーションと `$sampled`・`$stable`、クロッキングブロック、virtual interface、`let`、checker | P3 |
+| クラス、動的配列、キュー、連想配列、乱数化と制約、カバーグループ、並行アサーションと `$sampled`・`$stable`、クロッキングブロック、virtual interface、`let` | P3 |
 | program ブロック。program のコードは reactive の領域の組で動くもの（24.3.1）なので、今は未対応として報告する | P3 |
 | VPI、DPI-C | P3 |
 | 第 2 層（C++ の生成）と、速さのための作業 | P2 |
 | MOS と双方向のスイッチ | P4 |
+
+### 当面は予定にないもの
+
+設計は、次のものを当面の対象から外しています。kirimasim は、出会ったところで未対応として報告します。これらを使うテストは、P1 の母集団から外します（TEST_SUITE.md の「自前のテストの 90%」）。
+
+- VHDL と、言語を混ぜた設計。アナログと混在信号の設計
+- SDF のバックアノテーション（`$sdf_annotate`）、ゲート遅延の注釈、暗号化した IP
+- モジュールのパスかタイミングチェックのある specify ブロック（specparam だけの specify ブロックは動く）、利用者が定義する nettype と `interconnect`、`trireg`
+- 古い PLI（`tf_` と `acc_` のルーチン）
+- ライブラリの対応表のファイル（33.3）。ソースの中の config はトップを決める（CLI.md 2.1）
+- checker と `randsequence`。後で検討する
+- 対話的なデバッガと独自の Python の API。波形は FST に書いて外部のビューアで見て、Python からは cocotb が VPI を通して使う
 
 ## ビルド
 

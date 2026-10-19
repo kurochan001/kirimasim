@@ -314,11 +314,31 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 | Not yet | Planned |
 | --- | --- |
 | File I/O (`$fopen` and the rest), `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), the `%p` format, `$stime`, `$timeunit`, `$timeprecision`, `$stacktrace`, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`) | P1 |
-| Classes, dynamic arrays, queues, associative arrays, randomization and constraints, `randsequence`, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let`, checkers | P3 |
+| Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
 | Tier 2 (C++ generation) and any speed work | P2 |
 | MOS and bidirectional switches | P4 |
+
+### Not planned for now
+
+The design leaves these out of its scope for now. kirimasim reports them
+as unsupported where it meets them, and tests that use them are left out
+of the P1 population (TEST_SUITE.md, "90% of our own tests").
+
+- VHDL and designs in mixed languages; analog and mixed-signal designs
+- SDF back-annotation (`$sdf_annotate`), annotation of gate delays, and
+  encrypted IP
+- specify blocks with module paths or timing checks (a specify block with
+  only specparams works), user-defined nettypes and `interconnect`, and
+  `trireg`
+- the old PLI (`tf_` and `acc_` routines)
+- library map files (33.3); a config in the sources gives the top
+  (CLI.md 2.1)
+- checkers and `randsequence`, to be considered later
+- an interactive debugger and a Python API of its own: waveforms are
+  written as FST for external viewers, and Python reaches kirimasim
+  through cocotb over VPI
 
 ## Building
 
