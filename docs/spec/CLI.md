@@ -2,7 +2,7 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (proposed, awaiting approval). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (proposed, awaiting approval). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (proposed, awaiting approval). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (proposed, awaiting approval). The same day, `--stop` was added to 2.2 and 5 (proposed, awaiting approval). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
 
@@ -44,6 +44,7 @@ kirimasim --version | --help
 | `--max-scc-iter=<n>`, `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (reason zero_time_limit, code 5). Their meaning and defaults: 2.6 | M4 |
 | `--max-procs=<n>`, `--max-call-depth=<n>` | Limits on resources (reason resource_limit, code 6). Their meaning and defaults: 2.7 (proposed 2026-10-19) | M7 (proposed) |
 | `--max-wall-time=<seconds>` | A limit on wall-clock time (reason wall_time_limit, code 4). 2.7 (proposed 2026-10-19) | M7 (proposed) |
+| `--stop=finish\|ignore\|error` | What `$stop` does: end (the default), go on, or end with code 1 (SCHEDULER_SPEC.md 16.2; proposed 2026-10-19) | M7 (proposed) |
 | `--seed=<n>` | The random seed (the random-number section of SYSTEM_TASKS.md; to be written in P1) | M7 |
 | `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (the waveform document; to be written in P1) | M7 |
 
@@ -127,7 +128,7 @@ The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go int
 | Code | Reason | Meaning |
 | --- | --- | --- |
 | 0 | finish, quiescent, stop | `$finish`, no events left, `$stop`. time_limit with `--max-time-ok` is also 0 |
-| 1 | fatal | `$fatal`. With the option that counts `$error`, one or more `$error` |
+| 1 | fatal | `$fatal`. With the option that counts `$error`, one or more `$error`. `$stop` with `--stop=error` is also 1 (the reason stays stop; proposed 2026-10-19) |
 | 2 | error | An error in the command line or the input (syntax errors and unsupported constructs included), or a run-time error of the design (SCHEDULER_SPEC.md 16.2) |
 | 3 | internal | An internal error of kirimasim (a failure of the SIR verifier and the like); never an error of the design |
 | 4 | time_limit, wall_time_limit | `--max-time` reached; `--max-wall-time` passed (2.7; proposed 2026-10-19) |
