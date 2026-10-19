@@ -2,7 +2,7 @@
 
 [English](CLI.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**承認済み（2026-10-15）**。2026-10-16 に、`--max-time` の書き方と打ち切り方（2.5 節）と、終了の理由の行の時刻の書き方（4 節）を足した（承認済み）。同日、時刻が進まない実行の上限の既定値（2.6 節）と、slang の言語の版（2.1 節）を足した（承認済み）。2026-10-18 に、コード 2 に設計が起こす実行時の誤りを含めた（5 節。承認済み）。同日、4 節の版の行の例を、シードの無い今の形にした（承認済み）。2026-10-19 に、2.6 節の上限に `--max-slot-events` を足した（承認済み）。同日、資源の上限（2.2 節、2.7 節）と終了コード 6（5 節）を足した（提案、承認待ち）。設計仕様書の「外部インターフェース」の案を、実装する段階ごとに整理し、決まっていなかった点（出力の行き先、`--dump-sir`、プラスアーグ）を足した。
+優先度：P1。状態：**承認済み（2026-10-15）**。2026-10-16 に、`--max-time` の書き方と打ち切り方（2.5 節）と、終了の理由の行の時刻の書き方（4 節）を足した（承認済み）。同日、時刻が進まない実行の上限の既定値（2.6 節）と、slang の言語の版（2.1 節）を足した（承認済み）。2026-10-18 に、コード 2 に設計が起こす実行時の誤りを含めた（5 節。承認済み）。同日、4 節の版の行の例を、シードの無い今の形にした（承認済み）。2026-10-19 に、2.6 節の上限に `--max-slot-events` を足した（承認済み）。同日、資源の上限（2.2 節、2.7 節）と終了コード 6（5 節）を足した（提案、承認待ち）。同日、壁時計の上限を 2.2 節、2.7 節、5 節に足した（提案、承認待ち）。設計仕様書の「外部インターフェース」の案を、実装する段階ごとに整理し、決まっていなかった点（出力の行き先、`--dump-sir`、プラスアーグ）を足した。
 
 この文書は、kirimasim のコマンドラインの形、オプション、終了コード、kirimasim 自身が出すメッセージの形を定める。終了の理由とコードの意味は SCHEDULER_SPEC.md の 16 節、システムタスクの出力は SYSTEM_TASKS.md に従う。
 
@@ -43,6 +43,7 @@ kirimasim --version | --help
 | `--max-time-ok` | time_limit をコード 0 として扱う | M4 |
 | `--max-scc-iter=<n>`、`--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（理由 zero_time_limit、コード 5）。意味と既定の値は 2.6 | M4 |
 | `--max-procs=<n>`、`--max-call-depth=<n>` | 資源の上限（理由 resource_limit、コード 6）。意味と既定の値は 2.7（2026-10-19 に提案） | M7（案） |
+| `--max-wall-time=<秒>` | 壁時計の上限（理由 wall_time_limit、コード 4）。2.7（2026-10-19 に提案） | M7（案） |
 | `--seed=<n>` | 乱数のシード（SYSTEM_TASKS.md の乱数の節。P1 で書く） | M7 |
 | `--wave=<file>.fst\|.vcd`、`--wave-scope=<パターン>` | 波形の出力と範囲（波形の文書。P1 で書く） | M7 |
 
@@ -90,19 +91,21 @@ P2 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt
   - `kirimasim: error: time did not advance: process "<プロセスの名前>" ran <n> instructions without waiting (--max-steps=<n>)`
   - プロセスの名前は SIR のプロセスの名前（`top.initial0` など）。
 
-### 2.7 資源の上限（2026-10-19 に提案）
+### 2.7 資源と壁時計の上限（2026-10-19 に提案）
 
 | オプション | 数えるもの | 既定の値 |
 | --- | --- | --- |
 | `--max-procs=<n>` | 実行時に作られ（`fork` の子など）、まだ終わっていないプロセス。エラボレーションが作る静的なプロセス（連続代入、ゲート、`always`、`initial` など）は数えない。その数は実行の前に決まり、大きなゲートレベルの設計が既定の値で止まってはならないため | 1000000 |
 | `--max-call-depth=<n>` | 1 つのプロセスが同時に入れ子にしている呼び出し。待つ task の呼び出しとそれ以外を合わせて数える（SCHEDULER_SPEC.md の 16.2 節） | 10000 |
+| `--max-wall-time=<秒>` | シミュレーションを始めてからの壁時計の秒数（コンパイルは数えない）。整数。理由は wall_time_limit で、コードは time_limit と同じ 4（どちらも実行を打ち切るため） | 無し |
 
-- `--max-procs=0` は 2.6 と同じく「上限なし」を表す。`--max-call-depth=0` は受け付けない（コード 2）。シミュレーションのスレッドのスタックの大きさをこれで決めるため（RUNTIME_ABI.md の 5 節）。
-- `--max-procs` はプロセスを作る時点で、`--max-call-depth` は呼び出す時点で確かめる（SCHEDULER_SPEC.md の 16.2 節）。
+- `--max-procs=0` と `--max-wall-time=0` は、2.6 と同じく「上限なし」を表す。`--max-call-depth=0` は受け付けない（コード 2）。シミュレーションのスレッドのスタックの大きさをこれで決めるため（RUNTIME_ABI.md の 5 節）。
+- `--max-procs` はプロセスを作る時点で、`--max-call-depth` は呼び出す時点で、`--max-wall-time` は SIGINT の確認点で確かめる（SCHEDULER_SPEC.md の 16.2 節）。`--max-time-ok` は wall_time_limit には効かない。
 - 既定の値の根拠：`--max-call-depth` は、今のスタックで測った深さのまま（RUNTIME_ABI.md の 5 節）。`--max-procs` はまだ測っていない。2.6 のとおり、実設計を走らせたときに見直す。
 - 段：M7（案）。P1 の計画はこれらのオプションの段を決めておらず、残っている段は M7 だけである。
 - 上限に達したら、終了の理由の行（4 節）の前に、どの上限に達したかを 1 行で標準エラーに書く。形：
   - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`
+  - `kirimasim: error: wall-clock limit reached: <n> seconds (--max-wall-time=<n>)`
   - 呼び出しの深さは、設計が起こす実行時の誤りの形のまま、文の位置とインスタンスの階層名を含める（SCHEDULER_SPEC.md の 16.2 節）：`<file>:<line>: error: calls nested more than <n> deep (--max-call-depth=<n>) [<階層名> @ <時刻>]`。
 
 ## 3. 出力の行き先
@@ -127,7 +130,7 @@ SCHEDULER_SPEC.md の 16.2 節の表と同じ。理由の名前は `--stats=json
 | 1 | fatal | `$fatal`。`$error` を数えるオプションが有効なら、`$error` が 1 件以上 |
 | 2 | error | コマンドラインや入力の誤り（構文エラー、未対応の構文を含む）、または設計が起こす実行時の誤り（SCHEDULER_SPEC.md の 16.2 節） |
 | 3 | internal | kirimasim の内部エラー（SIR の検証器の失敗など）。設計の誤りには使わない |
-| 4 | time_limit | `--max-time` に達した |
+| 4 | time_limit、wall_time_limit | `--max-time` に達した。`--max-wall-time` が過ぎた（2.7。2026-10-19 に提案） |
 | 5 | zero_time_limit | 時刻が進まないまま上限に達した |
 | 6 | resource_limit | 資源の上限に達した（2.7。2026-10-19 に提案） |
 | 130 | interrupted | SIGINT |
