@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- `always_comb` and `always_latch` no longer run again when a variable
+  changes that only the body of a task they call reads, or only an action
+  block of an assertion in them or in a function they call; the arguments
+  of the task and the expression of the assertion still count
+  (SCHEDULER_SPEC.md 6.3; #21).
 - A `fork` or a named block with one statement is placed at its first
   token, not at that statement: a run-time error at such a `fork` named
   the statement's line, and `--dump-sir` placed the `fork`, the processes

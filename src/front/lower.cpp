@@ -735,7 +735,9 @@ void Lowerer::noteWrite(const sir::SlotRange& r) {
     writes.push_back(r);
 }
 
-void Lowerer::noteRead(const sir::SlotRange& r) { b_.reads.push_back(r); }
+void Lowerer::noteRead(const sir::SlotRange& r) {
+    if (b_.actions == 0) b_.reads.push_back(r);
+}
 
 // --- Modules and procedures --------------------------------------------------
 
@@ -818,9 +820,16 @@ void Lowerer::finishDesign() {
         set.push_back(r);
         return true;
     };
-    // What each subroutine writes and reads, with what it calls, until
-    // nothing changes (recursion included).
+    // What each subroutine may write, with what it calls; what the functions
+    // it calls write; and what it reads, with the functions it calls outside
+    // assertion action blocks: until nothing changes (recursion included).
+    // The sensitivity of always_comb looks into functions, not tasks
+    // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
+    const auto task = [&](sir::SubroutineId c) {
+        return design_.subroutines[c].kind == sir::SubroutineKind::Task;
+    };
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> writes = subWrites_;
+    std::map<sir::SubroutineId, std::vector<sir::SlotRange>> functionWrites = subWrites_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> reads = subReads_;
     for (bool changed = true; changed;) {
         changed = false;
@@ -829,25 +838,46 @@ void Lowerer::finishDesign() {
             for (const sir::SubroutineId c : called) {
                 for (const sir::SlotRange& r : std::vector(writes[c]))
                     changed = add(writes[key.second], r) || changed;
-                for (const sir::SlotRange& r : std::vector(reads[c]))
-                    changed = add(reads[key.second], r) || changed;
+                if (!task(c))
+                    for (const sir::SlotRange& r : std::vector(functionWrites[c]))
+                        changed = add(functionWrites[key.second], r) || changed;
             }
         }
+        for (const auto& [key, called] : readCallees_) {
+            if (!key.first) continue;
+            for (const sir::SubroutineId c : called)
+                for (const sir::SlotRange& r : std::vector(reads[c]))
+                    changed = add(reads[key.second], r) || changed;
+        }
+    }
+    // What an always_comb or always_latch writes itself and through the
+    // functions it calls is no part of its sensitivity (9.2.2.2.1,
+    // SCHEDULER_SPEC.md 6.3); what its tasks write is.
+    std::map<std::uint32_t, std::vector<sir::SlotRange>> combWrites;
+    for (const auto& [p, procReads] : combReads_) {
+        combWrites[p] = design_.processes[p].writes;
+        if (const auto it = callees_.find({false, p}); it != callees_.end())
+            for (const sir::SubroutineId c : it->second)
+                if (!task(c))
+                    for (const sir::SlotRange& r : functionWrites[c])
+                        add(combWrites[p], r);
     }
     // A process writes what the subroutines it calls write; always_comb and
-    // always_latch are sensitive to what they read there too (9.2.2.2.1,
-    // SCHEDULER_SPEC.md 6.3, 6.4). A cont process takes them after its own
+    // always_latch are sensitive to what the functions they call read too
+    // (SCHEDULER_SPEC.md 6.3, 6.4). A cont process takes them after its own
     // writes are known as what it drives (finishDrives).
     for (const auto& [key, called] : callees_) {
         if (key.first) continue;
         const bool cont = design_.processes[key.second].kind == sir::ProcessKind::Cont;
-        for (const sir::SubroutineId c : called) {
+        for (const sir::SubroutineId c : called)
             for (const sir::SlotRange& r : writes[c])
                 add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);
-            if (combReads_.count(key.second) != 0)
-                for (const sir::SlotRange& r : reads[c])
-                    combReads_[key.second].push_back(r);
-        }
+    }
+    for (const auto& [key, called] : readCallees_) {
+        if (key.first || combReads_.count(key.second) == 0) continue;
+        for (const sir::SubroutineId c : called)
+            for (const sir::SlotRange& r : reads[c])
+                combReads_[key.second].push_back(r);
     }
     // The implicit sensitivity: what the block reads, less what it writes
     // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
@@ -858,7 +888,7 @@ void Lowerer::finishDesign() {
             // Variables and arguments declared in a called function are not
             // part of it either.
             bool skip = s.subroutine != sir::kNone;
-            for (const sir::SlotRange& w : proc.writes)
+            for (const sir::SlotRange& w : combWrites[p])
                 skip = skip || sir::covers(s, w, r);
             for (const sir::Trigger& t : proc.triggers)
                 skip = skip || sir::covers(s, t.range, r);

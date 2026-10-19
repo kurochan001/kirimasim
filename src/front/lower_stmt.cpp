@@ -962,6 +962,9 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
         const auto acts = [](const ast::Statement* a) {
             return a != nullptr && a->kind != ast::StatementKind::Empty;
         };
+        // What the actions read and call is no part of an always_comb's
+        // sensitivity (SCHEDULER_SPEC.md 6.3).
+        ++b_.actions;
         setBlock(pass);
         if (acts(s.ifTrue)) deferAction(s.ifTrue, s.isFinal, sl);
         jump(join, sl);
@@ -970,6 +973,7 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
             (s.ifFalse == nullptr && (s.assertionKind == ast::AssertionKind::Assert ||
                                       s.assertionKind == ast::AssertionKind::Assume)))
             deferAction(s.ifFalse, s.isFinal, sl);
+        --b_.actions;
         jump(join, sl);
         setBlock(join);
         return;
@@ -982,6 +986,9 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
     const sir::BlockId fail = newBlock();
     const sir::BlockId join = newBlock();
     terminate(Op::BrIf, {c.op, Operand::block(pass), Operand::block(fail)}, sl);
+    // What the action blocks read and call is no part of an always_comb's
+    // sensitivity (SCHEDULER_SPEC.md 6.3).
+    ++b_.actions;
     setBlock(pass);
     if (s.ifTrue != nullptr) lowerStatement(*s.ifTrue);
     jump(join, sl);
@@ -992,6 +999,7 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
                s.assertionKind == ast::AssertionKind::Assume) {
         emitVoid(Op::Syscall, {Operand::str("$error"), Operand::str(b_.scope)}, sl);
     }
+    --b_.actions;
     jump(join, sl);
     setBlock(join);
 }

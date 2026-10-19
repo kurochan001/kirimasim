@@ -865,6 +865,12 @@ MUTANTS = [
     ("front: a block starts where slang's range of it starts", "src/front/lower_stmt.cpp",
      "    if (s.kind == ast::StatementKind::Block && s.syntax != nullptr)\n",
      "    if (s.kind == ast::StatementKind::Block && s.syntax != nullptr && false)\n"),
+    ("front: what a called task reads is an always_comb's", "src/front/lower_sub.cpp",
+     "if (sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0)",
+     "if (sym.subroutineKind != ast::SubroutineKind::Function || b_.actions == 0)"),
+    ("front: what an assertion's action block reads is an always_comb's", "src/front/lower.cpp",
+     "    if (b_.actions == 0) b_.reads.push_back(r);",
+     "    if (b_.actions == 0 || true) b_.reads.push_back(r);"),
 ]
 
 

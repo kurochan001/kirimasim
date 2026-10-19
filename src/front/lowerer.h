@@ -663,6 +663,9 @@ public:
         std::uint32_t forks = 0;            ///< Fork statements so far, for child names.
         std::uint32_t guards = 0;           ///< Guards so far (wait and iff), for their names.
         std::uint32_t deferred = 0;         ///< Deferred assertion actions so far, for their names.
+        /// Assertion action blocks being lowered: what they read and call is
+        /// no part of an always_comb's sensitivity (SCHEDULER_SPEC.md 6.3).
+        std::uint32_t actions = 0;
         bool fromAssertion = false;  ///< A procedure for an assertion written as a module item.
         /// The process's outermost block is a disable target: disabling it
         /// is a flush point of deferred assertions (SCHEDULER_SPEC.md 15.3).
@@ -755,6 +758,9 @@ private:
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subReads_;
     /// Calls made by each body: (is a subroutine, number) -> callees.
     std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> callees_;
+    /// The functions each body calls outside assertion action blocks, whose
+    /// reads are an always_comb's too (SCHEDULER_SPEC.md 6.3).
+    std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> readCallees_;
     /// The reads of each always_comb and always_latch, for its sensitivity.
     std::map<std::uint32_t, std::vector<sir::SlotRange>> combReads_;
     /// From scanDisables: the named blocks and tasks a disable names, the

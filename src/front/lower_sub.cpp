@@ -452,6 +452,10 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
     }
     const sir::SubroutineId id = subroutineOf(sym, sl);
     callees_[{b_.isSub, b_.proc}].push_back(id);
+    // What a function reads is an always_comb's too, unless an assertion's
+    // action block calls it; what a task reads is not (SCHEDULER_SPEC.md 6.3).
+    if (sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0)
+        readCallees_[{b_.isSub, b_.proc}].push_back(id);
     const std::vector<sir::Param> params = design_.subroutines[id].params;
     const Type rt = design_.subroutines[id].returnType;
     const bool waits = design_.subroutines[id].mayWait;
