@@ -5,9 +5,11 @@
   tools/p1_population.py run --tests-repo DIR --kirimasim BIN [--list FILE]
 
 select prints the population: the simulation tests of the test-suite
-repository that use no P3 feature. A test is out when its source, without
-comments and string literals, contains one of the words of TEST_SUITE.md
-("90% of our own tests"). The first line records the repository commit.
+repository that use no P3 feature and no feature outside the scope of the
+design. A test is out when its source, without comments and string
+literals, contains one of the words of TEST_SUITE.md ("90% of our own
+tests"), or a specify block with a path or a timing check. The first line
+records the repository commit.
 
 run runs every test of the frozen list (tests/gates/p1_population.txt) with
 tools/run_suite_test.py and reports the pass rate. A test skipped as
@@ -42,6 +44,18 @@ P3_FEATURES = {
     "let": r"\blet\b",
 }
 
+# Features outside the scope of the design for now (TEST_SUITE.md); a match
+# takes the test out too. A specify block counts only with a module path
+# (=> or *>), a timing check or a pulse-style or showcancelled declaration:
+# one that only declares specparams is in scope (SIR_SPEC.md 6).
+OUT_OF_SCOPE = {
+    "SDF annotation": r"\$sdf_annotate\b",
+    "randsequence": r"\brandsequence\b",
+}
+SPECIFY_TIMING = (r"=>|\*>|\$(setup|hold|setuphold|recovery|removal|recrem|skew|timeskew|"
+                  r"fullskew|period|width|nochange)\b|\b(pulsestyle_onevent|pulsestyle_ondetect|"
+                  r"showcancelled|noshowcancelled)\b")
+
 
 def header(text: str) -> dict[str, str]:
     m = re.search(r"/\*(.*?)\*/", text, re.DOTALL)
@@ -53,11 +67,18 @@ def header(text: str) -> dict[str, str]:
     return meta
 
 
-def p3_features(text: str) -> list[str]:
+def left_out(text: str) -> list[str]:
+    """The P3 features and the features outside the design's scope that a
+    test uses."""
     body = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
     body = re.sub(r"//[^\n]*", "", body)
     body = re.sub(r'"(?:\\.|[^"\\])*"', '""', body)
-    return [name for name, pat in P3_FEATURES.items() if re.search(pat, body)]
+    found = [name for name, pat in {**P3_FEATURES, **OUT_OF_SCOPE}.items()
+             if re.search(pat, body)]
+    specify = re.findall(r"\bspecify\b(.*?)\bendspecify\b", body, re.DOTALL)
+    if any(re.search(SPECIFY_TIMING, block) for block in specify):
+        found.append("specify paths or timing checks")
+    return found
 
 
 def select(repo: Path) -> int:
@@ -71,7 +92,7 @@ def select(repo: Path) -> int:
         if "name" not in meta or "simulation" not in meta.get("type", "").split():
             continue
         total += 1
-        if not p3_features(text):
+        if not left_out(text):
             names.append(str(path.relative_to(repo / "tests").with_suffix("")))
     print(f"# P1 gate population (TEST_SUITE.md): kirimasim-tests {commit}, "
           f"{len(names)} of {total} simulation tests; made by tools/p1_population.py select")
