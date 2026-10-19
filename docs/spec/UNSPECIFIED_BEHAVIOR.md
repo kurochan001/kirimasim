@@ -210,6 +210,7 @@ The presence, number and order of evaluations of expressions with side effects a
 | G3 | Generated code fixes the order with temporaries, as C++ does not set the order of arguments | — | 11.3.5 | P2 | later (P2; CODEGEN_SPEC.md "Rules of C++ generation") |
 | G4 | Operands are evaluated left to right | — | 11.4.2 | P1 | proposed 2026-10-19 (VALUE_SEMANTICS.md 3.1) |
 | G4 | Warn when one expression writes the same variable twice or more | `kirima-multi-side-effect` | 11.4.2 | P1 | proposed 2026-10-19 |
+| G4 | A blocking assignment with `=` evaluates its right side before its left side; an assignment operator such as `+=` evaluates its left side first | — | 10.4.1, 11.4.1 | P1 | approved 2026-10-19 (VALUE_SEMANTICS.md 3.1) |
 
 ### 6.8 H: lifetimes of tasks and functions
 
