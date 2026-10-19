@@ -20,6 +20,9 @@ comment) decides what is expected:
   that runs and passes fails too, until it is taken off the list. The list
   covers the tests under its own directory; any other test (the own test
   suite's, which tools/p1_population.py counts) is skipped as before.
+* :top_module: is passed to both runs as --top=<name>, one for each name.
+  :files:, :incdirs: and :defines: are not passed yet, so a test with one
+  of them fails rather than run in a form other than written.
 
 Standard output is compared line by line without empty lines (lines of
 only white space included), as the test-suite repository does
@@ -38,6 +41,7 @@ from suite_skips import SKIPS, read_skips, skip_name
 
 EXIT_INPUT_ERROR = 2
 SKIP = 77  # CTest's SKIP_RETURN_CODE for this test
+NOT_PASSED = ("files", "incdirs", "defines")  # header items not given to kirimasim yet
 
 
 def normalize(text: str) -> list[str]:
@@ -132,6 +136,10 @@ def main() -> int:
         for p in problems:
             print(f"FAIL: header: {p}", file=sys.stderr)
         return 1
+    for key in NOT_PASSED:
+        if key in meta:
+            print(f"FAIL: header: :{key}: is not passed to kirimasim yet", file=sys.stderr)
+            return 1
     timeout = int(meta["timeout"]) if "timeout" in meta else None
     try:
         return judge(args, meta, listed, covered, timeout)
@@ -142,8 +150,9 @@ def main() -> int:
 
 def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int | None) -> int:
     """Parses, and runs a simulation test, and compares what it expects."""
+    tops = [f"--top={name}" for name in meta.get("top_module", "").split()]
     proc = subprocess.run(
-        [args.kirimasim, "parse", str(args.test)],
+        [args.kirimasim, "parse", *tops, str(args.test)],
         capture_output=True,
         text=True,
         check=False,
@@ -160,7 +169,7 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
         return 0
 
     run = subprocess.run(
-        [args.kirimasim, str(args.test)],
+        [args.kirimasim, *tops, str(args.test)],
         capture_output=True,
         text=True,
         check=False,
