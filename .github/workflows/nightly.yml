@@ -167,17 +167,28 @@ jobs:
 
       # Own-suite gate: the test-suite repository is public, so it is cloned
       # without a token, at the commit the first line of the list names.
+      # The first three lines go to the step summary. The first 20 failing
+      # tests run once more, each in a group of the log, to show the
+      # comparison that failed.
       - name: Own suite, P1 population
         run: |
           commit=$(head -1 tests/gates/p1_population.txt | sed -n 's/.*kirimasim-tests \([0-9a-f]*\),.*/\1/p')
           git clone -q https://github.com/kurochan001/kirimasim-tests.git suite
           git -C suite checkout -q "$commit"
           python3 tools/p1_population.py run --tests-repo suite \
-            --kirimasim build/release/src/driver/kirimasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
+            --kirimasim build/release/src/driver/kirimasim > build/p1_population.out || true
+          head -3 build/p1_population.out | tee -a "$GITHUB_STEP_SUMMARY"
+          tail -n +4 build/p1_population.out
+          grep -m 20 '^FAIL ' build/p1_population.out | while read -r _ t; do
+            echo "::group::$t"
+            python3 tools/run_suite_test.py --kirimasim build/release/src/driver/kirimasim "suite/tests/$t.sv" || true
+            echo "::endgroup::"
+          done || true
 
       # Every test of the suite's latest main, so that tests added after the
       # population was chosen run too. Reported only: not a gate, and the
-      # gate figure in the line it prints does not apply.
+      # gate figure in the line it prints does not apply. Failures are shown
+      # as in the step before.
       - name: Own suite, latest main, every test (report only)
         run: |
           git -C suite checkout -q origin/main
@@ -185,7 +196,14 @@ jobs:
             (cd suite/tests && find . -name '*.sv' | sed 's|^\./||; s|\.sv$||' | LC_ALL=C sort)
           } > build/suite_all.txt
           python3 tools/p1_population.py run --tests-repo suite --list build/suite_all.txt \
-            --kirimasim build/release/src/driver/kirimasim | head -3 | tee -a "$GITHUB_STEP_SUMMARY" || true
+            --kirimasim build/release/src/driver/kirimasim > build/suite_all.out || true
+          head -3 build/suite_all.out | tee -a "$GITHUB_STEP_SUMMARY"
+          tail -n +4 build/suite_all.out
+          grep -m 20 '^FAIL ' build/suite_all.out | while read -r _ t; do
+            echo "::group::$t"
+            python3 tools/run_suite_test.py --kirimasim build/release/src/driver/kirimasim "suite/tests/$t.sv" || true
+            echo "::endgroup::"
+          done || true
 
   # Negative controls (TEST_SUITE.md): each known mistake put into the
   # sources must make some test fail.
