@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A negative real constant delay, such as `#(-2.0)`, waits as the same
+  value held in a real variable does: rounded to the precision, then read
+  as an unsigned 64-bit count of its steps (9.4.1, SCHEDULER_SPEC.md 8).
+  It was reported as unsupported, as were NaN and infinite constants,
+  which now give a delay of 0 (#12).
 - An input port left unconnected where `` `unconnected_drive pull1`` or
   `pull0` is in effect is pulled up or down, as 22.9 says: a `pullup` or
   `pulldown` on every bit of its net (VALUE_SEMANTICS.md 5.3). It stayed

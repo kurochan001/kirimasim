@@ -701,9 +701,23 @@ std::optional<std::uint64_t> Lowerer::delayTicks(const ast::Expression& e,
         if (!n) return std::nullopt;
         return sir::delayTicks(*n, timeScale(), precision());
     }
-    if (cv->isReal() && cv->real() >= 0 && !std::isinf(cv->real()))
-        return sir::delayTicksReal(cv->real(), timeScale(), precision());
-    unsupported(sl, "this delay value");
+    if (!cv->isReal() && !cv->isShortReal()) unsupported(sl, "this delay value");
+    const double r = cv->isReal() ? double(cv->real()) : double(cv->shortReal());
+    // NaN and the infinities convert to x (VALUE_SEMANTICS.md 7.4), and a
+    // delay of x is 0.
+    if (std::isnan(r) || std::isinf(r)) return 0;
+    const sir::TimeScale ts = timeScale();
+    if (r >= 0) return sir::delayTicksReal(r, ts, precision());
+    // Negative: the steps of the precision as delayValue counts them at run
+    // time, rounded half away from zero, their low 64 bits read as an
+    // unsigned count (9.4.1), then scaled; 2^64 ticks or more is past the
+    // largest time.
+    double unitSteps = 1;
+    for (int i = ts.precision; i < ts.unit; ++i)
+        unitSteps *= 10;
+    const double low = std::fmod(-std::round(r * unitSteps), 18446744073709551616.0);
+    const std::uint64_t n = std::uint64_t{0} - static_cast<std::uint64_t>(low);
+    return sir::delayTicks(n, sir::TimeScale{ts.precision, ts.precision}, precision());
 }
 
 Val Lowerer::delayConstant(std::optional<std::uint64_t> ticks) {

@@ -1,0 +1,1 @@
+delay_negative_real_coarser_var.sv:26: error: the delay takes the time past the largest time [top.u @ 0ns]

@@ -805,6 +805,12 @@ MUTANTS = [
      "    if (true || ps.direction"),
     ("front: the pull of `unconnected_drive is strong", "src/front/lower.cpp",
      "              {5, 5});", "              {6, 6});"),
+    ("front: a negative real constant delay is read as its magnitude", "src/front/lower_expr.cpp",
+     "const std::uint64_t n = std::uint64_t{0} - static_cast<std::uint64_t>(low);",
+     "const std::uint64_t n = static_cast<std::uint64_t>(low);"),
+    ("front: a NaN or infinite real constant delay is past the largest time",
+     "src/front/lower_expr.cpp", "if (std::isnan(r) || std::isinf(r)) return 0;",
+     "if (std::isnan(r) || std::isinf(r)) return std::nullopt;"),
 ]
 
 
