@@ -2,7 +2,7 @@
 
 [English](CODEGEN_SPEC.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P2（2026-10-15 に P1 から移した。C++ の生成は P2 の作業のため）。この文書はまだ見出しだけです。
+優先度：P2（2026-10-15 に P1 から移した。C++ の生成は P2 の作業のため）。この文書はまだ見出しだけです。ただし「浮動小数点」の節は 2026-10-19 に足しました（提案、承認待ち）。
 
 ## C++ 生成の規則
 
@@ -15,3 +15,22 @@
 ## 2 版切り替え
 
 未記入（表の優先度のフェーズで書く）
+
+## 浮動小数点
+
+2026-10-19 に提案、承認待ち。
+
+- **決まり：** 実行カーネル、VM、そのほかの kirimasim 自身のコード（`src/`、`tests/`）と、第 2 層が生成する C++ は、`-ffp-contract=off` を付け、`-ffast-math`、`-Ofast`、`-funsafe-math-optimizations` を付けずにビルドする（CLAUDE.md）。依存には課さない。数学の関数（`$sin`、`$exp` など）はシステムの libm に任せるので、最後のビットがシステムによって違いうる。これが実数についての NFR-2 の唯一の例外である。
+- **理由：** IEEE 754 の倍精度である `real`（規格の 6.12）の式は、どの層と OS でも同じビットにならなければならない（NFR-2）。乗算と加算を 1 つの FMA の命令にまとめるコンパイラは、積を丸めずに足すので、2 つの演算を別々に行ったときと最後のビットが違いうる。まとめるかどうかは、コンパイラ、対象、フラグで変わる。
+- **2026-10-19 に確かめたこと：** `double f(double a, double b, double c) { return a * b + c; }` を `-std=c++23 -S` で、`-O2` と `-O3` で翻訳し（2 つは同じ結果だった）、出力に FMA の命令（arm64 は `fmadd`、x86-64 は `vfmadd`）があるかを調べた。使った機械は arm64 の Mac で、ほかの対象は `--target` で翻訳しただけで、実行はしていない。
+
+| コンパイラ | 対象 | `-ffp-contract=off` なし | あり |
+| --- | --- | --- | --- |
+| Apple clang 21.0.0 | arm64-apple-macos | FMA（`fmadd`） | FMA なし（`fmul`、`fadd`） |
+| clang 22.1.8（Homebrew の LLVM） | aarch64-linux-gnu | FMA | FMA なし |
+| clang 22.1.8（Homebrew の LLVM） | x86_64-linux-gnu | FMA なし（`mulsd`、`addsd`） | FMA なし |
+| clang 22.1.8（Homebrew の LLVM） | x86_64-linux-gnu、`-march=haswell` | FMA（`vfmadd213sd`） | FMA なし |
+| GCC 16（Homebrew） | arm64-apple-darwin | FMA | FMA なし |
+
+- したがって、`-ffp-contract` も `-march` も付けない今のプリセットでは、arm64（macOS と arm64 の Linux）向けのビルドはまとめ、x86-64 向けのビルドはまとめないので、`real` の結果が両者で違いうる。Apple clang は既定でまとめる（`__FP_FAST_FMA` を定義する）。
+- **未確認：** Linux の CI のジョブのコンパイラである x86-64 Linux の GCC で、`-march` のあるときと無いとき（確かめ方：CI のジョブで同じ翻訳をする）。CI の macOS のランナー（`macos-26`）が arm64 か（確かめ方：CI のジョブで `uname -m`）。フラグを付けたときに、実数のテストのどれが変わるか（確かめ方：付ける前と後でテストスイートを走らせる）。
