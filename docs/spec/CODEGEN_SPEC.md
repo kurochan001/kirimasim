@@ -2,15 +2,22 @@
 
 [日本語](CODEGEN_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P2 (moved from P1 on 2026-10-15, since C++ generation is P2 work). This document has headings only so far, except the section "Floating point", added on 2026-10-19 (proposed, awaiting approval).
+Priority: P2 (moved from P1 on 2026-10-15, since C++ generation is P2 work). This document has headings only so far, except the section "Floating point" and the first rules of "Rules of C++ generation" and "Static islands", added on 2026-10-19 (proposed, awaiting approval).
 
 ## Rules of C++ generation
 
-Not written yet (to be written in the phase the priority table gives).
+The rest is written in the phase the priority table gives. These rules were proposed on 2026-10-19 and are awaiting approval.
+
+- The same SIR gives the same C++, byte for byte (NFR-6). CI generates it twice and compares the two.
+- The short-circuiting of `&&`, `||`, `->` and `?:` is kept. SIR expresses it with branches (SIR_SPEC.md 5.2), and generated code turns a logical operation into a bitwise one only where the right side is proved free of side effects and of null references.
+- An expression with side effects is evaluated as many times as SIR says. Code is duplicated only where it is proved free of side effects.
+- Where the left-to-right order of VALUE_SEMANTICS.md 3.1 meets a C++ construct whose order of evaluation is not set, such as the arguments of a call, the values go through temporaries in that order.
 
 ## Static islands
 
-Not written yet (to be written in the phase the priority table gives).
+The rest is written in the phase the priority table gives. This rule was proposed on 2026-10-19 and is awaiting approval.
+
+- Inside a static island, each process is evaluated once, in the level order that `analysis` decides. Tier 1 uses the same order for the processes of an island, so the values a time slot passes through, glitches included, are the same on both tiers.
 
 ## Two-version switching
 
