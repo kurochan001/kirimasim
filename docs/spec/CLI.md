@@ -2,7 +2,7 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (proposed, awaiting approval). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
 
@@ -42,6 +42,7 @@ kirimasim --version | --help
 | `--max-time=<time>` | Stop when this time is reached (reason time_limit, code 4). The time has a unit (for example `10us`). Its form and how it stops: 2.5 | M4 |
 | `--max-time-ok` | Treat time_limit as code 0 | M4 |
 | `--max-scc-iter=<n>`, `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (reason zero_time_limit, code 5). Their meaning and defaults: 2.6 | M4 |
+| `--max-procs=<n>`, `--max-call-depth=<n>` | Limits on resources (reason resource_limit, code 6). Their meaning and defaults: 2.7 (proposed 2026-10-19) | M7 (proposed) |
 | `--seed=<n>` | The random seed (the random-number section of SYSTEM_TASKS.md; to be written in P1) | M7 |
 | `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (the waveform document; to be written in P1) | M7 |
 
@@ -89,6 +90,21 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
   - `kirimasim: error: time did not advance: process "<process name>" ran <n> instructions without waiting (--max-steps=<n>)`
   - The process name is the name of the SIR process (`top.initial0` and the like).
 
+### 2.7 Limits on resources (proposed 2026-10-19)
+
+| Option | What it counts | Default |
+| --- | --- | --- |
+| `--max-procs=<n>` | Processes made at run time (the children of `fork` and the like) that have not ended. The static processes that elaboration makes (continuous assignments, gates, `always`, `initial` and so on) are not counted: their number is fixed before the run, and a large gate-level design must not stop at the default | 1000000 |
+| `--max-call-depth=<n>` | Calls one process has nested at once, the calls of tasks that wait and the others together (SCHEDULER_SPEC.md 16.2) | 10000 |
+
+- `--max-procs=0` means no limit, as in 2.6. `--max-call-depth=0` is not accepted (code 2): the stack of the simulation thread is sized by it (RUNTIME_ABI.md 5).
+- `--max-procs` is checked when a process is made, and `--max-call-depth` when a call is made (SCHEDULER_SPEC.md 16.2).
+- Grounds for the defaults: `--max-call-depth` keeps the depth measured with the present stack (RUNTIME_ABI.md 5). `--max-procs` is not measured yet; it is reviewed when real designs are run, as 2.6 says.
+- Stage: M7, the stage of P1 left (proposed). The P1 plan gives no stage for these options; M7 is the only one left.
+- When a limit is reached, one line says which, on standard error, before the line of the reason for ending (4). Forms:
+  - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`
+  - The depth of calls keeps the form of a run-time error of the design, with the statement's position and the instance's hierarchical name (SCHEDULER_SPEC.md 16.2): `<file>:<line>: error: calls nested more than <n> deep (--max-call-depth=<n>) [<hierarchical name> @ <time>]`.
+
 ## 3. Where output goes
 
 - **Standard output:** only what the design prints (`$display`, `$write`, `$strobe`, `$monitor` and so on). The test suite compares standard output only (TEST_SUITE.md). The exceptions are the SIR of `--dump-sir` and the JSON of `--stats=json` (written last).
@@ -113,6 +129,7 @@ The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go int
 | 3 | internal | An internal error of kirimasim (a failure of the SIR verifier and the like); never an error of the design |
 | 4 | time_limit | `--max-time` reached |
 | 5 | zero_time_limit | A limit reached without time advancing |
+| 6 | resource_limit | A limit on resources reached (2.7; proposed 2026-10-19) |
 | 130 | interrupted | SIGINT |
 
 - **Unsupported constructs:** during P1 many constructs are not implemented yet. When making SIR meets one, kirimasim gives a diagnostic at its position and ends with code 2 (as row 2 of the design specification's table of exit codes says). It is never ignored silently.
