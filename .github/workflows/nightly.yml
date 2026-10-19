@@ -207,9 +207,10 @@ jobs:
       - run: cmake --preset dev
       - run: cmake --build --preset dev
       # bash runs with pipefail, so a surviving mutant fails the step even
-      # though tee, the last command of the pipe, succeeds.
+      # though tee, the last command of the pipe, succeeds. -u writes each
+      # mutant's line at once, so the log shows how far a stopped run got.
       - shell: bash
-        run: python3 tools/mutants.py --preset dev | tee -a "$GITHUB_STEP_SUMMARY"
+        run: python3 -u tools/mutants.py --preset dev | tee -a "$GITHUB_STEP_SUMMARY"
 
   slang-main:
     # Watches slang's main branch: builds kirimasim against its latest
