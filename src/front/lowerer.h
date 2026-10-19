@@ -39,6 +39,10 @@
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 
+namespace slang::driver {
+class Driver;
+}
+
 namespace kirimasim::front {
 
 namespace ast = slang::ast;
@@ -46,6 +50,15 @@ namespace ast = slang::ast;
 /// Thrown after an "unsupported" error has been reported, to drop the
 /// procedure being lowered.
 struct Unsupported {};
+
+/// Without --top, a config in the sources gives the top (33.5.4, CLI.md
+/// 2.1): it goes to the driver's top modules as "<name>:config", which
+/// slang looks up among configs only. Configs in files read as libraries
+/// are not counted. With more than one, the standard does not say which
+/// is meant: an error at the second goes to `diagnostics`, and the result
+/// is false (UNSPECIFIED_BEHAVIOR.md N9). Called after the sources are
+/// parsed and before the compilation is made.
+bool chooseConfigTop(slang::driver::Driver& driver, std::string& diagnostics);
 
 /// The time unit and precision of a scope; 1ns/1ns when nothing sets them.
 sir::TimeScale timeScaleOf(const ast::Scope& scope);

@@ -1994,6 +1994,12 @@ CompileResult compile(std::span<const std::string> args) {
         result.diagnostics = client->getString();
         return result;
     }
+    std::string configError;
+    if (!chooseConfigTop(driver, configError)) {
+        result.numErrors = driver.diagEngine.getNumErrors() + 1;
+        result.diagnostics = client->getString() + configError;
+        return result;
+    }
     std::unique_ptr<ast::Compilation> compilation = driver.createCompilation();
     driver.reportCompilation(*compilation, /* quiet */ true);
     // slang's analysis checks the writers and drivers of variables and nets

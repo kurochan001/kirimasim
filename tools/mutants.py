@@ -794,6 +794,12 @@ MUTANTS = [
      "        return p.kind == sir::ProcessKind::Cont ||\n",
      "        return p.kind == sir::ProcessKind::Cont || p.kind == sir::ProcessKind::CombAt ||\n"
      "               p.kind == sir::ProcessKind::FfPlain ||\n"),
+    ("front: a config in the sources does not give the top", "src/front/front.cpp",
+     "    if (first != nullptr)\n        driver.options.topModules.push_back(",
+     "    if (first == nullptr)\n        driver.options.topModules.push_back("),
+    ("front: a second config in the sources is ignored", "src/front/front.cpp",
+     "            if (first == nullptr) {\n                first = &config;",
+     "            if (first == nullptr || true) {\n                if (first == nullptr) first = &config;"),
 ]
 
 

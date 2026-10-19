@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Without `--top`, a config in the sources gives the top, as 33.5.4
+  says: the cells its design statement names are the tops, and its rules
+  bind the instances. The config was ignored without a word, and every
+  module that nothing instantiated ran. With more than one config, an
+  error at the second asks for `--top` (CLI.md 2.1).
 - A continuous assignment, gate or UDP instance that reads what it
   drives, and a procedural `assign` or `force` that reads what it holds,
   are evaluated again when their own change alters what they read, as
