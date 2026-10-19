@@ -2,7 +2,7 @@
 
 [日本語](UNSPECIFIED_BEHAVIOR.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **proposed, awaiting approval**. On 2026-10-19, this document was written (proposed, awaiting approval). The same day, a person chose the approved rule for J3 (9), for A2 with a lint warning, and for A13 (9).
+Priority: P1. Status: **proposed, awaiting approval**. On 2026-10-19, this document was written (proposed, awaiting approval). The same day, a person chose the approved rules for the four differences of 9: for J3 and A13 as they are, for A2 with a lint warning, and for P4 with the memory's bounds where the arguments give none.
 
 This document lists the places where IEEE 1800-2023 does not set an order or a result, leaves it to the implementation, or where following its wording literally would break practical code, and says what kirimasim does at each. The text of the standard is not copied; clause numbers are given. Most rules this document relies on are written in other specifications. This document gives them as references, and writes here only what has no other home: the principles (1), the kinds of diagnostics (4), the status of each item (6), and the lists of 7 and 8.
 
@@ -13,7 +13,6 @@ The item IDs (A1 to R5, with A14 and A15 added) follow a private survey made in 
 - **in force**: already set by an approved specification. The section is given, and the rule is not repeated here.
 - **proposed 2026-10-19**: proposed by this document, not approved yet. Once a person approves it, it is changed to `approved <date>`. Only approved rows are implemented.
 - **later (P2)**, **later (P3)**, **later (P4)**: written here now, decided in detail and implemented in that phase.
-- **not decided**: this document and the approved specifications differ, and a person has not chosen yet (9). Until then the approved specification holds.
 
 ## 1. Principles
 
@@ -326,7 +325,7 @@ The same seed gives the same result, across versions too. Only `$random` and `$d
 | P3 | SystemVerilog's output and DPI-C's `printf` share one standard output and keep their order | — | 21.3 | P1 | in force (SYSTEM_TASKS.md 2) |
 | P3 | When output is written out, and an option that writes it out after every display task | `--autoflush` | 21.3 | P1 | proposed 2026-10-19 (SYSTEM_TASKS.md 2; CLI.md 2.2) |
 | P4 | `$readmemh` leaves words the file does not give unchanged | — | 21.4 | P1 | in force (SYSTEM_TASKS.md 7.1) |
-| P4 | An address out of range | — | 21.4 | P1 | not decided (9) |
+| P4 | An address in the file outside the range is an error and reading stops; without a finish address the range ends at the highest address of the memory, and without a start address it begins at the lowest | — | 21.4 | P1 | in force (SYSTEM_TASKS.md 7.1); the range without a finish address approved 2026-10-19 |
 | P4 | Run-time warnings for a range or a word count that does not match | `kirima-readmem-range`, `kirima-readmem-short` | 21.4 | P1 | proposed 2026-10-19 |
 | P5 | `$dumpvars` can only dump slots kept by the build; asking for others lists them | `kirima-dump-not-preserved` | 21.7 | P2 | later (P2) |
 
@@ -411,12 +410,12 @@ Every choice of this document is fixed by tests of the suite. Where the standard
 
 ## 9. Differences from the first proposal
 
-This document's first proposal differed from the approved specifications in these four points. Where an item says what a person chose, that holds; elsewhere the approved specification holds until a person chooses.
+This document's first proposal differed from the approved specifications in these four points. On 2026-10-19 a person chose for each what is written below.
 
 1. **The order of evaluating static initializers (J3; SCHEDULER_SPEC.md 6.1 step 1).** The first proposal was the order of dependency (declaration order where there is none), with a warning and declaration order for a cycle. The approved rule is declaration order within a scope, packages and compilation units first in source order (SCHEDULER_SPEC.md 3, 6.1; SIR_SPEC.md 7.1). The standard sets no order among them (6.8, 10.5), and asks that a package be compiled before the scopes that read it (26.3). **Chosen on 2026-10-19: the approved rule.** Other simulators differ here too (Icarus Verilog 14.0 (devel) follows declaration order, Verilator 5.052 the order of dependency), so what matters is the warning the approved rule gives when an initial value reads a static variable of another scope (`kirima-static-init-order`).
 2. **An `always` with no timing control on any path (A2).** The first proposal made it an elaboration error. The approved rule runs it and stops it at `--max-steps` (SCHEDULER_SPEC.md 6.2, 16.2). The standard describes such an `always` as looping forever at one time, without making it illegal (9.2.2.1). **Chosen on 2026-10-19: the approved rule, with a lint warning.** The standard allows it, so it is not rejected (principle 1). It runs and stops at `--max-steps` as before (principle 7), and the lint warning `kirima-always-no-wait` tells of it at elaboration (principle 8).
 3. **Writes by a function called from the arguments of `$monitor` or `$strobe` (A13).** The first proposal made every such write an error. The approved interpretation lets the function write its own arguments and its automatic and static variables (SCHEDULER_SPEC.md 2.2). The standard forbids writing nets and variables in the Postponed region (4.4.2.9). **Chosen on 2026-10-19: the approved interpretation.** Making every write an error would forbid calling a function that keeps its own work in its variables, which `$monitor` and `$strobe` allow (21.2.2, 21.2.3). The lint warning `kirima-monitor-side-effect` tells of a function with side effects there.
-4. **An address out of range in `$readmemb` and `$readmemh` (P4).** The proposal ignores it. The approved rule makes an address in the file outside the range given by the arguments an error that stops the reading (SYSTEM_TASKS.md 7.1). An address outside the memory's declared range when no range is given is set by neither.
+4. **An address out of range in `$readmemb` and `$readmemh` (P4).** The first proposal ignored it. The approved rule makes an address in the file outside the range given by the arguments an error that stops the reading (SYSTEM_TASKS.md 7.1). An address outside the memory's declared range when no range is given was set by neither. **Chosen on 2026-10-19: the approved rule, with the memory's bounds where the arguments give none.** Without a finish address the range ends at the highest address of the memory, and without a start address it begins at the lowest, so an address outside the memory is the same error (SYSTEM_TASKS.md 7.1). Icarus Verilog 14.0 (devel) does the same; Verilator 5.052 ends the run at an address or a word past the memory.
 
 ## 10. Not confirmed
 
