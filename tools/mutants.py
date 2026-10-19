@@ -871,6 +871,11 @@ MUTANTS = [
     ("front: what an assertion's action block reads is an always_comb's", "src/front/lower.cpp",
      "    if (b_.actions == 0) b_.reads.push_back(r);",
      "    if (b_.actions == 0 || true) b_.reads.push_back(r);"),
+    ("front: a process writes what the tasks it calls write", "src/front/lower.cpp",
+     "            if (!task(c))\n                for (const sir::SlotRange& r : writes[c])\n",
+     "            if (!task(c) || true)\n                for (const sir::SlotRange& r : writes[c])\n"),
+    ("front: no write through a task is checked against always_comb", "src/front/lower.cpp",
+     "    if (owners.empty()) return;", "    if (owners.empty() || true) return;"),
 ]
 
 

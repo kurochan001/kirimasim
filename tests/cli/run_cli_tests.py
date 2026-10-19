@@ -35,7 +35,8 @@ INTERRUPTS = HERE / "interrupt_matrix.expected"
 FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
-LATER_WORK = [HERE / "later_work_matrix.sv", HERE / "later_work_override.sv"]
+ERROR_DESIGNS = [HERE / "later_work_matrix.sv", HERE / "later_work_override.sv",
+                 HERE / "task_write_matrix.sv"]
 BLOCK_POSITIONS = HERE / "block_position_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 END_TASKS = str(HERE / "end_tasks.sv")
@@ -398,12 +399,13 @@ def main() -> int:
         print(f"FAIL: builtin call matrix: exit code {proc.returncode}\n{proc.stdout}"
               f"{proc.stderr}", file=sys.stderr)
 
-    # A function that schedules work after it returns, called where 13.4.4
-    # does not allow it, is an error at the call with a note at the
-    # statement (SCHEDULER_SPEC.md 6.5; the files come from
-    # tools/gen_later_work_matrix.py and
-    # tools/gen_later_work_override_matrix.py).
-    for design in LATER_WORK:
+    # Errors that front finds, each with a note, and exit code 2: a function
+    # that schedules work after it returns, called where 13.4.4 does not
+    # allow it (SCHEDULER_SPEC.md 6.5; tools/gen_later_work_matrix.py and
+    # tools/gen_later_work_override_matrix.py), and a write through a task
+    # to what an always_comb, always_latch or always_ff writes
+    # (SCHEDULER_SPEC.md 6.4; tools/gen_task_write_matrix.py).
+    for design in ERROR_DESIGNS:
         proc = subprocess.run([args.kirimasim, design.name], cwd=HERE, capture_output=True,
                               text=True, check=False)
         want = design.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()

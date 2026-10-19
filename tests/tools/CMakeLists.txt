@@ -341,3 +341,7 @@ set_tests_properties(tools/gen_block_position_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_comb_sensitivity_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_comb_sensitivity_matrix.py --check)
 set_tests_properties(tools/gen_comb_sensitivity_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_task_write_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_task_write_matrix.py --check)
+set_tests_properties(tools/gen_task_write_matrix PROPERTIES LABELS Tools)

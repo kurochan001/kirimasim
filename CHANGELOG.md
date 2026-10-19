@@ -90,6 +90,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A task that `always_comb`, `always_latch` or `always_ff` calls may
+  write a variable that another process writes, as 9.2.2 allows, where
+  kirimasim stopped with an internal error of the SIR verifier; and
+  another process that writes such a block's variable through a task is
+  an error at the write with a note at the call, which slang does not
+  report (SCHEDULER_SPEC.md 6.4; #21).
 - `always_comb` and `always_latch` no longer run again when a variable
   changes that only the body of a task they call reads, or only an action
   block of an assertion in them or in a function they call; the arguments

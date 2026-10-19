@@ -359,6 +359,12 @@ void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
 
 void Lowerer::error(slang::SourceLocation sl, std::string_view what, slang::SourceLocation noteAt,
                     std::string_view note) {
+    reportError(sl, what, noteAt, note);
+    throw Unsupported{};
+}
+
+void Lowerer::reportError(slang::SourceLocation sl, std::string_view what,
+                          slang::SourceLocation noteAt, std::string_view note) {
     ++numErrors_;
     const auto line = [&](slang::SourceLocation at, std::string_view kind, std::string_view text) {
         if (at.valid())
@@ -373,7 +379,6 @@ void Lowerer::error(slang::SourceLocation sl, std::string_view what, slang::Sour
     };
     line(sl, "error: ", what);
     if (noteAt.valid()) line(noteAt, "note: ", note);
-    throw Unsupported{};
 }
 
 void Lowerer::warning(slang::SourceLocation sl, std::string_view what) {
@@ -729,6 +734,7 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
 
 void Lowerer::noteWrite(const sir::SlotRange& r) {
     const sir::Slot& s = design_.slots[r.slot];
+    if (b_.isSub) subWriteSites_[b_.proc].push_back({r, b_.at});
     std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.proc] : proc().writes;
     for (const sir::SlotRange& w : writes)
         if (sir::covers(s, w, r)) return;
@@ -779,6 +785,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     checkStaticInitOrder();
     if (numErrors_ != 0) return;
     finishDesign();
+    checkTaskWrites();
     resolveNets();
     finishDrives();
 }
@@ -820,28 +827,24 @@ void Lowerer::finishDesign() {
         set.push_back(r);
         return true;
     };
-    // What each subroutine may write, with what it calls; what the functions
-    // it calls write; and what it reads, with the functions it calls outside
-    // assertion action blocks: until nothing changes (recursion included).
-    // The sensitivity of always_comb looks into functions, not tasks
-    // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
+    // What each subroutine writes, with the functions it calls, and what it
+    // reads, with the functions it calls outside assertion action blocks,
+    // until nothing changes (recursion included). A task's body is no part
+    // of its caller's, for what it writes (SIR_SPEC.md 3.4) or reads
+    // (SCHEDULER_SPEC.md 6.3).
     const auto task = [&](sir::SubroutineId c) {
         return design_.subroutines[c].kind == sir::SubroutineKind::Task;
     };
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> writes = subWrites_;
-    std::map<sir::SubroutineId, std::vector<sir::SlotRange>> functionWrites = subWrites_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> reads = subReads_;
     for (bool changed = true; changed;) {
         changed = false;
         for (const auto& [key, called] : callees_) {
             if (!key.first) continue;
-            for (const sir::SubroutineId c : called) {
-                for (const sir::SlotRange& r : std::vector(writes[c]))
-                    changed = add(writes[key.second], r) || changed;
+            for (const sir::SubroutineId c : called)
                 if (!task(c))
-                    for (const sir::SlotRange& r : std::vector(functionWrites[c]))
-                        changed = add(functionWrites[key.second], r) || changed;
-            }
+                    for (const sir::SlotRange& r : std::vector(writes[c]))
+                        changed = add(writes[key.second], r) || changed;
         }
         for (const auto& [key, called] : readCallees_) {
             if (!key.first) continue;
@@ -850,28 +853,17 @@ void Lowerer::finishDesign() {
                     changed = add(reads[key.second], r) || changed;
         }
     }
-    // What an always_comb or always_latch writes itself and through the
-    // functions it calls is no part of its sensitivity (9.2.2.2.1,
-    // SCHEDULER_SPEC.md 6.3); what its tasks write is.
-    std::map<std::uint32_t, std::vector<sir::SlotRange>> combWrites;
-    for (const auto& [p, procReads] : combReads_) {
-        combWrites[p] = design_.processes[p].writes;
-        if (const auto it = callees_.find({false, p}); it != callees_.end())
-            for (const sir::SubroutineId c : it->second)
-                if (!task(c))
-                    for (const sir::SlotRange& r : functionWrites[c])
-                        add(combWrites[p], r);
-    }
-    // A process writes what the subroutines it calls write; always_comb and
-    // always_latch are sensitive to what the functions they call read too
-    // (SCHEDULER_SPEC.md 6.3, 6.4). A cont process takes them after its own
-    // writes are known as what it drives (finishDrives).
+    // A process writes what the functions it calls write; always_comb and
+    // always_latch are sensitive to what they read too (SCHEDULER_SPEC.md
+    // 6.3, 6.4). A cont process takes them after its own writes are known as
+    // what it drives (finishDrives).
     for (const auto& [key, called] : callees_) {
         if (key.first) continue;
         const bool cont = design_.processes[key.second].kind == sir::ProcessKind::Cont;
         for (const sir::SubroutineId c : called)
-            for (const sir::SlotRange& r : writes[c])
-                add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);
+            if (!task(c))
+                for (const sir::SlotRange& r : writes[c])
+                    add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);
     }
     for (const auto& [key, called] : readCallees_) {
         if (key.first || combReads_.count(key.second) == 0) continue;
@@ -888,11 +880,67 @@ void Lowerer::finishDesign() {
             // Variables and arguments declared in a called function are not
             // part of it either.
             bool skip = s.subroutine != sir::kNone;
-            for (const sir::SlotRange& w : combWrites[p])
+            for (const sir::SlotRange& w : proc.writes)
                 skip = skip || sir::covers(s, w, r);
             for (const sir::Trigger& t : proc.triggers)
                 skip = skip || sir::covers(s, t.range, r);
             if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
+        }
+    }
+}
+
+void Lowerer::checkTaskWrites() {
+    // What each always_comb, always_latch and always_ff writes, itself and
+    // through its functions, by slot.
+    std::map<sir::SlotId, std::vector<std::uint32_t>> owners;
+    for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
+        const sir::ProcessKind k = design_.processes[p].kind;
+        if (k != sir::ProcessKind::Comb && k != sir::ProcessKind::Latch &&
+            k != sir::ProcessKind::Ff)
+            continue;
+        for (const sir::SlotRange& w : design_.processes[p].writes)
+            if (design_.slots[w.slot].subroutine == sir::kNone) owners[w.slot].push_back(p);
+    }
+    if (owners.empty()) return;
+    // Each task a process calls, and what it calls in turn, may write one
+    // of them; the error is at the write, the note at the call, once for
+    // each pair of places, whatever the instance.
+    std::set<std::pair<slang::SourceLocation, slang::SourceLocation>> reported;
+    for (const auto& [q, calls] : taskCalls_) {
+        for (const auto& [task, callAt] : calls) {
+            std::vector<sir::SubroutineId> todo{task};
+            std::set<sir::SubroutineId> seen{task};
+            while (!todo.empty()) {
+                const sir::SubroutineId x = todo.back();
+                todo.pop_back();
+                for (const auto& [r, at] : subWriteSites_[x]) {
+                    const sir::Slot& s = design_.slots[r.slot];
+                    const auto it = owners.find(r.slot);
+                    if (it == owners.end()) continue;
+                    for (const std::uint32_t p : it->second) {
+                        if (p == q) continue;
+                        const sir::Process& owner = design_.processes[p];
+                        const bool overlaps =
+                            std::ranges::any_of(owner.writes, [&](const sir::SlotRange& w) {
+                                return w.slot == r.slot && sir::overlaps(s, w, r);
+                            });
+                        if (!overlaps || !reported.insert({at, callAt}).second) continue;
+                        const char* kind = owner.kind == sir::ProcessKind::Comb    ? "always_comb"
+                                           : owner.kind == sir::ProcessKind::Latch ? "always_latch"
+                                                                                   : "always_ff";
+                        reportError(at,
+                                    "'" + s.name + "', which the " + kind + " procedure at " +
+                                        whereOf(owner.loc) +
+                                        " writes, may not be written by another process, here "
+                                        "through a task it calls",
+                                    callAt,
+                                    "'" + design_.subroutines[task].name + "' is called here");
+                    }
+                }
+                if (const auto c = callees_.find({true, x}); c != callees_.end())
+                    for (const sir::SubroutineId y : c->second)
+                        if (seen.insert(y).second) todo.push_back(y);
+            }
         }
     }
 }

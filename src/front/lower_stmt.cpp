@@ -66,6 +66,13 @@ slang::SourceLocation Lowerer::startOf(const ast::Statement& s) {
 void Lowerer::lowerStatement(const ast::Statement& s) {
     if (b_.dead) return;  // unreachable code is dropped
     const slang::SourceLocation sl = startOf(s);
+    // The writes of the statement are its own, until it ends.
+    struct RestoreAt {
+        Body& b;
+        slang::SourceLocation outer;
+        ~RestoreAt() { b.at = outer; }
+    } restoreAt{b_, b_.at};
+    b_.at = sl;
     switch (s.kind) {
         case ast::StatementKind::Empty: return;
         case ast::StatementKind::List:
