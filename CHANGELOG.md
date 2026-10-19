@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A real constant delay is rounded to the precision as the same value in a
+  variable is, from the double times the power of ten, half away from
+  zero (SCHEDULER_SPEC.md 1). The constant was rounded as its decimal
+  text reads, so `#1.005` at 1ns/10ps waited 101 steps and the same value
+  in a `real` variable 100 (#18).
 - A function that schedules work to run after it returns (a nonblocking
   assignment, `->>` or `fork ... join_none`, in it or in a function it
   calls) is an error at compile time when the initial value of a static

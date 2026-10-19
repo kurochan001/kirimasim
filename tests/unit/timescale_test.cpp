@@ -49,8 +49,14 @@ TEST(Timescale, IntegerDelays) {
 TEST(Timescale, RealDelaysRoundToThePrecision) {
     // Unit 1ns, precision 100ps: 2.75ns is 2.8ns (3.14.1).
     EXPECT_EQ(delayTicksReal(2.75, {-9, -10}, -12), 2800U);
-    // Rounded as written: 1.15 -> 1.2 (its binary value is just below).
+    // The double product is rounded (SCHEDULER_SPEC.md 1): 1.15 is just
+    // below 1.15, but 1.15 * 10 is 11.5, so 1.2.
     EXPECT_EQ(delayTicksReal(1.15, {-9, -10}, -10), 12U);
+    // 1.005 * 100 is 100.49999999999999: 1.00, as a real variable gives.
+    EXPECT_EQ(delayTicksReal(1.005, {-9, -11}, -11), 100U);
+    EXPECT_EQ(delayTicksReal(0.145, {-9, -11}, -11), 14U);
+    // 2.675 is just below 2.675, but 2.675 * 100 is 267.5: 2.68.
+    EXPECT_EQ(delayTicksReal(2.675, {-9, -11}, -11), 268U);
     // Precision equal to the unit rounds to whole units, half away from 0.
     EXPECT_EQ(delayTicksReal(0.25, {-9, -9}, -9), 0U);
     EXPECT_EQ(delayTicksReal(0.5, {-9, -9}, -9), 1U);

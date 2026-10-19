@@ -41,10 +41,10 @@ std::optional<std::uint64_t> delayTicks(std::uint64_t value, TimeScale scale, in
 /// (SCHEDULER_SPEC.md 1), then scaled; the second step is exact. Negative
 /// values, NaN and results that do not fit in 64 bits give nothing.
 ///
-/// The rounding works on the shortest decimal text that reads back as the
-/// same double, in integer arithmetic, so 1.15 with one decimal of
-/// precision rounds to 1.2 as written, not to 1.1 as its binary value
-/// would.
+/// The rounding takes the product of the double and the power of ten in
+/// double arithmetic, as a delay known only at run time does, so 1.005
+/// with two decimals of precision rounds to 1.00, the double being just
+/// below 1.005, and 2.675 to 2.68, the product being 267.5.
 std::optional<std::uint64_t> delayTicksReal(double value, TimeScale scale, int global);
 
 /// Reads a time such as "10us" or "1.5ns" (CLI.md 2.5: a decimal number

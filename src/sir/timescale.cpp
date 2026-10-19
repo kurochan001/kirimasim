@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <charconv>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -126,31 +125,18 @@ std::optional<std::uint64_t> delayTicks(std::uint64_t value, TimeScale scale, in
 
 std::optional<std::uint64_t> delayTicksReal(double value, TimeScale scale, int global) {
     if (!(value >= 0) || std::isinf(value)) return std::nullopt;
-    // The shortest decimal text that reads back as `value`: digits and an
-    // exponent, in the form d.ddde[+-]xx.
-    std::array<char, 64> buf{};
-    const auto res =
-        std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::scientific);
-    if (res.ec != std::errc()) return std::nullopt;
-    const std::string_view text(buf.data(), static_cast<std::size_t>(res.ptr - buf.data()));
-    const std::size_t epos = text.find('e');
-    if (epos == std::string_view::npos) return std::nullopt;
-    std::string digits;
-    for (const char c : text.substr(0, epos))
-        if (c != '.') digits += c;
-    int exp10 = 0;
-    std::string_view es = text.substr(epos + 1);
-    if (es.starts_with("+")) es.remove_prefix(1);
-    if (std::from_chars(es.data(), es.data() + es.size(), exp10).ec != std::errc())
-        return std::nullopt;
-    // value = digits * 10^(exp10 - (digits.size() - 1)) units. Count it in
-    // precision steps.
-    const int shift = exp10 - static_cast<int>(digits.size() - 1) + (scale.unit - scale.precision);
-    const std::optional<std::uint64_t> steps = roundScaled(digits, shift);
-    if (!steps) return std::nullopt;
+    // The value in steps of the precision is the double product, rounded
+    // half away from zero, as a delay known only at run time has to be
+    // (SCHEDULER_SPEC.md 1).
+    double unitSteps = 1;
+    for (int i = scale.precision; i < scale.unit; ++i)
+        unitSteps *= 10;
+    const double steps = std::round(value * unitSteps);
+    if (!(steps < 18446744073709551616.0)) return std::nullopt;
+    const auto n = static_cast<std::uint64_t>(steps);
     const auto f = pow10(scale.precision - global);
-    if (!f) return *steps == 0 ? std::optional<std::uint64_t>(0) : std::nullopt;
-    return mulChecked(*steps, *f);
+    if (!f) return n == 0 ? std::optional<std::uint64_t>(0) : std::nullopt;
+    return mulChecked(n, *f);
 }
 
 std::optional<std::uint64_t> parseTimeTicks(std::string_view text, int global) {

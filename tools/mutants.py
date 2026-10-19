@@ -845,6 +845,12 @@ MUTANTS = [
      "src/front/lower_sub.cpp",
      "if (s.lifetime == ast::VariableLifetime::Automatic) v.visitDefault(s);",
      "if (false) v.visitDefault(s);"),
+    ("sir: a real delay is rounded down to the precision", "src/sir/timescale.cpp",
+     "const double steps = std::round(value * unitSteps);",
+     "const double steps = std::floor(value * unitSteps);"),
+    ("sir: a real delay is rounded to the unit", "src/sir/timescale.cpp",
+     "    for (int i = scale.precision; i < scale.unit; ++i)\n        unitSteps *= 10;",
+     "    for (int i = scale.unit; i < scale.unit; ++i)\n        unitSteps *= 10;"),
 ]
 
 
