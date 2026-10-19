@@ -2,7 +2,7 @@
 
 [日本語](UNSPECIFIED_BEHAVIOR.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **proposed, awaiting approval**. On 2026-10-19, this document was written (proposed, awaiting approval).
+Priority: P1. Status: **proposed, awaiting approval**. On 2026-10-19, this document was written (proposed, awaiting approval). The same day, a person chose the approved rule for J3 (9).
 
 This document lists the places where IEEE 1800-2023 does not set an order or a result, leaves it to the implementation, or where following its wording literally would break practical code, and says what kirimasim does at each. The text of the standard is not copied; clause numbers are given. Most rules this document relies on are written in other specifications. This document gives them as references, and writes here only what has no other home: the principles (1), the kinds of diagnostics (4), the status of each item (6), and the lists of 7 and 8.
 
@@ -30,7 +30,7 @@ Every item follows these eight principles.
 
 ## 2. Order at time 0
 
-The steps at time 0 are written in SCHEDULER_SPEC.md 6.1 (proposed 2026-10-19). Items B8, B9, B10, D2 and J3 rest on them. The order of evaluating static initializers (step 1) is not decided (9).
+The steps at time 0 are written in SCHEDULER_SPEC.md 6.1 (proposed 2026-10-19). Items B8, B9, B10, D2 and J3 rest on them. Static initializers (step 1) keep declaration order within a scope (9).
 
 ## 3. Default order within a region
 
@@ -247,7 +247,7 @@ The presence, number and order of evaluations of expressions with side effects a
 | --- | --- | --- | --- | --- | --- |
 | J1 | Precise mark-and-sweep GC | GC counts and pause times in `--stats=json` | 8.29 | P3 | later (P3; RUNTIME_ABI.md 6) |
 | J2 | A null reference is a run-time error (reason error, code 2), with the chain of SystemVerilog calls | `kirima-null-deref` | 8.4 | P3 | in force for the reason and code (SCHEDULER_SPEC.md 16.2); later (P3) for the rest |
-| J3 | The order of evaluating static initializers | `kirima-static-init-cycle` | 6.8, 8.9, 26.3 | P1 | not decided (9) |
+| J3 | Static initializers are evaluated in declaration order within a scope, packages and compilation units first in source order; an initial value that reads a static variable of another scope gets a warning | `kirima-static-init-order` | 6.8, 8.9, 26.3 | P1 | in force (SCHEDULER_SPEC.md 3, 6.1; SIR_SPEC.md 7.1); the name approved 2026-10-19 |
 | J4 | Which method a virtual call inside a constructor reaches is checked in the standard and fixed (not confirmed) | slang's diagnostics | 8.15 | P3 | later (P3) |
 | J5 | Specializations of parameterized classes follow slang; static members are per specialization | — | 8.25 | P3 | later (P3) |
 | J6 | `weak_reference` becomes null after marking if its object did not survive | — | the clause is not confirmed | P3 | later (P3; RUNTIME_ABI.md 6) |
@@ -382,7 +382,7 @@ Names as in 4. The status of each follows its row in 6; the names themselves are
 | Kind | Names (items) |
 | --- | --- |
 | Elaboration error | `kirima-always-no-wait` (A2; not decided), `kirima-vif-in-sensitivity` (D10), `kirima-constraint-unsupported` (K4). Several writers of `always_comb` and the like, and several drivers of a `uwire`, are slang's (B4, E8) |
-| Lint warning | `kirima-zero-delay-loop` (A1), `kirima-always-no-wait-path` (A2), `kirima-empty-sensitivity` (A3), `kirima-const-wait` (A4), `kirima-comb-loop` (A6), `kirima-self-trigger` (A9), `kirima-shared-loop-var` (A10), `kirima-monitor-side-effect` (A13), `kirima-race-blocking` (B3, B6), `kirima-multi-write` (B4), `kirima-blk-nblk-mix` (B5), `kirima-comb-read-before-write` (B12), `kirima-comb-nba` (C7), `kirima-final-nba` (C8), `kirima-comb-dynamic-read` (D4), `kirima-casex` (E6), `kirima-const-out-of-range` (F7), `kirima-side-effect-in-index` (G2), `kirima-multi-side-effect` (G4), `kirima-fork-loop-var` (H2), `kirima-static-init-cycle` (J3), `kirima-never-match` (L6), `kirima-delay-rounded-zero` (O2), `kirima-latch-inferred`, `kirima-no-latch` (R1), `kirima-nonstandard` (R4) |
+| Lint warning | `kirima-zero-delay-loop` (A1), `kirima-always-no-wait-path` (A2), `kirima-empty-sensitivity` (A3), `kirima-const-wait` (A4), `kirima-comb-loop` (A6), `kirima-self-trigger` (A9), `kirima-shared-loop-var` (A10), `kirima-monitor-side-effect` (A13), `kirima-race-blocking` (B3, B6), `kirima-multi-write` (B4), `kirima-blk-nblk-mix` (B5), `kirima-comb-read-before-write` (B12), `kirima-comb-nba` (C7), `kirima-final-nba` (C8), `kirima-comb-dynamic-read` (D4), `kirima-casex` (E6), `kirima-const-out-of-range` (F7), `kirima-side-effect-in-index` (G2), `kirima-multi-side-effect` (G4), `kirima-fork-loop-var` (H2), `kirima-static-init-order` (J3), `kirima-never-match` (L6), `kirima-delay-rounded-zero` (O2), `kirima-latch-inferred`, `kirima-no-latch` (R1), `kirima-nonstandard` (R4) |
 | Note | `kirima-comb-loop-unsplit` (A7), `kirima-const-wait` for `wait(0)` (A4), removed pulses (C5) |
 | Run-time warning | `kirima-event-missed` (D8), `kirima-cond-x` (E1, E2), `kirima-out-of-range` (F7), `kirima-static-task-reentry` (H1), `kirima-randomize-failed` (K5), `kirima-modport-violation` (N8), `kirima-delay-unknown`, `kirima-delay-negative` (O4), `kirima-readmem-range`, `kirima-readmem-short` (P4), `kirima-dump-not-preserved` (P5) |
 | Run-time error | `kirima-readonly-write` (A13), `kirima-ref-stale` (H4), `kirima-dpi-not-context` (M4), `kirima-dpi-task-wait` (M5), `kirima-null-deref` (J2), `kirima-time-overflow` (O3) |
@@ -409,11 +409,11 @@ Every choice of this document is fixed by tests of the suite. Where the standard
 | output | P1 to P5 | iverilog, spec | Formats, `$monitor`, the order of output, `$readmemh` | P1 |
 | determinism | Q1 to Q3 | checks in CI | Runs with different thread counts, two generations compared, floating-point flags | P0, P4 |
 
-## 9. Not decided
+## 9. Differences from the first proposal
 
-These four points differ between this document's proposal and the approved specifications. A person chooses; until then the approved specification holds.
+This document's first proposal differed from the approved specifications in these four points. Where an item says what a person chose, that holds; elsewhere the approved specification holds until a person chooses.
 
-1. **The order of evaluating static initializers (J3; SCHEDULER_SPEC.md 6.1 step 1).** The proposal is the order of dependency (declaration order where there is none), with a warning and declaration order for a cycle. The approved rule is declaration order within a scope, packages and compilation units first in source order (SCHEDULER_SPEC.md 3, 6.1; SIR_SPEC.md 7.1). The standard sets no order among them (6.8, 10.5), and asks that a package be compiled before the scopes that read it (26.3).
+1. **The order of evaluating static initializers (J3; SCHEDULER_SPEC.md 6.1 step 1).** The first proposal was the order of dependency (declaration order where there is none), with a warning and declaration order for a cycle. The approved rule is declaration order within a scope, packages and compilation units first in source order (SCHEDULER_SPEC.md 3, 6.1; SIR_SPEC.md 7.1). The standard sets no order among them (6.8, 10.5), and asks that a package be compiled before the scopes that read it (26.3). **Chosen on 2026-10-19: the approved rule.** Other simulators differ here too (Icarus Verilog 14.0 (devel) follows declaration order, Verilator 5.052 the order of dependency), so what matters is the warning the approved rule gives when an initial value reads a static variable of another scope (`kirima-static-init-order`).
 2. **An `always` with no timing control on any path (A2).** The proposal makes it an elaboration error. The approved rule runs it and stops it at `--max-steps` (SCHEDULER_SPEC.md 6.2, 16.2). The standard describes such an `always` as looping forever at one time, without making it illegal (9.2.2.1).
 3. **Writes by a function called from the arguments of `$monitor` or `$strobe` (A13).** The proposal makes every such write an error. The approved interpretation lets the function write its own arguments and its automatic and static variables (SCHEDULER_SPEC.md 2.2). The standard forbids writing nets and variables in the Postponed region (4.4.2.9).
 4. **An address out of range in `$readmemb` and `$readmemh` (P4).** The proposal ignores it. The approved rule makes an address in the file outside the range given by the arguments an error that stops the reading (SYSTEM_TASKS.md 7.1). An address outside the memory's declared range when no range is given is set by neither.

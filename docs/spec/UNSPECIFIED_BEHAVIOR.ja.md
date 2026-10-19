@@ -2,7 +2,7 @@
 
 [English](UNSPECIFIED_BEHAVIOR.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**提案（承認待ち）**。2026-10-19 にこの文書を書いた（提案、承認待ち）。
+優先度：P1。状態：**提案（承認待ち）**。2026-10-19 にこの文書を書いた（提案、承認待ち）。同日、J3 で人が承認済みの決まりを選んだ（9 節）。
 
 この文書は、IEEE 1800-2023 が順序や結果を決めていない所、実装に任せている所、文言どおりに実装すると実用のコードが壊れる所を挙げ、それぞれで kirimasim がどうするかを書きます。規格の本文は写さず、節番号を示します。この文書が頼る決まりの多くは、ほかの詳細仕様書に書いてあります。この文書はそれを参照として示し、ほかに置き場の無いもの（基本の方針（1）、診断の種類（4）、項目ごとの状態（6）、7 と 8 の一覧）だけをここに書きます。
 
@@ -30,7 +30,7 @@
 
 ## 2. 時刻 0 の順序
 
-時刻 0 の手順は SCHEDULER_SPEC.md 6.1 に書きます（proposed 2026-10-19）。項目 B8、B9、B10、D2、J3 はこれに頼ります。static の初期化子を評価する順（手順の 1）は not decided です（9）。
+時刻 0 の手順は SCHEDULER_SPEC.md 6.1 に書きます（proposed 2026-10-19）。項目 B8、B9、B10、D2、J3 はこれに頼ります。static の初期化子（手順の 1）は、スコープの中の宣言の順のままにします（9）。
 
 ## 3. 同じ領域の中の既定の順序
 
@@ -247,7 +247,7 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | --- | --- | --- | --- | --- | --- |
 | J1 | 正確なマーク・スイープの GC | `--stats=json` に GC の回数と停止の時間 | 8.29 | P3 | later (P3。RUNTIME_ABI.md 6) |
 | J2 | null の参照は実行時のエラー（理由 error、コード 2）で、SystemVerilog の呼び出しの列を出す | `kirima-null-deref` | 8.4 | P3 | 理由とコードは in force（SCHEDULER_SPEC.md 16.2）。残りは later (P3) |
-| J3 | static の初期化子を評価する順 | `kirima-static-init-cycle` | 6.8、8.9、26.3 | P1 | not decided（9） |
+| J3 | static の初期化子は、スコープの中の宣言の順に評価し、パッケージとコンパイル単位をソースの順で先にする。ほかのスコープの static 変数を読む初期値には警告を出す | `kirima-static-init-order` | 6.8、8.9、26.3 | P1 | in force（SCHEDULER_SPEC.md 3、6.1。SIR_SPEC.md 7.1）。名前は approved 2026-10-19 |
 | J4 | コンストラクタの中の仮想メソッドの呼び出しがどのメソッドに届くかは、規格で確かめて固定する（未確認） | slang の診断 | 8.15 | P3 | later (P3) |
 | J5 | パラメータ付きクラスの特殊化は slang に従う。static メンバは特殊化ごと | — | 8.25 | P3 | later (P3) |
 | J6 | `weak_reference` は、印付けの後に参照先が生き残っていなければ null にする | — | 節は未確認 | P3 | later (P3。RUNTIME_ABI.md 6) |
@@ -382,7 +382,7 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | 種類 | 名前（項目） |
 | --- | --- |
 | エラボレーションのエラー | `kirima-always-no-wait`（A2。not decided）、`kirima-vif-in-sensitivity`（D10）、`kirima-constraint-unsupported`（K4）。`always_comb` などの複数の書き手と `uwire` の多重駆動は slang の診断（B4、E8） |
-| lint の警告 | `kirima-zero-delay-loop`（A1）、`kirima-always-no-wait-path`（A2）、`kirima-empty-sensitivity`（A3）、`kirima-const-wait`（A4）、`kirima-comb-loop`（A6）、`kirima-self-trigger`（A9）、`kirima-shared-loop-var`（A10）、`kirima-monitor-side-effect`（A13）、`kirima-race-blocking`（B3、B6）、`kirima-multi-write`（B4）、`kirima-blk-nblk-mix`（B5）、`kirima-comb-read-before-write`（B12）、`kirima-comb-nba`（C7）、`kirima-final-nba`（C8）、`kirima-comb-dynamic-read`（D4）、`kirima-casex`（E6）、`kirima-const-out-of-range`（F7）、`kirima-side-effect-in-index`（G2）、`kirima-multi-side-effect`（G4）、`kirima-fork-loop-var`（H2）、`kirima-static-init-cycle`（J3）、`kirima-never-match`（L6）、`kirima-delay-rounded-zero`（O2）、`kirima-latch-inferred`、`kirima-no-latch`（R1）、`kirima-nonstandard`（R4） |
+| lint の警告 | `kirima-zero-delay-loop`（A1）、`kirima-always-no-wait-path`（A2）、`kirima-empty-sensitivity`（A3）、`kirima-const-wait`（A4）、`kirima-comb-loop`（A6）、`kirima-self-trigger`（A9）、`kirima-shared-loop-var`（A10）、`kirima-monitor-side-effect`（A13）、`kirima-race-blocking`（B3、B6）、`kirima-multi-write`（B4）、`kirima-blk-nblk-mix`（B5）、`kirima-comb-read-before-write`（B12）、`kirima-comb-nba`（C7）、`kirima-final-nba`（C8）、`kirima-comb-dynamic-read`（D4）、`kirima-casex`（E6）、`kirima-const-out-of-range`（F7）、`kirima-side-effect-in-index`（G2）、`kirima-multi-side-effect`（G4）、`kirima-fork-loop-var`（H2）、`kirima-static-init-order`（J3）、`kirima-never-match`（L6）、`kirima-delay-rounded-zero`（O2）、`kirima-latch-inferred`、`kirima-no-latch`（R1）、`kirima-nonstandard`（R4） |
 | 情報 | `kirima-comb-loop-unsplit`（A7）、`wait(0)` の `kirima-const-wait`（A4）、消したパルス（C5） |
 | 実行時の警告 | `kirima-event-missed`（D8）、`kirima-cond-x`（E1、E2）、`kirima-out-of-range`（F7）、`kirima-static-task-reentry`（H1）、`kirima-randomize-failed`（K5）、`kirima-modport-violation`（N8）、`kirima-delay-unknown`、`kirima-delay-negative`（O4）、`kirima-readmem-range`、`kirima-readmem-short`（P4）、`kirima-dump-not-preserved`（P5） |
 | 実行時のエラー | `kirima-readonly-write`（A13）、`kirima-ref-stale`（H4）、`kirima-dpi-not-context`（M4）、`kirima-dpi-task-wait`（M5）、`kirima-null-deref`（J2）、`kirima-time-overflow`（O3） |
@@ -409,11 +409,11 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | output | P1〜P5 | iverilog、spec | 書式、`$monitor`、出力の順、`$readmemh` | P1 |
 | determinism | Q1〜Q3 | CI の検査 | スレッド数を変えた実行、2 回の生成の比較、浮動小数点のフラグ | P0、P4 |
 
-## 9. 決まっていないこと
+## 9. 最初の提案との違い
 
-この文書の提案と承認済みの詳細仕様書が、次の 4 点で違います。人が選びます。それまでは承認済みの詳細仕様書に従います。
+この文書の最初の提案と承認済みの詳細仕様書は、次の 4 点で違っていました。人が選んだと書いた項目はそれに従い、ほかの項目は人が選ぶまで承認済みの詳細仕様書に従います。
 
-1. **static の初期化子を評価する順（J3。SCHEDULER_SPEC.md 6.1 の手順 1）。** 提案は依存の順（依存が無ければ宣言の順）で、循環があれば警告を出して宣言の順にする。承認済みの決まりは、スコープの中は宣言の順で、パッケージとコンパイル単位をソースの順で先にする（SCHEDULER_SPEC.md 3、6.1。SIR_SPEC.md 7.1）。規格はこれらの間の順を決めておらず（6.8、10.5）、パッケージをそれを読むスコープより先にコンパイルすることを求める（26.3）。
+1. **static の初期化子を評価する順（J3。SCHEDULER_SPEC.md 6.1 の手順 1）。** 最初の提案は依存の順（依存が無ければ宣言の順）で、循環があれば警告を出して宣言の順にするものだった。承認済みの決まりは、スコープの中は宣言の順で、パッケージとコンパイル単位をソースの順で先にする（SCHEDULER_SPEC.md 3、6.1。SIR_SPEC.md 7.1）。規格はこれらの間の順を決めておらず（6.8、10.5）、パッケージをそれを読むスコープより先にコンパイルすることを求める（26.3）。**2026-10-19 に人が選んだもの：承認済みの決まり。** ほかのシミュレータの扱いも分かれている（Icarus Verilog 14.0 (devel) は宣言の順、Verilator 5.052 は依存の順）。そのため大事なのは、ほかのスコープの static 変数を読む初期値に、承認済みの決まりが出す警告（`kirima-static-init-order`）である。
 2. **どの経路にも時間制御の無い `always`（A2）。** 提案はエラボレーションのエラーにする。承認済みの決まりは、実行して `--max-steps` で止める（SCHEDULER_SPEC.md 6.2、16.2）。規格は、そのような `always` が同じ時刻で回り続けると述べるが、違反とはしていない（9.2.2.1）。
 3. **`$monitor` や `$strobe` の引数から呼ばれた関数の書き込み（A13）。** 提案はどの書き込みもエラーにする。承認済みの解釈では、その関数は自分の引数と、automatic と static の変数に書ける（SCHEDULER_SPEC.md 2.2）。規格は Postponed 領域でネットや変数に書くことを禁じる（4.4.2.9）。
 4. **`$readmemb` と `$readmemh` の範囲外のアドレス（P4）。** 提案は無視する。承認済みの決まりは、引数で与えた範囲の外にあるファイルの中のアドレスをエラーにし、読むのをやめる（SYSTEM_TASKS.md 7.1）。範囲を与えないときにメモリの宣言の範囲の外にあるアドレスは、どちらも決めていない。
