@@ -2,7 +2,7 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (proposed, awaiting approval). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (proposed, awaiting approval). The same day, `--stop` was added to 2.2 and 5 (proposed, awaiting approval). The same day, `--race-nba` was added to the options of P2 and later (2.3; proposed, awaiting approval). The same day, `--init-values`, `--cond-x` and `--bounds-check` were added to 2.2, and the line `--init-values` writes to 4 (proposed, awaiting approval). The same day, `--autoflush` was added to 2.2 (proposed, awaiting approval). The same day, `--mintypmax`, `--report-pulses` and `--wave-glitches` were added to 2.2 (proposed, awaiting approval). The same day, `--randomize-fail` and `--assert-incomplete` were added to the options of P2 and later (2.3; proposed, awaiting approval). The same day, the last process and the latest events in the report of a limit (2.6), and a scheme of names for diagnostics (6), were proposed (awaiting approval). The same day, 6 was made to point to the list of names in UNSPECIFIED_BEHAVIOR.md 7.3 (proposed, awaiting approval). The same day, slang's limits on elaboration were added to 2.1 (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
+Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (approved). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (approved). The same day, `--stop` was added to 2.2 and 5 (approved). The same day, `--race-nba` was added to the options of P2 and later (2.3; approved). The same day, `--init-values`, `--cond-x` and `--bounds-check` were added to 2.2, and the line `--init-values` writes to 4 (approved). The same day, `--autoflush` was added to 2.2 (approved). The same day, `--mintypmax`, `--report-pulses` and `--wave-glitches` were added to 2.2 (approved). The same day, `--randomize-fail` and `--assert-incomplete` were added to the options of P2 and later (2.3; approved). The same day, the last process and the latest events in the report of a limit (2.6), and a scheme of names for diagnostics (6), were added (approved). The same day, 6 was made to point to the list of names in UNSPECIFIED_BEHAVIOR.md 7.3 (approved). The same day, slang's limits on elaboration were added to 2.1 (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
 
@@ -43,18 +43,18 @@ kirimasim --version | --help
 | `--max-time=<time>` | Stop when this time is reached (reason time_limit, code 4). The time has a unit (for example `10us`). Its form and how it stops: 2.5 | M4 |
 | `--max-time-ok` | Treat time_limit as code 0 | M4 |
 | `--max-scc-iter=<n>`, `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (reason zero_time_limit, code 5). Their meaning and defaults: 2.6 | M4 |
-| `--max-procs=<n>`, `--max-call-depth=<n>` | Limits on resources (reason resource_limit, code 6). Their meaning and defaults: 2.7 (proposed 2026-10-19) | M7 (proposed) |
-| `--max-wall-time=<seconds>` | A limit on wall-clock time (reason wall_time_limit, code 4). 2.7 (proposed 2026-10-19) | M7 (proposed) |
-| `--stop=finish\|ignore\|error` | What `$stop` does: end (the default), go on, or end with code 1 (SCHEDULER_SPEC.md 16.2; proposed 2026-10-19) | M7 (proposed) |
-| `--init-values=x\|zero\|one\|random` | The initial value of the 4-state variables and memories that have no initial value: x (the default, as the standard says), 0, 1, or random bits from `--seed` (VALUE_SEMANTICS.md 1.4; proposed 2026-10-19) | M7 (proposed); `random` after `--seed` |
-| `--cond-x=off\|warn\|error` | Report the conditions of `if` and `?:` and the expressions of `case` that had x or z bits: `warn` once per place, with a count at the end; `error` ends the first time, as a run-time error of the design (VALUE_SEMANTICS.md 3.9, 4.1, 4.2; proposed 2026-10-19). Default `off` | M7 (proposed) |
-| `--bounds-check=off\|warn` | Report indices and positions out of range at run time, once per place (VALUE_SEMANTICS.md 3.11; proposed 2026-10-19). Default `off` | M7 (proposed) |
-| `--autoflush` | Write standard output out after every display task (SYSTEM_TASKS.md 2; proposed 2026-10-19). Off by default | M7 (proposed) |
+| `--max-procs=<n>`, `--max-call-depth=<n>` | Limits on resources (reason resource_limit, code 6). Their meaning and defaults: 2.7 (approved 2026-10-19) | M7 |
+| `--max-wall-time=<seconds>` | A limit on wall-clock time (reason wall_time_limit, code 4). 2.7 (approved 2026-10-19) | M7 |
+| `--stop=finish\|ignore\|error` | What `$stop` does: end (the default), go on, or end with code 1 (SCHEDULER_SPEC.md 16.2; approved 2026-10-19) | M7 |
+| `--init-values=x\|zero\|one\|random` | The initial value of the 4-state variables and memories that have no initial value: x (the default, as the standard says), 0, 1, or random bits from `--seed` (VALUE_SEMANTICS.md 1.4; approved 2026-10-19) | M7; `random` after `--seed` |
+| `--cond-x=off\|warn\|error` | Report the conditions of `if` and `?:` and the expressions of `case` that had x or z bits: `warn` once per place, with a count at the end; `error` ends the first time, as a run-time error of the design (VALUE_SEMANTICS.md 3.9, 4.1, 4.2; approved 2026-10-19). Default `off` | M7 |
+| `--bounds-check=off\|warn` | Report indices and positions out of range at run time, once per place (VALUE_SEMANTICS.md 3.11; approved 2026-10-19). Default `off` | M7 |
+| `--autoflush` | Write standard output out after every display task (SYSTEM_TASKS.md 2; approved 2026-10-19). Off by default | M7 |
 | `--seed=<n>` | The random seed (the random-number section of SYSTEM_TASKS.md; to be written in P1) | M7 |
 | `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (the waveform document; to be written in P1) | M7 |
-| `--wave-glitches` | Record in the waveform every change within a time slot, not only the value at its end (proposed 2026-10-19) | M7, with `--wave` (proposed) |
-| `--mintypmax=min\|typ\|max` | Which delay of `min:typ:max` to use. Default `typ` (SCHEDULER_SPEC.md 12; proposed 2026-10-19) | M7 (proposed) |
-| `--report-pulses` | Report, as notes, the pulses that inertial delays remove (SCHEDULER_SPEC.md 12; proposed 2026-10-19). Off by default | M7 (proposed) |
+| `--wave-glitches` | Record in the waveform every change within a time slot, not only the value at its end (approved 2026-10-19) | M7, with `--wave` |
+| `--mintypmax=min\|typ\|max` | Which delay of `min:typ:max` to use. Default `typ` (SCHEDULER_SPEC.md 12; approved 2026-10-19) | M7 |
+| `--report-pulses` | Report, as notes, the pulses that inertial delays remove (SCHEDULER_SPEC.md 12; approved 2026-10-19). Off by default | M7 |
 
 ### 2.3 Output and development
 
@@ -65,7 +65,7 @@ kirimasim --version | --help
 | `--log=<file>` | Also write a copy of standard output to a file | M7 |
 | `--diag-format=json` | Write errors and warnings to standard error as JSON with an ID and the clause of the standard | M7 |
 
-The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (proposed 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, and, proposed 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P3) are added to this document in their stage.
+The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P3) are added to this document in their stage.
 
 ### 2.4 Plusargs
 
@@ -99,7 +99,7 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
   - `kirimasim: error: time did not advance: <n> events ran in one time slot (--max-slot-events=<n>)`
   - `kirimasim: error: time did not advance: process "<process name>" ran <n> instructions without waiting (--max-steps=<n>)`
   - The process name is the name of the SIR process (`top.initial0` and the like).
-- **The last process and the latest events (proposed 2026-10-19):** after that first line, whose form does not change, the report gives the last process that put an event in the time slot, and the latest events of the time slot, newest first, at most 32, each with its region, its process, its source position and what it does. For example:
+- **The last process and the latest events (approved 2026-10-19):** after that first line, whose form does not change, the report gives the last process that put an event in the time slot, and the latest events of the time slot, newest first, at most 32, each with its region, its process, its source position and what it does. For example:
 
   ```text
   kirimasim: error: time did not advance: 1000000 moves into the Active region in one time slot (--max-zero-delay=1000000)
@@ -111,7 +111,7 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 
   The added lines are indented and contain no `: error: `, so `:expected_stderr:` (TEST_SUITE.md) does not compare them.
 
-### 2.7 Limits on resources and on wall-clock time (proposed 2026-10-19)
+### 2.7 Limits on resources and on wall-clock time (approved 2026-10-19)
 
 | Option | What it counts | Default |
 | --- | --- | --- |
@@ -122,7 +122,7 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 - `--max-procs=0` and `--max-wall-time=0` mean no limit, as in 2.6. `--max-call-depth=0` is not accepted (code 2): the stack of the simulation thread is sized by it (RUNTIME_ABI.md 5).
 - `--max-procs` is checked when a process is made, `--max-call-depth` when a call is made, and `--max-wall-time` at the check points of SIGINT (SCHEDULER_SPEC.md 16.2). `--max-time-ok` does not apply to wall_time_limit.
 - Grounds for the defaults: `--max-call-depth` keeps the depth measured with the present stack (RUNTIME_ABI.md 5). `--max-procs` is not measured yet; it is reviewed when real designs are run, as 2.6 says.
-- Stage: M7, the stage of P1 left (proposed). The P1 plan gives no stage for these options; M7 is the only one left.
+- Stage: M7, the stage of P1 left. The P1 plan gives no stage for these options; M7 is the only one left.
 - When a limit is reached, one line says which, on standard error, before the line of the reason for ending (4). Forms:
   - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`
   - `kirimasim: error: wall-clock limit reached: <n> seconds (--max-wall-time=<n>)`
@@ -137,7 +137,7 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 
 - The form is `kirimasim: <kind>: <text>`, the kind one of `error`, `warning`, `note`, `info`. A message with a source position has the form of slang's diagnostics, `<file>:<line>:<column>: <kind>: <text>`.
 - **Version line:** at the start of a run, one line on standard error gives the version, the commit, the options and the seed (so that the same conditions can be reproduced later). Example: `kirimasim: info: kirimasim 0.1.0 (commit 0123456789ab) args: --top=tb a.sv`. When `--seed` comes (M7), `seed=<n>` is added before `args:` (corrected 2026-10-18, approved: the example had the seed before the option existed). It is not written to standard output, so the test suite has no need to remove it.
-- **Initial values that are not the standard's (proposed 2026-10-19):** when `--init-values` is not `x`, one more line follows the version line: `kirimasim: note: --init-values=<value>: 4-state variables with no initial value start as <value>, not x (VALUE_SEMANTICS.md 1.4)`. It is a line of its own, not part of the version line, so that it stands out. Like the version line, it goes to standard error and the test suite does not compare it.
+- **Initial values that are not the standard's (approved 2026-10-19):** when `--init-values` is not `x`, one more line follows the version line: `kirimasim: note: --init-values=<value>: 4-state variables with no initial value start as <value>, not x (VALUE_SEMANTICS.md 1.4)`. It is a line of its own, not part of the version line, so that it stands out. Like the version line, it goes to standard error and the test suite does not compare it.
 - **Line of the reason for ending:** at the end, one line on standard error gives the reason and the time. Example: `kirimasim: info: finish at 120 ns`. It is not written for `$finish(0)` and `$stop(0)` (SCHEDULER_SPEC.md 16.2).
 - **How times are written (approved 2026-10-16):** an integer and a unit separated by one space. The unit is the largest of `s`, `ms`, `us`, `ns`, `ps`, `fs` that gives the time exactly as an integer (for example, with a precision of 1ps, 120000 steps are `120 ns` and 1500 steps are `1500 ps`). Time 0 is written in the unit of the design's precision (`0 ps` for a precision of 1ps, `0 ps` for 10ps). Nothing is rounded, so the number of steps can be read back exactly.
 
@@ -148,12 +148,12 @@ The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go int
 | Code | Reason | Meaning |
 | --- | --- | --- |
 | 0 | finish, quiescent, stop | `$finish`, no events left, `$stop`. time_limit with `--max-time-ok` is also 0 |
-| 1 | fatal | `$fatal`. With the option that counts `$error`, one or more `$error`. `$stop` with `--stop=error` is also 1 (the reason stays stop; proposed 2026-10-19) |
+| 1 | fatal | `$fatal`. With the option that counts `$error`, one or more `$error`. `$stop` with `--stop=error` is also 1 (the reason stays stop; approved 2026-10-19) |
 | 2 | error | An error in the command line or the input (syntax errors and unsupported constructs included), or a run-time error of the design (SCHEDULER_SPEC.md 16.2) |
 | 3 | internal | An internal error of kirimasim (a failure of the SIR verifier and the like); never an error of the design |
-| 4 | time_limit, wall_time_limit | `--max-time` reached; `--max-wall-time` passed (2.7; proposed 2026-10-19) |
+| 4 | time_limit, wall_time_limit | `--max-time` reached; `--max-wall-time` passed (2.7; approved 2026-10-19) |
 | 5 | zero_time_limit | A limit reached without time advancing |
-| 6 | resource_limit | A limit on resources reached (2.7; proposed 2026-10-19) |
+| 6 | resource_limit | A limit on resources reached (2.7; approved 2026-10-19) |
 | 130 | interrupted | SIGINT |
 
 - **Unsupported constructs:** during P1 many constructs are not implemented yet. When making SIR meets one, kirimasim gives a diagnostic at its position and ends with code 2 (as row 2 of the design specification's table of exit codes says). It is never ignored silently.
@@ -163,4 +163,4 @@ The same as the table of SCHEDULER_SPEC.md 16.2. The names of the reasons go int
 
 - The name and default of the option that counts `$error`.
 - The fields of `--diag-format=json` and the scheme of diagnostic IDs (M7; together with RUNTIME_ABI.md's `kirima_status`).
-- **A scheme of names (proposed 2026-10-19; fixed in M7):** kirimasim's own diagnostics are named `kirima-<words>`, in lower case with hyphens (for example `kirima-zero-time-loop`), in the form of slang's warning names. `-W<name>`, `-Wno-<name>` and `-Werror=<name>` (2.1) then take them as they take slang's, and the prefix keeps them apart from slang's. Run-time errors and limits cannot be turned off; a limit can only be raised. The names proposed so far, with the items they come from, are listed in UNSPECIFIED_BEHAVIOR.md 7.3.
+- **A scheme of names (approved 2026-10-19; fixed in M7):** kirimasim's own diagnostics are named `kirima-<words>`, in lower case with hyphens (for example `kirima-zero-time-loop`), in the form of slang's warning names. `-W<name>`, `-Wno-<name>` and `-Werror=<name>` (2.1) then take them as they take slang's, and the prefix keeps them apart from slang's. Run-time errors and limits cannot be turned off; a limit can only be raised. The names given so far, with the items they come from, are listed in UNSPECIFIED_BEHAVIOR.md 7.3.

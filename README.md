@@ -483,7 +483,7 @@ holds.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model |
 | [docs/spec/VALUE_SEMANTICS.md](docs/spec/VALUE_SEMANTICS.md) | Values, operators, nets, strengths, gates and UDPs |
 | [docs/spec/SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) | The time slot, regions, waits, processes, disable, pending reports |
-| [docs/spec/UNSPECIFIED_BEHAVIOR.md](docs/spec/UNSPECIFIED_BEHAVIOR.md) | What kirimasim does where the standard leaves the result open (proposed) |
+| [docs/spec/UNSPECIFIED_BEHAVIOR.md](docs/spec/UNSPECIFIED_BEHAVIOR.md) | What kirimasim does where the standard leaves the result open |
 | [docs/spec/SIR_SPEC.md](docs/spec/SIR_SPEC.md) | The intermediate representation |
 | [docs/spec/SYSTEM_TASKS.md](docs/spec/SYSTEM_TASKS.md) | System tasks and functions, message formats |
 | [docs/spec/CLI.md](docs/spec/CLI.md) | Command line, exit codes |

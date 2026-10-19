@@ -2,11 +2,11 @@
 
 [日本語](CODEGEN_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P2 (moved from P1 on 2026-10-15, since C++ generation is P2 work). This document has headings only so far, except the section "Floating point" and the first rules of "Rules of C++ generation" and "Static islands", added on 2026-10-19 (proposed, awaiting approval).
+Priority: P2 (moved from P1 on 2026-10-15, since C++ generation is P2 work). This document has headings only so far, except the section "Floating point" and the first rules of "Rules of C++ generation" and "Static islands", added on 2026-10-19 (approved).
 
 ## Rules of C++ generation
 
-The rest is written in the phase the priority table gives. These rules were proposed on 2026-10-19 and are awaiting approval.
+The rest is written in the phase the priority table gives. These rules were approved on 2026-10-19.
 
 - The same SIR gives the same C++, byte for byte (NFR-6). CI generates it twice and compares the two.
 - The short-circuiting of `&&`, `||`, `->` and `?:` is kept. SIR expresses it with branches (SIR_SPEC.md 5.2), and generated code turns a logical operation into a bitwise one only where the right side is proved free of side effects and of null references.
@@ -15,7 +15,7 @@ The rest is written in the phase the priority table gives. These rules were prop
 
 ## Static islands
 
-The rest is written in the phase the priority table gives. This rule was proposed on 2026-10-19 and is awaiting approval.
+The rest is written in the phase the priority table gives. This rule was approved on 2026-10-19.
 
 - Inside a static island, each process is evaluated once, in the level order that `analysis` decides. Tier 1 uses the same order for the processes of an island, so the values a time slot passes through, glitches included, are the same on both tiers.
 
@@ -25,7 +25,7 @@ Not written yet (to be written in the phase the priority table gives).
 
 ## Floating point
 
-Proposed 2026-10-19, awaiting approval.
+Approved 2026-10-19.
 
 - **Rule:** the execution kernel, the VM, the rest of kirimasim's own code (`src/`, `tests/`) and the C++ that tier 2 generates are built with `-ffp-contract=off`, and without `-ffast-math`, `-Ofast` or `-funsafe-math-optimizations` (CLAUDE.md). Dependencies are not held to this. Math functions (`$sin`, `$exp` and the like) are left to the system's libm, so their last bits may differ between systems; that is the one exception to NFR-2 for reals.
 - **Why:** an expression on `real`, an IEEE 754 double (6.12 of the standard), must give the same bits on every tier and OS (NFR-2). A compiler that fuses a multiply and an add into one FMA instruction does not round the product before the addition, so the result can differ in its last bit from the two operations done apart. Whether it fuses depends on the compiler, the target and the flags.
