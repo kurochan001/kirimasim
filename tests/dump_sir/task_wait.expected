@@ -38,13 +38,13 @@ bb1:
   ret  ; 0:12:18
 }
 
-process @0 "top.always0" kind=ff-plain inst=0 trigger=posedge(%s0) writes=%s2,%s3 {  ; 0:18:3
+process @0 "top.always0" kind=ff-plain inst=0 trigger=posedge(%s0) writes=%s2 {  ; 0:18:3
 bb0:
   call @0, %s2  ; 0:18:25
   ret  ; 0:18:3
 }
 
-process @1 "top.initial0" kind=initial inst=0 writes=%s1,%s3 {  ; 0:19:3
+process @1 "top.initial0" kind=initial inst=0 writes=%s1 {  ; 0:19:3
 bb0:
   store %s1, const s2<32> 32'h00000001  ; 0:20:5
   call.task @2, %s1, bb1  ; 0:21:5
