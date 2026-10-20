@@ -51,7 +51,7 @@ jobs:
   # The Context tests under ThreadSanitizer (RUNTIME_ABI.md 9.8), all of
   # them: ci.yml leaves out front_parallel, which fails while slang's
   # Driver writes its process-wide colour flags when it is made
-  # (RUNTIME_ABI.md 9.7). Linux uses clang 22, as ci.yml does.
+  # (RUNTIME_ABI.md 9.7, #32). Linux uses clang 22, as ci.yml does.
   tsan:
     name: tsan (${{ matrix.os }})
     strategy:

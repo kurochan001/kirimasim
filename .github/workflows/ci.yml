@@ -112,8 +112,8 @@ jobs:
   # preset builds and runs only them), with clang 22 as in build-test.
   # front_parallel is left out until slang's Driver no longer writes its
   # process-wide colour flags when it is made, which ThreadSanitizer
-  # reports when two fronts run at once (RUNTIME_ABI.md 9.7); the nightly
-  # workflow runs it.
+  # reports when two fronts run at once (RUNTIME_ABI.md 9.7, #32); the
+  # nightly workflow runs it.
   tsan:
     name: tsan (linux, clang-22)
     runs-on: ubuntu-24.04

@@ -13,6 +13,7 @@ foreach(mode sequential parallel churn)
     add_test(NAME context_${mode} COMMAND kirimasim_context_tests ${mode})
     set_tests_properties(context_${mode} PROPERTIES LABELS Context)
 endforeach()
-# front on several threads at once (RUNTIME_ABI.md 9.7).
+# front on several threads at once (RUNTIME_ABI.md 9.7); it fails under
+# ThreadSanitizer while slang's Driver writes its colour flags (#32).
 add_test(NAME front_parallel COMMAND kirimasim_context_tests front)
 set_tests_properties(front_parallel PROPERTIES LABELS Context)
