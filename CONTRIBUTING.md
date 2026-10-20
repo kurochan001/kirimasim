@@ -126,7 +126,9 @@ python3 tools/check_global_state.py
 For release builds, also run `python3 tools/check_release_flags.py` after
 `cmake --preset release`. The `asan` and `ubsan` presets run the same tests
 with sanitizers; `asan` builds slang without mimalloc, whose allocator the
-address sanitizer cannot see into.
+address sanitizer cannot see into. The `tsan` preset builds and runs only
+the tests of state and Contexts (`tests/context/`, RUNTIME_ABI.md 9.8)
+under the thread sanitizer, also without mimalloc.
 
 kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
 `-DKIRIMASIM_WERROR=ON` to make the warnings errors, as `tools/local_ci.py`

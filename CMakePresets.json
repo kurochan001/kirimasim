@@ -55,18 +55,33 @@
                 "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined",
                 "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=undefined"
             }
+        },
+        {
+            "name": "tsan",
+            "inherits": "base",
+            "displayName": "ThreadSanitizer (the Context tests only)",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_FLAGS_DEBUG": "-O1 -g -fsanitize=thread",
+                "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g -fsanitize=thread",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=thread",
+                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=thread",
+                "SLANG_USE_MIMALLOC": "OFF"
+            }
         }
     ],
     "buildPresets": [
         { "name": "dev", "configurePreset": "dev" },
         { "name": "release", "configurePreset": "release" },
         { "name": "asan", "configurePreset": "asan" },
-        { "name": "ubsan", "configurePreset": "ubsan" }
+        { "name": "ubsan", "configurePreset": "ubsan" },
+        { "name": "tsan", "configurePreset": "tsan", "targets": ["kirimasim_context_tests"] }
     ],
     "testPresets": [
         { "name": "dev", "configurePreset": "dev", "output": { "outputOnFailure": true }, "execution": { "timeout": 300 } },
         { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true }, "execution": { "timeout": 300 } },
         { "name": "asan", "configurePreset": "asan", "output": { "outputOnFailure": true }, "execution": { "timeout": 300 } },
-        { "name": "ubsan", "configurePreset": "ubsan", "output": { "outputOnFailure": true }, "execution": { "timeout": 300 } }
+        { "name": "ubsan", "configurePreset": "ubsan", "output": { "outputOnFailure": true }, "execution": { "timeout": 300 } },
+        { "name": "tsan", "configurePreset": "tsan", "output": { "outputOnFailure": true }, "execution": { "timeout": 300 }, "filter": { "include": { "label": "Context" } } }
     ]
 }

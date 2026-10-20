@@ -899,6 +899,11 @@ MUTANTS = [
     ("kernel: a message does not flush the output first", "src/kernel/sim.cpp",
      "void Output::message(std::string_view line) {\n    std::fflush(to_.out);",
      "void Output::message(std::string_view line) {\n    static_cast<void>(0);"),
+    ("vm: a run sees the runs before it in the process", "src/vm/vm.cpp",
+     "    return Interpreter(design, context, options).run();",
+     "    static int runs = 0;\n"
+     "    if (++runs > 1) context.output().write(\"again\\n\");\n"
+     "    return Interpreter(design, context, options).run();"),
 ]
 
 

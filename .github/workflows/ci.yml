@@ -108,6 +108,51 @@ jobs:
       - name: Test
         run: ctest --preset ${{ matrix.preset }} --output-on-failure
 
+  # The Context tests under ThreadSanitizer (RUNTIME_ABI.md 9.8; the tsan
+  # preset builds and runs only them), with clang 22 as in build-test.
+  # front_parallel is left out until slang's Driver no longer writes its
+  # process-wide colour flags when it is made, which ThreadSanitizer
+  # reports when two fronts run at once (RUNTIME_ABI.md 9.7); the nightly
+  # workflow runs it.
+  tsan:
+    name: tsan (linux, clang-22)
+    runs-on: ubuntu-24.04
+    env:
+      CC: clang-22
+      CXX: clang++-22
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install LLVM 22 (apt.llvm.org packages)
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+
+      - name: Show tool versions
+        run: |
+          "$CXX" --version
+          cmake --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/tsan/_deps/*-src
+            build/tsan/_deps/*-subbuild
+            build/tsan/_deps/*-tmp
+            build/tsan/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-clang22-tsan-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configure
+        run: cmake --preset tsan -DKIRIMASIM_WERROR=ON
+
+      - name: Build
+        run: cmake --build --preset tsan
+
+      - name: Test
+        run: ctest --preset tsan --output-on-failure -E front_parallel
+
   # GitHub's standard macOS (arm64) runners, which this public repository
   # can use, with the runner's Apple clang: the platform of the development
   # Mac. tools/local_ci.py still runs the same checks before a push.

@@ -39,6 +39,64 @@ jobs:
       - run: cmake --build --preset ${{ matrix.preset }}
       - run: ctest --preset ${{ matrix.preset }} --output-on-failure
 
+      # The unit tests in one process, in shuffled orders, three times over
+      # (TEST_SUITE.md, list of required tests; RUNTIME_ABI.md 9.8): state
+      # that one test leaves behind shows in another. gtest prints the seed
+      # of each round; the first is the day of the year.
+      - name: Unit tests shuffled in one process
+        run: >
+          build/${{ matrix.preset }}/tests/unit/kirimasim_unit_tests
+          --gtest_shuffle --gtest_repeat=3 --gtest_random_seed=$(date -u +%j)
+
+  # The Context tests under ThreadSanitizer (RUNTIME_ABI.md 9.8), all of
+  # them: ci.yml leaves out front_parallel, which fails while slang's
+  # Driver writes its process-wide colour flags when it is made
+  # (RUNTIME_ABI.md 9.7). Linux uses clang 22, as ci.yml does.
+  tsan:
+    name: tsan (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-26
+            cc: cc
+            cxx: c++
+          - os: ubuntu-24.04
+            cc: clang-22
+            cxx: clang++-22
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install LLVM 22 (apt.llvm.org packages)
+        if: runner.os == 'Linux'
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+
+      - name: Show tool versions
+        run: |
+          "$CXX" --version
+          cmake --version
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/tsan/_deps/*-src
+            build/tsan/_deps/*-subbuild
+            build/tsan/_deps/*-tmp
+            build/tsan/CMakeFiles/fc-stamp
+          key: fetchcontent-${{ matrix.os }}-${{ matrix.cc }}-tsan-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - run: cmake --preset tsan
+      - run: cmake --build --preset tsan
+      - run: ctest --preset tsan --output-on-failure
+
   linux-arm64:
     # ubuntu-24.04-arm is a standard GitHub-hosted arm64 runner for public
     # repositories.
