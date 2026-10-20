@@ -336,8 +336,15 @@ jobs:
           retention-days: 30
 
   # Negative controls (TEST_SUITE.md): each known mistake put into the
-  # sources must make some test fail.
+  # sources must make some test fail. Four jobs share the list
+  # (tools/mutants.py --shard), as one job would take hours and grows with
+  # every mistake added.
   mutants:
+    name: mutants (${{ matrix.shard }}/4)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -358,7 +365,9 @@ jobs:
       # though tee, the last command of the pipe, succeeds. -u writes each
       # mutant's line at once, so the log shows how far a stopped run got.
       - shell: bash
-        run: python3 -u tools/mutants.py --preset dev | tee -a "$GITHUB_STEP_SUMMARY"
+        run: >
+          python3 -u tools/mutants.py --preset dev --shard ${{ matrix.shard }}/4
+          | tee -a "$GITHUB_STEP_SUMMARY"
 
   slang-main:
     # Watches slang's main branch: builds kirimasim against its latest

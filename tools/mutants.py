@@ -4,12 +4,15 @@ mistake at a time into the sources, rebuilds, runs the tests, and checks
 that some test fails. A mistake that no test catches is a hole in the
 tests.
 
-  tools/mutants.py [--preset dev] [--only <name>]
+  tools/mutants.py [--preset dev] [--only <name>] [--shard <k>/<n>]
 
 A mistake counts as caught when some test fails, or when a test that ran
 on the unchanged sources is skipped as unsupported: a mistake can turn a
 supported construct into an unsupported one rather than give a wrong
-value.
+value. The tests of a build with a mistake stop at the first failure
+(ctest --stop-on-failure), as one is enough. --shard k/n takes the k-th
+of every n mistakes of the list (counting from 1), so that n jobs share
+the list (the nightly mutants jobs).
 
 Each mistake is a text replacement that must match exactly once. The source
 file is always restored, even when the run is interrupted; the script
@@ -937,7 +940,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--preset", default="dev")
     ap.add_argument("--only", default="", help="only mutants whose name contains this")
+    ap.add_argument("--shard", default="1/1", help="k/n: the k-th of every n mutants")
     args = ap.parse_args()
+    m = re.fullmatch(r"(\d+)/(\d+)", args.shard)
+    if not m or not 1 <= int(m.group(1)) <= int(m.group(2)):
+        print(f"mutants: --shard {args.shard}: expected k/n with 1 <= k <= n", file=sys.stderr)
+        return 2
+    k, n = int(m.group(1)), int(m.group(2))
+    chosen = [mu for i, mu in enumerate(MUTANTS) if i % n == k - 1 and args.only in mu[0]]
 
     if run(["git", "diff", "--quiet", "--", "src"]) != 0:
         print("mutants: src/ has uncommitted changes; commit or stash them first",
@@ -953,10 +963,9 @@ def main() -> int:
         print("mutants: tests fail on the unchanged sources", file=sys.stderr)
         return 2
 
+    print(f"mutants: {len(chosen)} of {len(MUTANTS)} (shard {k}/{n})")
     bad = 0
-    for name, rel, old, new in MUTANTS:
-        if args.only not in name:
-            continue
+    for name, rel, old, new in chosen:
         path = ROOT / rel
         original = path.read_text(encoding="utf-8")
         if original.count(old) != 1:
@@ -969,7 +978,7 @@ def main() -> int:
                 print(f"DOES NOT BUILD  {name}")
                 bad += 1
                 continue
-            rc, skipped = run_tests(test)
+            rc, skipped = run_tests(test + ["--stop-on-failure"])
             caught = rc != 0 or not skipped <= skipped_before
         finally:
             path.write_text(original, encoding="utf-8")
