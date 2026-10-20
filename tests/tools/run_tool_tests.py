@@ -191,6 +191,125 @@ def severity_test(kirimasim: str, tmp: Path) -> None:
     case("fatal_line_changed", "fatal: fatal 4", "fatal: fatal 5", False)
 
 
+def items_test(kirimasim: str, tmp: Path) -> None:
+    """run_suite_test.py with the items of the test suite repository
+    (TEST_SUITE.md, added 2026-10-21): :expected_stderr_regex: on an illegal
+    design and on a run, nonzero of :expected_exit:, :files:, and :dpi_c: or
+    :vpi_c:, each next to a change that must fail."""
+    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
+
+    def copy(name: str, test: str, old: str, new: str) -> Path:
+        d = tmp / ("items_" + name)
+        d.mkdir()
+        src = ROOT / "tests/suite" / test
+        for f in src.parent.glob(src.name + ".*"):
+            shutil.copy(f, d / f.name)
+        f = d / (src.name + ".sv")
+        text = f.read_text(encoding="utf-8")
+        assert old in text, old
+        f.write_text(text.replace(old, new, 1), encoding="utf-8")
+        return f
+
+    illegal = "proc/task_write_direct_comb"
+    error = (":expected_error: 21:15: error: variable 't' driven by always_comb procedure "
+             "cannot be written to by any other process")
+    # Each change takes the place of a header line, so that the lines of
+    # the design, which the messages name, stay where they were.
+    for name, old, new, want_ok in [
+        ("regex_at_the_place", error, r":expected_stderr_regex: task_write_direct_comb\.sv:21:",
+         True),
+        ("regex_elsewhere", error, r":expected_stderr_regex: task_write_direct_comb\.sv:20:",
+         False),
+        ("regex_and_error", ":issue: 21", ":expected_stderr_regex: :21:", True),
+        ("regex_and_error_elsewhere", ":issue: 21", ":expected_stderr_regex: :20:", False),
+        ("neither", error, ":issue: 21", False),
+        ("regex_not_a_regex", error, ":expected_stderr_regex: (", False),
+    ]:
+        expect("run_suite_test items " + name, run + [str(copy(name, illegal, old, new))],
+               want_ok)
+
+    passes = "values/unique_case_violation"  # exits 0, with a warning
+    stderr = ":expected_stderr: @unique_case_violation.stderr"
+    fatal = "proc/severity_tasks"            # exits 1
+    for name, test, old, new, want_ok in [
+        ("nonzero_of_1", fatal, ":expected_exit: 1", ":expected_exit: nonzero", True),
+        ("nonzero_of_0", passes, stderr, ":expected_exit: nonzero", False),
+        ("exit_a_word", fatal, ":expected_exit: 1", ":expected_exit: some", False),
+        ("run_regex_matches", passes, stderr,
+         r":expected_stderr_regex: :31: warning: unique case", True),
+        ("run_regex_misses", passes, stderr,
+         r":expected_stderr_regex: :31: error: unique case", False),
+    ]:
+        expect("run_suite_test items " + name, run + [str(copy(name, test, old, new))], want_ok)
+
+    # C code: not run, and unsupported under the rule of allowed skips.
+    for name, listed, code in [("c_code_outside", None, 77), ("c_code_listed", True, 77),
+                               ("c_code_not_listed", False, 1)]:
+        f = copy(name, passes, stderr, ":vpi_c: @app.c")
+        args = []
+        if listed is not None:
+            skips = f.parent / "skips.txt"
+            skips.write_text("unique_case_violation  # a reason\n" if listed else "",
+                             encoding="utf-8")
+            args = ["--skips", str(skips)]
+        expect_code("run_suite_test items " + name, run + args + [str(f)], code)
+
+    # :files: gives a source before the test and an included file's directory.
+    d = tmp / "items_files"
+    (d / "inc").mkdir(parents=True)
+    (d / "files_part.sv").write_text("module files_part(output int v);\n  assign v = 3;\n"
+                                     "endmodule\n", encoding="utf-8")
+    (d / "inc" / "files_add.svh").write_text("localparam int ADD = 4;\n", encoding="utf-8")
+    header = ("/*\n:name: files\n:description: d\n:tags: t\n:type: simulation\n"
+              ":lrm: 1800-2023 22.4\n:oracle: spec\n:spec_check: ai\n:fourstate: no\n"
+              ":nondeterministic: no\n:expected_stdout: 7\n{files}*/\n")
+    body = ("`include \"files_add.svh\"\nmodule top;\n  int v;\n  files_part p(v);\n"
+            "  initial #1 $display(\"%0d\", v + ADD);\nendmodule\n")
+    for name, files, want_ok in [("files", ":files: files_part.sv inc/files_add.svh\n", True),
+                                 ("files_without_source", ":files: inc/files_add.svh\n", False),
+                                 ("files_without_include", ":files: files_part.sv\n", False)]:
+        f = d / f"test_{name}.sv"
+        f.write_text(header.format(files=files) + body, encoding="utf-8")
+        expect("run_suite_test items " + name, run + [str(f)], want_ok)
+
+    # With stand-ins for kirimasim whose parse accepts everything: an
+    # illegal design rejected after slang, or stopped there as unsupported,
+    # and :args:, given to the run only, after the test's file.
+    d = tmp / "items_fake"
+    d.mkdir()
+    late = ("/*\n:name: late\n:description: d\n:tags: t\n:type: elaboration\n"
+            ":lrm: 1800-2023 9.2.2.2\n:oracle: spec\n:spec_check: ai\n:fourstate: no\n"
+            ":nondeterministic: no\n:should_fail_because: r\n{regex}*/\nmodule top;\nendmodule\n")
+    plusargs = ("/*\n:name: plusargs\n:description: d\n:tags: t\n:type: simulation\n"
+                ":lrm: 1800-2023 21.6\n:oracle: spec\n:spec_check: ai\n:fourstate: no\n"
+                ":nondeterministic: no\n:expected_stdout: hello\n{args}*/\nmodule top;\n"
+                "endmodule\n")
+    for name, body, text, code in [
+        ("late_error", "sys.stderr.write(sys.argv[-1] + ':3:1: error: rejected\\n'); sys.exit(2)",
+         late.format(regex=":expected_stderr_regex: test_late_error\\.sv:3:\n"), 0),
+        ("late_error_elsewhere",
+         "sys.stderr.write(sys.argv[-1] + ':3:1: error: rejected\\n'); sys.exit(2)",
+         late.format(regex=":expected_stderr_regex: test_late_error_elsewhere\\.sv:4:\n"), 1),
+        ("late_unsupported", "sys.stderr.write(sys.argv[-1] + ':3:1: error: unsupported: "
+         "a thing (not implemented yet)\\n'); sys.exit(2)",
+         late.format(regex=":expected_stderr_regex: test_late_unsupported\\.sv:3:\n"), 77),
+        ("args", "print('hello' if sys.argv[-1] == '+a=1' and sys.argv[-2].endswith('.sv') "
+         "else 'no')", plusargs.format(args=":args: +a=1\n"), 0),
+        ("args_missing", "print('hello' if sys.argv[-1] == '+a=1' else 'no')",
+         plusargs.format(args=""), 1),
+    ]:
+        fake = d / f"fake_{name}"
+        fake.write_text(f"#!{sys.executable}\nimport sys\nif sys.argv[1] == 'parse':\n"
+                        "    sys.exit(3 if '+a=1' in sys.argv else 0)\n"
+                        f"{body}\n", encoding="utf-8")
+        fake.chmod(0o755)
+        test = d / f"test_{name}.sv"
+        test.write_text(text, encoding="utf-8")
+        expect_code("run_suite_test items fake " + name,
+                    [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", str(fake),
+                     str(test)], code)
+
+
 def banned(tmp: Path) -> None:
     for name, line, want_ok in [
         ("pass_string", 'puts("TEST PASSED");', False),
@@ -489,6 +608,7 @@ def main() -> int:
         timeout_test(args.kirimasim, tmp)
         fake_kirimasim_test(tmp)
         severity_test(args.kirimasim, tmp)
+        items_test(args.kirimasim, tmp)
         banned(tmp)
         banned_kernel(tmp)
         banned_state(tmp)

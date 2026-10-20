@@ -246,12 +246,13 @@ jobs:
       # Every test of the suite's latest main, so that tests added after the
       # population was chosen run too. Reported only: not a gate, and the
       # gate figure in the line it prints does not apply. Failures are shown
-      # as in the step before.
+      # as in the step before. The suite's tests are its test_*.sv files; its
+      # other .sv files are sources that tests name in :files: (TEST_SUITE.md).
       - name: Own suite, latest main, every test (report only)
         run: |
           git -C suite checkout -q origin/main
           { echo "# every test of kirimasim-tests $(git -C suite rev-parse --short=12 HEAD), report only"
-            (cd suite/tests && find . -name '*.sv' | sed 's|^\./||; s|\.sv$||' | LC_ALL=C sort)
+            (cd suite/tests && find . -name 'test_*.sv' | sed 's|^\./||; s|\.sv$||' | LC_ALL=C sort)
           } > build/suite_all.txt
           python3 tools/p1_population.py run --tests-repo suite --list build/suite_all.txt \
             --kirimasim build/release/src/driver/kirimasim > build/suite_all.out || true

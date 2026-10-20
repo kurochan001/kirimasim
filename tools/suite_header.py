@@ -5,10 +5,11 @@ The header is the comment at the top of the file: the file starts with
 /* (blank lines before it are allowed), and each line inside of the form
 :item: value gives one item. A header that is not at the top, an item
 whose name is not in TEST_SUITE.md, a :type: word that is not a kind of
-test, a missing required item, a yes/no item with another value and a
-:timeout: that is not a number of seconds are problems: a misspelled item
-would otherwise be dropped without a word, and the test judged by less
-than it says.
+test, a missing required item, a yes/no item with another value, a
+:timeout: that is not a number of seconds, an :expected_exit: that is
+neither a number nor "nonzero" and an :expected_stderr_regex: that is not a
+regular expression are problems: a misspelled item would otherwise be
+dropped without a word, and the test judged by less than it says.
 """
 
 from __future__ import annotations
@@ -22,6 +23,8 @@ ITEMS = {
     "defines", "top_module", "timeout", "lrm", "oracle", "fourstate", "nondeterministic",
     "expected_stdout", "expected_error", "spec_check", "issue", "expected_exit", "generator",
     "expected_stderr",
+    # The test suite repository's items (TEST_SUITE.md, added 2026-10-21).
+    "expected_stderr_regex", "args", "dpi_c", "vpi_c",
 }
 REQUIRED = ("name", "description", "tags", "type", "lrm", "oracle", "fourstate",
             "nondeterministic")
@@ -56,6 +59,14 @@ def read_header(path: Path) -> tuple[dict[str, str], list[str]]:
             problems.append(f":{item}: is {meta[item]!r}, not yes or no")
     if "timeout" in meta and not (meta["timeout"].isdigit() and int(meta["timeout"]) > 0):
         problems.append(f":timeout: is {meta['timeout']!r}, not a number of seconds")
+    if "expected_exit" in meta and not (meta["expected_exit"].isdigit()
+                                        or meta["expected_exit"] == "nonzero"):
+        problems.append(f":expected_exit: is {meta['expected_exit']!r}, not a number or nonzero")
+    if "expected_stderr_regex" in meta:
+        try:
+            re.compile(meta["expected_stderr_regex"])
+        except re.error as e:
+            problems.append(f":expected_stderr_regex: is not a regular expression ({e})")
     if "spec" in meta.get("oracle", "").split() and "spec_check" not in meta:
         problems.append("the header has :oracle: spec but no :spec_check:")
     return meta, problems
