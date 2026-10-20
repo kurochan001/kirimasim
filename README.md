@@ -60,13 +60,13 @@ separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-
 Measured on 2026-10-17, against the newest development versions of Icarus
 Verilog and Verilator built from their main branches that day. kirimasim's
 sv-tests and own-suite results were measured again on 2026-10-20 at
-cd422c8, and did not change. The repository's tests were counted at the
-same commit, in the dev configuration (release adds one, the run to the
+cd422c8, and did not change. The repository's tests were counted the same
+day at a056ba6, in the dev configuration (release adds one, the run to the
 default of `--max-slot-events`).
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 985 | 983, 2 skipped | — | — |
+| This repository's tests (CTest) | 991 | 989, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 186 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -137,7 +137,7 @@ and 1,133 of the own test suite.
 - In the first table, a test that a simulator cannot build counts with its
   build step only; kirimasim stops early at an unsupported construct.
 - Versions and machine: kirimasim 8500bdc (release build) for the times;
-  its pass counts and the CTest row were measured again at cd422c8;
+  its pass counts were measured again at cd422c8, and the CTest row at a056ba6;
   Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
   8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple clang 21.
 
@@ -146,9 +146,10 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 165 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
+| Unit tests (GoogleTest) | 167 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the Context (2), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
 | `tests/suite/` | 698 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (279), scheduling (192), values (75), hierarchy (51), continuous assignments (39), illegal designs (35), nets (23), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
+| State and Contexts | 4 | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
 | Tools | 91 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages, the matrix of unsupported constructs (80 designs: each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`), loops that never advance time (9 designs, stopped by `--max-slot-events`), SIGINT (9 designs, on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them (141 calls in 2 designs), the positions of block statements in `--dump-sir` (144), writes to what `always_comb`, `always_latch` and `always_ff` write through tasks (9) and through the actions of deferred assertions (39); the counts of a fixed run (PerfCount) |
 
@@ -362,6 +363,7 @@ ctest --preset dev
 | `release` | `-O3` |
 | `asan` | `-O1 -g -fsanitize=address -fno-omit-frame-pointer`; slang built without mimalloc, so that the sanitizer sees the heap |
 | `ubsan` | `-O1 -g -fsanitize=undefined -fno-sanitize-recover=all` |
+| `tsan` | `-O1 -g -fsanitize=thread`; slang built without mimalloc; builds and runs only the tests of state and Contexts |
 
 Each preset builds into `build/<preset>/`.
 
@@ -473,16 +475,19 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 89 generators, 698 tests in `tests/suite/`, and 985
+  rules. There are 89 generators, 698 tests in `tests/suite/`, and 991
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 295 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 298 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
   test header says so.
 - **Sanitizers and static checks:** AddressSanitizer, UndefinedBehavior
   Sanitizer, clang-format and clang-tidy run before every push, and CI runs
-  them again on Linux (the sanitizers built with GCC) and on macOS.
+  them again on Linux (the sanitizers built with GCC) and on macOS. CI also
+  runs the tests of state and Contexts under ThreadSanitizer, and checks
+  that `src/` holds no global state but the listed exceptions
+  (RUNTIME_ABI.md 9).
 
 ## Contributions: specification proposals and issues only, for now
 
