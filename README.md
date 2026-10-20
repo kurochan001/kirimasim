@@ -17,7 +17,7 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-18)
+## Status (2026-10-20)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
@@ -48,7 +48,7 @@ The criteria and how they are measured are fixed in
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 186, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses) | Not yet |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), none fails; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
-| No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The fuzz tests pass in every build; the seven nightly runs are not done yet | Not measured |
+| No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The fuzz tests pass in every build; the nightly runs passed on each of the 3 nights so far (2026-10-17 to 2026-10-19) | Not yet |
 
 Most of the sv-tests gap is in chapters 7, 8, 16 and 21: dynamic arrays,
 queues, associative arrays and classes (P3), concurrent assertions (P3), and
@@ -59,11 +59,10 @@ separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-
 
 Measured on 2026-10-17, against the newest development versions of Icarus
 Verilog and Verilator built from their main branches that day. kirimasim's
-sv-tests and own-suite results were measured again on 2026-10-18, after
-slang moved to a newer commit, and did not change. On 2026-10-19 the
-repository's tests were counted again (in the dev configuration; release
-adds one, the run to the default of `--max-slot-events`), and the own
-suite's P1 population was run again, with the same result.
+sv-tests and own-suite results were measured again on 2026-10-20 at
+cd422c8, and did not change. The repository's tests were counted at the
+same commit, in the dev configuration (release adds one, the run to the
+default of `--max-slot-events`).
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
@@ -138,8 +137,8 @@ and 1,133 of the own test suite.
 - In the first table, a test that a simulator cannot build counts with its
   build step only; kirimasim stops early at an unsupported construct.
 - Versions and machine: kirimasim 8500bdc (release build) for the times;
-  its pass counts were measured again at 15b76df, and the CTest row at
-  ff8c53d; Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
+  its pass counts and the CTest row were measured again at cd422c8;
+  Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
   8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple clang 21.
 
 <details>
@@ -147,7 +146,7 @@ and 1,133 of the own test suite.
 
 | Kind | Tests | What they check |
 | --- | --- | --- |
-| Unit tests (GoogleTest) | 165 | SIR and its verifier (61), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
+| Unit tests (GoogleTest) | 165 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (8), time scales (7), UDP tables (4), counters (4), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
 | `tests/suite/` | 698 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (279), scheduling (192), values (75), hierarchy (51), continuous assignments (39), illegal designs (35), nets (23), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
 | Tools | 91 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, and the benchmark designs still run |
@@ -236,10 +235,10 @@ a checksum; all three simulators print the same.
 
 | Design | What it does | `+n=` | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 4.53 s | 7.97 s | 0.16 s |
-| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 10.69 s | 18.69 s | 0.16 s |
-| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 3.46 s | 4.93 s | 1.76 s |
-| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.33 s | 4.14 s | 0.87 s |
+| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 5.86 s | 7.97 s | 0.16 s |
+| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 13.85 s | 18.69 s | 0.16 s |
+| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 4.17 s | 4.93 s | 1.76 s |
+| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.95 s | 4.14 s | 0.87 s |
 
 - The times are of the simulation only: the median of five runs with the
   count, less the median of five runs with `+n=1`. Starting the program,
@@ -253,12 +252,15 @@ a checksum; all three simulators print the same.
   counterpart to Verilator is tier 2, C++ generation, in P2; kirimasim has
   had no speed work yet. Verilator's lead is smallest where many processes
   wait (`proc_wait`, `fork_join`).
-- Memory: a run used at most 10 MiB with kirimasim, 6 MiB with Icarus and
+- Memory: a run used at most 11 MiB with kirimasim, 6 MiB with Icarus and
   2 MiB with Verilator. Before 072d0c2, which releases the records of
   finished processes (SCHEDULER_SPEC.md 10.8), kirimasim kept them all and
   used 4,947 MiB on `fork_join`.
 - The versions and the machine are the same as in the test results above,
-  but kirimasim's column was measured again at 394717f, after 072d0c2.
+  but kirimasim's column was measured again on 2026-10-20 at cd422c8. It
+  is 20 to 31% slower than at 394717f (4.53, 10.69, 3.46 and 2.33 s): the
+  two builds, run one after the other on the same machine, differ as much,
+  so the cause is in the changes since then; which ones is not confirmed.
   `tools/bench.py` repeats the measurement; `--n` and `--runs` make it
   quick.
 
@@ -424,7 +426,8 @@ Options available now:
 Exit codes: 0 for `$finish`, `$stop` or no more events; 1 for `$fatal`; 2
 for an error in the input, including an unsupported construct; 3 for an
 internal error; 4 when `--max-time` is reached; 5 when a zero-time limit is
-reached. The full command line is in [docs/spec/CLI.md](docs/spec/CLI.md).
+reached; 130 when SIGINT (Ctrl-C) stops the run. The full command line is
+in [docs/spec/CLI.md](docs/spec/CLI.md).
 
 ## How it works
 
@@ -484,10 +487,10 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Contributions: specification proposals and issues only, for now
 
 kirimasim is in early development, so for now it accepts **specification
-proposals and issues only**. It does not accept code pull requests: only
-collaborators can open pull requests. Use the issue forms to propose a
-change to a specification under `docs/spec/`, report a bug, or point out a
-wrong expected value, and use
+proposals and issues only**. It does not accept code pull requests: pull
+requests are turned off for this repository for now. Use the issue forms
+to propose a change to a specification under `docs/spec/`, report a bug, or
+point out a wrong expected value, and use
 [Discussions](https://github.com/kurochan001/kirimasim/discussions) for
 questions (Q&A) and early ideas (Ideas). When the project starts accepting
 more, this section and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.
@@ -512,6 +515,8 @@ holds.
 | [docs/spec/RUNTIME_ABI.md](docs/spec/RUNTIME_ABI.md) | The boundary between the kernel and the tiers |
 | [docs/spec/PERFORMANCE.md](docs/spec/PERFORMANCE.md) | Performance goals and counters |
 | [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) | How AI is used in this project |
+| [docs/spec/CODEGEN_SPEC.md](docs/spec/CODEGEN_SPEC.md) | Tier 2, C++ generation (P2): floating point and the first rules so far |
+| [docs/spec/RANDOMIZE_SPEC.md](docs/spec/RANDOMIZE_SPEC.md), [ASSERTION_COVERAGE_SPEC.md](docs/spec/ASSERTION_COVERAGE_SPEC.md), [LIB_EXPORT_SPEC.md](docs/spec/LIB_EXPORT_SPEC.md), [VPI_SPEC.md](docs/spec/VPI_SPEC.md) | Constrained randomization, assertions and coverage, DPI library output, VPI: headings only so far |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
 | [CHANGELOG.md](CHANGELOG.md) | Changes |
 
@@ -634,8 +639,8 @@ Not yet. `$dumpvars` with VCD and FST output is planned for P1.
 ### Which platforms does it run on?
 
 It is developed on macOS (arm64), and CI builds and tests it on x86-64
-Linux; the nightly runs also build it on arm64 Linux and with GCC. Windows
-is not tested.
+Linux and arm64 macOS; the nightly runs also build it on arm64 Linux, with
+GCC 16 and with Clang 23. Windows is not tested.
 
 ### Is slang modified?
 

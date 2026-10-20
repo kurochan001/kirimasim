@@ -10,7 +10,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-18）
+## 状況（2026-10-20）
 
 > **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、動的配列、キュー、乱数化、並行アサーション、ファイルの入出力、VPI、DPI-C はまだ無く、速さのための作業もまだ始めていません。まだ対応していない構文に会うと、その位置を示して「未対応（unsupported）」のエラーで止まります。黙って読み飛ばすことはしません。
 
@@ -33,13 +33,13 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で Icarus Verilog 以上 | kirimasim 186 本、Icarus Verilog 210 本（14.0 devel、04cc493。合格条件で使う版） | まだ |
 | 自前の RTL のテストの母集団（1466 本、一覧を固定）の 90% が通る | 1451 本が通る（99.0%）。失敗は 0 本で、残りの 15 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P3 が要る 1 本を除く） | すべて通る | 達成 |
-| 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | ファジングのテストはどのビルドでも通る。夜間の 7 回はまだ | 未測定 |
+| 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | ファジングのテストはどのビルドでも通る。夜間の実行は、これまでの 3 晩（2026-10-17 から 2026-10-19）すべてで通った | まだ |
 
 sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列、キュー、連想配列、クラス（P3）、並行アサーション（P3）、ファイルの入出力と `$random`（P1、まだ）です。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
 
 ### テストの結果
 
-2026-10-17 に測りました。Icarus Verilog と Verilator は、その日の main の最新の開発版をビルドして使いました。kirimasim の sv-tests と自前のテストの結果は、slang を新しいコミットに上げたあとの 2026-10-18 に測り直し、変わりませんでした。2026-10-19 に、このリポジトリのテストを数え直し（dev の構成。release では `--max-slot-events` の既定の値まで走らせるテストが 1 本増えます）、自前のテストスイートの P1 の母集団を走らせ直して、結果は同じでした。
+2026-10-17 に測りました。Icarus Verilog と Verilator は、その日の main の最新の開発版をビルドして使いました。kirimasim の sv-tests と自前のテストの結果は、2026-10-20 に cd422c8 で測り直し、変わりませんでした。このリポジトリのテストは、同じコミットの dev の構成で数えました（release では `--max-slot-events` の既定の値まで走らせるテストが 1 本増えます）。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
@@ -79,14 +79,14 @@ sv-tests の差の大部分は 7、8、16、21 章にあります。動的配列
 - テストは短いので、実行の時間はほとんどが起動の時間です。kirimasim の実行の時間は引き算で求めていて、誤差と区別できないほど小さい値です。`--dump-sir` は SIR の文字も出すので、引き算の結果は小さめに出ます。
 - この機械では、ビルドしたばかりのプログラムを初めて起動すると約 0.2 秒かかり、同じファイルの 2 回目の起動は 0.01 秒未満でした（Icarus が作ったファイル 3 つで試しました。macOS がその時間を何に使うのかは未確認）。sv-tests の Icarus の実行は、道具がコンパイルしたファイルを直接起動するので、この初めての起動です。自前のテストスイートの道具は、`vvp` にファイルを渡して起動します。
 - 最初の表では、ビルドできなかったテストは準備の時間だけを数えます。kirimasim は、未対応の構文に会うと早く止まります。
-- 版と機械：kirimasim 8500bdc（release ビルド。時間はこの版。合格の本数は 15b76df で、CTest の行は ff8c53d で測り直した）、Icarus Verilog 14.0（devel）f190dbb、Verilator 5.053 devel 8668340。Apple M5 Max（18 コア）、メモリ 128 GB、macOS 27.0.1、Apple clang 21。
+- 版と機械：kirimasim 8500bdc（release ビルド。時間はこの版。合格の本数と CTest の行は cd422c8 で測り直した）、Icarus Verilog 14.0（devel）f190dbb、Verilator 5.053 devel 8668340。Apple M5 Max（18 コア）、メモリ 128 GB、macOS 27.0.1、Apple clang 21。
 
 <details>
 <summary>このリポジトリのテストの種類ごとの内訳</summary>
 
 | 種類 | 本数 | 確かめていること |
 | --- | --- | --- |
-| ユニットテスト（GoogleTest） | 165 | SIR とその検証器（61）、参照モデルと突き合わせるスケジューラ（26）、`valsem`（14）、出力の書式（13）、強さ（9）、入力の読み取り（8）、時間の単位（7）、UDP の表（4）、カウンタ（4）、カーネルの速い演算と `valsem` の突き合わせ：1 語（6）と任意の幅（6）など |
+| ユニットテスト（GoogleTest） | 165 | SIR とその検証器（63）、参照モデルと突き合わせるスケジューラ（26）、`valsem`（14）、出力の書式（13）、強さ（9）、入力の読み取り（8）、時間の単位（7）、UDP の表（4）、カウンタ（4）、カーネルの速い演算と `valsem` の突き合わせ：1 語（6）と任意の幅（6）など |
 | `tests/suite/` | 698 | 期待する出力を持つシミュレーションのテストと、期待する誤りを持つ違法な設計。大半は `tools/` の生成器が作る。手続き（279）、スケジューリング（192）、値（75）、階層（51）、連続代入（39）、違法な設計（35）、ネット（23）など |
 | `tests/dump_sir/` | 29 | front が作る中間表現 |
 | 道具 | 91 | 生成器がリポジトリのファイルを作り直せること、テストを判定する道具の陰性対照、ベンチマークの設計が動くこと |
@@ -167,15 +167,15 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 | 設計 | 内容 | `+n=` | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 32 ビットの算術をする `always_comb` の 8 段。入力は時刻ごとに変わる | 3,000,000 | 4.53 秒 | 7.97 秒 | 0.16 秒 |
-| `nba_shift` | `always_ff` の 64 段のシフトレジスタと 16 個の累算器。すべてノンブロッキング | 1,000,000 | 10.69 秒 | 18.69 秒 | 0.16 秒 |
-| `proc_wait` | `#` で待つ 64 個のプロセスと、名前付きイベントを待つ 64 個のプロセス | 1,000,000 | 3.46 秒 | 4.93 秒 | 1.76 秒 |
-| `fork_join` | 4 つの枝の fork と join を繰り返す。`#`、`->`、`@` を使う | 4,000,000 | 2.33 秒 | 4.14 秒 | 0.87 秒 |
+| `comb_chain` | 32 ビットの算術をする `always_comb` の 8 段。入力は時刻ごとに変わる | 3,000,000 | 5.86 秒 | 7.97 秒 | 0.16 秒 |
+| `nba_shift` | `always_ff` の 64 段のシフトレジスタと 16 個の累算器。すべてノンブロッキング | 1,000,000 | 13.85 秒 | 18.69 秒 | 0.16 秒 |
+| `proc_wait` | `#` で待つ 64 個のプロセスと、名前付きイベントを待つ 64 個のプロセス | 1,000,000 | 4.17 秒 | 4.93 秒 | 1.76 秒 |
+| `fork_join` | 4 つの枝の fork と join を繰り返す。`#`、`->`、`@` を使う | 4,000,000 | 2.95 秒 | 4.14 秒 | 0.87 秒 |
 
 - 時間はシミュレーションだけのものです。回数を決めた実行 5 回の中央値から、`+n=1` の実行 5 回の中央値を引きました。プログラムの起動、設計の読み込み、kirimasim のフロントエンドは両方の実行に入るので消えます（`+n=1` の実行は 3〜8 ミリ秒）。測る前にどのプログラムも 1 回起動したので、ビルドしたばかりのプログラムの初めての起動の時間も入りません。ビルドの時間も入りません（iverilog は設計ごとに 0.01 秒、Verilator は並列のビルドで 1.4 秒）。
 - kirimasim と Icarus Verilog は設計を 4 値のままインタプリタで実行し、Verilator は C++ にコンパイルし、2 値で動きます。kirimasim で Verilator に当たるのは P2 の第 2 層（C++ の生成）で、kirimasim は速さのための作業をまだしていません。Verilator との差は、多くのプロセスが待つ設計（`proc_wait`、`fork_join`）でいちばん小さくなりました。
-- メモリ：1 回の実行で使った量は、kirimasim が 10 MiB、Icarus が 6 MiB、Verilator が 2 MiB 以下でした。終わったプロセスの記録を解放するようにした 072d0c2（SCHEDULER_SPEC.md の 10.8 節）より前は、kirimasim が記録をすべて残していて、`fork_join` で 4,947 MiB を使っていました。
-- 版と機械は、上のテストの結果と同じです。ただし kirimasim の列は、072d0c2 の後の 394717f で測り直しました。`tools/bench.py` で測り直せます。`--n` と `--runs` で短くできます。
+- メモリ：1 回の実行で使った量は、kirimasim が 11 MiB、Icarus が 6 MiB、Verilator が 2 MiB 以下でした。終わったプロセスの記録を解放するようにした 072d0c2（SCHEDULER_SPEC.md の 10.8 節）より前は、kirimasim が記録をすべて残していて、`fork_join` で 4,947 MiB を使っていました。
+- 版と機械は、上のテストの結果と同じです。ただし kirimasim の列は、2026-10-20 に cd422c8 で測り直しました。394717f のときより 20〜31% 遅くなっています（4.53、10.69、3.46、2.33 秒）。2 つのビルドを同じ機械で続けて走らせても同じだけ違うので、原因はその後の変更にあります。どの変更かは未確認です。`tools/bench.py` で測り直せます。`--n` と `--runs` で短くできます。
 
 ### できること
 
@@ -290,7 +290,7 @@ kirimasim: info: finish at 52 ns
 | `--stats=json` | 実行の回数のカウンタを JSON で出す |
 | `+<名前>[=<値>]` | `$test$plusargs` と `$value$plusargs` のためのプラスアーグ |
 
-終了コード：0 は `$finish`、`$stop`、事象が尽きた。1 は `$fatal`。2 は入力の誤り（未対応の構文を含む）。3 は内部エラー。4 は `--max-time` に達した。5 は時刻が進まない実行の上限に達した。コマンドラインのすべては [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) にあります。
+終了コード：0 は `$finish`、`$stop`、事象が尽きた。1 は `$fatal`。2 は入力の誤り（未対応の構文を含む）。3 は内部エラー。4 は `--max-time` に達した。5 は時刻が進まない実行の上限に達した。130 は SIGINT（Ctrl-C）で止めた。コマンドラインのすべては [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) にあります。
 
 ## 仕組み
 
@@ -330,7 +330,7 @@ flowchart TD
 
 ## 貢献：今は仕様の提案と Issue だけを受け付けています
 
-kirimasim は開発の初期にあるため、今は**仕様の提案と Issue だけ**を受け付けています。コードの PR は受け付けていません（PR を作れるのは協力者だけという設定にしています）。`docs/spec/` の仕様書への提案、不具合の報告、期待値の誤りの指摘には Issue のフォームを、質問（Q&A）とまだ形になっていない案（Ideas）には [Discussions](https://github.com/kurochan001/kirimasim/discussions) を使ってください。受け付けを広げるときは、この節と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) でお知らせします。
+kirimasim は開発の初期にあるため、今は**仕様の提案と Issue だけ**を受け付けています。コードの PR は受け付けていません（今はこのリポジトリの PR の機能を止めています）。`docs/spec/` の仕様書への提案、不具合の報告、期待値の誤りの指摘には Issue のフォームを、質問（Q&A）とまだ形になっていない案（Ideas）には [Discussions](https://github.com/kurochan001/kirimasim/discussions) を使ってください。受け付けを広げるときは、この節と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) でお知らせします。
 
 ## 文書
 
@@ -349,6 +349,8 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | [docs/spec/RUNTIME_ABI.ja.md](docs/spec/RUNTIME_ABI.ja.md) | カーネルと実行層の境界 |
 | [docs/spec/PERFORMANCE.ja.md](docs/spec/PERFORMANCE.ja.md) | 性能の目標と回数のカウンタ |
 | [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) | このプロジェクトでの AI の使い方 |
+| [docs/spec/CODEGEN_SPEC.ja.md](docs/spec/CODEGEN_SPEC.ja.md) | 第 2 層、C++ の生成（P2）。今は浮動小数点と最初の決まりだけ |
+| [docs/spec/RANDOMIZE_SPEC.ja.md](docs/spec/RANDOMIZE_SPEC.ja.md)、[ASSERTION_COVERAGE_SPEC.ja.md](docs/spec/ASSERTION_COVERAGE_SPEC.ja.md)、[LIB_EXPORT_SPEC.ja.md](docs/spec/LIB_EXPORT_SPEC.ja.md)、[VPI_SPEC.ja.md](docs/spec/VPI_SPEC.ja.md) | 制約付き乱数、アサーションとカバレッジ、DPI ライブラリの出力、VPI。今は見出しだけ |
 | [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) | 貢献の方法 |
 | [CHANGELOG.md](CHANGELOG.md) | 変更の記録（英語） |
 
@@ -453,7 +455,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ### どの環境で動きますか？
 
-macOS（arm64）で開発し、CI で x86-64 の Linux でビルドとテストをしています。夜間の CI では、arm64 の Linux と GCC でもビルドします。Windows は試していません。
+macOS（arm64）で開発し、CI で x86-64 の Linux と arm64 の macOS でビルドとテストをしています。夜間の CI では、arm64 の Linux、GCC 16、Clang 23 でもビルドします。Windows は試していません。
 
 ### slang に手を加えていますか？
 
