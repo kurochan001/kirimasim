@@ -1,36 +1,76 @@
-file_not_open.sv:25:16: warning: $fdisplay: file descriptor 32'h80000003 names a file that is not open; nothing is written there
-file_not_open.sv:26:16: warning: $fwrite: file descriptor 32'h80000003 names a file that is not open; nothing is written there
-file_not_open.sv:27:16: warning: $fstrobe: file descriptor 32'h80000003 names a file that is not open; nothing is written there
-file_not_open.sv:28:16: warning: $fmonitor: file descriptor 32'h80000003 names a file that is not open; nothing is written there
-file_not_open.sv:29:16: warning: $fclose: file descriptor 32'h80000003 names a file that is not open
-file_not_open.sv:30:16: warning: $fflush: file descriptor 32'h80000003 names a file that is not open
-file_not_open.sv:31:20: warning: $fgets: file descriptor 32'h80000003 names a file that is not open
-file_not_open.sv:32:16: warning: $fdisplay: file descriptor 32'h80000009 names a file that is not open; nothing is written there
-file_not_open.sv:33:16: warning: $fwrite: file descriptor 32'h80000009 names a file that is not open; nothing is written there
-file_not_open.sv:34:16: warning: $fstrobe: file descriptor 32'h80000009 names a file that is not open; nothing is written there
-file_not_open.sv:35:16: warning: $fmonitor: file descriptor 32'h80000009 names a file that is not open; nothing is written there
-file_not_open.sv:36:16: warning: $fclose: file descriptor 32'h80000009 names a file that is not open
-file_not_open.sv:37:16: warning: $fflush: file descriptor 32'h80000009 names a file that is not open
-file_not_open.sv:38:20: warning: $fgets: file descriptor 32'h80000009 names a file that is not open
-file_not_open.sv:39:16: warning: $fdisplay: the descriptor has x or z bits; nothing is written there
-file_not_open.sv:40:16: warning: $fwrite: the descriptor has x or z bits; nothing is written there
-file_not_open.sv:41:16: warning: $fstrobe: the descriptor has x or z bits; nothing is written there
-file_not_open.sv:42:16: warning: $fmonitor: the descriptor has x or z bits; nothing is written there
-file_not_open.sv:43:16: warning: $fclose: the descriptor has x or z bits
-file_not_open.sv:44:16: warning: $fflush: the descriptor has x or z bits
-file_not_open.sv:45:20: warning: $fgets: the descriptor has x or z bits
-file_not_open.sv:46:16: warning: $fdisplay: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
-file_not_open.sv:47:16: warning: $fwrite: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
-file_not_open.sv:48:16: warning: $fstrobe: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
-file_not_open.sv:49:16: warning: $fmonitor: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
-file_not_open.sv:50:16: warning: $fclose: multichannel descriptor 32'h00000004 names a file that is not open
-file_not_open.sv:51:16: warning: $fflush: multichannel descriptor 32'h00000004 names a file that is not open
-file_not_open.sv:52:20: warning: $fgets: multichannel descriptor 32'h00000004 names a file that is not open
-file_not_open.sv:53:16: warning: $fdisplay: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
-file_not_open.sv:54:16: warning: $fwrite: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
-file_not_open.sv:55:16: warning: $fstrobe: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
-file_not_open.sv:56:16: warning: $fmonitor: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
-file_not_open.sv:57:16: warning: $fclose: multichannel descriptor 32'h00000000 names a file that is not open
-file_not_open.sv:58:16: warning: $fflush: multichannel descriptor 32'h00000000 names a file that is not open
-file_not_open.sv:59:20: warning: $fgets: multichannel descriptor 32'h00000000 names a file that is not open
-file_not_open.sv:61:9: warning: $fopen: "rw" is not a type of Table 21-6; nothing is opened
+file_not_open.sv:26:16: warning: $fdisplay: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:27:16: warning: $fwrite: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:28:16: warning: $fstrobe: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:29:16: warning: $fmonitor: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:30:16: warning: $fclose: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:31:16: warning: $fflush: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:32:20: warning: $fgets: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:33:20: warning: $fgetc: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:34:20: warning: $ungetc: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:35:20: warning: $fscanf: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:36:20: warning: $fread: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:37:20: warning: $ftell: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:38:20: warning: $fseek: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:39:20: warning: $rewind: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:40:20: warning: $feof: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:42:16: warning: $fdisplay: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:43:16: warning: $fwrite: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:44:16: warning: $fstrobe: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:45:16: warning: $fmonitor: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:46:16: warning: $fclose: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:47:16: warning: $fflush: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:48:20: warning: $fgets: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:49:20: warning: $fgetc: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:50:20: warning: $ungetc: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:51:20: warning: $fscanf: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:52:20: warning: $fread: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:53:20: warning: $ftell: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:54:20: warning: $fseek: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:55:20: warning: $rewind: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:56:20: warning: $feof: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:58:16: warning: $fdisplay: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:59:16: warning: $fwrite: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:60:16: warning: $fstrobe: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:61:16: warning: $fmonitor: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:62:16: warning: $fclose: the descriptor has x or z bits
+file_not_open.sv:63:16: warning: $fflush: the descriptor has x or z bits
+file_not_open.sv:64:20: warning: $fgets: the descriptor has x or z bits
+file_not_open.sv:65:20: warning: $fgetc: the descriptor has x or z bits
+file_not_open.sv:66:20: warning: $ungetc: the descriptor has x or z bits
+file_not_open.sv:67:20: warning: $fscanf: the descriptor has x or z bits
+file_not_open.sv:68:20: warning: $fread: the descriptor has x or z bits
+file_not_open.sv:69:20: warning: $ftell: the descriptor has x or z bits
+file_not_open.sv:70:20: warning: $fseek: the descriptor has x or z bits
+file_not_open.sv:71:20: warning: $rewind: the descriptor has x or z bits
+file_not_open.sv:72:20: warning: $feof: the descriptor has x or z bits
+file_not_open.sv:74:16: warning: $fdisplay: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:75:16: warning: $fwrite: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:76:16: warning: $fstrobe: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:77:16: warning: $fmonitor: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:78:16: warning: $fclose: multichannel descriptor 32'h00000004 names a file that is not open
+file_not_open.sv:79:16: warning: $fflush: multichannel descriptor 32'h00000004 names a file that is not open
+file_not_open.sv:80:20: warning: $fgets: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:81:20: warning: $fgetc: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:82:20: warning: $ungetc: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:83:20: warning: $fscanf: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:84:20: warning: $fread: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:85:20: warning: $ftell: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:86:20: warning: $fseek: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:87:20: warning: $rewind: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:88:20: warning: $feof: multichannel descriptor 32'h00000004 is not a file descriptor, which input takes
+file_not_open.sv:90:16: warning: $fdisplay: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:91:16: warning: $fwrite: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:92:16: warning: $fstrobe: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:93:16: warning: $fmonitor: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:94:16: warning: $fclose: multichannel descriptor 32'h00000000 names a file that is not open
+file_not_open.sv:95:16: warning: $fflush: multichannel descriptor 32'h00000000 names a file that is not open
+file_not_open.sv:96:20: warning: $fgets: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:97:20: warning: $fgetc: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:98:20: warning: $ungetc: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:99:20: warning: $fscanf: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:100:20: warning: $fread: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:101:20: warning: $ftell: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:102:20: warning: $fseek: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:103:20: warning: $rewind: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:104:20: warning: $feof: multichannel descriptor 32'h00000000 is not a file descriptor, which input takes
+file_not_open.sv:107:9: warning: $fopen: "rw" is not a type of Table 21-6; nothing is opened
