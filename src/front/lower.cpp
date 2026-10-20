@@ -1819,7 +1819,9 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
     // A UDP instance is a cont process (SIR_SPEC.md 3.5, 5.5). A sequential
     // one keeps its state and the inputs it last saw in slots of its own,
     // <instance>.$state and <instance>.$prev; the state starts at the
-    // initial value before time 0 (VALUE_SEMANTICS.md 5.9).
+    // initial value before time 0 (VALUE_SEMANTICS.md 5.9). With a delay,
+    // <instance>.$started says whether the output has the initial value
+    // yet: only the changes after it take the delay (29.7).
     const ast::PrimitiveSymbol& prim = g.primitiveType;
     // slang leaves an empty connection out of the list and only warns
     // (-Wudp-port-empty); a wrong count it reports as an error, and then
@@ -1840,19 +1842,20 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
     const std::uint32_t n = design_.types[table].inputs;
     sir::SlotId state = sir::kNone;
     sir::SlotId prev = sir::kNone;
+    sir::SlotId started = sir::kNone;
     if (prim.isSequential) {
-        const auto slot = [&](const std::string& suffix, std::uint32_t w) {
+        const auto slot = [&](const std::string& suffix, sir::Type t) {
             sir::Slot s;
             s.name = name + suffix;
-            s.type = sir::u4(w);
+            s.type = t;
             s.instance = instance_;
             const auto id = static_cast<sir::SlotId>(design_.slots.size());
             design_.names.push_back({s.name, id});
             design_.slots.push_back(std::move(s));
             return id;
         };
-        state = slot(".$state", 1);
-        prev = slot(".$prev", n);
+        state = slot(".$state", sir::u4(1));
+        prev = slot(".$prev", sir::u4(n));
         const char init = design_.types[table].initial;
         if (init != 'x') {
             ensureStaticInit(g, sl);
@@ -1863,12 +1866,33 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
             noteWrite({state, 0, 0, 0, 0});
             staticBody_[instance_] = std::move(b_);
             b_ = std::move(saved);
+            if (g.getDelay() != nullptr) started = slot(".$started", sir::u2(1));
         }
     }
     lowerCont(
         name, sl, g,
         [&] {
             const sir::Type bit = sir::u4(1);
+            if (started != sir::kNone) {
+                // The first time it runs, the instance puts the initial
+                // value on its output without the delay (29.7).
+                const Val done = emit(sir::Op::Load, sir::u2(1), {sir::Operand::slot(started)}, sl);
+                const sir::BlockId first = newBlock();
+                const sir::BlockId rest = newBlock();
+                terminate(sir::Op::BrIf,
+                          {done.op, sir::Operand::block(rest), sir::Operand::block(first)}, sl);
+                setBlock(first);
+                const Val init = emit(sir::Op::Load, bit, {sir::Operand::slot(state)}, sl);
+                const Place p = placeOf(*outputPlace(conns[0]), sl);
+                const auto delays = std::exchange(b_.delays, std::nullopt);
+                storePlace(p, coerce(init, p.type, sl), false, sl);
+                b_.delays = delays;
+                emitVoid(sir::Op::Store, {sir::Operand::slot(started), constant(sir::u2(1), 1).op},
+                         sl);
+                noteWrite({started, 0, 0, 0, 0});
+                terminate(sir::Op::Br, {sir::Operand::block(rest)}, sl);
+                setBlock(rest);
+            }
             std::vector<Val> in;
             in.reserve(n);
             for (std::uint32_t i = 0; i < n; ++i)

@@ -911,6 +911,13 @@ MUTANTS = [
     ("front: the elements of an array of gates or UDPs share one name", "src/front/lower.cpp",
      "    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size(); ++i)",
      "    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size() && false; ++i)"),
+    ("front: a delayed sequential UDP waits its delay to show its initial value",
+     "src/front/lower.cpp",
+     "if (g.getDelay() != nullptr) started = slot(\".$started\", sir::u2(1));",
+     "if (g.getDelay() != nullptr && false) started = slot(\".$started\", sir::u2(1));"),
+    ("front: the initial value of a delayed sequential UDP takes the delay", "src/front/lower.cpp",
+     "const auto delays = std::exchange(b_.delays, std::nullopt);",
+     "const auto delays = b_.delays;"),
 ]
 
 

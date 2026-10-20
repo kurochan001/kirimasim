@@ -90,6 +90,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A sequential UDP instance with a delay has the value of its `initial`
+  statement on its output from time 0, as one without a delay does; only
+  the later changes take the delay (29.7, VALUE_SEMANTICS.md 5.9). It was
+  x until the delay had passed (#26).
 - An array of sequential UDP instances runs: its elements got one name
   between them, so the slots of their states clashed and kirimasim stopped
   with an internal error (28.3.6). Each element is now named with its
