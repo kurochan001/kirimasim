@@ -94,6 +94,10 @@ own. CONTRIBUTING.md says what goes in this file.
   than 64 bits ran, every instruction looked at the widths of its operands
   to choose the wide path, which made the bench designs 8 to 22% slower;
   the choice is now made once, when the design is loaded (#28).
+- Tier 1 runs 4 to 9% faster on three of the bench designs: the check that
+  nothing is written from the Postponed region, made at each instruction,
+  is marked as the rare case it is, so that the compiler lays the common
+  path out first (#28).
 - The action of a deferred assertion is no part of the `always_comb`,
   `always_latch` or `always_ff` that runs it: several such blocks, and
   other processes, may write what their actions write, where kirimasim

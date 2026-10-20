@@ -1747,7 +1747,7 @@ private:
                 }
                 // Nothing may be written or scheduled from the Postponed
                 // region (4.4.2.9, SCHEDULER_SPEC.md 2.2): a run-time error.
-                if (sched_.inPostponed() && changesState(in)) {
+                if (sched_.inPostponed() && changesState(in)) [[unlikely]] {
                     designError(f, in, "a write or an event in the Postponed region");
                     return Exit::Error;
                 }
