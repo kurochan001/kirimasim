@@ -2,7 +2,9 @@
 """Checks kirimasim's command line: options, exit codes and messages (CLI.md).
 
 Each case runs kirimasim with some arguments on a small design and checks
-the exit code, and text that stdout or stderr must contain.
+the exit code, and text that stdout or stderr must contain. A run that
+writes more than 16 MiB to stdout or stderr is stopped and fails
+(tools/bounded_run.py).
 """
 
 import argparse
@@ -18,6 +20,9 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent.parent / "tools"))
+import bounded_run  # noqa: E402
+
 DESIGN = str(HERE / "display_finish.sv")
 DELAYS = str(HERE / "delays.sv")
 FINAL = str(HERE / "final.sv")
@@ -160,15 +165,27 @@ def run_interrupt(kirimasim: str, case: dict) -> list[str]:
     out: list[str] = []
     err: list[str] = []
     lines: queue.Queue = queue.Queue()
+    over: list[str] = []
 
-    def read_err():
-        for line in proc.stderr:
-            err.append(line)
-            lines.put(line)
-        lines.put(None)
+    def read(stream, name: str, keep: list[str], tell: bool) -> None:
+        # At most bounded_run.LIMIT characters, as bounded_run.run keeps.
+        size = 0
+        while line := stream.readline(bounded_run.LIMIT + 1 - size):
+            size += len(line)
+            if size > bounded_run.LIMIT:
+                over.append(name)
+                proc.kill()
+                break
+            keep.append(line)
+            if tell:
+                lines.put(line)
+        if tell:
+            lines.put(None)
 
-    readers = [threading.Thread(target=lambda: out.extend(proc.stdout), daemon=True),
-               threading.Thread(target=read_err, daemon=True)]
+    readers = [threading.Thread(target=read, args=(proc.stdout, "stdout", out, False),
+                                daemon=True),
+               threading.Thread(target=read, args=(proc.stderr, "stderr", err, True),
+                                daemon=True)]
     for r in readers:
         r.start()
     problems = []
@@ -194,6 +211,8 @@ def run_interrupt(kirimasim: str, case: dict) -> list[str]:
         problems.append("did not end")
     for r in readers:
         r.join(timeout=10)
+    if over:
+        return [f"wrote more than {bounded_run.LIMIT >> 20} MiB to {over[0]}; it was stopped"]
     if proc.returncode != 130:
         problems.append(f"exit code {proc.returncode}, expected 130")
     if "".join(out) != case["stdout"]:
@@ -223,8 +242,7 @@ def main() -> int:
         # The default stops the loop of processes that wake each other
         # through @(a) and @(b) (tools/gen_zero_time_loop_matrix.py).
         rel = str((ZERO_TIME_LOOPS / "subscription.sv").relative_to(HERE))
-        proc = subprocess.run([args.kirimasim, rel], cwd=HERE, capture_output=True, text=True,
-                              check=False)
+        proc = bounded_run.run([args.kirimasim, rel], cwd=HERE)
         want = ("kirimasim: error: time did not advance: 100000000 events ran in one time slot"
                 " (--max-slot-events=100000000)\nkirimasim: info: zero_time_limit at 1 ns\n")
         if (proc.returncode != 5 or proc.stdout != "started\nfinal ran\n" or
@@ -237,8 +255,7 @@ def main() -> int:
     failures = 0
     cases = [(c, None) for c in CASES] + [(c, HERE) for c in CWD_CASES]
     for (argv, code, out, err), cwd in cases:
-        proc = subprocess.run([args.kirimasim, *argv], cwd=cwd, capture_output=True, text=True,
-                              check=False)
+        proc = bounded_run.run([args.kirimasim, *argv], cwd=cwd)
         problems = []
         if proc.returncode != code:
             problems.append(f"exit code {proc.returncode}, expected {code}")
@@ -256,8 +273,7 @@ def main() -> int:
 
     # --stats=json puts one JSON object on the last line of stdout, with the
     # end reason as text (PERFORMANCE.md 3.1).
-    proc = subprocess.run([args.kirimasim, "--stats=json", DESIGN], capture_output=True,
-                          text=True, check=False)
+    proc = bounded_run.run([args.kirimasim, "--stats=json", DESIGN])
     try:
         stats = json.loads(proc.stdout.splitlines()[-1])
         if stats.get("sim.end_reason") != "finish" or stats.get("proc.wakeups") != 1:
@@ -269,8 +285,7 @@ def main() -> int:
     # $finish and $stop end the run at 5ns with exit code 0; final runs and
     # nothing scheduled later does (SCHEDULER_SPEC.md 16.2, 9.2.3).
     for plusarg, reason, level, line_no in END_CASES:
-        proc = subprocess.run([args.kirimasim, "--stats=json", END_TASKS, f"+{plusarg}"],
-                              capture_output=True, text=True, check=False)
+        proc = bounded_run.run([args.kirimasim, "--stats=json", END_TASKS, f"+{plusarg}"])
         lines = proc.stdout.splitlines()
         problems = []
         if proc.returncode != 0:
@@ -305,8 +320,7 @@ def main() -> int:
             print(f"FAIL: +{plusarg}: {'; '.join(problems)}\n{proc.stdout}{proc.stderr}",
                   file=sys.stderr)
 
-    proc = subprocess.run([args.kirimasim, VIOLATIONS], capture_output=True, text=True,
-                          check=False)
+    proc = bounded_run.run([args.kirimasim, VIOLATIONS])
     got = [line.split("/")[-1] for line in proc.stderr.splitlines() if " violation: " in line]
     if proc.returncode != 0 or proc.stdout != "h=8\n" or got != VIOLATION_LINES:
         failures += 1
@@ -315,8 +329,7 @@ def main() -> int:
     # Every program instance and anonymous program is reported as
     # unsupported, wherever it is, and nothing runs (CLI.md 5; the lines come
     # from tools/gen_program_matrix.py).
-    proc = subprocess.run([args.kirimasim, PROGRAM_MATRIX.name], cwd=HERE, capture_output=True,
-                          text=True, check=False)
+    proc = bounded_run.run([args.kirimasim, PROGRAM_MATRIX.name], cwd=HERE)
     want = PROGRAM_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
     got = [line for line in proc.stderr.splitlines() if ": error: " in line]
     if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
@@ -330,8 +343,7 @@ def main() -> int:
     got = []
     for sv in sorted(UNSUPPORTED_MATRIX.glob("*.sv")):
         rel = str(sv.relative_to(HERE))
-        proc = subprocess.run([args.kirimasim, rel], cwd=HERE, capture_output=True, text=True,
-                              check=False)
+        proc = bounded_run.run([args.kirimasim, rel], cwd=HERE)
         got += [line for line in proc.stderr.splitlines() if ": error: " in line]
         if proc.returncode != 2 or proc.stdout != "":
             failures += 1
@@ -357,8 +369,7 @@ def main() -> int:
             " (--max-slot-events=1000)\nkirimasim: info: zero_time_limit at 1 ns\n")
     for sv in loops:
         rel = str(sv.relative_to(HERE))
-        proc = subprocess.run([args.kirimasim, "--max-slot-events=1000", rel], cwd=HERE,
-                              capture_output=True, text=True, check=False)
+        proc = bounded_run.run([args.kirimasim, "--max-slot-events=1000", rel], cwd=HERE)
         if (proc.returncode != 5 or proc.stdout != "started\nfinal ran\n" or
                 not proc.stderr.endswith(want)):
             failures += 1
@@ -369,8 +380,7 @@ def main() -> int:
     # (SYSTEM_TASKS.md 3.12; the files come from tools/gen_format_flag_matrix.py):
     # what they print, and one warning for each format that uses them, in
     # any order; the flags that are not supported yet stop before the run.
-    proc = subprocess.run([args.kirimasim, FLAG_MATRIX.name], cwd=HERE, capture_output=True,
-                          text=True, check=False)
+    proc = bounded_run.run([args.kirimasim, FLAG_MATRIX.name], cwd=HERE)
     want_out = FLAG_MATRIX.with_suffix(".expected").read_text(encoding="utf-8")
     want = FLAG_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
     got = [line for line in proc.stderr.splitlines() if ": warning: " in line]
@@ -378,8 +388,7 @@ def main() -> int:
         failures += 1
         print(f"FAIL: format flag matrix: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
               file=sys.stderr)
-    proc = subprocess.run([args.kirimasim, FLAG_UNSUPPORTED.name], cwd=HERE, capture_output=True,
-                          text=True, check=False)
+    proc = bounded_run.run([args.kirimasim, FLAG_UNSUPPORTED.name], cwd=HERE)
     want = FLAG_UNSUPPORTED.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
     got = [line for line in proc.stderr.splitlines() if ": error: " in line]
     if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
@@ -390,8 +399,7 @@ def main() -> int:
     # A system task or function whose first argument is a string is reported
     # as one, not as a string method (the files come from
     # tools/gen_builtin_call_matrix.py).
-    proc = subprocess.run([args.kirimasim, BUILTIN_CALLS.name], cwd=HERE, capture_output=True,
-                          text=True, check=False)
+    proc = bounded_run.run([args.kirimasim, BUILTIN_CALLS.name], cwd=HERE)
     want = BUILTIN_CALLS.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
     got = [line for line in proc.stderr.splitlines() if ": error: " in line]
     if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
@@ -407,8 +415,7 @@ def main() -> int:
     # always_comb, always_latch or always_ff writes (SCHEDULER_SPEC.md 6.4;
     # tools/gen_task_write_matrix.py, tools/gen_deferred_write_matrix.py).
     for design in ERROR_DESIGNS:
-        proc = subprocess.run([args.kirimasim, design.name], cwd=HERE, capture_output=True,
-                              text=True, check=False)
+        proc = bounded_run.run([args.kirimasim, design.name], cwd=HERE)
         want = design.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
         got = [line for line in proc.stderr.splitlines()
                if ": error: " in line or ": note: " in line]
@@ -421,8 +428,7 @@ def main() -> int:
     # the fork instruction, the process of each statement of a fork, and
     # the scope instructions of a named block (the files come from
     # tools/gen_block_position_matrix.py).
-    proc = subprocess.run([args.kirimasim, "--dump-sir", BLOCK_POSITIONS.name], cwd=HERE,
-                          capture_output=True, text=True, check=False)
+    proc = bounded_run.run([args.kirimasim, "--dump-sir", BLOCK_POSITIONS.name], cwd=HERE)
     got = []
     for line in proc.stdout.splitlines():
         at = line.rsplit("; ", 1)[-1]
@@ -446,8 +452,7 @@ def main() -> int:
     # many processes are made, but no more records are kept at once.
     runs = []
     for n in (4, 8):
-        proc = subprocess.run([args.kirimasim, "--stats=json", str(LIFETIME), f"+n={n}"],
-                              capture_output=True, text=True, check=False)
+        proc = bounded_run.run([args.kirimasim, "--stats=json", str(LIFETIME), f"+n={n}"])
         try:
             stats = json.loads(proc.stdout.splitlines()[-1])
             runs.append((stats["proc.created"], stats["proc.kept_peak"]))
@@ -474,4 +479,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except bounded_run.OutputLimit as e:
+        print(f"FAIL: {e}", file=sys.stderr)
+        sys.exit(1)

@@ -16,7 +16,9 @@ comment) decides what is expected:
   "unsupported" error, CLI.md 5) is reported as skipped, not as passed,
   when tests/suite/skips.txt lists it; otherwise it fails. With :timeout:,
   kirimasim must finish within that many seconds, or the test fails (CTest
-  stops any test after 300 seconds, CMakePresets.json). A listed test
+  stops any test after 300 seconds, CMakePresets.json). A run that writes
+  more than 16 MiB to standard output or standard error is stopped, and the
+  test fails (tools/bounded_run.py). A listed test
   that runs and passes fails too, until it is taken off the list. The list
   covers the tests under its own directory; any other test (the own test
   suite's, which tools/p1_population.py counts) is skipped as before.
@@ -36,6 +38,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import bounded_run
 from suite_header import read_header
 from suite_skips import SKIPS, read_skips, skip_name
 
@@ -146,18 +149,15 @@ def main() -> int:
     except subprocess.TimeoutExpired:
         print(f"FAIL: kirimasim did not finish within {timeout} s (:timeout:)", file=sys.stderr)
         return 1
+    except bounded_run.OutputLimit as e:
+        print(f"FAIL: {e}", file=sys.stderr)
+        return 1
 
 
 def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int | None) -> int:
     """Parses, and runs a simulation test, and compares what it expects."""
     tops = [f"--top={name}" for name in meta.get("top_module", "").split()]
-    proc = subprocess.run(
-        [args.kirimasim, "parse", *tops, str(args.test)],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=timeout,
-    )
+    proc = bounded_run.run([args.kirimasim, "parse", *tops, str(args.test)], timeout=timeout)
 
     if "should_fail_because" in meta:
         return check_failure(args, meta, proc)
@@ -168,13 +168,7 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     if "simulation" not in meta.get("type", "").split():
         return 0
 
-    run = subprocess.run(
-        [args.kirimasim, *tops, str(args.test)],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=timeout,
-    )
+    run = bounded_run.run([args.kirimasim, *tops, str(args.test)], timeout=timeout)
     if run.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in run.stderr:
         if listed or not covered:
             print("SKIP: uses a construct that is not supported yet", file=sys.stderr)

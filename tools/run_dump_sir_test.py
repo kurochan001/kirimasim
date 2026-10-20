@@ -4,13 +4,16 @@
 The test runs in the directory of the .sv file and passes only the file
 name, so that the source paths in the SIR text do not depend on where the
 repository is checked out. The output must equal <name>.expected exactly.
+A run that writes more than 16 MiB to stdout or stderr is stopped and
+fails (tools/bounded_run.py).
 """
 
 import argparse
 import difflib
-import subprocess
 import sys
 from pathlib import Path
+
+import bounded_run
 
 
 def main() -> int:
@@ -20,13 +23,12 @@ def main() -> int:
     args = ap.parse_args()
 
     expected = args.test.with_suffix(".expected").read_text(encoding="utf-8")
-    proc = subprocess.run(
-        [args.kirimasim, "--dump-sir", args.test.name],
-        cwd=args.test.parent,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        proc = bounded_run.run([args.kirimasim, "--dump-sir", args.test.name],
+                               cwd=args.test.parent)
+    except bounded_run.OutputLimit as e:
+        print(f"FAIL: {e}", file=sys.stderr)
+        return 1
     if proc.returncode != 0:
         print(f"FAIL: exit code {proc.returncode}", file=sys.stderr)
         print(proc.stderr, file=sys.stderr)

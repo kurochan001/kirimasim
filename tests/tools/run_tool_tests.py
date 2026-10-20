@@ -76,6 +76,39 @@ def timeout_test(kirimasim: str, tmp: Path) -> None:
         expect_code("run_suite_test timeout " + name, run + [str(f)], code)
 
 
+def output_limit_test(tmp: Path) -> None:
+    """run_suite_test.py on a kirimasim that writes without end
+    (tools/bounded_run.py): the run is stopped past the limit and the test
+    fails, on either stream, in seconds; next to a kirimasim that writes
+    the expected output, which passes."""
+    test = tmp / "limit.sv"
+    test.write_text("/*\n:name: limit\n:description: d\n:tags: t\n:type: simulation\n"
+                    ":lrm: 1800-2023 21.2\n:oracle: spec\n:spec_check: ai\n:fourstate: no\n"
+                    ":nondeterministic: no\n:expected_stdout: hello\n*/\nmodule top;\n"
+                    "endmodule\n", encoding="utf-8")
+    for name, body, code, message in [
+        ("expected", "sys.stdout.write('hello\\n')", 0, ""),
+        ("stdout", "while True: sys.stdout.write('x' * 63 + '\\n')", 1,
+         "wrote more than 16 MiB to standard output"),
+        ("stderr", "while True: sys.stderr.write('x' * 63 + '\\n')", 1,
+         "wrote more than 16 MiB to standard error"),
+    ]:
+        fake = tmp / f"fake_{name}"
+        fake.write_text(f"#!{sys.executable}\nimport sys\nif sys.argv[1] != 'parse':\n"
+                        f"    {body}\n", encoding="utf-8")
+        fake.chmod(0o755)
+        try:
+            p = subprocess.run([sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim",
+                                str(fake), str(test)], capture_output=True, text=True,
+                               check=False, timeout=120)
+        except subprocess.TimeoutExpired:
+            failures.append(f"run_suite_test output limit {name}: did not end in 120 s")
+            continue
+        if p.returncode != code or message not in p.stderr:
+            failures.append(f"run_suite_test output limit {name}: exit code {p.returncode}, "
+                            f"expected {code} and {message!r}\n{p.stderr[-2000:]}")
+
+
 def suite_test(kirimasim: str, tmp: Path) -> None:
     """run_suite_test.py on a copy of values/unique_case_violation."""
     src = ROOT / "tests/suite/values/unique_case_violation"
@@ -450,6 +483,7 @@ def main() -> int:
         suite_test(args.kirimasim, tmp)
         skips_test(args.kirimasim, tmp)
         timeout_test(args.kirimasim, tmp)
+        output_limit_test(tmp)
         severity_test(args.kirimasim, tmp)
         banned(tmp)
         banned_kernel(tmp)

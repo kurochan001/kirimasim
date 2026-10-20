@@ -13,7 +13,8 @@ the last line of standard output. A header with problems
 expected value (any increase from an expected 0 counts), when a text
 counter such as sim.end_reason differs, when an expected counter is
 missing, or when the run reports a counter that expected.json does not
-list yet.
+list yet. A run that writes more than 16 MiB to stdout or stderr is
+stopped and fails the check (tools/bounded_run.py).
 
 Counts going down never fail the check; lower the expected value in a
 separate change, with the reason in the commit message.
@@ -21,10 +22,10 @@ separate change, with the reason in the commit message.
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
+import bounded_run
 from suite_header import read_header
 
 THRESHOLD_NUM, THRESHOLD_DEN = 11, 10  # fail at >= 110% of the expected count
@@ -54,7 +55,11 @@ def main() -> int:
         simulation = "simulation" in meta["type"].split()
         if not simulation:
             cmd.append("parse")
-        proc = subprocess.run(cmd + [str(path)], capture_output=True, text=True, check=False)
+        try:
+            proc = bounded_run.run(cmd + [str(path)])
+        except bounded_run.OutputLimit as e:
+            failures.append(f"{test}: {e}")
+            continue
         if simulation:
             want_exit = int(meta.get("expected_exit", "0"))
         else:
