@@ -2,7 +2,7 @@
 
 [日本語](AI_POLICY.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved).
+Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved).
 
 This document holds the rules for developing kirimasim together with AI. It restates the design specification's "policy for AI development".
 
@@ -26,6 +26,7 @@ Humans decide the following; AI only proposes.
 - The expected values of tests (for the test suite, AI drafts them against the clauses of the standard, and a human approves the procedure and the results in batches; the `:spec_check:` field of a test says whether a human checked that test itself; TEST_SUITE.md)
 - The performance budget (the expected values and thresholds of PerfCount)
 - Adding a new dependency
+- Adding global state, and adding an entry to `tools/global_state_allowlist.txt` (RUNTIME_ABI.md 9.3, 9.4)
 - Text that is published
 
 ## Rules that protect expected values

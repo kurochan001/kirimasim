@@ -2,7 +2,7 @@
 
 [日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
 
 This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
@@ -10,7 +10,7 @@ This document sets the boundary between the execution kernel (`kernel`) and tier
 
 - **Every tier registers in the same form:** a process is registered with the execution kernel as "a pointer to a resume function, and a frame". The kernel cannot tell whether what is inside is the interpreter or generated code. So tiers can be mixed process by process (SCHEDULER_SPEC.md; SIR_SPEC.md 7).
 - **The boundary is a table of C functions:** generated code is built into a shared library (`.dylib` on macOS, `.so` on Linux) that the driver loads. The boundary is expressed only by a versioned table of C functions and C structures. No C++ type (classes, templates, exceptions, RTTI) crosses the boundary.
-- **No global state:** all state is in the Context (`kernel::Context`). One process can hold several Contexts and several kirimasim libraries of different versions (the design specification's "isolation").
+- **No global state:** all state is in the Context (`kernel::Context`). One process can hold several Contexts and several kirimasim libraries of different versions (the design specification's "isolation"). The rules are in 9.
 - **No exception crosses:** errors are returned as values. Generated code uses no exceptions (the design specification's C++ rules).
 - **Prefix of the boundary's names:** the names of the boundary's C types and functions start with `kirima_`, and the names of its constants and macros with `KIRIMA_`. They are linked into the same executable as the user's design and DPI-C code, where a short prefix easily collides with other libraries, so the prefix is a longer one taken from the project's name (decided by a human, 2026-10-16).
 
@@ -138,3 +138,69 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 - (Approved 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P3; 6).
 - (Approved 2026-10-19.) `$finish` called inside a DPI-C export is marked and returned to C, and the run starts to end at the end of the SystemVerilog statement; `svLogicVecVal` arguments and the storage of open arrays are valid only during the call (P3).
 - (Approved 2026-10-19.) Only static islands with no side effects run in parallel; processes with `$display`, DPI-C, random numbers or `$finish` run on the main thread in the default order, so that results do not change with the number of threads (P4).
+
+## 9. State and Contexts (approved 2026-10-20)
+
+### 9.1 Purpose
+
+- Separate Contexts can run in one process, one after another, or at the same time on separate threads.
+- The same input gives the same output, whatever the order of the runs, whatever ran before in the same process, and whatever other Contexts run at the same time.
+- Running one simulation on several threads is decided in P4 (5, 8) and is outside this section; nothing here constrains it.
+
+### 9.2 Terms
+
+- **Context:** `kernel::Context`, the owner of the run-time state of one simulation (1). Today it holds the scheduler, the slot store, the strings, the counters (PerfCount) and the output.
+- **Global state:** a non-const variable at namespace scope, a non-const static data member, a non-const static variable in a function, a `thread_local` variable, and a function (`instance()`, `get()` and the like) that returns one of them.
+- **Immutable global data:** `constexpr` (and `constinit` const) tables and string literals. They are set before `main` and never change.
+
+### 9.3 Rules
+
+1. **No global state** in all of `src/` (front, sir, analysis, valsem, kernel, vm, codegen, driver), except what 9.4 lists.
+2. **State in arguments:** a function that uses state takes the parts it needs (the scheduler, the slot store, the strings, the counters, the state of random numbers and the like) as arguments, or is a member of an object that holds references to them. It takes the whole Context only where the whole is needed: the entries from the driver, the start of a run, the calls of resume functions across the C boundary, which get the handle of the whole Context (4), and the conversion to that handle (`toC`).
+3. **No "current Context"** is taken from a global or `thread_local` variable, except at the entries of VPI and DPI-C (9.6).
+4. A Context can be **neither copied nor moved**.
+5. **Nothing is shared between Contexts** but immutable data and the const input (the SIR of a design while no one changes it). A Context holds no reference into another Context. The exception is the flag of SIGINT (9.4), which every Context of the process sees, as a signal reaches the whole process.
+6. **One thread at a time** uses a Context.
+7. **Variables of static or thread storage duration:** non-const ones are banned, except what 9.4 lists. Const ones with dynamic initialization or a destructor that is not trivial (a `static const std::set` in a function, for example) are banned too: such a table becomes a `constexpr` one, or moves into the Context. This leaves no order of initialization or of destruction at exit to think about, and a compiler warning can check it (decided by a human on 2026-10-20, of two choices; the other allowed them, as a static variable in a function is initialized safely between threads since C++11 and does not change afterwards).
+8. **Outside inputs** (environment variables, the time of day, random seeds from outside, the locale) are read by the driver only and given to the Context when it is made, or to the run as options. The kernel, the VM and front read none of them (CLAUDE.md: no environment variables during execution).
+9. **Ending:**
+   - `$finish`, `$fatal`, reaching a limit and the like are returned as the state of the Context (the reason and level of the end that the scheduler holds). The driver holds the table from reason to exit code (CLI.md 5) and turns them into the exit code; the kernel returns the reason only (decided by a human on 2026-10-20; the table is `kernel::exitCode` today). A library embedded in another simulator (7) has no exit code.
+   - `exit`, `_Exit` and `quick_exit` are called only in the driver (now only `std::_Exit(130)` for the second SIGINT; CLI.md 5).
+   - `abort` and `std::terminate` are not called. A broken internal invariant (a bug of kirimasim) is returned as the reason internal (`Scheduler::fail`), or, outside the kernel's boundary, thrown and caught by the driver, which reports `internal error` with exit code 3 (1: no exception crosses the boundary).
+10. **The output** (the design's output and the diagnostics) goes where the Context says: the Context is given its output destinations when it is made (standard output and standard error by default).
+
+### 9.4 Exceptions
+
+Only the following are allowed. The two mutable ones are each listed in `tools/global_state_allowlist.txt` with the file, the name, the item of this list and the reason; immutable global data (9.2) needs no entry.
+
+1. `constexpr` tables (and `constinit` const ones).
+2. String literals.
+3. The one `volatile std::sig_atomic_t` flag of SIGINT, which only the driver holds (CLAUDE.md).
+4. The "current Context" at the entries of VPI and DPI-C: one `thread_local` pointer (9.6; P3).
+
+A table that interns strings belongs to the Context (now `kernel::Strings`).
+
+### 9.5 What the standard tends to make global
+
+- All of these belong to the Context: the state of `$random` (with the implicit seed when no seed is given), of `$urandom` and of the random generator of constrained randomization; the counts of severity tasks if they are kept; the state of `$finish` and `$stop`; PerfCount; the plusargs (now given with each run in `vm::RunOptions`, which is the same).
+- The limits (`--max-*`) are given with each run (now `vm::RunOptions` and the scheduler), not held globally.
+- No initial seed is made from the time of day or the process ID.
+
+### 9.6 VPI and DPI-C (the policy for P3)
+
+- Handles, callbacks, the registrations of `systf` and `svScope` belong to the Context.
+- The "current Context" (9.4) is set just before the kernel enters C code, and just before it resumes a suspended import task; it is put back when the C code returns, and when the task is suspended. It must be right even if a task is resumed on another thread (a fiber resumed there, for example).
+- There is no global default Context.
+- `vlog_startup_routines` are called once for each Context.
+- In P3, Contexts that use VPI or DPI-C are guaranteed to run one after another in a process, not at the same time.
+- Global state in the user's C code is outside what kirimasim guarantees.
+
+### 9.7 slang
+
+- front makes slang's `Driver`, and with it the `SourceManager` and the `Compilation`, anew for each run, and shares none of them (now `src/front/front.cpp`, `src/front/lower.cpp`).
+- slang itself holds process-wide mutable state (checked at b7f11c1 on 2026-10-20): the table of built-in functions (made once under a `std::once_flag`), the default diagnostic formatters, the capture and callback of its `OS` output, the time-trace profiler, a default `SourceManager`, and `thread_local` variables of its thread pool. kirimasim changes none of them and uses neither the `OS` capture and callback, nor the time trace, nor the default `SourceManager`.
+- Whether front can run on several threads at once depends on slang and is not confirmed; the tests of 9.8 check it under ThreadSanitizer.
+
+### 9.8 Tests
+
+The tests that keep these rules are required tests (TEST_SUITE.md, "List of required tests"): running designs one after another in one process, at the same time on separate threads under ThreadSanitizer, and made and destroyed many times under AddressSanitizer, and the unit tests in a shuffled order in one process. In P3 a test is added that resumes a suspended import task on another thread and checks the "current Context".
