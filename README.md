@@ -599,7 +599,7 @@ the same table with the Japanese terms.
 | mechanism matrix | A test that a generator makes over the axes of one mechanism (places, ways of reading and writing, spellings, containers), so that a fix covers the neighbors of a bug, not only its own shape |
 | generator | A script `tools/gen_*.py` that writes a mechanism matrix and its expected output from the written rules; `--check` tells whether the committed files are up to date |
 | container | Where a statement runs: a module procedure, a task, a function, a fork branch, an interface, a generate block, a package; a statement means the same in all of them |
-| mutant / negative control | A known mistake that `tools/mutants.py` plants in the code to prove that some test catches it |
+| mutant / negative control | A known mistake that `tools/mutants.py` plants in the code, one at a time, to prove that some test catches it. After each one the code is built and every test runs: the mutant is *caught* when some test fails, and *survives* when none does, which shows a hole in the tests. The code is put back each time. The nightly workflow runs every mutant |
 | PerfCount | Regression tests on event counters (not on time), against `tests/perf_counts/expected.json` |
 | `--stats=json` | The option that prints those counters |
 | oracle | Where a test's expected output comes from (`:oracle:` in its header: the standard, or a named simulator as evidence) |
