@@ -13,6 +13,7 @@
 
 #include <csignal>
 #include <cstdint>
+#include <cstdio>
 #include <deque>
 #include <span>
 #include <string>
@@ -611,19 +612,32 @@ private:
     void addPending(ProcessId p, PendingReport r);
 };
 
-/// The design's output on stdout (CLI.md 3). It remembers whether the
-/// output so far ends a line, so that --stats=json can start its own line.
+/// Where a Context writes (RUNTIME_ABI.md 9.3.10): the design's output,
+/// and the messages (CLI.md 3).
+struct OutputDestinations {
+    std::FILE* out;
+    std::FILE* err;
+};
+
+/// The design's output, on the destinations the Context was made with
+/// (CLI.md 3). It remembers whether the output so far ends a line, so that
+/// --stats=json can start its own line.
 class Output {
 public:
+    explicit Output(OutputDestinations to) : to_(to) {}
+
     void write(std::string_view text);
-    /// One line on stderr, after flushing stdout (CLI.md 3).
+    /// One line on the messages' destination, after flushing the output's
+    /// (CLI.md 3).
     void message(std::string_view line);
-    /// Flushes stdout, so that it comes before what follows on stderr.
+    /// Flushes the output's destination, so that it comes before what
+    /// follows on the messages'.
     void flush();
     /// Whether nothing was written, or the last thing written ended a line.
     [[nodiscard]] bool atLineStart() const { return atLineStart_; }
 
 private:
+    OutputDestinations to_;
     bool atLineStart_ = true;
 };
 

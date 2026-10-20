@@ -1190,16 +1190,16 @@ void Scheduler::fail(std::string message) {
 
 void Output::write(std::string_view text) {
     if (text.empty()) return;
-    std::fwrite(text.data(), 1, text.size(), stdout);
+    std::fwrite(text.data(), 1, text.size(), to_.out);
     atLineStart_ = text.back() == '\n';
 }
 
-void Output::flush() { std::fflush(stdout); }
+void Output::flush() { std::fflush(to_.out); }
 
 void Output::message(std::string_view line) {
-    std::fflush(stdout);
-    std::fwrite(line.data(), 1, line.size(), stderr);
-    std::fputc('\n', stderr);
+    std::fflush(to_.out);
+    std::fwrite(line.data(), 1, line.size(), to_.err);
+    std::fputc('\n', to_.err);
 }
 
 }  // namespace kirimasim::kernel

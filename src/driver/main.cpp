@@ -313,7 +313,8 @@ int run(int argc, char** argv) {
     Options o;
     if (const int code = parseArgs(argc, argv, o); code >= 0) return code;
 
-    kirimasim::kernel::Context context;
+    // The CLI's destinations: standard output and standard error (CLI.md 3).
+    kirimasim::kernel::Context context(kirimasim::kernel::OutputDestinations{stdout, stderr});
     const int code = o.command == "parse" ? runParse(context, o) : runDesign(context, o);
     if (o.statsJson) {
         // The JSON is the last line of stdout (PERFORMANCE.md 3.1).

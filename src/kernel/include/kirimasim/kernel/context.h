@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <cstdio>
+
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/store.h"
@@ -16,7 +18,10 @@ namespace kirimasim::kernel {
 
 class Context {
 public:
-    Context() : scheduler_(*this, store_, counters_) {}
+    /// A Context that writes to standard output and standard error.
+    Context() : Context(OutputDestinations{stdout, stderr}) {}
+    /// A Context that writes where it is told (RUNTIME_ABI.md 9.3.10).
+    explicit Context(OutputDestinations to) : output_(to), scheduler_(*this, store_, counters_) {}
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
 

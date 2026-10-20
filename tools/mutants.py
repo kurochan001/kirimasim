@@ -893,6 +893,12 @@ MUTANTS = [
     ("front: a simple assertion waits only in its pass action", "src/front/lower.cpp",
      "                   (a.ifFalse != nullptr && mayWaitIn(*a.ifFalse, seen));",
      "                   (a.ifFalse != nullptr && mayWaitIn(*a.ifFalse, seen) && false);"),
+    ("kernel: the output goes to stdout, not where the Context says", "src/kernel/sim.cpp",
+     "std::fwrite(text.data(), 1, text.size(), to_.out);",
+     "std::fwrite(text.data(), 1, text.size(), stdout);"),
+    ("kernel: a message does not flush the output first", "src/kernel/sim.cpp",
+     "void Output::message(std::string_view line) {\n    std::fflush(to_.out);",
+     "void Output::message(std::string_view line) {\n    static_cast<void>(0);"),
 ]
 
 
