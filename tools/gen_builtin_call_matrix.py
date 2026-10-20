@@ -30,14 +30,13 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "builtin_call_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 1
+VERSION = 2
 
 # (the statement, with ERR at the call, what it is)
 CALLS = [
-    ('fd = ERR$fopen("x.txt", "w");', "system function $fopen"),
-    ('fd = ERR$fopen(name, "w");', "system function $fopen"),
-    ('fd = ERR$fopen({name, ".txt"});', "system function $fopen"),
+    ('fd = ERR$system("x");', "system function $system"),
     ("fd = ERR$system(name);", "system function $system"),
+    ('fd = ERR$system({name, " y"});', "system function $system"),
     ('ERR$dumpfile("x.vcd");', "system task $dumpfile"),
     ("ERR$dumpfile(name);", "system task $dumpfile"),
     ("ERR$readmemh(name, mem);", "system task $readmemh"),
