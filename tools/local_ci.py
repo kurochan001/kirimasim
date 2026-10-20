@@ -11,7 +11,8 @@ order:
 3. tools/check_banned.py and tools/check_suite_files.py,
 4. clang-format --dry-run --Werror on all tracked .cpp and .h files,
 5. clang-tidy on all tracked .cpp files under src/ and tests/ (using the
-   dev build's compile_commands.json),
+   dev build's compile_commands.json), with the custom checks of
+   .clang-tidy, and tools/check_global_state.py with its clang-tidy probe,
 6. tools/check_expected_change.py on each commit that is not on the
    upstream branch yet, as CI checks each pushed commit (nothing to check
    without an upstream branch).
@@ -144,6 +145,13 @@ def main() -> int:
                        logs / "check_banned.log"))
     steps.append(timed("check_suite_files", [sys.executable, "tools/check_suite_files.py"],
                        logs / "check_suite_files.log"))
+    # Without clang-tidy, the allowlist is checked against src/ only; the
+    # probe that shows the custom check runs needs clang-tidy.
+    state = [sys.executable, "tools/check_global_state.py"]
+    tidy_for_state = None if args.skip_lint else find_tool("clang-tidy", args.llvm_bin)
+    if tidy_for_state:
+        state += ["--clang-tidy", tidy_for_state]
+    steps.append(timed("check_global_state", state, logs / "check_global_state.log"))
     steps.append(expected_changes(logs))
 
     clang_format = clang_tidy = None
@@ -163,7 +171,7 @@ def main() -> int:
             steps.append(Step("clang-tidy", "not run", 0.0,
                               "needs the dev preset (build/dev/compile_commands.json)"))
         else:
-            cmd = [clang_tidy, "-p", "build/dev", "--quiet"]
+            cmd = [clang_tidy, "--experimental-custom-checks", "-p", "build/dev", "--quiet"]
             if platform.system() == "Darwin":
                 sdk = subprocess.run(["xcrun", "--show-sdk-path"], capture_output=True,
                                      text=True, check=False).stdout.strip()

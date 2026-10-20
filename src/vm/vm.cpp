@@ -3779,7 +3779,7 @@ private:
             case SysTask::Warning:
             case SysTask::Info: {
                 // <file>:<line>: <severity>: <message> [<scope> @ <time>]
-                // on stderr (SYSTEM_TASKS.md 10.1); $fatal then ends the
+                // among the messages (SYSTEM_TASKS.md 10.1); $fatal then ends the
                 // run like $finish with its level (20.10).
                 const std::optional<std::string> message =
                     formatOperands(p, in, info, formatStart(info.task));

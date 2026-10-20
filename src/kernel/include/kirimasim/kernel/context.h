@@ -19,6 +19,7 @@ namespace kirimasim::kernel {
 class Context {
 public:
     /// A Context that writes to standard output and standard error.
+    // kirimasim: banned-ok the default destinations (RUNTIME_ABI.md 9.3.10)
     Context() : Context(OutputDestinations{stdout, stderr}) {}
     /// A Context that writes where it is told (RUNTIME_ABI.md 9.3.10).
     explicit Context(OutputDestinations to) : output_(to), scheduler_(*this, store_, counters_) {}

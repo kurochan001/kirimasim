@@ -92,8 +92,18 @@ they are protected:
   and `std::unordered_set` need a `// kirimasim: unordered-ok <reason>`
   comment on the same line or the line above, and their iteration order must
   never affect results. `tools/check_banned.py` checks this.
-- No mutable global or static state and no singletons; state belongs to a
-  context object.
+- No global state: state belongs to the Context (`kernel::Context`). In
+  `src/`, a variable of static or thread storage duration is `constexpr` or
+  `constinit const`; there are no singletons. The rules and their few
+  exceptions are in [RUNTIME_ABI.md 9](docs/spec/RUNTIME_ABI.md).
+  clang-tidy (with `--experimental-custom-checks`) and
+  `tools/check_global_state.py` check them; a new exception needs a human's
+  approval and a line in `tools/global_state_allowlist.txt`.
+- Outside `src/driver/`, code does not read environment variables, the
+  locale, the time of day or random seeds from outside, does not end the
+  process, and does not write to the process's standard output or standard
+  error; no code calls `abort`, `std::terminate` or `assert`.
+  `tools/check_banned.py` checks this.
 - Libraries depend on each other only in the directions listed in
   [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Do not copy text, figures, or example code from the IEEE 1800 standard.
@@ -110,6 +120,7 @@ cmake --build --preset dev
 ctest --preset dev                 # unit tests, test suite, PerfCount
 ctest --preset dev -L PerfCount    # event-count regression check only
 python3 tools/check_banned.py
+python3 tools/check_global_state.py
 ```
 
 For release builds, also run `python3 tools/check_release_flags.py` after
@@ -122,8 +133,9 @@ kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
 and CI's clang builds do.
 
 To run every check that CI runs (all four presets, the release flag check,
-the banned-feature check, clang-format, clang-tidy, and the check that each
-commit not pushed yet keeps existing expectations) in one go:
+the banned-feature check, the global-state check, clang-format, clang-tidy,
+and the check that each commit not pushed yet keeps existing expectations)
+in one go:
 
 ```sh
 python3 tools/local_ci.py

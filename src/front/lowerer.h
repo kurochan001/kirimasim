@@ -342,7 +342,7 @@ public:
     /// An unpacked array: a slot, an array frame variable, or what an array
     /// ref argument refers to.
     struct ArrayBase {
-        ArrayBase(sir::SlotId s) : id(s) {}  // NOLINT: a slot is the usual base
+        ArrayBase(sir::SlotId s) : id(s) {}  // NOLINT(google-explicit-constructor): the usual base
         ArrayBase(Place::Home h, std::uint32_t i) : home(h), id(i) {}
         Place::Home home = Place::Home::Slot;
         std::uint32_t id = 0;

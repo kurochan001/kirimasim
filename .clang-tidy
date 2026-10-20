@@ -6,6 +6,7 @@ Checks: >
   bugprone-*,
   performance-*,
   cppcoreguidelines-avoid-non-const-global-variables,
+  custom-kirimasim-global-state,
   -bugprone-easily-swappable-parameters,
   -bugprone-narrowing-conversions,
   -bugprone-branch-clone,
@@ -15,5 +16,25 @@ Checks: >
 # bugprone-branch-clone: truth tables and switch tables repeat on purpose.
 # performance-enum-size: enum sizes are chosen per type already.
 WarningsAsErrors: '*'
+# Global state (RUNTIME_ABI.md 9.3, 9.4): in src/, a variable of static or
+# thread storage duration is constexpr or constinit const. The check above
+# finds only non-const ones at namespace scope; this one also finds static
+# data members, statics in functions, thread_local variables, and const
+# ones that are not constant. It runs only with clang-tidy's
+# --experimental-custom-checks, and tools/check_global_state.py checks that
+# it does. The allowed exceptions are in tools/global_state_allowlist.txt.
+CustomChecks:
+  - Name: kirimasim-global-state
+    Query: |
+      match varDecl(
+        anyOf(hasStaticStorageDuration(), hasThreadStorageDuration()),
+        isExpansionInFileMatching("/src/(front|sir|analysis|valsem|kernel|vm|codegen|driver)/"),
+        unless(isConstexpr()),
+        unless(allOf(isConstinit(), hasType(isConstQualified())))
+      ).bind("var")
+    Diagnostic:
+      - BindName: var
+        Message: "global state: a variable of static or thread storage duration that is neither constexpr nor constinit const (RUNTIME_ABI.md 9.3, 9.4)"
+        Level: Warning
 HeaderFilterRegex: '.*/src/.*'
 ...

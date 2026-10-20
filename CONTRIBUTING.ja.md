@@ -54,7 +54,8 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 
 - kirimasim 本体は C++23。カーネルの公開ヘッダ（`src/kernel/include/`）は C++20 でコンパイルできること。
 - `src/kernel/` と `src/vm/` では、`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid` を使わないこと。`std::unordered_map` と `std::unordered_set` には、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` のコメントが要り、その走査の順が結果に影響してはいけません。`tools/check_banned.py` がこれを検査します。
-- 書き換え可能な大域や static の状態とシングルトンを持たないこと。状態はコンテキストのオブジェクトが持ちます。
+- 大域状態を持たないこと。状態は Context（`kernel::Context`）が持ちます。`src/` では、静的またはスレッドの記憶域期間を持つ変数は `constexpr` か `constinit const` に限り、シングルトンも持ちません。決まりと少しの例外は [RUNTIME_ABI.md の 9 節](docs/spec/RUNTIME_ABI.ja.md)にあります。clang-tidy（`--experimental-custom-checks` 付き）と `tools/check_global_state.py` がこれを検査します。例外を足すには、人の承認と `tools/global_state_allowlist.txt` への 1 行が要ります。
+- `src/driver/` の外では、環境変数、ロケール、時刻、外からの乱数の種を読まず、プロセスを終わらせず、プロセスの標準出力と標準エラーに書かないこと。`abort`、`std::terminate`、`assert` はどこでも呼びません。`tools/check_banned.py` がこれを検査します。
 - ライブラリどうしの依存は、[docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) に挙げた向きだけにすること。
 - IEEE 1800 の規格の本文、図、例のコードを写さないこと。節番号を示し、動作は自分の言葉で説明してください。
 - 他のシミュレータ（Icarus Verilog や Verilator など）のソースコードを読んだり写したりしないこと。動作は、その出力だけから知ってください。
@@ -68,13 +69,14 @@ cmake --build --preset dev
 ctest --preset dev                 # ユニットテスト、テストスイート、PerfCount
 ctest --preset dev -L PerfCount    # 事象の回数の回帰の検査だけ
 python3 tools/check_banned.py
+python3 tools/check_global_state.py
 ```
 
 release のビルドでは、`cmake --preset release` の後に `python3 tools/check_release_flags.py` も走らせてください。`asan` と `ubsan` のプリセットは、同じテストをサニタイザ付きで走らせます。`asan` は slang を mimalloc 無しでビルドします。mimalloc の確保した領域の中は、アドレスサニタイザから見えないためです。
 
 kirimasim 自身のコードは `-Wall -Wextra -Wpedantic` でビルドします。`tools/local_ci.py` と CI の clang のビルドと同じく警告を誤りにするには、configure に `-DKIRIMASIM_WERROR=ON` を付けてください。
 
-CI が走らせる検査のすべて（4 つのプリセット、release のフラグの検査、禁止の機能の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査）を一度に走らせるには：
+CI が走らせる検査のすべて（4 つのプリセット、release のフラグの検査、禁止の機能の検査、大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査）を一度に走らせるには：
 
 ```sh
 python3 tools/local_ci.py

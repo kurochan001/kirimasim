@@ -1,0 +1,10 @@
+# The global state allowed in src/ (RUNTIME_ABI.md 9.4). A human approves
+# every entry (AI_POLICY.md, "What humans hold").
+#
+# Each line: <file> | <variable> | <item of RUNTIME_ABI.md 9.4> | <reason>
+#
+# The declaration carries, on the line above,
+#   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables,custom-kirimasim-global-state)
+# and tools/check_global_state.py checks that each suppression of those
+# checks in src/ has its line here, and each line its suppression.
+src/driver/main.cpp | interruptRequested | 9.4 item 3 | the flag of SIGINT: a signal handler can reach nothing else (approved 2026-10-18)

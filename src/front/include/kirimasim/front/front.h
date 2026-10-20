@@ -24,8 +24,8 @@ struct ParseResult {
 
 /// Parses and elaborates the given files with slang and collects its
 /// diagnostics. Problems that slang reports before parsing (for example, a
-/// file that cannot be opened) are written to stderr by slang itself and
-/// make the result unsuccessful.
+/// file that cannot be opened) are written to the process's standard error
+/// by slang itself and make the result unsuccessful.
 ParseResult parseAndElaborate(std::span<const std::string> files);
 
 /// Result of compiling a design to SIR.

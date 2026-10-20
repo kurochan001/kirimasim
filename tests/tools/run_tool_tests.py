@@ -199,6 +199,88 @@ def banned_kernel(tmp: Path) -> None:
                    [sys.executable, str(TOOLS / "check_banned.py"), "--root", str(root)], want_ok)
 
 
+def banned_state(tmp: Path) -> None:
+    """RUNTIME_ABI.md 9.3: outside inputs, ending the process and the
+    process's output, banned in src/ but the driver; abort and the like,
+    banned in the driver too; and calls that only look like them."""
+    for name, line, where, want_ok in [
+        ("getenv_front", 'const char* e = std::getenv("X");', "src/front", False),
+        ("getenv_sir", 'const char* e = getenv("X");', "src/sir", False),
+        ("getenv_driver", 'const char* e = std::getenv("X");', "src/driver", True),
+        ("setenv", 'setenv("X", "1", 1);', "src/front", False),
+        ("locale", 'std::setlocale(LC_ALL, "");', "src/kernel", False),
+        ("std_locale", "std::locale l;", "src/vm", False),
+        ("system_clock", "auto t = std::chrono::system_clock::now();", "src/kernel", False),
+        ("std_time", "auto t = std::time(nullptr);", "src/vm", False),
+        ("localtime", "auto* tm = localtime(&t);", "src/front", False),
+        ("random_device", "std::random_device rd;", "src/kernel", False),
+        ("rand", "int r = rand();", "src/vm", False),
+        ("srand", "srand(1);", "src/kernel", False),
+        ("getpid", "auto seed = getpid();", "src/kernel", False),
+        ("exit", "std::exit(1);", "src/kernel", False),
+        ("exit_unqualified", "exit(1);", "src/front", False),
+        ("quick_exit", "std::quick_exit(1);", "src/vm", False),
+        ("exit_driver", "std::_Exit(130);", "src/driver", True),
+        ("abort", "std::abort();", "src/kernel", False),
+        ("abort_driver", "std::abort();", "src/driver", False),
+        ("terminate", "std::terminate();", "src/vm", False),
+        ("assert", "assert(x > 0);", "src/front", False),
+        ("cassert", "#include <cassert>", "src/kernel", False),
+        ("stdout", "std::fwrite(p, 1, n, stdout);", "src/kernel", False),
+        ("stderr", "std::fputs(s, stderr);", "src/vm", False),
+        ("cout", "std::cout << x;", "src/front", False),
+        ("printf", 'std::printf("%d", x);', "src/vm", False),
+        ("puts", 'puts("x");', "src/kernel", False),
+        ("print", 'std::println("{}", x);', "src/kernel", False),
+        ("stdout_driver", "std::fputs(s, stdout);", "src/driver", True),
+        ("stdout_waived", "// kirimasim: banned-ok the defaults\nf(stdout);", "src/kernel", True),
+        # Names that only look like the banned ones.
+        ("member_time", "const auto now = sched_.time();", "src/vm", True),
+        ("member_exit", "terminate(Op::Br, {Operand::block(*n.exit)}, sl);", "src/front", True),
+        ("fprintf_given", 'std::fprintf(to_.err, "%s", s);', "src/kernel", True),
+        ("snprintf", "std::snprintf(b, sizeof b, \"%d\", x);", "src/kernel", True),
+        ("static_assert", "static_assert(sizeof(int) == 4);", "src/kernel", True),
+        ("operand_random", "int r = op.random(seed);", "src/vm", True),
+    ]:
+        root = tmp / ("state_" + name)
+        (root / where).mkdir(parents=True)
+        (root / where / "x.cpp").write_text(line + "\n", encoding="utf-8")
+        expect(f"check_banned {name} in {where}",
+               [sys.executable, str(TOOLS / "check_banned.py"), "--root", str(root)], want_ok)
+
+
+def global_state(tmp: Path) -> None:
+    """check_global_state.py: each suppression of the global-state checks in
+    src/ has its line in the allowlist, and each line its suppression
+    (RUNTIME_ABI.md 9.4)."""
+    both = "cppcoreguidelines-avoid-non-const-global-variables,custom-kirimasim-global-state"
+    flag = f"// NOLINTNEXTLINE({both})\nvolatile std::sig_atomic_t flag = 0;\n"
+    entry = "src/driver/main.cpp | flag | 9.4 item 3 | the flag of SIGINT\n"
+    for name, source, allowlist, want_ok in [
+        ("listed", flag, entry, True),
+        ("same_line", f"volatile int flag = 0;  // NOLINT({both})\n", entry, True),
+        ("not_listed", flag, "", False),
+        ("other_name", flag.replace("flag =", "other ="), entry, False),
+        ("no_suppression", "int x = 0;\n", entry, False),
+        ("listed_twice", flag, entry + entry, False),
+        ("no_item", flag, "src/driver/main.cpp | flag | the flag of SIGINT\n", False),
+        ("bare_nolint", "int f();  // NOLINT\n", "", False),
+        ("pattern", "// NOLINTNEXTLINE(custom-*)\nint x = 0;\n", "", False),
+        ("everything", "// NOLINTNEXTLINE(*)\nint x = 0;\n", "", False),
+        ("begin", f"// NOLINTBEGIN({both})\nint x = 0;\n// NOLINTEND({both})\n", "", False),
+        ("other_check", "int f();  // NOLINT(bugprone-unused-return-value)\n", "", True),
+    ]:
+        root = tmp / ("global_" + name)
+        (root / "src/driver").mkdir(parents=True)
+        (root / "tools").mkdir()
+        (root / "src/driver/main.cpp").write_text(source, encoding="utf-8")
+        (root / "tools/global_state_allowlist.txt").write_text("# header\n" + allowlist,
+                                                              encoding="utf-8")
+        expect("check_global_state " + name,
+               [sys.executable, str(TOOLS / "check_global_state.py"), "--root", str(root)],
+               want_ok)
+
+
 def suite_files(tmp: Path) -> None:
     for name, files, skips, want_ok in [
         ("paired", ["a.sv", "a.expected", "a.stderr"], "", True),
@@ -327,6 +409,8 @@ def main() -> int:
         severity_test(args.kirimasim, tmp)
         banned(tmp)
         banned_kernel(tmp)
+        banned_state(tmp)
+        global_state(tmp)
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)

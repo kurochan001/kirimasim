@@ -203,8 +203,17 @@ jobs:
       - name: Build slang
         run: cmake --build --preset dev --target slang_slang
 
+      # --experimental-custom-checks runs custom-kirimasim-global-state of
+      # .clang-tidy (RUNTIME_ABI.md 9.3); without it, clang-tidy skips that
+      # check without a word. The next step shows on a probe that this
+      # clang-tidy reports what the check must.
       - name: clang-tidy
-        run: git ls-files 'src/*.cpp' 'tests/*.cpp' | xargs clang-tidy-22 -p build/dev --quiet
+        run: >
+          git ls-files 'src/*.cpp' 'tests/*.cpp'
+          | xargs clang-tidy-22 --experimental-custom-checks -p build/dev --quiet
+
+      - name: Global state and its allowlist
+        run: python3 tools/check_global_state.py --clang-tidy clang-tidy-22
 
       - name: Expected-value changes stay out of implementation PRs
         if: github.event_name == 'pull_request'

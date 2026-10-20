@@ -42,7 +42,7 @@ enum class EndReason : std::uint8_t {
     Internal,
 };
 
-/// The name used on stderr and in --stats=json: finish, quiescent, ...
+/// The name used in messages and in --stats=json: finish, quiescent, ...
 const char* endReasonName(EndReason r);
 
 /// The 17 regions of a time slot, in order (SCHEDULER_SPEC.md 2.1).
@@ -284,7 +284,7 @@ public:
     /// Whether e was triggered in the current time slot (15.5.3).
     [[nodiscard]] bool triggered(EventId e) const;
 
-    /// Puts a report (a whole stderr line) on the pending queue of the
+    /// Puts a report (a whole line of the messages) on the pending queue of the
     /// running process p (SCHEDULER_SPEC.md 15.3). The queue is dropped
     /// when the process resumes from an event control or wait (a flush
     /// point), and confirmed when the time slot reaches the Observed

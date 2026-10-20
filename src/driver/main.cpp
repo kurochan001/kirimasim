@@ -37,10 +37,11 @@ constexpr int kExitOk = 0;
 constexpr int kExitInputError = 2;
 constexpr int kExitInternalError = 3;
 
-// The one variable outside the Context (CLAUDE.md): the flag of SIGINT, as
-// a signal handler can reach nothing else. The scheduler reads it through
-// the pointer the driver gives it (RUNTIME_ABI.md 4.4).
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): the exception
+// The one variable outside the Context (RUNTIME_ABI.md 9.4, listed in
+// tools/global_state_allowlist.txt): the flag of SIGINT, as a signal
+// handler can reach nothing else. The scheduler reads it through the
+// pointer the driver gives it (RUNTIME_ABI.md 4.4).
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables,custom-kirimasim-global-state)
 volatile std::sig_atomic_t interruptRequested = 0;
 
 }  // namespace

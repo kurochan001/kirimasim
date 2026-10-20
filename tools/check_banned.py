@@ -2,19 +2,29 @@
 """Fails if src/ uses something banned (CLAUDE.md).
 
 Banned in src/kernel/ and src/vm/: std::shared_ptr, dynamic_cast,
-std::function, getenv, typeid. Shared ownership is banned in every
-spelling: shared_ptr, weak_ptr, make_shared, allocate_shared,
+std::function, typeid. Shared ownership is banned in every spelling:
+shared_ptr, weak_ptr, make_shared, allocate_shared,
 enable_shared_from_this and the pointer casts, with or without std::
 (after a using declaration); so is function<...> without std::.
+
+Banned in all of src/ but src/driver/ (RUNTIME_ABI.md 9.3): outside inputs
+(9.3.8: environment variables, the locale, the time of day, random seeds
+from outside, the process ID), ending the process (9.3.9: exit, _Exit,
+quick_exit, atexit), and writing to the process's standard output or
+standard error (9.3.10: stdout, stderr, std::cout, printf and the like).
+Banned in all of src/ (9.3.9): abort, std::terminate, assert and
+__builtin_trap.
 
 Banned in all of src/ (the simulator must know nothing of test suites):
 pass/fail strings such as "TEST PASSED", the names of test metadata
 (should_fail, expected_stdout and the like), and string literals that pick
 out files or libraries by name: "-fail.sv", "/uvm/", "/testbenches/", or a
-UVM class or package name ("uvm_..."). A line may carry
+UVM class or package name ("uvm_...").
+
+A line may carry
     // kirimasim: banned-ok <reason>
-(or have it on the line just above) where such a string is needed for
-another purpose; reviews look at every waiver.
+(or have it on the line just above) where something of the two lists above
+is needed for another purpose; reviews look at every waiver.
 
 std::unordered_map and std::unordered_set are allowed only when the same line
 or the line just above carries a comment of the form
@@ -39,8 +49,33 @@ BANNED = [
      "shared ownership (std::shared_ptr and its family)"),
     (re.compile(r"\bdynamic_cast\b"), "dynamic_cast"),
     (re.compile(r"\bstd\s*::\s*function\b|(?<![\w:])function\s*<"), "std::function"),
-    (re.compile(r"\b(?:std\s*::\s*)?(?:secure_)?getenv\b"), "getenv"),
     (re.compile(r"\btypeid\b"), "typeid"),
+]
+# RUNTIME_ABI.md 9.3, checked in all of src/ but src/driver/.
+OUTSIDE_DRIVER = [
+    (re.compile(r"\b(?:secure_)?getenv\b|\b(?:setenv|putenv|unsetenv|clearenv)\b|\benviron\b"),
+     "an environment variable (RUNTIME_ABI.md 9.3.8)"),
+    (re.compile(r"\bsetlocale\b|\bstd\s*::\s*locale\b|\blocaleconv\b|\bimbue\s*\("),
+     "the locale (RUNTIME_ABI.md 9.3.8)"),
+    (re.compile(r"\b(?:system|high_resolution|utc|tai|gps|file)_clock\b"
+                r"|\b(?:gettimeofday|clock_gettime|timespec_get|localtime(?:_r)?|gmtime(?:_r)?"
+                r"|asctime|ctime|strftime)\b|\bstd\s*::\s*time\s*\(|(?<![\w.>]):\s*:\s*time\s*\("),
+     "the time of day (RUNTIME_ABI.md 9.3.8)"),
+    (re.compile(r"\brandom_device\b|\bgetrandom\b|\barc4random\w*|\b[dlm]rand48\b|\bsrand\w*\s*\("
+                r"|(?<![\w.>])(?:std\s*::\s*)?rand\s*\(|\bgetpid\b"),
+     "a random seed from outside (RUNTIME_ABI.md 9.3.8, 9.5)"),
+    (re.compile(r"(?<![\w.>])(?:std\s*::\s*)?(?:exit|_Exit|quick_exit|atexit|at_quick_exit)\s*\("),
+     "ending the process (RUNTIME_ABI.md 9.3.9)"),
+    (re.compile(r"\bstd(?:out|err)\b|\bstd\s*::\s*w?c(?:out|err|log)\b"
+                r"|(?<!\w)(?:std\s*::\s*)?(?:v?printf|puts|putchar|perror)\s*\("
+                r"|\bstd\s*::\s*print(?:ln)?\s*\("),
+     "the process's standard output or standard error (RUNTIME_ABI.md 9.3.10)"),
+]
+# RUNTIME_ABI.md 9.3.9, checked in all of src/.
+EVERYWHERE = [
+    (re.compile(r"(?<![\w.>])(?:std\s*::\s*)?abort\s*\(|\bstd\s*::\s*terminate\b|\bassert\s*\("
+                r"|<c?assert(?:\.h)?>|\b__builtin_trap\b"),
+     "abort, std::terminate or assert (RUNTIME_ABI.md 9.3.9)"),
 ]
 # Test-suite knowledge, checked in all of src/.
 SUITE_KNOWLEDGE = [
@@ -56,14 +91,18 @@ UNORDERED = re.compile(r"\bstd\s*::\s*unordered_(?:map|set)\b")
 WAIVER = re.compile(r"//\s*kirimasim:\s*unordered-ok\s+\S")
 
 
-def check_suite_knowledge(path: Path, display: str) -> list[str]:
+def check_all_src(path: Path, display: str) -> list[str]:
+    """Test-suite knowledge and RUNTIME_ABI.md 9.3, which have the waiver."""
+    patterns = SUITE_KNOWLEDGE + EVERYWHERE
+    if not display.startswith("src/driver/"):
+        patterns = patterns + OUTSIDE_DRIVER
     errors = []
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     for i, line in enumerate(lines):
         prev = lines[i - 1] if i > 0 else ""
         if SUITE_WAIVER.search(line) or SUITE_WAIVER.search(prev):
             continue
-        for pattern, what in SUITE_KNOWLEDGE:
+        for pattern, what in patterns:
             if pattern.search(line):
                 errors.append(f"{display}:{i + 1}: banned in src/: {what}")
     return errors
@@ -106,7 +145,7 @@ def main() -> int:
     if src.is_dir():
         for path in sorted(src.rglob("*")):
             if path.is_file() and path.suffix in SUFFIXES:
-                errors += check_suite_knowledge(path, path.relative_to(args.root).as_posix())
+                errors += check_all_src(path, path.relative_to(args.root).as_posix())
 
     for e in errors:
         print(e, file=sys.stderr)
