@@ -90,6 +90,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- An immediate assertion waits only where its action blocks do, and a
+  deferred one not at all: `always_ff` with an assertion in its body was
+  reported as unsupported, and a task with one that `always_comb`,
+  `always_latch` or `always_ff` calls stopped kirimasim with an internal
+  error of the SIR verifier (16.3, 16.4).
 - A task that `always_comb`, `always_latch` or `always_ff` calls may
   write a variable that another process writes, as 9.2.2 allows, where
   kirimasim stopped with an internal error of the SIR verifier; and

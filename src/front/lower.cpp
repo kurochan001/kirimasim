@@ -270,6 +270,14 @@ bool mayWaitIn(const ast::Statement& s, std::vector<const ast::Symbol*>& seen) {
             return mayWaitIn(s.as<ast::DoWhileLoopStatement>().body, seen);
         case ast::StatementKind::ForeverLoop:
             return mayWaitIn(s.as<ast::ForeverLoopStatement>().body, seen);
+        case ast::StatementKind::ImmediateAssertion: {
+            // The action blocks of a simple assertion run here (16.3); the
+            // action of a deferred one runs later, not in this thread (16.4).
+            const auto& a = s.as<ast::ImmediateAssertionStatement>();
+            if (a.isDeferred) return false;
+            return (a.ifTrue != nullptr && mayWaitIn(*a.ifTrue, seen)) ||
+                   (a.ifFalse != nullptr && mayWaitIn(*a.ifFalse, seen));
+        }
         default: return true;
     }
 }

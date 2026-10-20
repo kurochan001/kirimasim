@@ -876,6 +876,14 @@ MUTANTS = [
      "            if (!task(c) || true)\n                for (const sir::SlotRange& r : writes[c])\n"),
     ("front: no write through a task is checked against always_comb", "src/front/lower.cpp",
      "    if (owners.empty()) return;", "    if (owners.empty() || true) return;"),
+    ("front: a deferred assertion may wait where it is", "src/front/lower.cpp",
+     "            if (a.isDeferred) return false;", "            if (a.isDeferred) return true;"),
+    ("front: a simple assertion waits only in its fail action", "src/front/lower.cpp",
+     "            return (a.ifTrue != nullptr && mayWaitIn(*a.ifTrue, seen)) ||\n",
+     "            return (a.ifTrue != nullptr && mayWaitIn(*a.ifTrue, seen) && false) ||\n"),
+    ("front: a simple assertion waits only in its pass action", "src/front/lower.cpp",
+     "                   (a.ifFalse != nullptr && mayWaitIn(*a.ifFalse, seen));",
+     "                   (a.ifFalse != nullptr && mayWaitIn(*a.ifFalse, seen) && false);"),
 ]
 
 
