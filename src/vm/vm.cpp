@@ -307,6 +307,10 @@ struct InstrInfo {
     /// The kind a text operand names, read once: "force" of an override
     /// instruction, "casex" of match.mask, "final" of report.call.
     bool textFlag = false;
+    /// Whether executeWide carries the instruction out: one it handles,
+    /// with a result or an operand of more than one chunk. The types do
+    /// not change while the design runs, so this is decided once.
+    bool wide = false;
 };
 
 /// The kind of net a resolve instruction names (SIR_SPEC.md 3.5).
@@ -542,6 +546,16 @@ public:
                 at += chunksOf(tempTypes_[p][t]);
             }
             tempTotal_[p] = at;
+        }
+        // After every temp has its type, which a later block may give.
+        for (std::uint32_t p = 0; p < bodies; ++p) {
+            const auto& blocks = bodyBlocks(p);
+            for (std::size_t b = 0; b < blocks.size(); ++b) {
+                for (std::size_t k = 0; k < blocks[b].instrs.size(); ++k) {
+                    const sir::Instr& in = blocks[b].instrs[k];
+                    info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in);
+                }
+            }
         }
     }
 
@@ -1155,11 +1169,14 @@ private:
 
     // --- Values ---
 
-    sir::Type typeOf(const Operand& o) const {
+    sir::Type typeOf(const Operand& o) const { return typeIn(act_.body, o); }
+
+    /// The type of an operand of an instruction of the given body.
+    sir::Type typeIn(std::uint32_t body, const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp: return tempTypes_[act_.body][o.id];
+            case Operand::Kind::Temp: return tempTypes_[body][o.id];
             case Operand::Kind::Const: return d_.constants[o.id].type;
-            case Operand::Kind::Frame: return bodyFrame(act_.body)[o.id].type;
+            case Operand::Kind::Frame: return bodyFrame(body)[o.id].type;
             case Operand::Kind::Slot: return d_.slots[o.id].type;
             default: return sir::voidType();
         }
@@ -2436,13 +2453,13 @@ private:
 
     /// Whether an instruction has an integral operand or result wider than
     /// 64 bits; those run in executeWide.
-    bool isWide(const sir::Instr& in) const {
+    bool isWide(std::uint32_t body, const sir::Instr& in) const {
         if (chunksOf(in.type) > 1) return true;
         for (const Operand& o : in.operands) {
             if (o.kind != Operand::Kind::Temp && o.kind != Operand::Kind::Const &&
                 o.kind != Operand::Kind::Frame && o.kind != Operand::Kind::Slot)
                 continue;
-            if (chunksOf(typeOf(o)) > 1) return true;
+            if (chunksOf(typeIn(body, o)) > 1) return true;
         }
         return false;
     }
@@ -3009,7 +3026,7 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
-        if (wideHandles(in.op) && isWide(in)) return executeWide(f, p, in, info);
+        if (info.wide) return executeWide(f, p, in, info);
         if (!ops.empty() &&
             (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
             // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the

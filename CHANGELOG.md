@@ -90,6 +90,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Tier 1 is fast again on designs without wide values: since values wider
+  than 64 bits ran, every instruction looked at the widths of its operands
+  to choose the wide path, which made the bench designs 8 to 22% slower;
+  the choice is now made once, when the design is loaded (#28).
 - The action of a deferred assertion is no part of the `always_comb`,
   `always_latch` or `always_ff` that runs it: several such blocks, and
   other processes, may write what their actions write, where kirimasim

@@ -904,6 +904,9 @@ MUTANTS = [
      "    static int runs = 0;\n"
      "    if (++runs > 1) context.output().write(\"again\\n\");\n"
      "    return Interpreter(design, context, options).run();"),
+    ("vm: no instruction takes the wide path", "src/vm/vm.cpp",
+     "info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in);",
+     "info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in) && false;"),
 ]
 
 
