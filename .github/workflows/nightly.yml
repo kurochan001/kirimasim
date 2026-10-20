@@ -46,7 +46,7 @@ jobs:
       - name: Unit tests shuffled in one process
         run: >
           build/${{ matrix.preset }}/tests/unit/kirimasim_unit_tests
-          --gtest_shuffle --gtest_repeat=3 --gtest_random_seed=$(date -u +%j)
+          --gtest_shuffle --gtest_repeat=3 --gtest_random_seed="$(date -u +%j)"
 
   # The Context tests under ThreadSanitizer (RUNTIME_ABI.md 9.8), all of
   # them: ci.yml leaves out front_parallel, which fails while slang's
