@@ -8,8 +8,9 @@ the first execution tier, is in progress. The README gives the status.
 ## What we accept for now
 
 For now, kirimasim accepts **specification proposals and issues only**.
-Only collaborators can open pull requests. When the project starts
-accepting more, this file and the README will say so.
+Pull requests are turned off for this repository for now; collaborators
+push to `main`. When the project starts accepting more, this file and the
+README will say so.
 
 We accept:
 
@@ -71,7 +72,9 @@ they are protected:
   under `tests/suite/`) must be its **own pull request**, separate from
   implementation changes under `src/`. The same applies to deleting or
   renaming an existing test file. Explain the reason and cite the IEEE 1800
-  section number in the PR.
+  section number in the PR. While pull requests are off, it is its own
+  commit, with the reason and the section number in the commit message:
+  CI checks each commit pushed to `main` on its own.
 - Unit tests (`tests/unit/`) may be edited together with the code they
   call, for example when a function is renamed. CI lists every changed or
   removed `EXPECT_*`/`ASSERT_*` line as a warning, and reviewers check that
@@ -127,8 +130,8 @@ python3 tools/local_ci.py
 ```
 
 CI runs on Linux and macOS after a push. Run `tools/local_ci.py` before
-pushing, to find failures first, and paste its summary into the pull
-request.
+pushing, to find failures first; with a pull request, paste its summary
+into it.
 
 ## Changelog
 
@@ -157,8 +160,9 @@ changed as they see it; the commit history has the details.
 
 ## Pull requests
 
-Pull requests come from collaborators only for now. Fill in the pull
-request template. Keep one purpose per commit and write
+Pull requests are turned off for now: collaborators push to `main`, and
+CI checks every pushed commit. When pull requests are turned on, fill in
+the pull request template. Keep one purpose per commit and write
 commit messages in English with a summary line of 72 characters or less.
 
 By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
