@@ -10,12 +10,14 @@
 #include <deque>
 #include <limits>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/strength.h"
@@ -64,6 +66,12 @@ enum class SysTask : std::uint8_t {
     TimeFormat,
     MonitorOn,
     MonitorOff,
+    FDisplay,
+    FWrite,
+    FOpen,
+    FClose,
+    FFlush,
+    FGets,
     Unknown,
 };
 
@@ -76,7 +84,9 @@ std::size_t formatStart(SysTask t) {
         case SysTask::SFormatF: return 1;
         case SysTask::Error:
         case SysTask::Warning:
-        case SysTask::Info: return 2;
+        case SysTask::Info:
+        case SysTask::FDisplay:
+        case SysTask::FWrite: return 2;
         case SysTask::Fatal: return 3;
         default: return 0;
     }
@@ -197,6 +207,14 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$write" || name == "$writeb" || name == "$writeo" || name == "$writeh")
         return SysTask::Write;
     if (name == "$swriteb" || name == "$swriteo" || name == "$swriteh") return SysTask::SFormatF;
+    if (name == "$fdisplay" || name == "$fdisplayb" || name == "$fdisplayo" || name == "$fdisplayh")
+        return SysTask::FDisplay;
+    if (name == "$fwrite" || name == "$fwriteb" || name == "$fwriteo" || name == "$fwriteh")
+        return SysTask::FWrite;
+    if (name == "$fopen") return SysTask::FOpen;
+    if (name == "$fclose") return SysTask::FClose;
+    if (name == "$fflush") return SysTask::FFlush;
+    if (name == "$fgets") return SysTask::FGets;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -230,6 +248,7 @@ std::size_t minOperands(SysTask t) {
     switch (t) {
         case SysTask::Fatal:
         case SysTask::Math2:
+        case SysTask::FGets:
         case SysTask::Sscanf:
         case SysTask::ValuePlusargs: return 3;
         case SysTask::Error:
@@ -241,6 +260,10 @@ std::size_t minOperands(SysTask t) {
         case SysTask::Time:
         case SysTask::Realtime:
         case SysTask::TestPlusargs:
+        case SysTask::FDisplay:
+        case SysTask::FWrite:
+        case SysTask::FOpen:
+        case SysTask::FClose:
         case SysTask::Rtoi:
         case SysTask::RealToBits:
         case SysTask::BitsToReal:
@@ -250,6 +273,18 @@ std::size_t minOperands(SysTask t) {
         case SysTask::Clog2: return 2;
         default: return 1;
     }
+}
+
+/// What a run-time warning says of a descriptor that names a file that
+/// is not open (SYSTEM_TASKS.md 6.1).
+std::string notOpenText(W4 d) {
+    const auto a = static_cast<std::uint32_t>(d.a);
+    if (static_cast<std::uint32_t>(d.b) != 0) return "the descriptor has x or z bits";
+    std::string hex(8, '0');
+    for (int i = 7, v = 0; i >= 0; --i, v += 4)
+        hex[static_cast<std::size_t>(i)] = "0123456789abcdef"[(a >> v) & 0xFU];
+    return std::string((a & 0x8000'0000U) != 0 ? "file descriptor" : "multichannel descriptor") +
+           " 32'h" + hex + " names a file that is not open";
 }
 
 bool isRealType(sir::Type t) {
@@ -466,7 +501,8 @@ class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
-          strings_(ctx.strings()), counters_(ctx.counters()), options_(options) {
+          files_(ctx.files()), strings_(ctx.strings()), counters_(ctx.counters()),
+          options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         constOff_.reserve(d.constants.size());
@@ -762,7 +798,11 @@ private:
     kernel::Scheduler& sched_;
     kernel::Store& store_;
     kernel::Output& output_;
+    kernel::Files& files_;
     kernel::Strings& strings_;
+    /// The places that gave a run-time warning, which each gives once
+    /// (UNSPECIFIED_BEHAVIOR.md 4).
+    std::set<const sir::Instr*> warned_;
     kernel::Counters& counters_;
     kernel::CounterId cInstrs_ = 0;
     RunOptions options_;
@@ -929,7 +969,8 @@ private:
             loadError_ = "syscall " + in.operands[0].text + " with too few operands";
         const std::string& n = in.operands[0].text;
         if ((info.task == SysTask::Display || info.task == SysTask::Write ||
-             info.task == SysTask::SFormatF) &&
+             info.task == SysTask::SFormatF || info.task == SysTask::FDisplay ||
+             info.task == SysTask::FWrite) &&
             (n.back() == 'b' || n.back() == 'o' || n.back() == 'h'))
             info.radix = n.back();
         for (const MathName& m : kMath) {
@@ -1929,8 +1970,25 @@ private:
                         if (sched_.ending()) return Exit::Stop;
                         break;
                     }
-                    case Op::Strobe: sched_.strobe(overrides_[ops[0].id]->kernelId); break;
+                    case Op::Strobe:
+                        if (ops.size() < 2)
+                            sched_.strobe(overrides_[ops[0].id]->kernelId);
+                        else  // $fstrobe: the files of its descriptor now (SYSTEM_TASKS.md 6.2)
+                            sched_.strobe(overrides_[ops[0].id]->kernelId,
+                                          fileTargets(in, value(ops[1]), "$fstrobe"));
+                        break;
                     case Op::Monitor: {
+                        if (ops.size() >= 2) {
+                            // $fmonitor: one more monitor, with a frame of
+                            // its own, printing to the files of its
+                            // descriptor now (SYSTEM_TASKS.md 6.2).
+                            kernel::FileTargets to = fileTargets(in, value(ops[1]), "$fmonitor");
+                            Frame& m = newFrame(ops[0].id);
+                            m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);
+                            sched_.addFileMonitor(m.kernelId, depsOf(ops[0].id).slots,
+                                                  std::move(to));
+                            break;
+                        }
                         // The new monitor starts afresh and shows what it
                         // reads (SYSTEM_TASKS.md 4).
                         Frame& m = *overrides_[ops[0].id];
@@ -3788,6 +3846,26 @@ private:
         return text;
     }
 
+    /// A run-time warning at in's place, given once for each place
+    /// (UNSPECIFIED_BEHAVIOR.md 4).
+    void warnOnce(const sir::Instr& in, std::string_view text) {
+        if (!warned_.insert(&in).second) return;
+        std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+        line += ":" + std::to_string(in.loc.line) + ":" + std::to_string(in.loc.column);
+        line += ": warning: ";
+        line += text;
+        output_.message(line);
+    }
+
+    /// The files d names, with a warning when some of it is not open
+    /// (SYSTEM_TASKS.md 6.1).
+    kernel::FileTargets fileTargets(const sir::Instr& in, W4 d, std::string_view task) {
+        kernel::FileTargets to = files_.targets(d);
+        if (to.notOpen)
+            warnOnce(in, std::string(task) + ": " + notOpenText(d) + "; nothing is written there");
+        return to;
+    }
+
     bool syscall(const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         switch (info.task) {
@@ -3882,9 +3960,61 @@ private:
                     return true;
                 }
                 if (info.task == SysTask::Display) text += '\n';
-                output_.write(text);
+                // The print of $fstrobe or $fmonitor (SYSTEM_TASKS.md 6.2).
+                if (const kernel::FileTargets* to = sched_.printingTo())
+                    files_.write(*to, text);
+                else
+                    output_.write(text);
                 return true;
             }
+            case SysTask::FDisplay:
+            case SysTask::FWrite: {
+                const std::optional<std::string> formatted =
+                    formatOperands(p, in, info, formatStart(info.task));
+                if (!formatted) return false;
+                std::string text = *formatted;
+                if (info.task == SysTask::FDisplay) text += '\n';
+                files_.write(fileTargets(in, value(ops[1]), ops[0].text), text);
+                return true;
+            }
+            case SysTask::FOpen: {
+                // An mcd with one argument, an fd with a type (SYSTEM_TASKS.md 6.1).
+                const std::string name(strings_.get(value(ops[1]).a));
+                std::uint32_t d = 0;
+                if (ops.size() > 2) {
+                    const std::string_view type = strings_.get(value(ops[2]).a);
+                    bool badType = false;
+                    d = files_.openFd(name, type, badType);
+                    if (badType)
+                        warnOnce(in, "$fopen: \"" + std::string(type) +
+                                         "\" is not a type of Table 21-6; nothing is opened");
+                } else {
+                    d = files_.openMcd(name);
+                }
+                temp(in.result) = {d, 0};
+                return true;
+            }
+            case SysTask::FGets: {
+                // The line goes to the frame variable, which front assigns
+                // to the target when the count is above 0 (SIR_SPEC.md 8).
+                std::string line;
+                bool notOpen = false;
+                files_.readLine(value(ops[2]), line, notOpen);
+                if (notOpen) warnOnce(in, "$fgets: " + notOpenText(value(ops[2])));
+                if (!line.empty()) frameVar(ops[1].id) = {strings_.intern(line), 0};
+                temp(in.result) = {line.size(), 0};
+                return true;
+            }
+            case SysTask::FClose:
+                if (!files_.close(value(ops[1])))
+                    warnOnce(in, "$fclose: " + notOpenText(value(ops[1])));
+                return true;
+            case SysTask::FFlush:
+                if (ops.size() < 2)
+                    files_.flushAll();
+                else if (!files_.flush(value(ops[1])))
+                    warnOnce(in, "$fflush: " + notOpenText(value(ops[1])));
+                return true;
             case SysTask::Finish:
             case SysTask::Stop: {
                 // 1 and 2 report the time and the place of the call, at the

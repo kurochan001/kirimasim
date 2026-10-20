@@ -248,26 +248,44 @@ void Scheduler::strobe(ProcessId p) {
     schedule(Region::Postponed, {Kind::Postponed, Region::Postponed, p, 0}, 0);
 }
 
+void Scheduler::strobe(ProcessId p, FileTargets to) {
+    begin();
+    strobeTargets_.push_back(std::move(to));
+    schedule(Region::Postponed, {Kind::Postponed, Region::Postponed, p, strobeTargets_.size()}, 0);
+}
+
+void Scheduler::countMonitorParts(const DisplayMonitor& m, bool add) {
+    for (const SlotPart& part : m.parts)
+        monitorSlot_[part.slot] = add ? monitorSlot_[part.slot] + 1 : monitorSlot_[part.slot] - 1;
+}
+
 void Scheduler::setMonitor(ProcessId p, std::span<const SlotPart> parts) {
     begin();
     ensureSlotTables();
-    for (const SlotPart& part : monitorParts_)
-        monitorSlot_[part.slot] = false;
-    monitorProc_ = p;
-    monitorParts_.assign(parts.begin(), parts.end());
-    for (const SlotPart& part : monitorParts_)
-        monitorSlot_[part.slot] = true;
-    monitorDue_ = true;
+    countMonitorParts(monitor_, false);
+    monitor_.process = p;
+    monitor_.parts.assign(parts.begin(), parts.end());
+    countMonitorParts(monitor_, true);
+    monitor_.due = true;
+}
+
+void Scheduler::addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to) {
+    begin();
+    ensureSlotTables();
+    fileMonitors_.push_back({p, {parts.begin(), parts.end()}, true, std::move(to)});
+    countMonitorParts(fileMonitors_.back(), true);
 }
 
 void Scheduler::setMonitoring(bool on) {
     monitorOn_ = on;
-    if (on) monitorDue_ = true;
+    if (on) monitor_.due = true;
 }
 
-void Scheduler::runPostponed(ProcessId p) {
+void Scheduler::runPostponed(ProcessId p, const FileTargets* to) {
     counters_.increment(cWakeups_);
+    printingTo_ = to;
     const auto st = static_cast<Status>(processes_[p].fn(toC(ctx_), processes_[p].frame));
+    printingTo_ = nullptr;
     if (st == Status::Error) {
         if (error_.empty()) error_ = "a process failed";
         requestEnd(EndReason::Internal, 1);
@@ -483,14 +501,30 @@ void Scheduler::runSlot() {
             runRegion(Region::PrePostponed);
     }
     if (!ending_) {
-        // The final assertions, then the monitor, then the strobes
-        // (SCHEDULER_SPEC.md 15.2, SYSTEM_TASKS.md 4).
+        // The final assertions, then the file monitors in the order made
+        // and the monitor, then the strobes (SCHEDULER_SPEC.md 15.2,
+        // SYSTEM_TASKS.md 4). A file monitor none of whose files is open
+        // any more ends (SYSTEM_TASKS.md 6.2).
         postponed_ = true;
         confirmFinals();
-        const bool due = monitorDue_ && monitorOn_ && monitorProc_ != kNoHolder;
-        monitorDue_ = false;
-        if (due) runPostponed(monitorProc_);
+        for (std::size_t i = 0; i < fileMonitors_.size();) {
+            if (!ctx_.files().live(fileMonitors_[i].to)) {
+                countMonitorParts(fileMonitors_[i], false);
+                fileMonitors_.erase(fileMonitors_.begin() + static_cast<std::ptrdiff_t>(i));
+                continue;
+            }
+            if (fileMonitors_[i].due) {
+                fileMonitors_[i].due = false;
+                const FileTargets to = fileMonitors_[i].to;  // the run may add monitors
+                runPostponed(fileMonitors_[i].process, &to);
+            }
+            ++i;
+        }
+        const bool due = monitor_.due && monitorOn_ && monitor_.process != kNoHolder;
+        monitor_.due = false;
+        if (due) runPostponed(monitor_.process);
         runRegion(Region::Postponed);
+        strobeTargets_.clear();
         postponed_ = false;
     }
     // The arena of NBA values without a delay is freed with the slot.
@@ -568,7 +602,15 @@ void Scheduler::execute(const Event& e) {
             return;
         }
         case Kind::TriggerNb: trigger(e.id); return;
-        case Kind::Postponed: runPostponed(e.id); return;
+        case Kind::Postponed: {
+            if (e.gen == 0) {
+                runPostponed(e.id);
+            } else {
+                const FileTargets to = strobeTargets_[e.gen - 1];  // the run may add strobes
+                runPostponed(e.id, &to);
+            }
+            return;
+        }
         case Kind::Deferred: {
             const PendingReport r = std::move(deferredCalls_[e.id]);
             freeDeferred_.push_back(e.id);
@@ -810,7 +852,8 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
-    const bool watched = !subscriptions_[s].empty() || !slotMonitors_[s].empty() || monitorSlot_[s];
+    const bool watched =
+        !subscriptions_[s].empty() || !slotMonitors_[s].empty() || monitorSlot_[s] != 0;
     // During a walk, the change waits for its end with its own copies.
     const bool late = watched && walking_ > 0;
     LateChange change;
@@ -867,6 +910,21 @@ void Scheduler::endWalk() {
     draining_ = false;
 }
 
+void Scheduler::markDue(DisplayMonitor& m, SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                        std::uint32_t width, const std::uint64_t* old, const std::uint64_t* now) {
+    if (m.due) return;
+    const SlotLayout& l = store_.layout(s);
+    for (const SlotPart& part : m.parts) {
+        const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
+        const std::uint32_t pwidth = part.width == 0 ? l.width : part.width;
+        if (part.slot == s && overlaps(part.firstElem, part.numElems, elem, 1) &&
+            overlaps(plsb, pwidth, lsb, width) && !sameBits(l.domain, old, now, plsb, pwidth)) {
+            m.due = true;
+            return;
+        }
+    }
+}
+
 void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const std::uint64_t* old, const std::uint64_t* now) {
     beginWalk();
@@ -896,15 +954,12 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     }
     subscriptions_[s].resize(keep);
 
-    // A part that $monitor shows (SYSTEM_TASKS.md 4).
-    if (monitorSlot_[s] && !monitorDue_) {
-        for (const SlotPart& part : monitorParts_) {
-            const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
-            const std::uint32_t pwidth = part.width == 0 ? l.width : part.width;
-            if (part.slot == s && overlaps(part.firstElem, part.numElems, elem, 1) &&
-                overlaps(plsb, pwidth, lsb, width) && !sameBits(l.domain, old, now, plsb, pwidth))
-                monitorDue_ = true;
-        }
+    // A part that the monitor or a file monitor shows (SYSTEM_TASKS.md 4,
+    // 6.2).
+    if (monitorSlot_[s] != 0) {
+        markDue(monitor_, s, elem, lsb, width, old, now);
+        for (DisplayMonitor& m : fileMonitors_)
+            markDue(m, s, elem, lsb, width, old, now);
     }
 
     // Monitor records that depend on the changed part.
@@ -1195,6 +1250,11 @@ void Output::write(std::string_view text) {
 }
 
 void Output::flush() { std::fflush(to_.out); }
+
+void Output::writeError(std::string_view text) {
+    std::fflush(to_.out);
+    std::fwrite(text.data(), 1, text.size(), to_.err);
+}
 
 void Output::message(std::string_view line) {
     std::fflush(to_.out);

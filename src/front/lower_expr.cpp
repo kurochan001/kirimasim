@@ -1153,6 +1153,40 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 !args.empty() && args[0]->type->getCanonicalType().isUnpackedArray())
                 return lowerArrayReduction(call, name, rt, sl);
             if (name == "$sscanf" || name == "$value$plusargs") return lowerScanCall(call, rt, sl);
+            if (name == "$fopen" && !args.empty() && args.size() <= 2) {
+                // An mcd, or an fd with a type (SYSTEM_TASKS.md 6.1); an
+                // integral name or type is read as a string.
+                std::vector<Operand> ops;
+                ops.reserve(args.size());
+                for (std::size_t i = 0; i < args.size(); ++i)
+                    ops.push_back(arg(i, Type{sir::TypeKind::String, 0}).op);
+                return coerce(sys(sir::s2(32), std::move(ops)), rt, sl);
+            }
+            if (name == "$fgets" && args.size() == 2) {
+                // $fgets(line, fd): the line goes to a frame variable, and
+                // to the target when the count is above 0 (SYSTEM_TASKS.md
+                // 6.3, SIR_SPEC.md 8). A target that is not a string is not
+                // implemented yet.
+                const ast::Expression* t = args[0];
+                if (t->kind == ast::ExpressionKind::Assignment &&
+                    t->as<ast::AssignmentExpression>().isLValueArg())
+                    t = &t->as<ast::AssignmentExpression>().left();
+                if (!t->type->getCanonicalType().isString())
+                    unsupported(sl, "$fgets into a target that is not a string");
+                const Type st{sir::TypeKind::String, 0};
+                const sir::FrameVarId f = newFrameVar(st);
+                const Val n =
+                    sys(sir::s2(32), {Operand::frame(f), lowerDescriptor(*args[1], sl).op});
+                const Val read = emit(Op::Gt, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl);
+                const sir::BlockId store = newBlock();
+                const sir::BlockId next = newBlock();
+                terminate(Op::BrIf, {read.op, Operand::block(store), Operand::block(next)}, sl);
+                setBlock(store);
+                lowerStore(*t, emit(Op::Fload, st, {Operand::frame(f)}, sl), false, sl);
+                terminate(Op::Br, {Operand::block(next)}, sl);
+                setBlock(next);
+                return coerce(n, rt, sl);
+            }
             if (name == "$test$plusargs" && args.size() == 1) {
                 // An integral argument is read as a string (21.6).
                 const Val str = coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl);
@@ -2932,16 +2966,27 @@ bool Lowerer::readsAutomatic(const ast::Expression& e) const {
     return automatic;
 }
 
-void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, char radix) {
+Val Lowerer::lowerDescriptor(const ast::Expression& e, slang::SourceLocation sl) {
+    // slang gives some of these tasks an int argument; the value as
+    // written keeps its x and z bits, which name no file (SYSTEM_TASKS.md 6.1).
+    const ast::Expression& written = e.unwrapImplicitConversions();
+    const ast::Expression& d = written.type->isIntegral() ? written : e;
+    return coerce(lowerExpr(d), integral(true, false, 32), sl);
+}
+
+void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool file, char radix) {
     const slang::SourceLocation sl = call.sourceRange.start();
-    const auto args = call.arguments();
+    // $fstrobe and $fmonitor read their descriptor at the call, and the
+    // rest in the Postponed region (SYSTEM_TASKS.md 6.2).
+    const auto args = file ? call.arguments().subspan(1) : call.arguments();
     // The process runs apart from the caller, so it cannot read the
     // caller's automatic variables; slang rejects them already (13.3.2).
     for (const ast::Expression* a : args)
         if (readsAutomatic(*a)) unsupported(sl, "$strobe or $monitor of an automatic variable");
     const sir::InstanceId inst = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
     sir::Process p;
-    p.name = processName(design_.instances[inst].scopeName, monitor ? "$monitor" : "$strobe");
+    p.name = processName(design_.instances[inst].scopeName,
+                         std::string(file ? "$f" : "$") + (monitor ? "monitor" : "strobe"));
     p.kind = sir::ProcessKind::Postponed;
     p.instance = inst;
     p.loc = loc(sl);
@@ -3004,7 +3049,9 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, char
         throw;
     }
     b_ = std::move(saved);
-    emitVoid(monitor ? Op::Monitor : Op::Strobe, {Operand::process(id)}, sl);
+    std::vector<Operand> ops{Operand::process(id)};
+    if (file) ops.push_back(lowerDescriptor(*call.arguments()[0], sl).op);
+    emitVoid(monitor ? Op::Monitor : Op::Strobe, std::move(ops), sl);
 }
 
 void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
@@ -3024,8 +3071,26 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         emitVoid(Op::Syscall, std::move(ops), sl);
         return;
     }
-    if (base == "$strobe" || base == "$monitor") {
-        lowerPostponed(call, base == "$monitor", radix);
+    if (base == "$strobe" || base == "$monitor" || base == "$fstrobe" || base == "$fmonitor") {
+        lowerPostponed(call, base.ends_with("monitor"), base.starts_with("$f"), radix);
+        return;
+    }
+    if ((base == "$fdisplay" || base == "$fwrite") && !args.empty()) {
+        // The descriptor, then as $display and $write (SYSTEM_TASKS.md 6.2).
+        std::vector<Operand> ops{Operand::str(name), lowerDescriptor(*args[0], sl).op};
+        lowerFormatArgs(args.subspan(1), ops, sl, radix);
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
+    if (name == "$fclose" || name == "$fflush") {
+        // $fflush with no argument flushes every file (SYSTEM_TASKS.md 6.2).
+        std::vector<Operand> ops{Operand::str(name)};
+        if (!args.empty()) ops.push_back(lowerDescriptor(*args[0], sl).op);
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
+    if (name == "$fopen" || name == "$fgets") {
+        (void)lowerExpr(call);  // its value unused
         return;
     }
     if (name == "$monitoron" || name == "$monitoroff") {

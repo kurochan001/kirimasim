@@ -10,6 +10,7 @@
 #include <cstdio>
 
 #include "kirimasim/kernel/counters.h"
+#include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strings.h"
@@ -22,7 +23,8 @@ public:
     // kirimasim: banned-ok the default destinations (RUNTIME_ABI.md 9.3.10)
     Context() : Context(OutputDestinations{stdout, stderr}) {}
     /// A Context that writes where it is told (RUNTIME_ABI.md 9.3.10).
-    explicit Context(OutputDestinations to) : output_(to), scheduler_(*this, store_, counters_) {}
+    explicit Context(OutputDestinations to)
+        : output_(to), files_(output_), scheduler_(*this, store_, counters_) {}
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
 
@@ -31,6 +33,7 @@ public:
     Scheduler& scheduler() { return scheduler_; }
     [[nodiscard]] const Scheduler& scheduler() const { return scheduler_; }
     Output& output() { return output_; }
+    Files& files() { return files_; }
     Store& store() { return store_; }
     Strings& strings() { return strings_; }
     [[nodiscard]] const Strings& strings() const { return strings_; }
@@ -39,6 +42,7 @@ public:
 private:
     Counters counters_;
     Output output_;
+    Files files_;  ///< After output_, which it writes to.
     Store store_;
     Strings strings_;
     Scheduler scheduler_;

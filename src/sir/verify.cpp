@@ -1462,10 +1462,16 @@ private:
                 break;
             case Op::Strobe:
             case Op::Monitor:
-                if (nOps(1) &&
-                    (ops[0].kind != Operand::Kind::Process || ops[0].id >= d_.processes.size() ||
-                     d_.processes[ops[0].id].kind != ProcessKind::Postponed))
+                // With a descriptor for $fstrobe and $fmonitor (SIR_SPEC.md 7.1).
+                if (ops.size() != 1 && ops.size() != 2) {
+                    bad("expects 1 or 2 operands");
+                } else if (ops[0].kind != Operand::Kind::Process ||
+                           ops[0].id >= d_.processes.size() ||
+                           d_.processes[ops[0].id].kind != ProcessKind::Postponed) {
                     bad("needs a postponed process");
+                } else if (ops.size() == 2 && (!isValue(1) || !isIntegral(ty(1)))) {
+                    bad("the descriptor must be an integral value");
+                }
                 break;
             case Op::Udp:
             case Op::UdpSeq: {

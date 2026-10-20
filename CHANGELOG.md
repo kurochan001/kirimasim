@@ -75,6 +75,12 @@ own. CONTRIBUTING.md says what goes in this file.
   `#` and a precision outside `%e`, `%f` and `%g` are reported as
   unsupported (SYSTEM_TASKS.md 3.12). Before, `-` stopped the run with an
   internal error (code 3), and `0` was read as part of the width.
+- File output: `$fopen`, `$fclose`, `$fflush`, `$fdisplay`, `$fwrite`,
+  `$fstrobe` and `$fmonitor` in their b, o and h forms, to an mcd or an fd,
+  and `$fgets` into a string. `$fclose` ends the `$fstrobe`s and
+  `$fmonitor`s of the files it closes; a descriptor that names no open file
+  gives one warning for each place (SYSTEM_TASKS.md 6). Before, each of them
+  was reported as unsupported.
 
 ### Changed
 

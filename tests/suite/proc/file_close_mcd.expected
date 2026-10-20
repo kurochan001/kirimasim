@@ -1,0 +1,19 @@
+s1.txt: end
+s2 reused 1
+s2a.txt: end
+s2b.txt: end
+m1.txt: m1 v=1
+m1.txt: m1 v=2
+m1.txt: end
+m2 reused 1
+m2a.txt: m2 v=1
+m2a.txt: end
+m2b.txt: end
+p1a.txt: end
+p1b.txt: p1 strobe
+p1b.txt: end
+p2a.txt: p2 v=1
+p2a.txt: end
+p2b.txt: p2 v=1
+p2b.txt: p2 v=2
+p2b.txt: end

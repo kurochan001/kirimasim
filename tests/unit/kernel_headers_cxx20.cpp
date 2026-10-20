@@ -6,6 +6,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/edge.h"
+#include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/sim.h"

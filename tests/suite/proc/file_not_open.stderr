@@ -1,0 +1,36 @@
+file_not_open.sv:25:16: warning: $fdisplay: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:26:16: warning: $fwrite: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:27:16: warning: $fstrobe: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:28:16: warning: $fmonitor: file descriptor 32'h80000003 names a file that is not open; nothing is written there
+file_not_open.sv:29:16: warning: $fclose: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:30:16: warning: $fflush: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:31:20: warning: $fgets: file descriptor 32'h80000003 names a file that is not open
+file_not_open.sv:32:16: warning: $fdisplay: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:33:16: warning: $fwrite: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:34:16: warning: $fstrobe: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:35:16: warning: $fmonitor: file descriptor 32'h80000009 names a file that is not open; nothing is written there
+file_not_open.sv:36:16: warning: $fclose: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:37:16: warning: $fflush: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:38:20: warning: $fgets: file descriptor 32'h80000009 names a file that is not open
+file_not_open.sv:39:16: warning: $fdisplay: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:40:16: warning: $fwrite: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:41:16: warning: $fstrobe: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:42:16: warning: $fmonitor: the descriptor has x or z bits; nothing is written there
+file_not_open.sv:43:16: warning: $fclose: the descriptor has x or z bits
+file_not_open.sv:44:16: warning: $fflush: the descriptor has x or z bits
+file_not_open.sv:45:20: warning: $fgets: the descriptor has x or z bits
+file_not_open.sv:46:16: warning: $fdisplay: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:47:16: warning: $fwrite: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:48:16: warning: $fstrobe: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:49:16: warning: $fmonitor: multichannel descriptor 32'h00000004 names a file that is not open; nothing is written there
+file_not_open.sv:50:16: warning: $fclose: multichannel descriptor 32'h00000004 names a file that is not open
+file_not_open.sv:51:16: warning: $fflush: multichannel descriptor 32'h00000004 names a file that is not open
+file_not_open.sv:52:20: warning: $fgets: multichannel descriptor 32'h00000004 names a file that is not open
+file_not_open.sv:53:16: warning: $fdisplay: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:54:16: warning: $fwrite: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:55:16: warning: $fstrobe: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:56:16: warning: $fmonitor: multichannel descriptor 32'h00000000 names a file that is not open; nothing is written there
+file_not_open.sv:57:16: warning: $fclose: multichannel descriptor 32'h00000000 names a file that is not open
+file_not_open.sv:58:16: warning: $fflush: multichannel descriptor 32'h00000000 names a file that is not open
+file_not_open.sv:59:20: warning: $fgets: multichannel descriptor 32'h00000000 names a file that is not open
+file_not_open.sv:61:9: warning: $fopen: "rw" is not a type of Table 21-6; nothing is opened

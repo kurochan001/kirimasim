@@ -1,0 +1,226 @@
+c0.txt: c0 165
+c0.txt: end
+c1a.txt: c1 165
+c1a.txt: end
+c1b.txt: c1 165
+c1b.txt: end
+c2 165
+c2.txt: c2 165
+c2.txt: end
+c3.txt: c3 165
+c3.txt: end
+c4 165
+c5.txt: c5 10100101
+c5.txt: end
+c6a.txt: c6 10100101
+c6a.txt: end
+c6b.txt: c6 10100101
+c6b.txt: end
+c7 10100101
+c7.txt: c7 10100101
+c7.txt: end
+c8.txt: c8 10100101
+c8.txt: end
+c9 10100101
+c10.txt: c10 245
+c10.txt: end
+c11a.txt: c11 245
+c11a.txt: end
+c11b.txt: c11 245
+c11b.txt: end
+c12 245
+c12.txt: c12 245
+c12.txt: end
+c13.txt: c13 245
+c13.txt: end
+c14 245
+c15.txt: c15 a5
+c15.txt: end
+c16a.txt: c16 a5
+c16a.txt: end
+c16b.txt: c16 a5
+c16b.txt: end
+c17 a5
+c17.txt: c17 a5
+c17.txt: end
+c18.txt: c18 a5
+c18.txt: end
+c19 a5
+c20.txt: c20 165
+c20.txt: end
+c21a.txt: c21 165
+c21a.txt: end
+c21b.txt: c21 165
+c21b.txt: end
+c22 165
+c22.txt: c22 165
+c22.txt: end
+c23.txt: c23 165
+c23.txt: end
+c24 165
+c25.txt: c25 10100101
+c25.txt: end
+c26a.txt: c26 10100101
+c26a.txt: end
+c26b.txt: c26 10100101
+c26b.txt: end
+c27 10100101
+c27.txt: c27 10100101
+c27.txt: end
+c28.txt: c28 10100101
+c28.txt: end
+c29 10100101
+c30.txt: c30 245
+c30.txt: end
+c31a.txt: c31 245
+c31a.txt: end
+c31b.txt: c31 245
+c31b.txt: end
+c32 245
+c32.txt: c32 245
+c32.txt: end
+c33.txt: c33 245
+c33.txt: end
+c34 245
+c35.txt: c35 a5
+c35.txt: end
+c36a.txt: c36 a5
+c36a.txt: end
+c36b.txt: c36 a5
+c36b.txt: end
+c37 a5
+c37.txt: c37 a5
+c37.txt: end
+c38.txt: c38 a5
+c38.txt: end
+c39 a5
+c40.txt: c40  60
+c40.txt: end
+c41a.txt: c41  60
+c41a.txt: end
+c41b.txt: c41  60
+c41b.txt: end
+c42  60
+c42.txt: c42  60
+c42.txt: end
+c43.txt: c43  60
+c43.txt: end
+c44  60
+c45.txt: c45 00111100
+c45.txt: end
+c46a.txt: c46 00111100
+c46a.txt: end
+c46b.txt: c46 00111100
+c46b.txt: end
+c47 00111100
+c47.txt: c47 00111100
+c47.txt: end
+c48.txt: c48 00111100
+c48.txt: end
+c49 00111100
+c50.txt: c50 074
+c50.txt: end
+c51a.txt: c51 074
+c51a.txt: end
+c51b.txt: c51 074
+c51b.txt: end
+c52 074
+c52.txt: c52 074
+c52.txt: end
+c53.txt: c53 074
+c53.txt: end
+c54 074
+c55.txt: c55 3c
+c55.txt: end
+c56a.txt: c56 3c
+c56a.txt: end
+c56b.txt: c56 3c
+c56b.txt: end
+c57 3c
+c57.txt: c57 3c
+c57.txt: end
+c58.txt: c58 3c
+c58.txt: end
+c59 3c
+c60.txt: c60  60
+c60.txt: c60   7
+c60.txt: end
+c61a.txt: c61  60
+c61a.txt: c61   7
+c61a.txt: end
+c61b.txt: c61  60
+c61b.txt: c61   7
+c61b.txt: end
+c62  60
+c62   7
+c62.txt: c62  60
+c62.txt: c62   7
+c62.txt: end
+c63.txt: c63  60
+c63.txt: c63   7
+c63.txt: end
+c64  60
+c64   7
+c65.txt: c65 00111100
+c65.txt: c65 00000111
+c65.txt: end
+c66a.txt: c66 00111100
+c66a.txt: c66 00000111
+c66a.txt: end
+c66b.txt: c66 00111100
+c66b.txt: c66 00000111
+c66b.txt: end
+c67 00111100
+c67 00000111
+c67.txt: c67 00111100
+c67.txt: c67 00000111
+c67.txt: end
+c68.txt: c68 00111100
+c68.txt: c68 00000111
+c68.txt: end
+c69 00111100
+c69 00000111
+c70.txt: c70 074
+c70.txt: c70 007
+c70.txt: end
+c71a.txt: c71 074
+c71a.txt: c71 007
+c71a.txt: end
+c71b.txt: c71 074
+c71b.txt: c71 007
+c71b.txt: end
+c72 074
+c72 007
+c72.txt: c72 074
+c72.txt: c72 007
+c72.txt: end
+c73.txt: c73 074
+c73.txt: c73 007
+c73.txt: end
+c74 074
+c74 007
+c75.txt: c75 3c
+c75.txt: c75 07
+c75.txt: end
+c76a.txt: c76 3c
+c76a.txt: c76 07
+c76a.txt: end
+c76b.txt: c76 3c
+c76b.txt: c76 07
+c76b.txt: end
+c77 3c
+c77 07
+c77.txt: c77 3c
+c77.txt: c77 07
+c77.txt: end
+c78.txt: c78 3c
+c78.txt: c78 07
+c78.txt: end
+c79 3c
+c79 07
+w1.txt: w   1
+w1.txt: w   2
+w1.txt: end
+w2.txt: w   1
+w2.txt: w   2
+w2.txt: end

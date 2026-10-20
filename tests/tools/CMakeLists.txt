@@ -111,6 +111,18 @@ add_test(NAME tools/gen_udp_delay_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_udp_delay_matrix.py --check)
 set_tests_properties(tools/gen_udp_delay_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_file_output_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_file_output_matrix.py --check)
+set_tests_properties(tools/gen_file_output_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_file_close_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_file_close_matrix.py --check)
+set_tests_properties(tools/gen_file_close_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_file_not_open_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_file_not_open_matrix.py --check)
+set_tests_properties(tools/gen_file_not_open_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_delay_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delay_matrix.py --check)
 set_tests_properties(tools/gen_delay_matrix PROPERTIES LABELS Tools)

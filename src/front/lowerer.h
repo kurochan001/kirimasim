@@ -395,9 +395,12 @@ public:
                          std::string_view formatOf = {});
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
-    /// $strobe and $monitor and their b, o and h forms: a postponed process
-    /// that displays, started by strobe or monitor (SIR_SPEC.md 7.1, 7.2).
-    void lowerPostponed(const ast::CallExpression& call, bool monitor, char radix);
+    /// $strobe and $monitor and their b, o and h forms, and with file the
+    /// same of $fstrobe and $fmonitor: a postponed process that displays,
+    /// started by strobe or monitor (SIR_SPEC.md 7.1, 7.2).
+    void lowerPostponed(const ast::CallExpression& call, bool monitor, bool file, char radix);
+    /// The descriptor of a file task, as a 4-state 32-bit value (SYSTEM_TASKS.md 6).
+    Val lowerDescriptor(const ast::Expression& e, slang::SourceLocation sl);
 
     // Constants.
     /// The value of an expression slang can evaluate as a constant.

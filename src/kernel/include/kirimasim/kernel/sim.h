@@ -113,6 +113,18 @@ struct SlotPart {
     std::uint32_t width = 0;
 };
 
+/// The files a descriptor named when it was read. Each file is kept with
+/// the serial of its opening, so that one closed since, or opened again
+/// under the same number, is left out (SYSTEM_TASKS.md 6.2).
+struct FileTargets {
+    bool out = false;  ///< Standard output: bit 0 of an mcd, or STDOUT.
+    bool err = false;  ///< Standard error: STDERR.
+    std::vector<std::pair<std::uint32_t, std::uint64_t>> files;  ///< (row, serial)
+    /// Some of the descriptor named no open file: x or z bits, an fd that
+    /// is not open, or a bit of an mcd whose file is not open.
+    bool notOpen = false;
+};
+
 /// One item of an event control on a fixed slot part: a subscription
 /// (SCHEDULER_SPEC.md 9.5). The edge is judged on the part's lowest bit.
 struct WaitItem {
@@ -305,13 +317,22 @@ public:
     /// strobe @P: p runs once in the Postponed region of this time slot
     /// (21.2.2).
     void strobe(ProcessId p);
+    /// strobe @P, d: the same, printing to `to` (SYSTEM_TASKS.md 6.2).
+    void strobe(ProcessId p, FileTargets to);
     /// monitor @P: p becomes the one monitor (21.2.3). It runs in the
     /// Postponed region of this time slot, and of every later time slot in
     /// which a bit of `parts` changes, while monitoring is on.
     void setMonitor(ProcessId p, std::span<const SlotPart> parts);
+    /// monitor @P, d: adds a file monitor printing to `to`, which runs as
+    /// the monitor does; any number run at once, $monitoroff stops none,
+    /// and one ends when none of `to` is open any more (SYSTEM_TASKS.md 6.2).
+    void addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to);
     /// $monitoron and $monitoroff: monitoring on (the default) or off.
     /// Turning it on runs the monitor in this time slot's Postponed region.
     void setMonitoring(bool on);
+    /// While a strobe or a monitor with a descriptor runs: the files it
+    /// prints to; otherwise null, for standard output.
+    [[nodiscard]] const FileTargets* printingTo() const { return printingTo_; }
 
     /// Runs the simulation until it ends, and returns the reason.
     EndReason run();
@@ -531,14 +552,25 @@ private:
     std::vector<Held> held_;
     std::vector<std::uint64_t> shown_;    ///< Scratch: a held part's value.
     std::vector<std::uint64_t> scratch_;  ///< Scratch: a monitor's new value.
-    // The $monitor process, the parts it shows, by slot whether one of
-    // them is in it, whether monitoring is on, and whether it is to run at
-    // the end of this time slot.
-    ProcessId monitorProc_ = kNoHolder;
-    std::vector<SlotPart> monitorParts_;
-    std::vector<bool> monitorSlot_;
+    // A process that shows parts when they change: the $monitor, or a
+    // file monitor, with the files it prints to.
+    struct DisplayMonitor {
+        ProcessId process = kNoHolder;
+        std::vector<SlotPart> parts;
+        bool due = false;  ///< To run at the end of this time slot.
+        FileTargets to;
+    };
+    // The $monitor and the file monitors in the order made; by slot, how
+    // many of their parts are in it; whether monitoring is on.
+    DisplayMonitor monitor_;
+    std::vector<DisplayMonitor> fileMonitors_;
+    std::vector<std::uint32_t> monitorSlot_;
     bool monitorOn_ = true;
-    bool monitorDue_ = false;
+    // The files of the strobes with a descriptor of this time slot (a
+    // Postponed event's gen is 1 + its row; 0 for standard output), and
+    // those of the run in progress.
+    std::vector<FileTargets> strobeTargets_;
+    const FileTargets* printingTo_ = nullptr;
 
     bool ending_ = false;
     EndReason reason_ = EndReason::Quiescent;
@@ -580,7 +612,10 @@ private:
     bool anyEvents(Region first, Region last) const;
     bool moveFirst(Region first, Region last, Region to);
     void execute(const Event& e);
-    void runPostponed(ProcessId p);
+    void runPostponed(ProcessId p, const FileTargets* to = nullptr);
+    void countMonitorParts(const DisplayMonitor& m, bool add);
+    void markDue(DisplayMonitor& m, SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                 std::uint32_t width, const std::uint64_t* old, const std::uint64_t* now);
     /// Announces a change of bits [lsb, lsb + width) of element elem of s
     /// from `old` to `now` (whole elements) to its waiters and monitors.
     void notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
@@ -627,6 +662,9 @@ public:
     explicit Output(OutputDestinations to) : to_(to) {}
 
     void write(std::string_view text);
+    /// The design's text on the messages' destination (STDERR, 21.3.1),
+    /// after flushing the output's.
+    void writeError(std::string_view text);
     /// One line on the messages' destination, after flushing the output's
     /// (CLI.md 3).
     void message(std::string_view line);
