@@ -236,10 +236,10 @@ a checksum; all three simulators print the same.
 
 | Design | What it does | `+n=` | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 5.86 s | 7.97 s | 0.16 s |
-| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 13.85 s | 18.69 s | 0.16 s |
-| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 4.17 s | 4.93 s | 1.76 s |
-| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.95 s | 4.14 s | 0.87 s |
+| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 4.89 s | 7.97 s | 0.16 s |
+| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 11.23 s | 18.69 s | 0.16 s |
+| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 3.91 s | 4.93 s | 1.76 s |
+| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.65 s | 4.14 s | 0.87 s |
 
 - The times are of the simulation only: the median of five runs with the
   count, less the median of five runs with `+n=1`. Starting the program,
@@ -258,10 +258,12 @@ a checksum; all three simulators print the same.
   finished processes (SCHEDULER_SPEC.md 10.8), kirimasim kept them all and
   used 4,947 MiB on `fork_join`.
 - The versions and the machine are the same as in the test results above,
-  but kirimasim's column was measured again on 2026-10-20 at cd422c8. It
-  is 20 to 31% slower than at 394717f (4.53, 10.69, 3.46 and 2.33 s): the
-  two builds, run one after the other on the same machine, differ as much,
-  so the cause is in the changes since then; which ones is not confirmed.
+  but kirimasim's column was measured again on 2026-10-20 at 08a0c3c. It
+  is 5 to 14% slower than at 394717f (4.53, 10.69, 3.46 and 2.33 s). At
+  cd422c8 it was 20 to 31% slower; most of that came from a check of the
+  width of every instruction's operands and from the layout of the check
+  of the Postponed region, both fixed since. The rest is spread over
+  later changes that made the run correct (#28).
   `tools/bench.py` repeats the measurement; `--n` and `--runs` make it
   quick.
 
@@ -477,7 +479,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   generators under `tools/` whose expected output follows from the written
   rules. There are 89 generators, 698 tests in `tests/suite/`, and 991
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 298 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 299 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
