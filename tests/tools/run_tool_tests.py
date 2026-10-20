@@ -281,6 +281,50 @@ def global_state(tmp: Path) -> None:
                want_ok)
 
 
+def bench_report(tmp: Path) -> None:
+    """bench_report.py (PERFORMANCE.md 5.1): a warning for each value worse
+    than the median of the last seven nights by its limit, none for the
+    others, and exit code 0 either way."""
+    def record(seconds: float, mib: float) -> dict:
+        return {"results": {"kirimasim": {"d": {"simulation_seconds": seconds,
+                                                "max_rss_mib": mib}}}}
+    same = [(1.0, 10.0)] * 3
+    for name, past, now, build, want in [
+        ("same", same, (1.0, 10.0), 100.0, set()),
+        ("time_below", same, (1.14, 10.0), 100.0, set()),
+        ("time_at_limit", same, (1.15, 10.0), 100.0, {"d seconds"}),
+        ("rss", same, (1.0, 11.5), 100.0, {"d MiB"}),
+        ("build_below", same, (1.0, 10.0), 124.0, set()),
+        ("build_at_limit", same, (1.0, 10.0), 125.0, {"build seconds"}),
+        ("median_not_mean", [(1.0, 10.0), (9.0, 10.0), (1.0, 10.0)], (1.2, 10.0), 100.0,
+         {"d seconds"}),
+        # Eight nights: the oldest one is left out, or the median would be 5.5.
+        ("last_seven", [(10.0, 10.0)] * 4 + [(1.0, 10.0)] * 4, (1.2, 10.0), 100.0,
+         {"d seconds"}),
+        ("no_history", [], (5.0, 10.0), 100.0, set()),
+    ]:
+        root = tmp / ("bench_" + name)
+        for i, (seconds, mib) in enumerate(past):
+            night = root / "history" / str(i)
+            night.mkdir(parents=True)
+            (night / "nightly.json").write_text(json.dumps(
+                {"date": f"2026-10-{i + 1:02d}T00:00:00Z", "commit": "c", "build_seconds": 100.0,
+                 "results": record(seconds, mib)}), encoding="utf-8")
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "results.json").write_text(json.dumps(record(*now)), encoding="utf-8")
+        p = subprocess.run([sys.executable, str(TOOLS / "bench_report.py"),
+                            "--results", str(root / "results.json"),
+                            "--build-seconds", str(build), "--commit", "0123456789ab",
+                            "--out", str(root / "out" / "nightly.json"),
+                            "--history", str(root / "history")],
+                           capture_output=True, text=True, check=False)
+        got = {line.removeprefix("::warning::benchmark ").split(":")[0]
+               for line in p.stdout.splitlines() if line.startswith("::warning::benchmark ")}
+        if p.returncode != 0 or got != want or not (root / "out" / "nightly.json").is_file():
+            failures.append(f"bench_report {name}: exit code {p.returncode}, warnings "
+                            f"{sorted(got)}, expected {sorted(want)}\n{p.stdout}{p.stderr}")
+
+
 def suite_files(tmp: Path) -> None:
     for name, files, skips, want_ok in [
         ("paired", ["a.sv", "a.expected", "a.stderr"], "", True),
@@ -411,6 +455,7 @@ def main() -> int:
         banned_kernel(tmp)
         banned_state(tmp)
         global_state(tmp)
+        bench_report(tmp)
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)

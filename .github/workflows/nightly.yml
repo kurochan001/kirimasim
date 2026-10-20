@@ -263,6 +263,78 @@ jobs:
             echo "::endgroup::"
           done || true
 
+  # Wall-clock benchmarks (PERFORMANCE.md 5.1): the build time of
+  # kirimasim and tools/bench.py on bench/, compared by
+  # tools/bench_report.py with the median of the last seven nights, whose
+  # records come from their artifacts. A value worse than its limit gets a
+  # warning in the summary; nothing fails, as shared runners swing widely.
+  bench:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/release/_deps/*-src
+            build/release/_deps/*-subbuild
+            build/release/_deps/*-tmp
+            build/release/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-release-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - run: cmake --preset release
+      # slang first, so that the time is that of kirimasim's own code.
+      - run: cmake --build --preset release --target slang_slang
+
+      - name: Build kirimasim, timed
+        run: |
+          start=$(date +%s.%N)
+          cmake --build --preset release --target kirimasim
+          end=$(date +%s.%N)
+          echo "BUILD_SECONDS=$(python3 -c "print(round($end - $start, 2))")" >> "$GITHUB_ENV"
+
+      - name: Run the benchmarks
+        run: python3 tools/bench.py --kirimasim build/release/src/driver/kirimasim --out build/bench
+
+      # A night without a record (its job failed, or the artifact expired)
+      # is skipped.
+      - name: Fetch the records of the last seven nights
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p build/bench-history
+          found=0
+          for id in $(gh run list --repo "$GITHUB_REPOSITORY" --workflow nightly.yml \
+                        --branch main --limit 30 --json databaseId --jq '.[].databaseId'); do
+            [ "$id" = "$GITHUB_RUN_ID" ] && continue
+            if gh run download "$id" --repo "$GITHUB_REPOSITORY" --name bench \
+                 --dir "build/bench-history/$id" 2>/dev/null; then
+              found=$((found + 1))
+              [ "$found" -ge 7 ] && break
+            fi
+          done
+          echo "records of earlier nights: $found"
+
+      - name: Compare with the last nights
+        run: >
+          python3 tools/bench_report.py --results build/bench/results.json
+          --build-seconds "$BUILD_SECONDS" --commit "$GITHUB_SHA"
+          --out build/bench/nightly.json --history build/bench-history
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep this night's record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bench
+          path: |
+            build/bench/nightly.json
+            build/bench/summary.md
+          retention-days: 30
+
   # Negative controls (TEST_SUITE.md): each known mistake put into the
   # sources must make some test fail.
   mutants:

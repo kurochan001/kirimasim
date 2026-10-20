@@ -2,7 +2,7 @@
 
 [日本語](PERFORMANCE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved). The same day, the premise in 5.1 that macOS runners cannot be had was corrected (approved).
+Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved). The same day, the premise in 5.1 that macOS runners cannot be had was corrected (approved). On 2026-10-20, 5.1 was implemented on Linux (approved).
 
 This document sets kirimasim's performance goals, its event counters, the regression test by counts (PerfCount), and the conditions of wall-clock benchmarks. The reasons for ending follow SCHEDULER_SPEC.md 16, and the form of `--stats=json` follows CLI.md.
 
@@ -96,7 +96,7 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 
 ### 5.1 Nightly measurement (from M6 of P1)
 
-Not implemented yet (as of 2026-10-18): no workflow measures the benchmarks; `tests/tools` only checks that the benchmark designs run.
+Implemented on 2026-10-20: the `bench` job of the nightly workflow times the release build of kirimasim, runs `tools/bench.py`, and compares with `tools/bench_report.py`, which also writes the night's record. It measures on Linux only; whether to measure on macOS too is not decided yet.
 
 - A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. Whether it also measures on GitHub's macOS runner, which this public repository can use (checked 2026-10-18), is decided when this is implemented; until then macOS values are measured on the developer's Mac and attached to reports.
 - What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken with Python's `resource.getrusage(RUSAGE_CHILDREN)`; no new tool is installed.

@@ -266,6 +266,10 @@ a checksum; all three simulators print the same.
   later changes that made the run correct (#28).
   `tools/bench.py` repeats the measurement; `--n` and `--runs` make it
   quick.
+- The nightly workflow measures kirimasim on Linux each night and puts a
+  warning in its summary when a time or the memory is 15% worse, or the
+  build 25% slower, than the median of the last seven nights
+  (PERFORMANCE.md 5.1). It fails nothing: shared runners swing widely.
 
 ### What works
 
