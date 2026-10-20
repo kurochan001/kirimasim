@@ -1,7 +1,9 @@
-// Formatted reading for $sscanf (SYSTEM_TASKS.md 6.3, 21.3.4.3).
+// Formatted reading for $sscanf and $fscanf (SYSTEM_TASKS.md 6.3, 21.3.4.3).
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -12,8 +14,24 @@ namespace {
 
 using kirimasim::kernel::parseScanFormat;
 using kirimasim::kernel::ScanConversion;
+using kirimasim::kernel::ScanInput;
+using kirimasim::kernel::scanInput;
 using kirimasim::kernel::scanString;
 using kirimasim::kernel::ScanValue;
+
+/// The characters of a string, one at a time, counting how many were taken.
+class FromString final : public ScanInput {
+public:
+    explicit FromString(std::string s) : s_(std::move(s)) {}
+    int get() override {
+        return taken_ < s_.size() ? static_cast<unsigned char>(s_[taken_++]) : -1;
+    }
+    [[nodiscard]] std::size_t taken() const { return taken_; }
+
+private:
+    std::string s_;
+    std::size_t taken_ = 0;
+};
 
 std::vector<ScanValue> scan(const std::string& in, const std::string& fmt, int expect) {
     std::vector<ScanValue> out;
@@ -127,6 +145,41 @@ TEST(Scan, PlusargValues) {
     EXPECT_EQ(plusargValue("12ab", 'd').bits.b, ~std::uint64_t{0});
     EXPECT_EQ(plusargValue("fast", 's').text, "fast");
     EXPECT_DOUBLE_EQ(plusargValue("2.5", 'f').real, 2.5);
+}
+
+// $fscanf: the same reading, from characters taken one at a time; what was
+// looked at and not used comes back, and nothing after it is taken.
+TEST(Scan, FromAStream) {
+    FromString in("12 ab 1e+x rest");
+    std::vector<ScanValue> out;
+    std::string unread;
+    EXPECT_EQ(scanInput(in, "%d %s %f", out, unread), 3);
+    EXPECT_EQ(out[0].bits.a, 12U);
+    EXPECT_EQ(out[1].text, "ab");
+    EXPECT_DOUBLE_EQ(out[2].real, 1.0);
+    // %f looked at "e+x" for an exponent and did not use it.
+    EXPECT_EQ(unread, "e+x");
+    EXPECT_EQ(in.taken(), 10U);
+    // A literal that does not match is looked at and given back.
+    FromString lit("7;8");
+    out.clear();
+    EXPECT_EQ(scanInput(lit, "%d,%d", out, unread), 1);
+    EXPECT_EQ(unread, ";");
+    // The end before the first conversion is -1; NUL is not white space.
+    FromString empty("  ");
+    out.clear();
+    EXPECT_EQ(scanInput(empty, "%d", out, unread), -1);
+    FromString nul(std::string("\0"
+                               "5",
+                               2));
+    out.clear();
+    EXPECT_EQ(scanInput(nul, "%d", out, unread), 0);
+    EXPECT_EQ(scan(std::string("\0"
+                               "5",
+                               2),
+                   "%d", 1)[0]
+                  .bits.a,
+              5U);
 }
 
 TEST(Scan, ParseFormat) {

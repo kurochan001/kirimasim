@@ -50,6 +50,24 @@ bool parseScanFormat(std::string_view format, std::vector<ScanConversion>& convs
 /// as white space.
 int scanString(std::string_view input, std::string_view format, std::vector<ScanValue>& out);
 
+/// Where scanInput takes its characters from: get() gives the next one,
+/// or -1 at the end of the input.
+class ScanInput {
+public:
+    ScanInput() = default;
+    ScanInput(const ScanInput&) = delete;
+    ScanInput& operator=(const ScanInput&) = delete;
+    virtual ~ScanInput() = default;
+    virtual int get() = 0;
+};
+
+/// Reads as scanString does, from `input` ($fscanf; SYSTEM_TASKS.md 6.3),
+/// where NUL is not white space. The characters it took from `input` to
+/// look at but did not use are put in `unread`, in order, for the caller
+/// to give back.
+int scanInput(ScanInput& input, std::string_view format, std::vector<ScanValue>& out,
+              std::string& unread);
+
 /// The value of the rest of a plusarg after its name, read by the one
 /// conversion of $value$plusargs (SYSTEM_TASKS.md 9): an empty rest gives 0
 /// or the empty string; a rest the conversion cannot read whole gives x

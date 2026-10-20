@@ -72,6 +72,15 @@ enum class SysTask : std::uint8_t {
     FClose,
     FFlush,
     FGets,
+    FGetc,
+    Ungetc,
+    FScanf,
+    FRead,
+    FTell,
+    FSeek,
+    Rewind,
+    FEof,
+    FError,
     Unknown,
 };
 
@@ -215,6 +224,15 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$fclose") return SysTask::FClose;
     if (name == "$fflush") return SysTask::FFlush;
     if (name == "$fgets") return SysTask::FGets;
+    if (name == "$fgetc") return SysTask::FGetc;
+    if (name == "$ungetc") return SysTask::Ungetc;
+    if (name == "$fscanf") return SysTask::FScanf;
+    if (name == "$fread") return SysTask::FRead;
+    if (name == "$ftell") return SysTask::FTell;
+    if (name == "$fseek") return SysTask::FSeek;
+    if (name == "$rewind") return SysTask::Rewind;
+    if (name == "$feof") return SysTask::FEof;
+    if (name == "$ferror") return SysTask::FError;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -246,9 +264,14 @@ SysTask resolveSysTask(std::string_view name) {
 /// position: the name, then those.
 std::size_t minOperands(SysTask t) {
     switch (t) {
+        case SysTask::FSeek: return 4;
         case SysTask::Fatal:
         case SysTask::Math2:
         case SysTask::FGets:
+        case SysTask::Ungetc:
+        case SysTask::FScanf:
+        case SysTask::FRead:
+        case SysTask::FError:
         case SysTask::Sscanf:
         case SysTask::ValuePlusargs: return 3;
         case SysTask::Error:
@@ -264,6 +287,10 @@ std::size_t minOperands(SysTask t) {
         case SysTask::FWrite:
         case SysTask::FOpen:
         case SysTask::FClose:
+        case SysTask::FGetc:
+        case SysTask::FTell:
+        case SysTask::Rewind:
+        case SysTask::FEof:
         case SysTask::Rtoi:
         case SysTask::RealToBits:
         case SysTask::BitsToReal:
@@ -277,14 +304,26 @@ std::size_t minOperands(SysTask t) {
 
 /// What a run-time warning says of a descriptor that names a file that
 /// is not open (SYSTEM_TASKS.md 6.1).
-std::string notOpenText(W4 d) {
-    const auto a = static_cast<std::uint32_t>(d.a);
-    if (static_cast<std::uint32_t>(d.b) != 0) return "the descriptor has x or z bits";
+std::string descriptorText(std::uint32_t a) {
     std::string hex(8, '0');
     for (int i = 7, v = 0; i >= 0; --i, v += 4)
         hex[static_cast<std::size_t>(i)] = "0123456789abcdef"[(a >> v) & 0xFU];
     return std::string((a & 0x8000'0000U) != 0 ? "file descriptor" : "multichannel descriptor") +
-           " 32'h" + hex + " names a file that is not open";
+           " 32'h" + hex;
+}
+
+std::string notOpenText(W4 d) {
+    if (static_cast<std::uint32_t>(d.b) != 0) return "the descriptor has x or z bits";
+    return descriptorText(static_cast<std::uint32_t>(d.a)) + " names a file that is not open";
+}
+
+/// The same for input, which takes an fd: an mcd names no file to read
+/// (SYSTEM_TASKS.md 6.3).
+std::string notReadableText(W4 d) {
+    const auto a = static_cast<std::uint32_t>(d.a);
+    if (static_cast<std::uint32_t>(d.b) == 0 && (a & 0x8000'0000U) == 0)
+        return descriptorText(a) + " is not a file descriptor, which input takes";
+    return notOpenText(d);
 }
 
 bool isRealType(sir::Type t) {
@@ -3996,13 +4035,119 @@ private:
             }
             case SysTask::FGets: {
                 // The line goes to the frame variable, which front assigns
-                // to the target when the count is above 0 (SIR_SPEC.md 8).
+                // to the target when the count is above 0 (SIR_SPEC.md 8). An
+                // integral target holds width / 8 characters, placed as a
+                // string literal is (SYSTEM_TASKS.md 6.3).
+                const sir::Type t = typeOf(ops[1]);
+                const bool text = t.kind == sir::TypeKind::String;
                 std::string line;
                 bool notOpen = false;
-                files_.readLine(value(ops[2]), line, notOpen);
-                if (notOpen) warnOnce(in, "$fgets: " + notOpenText(value(ops[2])));
-                if (!line.empty()) frameVar(ops[1].id) = {strings_.intern(line), 0};
+                if (text || t.width >= 8)
+                    files_.readLine(value(ops[2]), text ? 0 : t.width / 8, line, notOpen);
+                if (notOpen) warnOnce(in, "$fgets: " + notReadableText(value(ops[2])));
+                if (!line.empty()) {
+                    if (text)
+                        frameVar(ops[1].id) = {strings_.intern(line), 0};
+                    else
+                        kernel::wide::fromText(&frameVar(ops[1].id), t.width, line);
+                }
                 temp(in.result) = {line.size(), 0};
+                return true;
+            }
+            case SysTask::FGetc: {
+                bool notOpen = false;
+                const int c = files_.getChar(value(ops[1]), notOpen);
+                if (notOpen) warnOnce(in, "$fgetc: " + notReadableText(value(ops[1])));
+                temp(in.result) = {static_cast<std::uint32_t>(c), 0};
+                return true;
+            }
+            case SysTask::Ungetc: {
+                bool notOpen = false;
+                const int r = files_.ungetChar(static_cast<int>(value(ops[1]).a & 0xffU),
+                                               value(ops[2]), notOpen);
+                if (notOpen) warnOnce(in, "$ungetc: " + notReadableText(value(ops[2])));
+                temp(in.result) = {static_cast<std::uint32_t>(r), 0};
+                return true;
+            }
+            case SysTask::FScanf: {
+                // $fscanf(fd, format, frame variables...): as $sscanf, from
+                // the file (SYSTEM_TASKS.md 6.3).
+                bool notOpen = false;
+                scanValues_.clear();
+                const int n = files_.scan(value(ops[1]), ops[2].text, scanValues_, notOpen);
+                if (notOpen) warnOnce(in, "$fscanf: " + notReadableText(value(ops[1])));
+                for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
+                    scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].id));
+                temp(in.result) = {static_cast<std::uint32_t>(n), 0};
+                return true;
+            }
+            case SysTask::FRead: {
+                // $fread(frame variable, fd): the frame variable holds the
+                // target's value; the bytes read replace its bits from the
+                // most significant byte of ceil(width / 8) on, as 2-state
+                // values, and the rest keep theirs (SYSTEM_TASKS.md 6.3).
+                const sir::Type t = typeOf(ops[1]);
+                const unsigned nbytes = (t.width + 7) / 8;
+                std::string bytes;
+                bool notOpen = false;
+                files_.readBytes(value(ops[2]), nbytes, bytes, notOpen);
+                if (notOpen) warnOnce(in, "$fread: " + notReadableText(value(ops[2])));
+                W4* v = &frameVar(ops[1].id);
+                for (std::size_t k = 0; k < bytes.size(); ++k) {
+                    const W4 byte{static_cast<unsigned char>(bytes[k]), 0};
+                    const auto low = static_cast<unsigned>((nbytes - 1 - k) * 8);
+                    if (low < t.width)
+                        kernel::wide::put(v, low, &byte, std::min(8U, t.width - low));
+                }
+                temp(in.result) = {bytes.size(), 0};
+                return true;
+            }
+            case SysTask::FTell: {
+                bool notOpen = false;
+                const std::int64_t p = files_.tell(value(ops[1]), notOpen);
+                if (notOpen) warnOnce(in, "$ftell: " + notReadableText(value(ops[1])));
+                temp(in.result) = {static_cast<std::uint32_t>(p), 0};
+                return true;
+            }
+            case SysTask::FSeek:
+            case SysTask::Rewind: {
+                // $rewind is $fseek(fd, 0, 0) (21.3.5); an offset or an
+                // operation with x or z bits is an error.
+                bool notOpen = false;
+                std::int64_t offset = 0;
+                std::int64_t from = 0;
+                bool known = true;
+                if (info.task == SysTask::FSeek) {
+                    const W4 o = value(ops[2]);
+                    const W4 f = value(ops[3]);
+                    known = o.b == 0 && f.b == 0;
+                    offset = static_cast<std::int32_t>(o.a);
+                    from = static_cast<std::int32_t>(f.a);
+                }
+                const int r = files_.seek(value(ops[1]), offset, known ? from : -1, notOpen);
+                if (notOpen) warnOnce(in, ops[0].text + ": " + notReadableText(value(ops[1])));
+                temp(in.result) = {static_cast<std::uint32_t>(r), 0};
+                return true;
+            }
+            case SysTask::FEof: {
+                bool notOpen = false;
+                const int e = files_.atEnd(value(ops[1]), notOpen);
+                if (notOpen) warnOnce(in, "$feof: " + notReadableText(value(ops[1])));
+                temp(in.result) = {static_cast<std::uint32_t>(e), 0};
+                return true;
+            }
+            case SysTask::FError: {
+                // $ferror(fd, frame variable): the text goes to the frame
+                // variable, which front assigns to the target; no warning,
+                // as it is how a design asks (SYSTEM_TASKS.md 6.4).
+                std::string text;
+                const int e = files_.error(value(ops[1]), text);
+                const sir::Type t = typeOf(ops[2]);
+                if (t.kind == sir::TypeKind::String)
+                    frameVar(ops[2].id) = {strings_.intern(text), 0};
+                else
+                    kernel::wide::fromText(&frameVar(ops[2].id), t.width, text);
+                temp(in.result) = {static_cast<std::uint32_t>(e), 0};
                 return true;
             }
             case SysTask::FClose:

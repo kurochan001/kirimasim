@@ -1,0 +1,29 @@
+fgetc 97 0
+fgetc 98 0
+fgetc -1 1
+fgetc error 0 0
+ungetc 0 0 0 66 65 -1 2 0 121
+fgets 3 [ab
+]
+fgets 2 [cd]
+fgets 0 [cd]
+fgets 4 61626364
+fgets 4 065666768
+fgets 1 069
+fgets 8 006a6b6c6d6e6f700a
+fgets 0 55
+fscanf 4 12 ab 3.5 x
+fscanf 1 1.0 101
+fscanf rest 4 [+x 7]
+fscanf -1 5
+fread 2 182
+fread 2 8384
+fread 1 85000000
+fread 0 182
+m 03 01 02 ee m9 005 007 dm ee 0a 0b
+fread memory 2 1 4 2 1 0 m9 105 007
+seek 0 0 53 6 0 52 0 57 -1 1 0 0 48 -1 1
+write only -1 1 0 -1 0 0 0 0
+update 0 3 0 3 6 Xhere
+append 0 4 4 one two
+stdin -1 1 0

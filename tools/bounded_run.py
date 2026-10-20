@@ -6,7 +6,9 @@ mistake planted by tools/mutants.py can make one. A tool that kept all of
 it grew until the machine ran out of memory, and took every test running
 beside it down too (#27). run() keeps at most LIMIT bytes of each stream,
 and stops the program as soon as it writes more. The limit is far beyond
-every expected output (the largest is about 120 KB).
+every expected output (the largest is about 120 KB). The program's
+standard input is empty, so that a design that reads STDIN does not wait
+for the terminal (TEST_SUITE.md, "Where a test runs").
 """
 
 import locale
@@ -28,11 +30,12 @@ class OutputLimit(Exception):
 def run(cmd: list[str], *, cwd=None, timeout: float | None = None,
         merge_stderr: bool = False) -> subprocess.CompletedProcess:
     """As subprocess.run(cmd, cwd=cwd, timeout=timeout, capture_output=True,
-    text=True, check=False), with standard error in standard output when
+    text=True, check=False) with an empty standard input, with standard
+    error in standard output when
     merge_stderr is set. Raises OutputLimit when a stream goes past LIMIT,
     and subprocess.TimeoutExpired, after stopping the program, as
     subprocess.run does."""
-    proc = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE,
+    proc = subprocess.Popen(cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT if merge_stderr else subprocess.PIPE)
     over: list[str] = []
 

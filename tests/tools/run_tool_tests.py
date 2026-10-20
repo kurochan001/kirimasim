@@ -81,7 +81,8 @@ def fake_kirimasim_test(tmp: Path) -> None:
     is judged now"): one that writes without end is stopped past the limit
     of tools/bounded_run.py and the test fails, on either stream, in
     seconds; one that writes the expected output only when it runs in an
-    empty directory and is given the test by an absolute path passes, next
+    empty directory and is given the test by an absolute path passes, and
+    so does one that writes it only when its standard input is empty, next
     to one that writes the expected output, which passes."""
     test = tmp / "limit.sv"
     test.write_text("/*\n:name: limit\n:description: d\n:tags: t\n:type: simulation\n"
@@ -92,6 +93,8 @@ def fake_kirimasim_test(tmp: Path) -> None:
         ("expected", "sys.stdout.write('hello\\n')", 0, ""),
         ("workdir", "sys.stdout.write('hello\\n' if not os.listdir('.') and "
                     "os.path.isabs(sys.argv[-1]) else 'not in an empty directory\\n')", 0, ""),
+        ("empty_stdin", "sys.stdout.write('hello\\n' if sys.stdin.read() == '' else 'input\\n')",
+         0, ""),
         ("stdout", "while True: sys.stdout.write('x' * 63 + '\\n')", 1,
          "wrote more than 16 MiB to standard output"),
         ("stderr", "while True: sys.stderr.write('x' * 63 + '\\n')", 1,
@@ -102,9 +105,10 @@ def fake_kirimasim_test(tmp: Path) -> None:
                         f"    {body}\n", encoding="utf-8")
         fake.chmod(0o755)
         try:
+            # Given standard input that is not empty, which the test must not see.
             p = subprocess.run([sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim",
-                                str(fake), str(test)], capture_output=True, text=True,
-                               check=False, timeout=120)
+                                str(fake), str(test)], input="not empty\n", capture_output=True,
+                               text=True, check=False, timeout=120)
         except subprocess.TimeoutExpired:
             failures.append(f"run_suite_test fake kirimasim {name}: did not end in 120 s")
             continue

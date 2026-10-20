@@ -81,6 +81,13 @@ own. CONTRIBUTING.md says what goes in this file.
   `$fmonitor`s of the files it closes; a descriptor that names no open file
   gives one warning for each place (SYSTEM_TASKS.md 6). Before, each of them
   was reported as unsupported.
+- File input: `$fgetc`, `$ungetc`, `$fscanf`, `$fread` into a variable or a
+  memory, `$ftell`, `$fseek`, `$rewind`, `$feof` and `$ferror`, and
+  `$fgets` into an integral variable; STDIN reads standard input. Reading
+  an mcd or a closed file gives one warning for each place, and reading a
+  file opened only for writing fails with an error that `$ferror` reports
+  (SYSTEM_TASKS.md 6.3, 6.4). Before, each of them was reported as
+  unsupported, and `$fgets` on STDIN read nothing.
 
 ### Changed
 
