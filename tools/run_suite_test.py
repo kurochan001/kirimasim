@@ -22,6 +22,9 @@ comment) decides what is expected:
   that runs and passes fails too, until it is taken off the list. The list
   covers the tests under its own directory; any other test (the own test
   suite's, which tools/p1_population.py counts) is skipped as before.
+* Both runs are made in an empty temporary directory made for the test,
+  with the test's file given by its absolute path, so that files the
+  design writes do not meet those of other tests (TEST_SUITE.md).
 * :top_module: is passed to both runs as --top=<name>, one for each name.
   :files:, :incdirs: and :defines: are not passed yet, so a test with one
   of them fails rather than run in a form other than written.
@@ -36,6 +39,7 @@ import argparse
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import bounded_run
@@ -145,7 +149,8 @@ def main() -> int:
             return 1
     timeout = int(meta["timeout"]) if "timeout" in meta else None
     try:
-        return judge(args, meta, listed, covered, timeout)
+        with tempfile.TemporaryDirectory(prefix="kirimasim-test-") as work:
+            return judge(args, meta, listed, covered, timeout, work)
     except subprocess.TimeoutExpired:
         print(f"FAIL: kirimasim did not finish within {timeout} s (:timeout:)", file=sys.stderr)
         return 1
@@ -154,10 +159,16 @@ def main() -> int:
         return 1
 
 
-def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int | None) -> int:
-    """Parses, and runs a simulation test, and compares what it expects."""
+def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int | None,
+          work: str) -> int:
+    """Parses, and runs a simulation test in the directory work, and
+    compares what it expects."""
     tops = [f"--top={name}" for name in meta.get("top_module", "").split()]
-    proc = bounded_run.run([args.kirimasim, "parse", *tops, str(args.test)], timeout=timeout)
+    test = str(args.test.resolve())
+    # A path to kirimasim would be taken from work; a bare name is looked
+    # up on PATH.
+    exe = str(Path(args.kirimasim).resolve()) if "/" in args.kirimasim else args.kirimasim
+    proc = bounded_run.run([exe, "parse", *tops, test], cwd=work, timeout=timeout)
 
     if "should_fail_because" in meta:
         return check_failure(args, meta, proc)
@@ -168,7 +179,7 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     if "simulation" not in meta.get("type", "").split():
         return 0
 
-    run = bounded_run.run([args.kirimasim, *tops, str(args.test)], timeout=timeout)
+    run = bounded_run.run([exe, *tops, test], cwd=work, timeout=timeout)
     if run.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in run.stderr:
         if listed or not covered:
             print("SKIP: uses a construct that is not supported yet", file=sys.stderr)

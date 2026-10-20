@@ -76,11 +76,13 @@ def timeout_test(kirimasim: str, tmp: Path) -> None:
         expect_code("run_suite_test timeout " + name, run + [str(f)], code)
 
 
-def output_limit_test(tmp: Path) -> None:
-    """run_suite_test.py on a kirimasim that writes without end
-    (tools/bounded_run.py): the run is stopped past the limit and the test
-    fails, on either stream, in seconds; next to a kirimasim that writes
-    the expected output, which passes."""
+def fake_kirimasim_test(tmp: Path) -> None:
+    """run_suite_test.py on stand-ins for kirimasim (TEST_SUITE.md, "What
+    is judged now"): one that writes without end is stopped past the limit
+    of tools/bounded_run.py and the test fails, on either stream, in
+    seconds; one that writes the expected output only when it runs in an
+    empty directory and is given the test by an absolute path passes, next
+    to one that writes the expected output, which passes."""
     test = tmp / "limit.sv"
     test.write_text("/*\n:name: limit\n:description: d\n:tags: t\n:type: simulation\n"
                     ":lrm: 1800-2023 21.2\n:oracle: spec\n:spec_check: ai\n:fourstate: no\n"
@@ -88,13 +90,15 @@ def output_limit_test(tmp: Path) -> None:
                     "endmodule\n", encoding="utf-8")
     for name, body, code, message in [
         ("expected", "sys.stdout.write('hello\\n')", 0, ""),
+        ("workdir", "sys.stdout.write('hello\\n' if not os.listdir('.') and "
+                    "os.path.isabs(sys.argv[-1]) else 'not in an empty directory\\n')", 0, ""),
         ("stdout", "while True: sys.stdout.write('x' * 63 + '\\n')", 1,
          "wrote more than 16 MiB to standard output"),
         ("stderr", "while True: sys.stderr.write('x' * 63 + '\\n')", 1,
          "wrote more than 16 MiB to standard error"),
     ]:
         fake = tmp / f"fake_{name}"
-        fake.write_text(f"#!{sys.executable}\nimport sys\nif sys.argv[1] != 'parse':\n"
+        fake.write_text(f"#!{sys.executable}\nimport os, sys\nif sys.argv[1] != 'parse':\n"
                         f"    {body}\n", encoding="utf-8")
         fake.chmod(0o755)
         try:
@@ -102,10 +106,10 @@ def output_limit_test(tmp: Path) -> None:
                                 str(fake), str(test)], capture_output=True, text=True,
                                check=False, timeout=120)
         except subprocess.TimeoutExpired:
-            failures.append(f"run_suite_test output limit {name}: did not end in 120 s")
+            failures.append(f"run_suite_test fake kirimasim {name}: did not end in 120 s")
             continue
         if p.returncode != code or message not in p.stderr:
-            failures.append(f"run_suite_test output limit {name}: exit code {p.returncode}, "
+            failures.append(f"run_suite_test fake kirimasim {name}: exit code {p.returncode}, "
                             f"expected {code} and {message!r}\n{p.stderr[-2000:]}")
 
 
@@ -483,7 +487,7 @@ def main() -> int:
         suite_test(args.kirimasim, tmp)
         skips_test(args.kirimasim, tmp)
         timeout_test(args.kirimasim, tmp)
-        output_limit_test(tmp)
+        fake_kirimasim_test(tmp)
         severity_test(args.kirimasim, tmp)
         banned(tmp)
         banned_kernel(tmp)
