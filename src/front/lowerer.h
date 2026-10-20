@@ -765,12 +765,17 @@ private:
     /// The functions each body calls outside assertion action blocks, whose
     /// reads are an always_comb's too (SCHEDULER_SPEC.md 6.3).
     std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> readCallees_;
-    /// Where each subroutine writes what (for checkTaskWrites).
+    /// Where each subroutine writes what (for checkTaskAndActionWrites).
     std::map<sir::SubroutineId, std::vector<std::pair<sir::SlotRange, slang::SourceLocation>>>
         subWriteSites_;
-    /// The tasks each process calls itself, with where (for checkTaskWrites).
+    /// The tasks each process calls itself, with where (for
+    /// checkTaskAndActionWrites).
     std::map<std::uint32_t, std::vector<std::pair<sir::SubroutineId, slang::SourceLocation>>>
         taskCalls_;
+    /// The functions that run deferred assertions' actions (deferAction),
+    /// with where each assertion is. Like tasks, what they write is not
+    /// their caller's (SIR_SPEC.md 3.4).
+    std::map<sir::SubroutineId, slang::SourceLocation> actions_;
     /// The reads of each always_comb and always_latch, for its sensitivity.
     std::map<std::uint32_t, std::vector<sir::SlotRange>> combReads_;
     /// From scanDisables: the named blocks and tasks a disable names, the
@@ -874,10 +879,11 @@ private:
     /// After the nets are resolved: what each cont process drives, and then
     /// what the functions it calls write (SIR_SPEC.md 3.4).
     void finishDrives();
-    /// Reports a write that a process makes through a task to what an
-    /// always_comb, always_latch or always_ff writes, which slang's analysis
-    /// does not see (9.2.2.2, 9.2.2.4; SCHEDULER_SPEC.md 6.4).
-    void checkTaskWrites();
+    /// Reports a write that a process makes through a task, or through the
+    /// action of a deferred assertion it runs, to what an always_comb,
+    /// always_latch or always_ff writes, which slang's analysis does not see
+    /// (9.2.2.2, 9.2.2.4; SCHEDULER_SPEC.md 6.4).
+    void checkTaskAndActionWrites();
     void lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::string& prefix);
 };
 

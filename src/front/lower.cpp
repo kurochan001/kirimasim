@@ -793,7 +793,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     checkStaticInitOrder();
     if (numErrors_ != 0) return;
     finishDesign();
-    checkTaskWrites();
+    checkTaskAndActionWrites();
     resolveNets();
     finishDrives();
 }
@@ -839,9 +839,10 @@ void Lowerer::finishDesign() {
     // reads, with the functions it calls outside assertion action blocks,
     // until nothing changes (recursion included). A task's body is no part
     // of its caller's, for what it writes (SIR_SPEC.md 3.4) or reads
-    // (SCHEDULER_SPEC.md 6.3).
-    const auto task = [&](sir::SubroutineId c) {
-        return design_.subroutines[c].kind == sir::SubroutineKind::Task;
+    // (SCHEDULER_SPEC.md 6.3), nor is a deferred assertion's action, which
+    // runs after the caller (16.4.1).
+    const auto later = [&](sir::SubroutineId c) {
+        return design_.subroutines[c].kind == sir::SubroutineKind::Task || actions_.contains(c);
     };
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> writes = subWrites_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> reads = subReads_;
@@ -850,7 +851,7 @@ void Lowerer::finishDesign() {
         for (const auto& [key, called] : callees_) {
             if (!key.first) continue;
             for (const sir::SubroutineId c : called)
-                if (!task(c))
+                if (!later(c))
                     for (const sir::SlotRange& r : std::vector(writes[c]))
                         changed = add(writes[key.second], r) || changed;
         }
@@ -869,7 +870,7 @@ void Lowerer::finishDesign() {
         if (key.first) continue;
         const bool cont = design_.processes[key.second].kind == sir::ProcessKind::Cont;
         for (const sir::SubroutineId c : called)
-            if (!task(c))
+            if (!later(c))
                 for (const sir::SlotRange& r : writes[c])
                     add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);
     }
@@ -897,7 +898,7 @@ void Lowerer::finishDesign() {
     }
 }
 
-void Lowerer::checkTaskWrites() {
+void Lowerer::checkTaskAndActionWrites() {
     // What each always_comb, always_latch and always_ff writes, itself and
     // through its functions, by slot.
     std::map<sir::SlotId, std::vector<std::uint32_t>> owners;
@@ -910,14 +911,40 @@ void Lowerer::checkTaskWrites() {
             if (design_.slots[w.slot].subroutine == sir::kNone) owners[w.slot].push_back(p);
     }
     if (owners.empty()) return;
-    // Each task a process calls, and what it calls in turn, may write one
-    // of them; the error is at the write, the note at the call, once for
-    // each pair of places, whatever the instance.
+    // Where a process writes what is not its block's: each task it calls,
+    // and each deferred assertion's action that it or a function it calls
+    // runs (finishDesign).
+    struct Start {
+        sir::SubroutineId sub;
+        slang::SourceLocation at;
+    };
+    std::map<std::uint32_t, std::vector<Start>> starts;
+    for (const auto& [q, calls] : taskCalls_)
+        for (const auto& [task, callAt] : calls)
+            starts[q].push_back({task, callAt});
+    for (const auto& [key, called] : callees_) {
+        if (key.first) continue;
+        std::set<sir::SubroutineId> seen;
+        const auto visit = [&](const auto& self, sir::SubroutineId x) -> void {
+            if (!seen.insert(x).second) return;
+            if (const auto a = actions_.find(x); a != actions_.end())
+                starts[key.second].push_back({x, a->second});
+            else if (design_.subroutines[x].kind != sir::SubroutineKind::Task)
+                if (const auto c = callees_.find({true, x}); c != callees_.end())
+                    for (const sir::SubroutineId y : c->second)
+                        self(self, y);
+        };
+        for (const sir::SubroutineId c : called)
+            visit(visit, c);
+    }
+    // Each of them, and what it calls in turn, may write one of them; the
+    // error is at the write, the note at the call or the assertion, once
+    // for each pair of places, whatever the instance.
     std::set<std::pair<slang::SourceLocation, slang::SourceLocation>> reported;
-    for (const auto& [q, calls] : taskCalls_) {
-        for (const auto& [task, callAt] : calls) {
-            std::vector<sir::SubroutineId> todo{task};
-            std::set<sir::SubroutineId> seen{task};
+    for (const auto& [q, list] : starts) {
+        for (const auto& [start, callAt] : list) {
+            std::vector<sir::SubroutineId> todo{start};
+            std::set<sir::SubroutineId> seen{start};
             while (!todo.empty()) {
                 const sir::SubroutineId x = todo.back();
                 todo.pop_back();
@@ -936,13 +963,18 @@ void Lowerer::checkTaskWrites() {
                         const char* kind = owner.kind == sir::ProcessKind::Comb    ? "always_comb"
                                            : owner.kind == sir::ProcessKind::Latch ? "always_latch"
                                                                                    : "always_ff";
+                        const bool action = actions_.contains(start);
                         reportError(at,
                                     "'" + s.name + "', which the " + kind + " procedure at " +
                                         whereOf(owner.loc) +
                                         " writes, may not be written by another process, here "
-                                        "through a task it calls",
+                                        "through " +
+                                        (action ? "the action of a deferred assertion it runs"
+                                                : "a task it calls"),
                                     callAt,
-                                    "'" + design_.subroutines[task].name + "' is called here");
+                                    action ? "the deferred assertion is here"
+                                           : "'" + design_.subroutines[start].name +
+                                                 "' is called here");
                     }
                 }
                 if (const auto c = callees_.find({true, x}); c != callees_.end())

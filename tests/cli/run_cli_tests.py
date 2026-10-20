@@ -36,7 +36,7 @@ FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
 ERROR_DESIGNS = [HERE / "later_work_matrix.sv", HERE / "later_work_override.sv",
-                 HERE / "task_write_matrix.sv"]
+                 HERE / "task_write_matrix.sv", HERE / "deferred_write_matrix.sv"]
 BLOCK_POSITIONS = HERE / "block_position_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 END_TASKS = str(HERE / "end_tasks.sv")
@@ -402,9 +402,10 @@ def main() -> int:
     # Errors that front finds, each with a note, and exit code 2: a function
     # that schedules work after it returns, called where 13.4.4 does not
     # allow it (SCHEDULER_SPEC.md 6.5; tools/gen_later_work_matrix.py and
-    # tools/gen_later_work_override_matrix.py), and a write through a task
-    # to what an always_comb, always_latch or always_ff writes
-    # (SCHEDULER_SPEC.md 6.4; tools/gen_task_write_matrix.py).
+    # tools/gen_later_work_override_matrix.py), and a write through a task,
+    # or through the action of a deferred assertion, to what an
+    # always_comb, always_latch or always_ff writes (SCHEDULER_SPEC.md 6.4;
+    # tools/gen_task_write_matrix.py, tools/gen_deferred_write_matrix.py).
     for design in ERROR_DESIGNS:
         proc = subprocess.run([args.kirimasim, design.name], cwd=HERE, capture_output=True,
                               text=True, check=False)

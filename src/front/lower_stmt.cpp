@@ -1074,12 +1074,15 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
     const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
     design_.subroutines.push_back(std::move(fn));
     callees_[{b_.isSub, b_.proc}].push_back(id);
+    actions_[id] = sl;
     Body saved = std::move(b_);
     b_ = Body{};
     b_.isSub = true;
     b_.proc = id;
     b_.scale = saved.scale;
     b_.scope = saved.scope;
+    // A write the call makes itself, through a ref argument, is at the action.
+    b_.at = action != nullptr ? startOf(*action) : sl;
     try {
         for (std::size_t i = 0; i < passed.size(); ++i)
             substitutions_[passed[i]] = emit(Op::Fload, values[i].type,

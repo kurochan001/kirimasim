@@ -90,6 +90,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- The action of a deferred assertion is no part of the `always_comb`,
+  `always_latch` or `always_ff` that runs it: several such blocks, and
+  other processes, may write what their actions write, where kirimasim
+  stopped with an internal error of the SIR verifier. A write through
+  the action of another process's deferred assertion to what such a
+  block writes is an error at the write with a note at the assertion,
+  which slang does not report (SCHEDULER_SPEC.md 6.4; #22).
 - An immediate assertion waits only where its action blocks do, and a
   deferred one not at all: `always_ff` with an assertion in its body was
   reported as unsupported, and a task with one that `always_comb`,

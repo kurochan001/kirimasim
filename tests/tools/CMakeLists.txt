@@ -349,3 +349,7 @@ set_tests_properties(tools/gen_task_write_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_assertion_wait_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_assertion_wait_matrix.py --check)
 set_tests_properties(tools/gen_assertion_wait_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_deferred_write_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_deferred_write_matrix.py --check)
+set_tests_properties(tools/gen_deferred_write_matrix PROPERTIES LABELS Tools)
