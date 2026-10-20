@@ -6,6 +6,7 @@ which must pass.
 """
 
 import argparse
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -601,6 +602,25 @@ def dco(tmp: Path) -> None:
                                      "--head", "HEAD"], want_ok, cwd=repo)
 
 
+def mutants_check(tmp: Path) -> None:
+    """mutants.py --check on a copy of src/: it passes, and fails once the
+    text that one mistake rewrites is changed."""
+    spec = importlib.util.spec_from_file_location("mutants", TOOLS / "mutants.py")
+    mutants = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mutants)
+    run = [sys.executable, str(TOOLS / "mutants.py"), "--check", "--root"]
+    for name, change in [("unchanged", False), ("text_changed", True)]:
+        root = tmp / ("mutants_" + name)
+        shutil.copytree(ROOT / "src", root / "src")
+        if change:
+            _, rel, old, _ = mutants.MUTANTS[0]
+            f = root / rel
+            half = len(old) // 2  # a character in the middle, so that the text is not there
+            f.write_text(f.read_text(encoding="utf-8").replace(old, old[:half] + "@" + old[half:]),
+                         encoding="utf-8")
+        expect("mutants check " + name, run + [str(root)], not change)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True)
@@ -622,6 +642,7 @@ def main() -> int:
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)
         dco(tmp)
+        mutants_check(tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)
     if failures:

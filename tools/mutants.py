@@ -5,6 +5,7 @@ that some test fails. A mistake that no test catches is a hole in the
 tests.
 
   tools/mutants.py [--preset dev] [--only <name>] [--shard <k>/<n>]
+  tools/mutants.py --check [--root <dir>]
 
 A mistake counts as caught when some test fails, or when a test that ran
 on the unchanged sources is skipped as unsupported: a mistake can turn a
@@ -19,6 +20,11 @@ file is always restored, even when the run is interrupted; the script
 refuses to start when src/ has uncommitted changes, so that restoring can
 never lose work. At the end it rebuilds the unchanged sources. The exit code
 is 1 if a mistake survives or does not apply.
+
+--check builds and runs nothing: it only checks that the text of every
+mistake is in its file exactly once (under --root, the repository by
+default), so that a change of the code that a mistake rewrites is seen by
+every test run, not first by the nightly run of the mistakes.
 """
 
 import argparse
@@ -989,12 +995,31 @@ def run_tests(cmd: list[str]) -> tuple[int, set[str]]:
     return p.returncode, skipped
 
 
+def check(root: Path) -> int:
+    """1 if the text of some mistake is not in its file exactly once."""
+    bad = 0
+    for name, rel, old, _ in MUTANTS:
+        path = root / rel
+        found = path.read_text(encoding="utf-8").count(old) if path.exists() else 0
+        if found != 1:
+            print(f"DOES NOT APPLY  {name} ({rel}: its text is there {found} times)")
+            bad += 1
+    print(f"mutants: {len(MUTANTS)} checked, {bad} do not apply")
+    return 1 if bad else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--preset", default="dev")
     ap.add_argument("--only", default="", help="only mutants whose name contains this")
     ap.add_argument("--shard", default="1/1", help="k/n: the k-th of every n mutants")
+    ap.add_argument("--check", action="store_true",
+                    help="only check that every mistake applies; build and run nothing")
+    ap.add_argument("--root", type=Path, default=ROOT,
+                    help="with --check: the tree whose files are checked")
     args = ap.parse_args()
+    if args.check:
+        return check(args.root)
     m = re.fullmatch(r"(\d+)/(\d+)", args.shard)
     if not m or not 1 <= int(m.group(1)) <= int(m.group(2)):
         print(f"mutants: --shard {args.shard}: expected k/n with 1 <= k <= n", file=sys.stderr)
