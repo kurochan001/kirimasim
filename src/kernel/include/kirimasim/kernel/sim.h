@@ -44,9 +44,6 @@ enum class EndReason : std::uint8_t {
 /// The name used on stderr and in --stats=json: finish, quiescent, ...
 const char* endReasonName(EndReason r);
 
-/// The default exit code for a reason.
-int exitCode(EndReason r);
-
 /// The 17 regions of a time slot, in order (SCHEDULER_SPEC.md 2.1).
 enum class Region : std::uint8_t {
     Preponed,

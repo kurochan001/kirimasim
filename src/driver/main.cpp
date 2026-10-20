@@ -193,6 +193,24 @@ int runParse(kirimasim::kernel::Context& context, const Options& o) {
     return result.success ? kExitOk : kExitInputError;
 }
 
+/// The exit code of the reason a run ended for (CLI.md 5). The table is
+/// the driver's: the kernel returns the reason only (RUNTIME_ABI.md 9.3.9).
+int exitCode(kirimasim::kernel::EndReason r) {
+    using kirimasim::kernel::EndReason;
+    switch (r) {
+        case EndReason::Finish:
+        case EndReason::Quiescent:
+        case EndReason::Stop: return 0;
+        case EndReason::Fatal: return 1;
+        case EndReason::Error: return 2;
+        case EndReason::Internal: return 3;
+        case EndReason::TimeLimit: return 4;
+        case EndReason::ZeroTimeLimit: return 5;
+        case EndReason::Interrupted: return 130;
+    }
+    return 3;
+}
+
 int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     if (o.slangArgs.empty()) {
         std::fputs("kirimasim: error: no input files\n", stderr);
@@ -288,7 +306,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
                          context.counters().toJson().c_str());
     }
     if (reason == kirimasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;
-    return kirimasim::kernel::exitCode(reason);
+    return exitCode(reason);
 }
 
 int run(int argc, char** argv) {

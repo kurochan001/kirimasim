@@ -107,21 +107,6 @@ const char* endReasonName(EndReason r) {
     return "internal";
 }
 
-int exitCode(EndReason r) {
-    switch (r) {
-        case EndReason::Finish:
-        case EndReason::Quiescent:
-        case EndReason::Stop: return 0;
-        case EndReason::Fatal: return 1;
-        case EndReason::Error: return 2;
-        case EndReason::Internal: return 3;
-        case EndReason::TimeLimit: return 4;
-        case EndReason::ZeroTimeLimit: return 5;
-        case EndReason::Interrupted: return 130;
-    }
-    return 3;
-}
-
 const char* regionName(Region r) {
     switch (r) {
         case Region::Preponed: return "preponed";
