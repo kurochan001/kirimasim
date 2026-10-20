@@ -1664,12 +1664,11 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
         lowerUdp(g, prefix);
         return;
     }
-    static const std::set<std::string, std::less<>> kLogic = {"and", "nand", "or",
-                                                              "nor", "xor",  "xnor"};
-    static const std::set<std::string, std::less<>> kTri = {"bufif0", "bufif1", "notif0", "notif1"};
+    static constexpr std::string_view kLogic[] = {"and", "nand", "or", "nor", "xor", "xnor"};
+    static constexpr std::string_view kTri[] = {"bufif0", "bufif1", "notif0", "notif1"};
     const bool pull = kind == "pullup" || kind == "pulldown";
-    const bool logic = kLogic.contains(kind);
-    const bool tri = kTri.contains(kind);
+    const bool logic = std::find(std::begin(kLogic), std::end(kLogic), kind) != std::end(kLogic);
+    const bool tri = std::find(std::begin(kTri), std::end(kTri), kind) != std::end(kTri);
     if (!logic && !tri && !pull && kind != "buf" && kind != "not") {
         // MOS switches and bidirectional switches are phase 4
         // (VALUE_SEMANTICS.md 5.1).
