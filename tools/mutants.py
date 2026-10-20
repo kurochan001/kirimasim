@@ -908,6 +908,9 @@ MUTANTS = [
     ("vm: no instruction takes the wide path", "src/vm/vm.cpp",
      "info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in);",
      "info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in) && false;"),
+    ("front: the elements of an array of gates or UDPs share one name", "src/front/lower.cpp",
+     "    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size(); ++i)",
+     "    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size() && false; ++i)"),
 ]
 
 

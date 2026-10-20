@@ -90,6 +90,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- An array of sequential UDP instances runs: its elements got one name
+  between them, so the slots of their states clashed and kirimasim stopped
+  with an internal error (28.3.6). Each element is now named with its
+  indices, as an element of an array of module instances is.
 - Tier 1 is fast again on designs without wide values: since values wider
   than 64 bits ran, every instruction looked at the widths of its operands
   to choose the wide path, which made the bench designs 8 to 22% slower;

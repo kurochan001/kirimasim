@@ -1,0 +1,3 @@
+t=0 i1_down=11 i1_up=1111 i1_offset=1111 i1_two_dims=1111 in_down=xx in_up=xxxx in_offset=xxxx in_two_dims=xxxx
+t=1 i1_down=01 i1_up=0110 i1_offset=1011 i1_two_dims=1001 in_down=01 in_up=1011 in_offset=1001 in_two_dims=1101
+t=3 i1_down=10 i1_up=1001 i1_offset=0110 i1_two_dims=0110 in_down=10 in_up=0110 in_offset=0110 in_two_dims=1010

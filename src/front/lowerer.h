@@ -834,6 +834,10 @@ private:
     /// `unconnected_drive is in effect (22.9, VALUE_SEMANTICS.md 5.3); a
     /// variable port is not pulled (UNSPECIFIED_BEHAVIOR.md N10).
     void pullUnconnected(const ast::InstanceSymbol& child, const ast::PortSymbol& ps);
+    /// The name of a gate or UDP instance, with the indices of its element
+    /// when it is part of an array.
+    std::string primitiveName(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix,
+                              std::string_view kind);
     /// A built-in gate or pull (VALUE_SEMANTICS.md 5.8), or one element of an
     /// array of them.
     void lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix);

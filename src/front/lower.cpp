@@ -1654,6 +1654,21 @@ void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortS
               {5, 5});
 }
 
+std::string Lowerer::primitiveName(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix,
+                                   std::string_view kind) {
+    if (g.name.empty() && g.arrayPath.empty()) return processName(prefix, std::string(kind));
+    // slang names an element of an array of gates or UDPs by the array
+    // alone; it gets its indices, as an element of an array of module
+    // instances does (28.3.6), so that the names of its slots are its own.
+    std::string name = g.getHierarchicalPath();
+    slang::SmallVector<slang::ConstantRange> dims;
+    g.getArrayDimensions(dims);
+    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size(); ++i)
+        name +=
+            "[" + std::to_string(static_cast<std::int32_t>(g.arrayPath[i]) + dims[i].lower()) + "]";
+    return name;
+}
+
 void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {
     // A built-in gate or pull is a cont process that computes its outputs
     // from its inputs whenever one changes (VALUE_SEMANTICS.md 5.8,
@@ -1684,8 +1699,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
         if (!ds.second) strength.first = 5;
         if (!ds.first) strength.second = 5;
     }
-    const std::string name = g.name.empty() && g.arrayPath.empty() ? processName(prefix, "gate")
-                                                                   : g.getHierarchicalPath();
+    const std::string name = primitiveName(g, prefix, "gate");
     const slang::SourceLocation sl = g.location;
     const auto first = static_cast<std::uint32_t>(design_.processes.size());
     std::optional<GateSide> side;
@@ -1816,8 +1830,7 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
         return;
     }
     const slang::SourceLocation sl = g.location;
-    const std::string name = g.name.empty() && g.arrayPath.empty() ? processName(prefix, "udp")
-                                                                   : g.getHierarchicalPath();
+    const std::string name = primitiveName(g, prefix, "udp");
     sir::TypeId table = 0;
     try {
         table = udpTable(prim, sl);
