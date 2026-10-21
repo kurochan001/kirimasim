@@ -95,7 +95,7 @@ TEST(Dump, TheEndOfTheRunWritesTheLastChanges) {
     d.ctx.dump().file(d.file.string(), "$dumpfile(\"x\")");
     d.ctx.dump().vars(0, 0, {}, {}, true);
     d.ctx.dump().endSlot(d.ctx.scheduler());
-    std::uint64_t* w = d.ctx.store().element(0, 0);
+    std::uint64_t* w = d.ctx.store().element(kirimasim::kernel::SlotId{0}, 0);
     w[0] = 0b0101;  // a: 0101, b: 0
     w[1] = 0;
     d.ctx.dump().finish(d.ctx.scheduler());

@@ -149,18 +149,20 @@ public:
     k::Context& context() { return ctx_; }
 
     std::uint64_t now() override { return ctx_.scheduler().time(); }
-    std::uint64_t read(std::uint32_t slot) override { return ctx_.store().element(slot, 0)[0]; }
+    std::uint64_t read(std::uint32_t slot) override {
+        return ctx_.store().element(k::SlotId{slot}, 0)[0];
+    }
     void write(std::uint32_t slot, std::uint64_t v) override {
-        ctx_.scheduler().write(slot, 0, 0, 0, &v);
+        ctx_.scheduler().write(k::SlotId{slot}, 0, 0, 0, &v);
     }
     void nba(std::uint32_t p, std::uint32_t slot, std::uint64_t v, std::uint64_t d) override {
-        ctx_.scheduler().scheduleNba(k::ProcessId{p}, slot, 0, 0, 0, &v, d);
+        ctx_.scheduler().scheduleNba(k::ProcessId{p}, k::SlotId{slot}, 0, 0, 0, &v, d);
     }
     void waitDelay(std::uint32_t p, std::uint64_t d) override {
         ctx_.scheduler().waitDelay(k::ProcessId{p}, d);
     }
     void waitEdge(std::uint32_t p, std::uint32_t slot, Edge e) override {
-        const k::WaitItem item{{slot, 0, 0, 0, 0}, e, nullptr, nullptr};
+        const k::WaitItem item{{k::SlotId{slot}, 0, 0, 0, 0}, e, nullptr, nullptr};
         ctx_.scheduler().waitEvent(k::ProcessId{p}, {&item, 1});
     }
     void waitNamed(std::uint32_t p, std::uint32_t ev) override {
@@ -173,7 +175,7 @@ public:
     void waitTrue(std::uint32_t p, std::uint32_t slot) override {
         monitors_[p] = {this, slot};
         k::MonitorSpec m;
-        m.slots = {{slot, 0, 0, 0, 0}};
+        m.slots = {{k::SlotId{slot}, 0, 0, 0, 0}};
         m.eval = &evalSlot;
         m.frame = &monitors_[p];
         m.domain = k::Domain::Two;
@@ -204,7 +206,7 @@ private:
     }
     static void evalSlot(kirima_context* ctx, void* frame, std::uint64_t* out) {
         const auto* m = static_cast<MonitorFrame*>(frame);
-        out[0] = k::fromC(ctx).store().element(m->slot, 0)[0];
+        out[0] = k::fromC(ctx).store().element(k::SlotId{m->slot}, 0)[0];
     }
 };
 
@@ -522,7 +524,7 @@ TEST(Scheduler, KilledProcessNeverResumes) {
     EXPECT_EQ(sim.log().find(" L1"), std::string::npos);
     EXPECT_EQ(sim.log().find(" L2"), std::string::npos);
     EXPECT_NE(sim.log().find("t6 p3 L3"), std::string::npos);
-    EXPECT_EQ(sim.context().store().element(1, 0)[0], 5U);
+    EXPECT_EQ(sim.context().store().element(k::SlotId{1}, 0)[0], 5U);
     const std::string json = sim.context().counters().toJson();
     EXPECT_NE(json.find("\"proc.created\": 4, \"proc.finished\": 4"), std::string::npos) << json;
 }
@@ -1055,7 +1057,7 @@ TEST(KernelAbi, WaitAnyTakesMonitorItemsWithIff) {
     BitFrame f{a};
     GuardState g;
     const std::uint32_t p = api->add_process(k::toC(ctx), &logOnce, &w, KIRIMA_GROUP_ACTIVE);
-    const kirima_slot_part part{a, 0, 0, 0, 0};
+    const kirima_slot_part part{a.index(), 0, 0, 0, 0};
     kirima_monitor_item item{};
     item.monitor.slots = &part;
     item.monitor.num_slots = 1;

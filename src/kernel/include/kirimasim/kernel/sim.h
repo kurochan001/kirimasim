@@ -117,7 +117,7 @@ using DeferredFn = kirima_deferred_fn;
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems
 /// 0: all) and bits [lsb, lsb + width) of each (width 0: all).
 struct SlotPart {
-    SlotId slot = 0;
+    SlotId slot{0};
     std::uint32_t firstElem = 0;
     std::uint32_t numElems = 0;
     std::uint32_t lsb = 0;
@@ -472,7 +472,7 @@ private:
     /// arena, freed all at once when the slot ends; with a delay, in the
     /// record itself, freed when the update runs (SCHEDULER_SPEC.md 5).
     struct NbaRecord {
-        SlotId slot = 0;
+        SlotId slot{0};
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
         std::uint32_t width = 0;
@@ -496,7 +496,7 @@ private:
     /// is 64 bits, as Event::gen is: a 32-bit one would come round to a
     /// dropped update's number in a long run (#36).
     struct DelayedDriver {
-        SlotId slot = 0;
+        SlotId slot{0};
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
         std::uint32_t width = 0;
@@ -554,7 +554,7 @@ private:
     struct LateChange {
         bool trigger = false;
         EventId event{0};
-        SlotId slot = 0;
+        SlotId slot{0};
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
         std::uint32_t width = 0;

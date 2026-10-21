@@ -8,9 +8,12 @@
 #include <cstdint>
 #include <vector>
 
+#include "kirimasim/kernel/id.h"
+
 namespace kirimasim::kernel {
 
-using SlotId = std::uint32_t;
+struct SlotTag;
+using SlotId = Id<SlotTag>;
 
 /// Storage domain of a slot (SIR_SPEC.md 3.2).
 enum class Domain : std::uint8_t { Two, Four, Real, Handle };
@@ -36,16 +39,16 @@ public:
     /// Adds a slot and sets every element to its initial value.
     SlotId add(Domain domain, std::uint32_t width, std::uint32_t elements, Init init);
 
-    [[nodiscard]] const SlotLayout& layout(SlotId s) const { return slots_[s]; }
+    [[nodiscard]] const SlotLayout& layout(SlotId s) const { return slots_[s.index()]; }
     [[nodiscard]] std::uint32_t size() const { return static_cast<std::uint32_t>(slots_.size()); }
 
     /// The words of element e of slot s.
     std::uint64_t* element(SlotId s, std::uint32_t e) {
-        const SlotLayout& l = slots_[s];
+        const SlotLayout& l = slots_[s.index()];
         return words(l.domain).data() + l.offset + std::uint64_t{e} * l.elemWords;
     }
     [[nodiscard]] const std::uint64_t* element(SlotId s, std::uint32_t e) const {
-        const SlotLayout& l = slots_[s];
+        const SlotLayout& l = slots_[s.index()];
         return words(l.domain).data() + l.offset + std::uint64_t{e} * l.elemWords;
     }
 

@@ -301,7 +301,8 @@ MUTANTS = [
      "        b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process;",
      "        sir::Owner::Kind::Process;"),
     ("kernel: writes to a held slot ignore the hold", "src/kernel/sim.cpp",
-     "if (heldOf_.empty() || heldOf_[s] == kNotHeld) return writeRaw(s, elem, lsb, width, value);",
+     "if (heldOf_.empty() || heldOf_[s.index()] == kNotHeld)\n"
+     "        return writeRaw(s, elem, lsb, width, value);",
      "return writeRaw(s, elem, lsb, width, value);"),
     ("kernel: a released net keeps the forced value", "src/kernel/sim.cpp",
      "        if (h.net)\n            showHeld(part.slot, e, lsb, width);",
@@ -1072,7 +1073,7 @@ MUTANTS = [
     ("kernel: --wave-scope keeps no scope below a match", "src/kernel/dump.cpp",
      "keep[i] = rows[i].parent != kNoRow && keep[rows[i].parent];", "keep[i] = false;"),
     ("kernel: names of one net get codes of their own", "src/kernel/dump.cpp",
-     "if (codeOf_[d.slot] == kNoRow) {", "if (codeOf_[d.slot] == kNoRow || true) {"),
+     "if (codeOf_[d.slot.index()] == kNoRow) {", "if (codeOf_[d.slot.index()] == kNoRow || true) {"),
     ("kernel: a later $dumpvars gives no warning", "src/kernel/dump.cpp",
      "    } else if (state_ != State::Starting || time != startTime_) {\n        return DumpCall::Late;",
      "    } else if (state_ != State::Starting || time != startTime_) {\n        return DumpCall::Done;"),

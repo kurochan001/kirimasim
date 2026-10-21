@@ -257,7 +257,8 @@ void Scheduler::strobe(ProcessId p, FileTargets to) {
 
 void Scheduler::countMonitorParts(const DisplayMonitor& m, bool add) {
     for (const SlotPart& part : m.parts)
-        monitorSlot_[part.slot] = add ? monitorSlot_[part.slot] + 1 : monitorSlot_[part.slot] - 1;
+        monitorSlot_[part.slot.index()] =
+            add ? monitorSlot_[part.slot.index()] + 1 : monitorSlot_[part.slot.index()] - 1;
 }
 
 void Scheduler::setMonitor(ProcessId p, std::span<const SlotPart> parts) {
@@ -624,7 +625,8 @@ void Scheduler::execute(const Event& e) {
             return;
         }
         case Kind::Show:
-            showHeld(e.id, static_cast<std::uint32_t>(e.gen), 0, store_.layout(e.id).width);
+            showHeld(SlotId{e.id}, static_cast<std::uint32_t>(e.gen), 0,
+                     store_.layout(SlotId{e.id}).width);
             return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
@@ -665,7 +667,7 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
     for (const WaitItem& item : items) {
         const SlotId s = item.part.slot;
         pushSwept(
-            subscriptions_[s], subscriptionLimit_[s], Subscription{p, gen, item},
+            subscriptions_[s.index()], subscriptionLimit_[s.index()], Subscription{p, gen, item},
             [&](const Subscription& x) { return processes_[x.process.index()].gen != x.gen; });
         counters_.increment(cSubscriptions_);
     }
@@ -697,9 +699,9 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
     counters_.increment(cMonitorEvals_);
     const MonitorRef ref{id, monitors_[id].serial};
     for (const SlotPart& part : m.slots) {
-        auto& list = slotMonitors_[part.slot];
+        auto& list = slotMonitors_[part.slot.index()];
         if (list.empty() || list.back().id != id || list.back().serial != ref.serial)
-            pushSwept(list, slotMonitorLimit_[part.slot], ref,
+            pushSwept(list, slotMonitorLimit_[part.slot.index()], ref,
                       [&](const MonitorRef& r) { return !live(r); });
     }
     for (const EventId e : m.events)
@@ -720,7 +722,8 @@ void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
 
 bool Scheduler::write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                       const std::uint64_t* value) {
-    if (heldOf_.empty() || heldOf_[s] == kNotHeld) return writeRaw(s, elem, lsb, width, value);
+    if (heldOf_.empty() || heldOf_[s.index()] == kNotHeld)
+        return writeRaw(s, elem, lsb, width, value);
     // A held slot: the write goes to the value of the ordinary writes,
     // which shows where nothing holds the bits (SCHEDULER_SPEC.md 14).
     const SlotLayout& l = store_.layout(s);
@@ -729,7 +732,7 @@ bool Scheduler::write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint
         width = l.width;
     }
     const unsigned stride = l.domain == Domain::Four ? 2 : 1;
-    std::uint64_t* base = held_[heldOf_[s]].base.data() + std::uint64_t{elem} * l.elemWords;
+    std::uint64_t* base = held_[heldOf_[s.index()]].base.data() + std::uint64_t{elem} * l.elemWords;
     for (unsigned k = 0; k < stride; ++k)
         copyBits(base + k, stride, lsb, value + k, stride, 0, width);
     return showHeld(s, elem, lsb, width);
@@ -737,7 +740,7 @@ bool Scheduler::write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint
 
 void Scheduler::markHeld(SlotId s, bool net, bool driven) {
     if (heldOf_.size() < store_.size()) heldOf_.resize(store_.size(), kNotHeld);
-    if (heldOf_[s] != kNotHeld) return;
+    if (heldOf_[s.index()] != kNotHeld) return;
     const SlotLayout& l = store_.layout(s);
     Held h;
     h.net = net;
@@ -748,12 +751,12 @@ void Scheduler::markHeld(SlotId s, bool net, bool driven) {
         h.value[level].assign(h.base.size(), 0);
         h.owner[level].assign(std::uint64_t{l.elements} * l.width, kNoHolder);
     }
-    heldOf_[s] = static_cast<std::uint32_t>(held_.size());
+    heldOf_[s.index()] = static_cast<std::uint32_t>(held_.size());
     held_.push_back(std::move(h));
 }
 
 void Scheduler::hold(Hold level, ProcessId owner, const SlotPart& part) {
-    Held& h = held_[heldOf_[part.slot]];
+    Held& h = held_[heldOf_[part.slot.index()]];
     const SlotLayout& l = store_.layout(part.slot);
     const std::uint32_t n = part.numElems == 0 ? l.elements : part.numElems;
     const std::uint32_t lsb = part.width == 0 ? 0 : part.lsb;
@@ -766,7 +769,7 @@ void Scheduler::hold(Hold level, ProcessId owner, const SlotPart& part) {
 
 void Scheduler::writeHeld(Hold level, ProcessId owner, SlotId s, std::uint32_t elem,
                           std::uint32_t lsb, std::uint32_t width, const std::uint64_t* value) {
-    Held& h = held_[heldOf_[s]];
+    Held& h = held_[heldOf_[s.index()]];
     const SlotLayout& l = store_.layout(s);
     if (width == 0) {
         lsb = 0;
@@ -785,7 +788,7 @@ void Scheduler::writeHeld(Hold level, ProcessId owner, SlotId s, std::uint32_t e
 }
 
 void Scheduler::release(Hold level, const SlotPart& part) {
-    Held& h = held_[heldOf_[part.slot]];
+    Held& h = held_[heldOf_[part.slot.index()]];
     const SlotLayout& l = store_.layout(part.slot);
     const std::uint32_t n = part.numElems == 0 ? l.elements : part.numElems;
     const std::uint32_t lsb = part.width == 0 ? 0 : part.lsb;
@@ -816,7 +819,7 @@ void Scheduler::release(Hold level, const SlotPart& part) {
         if (h.net)
             showHeld(part.slot, e, lsb, width);
         else if (later)
-            schedule(Region::Active, {Kind::Show, Region::Active, part.slot, e}, 0);
+            schedule(Region::Active, {Kind::Show, Region::Active, part.slot.index(), e}, 0);
     }
 }
 
@@ -833,7 +836,7 @@ void Scheduler::cancelWait(ProcessId p) {
 }
 
 bool Scheduler::showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) {
-    const Held& h = held_[heldOf_[s]];
+    const Held& h = held_[heldOf_[s.index()]];
     const SlotLayout& l = store_.layout(s);
     const unsigned stride = l.domain == Domain::Four ? 2 : 1;
     const std::uint64_t at = std::uint64_t{elem} * l.elemWords;
@@ -860,8 +863,8 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
-    const bool watched =
-        !subscriptions_[s].empty() || !slotMonitors_[s].empty() || monitorSlot_[s] != 0;
+    const bool watched = !subscriptions_[s.index()].empty() || !slotMonitors_[s.index()].empty() ||
+                         monitorSlot_[s.index()] != 0;
     // During a walk, the change waits for its end with its own copies.
     const bool late = watched && walking_ > 0;
     LateChange change;
@@ -940,7 +943,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     const SlotLayout& l = store_.layout(s);
     // Subscriptions. Waking a process makes its other items stale; they
     // are dropped here or on the next write of their slot.
-    auto& subs = subscriptions_[s];
+    auto& subs = subscriptions_[s.index()];
     std::size_t keep = 0;
     for (std::size_t i = 0; i < subs.size(); ++i) {
         const Subscription sub = subs[i];
@@ -961,23 +964,23 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         wake(sub.process, true);  // an event control: a flush point (15.4)
         --keep;                   // this item is used up
     }
-    subscriptions_[s].resize(keep);
+    subscriptions_[s.index()].resize(keep);
 
     // A part that the monitor or a file monitor shows (SYSTEM_TASKS.md 4,
     // 6.2).
-    if (monitorSlot_[s] != 0) {
+    if (monitorSlot_[s.index()] != 0) {
         markDue(monitor_, s, elem, lsb, width, old, now);
         for (DisplayMonitor& m : fileMonitors_)
             markDue(m, s, elem, lsb, width, old, now);
     }
 
     // Monitor records that depend on the changed part.
-    auto& mons = slotMonitors_[s];
+    auto& mons = slotMonitors_[s.index()];
     std::size_t kept = 0;
     for (std::size_t i = 0; i < mons.size(); ++i) {
-        const MonitorRef ref = slotMonitors_[s][i];
+        const MonitorRef ref = slotMonitors_[s.index()][i];
         if (!live(ref)) continue;  // stale
-        slotMonitors_[s][kept++] = ref;
+        slotMonitors_[s.index()][kept++] = ref;
         const std::uint32_t id = ref.id;
         const Monitor& m = monitors_[id];
         bool depends = false;
@@ -990,7 +993,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         }
         if (depends) evaluateMonitor(id);
     }
-    slotMonitors_[s].resize(kept);
+    slotMonitors_[s.index()].resize(kept);
     endWalk();
 }
 

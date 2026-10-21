@@ -66,7 +66,7 @@ struct DumpVar {
     std::string range;  ///< "[msb:lsb]", or empty.
     DumpType type = DumpType::Reg;
     std::uint32_t width = 1;  ///< The size the VCD gives.
-    SlotId slot = 0;
+    SlotId slot{0};
     bool shortReal = false;  ///< The slot holds a shortreal: a float in its low 32 bits.
 };
 
@@ -144,7 +144,7 @@ private:
     /// A variable written to the file: one per slot.
     struct Code {
         std::string id;
-        SlotId slot = 0;
+        SlotId slot{0};
         DumpType type = DumpType::Reg;
         std::uint32_t width = 1;
         bool shortReal = false;

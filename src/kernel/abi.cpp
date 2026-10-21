@@ -25,7 +25,7 @@ static_assert(sizeof(kirima_slot_part) == sizeof(SlotPart));
 Scheduler& sched(kirima_context* c) { return fromC(c).scheduler(); }
 
 SlotPart partOf(const kirima_slot_part& p) {
-    return {p.slot, p.first_elem, p.num_elems, p.lsb, p.width};
+    return {SlotId{p.slot}, p.first_elem, p.num_elems, p.lsb, p.width};
 }
 
 std::vector<WaitItem> itemsOf(const kirima_wait_item* items, std::uint32_t n) {
@@ -72,11 +72,12 @@ constexpr kirima_kernel_api kApi = {
         sched(c).waitNamed(ProcessId{p}, EventId{e});
     },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
-       std::uint32_t width,
-       const std::uint64_t* value) { return sched(c).write(s, elem, lsb, width, value) ? 1 : 0; },
+       std::uint32_t width, const std::uint64_t* value) {
+        return sched(c).write(SlotId{s}, elem, lsb, width, value) ? 1 : 0;
+    },
     [](kirima_context* c, std::uint32_t p, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width, const std::uint64_t* value, std::uint64_t delay) {
-        sched(c).scheduleNba(ProcessId{p}, s, elem, lsb, width, value, delay);
+        sched(c).scheduleNba(ProcessId{p}, SlotId{s}, elem, lsb, width, value, delay);
     },
     [](kirima_context* c, std::uint32_t e) { sched(c).trigger(EventId{e}); },
     [](kirima_context* c, std::uint32_t p, std::uint32_t e, std::uint64_t delay) {
@@ -90,7 +91,7 @@ constexpr kirima_kernel_api kApi = {
     [](kirima_context* c) { return sched(c).ending() ? 1 : 0; },
     [](kirima_context* c, const char* message) { sched(c).fail(message); },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem) {
-        return fromC(c).store().element(s, elem);
+        return fromC(c).store().element(SlotId{s}, elem);
     },
     [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n,
        const kirima_monitor_item* monitors, std::uint32_t m) {

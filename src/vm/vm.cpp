@@ -688,12 +688,13 @@ public:
     RunResult run() {
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
+        kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
             const sir::Domain dom = sir::domainOf(s.type);
-            store_.add(kernelDomain(dom), s.type.width,
-                       static_cast<std::uint32_t>(sir::elementCount(s)),
-                       dom == sir::Domain::Four ? kernelInit(sir::initialValue(s.kind))
-                                                : kernel::Init::Zero);
+            kernelSlots_.push_back(store_.add(
+                kernelDomain(dom), s.type.width, static_cast<std::uint32_t>(sir::elementCount(s)),
+                dom == sir::Domain::Four ? kernelInit(sir::initialValue(s.kind))
+                                         : kernel::Init::Zero));
         }
         // The bits a driver drives are x until it first writes them
         // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
@@ -954,6 +955,7 @@ private:
         }
     };
     std::vector<Layout> layouts_;              ///< By body.
+    std::vector<kernel::SlotId> kernelSlots_;  ///< By SIR slot: the store's number.
     std::vector<kernel::UdpTable> udpTables_;  ///< By type-table row.
     /// The initialization generator of each row of the instance table
     /// (SYSTEM_TASKS.md 13.2).
@@ -1375,10 +1377,9 @@ private:
         return c[0].a;
     }
 
-    /// The kernel's slot of a SIR slot: the VM adds the slots to the store
-    /// in the SIR's order (load), so the numbers agree. Every number the VM
-    /// gives the kernel goes through here.
-    static kernel::SlotId kernelSlot(sir::SlotId s) { return s.index(); }
+    /// The kernel's slot of a SIR slot, as the store numbered it when run()
+    /// added the slots. Every slot the VM gives the kernel goes through here.
+    [[nodiscard]] kernel::SlotId kernelSlot(sir::SlotId s) const { return kernelSlots_[s.index()]; }
     /// The k-th slot after s: the leaves of an unpacked structure are
     /// consecutive slots (SIR_SPEC.md 4.2).
     static sir::SlotId leafSlot(sir::SlotId s, std::uint32_t k) {
@@ -1454,7 +1455,7 @@ private:
     /// A value laid out for the kernel's write() into the slot range
     /// `target`: a and b words in turn for a four-state slot (store.h).
     std::vector<std::uint64_t> slotWords(const Operand& target, const Operand& value) const {
-        const kernel::SlotLayout& l = store_.layout(target.id);
+        const kernel::SlotLayout& l = store_.layout(kernelSlot(target.asSlot()));
         if (l.domain != kernel::Domain::Four && l.domain != kernel::Domain::Two) {
             const W4 x = this->value(value);
             return {x.a, x.b};
@@ -2033,7 +2034,8 @@ private:
                                     withIff(f, items_.back(), o.asSubroutine());
                             } else {
                                 kernel::WaitItem item;
-                                item.part = {o.id, o.firstElem, o.numElems, o.lsb, o.width};
+                                item.part = {kernelSlot(o.asSlot()), o.firstElem, o.numElems, o.lsb,
+                                             o.width};
                                 item.edge = kernelEdge(o.edge);
                                 items_.push_back(item);
                                 onWatch = false;
@@ -2188,7 +2190,7 @@ private:
         return info.textFlag ? kernel::Hold::Force : kernel::Hold::Assign;
     }
 
-    static kernel::SlotPart partOf(const Operand& o) {
+    [[nodiscard]] kernel::SlotPart partOf(const Operand& o) const {
         return {kernelSlot(o.asSlot()), o.firstElem, o.numElems, o.lsb, o.width};
     }
 
@@ -2311,7 +2313,9 @@ private:
             const sir::SubroutineId g = d_.slots[s].subroutine;
             return g != sir::kNone && seen[processCount() + g.index()];
         };
-        std::erase_if(deps.slots, [&](const kernel::SlotPart& p) { return called(p.slot); });
+        // A kernel slot read as a SIR slot: right only while the numbers agree.
+        std::erase_if(deps.slots,
+                      [&](const kernel::SlotPart& p) { return called(p.slot.index()); });
         std::erase_if(deps.events, [&](sir::SlotId e) { return called(e.index()); });
         return cached.emplace(std::move(deps));
     }

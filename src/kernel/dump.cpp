@@ -165,8 +165,8 @@ void Dump::endSlot(const Scheduler& s) {
 }
 
 void Dump::changed(SlotId s, std::uint64_t time) {
-    if (state_ != State::On || s >= codeOf_.size() || codeOf_[s] == kNoRow) return;
-    Code& c = codes_[codeOf_[s]];
+    if (state_ != State::On || s.index() >= codeOf_.size() || codeOf_[s.index()] == kNoRow) return;
+    Code& c = codes_[codeOf_[s.index()]];
     if (c.type == DumpType::Event || !take(c)) return;
     stamp(time);
     value(c, false);
@@ -288,8 +288,8 @@ void Dump::header(const std::vector<bool>& scopes, const std::vector<bool>& vars
             if (!vars[v]) continue;
             const DumpVar& d = setup_.vars[v];
             // A slot has one code, whatever names it (WAVEFORM.md 2).
-            if (codeOf_[d.slot] == kNoRow) {
-                codeOf_[d.slot] = static_cast<std::uint32_t>(codes_.size());
+            if (codeOf_[d.slot.index()] == kNoRow) {
+                codeOf_[d.slot.index()] = static_cast<std::uint32_t>(codes_.size());
                 Code c;
                 c.id = codeText(codes_.size());
                 c.slot = d.slot;
@@ -302,8 +302,8 @@ void Dump::header(const std::vector<bool>& scopes, const std::vector<bool>& vars
             }
             chunk_ += "$var ";
             chunk_ += typeName(d.type);
-            chunk_ +=
-                " " + std::to_string(d.width) + " " + codes_[codeOf_[d.slot]].id + " " + d.name;
+            chunk_ += " " + std::to_string(d.width) + " " + codes_[codeOf_[d.slot.index()]].id +
+                      " " + d.name;
             if (!d.range.empty()) chunk_ += " " + d.range;
             chunk_ += " $end\n";
         }

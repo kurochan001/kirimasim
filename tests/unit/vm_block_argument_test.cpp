@@ -72,7 +72,7 @@ Value pattern(Type t, Upper upper, std::uint64_t seed) {
 
 /// The value of slot s after the run.
 Value slotValue(const kirimasim::kernel::Context& c, SlotId s, Type t) {
-    const std::uint64_t* p = c.store().element(s.index(), 0);
+    const std::uint64_t* p = c.store().element(kirimasim::kernel::SlotId{s.index()}, 0);
     const std::size_t chunks = (t.width + 63) / 64;
     Value v;
     for (std::size_t k = 0; k < chunks; ++k) {
