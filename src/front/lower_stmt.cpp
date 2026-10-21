@@ -237,6 +237,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             lowerImmediateAssertion(s.as<ast::ImmediateAssertionStatement>());
             return;
         case ast::StatementKind::Case: lowerCase(s.as<ast::CaseStatement>()); return;
+        case ast::StatementKind::RandCase: lowerRandCase(s.as<ast::RandCaseStatement>()); return;
         case ast::StatementKind::ForLoop: {
             const auto& f = s.as<ast::ForLoopStatement>();
             // Loop variables (automatic, 12.7.1) come with declaration
@@ -1105,6 +1106,68 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
     for (const Val& v : values)
         ops.push_back(v.op);
     emitVoid(Op::ReportCall, std::move(ops), sl);
+}
+
+void Lowerer::lowerRandCase(const ast::RandCaseStatement& s) {
+    // The weights in the order of the branches, each of its own width, added
+    // as unsigned values at the width of the widest. A sum of 0 takes no
+    // branch and draws nothing; otherwise r = $urandom_range(sum - 1), and
+    // the first branch whose weight with those before it exceeds r is taken
+    // (18.16, SYSTEM_TASKS.md 13.3).
+    const slang::SourceLocation sl = s.sourceRange.start();
+    std::uint32_t width = 1;
+    for (const auto& item : s.items)
+        width = std::max(width, static_cast<std::uint32_t>(item.expr->type->getBitWidth()));
+    if (width > 32) unsupported(sl, "randcase with a weight wider than 32 bits");
+    const Type wt = sir::u2(width);
+    const Type u32 = sir::u2(32);
+    std::vector<Val> limits;  // each branch's weight with those before it
+    Val sum = constant(wt, 0);
+    for (const auto& item : s.items) {
+        const Val v = lowerExpr(*item.expr);
+        if (!sir::isIntegral(v.type)) unsupported(sl, "randcase with a weight of this type");
+        const Val w = coerce(coerce(v, sir::u2(v.type.width), sl), wt, sl);
+        sum = emit(Op::Add, wt, {sum.op, w.op}, sl);
+        limits.push_back(coerce(sum, u32, sl));
+    }
+    const Val total = coerce(sum, u32, sl);
+    std::vector<sir::BlockId> bodies;
+    bodies.reserve(s.items.size());
+    for (std::size_t i = 0; i < s.items.size(); ++i)
+        bodies.push_back(newBlock());
+    const sir::BlockId none = newBlock();
+    const sir::BlockId draw = newBlock();
+    terminate(Op::BrIf,
+              {emit(Op::Eq, sir::u2(1), {total.op, constant(u32, 0).op}, sl).op,
+               Operand::block(none), Operand::block(draw)},
+              sl);
+    setBlock(draw);
+    const Val r =
+        emit(Op::Syscall, u32,
+             {Operand::str("$urandom_range"),
+              emit(Op::Sub, u32, {total.op, constant(u32, 1).op}, sl).op, constant(u32, 0).op},
+             sl);
+    for (std::size_t i = 0; i < s.items.size(); ++i) {
+        const sir::BlockId next = newBlock();
+        terminate(Op::BrIf,
+                  {emit(Op::Lt, sir::u2(1), {r.op, limits[i].op}, sl).op, Operand::block(bodies[i]),
+                   Operand::block(next)},
+                  sl);
+        setBlock(next);
+    }
+    terminate(Op::Br, {Operand::block(none)}, sl);
+    std::vector<sir::BlockId> ends;
+    setBlock(none);
+    ends.push_back(b_.block);
+    for (std::size_t i = 0; i < s.items.size(); ++i) {
+        setBlock(bodies[i]);
+        lowerStatement(*s.items[i].stmt);
+        if (!b_.dead) ends.push_back(b_.block);
+    }
+    const sir::BlockId join = newBlock();
+    for (const sir::BlockId e : ends)
+        emitInto(e, Op::Br, {Operand::block(join)}, sl);
+    setBlock(join);
 }
 
 void Lowerer::lowerCase(const ast::CaseStatement& s) {

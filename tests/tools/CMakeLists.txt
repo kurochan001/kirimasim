@@ -139,6 +139,10 @@ add_test(NAME tools/gen_fread_struct_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_fread_struct_matrix.py --check)
 set_tests_properties(tools/gen_fread_struct_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_randcase_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_randcase_matrix.py --check)
+set_tests_properties(tools/gen_randcase_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_urandom_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_urandom_matrix.py --check)
 set_tests_properties(tools/gen_urandom_matrix PROPERTIES LABELS Tools)

@@ -207,6 +207,8 @@ public:
     void reportViolations(const std::vector<Val>& matches, ast::UniquePriorityCheck check,
                           bool hasElse, bool isCase, slang::SourceLocation sl);
     void lowerCase(const ast::CaseStatement& s);
+    /// randcase (18.16, SYSTEM_TASKS.md 13.3).
+    void lowerRandCase(const ast::RandCaseStatement& s);
     void lowerTiming(const ast::TimingControl& t);
     /// disable of a named block or a task (9.6.2, SIR_SPEC.md 7.2).
     void lowerDisable(const ast::DisableStatement& d);

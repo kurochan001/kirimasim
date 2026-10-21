@@ -124,6 +124,9 @@ own. CONTRIBUTING.md says what goes in this file.
   fork branch seeded as 18.14 asks, and `--seed`, which the version line
   now shows (SYSTEM_TASKS.md 13). Before, the functions were reported as
   unsupported and `--seed` was an unknown option.
+- `randcase`, which takes a branch by its weights from the process's
+  generator (SYSTEM_TASKS.md 13.3, 18.16). Before, it was reported as
+  unsupported.
 
 ### Changed
 
