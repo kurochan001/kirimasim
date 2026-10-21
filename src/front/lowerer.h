@@ -450,14 +450,19 @@ public:
                   slang::SourceLocation sl);
 
     sir::Process& proc() { return design_.processes[b_.proc]; }
+    /// The process or subroutine whose body is being lowered.
+    sir::Owner bodyOwner() const {
+        return b_.isSub ? sir::Owner{sir::Owner::Kind::Subroutine, b_.sub.index()}
+                        : sir::Owner{sir::Owner::Kind::Process, b_.proc};
+    }
     // The parts of the body being lowered, a process or a subroutine.
     std::vector<sir::BasicBlock>& blocks() {
-        return b_.isSub ? design_.subroutine(b_.sub()).blocks : proc().blocks;
+        return b_.isSub ? design_.subroutine(b_.sub).blocks : proc().blocks;
     }
     sir::BasicBlock& block(sir::BlockId b) { return blocks()[b.index()]; }
     std::vector<sir::FrameVar>& frameVars() {
         if (!b_.isSub) return proc().frame;
-        sir::Subroutine& s = design_.subroutine(b_.sub());
+        sir::Subroutine& s = design_.subroutine(b_.sub);
         // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
         if (!sir::readsWaiterFrame(s.kind)) return s.frame;
         return s.frameOf.kind == sir::Owner::Kind::Process
@@ -466,7 +471,7 @@ public:
     }
     sir::FrameVar& frameVar(sir::FrameVarId f) { return frameVars()[f.index()]; }
     std::uint32_t& numTemps() {
-        return b_.isSub ? design_.subroutine(b_.sub()).numTemps : proc().numTemps;
+        return b_.isSub ? design_.subroutine(b_.sub).numTemps : proc().numTemps;
     }
     sir::Design& design() { return design_; }
     int precision() const { return precision_; }
@@ -688,7 +693,8 @@ public:
 
     /// The state of the procedure being lowered.
     struct Body {
-        std::uint32_t proc = 0;  ///< A process, or with isSub a subroutine (sub()).
+        std::uint32_t proc = 0;    ///< The process, unless isSub.
+        sir::SubroutineId sub{0};  ///< The subroutine, when isSub.
         sir::BlockId block = sir::kEntryBlock;
         bool dead = false;  ///< The current point is unreachable.
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
@@ -719,7 +725,7 @@ public:
         /// The process's outermost block is a disable target: disabling it
         /// is a flush point of deferred assertions (SCHEDULER_SPEC.md 15.3).
         bool outermostDisabled = false;
-        bool isSub = false;                       ///< proc is a subroutine number.
+        bool isSub = false;                       ///< The body is a subroutine's (sub).
         const ast::Symbol* subSymbol = nullptr;   ///< The subroutine, when isSub.
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         /// A function's return variable of an unpacked structure or array
@@ -735,8 +741,6 @@ public:
         /// The rise, fall and turn-off delays of a cont process whose
         /// writes are delayed (drive.delay; SIR_SPEC.md 5.4).
         std::optional<std::array<Val, 3>> delays;
-        /// proc as the subroutine it is, when isSub.
-        sir::SubroutineId sub() const { return sir::SubroutineId{proc}; }
     };
     Body& body() { return b_; }
 
@@ -809,11 +813,20 @@ private:
     /// ($return) come after them (SIR_SPEC.md 8).
     std::map<sir::SubroutineId, std::vector<std::pair<std::uint32_t, std::uint32_t>>> argParams_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subReads_;
-    /// Calls made by each body: (is a subroutine, number) -> callees.
-    std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> callees_;
+    /// The subroutines each body calls, by process and by subroutine.
+    struct Calls {
+        std::map<std::uint32_t, std::vector<sir::SubroutineId>> byProcess;
+        std::map<sir::SubroutineId, std::vector<sir::SubroutineId>> bySubroutine;
+        /// The list of the body being lowered.
+        std::vector<sir::SubroutineId>& of(const Body& b) {
+            return b.isSub ? bySubroutine[b.sub] : byProcess[b.proc];
+        }
+    };
+    /// Calls made by each body.
+    Calls callees_;
     /// The functions each body calls outside assertion action blocks, whose
     /// reads are an always_comb's too (SCHEDULER_SPEC.md 6.3).
-    std::map<std::pair<bool, std::uint32_t>, std::vector<sir::SubroutineId>> readCallees_;
+    Calls readCallees_;
     /// Where each subroutine writes what (for checkTaskAndActionWrites).
     std::map<sir::SubroutineId, std::vector<std::pair<sir::SlotRange, slang::SourceLocation>>>
         subWriteSites_;

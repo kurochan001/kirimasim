@@ -298,8 +298,8 @@ MUTANTS = [
     ("front: a UDP ignores its initial statement", "src/front/lower.cpp",
      "        if (init != 'x') {", "        if (false) {"),
     ("front: a fork in a task belongs to a process", "src/front/lower_stmt.cpp",
-     "        b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process;",
-     "        sir::Owner::Kind::Process;"),
+     "    const sir::Owner parent = bodyOwner();",
+     "    const sir::Owner parent{sir::Owner::Kind::Process, bodyOwner().id};"),
     ("kernel: writes to a held slot ignore the hold", "src/kernel/sim.cpp",
      "if (heldOf_.empty() || heldOf_[s.index()] == kNotHeld)\n"
      "        return writeRaw(s, elem, lsb, width, value);",
@@ -871,8 +871,8 @@ MUTANTS = [
      "    for (int i = scale.precision; i < scale.unit; ++i)\n        unitSteps *= 10;",
      "    for (int i = scale.unit; i < scale.unit; ++i)\n        unitSteps *= 10;"),
     ("front: a cont process drives what the functions it calls write", "src/front/lower.cpp",
-     "add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);",
-     "add(cont && false ? callWrites_[key.second] : design_.processes[key.second].writes, r);"),
+     "add(cont ? callWrites_[p] : design_.processes[p].writes, r);",
+     "add(cont && false ? callWrites_[p] : design_.processes[p].writes, r);"),
     ("vm: a variable that a function of a cont process writes is driven", "src/vm/vm.cpp",
      "            for (const sir::SlotRange& w : proc.drives)\n                driven[w.slot.index()] = true;",
      "            if (proc.kind == sir::ProcessKind::Cont)\n"

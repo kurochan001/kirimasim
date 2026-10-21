@@ -96,7 +96,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 // activations at once (SIR_SPEC.md 7.2). One in a task or a
                 // fork branch may be active in several processes.
                 const bool inTask =
-                    b_.isSub && design_.subroutine(b_.sub()).kind == sir::SubroutineKind::Task;
+                    b_.isSub && design_.subroutine(b_.sub).kind == sir::SubroutineKind::Task;
                 const bool inFork = !b_.isSub && proc().parent.kind != sir::Owner::Kind::None;
                 if (disableTargets_.contains(b.blockSymbol) &&
                     (inTask || inFork || disabledFromOutside_.contains(b.blockSymbol) ||
@@ -467,7 +467,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     } else {
         stmts.push_back(&b.body);
     }
-    const std::uint32_t parent = b_.proc;
+    const sir::Owner parent = bodyOwner();
     const std::uint32_t forkNumber = b_.forks++;
     // Children not waited for may outlive the named blocks around the fork.
     if (b.blockKind != ast::StatementBlockKind::JoinAll)
@@ -477,11 +477,9 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
         scope += "." + std::string(b.blockSymbol->name);
     // The parent is the process, or the task, whose body holds the fork.
-    const std::string owner = b_.isSub ? design().subroutines[b_.proc].name : proc().name;
+    const std::string owner = b_.isSub ? design().subroutine(b_.sub).name : proc().name;
     const sir::InstanceId instance =
-        b_.isSub ? design().subroutines[b_.proc].instance : proc().instance;
-    const sir::Owner::Kind ownerKind =
-        b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process;
+        b_.isSub ? design().subroutine(b_.sub).instance : proc().instance;
     std::vector<Operand> ops;
     for (std::size_t i = 0; i < stmts.size(); ++i) {
         if (stmts[i]->kind == ast::StatementKind::VariableDeclaration)
@@ -491,7 +489,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         child.name = owner + ".fork" + std::to_string(forkNumber) + "." + std::to_string(i);
         child.kind = sir::ProcessKind::General;
         child.instance = instance;
-        child.parent = {ownerKind, parent};
+        child.parent = parent;
         child.loc = loc(startOf(*stmts[i]));
         child.blocks.resize(1);
         const auto id = static_cast<std::uint32_t>(design().processes.size());
@@ -677,13 +675,12 @@ sir::SubroutineId Lowerer::watchOf(const ast::Expression& e, slang::SourceLocati
 sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Expression& e,
                                     const char* what, slang::SourceLocation sl) {
     const bool guard = kind == sir::SubroutineKind::Guard;
-    const sir::Owner owner{b_.isSub ? sir::Owner::Kind::Subroutine : sir::Owner::Kind::Process,
-                           b_.proc};
+    const sir::Owner owner = bodyOwner();
     sir::Subroutine g;
-    g.name = (b_.isSub ? design_.subroutine(b_.sub()).name : proc().name) + "." + what +
+    g.name = (b_.isSub ? design_.subroutine(b_.sub).name : proc().name) + "." + what +
              std::to_string(b_.guards++);
     g.kind = kind;
-    g.instance = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
+    g.instance = b_.isSub ? design_.subroutine(b_.sub).instance : proc().instance;
     g.frameOf = owner;
     g.returnType = guard ? sir::u4(1) : typeOf(*e.type, sl);
     g.loc = loc(sl);
@@ -693,7 +690,7 @@ sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Express
     Body saved = std::move(b_);
     b_ = Body{};
     b_.isSub = true;
-    b_.proc = id.index();
+    b_.sub = id;
     b_.subSymbol = saved.subSymbol;  // the variables of a waiting task are its own
     b_.frameVars = saved.frameVars;
     b_.structFrames = saved.structFrames;
@@ -709,7 +706,7 @@ sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Express
     }
     b_ = std::move(saved);
     // What the guard's calls write counts as the waiting body's.
-    callees_[{b_.isSub, b_.proc}].push_back(id);
+    callees_.of(b_).push_back(id);
     // The kernel evaluates the condition in the middle of the write that
     // changed what it reads (SCHEDULER_SPEC.md 9.5) or that made the
     // event, so it may not write a variable or a net itself.
@@ -725,7 +722,7 @@ bool Lowerer::writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& s
     if (const auto it = subWrites_.find(id); it != subWrites_.end())
         for (const sir::SlotRange& r : it->second)
             if (design_.slot(r.slot).subroutine == sir::kNone) return true;
-    if (const auto it = callees_.find({true, id.index()}); it != callees_.end())
+    if (const auto it = callees_.bySubroutine.find(id); it != callees_.bySubroutine.end())
         for (const sir::SubroutineId c : it->second)
             if (writesOutside(c, seen)) return true;
     return false;
@@ -795,7 +792,7 @@ void Lowerer::lowerOverride(const ast::ProceduralAssignStatement& s) {
     const auto& a = s.assignment.as<ast::AssignmentExpression>();
     const std::string level = s.isForce ? "force" : "assign";
     const std::vector<HeldTarget> targets = heldTargets(a.left(), sl);
-    const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
+    const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub).instance : proc().instance;
     sir::Process p;
     p.name = processName(design_.instance(inst).scopeName, "$" + level);
     p.kind = sir::ProcessKind::Override;
@@ -1058,12 +1055,12 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
             values.push_back(lowerExpr(*a));
         }
     }
-    const std::string owner = b_.isSub ? design_.subroutine(b_.sub()).name : proc().name;
+    const std::string owner = b_.isSub ? design_.subroutine(b_.sub).name : proc().name;
     sir::Subroutine fn;
     fn.name = owner + ".$deferred" + std::to_string(b_.deferred++);
     fn.kind = sir::SubroutineKind::Function;
     fn.automatic = true;
-    fn.instance = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
+    fn.instance = b_.isSub ? design_.subroutine(b_.sub).instance : proc().instance;
     fn.returnType = sir::voidType();
     fn.loc = loc(sl);
     fn.blocks.resize(1);
@@ -1075,12 +1072,12 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
     }
     const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
     design_.subroutines.push_back(std::move(fn));
-    callees_[{b_.isSub, b_.proc}].push_back(id);
+    callees_.of(b_).push_back(id);
     actions_[id] = sl;
     Body saved = std::move(b_);
     b_ = Body{};
     b_.isSub = true;
-    b_.proc = id.index();
+    b_.sub = id;
     b_.scale = saved.scale;
     b_.scope = saved.scope;
     // A write the call makes itself, through a ref argument, is at the action.

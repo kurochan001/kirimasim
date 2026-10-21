@@ -681,7 +681,7 @@ Val Lowerer::lowerTriggered(const ast::Expression& ev, Type rt, slang::SourceLoc
     // they may call) would not see it.
     const bool implicit =
         b_.isSub
-            ? design().subroutines[b_.proc].kind == sir::SubroutineKind::Function
+            ? design().subroutine(b_.sub).kind == sir::SubroutineKind::Function
             : proc().kind == sir::ProcessKind::Comb || proc().kind == sir::ProcessKind::Latch ||
                   proc().kind == sir::ProcessKind::CombAt || proc().kind == sir::ProcessKind::Cont;
     if (implicit) unsupported(sl, "triggered in a function or under an implicit sensitivity");
@@ -3295,7 +3295,7 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
     // caller's automatic variables; slang rejects them already (13.3.2).
     for (const ast::Expression* a : args)
         if (readsAutomatic(*a)) unsupported(sl, "$strobe or $monitor of an automatic variable");
-    const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
+    const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub).instance : proc().instance;
     sir::Process p;
     p.name = processName(design_.instance(inst).scopeName,
                          std::string(file ? "$f" : "$") + (monitor ? "monitor" : "strobe"));

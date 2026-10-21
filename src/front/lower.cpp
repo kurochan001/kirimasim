@@ -690,9 +690,9 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
                 // A guard's or watch's variables are those of the task that waits.
                 // subSymbol is set here only when the waiter is a task, so its
                 // frameOf names a subroutine.
-                const sir::Subroutine& cur = design_.subroutine(b_.sub());
+                const sir::Subroutine& cur = design_.subroutine(b_.sub);
                 s.subroutine =
-                    sir::readsWaiterFrame(cur.kind) ? sir::SubroutineId{cur.frameOf.id} : b_.sub();
+                    sir::readsWaiterFrame(cur.kind) ? sir::SubroutineId{cur.frameOf.id} : b_.sub;
                 break;
             }
             if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
@@ -745,8 +745,8 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
 
 void Lowerer::noteWrite(const sir::SlotRange& r) {
     const sir::Slot& s = design_.slot(r.slot);
-    if (b_.isSub) subWriteSites_[b_.sub()].push_back({r, b_.at});
-    std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.sub()] : proc().writes;
+    if (b_.isSub) subWriteSites_[b_.sub].push_back({r, b_.at});
+    std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.sub] : proc().writes;
     for (const sir::SlotRange& w : writes)
         if (sir::covers(s, w, r)) return;
     writes.push_back(r);
@@ -860,37 +860,32 @@ void Lowerer::finishDesign() {
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> reads = subReads_;
     for (bool changed = true; changed;) {
         changed = false;
-        for (const auto& [key, called] : callees_) {
-            if (!key.first) continue;
+        for (const auto& [sub, called] : callees_.bySubroutine)
             for (const sir::SubroutineId c : called)
                 if (!later(c))
                     for (const sir::SlotRange& r : std::vector(writes[c]))
-                        changed = add(writes[sir::SubroutineId{key.second}], r) || changed;
-        }
-        for (const auto& [key, called] : readCallees_) {
-            if (!key.first) continue;
+                        changed = add(writes[sub], r) || changed;
+        for (const auto& [sub, called] : readCallees_.bySubroutine)
             for (const sir::SubroutineId c : called)
                 for (const sir::SlotRange& r : std::vector(reads[c]))
-                    changed = add(reads[sir::SubroutineId{key.second}], r) || changed;
-        }
+                    changed = add(reads[sub], r) || changed;
     }
     // A process writes what the functions it calls write; always_comb and
     // always_latch are sensitive to what they read too (SCHEDULER_SPEC.md
     // 6.3, 6.4). A cont process takes them after its own writes are known as
     // what it drives (finishDrives).
-    for (const auto& [key, called] : callees_) {
-        if (key.first) continue;
-        const bool cont = design_.processes[key.second].kind == sir::ProcessKind::Cont;
+    for (const auto& [p, called] : callees_.byProcess) {
+        const bool cont = design_.processes[p].kind == sir::ProcessKind::Cont;
         for (const sir::SubroutineId c : called)
             if (!later(c))
                 for (const sir::SlotRange& r : writes[c])
-                    add(cont ? callWrites_[key.second] : design_.processes[key.second].writes, r);
+                    add(cont ? callWrites_[p] : design_.processes[p].writes, r);
     }
-    for (const auto& [key, called] : readCallees_) {
-        if (key.first || combReads_.count(key.second) == 0) continue;
+    for (const auto& [p, called] : readCallees_.byProcess) {
+        if (combReads_.count(p) == 0) continue;
         for (const sir::SubroutineId c : called)
             for (const sir::SlotRange& r : reads[c])
-                combReads_[key.second].push_back(r);
+                combReads_[p].push_back(r);
     }
     // The implicit sensitivity: what the block reads, less what it writes
     // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
@@ -934,15 +929,14 @@ void Lowerer::checkTaskAndActionWrites() {
     for (const auto& [q, calls] : taskCalls_)
         for (const auto& [task, callAt] : calls)
             starts[q].push_back({task, callAt});
-    for (const auto& [key, called] : callees_) {
-        if (key.first) continue;
+    for (const auto& [p, called] : callees_.byProcess) {
         std::set<sir::SubroutineId> seen;
         const auto visit = [&](const auto& self, sir::SubroutineId x) -> void {
             if (!seen.insert(x).second) return;
             if (const auto a = actions_.find(x); a != actions_.end())
-                starts[key.second].push_back({x, a->second});
+                starts[p].push_back({x, a->second});
             else if (design_.subroutine(x).kind != sir::SubroutineKind::Task)
-                if (const auto c = callees_.find({true, x.index()}); c != callees_.end())
+                if (const auto c = callees_.bySubroutine.find(x); c != callees_.bySubroutine.end())
                     for (const sir::SubroutineId y : c->second)
                         self(self, y);
         };
@@ -989,7 +983,7 @@ void Lowerer::checkTaskAndActionWrites() {
                                                  "' is called here");
                     }
                 }
-                if (const auto c = callees_.find({true, x.index()}); c != callees_.end())
+                if (const auto c = callees_.bySubroutine.find(x); c != callees_.bySubroutine.end())
                     for (const sir::SubroutineId y : c->second)
                         if (seen.insert(y).second) todo.push_back(y);
             }

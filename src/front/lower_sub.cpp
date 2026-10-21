@@ -83,7 +83,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     b_ = Body{};
     b_.isSub = true;
     b_.subSymbol = &sym;
-    b_.proc = id.index();
+    b_.sub = id;
     b_.scale = timeScaleOf(*sym.getParentScope());
     b_.scope = sym.getHierarchicalPath();  // its own scope, also when called from elsewhere
     evalSymbol_ = &sym;
@@ -218,7 +218,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
 void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (!b_.isSub) unsupported(sl, "return outside a subroutine");
     leaveScopes(0, sl);
-    const Type rt = design_.subroutine(b_.sub()).returnType;
+    const Type rt = design_.subroutine(b_.sub).returnType;
     if (b_.retAggregate && b_.retAggregateType != nullptr) {
         // The value goes to $return like an aggregate assignment
         // (SIR_SPEC.md 8, VALUE_SEMANTICS.md 3.13).
@@ -452,11 +452,11 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                       w->at, w->what);
     }
     const sir::SubroutineId id = subroutineOf(sym, sl);
-    callees_[{b_.isSub, b_.proc}].push_back(id);
+    callees_.of(b_).push_back(id);
     // What a function reads is an always_comb's too, unless an assertion's
     // action block calls it; what a task reads is not (SCHEDULER_SPEC.md 6.3).
     if (sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0)
-        readCallees_[{b_.isSub, b_.proc}].push_back(id);
+        readCallees_.of(b_).push_back(id);
     // A task a process calls may write what an always_comb writes
     // (checkTaskAndActionWrites).
     if (sym.subroutineKind == ast::SubroutineKind::Task && !b_.isSub)
