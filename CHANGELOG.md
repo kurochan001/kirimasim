@@ -127,6 +127,9 @@ own. CONTRIBUTING.md says what goes in this file.
 - `randcase`, which takes a branch by its weights from the process's
   generator (SYSTEM_TASKS.md 13.3, 18.16). Before, it was reported as
   unsupported.
+- `--max-call-depth=<n>`: how deep the calls of one process may nest,
+  10000 by default; above the default, the stack of the simulation thread
+  grows in proportion (CLI.md 2.7, RUNTIME_ABI.md 5).
 
 ### Changed
 
@@ -139,6 +142,10 @@ own. CONTRIBUTING.md says what goes in this file.
   internal error (code 3); a disable from a function of a block outside
   it, an internal error before; and a delay that takes the time past the
   largest time, whose event was lost without a word.
+- Calls nested deeper than the limit now end the run with the reason
+  resource_limit and exit code 6, not error and code 2, and the line names
+  the option: `calls nested more than <n> deep (--max-call-depth=<n>)`
+  (SCHEDULER_SPEC.md 16.2, CLI.md 2.7).
 
 ### Fixed
 

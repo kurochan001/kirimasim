@@ -6,8 +6,9 @@
 //
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
-// --max-steps, --max-scc-iter, --seed, --dump-sir, --stats=json, --wave,
-// --wave-scope and --wave-glitches. Exit codes are those of CLI.md 5.
+// --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
+// --stats=json, --wave, --wave-scope and --wave-glitches. Exit codes are
+// those of CLI.md 5.
 
 #include <charconv>
 #include <csignal>
@@ -64,7 +65,8 @@ void printUsage(std::FILE* out) {
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-               "         --max-scc-iter=<n>, --seed=<n>, --dump-sir, --stats=json,\n"
+               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
+               "         --stats=json,\n"
                "         --wave=<file>.vcd,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
@@ -92,10 +94,11 @@ struct Options {
     std::uint64_t maxZeroDelay = 1000000;  // the defaults of CLI.md 2.6; 0: no limit
     std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
-    std::uint64_t maxSccIter = 0;         // no effect until tier 2 has islands (P2)
-    std::uint64_t seed = 0;               // --seed (SYSTEM_TASKS.md 13.2)
-    std::string waveFile;                 // --wave
-    std::vector<std::string> waveScopes;  // --wave-scope
+    std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
+    std::uint64_t maxCallDepth = kirimasim::vm::kDefaultCallDepth;  // CLI.md 2.7
+    std::uint64_t seed = 0;                                         // --seed (SYSTEM_TASKS.md 13.2)
+    std::string waveFile;                                           // --wave
+    std::vector<std::string> waveScopes;                            // --wave-scope
     bool waveGlitches = false;
 };
 
@@ -106,6 +109,16 @@ bool parseCount(std::string_view arg, std::string_view name, std::uint64_t& out)
     const char* last = std::to_address(text.end());
     const auto r = std::from_chars(first, last, out);
     return !text.empty() && r.ec == std::errc() && r.ptr == last;
+}
+
+/// Reads --max-call-depth=<n> (CLI.md 2.7): a whole number above 0, as
+/// the stack of the simulation thread is sized by it (RUNTIME_ABI.md 5).
+/// False, with the line written, if it is not one.
+bool parseCallDepth(std::string_view arg, std::uint64_t& out) {
+    if (parseCount(arg, "--max-call-depth", out) && out != 0) return true;
+    std::fprintf(stderr, "kirimasim: error: %.*s needs a whole number above 0\n",
+                 static_cast<int>(arg.size()), arg.data());
+    return false;
 }
 
 bool isSlangPlusOption(std::string_view arg) {
@@ -142,7 +155,9 @@ int parseArgs(int argc, char** argv, Options& o) {
             counted = true;
         }
         if (counted) continue;
-        if (arg == "--stats=json") {
+        if (arg.starts_with("--max-call-depth=")) {
+            if (!parseCallDepth(arg, o.maxCallDepth)) return kExitInputError;
+        } else if (arg == "--stats=json") {
             o.statsJson = true;
         } else if (arg.starts_with("--max-time=")) {
             o.maxTime = arg.substr(std::string_view("--max-time=").size());
@@ -315,6 +330,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     context.scheduler().setLimits(limits);
     kirimasim::vm::RunOptions run;
     run.maxSteps = o.maxSteps;
+    run.maxCallDepth = o.maxCallDepth;
     for (const std::string& a : o.plusargs)
         run.plusargs.push_back(a.substr(1));
     // The waveform's date, read here as the time of day is an outside
@@ -381,9 +397,18 @@ int run(int argc, char** argv) {
 }
 
 /// The stack of the thread that compiles and runs the design: calls nested
-/// as deep as tier 1 allows (SCHEDULER_SPEC.md 16.2) need more than a main
-/// thread has (RUNTIME_ABI.md 5).
+/// as deep as tier 1 allows by default (SCHEDULER_SPEC.md 16.2) need more
+/// than a main thread has (RUNTIME_ABI.md 5).
 constexpr std::size_t kStackBytes = std::size_t{512} << 20;
+
+/// The stack for calls nested `depth` deep: kStackBytes for the default
+/// and less, as compiling runs on the thread too, and in the default's
+/// ratio above it (RUNTIME_ABI.md 5). 0 when that does not fit a size_t.
+std::size_t stackBytes(std::uint64_t depth) {
+    if (depth <= kirimasim::vm::kDefaultCallDepth) return kStackBytes;
+    if (depth > SIZE_MAX / kStackBytes) return 0;
+    return kStackBytes * static_cast<std::size_t>(depth) / kirimasim::vm::kDefaultCallDepth;
+}
 
 struct Job {
     int argc;
@@ -404,11 +429,19 @@ void runJob(Job& job) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    // The thread's stack is sized by --max-call-depth, read here, before
+    // the thread that reads the other options starts.
+    std::uint64_t depth = kirimasim::vm::kDefaultCallDepth;
+    for (int i = 1; i < argc; ++i)
+        if (std::string_view(argv[i]).starts_with("--max-call-depth=") &&
+            !parseCallDepth(argv[i], depth))
+            return kExitInputError;
+    const std::size_t stack = stackBytes(depth);
     Job job{argc, argv};
     pthread_attr_t attr;
     pthread_t thread;
-    bool started = pthread_attr_init(&attr) == 0;
-    started = started && pthread_attr_setstacksize(&attr, kStackBytes) == 0 &&
+    bool started = stack != 0 && pthread_attr_init(&attr) == 0;
+    started = started && pthread_attr_setstacksize(&attr, stack) == 0 &&
               pthread_create(
                   &thread, &attr,
                   [](void* j) -> void* {
@@ -416,7 +449,14 @@ int main(int argc, char** argv) {
                       return nullptr;
                   },
                   &job) == 0;
-    pthread_attr_destroy(&attr);
+    if (stack != 0) pthread_attr_destroy(&attr);
+    if (!started && depth != kirimasim::vm::kDefaultCallDepth) {
+        std::fprintf(stderr,
+                     "kirimasim: error: --max-call-depth=%llu needs a larger stack than the "
+                     "system gives a thread\n",
+                     static_cast<unsigned long long>(depth));
+        return kExitInputError;
+    }
     if (!started) {
         std::fputs("kirimasim: internal error: no thread with a stack for the run\n", stderr);
         return kExitInternalError;

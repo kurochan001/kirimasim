@@ -983,29 +983,32 @@ private:
     Act act_;
     std::uint32_t callDepth_ = 0;  ///< Calls running on the C++ stack.
 
-    /// How deep the calls of one process may nest: the calls of tasks that
-    /// wait, which the frame chains, and the others, which run on the C++
-    /// stack, together (SCHEDULER_SPEC.md 16.2). The driver gives the
-    /// simulation a stack that holds this many (RUNTIME_ABI.md 5).
-    static constexpr std::size_t kMaxCallDepth = 10000;
-
-    /// One more call of f would nest deeper than kMaxCallDepth, or the
-    /// stack of this thread is nearly used up: reports it at the call and
-    /// ends the run (SCHEDULER_SPEC.md 16.2, RUNTIME_ABI.md 5).
+    /// One more call of f would nest deeper than --max-call-depth allows,
+    /// or the stack of this thread is nearly used up: reports it at the
+    /// call and ends the run with resource_limit (SCHEDULER_SPEC.md 16.2,
+    /// RUNTIME_ABI.md 5).
     bool tooDeep(const Frame& f, const sir::Instr& in) {
-        if (f.calls.size() + callDepth_ >= kMaxCallDepth) {
-            designError(f, in, "calls nested more than " + std::to_string(kMaxCallDepth) + " deep");
+        const sir::InstanceId inst = instanceOf(d_.process(f.process));
+        if (f.calls.size() + callDepth_ >= options_.maxCallDepth) {
+            const std::string n = std::to_string(options_.maxCallDepth);
+            limitAt(inst, in.loc,
+                    "calls nested more than " + n + " deep (--max-call-depth=" + n + ")");
             return true;
         }
         if (!stack_.nearlyUsedUp()) return false;
-        stackLimit(instanceOf(d_.process(f.process)), in.loc);
+        stackLimit(inst, in.loc);
         return true;
     }
     /// The stack of this thread is nearly used up where a call of the
-    /// design would start: the line of SCHEDULER_SPEC.md 16.2 at loc,
-    /// then the end of the run, reason resource_limit (RUNTIME_ABI.md 5).
+    /// design would start (RUNTIME_ABI.md 5).
     void stackLimit(sir::InstanceId inst, sir::SourceLoc loc) {
-        output_.message(runtimeLine(inst, loc, "the stack of this thread is nearly used up"));
+        limitAt(inst, loc, "the stack of this thread is nearly used up");
+    }
+    /// A limit on resources reached at loc (CLI.md 2.7): the line of a
+    /// run-time error of the design, then the end of the run, reason
+    /// resource_limit (SCHEDULER_SPEC.md 16.2).
+    void limitAt(sir::InstanceId inst, sir::SourceLoc loc, const std::string& what) {
+        output_.message(runtimeLine(inst, loc, what));
         sched_.resourceLimit();
     }
     bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.

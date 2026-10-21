@@ -23,11 +23,21 @@ struct RunResult {
 };
 
 /// Limits of the VM (CLI.md 2.2).
+/// How deep the calls of one process may nest by default (CLI.md 2.7).
+inline constexpr std::uint64_t kDefaultCallDepth = 10000;
+
 struct RunOptions {
     /// --max-steps: instructions one process may run without waiting; 0 is
     /// no limit. Going over ends the run with zero_time_limit
     /// (SCHEDULER_SPEC.md 16.2).
     std::uint64_t maxSteps = 0;
+    /// --max-call-depth: how deep the calls of one process may nest, the
+    /// calls of tasks that wait, which the frame chains, and the others,
+    /// which run on the C++ stack, together. The call that would go deeper
+    /// is not made, and the run ends with resource_limit (SCHEDULER_SPEC.md
+    /// 16.2). The driver sizes the stack of the simulation by it
+    /// (RUNTIME_ABI.md 5).
+    std::uint64_t maxCallDepth = kDefaultCallDepth;
     /// The run-time plusargs, in order, without their leading + (CLI.md 2.4).
     std::vector<std::string> plusargs;
     /// For the waveform (WAVEFORM.md 3, 5): when the run started, which
