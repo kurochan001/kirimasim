@@ -1,6 +1,7 @@
 #include "kirimasim/front/front.h"
 
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,20 @@
 #include "slang/syntax/SyntaxTree.h"
 
 namespace kirimasim::front {
+
+bool setUpDriver(slang::driver::Driver& driver, std::span<const std::string> args) {
+    driver.addStandardArgs();
+    std::vector<const char*> argv;
+    argv.push_back("kirimasim");
+    argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
+    for (const auto& a : args)
+        argv.push_back(a.c_str());
+    if (!driver.parseCommandLine(static_cast<int>(argv.size()), argv.data())) return false;
+    // The threads of slang's pool have the system's default stack, too
+    // small for statements nested about 1000 deep on macOS (#35).
+    driver.options.numThreads = 1;
+    return driver.processOptions();
+}
 
 bool chooseConfigTop(slang::driver::Driver& driver, std::string& diagnostics) {
     namespace syntax = slang::syntax;
@@ -48,15 +63,7 @@ ParseResult parseAndElaborate(std::span<const std::string> files) {
     result.numFiles = files.size();
 
     slang::driver::Driver driver;
-    driver.addStandardArgs();
-
-    std::vector<const char*> argv;
-    argv.push_back("kirimasim");
-    argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
-    for (const auto& f : files)
-        argv.push_back(f.c_str());
-    if (!driver.parseCommandLine(static_cast<int>(argv.size()), argv.data())) return result;
-    if (!driver.processOptions()) return result;
+    if (!setUpDriver(driver, files)) return result;
 
     // Collect diagnostics into a string instead of letting slang print them.
     driver.diagEngine.removeClient(driver.textDiagClient);

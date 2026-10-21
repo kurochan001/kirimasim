@@ -2283,15 +2283,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
 CompileResult compile(std::span<const std::string> args) {
     CompileResult result;
     slang::driver::Driver driver;
-    driver.addStandardArgs();
-
-    std::vector<const char*> argv;
-    argv.push_back("kirimasim");
-    argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
-    for (const auto& a : args)
-        argv.push_back(a.c_str());
-    if (!driver.parseCommandLine(static_cast<int>(argv.size()), argv.data())) return result;
-    if (!driver.processOptions()) return result;
+    if (!setUpDriver(driver, args)) return result;
 
     driver.diagEngine.removeClient(driver.textDiagClient);
     auto client = std::make_shared<slang::TextDiagnosticClient>();

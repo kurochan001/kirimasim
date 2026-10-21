@@ -60,6 +60,12 @@ struct Unsupported {};
 /// parsed and before the compilation is made.
 bool chooseConfigTop(slang::driver::Driver& driver, std::string& diagnostics);
 
+/// Gives slang its command line: the files and options in `args`, always
+/// with the IEEE 1800-2023 version (CLI.md 2.1), and all of slang's work
+/// on the calling thread, whose stack the driver sizes, not on slang's
+/// thread pool (RUNTIME_ABI.md 5). False when slang rejects the options.
+bool setUpDriver(slang::driver::Driver& driver, std::span<const std::string> args);
+
 /// The time unit and precision of a scope; 1ns/1ns when nothing sets them.
 sir::TimeScale timeScaleOf(const ast::Scope& scope);
 /// Whether a statement may wait (unknown statements count as waiting).

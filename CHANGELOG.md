@@ -308,3 +308,8 @@ own. CONTRIBUTING.md says what goes in this file.
   `join_any`, after `wait fork`, or after a block was disabled. Only
   resuming from an event control or `wait`, or a new start of
   `always_comb`, drops it now (SCHEDULER_SPEC.md 15.4).
+- A design whose statements or expressions nest about 1000 deep, which
+  slang accepts, no longer crashes kirimasim on macOS while it compiles:
+  slang now does all its work on the thread the driver sized, not on a
+  thread pool with the system's default stack of 512 KiB (RUNTIME_ABI.md
+  5; #35).
