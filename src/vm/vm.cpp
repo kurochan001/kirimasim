@@ -506,14 +506,16 @@ struct Frame {
     /// descendants left (SCHEDULER_SPEC.md 10.8).
     std::vector<Frame*> children;
     std::uint32_t liveChildren = 0;
-    std::uint32_t births = 0;   ///< Children made so far: the next one's birth number.
-    std::uint32_t birth = 0;    ///< Its birth number among its parent's children.
+    // Birth and group numbers are 64 bits: a frame that forks on every
+    // clock edge makes more than 2^32 children in a long run (#36).
+    std::uint64_t births = 0;   ///< Children made so far: the next one's birth number.
+    std::uint64_t birth = 0;    ///< Its birth number among its parent's children.
     std::uint32_t place = 0;    ///< Its place in parent->children.
     std::uint32_t reports = 0;  ///< Its deferred assertion calls on the kernel's queues.
     bool finished = false;
     bool released = false;        ///< Its record was released; the frame waits to be reused.
-    std::uint32_t group = 0;      ///< The parent's fork group it belongs to (0: none).
-    std::uint32_t forkGroup = 0;  ///< This frame's latest join or join_any group.
+    std::uint64_t group = 0;      ///< The parent's fork group it belongs to (0: none).
+    std::uint64_t forkGroup = 0;  ///< This frame's latest join or join_any group.
     std::uint32_t groupSize = 0;
     std::uint32_t groupDone = 0;
     Join pending = Join::None;               ///< What the frame waits for before going on.
@@ -546,7 +548,7 @@ struct Frame {
         std::uint32_t varsId = 0;
         sir::BlockId block = 0;
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
-        std::uint32_t children = 0;        ///< The frame's births when it was called.
+        std::uint64_t children = 0;        ///< The frame's births when it was called.
     };
     std::vector<TaskCall> calls;
 
@@ -555,7 +557,7 @@ struct Frame {
     // within the innermost one, each with the frame's births then.
     struct SyncCall {
         std::uint32_t body = 0;
-        std::uint32_t children = 0;
+        std::uint64_t children = 0;
         const sir::Instr* site = nullptr;  ///< The call in the caller; none for a deferred one.
     };
     std::vector<SyncCall> syncCalls;
@@ -566,7 +568,7 @@ struct Frame {
         sir::BlockId exit = 0;
         std::uint32_t calls = 0;
         std::uint32_t sync = 0;
-        std::uint32_t children = 0;
+        std::uint64_t children = 0;
     };
     std::vector<ScopeAct> scopes;
     /// Where a disable sends the running frame: the task calls and
@@ -579,6 +581,11 @@ struct Frame {
     };
     std::optional<Unwind> unwind;
 };
+// The numbers that count forks over a whole run stay 64 bits (#36).
+static_assert(sizeof(Frame::births) == 8 && sizeof(Frame::birth) == 8);
+static_assert(sizeof(Frame::group) == 8 && sizeof(Frame::forkGroup) == 8);
+static_assert(sizeof(Frame::TaskCall::children) == 8 && sizeof(Frame::SyncCall::children) == 8 &&
+              sizeof(Frame::ScopeAct::children) == 8);
 
 class Interpreter {
 public:
@@ -1172,8 +1179,8 @@ private:
 
     /// The children of a frame from birth number `from` on, in the order
     /// they were made: a copy, since ending them may release them.
-    static std::vector<Frame*> childrenFrom(const Frame& f, std::uint32_t from) {
-        std::vector<std::pair<std::uint32_t, Frame*>> born;
+    static std::vector<Frame*> childrenFrom(const Frame& f, std::uint64_t from) {
+        std::vector<std::pair<std::uint64_t, Frame*>> born;
         for (Frame* c : f.children)
             if (c->birth >= from) born.emplace_back(c->birth, c);
         std::sort(born.begin(), born.end(),
@@ -2363,7 +2370,7 @@ private:
 
     /// Ends the children a frame made from birth number `from` on, with
     /// their descendants.
-    void killChildren(Frame& f, std::uint32_t from) {
+    void killChildren(Frame& f, std::uint64_t from) {
         for (Frame* c : childrenFrom(f, from)) {
             if (c->released) continue;
             if (!c->finished) {
@@ -2391,7 +2398,7 @@ private:
         for (Frame& g : frames_) {
             if (g.finished) continue;
             std::optional<Frame::Unwind> to;
-            std::uint32_t children = 0;
+            std::uint64_t children = 0;
             std::size_t keep = g.scopes.size();  ///< The activations that stay.
             if (!task) {
                 for (std::size_t i = 0; i < g.scopes.size() && !to; ++i) {

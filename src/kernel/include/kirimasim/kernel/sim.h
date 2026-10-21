@@ -479,16 +479,19 @@ private:
         std::vector<ProcessId> owner[2];
     };
     /// A delayed driver: where it writes and its pending update, if any;
-    /// gen numbers the update, so a dropped one is stale when it comes.
+    /// gen numbers the update, so a dropped one is stale when it comes. It
+    /// is 64 bits, as Event::gen is: a 32-bit one would come round to a
+    /// dropped update's number in a long run (#36).
     struct DelayedDriver {
         SlotId slot = 0;
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
         std::uint32_t width = 0;
         bool pending = false;
-        std::uint32_t gen = 0;
+        std::uint64_t gen = 0;
         std::vector<std::uint64_t> value;
     };
+    static_assert(sizeof(DelayedDriver::gen) == sizeof(Event::gen));
     std::vector<DelayedDriver> drivers_;
     static constexpr std::uint32_t kNotHeld = UINT32_MAX;
     static constexpr ProcessId kNoHolder = UINT32_MAX;
