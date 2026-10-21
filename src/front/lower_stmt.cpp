@@ -492,7 +492,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         child.parent = parent;
         child.loc = loc(startOf(*stmts[i]));
         child.blocks.resize(1);
-        const auto id = static_cast<std::uint32_t>(design().processes.size());
+        const auto id = static_cast<sir::ProcessId>(design().processes.size());
         design().processes.push_back(std::move(child));
         Body saved = std::move(b_);
         b_ = Body{};
@@ -799,7 +799,7 @@ void Lowerer::lowerOverride(const ast::ProceduralAssignStatement& s) {
     p.instance = inst;
     p.loc = loc(sl);
     p.blocks.resize(1);
-    const auto id = static_cast<std::uint32_t>(design_.processes.size());
+    const auto id = static_cast<sir::ProcessId>(design_.processes.size());
     design_.processes.push_back(std::move(p));
     Body saved = std::move(b_);
     b_ = Body{};

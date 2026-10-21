@@ -316,7 +316,7 @@ MUTANTS = [
      "const std::uint64_t* from = h.owner[0][bit] != kNoHolder   ? h.value[0].data() + at\n"
      "                                    : h.owner[1][bit] != kNoHolder ? h.value[1].data() + at"),
     ("vm: a force does not follow its right side", "src/vm/vm.cpp",
-     "        o.level = level;\n        waitTriggers(o, d_.processes[ops[1].id]);",
+     "        o.level = level;\n        waitTriggers(o, d_.process(ops[1].asProcess()));",
      "        o.level = level;"),
     ("front: a gate passes an input z through", "src/front/lower.cpp",
      "const auto known = [&](const Val& a) { return op2(sir::Op::Xor, a, constant(bit, 0)); };",
@@ -772,7 +772,7 @@ MUTANTS = [
      "        if (f.calls.size() + callDepth_ <= kMaxCallDepth) return false;"),
     ("vm: calls nested too deep are an internal error", "src/vm/vm.cpp",
      "        designError(f, in, \"calls nested more than \" + std::to_string(kMaxCallDepth) + \" deep\");",
-     "        fail(d_.processes[f.process], \"too deep at \" + std::to_string(in.loc.line));"),
+     "        fail(d_.process(f.process), \"too deep at \" + std::to_string(in.loc.line));"),
     ("vm: SIGINT is not looked at on a branch", "src/vm/vm.cpp",
      "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"
      "                        if (sched_.takeInterrupt()) return Exit::Stop;\n",
@@ -800,18 +800,20 @@ MUTANTS = [
      "(p.kind == sir::ProcessKind::Override && f.holding);",
      "(p.kind == sir::ProcessKind::Override && f.holding && false);"),
     ("vm: override.start waits on its triggers only after the first run", "src/vm/vm.cpp",
-     "        waitTriggers(o, d_.processes[ops[1].id]);\n"
+     "        waitTriggers(o, d_.process(ops[1].asProcess()));\n"
      "        const Act caller = act_;\n"
-     "        enter({bodyOfProcess(ops[1].id), &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
+     "        enter({bodyOfProcess(ops[1].asProcess()), &o.vars, caller.base + bodyTemps(caller.body),\n"
+     "               o.varsId});\n"
      "        W4 ret{0, 0};\n"
      "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n",
      "        const Act caller = act_;\n"
-     "        enter({bodyOfProcess(ops[1].id), &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
+     "        enter({bodyOfProcess(ops[1].asProcess()), &o.vars, caller.base + bodyTemps(caller.body),\n"
+     "               o.varsId});\n"
      "        W4 ret{0, 0};\n"
      "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n"
-     "        waitTriggers(o, d_.processes[ops[1].id]);\n"),
+     "        waitTriggers(o, d_.process(ops[1].asProcess()));\n"),
     ("vm: always @* and always @(...) wait on their triggers while they run", "src/vm/vm.cpp",
      "        return p.kind == sir::ProcessKind::Cont ||\n",
      "        return p.kind == sir::ProcessKind::Cont || p.kind == sir::ProcessKind::CombAt ||\n"
@@ -871,8 +873,8 @@ MUTANTS = [
      "    for (int i = scale.precision; i < scale.unit; ++i)\n        unitSteps *= 10;",
      "    for (int i = scale.unit; i < scale.unit; ++i)\n        unitSteps *= 10;"),
     ("front: a cont process drives what the functions it calls write", "src/front/lower.cpp",
-     "add(cont ? callWrites_[p] : design_.processes[p].writes, r);",
-     "add(cont && false ? callWrites_[p] : design_.processes[p].writes, r);"),
+     "add(cont ? callWrites_[p] : design_.process(p).writes, r);",
+     "add(cont && false ? callWrites_[p] : design_.process(p).writes, r);"),
     ("vm: a variable that a function of a cont process writes is driven", "src/vm/vm.cpp",
      "            for (const sir::SlotRange& w : proc.drives)\n                driven[w.slot.index()] = true;",
      "            if (proc.kind == sir::ProcessKind::Cont)\n"
@@ -1044,7 +1046,7 @@ MUTANTS = [
      "                lowerStore(*seed, coerce(after, typeOf(*seed->type, sl), sl), false, sl);\n",
      ""),
     ("vm: every $fmonitor call shares the frame of its statement", "src/vm/vm.cpp",
-     "Frame& m = newFrame(ops[0].id);\n                            m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);",
+     "Frame& m = newFrame(ops[0].asProcess());\n                            m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);",
      "Frame& m = *overrides_[ops[0].id];"),
     ("vm: a run-time warning comes at every pass of its place", "src/vm/vm.cpp",
      "if (!warned_.insert(&in).second) return;", "warned_.insert(&in);"),

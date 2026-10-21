@@ -1021,9 +1021,9 @@ TEST(Sir, ForkChildrenBelongToTheParent) {
     child.blocks.resize(1);
     child.blocks[0].instrs = {make(Op::Ret, voidType(), kNone, {}, 14)};
     d.processes.push_back(std::move(child));
-    d.processes[0].blocks[0].instrs[2] =
-        make(Op::Fork, voidType(), kNone,
-             {Operand::process(1), Operand::str("join"), Operand::block(BlockId{1})}, 12);
+    d.processes[0].blocks[0].instrs[2] = make(
+        Op::Fork, voidType(), kNone,
+        {Operand::process(ProcessId{1}), Operand::str("join"), Operand::block(BlockId{1})}, 12);
     expectClean(d);
     d.processes[1].parent = {Owner::Kind::Process, 1};
     EXPECT_TRUE(mentions(verify(d), "has another parent"));
@@ -1043,9 +1043,10 @@ TEST(Sir, ForkJoinNoneIsNotAWait) {
     auto& fb = d.subroutines[0].blocks;
     fb.resize(2);
     fb[1].instrs = {fb[0].instrs[2]};
-    fb[0].instrs[2] =
-        make(Op::Fork, voidType(), kNone,
-             {Operand::process(1), Operand::str("join_none"), Operand::block(BlockId{1})}, 10);
+    fb[0].instrs[2] = make(
+        Op::Fork, voidType(), kNone,
+        {Operand::process(ProcessId{1}), Operand::str("join_none"), Operand::block(BlockId{1})},
+        10);
     expectClean(d);
     fb[0].instrs[2].operands[1].text = "join";
     EXPECT_TRUE(mentions(verify(d), "fork in a function"));

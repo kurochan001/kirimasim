@@ -449,11 +449,10 @@ public:
     void emitInto(sir::BlockId b, sir::Op op, std::vector<sir::Operand> ops,
                   slang::SourceLocation sl);
 
-    sir::Process& proc() { return design_.processes[b_.proc]; }
+    sir::Process& proc() { return design_.process(b_.proc); }
     /// The process or subroutine whose body is being lowered.
     sir::Owner bodyOwner() const {
-        return b_.isSub ? sir::Owner{sir::Owner::Kind::Subroutine, b_.sub.index()}
-                        : sir::Owner{sir::Owner::Kind::Process, b_.proc};
+        return b_.isSub ? sir::Owner::of(b_.sub) : sir::Owner::of(b_.proc);
     }
     // The parts of the body being lowered, a process or a subroutine.
     std::vector<sir::BasicBlock>& blocks() {
@@ -466,8 +465,8 @@ public:
         // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
         if (!sir::readsWaiterFrame(s.kind)) return s.frame;
         return s.frameOf.kind == sir::Owner::Kind::Process
-                   ? design_.processes[s.frameOf.id].frame
-                   : design_.subroutines[s.frameOf.id].frame;
+                   ? design_.process(s.frameOf.asProcess()).frame
+                   : design_.subroutine(s.frameOf.asSubroutine()).frame;
     }
     sir::FrameVar& frameVar(sir::FrameVarId f) { return frameVars()[f.index()]; }
     std::uint32_t& numTemps() {
@@ -693,7 +692,7 @@ public:
 
     /// The state of the procedure being lowered.
     struct Body {
-        std::uint32_t proc = 0;    ///< The process, unless isSub.
+        sir::ProcessId proc{0};    ///< The process, unless isSub.
         sir::SubroutineId sub{0};  ///< The subroutine, when isSub.
         sir::BlockId block = sir::kEntryBlock;
         bool dead = false;  ///< The current point is unreachable.
@@ -769,9 +768,9 @@ private:
     std::uint32_t units_ = 0;  ///< Compilation units with rows so far.
     /// The cont processes whose drive strength is not (strong1, strong0):
     /// process -> (strength1, strength0).
-    std::map<std::uint32_t, std::pair<std::uint8_t, std::uint8_t>> strengths_;
+    std::map<sir::ProcessId, std::pair<std::uint8_t, std::uint8_t>> strengths_;
     /// The cont processes of port connections between nets.
-    std::set<std::uint32_t> netPorts_;
+    std::set<sir::ProcessId> netPorts_;
     /// The side computation of a three-state gate (SIR_SPEC.md 3.5):
     /// instructions [first, first + count) of its process's entry block,
     /// which store to a side slot not made yet (kNone). resolveNets points
@@ -783,7 +782,7 @@ private:
         std::size_t count = 0;
         bool known = true;
     };
-    std::map<std::uint32_t, GateSide> sides_;
+    std::map<sir::ProcessId, GateSide> sides_;
     /// The type-table rows of the UDP tables made so far.
     std::map<const ast::PrimitiveSymbol*, sir::TypeId> udpTables_;
     /// The type-table rows of the enumerated types made so far.
@@ -794,15 +793,16 @@ private:
     std::set<sir::SlotId> mergedSlots_;
     /// Process names used so far, "<scope>.<kind>" -> the next number.
     std::map<std::string, std::uint32_t> nameCounts_;
-    std::map<sir::InstanceId, std::uint32_t> staticInit_;  ///< Instance -> its static-init process.
-    std::map<sir::InstanceId, Body> staticBody_;           ///< Its lowering state.
+    std::map<sir::InstanceId, sir::ProcessId>
+        staticInit_;                              ///< Instance -> its static-init process.
+    std::map<sir::InstanceId, Body> staticBody_;  ///< Its lowering state.
     std::map<sir::InstanceId, slang::SourceLocation> staticLoc_;  ///< Its first initializer.
     /// The static variables put into static-init processes, in the order of
     /// their stores there: each with its process.
-    std::vector<std::pair<const ast::VariableSymbol*, std::uint32_t>> staticInits_;
+    std::vector<std::pair<const ast::VariableSymbol*, sir::ProcessId>> staticInits_;
     /// What the subroutines a cont process calls write, by process, until
     /// finishDrives adds them to its writes.
-    std::map<std::uint32_t, std::vector<sir::SlotRange>> callWrites_;
+    std::map<sir::ProcessId, std::vector<sir::SlotRange>> callWrites_;
     /// Subroutines lowered so far, per instance and symbol.
     std::map<std::pair<sir::InstanceId, const ast::Symbol*>, sir::SubroutineId> subs_;
     /// laterWork of each function looked at so far.
@@ -815,7 +815,7 @@ private:
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subReads_;
     /// The subroutines each body calls, by process and by subroutine.
     struct Calls {
-        std::map<std::uint32_t, std::vector<sir::SubroutineId>> byProcess;
+        std::map<sir::ProcessId, std::vector<sir::SubroutineId>> byProcess;
         std::map<sir::SubroutineId, std::vector<sir::SubroutineId>> bySubroutine;
         /// The list of the body being lowered.
         std::vector<sir::SubroutineId>& of(const Body& b) {
@@ -832,14 +832,14 @@ private:
         subWriteSites_;
     /// The tasks each process calls itself, with where (for
     /// checkTaskAndActionWrites).
-    std::map<std::uint32_t, std::vector<std::pair<sir::SubroutineId, slang::SourceLocation>>>
+    std::map<sir::ProcessId, std::vector<std::pair<sir::SubroutineId, slang::SourceLocation>>>
         taskCalls_;
     /// The functions that run deferred assertions' actions (deferAction),
     /// with where each assertion is. Like tasks, what they write is not
     /// their caller's (SIR_SPEC.md 3.4).
     std::map<sir::SubroutineId, slang::SourceLocation> actions_;
     /// The reads of each always_comb and always_latch, for its sensitivity.
-    std::map<std::uint32_t, std::vector<sir::SlotRange>> combReads_;
+    std::map<sir::ProcessId, std::vector<sir::SlotRange>> combReads_;
     /// From scanDisables: the named blocks and tasks a disable names, the
     /// blocks reached from outside their body, and the blocks that start
     /// processes they do not wait for or call tasks.
@@ -945,7 +945,7 @@ private:
     std::string processName(const std::string& prefix, const std::string& kind);
     /// Drops the processes from number `first` on, after an unsupported
     /// construct, with the static-init processes made meanwhile.
-    void dropProcesses(std::size_t first);
+    void dropProcesses(sir::ProcessId first);
     /// "<file>:<line>:<column>" of a SIR source position.
     std::string whereOf(const sir::SourceLoc& l) const;
     /// The nets that need resolution (VALUE_SEMANTICS.md 5.5) get a driver

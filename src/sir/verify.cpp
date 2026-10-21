@@ -134,7 +134,7 @@ bool clash(Writer a, Writer b, SlotKind k) {
 struct WriteExtent {
     SlotId slot{0};
     std::uint64_t elemLo = 0, elemHi = 0, bitLo = 0, bitHi = 0;
-    ProcessId process = 0;
+    ProcessId process{0};
     std::uint32_t index = 0;  ///< Its place in the process's writes.
     Writer writer = Writer::Other;
 };
@@ -148,7 +148,7 @@ std::pair<std::uint64_t, std::uint64_t> extent(std::uint32_t first, std::uint32_
 /// Two writes that rule 6 forbids: processes first < second, and the places
 /// of the ranges in their writes.
 struct Clash {
-    ProcessId first = 0, second = 0;
+    ProcessId first{0}, second{0};
     std::uint32_t firstIndex = 0, secondIndex = 0;
     SlotId slot{0};
 };
@@ -235,7 +235,7 @@ private:
         errors_.push_back({std::move(where), std::move(message), loc});
     }
 
-    static std::string processWhere(ProcessId i) { return "process @" + std::to_string(i); }
+    static std::string processWhere(ProcessId i) { return "process @" + std::to_string(i.index()); }
     static std::string subroutineWhere(SubroutineId i) {
         return "subroutine @" + std::to_string(i.index());
     }
@@ -530,7 +530,7 @@ private:
         if (s.instance.index() >= d_.instances.size()) error(where, "instance out of range", s.loc);
         Body body;
         body.where = where;
-        body.owner = {Owner::Kind::Subroutine, id.index()};
+        body.owner = Owner::of(id);
         body.blocks = &s.blocks;
         body.frame = &s.frame;
         body.numTemps = s.numTemps;
@@ -602,7 +602,7 @@ private:
                 d_.subroutine(t.guard).kind != SubroutineKind::Guard)
                 error(where, g + " is not a guard", p.loc);
             else if (const Owner& o = d_.subroutine(t.guard).frameOf;
-                     o.kind != Owner::Kind::Process || o.id != id)
+                     o.kind != Owner::Kind::Process || o.asProcess() != id)
                 error(where, g + " reads another frame", p.loc);
         }
         for (const SlotRange& w : p.writes)
@@ -640,7 +640,7 @@ private:
         }
         Body body;
         body.where = where;
-        body.owner = {Owner::Kind::Process, id};
+        body.owner = Owner::of(id);
         body.blocks = &p.blocks;
         body.frame = &p.frame;
         body.numTemps = p.numTemps;
@@ -1833,10 +1833,10 @@ private:
                    std::tie(y.first, y.second, y.firstIndex, y.secondIndex);
         });
         for (const Clash& c : found)
-            error(processWhere(c.second) + " " + ps[c.second].name,
+            error(processWhere(c.second) + " " + d_.process(c.second).name,
                   "writes %s" + std::to_string(c.slot.index()) + " (" + d_.slot(c.slot).name +
                       "), which " + processWhere(c.first) + " also writes",
-                  ps[c.second].loc);
+                  d_.process(c.second).loc);
     }
 
     /// The writes of one slot, sorted by elements and then bits. Writes

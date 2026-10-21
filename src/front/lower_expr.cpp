@@ -3303,7 +3303,7 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
     p.instance = inst;
     p.loc = loc(sl);
     p.blocks.resize(1);
-    const auto id = static_cast<std::uint32_t>(design_.processes.size());
+    const auto id = static_cast<sir::ProcessId>(design_.processes.size());
     design_.processes.push_back(std::move(p));
     Body saved = std::move(b_);
     b_ = Body{};

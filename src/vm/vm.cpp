@@ -504,7 +504,7 @@ using VarsId = sir::Id<VarsTag>;
 
 struct Frame {
     Interpreter* vm = nullptr;
-    std::uint32_t process = 0;      ///< Index in the SIR process table.
+    sir::ProcessId process{0};      ///< Row in the SIR process table.
     kernel::ProcessId kernelId{0};  ///< Id in the kernel.
     sir::BlockId block{0};          ///< Block to resume at.
     std::vector<W4> vars;           ///< Frame variables (SIR_SPEC.md 7.4).
@@ -768,13 +768,13 @@ public:
         overrides_.assign(d_.processes.size(), nullptr);
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             if (d_.processes[p].kind != sir::ProcessKind::Postponed) continue;
-            Frame& f = newFrame(p);
+            Frame& f = newFrame(sir::ProcessId{p});
             f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
             overrides_[p] = &f;
         }
         for (std::uint32_t p = 0; p < d_.processes.size() && !sched_.ending(); ++p) {
             if (d_.processes[p].kind != sir::ProcessKind::StaticInit) continue;
-            Frame& f = newFrame(p);
+            Frame& f = newFrame(sir::ProcessId{p});
             f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
             running_ = &f;
             const kernel::Status st = runProcess(f, initSteps);
@@ -791,7 +791,7 @@ public:
             if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
             if (proc.kind == sir::ProcessKind::StaticInit) continue;   // already run
             if (proc.kind == sir::ProcessKind::Postponed) continue;    // registered above
-            Frame& f = newFrame(p);
+            Frame& f = newFrame(sir::ProcessId{p});
             if (isProcedure(proc)) {
                 f.rng = procRngs[p];
                 f.ownRng = true;
@@ -1000,7 +1000,7 @@ private:
     [[nodiscard]] BodyId bodyOf(sir::SubroutineId s) const {
         return BodyId{processCount() + s.index()};
     }
-    static BodyId bodyOfProcess(std::uint32_t p) { return BodyId{p}; }
+    static BodyId bodyOfProcess(sir::ProcessId p) { return BodyId{p.index()}; }
     bool isSubBody(BodyId body) const { return body.index() >= processCount(); }
     const sir::Subroutine& subOf(BodyId body) const {
         return d_.subroutines[body.index() - processCount()];
@@ -1014,8 +1014,9 @@ private:
         const sir::Subroutine& s = subOf(body);
         // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
         if (!sir::readsWaiterFrame(s.kind)) return s.frame;
-        return s.frameOf.kind == sir::Owner::Kind::Process ? d_.processes[s.frameOf.id].frame
-                                                           : d_.subroutines[s.frameOf.id].frame;
+        return s.frameOf.kind == sir::Owner::Kind::Process
+                   ? d_.process(s.frameOf.asProcess()).frame
+                   : d_.subroutine(s.frameOf.asSubroutine()).frame;
     }
     std::uint32_t numTemps(BodyId body) const {
         return isSubBody(body) ? subOf(body).numTemps : processOf(body).numTemps;
@@ -1137,7 +1138,7 @@ private:
         return info;
     }
 
-    Frame& newFrame(std::uint32_t process) {
+    Frame& newFrame(sir::ProcessId process) {
         sweep();
         Frame* place = nullptr;
         if (freeFrames_.empty()) {
@@ -1270,7 +1271,7 @@ private:
             f.pending = join == "join" ? Frame::Join::All : Frame::Join::Any;
         }
         for (std::size_t i = 0; i + 2 < ops.size(); ++i) {
-            Frame& c = newFrame(ops[i].id);
+            Frame& c = newFrame(ops[i].asProcess());
             // Each branch, in order, is seeded from the parent (18.14.2).
             c.rng = rngOf(f).child();
             c.ownRng = true;
@@ -1307,7 +1308,7 @@ private:
     /// the form of the severity tasks, at the instruction's position and
     /// with the instance's name, then the end of the run, reason error.
     void designError(const Frame& f, const sir::Instr& in, const std::string& what) {
-        designErrorIn(d_.processes[f.process], in, what);
+        designErrorIn(d_.process(f.process), in, what);
     }
     /// The same, given the process that runs.
     void designErrorIn(const sir::Process& p, const sir::Instr& in, const std::string& what) {
@@ -1642,7 +1643,7 @@ private:
     /// simulation ends.
     /// Counts the instructions it runs in `steps` (vm.instrs).
     kernel::Status runProcess(Frame& f, std::uint64_t& steps) {
-        const sir::Process& p = d_.processes[f.process];
+        const sir::Process& p = d_.process(f.process);
         // Woken at a join or wait fork: wait again until it is satisfied.
         if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
         const bool early = sensitiveWhileRunning(p, f);
@@ -1951,7 +1952,7 @@ private:
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
-        const sir::Process& p = d_.processes[f.process];
+        const sir::Process& p = d_.process(f.process);
         const BodyId body = act_.body;
         for (;;) {
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
@@ -2181,10 +2182,11 @@ private:
                             // its own, printing to the files of its
                             // descriptor now (SYSTEM_TASKS.md 6.2).
                             kernel::FileTargets to = fileTargets(in, value(ops[1]), "$fmonitor");
-                            Frame& m = newFrame(ops[0].id);
+                            Frame& m = newFrame(ops[0].asProcess());
                             m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);
-                            sched_.addFileMonitor(
-                                m.kernelId, depsOf(bodyOfProcess(ops[0].id)).slots, std::move(to));
+                            sched_.addFileMonitor(m.kernelId,
+                                                  depsOf(bodyOfProcess(ops[0].asProcess())).slots,
+                                                  std::move(to));
                             break;
                         }
                         // The new monitor starts afresh and shows what it
@@ -2192,7 +2194,8 @@ private:
                         Frame& m = *overrides_[ops[0].id];
                         freshVars(m);
                         monitor_ = &m;
-                        sched_.setMonitor(m.kernelId, depsOf(bodyOfProcess(ops[0].id)).slots);
+                        sched_.setMonitor(m.kernelId,
+                                          depsOf(bodyOfProcess(ops[0].asProcess())).slots);
                         break;
                     }
                     case Op::OverrideStop: {
@@ -2256,9 +2259,10 @@ private:
         // before it runs (sensitiveWhileRunning).
         o.holding = true;
         o.level = level;
-        waitTriggers(o, d_.processes[ops[1].id]);
+        waitTriggers(o, d_.process(ops[1].asProcess()));
         const Act caller = act_;
-        enter({bodyOfProcess(ops[1].id), &o.vars, caller.base + bodyTemps(caller.body), o.varsId});
+        enter({bodyOfProcess(ops[1].asProcess()), &o.vars, caller.base + bodyTemps(caller.body),
+               o.varsId});
         W4 ret{0, 0};
         const Exit e = runBody(o, sir::kEntryBlock, steps, ret);
         act_ = caller;
@@ -2596,7 +2600,7 @@ private:
         retire(act_.varsId);
         act_ = caller;
         if (e == Exit::Waiting) {
-            fail(d_.processes[f.process],
+            fail(d_.process(f.process),
                  "task " + s.name + " waited; tasks that wait are not supported by the VM yet");
             return Exit::Error;
         }
@@ -4116,7 +4120,7 @@ private:
     /// for a procedure or a fork branch, or else its instance's
     /// initialization generator.
     kernel::Rng& rngOf(Frame& f) {
-        return f.ownRng ? f.rng : initRngs_[d_.processes[f.process].instance.index()];
+        return f.ownRng ? f.rng : initRngs_[d_.process(f.process).instance.index()];
     }
 
     /// $urandom([seed]) and $urandom_range(maxval, minval) (SYSTEM_TASKS.md

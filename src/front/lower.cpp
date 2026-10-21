@@ -692,7 +692,7 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
                 // frameOf names a subroutine.
                 const sir::Subroutine& cur = design_.subroutine(b_.sub);
                 s.subroutine =
-                    sir::readsWaiterFrame(cur.kind) ? sir::SubroutineId{cur.frameOf.id} : b_.sub;
+                    sir::readsWaiterFrame(cur.kind) ? cur.frameOf.asSubroutine() : b_.sub;
                 break;
             }
             if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
@@ -820,12 +820,12 @@ std::string Lowerer::processName(const std::string& prefix, const std::string& k
     return key + std::to_string(nameCounts_[key]++);
 }
 
-void Lowerer::dropProcesses(std::size_t first) {
-    design_.processes.resize(first);  // with any fork children
-    combReads_.erase(static_cast<std::uint32_t>(first));
-    strengths_.erase(strengths_.lower_bound(static_cast<std::uint32_t>(first)), strengths_.end());
-    netPorts_.erase(netPorts_.lower_bound(static_cast<std::uint32_t>(first)), netPorts_.end());
-    sides_.erase(sides_.lower_bound(static_cast<std::uint32_t>(first)), sides_.end());
+void Lowerer::dropProcesses(sir::ProcessId first) {
+    design_.processes.resize(first.index());  // with any fork children
+    combReads_.erase(first);
+    strengths_.erase(strengths_.lower_bound(first), strengths_.end());
+    netPorts_.erase(netPorts_.lower_bound(first), netPorts_.end());
+    sides_.erase(sides_.lower_bound(first), sides_.end());
     // A static-init process made while lowering the dropped ones goes too.
     std::erase_if(staticInits_, [&](const auto& s) { return s.second >= first; });
     for (auto it = staticInit_.begin(); it != staticInit_.end();) {
@@ -875,11 +875,11 @@ void Lowerer::finishDesign() {
     // 6.3, 6.4). A cont process takes them after its own writes are known as
     // what it drives (finishDrives).
     for (const auto& [p, called] : callees_.byProcess) {
-        const bool cont = design_.processes[p].kind == sir::ProcessKind::Cont;
+        const bool cont = design_.process(p).kind == sir::ProcessKind::Cont;
         for (const sir::SubroutineId c : called)
             if (!later(c))
                 for (const sir::SlotRange& r : writes[c])
-                    add(cont ? callWrites_[p] : design_.processes[p].writes, r);
+                    add(cont ? callWrites_[p] : design_.process(p).writes, r);
     }
     for (const auto& [p, called] : readCallees_.byProcess) {
         if (combReads_.count(p) == 0) continue;
@@ -890,7 +890,7 @@ void Lowerer::finishDesign() {
     // The implicit sensitivity: what the block reads, less what it writes
     // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
     for (const auto& [p, procReads] : combReads_) {
-        sir::Process& proc = design_.processes[p];
+        sir::Process& proc = design_.process(p);
         for (const sir::SlotRange& r : procReads) {
             const sir::Slot& s = design_.slot(r.slot);
             // Variables and arguments declared in a called function are not
@@ -908,13 +908,14 @@ void Lowerer::finishDesign() {
 void Lowerer::checkTaskAndActionWrites() {
     // What each always_comb, always_latch and always_ff writes, itself and
     // through its functions, by slot.
-    std::map<sir::SlotId, std::vector<std::uint32_t>> owners;
-    for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
-        const sir::ProcessKind k = design_.processes[p].kind;
+    std::map<sir::SlotId, std::vector<sir::ProcessId>> owners;
+    for (std::uint32_t i = 0; i < design_.processes.size(); ++i) {
+        const sir::ProcessId p{i};
+        const sir::ProcessKind k = design_.process(p).kind;
         if (k != sir::ProcessKind::Comb && k != sir::ProcessKind::Latch &&
             k != sir::ProcessKind::Ff)
             continue;
-        for (const sir::SlotRange& w : design_.processes[p].writes)
+        for (const sir::SlotRange& w : design_.process(p).writes)
             if (design_.slot(w.slot).subroutine == sir::kNone) owners[w.slot].push_back(p);
     }
     if (owners.empty()) return;
@@ -925,7 +926,7 @@ void Lowerer::checkTaskAndActionWrites() {
         sir::SubroutineId sub;
         slang::SourceLocation at;
     };
-    std::map<std::uint32_t, std::vector<Start>> starts;
+    std::map<sir::ProcessId, std::vector<Start>> starts;
     for (const auto& [q, calls] : taskCalls_)
         for (const auto& [task, callAt] : calls)
             starts[q].push_back({task, callAt});
@@ -958,9 +959,9 @@ void Lowerer::checkTaskAndActionWrites() {
                     const sir::Slot& s = design_.slot(r.slot);
                     const auto it = owners.find(r.slot);
                     if (it == owners.end()) continue;
-                    for (const std::uint32_t p : it->second) {
+                    for (const sir::ProcessId p : it->second) {
                         if (p == q) continue;
-                        const sir::Process& owner = design_.processes[p];
+                        const sir::Process& owner = design_.process(p);
                         const bool overlaps =
                             std::ranges::any_of(owner.writes, [&](const sir::SlotRange& w) {
                                 return w.slot == r.slot && sir::overlaps(s, w, r);
@@ -995,8 +996,9 @@ void Lowerer::finishDrives() {
     // What a cont process drives is what its own instructions write, once
     // resolveNets has moved them to the driver slots; what the functions it
     // calls write are procedural writes (6.5, SIR_SPEC.md 3.4).
-    for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
-        sir::Process& proc = design_.processes[p];
+    for (std::uint32_t i = 0; i < design_.processes.size(); ++i) {
+        const sir::ProcessId p{i};
+        sir::Process& proc = design_.process(p);
         if (proc.kind != sir::ProcessKind::Cont) continue;
         proc.drives = proc.writes;
         const auto it = callWrites_.find(p);
@@ -1014,10 +1016,11 @@ void Lowerer::resolveNets() {
     // continuous assignment, a net declaration assignment or a port).
     // Two drivers of a uwire never get here: slang's analysis rejects them
     // (6.6.2).
-    std::map<sir::SlotId, std::vector<std::pair<std::uint32_t, sir::SlotRange>>> drivers;
-    for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
-        if (design_.processes[p].kind != sir::ProcessKind::Cont) continue;
-        for (const sir::SlotRange& w : design_.processes[p].writes)
+    std::map<sir::SlotId, std::vector<std::pair<sir::ProcessId, sir::SlotRange>>> drivers;
+    for (std::uint32_t i = 0; i < design_.processes.size(); ++i) {
+        const sir::ProcessId p{i};
+        if (design_.process(p).kind != sir::ProcessKind::Cont) continue;
+        for (const sir::SlotRange& w : design_.process(p).writes)
             if (design_.slot(w.slot).kind != sir::SlotKind::Var) drivers[w.slot].push_back({p, w});
     }
     for (const auto& [net, writes] : drivers) {
@@ -1034,44 +1037,44 @@ void Lowerer::resolveNets() {
                 shared = writes[i].first != writes[j].first &&
                          sir::overlaps(design_.slot(net), writes[i].second, writes[j].second);
         if (!shared && !own) continue;
-        std::vector<std::uint32_t> ps;
+        std::vector<sir::ProcessId> ps;
         for (const auto& w : writes)
             if (std::find(ps.begin(), ps.end(), w.first) == ps.end()) ps.push_back(w.first);
         // Drivers that meet through a port between nets resolve on one net
         // with their own strengths (VALUE_SEMANTICS.md 5.3); that needs
         // the nets merged, not done yet.
         const auto through = std::find_if(ps.begin(), ps.end(),
-                                          [&](std::uint32_t p) { return netPorts_.contains(p); });
+                                          [&](sir::ProcessId p) { return netPorts_.contains(p); });
         if (through != ps.end()) {
             ++numErrors_;
-            diags_ += whereOf(design_.processes[*through].loc) +
+            diags_ += whereOf(design_.process(*through).loc) +
                       ": error: unsupported: " + "drivers of the net '" + design_.slot(net).name +
                       "' that meet through a port (not implemented yet)\n";
             continue;
         }
-        const sir::SourceLoc where = design_.processes[ps.front()].loc;
+        const sir::SourceLoc where = design_.process(ps.front()).loc;
         if (!design_.slot(net).dims.empty()) {
             ++numErrors_;
             diags_ += whereOf(where) + ": error: unsupported: an array of nets with " +
                       "several drivers (not implemented yet)\n";
             continue;
         }
-        const auto unknownSide = std::find_if(ps.begin(), ps.end(), [&](std::uint32_t p) {
+        const auto unknownSide = std::find_if(ps.begin(), ps.end(), [&](sir::ProcessId p) {
             const auto it = sides_.find(p);
             return it != sides_.end() && !it->second.known;
         });
         // The side slot is written at once, so a gate whose value is
         // delayed would show its sides before its value.
-        const auto delayedSide = std::find_if(ps.begin(), ps.end(), [&](std::uint32_t p) {
+        const auto delayedSide = std::find_if(ps.begin(), ps.end(), [&](sir::ProcessId p) {
             if (!sides_.contains(p)) return false;
-            for (const sir::Instr& in : design_.processes[p].blocks[0].instrs)
+            for (const sir::Instr& in : design_.process(p).blocks[0].instrs)
                 if (in.op == sir::Op::DriveDelay) return true;
             return false;
         });
         if (delayedSide != ps.end()) {
             ++numErrors_;
             diags_ +=
-                whereOf(design_.processes[*delayedSide].loc) +
+                whereOf(design_.process(*delayedSide).loc) +
                 ": error: unsupported: a three-state gate with a delay that drives the net '" +
                 design_.slot(net).name + "' with other drivers (not implemented yet)\n";
             continue;
@@ -1079,7 +1082,7 @@ void Lowerer::resolveNets() {
         if (unknownSide != ps.end()) {
             ++numErrors_;
             diags_ +=
-                whereOf(design_.processes[*unknownSide].loc) +
+                whereOf(design_.process(*unknownSide).loc) +
                 ": error: unsupported: a three-state gate that drives this part of the net '" +
                 design_.slot(net).name + "' with other drivers (not implemented yet)\n";
             continue;
@@ -1104,7 +1107,7 @@ void Lowerer::resolveNets() {
             const auto id = static_cast<sir::SlotId>(design_.slots.size());
             design_.slots.push_back(std::move(d));
             slots.push_back(id);
-            sir::Process& p = design_.processes[ps[k]];
+            sir::Process& p = design_.process(ps[k]);
             for (sir::BasicBlock& bb : p.blocks)
                 for (sir::Instr& in : bb.instrs)
                     if (sir::writesSlot(in.op) && !in.operands.empty() &&
@@ -1179,7 +1182,7 @@ void Lowerer::resolveNets() {
     // A three-state gate on a net that does not resolve writes L and H as
     // x alone (SIR_SPEC.md 3.5): its side computation goes.
     for (const auto& [proc, side] : sides_) {
-        std::vector<sir::Instr>& instrs = design_.processes[proc].blocks[0].instrs;
+        std::vector<sir::Instr>& instrs = design_.process(proc).blocks[0].instrs;
         const auto at = instrs.begin() + static_cast<std::ptrdiff_t>(side.first);
         instrs.erase(at, at + static_cast<std::ptrdiff_t>(side.count));
     }
@@ -1617,7 +1620,7 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
             case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
         }
         if (betweenNets && design_.processes.size() > before)
-            netPorts_.insert(static_cast<std::uint32_t>(before));
+            netPorts_.insert(static_cast<sir::ProcessId>(before));
     }
 }
 
@@ -1708,7 +1711,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
     }
     const std::string name = primitiveName(g, prefix, "gate");
     const slang::SourceLocation sl = g.location;
-    const auto first = static_cast<std::uint32_t>(design_.processes.size());
+    const auto first = static_cast<sir::ProcessId>(design_.processes.size());
     std::optional<GateSide> side;
     lowerCont(
         name, sl, g,
@@ -1796,7 +1799,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
             side = GateSide{start, block(b_.block).instrs.size() - start, true};
         },
         strength, g.getDelay());
-    if (side && design_.processes.size() > first) sides_[first] = *side;
+    if (side && design_.processes.size() > first.index()) sides_[first] = *side;
 }
 
 sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) {
@@ -1984,10 +1987,10 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
     p.instance = instance_;
     p.loc = loc(sl);
     p.blocks.resize(1);
-    const std::size_t first = design_.processes.size();
+    const auto first = static_cast<sir::ProcessId>(design_.processes.size());
     design_.processes.push_back(std::move(p));
     b_ = Body{};
-    b_.proc = static_cast<std::uint32_t>(first);
+    b_.proc = first;
     b_.scale = timeScaleOf(*evalAt.getParentScope());
     b_.scope = scopeNameOf(evalAt);
     evalSymbol_ = &evalAt;
@@ -2000,8 +2003,7 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
         dropProcesses(first);
         return;
     }
-    if (strength != std::pair<std::uint8_t, std::uint8_t>{6, 6})
-        strengths_[static_cast<std::uint32_t>(first)] = strength;
+    if (strength != std::pair<std::uint8_t, std::uint8_t>{6, 6}) strengths_[first] = strength;
     // Evaluated again whenever an operand of the right-hand side changes
     // (10.3.2).
     triggerOnReads();
@@ -2031,7 +2033,7 @@ void Lowerer::ensureStaticInit(const ast::Symbol& at, slang::SourceLocation sl) 
         p.instance = instance_;
         p.loc = loc(sl);
         p.blocks.resize(1);
-        const auto id = static_cast<std::uint32_t>(design_.processes.size());
+        const auto id = static_cast<sir::ProcessId>(design_.processes.size());
         design_.processes.push_back(std::move(p));
         staticInit_[instance_] = id;
         staticLoc_[instance_] = sl;
@@ -2046,7 +2048,7 @@ void Lowerer::checkStaticInitOrder() {
     // Static-init processes run in the order of their numbers, and each
     // runs its stores in order (SIR_SPEC.md 7.1): packages and compilation
     // units first, then the instances.
-    std::map<const ast::Symbol*, std::pair<std::uint32_t, std::size_t>> when;
+    std::map<const ast::Symbol*, std::pair<sir::ProcessId, std::size_t>> when;
     for (std::size_t i = 0; i < staticInits_.size(); ++i)
         when.try_emplace(staticInits_[i].first, staticInits_[i].second, i);
     const auto instanceOf = [&](const ast::Symbol& s) -> std::optional<sir::InstanceId> {
@@ -2060,7 +2062,7 @@ void Lowerer::checkStaticInitOrder() {
         const ast::Expression* init = v.getInitializer();
         const std::optional<sir::InstanceId> own = instanceOf(v);
         if (init == nullptr || !own) continue;
-        const std::pair<std::uint32_t, std::size_t> mine{staticInits_[i].second, i};
+        const std::pair<sir::ProcessId, std::size_t> mine{staticInits_[i].second, i};
         // Only the variables the expression names count, not those read
         // inside the functions it calls (P1).
         std::vector<const ast::Symbol*> early;
@@ -2153,10 +2155,10 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
     p.instance = instance_;
     p.loc = loc(pb.location);
     p.blocks.resize(1);
-    const std::size_t first = design_.processes.size();
+    const auto first = static_cast<sir::ProcessId>(design_.processes.size());
     design_.processes.push_back(std::move(p));
     b_ = Body{};
-    b_.proc = static_cast<std::uint32_t>(first);
+    b_.proc = first;
     b_.scale = timeScaleOf(*pb.getParentScope());
     b_.scope = prefix;
     b_.fromAssertion = pb.isFromAssertion;

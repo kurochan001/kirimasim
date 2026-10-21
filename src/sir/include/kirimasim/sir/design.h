@@ -33,7 +33,8 @@ struct FrameVarTag;
 using FrameVarId = Id<FrameVarTag>;
 struct SubroutineTag;
 using SubroutineId = Id<SubroutineTag>;
-using ProcessId = std::uint32_t;
+struct ProcessTag;
+using ProcessId = Id<ProcessTag>;
 
 /// Every body starts at its block 0, as the text form numbers them (bb0).
 inline constexpr BlockId kEntryBlock{0};
@@ -375,6 +376,7 @@ struct Operand {
     /// that `kind` agrees.
     [[nodiscard]] BlockId asBlock() const { return BlockId{id}; }
     [[nodiscard]] SubroutineId asSubroutine() const { return SubroutineId{id}; }
+    [[nodiscard]] ProcessId asProcess() const { return ProcessId{id}; }
     [[nodiscard]] TempId asTemp() const { return TempId{id}; }
     [[nodiscard]] ConstId asConst() const { return ConstId{id}; }
     [[nodiscard]] TypeId asType() const { return TypeId{id}; }
@@ -407,7 +409,7 @@ struct Operand {
     }
     static Operand frame(FrameVarId f) { return of(Kind::Frame, f.index()); }
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s.index()); }
-    static Operand process(ProcessId p) { return of(Kind::Process, p); }
+    static Operand process(ProcessId p) { return of(Kind::Process, p.index()); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
     static Operand str(std::string s) {
@@ -493,7 +495,13 @@ struct Trigger {
 struct Owner {
     enum class Kind : std::uint8_t { None, Process, Subroutine };
     Kind kind = Kind::None;
-    std::uint32_t id = 0;
+    std::uint32_t id = 0;  ///< A process or a subroutine, as kind says.
+
+    static Owner of(ProcessId p) { return {Kind::Process, p.index()}; }
+    static Owner of(SubroutineId s) { return {Kind::Subroutine, s.index()}; }
+    /// id as the number it is, once kind is known.
+    [[nodiscard]] ProcessId asProcess() const { return ProcessId{id}; }
+    [[nodiscard]] SubroutineId asSubroutine() const { return SubroutineId{id}; }
 };
 
 /// A process. Block 0 is the entry block.
@@ -621,6 +629,8 @@ struct Design {
     /// The rows the typed numbers name.
     Slot& slot(SlotId s) { return slots[s.index()]; }
     const Slot& slot(SlotId s) const { return slots[s.index()]; }
+    Process& process(ProcessId p) { return processes[p.index()]; }
+    const Process& process(ProcessId p) const { return processes[p.index()]; }
     Subroutine& subroutine(SubroutineId s) { return subroutines[s.index()]; }
     const Subroutine& subroutine(SubroutineId s) const { return subroutines[s.index()]; }
     Instance& instance(InstanceId i) { return instances[i.index()]; }
