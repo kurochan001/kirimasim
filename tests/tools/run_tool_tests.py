@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Checks that the judging tools fail when they should (TEST_SUITE.md,
 negative controls): each case changes one thing in a copy of a test or of an
 expectation and expects the tool to reject it, next to the unchanged copy,

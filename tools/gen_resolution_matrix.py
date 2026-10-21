@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the net resolution matrix tests of TEST_SUITE.md ("Net matrix",
 "4-state matrix") in tests/suite/nets/.
 

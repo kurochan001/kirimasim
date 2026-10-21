@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """The list of tests allowed to be skipped as unsupported (TEST_SUITE.md,
 "What is judged now"): tests/suite/skips.txt holds one test per line, its
 path under tests/suite/ without .sv, then # and the reason. Blank lines

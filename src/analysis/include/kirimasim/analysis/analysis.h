@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // analysis: X-reachability analysis, static island detection, levelization, observability.
 //
 // Empty skeleton. Real contents arrive in later phases.

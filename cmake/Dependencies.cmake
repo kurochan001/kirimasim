@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # External dependencies, fetched with FetchContent and pinned to commit SHAs.
 #
 # No git submodules are used. Every dependency is pinned to a full commit SHA

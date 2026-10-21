@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The strings of $typename (SYSTEM_TASKS.md 8, 20.6.1), built from slang's
 // types.
 

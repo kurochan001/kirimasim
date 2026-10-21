@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Runs one test-suite file through kirimasim and checks the result.
 
 The test's metadata header (sv-tests style, inside the first /* ... */

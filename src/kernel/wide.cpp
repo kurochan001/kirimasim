@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Four-state operations on values of any width (wide.h).
 
 #include "kirimasim/kernel/wide.h"

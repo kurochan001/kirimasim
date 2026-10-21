@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The string values of a simulation (SIR_SPEC.md 3.2.1).
 //
 // A string is a handle in the Handle domain: 0 is the empty string, and

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The Context's own rules (RUNTIME_ABI.md 9.3): it cannot be copied or
 // moved, and it writes only to the destinations it was made with.
 

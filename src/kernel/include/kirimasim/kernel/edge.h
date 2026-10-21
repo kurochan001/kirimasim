@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Edges of a four-state bit (VALUE_SEMANTICS.md 4.3, IEEE 1800-2023 table
 // 9-2).
 //

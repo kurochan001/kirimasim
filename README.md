@@ -707,3 +707,8 @@ requests are not accepted: they are turned off for this repository
 kirimasim is licensed under the Apache License 2.0 with LLVM Exceptions
 (`Apache-2.0 WITH LLVM-exception`). See [LICENSE](LICENSE) and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Every file in this repository is under that licence unless it says
+otherwise; each file of code says so in an SPDX line at its top. "The
+kirimasim Authors", whom those files name, are the people who have
+contributed to kirimasim, as its commit history records.

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The kernel's dump (WAVEFORM.md): what the suite's designs cannot see from
 // inside, as they read their dump while it runs: the end of the run, and a
 // file that cannot be opened. And the patterns of --wave-scope.

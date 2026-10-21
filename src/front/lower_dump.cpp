@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The dump table (SIR_SPEC.md 2, WAVEFORM.md 2): the scopes and variables
 // a waveform can name, made from slang's model once the design is lowered,
 // and the rows the arguments of $dumpvars name.

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix test of the format flags - and 0, which the
 standard does not define (SYSTEM_TASKS.md 3.12), in tests/cli/.
 

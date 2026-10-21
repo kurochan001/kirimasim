@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Measures the simulation speed of kirimasim on the designs under bench/,
 and of Icarus Verilog and Verilator for comparison (PERFORMANCE.md 5).
 

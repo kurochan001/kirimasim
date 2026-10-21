@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # codegen: tier 2, C++ generation and build.
 # May depend on: sir, analysis.
 add_library(kirimasim_codegen STATIC codegen.cpp)

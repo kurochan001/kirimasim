@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Event counters reported by `--stats=json`.
 //
 // Counts do not depend on machine load or optimization level, so CI uses

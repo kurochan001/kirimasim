@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the assignment operator matrix tests of TEST_SUITE.md
 ("4-state matrix", "Mechanism matrix") in tests/suite/values/.
 

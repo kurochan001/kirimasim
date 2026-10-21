@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // vm: tier 1, which runs SIR processes on the shared kernel.
 //
 // This version interprets SIR directly. It runs the SIR that front makes

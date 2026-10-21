@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Tests for time units and delay conversion (SCHEDULER_SPEC.md 1).
 
 #include <cmath>

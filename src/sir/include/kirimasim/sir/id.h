@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Distinct types for the numbers of the SIR's tables. A slot number, a
 // block number and a frame variable number cannot be given for one
 // another, and none of them is an integer: using one as an offset or as

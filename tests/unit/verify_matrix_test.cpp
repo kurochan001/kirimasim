@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The negative matrix of the SIR verifier (SIR_SPEC.md 10): every check
 // that rejects a malformed design, each reached by one small change to a
 // design that verifies. Without it, a check that never fires would go

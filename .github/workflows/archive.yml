@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 name: Archive
 
 # Asks Software Heritage (https://www.softwareheritage.org/) to save the

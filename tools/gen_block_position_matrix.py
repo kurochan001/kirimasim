@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix tests of where a block statement is placed, of
 TEST_SUITE.md ("Mechanism matrix"): a design whose --dump-sir positions
 run_cli_tests.py compares, in tests/cli/, and simulation tests of a

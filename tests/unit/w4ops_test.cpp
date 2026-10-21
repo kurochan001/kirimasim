@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Compares the kernel's fast one-word operations (kernel/w4ops.h) with the
 // valsem reference (valsem/value.h) on random values of every width from 1
 // to 64, with and without X and Z bits (VALUE_SEMANTICS.md 3).

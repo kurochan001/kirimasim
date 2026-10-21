@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # The tools use the union types of Python 3.10 in their annotations.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 

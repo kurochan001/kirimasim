@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 /* The C boundary between the kernel and code built separately from it
  * (tier 2, later tier 3): the kernel's function table (RUNTIME_ABI.md 4.2)
  * and the resume-function form (4.3).

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Lowering of functions and tasks, their calls and return (SIR_SPEC.md 8).
 //
 // A subroutine is lowered once per instance that calls it, when it is first

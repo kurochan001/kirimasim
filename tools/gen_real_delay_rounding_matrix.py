@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix tests of rounding real delays to the precision, of
 TEST_SUITE.md ("Mechanism matrix"), in tests/suite/sched/.
 

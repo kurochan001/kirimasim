@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Tests for the formatting of $display values (SYSTEM_TASKS.md 3). The
 // expected texts follow the examples and rules of that section.
 

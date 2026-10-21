@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # Each .sv file under tests/suite becomes one CTest test (tools/run_suite_test.py).
 # Simulation tests that use constructs not supported yet are reported as skipped.
 file(GLOB_RECURSE suite_files CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.sv)

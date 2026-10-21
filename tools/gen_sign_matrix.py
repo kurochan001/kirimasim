@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the sign propagation matrix tests of TEST_SUITE.md ("4-state matrix")
 in tests/suite/values/.
 

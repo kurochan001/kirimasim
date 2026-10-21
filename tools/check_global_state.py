@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Checks the global state of src/ against its allowlist (RUNTIME_ABI.md
 9.3, 9.4).
 

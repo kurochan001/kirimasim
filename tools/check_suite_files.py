@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Fails if tests/suite/ or tests/dump_sir/ has expectation files that no
 test uses (TEST_SUITE.md): a .expected or .stderr file without the .sv file
 of the same name. Every .sv file under tests/suite/ is registered with CTest

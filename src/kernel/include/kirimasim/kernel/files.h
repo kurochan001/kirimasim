@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The files a design opens (SYSTEM_TASKS.md 6): multichannel descriptors
 // (mcd) and file descriptors (fd). Standard output and standard error are
 // the Context's Output, so that every path to them keeps one order

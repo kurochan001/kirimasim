@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix tests of the delays of sequential UDP instances and
 their initial values (TEST_SUITE.md, "Mechanism matrix") in
 tests/suite/nets/.

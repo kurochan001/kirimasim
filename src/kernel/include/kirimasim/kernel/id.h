@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Distinct types for the numbers the kernel hands out and takes: slots,
 // processes, events and counters cannot be given for one another, and none
 // of them is an integer. The SIR has a template of its own (sir/id.h): the

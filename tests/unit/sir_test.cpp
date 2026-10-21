@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Tests for the SIR data structures, the text writer and the verifier.
 
 #include <algorithm>

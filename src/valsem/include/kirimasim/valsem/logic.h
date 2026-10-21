@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Reference semantics for four-state values, one bit at a time.
 //
 // These definitions are slow but obviously correct. Fast implementations in

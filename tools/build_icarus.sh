@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # Builds the Icarus Verilog development version that the P1 gate compares
 # against (TEST_SUITE.md, "Simulators compared against" and "How the P1
 # passing conditions are measured").

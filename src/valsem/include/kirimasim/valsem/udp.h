@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Reference semantics of user-defined primitives (VALUE_SEMANTICS.md 5.9):
 // the rows of a table matched symbol by symbol, as table 29-1 defines the
 // symbols. The kernel's compiled tables (kernel/udp.h) are tested against

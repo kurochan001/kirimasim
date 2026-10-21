@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Fails if src/ uses something banned (CLAUDE.md).
 
 Banned in src/kernel/ and src/vm/: std::shared_ptr, dynamic_cast,

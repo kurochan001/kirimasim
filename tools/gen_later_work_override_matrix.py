@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix tests of functions that schedule work to run after
 they return, called from the callers SCHEDULER_SPEC.md 6.5 added on
 2026-10-20, of TEST_SUITE.md ("Mechanism matrix"): a design whose calls

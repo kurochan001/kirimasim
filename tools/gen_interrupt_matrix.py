@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix test of SIGINT, of TEST_SUITE.md ("Mechanism
 matrix"), in tests/cli/interrupt_matrix/ and tests/cli/interrupt_matrix.expected.
 

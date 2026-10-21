@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Checks `kirimasim --dump-sir` against an expected SIR text.
 
 The test runs in the directory of the .sv file and passes only the file

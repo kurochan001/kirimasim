@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The C function table of abi.h. Every entry forwards to the C++ API, so
 // the table and the API have one meaning (RUNTIME_ABI.md 4.2).
 

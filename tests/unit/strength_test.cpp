@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Net resolution with strengths (VALUE_SEMANTICS.md 5): the valsem
 // reference on cases worked out from 28.12, and the kernel's fast version
 // (kernel/strength.h) compared with the reference.

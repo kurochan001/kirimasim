@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Checks the valsem reference against the examples that VALUE_SEMANTICS.md
 // records as checked against the standard (and, where noted there, against
 // Icarus Verilog 13.0).

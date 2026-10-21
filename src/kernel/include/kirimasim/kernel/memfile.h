@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The files of $readmemb, $readmemh, $writememb and $writememh
 // (SYSTEM_TASKS.md 7, 21.4, 21.5): which elements of a memory get which
 // words of a file, decided here for every tier (SIR_SPEC.md 8).

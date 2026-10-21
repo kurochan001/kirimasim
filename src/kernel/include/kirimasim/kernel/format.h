@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Formatting of values for $display and its relatives (SYSTEM_TASKS.md 3).
 //
 // Every tier formats through these functions, so the output does not

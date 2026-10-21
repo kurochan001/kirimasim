@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The tests of state and Contexts (RUNTIME_ABI.md 9.8; TEST_SUITE.md, list
 // of required tests). Each compiles and runs the designs of designs/ in one
 // process and compares every run with the run of that design alone, which a

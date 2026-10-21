@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Fast four-state operations on values of 1 to 64 bits held in one W4.
 //
 // This header is part of the kernel's public interface. Generated code reads

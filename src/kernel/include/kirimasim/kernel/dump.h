@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Waveforms: the 4-state VCD file of 21.7.1 and 21.7.2, as WAVEFORM.md
 // sets it.
 //

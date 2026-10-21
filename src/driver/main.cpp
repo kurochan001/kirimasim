@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The kirimasim command line (CLI.md).
 //
 //   kirimasim [options] <file>... [+plusarg]...   compile and run

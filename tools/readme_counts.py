@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Keeps the counts in README.md and README.ja.md up to date.
 
 The counts live in docs/counts.json: this repository's tests (CTest, dev

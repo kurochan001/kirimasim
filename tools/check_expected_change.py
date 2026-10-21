@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Keeps changes to existing test expectations out of implementation PRs.
 
 Looks at the diff from merge-base(base, head) to head. If that diff touches

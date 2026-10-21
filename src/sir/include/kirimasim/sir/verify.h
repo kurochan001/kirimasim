@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The SIR verifier (SIR_SPEC.md section 10).
 //
 // All the rules: 1 (types), 2 (slot ranges and table references), 3

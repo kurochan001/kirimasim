@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """The second P1 gate of TEST_SUITE.md: 90% of the own-suite tests in P1 scope.
 
   tools/p1_population.py select --tests-repo DIR > tests/gates/p1_population.txt

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The stack of the thread that runs front, so that lowering stops with a
 // diagnostic before it runs out (RUNTIME_ABI.md 5). The twin of the
 // kernel's (kirimasim/kernel/stack.h): neither library depends on the

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Reading the range of the calling thread's stack (stack.h).
 
 #include "kirimasim/kernel/stack.h"

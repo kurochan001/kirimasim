@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The stack of the thread that runs a design, so that a run stops before
 // it runs out (RUNTIME_ABI.md 5): the count of nested calls is the limit
 // of the design, and this is the limit of the thread, whatever thread

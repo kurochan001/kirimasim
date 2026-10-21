@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # front: drives slang and lowers its elaboration result to SIR.
 # May depend on: slang, sir.
 add_library(kirimasim_front STATIC front.cpp lower.cpp lower_dump.cpp lower_expr.cpp lower_stmt.cpp

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix tests of writes through tasks and the restriction of
 always_comb, always_latch and always_ff, of TEST_SUITE.md ("Mechanism
 matrix"): a design whose errors are all front's, in tests/cli/

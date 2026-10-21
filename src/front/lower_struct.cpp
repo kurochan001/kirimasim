@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Lowering of unpacked structures and arrays of them (SIR_SPEC.md 4.2).
 //
 // A variable of an unpacked structure type has one slot, or one frame

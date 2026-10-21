@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The scheduler: time slots with the 17 regions of IEEE 1800-2023 4.4, the
 // reference algorithm of 4.5, waits and wake-ups, NBAs, named events, and
 // the reasons a simulation ends (SCHEDULER_SPEC.md 1 to 9, 13 and 16).

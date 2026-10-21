@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The storage of slots: one word array per domain (SIR_SPEC.md 3.2).
 //
 // This header is part of the kernel's public interface and must stay

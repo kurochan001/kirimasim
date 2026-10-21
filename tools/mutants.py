@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Negative controls for the implementation (TEST_SUITE.md): puts one known
 mistake at a time into the sources, rebuilds, runs the tests, and checks
 that some test fails. A mistake that no test catches is a hole in the

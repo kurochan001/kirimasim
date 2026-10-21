@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The stop before the stack of the running thread runs out (RUNTIME_ABI.md
 // 5; #35, #38). Each case compiles and runs a design on a new thread with
 // the stack size it names, and checks how the run ends; a crash fails it:

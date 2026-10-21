@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The lowering of slang's elaborated design to SIR (private to front).
 //
 // lower.cpp handles modules, variables and procedures, lower_stmt.cpp the

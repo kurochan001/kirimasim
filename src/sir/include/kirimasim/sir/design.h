@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The SIR of one design: slot table, name table, instances, type table,
 // constants, subroutines and processes (SIR_SPEC.md sections 2 to 8).
 //

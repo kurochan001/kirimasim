@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Time units and the conversion of delays to ticks of the global time
 // precision (SCHEDULER_SPEC.md 1).
 //

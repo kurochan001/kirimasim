@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // $random and the $dist_* functions (SYSTEM_TASKS.md 12, 20.14, Annex N),
 // written from SYSTEM_TASKS.md 12 alone.
 //

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Lowering of procedural statements to SIR basic blocks.
 //
 // Code after a statement that never falls through (break, continue, a loop

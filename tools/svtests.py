@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Runs the sv-tests simulation tests with kirimasim, Icarus and Verilator and compares.
 
 This is the first P1 gate of TEST_SUITE.md ("As many as Icarus or more on

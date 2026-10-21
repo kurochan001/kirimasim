@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Compares the fast four-state AND in the kernel with the one-bit-at-a-time
 // reference in valsem.
 

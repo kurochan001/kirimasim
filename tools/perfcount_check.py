@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Checks event counts against tests/perf_counts/expected.json.
 
 For every test file listed in expected.json, runs kirimasim with

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # kernel: the execution kernel shared by every execution tier.
 # Depends on nothing else in kirimasim. Its public headers are C++20.
 add_library(kirimasim_kernel STATIC abi.cpp counters.cpp dump.cpp files.cpp format.cpp memfile.cpp random.cpp scan.cpp sim.cpp stack.cpp

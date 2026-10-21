@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Reference semantics of the resolution of nets with strengths
 // (VALUE_SEMANTICS.md 5), one bit at a time.
 //

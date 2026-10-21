@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Runs a program and keeps a bounded part of what it writes, for the tools
 that judge kirimasim's runs (TEST_SUITE.md, "What is judged now").
 

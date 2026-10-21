@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Block arguments (SIR_SPEC.md 5.1) in tier 1: a branch gives each
 // parameter the whole of its argument, every chunk of a value wider than
 // 64 bits, and reads all the arguments before it writes any parameter, so

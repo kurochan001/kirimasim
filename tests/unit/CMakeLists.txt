@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 include(GoogleTest)
 
 add_executable(kirimasim_unit_tests and4_test.cpp context_test.cpp counters_test.cpp dump_test.cpp format_test.cpp scan_test.cpp scheduler_test.cpp sir_test.cpp verify_matrix_test.cpp strength_test.cpp timescale_test.cpp

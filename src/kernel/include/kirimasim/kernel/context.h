@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The execution context: the single owner of all simulation state.
 //
 // Nothing in the kernel is global. Several Contexts can exist in one process.

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The size and the seed of the fuzz tests (TEST_SUITE.md, the valsem gate).
 //
 // By default the fuzzers run a fixed number of rounds from a fixed seed, so

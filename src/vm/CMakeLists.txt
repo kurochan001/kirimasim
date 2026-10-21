@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # vm: tier 1, bytecode generation and interpretation.
 # May depend on: sir, kernel.
 add_library(kirimasim_vm STATIC vm.cpp)

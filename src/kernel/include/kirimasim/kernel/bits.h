@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Bit ranges inside arrays of 64-bit words.
 //
 // A value of w bits is held in ceil(w / 64) words, least significant word

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the matrix test of $signed, $unsigned and the casts
 signed'() and unsigned'(), of TEST_SUITE.md ("Mechanism matrix"), in
 tests/suite/values/.

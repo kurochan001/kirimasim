@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Tests for the kernel scheduler (SCHEDULER_SPEC.md).
 //
 // Processes here are small scripts: a list of steps such as "write 3 to

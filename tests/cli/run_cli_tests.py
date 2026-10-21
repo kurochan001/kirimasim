@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Checks kirimasim's command line: options, exit codes and messages (CLI.md).
 
 Each case runs kirimasim with some arguments on a small design and checks

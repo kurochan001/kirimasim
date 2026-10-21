@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Generates the tests of illegal designs of TEST_SUITE.md ("Tests expected
 to fail") in tests/suite/illegal/.
 

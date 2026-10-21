@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # Each .sv file under tests/dump_sir is compared with the --dump-sir text in
 # its .expected file (SIR_SPEC.md 9). The .expected files are protected
 # expectations (TEST_SUITE.md).

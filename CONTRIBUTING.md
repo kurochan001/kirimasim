@@ -113,6 +113,14 @@ they are protected:
 - Tests too: do not copy reproducing code from other projects' issues, or
   their test suites. Write the test anew from what the bug is.
 - Format with `clang-format` (the repository's `.clang-format`).
+- Each file of code (C++, CMake, Python, shell and the workflows) starts
+  with two comment lines, after a `#!` line if it has one:
+  `Copyright (c) <year> The kirimasim Authors`, with the year the file is
+  made in, and `SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception`.
+  `tools/check_spdx.py` checks this, and `--add` writes them. Test data
+  (`.sv`, expected outputs) has none: a line more at the top would move
+  the positions that expected diagnostics name. The README's License
+  section covers every file.
 
 ## Building and testing
 

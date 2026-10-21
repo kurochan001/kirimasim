@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // User-defined primitives (VALUE_SEMANTICS.md 5.9): the valsem reference on
 // tables worked out from chapter 29, and the kernel's compiled tables
 // (kernel/udp.h) compared with the reference on random tables.

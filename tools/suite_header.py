@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Reads the metadata header of a test-suite file (TEST_SUITE.md, "Metadata
 header"), for the tools that judge tests.
 

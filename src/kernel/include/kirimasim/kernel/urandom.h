@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The random number generators of $urandom, $urandom_range and randcase
 // (SYSTEM_TASKS.md 13, 18.13, 18.14): SplitMix64, and the seeds the
 // initialization generators of instances and packages start from.

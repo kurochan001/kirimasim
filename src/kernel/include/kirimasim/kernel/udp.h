@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // User-defined primitives (VALUE_SEMANTICS.md 5.9), with each table row
 // compiled to bit masks.
 //

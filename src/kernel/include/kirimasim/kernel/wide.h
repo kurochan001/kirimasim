@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Four-state operations on integral values of any width, held in
 // consecutive W4 chunks, the least significant first: chunk k holds bits
 // [64k, 64k + 64). Operands and results have their bits above the width 0

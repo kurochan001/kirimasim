@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """Checks that the release build really optimizes kirimasim's own code.
 
 Reads build/release/compile_commands.json and requires every entry whose

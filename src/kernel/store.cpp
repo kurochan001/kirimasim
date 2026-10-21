@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #include "kirimasim/kernel/store.h"
 
 #include "kirimasim/kernel/bits.h"

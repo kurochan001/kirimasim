@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Includes every public kernel header so that they are compiled as C++20.
 // Keep this list in sync with src/kernel/include/kirimasim/kernel/.
 

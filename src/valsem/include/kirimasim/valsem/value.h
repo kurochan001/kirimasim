@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Reference semantics of the SIR value instructions (SIR_SPEC.md 5.2,
 // VALUE_SEMANTICS.md 2 and 3), for integral values of any width, one bit at
 // a time.

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // codegen: tier 2, C++ generation and build.
 //
 // Empty skeleton. Real contents arrive in later phases.

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Lowering of expressions, assignments and system task calls to SIR.
 //
 // Integral values of 1 to 64 bits only, so far. slang has already applied

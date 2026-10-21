@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The generator of $urandom (SYSTEM_TASKS.md 13): SplitMix64 against its
 // published first value, FNV-1a against its published values, and the
 // bounds of $urandom_range.

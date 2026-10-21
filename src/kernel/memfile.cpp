@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // The files of $readmemb, $readmemh, $writememb and $writememh
 // (SYSTEM_TASKS.md 7).
 
