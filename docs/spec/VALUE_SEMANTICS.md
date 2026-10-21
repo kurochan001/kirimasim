@@ -477,5 +477,4 @@ Approved 2026-10-17.
   - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P3.
 - How the values of assignment patterns (10.9) are decided is expressed in SIR by unfolding them into assignments element by element. Assignment patterns of unpacked arrays and structures are written together with how arrays and structures are laid out in SIR_SPEC.md.
 - Operations on class handles (P3).
-- The computation of `$random` and `$dist_*` (Annex N; how to write it without copying, including the legal side, is decided together with the random-number section of SYSTEM_TASKS.md).
 - Compare the "not confirmed" items of 7.3, 7.4 and 7.6 with Icarus 13.0's results.

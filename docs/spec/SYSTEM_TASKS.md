@@ -2,7 +2,7 @@
 
 [日本語](SYSTEM_TASKS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0 (before P1 starts). Status: **approved (2026-10-15)**. On 2026-10-16, string literals passed to format specifiers (3.1) and the form of reports of unique and priority violations (10.4) were added (approved). The same day, reals with no format specifier, and swapping integer and real formats (3.6), were added (approved). On 2026-10-17, upper-case `%E` and `%G` (3, 3.6) were added (approved). The same day, how `%s` prints zero bytes in the middle of a value (3.5) was added (approved). The same day, the result of `$rtoi` for NaN, infinities and out-of-range values (8) was decided (approved). On 2026-10-18, a `%` with no conversion (3.1) was decided (approved). The same day, the details of the flags `-` and `0` (3.12) were decided (approved). The same day, how the time of the report of `$finish` and `$stop` is written, and when and in what form argument 2 writes its statistics (10.2), were decided (approved). The same day, the value that `?` reads as in `$sscanf` and `$fscanf` (6.3) was written down (approved). On 2026-10-19, `--stop` was referred to from 10.2 (approved). The same day, when standard output is written out, and `--autoflush`, were added to 2 (approved). The same day, a point UNSPECIFIED_BEHAVIOR.md leaves not decided was marked in 7.1 (approved). The same day, the range of `$readmemb` and `$readmemh` without a finish address was added to 7.1 (approved). The same day, the sentence of 11 on `%0t` was brought up to date (approved). On 2026-10-20, descriptors that are not open, `$fopen` with a type not in Table 21-6 and the files of the Context were added to 6.1, and when `$fstrobe` and `$fmonitor` read their descriptor, and how `$fclose` cancels them, to 6.2 (approved). On 2026-10-21, the descriptors input reads, standard input, files that only write, `$fgets` into an integral variable, `$fread`, how `$fscanf` takes characters and `$ungetc` were added to 6.3, and the error `$ferror` gives and when `$feof` is set to 6.4 (approved). On 2026-10-21, the digits of a word, the order of the lower dimensions, what a file that cannot be read does (7.1), and the order of the words $writemem writes (7.2) were set (approved). The interpretations and the rules of this document were approved by a human on 2026-10-15.
+Priority: P0 (before P1 starts). Status: **approved (2026-10-15)**. On 2026-10-16, string literals passed to format specifiers (3.1) and the form of reports of unique and priority violations (10.4) were added (approved). The same day, reals with no format specifier, and swapping integer and real formats (3.6), were added (approved). On 2026-10-17, upper-case `%E` and `%G` (3, 3.6) were added (approved). The same day, how `%s` prints zero bytes in the middle of a value (3.5) was added (approved). The same day, the result of `$rtoi` for NaN, infinities and out-of-range values (8) was decided (approved). On 2026-10-18, a `%` with no conversion (3.1) was decided (approved). The same day, the details of the flags `-` and `0` (3.12) were decided (approved). The same day, how the time of the report of `$finish` and `$stop` is written, and when and in what form argument 2 writes its statistics (10.2), were decided (approved). The same day, the value that `?` reads as in `$sscanf` and `$fscanf` (6.3) was written down (approved). On 2026-10-19, `--stop` was referred to from 10.2 (approved). The same day, when standard output is written out, and `--autoflush`, were added to 2 (approved). The same day, a point UNSPECIFIED_BEHAVIOR.md leaves not decided was marked in 7.1 (approved). The same day, the range of `$readmemb` and `$readmemh` without a finish address was added to 7.1 (approved). The same day, the sentence of 11 on `%0t` was brought up to date (approved). On 2026-10-20, descriptors that are not open, `$fopen` with a type not in Table 21-6 and the files of the Context were added to 6.1, and when `$fstrobe` and `$fmonitor` read their descriptor, and how `$fclose` cancels them, to 6.2 (approved). On 2026-10-21, the descriptors input reads, standard input, files that only write, `$fgets` into an integral variable, `$fread`, how `$fscanf` takes characters and `$ungetc` were added to 6.3, and the error `$ferror` gives and when `$feof` is set to 6.4 (approved). On 2026-10-21, the digits of a word, the order of the lower dimensions, what a file that cannot be read does (7.1), and the order of the words $writemem writes (7.2) were set (approved). The same day, the section on `$random` and the `$dist_*` functions was added as 12, and "Not confirmed" became 13 (approved). The interpretations and the rules of this document were approved by a human on 2026-10-15.
 
 This document sets what kirimasim's system tasks and system functions do. The test suite passes or fails on standard output, so the details of display formats are set too. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on.
 
@@ -352,7 +352,93 @@ Approving this document settles these points for the test suite:
 - Flags not in the standard (3.12), the spaces of `%p` (3.9), the numbers of `$ferror` (6.4), the form of severity tasks (10.1) and `$stacktrace` (10.3) are not put in expected values (continuing the present rule).
 - The digit sets of `$sscanf` (6.3) are set by the standard, so they may be put in expected values.
 
-## 12. Not confirmed, to be written later
+## 12. `$random` and the `$dist_*` functions (added 2026-10-21, approved)
+
+This section restates in words the algorithm that Annex N defines by C source code (N.2), so that kirimasim gives the same values without copying that code (UNSPECIFIED_BEHAVIOR.md K3): one author read N.2 and wrote this section, and another wrote the implementation from this section alone. Annex N is normative: where this section and N.2 disagree, N.2 holds. The points N.2 leaves open are settled by rules of this document (approved 2026-10-21), with what Icarus Verilog does for reference.
+
+### 12.1 Sources
+
+- 20.14: `$random`, `$dist_uniform`, `$dist_normal`, `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang` return integers, and their algorithm is part of the standard so that every implementation gives the same values; Annex N holds it (checked: 20.14).
+- 20.14.1: `$random` takes an optional seed argument and returns a new 32-bit signed value at each call. The seed argument is an integral variable, given a value before the call (checked: 20.14.1).
+- 20.14.2: every argument is an integer. For `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang`, the mean, the degree of freedom and k_stage are to be greater than 0. The seed is an inout argument: the same seed gives the same result, and only the function updates it. For `$dist_uniform`, start is to be less than end (checked: 20.14.2).
+- N.1 maps each function to a routine of N.2, and makes `$random` the uniform distribution over the whole range of the C type `long` (checked: N.1).
+- `$random` and `randomize()` are independent (checked: 18.14.3).
+
+### 12.2 Arithmetic
+
+- **Integers.** The seed, the arguments and the results are 32-bit two's complement signed integers. N.2 is written with C `long`, which this section reads as 32 bits: 20.14.1 gives `$random` a 32-bit signed value, which N.1's "whole range of `long`" is only with a 32-bit `long`; the seed update wraps modulo 2^32; and the test of a zero seed (12.4) is made at every draw. For reference, checked 2026-10-21: reading `long` as 64 bits disagrees with Icarus 14.0 devel in 11,738 of about 136,000 results; reading it as 32 bits agrees in all.
+- **Reals.** Every real quantity is an IEEE 754 binary64 value, and every operation is rounded to nearest, ties to even. Below, (+), (-), (x) and (/) are those operations, done in the order written; `sqrt` is the correctly rounded square root, `ln` and `exp` the natural logarithm and the exponential of the C library. An integer of this section converted to a real is exact.
+- **No fused multiply-add (approved 2026-10-21).** Each product and each sum is rounded by itself, as kirimasim's code is built with `-ffp-contract=off` (CODEGEN_SPEC.md, "Floating point"). C lets a compiler fuse `a*b + c` into one rounding, so N.2 as C does not settle this. Fusing changes results only at the three places marked "fusion point" below. For reference, checked 2026-10-21: Icarus 14.0 devel and 13.0 built for arm64 macOS fuse all three, and so give `$random` a result one greater for 64 of the 2^23 values of M (12.4); what builds for other machines do is not confirmed.
+- **trunc(x)** is x rounded toward zero to an integer.
+
+### 12.3 The seed
+
+- **With a seed argument** (`$random(seed)` and every `$dist_*`): the state S is the variable's value when the function is called; the function updates S as 12.4 and 12.5 say, and the final S becomes the variable's value. A function that returns without a draw (the arguments of 12.6 that give 0) leaves S unchanged (checked: 20.14.2, N.2).
+- **The width of the seed variable (approved 2026-10-21):** one of 32 bits or more is read through its low 32 bits, and the new seed is written back sign-extended to its width; x and z bits read as 0. A seed variable of fewer than 32 bits is reported as unsupported. (Rule of this document; the standard says only that the seed is an integral variable. For reference, checked 2026-10-21: Icarus 14.0 devel does the same for wider seeds and for x and z, and makes a narrower one an error.)
+- **Without a seed argument (approved 2026-10-21):** `$random` uses a seed kept by the Context, one for the whole simulation and shared by every call, which starts at 0; its values are those of `$random(seed)` with a seed starting at 0. (Rule of this document; the standard fixes neither. For reference, Icarus 14.0 devel does the same.)
+
+### 12.4 The draw
+
+A draw D(lo, hi) takes two integers lo < hi, updates S, and gives a real. Every use below has lo < hi, and hi - lo is between 1 and 2^32 - 1.
+
+1. If S = 0, S becomes 259341593.
+2. S becomes (69069 * S + 1) mod 2^32, kept as a 32-bit pattern.
+3. M is the top 23 bits of the new S, read as an unsigned number: M = floor(S_unsigned / 512), from 0 to 2^23 - 1.
+4. F = 1 + M * 2^-23, exact as a real (the binary32 number with sign 0, biased exponent 127 and fraction M).
+5. G = F + F * 2^-23, exact.
+6. H = G - 1, exact: H = (M + 1) * 2^-23 + M * 2^-46. It is never 0 and never exactly 1; it is above 1 only when M = 2^23 - 1.
+7. The value is ((hi - lo) (x) H) (+) lo, with hi - lo exact as a real. (Fusion point 1.)
+
+Two draws have names of their own: U = D(0, 1), which is H, from 2^-23 to 1 + 2^-23 - 2^-46; and W = D(-1, 1), which is 2H - 1, from -1 + 2^-22 to 1 + 2^-22 - 2^-45, never 0. A draw can be above hi (M = 2^23 - 1), so the functions clamp, and the logarithm of a draw U can be positive.
+
+### 12.5 Steps built on draws
+
+Each step takes its draws from the same S, in the order stated.
+
+- **Normal step N(mean, sd)**: (1) draw a1 = W, then a2 = W, and let w = (a1 (x) a1) (+) (a2 (x) a2), each product rounded, then the sum (fusion point 2); (2) if w >= 1 or w = 0, start again at (1) with two new draws; (3) z = a1 (x) sqrt(((-2.0) (x) ln(w)) (/) w), in that order; a2 does not enter z; (4) the value is (z (x) sd) (+) mean, with sd and mean as reals (fusion point 3).
+- **Exponential step E(mean)**: draw y = U; the value is (-ln(y)) (x) mean. When M = 2^23 - 1, y is above 1 and the value is slightly negative.
+- **Poisson step P(mean)**: L = exp(-mean); j = 0; draw prod = U. While L < prod: j becomes j + 1, a new U is drawn, and prod becomes U (x) prod. The value is j. For a large mean, L is 0 and the loop ends only when prod becomes 0.
+- **Chi-square step C(df)**, df > 0: if df is odd, acc = z (x) z with z the value of N(0, 1); if even, acc = 0. Then floor(df / 2) times, acc becomes acc (+) (2 (x) E(1)). The value is acc.
+- **Student t step T(df)**, df > 0: y = C(df); den = sqrt(y (/) df); z = N(0, 1), drawn after all the draws of C; the value is z (/) den.
+- **Erlang step R(k, mean)**, k > 0: prod = 1.0; k times, prod becomes prod (x) U. The value is ((-mean) (x) ln(prod)) (/) k, with mean and k as reals; ln(0) is minus infinity.
+
+### 12.6 The results
+
+- **round(y)**: if y >= 0, trunc(y (+) 0.5); otherwise -trunc((-y) (+) 0.5). The 0.5 is added in real arithmetic, so that the rounding of that sum counts. A NaN takes the second branch.
+- **Values outside 32 bits (approved 2026-10-21):** where N.2 converts a real outside -2^31 .. 2^31 - 1, an infinity or a NaN to a 32-bit integer, which C leaves undefined, kirimasim takes the nearest of -2^31 and 2^31 - 1, and 0 for a NaN. So round gives 2147483647 or -2147483647 there (the magnitude is converted before the sign is applied). (Rule of this document. For reference, checked 2026-10-21: Icarus 14.0 devel and 13.0 give the same.)
+- **`$dist_uniform(seed, start, end)`**:
+  - If start >= end, the result is start and the seed is unchanged.
+  - Otherwise, if end is not 2^31 - 1: e = end + 1 and y = D(start, e). k = trunc(y) if y >= 0, and trunc(y (-) 1) if y < 0. If k < start, k becomes start; if k >= e, k becomes end. The result is k.
+  - Otherwise, if start is not -2^31: b = start - 1 and y = D(b, end) (+) 1.0; k as before. If k <= b, k becomes start; if k > end, k becomes end. The result is k.
+  - In these two cases k is clamped as a mathematical integer; N.2 converts it to 32 bits first, which leaves its range only in corners near the ends of the 32-bit range, where the clamping gives start or end (interpretation; for reference, Icarus 14.0 devel gives the same).
+  - Otherwise (start = -2^31 and end = 2^31 - 1): v = D(-2^31, 2^31 - 1); y = (v (+) 2147483648.0) (/) 4294967295.0; y = (y (x) 4294967296.0) (-) 2147483648.0; k as before, with no clamping. When M = 2^23 - 1, k is 2^31 + 511, which the rule above makes 2147483647.
+- **`$random(seed)`** is `$dist_uniform(seed, -2^31, 2^31 - 1)`. `$random` alone does the same with the Context's seed (12.3).
+- **`$dist_normal(seed, mean, standard_deviation)`**: round(N(mean, standard_deviation)). Nothing is checked: a standard deviation of 0 gives mean, after the draws.
+- **`$dist_exponential(seed, mean)`**: if mean <= 0, 0 and the seed unchanged; otherwise round(E(mean)).
+- **`$dist_poisson(seed, mean)`**: if mean <= 0, 0 and the seed unchanged; otherwise P(mean).
+- **`$dist_chi_square(seed, degree_of_freedom)`**: if degree_of_freedom <= 0, 0 and the seed unchanged; otherwise round(C(degree_of_freedom)).
+- **`$dist_t(seed, degree_of_freedom)`**: if degree_of_freedom <= 0, 0 and the seed unchanged; otherwise round(T(degree_of_freedom)).
+- **`$dist_erlang(seed, k_stage, mean)`**: if k_stage <= 0, 0 and the seed unchanged; otherwise round(R(k_stage, mean)); mean is not checked.
+- **Arguments out of their range (approved 2026-10-21):** a mean, degree of freedom or k_stage that is 0 or less gives, besides the result 0, the run-time warning `kirima-dist-argument`, once for each place (rule of this document; N.2 prints a warning there, whose wording is not followed).
+
+### 12.7 Limits and checks
+
+- `ln` and `exp` come from the C library, which C does not require to be correctly rounded. A last-bit difference changes an integer result only when a real falls on a rounding or comparison boundary. For reference, checked 2026-10-21 on arm64 macOS: correctly rounded `ln` and `exp` changed none of the results compared with Icarus. Whether some reachable result depends on them is not confirmed.
+- Values to check against (from seed = 1 unless said otherwise; each result with the seed after the call):
+  - `$random(seed)` from 0: 303379748, -1064739199, -2071669239, -1309649309, 112818957; the seed after the first call is -1844104698.
+  - `$random(seed)` from 1: -2147414528 (69070), -1671855048 (475628535), 1129920902 (-1017563188).
+  - `$dist_uniform(seed, -5, 5)`: -5 (69070), -4 (475628535), 3 (-1017563188).
+  - `$dist_normal(seed, 100, 10)`: 106 (772999773), 76 (2044158073), 102 (797919023).
+  - `$dist_exponential(seed, 10)`: 110 (69070), 22 (475628535), 3 (-1017563188).
+  - `$dist_poisson(seed, 5)`: 0 (69070), 5 (1662200408), 5 (1059494674).
+  - `$dist_chi_square(seed, 3)`: 1 (-417135238), 2 (2044158073), 1 (-1551342684).
+  - `$dist_t(seed, 5)`: -6 (2044158073), 0 (584849259), 2 (1692139853).
+  - `$dist_erlang(seed, 3, 100)`: 450 (-1017563188), 64 (-473131853), 61 (-505977370).
+  - Fusion point 1: `$random(seed)` from -1709352709 gives -1073741185 (Icarus on arm64: -1073741184).
+  - Outside 32 bits: `$random(seed)` from -1271221770 gives 2147483647, with the seed -1.
+  - A zero seed inside one call: `$dist_normal(seed, 100, 10)` from 1511872763 gives 86 (-2034665166), then 106 (851608272).
+
+## 13. Not confirmed, to be written later
 
 - The conversion when a real is printed with an integer format (and the reverse) (3.6).
 - The meaning of `$timeformat` with its arguments omitted (5.4), to be checked against Icarus 13.0.

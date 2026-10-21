@@ -2,7 +2,7 @@
 
 [English](UNSPECIFIED_BEHAVIOR.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**承認済み（2026-10-19）**。2026-10-19 にこの文書を書いた（承認済み）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。同日、A11 と A12 で渡す slang の上限のオプションを決めた（CLI.md 2.1。承認済み）。同日、N9（ソースの中の config から取るトップ）を足した（CLI.md 2.1。承認済み）。同日、N10（`` `unconnected_drive `` の下の変数の入力ポート）を足した（VALUE_SEMANTICS.md 5.3。承認済み）。2026-10-20 に、P6（開いていない記述子と、表 21-6 に無い type の `$fopen`）を足した（SYSTEM_TASKS.md 6.1。承認済み）。2026-10-21 に、そのような記述子からの入力を P6 に足した（SYSTEM_TASKS.md 6.3。承認済み）。
+優先度：P1。状態：**承認済み（2026-10-19）**。2026-10-19 にこの文書を書いた（承認済み）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。同日、A11 と A12 で渡す slang の上限のオプションを決めた（CLI.md 2.1。承認済み）。同日、N9（ソースの中の config から取るトップ）を足した（CLI.md 2.1。承認済み）。同日、N10（`` `unconnected_drive `` の下の変数の入力ポート）を足した（VALUE_SEMANTICS.md 5.3。承認済み）。2026-10-20 に、P6（開いていない記述子と、表 21-6 に無い type の `$fopen`）を足した（SYSTEM_TASKS.md 6.1。承認済み）。2026-10-21 に、そのような記述子からの入力を P6 に足した（SYSTEM_TASKS.md 6.3。承認済み）。同日、`$random` と `$dist_*` について附属書 N が決めていない所を K3 に足した（SYSTEM_TASKS.md 12。承認済み）。
 
 この文書は、IEEE 1800-2023 が順序や結果を決めていない所、実装に任せている所、文言どおりに実装すると実用のコードが壊れる所を挙げ、それぞれで kirimasim がどうするかを書きます。規格の本文は写さず、節番号を示します。この文書が頼る決まりの多くは、ほかの詳細仕様書に書いてあります。この文書はそれを参照として示し、ほかに置き場の無いもの（基本の方針（1）、診断の種類（4）、項目ごとの状態（6）、7 と 8 の一覧）だけをここに書きます。
 
@@ -263,7 +263,8 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | K1 | シードの配り方（全体のシード、プロセスとオブジェクトを作る順、階層名）を RANDOMIZE_SPEC.md で固定し、版をまたいで変えない。変えるときは主版を上げる | — | 18.14、18.14.1 | P3 | later (P3) |
 | K1 | 実行の冒頭にシードを書く | — | 18.14 | P1 | in force（CLI.md 4） |
 | K2 | プロセスとオブジェクトごとに乱数の状態を持つ | — | 18.14.2、18.14.3 | P3 | later (P3) |
-| K3 | `$random` と `$dist_*` は附属書 N のアルゴリズムの結果を出す | — | 20.15、附属書 N | P1 | in force（VALUE_SEMANTICS.md 8。M7 で SYSTEM_TASKS.md の乱数の節に書く） |
+| K3 | `$random` と `$dist_*` は附属書 N のアルゴリズムの結果を出す | — | 20.14、附属書 N | P1 | in force（SYSTEM_TASKS.md 12。2026-10-21 に書いた） |
+| K3 | 附属書 N が決めていない所：積和を 1 回の丸めにまとめない。32 ビットの外の結果は近いほうの端、NaN は 0 にする。引数の無い `$random` は Context の 1 つのシードを 0 から使う。32 ビット以上のシードの変数は下位 32 ビットを読み、x と z は 0 とする。0 以下の平均、自由度、k_stage は実行時の警告を出す | `kirima-dist-argument` | 20.14、附属書 N | P1 | approved 2026-10-21（SYSTEM_TASKS.md 12） |
 | K3 | `$urandom` は kirimasim のアルゴリズムで、版をまたいで固定する | — | 18.13 | P1 | approved 2026-10-19 |
 | K4 | 同じシードなら同じ解。`randc` は周期の中で重複しない。未対応の制約はエラー | `kirima-constraint-unsupported` | 18.4.2、18.5 | P3 | later (P3) |
 | K5 | 矛盾すると `randomize()` は 0 を返し、変数を変えない（未確認）。関わった制約を示す | `kirima-randomize-failed`、`--randomize-fail` | 18.6.3 | P3 | later (P3) |
@@ -388,7 +389,7 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | エラボレーションのエラー | `kirima-vif-in-sensitivity`（D10）、`kirima-constraint-unsupported`（K4）。`always_comb` などの複数の書き手と `uwire` の多重駆動は slang の診断（B4、E8） |
 | lint の警告 | `kirima-zero-delay-loop`（A1）、`kirima-always-no-wait`、`kirima-always-no-wait-path`（A2）、`kirima-empty-sensitivity`（A3）、`kirima-const-wait`（A4）、`kirima-comb-loop`（A6）、`kirima-self-trigger`（A9）、`kirima-shared-loop-var`（A10）、`kirima-monitor-side-effect`（A13）、`kirima-race-blocking`（B3、B6）、`kirima-multi-write`（B4）、`kirima-blk-nblk-mix`（B5）、`kirima-comb-read-before-write`（B12）、`kirima-comb-nba`（C7）、`kirima-final-nba`（C8）、`kirima-comb-dynamic-read`（D4）、`kirima-casex`（E6）、`kirima-const-out-of-range`（F7）、`kirima-side-effect-in-index`（G2）、`kirima-multi-side-effect`（G4）、`kirima-fork-loop-var`（H2）、`kirima-static-init-order`（J3）、`kirima-never-match`（L6）、`kirima-unconnected-drive-var`（N10）、`kirima-delay-rounded-zero`（O2）、`kirima-latch-inferred`、`kirima-no-latch`（R1）、`kirima-nonstandard`（R4） |
 | 情報 | `kirima-comb-loop-unsplit`（A7）、`wait(0)` の `kirima-const-wait`（A4）、消したパルス（C5） |
-| 実行時の警告 | `kirima-event-missed`（D8）、`kirima-cond-x`（E1、E2）、`kirima-out-of-range`（F7）、`kirima-static-task-reentry`（H1）、`kirima-randomize-failed`（K5）、`kirima-modport-violation`（N8）、`kirima-delay-unknown`、`kirima-delay-negative`（O4）、`kirima-readmem-range`、`kirima-readmem-short`（P4）、`kirima-dump-not-preserved`（P5）、`kirima-file-not-open`、`kirima-fopen-mode`（P6） |
+| 実行時の警告 | `kirima-event-missed`（D8）、`kirima-cond-x`（E1、E2）、`kirima-out-of-range`（F7）、`kirima-static-task-reentry`（H1）、`kirima-randomize-failed`（K5）、`kirima-modport-violation`（N8）、`kirima-delay-unknown`、`kirima-delay-negative`（O4）、`kirima-readmem-range`、`kirima-readmem-short`（P4）、`kirima-dump-not-preserved`（P5）、`kirima-file-not-open`、`kirima-fopen-mode`（P6）、`kirima-dist-argument`（K3） |
 | 実行時のエラー | `kirima-readonly-write`（A13）、`kirima-ref-stale`（H4）、`kirima-dpi-not-context`（M4）、`kirima-dpi-task-wait`（M5）、`kirima-null-deref`（J2）、`kirima-time-overflow`（O3） |
 | 実行時の致命 | `kirima-zero-time-loop`（A1、A9、A14）、`kirima-comb-not-converged`（A6）、`kirima-process-limit`（A5）、`kirima-call-depth-limit`（A15） |
 
