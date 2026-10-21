@@ -70,7 +70,7 @@ python3 tools/check_banned.py
 python3 tools/check_global_state.py
 ```
 
-release のビルドでは、`cmake --preset release` の後に `python3 tools/check_release_flags.py` も走らせてください。`asan` と `ubsan` のプリセットは、同じテストをサニタイザ付きで走らせます。`asan` は slang を mimalloc 無しでビルドします。mimalloc の確保した領域の中は、アドレスサニタイザから見えないためです。`tsan` のプリセットは、状態と Context のテスト（`tests/context/`、RUNTIME_ABI.md の 9.8 節）だけを、スレッドサニタイザ付きで、やはり mimalloc 無しでビルドして走らせます。
+release のビルドでは、`cmake --preset release` の後に `python3 tools/check_release_flags.py` も走らせてください。`asan` と `ubsan` のプリセットは、同じテストをサニタイザ付きで走らせます。`asan` は slang を mimalloc 無しでビルドします。mimalloc の確保した領域の中は、アドレスサニタイザから見えないためです。`tsan` のプリセットは、状態と Context のテスト（`tests/context/`、RUNTIME_ABI.md の 9.8 節）だけを、スレッドサニタイザ付きで、やはり mimalloc 無しでビルドして走らせます。`dev`、`asan`、`ubsan`、`tsan` のプリセットは、C++ の標準ライブラリの範囲の検査（libstdc++ は `_GLIBCXX_ASSERTIONS`、libc++ は extensive の hardening モード）も、slang の分も含めて有効にします。範囲外の添字は、その場で実行を止めます。`release` のプリセットは有効にしません。
 
 kirimasim 自身のコードは `-Wall -Wextra -Wpedantic` でビルドします。`tools/local_ci.py` と CI の clang のビルドと同じく警告を誤りにするには、configure に `-DKIRIMASIM_WERROR=ON` を付けてください。
 

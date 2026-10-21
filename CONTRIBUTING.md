@@ -130,7 +130,11 @@ For release builds, also run `python3 tools/check_release_flags.py` after
 with sanitizers; `asan` builds slang without mimalloc, whose allocator the
 address sanitizer cannot see into. The `tsan` preset builds and runs only
 the tests of state and Contexts (`tests/context/`, RUNTIME_ABI.md 9.8)
-under the thread sanitizer, also without mimalloc.
+under the thread sanitizer, also without mimalloc. The `dev`, `asan`,
+`ubsan` and `tsan` presets also turn on the range checks of the C++
+standard library (`_GLIBCXX_ASSERTIONS` for libstdc++, the extensive
+hardening mode for libc++), for slang too: an index out of range stops the
+run at once. The `release` preset does not.
 
 kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
 `-DKIRIMASIM_WERROR=ON` to make the warnings errors, as `tools/local_ci.py`
