@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 11
+VERSION = 12
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -130,7 +130,8 @@ STATEMENTS = [
      "«»sp.f[i] = 1'b1;", "a select known at run time of a member or a part", False),
     ("trigger_event_control", "  event e, e2;\n", "«»->> @(e2) e;",
      "->> with an event control", True),
-    ("randcase", "  int y;\n", "«»randcase 1: y = 1; endcase", "statement 'RandCase'", False),
+    ("randsequence", "  int y;\n", "«»randsequence(main) main : { y = 1; }; endsequence",
+     "statement 'RandSequence'", False),
     ("wait_order", "  event e1, e2;\n", "«»wait_order(e1, e2);", "statement 'WaitOrder'", True),
     ("fork_declaration", "", "fork int «»k; join", "declarations in a fork block", True),
     ("disable_fork_block", "", "fork : fb_{c} #5; join_none «»disable fb_{c};",
