@@ -424,7 +424,7 @@ public:
     Val constantFrom(const slang::ConstantValue& cv, sir::Type t, slang::SourceLocation sl);
 
     // Building blocks.
-    sir::TempId newTemp() { return numTemps()++; }
+    sir::TempId newTemp() { return sir::TempId{numTemps()++}; }
     sir::BlockId newBlock();
     /// A new argument of block b (SIR_SPEC.md 5.1), where values join.
     Val blockParam(sir::BlockId b, sir::Type t);
@@ -744,7 +744,7 @@ private:
     /// The values of the iterators of the with clauses being lowered.
     std::map<const ast::Symbol*, Val> iterators_;
     std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
-    sir::InstanceId instance_ = 0;
+    sir::InstanceId instance_{0};
     std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;
     /// Row of the instance table -> its symbol: an instance, a package or
     /// a compilation unit.
@@ -831,7 +831,7 @@ private:
     /// An argument of $dumpvars: the constant that gets its row of the dump
     /// table, which is made last (buildDumpTable), and what it names.
     struct DumpRef {
-        sir::ConstId constant = 0;
+        sir::ConstId constant{0};
         const ast::Symbol* symbol = nullptr;
         bool scope = false;
     };

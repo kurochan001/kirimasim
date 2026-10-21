@@ -57,7 +57,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     if (reportDpiImport(sym)) throw Unsupported{};
 
     sir::Subroutine s;
-    s.name = design_.instances[owner].scopeName + (row ? "::" : ".") + std::string(sym.name);
+    s.name = design_.instance(owner).scopeName + (row ? "::" : ".") + std::string(sym.name);
     s.kind = sym.subroutineKind == ast::SubroutineKind::Function ? sir::SubroutineKind::Function
                                                                  : sir::SubroutineKind::Task;
     s.automatic = sym.defaultLifetime == ast::VariableLifetime::Automatic;
@@ -352,7 +352,7 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
     if (unpackedStruct(ret) != nullptr || ret.getCanonicalType().isUnpackedArray()) {
         // An aggregate value not used: it still needs a place to go.
         (void)callAggregate(call);
-        return {Operand::temp(0), sir::voidType()};
+        return {Operand::temp(sir::TempId{0}), sir::voidType()};
     }
     return lowerCallTo(call, nullptr);
 }
@@ -561,7 +561,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         for (std::uint32_t k = 0; k < count; ++k)
             ops.push_back(Operand::frame(retTo->id + k));
     }
-    Val result{Operand::temp(0), sir::voidType()};
+    Val result{Operand::temp(sir::TempId{0}), sir::voidType()};
     if (waits) {
         // call.task ends the block; the caller goes on in a new one.
         const sir::BlockId cont = newBlock();

@@ -103,7 +103,7 @@ void Lowerer::buildDumpTable() {
     for (const DumpRef& r : dumpRefs_) {
         const auto& rows = r.scope ? dumpScopeRows_ : dumpVarRows_;
         const auto it = rows.find(r.symbol);
-        design_.constants[r.constant].aWords[0] = it == rows.end() ? sir::kNone : it->second;
+        design_.constant(r.constant).aWords[0] = it == rows.end() ? sir::kNone : it->second;
     }
 }
 

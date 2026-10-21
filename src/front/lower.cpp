@@ -530,7 +530,7 @@ std::string Lowerer::scopeNameOf(const ast::Symbol& sym) const {
             break;
         return s.getHierarchicalPath();
     }
-    return design_.instances[instance_].scopeName;
+    return design_.instance(instance_).scopeName;
 }
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {
@@ -674,8 +674,8 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
     // the text form, and must be unique; SIR_SPEC.md 3.1). A member of an
     // unpacked structure adds its path, ".x" (SIR_SPEC.md 4.2).
     s.name = v.getHierarchicalPath();
-    if (row && v.getParentScope() == &instanceSyms_[*row]->as<ast::Scope>())
-        s.name = design_.instances[*row].scopeName + "::" + std::string(v.name);
+    if (row && v.getParentScope() == &instanceSyms_[row->index()]->as<ast::Scope>())
+        s.name = design_.instance(*row).scopeName + "::" + std::string(v.name);
     s.name += member;
     if (const std::uint32_t n = ++slotNames_[s.name]; n > 1) s.name += "~" + std::to_string(n);
     s.type = typeOf(*t, sl);
@@ -787,7 +787,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
         b_ = std::move(body);
         // A compilation unit has no location of its own; its first
         // initializer's will do.
-        slang::SourceLocation end = instanceSyms_[inst]->location;
+        slang::SourceLocation end = instanceSyms_[inst.index()]->location;
         if (!end.valid()) end = staticLoc_.at(inst);
         if (!b_.dead) terminate(sir::Op::Ret, {}, end);
         body = std::move(b_);
@@ -1153,7 +1153,7 @@ void Lowerer::resolveNets() {
         r.blocks.resize(1);
         std::vector<sir::Operand> ops{sir::Operand::str(std::string(sir::kindName(kind)))};
         for (std::size_t k = 0; k < slots.size(); ++k) {
-            const sir::TempId t = r.numTemps++;
+            const sir::TempId t = sir::TempId{r.numTemps++};
             r.blocks[0].instrs.push_back(
                 {sir::Op::Load, type, t, {sir::Operand::slot(slots[k])}, where});
             r.triggers.push_back({sir::SlotRange{slots[k], 0, 0, 0, 0}, sir::Edge::Any});
@@ -1161,7 +1161,7 @@ void Lowerer::resolveNets() {
             ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength1).op);
             ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength0).op);
             if (sideSlots[k] == sir::kNone) continue;
-            const sir::TempId s = r.numTemps++;
+            const sir::TempId s = sir::TempId{r.numTemps++};
             r.blocks[0].instrs.push_back({sir::Op::Load,
                                           design_.slots[sideSlots[k]].type,
                                           s,
@@ -1170,7 +1170,7 @@ void Lowerer::resolveNets() {
             r.triggers.push_back({sir::SlotRange{sideSlots[k], 0, 0, 0, 0}, sir::Edge::Any});
             ops.push_back(sir::Operand::temp(s));
         }
-        const sir::TempId v = r.numTemps++;
+        const sir::TempId v = sir::TempId{r.numTemps++};
         r.blocks[0].instrs.push_back({sir::Op::Resolve, type, v, std::move(ops), where});
         r.blocks[0].instrs.push_back({sir::Op::Store,
                                       sir::voidType(),
@@ -1224,7 +1224,7 @@ void Lowerer::declarePackages(const ast::RootSymbol& root) {
         instance_ = scopeRows_.at(sym);
         declareScope(sym->as<ast::Scope>());
     }
-    instance_ = 0;
+    instance_ = sir::InstanceId{0};
 }
 
 sir::InstanceId Lowerer::rowFor(const ast::Symbol& scope) {
@@ -1440,7 +1440,7 @@ void Lowerer::lowerInstance(const ast::InstanceSymbol& inst) {
     instance_ = instanceIds_.at(&inst);
     // A copy: the first use of a package adds its row to the table while
     // the scope is lowered (rowFor).
-    const std::string scope = design_.instances[instance_].scopeName;
+    const std::string scope = design_.instance(instance_).scopeName;
     lowerScope(inst.body, scope);
     instance_ = saved;
 }
@@ -1560,7 +1560,7 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
     // Each connection is an implicit continuous assignment (4.9.6): an
     // input from the parent's expression to the port's net or variable,
     // an output the other way (SIR_SPEC.md 3.5; folding is P2).
-    const std::string scope = design_.instances[instanceIds_.at(&child)].scopeName;
+    const std::string scope = design_.instance(instanceIds_.at(&child)).scopeName;
     for (const ast::PortConnection* conn : child.getPortConnections()) {
         const ast::Symbol& port = conn->port;
         // An interface port connects no value; names through it reach the
@@ -1655,7 +1655,7 @@ void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortS
     // A pullup or pulldown on every bit: 1 or 0 at pull strength (28.10).
     const std::uint64_t word = drive == ast::UnconnectedDrive::Pull1 ? ~std::uint64_t{0} : 0;
     const std::size_t words = (t.width + 63) / 64;
-    const std::string scope = design_.instances[instanceIds_.at(&child)].scopeName;
+    const std::string scope = design_.instance(instanceIds_.at(&child)).scopeName;
     lowerCont(scope + ".$pull." + std::string(ps.name), ps.location, child,
               [&] {
                   const Val v = constantWords(t, std::vector<std::uint64_t>(words, word),
@@ -1814,7 +1814,7 @@ sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) 
     t.value = typeOf(et, sl);
     for (const ast::EnumValueSymbol& item : et.values())
         t.items.push_back(
-            {std::string(item.name), constantFrom(item.getValue(), t.value, sl).op.id});
+            {std::string(item.name), constantFrom(item.getValue(), t.value, sl).op.asConst()});
     const auto id = static_cast<sir::TypeId>(design_.types.size());
     design_.types.push_back(std::move(t));
     enumRows_.emplace(&et, id);
@@ -1862,13 +1862,13 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
     }
     const slang::SourceLocation sl = g.location;
     const std::string name = primitiveName(g, prefix, "udp");
-    sir::TypeId table = 0;
+    sir::TypeId table{0};
     try {
         table = udpTable(prim, sl);
     } catch (const Unsupported&) {
         return;
     }
-    const std::uint32_t n = design_.types[table].inputs;
+    const std::uint32_t n = design_.typeEntry(table).inputs;
     sir::SlotId state = sir::kNone;
     sir::SlotId prev = sir::kNone;
     sir::SlotId started = sir::kNone;
@@ -1885,7 +1885,7 @@ void Lowerer::lowerUdp(const ast::PrimitiveInstanceSymbol& g, const std::string&
         };
         state = slot(".$state", sir::u4(1));
         prev = slot(".$prev", sir::u4(n));
-        const char init = design_.types[table].initial;
+        const char init = design_.typeEntry(table).initial;
         if (init != 'x') {
             ensureStaticInit(g, sl);
             Body saved = std::move(b_);
@@ -2029,9 +2029,9 @@ void Lowerer::ensureStaticInit(const ast::Symbol& at, slang::SourceLocation sl) 
     if (staticInit_.find(instance_) == staticInit_.end()) {
         sir::Process p;
         // <instance>.$static; <package>::$static and $unit::$static (SIR_SPEC.md 7.1).
-        p.name = design_.instances[instance_].scopeName +
-                 (design_.instances[instance_].kind == sir::InstanceKind::Module ? ".$static"
-                                                                                 : "::$static");
+        p.name = design_.instance(instance_).scopeName +
+                 (design_.instance(instance_).kind == sir::InstanceKind::Module ? ".$static"
+                                                                                : "::$static");
         p.kind = sir::ProcessKind::StaticInit;
         p.instance = instance_;
         p.loc = loc(sl);
@@ -2076,7 +2076,7 @@ void Lowerer::checkStaticInitOrder() {
             // Another instance's variable: the standard sets no order
             // between instances. Any other: when its own is set later.
             const bool other =
-                *inst != *own && design_.instances[*inst].kind == sir::InstanceKind::Module;
+                *inst != *own && design_.instance(*inst).kind == sir::InstanceKind::Module;
             const auto it = when.find(&s);
             if ((other || (it != when.end() && it->second > mine)) &&
                 std::find(early.begin(), early.end(), &s) == early.end())

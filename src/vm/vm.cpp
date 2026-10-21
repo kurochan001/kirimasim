@@ -649,10 +649,10 @@ public:
             info_[p].resize(blocks.size());
             for (std::size_t b = 0; b < blocks.size(); ++b) {
                 for (const sir::BlockParam& bp : blocks[b].params)
-                    if (bp.temp < n) tempTypes_[p][bp.temp] = bp.type;
+                    if (bp.temp.index() < n) tempTypes_[p][bp.temp.index()] = bp.type;
                 for (const sir::Instr& in : blocks[b].instrs) {
-                    if (in.result != sir::kNone && in.result < n)
-                        tempTypes_[p][in.result] = in.type;
+                    if (in.result != sir::kNone && in.result.index() < n)
+                        tempTypes_[p][in.result.index()] = in.type;
                     info_[p][b].push_back(decode(in));
                     // Each drive.delay keeps its own pending update
                     // (SIR_SPEC.md 5.4).
@@ -748,7 +748,7 @@ public:
         std::vector<kernel::Rng> procRngs(d_.processes.size());
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p)
             if (isProcedure(d_.processes[p]))
-                procRngs[p] = initRngs_[d_.processes[p].instance].child();
+                procRngs[p] = initRngs_[d_.processes[p].instance.index()].child();
         // The processes of $strobe and $monitor first: an initializer's
         // function may call them, and they wait on nothing until then.
         overrides_.assign(d_.processes.size(), nullptr);
@@ -993,7 +993,7 @@ private:
     }
     /// The chunks a body's temps take on the temp stack.
     std::uint32_t bodyTemps(std::uint32_t body) const { return tempTotal_[body]; }
-    W4& temp(sir::TempId id) { return tempStack_[act_.base + tempOff_[act_.body][id]]; }
+    W4& temp(sir::TempId id) { return tempStack_[act_.base + tempOff_[act_.body][id.index()]]; }
     /// The W4 chunks of a value of type t (kernel/wide.h).
     static std::uint32_t chunksOf(sir::Type t) {
         return sir::isIntegral(t) && t.width > 64 ? (t.width + 63) / 64 : 1;
@@ -1279,8 +1279,8 @@ private:
         const sir::InstanceId inst = isSubBody(act_.body) ? subOf(act_.body).instance : p.instance;
         std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
         line += ":" + std::to_string(in.loc.line) + ": error: " + what + " [" +
-                d_.instances[inst].scopeName + " @ " +
-                messageTime(sched_.time(), d_.timePrecision) + "]";
+                d_.instance(inst).scopeName + " @ " + messageTime(sched_.time(), d_.timePrecision) +
+                "]";
         output_.message(line);
         sched_.runtimeError();
     }
@@ -4005,7 +4005,7 @@ private:
     /// for a procedure or a fork branch, or else its instance's
     /// initialization generator.
     kernel::Rng& rngOf(Frame& f) {
-        return f.ownRng ? f.rng : initRngs_[d_.processes[f.process].instance];
+        return f.ownRng ? f.rng : initRngs_[d_.processes[f.process].instance.index()];
     }
 
     /// $urandom([seed]) and $urandom_range(maxval, minval) (SYSTEM_TASKS.md
@@ -4035,7 +4035,7 @@ private:
         };
         const auto scopeOf = [&](std::uint32_t body) {
             return isSubBody(body) ? subOf(body).name
-                                   : d_.instances[d_.processes[body].instance].scopeName;
+                                   : d_.instance(d_.processes[body].instance).scopeName;
         };
         // The bodies from the process in, each with the call that entered it.
         std::vector<std::pair<std::uint32_t, const sir::Instr*>> chain{{f.process, nullptr}};
@@ -4196,7 +4196,7 @@ private:
         std::vector<std::vector<W4>> items;
         if (isEnum)
             for (const sir::EnumItem& item : d_.types[ops[3].id].items) {
-                const std::uint32_t o = constOff_[item.value];
+                const std::uint32_t o = constOff_[item.value.index()];
                 items.emplace_back(consts_.begin() + o, consts_.begin() + o + c);
             }
         const kernel::MemLoad l = kernel::loadMemory(*text, hex, dims, et.width, address[0],

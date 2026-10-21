@@ -22,8 +22,8 @@ using namespace kirimasim::sir;
 
 SourceLoc at(std::uint32_t line) { return {0, line, 1}; }
 
-Instr make(Op op, Type t, TempId r, std::vector<Operand> ops) {
-    return {op, t, r, std::move(ops), at(2)};
+Instr make(Op op, Type t, std::uint32_t r, std::vector<Operand> ops) {
+    return {op, t, TempId{r}, std::move(ops), at(2)};
 }
 Instr none(Op op, std::vector<Operand> ops) { return make(op, voidType(), kNone, std::move(ops)); }
 
@@ -36,9 +36,9 @@ const Type kChandle{TypeKind::Chandle, 0};
 // Slots of the playground.
 enum : SlotId { sA, sB, sR, sS, sE, sM, sBit, sW, sF };
 // Temps that block 0 loads from them, and the first free one.
-enum : TempId { tA, tB, tR, tS, tBit, tFree };
+enum : std::uint32_t { tA, tB, tR, tS, tBit, tFree };
 // Constants.
-enum : ConstId { c5, c2, c6, cReal, cString, cTrue };
+enum : std::uint32_t { c5, c2, c6, cReal, cString, cTrue };
 // Frame variables of the playground process.
 enum : FrameVarId { fV, fRef, fRefArr, fRefReal };
 
@@ -107,7 +107,7 @@ Design playground() {
     g.automatic = true;
     g.returnType = u2(1);
     g.frameOf = {Owner::Kind::Process, 0};
-    g.blocks = {{{}, {make(Op::Ret, voidType(), kNone, {Operand::constant(cTrue)})}}};
+    g.blocks = {{{}, {make(Op::Ret, voidType(), kNone, {Operand::constant(ConstId{cTrue})})}}};
     g.loc = at(1);
     d.subroutines.push_back(g);
 
@@ -161,18 +161,19 @@ struct Case {
     Change change;
 };
 
-constexpr TempId N = tFree;
+constexpr std::uint32_t N = tFree;
 
 std::vector<Case> cases() {
-    const Operand A = Operand::temp(tA), B = Operand::temp(tB), R = Operand::temp(tR),
-                  S = Operand::temp(tS), Bit = Operand::temp(tBit);
-    const Operand C5 = Operand::constant(c5), C2 = Operand::constant(c2),
-                  C6 = Operand::constant(c6);
+    const Operand A = Operand::temp(TempId{tA}), B = Operand::temp(TempId{tB}),
+                  R = Operand::temp(TempId{tR}), S = Operand::temp(TempId{tS}),
+                  Bit = Operand::temp(TempId{tBit});
+    const Operand C5 = Operand::constant(ConstId{c5}), C2 = Operand::constant(ConstId{c2}),
+                  C6 = Operand::constant(ConstId{c6});
     return {
         // Instructions: the operands each opcode takes (SIR_SPEC.md 5, 7).
         {"source file", "source file out of range",
          [](Design& d) {
-             Instr in = none(Op::Store, {Operand::slot(sA), Operand::temp(tA)});
+             Instr in = none(Op::Store, {Operand::slot(sA), Operand::temp(TempId{tA})});
              in.loc.file = 9;
              add(in).apply(d);
          }},
@@ -187,7 +188,8 @@ std::vector<Case> cases() {
         {"wait.delay of a real", "needs an integral delay",
          [](Design& d) {
              auto& instrs = d.processes[0].blocks[0].instrs;
-             instrs.back() = none(Op::WaitDelay, {Operand::temp(tR), Operand::block(BlockId{1})});
+             instrs.back() =
+                 none(Op::WaitDelay, {Operand::temp(TempId{tR}), Operand::block(BlockId{1})});
              d.processes[0].blocks.push_back({{}, {none(Op::Ret, {})}});
          }},
         {"no result", "needs a result", add(make(Op::Add, voidType(), kNone, {A, A}))},
@@ -296,7 +298,7 @@ std::vector<Case> cases() {
          add(none(Op::DisableTask, {Operand::subroutine(SubroutineId{0})}))},
         {"strobe", "needs a postponed process", add(none(Op::Strobe, {A}))},
         {"udp kind", "needs a sequential UDP table",
-         add(make(Op::UdpSeq, u4(1), N, {Operand::typeRow(0), Bit, Bit, Bit}))},
+         add(make(Op::UdpSeq, u4(1), N, {Operand::typeRow(TypeId{0}), Bit, Bit, Bit}))},
         {"drive.delay operands", "needs an integral slot range, a value of its type",
          add(none(Op::DriveDelay, {A, A, C2, C2, C2}))},
         {"block arguments", "block arguments are missing",
@@ -309,17 +311,17 @@ std::vector<Case> cases() {
         {"ref argument", "argument 'x' must be a ref",
          [](Design& d) {
              d.subroutines[0].params[0].dir = Direction::Ref;
-             add(none(Op::Call, {Operand::subroutine(SubroutineId{0}), Operand::temp(tA)}))
+             add(none(Op::Call, {Operand::subroutine(SubroutineId{0}), Operand::temp(TempId{tA})}))
                  .apply(d);
          }},
         {"array argument", "argument 'x' must be an array of its shape",
          [](Design& d) {
              d.subroutines[0].frame[0].dims = {{0, 3}};
-             add(none(Op::Call, {Operand::subroutine(SubroutineId{0}), Operand::temp(tA)}))
+             add(none(Op::Call, {Operand::subroutine(SubroutineId{0}), Operand::temp(TempId{tA})}))
                  .apply(d);
          }},
         {"udp inputs", "needs one value per input",
-         add(make(Op::Udp, u4(1), N, {Operand::typeRow(0), Bit}))},
+         add(make(Op::Udp, u4(1), N, {Operand::typeRow(TypeId{0}), Bit}))},
         {"override.start", "needs \"assign\" or \"force\"",
          add(none(Op::OverrideStart, {Operand::str("hold")}))},
         {"store.override outside an override process", "only an override process writes with it",
@@ -359,14 +361,14 @@ std::vector<Case> cases() {
 
         // Tables, subroutines and processes (SIR_SPEC.md 2 to 4, 7, 8).
         {"instance order", "parent must come before the child",
-         [](Design& d) { d.instances.push_back({"top.c", "c", 2}); }},
+         [](Design& d) { d.instances.push_back({"top.c", "c", InstanceId{2}}); }},
         {"enum names", "enum item name is not unique",
          [](Design& d) {
              TypeEntry e;
              e.kind = TypeEntryKind::Enum;
              e.name = "e";
              e.value = u2(32);
-             e.items = {{"A", c2}, {"A", c6}};
+             e.items = {{"A", ConstId{c2}}, {"A", ConstId{c6}}};
              d.types.push_back(e);
          }},
         {"union field", "union field does not start at bit 0",
@@ -398,7 +400,7 @@ std::vector<Case> cases() {
              a.kind = TypeEntryKind::Array;
              a.name = "a";
              a.dims = {{0, 1}};
-             a.element = 99;
+             a.element = TypeId{99};
              d.types.push_back(a);
          }},
         {"udp initial state", "initial state must be 0, 1 or x",
@@ -447,8 +449,8 @@ std::vector<Case> cases() {
              o.loc = at(1);
              o.writes = {{sF, 0, 0, 0, 0}};
              o.blocks = {{{},
-                          {none(Op::StoreOverride,
-                                {Operand::str("hold"), Operand::slot(sF), Operand::constant(c5)}),
+                          {none(Op::StoreOverride, {Operand::str("hold"), Operand::slot(sF),
+                                                    Operand::constant(ConstId{c5})}),
                            none(Op::Ret, {})}}};
              d.processes.push_back(o);
          }},

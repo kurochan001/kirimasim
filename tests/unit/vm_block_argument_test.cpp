@@ -40,8 +40,8 @@ struct Value {
     std::vector<std::uint64_t> a, b;
 };
 
-Instr make(Op op, Type t, TempId r, std::vector<Operand> ops) {
-    return {op, t, r, std::move(ops), {0, 1, 1}};
+Instr make(Op op, Type t, std::uint32_t r, std::vector<Operand> ops) {
+    return {op, t, TempId{r}, std::move(ops), {0, 1, 1}};
 }
 Instr none(Op op, std::vector<Operand> ops) { return make(op, voidType(), kNone, std::move(ops)); }
 
@@ -90,14 +90,15 @@ Design swapDesign(Type t, Back back, const Value& a, const Value& b) {
     Design d;
     d.sources = {"block_argument.sv"};
     d.instances = {{"top", "top", kNone}};
-    d.slots = {{"top.x", t, SlotKind::Var, {}, kObservable, 0, kNone, kNone, 0},
-               {"top.y", t, SlotKind::Var, {}, kObservable, 0, kNone, kNone, 0}};
+    d.slots = {{"top.x", t, SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0},
+               {"top.y", t, SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0}};
     d.constants = {{t, a.a, a.b}, {t, b.a, b.b}, {u2(8), {0}, {}}, {u2(8), {1}, {}}};
-    enum : ConstId { cA, cB, c0, c1 };
-    enum : TempId { tP, tN, tQ, tX, tY, tD };
-    const Operand A = Operand::constant(cA), B = Operand::constant(cB);
-    const Operand zero = Operand::constant(c0), one = Operand::constant(c1);
-    const Operand P = Operand::temp(tP), N = Operand::temp(tN), Q = Operand::temp(tQ);
+    enum : std::uint32_t { cA, cB, c0, c1 };
+    enum : std::uint32_t { tP, tN, tQ, tX, tY, tD };
+    const Operand A = Operand::constant(ConstId{cA}), B = Operand::constant(ConstId{cB});
+    const Operand zero = Operand::constant(ConstId{c0}), one = Operand::constant(ConstId{c1});
+    const Operand P = Operand::temp(TempId{tP}), N = Operand::temp(TempId{tN}),
+                  Q = Operand::temp(TempId{tQ});
 
     Process p;
     p.name = "top.initial0";
@@ -105,16 +106,16 @@ Design swapDesign(Type t, Back back, const Value& a, const Value& b) {
     p.numTemps = 6;
     p.blocks.resize(back == Back::Br ? 4 : 3);
     p.blocks[0].instrs = {none(Op::Br, {Operand::block(BlockId{1}, 3), A, zero, B})};
-    p.blocks[1].params = {{tP, t}, {tN, u2(8)}, {tQ, t}};
-    std::vector<Operand> brIf = {Operand::temp(tD), Operand::block(BlockId{2}, 2), P, Q};
+    p.blocks[1].params = {{TempId{tP}, t}, {TempId{tN}, u2(8)}, {TempId{tQ}, t}};
+    std::vector<Operand> brIf = {Operand::temp(TempId{tD}), Operand::block(BlockId{2}, 2), P, Q};
     if (back == Back::BrIf)
         brIf.insert(brIf.end(), {Operand::block(BlockId{1}, 3), Q, one, P});
     else
         brIf.push_back(Operand::block(BlockId{3}));
     p.blocks[1].instrs = {make(Op::Ceq, u2(1), tD, {N, one}), none(Op::BrIf, brIf)};
-    p.blocks[2].params = {{tX, t}, {tY, t}};
-    p.blocks[2].instrs = {none(Op::Store, {Operand::slot(0), Operand::temp(tX)}),
-                          none(Op::Store, {Operand::slot(1), Operand::temp(tY)}),
+    p.blocks[2].params = {{TempId{tX}, t}, {TempId{tY}, t}};
+    p.blocks[2].instrs = {none(Op::Store, {Operand::slot(0), Operand::temp(TempId{tX})}),
+                          none(Op::Store, {Operand::slot(1), Operand::temp(TempId{tY})}),
                           none(Op::Ret, {})};
     if (back == Back::Br)
         p.blocks[3].instrs = {none(Op::Br, {Operand::block(BlockId{1}, 3), Q, one, P})};

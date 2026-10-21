@@ -796,7 +796,7 @@ void Lowerer::lowerOverride(const ast::ProceduralAssignStatement& s) {
     const std::vector<HeldTarget> targets = heldTargets(a.left(), sl);
     const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
     sir::Process p;
-    p.name = processName(design_.instances[inst].scopeName, "$" + level);
+    p.name = processName(design_.instance(inst).scopeName, "$" + level);
     p.kind = sir::ProcessKind::Override;
     p.instance = inst;
     p.loc = loc(sl);

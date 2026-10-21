@@ -240,12 +240,12 @@ private:
         return "subroutine @" + std::to_string(i.index());
     }
 
-    bool typeRefOk(TypeId t) const { return t == kNone || t < d_.types.size(); }
+    bool typeRefOk(TypeId t) const { return t == kNone || t.index() < d_.types.size(); }
 
     void checkInstances() {
         for (std::size_t i = 0; i < d_.instances.size(); ++i) {
             const InstanceId p = d_.instances[i].parent;
-            if (p != kNone && p >= i)
+            if (p != kNone && p.index() >= i)
                 error("instance " + std::to_string(i), "parent must come before the child");
         }
     }
@@ -265,8 +265,8 @@ private:
                     for (const EnumItem& item : t.items) {
                         if (!names.insert(item.name).second)
                             error(where, "enum item name is not unique");
-                        if (item.value >= d_.constants.size() ||
-                            d_.constants[item.value].type != t.value)
+                        if (item.value.index() >= d_.constants.size() ||
+                            d_.constant(item.value).type != t.value)
                             error(where, "enum item value does not have the base type");
                     }
                     break;
@@ -335,7 +335,7 @@ private:
             const std::string where = "slot %s" + std::to_string(i);
             if (s.name.empty()) error(where, "slot has no name");
             if (!seen.insert(s.name).second) error(where, "slot name is not unique");
-            if (s.instance >= d_.instances.size()) error(where, "instance out of range");
+            if (s.instance.index() >= d_.instances.size()) error(where, "instance out of range");
             if (s.subroutine != kNone && s.subroutine.index() >= d_.subroutines.size())
                 error(where, "subroutine out of range");
             if (!typeRefOk(s.declType)) error(where, "type out of range");
@@ -524,7 +524,7 @@ private:
 
     void checkSubroutine(const Subroutine& s, SubroutineId id) {
         const std::string where = subroutineWhere(id) + " " + s.name;
-        if (s.instance >= d_.instances.size()) error(where, "instance out of range", s.loc);
+        if (s.instance.index() >= d_.instances.size()) error(where, "instance out of range", s.loc);
         Body body;
         body.where = where;
         body.owner = {Owner::Kind::Subroutine, id.index()};
@@ -589,7 +589,7 @@ private:
 
     void checkProcess(const Process& p, ProcessId id) {
         const std::string where = processWhere(id) + " " + p.name;
-        if (p.instance >= d_.instances.size()) error(where, "instance out of range", p.loc);
+        if (p.instance.index() >= d_.instances.size()) error(where, "instance out of range", p.loc);
         for (const Trigger& t : p.triggers) {
             if (!rangeOk(t.range)) error(where, "trigger slot range is invalid");
             if (t.guard == kNone) continue;
@@ -734,14 +734,14 @@ private:
         std::vector<long> defIndex(nt, 0);
         std::vector<Type> tempType(nt);
         const auto define = [&](TempId t, std::size_t b, long k, Type ty, SourceLoc loc) {
-            if (t >= nt) {
-                error(bw(b), "temp %t" + std::to_string(t) + " out of range", loc);
-            } else if (defBlock[t] >= 0) {
-                error(bw(b), "temp %t" + std::to_string(t) + " is defined twice", loc);
+            if (t.index() >= nt) {
+                error(bw(b), "temp %t" + std::to_string(t.index()) + " out of range", loc);
+            } else if (defBlock[t.index()] >= 0) {
+                error(bw(b), "temp %t" + std::to_string(t.index()) + " is defined twice", loc);
             } else {
-                defBlock[t] = static_cast<int>(b);
-                defIndex[t] = k;
-                tempType[t] = ty;
+                defBlock[t.index()] = static_cast<int>(b);
+                defIndex[t.index()] = k;
+                tempType[t.index()] = ty;
             }
         };
         for (std::size_t b = 0; b < nb; ++b) {

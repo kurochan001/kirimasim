@@ -20,8 +20,8 @@ using namespace kirimasim::sir;
 
 SourceLoc at(std::uint32_t line, std::uint32_t col = 1) { return {0, line, col}; }
 
-Instr make(Op op, Type t, TempId r, std::vector<Operand> ops, std::uint32_t line) {
-    return {op, t, r, std::move(ops), at(line)};
+Instr make(Op op, Type t, std::uint32_t r, std::vector<Operand> ops, std::uint32_t line) {
+    return {op, t, TempId{r}, std::move(ops), at(line)};
 }
 
 Constant constU4(std::uint32_t w, std::uint64_t a, std::uint64_t b = 0) {
@@ -35,9 +35,9 @@ Design counter() {
     d.sources = {"counter.sv"};
     d.instances = {{"top", "counter", kNone}};
     d.slots = {
-        {"top.clk", u4(1), SlotKind::Var, {}, kObservable, 0, kNone, kNone, 0},
-        {"top.rst_n", u4(1), SlotKind::Var, {}, kObservable, 0, kNone, kNone, 0},
-        {"top.q", u4(8), SlotKind::Var, {}, kObservable, 0, kNone, kNone, 0},
+        {"top.clk", u4(1), SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0},
+        {"top.rst_n", u4(1), SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0},
+        {"top.q", u4(8), SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0},
     };
     d.names = {{"top.clk", 0}, {"top.rst_n", 1}, {"top.q", 2}};
     d.constants = {constU4(8, 0), constU4(8, 1)};
@@ -51,19 +51,19 @@ Design counter() {
     p.blocks.resize(3);
     p.blocks[0].instrs = {
         make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
-        make(Op::Lnot, u4(1), 1, {Operand::temp(0)}, 3),
-        make(Op::Truth, u4(1), 2, {Operand::temp(1)}, 3),
+        make(Op::Lnot, u4(1), 1, {Operand::temp(TempId{0})}, 3),
+        make(Op::Truth, u4(1), 2, {Operand::temp(TempId{1})}, 3),
         make(Op::BrIf, voidType(), kNone,
-             {Operand::temp(2), Operand::block(BlockId{1}), Operand::block(BlockId{2})}, 3),
+             {Operand::temp(TempId{2}), Operand::block(BlockId{1}), Operand::block(BlockId{2})}, 3),
     };
     p.blocks[1].instrs = {
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::constant(0)}, 4),
+        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::constant(ConstId{0})}, 4),
         make(Op::Ret, voidType(), kNone, {}, 4),
     };
     p.blocks[2].instrs = {
         make(Op::Load, u4(8), 3, {Operand::slot(2)}, 5),
-        make(Op::Add, u4(8), 4, {Operand::temp(3), Operand::constant(1)}, 5),
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(4)}, 5),
+        make(Op::Add, u4(8), 4, {Operand::temp(TempId{3}), Operand::constant(ConstId{1})}, 5),
+        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{4})}, 5),
         make(Op::Ret, voidType(), kNone, {}, 5),
     };
     d.processes.push_back(std::move(p));
@@ -143,13 +143,13 @@ TEST(Sir, UseBeforeDefinition) {
     Design d = counter();
     // bb1 does not see %t3, which is defined in bb2.
     auto& instrs = d.processes[0].blocks[1].instrs;
-    instrs[0] = make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(3)}, 4);
+    instrs[0] = make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{3})}, 4);
     EXPECT_TRUE(mentions(verify(d), "not defined before use"));
 }
 
 TEST(Sir, TempDefinedTwice) {
     Design d = counter();
-    d.processes[0].blocks[2].instrs[1].result = 3;
+    d.processes[0].blocks[2].instrs[1].result = TempId{3};
     EXPECT_TRUE(mentions(verify(d), "defined twice"));
 }
 
@@ -157,7 +157,7 @@ TEST(Sir, WaitInFlipFlop) {
     Design d = counter();
     auto& instrs = d.processes[0].blocks[1].instrs;
     instrs.back() = make(Op::WaitDelay, voidType(), kNone,
-                         {Operand::constant(1), Operand::block(BlockId{2})}, 4);
+                         {Operand::constant(ConstId{1}), Operand::block(BlockId{2})}, 4);
     EXPECT_TRUE(mentions(verify(d), "wait.delay in a ff-plain process"));
 }
 
@@ -167,7 +167,7 @@ TEST(Sir, WaitInInitialIsAllowed) {
     d.processes[0].triggers.clear();
     auto& instrs = d.processes[0].blocks[1].instrs;
     instrs.back() = make(Op::WaitDelay, voidType(), kNone,
-                         {Operand::constant(1), Operand::block(BlockId{2})}, 4);
+                         {Operand::constant(ConstId{1}), Operand::block(BlockId{2})}, 4);
     EXPECT_TRUE(verify(d).empty());
 }
 
@@ -182,7 +182,7 @@ TEST(Sir, StoreTypeMismatch) {
     Design d = counter();
     // A 1-bit value stored into the 8-bit q.
     d.processes[0].blocks[2].instrs[2] =
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(0)}, 5);
+        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{0})}, 5);
     EXPECT_TRUE(mentions(verify(d), "does not fit"));
 }
 
@@ -199,7 +199,8 @@ TEST(Sir, MatchMaskTakesTwoValuesAndAKind) {
     d.processes[0].numTemps = 6;
     const auto match = [](Type t, const char* kind) {
         return make(Op::MatchMask, t, 5,
-                    {Operand::temp(3), Operand::constant(1), Operand::str(kind)}, 5);
+                    {Operand::temp(TempId{3}), Operand::constant(ConstId{1}), Operand::str(kind)},
+                    5);
     };
     instrs.insert(instrs.begin() + 1, match(u2(1), "casez"));
     EXPECT_TRUE(verify(d).empty());
@@ -242,7 +243,7 @@ TEST(Sir, PartOfASlotIsUnsigned) {
     d.slots[2].type = s4(8);
     // Bits [3:0] of a signed slot read as unsigned (like a part-select).
     d.processes[0].blocks[2].instrs[0] = make(Op::Load, u4(4), 3, {Operand::slot(2, 0, 4)}, 5);
-    d.processes[0].blocks[2].instrs[1] = make(Op::Zext, u4(8), 4, {Operand::temp(3)}, 5);
+    d.processes[0].blocks[2].instrs[1] = make(Op::Zext, u4(8), 4, {Operand::temp(TempId{3})}, 5);
     const auto errors = verify(d);
     EXPECT_FALSE(mentions(errors, "load"));
 }
@@ -306,26 +307,26 @@ Design loopWithWait() {
     p.numTemps = 6;
     p.blocks.resize(5);
     p.blocks[0].instrs = {
-        make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::constant(0)}, 1),
+        make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::constant(ConstId{0})}, 1),
         make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
     };
     p.blocks[1].instrs = {
         make(Op::Fload, s2(32), 0, {Operand::frame(0)}, 1),
-        make(Op::Lt, u2(1), 1, {Operand::temp(0), Operand::constant(1)}, 1),
+        make(Op::Lt, u2(1), 1, {Operand::temp(TempId{0}), Operand::constant(ConstId{1})}, 1),
         make(Op::BrIf, voidType(), kNone,
-             {Operand::temp(1), Operand::block(BlockId{2}), Operand::block(BlockId{4})}, 1),
+             {Operand::temp(TempId{1}), Operand::block(BlockId{2}), Operand::block(BlockId{4})}, 1),
     };
     p.blocks[2].instrs = {
-        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(2), Operand::block(BlockId{3})},
-             1),
+        make(Op::WaitDelay, voidType(), kNone,
+             {Operand::constant(ConstId{2}), Operand::block(BlockId{3})}, 1),
     };
     p.blocks[3].instrs = {
         make(Op::Fload, s2(32), 2, {Operand::frame(0)}, 1),
-        make(Op::Trunc, u2(8), 3, {Operand::temp(2)}, 1),
-        make(Op::To4, u4(8), 4, {Operand::temp(3)}, 1),
-        make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(4)}, 1),
-        make(Op::Add, s2(32), 5, {Operand::temp(2), Operand::constant(3)}, 1),
-        make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::temp(5)}, 1),
+        make(Op::Trunc, u2(8), 3, {Operand::temp(TempId{2})}, 1),
+        make(Op::To4, u4(8), 4, {Operand::temp(TempId{3})}, 1),
+        make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{4})}, 1),
+        make(Op::Add, s2(32), 5, {Operand::temp(TempId{2}), Operand::constant(ConstId{3})}, 1),
+        make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::temp(TempId{5})}, 1),
         make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
     };
     p.blocks[4].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
@@ -346,17 +347,19 @@ Design loopWithParam() {
     p.numTemps = 3;
     p.blocks.resize(4);
     p.blocks[0].instrs = {
-        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1}, 1), Operand::constant(0)}, 1),
+        make(Op::Br, voidType(), kNone,
+             {Operand::block(BlockId{1}, 1), Operand::constant(ConstId{0})}, 1),
     };
-    p.blocks[1].params = {{0, s2(32)}};
+    p.blocks[1].params = {{TempId{0}, s2(32)}};
     p.blocks[1].instrs = {
-        make(Op::Lt, u2(1), 1, {Operand::temp(0), Operand::constant(1)}, 1),
+        make(Op::Lt, u2(1), 1, {Operand::temp(TempId{0}), Operand::constant(ConstId{1})}, 1),
         make(Op::BrIf, voidType(), kNone,
-             {Operand::temp(1), Operand::block(BlockId{2}), Operand::block(BlockId{3})}, 1),
+             {Operand::temp(TempId{1}), Operand::block(BlockId{2}), Operand::block(BlockId{3})}, 1),
     };
     p.blocks[2].instrs = {
-        make(Op::Add, s2(32), 2, {Operand::temp(0), Operand::constant(2)}, 1),
-        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1}, 1), Operand::temp(2)}, 1),
+        make(Op::Add, s2(32), 2, {Operand::temp(TempId{0}), Operand::constant(ConstId{2})}, 1),
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1}, 1), Operand::temp(TempId{2})},
+             1),
     };
     p.blocks[3].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
     d.processes.push_back(std::move(p));
@@ -393,7 +396,7 @@ TEST(Sir, LoopText) {
 TEST(Sir, TempUsedAfterAWait) {
     Design d = loopWithWait();
     // Use %t0 (read before the wait) after the wait instead of reading again.
-    d.processes[0].blocks[3].instrs[1] = make(Op::Trunc, u2(8), 3, {Operand::temp(0)}, 1);
+    d.processes[0].blocks[3].instrs[1] = make(Op::Trunc, u2(8), 3, {Operand::temp(TempId{0})}, 1);
     EXPECT_TRUE(mentions(verify(d), "temp %t0 is used after a wait"));
 }
 
@@ -412,13 +415,13 @@ TEST(Sir, BlockArgumentType) {
 
 TEST(Sir, EntryBlockHasNoParameters) {
     Design d = loopWithParam();
-    d.processes[0].blocks[0].params = {{2, s2(32)}};
+    d.processes[0].blocks[0].params = {{TempId{2}, s2(32)}};
     EXPECT_TRUE(mentions(verify(d), "entry block has parameters"));
 }
 
 TEST(Sir, BlockAfterAWaitTakesNoArguments) {
     Design d = loopWithWait();
-    d.processes[0].blocks[3].params = {{0, s2(32)}};
+    d.processes[0].blocks[3].params = {{TempId{0}, s2(32)}};
     d.processes[0].blocks[1].instrs[0] = make(Op::Fload, s2(32), 1, {Operand::frame(0)}, 1);
     EXPECT_TRUE(mentions(verify(d), "the block after a wait takes no arguments"));
 }
@@ -426,7 +429,7 @@ TEST(Sir, BlockAfterAWaitTakesNoArguments) {
 TEST(Sir, FrameVariableOutOfRange) {
     Design d = loopWithWait();
     d.processes[0].blocks[0].instrs[0] =
-        make(Op::Fstore, voidType(), kNone, {Operand::frame(1), Operand::constant(0)}, 1);
+        make(Op::Fstore, voidType(), kNone, {Operand::frame(1), Operand::constant(ConstId{0})}, 1);
     EXPECT_TRUE(mentions(verify(d), "frame variable out of range"));
 }
 
@@ -446,7 +449,8 @@ TEST(Sir, AlwaysCombWritesAreExclusive) {
     c.loc = at(7);
     c.blocks.resize(1);
     c.blocks[0].instrs = {
-        make(Op::Store, voidType(), kNone, {Operand::slot(2, 4, 4), Operand::constant(2)}, 7),
+        make(Op::Store, voidType(), kNone, {Operand::slot(2, 4, 4), Operand::constant(ConstId{2})},
+             7),
         make(Op::Ret, voidType(), kNone, {}, 7),
     };
     d.constants.push_back({u4(4), {0}, {0}, {}});
@@ -454,10 +458,10 @@ TEST(Sir, AlwaysCombWritesAreExclusive) {
     EXPECT_TRUE(mentions(verify(d), "also writes"));
     // Disjoint bits are fine.
     d.processes[0].writes = {{2, 0, 0, 0, 4}};
-    d.processes[0].blocks[1].instrs[0] =
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2, 0, 4), Operand::constant(2)}, 4);
-    d.processes[0].blocks[2].instrs[2] =
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2, 0, 4), Operand::constant(2)}, 5);
+    d.processes[0].blocks[1].instrs[0] = make(
+        Op::Nba, voidType(), kNone, {Operand::slot(2, 0, 4), Operand::constant(ConstId{2})}, 4);
+    d.processes[0].blocks[2].instrs[2] = make(
+        Op::Nba, voidType(), kNone, {Operand::slot(2, 0, 4), Operand::constant(ConstId{2})}, 5);
     expectClean(d);
 }
 
@@ -473,7 +477,8 @@ TEST(Sir, TwoContinuousAssignmentsToAVariable) {
         c.loc = at(8);
         c.blocks.resize(1);
         c.blocks[0].instrs = {
-            make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::constant(1)}, 8),
+            make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::constant(ConstId{1})},
+                 8),
             make(Op::Ret, voidType(), kNone, {}, 8),
         };
         d.processes.push_back(std::move(c));
@@ -600,10 +605,18 @@ TEST(Sir, WriteConflictsAreThoseOfEveryPair) {
     for (std::uint64_t round = 0; round < rounds; ++round) {
         Design d = counter();
         d.slots = {
-            {"top.v", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, kNone, kNone, 0},
-            {"top.w", u4(8), SlotKind::Wire, {{0, 3}}, 0, 0, kNone, kNone, 0},
-            {"top.u", u4(8), SlotKind::Uwire, {{0, 3}}, 0, 0, kNone, kNone, 0},
-            {"top.f.x", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, SubroutineId{0}, kNone, 0},
+            {"top.v", u4(8), SlotKind::Var, {{0, 3}}, 0, InstanceId{0}, kNone, kNone, 0},
+            {"top.w", u4(8), SlotKind::Wire, {{0, 3}}, 0, InstanceId{0}, kNone, kNone, 0},
+            {"top.u", u4(8), SlotKind::Uwire, {{0, 3}}, 0, InstanceId{0}, kNone, kNone, 0},
+            {"top.f.x",
+             u4(8),
+             SlotKind::Var,
+             {{0, 3}},
+             0,
+             InstanceId{0},
+             SubroutineId{0},
+             kNone,
+             0},
         };
         d.processes.clear();
         const std::uint32_t n = 2 + pick(12);
@@ -634,8 +647,8 @@ TEST(Sir, ManyWritersOfOneSlot) {
     constexpr std::uint32_t kN = 20000;
     Design d = counter();
     d.slots = {
-        {"top.q", u4(kN), SlotKind::Var, {}, 0, 0, kNone, kNone, 0},
-        {"top.mem", u4(8), SlotKind::Var, {{0, kN - 1}}, 0, 0, kNone, kNone, 0},
+        {"top.q", u4(kN), SlotKind::Var, {}, 0, InstanceId{0}, kNone, kNone, 0},
+        {"top.mem", u4(8), SlotKind::Var, {{0, kN - 1}}, 0, InstanceId{0}, kNone, kNone, 0},
     };
     d.processes.clear();
     for (std::uint32_t i = 0; i < kN; ++i)
@@ -656,7 +669,8 @@ TEST(Sir, ManyWritersOfOneSlot) {
 Design memory() {
     Design d = counter();
     d.processes.clear();
-    d.slots.push_back({"top.mem", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, kNone, kNone, 0});
+    d.slots.push_back(
+        {"top.mem", u4(8), SlotKind::Var, {{0, 3}}, 0, InstanceId{0}, kNone, kNone, 0});
     d.constants.push_back(constS2(32, 2));  // #2
     Process p;
     p.name = "rw";
@@ -666,9 +680,9 @@ Design memory() {
     p.numTemps = 1;
     p.blocks.resize(1);
     p.blocks[0].instrs = {
-        make(Op::LoadElem, u4(8), 0, {Operand::slot(3), Operand::constant(2)}, 9),
+        make(Op::LoadElem, u4(8), 0, {Operand::slot(3), Operand::constant(ConstId{2})}, 9),
         make(Op::StoreElem, voidType(), kNone,
-             {Operand::slot(3), Operand::constant(2), Operand::temp(0)}, 9),
+             {Operand::slot(3), Operand::constant(ConstId{2}), Operand::temp(TempId{0})}, 9),
         make(Op::Ret, voidType(), kNone, {}, 9),
     };
     d.processes.push_back(std::move(p));
@@ -683,8 +697,9 @@ TEST(Sir, ArrayElementsVerify) {
 
 TEST(Sir, OneIndexPerDimension) {
     Design d = memory();
-    d.processes[0].blocks[0].instrs[0] = make(
-        Op::LoadElem, u4(8), 0, {Operand::slot(3), Operand::constant(2), Operand::constant(2)}, 9);
+    d.processes[0].blocks[0].instrs[0] =
+        make(Op::LoadElem, u4(8), 0,
+             {Operand::slot(3), Operand::constant(ConstId{2}), Operand::constant(ConstId{2})}, 9);
     EXPECT_TRUE(mentions(verify(d), "one index per dimension"));
 }
 
@@ -727,8 +742,8 @@ Design calls() {
     f.blocks.resize(1);
     f.blocks[0].instrs = {
         make(Op::Fload, u4(8), 0, {Operand::frame(0)}, 10),
-        make(Op::Add, u4(8), 1, {Operand::temp(0), Operand::constant(1)}, 10),
-        make(Op::Ret, voidType(), kNone, {Operand::temp(1)}, 10),
+        make(Op::Add, u4(8), 1, {Operand::temp(TempId{0}), Operand::constant(ConstId{1})}, 10),
+        make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{1})}, 10),
     };
     Subroutine t;
     t.name = "top.t";
@@ -740,8 +755,8 @@ Design calls() {
     t.blocks.resize(2);
     d.constants.push_back({u2(64), {1}, {}, {}});  // #2
     t.blocks[0].instrs = {
-        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(2), Operand::block(BlockId{1})},
-             11),
+        make(Op::WaitDelay, voidType(), kNone,
+             {Operand::constant(ConstId{2}), Operand::block(BlockId{1})}, 11),
     };
     t.blocks[1].instrs = {make(Op::Ret, voidType(), kNone, {}, 11)};
     d.subroutines = {std::move(f), std::move(t)};
@@ -753,8 +768,9 @@ Design calls() {
     p.numTemps = 1;
     p.blocks.resize(2);
     p.blocks[0].instrs = {
-        make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::constant(0)}, 12),
-        make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(0)}, 12),
+        make(Op::Call, u4(8), 0,
+             {Operand::subroutine(SubroutineId{0}), Operand::constant(ConstId{0})}, 12),
+        make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{0})}, 12),
         make(Op::CallTask, voidType(), kNone,
              {Operand::subroutine(SubroutineId{1}), Operand::block(BlockId{1})}, 12),
     };
@@ -776,7 +792,8 @@ TEST(Sir, CallsVerify) {
 TEST(Sir, CallArgumentType) {
     Design d = calls();
     d.processes[0].blocks[0].instrs[0] =
-        make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::constant(2)}, 12);
+        make(Op::Call, u4(8), 0,
+             {Operand::subroutine(SubroutineId{0}), Operand::constant(ConstId{2})}, 12);
     EXPECT_TRUE(mentions(verify(d), "argument 'a' has the wrong type"));
     d.processes[0].blocks[0].instrs[0] =
         make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::slot(2)}, 12);
@@ -810,7 +827,7 @@ TEST(Sir, WaitInAFunction) {
 TEST(Sir, ReturnValueType) {
     Design d = calls();
     d.subroutines[0].blocks[0].instrs[2] =
-        make(Op::Ret, voidType(), kNone, {Operand::constant(2)}, 10);
+        make(Op::Ret, voidType(), kNone, {Operand::constant(ConstId{2})}, 10);
     EXPECT_TRUE(mentions(verify(d), "needs a value of the return type"));
 }
 
@@ -827,7 +844,7 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
     g.blocks.resize(1);
     g.blocks[0].instrs = {
         make(Op::Load, u4(1), 0, {Operand::slot(1)}, 13),
-        make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 13),
+        make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, 13),
     };
     d.subroutines.push_back(std::move(g));
     d.processes[0].blocks[0].instrs[2] =
@@ -854,11 +871,11 @@ TEST(Sir, StructureRowsOfTheTypeTable) {
     TypeEntry u;
     u.kind = TypeEntryKind::UnpackedStruct;
     u.name = "u_t";
-    u.fields = {{"x", 0, 0, kNone}, {"y", 0, 0, 0}};
+    u.fields = {{"x", 0, 0, kNone}, {"y", 0, 0, TypeId{0}}};
     TypeEntry a;
     a.kind = TypeEntryKind::Array;
     a.name = "u_t$[0:1]";
-    a.element = 1;
+    a.element = TypeId{1};
     a.dims = {{0, 1}};
     d.types = {p, u, a};
     expectClean(d);
@@ -886,7 +903,7 @@ TEST(Sir, WatchItemBelongsToTheWaiter) {
         w.blocks.resize(1);
         w.blocks[0].instrs = {
             make(Op::Load, u4(1), 0, {Operand::slot(1)}, 13),
-            make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 13),
+            make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, 13),
         };
         d.subroutines.push_back(std::move(w));
     }
@@ -930,7 +947,7 @@ TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
     g.blocks.resize(1);
     g.blocks[0].instrs = {
         make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
-        make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 3),
+        make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, 3),
     };
     d.subroutines.push_back(std::move(g));
     d.processes[0].triggers[0].guard = SubroutineId{0};
@@ -956,7 +973,8 @@ TEST(Sir, StaticSubroutineSlotsAreNotExclusive) {
     Design d = calls();
     d.processes.clear();
     const auto arg = static_cast<SlotId>(d.slots.size());
-    d.slots.push_back({"top.f.x", u4(8), SlotKind::Var, {}, 0, 0, SubroutineId{0}, kNone, 0});
+    d.slots.push_back(
+        {"top.f.x", u4(8), SlotKind::Var, {}, 0, InstanceId{0}, SubroutineId{0}, kNone, 0});
     d.names.push_back({"top.f.x", arg});
     for (int i = 0; i < 2; ++i) {
         Process c;
@@ -966,7 +984,8 @@ TEST(Sir, StaticSubroutineSlotsAreNotExclusive) {
         c.loc = at(13);
         c.blocks.resize(1);
         c.blocks[0].instrs = {
-            make(Op::Store, voidType(), kNone, {Operand::slot(arg), Operand::constant(1)}, 13),
+            make(Op::Store, voidType(), kNone, {Operand::slot(arg), Operand::constant(ConstId{1})},
+                 13),
             make(Op::Ret, voidType(), kNone, {}, 13),
         };
         d.processes.push_back(std::move(c));
@@ -1032,13 +1051,13 @@ TEST(Sir, EnumItemsHaveTheBaseType) {
     e.kind = TypeEntryKind::Enum;
     e.name = "state_t";
     e.value = u2(2);
-    e.items = {{"IDLE", 2}, {"RUN", 3}};
+    e.items = {{"IDLE", ConstId{2}}, {"RUN", ConstId{3}}};
     d.types.push_back(e);
     expectClean(d);
     EXPECT_NE(toText(d).find("type !0 enum \"state_t\" : i2<2> { \"IDLE\" = 2'h0, \"RUN\" = "
                              "2'h1 }"),
               std::string::npos);
-    d.types[0].items[1].value = 0;  // an i4<8> constant
+    d.types[0].items[1].value = ConstId{0};  // an i4<8> constant
     EXPECT_TRUE(mentions(verify(d), "does not have the base type"));
 }
 
@@ -1060,8 +1079,9 @@ TEST(Sir, ConcatWidth) {
     d.processes[0].numTemps = 6;
     auto& instrs = d.processes[0].blocks[2].instrs;
     // {q, q} is 16 bits wide, not 8.
-    instrs.insert(instrs.begin() + 1,
-                  make(Op::Concat, u4(16), 5, {Operand::temp(3), Operand::temp(3)}, 5));
+    instrs.insert(
+        instrs.begin() + 1,
+        make(Op::Concat, u4(16), 5, {Operand::temp(TempId{3}), Operand::temp(TempId{3})}, 5));
     expectClean(d);
     instrs[1].type = u4(8);
     EXPECT_TRUE(mentions(verify(d), "as wide as the operands together"));

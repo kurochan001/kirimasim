@@ -530,8 +530,8 @@ MUTANTS = [
      "if (r.slot >= d_.slots.size() || d_.slots[r.slot].subroutine != kNone) continue;",
      "if (r.slot >= d_.slots.size()) continue;"),
     ("front: an instance's scope name is a reference into the table", "src/front/lower.cpp",
-     "    const std::string scope = design_.instances[instance_].scopeName;",
-     "    const std::string& scope = design_.instances[instance_].scopeName;"),
+     "    const std::string scope = design_.instance(instance_).scopeName;",
+     "    const std::string& scope = design_.instance(instance_).scopeName;"),
     ("front: an element's slot is looked up before its indices", "src/front/lower_expr.cpp",
      '    if (design().slots[st->id].dims.size() != st->elem.size() + indices.size())\n'
      '        unsupported(sl, "a part of an unpacked array");\n'
@@ -830,8 +830,8 @@ MUTANTS = [
      "if (std::isnan(r) || std::isinf(r)) return std::nullopt;"),
     ("front: another instance's static variable read in an initial value is not reported",
      "src/front/lower.cpp",
-     "                *inst != *own && design_.instances[*inst].kind == sir::InstanceKind::Module;",
-     "                false && design_.instances[*inst].kind == sir::InstanceKind::Module;"),
+     "                *inst != *own && design_.instance(*inst).kind == sir::InstanceKind::Module;",
+     "                false && design_.instance(*inst).kind == sir::InstanceKind::Module;"),
     ("front: an initial value is reported for reading an earlier variable", "src/front/lower.cpp",
      "it != when.end() && it->second > mine", "it != when.end() && it->second < mine"),
     ("front: the order of static initial values is taken from the calls, not the stores",

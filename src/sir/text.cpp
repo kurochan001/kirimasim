@@ -145,7 +145,7 @@ std::string ownerText(const Owner& o) {
     return "?";
 }
 
-std::string typeRef(TypeId t) { return t == kNone ? "-" : "!" + std::to_string(t); }
+std::string typeRef(TypeId t) { return t == kNone ? "-" : "!" + std::to_string(t.index()); }
 
 std::string dimsText(const std::vector<ArrayDim>& dims) {
     std::string out;
@@ -175,7 +175,7 @@ std::string blocksText(const Design& d, const std::vector<BasicBlock>& blocks) {
         if (!params.empty()) {
             out += "(";
             for (std::size_t i = 0; i < params.size(); ++i) {
-                out += (i == 0 ? "%t" : ", %t") + std::to_string(params[i].temp) + ": " +
+                out += (i == 0 ? "%t" : ", %t") + std::to_string(params[i].temp.index()) + ": " +
                        toString(params[i].type);
             }
             out += ")";
@@ -183,7 +183,7 @@ std::string blocksText(const Design& d, const std::vector<BasicBlock>& blocks) {
         out += ":\n";
         for (const Instr& in : blocks[b].instrs) {
             std::string line = "  ";
-            if (in.result != kNone) line += "%t" + std::to_string(in.result) + " = ";
+            if (in.result != kNone) line += "%t" + std::to_string(in.result.index()) + " = ";
             line += opName(in.op);
             if (in.type.kind != TypeKind::Void) line += " " + toString(in.type);
             out += line + operandsText(d, in) + locText(in.loc) + "\n";
@@ -214,7 +214,8 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
         for (std::size_t i = 0; i < t.items.size(); ++i) {
             const EnumItem& item = t.items[i];
             out += (i == 0 ? " " : ", ") + quoted(item.name) + " = " +
-                   (item.value < d.constants.size() ? constantText(d.constants[item.value]) : "?");
+                   (item.value.index() < d.constants.size() ? constantText(d.constant(item.value))
+                                                            : "?");
         }
         out += " }";
     } else if (!t.fields.empty()) {
@@ -282,7 +283,7 @@ std::string toText(const Design& d) {
         const Instance& inst = d.instances[i];
         out += "instance " + std::to_string(i) + " " + quoted(inst.scopeName) +
                " def=" + quoted(inst.definition) +
-               " parent=" + (inst.parent == kNone ? "-" : std::to_string(inst.parent)) +
+               " parent=" + (inst.parent == kNone ? "-" : std::to_string(inst.parent.index())) +
                (inst.kind == InstanceKind::Package ? " package"
                 : inst.kind == InstanceKind::Unit  ? " unit"
                                                    : "") +
@@ -293,7 +294,8 @@ std::string toText(const Design& d) {
     for (std::size_t i = 0; i < d.slots.size(); ++i) {
         const Slot& s = d.slots[i];
         out += "slot %s" + std::to_string(i) + " " + quoted(s.name) + " : " + toString(s.type) +
-               dimsText(s.dims) + " " + kindName(s.kind) + " inst=" + std::to_string(s.instance);
+               dimsText(s.dims) + " " + kindName(s.kind) +
+               " inst=" + std::to_string(s.instance.index());
         if (s.subroutine != kNone) out += " sub=@" + std::to_string(s.subroutine.index());
         if (s.declType != kNone) out += " type=" + typeRef(s.declType);
         if (s.driverOf != kNone)
@@ -309,7 +311,7 @@ std::string toText(const Design& d) {
         const Subroutine& sub = d.subroutines[i];
         out += "\nsubroutine @" + std::to_string(i) + " " + quoted(sub.name) + " " +
                kindName(sub.kind) + (sub.automatic ? " automatic" : " static") +
-               (sub.mayWait ? " may-wait" : "") + " inst=" + std::to_string(sub.instance) +
+               (sub.mayWait ? " may-wait" : "") + " inst=" + std::to_string(sub.instance.index()) +
                " ret=" + toString(sub.returnType);
         if (sub.frameOf.kind != Owner::Kind::None) out += " frame-of=" + ownerText(sub.frameOf);
         out += " {" + locText(sub.loc) + "\n";
@@ -325,7 +327,7 @@ std::string toText(const Design& d) {
     for (std::size_t i = 0; i < d.processes.size(); ++i) {
         const Process& p = d.processes[i];
         out += "\nprocess @" + std::to_string(i) + " " + quoted(p.name) +
-               " kind=" + kindName(p.kind) + " inst=" + std::to_string(p.instance);
+               " kind=" + kindName(p.kind) + " inst=" + std::to_string(p.instance.index());
         if (p.parent.kind != Owner::Kind::None) out += " parent=" + ownerText(p.parent);
         if (!p.triggers.empty()) {
             out += " trigger=";

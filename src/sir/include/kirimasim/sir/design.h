@@ -18,12 +18,16 @@
 namespace kirimasim::sir {
 
 using SlotId = std::uint32_t;
-using InstanceId = std::uint32_t;
-using ConstId = std::uint32_t;
-using TempId = std::uint32_t;
+struct InstanceTag;
+using InstanceId = Id<InstanceTag>;
+struct ConstTag;
+using ConstId = Id<ConstTag>;
+struct TempTag;
+using TempId = Id<TempTag>;
 struct BlockTag;
 using BlockId = Id<BlockTag>;
-using TypeId = std::uint32_t;
+struct TypeTag;
+using TypeId = Id<TypeTag>;
 using FrameVarId = std::uint32_t;
 struct SubroutineTag;
 using SubroutineId = Id<SubroutineTag>;
@@ -83,7 +87,7 @@ struct Slot {
     SlotKind kind = SlotKind::Var;
     std::vector<ArrayDim> dims;
     std::uint32_t flags = 0;
-    InstanceId instance = 0;
+    InstanceId instance{0};
     SubroutineId subroutine = kNone;  ///< Owning static subroutine, if any.
     TypeId declType = kNone;          ///< Type table row, when the value type is not enough.
     std::uint32_t offset = 0;         ///< Word offset inside the domain (assigned later).
@@ -136,7 +140,7 @@ struct UdpRow {
 /// An item of an enum: its name and value (a constant of the base type).
 struct EnumItem {
     std::string name;
-    ConstId value = 0;
+    ConstId value{0};
 };
 
 /// A field of a packed struct or union, or a member of an unpacked struct.
@@ -369,6 +373,9 @@ struct Operand {
     /// that `kind` agrees.
     [[nodiscard]] BlockId asBlock() const { return BlockId{id}; }
     [[nodiscard]] SubroutineId asSubroutine() const { return SubroutineId{id}; }
+    [[nodiscard]] TempId asTemp() const { return TempId{id}; }
+    [[nodiscard]] ConstId asConst() const { return ConstId{id}; }
+    [[nodiscard]] TypeId asType() const { return TypeId{id}; }
 
     static Operand of(Kind k, std::uint32_t id) {
         Operand o;
@@ -376,8 +383,8 @@ struct Operand {
         o.id = id;
         return o;
     }
-    static Operand temp(TempId t) { return of(Kind::Temp, t); }
-    static Operand constant(ConstId c) { return of(Kind::Const, c); }
+    static Operand temp(TempId t) { return of(Kind::Temp, t.index()); }
+    static Operand constant(ConstId c) { return of(Kind::Const, c.index()); }
     static Operand slot(SlotId s, std::uint32_t lsb = 0, std::uint32_t width = 0) {
         Operand o = of(Kind::Slot, s);
         o.lsb = lsb;
@@ -397,7 +404,7 @@ struct Operand {
     static Operand frame(FrameVarId f) { return of(Kind::Frame, f); }
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s.index()); }
     static Operand process(ProcessId p) { return of(Kind::Process, p); }
-    static Operand typeRow(TypeId t) { return of(Kind::Type, t); }
+    static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
@@ -417,7 +424,7 @@ struct Instr {
 
 /// A typed parameter of a basic block (SIR_SPEC.md 5.1).
 struct BlockParam {
-    TempId temp = 0;
+    TempId temp{0};
     Type type;
 };
 
@@ -489,7 +496,7 @@ struct Owner {
 struct Process {
     std::string name;
     ProcessKind kind = ProcessKind::Initial;
-    InstanceId instance = 0;
+    InstanceId instance{0};
     std::vector<Trigger> triggers;
     std::vector<SlotRange> writes;  ///< Everything the process may write (SIR_SPEC.md 3.4).
     /// What a cont process's own instructions write, the targets of its
@@ -534,7 +541,7 @@ struct Subroutine {
     SubroutineKind kind = SubroutineKind::Function;
     bool automatic = false;
     bool mayWait = false;  ///< Only tasks; called with call.task when set.
-    InstanceId instance = 0;
+    InstanceId instance{0};
     std::vector<Param> params;
     Type returnType;  ///< void for tasks and void functions.
     std::vector<FrameVar> frame;
@@ -610,6 +617,12 @@ struct Design {
     /// The rows the typed numbers name.
     Subroutine& subroutine(SubroutineId s) { return subroutines[s.index()]; }
     const Subroutine& subroutine(SubroutineId s) const { return subroutines[s.index()]; }
+    Instance& instance(InstanceId i) { return instances[i.index()]; }
+    const Instance& instance(InstanceId i) const { return instances[i.index()]; }
+    TypeEntry& typeEntry(TypeId t) { return types[t.index()]; }
+    const TypeEntry& typeEntry(TypeId t) const { return types[t.index()]; }
+    Constant& constant(ConstId c) { return constants[c.index()]; }
+    const Constant& constant(ConstId c) const { return constants[c.index()]; }
 };
 
 /// The storage domain of a value type (SIR_SPEC.md 3.2).

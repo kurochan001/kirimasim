@@ -2426,7 +2426,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     if (a.left().kind == ast::ExpressionKind::Streaming) {
         lowerUnpack(a.left().as<ast::StreamingConcatenationExpression>(), a.right(),
                     a.isNonBlocking(), sl);
-        return Val{Operand::temp(0), sir::voidType()};
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
     if (a.isCompound()) {
         // a op= b is a = a op (b) with the indices of a evaluated once
@@ -2459,7 +2459,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
                 st = emit(Op::Concat, integral(sir::isFourState(st.type), false, all.width),
                           {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);
             storePlace(all, st, a.isNonBlocking(), sl);
-            return Val{Operand::temp(0), sir::voidType()};
+            return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
         }
     }
     if (structElement(*a.left().type) != nullptr) {
@@ -2470,7 +2470,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         Stores stores;
         assignAggregate(*dst, *a.left().type, a.right(), stores, sl);
         flushStores(stores, a.isNonBlocking(), sl);
-        return Val{Operand::temp(0), sir::voidType()};
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
     if (a.left().type->getCanonicalType().isUnpackedArray()) {
         // An unpacked array is assigned element by element (7.6, 10.9.1).
@@ -2479,7 +2479,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         Stores stores;
         assignArray(baseOf(*target), target->indices, a.right(), stores, sl);
         flushStores(stores, a.isNonBlocking(), sl);
-        return Val{Operand::temp(0), sir::voidType()};
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
     const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
     lowerStore(a.left(), v, a.isNonBlocking(), sl);
@@ -3121,7 +3121,7 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
         changed = method(st, {arg(1, Type{sir::TypeKind::Real, 0}).op});
     if (!changed || !place) unsupported(sl, "string method " + name);
     storePlace(*place, *changed, false, sl);
-    return Val{Operand::temp(0), sir::voidType()};
+    return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
 }
 
 void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
@@ -3291,7 +3291,7 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
         if (readsAutomatic(*a)) unsupported(sl, "$strobe or $monitor of an automatic variable");
     const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
     sir::Process p;
-    p.name = processName(design_.instances[inst].scopeName,
+    p.name = processName(design_.instance(inst).scopeName,
                          std::string(file ? "$f" : "$") + (monitor ? "monitor" : "strobe"));
     p.kind = sir::ProcessKind::Postponed;
     p.instance = inst;
@@ -3553,7 +3553,7 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             const bool scope =
                 !value || unpackedStruct(s->as<ast::ValueSymbol>().getType()) != nullptr;
             const Val row = constant(sir::u2(32), 0);
-            dumpRefs_.push_back({row.op.id, s, scope});
+            dumpRefs_.push_back({row.op.asConst(), s, scope});
             ops.push_back(Operand::str(scope ? "scope" : "var"));
             ops.push_back(row.op);
         }
