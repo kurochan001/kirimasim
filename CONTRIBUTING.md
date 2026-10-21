@@ -161,8 +161,10 @@ suite's P1 population) come from `docs/counts.json`, which
 or removing tests, run the dev tests with `--output-junit` and then
 `python3 tools/readme_counts.py update --build build/dev --junit <file>`;
 after measuring sv-tests or the population, give `--svtests` or
-`--population` too. CI fails when the counts are out of date, and so does
-the nightly run when its own measurements differ.
+`--population` too. sv-tests is counted on each OS that CI runs on, so
+`--svtests` takes `--os linux` or `--os macos`, the OS it was measured on.
+CI fails when the counts are out of date, and so does the nightly run when
+its own measurements differ.
 
 ## Changelog
 

@@ -293,11 +293,11 @@ jobs:
           done || true
 
       # The counts of the READMEs against what this run measured: sv-tests
-      # (with Icarus) and the own suite's P1 population (tools/readme_counts.py,
-      # docs/counts.json). It fails when they differ.
+      # (with Icarus) on Linux and the own suite's P1 population
+      # (tools/readme_counts.py, docs/counts.json). It fails when they differ.
       - name: README counts
         run: |
-          python3 tools/readme_counts.py check --svtests build/svtests/results.json \
+          python3 tools/readme_counts.py check --svtests build/svtests/results.json --os linux \
             --population build/p1_population.out
 
       # Every test of the suite's latest main, so that tests added after the
@@ -320,6 +320,53 @@ jobs:
             python3 tools/run_suite_test.py --kirimasim build/release/src/driver/kirimasim "suite/tests/$t.sv" || true
             echo "::endgroup::"
           done || true
+
+  # The sv-tests gate on macOS (TEST_SUITE.md, "As many as Icarus or more"):
+  # some tests depend on the C library, so each OS is measured against an
+  # Icarus built there by the same procedure, and the READMEs keep both
+  # counts.
+  svtests-macos:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/release/_deps/*-src
+            build/release/_deps/*-subbuild
+            build/release/_deps/*-tmp
+            build/release/CMakeFiles/fc-stamp
+          key: fetchcontent-macos-26-release-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Cache the Icarus build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/kirimasim
+          key: icarus-macos-26-${{ hashFiles('tools/build_icarus.sh') }}
+
+      # tools/build_icarus.sh takes Homebrew's bison and flex, newer than
+      # the system's.
+      - name: Install the tools to build Icarus
+        run: brew install autoconf gperf bison flex
+
+      - run: cmake --preset release
+      - run: cmake --build --preset release
+
+      - name: sv-tests against Icarus
+        run: |
+          iverilog=$(tools/build_icarus.sh)
+          git init -q sv-tests
+          git -C sv-tests fetch -q --depth 1 https://github.com/chipsalliance/sv-tests.git \
+            15490e95fd978ada1c1dc59b7c4b53a7edb23b78
+          git -C sv-tests checkout -q FETCH_HEAD
+          git -C sv-tests submodule update -q --init --depth 1 third_party/tests/uvm
+          python3 tools/svtests.py --sv-tests sv-tests --kirimasim build/release/src/driver/kirimasim \
+            --iverilog "$iverilog" --out build/svtests | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: README counts
+        run: python3 tools/readme_counts.py check --svtests build/svtests/results.json --os macos
 
   # Wall-clock benchmarks (PERFORMANCE.md 5.1): the build time of
   # kirimasim and tools/bench.py on bench/, compared by

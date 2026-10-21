@@ -82,7 +82,7 @@ python3 tools/local_ci.py
 
 CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を走らせて先に失敗を見つけてください。CI は、kirimasim が対応する最も古いコンパイラでもビルドとテストをします（README の「ビルド」に挙げています）。開発の機械にはそうしたコンパイラがまず無いので、`tools/local_ci.py` はこれをしません。夜間の実行は、kirimasim を C++26 としてもビルドしてテストします。
 
-README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて走らせ、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を走らせてください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
+README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて走らせ、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を走らせてください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。sv-tests は CI が走る OS ごとに数えるので、`--svtests` には、測った OS を `--os linux` か `--os macos` で添えます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
 
 ## 変更の記録
 

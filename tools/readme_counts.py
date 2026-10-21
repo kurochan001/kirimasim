@@ -3,7 +3,8 @@
 
 The counts live in docs/counts.json: this repository's tests (CTest, dev
 configuration), the tests under tests/suite/ and their generators, the
-sv-tests result against the Icarus build of the P1 criterion, and the P1
+sv-tests result against the Icarus build of the P1 criterion on each OS
+that CI runs on (TEST_SUITE.md, "As many as Icarus or more"), and the P1
 population of the own test suite (TEST_SUITE.md), with the fuzz runs and
 the mandatory list of the P1 criteria, and the numbers of the other
 simulators. Each README holds a range between <!-- counts:begin --> and
@@ -20,6 +21,7 @@ The inputs, each optional:
                      --output-junit): how many passed and were skipped
   --svtests FILE     results.json of tools/svtests.py: kirimasim's count,
                      and Icarus's when it ran
+  --os NAME          the OS that --svtests was measured on: linux or macos
   --population FILE  the output of tools/p1_population.py run
 
 The tests under tests/suite/ and the generators are counted from the
@@ -55,8 +57,12 @@ def n(v):
 def render(c, lang):
     """The text between the markers."""
     s, p, f, o, k = c["svtests"], c["population"], c["fuzz"], c["others"], c["kinds"]
+    lin, mac = s["linux"], s["macos"]
     pct = 100.0 * p["passed"] / p["total"]
-    sv_met = s["kirimasim"] >= s["icarus"]
+    sv_met = all(x["kirimasim"] >= x["icarus"] for x in (lin, mac))
+    # kirimasim's count, one number when the two OSes agree
+    ours = (str(lin["kirimasim"]) if lin["kirimasim"] == mac["kirimasim"] else
+            f"{lin['kirimasim']} (Linux), {mac['kirimasim']} (macOS)")
     pop_met = pct >= p["gate"]
     fuzz_met = f["nights"] >= FUZZ_NIGHTS
     if lang == "en":
@@ -67,9 +73,11 @@ def render(c, lang):
             "| Criterion | Now | Met |",
             "| --- | --- | --- |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned "
-            f"commit, hand-written tests, {s['total']}): at least as many as Icarus Verilog | "
-            f"kirimasim {s['kirimasim']}, Icarus Verilog {s['icarus']} ({s['icarus_build']}, the "
-            f"build the criterion uses) | {yes(sv_met)} |",
+            f"commit, hand-written tests, {s['total']}): at least as many as Icarus Verilog, on "
+            f"Linux and on macOS | Linux: kirimasim {lin['kirimasim']}, Icarus Verilog "
+            f"{lin['icarus']}; macOS: kirimasim {mac['kirimasim']}, Icarus Verilog "
+            f"{mac['icarus']} ({s['icarus_build']}, the build the criterion uses, built on "
+            f"each) | {yes(sv_met)} |",
             f"| kirimasim's own RTL test population ({n(p['total'])} tests, fixed list): "
             f"{p['gate']}% pass | {n(p['passed'])} pass ({pct:.1f}%), {p['failed']} fail; "
             f"{p['unsupported']} stop at constructs of later work | {yes(pop_met)} |",
@@ -91,7 +99,7 @@ def render(c, lang):
             f"| This repository's tests (CTest, dev configuration) | {n(c['ctest']['total'])} | "
             f"{n(c['ctest']['passed'])}, {c['ctest']['skipped']} skipped | — | — |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | "
-            f"{s['total']} | {s['kirimasim']} | {o['svtests']['icarus']} | "
+            f"{s['total']} | {ours} | {o['svtests']['icarus']} | "
             f"{o['svtests']['verilator']} |",
             f"| Own test suite, P1 population | {n(p['total'])} | {n(p['passed'])} | "
             f"{n(o['population']['icarus'])} | {n(o['population']['verilator'])} |",
@@ -109,10 +117,11 @@ def render(c, lang):
             "| 条件 | 今 | 達成 |",
             "| --- | --- | --- |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト"
-            f"（固定したコミット、手書きのテスト {s['total']} 本）で Icarus Verilog 以上 | "
-            f"kirimasim {s['kirimasim']} 本、Icarus Verilog {s['icarus']} 本"
-            f"（{s['icarus_build'].replace(', ', '、')}。"
-            f"合格条件で使う版） | {yes(sv_met)} |",
+            f"（固定したコミット、手書きのテスト {s['total']} 本）で、Linux と macOS のそれぞれで "
+            f"Icarus Verilog 以上 | Linux：kirimasim {lin['kirimasim']} 本、Icarus Verilog "
+            f"{lin['icarus']} 本。macOS：kirimasim {mac['kirimasim']} 本、Icarus Verilog "
+            f"{mac['icarus']} 本（{s['icarus_build'].replace(', ', '、')}。"
+            f"合格条件で使う版を、それぞれでビルドしたもの） | {yes(sv_met)} |",
             f"| 自前の RTL のテストの母集団（{n(p['total'])} 本、一覧を固定）の {p['gate']}% が通る | "
             f"{n(p['passed'])} 本が通る（{pct:.1f}%）。失敗は {p['failed']} 本で、"
             f"{p['unsupported']} 本は後で作る構文で止まる | {yes(pop_met)} |",
@@ -132,8 +141,8 @@ def render(c, lang):
             f"| このリポジトリのテスト（CTest、dev の構成） | {n(c['ctest']['total'])} | "
             f"{n(c['ctest']['passed'])}、{c['ctest']['skipped']} 本は飛ばす | — | — |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | "
-            f"{s['total']} | {s['kirimasim']} | {o['svtests']['icarus']} | "
-            f"{o['svtests']['verilator']} |",
+            f"{s['total']} | {ours.replace(' (Linux), ', '（Linux）、').replace(' (macOS)', '（macOS）')} | "
+            f"{o['svtests']['icarus']} | {o['svtests']['verilator']} |",
             f"| 自前のテストスイートの P1 の母集団 | {n(p['total'])} | {n(p['passed'])} | "
             f"{n(o['population']['icarus'])} | {n(o['population']['verilator'])} |",
             "",
@@ -208,7 +217,8 @@ def measure(args, c):
                 ("JUnit", ("ctest", "skipped"), skipped)]
     if args.svtests:
         for k, v in svtests_counts(args.svtests).items():
-            got.append(("sv-tests", ("svtests", k), v))
+            keys = ("svtests", k) if k == "total" else ("svtests", args.os, k)
+            got.append((f"sv-tests on {args.os}", keys, v))
     if args.population:
         for k, v in population_counts(args.population).items():
             got.append(("population", ("population", k), v))
@@ -221,9 +231,12 @@ def main():
     ap.add_argument("--build", type=Path)
     ap.add_argument("--junit", type=Path)
     ap.add_argument("--svtests", type=Path)
+    ap.add_argument("--os", choices=["linux", "macos"])
     ap.add_argument("--population", type=Path)
     ap.add_argument("--date", default=datetime.datetime.now(datetime.timezone.utc).date().isoformat())
     args = ap.parse_args()
+    if args.svtests and not args.os:
+        ap.error("--svtests needs --os, the OS it was measured on")
     c = json.loads(DATA.read_text(encoding="utf-8"))
     problems = []
     for where, keys, value in measure(args, c):

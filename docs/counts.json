@@ -17,9 +17,15 @@
   "generators": 105,
   "svtests": {
     "total": 344,
-    "kirimasim": 213,
-    "icarus": 211,
-    "icarus_build": "14.0 devel, 04cc493"
+    "icarus_build": "14.0 devel, 04cc493",
+    "linux": {
+      "kirimasim": 213,
+      "icarus": 211
+    },
+    "macos": {
+      "kirimasim": 213,
+      "icarus": 210
+    }
   },
   "population": {
     "total": 1466,
