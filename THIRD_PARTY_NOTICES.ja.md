@@ -8,7 +8,7 @@ kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions 
 
 | 部品 | 版 | ライセンス | 取得元 |
 | --- | --- | --- | --- |
-| slang | v12.0 の後の main（`b7f11c1f034029b9534444ee9d63090037f23e87`） | MIT | https://github.com/MikePopoloski/slang |
+| slang | v12.0 の後の main（`b6c67a8b06c6b98fbc1eaeaf0d7bf734e1b86dfa`） | MIT | https://github.com/MikePopoloski/slang |
 | {fmt}（slang が取得する） | 12.2.0 | MIT | https://github.com/fmtlib/fmt |
 | mimalloc（slang が取得する） | v3.5.3 | MIT | https://github.com/microsoft/mimalloc |
 | boost::regex（slang が取得する。slang の複製） | boost-1.91.0 | BSL-1.0 | https://github.com/MikePopoloski/regex |

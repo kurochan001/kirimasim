@@ -12,10 +12,10 @@
 
 include(FetchContent)
 
-# slang's main branch at b7f11c1 (2026-10-17), 38 commits after v12.0
-# (released 2026-09-29), for the fixes of slang issues #2023 and #2029. The
-# pin is a commit of main, not only a release tag, and moves when a needed
-# fix lands; the nightly job slang-main builds against main's head.
+# slang's main branch at b6c67a8 (2026-10-21), 54 commits after v12.0
+# (released 2026-09-29), which include the fixes of slang issues #2023 and
+# #2029. The pin is a commit of main, not only a release tag, and moves when
+# a needed fix lands; the nightly job slang-main builds against main's head.
 # GIT_SHALLOW is not used because a shallow clone cannot check out an
 # arbitrary SHA.
 set(SLANG_INCLUDE_TESTS OFF CACHE BOOL "" FORCE)
@@ -24,7 +24,7 @@ set(SLANG_INCLUDE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     slang
     GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
-    GIT_TAG b7f11c1f034029b9534444ee9d63090037f23e87 # main, 2026-10-17
+    GIT_TAG b6c67a8b06c6b98fbc1eaeaf0d7bf734e1b86dfa # main, 2026-10-21
 )
 
 # GoogleTest v1.18.0 (released 2026-08-10). Used only by the unit tests.

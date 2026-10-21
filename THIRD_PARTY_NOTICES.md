@@ -13,7 +13,7 @@ the license file of the fetched sources.
 
 | Component | Version | License | Source |
 | --- | --- | --- | --- |
-| slang | main after v12.0 (`b7f11c1f034029b9534444ee9d63090037f23e87`) | MIT | https://github.com/MikePopoloski/slang |
+| slang | main after v12.0 (`b6c67a8b06c6b98fbc1eaeaf0d7bf734e1b86dfa`) | MIT | https://github.com/MikePopoloski/slang |
 | {fmt} (fetched by slang) | 12.2.0 | MIT | https://github.com/fmtlib/fmt |
 | mimalloc (fetched by slang) | v3.5.3 | MIT | https://github.com/microsoft/mimalloc |
 | boost::regex (fetched by slang, slang's mirror) | boost-1.91.0 | BSL-1.0 | https://github.com/MikePopoloski/regex |
