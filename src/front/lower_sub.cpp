@@ -189,7 +189,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 design_.subroutine(id).params.push_back(std::move(prm));
             }
             shape.emplace_back(at, static_cast<std::uint32_t>(leaves.size()));
-            b_.retAggregate = {held.index(), true};
+            b_.retAggregate = held;
             b_.retAggregateType = &ret;
         } else if (sym.returnValVar != nullptr && !ret.isVoid()) {
             // The function's own name as a variable (13.4.1).
@@ -223,8 +223,8 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
         // The value goes to $return like an aggregate assignment
         // (SIR_SPEC.md 8, VALUE_SEMANTICS.md 3.13).
         Storage held;
-        held.id = b_.retAggregate->first;
-        held.frame = b_.retAggregate->second;
+        held.frame = true;
+        held.var = *b_.retAggregate;
         if (e != nullptr) {
             Stores stores;
             assignAggregate(held, *b_.retAggregateType, *e, stores, sl);
@@ -233,7 +233,7 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
         if (b_.retSlots) {
             // A static function's $return slots.
             Storage out;
-            out.id = b_.retSlots->index();
+            out.slot = *b_.retSlots;
             Stores stores;
             copyAggregate(out, held, *b_.retAggregateType, stores, sl);
             flushStores(stores, false, sl);
@@ -286,8 +286,7 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
                                     "64 bits");
         }
     }
-    ops.push_back(st->frame ? Operand::frame(sir::FrameVarId{st->id})
-                            : Operand::slot(sir::SlotId{st->id}));
+    ops.push_back(st->frame ? Operand::frame(st->var) : Operand::slot(st->slot));
     ops.insert(ops.end(), st->elem.begin(), st->elem.end());
     for (const ast::Expression* ix : indices) {
         const Val iv = lowerExpr(*ix);
@@ -295,8 +294,8 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
         ops.push_back(iv.op);
     }
     if (!st->frame) {
-        noteRead({sir::SlotId{st->id}, 0, 0, 0, 0});
-        if (!isConst) noteWrite({sir::SlotId{st->id}, 0, 0, 0, 0});
+        noteRead({st->slot, 0, 0, 0, 0});
+        if (!isConst) noteWrite({st->slot, 0, 0, 0, 0});
     }
     return emit(Op::RefMake, sir::refType(), std::move(ops), sl);
 }
@@ -341,10 +340,9 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     // would evaluate it twice, a function's value calling the function
     // again (4.9.7: an input is evaluated once, at the call).
     if (a)
-        copyArray(ArrayBase{Place::Home::Frame, fv.index()}, {}, baseOf(*a), a->indices, stores,
-                  sl);
+        copyArray(ArrayBase{Place::Home::Frame, fv}, {}, baseOf(*a), a->indices, stores, sl);
     else
-        assignArray(ArrayBase{Place::Home::Frame, fv.index()}, {}, actual, stores, sl);
+        assignArray(ArrayBase{Place::Home::Frame, fv}, {}, actual, stores, sl);
     flushStores(stores, false, sl);
     return Operand::frame(fv);
 }
@@ -363,7 +361,7 @@ Val Lowerer::lowerCall(const ast::CallExpression& call) {
 Lowerer::Storage Lowerer::tempStorage(const ast::Type& t, slang::SourceLocation sl) {
     Storage st;
     st.frame = true;
-    st.id = static_cast<std::uint32_t>(frameVars().size());
+    st.var = sir::FrameVarId{static_cast<std::uint32_t>(frameVars().size())};  // the next one
     if (unpackedStruct(t) != nullptr) {
         std::vector<Leaf> leaves;
         structLeaves(t, "", leaves);
@@ -501,7 +499,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                     ops.push_back(
                         coerce(loadPlace(storagePlace(leaf), sl), params[first + k].type, sl).op);
                 else
-                    ops.push_back(Operand::frame(sir::FrameVarId{leaf.id}));
+                    ops.push_back(Operand::frame(leaf.var));
             }
             if (prm.dir != sir::Direction::Input) {
                 const std::optional<Storage> dst = storageOf(*outputPlace(args[i]), sl);
@@ -562,7 +560,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         const auto [first, count] = shape[args.size()];
         (void)first;
         for (std::uint32_t k = 0; k < count; ++k)
-            ops.push_back(Operand::frame(sir::FrameVarId{retTo->id + k}));
+            ops.push_back(Operand::frame(leafAt(*retTo, k).var));
     }
     Val result{Operand::temp(sir::TempId{0}), sir::voidType()};
     if (waits) {

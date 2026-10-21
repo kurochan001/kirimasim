@@ -1402,16 +1402,16 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
     Place p;
     p.kind = Place::Kind::Element;
     if (st->frame)
-        p.frame = sir::FrameVarId{st->id};
+        p.frame = st->var;
     else
-        p.slot = sir::SlotId{st->id};
+        p.slot = st->slot;
     p.indices = st->elem;
     if (st->frame) {
         // An automatic array, or what an array ref argument refers to
         // (SIR_SPEC.md 7.4, 8).
-        const bool ref = frameVars()[st->id].type.kind == sir::TypeKind::Ref;
+        const bool ref = frameVar(st->var).type.kind == sir::TypeKind::Ref;
         p.home = ref ? Place::Home::Ref : Place::Home::Frame;
-        if (frameVars()[st->id].dims.size() != st->elem.size() + indices.size())
+        if (frameVar(st->var).dims.size() != st->elem.size() + indices.size())
             unsupported(sl, "a part of an unpacked array");
         for (const ast::Expression* ix : indices) {
             const Val iv = lowerExpr(*ix);
@@ -1421,7 +1421,7 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
         p.type = homeType(p);
         return p;
     }
-    if (design().slots[st->id].dims.size() != st->elem.size() + indices.size())
+    if (design().slot(st->slot).dims.size() != st->elem.size() + indices.size())
         unsupported(sl, "a part of an unpacked array");
     bool fixed = !st->dynamic;
     std::vector<std::int64_t> idx = st->constIdx;
@@ -1437,7 +1437,7 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
     }
     // Looked up after the indices: the first call of a static function
     // among them adds its variables to the slot table.
-    const sir::Slot& slot = design().slots[st->id];
+    const sir::Slot& slot = design().slot(st->slot);
     if (fixed) p.elem = constElementOf(slot, idx);
     p.type = slot.type;
     return p;
@@ -2507,29 +2507,27 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
         return std::nullopt;
     const std::optional<Storage> st = storageOf(e, e.sourceRange.start());
     if (!st || st->dynamic || !isArrayLeaf(*st)) return std::nullopt;
-    if (!st->frame) return ArrayTarget{sir::SlotId{st->id}, st->constIdx};
+    if (!st->frame) return ArrayTarget{st->slot, st->constIdx};
     // An automatic array, or what an array ref argument refers to.
-    const bool ref = frameVars()[st->id].type.kind == sir::TypeKind::Ref;
-    return ArrayTarget{
-        {}, st->constIdx, ref ? Place::Home::Ref : Place::Home::Frame, sir::FrameVarId{st->id}};
+    const bool ref = frameVar(st->var).type.kind == sir::TypeKind::Ref;
+    return ArrayTarget{{}, st->constIdx, ref ? Place::Home::Ref : Place::Home::Frame, st->var};
 }
 
 const std::vector<sir::ArrayDim>& Lowerer::dimsOf(ArrayBase b) {
-    return b.home == Place::Home::Slot ? design().slots[b.id].dims : frameVars()[b.id].dims;
+    return b.home == Place::Home::Slot ? design().slot(b.slot).dims : frameVar(b.frame).dims;
 }
 
 Type Lowerer::elemTypeOf(ArrayBase b) {
     switch (b.home) {
-        case Place::Home::Slot: return design().slots[b.id].type;
-        case Place::Home::Frame: return frameVars()[b.id].type;
-        case Place::Home::Ref: return frameVars()[b.id].target;
+        case Place::Home::Slot: return design().slot(b.slot).type;
+        case Place::Home::Frame: return frameVar(b.frame).type;
+        case Place::Home::Ref: return frameVar(b.frame).target;
     }
     return sir::voidType();
 }
 
 Type Lowerer::homeType(const Place& p) {
-    return elemTypeOf(p.home == Place::Home::Slot ? ArrayBase{p.slot}
-                                                  : ArrayBase{p.home, p.frame.index()});
+    return elemTypeOf(p.home == Place::Home::Slot ? ArrayBase{p.slot} : ArrayBase{p.home, p.frame});
 }
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
@@ -2543,13 +2541,11 @@ Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t
     Place p;
     p.kind = Place::Kind::Element;
     p.home = s.home;
-    if (s.home == Place::Home::Slot)
-        p.slot = sir::SlotId{s.id};
-    else
-        p.frame = sir::FrameVarId{s.id};
+    p.slot = s.slot;
+    p.frame = s.frame;
     for (const std::int64_t i : indices)
         p.indices.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
-    if (s.home == Place::Home::Slot) p.elem = elementNumber(design().slots[s.id], indices);
+    if (s.home == Place::Home::Slot) p.elem = elementNumber(design().slot(s.slot), indices);
     p.type = elemTypeOf(s);
     return p;
 }

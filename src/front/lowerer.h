@@ -351,13 +351,14 @@ public:
     /// ref argument refers to.
     struct ArrayBase {
         ArrayBase(sir::SlotId s)
-            : id(s.index()) {}  // NOLINT(google-explicit-constructor): the usual base
-        ArrayBase(Place::Home h, std::uint32_t i) : home(h), id(i) {}
+            : slot(s) {}  // NOLINT(google-explicit-constructor): the usual base
+        ArrayBase(Place::Home h, sir::FrameVarId f) : home(h), frame(f) {}
         Place::Home home = Place::Home::Slot;
-        std::uint32_t id = 0;
+        sir::SlotId slot{0};       ///< When home is Slot.
+        sir::FrameVarId frame{0};  ///< When home is Frame or Ref.
     };
     static ArrayBase baseOf(const ArrayTarget& a) {
-        return a.home == Place::Home::Slot ? ArrayBase{a.slot} : ArrayBase{a.home, a.frame.index()};
+        return a.home == Place::Home::Slot ? ArrayBase{a.slot} : ArrayBase{a.home, a.frame};
     }
     const std::vector<sir::ArrayDim>& dimsOf(ArrayBase b);
     sir::Type elemTypeOf(ArrayBase b);
@@ -500,7 +501,8 @@ public:
     /// following in order (SIR_SPEC.md 4.2).
     struct Storage {
         bool frame = false;
-        std::uint32_t id = 0;
+        sir::SlotId slot{0};     ///< Unless frame: the slot, or a structure's first leaf's.
+        sir::FrameVarId var{0};  ///< When frame: the frame variable, or the first leaf's.
         /// In an array of structures: the indices of the element, outermost
         /// first, evaluated once (SIR_SPEC.md 4.2), and their values when
         /// all are constant.
@@ -722,7 +724,7 @@ public:
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         /// A function's return variable of an unpacked structure or array
         /// type: its storage and type ($return, SIR_SPEC.md 8).
-        std::optional<std::pair<std::uint32_t, bool>> retAggregate;  ///< (id, frame)
+        std::optional<sir::FrameVarId> retAggregate;  ///< Its first frame variable.
         const ast::Type* retAggregateType = nullptr;
         std::optional<sir::SlotId> retSlots;  ///< A static function's $return, the first slot.
         std::optional<sir::SlotId> retSlot;   ///< The same, static.

@@ -158,7 +158,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 Stores stores;
                 Storage dst;
                 dst.frame = true;
-                dst.id = first.index();
+                dst.var = first;
                 if (init != nullptr)
                     assignAggregate(dst, v.getType(), *init, stores, sl);
                 else
@@ -181,7 +181,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             if (!frameVar(f).dims.empty()) {
                 // An array: its initializer element by element, or else
                 // every element's default.
-                const ArrayBase a{Place::Home::Frame, f.index()};
+                const ArrayBase a{Place::Home::Frame, f};
                 Stores stores;
                 if (init != nullptr) {
                     assignArray(a, {}, *init, stores, sl);

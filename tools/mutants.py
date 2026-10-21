@@ -538,7 +538,7 @@ MUTANTS = [
      "    const std::string scope = design_.instance(instance_).scopeName;",
      "    const std::string& scope = design_.instance(instance_).scopeName;"),
     ("front: an element's slot is looked up before its indices", "src/front/lower_expr.cpp",
-     '    if (design().slots[st->id].dims.size() != st->elem.size() + indices.size())\n'
+     '    if (design().slot(st->slot).dims.size() != st->elem.size() + indices.size())\n'
      '        unsupported(sl, "a part of an unpacked array");\n'
      '    bool fixed = !st->dynamic;\n'
      '    std::vector<std::int64_t> idx = st->constIdx;\n'
@@ -554,10 +554,10 @@ MUTANTS = [
      '    }\n'
      '    // Looked up after the indices: the first call of a static function\n'
      '    // among them adds its variables to the slot table.\n'
-     '    const sir::Slot& slot = design().slots[st->id];\n'
+     '    const sir::Slot& slot = design().slot(st->slot);\n'
      '    if (fixed) p.elem = constElementOf(slot, idx);\n'
      '    p.type = slot.type;\n',
-     '    const sir::Slot& slot = design().slots[st->id];\n'
+     '    const sir::Slot& slot = design().slot(st->slot);\n'
      '    if (slot.dims.size() != st->elem.size() + indices.size())\n'
      '        unsupported(sl, "a part of an unpacked array");\n'
      '    bool fixed = !st->dynamic;\n'

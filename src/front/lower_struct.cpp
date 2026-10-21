@@ -52,7 +52,12 @@ bool Lowerer::isUnpackedMember(const ast::Expression& e) {
 }
 
 Lowerer::Storage Lowerer::leafAt(Storage s, std::uint32_t off) {
-    s.id += off;
+    // The leaves of a structure are consecutive slots, or consecutive frame
+    // variables (SIR_SPEC.md 4.2): the one place a leaf's number is counted.
+    if (s.frame)
+        s.var = sir::FrameVarId{s.var.index() + off};
+    else
+        s.slot = sir::SlotId{s.slot.index() + off};
     return s;
 }
 
@@ -63,14 +68,14 @@ Lowerer::Storage Lowerer::withIndex(Storage s, std::int64_t index) {
 }
 
 bool Lowerer::isArrayLeaf(const Storage& s) {
-    if (s.frame) return !frameVars()[s.id].dims.empty();
-    return design_.slots[s.id].dims.size() > s.elem.size();
+    if (s.frame) return !frameVar(s.var).dims.empty();
+    return design_.slot(s.slot).dims.size() > s.elem.size();
 }
 
 Lowerer::ArrayBase Lowerer::storageBase(const Storage& s) {
-    if (!s.frame) return sir::SlotId{s.id};
-    const bool ref = frameVars()[s.id].type.kind == sir::TypeKind::Ref;
-    return {ref ? Place::Home::Ref : Place::Home::Frame, s.id};
+    if (!s.frame) return s.slot;
+    const bool ref = frameVar(s.var).type.kind == sir::TypeKind::Ref;
+    return {ref ? Place::Home::Ref : Place::Home::Frame, s.var};
 }
 
 std::vector<std::int64_t> Lowerer::fixedIndices(const Storage& s, slang::SourceLocation sl) {
@@ -134,7 +139,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
     if (sym != nullptr && sym->kind == ast::SymbolKind::Parameter &&
         sym->as<ast::ParameterSymbol>().getType().isUnpackedArray()) {
         Storage st;
-        st.id = paramSlot(sym->as<ast::ParameterSymbol>(), sl).index();
+        st.slot = paramSlot(sym->as<ast::ParameterSymbol>(), sl);
         return st;
     }
     if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
@@ -144,20 +149,20 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
     if (structElement(v.getType()) != nullptr) {
         if (auto it = b_.structFrames.find(sym); it != b_.structFrames.end()) {
             st.frame = true;
-            st.id = it->second.index();
+            st.var = it->second;
             return st;
         }
         if (!inSlot(*sym)) unsupported(sl, "automatic variable '" + std::string(v.name) + "' here");
-        st.id = structSlots(v, sl).index();
+        st.slot = structSlots(v, sl);
         return st;
     }
     if (const std::optional<sir::FrameVarId> f = findFrameVar(*sym)) {
         st.frame = true;
-        st.id = f->index();
+        st.var = *f;
         return st;
     }
     if (!inSlot(*sym)) return std::nullopt;
-    st.id = slotOf(v, sl).index();
+    st.slot = slotOf(v, sl);
     return st;
 }
 
@@ -167,15 +172,15 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
     Place p;
     if (st.frame) {
         // An automatic variable, or what a ref argument refers to (SIR_SPEC.md 8).
-        const sir::FrameVar& fv = frameVars()[st.id];
+        const sir::FrameVar& fv = frameVar(st.var);
         const bool ref = fv.type.kind == sir::TypeKind::Ref;
         p.kind = ref ? Place::Kind::Ref : Place::Kind::Frame;
-        p.frame = sir::FrameVarId{st.id};
+        p.frame = st.var;
         p.type = ref ? fv.target : fv.type;
         return p;
     }
-    const sir::Slot& slot = design().slots[st.id];
-    p.slot = sir::SlotId{st.id};
+    const sir::Slot& slot = design().slot(st.slot);
+    p.slot = st.slot;
     p.type = slot.type;
     if (st.elem.empty()) {
         p.kind = Place::Kind::Slot;

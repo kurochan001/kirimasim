@@ -2119,7 +2119,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
             // The initializer, or else the members' defaults (7.2.2).
             Stores stores;
             Storage dst;
-            dst.id = slot.index();
+            dst.slot = slot;
             if (const ast::Expression* init = v.getInitializer())
                 assignAggregate(dst, v.getType(), *init, stores, sl);
             else
