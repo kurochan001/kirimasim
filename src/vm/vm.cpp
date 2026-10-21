@@ -497,6 +497,10 @@ class Interpreter;
 /// bodyOfProcess make them.
 struct BodyTag;
 using BodyId = sir::Id<BodyTag>;
+/// A live activation's number, which refs to its frame variables carry
+/// (Interpreter::enroll).
+struct VarsTag;
+using VarsId = sir::Id<VarsTag>;
 
 struct Frame {
     Interpreter* vm = nullptr;
@@ -504,7 +508,7 @@ struct Frame {
     kernel::ProcessId kernelId{0};  ///< Id in the kernel.
     sir::BlockId block{0};          ///< Block to resume at.
     std::vector<W4> vars;           ///< Frame variables (SIR_SPEC.md 7.4).
-    std::uint32_t varsId = 0;       ///< Their number for refs (Interpreter::enroll).
+    VarsId varsId{0};               ///< Their number for refs (Interpreter::enroll).
 
     // Process control (SCHEDULER_SPEC.md 10).
     enum class Join : std::uint8_t { None, All, Any, WaitFork };
@@ -552,7 +556,7 @@ struct Frame {
     struct TaskCall {
         BodyId body{0};
         std::vector<W4> vars;
-        std::uint32_t varsId = 0;
+        VarsId varsId{0};
         sir::BlockId block{0};
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
         std::uint64_t children = 0;        ///< The frame's births when it was called.
@@ -943,7 +947,7 @@ private:
         BodyId body{0};
         std::vector<W4>* vars = nullptr;
         std::size_t base = 0;
-        std::uint32_t varsId = 0;
+        VarsId varsId{0};
     };
     /// Where the frame variables of a body lie (RUNTIME_ABI.md 4.3): a word
     /// pair for each, by number, then the elements of each array in order.
@@ -971,7 +975,7 @@ private:
     /// (SIR_SPEC.md 8): a ref to a frame variable is its activation's
     /// number and the word's place in it.
     std::vector<W4*> varSets_;
-    std::vector<std::uint32_t> freeVarSets_;
+    std::vector<VarsId> freeVarSets_;
     Act act_;
     std::uint32_t callDepth_ = 0;  ///< Calls running on the C++ stack.
 
@@ -1767,18 +1771,18 @@ private:
     }
 
     /// Gives an activation's frame variables a number for refs.
-    std::uint32_t enroll(std::vector<W4>& vars) {
+    VarsId enroll(std::vector<W4>& vars) {
         if (freeVarSets_.empty()) {
             varSets_.push_back(vars.data());
-            return static_cast<std::uint32_t>(varSets_.size() - 1);
+            return VarsId{static_cast<std::uint32_t>(varSets_.size() - 1)};
         }
-        const std::uint32_t id = freeVarSets_.back();
+        const VarsId id = freeVarSets_.back();
         freeVarSets_.pop_back();
-        varSets_[id] = vars.data();
+        varSets_[id.index()] = vars.data();
         return id;
     }
-    void retire(std::uint32_t id) {
-        varSets_[id] = nullptr;
+    void retire(VarsId id) {
+        varSets_[id.index()] = nullptr;
         freeVarSets_.push_back(id);
     }
 
@@ -1925,12 +1929,22 @@ private:
     /// number in the high half of a, the word's place in the low half), or
     /// an element of a slot (the slot in a, the element in b above the
     /// tag).
-    static W4 frameRef(std::uint32_t vars, std::size_t at) {
-        return {(std::uint64_t{vars} << 32) | static_cast<std::uint64_t>(at), 1};
+    /// A ref to word `at` of activation `vars`; nothing when the word's
+    /// place does not fit the low half, which it would overrun into the
+    /// activation's number.
+    static std::optional<W4> frameRef(VarsId vars, std::uint64_t at) {
+        if (at > 0xffffffffU) return std::nullopt;
+        return W4{(std::uint64_t{vars.index()} << 32) | at, 1};
+    }
+    /// The frame ref `words` words further on, on the same terms.
+    static std::optional<W4> refStep(W4 r, std::uint64_t words) {
+        return frameRef(VarsId{static_cast<std::uint32_t>(r.a >> 32)}, (r.a & 0xffffffffU) + words);
     }
     static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s.index(), std::uint64_t{e} << 1}; }
     static bool isFrameRef(W4 r) { return (r.b & 1U) != 0; }
-    W4& refWord(W4 r, std::uint64_t off) { return varSets_[r.a >> 32][(r.a & 0xffffffffU) + off]; }
+    W4& refWord(W4 r, std::uint64_t off) {
+        return varSets_[r.a >> 32][(r.a & 0xffffffffU) + off];  // the halves frameRef packs
+    }
     static sir::SlotId refSlot(W4 r) { return sir::SlotId{static_cast<std::uint32_t>(r.a)}; }
     static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
 
@@ -2266,7 +2280,7 @@ private:
     bool runWaiter(Frame& f, sir::SubroutineId g, std::uint64_t& steps, W4& ret) {
         const Act caller = act_;
         std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
-        const std::uint32_t varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
+        const VarsId varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
         enter({bodyOf(g), &vars, caller.base + bodyTemps(caller.body), varsId});
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         act_ = caller;
@@ -3584,10 +3598,17 @@ private:
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
-                        if (isFrameRef(r))
-                            r.a += std::uint64_t{*el} * chunksOf(fv.target);
-                        else
+                        if (isFrameRef(r)) {
+                            const std::optional<W4> moved =
+                                refStep(r, std::uint64_t{*el} * chunksOf(fv.target));
+                            if (!moved) {
+                                fail(p, "ref past the words of its frame");
+                                return false;
+                            }
+                            r = *moved;
+                        } else {
                             r.b += std::uint64_t{*el} << 1;
+                        }
                     }
                     set(r);
                     return true;
@@ -3606,7 +3627,12 @@ private:
                         at += std::size_t{*el} * chunksOf(fv.type);
                     }
                 }
-                set(frameRef(act_.varsId, at));
+                const std::optional<W4> ref = frameRef(act_.varsId, at);
+                if (!ref) {
+                    fail(p, "ref past the words of its frame");
+                    return false;
+                }
+                set(*ref);
                 return true;
             }
             case Op::LoadRef:
