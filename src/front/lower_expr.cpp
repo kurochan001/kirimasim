@@ -793,13 +793,15 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
     // Assigning, comparing and printing events come with their handles (P3).
     if (e.type->isEvent()) unsupported(sl, "event used as a value");
-    const bool pure = e.kind != ast::ExpressionKind::Assignment &&
-                      e.kind != ast::ExpressionKind::Call && !sideEffects(e) &&
-                      !untrustedConstant(e);
-    if (pure && e.getConstant() != nullptr && (e.type->isIntegral() || e.type->isFloating()) &&
-        (e.getConstant()->isInteger() || e.getConstant()->isReal() ||
-         e.getConstant()->isShortReal()))
-        return constantFrom(*e.getConstant(), typeOf(*e.type, sl), sl);
+    // slang's constant, unless something in the expression is not pure.
+    // The walks over the whole expression come last, only for a constant:
+    // asked at every step of a long chain they would cost its square.
+    const slang::ConstantValue* cv = e.getConstant();
+    if (cv != nullptr && (e.type->isIntegral() || e.type->isFloating()) &&
+        (cv->isInteger() || cv->isReal() || cv->isShortReal()) &&
+        e.kind != ast::ExpressionKind::Assignment && e.kind != ast::ExpressionKind::Call &&
+        !sideEffects(e) && !untrustedConstant(e))
+        return constantFrom(*cv, typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
         case ast::ExpressionKind::IntegerLiteral:
