@@ -17,7 +17,9 @@
 //
 // Each input runs on a thread with the stack the driver gives (RUNTIME_ABI.md
 // 5), so that what the driver handles is not reported. The designs run in
-// a directory of their own, where what they write with $fopen goes.
+// a directory of their own, where what they write with $fopen goes; the
+// target goes there only while an input runs, as libFuzzer reads and
+// writes its corpus and artifacts by the paths it was given.
 
 #include <cstddef>
 #include <cstdint>
@@ -29,7 +31,7 @@
 #include <vector>
 
 #include <pthread.h>
-#include <unistd.h>
+#include <unistd.h>  // mkdtemp
 
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
@@ -92,7 +94,7 @@ extern "C" int LLVMFuzzerInitialize(int* /*argc*/, char*** /*argv*/) {
     // Under the system's directory for temporary files: only this test
     // program reads the environment (CLAUDE.md is about src/).
     std::string dir = (std::filesystem::temp_directory_path() / "kirimasim-fuzz-XXXXXX").string();
-    if (mkdtemp(dir.data()) == nullptr || chdir(dir.c_str()) != 0) {
+    if (mkdtemp(dir.data()) == nullptr) {
         std::perror("kirimasim_fuzz_compile: no directory to work in");
         std::exit(1);
     }
@@ -106,6 +108,8 @@ extern "C" int LLVMFuzzerInitialize(int* /*argc*/, char*** /*argv*/) {
 
 extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size) {
     Input in{data, size};
+    const std::filesystem::path back = std::filesystem::current_path();
+    std::filesystem::current_path(workDir);
     pthread_attr_t attr;
     pthread_t thread;
     if (pthread_attr_init(&attr) != 0) std::abort();
@@ -118,5 +122,6 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
         std::abort();
     pthread_attr_destroy(&attr);
     pthread_join(thread, nullptr);
+    std::filesystem::current_path(back);
     return 0;
 }
