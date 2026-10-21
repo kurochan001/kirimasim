@@ -110,6 +110,11 @@ CASES = [
     ([DESIGN], 0, "hello\n", "kirimasim: info: finish at 0 ns"),
     (["--max-steps=2", DESIGN], 5, "hello\n", "kirimasim: info: zero_time_limit"),
     (["--max-steps=x", DESIGN], 2, "", "--max-steps=x needs a whole number"),
+    # A waveform is a .vcd file; FST waits for libfstapi (WAVEFORM.md 1, 5).
+    (["--wave=w.fst", DESIGN], 2, "", "--wave=w.fst: FST is not supported yet; use a .vcd file"),
+    (["--wave=w", DESIGN], 2, "", "--wave=w needs a file ending in .vcd"),
+    (["--wave=.vcd", DESIGN], 2, "", "--wave=.vcd needs a file ending in .vcd"),
+    (["--wave-scope=top,,u", DESIGN], 2, "", "--wave-scope=top,,u has an empty pattern"),
     (["--max-zero-delay=", DESIGN], 2, "", "needs a whole number"),
     (["--max-zero-delay=100", DESIGN], 0, "hello\n", ""),
     (["--max-slot-events=", DESIGN], 2, "", "needs a whole number"),
