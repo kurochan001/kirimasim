@@ -158,7 +158,7 @@ void Scheduler::begin() {
 
 ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     begin();
-    ProcessId id = 0;
+    ProcessId id{0};
     Process proc;
     if (freeProcesses_.empty()) {
         id = static_cast<ProcessId>(processes_.size());
@@ -168,20 +168,20 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
         // stale wake-ups never match (SCHEDULER_SPEC.md 10.8).
         id = freeProcesses_.back();
         freeProcesses_.pop_back();
-        proc.gen = processes_[id].gen + 1;
+        proc.gen = processes_[id.index()].gen + 1;
     }
     proc.fn = fn;
     proc.frame = frame;
     proc.group = group;
     proc.serial = nextSerial_++;
-    processes_[id] = std::move(proc);
+    processes_[id.index()] = std::move(proc);
     counters_.increment(cCreated_);
     if (++kept_ > counters_.value(cKeptPeak_)) counters_.set(cKeptPeak_, kept_);
     return id;
 }
 
 void Scheduler::releaseProcess(ProcessId p) {
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     proc.fn = nullptr;
     proc.frame = nullptr;
     proc.pending = {};
@@ -190,7 +190,7 @@ void Scheduler::releaseProcess(ProcessId p) {
 }
 
 void Scheduler::kill(ProcessId p) {
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     if (proc.done) return;
     // A new wait number makes every pending wake-up of the process stale:
     // its delay events, subscriptions and named-event waits are dropped
@@ -203,7 +203,7 @@ void Scheduler::kill(ProcessId p) {
 
 void Scheduler::ended(ProcessId p) {
     freeMonitor(p);
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     if (!proc.done) counters_.increment(cFinished_);
     proc.done = true;
     ++proc.gen;
@@ -245,13 +245,14 @@ std::size_t Scheduler::waitListEntries() const {
 
 void Scheduler::strobe(ProcessId p) {
     begin();
-    schedule(Region::Postponed, {Kind::Postponed, Region::Postponed, p, 0}, 0);
+    schedule(Region::Postponed, {Kind::Postponed, Region::Postponed, p.index(), 0}, 0);
 }
 
 void Scheduler::strobe(ProcessId p, FileTargets to) {
     begin();
     strobeTargets_.push_back(std::move(to));
-    schedule(Region::Postponed, {Kind::Postponed, Region::Postponed, p, strobeTargets_.size()}, 0);
+    schedule(Region::Postponed,
+             {Kind::Postponed, Region::Postponed, p.index(), strobeTargets_.size()}, 0);
 }
 
 void Scheduler::countMonitorParts(const DisplayMonitor& m, bool add) {
@@ -284,7 +285,8 @@ void Scheduler::setMonitoring(bool on) {
 void Scheduler::runPostponed(ProcessId p, const FileTargets* to) {
     counters_.increment(cWakeups_);
     printingTo_ = to;
-    const auto st = static_cast<Status>(processes_[p].fn(toC(ctx_), processes_[p].frame));
+    const auto st =
+        static_cast<Status>(processes_[p.index()].fn(toC(ctx_), processes_[p.index()].frame));
     printingTo_ = nullptr;
     if (st == Status::Error) {
         if (error_.empty()) error_ = "a process failed";
@@ -295,7 +297,7 @@ void Scheduler::runPostponed(ProcessId p, const FileTargets* to) {
 // --- Scheduling --------------------------------------------------------------
 
 void Scheduler::freeMonitor(ProcessId p) {
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     for (const std::uint32_t id : proc.monitors) {
         Monitor& m = monitors_[id];
         m.serial = ++monitorSerial_;  // references from slots and events go stale
@@ -307,11 +309,11 @@ void Scheduler::freeMonitor(ProcessId p) {
 
 void Scheduler::wake(ProcessId p, bool flushPoint) {
     freeMonitor(p);
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     proc.flushOnResume = flushPoint;
     ++proc.gen;  // ends every other item of the wait
     const Region r = proc.group == Group::Active ? Region::Active : Region::Reactive;
-    schedule(r, {Kind::Resume, r, p, proc.gen}, 0);
+    schedule(r, {Kind::Resume, r, p.index(), proc.gen}, 0);
 }
 
 void Scheduler::schedule(Region r, Event e, std::uint64_t delay) {
@@ -417,12 +419,13 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
     const EndReason endReason = reason_;
     const int endLevel = level_;
     for (const ProcessId p : finals) {
-        if (processes_[p].done) continue;
+        if (processes_[p.index()].done) continue;
         ending_ = false;
         counters_.increment(cWakeups_);
-        const auto st = static_cast<Status>(processes_[p].fn(toC(ctx_), processes_[p].frame));
-        processes_[p].done = true;
-        ++processes_[p].gen;
+        const auto st =
+            static_cast<Status>(processes_[p.index()].fn(toC(ctx_), processes_[p.index()].frame));
+        processes_[p.index()].done = true;
+        ++processes_[p.index()].gen;
         counters_.increment(cFinished_);
         // A run-time error of the design that the final procedure made
         // stays one (16.2); any other failure is internal.
@@ -570,7 +573,7 @@ void Scheduler::execute(const Event& e) {
             if (proc.done || proc.gen != e.gen) return;  // killed, or woken again
             if (proc.flushOnResume) {
                 proc.flushOnResume = false;
-                flushReports(e.id);
+                flushReports(ProcessId{e.id});
             }
             counters_.increment(cWakeups_);
             // proc may be stale after the call: the table may have grown.
@@ -578,7 +581,7 @@ void Scheduler::execute(const Event& e) {
             switch (st) {
                 case Status::Waiting: break;
                 case Status::Done:
-                case Status::Killed: ended(e.id); break;
+                case Status::Killed: ended(ProcessId{e.id}); break;
                 case Status::Error:
                     if (error_.empty()) error_ = "a process failed";
                     requestEnd(EndReason::Internal, 1);
@@ -607,10 +610,10 @@ void Scheduler::execute(const Event& e) {
         case Kind::TriggerNb: trigger(EventId{e.id}); return;
         case Kind::Postponed: {
             if (e.gen == 0) {
-                runPostponed(e.id);
+                runPostponed(ProcessId{e.id});
             } else {
                 const FileTargets to = strobeTargets_[e.gen - 1];  // the run may add strobes
-                runPostponed(e.id, &to);
+                runPostponed(ProcessId{e.id}, &to);
             }
             return;
         }
@@ -638,15 +641,15 @@ void Scheduler::execute(const Event& e) {
 
 void Scheduler::waitDelay(ProcessId p, std::uint64_t ticks) {
     freeMonitor(p);
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     ++proc.gen;
     const bool active = proc.group == Group::Active;
     if (ticks == 0) {
         const Region r = active ? Region::Inactive : Region::ReInactive;
-        schedule(r, {Kind::Resume, r, p, proc.gen}, 0);
+        schedule(r, {Kind::Resume, r, p.index(), proc.gen}, 0);
     } else {
         const Region r = active ? Region::Active : Region::Reactive;
-        schedule(r, {Kind::Resume, r, p, proc.gen}, ticks);
+        schedule(r, {Kind::Resume, r, p.index(), proc.gen}, ticks);
     }
 }
 
@@ -658,11 +661,12 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
                         std::span<const MonitorSpec> monitors) {
     ensureSlotTables();
     freeMonitor(p);
-    const std::uint64_t gen = ++processes_[p].gen;
+    const std::uint64_t gen = ++processes_[p.index()].gen;
     for (const WaitItem& item : items) {
         const SlotId s = item.part.slot;
-        pushSwept(subscriptions_[s], subscriptionLimit_[s], Subscription{p, gen, item},
-                  [&](const Subscription& x) { return processes_[x.process].gen != x.gen; });
+        pushSwept(
+            subscriptions_[s], subscriptionLimit_[s], Subscription{p, gen, item},
+            [&](const Subscription& x) { return processes_[x.process.index()].gen != x.gen; });
         counters_.increment(cSubscriptions_);
     }
     // The monitors' first evaluation may write or trigger: announced once
@@ -682,10 +686,10 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
         id = static_cast<std::uint32_t>(monitors_.size());
         monitors_.emplace_back();
     }
-    processes_[p].monitors.push_back(id);
+    processes_[p.index()].monitors.push_back(id);
     Monitor& mon = monitors_[id];
     mon.process = p;
-    mon.gen = processes_[p].gen;
+    mon.gen = processes_[p.index()].gen;
     mon.serial = ++monitorSerial_;
     mon.spec = m;
     mon.last.assign(elementWords(m.domain, m.width), 0);
@@ -705,11 +709,11 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
 
 void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
     freeMonitor(p);
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     ++proc.gen;
     pushSwept(events_[e.index()].waiters, events_[e.index()].waiterLimit,
               Waiter{p, proc.gen, flushPoint},
-              [&](const Waiter& w) { return processes_[w.process].gen != w.gen; });
+              [&](const Waiter& w) { return processes_[w.process.index()].gen != w.gen; });
 }
 
 // --- Effects -----------------------------------------------------------------
@@ -825,7 +829,7 @@ bool Scheduler::holdsAny(Hold level, ProcessId owner) const {
 
 void Scheduler::cancelWait(ProcessId p) {
     freeMonitor(p);
-    ++processes_[p].gen;
+    ++processes_[p.index()].gen;
 }
 
 bool Scheduler::showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) {
@@ -940,7 +944,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     std::size_t keep = 0;
     for (std::size_t i = 0; i < subs.size(); ++i) {
         const Subscription sub = subs[i];
-        if (processes_[sub.process].gen != sub.gen) continue;  // stale
+        if (processes_[sub.process.index()].gen != sub.gen) continue;  // stale
         subs[keep++] = sub;
         const SlotPart& part = sub.item.part;
         const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
@@ -992,7 +996,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
 
 void Scheduler::evaluateMonitor(std::uint32_t id) {
     Monitor& m = monitors_[id];
-    if (processes_[m.process].gen != m.gen) return;  // already woken
+    if (processes_[m.process.index()].gen != m.gen) return;  // already woken
     const MonitorSpec& spec = m.spec;
     scratch_.assign(m.last.size(), 0);
     spec.eval(toC(ctx_), spec.frame, scratch_.data());
@@ -1020,7 +1024,7 @@ void Scheduler::scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint
     const std::uint32_t bits = width == 0 ? l.width : width;
     const std::uint32_t words = elementWords(l.domain, bits);
     counters_.increment(cNbaScheduled_);
-    const Region r = processes_[p].group == Group::Active ? Region::Nba : Region::ReNba;
+    const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
     NbaRecord n;
     n.slot = s;
     n.elem = elem;
@@ -1121,7 +1125,7 @@ void Scheduler::trigger(EventId e) {
     const auto waiters = std::move(ev.waiters);
     events_[e.index()].waiters.clear();
     for (const Waiter& w : waiters)
-        if (processes_[w.process].gen == w.gen) wake(w.process, w.flushPoint);
+        if (processes_[w.process.index()].gen == w.gen) wake(w.process, w.flushPoint);
     const auto mons = events_[e.index()].monitors;
     std::vector<MonitorRef> keep;
     for (const MonitorRef ref : mons) {
@@ -1139,7 +1143,7 @@ void Scheduler::trigger(EventId e) {
 }
 
 void Scheduler::triggerNb(ProcessId p, EventId e, std::uint64_t delay) {
-    const Region r = processes_[p].group == Group::Active ? Region::Nba : Region::ReNba;
+    const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
     schedule(r, {Kind::TriggerNb, r, e.index(), 0}, delay);
 }
 
@@ -1148,7 +1152,7 @@ bool Scheduler::triggered(EventId e) const { return events_[e.index()].triggered
 // --- Pending reports (SCHEDULER_SPEC.md 15) -------------------------------------
 
 void Scheduler::addPending(ProcessId p, PendingReport r) {
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     if (std::find(pendingOrder_.begin(), pendingOrder_.end(), p) == pendingOrder_.end())
         pendingOrder_.push_back(p);
     if (!r.final && proc.observed++ == 0) ++pendingProcesses_;
@@ -1172,7 +1176,7 @@ void Scheduler::deferCall(ProcessId p, bool final, DeferredFn fn, void* frame,
 }
 
 void Scheduler::flushReports(ProcessId p) {
-    Process& proc = processes_[p];
+    Process& proc = processes_[p.index()];
     if (proc.pending.empty()) return;
     std::vector<PendingReport> dropped = std::move(proc.pending);
     proc.pending.clear();
@@ -1191,7 +1195,7 @@ void Scheduler::confirmReports() {
     std::vector<ProcessId> left;
     for (const ProcessId p : pendingOrder_) {
         std::vector<PendingReport> finals;
-        for (PendingReport& r : processes_[p].pending) {
+        for (PendingReport& r : processes_[p.index()].pending) {
             if (r.final) {
                 finals.push_back(std::move(r));
             } else if (r.fn == nullptr) {
@@ -1209,9 +1213,9 @@ void Scheduler::confirmReports() {
                 schedule(Region::Reactive, {Kind::Deferred, Region::Reactive, id, 0}, 0);
             }
         }
-        processes_[p].pending = std::move(finals);
-        processes_[p].observed = 0;
-        if (!processes_[p].pending.empty()) left.push_back(p);
+        processes_[p.index()].pending = std::move(finals);
+        processes_[p.index()].observed = 0;
+        if (!processes_[p.index()].pending.empty()) left.push_back(p);
     }
     pendingOrder_ = std::move(left);
     pendingProcesses_ = 0;
@@ -1219,7 +1223,7 @@ void Scheduler::confirmReports() {
 
 void Scheduler::sortPending() {
     std::sort(pendingOrder_.begin(), pendingOrder_.end(), [&](ProcessId a, ProcessId b) {
-        return processes_[a].serial < processes_[b].serial;
+        return processes_[a.index()].serial < processes_[b.index()].serial;
     });
 }
 
@@ -1228,8 +1232,8 @@ void Scheduler::confirmFinals() {
     const std::vector<ProcessId> order = std::move(pendingOrder_);
     pendingOrder_.clear();
     for (const ProcessId p : order) {
-        const std::vector<PendingReport> calls = std::move(processes_[p].pending);
-        processes_[p].pending.clear();
+        const std::vector<PendingReport> calls = std::move(processes_[p.index()].pending);
+        processes_[p.index()].pending.clear();
         for (const PendingReport& r : calls)
             if (!ending_ && r.fn != nullptr) r.fn(toC(ctx_), r.frame, r.token, 1);
     }

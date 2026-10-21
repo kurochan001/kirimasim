@@ -54,9 +54,9 @@ MUTANTS = [
      "(from >= 2 && to == 1)", "(from == 2 && to == 1)"),
     ("scheduler: NBA in the Inactive region", "src/kernel/sim.cpp",
      "counters_.increment(cNbaScheduled_);\n"
-     "    const Region r = processes_[p].group == Group::Active ? Region::Nba : Region::ReNba;",
+     "    const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;",
      "counters_.increment(cNbaScheduled_);\n"
-     "    const Region r = processes_[p].group == Group::Active ? Region::Inactive : Region::ReNba;"),
+     "    const Region r = processes_[p.index()].group == Group::Active ? Region::Inactive : Region::ReNba;"),
     ("scheduler: no flush point on an event wake-up", "src/kernel/sim.cpp",
      "proc.flushOnResume = flushPoint;", "(void)flushPoint; proc.flushOnResume = false;"),
     ("vm: an x condition is true", "src/vm/vm.cpp",
@@ -512,9 +512,9 @@ MUTANTS = [
     ("sir: verify lets a UDP row have the wrong number of inputs", "src/sir/verify.cpp",
      'error(where, "row \\"" + r.inputs + "\\" is not a row of this UDP");', "(void)0;"),
     ("kernel: a reused place counts its waits from 0", "src/kernel/sim.cpp",
-     "        proc.gen = processes_[id].gen + 1;", "        proc.gen = 0;"),
+     "        proc.gen = processes_[id.index()].gen + 1;", "        proc.gen = 0;"),
     ("kernel: held reports go by place, not creation", "src/kernel/sim.cpp",
-     "        return processes_[a].serial < processes_[b].serial;", "        return a < b;"),
+     "        return processes_[a.index()].serial < processes_[b.index()].serial;", "        return a < b;"),
     ("front: an event control drops its iff", "src/front/lower_stmt.cpp",
      "                if (const ast::Expression* c = se.iffCondition; c != nullptr)\n"
      "                    ops.push_back(Operand::subroutine(guardOf(*c, \"iff\", c->sourceRange.start())));\n",

@@ -86,7 +86,8 @@ enum class Status : std::uint8_t {
     Stop,     ///< It saw the request to end and stopped.
 };
 
-using ProcessId = std::uint32_t;
+struct ProcessTag;
+using ProcessId = Id<ProcessTag>;
 struct EventTag;
 using EventId = Id<EventTag>;
 
@@ -201,7 +202,9 @@ public:
     /// the kernel marks it ended after it returns.
     void releaseProcess(ProcessId p);
     /// Whether a process holds reports not yet confirmed (SCHEDULER_SPEC.md 15).
-    [[nodiscard]] bool hasPending(ProcessId p) const { return !processes_[p].pending.empty(); }
+    [[nodiscard]] bool hasPending(ProcessId p) const {
+        return !processes_[p.index()].pending.empty();
+    }
     /// Schedules a process to run in the current time slot, in Active or
     /// Reactive by its group.
     void start(ProcessId p);
@@ -212,7 +215,7 @@ public:
     /// nothing.
     void kill(ProcessId p);
     /// Whether a process has finished or been killed.
-    [[nodiscard]] bool finished(ProcessId p) const { return processes_[p].done; }
+    [[nodiscard]] bool finished(ProcessId p) const { return processes_[p.index()].done; }
     /// A process that its tier ran outside the scheduler, as static-init
     /// before time 0 starts (SCHEDULER_SPEC.md 6.1), has run to its end: as
     /// when a resumption returns Status::Done. What it put on its pending
@@ -436,12 +439,12 @@ private:
         std::uint64_t serial = 0;            ///< Creation order, for 15.4 (10.8).
     };
     struct Subscription {
-        ProcessId process = 0;
+        ProcessId process{0};
         std::uint64_t gen = 0;
         WaitItem item;
     };
     struct Monitor {
-        ProcessId process = 0;
+        ProcessId process{0};
         std::uint64_t gen = 0;     ///< The process's wait it belongs to.
         std::uint64_t serial = 0;  ///< Changes when the record is reused.
         MonitorSpec spec;
@@ -454,7 +457,7 @@ private:
         std::uint64_t serial = 0;
     };
     struct Waiter {
-        ProcessId process = 0;
+        ProcessId process{0};
         std::uint64_t gen = 0;
         bool flushPoint = true;
     };
@@ -504,7 +507,7 @@ private:
     static_assert(sizeof(DelayedDriver::gen) == sizeof(Event::gen));
     std::vector<DelayedDriver> drivers_;
     static constexpr std::uint32_t kNotHeld = UINT32_MAX;
-    static constexpr ProcessId kNoHolder = UINT32_MAX;
+    static constexpr ProcessId kNoHolder = kNone;
 
     static constexpr std::uint64_t kWheel = 256;
 

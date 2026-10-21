@@ -142,7 +142,7 @@ public:
 
     EndReason run() {
         for (std::uint32_t p = 0; p < runner_.scripts.size(); ++p)
-            ctx_.scheduler().start(p);
+            ctx_.scheduler().start(k::ProcessId{p});
         return ctx_.scheduler().run();
     }
     const std::string& log() const { return runner_.log; }
@@ -154,19 +154,21 @@ public:
         ctx_.scheduler().write(slot, 0, 0, 0, &v);
     }
     void nba(std::uint32_t p, std::uint32_t slot, std::uint64_t v, std::uint64_t d) override {
-        ctx_.scheduler().scheduleNba(p, slot, 0, 0, 0, &v, d);
+        ctx_.scheduler().scheduleNba(k::ProcessId{p}, slot, 0, 0, 0, &v, d);
     }
-    void waitDelay(std::uint32_t p, std::uint64_t d) override { ctx_.scheduler().waitDelay(p, d); }
+    void waitDelay(std::uint32_t p, std::uint64_t d) override {
+        ctx_.scheduler().waitDelay(k::ProcessId{p}, d);
+    }
     void waitEdge(std::uint32_t p, std::uint32_t slot, Edge e) override {
         const k::WaitItem item{{slot, 0, 0, 0, 0}, e, nullptr, nullptr};
-        ctx_.scheduler().waitEvent(p, {&item, 1});
+        ctx_.scheduler().waitEvent(k::ProcessId{p}, {&item, 1});
     }
     void waitNamed(std::uint32_t p, std::uint32_t ev) override {
-        ctx_.scheduler().waitNamed(p, k::EventId{ev});
+        ctx_.scheduler().waitNamed(k::ProcessId{p}, k::EventId{ev});
     }
     void trigger(std::uint32_t ev) override { ctx_.scheduler().trigger(k::EventId{ev}); }
     void triggerNb(std::uint32_t p, std::uint32_t ev, std::uint64_t d) override {
-        ctx_.scheduler().triggerNb(p, k::EventId{ev}, d);
+        ctx_.scheduler().triggerNb(k::ProcessId{p}, k::EventId{ev}, d);
     }
     void waitTrue(std::uint32_t p, std::uint32_t slot) override {
         monitors_[p] = {this, slot};
@@ -177,10 +179,10 @@ public:
         m.domain = k::Domain::Two;
         m.width = 8;
         m.untilTrue = true;
-        ctx_.scheduler().waitMonitor(p, m);
+        ctx_.scheduler().waitMonitor(k::ProcessId{p}, m);
     }
     void finish() override { ctx_.scheduler().requestEnd(EndReason::Finish, 1); }
-    void kill(std::uint32_t p) override { ctx_.scheduler().kill(p); }
+    void kill(std::uint32_t p) override { ctx_.scheduler().kill(k::ProcessId{p}); }
 
 private:
     struct Frame {
@@ -892,7 +894,7 @@ TEST(Scheduler, MixedWaitEndsAtItsFirstItem) {
 struct Rewaiter {
     std::vector<k::WaitItem> items;
     std::vector<k::MonitorSpec> monitors;
-    k::ProcessId self = 0;
+    k::ProcessId self{0};
     int wakes = 0;
 };
 
@@ -1150,7 +1152,7 @@ struct Actor {
     };
     Role role = Role::End;
     k::Scheduler* sched = nullptr;
-    k::ProcessId id = 0;
+    k::ProcessId id{0};
     std::uint64_t delay = 0;
     char name = '?';
     Actor* other = nullptr;
@@ -1201,8 +1203,8 @@ TEST(Scheduler, AReusedPlaceGetsNoStaleWakeUp) {
     // a's wake-up at 10 must not reach b: b runs at 0 and 20 only.
     k::Context ctx;
     k::Scheduler& s = ctx.scheduler();
-    Actor a{Actor::Role::Wait, &s, 0, 10};
-    Actor b{Actor::Role::Wait, &s, 0, 20};
+    Actor a{Actor::Role::Wait, &s, k::ProcessId{0}, 10};
+    Actor b{Actor::Role::Wait, &s, k::ProcessId{0}, 20};
     Actor swap{Actor::Role::Swap, &s};
     swap.other = &a;
     swap.next = &b;

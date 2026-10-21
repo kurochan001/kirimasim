@@ -493,11 +493,11 @@ class Interpreter;
 /// goes on when the kernel resumes it, and its frame variables.
 struct Frame {
     Interpreter* vm = nullptr;
-    std::uint32_t process = 0;       ///< Index in the SIR process table.
-    kernel::ProcessId kernelId = 0;  ///< Id in the kernel.
-    sir::BlockId block{0};           ///< Block to resume at.
-    std::vector<W4> vars;            ///< Frame variables (SIR_SPEC.md 7.4).
-    std::uint32_t varsId = 0;        ///< Their number for refs (Interpreter::enroll).
+    std::uint32_t process = 0;      ///< Index in the SIR process table.
+    kernel::ProcessId kernelId{0};  ///< Id in the kernel.
+    sir::BlockId block{0};          ///< Block to resume at.
+    std::vector<W4> vars;           ///< Frame variables (SIR_SPEC.md 7.4).
+    std::uint32_t varsId = 0;       ///< Their number for refs (Interpreter::enroll).
 
     // Process control (SCHEDULER_SPEC.md 10).
     enum class Join : std::uint8_t { None, All, Any, WaitFork };

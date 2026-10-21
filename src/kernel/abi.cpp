@@ -56,26 +56,31 @@ constexpr kirima_kernel_api kApi = {
     KIRIMA_ABI_MAJOR,
     KIRIMA_ABI_MINOR,
     [](kirima_context* c, kirima_resume_fn fn, void* frame, std::uint32_t group) {
-        return sched(c).addProcess(fn, frame, static_cast<Group>(group));
+        return sched(c).addProcess(fn, frame, static_cast<Group>(group)).index();
     },
-    [](kirima_context* c, std::uint32_t p) { sched(c).start(p); },
-    [](kirima_context* c, std::uint32_t p, std::uint64_t ticks) { sched(c).waitDelay(p, ticks); },
+    [](kirima_context* c, std::uint32_t p) { sched(c).start(ProcessId{p}); },
+    [](kirima_context* c, std::uint32_t p, std::uint64_t ticks) {
+        sched(c).waitDelay(ProcessId{p}, ticks);
+    },
     [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n) {
-        sched(c).waitEvent(p, itemsOf(items, n));
+        sched(c).waitEvent(ProcessId{p}, itemsOf(items, n));
     },
     [](kirima_context* c, std::uint32_t p, const kirima_monitor* m) {
-        sched(c).waitMonitor(p, specOf(*m));
+        sched(c).waitMonitor(ProcessId{p}, specOf(*m));
     },
-    [](kirima_context* c, std::uint32_t p, std::uint32_t e) { sched(c).waitNamed(p, EventId{e}); },
+    [](kirima_context* c, std::uint32_t p, std::uint32_t e) {
+        sched(c).waitNamed(ProcessId{p}, EventId{e});
+    },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width,
        const std::uint64_t* value) { return sched(c).write(s, elem, lsb, width, value) ? 1 : 0; },
     [](kirima_context* c, std::uint32_t p, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
-       std::uint32_t width, const std::uint64_t* value,
-       std::uint64_t delay) { sched(c).scheduleNba(p, s, elem, lsb, width, value, delay); },
+       std::uint32_t width, const std::uint64_t* value, std::uint64_t delay) {
+        sched(c).scheduleNba(ProcessId{p}, s, elem, lsb, width, value, delay);
+    },
     [](kirima_context* c, std::uint32_t e) { sched(c).trigger(EventId{e}); },
     [](kirima_context* c, std::uint32_t p, std::uint32_t e, std::uint64_t delay) {
-        sched(c).triggerNb(p, EventId{e}, delay);
+        sched(c).triggerNb(ProcessId{p}, EventId{e}, delay);
     },
     [](kirima_context* c, std::uint32_t e) { return sched(c).triggered(EventId{e}) ? 1 : 0; },
     [](kirima_context* c) { return sched(c).time(); },
@@ -96,7 +101,7 @@ constexpr kirima_kernel_api kApi = {
             specs.back().guard = monitors[i].guard;
             specs.back().guardFrame = monitors[i].guard_frame;
         }
-        sched(c).waitAny(p, itemsOf(items, n), specs);
+        sched(c).waitAny(ProcessId{p}, itemsOf(items, n), specs);
     },
 };
 
