@@ -77,8 +77,8 @@ they are protected:
 
 ## Rules for the code
 
-- C++23 for kirimasim itself; the kernel's public headers
-  (`src/kernel/include/`) must compile as C++20.
+- C++23 for kirimasim itself, without C++26 features; the kernel's public
+  headers (`src/kernel/include/`) must compile as C++20.
 - In `src/kernel/` and `src/vm/`, do not use `std::shared_ptr`,
   `dynamic_cast`, `std::function`, `getenv`, or `typeid`. `std::unordered_map`
   and `std::unordered_set` need a `// kirimasim: unordered-ok <reason>`
@@ -136,7 +136,7 @@ kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
 `-DKIRIMASIM_WERROR=ON` to make the warnings errors, as `tools/local_ci.py`
 and CI's clang builds do.
 
-To run every check that CI runs (all four presets, the release flag check,
+To run the checks that CI runs (all four presets, the release flag check,
 the banned-feature check, the global-state check, clang-format, clang-tidy,
 and the check that each commit not pushed yet keeps existing expectations)
 in one go:
@@ -146,7 +146,10 @@ python3 tools/local_ci.py
 ```
 
 CI runs on Linux and macOS after a push. Run `tools/local_ci.py` before
-pushing, to find failures first.
+pushing, to find failures first. CI also builds and tests with the oldest
+compilers kirimasim supports (the README's "Building" names them), which
+`tools/local_ci.py` does not, as a development machine seldom has them;
+and the nightly run builds and tests kirimasim as C++26.
 
 The counts in the READMEs (this repository's tests, sv-tests and the own
 suite's P1 population) come from `docs/counts.json`, which

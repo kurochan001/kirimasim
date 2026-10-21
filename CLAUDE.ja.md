@@ -29,7 +29,7 @@ kirimasim は、オープンソースの SystemVerilog シミュレータです�
 
 ## C++ の版と禁止事項
 
-- 本体は C++23。C++26 の機能は、使えるコンパイラでだけ機能検出マクロを通して使う。
+- 本体は C++23 で、C++26 の機能は使わない。対応するコンパイラ（README の「ビルド」）がすべて C++26 に対応したら C++26 に移る。それまでは、nightly の `cxx26` のジョブが C++26 でビルドとテストをする。
 - `kernel` の公開ヘッダと生成コードは C++20。生成コードは例外と RTTI を使わない。
 - kirimasim 自身のコード（`src/`、`tests/`）と将来の生成コードは、実数の計算がどの OS と層でも同じビットになるように、`-ffp-contract=off` を付け、`-ffast-math`、`-Ofast`、`-funsafe-math-optimizations` を付けずにビルドする。依存（slang など）には課さない。`tools/check_release_flags.py` がこれを検査する（フラグを足す変更で一緒に入れる）。根拠と測定は CODEGEN_SPEC.md の「浮動小数点」（Floating point）にある（2026-10-19 に承認）。
 - `src/kernel/` と `src/vm/`（と将来の生成コード）で禁止：`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid`。`tools/check_banned.py` が検査する。コメントの中の語も検出されるので、説明文では別の書き方をする。

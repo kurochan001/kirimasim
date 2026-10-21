@@ -25,6 +25,10 @@ reported as "not run" and makes the result fail unless --skip-lint is given.
 
 Prints a summary to attach to the report of a push and exits with 1 if
 any step failed.
+
+The builds with the oldest supported compilers (the min-compilers job of
+ci.yml) are left to CI, as a development machine seldom has those
+compilers; so are the nightly jobs.
 """
 
 import argparse

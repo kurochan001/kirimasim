@@ -229,7 +229,9 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 ## ビルド
 
-必要なもの：CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 のコンパイラ（macOS arm64 の Apple clang 21 で開発。CI は x86-64 の Linux と arm64 の macOS でビルドします）。最初の configure で slang と GoogleTest を取得します。
+必要なもの：CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 のコンパイラ。コンパイラは、GCC 13 以上、Clang 18 以上と libc++ 18 以上の組、Clang 19 以上と libstdc++ 13 以上の組、Apple clang 17 以上（Xcode 26）のどれかです。libstdc++ と組み合わせると、Clang 17 と 18 では slang を C++23 としてビルドできません。CI は push のたびに、これらの最も古い版でビルドとテストをします。x86-64 の Linux の Clang 22 と、arm64 の macOS の Apple clang 21 でもします。開発は macOS arm64 の Apple clang 21 で行っています。最初の configure で slang と GoogleTest を取得します。
+
+kirimasim は C++23 で書き、C++26 の機能は使いません。上のコンパイラがすべて C++26 に対応したら、C++26 に移ります。それまでは、夜間の CI が C++26 でもビルドとテストをします。
 
 ```sh
 cmake --preset dev            # ほかに release、asan、ubsan
@@ -470,7 +472,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ### どの環境で動きますか？
 
-macOS（arm64）で開発し、CI で x86-64 の Linux と arm64 の macOS でビルドとテストをしています。夜間の CI では、arm64 の Linux、GCC 16、Clang 23 でもビルドします。Windows は試していません。
+macOS（arm64）で開発し、CI で x86-64 の Linux と arm64 の macOS でビルドとテストをしています。対応する最も古いコンパイラでもしています（[ビルド](#ビルド)を見てください）。夜間の CI では、arm64 の Linux、GCC 16、Clang 23 でもビルドし、C++26 としてもビルドします。Windows は試していません。
 
 ### slang に手を加えていますか？
 

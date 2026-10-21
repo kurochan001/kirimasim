@@ -370,9 +370,17 @@ of the P1 population (TEST_SUITE.md, "90% of our own tests").
 ## Building
 
 Requirements: CMake 3.28 or later, Ninja, Python 3.10 or later, and a C++23
-compiler (developed with Apple clang 21 on macOS arm64; CI builds on x86-64
-Linux and arm64 macOS).
+compiler: GCC 13 or later; Clang 18 or later with libc++ 18 or later, or
+Clang 19 or later with libstdc++ 13 or later; or Apple clang 17 or later
+(Xcode 26). With libstdc++, Clang 17 and 18 cannot build slang as C++23. On
+every push CI builds and tests with each of these oldest versions, and with
+Clang 22 on x86-64 Linux and Apple clang 21 on arm64 macOS; kirimasim is
+developed with Apple clang 21 on macOS arm64.
 The first configure downloads slang and GoogleTest.
+
+kirimasim is written in C++23 and uses no C++26 feature. It moves to C++26
+once the compilers above all support it; until then the nightly runs build
+and test it as C++26 too.
 
 ```sh
 cmake --preset dev            # also: release, asan, ubsan
@@ -669,8 +677,9 @@ new dependency.
 ### Which platforms does it run on?
 
 It is developed on macOS (arm64), and CI builds and tests it on x86-64
-Linux and arm64 macOS; the nightly runs also build it on arm64 Linux, with
-GCC 16 and with Clang 23. Windows is not tested.
+Linux and arm64 macOS, also with the oldest compilers it supports (see
+[Building](#building)); the nightly runs also build it on arm64 Linux, with
+GCC 16 and with Clang 23, and as C++26. Windows is not tested.
 
 ### Is slang modified?
 

@@ -48,7 +48,7 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 
 ## コードの決まり
 
-- kirimasim 本体は C++23。カーネルの公開ヘッダ（`src/kernel/include/`）は C++20 でコンパイルできること。
+- kirimasim 本体は C++23 で、C++26 の機能は使わないこと。カーネルの公開ヘッダ（`src/kernel/include/`）は C++20 でコンパイルできること。
 - `src/kernel/` と `src/vm/` では、`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid` を使わないこと。`std::unordered_map` と `std::unordered_set` には、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` のコメントが要り、その走査の順が結果に影響してはいけません。`tools/check_banned.py` がこれを検査します。
 - 大域状態を持たないこと。状態は Context（`kernel::Context`）が持ちます。`src/` では、静的またはスレッドの記憶域期間を持つ変数は `constexpr` か `constinit const` に限り、シングルトンも持ちません。決まりと少しの例外は [RUNTIME_ABI.md の 9 節](docs/spec/RUNTIME_ABI.ja.md)にあります。clang-tidy（`--experimental-custom-checks` 付き）と `tools/check_global_state.py` がこれを検査します。例外を足すには、人の承認と `tools/global_state_allowlist.txt` への 1 行が要ります。
 - `src/driver/` の外では、環境変数、ロケール、時刻、外からの乱数の種を読まず、プロセスを終わらせず、プロセスの標準出力と標準エラーに書かないこと。`abort`、`std::terminate`、`assert` はどこでも呼びません。`tools/check_banned.py` がこれを検査します。
@@ -74,13 +74,13 @@ release のビルドでは、`cmake --preset release` の後に `python3 tools/c
 
 kirimasim 自身のコードは `-Wall -Wextra -Wpedantic` でビルドします。`tools/local_ci.py` と CI の clang のビルドと同じく警告を誤りにするには、configure に `-DKIRIMASIM_WERROR=ON` を付けてください。
 
-CI が走らせる検査のすべて（4 つのプリセット、release のフラグの検査、禁止の機能の検査、大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査）を一度に走らせるには：
+CI が走らせる検査（4 つのプリセット、release のフラグの検査、禁止の機能の検査、大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査）を一度に走らせるには：
 
 ```sh
 python3 tools/local_ci.py
 ```
 
-CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を走らせて先に失敗を見つけてください。
+CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を走らせて先に失敗を見つけてください。CI は、kirimasim が対応する最も古いコンパイラでもビルドとテストをします（README の「ビルド」に挙げています）。開発の機械にはそうしたコンパイラがまず無いので、`tools/local_ci.py` はこれをしません。夜間の実行は、kirimasim を C++26 としてもビルドしてテストします。
 
 README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて走らせ、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を走らせてください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
 

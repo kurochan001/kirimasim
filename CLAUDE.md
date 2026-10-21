@@ -29,7 +29,7 @@ Dependencies go only in the directions of the table below. Do not add to `target
 
 ## C++ versions and prohibitions
 
-- The main body is C++23. C++26 features are used only with compilers that have them, through feature-test macros.
+- The main body is C++23 and uses no C++26 features. It moves to C++26 once the compilers it supports (README, "Building") all have C++26; until then the nightly job `cxx26` builds and tests it as C++26.
 - `kernel`'s public headers and generated code are C++20. Generated code uses no exceptions or RTTI.
 - kirimasim's own code (`src/`, `tests/`) and future generated code are built with `-ffp-contract=off`, and without `-ffast-math`, `-Ofast` or `-funsafe-math-optimizations`, so that real arithmetic gives the same bits on every OS and tier. Dependencies (slang and the others) are not held to this. `tools/check_release_flags.py` is to check it (with the change that adds the flag). The grounds and the measurements are in CODEGEN_SPEC.md "Floating point" (approved 2026-10-19).
 - Forbidden in `src/kernel/` and `src/vm/` (and in future generated code): `std::shared_ptr`, `dynamic_cast`, `std::function`, `getenv`, `typeid`. `tools/check_banned.py` checks this. Words inside comments are detected too, so explanations use other wordings.
