@@ -1,0 +1,11 @@
+top.u work.fine: 4 4 3.7 -9 -12 -9 -12 -8 -9 -12 -12
+top.u.t_task work.fine: 4 4 3.7 -9 -12 -9 -12 -8 -9 -12 -12
+top.u.f_function work.fine: 4 4 3.7 -9 -12 -9 -12 -8 -9 -12 -12
+top.u work.fine: 4 4 3.7 -9 -12 -9 -12 -8 -9 -12 -12
+top.u.g.t work.fine: 4 4 3.7 -9 -12 -9 -12 -8 -9 -12 -12
+top work.top: 3 3 2.5 -6 -8 -9 -12 -8 -9 -12 -12
+top.t_task work.top: 3 3 2.5 -6 -8 -9 -12 -8 -9 -12 -12
+top.f_function work.top: 3 3 2.5 -6 -8 -9 -12 -8 -9 -12 -12
+top work.top: 3 3 2.5 -6 -8 -9 -12 -8 -9 -12 -12
+top.g.t work.top: 3 3 2.5 -6 -8 -9 -12 -8 -9 -12 -12
+fine past 2^32: 4294967300 4

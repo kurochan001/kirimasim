@@ -62,6 +62,9 @@ bool among(std::string_view n, std::span<const std::string_view> set) {
 /// System functions that only compute a value.
 bool isPureSystemFunction(std::string_view n) {
     static constexpr std::string_view kPure[] = {"$time",
+                                                 "$stime",
+                                                 "$timeunit",
+                                                 "$timeprecision",
                                                  "$realtime",
                                                  "$signed",
                                                  "$unsigned",
@@ -321,7 +324,7 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
         }
         auto conv = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
         if (conv == 'x') conv = 'h';
-        if (conv == 'm') continue;  // takes no argument (withScope)
+        if (conv == 'm' || conv == 'l') continue;  // take no argument (withScope)
         if (std::string_view("bohdcstefg").find(conv) == std::string_view::npos) {
             bad = std::string("format specifier %") + f[i];
             return false;
@@ -347,8 +350,9 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
 }
 
 /// A format with each %m replaced by the hierarchical name of the scope
-/// that calls the task (SYSTEM_TASKS.md 3.8).
-std::string withScope(std::string_view f, std::string_view scope) {
+/// that calls the task, and each %l by the library and cell of its design
+/// element (SYSTEM_TASKS.md 3.8).
+std::string withScope(std::string_view f, std::string_view scope, std::string_view cell) {
     std::string out;
     for (std::size_t i = 0; i < f.size(); ++i) {
         if (f[i] != '%' || i + 1 >= f.size()) {
@@ -361,6 +365,9 @@ std::string withScope(std::string_view f, std::string_view scope) {
             ++j;
         if (j < f.size() && (f[j] == 'm' || f[j] == 'M')) {
             out += scope;
+            i = j;
+        } else if (j < f.size() && (f[j] == 'l' || f[j] == 'L')) {
+            out += cell;
             i = j;
         } else {
             // %% and any other specifier stay as they are.
@@ -1051,16 +1058,45 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 return lowerTriggered(*call.arguments()[0], typeOf(*e.type, sl), sl);
             if ((name == "$signed" || name == "$unsigned") && call.arguments().size() == 1)
                 return coerce(lowerExpr(*call.arguments()[0]), typeOf(*e.type, sl), sl);
-            if (name == "$time") {
+            if (name == "$time" || name == "$stime") {
                 // $time is in the caller's time unit (SYSTEM_TASKS.md 5.1):
                 // the VM divides the tick count by 10^(unit - precision).
+                // $stime is its low 32 bits.
                 const int shift = timeScale().unit - precision();
-                if (shift < 0 || shift > 19) unsupported(sl, "$time with this time unit");
+                if (shift < 0 || shift > 19) unsupported(sl, name + " with this time unit");
                 std::uint64_t div = 1;
                 for (int i = 0; i < shift; ++i)
                     div *= 10;
                 const Val d = constant(sir::u2(64), div);
-                return emit(Op::Syscall, sir::u4(64), {Operand::str(name), d.op}, sl);
+                const Val t = emit(Op::Syscall, sir::u4(64), {Operand::str("$time"), d.op}, sl);
+                return name == "$time" ? t : coerce(t, typeOf(*e.type, sl), sl);
+            }
+            if ((name == "$timeunit" || name == "$timeprecision") && call.arguments().size() <= 1) {
+                // The exponent of the unit or precision of the caller's design
+                // element, of the instance named, of the compilation unit for
+                // $unit, or of the simulation for $root, which is the global
+                // precision (SYSTEM_TASKS.md 5.2, 20.4.1).
+                const bool unit = name == "$timeunit";
+                sir::TimeScale ts = timeScale();
+                if (call.arguments().size() == 1) {
+                    const ast::Expression& a = *call.arguments()[0];
+                    const ast::Symbol* at =
+                        a.kind == ast::ExpressionKind::ArbitrarySymbol
+                            ? a.as<ast::ArbitrarySymbolExpression>().symbol.get()
+                            : nullptr;
+                    if (at != nullptr && at->kind == ast::SymbolKind::Instance)
+                        ts = timeScaleOf(at->as<ast::InstanceSymbol>().body);
+                    else if (at != nullptr && at->kind == ast::SymbolKind::CompilationUnit)
+                        ts = timeScaleOf(at->as<ast::CompilationUnitSymbol>());
+                    else if (at != nullptr && at->kind == ast::SymbolKind::Root)
+                        ts = {precision(), precision()};
+                    else
+                        unsupported(sl, name + " of this argument");
+                }
+                const int x = unit ? ts.unit : ts.precision;
+                return coerce(
+                    constant(sir::s2(32), static_cast<std::uint64_t>(static_cast<std::int64_t>(x))),
+                    typeOf(*e.type, sl), sl);
             }
             const auto args = call.arguments();
             const Type real{sir::TypeKind::Real, 0};
@@ -3010,7 +3046,19 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
         // (3.12).
         if (!extra.empty()) warning(at, "format flag " + extra + " is not in IEEE 1800-2023");
         pending.assign(convs.begin(), convs.end());
-        ops.push_back(Operand::str(withScope(text, b_.scope)));
+        // %l: <library>.<cell> of the module the call is in; the library is
+        // work until chapter 33's libraries exist (SYSTEM_TASKS.md 3.8).
+        std::string cell;
+        for (const ast::Symbol* sy = evalSymbol_; sy != nullptr && cell.empty();
+             sy = sy->getParentScope() != nullptr ? &sy->getParentScope()->asSymbol() : nullptr)
+            if (sy->kind == ast::SymbolKind::InstanceBody)
+                cell =
+                    "work." + std::string(sy->as<ast::InstanceBodySymbol>().getDefinition().name);
+        // Outside a module a %l has no cell: \x01 marks where it would go.
+        const std::string f = withScope(text, b_.scope, cell.empty() ? "\x01" : cell);
+        if (cell.empty() && f.find('\x01') != std::string::npos)
+            unsupported(at, "%l outside a module");
+        ops.push_back(Operand::str(f));
     };
     // Set by a constant format that is not a literal: every later argument
     // fills one of its specifiers (3.13).

@@ -88,6 +88,10 @@ own. CONTRIBUTING.md says what goes in this file.
   file opened only for writing fails with an error that `$ferror` reports
   (SYSTEM_TASKS.md 6.3, 6.4). Before, each of them was reported as
   unsupported, and `$fgets` on STDIN read nothing.
+- `$stime`, `$timeunit` and `$timeprecision` (with no argument, an
+  instance, `$unit` or `$root`), and the `%l` format, which prints
+  `work.<module>` (SYSTEM_TASKS.md 3.8, 5.1, 5.2). Before, each was
+  reported as unsupported.
 
 ### Changed
 

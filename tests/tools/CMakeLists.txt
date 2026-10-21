@@ -127,6 +127,10 @@ add_test(NAME tools/mutants_apply
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/mutants.py --check)
 set_tests_properties(tools/mutants_apply PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_time_query_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_time_query_matrix.py --check)
+set_tests_properties(tools/gen_time_query_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_file_input_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_file_input_matrix.py --check)
 set_tests_properties(tools/gen_file_input_matrix PROPERTIES LABELS Tools)
