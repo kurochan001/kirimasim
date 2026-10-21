@@ -2,7 +2,16 @@ cmake_minimum_required(VERSION 3.28)
 
 project(kirimasim VERSION 0.0.0 LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 23)
+# kirimasim is written in C++23 and uses no C++26 feature. The nightly job
+# cxx26 also builds it with -DCMAKE_CXX_STANDARD=26, to see when it can move
+# to C++26; no other standard is accepted. The one target with a standard of
+# its own is the C++20 check of the kernel's public headers (tests/unit).
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 23)
+elseif(NOT CMAKE_CXX_STANDARD MATCHES "^(23|26)$")
+    message(FATAL_ERROR "kirimasim is built as C++23 (CMAKE_CXX_STANDARD 23, "
+                        "or 26 for the nightly check), not ${CMAKE_CXX_STANDARD}")
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
