@@ -132,7 +132,7 @@ bool clash(Writer a, Writer b, SlotKind k) {
 /// A write range of a process, with its elements and bits as half-open
 /// intervals; a count or width of 0 means all, which overlaps everything.
 struct WriteExtent {
-    SlotId slot = 0;
+    SlotId slot{0};
     std::uint64_t elemLo = 0, elemHi = 0, bitLo = 0, bitHi = 0;
     ProcessId process = 0;
     std::uint32_t index = 0;  ///< Its place in the process's writes.
@@ -150,7 +150,7 @@ std::pair<std::uint64_t, std::uint64_t> extent(std::uint32_t first, std::uint32_
 struct Clash {
     ProcessId first = 0, second = 0;
     std::uint32_t firstIndex = 0, secondIndex = 0;
-    SlotId slot = 0;
+    SlotId slot{0};
 };
 
 /// Adds to `found` the pairs of writes whose bits overlap and that rule 6
@@ -343,8 +343,9 @@ private:
             if (isIntegral(s.type) && s.type.width == 0) error(where, "integral slot has width 0");
             if (s.driverOf != kNone) {
                 // A driver slot (SIR_SPEC.md 3.5): the shape of its net.
-                if (s.driverOf >= d_.slots.size() || d_.slots[s.driverOf].kind == SlotKind::Var ||
-                    d_.slots[s.driverOf].type != s.type || !d_.slots[s.driverOf].dims.empty() ||
+                if (s.driverOf.index() >= d_.slots.size() ||
+                    d_.slot(s.driverOf).kind == SlotKind::Var ||
+                    d_.slot(s.driverOf).type != s.type || !d_.slot(s.driverOf).dims.empty() ||
                     !s.dims.empty())
                     error(where, "a driver slot drives a net of its own type");
                 if (s.strength1 > 7 || s.strength0 > 7) error(where, "strength out of range");
@@ -367,7 +368,7 @@ private:
     void checkNames() {
         std::set<std::string> seen;
         for (const NameEntry& n : d_.names) {
-            if (n.slot >= d_.slots.size()) error("name " + n.path, "slot out of range");
+            if (n.slot.index() >= d_.slots.size()) error("name " + n.path, "slot out of range");
             if (!seen.insert(n.path).second) error("name " + n.path, "name is not unique");
         }
     }
@@ -388,11 +389,11 @@ private:
             if (i > 0 && v.scope < d_.dumpVars[i - 1].scope)
                 error(where, "variables must come in the order of their scopes");
             if (v.name.empty()) error(where, "variable has no name");
-            if (v.slot >= d_.slots.size()) {
+            if (v.slot.index() >= d_.slots.size()) {
                 error(where, "slot out of range");
                 continue;
             }
-            const Slot& s = d_.slots[v.slot];
+            const Slot& s = d_.slot(v.slot);
             if (!s.dims.empty()) error(where, "an unpacked array is not dumped");
             const bool real = v.type == DumpType::Real || v.type == DumpType::Realtime;
             const bool realSlot =
@@ -447,8 +448,8 @@ private:
     // Rule 2: a slot range lies inside its slot.
     bool rangeOk(SlotId s, std::uint32_t firstElem, std::uint32_t numElems, std::uint32_t lsb,
                  std::uint32_t width) const {
-        if (s >= d_.slots.size()) return false;
-        const Slot& slot = d_.slots[s];
+        if (s.index() >= d_.slots.size()) return false;
+        const Slot& slot = d_.slot(s);
         if (slot.dims.empty()) {
             if (firstElem != 0 || numElems != 0) return false;
         } else if (numElems != 0) {
@@ -464,7 +465,7 @@ private:
         return rangeOk(r.slot, r.firstElem, r.numElems, r.lsb, r.width);
     }
     bool rangeOk(const Operand& o) const {
-        return rangeOk(o.id, o.firstElem, o.numElems, o.lsb, o.width);
+        return rangeOk(o.asSlot(), o.firstElem, o.numElems, o.lsb, o.width);
     }
 
     /// "assign" or "force", the levels of SIR_SPEC.md 5.6.
@@ -487,8 +488,8 @@ private:
     /// The number of elements of an array argument, or 0 for one that is
     /// not an array.
     std::uint64_t paramElements(const Subroutine& s, const Param& p) const {
-        if (p.slot != kNone && p.slot < d_.slots.size())
-            return d_.slots[p.slot].dims.empty() ? 0 : elementCount(d_.slots[p.slot]);
+        if (p.slot != kNone && p.slot.index() < d_.slots.size())
+            return d_.slot(p.slot).dims.empty() ? 0 : elementCount(d_.slot(p.slot));
         if (p.frameVar.index() < s.frame.size())
             return s.frame[p.frameVar.index()].dims.empty()
                        ? 0
@@ -575,7 +576,7 @@ private:
                           " subroutine is in the " + (inSlot ? "slot table" : "frame"),
                       s.loc);
             } else if (inSlot) {
-                if (p.slot >= d_.slots.size() || !fits(d_.slots[p.slot].type, p.type) ||
+                if (p.slot.index() >= d_.slots.size() || !fits(d_.slot(p.slot).type, p.type) ||
                     p.dir == Direction::Ref || p.dir == Direction::ConstRef)
                     error(where, "argument '" + p.name + "' slot is invalid", s.loc);
             } else if (p.frameVar.index() >= s.frame.size()) {
@@ -841,7 +842,7 @@ private:
     SlotRange elementTarget(const Body& body, const Instr& in,
                             const std::vector<Type>& tempType) const {
         const auto& ops = in.operands;
-        const SlotRange whole{ops[0].id, 0, 0, 0, 0};
+        const SlotRange whole{ops[0].asSlot(), 0, 0, 0, 0};
         if (ops[0].id >= d_.slots.size()) return whole;
         const Slot& slot = d_.slots[ops[0].id];
         const bool bits = in.op == Op::StoreBits || in.op == Op::NbaBits;
@@ -859,7 +860,7 @@ private:
             if (off < 0 || static_cast<std::uint64_t>(off) >= n) return whole;
             elem = elem * n + static_cast<std::uint64_t>(off);
         }
-        SlotRange t{ops[0].id, static_cast<std::uint32_t>(elem), nIdx == 0 ? 0U : 1U, 0, 0};
+        SlotRange t{ops[0].asSlot(), static_cast<std::uint32_t>(elem), nIdx == 0 ? 0U : 1U, 0, 0};
         if (bits) {
             const std::optional<std::int64_t> pos = constIndex(ops[1 + nIdx]);
             const std::uint32_t w = operandType(body, ops.back(), tempType).width;
@@ -937,7 +938,7 @@ private:
         if (writesSlot(in.op) && body.process != nullptr && !ops.empty() &&
             ops[0].kind == Operand::Kind::Slot) {
             const Operand& o = ops[0];
-            SlotRange target{o.id, o.firstElem, o.numElems, o.lsb, o.width};
+            SlotRange target{o.asSlot(), o.firstElem, o.numElems, o.lsb, o.width};
             if (in.op != Op::Store && in.op != Op::Nba && in.op != Op::NbaDelay &&
                 in.op != Op::DriveDelay)
                 target = elementTarget(body, in, tempType);
@@ -1568,7 +1569,7 @@ private:
                     break;
                 }
                 const Operand& o = ops[1];
-                const SlotRange target{o.id, o.firstElem, o.numElems, o.lsb, o.width};
+                const SlotRange target{o.asSlot(), o.firstElem, o.numElems, o.lsb, o.width};
                 bool covered = false;
                 for (const SlotRange& w : body.process->writes)
                     covered = covered || covers(d_.slots[o.id], w, target);
@@ -1807,7 +1808,8 @@ private:
                 // A static subroutine's variables and arguments: a call
                 // copies into them, and slang reports the assignments
                 // inside the function (SIR_SPEC.md 10).
-                if (r.slot >= d_.slots.size() || d_.slots[r.slot].subroutine != kNone) continue;
+                if (r.slot.index() >= d_.slots.size() || d_.slot(r.slot).subroutine != kNone)
+                    continue;
                 const auto [elemLo, elemHi] = extent(r.firstElem, r.numElems);
                 const auto [bitLo, bitHi] = extent(r.lsb, r.width);
                 writes.push_back({r.slot, elemLo, elemHi, bitLo, bitHi, static_cast<ProcessId>(i),
@@ -1832,7 +1834,7 @@ private:
         });
         for (const Clash& c : found)
             error(processWhere(c.second) + " " + ps[c.second].name,
-                  "writes %s" + std::to_string(c.slot) + " (" + d_.slots[c.slot].name +
+                  "writes %s" + std::to_string(c.slot.index()) + " (" + d_.slot(c.slot).name +
                       "), which " + processWhere(c.first) + " also writes",
                   ps[c.second].loc);
     }
@@ -1841,7 +1843,7 @@ private:
     /// with the same elements form a group; each group is swept on its own
     /// and with each earlier group whose elements overlap its own.
     void sweepSlot(std::span<const WriteExtent> slotWrites, std::vector<Clash>& found) const {
-        const SlotKind kind = d_.slots[slotWrites.front().slot].kind;
+        const SlotKind kind = d_.slot(slotWrites.front().slot).kind;
         struct Group {
             std::span<const WriteExtent> writes;
             std::array<bool, kWriters> has{};

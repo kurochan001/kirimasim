@@ -72,7 +72,7 @@ Value pattern(Type t, Upper upper, std::uint64_t seed) {
 
 /// The value of slot s after the run.
 Value slotValue(const kirimasim::kernel::Context& c, SlotId s, Type t) {
-    const std::uint64_t* p = c.store().element(s, 0);
+    const std::uint64_t* p = c.store().element(s.index(), 0);
     const std::size_t chunks = (t.width + 63) / 64;
     Value v;
     for (std::size_t k = 0; k < chunks; ++k) {
@@ -102,7 +102,7 @@ Design swapDesign(Type t, Back back, const Value& a, const Value& b) {
 
     Process p;
     p.name = "top.initial0";
-    p.writes = {{0}, {1}};
+    p.writes = {{SlotId{0}}, {SlotId{1}}};
     p.numTemps = 6;
     p.blocks.resize(back == Back::Br ? 4 : 3);
     p.blocks[0].instrs = {none(Op::Br, {Operand::block(BlockId{1}, 3), A, zero, B})};
@@ -114,8 +114,8 @@ Design swapDesign(Type t, Back back, const Value& a, const Value& b) {
         brIf.push_back(Operand::block(BlockId{3}));
     p.blocks[1].instrs = {make(Op::Ceq, u2(1), tD, {N, one}), none(Op::BrIf, brIf)};
     p.blocks[2].params = {{TempId{tX}, t}, {TempId{tY}, t}};
-    p.blocks[2].instrs = {none(Op::Store, {Operand::slot(0), Operand::temp(TempId{tX})}),
-                          none(Op::Store, {Operand::slot(1), Operand::temp(TempId{tY})}),
+    p.blocks[2].instrs = {none(Op::Store, {Operand::slot(SlotId{0}), Operand::temp(TempId{tX})}),
+                          none(Op::Store, {Operand::slot(SlotId{1}), Operand::temp(TempId{tY})}),
                           none(Op::Ret, {})};
     if (back == Back::Br)
         p.blocks[3].instrs = {none(Op::Br, {Operand::block(BlockId{1}, 3), Q, one, P})};
@@ -148,7 +148,7 @@ TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
                     kirimasim::kernel::Context c;
                     const auto r = kirimasim::vm::run(d, c);
                     ASSERT_EQ(r.reason, kirimasim::kernel::EndReason::Quiescent) << r.error;
-                    const Value x = slotValue(c, 0, t), y = slotValue(c, 1, t);
+                    const Value x = slotValue(c, SlotId{0}, t), y = slotValue(c, SlotId{1}, t);
                     EXPECT_EQ(x.a, b.a);
                     EXPECT_EQ(x.b, b.b);
                     EXPECT_EQ(y.a, a.a);

@@ -34,7 +34,7 @@ const Type kEvent{TypeKind::Event, 0};
 const Type kChandle{TypeKind::Chandle, 0};
 
 // Slots of the playground.
-enum : SlotId { sA, sB, sR, sS, sE, sM, sBit, sW, sF };
+enum : std::uint32_t { sA, sB, sR, sS, sE, sM, sBit, sW, sF };
 // Temps that block 0 loads from them, and the first free one.
 enum : std::uint32_t { tA, tB, tR, tS, tBit, tFree };
 // Constants.
@@ -70,8 +70,8 @@ Design playground() {
                slot("top.bit", u4(1)),
                slot("top.w", u4(8), {}, SlotKind::Wire),
                slot("top.f", u4(8), {}, SlotKind::Var, kForceTarget)};
-    for (SlotId s = 0; s < d.slots.size(); ++s)
-        d.names.push_back({d.slots[s].name, s});
+    for (std::uint32_t s = 0; s < d.slots.size(); ++s)
+        d.names.push_back({d.slots[s].name, SlotId{s}});
     d.constants = {{u4(8), {5}, {0}},      {u2(32), {2}, {}},
                    {u2(32), {6}, {}},      {kReal, {std::bit_cast<std::uint64_t>(1.5)}, {}},
                    {kString, {}, {}, "x"}, {u2(1), {1}, {}}};
@@ -116,18 +116,18 @@ Design playground() {
     p.kind = ProcessKind::Initial;
     p.loc = at(1);
     p.numTemps = 40;
-    p.writes = {{sA, 0, 0, 0, 0}, {sB, 0, 0, 0, 0}, {sR, 0, 0, 0, 0},
-                {sS, 0, 0, 0, 0}, {sM, 0, 0, 0, 0}, {sBit, 0, 0, 0, 0}};
+    p.writes = {{SlotId{sA}, 0, 0, 0, 0}, {SlotId{sB}, 0, 0, 0, 0}, {SlotId{sR}, 0, 0, 0, 0},
+                {SlotId{sS}, 0, 0, 0, 0}, {SlotId{sM}, 0, 0, 0, 0}, {SlotId{sBit}, 0, 0, 0, 0}};
     p.frame = {{"v", u4(8), kNone, {}, {}},
                {"ref", refType(), kNone, {}, u4(8)},
                {"refarr", refType(), kNone, {{0, 3}}, u4(8)},
                {"refreal", refType(), kNone, {}, kReal}};
     p.blocks = {{{},
-                 {make(Op::Load, u4(8), tA, {Operand::slot(sA)}),
-                  make(Op::Load, u2(8), tB, {Operand::slot(sB)}),
-                  make(Op::Load, kReal, tR, {Operand::slot(sR)}),
-                  make(Op::Load, kString, tS, {Operand::slot(sS)}),
-                  make(Op::Load, u4(1), tBit, {Operand::slot(sBit)}), none(Op::Ret, {})}}};
+                 {make(Op::Load, u4(8), tA, {Operand::slot(SlotId{sA})}),
+                  make(Op::Load, u2(8), tB, {Operand::slot(SlotId{sB})}),
+                  make(Op::Load, kReal, tR, {Operand::slot(SlotId{sR})}),
+                  make(Op::Load, kString, tS, {Operand::slot(SlotId{sS})}),
+                  make(Op::Load, u4(1), tBit, {Operand::slot(SlotId{sBit})}), none(Op::Ret, {})}}};
     d.processes.push_back(p);
     return d;
 }
@@ -173,7 +173,7 @@ std::vector<Case> cases() {
         // Instructions: the operands each opcode takes (SIR_SPEC.md 5, 7).
         {"source file", "source file out of range",
          [](Design& d) {
-             Instr in = none(Op::Store, {Operand::slot(sA), Operand::temp(TempId{tA})});
+             Instr in = none(Op::Store, {Operand::slot(SlotId{sA}), Operand::temp(TempId{tA})});
              in.loc.file = 9;
              add(in).apply(d);
          }},
@@ -184,7 +184,7 @@ std::vector<Case> cases() {
          [](Design& d) { d.processes[0].frame.push_back({"z", u2(0), kNone, {}, {}}); }},
         // A delay is a count of ticks, an integral value.
         {"trigger.nb of a real", "optional integral delay",
-         add(none(Op::TriggerNb, {Operand::slot(sE), R}))},
+         add(none(Op::TriggerNb, {Operand::slot(SlotId{sE}), R}))},
         {"wait.delay of a real", "needs an integral delay",
          [](Design& d) {
              auto& instrs = d.processes[0].blocks[0].instrs;
@@ -196,29 +196,30 @@ std::vector<Case> cases() {
         {"br without block", "needs a block", add(none(Op::Br, {A}))},
         {"store", "bad operands", add(none(Op::Store, {A, A}))},
         {"nba.delay operands", "bad operands", add(none(Op::NbaDelay, {A, A, C2}))},
-        {"nba.delay value", "does not fit", add(none(Op::NbaDelay, {Operand::slot(sA), R, C2}))},
+        {"nba.delay value", "does not fit",
+         add(none(Op::NbaDelay, {Operand::slot(SlotId{sA}), R, C2}))},
         {"nba.delay delay", "the delay must be integral",
-         add(none(Op::NbaDelay, {Operand::slot(sA), A, R}))},
+         add(none(Op::NbaDelay, {Operand::slot(SlotId{sA}), A, R}))},
         {"drive.delay outside cont", "only a cont process writes with it",
-         add(none(Op::DriveDelay, {Operand::slot(sW), A, C2, C2, C2}))},
+         add(none(Op::DriveDelay, {Operand::slot(SlotId{sW}), A, C2, C2, C2}))},
         {"load.elem of a scalar", "needs a whole unpacked array slot or frame variable",
-         add(make(Op::LoadElem, u4(8), N, {Operand::slot(sA), C2}))},
+         add(make(Op::LoadElem, u4(8), N, {Operand::slot(SlotId{sA}), C2}))},
         {"store.elem value", "value does not fit the element type",
-         add(none(Op::StoreElem, {Operand::slot(sM), C2, R}))},
+         add(none(Op::StoreElem, {Operand::slot(SlotId{sM}), C2, R}))},
         {"store.bits of a real", "needs a whole integral slot or frame variable",
-         add(none(Op::StoreBits, {Operand::slot(sR), C2, A}))},
+         add(none(Op::StoreBits, {Operand::slot(SlotId{sR}), C2, A}))},
         {"store.bits without value", "needs one index per dimension, a position and a value",
-         add(none(Op::StoreBits, {Operand::slot(sA), C2}))},
+         add(none(Op::StoreBits, {Operand::slot(SlotId{sA}), C2}))},
         {"store.bits domain", "value must be integral, in the slot's domain and not wider",
-         add(none(Op::StoreBits, {Operand::slot(sB), C2, A}))},
+         add(none(Op::StoreBits, {Operand::slot(SlotId{sB}), C2, A}))},
         {"fload type", "needs a frame variable of the result type that is not an array",
          add(make(Op::Fload, u2(8), N, {Operand::frame(FrameVarId{fV})}))},
         {"ref.make result", "needs a slot or frame variable and a ref result",
-         add(make(Op::RefMake, u4(8), N, {Operand::slot(sA)}))},
+         add(make(Op::RefMake, u4(8), N, {Operand::slot(SlotId{sA})}))},
         {"ref.make of a part", "needs a whole slot or frame variable",
-         add(make(Op::RefMake, refType(), N, {Operand::slot(sA, 0, 4)}))},
+         add(make(Op::RefMake, refType(), N, {Operand::slot(SlotId{sA}, 0, 4)}))},
         {"ref.make indices", "needs no index or one per dimension",
-         add(make(Op::RefMake, refType(), N, {Operand::slot(sM), C2, C2}))},
+         add(make(Op::RefMake, refType(), N, {Operand::slot(SlotId{sM}), C2, C2}))},
         {"load.ref.elem of a non-ref", "needs a ref argument",
          add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(FrameVarId{fV}), C2}))},
         {"load.ref.elem indices", "needs one index per dimension of what it refers to",
@@ -288,9 +289,9 @@ std::vector<Case> cases() {
         {"stoi", "must convert a string to an integral value", add(make(Op::Stoi, u4(8), N, {A}))},
         {"str.get", "needs a string and an index, and gives a two-state byte",
          add(make(Op::StrGet, u4(8), N, {S, C2}))},
-        {"trigger", "needs an event slot", add(none(Op::Trigger, {Operand::slot(sA)}))},
+        {"trigger", "needs an event slot", add(none(Op::Trigger, {Operand::slot(SlotId{sA})}))},
         {"trigger.nb", "needs an event slot and an optional integral delay",
-         add(none(Op::TriggerNb, {Operand::slot(sE), R}))},
+         add(none(Op::TriggerNb, {Operand::slot(SlotId{sE}), R}))},
         {"disable", "needs a process, a subroutine or a block name", add(none(Op::Disable, {A}))},
         {"scope.enter", "needs a scope and its exit block", add(none(Op::ScopeEnter, {A, A}))},
         {"scope.leave", "needs a scope", add(none(Op::ScopeLeave, {A}))},
@@ -325,7 +326,7 @@ std::vector<Case> cases() {
         {"override.start", "needs \"assign\" or \"force\"",
          add(none(Op::OverrideStart, {Operand::str("hold")}))},
         {"store.override outside an override process", "only an override process writes with it",
-         add(none(Op::StoreOverride, {Operand::str("force"), Operand::slot(sF), A}))},
+         add(none(Op::StoreOverride, {Operand::str("force"), Operand::slot(SlotId{sF}), A}))},
         {"report.call kind", "needs \"#0\" or \"final\" and a function",
          add(none(Op::ReportCall, {Operand::str("now"), Operand::subroutine(SubroutineId{0}), A}))},
         {"report.call arguments", "needs a function and one value per argument",
@@ -347,7 +348,7 @@ std::vector<Case> cases() {
          add(none(Op::WaitCond,
                   {Operand::subroutine(SubroutineId{0}), Operand::block(BlockId{0})}))},
         {"wait.named", "needs an event slot",
-         add(none(Op::WaitNamed, {Operand::slot(sA), Operand::block(BlockId{0})}))},
+         add(none(Op::WaitNamed, {Operand::slot(SlotId{sA}), Operand::block(BlockId{0})}))},
         {"fork", "needs processes, a join kind and a block", add(none(Op::Fork, {}))},
         {"fork join kind", "join kind must be join, join_any or join_none",
          add(none(Op::Fork,
@@ -412,7 +413,7 @@ std::vector<Case> cases() {
         {"driver slot", "a driver slot drives a net of its own type",
          [](Design& d) {
              Slot s = slot("top.w.d", u2(8));
-             s.driverOf = sW;
+             s.driverOf = SlotId{sW};
              d.slots.push_back(s);
          }},
         {"array size", "array is too large",
@@ -438,7 +439,7 @@ std::vector<Case> cases() {
          [](Design& d) {
              d.subroutines[0].automatic = false;
              d.subroutines[0].params[0].frameVar = kNone;
-             d.subroutines[0].params[0].slot = sR;
+             d.subroutines[0].params[0].slot = SlotId{sR};
          }},
         {"store.override operands",
          "a slot range marked as a force target and a value of its width",
@@ -447,9 +448,9 @@ std::vector<Case> cases() {
              o.name = "hold";
              o.kind = ProcessKind::Override;
              o.loc = at(1);
-             o.writes = {{sF, 0, 0, 0, 0}};
+             o.writes = {{SlotId{sF}, 0, 0, 0, 0}};
              o.blocks = {{{},
-                          {none(Op::StoreOverride, {Operand::str("hold"), Operand::slot(sF),
+                          {none(Op::StoreOverride, {Operand::str("hold"), Operand::slot(SlotId{sF}),
                                                     Operand::constant(ConstId{c5})}),
                            none(Op::Ret, {})}}};
              d.processes.push_back(o);
@@ -459,7 +460,7 @@ std::vector<Case> cases() {
         {"frame of another", "only guards read another frame",
          [](Design& d) { d.subroutines[0].frameOf = {Owner::Kind::Process, 0}; }},
         {"argument place", "needs exactly one place",
-         [](Design& d) { d.subroutines[0].params[0].slot = sA; }},
+         [](Design& d) { d.subroutines[0].params[0].slot = SlotId{sA}; }},
         {"argument frame variable", "frame variable is invalid",
          [](Design& d) { d.subroutines[0].params[0].frameVar = FrameVarId{7}; }},
         {"postponed process", "a postponed process has no triggers",
@@ -468,7 +469,7 @@ std::vector<Case> cases() {
              p.name = "post";
              p.kind = ProcessKind::Postponed;
              p.loc = at(1);
-             p.triggers = {{{sA, 0, 0, 0, 0}, Edge::Any}};
+             p.triggers = {{{SlotId{sA}, 0, 0, 0, 0}, Edge::Any}};
              p.blocks = {{{}, {none(Op::Ret, {})}}};
              d.processes.push_back(p);
          }},

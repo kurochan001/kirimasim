@@ -211,7 +211,7 @@ void Lowerer::dumpMembers(const ast::Scope& scope, std::uint32_t row, bool named
 
 void Lowerer::dumpVariable(const ast::ValueSymbol& v, std::uint32_t row) {
     const auto it = slots_.find(&v);
-    if (!inSlot(v) || it == slots_.end() || !design_.slots[it->second].dims.empty()) return;
+    if (!inSlot(v) || it == slots_.end() || !design_.slot(it->second).dims.empty()) return;
     std::optional<DumpShape> shape = dumpShape(v.getType());
     if (!shape) return;
     if (v.kind == ast::SymbolKind::Net) {
@@ -235,16 +235,16 @@ void Lowerer::dumpStruct(const ast::VariableSymbol& v, std::uint32_t row) {
 
 void Lowerer::dumpFields(const ast::UnpackedStructType& st, sir::SlotId first, std::uint32_t row) {
     for (const ast::FieldSymbol* f : st.fields) {
-        const sir::SlotId s = first + leafOffset(st, *f);
+        const sir::SlotId s{first.index() + leafOffset(st, *f)};
         std::optional<DumpShape> shape = dumpShape(f->getType());
-        if (unpackedStruct(f->getType()) != nullptr || !shape || !design_.slots[s].dims.empty())
+        if (unpackedStruct(f->getType()) != nullptr || !shape || !design_.slot(s).dims.empty())
             continue;
         design_.dumpVars.push_back(
             {row, std::string(f->name), std::move(shape->range), shape->type, shape->width, s});
     }
     for (const ast::FieldSymbol* f : st.fields)
         if (const ast::UnpackedStructType* inner = unpackedStruct(f->getType()))
-            dumpFields(*inner, first + leafOffset(st, *f),
+            dumpFields(*inner, sir::SlotId{first.index() + leafOffset(st, *f)},
                        addDumpScope(*f, design_.dumpScopes[row].path + "." + std::string(f->name),
                                     sir::DumpScopeKind::Fork, row));
 }

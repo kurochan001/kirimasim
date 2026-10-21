@@ -39,31 +39,32 @@ Design counter() {
         {"top.rst_n", u4(1), SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0},
         {"top.q", u4(8), SlotKind::Var, {}, kObservable, InstanceId{0}, kNone, kNone, 0},
     };
-    d.names = {{"top.clk", 0}, {"top.rst_n", 1}, {"top.q", 2}};
+    d.names = {{"top.clk", SlotId{0}}, {"top.rst_n", SlotId{1}}, {"top.q", SlotId{2}}};
     d.constants = {constU4(8, 0), constU4(8, 1)};
     Process p;
     p.name = "ff_q";
     p.kind = ProcessKind::FfPlain;
-    p.triggers = {{{0, 0, 0, 0, 0}, Edge::Pos}};
-    p.writes = {{2, 0, 0, 0, 0}};
+    p.triggers = {{{SlotId{0}, 0, 0, 0, 0}, Edge::Pos}};
+    p.writes = {{SlotId{2}, 0, 0, 0, 0}};
     p.loc = at(3);
     p.numTemps = 5;
     p.blocks.resize(3);
     p.blocks[0].instrs = {
-        make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
+        make(Op::Load, u4(1), 0, {Operand::slot(SlotId{1})}, 3),
         make(Op::Lnot, u4(1), 1, {Operand::temp(TempId{0})}, 3),
         make(Op::Truth, u4(1), 2, {Operand::temp(TempId{1})}, 3),
         make(Op::BrIf, voidType(), kNone,
              {Operand::temp(TempId{2}), Operand::block(BlockId{1}), Operand::block(BlockId{2})}, 3),
     };
     p.blocks[1].instrs = {
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::constant(ConstId{0})}, 4),
+        make(Op::Nba, voidType(), kNone, {Operand::slot(SlotId{2}), Operand::constant(ConstId{0})},
+             4),
         make(Op::Ret, voidType(), kNone, {}, 4),
     };
     p.blocks[2].instrs = {
-        make(Op::Load, u4(8), 3, {Operand::slot(2)}, 5),
+        make(Op::Load, u4(8), 3, {Operand::slot(SlotId{2})}, 5),
         make(Op::Add, u4(8), 4, {Operand::temp(TempId{3}), Operand::constant(ConstId{1})}, 5),
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{4})}, 5),
+        make(Op::Nba, voidType(), kNone, {Operand::slot(SlotId{2}), Operand::temp(TempId{4})}, 5),
         make(Op::Ret, voidType(), kNone, {}, 5),
     };
     d.processes.push_back(std::move(p));
@@ -143,7 +144,8 @@ TEST(Sir, UseBeforeDefinition) {
     Design d = counter();
     // bb1 does not see %t3, which is defined in bb2.
     auto& instrs = d.processes[0].blocks[1].instrs;
-    instrs[0] = make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{3})}, 4);
+    instrs[0] =
+        make(Op::Nba, voidType(), kNone, {Operand::slot(SlotId{2}), Operand::temp(TempId{3})}, 4);
     EXPECT_TRUE(mentions(verify(d), "not defined before use"));
 }
 
@@ -182,7 +184,7 @@ TEST(Sir, StoreTypeMismatch) {
     Design d = counter();
     // A 1-bit value stored into the 8-bit q.
     d.processes[0].blocks[2].instrs[2] =
-        make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{0})}, 5);
+        make(Op::Nba, voidType(), kNone, {Operand::slot(SlotId{2}), Operand::temp(TempId{0})}, 5);
     EXPECT_TRUE(mentions(verify(d), "does not fit"));
 }
 
@@ -234,7 +236,8 @@ TEST(Sir, ReportDeferTakesTheTextsOf10_4) {
 
 TEST(Sir, SlotRangeOutOfBounds) {
     Design d = counter();
-    d.processes[0].blocks[2].instrs[0] = make(Op::Load, u4(4), 3, {Operand::slot(2, 6, 4)}, 5);
+    d.processes[0].blocks[2].instrs[0] =
+        make(Op::Load, u4(4), 3, {Operand::slot(SlotId{2}, 6, 4)}, 5);
     EXPECT_TRUE(mentions(verify(d), "slot range is invalid"));
 }
 
@@ -242,7 +245,8 @@ TEST(Sir, PartOfASlotIsUnsigned) {
     Design d = counter();
     d.slots[2].type = s4(8);
     // Bits [3:0] of a signed slot read as unsigned (like a part-select).
-    d.processes[0].blocks[2].instrs[0] = make(Op::Load, u4(4), 3, {Operand::slot(2, 0, 4)}, 5);
+    d.processes[0].blocks[2].instrs[0] =
+        make(Op::Load, u4(4), 3, {Operand::slot(SlotId{2}, 0, 4)}, 5);
     d.processes[0].blocks[2].instrs[1] = make(Op::Zext, u4(8), 4, {Operand::temp(TempId{3})}, 5);
     const auto errors = verify(d);
     EXPECT_FALSE(mentions(errors, "load"));
@@ -301,7 +305,7 @@ Design loopWithWait() {
     Process p;
     p.name = "counter.initial0";
     p.kind = ProcessKind::Initial;
-    p.writes = {{2, 0, 0, 0, 0}};
+    p.writes = {{SlotId{2}, 0, 0, 0, 0}};
     p.frame = {{"i", s2(32), kNone}};
     p.loc = at(1);
     p.numTemps = 6;
@@ -325,7 +329,7 @@ Design loopWithWait() {
         make(Op::Fload, s2(32), 2, {Operand::frame(FrameVarId{0})}, 1),
         make(Op::Trunc, u2(8), 3, {Operand::temp(TempId{2})}, 1),
         make(Op::To4, u4(8), 4, {Operand::temp(TempId{3})}, 1),
-        make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{4})}, 1),
+        make(Op::Store, voidType(), kNone, {Operand::slot(SlotId{2}), Operand::temp(TempId{4})}, 1),
         make(Op::Add, s2(32), 5, {Operand::temp(TempId{2}), Operand::constant(ConstId{3})}, 1),
         make(Op::Fstore, voidType(), kNone,
              {Operand::frame(FrameVarId{0}), Operand::temp(TempId{5})}, 1),
@@ -449,23 +453,25 @@ TEST(Sir, AlwaysCombWritesAreExclusive) {
     Process c;
     c.name = "comb_q";
     c.kind = ProcessKind::Comb;
-    c.writes = {{2, 0, 0, 4, 4}};
+    c.writes = {{SlotId{2}, 0, 0, 4, 4}};
     c.loc = at(7);
     c.blocks.resize(1);
     c.blocks[0].instrs = {
-        make(Op::Store, voidType(), kNone, {Operand::slot(2, 4, 4), Operand::constant(ConstId{2})},
-             7),
+        make(Op::Store, voidType(), kNone,
+             {Operand::slot(SlotId{2}, 4, 4), Operand::constant(ConstId{2})}, 7),
         make(Op::Ret, voidType(), kNone, {}, 7),
     };
     d.constants.push_back({u4(4), {0}, {0}, {}});
     d.processes.push_back(std::move(c));
     EXPECT_TRUE(mentions(verify(d), "also writes"));
     // Disjoint bits are fine.
-    d.processes[0].writes = {{2, 0, 0, 0, 4}};
-    d.processes[0].blocks[1].instrs[0] = make(
-        Op::Nba, voidType(), kNone, {Operand::slot(2, 0, 4), Operand::constant(ConstId{2})}, 4);
-    d.processes[0].blocks[2].instrs[2] = make(
-        Op::Nba, voidType(), kNone, {Operand::slot(2, 0, 4), Operand::constant(ConstId{2})}, 5);
+    d.processes[0].writes = {{SlotId{2}, 0, 0, 0, 4}};
+    d.processes[0].blocks[1].instrs[0] =
+        make(Op::Nba, voidType(), kNone,
+             {Operand::slot(SlotId{2}, 0, 4), Operand::constant(ConstId{2})}, 4);
+    d.processes[0].blocks[2].instrs[2] =
+        make(Op::Nba, voidType(), kNone,
+             {Operand::slot(SlotId{2}, 0, 4), Operand::constant(ConstId{2})}, 5);
     expectClean(d);
 }
 
@@ -476,13 +482,13 @@ TEST(Sir, TwoContinuousAssignmentsToAVariable) {
         Process c;
         c.name = "assign" + std::to_string(i);
         c.kind = ProcessKind::Cont;
-        c.writes = {{2, 0, 0, 0, 0}};
+        c.writes = {{SlotId{2}, 0, 0, 0, 0}};
         c.drives = c.writes;
         c.loc = at(8);
         c.blocks.resize(1);
         c.blocks[0].instrs = {
-            make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::constant(ConstId{1})},
-                 8),
+            make(Op::Store, voidType(), kNone,
+                 {Operand::slot(SlotId{2}), Operand::constant(ConstId{1})}, 8),
             make(Op::Ret, voidType(), kNone, {}, 8),
         };
         d.processes.push_back(std::move(c));
@@ -502,27 +508,27 @@ TEST(Sir, WritesOfFunctionsContinuousAssignmentsCall) {
         Process c;
         c.name = "assign" + std::to_string(i);
         c.kind = ProcessKind::Cont;
-        c.writes = {{i, 0, 0, 0, 0}, {2, 0, 0, 0, 0}};
-        c.drives = {{i, 0, 0, 0, 0}};
+        c.writes = {{SlotId{i}, 0, 0, 0, 0}, {SlotId{2}, 0, 0, 0, 0}};
+        c.drives = {{SlotId{i}, 0, 0, 0, 0}};
         c.loc = at(8);
         c.blocks.resize(1);
         c.blocks[0].instrs = {make(Op::Ret, voidType(), kNone, {}, 8)};
         d.processes.push_back(std::move(c));
     }
     expectClean(d);
-    d.processes[1].drives.push_back({2, 0, 0, 0, 0});
+    d.processes[1].drives.push_back({SlotId{2}, 0, 0, 0, 0});
     expectClean(d);  // one continuous assignment and procedural writes
-    d.processes[0].drives.push_back({2, 0, 0, 0, 0});
+    d.processes[0].drives.push_back({SlotId{2}, 0, 0, 0, 0});
     EXPECT_TRUE(mentions(verify(d), "also writes"));
 }
 
 TEST(Sir, OnlyContinuousAssignmentsDriveWhatTheyWrite) {
     Design d = counter();
-    d.processes[0].drives = {{2, 0, 0, 0, 0}};
+    d.processes[0].drives = {{SlotId{2}, 0, 0, 0, 0}};
     EXPECT_TRUE(mentions(verify(d), "only a cont process drives"));
     d.processes[0].kind = ProcessKind::Cont;
     d.processes[0].triggers.clear();
-    d.processes[0].drives = {{0, 0, 0, 0, 0}};
+    d.processes[0].drives = {{SlotId{0}, 0, 0, 0, 0}};
     EXPECT_TRUE(mentions(verify(d), "drives a range it does not write"));
 }
 
@@ -544,11 +550,11 @@ std::vector<std::string> conflictsByPairs(const Design& d) {
         for (std::size_t j = i + 1; j < ps.size(); ++j) {
             for (const SlotRange& a : ps[i].writes) {
                 for (const SlotRange& b : ps[j].writes) {
-                    if (a.slot != b.slot || a.slot >= d.slots.size() ||
+                    if (a.slot != b.slot || a.slot.index() >= d.slots.size() ||
                         !overlap(a.firstElem, a.numElems, b.firstElem, b.numElems) ||
                         !overlap(a.lsb, a.width, b.lsb, b.width))
                         continue;
-                    const Slot& s = d.slots[a.slot];
+                    const Slot& s = d.slot(a.slot);
                     if (unchecked(ps[i].kind) || unchecked(ps[j].kind) || s.subroutine != kNone)
                         continue;
                     // A cont process writes as a continuous assignment only
@@ -560,8 +566,9 @@ std::vector<std::string> conflictsByPairs(const Design& d) {
                     if (exclusive(ps[i].kind) || exclusive(ps[j].kind) ||
                         s.kind == SlotKind::Uwire || (bothCont && s.kind == SlotKind::Var))
                         out.push_back("process @" + std::to_string(j) + " " + ps[j].name +
-                                      ": writes %s" + std::to_string(a.slot) + " (" + s.name +
-                                      "), which process @" + std::to_string(i) + " also writes");
+                                      ": writes %s" + std::to_string(a.slot.index()) + " (" +
+                                      s.name + "), which process @" + std::to_string(i) +
+                                      " also writes");
                 }
             }
         }
@@ -627,7 +634,7 @@ TEST(Sir, WriteConflictsAreThoseOfEveryPair) {
         for (std::uint32_t i = 0; i < n; ++i) {
             std::vector<SlotRange> writes;
             for (std::uint32_t k = pick(5); k > 0; --k)
-                writes.push_back({pick(5), pick(4), pick(4), pick(8), pick(5)});
+                writes.push_back({SlotId{pick(5)}, pick(4), pick(4), pick(8), pick(5)});
             d.processes.push_back(
                 writer("p" + std::to_string(i), kinds[pick(std::size(kinds))], std::move(writes)));
             // A cont process drives some of what it writes; the rest is
@@ -656,12 +663,14 @@ TEST(Sir, ManyWritersOfOneSlot) {
     };
     d.processes.clear();
     for (std::uint32_t i = 0; i < kN; ++i)
-        d.processes.push_back(writer("q" + std::to_string(i), ProcessKind::Ff, {{0, 0, 0, i, 1}}));
+        d.processes.push_back(
+            writer("q" + std::to_string(i), ProcessKind::Ff, {{SlotId{0}, 0, 0, i, 1}}));
     for (std::uint32_t i = 0; i < kN; ++i)
-        d.processes.push_back(writer("m" + std::to_string(i), ProcessKind::Ff, {{1, i, 1, 0, 0}}));
+        d.processes.push_back(
+            writer("m" + std::to_string(i), ProcessKind::Ff, {{SlotId{1}, i, 1, 0, 0}}));
     EXPECT_TRUE(conflictsOf(verify(d)).empty());
-    d.processes.push_back(
-        writer("both", ProcessKind::FfPlain, {{0, 0, 0, 1234, 1}, {1, 4321, 1, 2, 3}}));
+    d.processes.push_back(writer("both", ProcessKind::FfPlain,
+                                 {{SlotId{0}, 0, 0, 1234, 1}, {SlotId{1}, 4321, 1, 2, 3}}));
     const std::vector<std::string> want = {
         "process @40000 both: writes %s0 (top.q), which process @1234 also writes",
         "process @40000 both: writes %s1 (top.mem), which process @24321 also writes",
@@ -679,14 +688,15 @@ Design memory() {
     Process p;
     p.name = "rw";
     p.kind = ProcessKind::Initial;
-    p.writes = {{3, 0, 0, 0, 0}};
+    p.writes = {{SlotId{3}, 0, 0, 0, 0}};
     p.loc = at(9);
     p.numTemps = 1;
     p.blocks.resize(1);
     p.blocks[0].instrs = {
-        make(Op::LoadElem, u4(8), 0, {Operand::slot(3), Operand::constant(ConstId{2})}, 9),
+        make(Op::LoadElem, u4(8), 0, {Operand::slot(SlotId{3}), Operand::constant(ConstId{2})}, 9),
         make(Op::StoreElem, voidType(), kNone,
-             {Operand::slot(3), Operand::constant(ConstId{2}), Operand::temp(TempId{0})}, 9),
+             {Operand::slot(SlotId{3}), Operand::constant(ConstId{2}), Operand::temp(TempId{0})},
+             9),
         make(Op::Ret, voidType(), kNone, {}, 9),
     };
     d.processes.push_back(std::move(p));
@@ -701,18 +711,19 @@ TEST(Sir, ArrayElementsVerify) {
 
 TEST(Sir, OneIndexPerDimension) {
     Design d = memory();
-    d.processes[0].blocks[0].instrs[0] =
-        make(Op::LoadElem, u4(8), 0,
-             {Operand::slot(3), Operand::constant(ConstId{2}), Operand::constant(ConstId{2})}, 9);
+    d.processes[0].blocks[0].instrs[0] = make(
+        Op::LoadElem, u4(8), 0,
+        {Operand::slot(SlotId{3}), Operand::constant(ConstId{2}), Operand::constant(ConstId{2})},
+        9);
     EXPECT_TRUE(mentions(verify(d), "one index per dimension"));
 }
 
 TEST(Sir, WholeArrayIsNotAValue) {
     Design d = memory();
-    d.processes[0].blocks[0].instrs[0] = make(Op::Load, u4(8), 0, {Operand::slot(3)}, 9);
+    d.processes[0].blocks[0].instrs[0] = make(Op::Load, u4(8), 0, {Operand::slot(SlotId{3})}, 9);
     EXPECT_TRUE(mentions(verify(d), "result type differs"));
     // One element with a constant index is a value.
-    Operand one = Operand::slot(3);
+    Operand one = Operand::slot(SlotId{3});
     one.firstElem = 2;
     one.numElems = 1;
     d.processes[0].blocks[0].instrs[0] = make(Op::Load, u4(8), 0, {one}, 9);
@@ -722,7 +733,7 @@ TEST(Sir, WholeArrayIsNotAValue) {
 
 TEST(Sir, ElementRangeOutOfBounds) {
     Design d = memory();
-    Operand bad = Operand::slot(3);
+    Operand bad = Operand::slot(SlotId{3});
     bad.firstElem = 3;
     bad.numElems = 2;
     d.processes[0].blocks[0].instrs[0] = make(Op::Load, u4(8), 0, {bad}, 9);
@@ -767,14 +778,15 @@ Design calls() {
     Process p;
     p.name = "caller";
     p.kind = ProcessKind::Initial;
-    p.writes = {{2, 0, 0, 0, 0}};
+    p.writes = {{SlotId{2}, 0, 0, 0, 0}};
     p.loc = at(12);
     p.numTemps = 1;
     p.blocks.resize(2);
     p.blocks[0].instrs = {
         make(Op::Call, u4(8), 0,
              {Operand::subroutine(SubroutineId{0}), Operand::constant(ConstId{0})}, 12),
-        make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{0})}, 12),
+        make(Op::Store, voidType(), kNone, {Operand::slot(SlotId{2}), Operand::temp(TempId{0})},
+             12),
         make(Op::CallTask, voidType(), kNone,
              {Operand::subroutine(SubroutineId{1}), Operand::block(BlockId{1})}, 12),
     };
@@ -799,8 +811,8 @@ TEST(Sir, CallArgumentType) {
         make(Op::Call, u4(8), 0,
              {Operand::subroutine(SubroutineId{0}), Operand::constant(ConstId{2})}, 12);
     EXPECT_TRUE(mentions(verify(d), "argument 'a' has the wrong type"));
-    d.processes[0].blocks[0].instrs[0] =
-        make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::slot(2)}, 12);
+    d.processes[0].blocks[0].instrs[0] = make(
+        Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::slot(SlotId{2})}, 12);
     EXPECT_TRUE(mentions(verify(d), "argument 'a' must be a value"));
 }
 
@@ -847,13 +859,13 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
     g.numTemps = 1;
     g.blocks.resize(1);
     g.blocks[0].instrs = {
-        make(Op::Load, u4(1), 0, {Operand::slot(1)}, 13),
+        make(Op::Load, u4(1), 0, {Operand::slot(SlotId{1})}, 13),
         make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, 13),
     };
     d.subroutines.push_back(std::move(g));
     d.processes[0].blocks[0].instrs[2] =
         make(Op::WaitEvent, voidType(), kNone,
-             {Operand::event(0, Edge::Pos), Operand::subroutine(SubroutineId{2}),
+             {Operand::event(SlotId{0}, Edge::Pos), Operand::subroutine(SubroutineId{2}),
               Operand::block(BlockId{1})},
              12);
     expectClean(d);
@@ -906,7 +918,7 @@ TEST(Sir, WatchItemBelongsToTheWaiter) {
         w.numTemps = 1;
         w.blocks.resize(1);
         w.blocks[0].instrs = {
-            make(Op::Load, u4(1), 0, {Operand::slot(1)}, 13),
+            make(Op::Load, u4(1), 0, {Operand::slot(SlotId{1})}, 13),
             make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, 13),
         };
         d.subroutines.push_back(std::move(w));
@@ -950,7 +962,7 @@ TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
     g.numTemps = 1;
     g.blocks.resize(1);
     g.blocks[0].instrs = {
-        make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
+        make(Op::Load, u4(1), 0, {Operand::slot(SlotId{1})}, 3),
         make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, 3),
     };
     d.subroutines.push_back(std::move(g));
@@ -988,14 +1000,14 @@ TEST(Sir, StaticSubroutineSlotsAreNotExclusive) {
         c.loc = at(13);
         c.blocks.resize(1);
         c.blocks[0].instrs = {
-            make(Op::Store, voidType(), kNone, {Operand::slot(arg), Operand::constant(ConstId{1})},
-                 13),
+            make(Op::Store, voidType(), kNone,
+                 {Operand::slot(SlotId{arg}), Operand::constant(ConstId{1})}, 13),
             make(Op::Ret, voidType(), kNone, {}, 13),
         };
         d.processes.push_back(std::move(c));
     }
     expectClean(d);
-    d.slots[arg].subroutine = kNone;  // a variable of the module
+    d.slot(arg).subroutine = kNone;  // a variable of the module
     EXPECT_TRUE(mentions(verify(d), "also writes"));
 }
 

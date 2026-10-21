@@ -724,7 +724,7 @@ bool Lowerer::writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& s
     if (!seen.insert(id).second) return false;
     if (const auto it = subWrites_.find(id); it != subWrites_.end())
         for (const sir::SlotRange& r : it->second)
-            if (design_.slots[r.slot].subroutine == sir::kNone) return true;
+            if (design_.slot(r.slot).subroutine == sir::kNone) return true;
     if (const auto it = callees_.find({true, id.index()}); it != callees_.end())
         for (const sir::SubroutineId c : it->second)
             if (writesOutside(c, seen)) return true;
@@ -753,7 +753,7 @@ std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs
                             ((p.kind == Place::Kind::Element || p.kind == Place::Kind::Bits) &&
                              p.home == Place::Home::Slot);
         if (!ofSlot) unsupported(sl, "this target of assign or force");
-        sir::Slot& slot = design_.slots[p.slot];
+        sir::Slot& slot = design_.slot(p.slot);
         if (!sir::isIntegral(slot.type))
             unsupported(sl, "assign or force of a value that is not integral");
         // A net merged with another through a port would be held on both
@@ -826,8 +826,8 @@ void Lowerer::lowerOverride(const ast::ProceduralAssignStatement& s) {
                             {all.op, constant(sir::u2(32), lsb).op}, sl);
             part = coerce(part, h.type, sl);
             emitVoid(Op::StoreOverride, {Operand::str(level), h.range, part.op}, sl);
-            noteWrite(
-                {h.range.id, h.range.firstElem, h.range.numElems, h.range.lsb, h.range.width});
+            noteWrite({h.range.asSlot(), h.range.firstElem, h.range.numElems, h.range.lsb,
+                       h.range.width});
         }
         terminate(Op::Ret, {}, sl);
         triggerOnReads();

@@ -548,7 +548,7 @@ sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl)
     if (structElement(v.getType()) != nullptr)
         unsupported(sl, "unpacked structure used as a whole here");
     const sir::SlotId id = newSlot(v, "", v.getType(), {}, sl);
-    if (owner) design_.slots[id].subroutine = *owner;
+    if (owner) design_.slot(id).subroutine = *owner;
     slots_.emplace(&v, id);
     return id;
 }
@@ -587,7 +587,7 @@ sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocat
     const sir::InstanceId saved = instance_;
     instance_ = declaringInstance(p).value_or(instance_);
     const sir::SlotId id = slotOf(p, sl);
-    design_.slots[id].instance = instance_;
+    design_.slot(id).instance = instance_;
     // The elements in slot order: the rightmost dimension fastest (4.2).
     std::vector<const slang::ConstantValue*> values;
     const auto flatten = [&](const slang::ConstantValue& cv, auto& self) -> void {
@@ -599,7 +599,7 @@ sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocat
             self(e, self);
     };
     flatten(p.getValue(), flatten);
-    if (values.size() != sir::elementCount(design_.slots[id])) {
+    if (values.size() != sir::elementCount(design_.slot(id))) {
         instance_ = saved;
         unsupported(sl, "the value of parameter '" + std::string(p.name) + "'");
     }
@@ -614,7 +614,7 @@ sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocat
         instance_ = saved;
     };
     try {
-        const sir::Type t = design_.slots[id].type;
+        const sir::Type t = design_.slot(id).type;
         for (std::size_t i = 0; i < values.size(); ++i) {
             sir::Operand o = sir::Operand::slot(id);
             o.firstElem = static_cast<std::uint32_t>(i);
@@ -744,7 +744,7 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
 }
 
 void Lowerer::noteWrite(const sir::SlotRange& r) {
-    const sir::Slot& s = design_.slots[r.slot];
+    const sir::Slot& s = design_.slot(r.slot);
     if (b_.isSub) subWriteSites_[b_.sub()].push_back({r, b_.at});
     std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.sub()] : proc().writes;
     for (const sir::SlotRange& w : writes)
@@ -841,7 +841,7 @@ void Lowerer::dropProcesses(std::size_t first) {
 
 void Lowerer::finishDesign() {
     const auto add = [&](std::vector<sir::SlotRange>& set, const sir::SlotRange& r) {
-        const sir::Slot& s = design_.slots[r.slot];
+        const sir::Slot& s = design_.slot(r.slot);
         for (const sir::SlotRange& w : set)
             if (sir::covers(s, w, r)) return false;
         set.push_back(r);
@@ -897,7 +897,7 @@ void Lowerer::finishDesign() {
     for (const auto& [p, procReads] : combReads_) {
         sir::Process& proc = design_.processes[p];
         for (const sir::SlotRange& r : procReads) {
-            const sir::Slot& s = design_.slots[r.slot];
+            const sir::Slot& s = design_.slot(r.slot);
             // Variables and arguments declared in a called function are not
             // part of it either.
             bool skip = s.subroutine != sir::kNone;
@@ -920,7 +920,7 @@ void Lowerer::checkTaskAndActionWrites() {
             k != sir::ProcessKind::Ff)
             continue;
         for (const sir::SlotRange& w : design_.processes[p].writes)
-            if (design_.slots[w.slot].subroutine == sir::kNone) owners[w.slot].push_back(p);
+            if (design_.slot(w.slot).subroutine == sir::kNone) owners[w.slot].push_back(p);
     }
     if (owners.empty()) return;
     // Where a process writes what is not its block's: each task it calls,
@@ -961,7 +961,7 @@ void Lowerer::checkTaskAndActionWrites() {
                 const sir::SubroutineId x = todo.back();
                 todo.pop_back();
                 for (const auto& [r, at] : subWriteSites_[x]) {
-                    const sir::Slot& s = design_.slots[r.slot];
+                    const sir::Slot& s = design_.slot(r.slot);
                     const auto it = owners.find(r.slot);
                     if (it == owners.end()) continue;
                     for (const std::uint32_t p : it->second) {
@@ -1009,7 +1009,7 @@ void Lowerer::finishDrives() {
         if (it == callWrites_.end()) continue;
         for (const sir::SlotRange& r : it->second)
             if (std::ranges::none_of(proc.writes, [&](const sir::SlotRange& w) {
-                    return sir::covers(design_.slots[r.slot], w, r);
+                    return sir::covers(design_.slot(r.slot), w, r);
                 }))
                 proc.writes.push_back(r);
     }
@@ -1024,21 +1024,21 @@ void Lowerer::resolveNets() {
     for (std::uint32_t p = 0; p < design_.processes.size(); ++p) {
         if (design_.processes[p].kind != sir::ProcessKind::Cont) continue;
         for (const sir::SlotRange& w : design_.processes[p].writes)
-            if (design_.slots[w.slot].kind != sir::SlotKind::Var) drivers[w.slot].push_back({p, w});
+            if (design_.slot(w.slot).kind != sir::SlotKind::Var) drivers[w.slot].push_back({p, w});
     }
     for (const auto& [net, writes] : drivers) {
         // Only nets with bits that several drivers write, or with a driver
         // and their own pull or supply, are resolved (VALUE_SEMANTICS.md
         // 5.5). Where drivers write separate bits, each bit has the value
         // of its one driver either way.
-        const sir::SlotKind kind = design_.slots[net].kind;
+        const sir::SlotKind kind = design_.slot(net).kind;
         const bool own = kind == sir::SlotKind::Tri0 || kind == sir::SlotKind::Tri1 ||
                          kind == sir::SlotKind::Supply0 || kind == sir::SlotKind::Supply1;
         bool shared = false;
         for (std::size_t i = 0; i < writes.size() && !shared; ++i)
             for (std::size_t j = i + 1; j < writes.size() && !shared; ++j)
                 shared = writes[i].first != writes[j].first &&
-                         sir::overlaps(design_.slots[net], writes[i].second, writes[j].second);
+                         sir::overlaps(design_.slot(net), writes[i].second, writes[j].second);
         if (!shared && !own) continue;
         std::vector<std::uint32_t> ps;
         for (const auto& w : writes)
@@ -1051,12 +1051,12 @@ void Lowerer::resolveNets() {
         if (through != ps.end()) {
             ++numErrors_;
             diags_ += whereOf(design_.processes[*through].loc) +
-                      ": error: unsupported: " + "drivers of the net '" + design_.slots[net].name +
+                      ": error: unsupported: " + "drivers of the net '" + design_.slot(net).name +
                       "' that meet through a port (not implemented yet)\n";
             continue;
         }
         const sir::SourceLoc where = design_.processes[ps.front()].loc;
-        if (!design_.slots[net].dims.empty()) {
+        if (!design_.slot(net).dims.empty()) {
             ++numErrors_;
             diags_ += whereOf(where) + ": error: unsupported: an array of nets with " +
                       "several drivers (not implemented yet)\n";
@@ -1079,7 +1079,7 @@ void Lowerer::resolveNets() {
             diags_ +=
                 whereOf(design_.processes[*delayedSide].loc) +
                 ": error: unsupported: a three-state gate with a delay that drives the net '" +
-                design_.slots[net].name + "' with other drivers (not implemented yet)\n";
+                design_.slot(net).name + "' with other drivers (not implemented yet)\n";
             continue;
         }
         if (unknownSide != ps.end()) {
@@ -1087,12 +1087,12 @@ void Lowerer::resolveNets() {
             diags_ +=
                 whereOf(design_.processes[*unknownSide].loc) +
                 ": error: unsupported: a three-state gate that drives this part of the net '" +
-                design_.slots[net].name + "' with other drivers (not implemented yet)\n";
+                design_.slot(net).name + "' with other drivers (not implemented yet)\n";
             continue;
         }
-        const sir::Type type = design_.slots[net].type;
-        const sir::InstanceId instance = design_.slots[net].instance;
-        design_.slots[net].flags |= sir::kMultiDriver;
+        const sir::Type type = design_.slot(net).type;
+        const sir::InstanceId instance = design_.slot(net).instance;
+        design_.slot(net).flags |= sir::kMultiDriver;
 
         // Each driver writes its own slot, which starts at z (SIR_SPEC.md
         // 3.5): the bits it does not write do not drive.
@@ -1100,7 +1100,7 @@ void Lowerer::resolveNets() {
         std::vector<sir::SlotId> sideSlots;
         for (std::size_t k = 0; k < ps.size(); ++k) {
             sir::Slot d;
-            d.name = design_.slots[net].name + ".$driver" + std::to_string(k);
+            d.name = design_.slot(net).name + ".$driver" + std::to_string(k);
             d.type = type;
             d.kind = sir::SlotKind::Wire;
             d.instance = instance;
@@ -1114,8 +1114,9 @@ void Lowerer::resolveNets() {
             for (sir::BasicBlock& bb : p.blocks)
                 for (sir::Instr& in : bb.instrs)
                     if (sir::writesSlot(in.op) && !in.operands.empty() &&
-                        in.operands[0].kind == sir::Operand::Kind::Slot && in.operands[0].id == net)
-                        in.operands[0].id = id;
+                        in.operands[0].kind == sir::Operand::Kind::Slot &&
+                        in.operands[0].asSlot() == net)
+                        in.operands[0].id = id.index();
             for (sir::SlotRange& w : p.writes)
                 if (w.slot == net) w.slot = id;
             // A three-state gate's sides go to a side slot of twice the
@@ -1126,7 +1127,7 @@ void Lowerer::resolveNets() {
                 continue;
             }
             sir::Slot ss;
-            ss.name = design_.slots[net].name + ".$side" + std::to_string(k);
+            ss.name = design_.slot(net).name + ".$side" + std::to_string(k);
             ss.type = sir::u2(2 * type.width);
             ss.instance = instance;
             const auto sid = static_cast<sir::SlotId>(design_.slots.size());
@@ -1137,7 +1138,7 @@ void Lowerer::resolveNets() {
                  ++i) {
                 if (instrs[i].op != sir::Op::Store) continue;
                 sir::Operand& o = instrs[i].operands[0];
-                o.id = sid;
+                o.id = sid.index();
                 p.writes.push_back({sid, 0, 0, o.lsb, o.width});
             }
             sides_.erase(side);
@@ -1146,7 +1147,7 @@ void Lowerer::resolveNets() {
         // The net's value is resolved again whenever a driver changes
         // (VALUE_SEMANTICS.md 5.6).
         sir::Process r;
-        r.name = design_.slots[net].name + ".$resolve";
+        r.name = design_.slot(net).name + ".$resolve";
         r.kind = sir::ProcessKind::Cont;
         r.instance = instance;
         r.loc = where;
@@ -1158,12 +1159,12 @@ void Lowerer::resolveNets() {
                 {sir::Op::Load, type, t, {sir::Operand::slot(slots[k])}, where});
             r.triggers.push_back({sir::SlotRange{slots[k], 0, 0, 0, 0}, sir::Edge::Any});
             ops.push_back(sir::Operand::temp(t));
-            ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength1).op);
-            ops.push_back(constant(sir::u2(3), design_.slots[slots[k]].strength0).op);
+            ops.push_back(constant(sir::u2(3), design_.slot(slots[k]).strength1).op);
+            ops.push_back(constant(sir::u2(3), design_.slot(slots[k]).strength0).op);
             if (sideSlots[k] == sir::kNone) continue;
             const sir::TempId s = sir::TempId{r.numTemps++};
             r.blocks[0].instrs.push_back({sir::Op::Load,
-                                          design_.slots[sideSlots[k]].type,
+                                          design_.slot(sideSlots[k]).type,
                                           s,
                                           {sir::Operand::slot(sideSlots[k])},
                                           where});
@@ -1321,7 +1322,7 @@ void Lowerer::mergePorts(const ast::InstanceSymbol& child) {
         const slang::SourceLocation sl = outer->sourceRange.start();
         try {
             const sir::SlotId s = slotOf(os->as<ast::ValueSymbol>(), sl);
-            sir::Slot& slot = design_.slots[s];
+            sir::Slot& slot = design_.slot(s);
             if (!slot.dims.empty() || inner.getType().getCanonicalType().isUnpackedArray() ||
                 slot.type != typeOf(inner.getType(), sl))
                 continue;
@@ -1371,8 +1372,8 @@ void Lowerer::aliasNets(const ast::NetAliasSymbol& alias) {
         const sir::SlotId s = shared ? *shared : slotOf(*nets.front(), sl);
         for (const ast::NetSymbol* n : nets) {
             if (slots_.contains(n)) continue;
-            if (typeOf(n->getType(), sl) != design_.slots[s].type ||
-                netKindOf(*n) != design_.slots[s].kind) {
+            if (typeOf(n->getType(), sl) != design_.slot(s).type ||
+                netKindOf(*n) != design_.slot(s).kind) {
                 report(sl, "an alias of nets of different types or kinds");
                 return;
             }
@@ -1479,11 +1480,11 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                 lowerCont(
                     processName(prefix, "assign"), n.location, n,
                     [&] {
-                        if (!design_.slots[s].dims.empty())
+                        if (!design_.slot(s).dims.empty())
                             unsupported(n.location, "assignment to a whole unpacked array");
                         // The type first: lowering the value may add slots,
                         // which moves the table.
-                        const sir::Type t = design_.slots[s].type;
+                        const sir::Type t = design_.slot(s).type;
                         const Val v = coerce(lowerExpr(*init), t, n.location);
                         storePlace(placeOfSlot(s), v, false, n.location);
                     },
@@ -1601,8 +1602,8 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         switch (ps.direction) {
             case ast::ArgumentDirection::In:
                 lowerCont(name, sl, child, [&] {
-                    if (!design_.slots[s].dims.empty()) unsupported(sl, "unpacked array port");
-                    const sir::Type t = design_.slots[s].type;  // before lowering adds slots
+                    if (!design_.slot(s).dims.empty()) unsupported(sl, "unpacked array port");
+                    const sir::Type t = design_.slot(s).type;  // before lowering adds slots
                     const Val v = coerce(lowerExpr(*ext), t, sl);
                     emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, sl);
                     noteWrite({s, 0, 0, 0, 0});
@@ -1610,10 +1611,10 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
                 break;
             case ast::ArgumentDirection::Out:
                 lowerCont(name, sl, child, [&] {
-                    if (!design_.slots[s].dims.empty()) unsupported(sl, "unpacked array port");
+                    if (!design_.slot(s).dims.empty()) unsupported(sl, "unpacked array port");
                     const ast::Expression& place = *outputPlace(ext);
                     const Val v =
-                        emit(sir::Op::Load, design_.slots[s].type, {sir::Operand::slot(s)}, sl);
+                        emit(sir::Op::Load, design_.slot(s).type, {sir::Operand::slot(s)}, sl);
                     noteRead({s, 0, 0, 0, 0});
                     lowerStore(place, coerce(v, typeOf(*place.type, sl), sl), false, sl);
                 });
@@ -1647,8 +1648,8 @@ void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortS
     const auto it = slots_.find(internal);
     if (it == slots_.end()) return;  // its declaration was reported
     const sir::SlotId s = it->second;
-    const sir::Type t = design_.slots[s].type;
-    if (!design_.slots[s].dims.empty() || !sir::isIntegral(t)) {
+    const sir::Type t = design_.slot(s).type;
+    if (!design_.slot(s).dims.empty() || !sir::isIntegral(t)) {
         report(ps.location, "unpacked array port left unconnected under `unconnected_drive");
         return;
     }
@@ -1777,13 +1778,13 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
             // resolves (SIR_SPEC.md 3.5): no 1 side for L, no 0 side for H.
             // resolveNets keeps these instructions or removes them.
             const bool net = p.kind == Place::Kind::Slot || p.kind == Place::Kind::Bits;
-            if (!net || design_.slots[p.slot].kind == sir::SlotKind::Var) return;
-            const std::uint32_t w = design_.slots[p.slot].type.width;
+            if (!net || design_.slot(p.slot).kind == sir::SlotKind::Var) return;
+            const std::uint32_t w = design_.slot(p.slot).type.width;
             const bool fixed = p.kind == Place::Kind::Slot
                                    ? w == 1
                                    : !p.pos && p.indices.empty() && p.width == 1 && p.lsb >= 0 &&
                                          p.lsb < static_cast<std::int64_t>(w);
-            if (!fixed || !design_.slots[p.slot].dims.empty() || 2 * w > 64) {
+            if (!fixed || !design_.slot(p.slot).dims.empty() || 2 * w > 64) {
                 side = GateSide{0, 0, false};
                 return;
             }
@@ -2014,7 +2015,7 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
 
 void Lowerer::triggerOnReads() {
     for (const sir::SlotRange& r : b_.reads) {
-        const sir::Slot& s = design_.slots[r.slot];
+        const sir::Slot& s = design_.slot(r.slot);
         if (s.subroutine != sir::kNone) continue;
         bool dup = false;
         for (const sir::Trigger& t : proc().triggers)
@@ -2057,7 +2058,7 @@ void Lowerer::checkStaticInitOrder() {
     const auto instanceOf = [&](const ast::Symbol& s) -> std::optional<sir::InstanceId> {
         for (const auto* m : {&slots_, &structSlots_})
             if (const auto it = m->find(&s); it != m->end())
-                return design_.slots[it->second].instance;
+                return design_.slot(it->second).instance;
         return std::nullopt;
     };
     for (std::size_t i = 0; i < staticInits_.size(); ++i) {
@@ -2118,18 +2119,18 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
             // The initializer, or else the members' defaults (7.2.2).
             Stores stores;
             Storage dst;
-            dst.id = slot;
+            dst.id = slot.index();
             if (const ast::Expression* init = v.getInitializer())
                 assignAggregate(dst, v.getType(), *init, stores, sl);
             else
                 memberDefaults(dst, v.getType(), stores, sl);
             flushStores(stores, false, sl);
-        } else if (!design_.slots[slot].dims.empty()) {
+        } else if (!design_.slot(slot).dims.empty()) {
             Stores stores;
             assignArray(slot, {}, *v.getInitializer(), stores, sl);  // element by element
             flushStores(stores, false, sl);
         } else {
-            const sir::Type t = design_.slots[slot].type;
+            const sir::Type t = design_.slot(slot).type;
             const Val val = coerce(lowerExpr(*v.getInitializer()), t, sl);
             emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
             noteWrite({slot, 0, 0, 0, 0});

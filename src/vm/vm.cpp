@@ -698,12 +698,12 @@ public:
         // The bits a driver drives are x until it first writes them
         // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
         for (const sir::SlotRange& r : sir::unknownAtStart(d_)) {
-            const kernel::SlotLayout& l = store_.layout(r.slot);
+            const kernel::SlotLayout& l = store_.layout(kernelSlot(r.slot));
             const std::uint32_t lsb = r.width == 0 ? 0 : r.lsb;
             const std::uint32_t width = r.width == 0 ? l.width : r.width;
             const std::uint32_t n = r.numElems == 0 ? l.elements : r.numElems;
             for (std::uint32_t e = r.firstElem; e < r.firstElem + n; ++e) {
-                std::uint64_t* p = store_.element(r.slot, e);
+                std::uint64_t* p = store_.element(kernelSlot(r.slot), e);
                 for (std::uint32_t done = 0; done < width;) {
                     const unsigned k = width - done < 64 ? width - done : 64U;
                     kernel::writeField(p, 2, lsb + done, k, kernel::mask(k));
@@ -715,11 +715,12 @@ public:
         // Every element of an event slot holds its own event from the
         // start; the handle is the event's number plus 1, 0 being null
         // (SIR_SPEC.md 3.2.1).
-        for (sir::SlotId s = 0; s < d_.slots.size(); ++s) {
-            if (d_.slots[s].type.kind != sir::TypeKind::Event) continue;
-            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
+        for (std::uint32_t i = 0; i < d_.slots.size(); ++i) {
+            const sir::SlotId s{i};
+            if (d_.slot(s).type.kind != sir::TypeKind::Event) continue;
+            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slot(s)));
             for (std::uint32_t e = 0; e < n; ++e)
-                *store_.element(s, e) = std::uint64_t{sched_.addEvent()} + 1;
+                *store_.element(kernelSlot(s), e) = std::uint64_t{sched_.addEvent()} + 1;
         }
         // The slots assign and force may hold (SCHEDULER_SPEC.md 14.4). A
         // net, or a variable that a continuous assignment drives, gets its
@@ -728,10 +729,11 @@ public:
         std::vector<bool> driven(d_.slots.size(), false);
         for (const sir::Process& proc : d_.processes)
             for (const sir::SlotRange& w : proc.drives)
-                driven[w.slot] = true;
-        for (sir::SlotId s = 0; s < d_.slots.size(); ++s)
-            if ((d_.slots[s].flags & sir::kForceTarget) != 0)
-                sched_.markHeld(s, d_.slots[s].kind != sir::SlotKind::Var, driven[s]);
+                driven[w.slot.index()] = true;
+        for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
+            if ((d_.slots[i].flags & sir::kForceTarget) != 0)
+                sched_.markHeld(kernelSlot(sir::SlotId{i}), d_.slots[i].kind != sir::SlotKind::Var,
+                                driven[i]);
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
         // Each is a process of the kernel, with a pending queue whose
@@ -1300,12 +1302,13 @@ private:
     bool changesState(const sir::Instr& in) const {
         const auto& ops = in.operands;
         const auto ownSlot = [&](sir::SlotId s) {
-            return s < d_.slots.size() && d_.slots[s].subroutine != sir::kNone;
+            return s.index() < d_.slots.size() && d_.slot(s).subroutine != sir::kNone;
         };
         switch (in.op) {
-            case Op::Store: return !ownSlot(ops[0].id);
+            case Op::Store: return !ownSlot(ops[0].asSlot());
             case Op::StoreElem:
-            case Op::StoreBits: return ops[0].kind != Operand::Kind::Frame && !ownSlot(ops[0].id);
+            case Op::StoreBits:
+                return ops[0].kind != Operand::Kind::Frame && !ownSlot(ops[0].asSlot());
             case Op::StoreRef:
             case Op::StoreRefElem:  // the reference is the frame variable's value
             case Op::StoreRefBits: {
@@ -1342,7 +1345,7 @@ private:
             case Operand::Kind::Temp: return tempTypes_[body][o.id];
             case Operand::Kind::Const: return d_.constants[o.id].type;
             case Operand::Kind::Frame: return bodyFrame(body)[o.id].type;
-            case Operand::Kind::Slot: return d_.slots[o.id].type;
+            case Operand::Kind::Slot: return d_.slot(o.asSlot()).type;
             default: return sir::voidType();
         }
     }
@@ -1372,10 +1375,20 @@ private:
         return c[0].a;
     }
 
+    /// The kernel's slot of a SIR slot: the VM adds the slots to the store
+    /// in the SIR's order (load), so the numbers agree. Every number the VM
+    /// gives the kernel goes through here.
+    static kernel::SlotId kernelSlot(sir::SlotId s) { return s.index(); }
+    /// The k-th slot after s: the leaves of an unpacked structure are
+    /// consecutive slots (SIR_SPEC.md 4.2).
+    static sir::SlotId leafSlot(sir::SlotId s, std::uint32_t k) {
+        return sir::SlotId{s.index() + k};
+    }
+
     W4 readSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) const {
-        const kernel::SlotLayout& l = store_.layout(s);
+        const kernel::SlotLayout& l = store_.layout(kernelSlot(s));
         if (width == 0) width = l.width;
-        const std::uint64_t* p = store_.element(s, elem);
+        const std::uint64_t* p = store_.element(kernelSlot(s), elem);
         if (l.domain == kernel::Domain::Four)
             return {kernel::readField(p, 2, lsb, width), kernel::readField(p + 1, 2, lsb, width)};
         return {kernel::readField(p, 1, lsb, width), 0};
@@ -1384,13 +1397,13 @@ private:
     void writeSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.write(s, elem, lsb, width, buf);
+        sched_.write(kernelSlot(s), elem, lsb, width, buf);
     }
 
     void nbaSlot(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.scheduleNba(f.kernelId, s, elem, lsb, width, buf, delay);
+        sched_.scheduleNba(f.kernelId, kernelSlot(s), elem, lsb, width, buf, delay);
     }
 
     // Values of any width, in W4 chunks (kernel/wide.h). A two-state slot
@@ -1399,9 +1412,9 @@ private:
     /// Bits [lsb, lsb + width) (width 0: all) of a slot element.
     void readSlotWide(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                       W4* out) const {
-        const kernel::SlotLayout& l = store_.layout(s);
+        const kernel::SlotLayout& l = store_.layout(kernelSlot(s));
         if (width == 0) width = l.width;
-        const std::uint64_t* p = store_.element(s, elem);
+        const std::uint64_t* p = store_.element(kernelSlot(s), elem);
         const bool four = l.domain == kernel::Domain::Four;
         if (l.domain == kernel::Domain::Real || l.domain == kernel::Domain::Handle) {
             out[0] = {p[0], 0};
@@ -1427,7 +1440,7 @@ private:
     /// Writes the bits [lsb, lsb + width) (width 0: all) of a slot element.
     void writeSlotWide(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const W4* v) {
-        const kernel::SlotLayout& l = store_.layout(s);
+        const kernel::SlotLayout& l = store_.layout(kernelSlot(s));
         const std::uint32_t w = width == 0 ? l.width : width;
         if (l.domain != kernel::Domain::Four && l.domain != kernel::Domain::Two) {
             writeSlot(s, elem, lsb, width, v[0]);
@@ -1435,7 +1448,7 @@ private:
         }
         const std::uint32_t c = (w + 63) / 64;
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
-        sched_.write(s, elem, lsb, width, buf.data());
+        sched_.write(kernelSlot(s), elem, lsb, width, buf.data());
     }
 
     /// A value laid out for the kernel's write() into the slot range
@@ -1455,7 +1468,7 @@ private:
 
     void nbaSlotWide(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                      std::uint32_t width, const W4* v, std::uint64_t delay = 0) {
-        const kernel::SlotLayout& l = store_.layout(s);
+        const kernel::SlotLayout& l = store_.layout(kernelSlot(s));
         const std::uint32_t w = width == 0 ? l.width : width;
         if (l.domain != kernel::Domain::Four && l.domain != kernel::Domain::Two) {
             nbaSlot(f, s, elem, lsb, width, v[0], delay);
@@ -1463,7 +1476,7 @@ private:
         }
         const std::vector<std::uint64_t> buf =
             packed(v, (w + 63) / 64, l.domain == kernel::Domain::Four);
-        sched_.scheduleNba(f.kernelId, s, elem, lsb, width, buf.data(), delay);
+        sched_.scheduleNba(f.kernelId, kernelSlot(s), elem, lsb, width, buf.data(), delay);
     }
 
     /// Chunks laid out like a slot element: a and b words interleaved when
@@ -1480,7 +1493,9 @@ private:
     /// frame variable, or the range of a slot.
     void readOperand(const Operand& o, W4* out, std::uint32_t chunks) const {
         switch (o.kind) {
-            case Operand::Kind::Slot: readSlotWide(o.id, o.firstElem, o.lsb, o.width, out); return;
+            case Operand::Kind::Slot:
+                readSlotWide(o.asSlot(), o.firstElem, o.lsb, o.width, out);
+                return;
             case Operand::Kind::Temp: {
                 const W4* p = &tempStack_[act_.base + tempOff_[act_.body][o.id]];
                 for (std::uint32_t k = 0; k < chunks; ++k)
@@ -1530,7 +1545,7 @@ private:
     void storeBits(const Frame& f, sir::SlotId s, std::uint32_t elem,
                    std::optional<std::int64_t> pos, W4 v, std::uint32_t width, bool nba) {
         const std::optional<kernel::Inside> in =
-            pos ? kernel::inside(*pos, width, d_.slots[s].type.width) : std::nullopt;
+            pos ? kernel::inside(*pos, width, d_.slot(s).type.width) : std::nullopt;
         if (!in) return;
         const W4 part{(v.a >> in->skip) & kernel::mask(in->n),
                       (v.b >> in->skip) & kernel::mask(in->n)};
@@ -1558,7 +1573,7 @@ private:
         f.iffs.reserve(proc.triggers.size());  // the kernel keeps pointers into it
         for (const sir::Trigger& t : proc.triggers) {
             kernel::WaitItem item;
-            item.part = {t.range.slot, t.range.firstElem, t.range.numElems, t.range.lsb,
+            item.part = {kernelSlot(t.range.slot), t.range.firstElem, t.range.numElems, t.range.lsb,
                          t.range.width};
             item.edge = kernelEdge(t.edge);
             if (t.guard != sir::kNone) withIff(f, item, t.guard);
@@ -1753,7 +1768,7 @@ private:
         return p.frameVar != sir::kNone
                    ? !s.frame[p.frameVar.index()].dims.empty() &&
                          s.frame[p.frameVar.index()].type.kind != sir::TypeKind::Ref
-                   : !d.slots[p.slot].dims.empty();
+                   : !d.slot(p.slot).dims.empty();
     }
     static bool isRefParam(const sir::Param& p) {
         return p.dir == sir::Direction::Ref || p.dir == sir::Direction::ConstRef;
@@ -1765,16 +1780,18 @@ private:
     std::vector<W4> readArray(const Operand& o) {
         std::vector<W4> out;
         if (o.kind == Operand::Kind::Slot) {
-            const std::uint32_t c = chunksOf(d_.slots[o.id].type);
+            const std::uint32_t c = chunksOf(d_.slot(o.asSlot()).type);
             const std::uint64_t n =
-                o.numElems != 0 ? o.numElems : sir::elementCount(d_.slots[o.id]);
+                o.numElems != 0 ? o.numElems : sir::elementCount(d_.slot(o.asSlot()));
             out.resize(n * c);
             for (std::uint64_t e = 0; e < n; ++e)
-                readSlotWide(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0, &out[e * c]);
+                readSlotWide(o.asSlot(), static_cast<std::uint32_t>(o.firstElem + e), 0, 0,
+                             &out[e * c]);
             return out;
         }
         const Layout& l = layouts_[act_.body];
-        const std::uint64_t n = sir::elementCount(bodyFrame(act_.body)[o.id]) * l.chunks[o.id];
+        const std::uint64_t n =
+            sir::elementCount(bodyFrame(act_.body)[o.asFrame().index()]) * l.chunks[o.id];
         for (std::uint64_t k = 0; k < n; ++k)
             out.push_back((*act_.vars)[l.wordOf(o.asFrame()) + k]);
         return out;
@@ -1812,7 +1829,7 @@ private:
             const sir::Param& prm = s.params[i];
             if (args[i].empty()) continue;  // an output
             if (prm.frameVar == sir::kNone) {
-                const std::uint32_t c = chunksOf(d_.slots[prm.slot].type);
+                const std::uint32_t c = chunksOf(d_.slot(prm.slot).type);
                 for (std::size_t e = 0; e * c < args[i].size(); ++e)
                     writeSlotWide(prm.slot, static_cast<std::uint32_t>(e), 0, 0, &args[i][e * c]);
             } else {
@@ -1831,7 +1848,7 @@ private:
             const sir::Param& prm = s.params[i];
             if (prm.dir == sir::Direction::Input || isRefParam(prm)) continue;
             if (prm.frameVar == sir::kNone) {
-                const sir::Slot& slot = d_.slots[prm.slot];
+                const sir::Slot& slot = d_.slot(prm.slot);
                 const std::uint32_t c = chunksOf(slot.type);
                 const std::uint64_t n = sir::elementCount(slot);
                 outs[i].resize(n * c);
@@ -1860,11 +1877,11 @@ private:
             const std::uint32_t c = chunksOf(s.params[i].type);
             if (o.kind == Operand::Kind::Slot) {
                 if (!isArrayParam(s, s.params[i], d_)) {
-                    writeSlotWide(o.id, o.firstElem, o.lsb, o.width, outs[i].data());
+                    writeSlotWide(o.asSlot(), o.firstElem, o.lsb, o.width, outs[i].data());
                     continue;
                 }
                 for (std::size_t e = 0; e * c < outs[i].size(); ++e)
-                    writeSlotWide(o.id, static_cast<std::uint32_t>(o.firstElem + e), 0, 0,
+                    writeSlotWide(o.asSlot(), static_cast<std::uint32_t>(o.firstElem + e), 0, 0,
                                   &outs[i][e * c]);
                 continue;
             }
@@ -1882,10 +1899,10 @@ private:
     static W4 frameRef(std::uint32_t vars, std::size_t at) {
         return {(std::uint64_t{vars} << 32) | static_cast<std::uint64_t>(at), 1};
     }
-    static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s, std::uint64_t{e} << 1}; }
+    static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s.index(), std::uint64_t{e} << 1}; }
     static bool isFrameRef(W4 r) { return (r.b & 1U) != 0; }
     W4& refWord(W4 r, std::uint64_t off) { return varSets_[r.a >> 32][(r.a & 0xffffffffU) + off]; }
-    static sir::SlotId refSlot(W4 r) { return static_cast<sir::SlotId>(r.a); }
+    static sir::SlotId refSlot(W4 r) { return sir::SlotId{static_cast<std::uint32_t>(r.a)}; }
     static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
@@ -2078,9 +2095,10 @@ private:
                             designError(f, in, "the delay takes the time past the largest time");
                             return Exit::Error;
                         }
-                        sched_.driveDelayed(info_[body][b.index()][k].driver, ops[0].id,
-                                            ops[0].firstElem, ops[0].lsb, ops[0].width, buf.data(),
-                                            *rise, *fall, *off);
+                        sched_.driveDelayed(info_[body][b.index()][k].driver,
+                                            kernelSlot(ops[0].asSlot()), ops[0].firstElem,
+                                            ops[0].lsb, ops[0].width, buf.data(), *rise, *fall,
+                                            *off);
                         break;
                     }
                     case Op::Resolve: resolve(in, info_[body][b.index()][k]); break;
@@ -2141,8 +2159,8 @@ private:
                     case Op::StoreOverride: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
                         sched_.writeHeld(holdLevel(info_[body][b.index()][k]), f.kernelId,
-                                         ops[1].id, ops[1].firstElem, ops[1].lsb, ops[1].width,
-                                         buf.data());
+                                         kernelSlot(ops[1].asSlot()), ops[1].firstElem, ops[1].lsb,
+                                         ops[1].width, buf.data());
                         break;
                     }
                     default:
@@ -2171,7 +2189,7 @@ private:
     }
 
     static kernel::SlotPart partOf(const Operand& o) {
-        return {o.id, o.firstElem, o.numElems, o.lsb, o.width};
+        return {kernelSlot(o.asSlot()), o.firstElem, o.numElems, o.lsb, o.width};
     }
 
     /// override.start: the targets go to the override process, which runs
@@ -2265,11 +2283,12 @@ private:
                 for (std::size_t i = 0; i < in.operands.size(); ++i) {
                     const Operand& o = in.operands[i];
                     if (o.kind != Operand::Kind::Slot || (target && i == 0)) continue;
-                    const sir::Slot& slot = d_.slots[o.id];
+                    const sir::Slot& slot = d_.slot(o.asSlot());
                     const bool whole = in.op != Op::Load;
-                    deps.slots.push_back({o.id, whole ? 0 : o.firstElem, whole ? 0 : o.numElems,
-                                          whole ? 0 : o.lsb, whole ? 0 : o.width});
-                    if (slot.type.kind == sir::TypeKind::Event) deps.events.push_back(o.id);
+                    deps.slots.push_back({kernelSlot(o.asSlot()), whole ? 0 : o.firstElem,
+                                          whole ? 0 : o.numElems, whole ? 0 : o.lsb,
+                                          whole ? 0 : o.width});
+                    if (slot.type.kind == sir::TypeKind::Event) deps.events.push_back(o.asSlot());
                 }
             }
         }
@@ -2293,7 +2312,7 @@ private:
             return g != sir::kNone && seen[processCount() + g.index()];
         };
         std::erase_if(deps.slots, [&](const kernel::SlotPart& p) { return called(p.slot); });
-        std::erase_if(deps.events, [&](auto e) { return called(e); });
+        std::erase_if(deps.events, [&](sir::SlotId e) { return called(e.index()); });
         return cached.emplace(std::move(deps));
     }
 
@@ -2317,13 +2336,13 @@ private:
         for (const GuardDeps::RefRead& rr : deps.refs) {
             const W4 r = vars[layouts_[body].wordOf(rr.var)];
             if (isFrameRef(r)) continue;
-            m.slots.push_back({refSlot(r) + rr.leaf, rr.anyElement ? 0 : refElem(r),
-                               rr.anyElement ? 0U : 1U, 0, 0});
+            m.slots.push_back({kernelSlot(leafSlot(refSlot(r), rr.leaf)),
+                               rr.anyElement ? 0 : refElem(r), rr.anyElement ? 0U : 1U, 0, 0});
         }
         for (const sir::SlotId s : deps.events) {
-            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slots[s]));
+            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slot(s)));
             for (std::uint32_t e = 0; e < n; ++e)
-                if (const std::uint64_t h = *store_.element(s, e); h != 0)
+                if (const std::uint64_t h = *store_.element(kernelSlot(s), e); h != 0)
                     m.events.push_back(static_cast<kernel::EventId>(h - 1));
         }
     }
@@ -2720,12 +2739,13 @@ private:
         };
         switch (in.op) {
             case Op::Load:
-                readSlotWide(ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, r.data());
+                readSlotWide(ops[0].asSlot(), ops[0].firstElem, ops[0].lsb, ops[0].width, r.data());
                 setWide(in, r);
                 return true;
             case Op::Store: {
                 const std::vector<W4> x = get(1);
-                writeSlotWide(ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, x.data());
+                writeSlotWide(ops[0].asSlot(), ops[0].firstElem, ops[0].lsb, ops[0].width,
+                              x.data());
                 return true;
             }
             case Op::Nba:
@@ -2737,8 +2757,8 @@ private:
                     designError(f, in, "the delay takes the time past the largest time");
                     return false;
                 }
-                nbaSlotWide(f, ops[0].id, ops[0].firstElem, ops[0].lsb, ops[0].width, x.data(),
-                            *delay);
+                nbaSlotWide(f, ops[0].asSlot(), ops[0].firstElem, ops[0].lsb, ops[0].width,
+                            x.data(), *delay);
                 return true;
             }
             case Op::Fload: {
@@ -2758,7 +2778,8 @@ private:
             case Op::LoadElem: {
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
-                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                    frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
+                          : d_.slot(ops[0].asSlot()).dims;
                 const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);
                 if (!e) {
                     fillDefault(r.data(), rt);  // VALUE_SEMANTICS.md 3.11
@@ -2767,7 +2788,7 @@ private:
                     for (std::size_t k = 0; k < r.size(); ++k)
                         r[k] = src[k];
                 } else {
-                    readSlotWide(ops[0].id, *e, 0, 0, r.data());
+                    readSlotWide(ops[0].asSlot(), *e, 0, 0, r.data());
                 }
                 setWide(in, r);
                 return true;
@@ -2776,7 +2797,8 @@ private:
             case Op::NbaElem: {
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
-                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                    frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
+                          : d_.slot(ops[0].asSlot()).dims;
                 const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);
                 if (!e) return true;  // an invalid index writes nothing
                 const std::vector<W4> x = get(ops.size() - 1);
@@ -2785,9 +2807,9 @@ private:
                     for (std::size_t k = 0; k < x.size(); ++k)
                         dst[k] = x[k];
                 } else if (in.op == Op::StoreElem) {
-                    writeSlotWide(ops[0].id, *e, 0, 0, x.data());
+                    writeSlotWide(ops[0].asSlot(), *e, 0, 0, x.data());
                 } else {
-                    nbaSlotWide(f, ops[0].id, *e, 0, 0, x.data());
+                    nbaSlotWide(f, ops[0].asSlot(), *e, 0, 0, x.data());
                 }
                 return true;
             }
@@ -2797,7 +2819,8 @@ private:
                 // element (VALUE_SEMANTICS.md 3.11).
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
-                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                    frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
+                          : d_.slot(ops[0].asSlot()).dims;
                 std::uint32_t e = 0;
                 if (!dims.empty()) {
                     const std::optional<std::uint32_t> el = elementOf(dims, ops, 1);
@@ -2807,8 +2830,8 @@ private:
                 const std::size_t n = dims.size();
                 const std::optional<std::int64_t> pos = indexOf(ops[n + 1]);
                 if (!pos) return true;
-                const sir::Type et =
-                    frame ? bodyFrame(act_.body)[ops[0].id].type : d_.slots[ops[0].id].type;
+                const sir::Type et = frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].type
+                                           : d_.slot(ops[0].asSlot()).type;
                 const unsigned vw = t(n + 2).width;
                 const std::optional<kernel::Inside> at = kernel::inside(*pos, vw, et.width);
                 if (!at) return true;
@@ -2820,9 +2843,9 @@ private:
                                             : &frameElem(ops[0].asFrame(), e);
                     kw::put(cell, at->lo, part.data(), at->n);
                 } else if (in.op == Op::StoreBits) {
-                    writeSlotWide(ops[0].id, e, at->lo, at->n, part.data());
+                    writeSlotWide(ops[0].asSlot(), e, at->lo, at->n, part.data());
                 } else {
-                    nbaSlotWide(f, ops[0].id, e, at->lo, at->n, part.data());
+                    nbaSlotWide(f, ops[0].asSlot(), e, at->lo, at->n, part.data());
                 }
                 return true;
             }
@@ -3067,7 +3090,8 @@ private:
                     for (std::uint32_t j = 0; j < c; ++j)
                         out[j] = refWord(r, k + j);
                 } else {
-                    readSlotWide(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, out);
+                    readSlotWide(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0,
+                                 0, out);
                 }
                 return true;
             }
@@ -3080,14 +3104,15 @@ private:
                 for (std::uint32_t j = 0; j < c; ++j)
                     refWord(r, k + j) = x[j];
             } else if (in.op == Op::StoreRef) {
-                writeSlotWide(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, x.data());
+                writeSlotWide(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0, 0,
+                              x.data());
             } else {
-                nbaSlotWide(f, refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0,
-                            x.data());
+                nbaSlotWide(f, leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0,
+                            0, x.data());
             }
             return true;
         }
-        const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].id];
+        const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].asFrame().index()];
         const std::uint32_t c = chunksOf(fv.target);
         if (c == 1) return false;
         const W4 r = frameVar(ops[0].asFrame());
@@ -3384,16 +3409,16 @@ private:
         switch (in.op) {
             case Op::Load: {
                 const Operand& o = ops[0];
-                set(readSlot(o.id, o.firstElem, o.lsb, o.width));
+                set(readSlot(o.asSlot(), o.firstElem, o.lsb, o.width));
                 return true;
             }
             case Op::Store:
             case Op::Nba: {
                 const Operand& o = ops[0];
                 if (in.op == Op::Store)
-                    writeSlot(o.id, o.firstElem, o.lsb, o.width, v(1));
+                    writeSlot(o.asSlot(), o.firstElem, o.lsb, o.width, v(1));
                 else
-                    nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1));
+                    nbaSlot(f, o.asSlot(), o.firstElem, o.lsb, o.width, v(1));
                 return true;
             }
             case Op::NbaDelay: {
@@ -3405,42 +3430,46 @@ private:
                     designError(f, in, "the delay takes the time past the largest time");
                     return false;
                 }
-                nbaSlot(f, o.id, o.firstElem, o.lsb, o.width, v(1), *d);
+                nbaSlot(f, o.asSlot(), o.firstElem, o.lsb, o.width, v(1), *d);
                 return true;
             }
             case Op::LoadElem: {
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
-                const std::optional<std::uint32_t> e = elementOf(
-                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims, ops,
-                    1);
+                const std::optional<std::uint32_t> e =
+                    elementOf(frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
+                                    : d_.slot(ops[0].asSlot()).dims,
+                              ops, 1);
                 // An invalid index reads the element type's default
                 // (VALUE_SEMANTICS.md 3.11).
                 if (!e)
                     set(defaultValue(rt));
                 else
-                    set(frame ? frameElem(ops[0].asFrame(), *e) : readSlot(ops[0].id, *e, 0, 0));
+                    set(frame ? frameElem(ops[0].asFrame(), *e)
+                              : readSlot(ops[0].asSlot(), *e, 0, 0));
                 return true;
             }
             case Op::StoreElem:
             case Op::NbaElem: {
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
-                const std::optional<std::uint32_t> e = elementOf(
-                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims, ops,
-                    1);
+                const std::optional<std::uint32_t> e =
+                    elementOf(frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
+                                    : d_.slot(ops[0].asSlot()).dims,
+                              ops, 1);
                 if (!e) return true;  // an invalid index writes nothing
                 if (frame)
                     frameElem(ops[0].asFrame(), *e) = v(ops.size() - 1);
                 else if (in.op == Op::StoreElem)
-                    writeSlot(ops[0].id, *e, 0, 0, v(ops.size() - 1));
+                    writeSlot(ops[0].asSlot(), *e, 0, 0, v(ops.size() - 1));
                 else
-                    nbaSlot(f, ops[0].id, *e, 0, 0, v(ops.size() - 1));
+                    nbaSlot(f, ops[0].asSlot(), *e, 0, 0, v(ops.size() - 1));
                 return true;
             }
             case Op::StoreBits:
             case Op::NbaBits: {
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
-                    frame ? bodyFrame(act_.body)[ops[0].id].dims : d_.slots[ops[0].id].dims;
+                    frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
+                          : d_.slot(ops[0].asSlot()).dims;
                 std::uint32_t e = 0;
                 if (!dims.empty()) {
                     const std::optional<std::uint32_t> el = elementOf(dims, ops, 1);
@@ -3452,11 +3481,12 @@ private:
                     W4& cell =
                         dims.empty() ? frameVar(ops[0].asFrame()) : frameElem(ops[0].asFrame(), e);
                     if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
-                        cell = kernel::writeBits4(cell, bodyFrame(act_.body)[ops[0].id].type.width,
-                                                  *pos, v(n + 2), t(n + 2).width);
+                        cell = kernel::writeBits4(
+                            cell, bodyFrame(act_.body)[ops[0].asFrame().index()].type.width, *pos,
+                            v(n + 2), t(n + 2).width);
                     return true;
                 }
-                storeBits(f, ops[0].id, e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
+                storeBits(f, ops[0].asSlot(), e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
                           in.op == Op::NbaBits);
                 return true;
             }
@@ -3491,17 +3521,17 @@ private:
                     std::uint32_t e = 0;
                     if (ops.size() > 1) {
                         const std::optional<std::uint32_t> el =
-                            elementOf(d_.slots[o.id].dims, ops, 1);
+                            elementOf(d_.slot(o.asSlot()).dims, ops, 1);
                         if (!el) {
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
                         e = *el;
                     }
-                    set(slotRef(o.id, e));
+                    set(slotRef(o.asSlot(), e));
                     return true;
                 }
-                const sir::FrameVar& fv = bodyFrame(act_.body)[o.id];
+                const sir::FrameVar& fv = bodyFrame(act_.body)[o.asFrame().index()];
                 if (fv.type.kind == sir::TypeKind::Ref) {
                     // A ref argument passed on, or an element of the array
                     // it refers to.
@@ -3548,7 +3578,8 @@ private:
                 if (in.op == Op::LoadRef) {
                     set(isFrameRef(r)
                             ? refWord(r, k)
-                            : readSlot(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0));
+                            : readSlot(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)),
+                                       refElem(r), 0, 0));
                     return true;
                 }
                 const W4 x = v(ops.size() - 1);
@@ -3559,9 +3590,11 @@ private:
                     }
                     refWord(r, k) = x;
                 } else if (in.op == Op::StoreRef) {
-                    writeSlot(refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, x);
+                    writeSlot(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0, 0,
+                              x);
                 } else {
-                    nbaSlot(f, refSlot(r) + static_cast<sir::SlotId>(k), refElem(r), 0, 0, x);
+                    nbaSlot(f, leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0,
+                            0, x);
                 }
                 return true;
             }
@@ -3569,7 +3602,7 @@ private:
             case Op::StoreRefElem:
             case Op::StoreRefBits: {
                 if (refWide(f, p, in)) return true;
-                const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].id];
+                const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].asFrame().index()];
                 const W4 r = frameVar(ops[0].asFrame());
                 std::uint32_t e = 0;
                 if (!fv.dims.empty()) {
@@ -3783,7 +3816,7 @@ private:
 
     /// The event an element of an event slot holds; nothing for null.
     std::optional<kernel::EventId> eventOf(const sir::Operand& o) const {
-        const std::uint64_t h = readSlot(o.id, o.firstElem, 0, 0).a;
+        const std::uint64_t h = readSlot(o.asSlot(), o.firstElem, 0, 0).a;
         if (h == 0) return std::nullopt;
         return static_cast<kernel::EventId>(h - 1);
     }
@@ -4101,8 +4134,8 @@ private:
                 case sir::DumpType::Supply0: t = kernel::DumpType::Supply0; break;
                 case sir::DumpType::Supply1: t = kernel::DumpType::Supply1; break;
             }
-            s.vars.push_back({v.scope, v.name, v.range, t, v.width, v.slot,
-                              d_.slots[v.slot].type.kind == sir::TypeKind::ShortReal});
+            s.vars.push_back({v.scope, v.name, v.range, t, v.width, kernelSlot(v.slot),
+                              d_.slot(v.slot).type.kind == sir::TypeKind::ShortReal});
         }
         s.date = options_.date;
         s.version = options_.version;
@@ -4149,8 +4182,9 @@ private:
         const Operand& m = ops[2];
         const bool slot = m.kind == Operand::Kind::Slot;
         const std::vector<sir::ArrayDim>& adims =
-            slot ? d_.slots[m.id].dims : bodyFrame(act_.body)[m.id].dims;
-        const sir::Type et = slot ? d_.slots[m.id].type : bodyFrame(act_.body)[m.id].type;
+            slot ? d_.slot(m.asSlot()).dims : bodyFrame(act_.body)[m.asFrame().index()].dims;
+        const sir::Type et =
+            slot ? d_.slot(m.asSlot()).type : bodyFrame(act_.body)[m.asFrame().index()].type;
         std::vector<kernel::MemDim> dims;
         dims.reserve(adims.size());
         for (const sir::ArrayDim& d : adims)
@@ -4179,7 +4213,7 @@ private:
             spec.conv = hex ? 'h' : 'b';
             for (const std::uint32_t e : kernel::dumpOrder(dims, address[0], address[1])) {
                 if (slot)
-                    readSlotWide(m.id, e, 0, 0, v.data());
+                    readSlotWide(m.asSlot(), e, 0, 0, v.data());
                 else
                     for (std::uint32_t k = 0; k < c; ++k)
                         v[k] = (&frameElem(m.asFrame(), e))[k];
@@ -4213,7 +4247,7 @@ private:
                                                      address[1], !sir::isFourState(et), items);
         for (const kernel::MemWord& w : l.words) {
             if (slot)
-                writeSlotWide(m.id, w.elem, 0, 0, w.value.data());
+                writeSlotWide(m.asSlot(), w.elem, 0, 0, w.value.data());
             else
                 for (std::uint32_t k = 0; k < c; ++k)
                     (&frameElem(m.asFrame(), w.elem))[k] = w.value[k];

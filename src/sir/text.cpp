@@ -60,7 +60,8 @@ std::string rangeText(std::uint32_t firstElem, std::uint32_t numElems, std::uint
 }
 
 std::string slotRef(const SlotRange& r) {
-    return "%s" + std::to_string(r.slot) + rangeText(r.firstElem, r.numElems, r.lsb, r.width);
+    return "%s" + std::to_string(r.slot.index()) +
+           rangeText(r.firstElem, r.numElems, r.lsb, r.width);
 }
 
 std::string operandText(const Design& d, const Operand& o) {
@@ -299,13 +300,13 @@ std::string toText(const Design& d) {
         if (s.subroutine != kNone) out += " sub=@" + std::to_string(s.subroutine.index());
         if (s.declType != kNone) out += " type=" + typeRef(s.declType);
         if (s.driverOf != kNone)
-            out += " driver-of=%s" + std::to_string(s.driverOf) + " strength=(" +
+            out += " driver-of=%s" + std::to_string(s.driverOf.index()) + " strength=(" +
                    std::to_string(s.strength1) + "," + std::to_string(s.strength0) + ")";
         out += slotFlags(s.flags) + "\n";
     }
     for (const NameEntry& n : d.names) {
-        if (n.slot < d.slots.size() && n.path == d.slots[n.slot].name) continue;
-        out += "alias " + quoted(n.path) + " -> %s" + std::to_string(n.slot) + "\n";
+        if (n.slot.index() < d.slots.size() && n.path == d.slot(n.slot).name) continue;
+        out += "alias " + quoted(n.path) + " -> %s" + std::to_string(n.slot.index()) + "\n";
     }
     for (std::size_t i = 0; i < d.subroutines.size(); ++i) {
         const Subroutine& sub = d.subroutines[i];
@@ -318,7 +319,7 @@ std::string toText(const Design& d) {
         for (const Param& prm : sub.params) {
             out += "  param " + std::string(directionName(prm.dir)) + " " + quoted(prm.name) +
                    " : " + toString(prm.type) + " -> " +
-                   (prm.slot != kNone ? "%s" + std::to_string(prm.slot)
+                   (prm.slot != kNone ? "%s" + std::to_string(prm.slot.index())
                                       : "%f" + std::to_string(prm.frameVar.index())) +
                    "\n";
         }

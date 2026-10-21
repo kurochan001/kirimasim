@@ -68,7 +68,7 @@ bool Lowerer::isArrayLeaf(const Storage& s) {
 }
 
 Lowerer::ArrayBase Lowerer::storageBase(const Storage& s) {
-    if (!s.frame) return s.id;
+    if (!s.frame) return sir::SlotId{s.id};
     const bool ref = frameVars()[s.id].type.kind == sir::TypeKind::Ref;
     return {ref ? Place::Home::Ref : Place::Home::Frame, s.id};
 }
@@ -134,7 +134,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
     if (sym != nullptr && sym->kind == ast::SymbolKind::Parameter &&
         sym->as<ast::ParameterSymbol>().getType().isUnpackedArray()) {
         Storage st;
-        st.id = paramSlot(sym->as<ast::ParameterSymbol>(), sl);
+        st.id = paramSlot(sym->as<ast::ParameterSymbol>(), sl).index();
         return st;
     }
     if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
@@ -148,7 +148,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
             return st;
         }
         if (!inSlot(*sym)) unsupported(sl, "automatic variable '" + std::string(v.name) + "' here");
-        st.id = structSlots(v, sl);
+        st.id = structSlots(v, sl).index();
         return st;
     }
     if (const std::optional<sir::FrameVarId> f = findFrameVar(*sym)) {
@@ -157,7 +157,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         return st;
     }
     if (!inSlot(*sym)) return std::nullopt;
-    st.id = slotOf(v, sl);
+    st.id = slotOf(v, sl).index();
     return st;
 }
 
@@ -175,7 +175,7 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
         return p;
     }
     const sir::Slot& slot = design().slots[st.id];
-    p.slot = st.id;
+    p.slot = sir::SlotId{st.id};  // a frame variable's number when st.frame
     p.type = slot.type;
     if (st.elem.empty()) {
         p.kind = Place::Kind::Slot;

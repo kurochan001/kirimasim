@@ -96,8 +96,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             std::vector<Leaf> leaves;
             structLeaves(v.getType(), "", leaves);
             const bool automatic = v.lifetime == ast::VariableLifetime::Automatic;
-            const std::uint32_t first =
-                automatic ? structFrameVars(v, v.location).index() : structSlots(v, v.location);
+            const std::uint32_t first = automatic ? structFrameVars(v, v.location).index()
+                                                  : structSlots(v, v.location).index();
             const auto at = static_cast<std::uint32_t>(design_.subroutine(id).params.size());
             for (std::size_t k = 0; k < leaves.size(); ++k) {
                 sir::Param prm;
@@ -108,9 +108,9 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                     prm.frameVar = sir::FrameVarId{leaf};
                     prm.type = frameVar(prm.frameVar).type;
                 } else {
-                    prm.slot = leaf;
+                    prm.slot = sir::SlotId{leaf};
                     prm.type = design_.slots[leaf].type;
-                    noteWrite({leaf, 0, 0, 0, 0});
+                    noteWrite({sir::SlotId{leaf}, 0, 0, 0, 0});
                 }
                 design_.subroutine(id).params.push_back(std::move(prm));
             }
@@ -233,7 +233,7 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
         if (b_.retSlots) {
             // A static function's $return slots.
             Storage out;
-            out.id = *b_.retSlots;
+            out.id = b_.retSlots->index();
             Stores stores;
             copyAggregate(out, held, *b_.retAggregateType, stores, sl);
             flushStores(stores, false, sl);
@@ -251,7 +251,7 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     } else if (b_.retFrame) {
         v = emit(Op::Fload, frameVar(*b_.retFrame).type, {Operand::frame(*b_.retFrame)}, sl);
     } else if (b_.retSlot) {
-        v = emit(Op::Load, design_.slots[*b_.retSlot].type, {Operand::slot(*b_.retSlot)}, sl);
+        v = emit(Op::Load, design_.slot(*b_.retSlot).type, {Operand::slot(*b_.retSlot)}, sl);
     } else {
         unsupported(sl, "function without a return value");
     }
@@ -286,7 +286,8 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
                                     "64 bits");
         }
     }
-    ops.push_back(st->frame ? Operand::frame(sir::FrameVarId{st->id}) : Operand::slot(st->id));
+    ops.push_back(st->frame ? Operand::frame(sir::FrameVarId{st->id})
+                            : Operand::slot(sir::SlotId{st->id}));
     ops.insert(ops.end(), st->elem.begin(), st->elem.end());
     for (const ast::Expression* ix : indices) {
         const Val iv = lowerExpr(*ix);
@@ -294,8 +295,8 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
         ops.push_back(iv.op);
     }
     if (!st->frame) {
-        noteRead({st->id, 0, 0, 0, 0});
-        if (!isConst) noteWrite({st->id, 0, 0, 0, 0});
+        noteRead({sir::SlotId{st->id}, 0, 0, 0, 0});
+        if (!isConst) noteWrite({sir::SlotId{st->id}, 0, 0, 0, 0});
     }
     return emit(Op::RefMake, sir::refType(), std::move(ops), sl);
 }
@@ -308,7 +309,7 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     // of the caller's frame.
     const std::optional<ArrayTarget> a = arrayTarget(actual);
     if (a && a->home == Place::Home::Slot) {
-        const sir::Slot& slot = design_.slots[a->slot];
+        const sir::Slot& slot = design_.slot(a->slot);
         Operand o = Operand::slot(a->slot);
         if (!a->indices.empty()) {
             // The elements of a sub-array lie together, from its left bounds.
@@ -517,7 +518,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         const sir::Subroutine& callee = design_.subroutine(id);
         const std::vector<sir::ArrayDim>& dims = prm.frameVar != sir::kNone
                                                      ? callee.frame[prm.frameVar.index()].dims
-                                                     : design_.slots[prm.slot].dims;
+                                                     : design_.slot(prm.slot).dims;
         if (!dims.empty()) {
             ops.push_back(arrayArgument(*outputPlace(args[i]), prm, dims, sl));
             continue;
@@ -540,7 +541,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                         v.kind == ast::SymbolKind::FormalArgument) &&
                        v.as<ast::VariableSymbol>().lifetime == ast::VariableLifetime::Static) {
                 const sir::SlotId s = slotOf(v.as<ast::VariableSymbol>(), sl);
-                if (design_.slots[s].dims.empty() && design_.slots[s].type == prm.type) {
+                if (design_.slot(s).dims.empty() && design_.slot(s).type == prm.type) {
                     ops.push_back(Operand::slot(s));
                     noteWrite({s, 0, 0, 0, 0});
                     continue;

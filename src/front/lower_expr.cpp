@@ -630,7 +630,7 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
     const Place p = placeOf(e, e.sourceRange.start());
     if (p.home != Place::Home::Slot || p.pos || (!p.indices.empty() && !p.elem))
         return std::nullopt;
-    const sir::Slot& slot = design().slots[p.slot];
+    const sir::Slot& slot = design().slot(p.slot);
     switch (p.kind) {
         case Place::Kind::Slot:
             if (!slot.dims.empty()) return std::nullopt;
@@ -659,7 +659,7 @@ Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl
     if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym))
         unsupported(sl, "event given by this expression");
     const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), sl);
-    const sir::Slot& slot = design().slots[s];
+    const sir::Slot& slot = design().slot(s);
     if (indices.size() != slot.dims.size()) unsupported(sl, "event given by this expression");
     for (std::size_t d = 0; d < indices.size(); ++d) {
         const std::int64_t l = slot.dims[d].left;
@@ -860,9 +860,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (!inSlot(sym))
                 unsupported(sl, "automatic variable '" + std::string(sym.name) + "' here");
             const sir::SlotId s = slotOf(sym.as<ast::ValueSymbol>(), sl);
-            if (!design().slots[s].dims.empty()) unsupported(sl, "an unpacked array as a value");
+            if (!design().slot(s).dims.empty()) unsupported(sl, "an unpacked array as a value");
             noteRead({s, 0, 0, 0, 0});
-            return emit(Op::Load, design().slots[s].type, {Operand::slot(s)}, sl);
+            return emit(Op::Load, design().slot(s).type, {Operand::slot(s)}, sl);
         }
         case ast::ExpressionKind::ElementSelect: return lowerElementSelect(e);
         case ast::ExpressionKind::RangeSelect: return lowerRangeSelect(e);
@@ -1401,7 +1401,7 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
     if (!st) unsupported(sl, "selecting from this array");
     Place p;
     p.kind = Place::Kind::Element;
-    p.slot = st->id;
+    p.slot = sir::SlotId{st->id};  // a frame variable's number when frame
     p.indices = st->elem;
     if (st->frame) {
         // An automatic array, or what an array ref argument refers to
@@ -2396,7 +2396,7 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
         // The target is a fixed range of a slot: a whole variable, an
         // element or bits at constant positions (SIR_SPEC.md 5.3).
         const Place p = placeOf(a.left(), sl);
-        const sir::Slot& slot = design().slots[p.slot];
+        const sir::Slot& slot = design().slot(p.slot);
         const bool fixedElem = p.kind == Place::Kind::Element ? p.elem.has_value()
                                : p.kind == Place::Kind::Bits  ? p.indices.empty() || p.elem
                                                               : p.kind == Place::Kind::Slot;
@@ -2504,10 +2504,11 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
         return std::nullopt;
     const std::optional<Storage> st = storageOf(e, e.sourceRange.start());
     if (!st || st->dynamic || !isArrayLeaf(*st)) return std::nullopt;
-    if (!st->frame) return ArrayTarget{st->id, st->constIdx};
+    if (!st->frame) return ArrayTarget{sir::SlotId{st->id}, st->constIdx};
     // An automatic array, or what an array ref argument refers to.
     const bool ref = frameVars()[st->id].type.kind == sir::TypeKind::Ref;
-    return ArrayTarget{st->id, st->constIdx, ref ? Place::Home::Ref : Place::Home::Frame};
+    return ArrayTarget{sir::SlotId{st->id}, st->constIdx,
+                       ref ? Place::Home::Ref : Place::Home::Frame};
 }
 
 const std::vector<sir::ArrayDim>& Lowerer::dimsOf(ArrayBase b) {
@@ -2523,7 +2524,7 @@ Type Lowerer::elemTypeOf(ArrayBase b) {
     return sir::voidType();
 }
 
-Type Lowerer::homeType(const Place& p) { return elemTypeOf({p.home, p.slot}); }
+Type Lowerer::homeType(const Place& p) { return elemTypeOf({p.home, p.slot.index()}); }
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
     // The writes of an aggregate assignment, after every value of its right
@@ -2536,7 +2537,7 @@ Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t
     Place p;
     p.kind = Place::Kind::Element;
     p.home = s.home;
-    p.slot = s.id;
+    p.slot = sir::SlotId{s.id};  // a frame variable's number when s.frame
     for (const std::int64_t i : indices)
         p.indices.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
     if (s.home == Place::Home::Slot) p.elem = elementNumber(design().slots[s.id], indices);
@@ -2660,9 +2661,9 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             if (!inSlot(sym))
                 unsupported(sl, "automatic variable '" + std::string(sym.name) + "' here");
             p.slot = slotOf(sym.as<ast::ValueSymbol>(), sl);
-            if (!design().slots[p.slot].dims.empty())
+            if (!design().slot(p.slot).dims.empty())
                 unsupported(sl, "assignment to a whole unpacked array");
-            p.type = design().slots[p.slot].type;
+            p.type = design().slot(p.slot).type;
             return p;
         }
         case ast::ExpressionKind::ElementSelect:
@@ -2701,7 +2702,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     // Bits of an automatic variable, or of what a ref
                     // argument refers to (SIR_SPEC.md 7.4, 8).
                     p.home = leaf.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
-                    p.slot = leaf.frame.index();  // read back by frameHome()
+                    p.slot = sir::SlotId{leaf.frame.index()};  // read back by frameHome()
                 } else {
                     p.slot = leaf.slot;
                     p.indices = leaf.indices;
@@ -2795,7 +2796,7 @@ Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width
     if (base.kind == Place::Kind::Frame || base.kind == Place::Kind::Ref) {
         // Bits of an automatic variable or of what a ref argument refers to.
         base.home = base.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
-        base.slot = base.frame.index();  // read back by frameHome()
+        base.slot = sir::SlotId{base.frame.index()};  // read back by frameHome()
         base.kind = Place::Kind::Slot;
     }
     if (base.kind != Place::Kind::Slot && base.kind != Place::Kind::Element &&
@@ -2826,7 +2827,7 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
     const std::uint32_t elem = p.elem.value_or(0);
     const std::uint32_t count = p.elem ? 1 : 0;
     if (p.kind == Place::Kind::Bits && !p.pos && p.lsb >= 0 &&
-        p.lsb + p.width <= design_.slots[p.slot].type.width)
+        p.lsb + p.width <= design_.slot(p.slot).type.width)
         return {p.slot, elem, count, static_cast<std::uint32_t>(p.lsb), p.width};
     return {p.slot, elem, count, 0, 0};
 }
@@ -2894,7 +2895,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         const bool bits = p.kind == Place::Kind::Bits && p.home == Place::Home::Slot && !p.pos &&
                           p.indices.empty();
         if (!whole && !bits) unsupported(sl, "a delayed write of this target");
-        const sir::Slot& slot = design().slots[p.slot];
+        const sir::Slot& slot = design().slot(p.slot);
         const bool part = bits && p.lsb >= 0 && p.lsb + p.width <= slot.type.width;
         if (!whole && !part) unsupported(sl, "a delayed write of this target");
         const Val dv = coerce(v, p.type, sl);
@@ -2982,7 +2983,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                          std::move(ops), sl);
                 return;
             }
-            const sir::Slot& slot = design().slots[p.slot];
+            const sir::Slot& slot = design().slot(p.slot);
             if (!p.pos && p.indices.empty()) {
                 // A constant part of a whole variable: an ordinary store to a
                 // slot range. A part wholly outside writes nothing (3.11).

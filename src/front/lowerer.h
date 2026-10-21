@@ -310,7 +310,7 @@ public:
         Home home = Home::Slot;
         sir::FrameVarId frame{0};
         std::uint32_t leaf = 0;  ///< Ref: the leaf of a structure it refers to.
-        sir::SlotId slot = 0;
+        sir::SlotId slot{0};
         std::vector<sir::Operand> indices;  ///< Of an array element; of the character.
         std::optional<std::uint32_t> elem;  ///< The element, when the indices are constant.
         std::optional<Val> pos;             ///< Bits: a position known at run time,
@@ -321,14 +321,14 @@ public:
         /// The frame variable, or ref argument, that an Element or Bits
         /// place of home Frame or Ref lives in. It is kept in `slot` for
         /// now; this is the one place that reads it as a frame variable.
-        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot}; }
+        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot.index()}; }
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
     /// The place of a whole slot.
     Place placeOfSlot(sir::SlotId s) {
         Place p;
         p.slot = s;
-        p.type = design_.slots[s].type;
+        p.type = design_.slot(s).type;
         return p;
     }
     /// Bits lsb .. lsb + width - 1 of an integral place: a member of a
@@ -342,21 +342,22 @@ public:
     /// An unpacked array in a slot, or a sub-array of one selected by
     /// constant indices (declared index values).
     struct ArrayTarget {
-        sir::SlotId slot = 0;
+        sir::SlotId slot{0};
         std::vector<std::int64_t> indices;
         Place::Home home = Place::Home::Slot;  ///< slot is a frame variable unless Slot.
         /// slot read as the frame variable it is, when home is not Slot.
-        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot}; }
+        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot.index()}; }
     };
     /// An unpacked array: a slot, an array frame variable, or what an array
     /// ref argument refers to.
     struct ArrayBase {
-        ArrayBase(sir::SlotId s) : id(s) {}  // NOLINT(google-explicit-constructor): the usual base
+        ArrayBase(sir::SlotId s)
+            : id(s.index()) {}  // NOLINT(google-explicit-constructor): the usual base
         ArrayBase(Place::Home h, std::uint32_t i) : home(h), id(i) {}
         Place::Home home = Place::Home::Slot;
         std::uint32_t id = 0;
     };
-    static ArrayBase baseOf(const ArrayTarget& a) { return {a.home, a.slot}; }
+    static ArrayBase baseOf(const ArrayTarget& a) { return {a.home, a.slot.index()}; }
     const std::vector<sir::ArrayDim>& dimsOf(ArrayBase b);
     sir::Type elemTypeOf(ArrayBase b);
     /// The value type of the variable an Element or Bits place is in (one

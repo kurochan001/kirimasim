@@ -17,7 +17,8 @@
 
 namespace kirimasim::sir {
 
-using SlotId = std::uint32_t;
+struct SlotTag;
+using SlotId = Id<SlotTag>;
 struct InstanceTag;
 using InstanceId = Id<InstanceTag>;
 struct ConstTag;
@@ -104,7 +105,7 @@ struct Slot {
 /// Folded ports keep both names as aliases of one slot (SIR_SPEC.md 3.5).
 struct NameEntry {
     std::string path;
-    SlotId slot = 0;
+    SlotId slot{0};
 };
 
 /// What a row of the instance table is: an instance, or a package or a
@@ -378,6 +379,7 @@ struct Operand {
     [[nodiscard]] ConstId asConst() const { return ConstId{id}; }
     [[nodiscard]] TypeId asType() const { return TypeId{id}; }
     [[nodiscard]] FrameVarId asFrame() const { return FrameVarId{id}; }
+    [[nodiscard]] SlotId asSlot() const { return SlotId{id}; }
 
     static Operand of(Kind k, std::uint32_t id) {
         Operand o;
@@ -388,13 +390,13 @@ struct Operand {
     static Operand temp(TempId t) { return of(Kind::Temp, t.index()); }
     static Operand constant(ConstId c) { return of(Kind::Const, c.index()); }
     static Operand slot(SlotId s, std::uint32_t lsb = 0, std::uint32_t width = 0) {
-        Operand o = of(Kind::Slot, s);
+        Operand o = of(Kind::Slot, s.index());
         o.lsb = lsb;
         o.width = width;
         return o;
     }
     static Operand event(SlotId s, Edge e) {
-        Operand o = of(Kind::Slot, s);
+        Operand o = of(Kind::Slot, s.index());
         o.edge = e;
         return o;
     }
@@ -470,7 +472,7 @@ enum class ProcessKind : std::uint8_t {
 /// A part of a slot: elements [firstElem, firstElem + numElems) (numElems
 /// 0: all) and bits [lsb, lsb + width) of each (width 0: all bits).
 struct SlotRange {
-    SlotId slot = 0;
+    SlotId slot{0};
     std::uint32_t firstElem = 0;
     std::uint32_t numElems = 0;
     std::uint32_t lsb = 0;
@@ -593,7 +595,7 @@ struct DumpVar {
     std::string range;  ///< "[msb:lsb]", or empty (WAVEFORM.md 2).
     DumpType type = DumpType::Reg;
     std::uint32_t width = 1;  ///< The size the VCD gives.
-    SlotId slot = 0;
+    SlotId slot{0};
 };
 
 /// The SIR of one design.
@@ -617,6 +619,8 @@ struct Design {
     std::vector<DumpVar> dumpVars;
 
     /// The rows the typed numbers name.
+    Slot& slot(SlotId s) { return slots[s.index()]; }
+    const Slot& slot(SlotId s) const { return slots[s.index()]; }
     Subroutine& subroutine(SubroutineId s) { return subroutines[s.index()]; }
     const Subroutine& subroutine(SubroutineId s) const { return subroutines[s.index()]; }
     Instance& instance(InstanceId i) { return instances[i.index()]; }
