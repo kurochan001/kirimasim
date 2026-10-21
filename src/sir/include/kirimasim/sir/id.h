@@ -11,9 +11,7 @@
 #pragma once
 
 #include <compare>
-#include <cstddef>
 #include <cstdint>
-#include <functional>
 
 namespace kirimasim::sir {
 
@@ -44,9 +42,3 @@ private:
 };
 
 }  // namespace kirimasim::sir
-
-template <class Tag> struct std::hash<kirimasim::sir::Id<Tag>> {
-    std::size_t operator()(kirimasim::sir::Id<Tag> i) const noexcept {
-        return std::hash<std::uint32_t>{}(i.index());
-    }
-};
