@@ -6,11 +6,14 @@
   tools/gen_call_depth_matrix.py --check   # exit 1 if a file differs from what it would write
 
 The recursion of automatic subroutines is decided at run time (13.3.1,
-13.4.2). Tier 1 lets the calls of one process nest 10000 deep, the calls
-of tasks that wait and the others together; one more is a run-time error
-of the design at the call: one error line, exit code 2, and final runs
-(SCHEDULER_SPEC.md 16.2). The output written before it is kept. The
-driver gives the simulation a stack that holds 10000 (RUNTIME_ABI.md 5).
+13.4.2). The calls of one process may nest as deep as --max-call-depth
+says, 10000 by default, the calls of tasks that wait and the others
+together; the call that would go one deeper is not made, and the run ends
+with reason resource_limit: one line at the call in the form of a
+run-time error of the design that names the option, exit code 6, and
+final runs (CLI.md 2.7, SCHEDULER_SPEC.md 16.2). The output written
+before it is kept. The driver gives the simulation a stack that holds
+the depth (RUNTIME_ABI.md 5).
 
 The axes: the subroutine (a function that calls itself, two functions
 that call each other, a task that does not wait, a task that waits at the
@@ -18,9 +21,11 @@ bottom of its recursion, and a function that calls itself without end);
 the place of the first call (an initial procedure, a fork branch, a
 package's subroutine called from an initial procedure, a continuous
 assignment and a static variable's initializer; tasks only where a
-statement can call them); the depth (n = 9999, which nests 10000 calls,
-and n = 10000, which needs one more). One file each, since an error ends
-the run. The error line of a package's subroutine is not compared, as
+statement can call them); the limit (the default, and --max-call-depth=100
+for the three kinds that call themselves from an initial procedure); the
+depth (n one less than the limit, which nests as many calls as the limit,
+and n equal to it, which needs one more). One file each, since the limit
+ends the run. The error line of a package's subroutine is not compared, as
 SYSTEM_TASKS.md 3.8 does not say yet how a package's name is written.
 """
 
@@ -34,9 +39,15 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "proc"
 PREFIX = "call_depth_"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
-LIMIT = 10000
-ERROR = f"calls nested more than {LIMIT} deep"
+VERSION = 2
+LIMIT = 10000  # the default of --max-call-depth (CLI.md 2.7)
+# The limit given with the option, small enough to keep the tests quick.
+GIVEN = 100
+
+
+def error(limit):
+    return f"calls nested more than {limit} deep (--max-call-depth={limit})"
+
 
 # (name, the subroutines with ERR on the line of the call that goes one
 # deeper, or ERR_EVEN/ERR_ODD for the two functions, whether it is a task,
@@ -84,12 +95,12 @@ KINDS = {
 PLACES = ["initial", "fork", "package", "assign", "static_init"]
 
 
-def header(name, over, compared):
+def header(name, over, compared, given):
     lines = [
         "/*",
         f":name: {name}",
-        ":description: the calls of one process may nest 10000 deep; one more is a run-time "
-        "error of the design at the call, and final runs",
+        ":description: the calls of one process may nest as deep as --max-call-depth says; "
+        "one more ends the run at the call with resource_limit, and final runs",
         ":tags: proc subroutine",
         ":type: simulation",
         ":lrm: 1800-2023 13.3.1 13.4.2",
@@ -102,8 +113,10 @@ def header(name, over, compared):
         ":top_module: top",
         f":expected_stdout: @{name}.expected",
     ]
+    if given:
+        lines.append(f":args: --max-call-depth={GIVEN}")
     if over:
-        lines.append(":expected_exit: 2")
+        lines.append(":expected_exit: 6")
         if compared:
             lines.append(f":expected_stderr: @{name}.stderr")
     return lines + ["*/",
@@ -111,18 +124,19 @@ def header(name, over, compared):
                     "this file."]
 
 
-def one(kind, place, n):
+def one(kind, place, n, given=False):
     subs, task, call, ends = KINDS[kind]
-    over = n >= LIMIT or not ends
-    name = f"{PREFIX}{kind}_{place}_{'over' if over else 'fits'}"
+    limit = GIVEN if given else LIMIT
+    over = n >= limit or not ends
+    name = f"{PREFIX}{kind}_{place}_{f'limit{GIVEN}_' if given else ''}{'over' if over else 'fits'}"
     in_package = place == "package"
     call = call.format(n=n, p="p::" if in_package else "")
     # The function that makes the call one deeper than the limit: with two,
-    # the 10000th call is to even when 10000 is odd.
+    # the limit-th call is to even when the limit is odd.
     err_tag = "ERR"
     if kind == "mutual":
-        err_tag = "ERR_EVEN" if LIMIT % 2 == 1 else "ERR_ODD"
-    lines = header(name, over, not in_package)
+        err_tag = "ERR_EVEN" if limit % 2 == 1 else "ERR_ODD"
+    lines = header(name, over, not in_package, given)
     body = [f"  {x}" for x in subs]
     if in_package:
         lines += ["package p;"] + body + ["endpackage"]
@@ -159,7 +173,7 @@ def one(kind, place, n):
     out.append("final ran")
     files = {f"{name}.sv": "\n".join(lines), f"{name}.expected": "\n".join(out) + "\n"}
     if over and not in_package:
-        files[f"{name}.stderr"] = f"{name}.sv:{err}: error: {ERROR} [top @ 0ns]\n"
+        files[f"{name}.stderr"] = f"{name}.sv:{err}: error: {error(limit)} [top @ 0ns]\n"
     return files
 
 
@@ -175,6 +189,10 @@ def files():
                 continue
             for n in ((LIMIT - 1, LIMIT) if ends else (0,)):
                 out.update(one(kind, place, n))
+    for kind in ("function", "task", "task_wait"):
+        for n in (GIVEN - 1, GIVEN):
+            out.update(one(kind, "initial", n, given=True))
+    out.update(one("endless", "initial", 0, given=True))
     return out
 
 

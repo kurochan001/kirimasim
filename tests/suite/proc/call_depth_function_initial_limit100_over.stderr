@@ -1,0 +1,1 @@
+call_depth_function_initial_limit100_over.sv:22: error: calls nested more than 100 deep (--max-call-depth=100) [top @ 0ns]

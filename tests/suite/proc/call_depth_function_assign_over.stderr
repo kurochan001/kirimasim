@@ -1,1 +1,1 @@
-call_depth_function_assign_over.sv:21: error: calls nested more than 10000 deep [top @ 0ns]
+call_depth_function_assign_over.sv:21: error: calls nested more than 10000 deep (--max-call-depth=10000) [top @ 0ns]
