@@ -1,20 +1,20 @@
 {
   "measured": "2026-10-21",
   "ctest": {
-    "total": 1126,
-    "passed": 1123,
+    "total": 1152,
+    "passed": 1149,
     "skipped": 2
   },
   "kinds": {
     "unit": 175,
-    "suite": 798,
-    "tools": 107,
+    "suite": 823,
+    "tools": 108,
     "dump_sir": 29,
     "context": 15,
     "cli": 2
   },
-  "suite_tests": 798,
-  "generators": 103,
+  "suite_tests": 823,
+  "generators": 104,
   "svtests": {
     "total": 344,
     "kirimasim": 212,

@@ -363,6 +363,10 @@ add_test(NAME tools/gen_call_depth_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_call_depth_matrix.py --check)
 set_tests_properties(tools/gen_call_depth_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_nesting_depth_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_nesting_depth_matrix.py --check)
+set_tests_properties(tools/gen_nesting_depth_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_cont_self_read_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_cont_self_read_matrix.py --check)
 set_tests_properties(tools/gen_cont_self_read_matrix PROPERTIES LABELS Tools)
