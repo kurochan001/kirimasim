@@ -29,5 +29,5 @@ labels: expected-value
 
 <!-- Outputs of other simulators (name and version), or other evidence. -->
 
-Changes to existing expectations are made in their own pull request, with
-no implementation changes under `src/` (see CONTRIBUTING.md).
+Changes to existing expectations are made in their own commit, with no
+implementation changes under `src/` (see CONTRIBUTING.md).

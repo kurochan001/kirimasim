@@ -8,9 +8,9 @@ the first execution tier, is in progress. The README gives the status.
 ## What we accept for now
 
 For now, kirimasim accepts **specification proposals and issues only**.
-Pull requests are turned off for this repository for now; collaborators
-push to `main`. When the project starts accepting more, this file and the
-README will say so.
+Pull requests are turned off for this repository, so none can be opened;
+collaborators push to `main`. When the project starts accepting more, this
+file and the README will say so.
 
 We accept:
 
@@ -24,7 +24,7 @@ We accept:
 
 We do not accept:
 
-- **Code pull requests** from outside the project.
+- **Pull requests**: they are turned off for this repository.
 
 In issues and discussions, do not paste text, figures, or example code from
 the IEEE 1800 standard or code written by others, and do not include
@@ -62,17 +62,16 @@ they are protected:
 - A change that modifies, removes, or relaxes an **existing** expectation
   (`tests/perf_counts/expected.json` entries, `tests/**/expected*` lines,
   `:expected_stdout:` lines, or the body of an existing test-suite file
-  under `tests/suite/`) must be its **own pull request**, separate from
+  under `tests/suite/`) must be its **own commit**, separate from
   implementation changes under `src/`. The same applies to deleting or
   renaming an existing test file. Explain the reason and cite the IEEE 1800
-  section number in the PR. While pull requests are off, it is its own
-  commit, with the reason and the section number in the commit message:
-  CI checks each commit pushed to `main` on its own.
+  section number in the commit message: CI checks each commit pushed to
+  `main` on its own.
 - Unit tests (`tests/unit/`) may be edited together with the code they
   call, for example when a function is renamed. CI lists every changed or
   removed `EXPECT_*`/`ASSERT_*` line as a warning, and reviewers check that
   no assertion was weakened.
-- Adding new tests and their expectations in the same PR as the
+- Adding new tests and their expectations in the same commit as the
   implementation is fine. Reviewers check where the expectation comes from.
 - CI enforces this with `tools/check_expected_change.py`.
 
@@ -137,8 +136,7 @@ python3 tools/local_ci.py
 ```
 
 CI runs on Linux and macOS after a push. Run `tools/local_ci.py` before
-pushing, to find failures first; with a pull request, paste its summary
-into it.
+pushing, to find failures first.
 
 ## Changelog
 
@@ -165,11 +163,10 @@ changed as they see it; the commit history has the details.
   the end of the file. While the version is 0.x, a new minor version may
   break compatibility, as Semantic Versioning allows.
 
-## Pull requests
+## Commits
 
-Pull requests are turned off for now: collaborators push to `main`, and
-CI checks every pushed commit. When pull requests are turned on, fill in
-the pull request template. Keep one purpose per commit and write
-commit messages in English with a summary line of 72 characters or less.
+Pull requests are turned off: collaborators push to `main`, and CI checks
+every pushed commit. Keep one purpose per commit and write commit messages
+in English with a summary line of 72 characters or less.
 
 By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).

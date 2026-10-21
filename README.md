@@ -512,8 +512,8 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Contributions: specification proposals and issues only, for now
 
 kirimasim is in early development, so for now it accepts **specification
-proposals and issues only**. It does not accept code pull requests: pull
-requests are turned off for this repository for now. Use the issue forms
+proposals and issues only**. It does not accept pull requests: they are
+turned off for this repository, so none can be opened. Use the issue forms
 to propose a change to a specification under `docs/spec/`, report a bug, or
 point out a wrong expected value, and use
 [Discussions](https://github.com/kurochan001/kirimasim/discussions) for
@@ -524,7 +524,7 @@ more, this section and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.
 
 Every document is written in English, with a Japanese version beside it
 (`X.ja.md` next to `X.md`), except the changelog, the licence, and the
-GitHub issue and pull request forms. Where the two differ, the English text
+GitHub issue forms. Where the two differ, the English text
 holds.
 
 | Document | Content |
@@ -687,8 +687,8 @@ how AI is used.
 
 For now, with issues: bug reports, wrong expected values, and proposals for
 the specifications under `docs/spec/`. Questions and ideas go to
-[Discussions](https://github.com/kurochan001/kirimasim/discussions). Code
-pull requests are not accepted yet
+[Discussions](https://github.com/kurochan001/kirimasim/discussions). Pull
+requests are not accepted: they are turned off for this repository
 ([Contributions](#contributions-specification-proposals-and-issues-only-for-now)).
 
 ## License
