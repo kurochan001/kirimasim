@@ -1042,6 +1042,10 @@ private:
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
     struct GuardDeps {
+        /// What the body reads, as the SIR's ranges while they are found
+        /// (collectReads), and as the kernel's parts once depsOf has left
+        /// out the called functions' variables.
+        std::vector<sir::SlotRange> reads;
         std::vector<kernel::SlotPart> slots;
         std::vector<sir::SlotId> events;
         /// What the body reads through a ref of the waiter's frame: the
@@ -2287,7 +2291,7 @@ private:
                     if (o.kind != Operand::Kind::Slot || (target && i == 0)) continue;
                     const sir::Slot& slot = d_.slot(o.asSlot());
                     const bool whole = in.op != Op::Load;
-                    deps.slots.push_back({kernelSlot(o.asSlot()), whole ? 0 : o.firstElem,
+                    deps.reads.push_back({o.asSlot(), whole ? 0 : o.firstElem,
                                           whole ? 0 : o.numElems, whole ? 0 : o.lsb,
                                           whole ? 0 : o.width});
                     if (slot.type.kind == sir::TypeKind::Event) deps.events.push_back(o.asSlot());
@@ -2309,14 +2313,15 @@ private:
         // sets them again. Those of another function, read by a
         // hierarchical name, are what the body depends on (SCHEDULER_SPEC.md
         // 9.5).
-        const auto called = [&](std::uint32_t s) {
-            const sir::SubroutineId g = d_.slots[s].subroutine;
+        const auto called = [&](sir::SlotId s) {
+            const sir::SubroutineId g = d_.slot(s).subroutine;
             return g != sir::kNone && seen[processCount() + g.index()];
         };
-        // A kernel slot read as a SIR slot: right only while the numbers agree.
-        std::erase_if(deps.slots,
-                      [&](const kernel::SlotPart& p) { return called(p.slot.index()); });
-        std::erase_if(deps.events, [&](sir::SlotId e) { return called(e.index()); });
+        std::erase_if(deps.reads, [&](const sir::SlotRange& r) { return called(r.slot); });
+        std::erase_if(deps.events, called);
+        // The kernel's parts, made from the SIR's slots in one place (#39).
+        for (const sir::SlotRange& r : deps.reads)
+            deps.slots.push_back({kernelSlot(r.slot), r.firstElem, r.numElems, r.lsb, r.width});
         return cached.emplace(std::move(deps));
     }
 
