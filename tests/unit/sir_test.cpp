@@ -603,7 +603,7 @@ TEST(Sir, WriteConflictsAreThoseOfEveryPair) {
             {"top.v", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, kNone, kNone, 0},
             {"top.w", u4(8), SlotKind::Wire, {{0, 3}}, 0, 0, kNone, kNone, 0},
             {"top.u", u4(8), SlotKind::Uwire, {{0, 3}}, 0, 0, kNone, kNone, 0},
-            {"top.f.x", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, 0, kNone, 0},
+            {"top.f.x", u4(8), SlotKind::Var, {{0, 3}}, 0, 0, SubroutineId{0}, kNone, 0},
         };
         d.processes.clear();
         const std::uint32_t n = 2 + pick(12);
@@ -753,10 +753,10 @@ Design calls() {
     p.numTemps = 1;
     p.blocks.resize(2);
     p.blocks[0].instrs = {
-        make(Op::Call, u4(8), 0, {Operand::subroutine(0), Operand::constant(0)}, 12),
+        make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::constant(0)}, 12),
         make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(0)}, 12),
-        make(Op::CallTask, voidType(), kNone, {Operand::subroutine(1), Operand::block(BlockId{1})},
-             12),
+        make(Op::CallTask, voidType(), kNone,
+             {Operand::subroutine(SubroutineId{1}), Operand::block(BlockId{1})}, 12),
     };
     p.blocks[1].instrs = {make(Op::Ret, voidType(), kNone, {}, 12)};
     d.processes.push_back(std::move(p));
@@ -776,17 +776,17 @@ TEST(Sir, CallsVerify) {
 TEST(Sir, CallArgumentType) {
     Design d = calls();
     d.processes[0].blocks[0].instrs[0] =
-        make(Op::Call, u4(8), 0, {Operand::subroutine(0), Operand::constant(2)}, 12);
+        make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::constant(2)}, 12);
     EXPECT_TRUE(mentions(verify(d), "argument 'a' has the wrong type"));
     d.processes[0].blocks[0].instrs[0] =
-        make(Op::Call, u4(8), 0, {Operand::subroutine(0), Operand::slot(2)}, 12);
+        make(Op::Call, u4(8), 0, {Operand::subroutine(SubroutineId{0}), Operand::slot(2)}, 12);
     EXPECT_TRUE(mentions(verify(d), "argument 'a' must be a value"));
 }
 
 TEST(Sir, WaitingTaskNeedsCallTask) {
     Design d = calls();
     d.processes[0].blocks[0].instrs[2] =
-        make(Op::Call, voidType(), kNone, {Operand::subroutine(1)}, 12);
+        make(Op::Call, voidType(), kNone, {Operand::subroutine(SubroutineId{1})}, 12);
     d.processes[0].blocks[0].instrs.push_back(
         make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 12));
     EXPECT_TRUE(mentions(verify(d), "called with call.task"));
@@ -830,9 +830,11 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
         make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 13),
     };
     d.subroutines.push_back(std::move(g));
-    d.processes[0].blocks[0].instrs[2] = make(
-        Op::WaitEvent, voidType(), kNone,
-        {Operand::event(0, Edge::Pos), Operand::subroutine(2), Operand::block(BlockId{1})}, 12);
+    d.processes[0].blocks[0].instrs[2] =
+        make(Op::WaitEvent, voidType(), kNone,
+             {Operand::event(0, Edge::Pos), Operand::subroutine(SubroutineId{2}),
+              Operand::block(BlockId{1})},
+             12);
     expectClean(d);
     EXPECT_NE(toText(d).find("wait.event posedge %s0 iff @2, bb1"), std::string::npos);
     d.subroutines[2].frameOf = {Owner::Kind::Subroutine, 1};
@@ -888,11 +890,11 @@ TEST(Sir, WatchItemBelongsToTheWaiter) {
         };
         d.subroutines.push_back(std::move(w));
     }
-    Operand item = Operand::subroutine(2);
+    Operand item = Operand::subroutine(SubroutineId{2});
     item.edge = Edge::Pos;
     d.processes[0].blocks[0].instrs[2] =
         make(Op::WaitEvent, voidType(), kNone,
-             {item, Operand::subroutine(3), Operand::block(BlockId{1})}, 12);
+             {item, Operand::subroutine(SubroutineId{3}), Operand::block(BlockId{1})}, 12);
     expectClean(d);
     EXPECT_NE(toText(d).find("wait.event posedge @2 iff @3, bb1"), std::string::npos);
     EXPECT_NE(toText(d).find("\"caller.event0\" watch"), std::string::npos);
@@ -904,11 +906,13 @@ TEST(Sir, WatchItemBelongsToTheWaiter) {
     bad.subroutines[2].frameOf = {Owner::Kind::Subroutine, 1};
     EXPECT_TRUE(mentions(verify(bad), "watch @2 reads another frame"));
     bad = d;  // a guard is no item
-    bad.processes[0].blocks[0].instrs[2] = make(
-        Op::WaitEvent, voidType(), kNone, {Operand::subroutine(3), Operand::block(BlockId{1})}, 12);
+    bad.processes[0].blocks[0].instrs[2] =
+        make(Op::WaitEvent, voidType(), kNone,
+             {Operand::subroutine(SubroutineId{3}), Operand::block(BlockId{1})}, 12);
     EXPECT_TRUE(mentions(verify(bad), "events must be slot ranges or watches"));
     bad = d;
-    bad.processes[0].blocks[0].instrs[0] = make(Op::Call, u4(1), 0, {Operand::subroutine(2)}, 12);
+    bad.processes[0].blocks[0].instrs[0] =
+        make(Op::Call, u4(1), 0, {Operand::subroutine(SubroutineId{2})}, 12);
     EXPECT_TRUE(mentions(verify(bad), "a watch is not called"));
 }
 
@@ -929,7 +933,7 @@ TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
         make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 3),
     };
     d.subroutines.push_back(std::move(g));
-    d.processes[0].triggers[0].guard = 0;
+    d.processes[0].triggers[0].guard = SubroutineId{0};
     Process other = d.processes[0];
     other.name = "ff_r";
     other.triggers.clear();
@@ -941,7 +945,7 @@ TEST(Sir, TriggerIffGuardBelongsToTheProcess) {
     d.subroutines[0].frameOf = {Owner::Kind::Process, 0};
     d.subroutines[0].kind = SubroutineKind::Function;
     EXPECT_TRUE(mentions(verify(d), "trigger iff @0 is not a guard"));
-    d.processes[0].triggers[0].guard = 9;
+    d.processes[0].triggers[0].guard = SubroutineId{9};
     EXPECT_TRUE(mentions(verify(d), "trigger iff @9 is not a guard"));
 }
 
@@ -952,7 +956,7 @@ TEST(Sir, StaticSubroutineSlotsAreNotExclusive) {
     Design d = calls();
     d.processes.clear();
     const auto arg = static_cast<SlotId>(d.slots.size());
-    d.slots.push_back({"top.f.x", u4(8), SlotKind::Var, {}, 0, 0, 0, kNone, 0});
+    d.slots.push_back({"top.f.x", u4(8), SlotKind::Var, {}, 0, 0, SubroutineId{0}, kNone, 0});
     d.names.push_back({"top.f.x", arg});
     for (int i = 0; i < 2; ++i) {
         Process c;

@@ -294,7 +294,7 @@ std::string toText(const Design& d) {
         const Slot& s = d.slots[i];
         out += "slot %s" + std::to_string(i) + " " + quoted(s.name) + " : " + toString(s.type) +
                dimsText(s.dims) + " " + kindName(s.kind) + " inst=" + std::to_string(s.instance);
-        if (s.subroutine != kNone) out += " sub=@" + std::to_string(s.subroutine);
+        if (s.subroutine != kNone) out += " sub=@" + std::to_string(s.subroutine.index());
         if (s.declType != kNone) out += " type=" + typeRef(s.declType);
         if (s.driverOf != kNone)
             out += " driver-of=%s" + std::to_string(s.driverOf) + " strength=(" +
@@ -333,7 +333,7 @@ std::string toText(const Design& d) {
                 const Trigger& t = p.triggers[k];
                 if (k != 0) out += ",";
                 out += std::string(edgeName(t.edge)) + "(" + slotRef(t.range) + ")";
-                if (t.guard != kNone) out += " iff @" + std::to_string(t.guard);
+                if (t.guard != kNone) out += " iff @" + std::to_string(t.guard.index());
             }
         }
         if (!p.writes.empty()) {

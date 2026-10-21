@@ -25,7 +25,8 @@ struct BlockTag;
 using BlockId = Id<BlockTag>;
 using TypeId = std::uint32_t;
 using FrameVarId = std::uint32_t;
-using SubroutineId = std::uint32_t;
+struct SubroutineTag;
+using SubroutineId = Id<SubroutineTag>;
 using ProcessId = std::uint32_t;
 
 /// Every body starts at its block 0, as the text form numbers them (bb0).
@@ -367,6 +368,7 @@ struct Operand {
     /// The row `id` names, as the kind of row it is; the verifier checks
     /// that `kind` agrees.
     [[nodiscard]] BlockId asBlock() const { return BlockId{id}; }
+    [[nodiscard]] SubroutineId asSubroutine() const { return SubroutineId{id}; }
 
     static Operand of(Kind k, std::uint32_t id) {
         Operand o;
@@ -393,7 +395,7 @@ struct Operand {
         return o;
     }
     static Operand frame(FrameVarId f) { return of(Kind::Frame, f); }
-    static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s); }
+    static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s.index()); }
     static Operand process(ProcessId p) { return of(Kind::Process, p); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
@@ -604,6 +606,10 @@ struct Design {
     /// starts, never while the design runs. The text form leaves it out.
     std::vector<DumpScope> dumpScopes;
     std::vector<DumpVar> dumpVars;
+
+    /// The rows the typed numbers name.
+    Subroutine& subroutine(SubroutineId s) { return subroutines[s.index()]; }
+    const Subroutine& subroutine(SubroutineId s) const { return subroutines[s.index()]; }
 };
 
 /// The storage domain of a value type (SIR_SPEC.md 3.2).

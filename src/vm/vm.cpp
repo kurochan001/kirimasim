@@ -529,12 +529,12 @@ struct Frame {
     kernel::Rng rng;
     bool ownRng = false;
     /// The guard of the wait.cond it waits at (SIR_SPEC.md 7.2).
-    sir::SubroutineId cond = 0;
+    sir::SubroutineId cond{0};
     /// A guard or a watch of the event control it waits at, which the
     /// kernel calls with a pointer to this record (SIR_SPEC.md 7.2).
     struct Callback {
         Frame* frame = nullptr;
-        sir::SubroutineId body = 0;
+        sir::SubroutineId body{0};
     };
     std::vector<Callback> iffs;     ///< The items' iff guards.
     std::vector<Callback> watches;  ///< The items on expressions.
@@ -861,7 +861,7 @@ public:
         std::uint64_t steps = 0;
         W4 ret{0, 0};
         if (vm.runWaiter(*w->frame, w->body, steps, ret)) {
-            const sir::Type t = vm.d_.subroutines[w->body].returnType;
+            const sir::Type t = vm.d_.subroutine(w->body).returnType;
             const std::uint32_t c = chunksOf(t);
             const W4* v = c > 1 ? vm.retWide_.data() : &ret;
             const std::vector<std::uint64_t> words = packed(v, c, sir::isFourState(t));
@@ -1022,7 +1022,7 @@ private:
     /// The calls of deferred assertions on the kernel's queues: the function
     /// and its arguments' values (SIR_SPEC.md 5.7).
     struct Deferred {
-        sir::SubroutineId subroutine = 0;
+        sir::SubroutineId subroutine{0};
         std::vector<std::vector<W4>> args;  ///< Each argument's chunks.
     };
     std::vector<Deferred> deferred_;
@@ -1576,7 +1576,7 @@ private:
         kernel::MonitorSpec m;
         readsOf(f, processCount() + o.id, m);
         m.eval = &evalWatch;
-        m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.id});
+        m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.asSubroutine()});
         m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
         m.width = t.width;
         m.edge = kernelEdge(o.edge);
@@ -2003,9 +2003,9 @@ private:
                                 onWatch = true;
                             } else if (o.kind == Operand::Kind::Subroutine) {  // the item's iff
                                 if (onWatch)
-                                    withIff(f, monitors_.back(), o.id);
+                                    withIff(f, monitors_.back(), o.asSubroutine());
                                 else
-                                    withIff(f, items_.back(), o.id);
+                                    withIff(f, items_.back(), o.asSubroutine());
                             } else {
                                 kernel::WaitItem item;
                                 item.part = {o.id, o.firstElem, o.numElems, o.lsb, o.width};
@@ -2019,7 +2019,7 @@ private:
                         return Exit::Waiting;
                     }
                     case Op::WaitCond: {
-                        const std::optional<bool> waits = waitCond(f, ops[0].id, steps);
+                        const std::optional<bool> waits = waitCond(f, ops[0].asSubroutine(), steps);
                         if (!waits) return sched_.ending() ? Exit::Stop : Exit::Error;
                         if (*waits) {
                             resumeAt(f) = ops[1].asBlock();
@@ -2205,7 +2205,7 @@ private:
         const Act caller = act_;
         std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         const std::uint32_t varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
-        enter({processCount() + g, &vars, caller.base + bodyTemps(caller.body), varsId});
+        enter({processCount() + g.index(), &vars, caller.base + bodyTemps(caller.body), varsId});
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         act_ = caller;
         return e == Exit::Ret;
@@ -2282,7 +2282,7 @@ private:
         // 9.5).
         const auto called = [&](std::uint32_t s) {
             const sir::SubroutineId g = d_.slots[s].subroutine;
-            return g != sir::kNone && seen[processCount() + g];
+            return g != sir::kNone && seen[processCount() + g.index()];
         };
         std::erase_if(deps.slots, [&](const kernel::SlotPart& p) { return called(p.slot); });
         std::erase_if(deps.events, [&](auto e) { return called(e); });
@@ -2328,7 +2328,7 @@ private:
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
         kernel::MonitorSpec m;
-        readsOf(f, processCount() + g, m);
+        readsOf(f, processCount() + g.index(), m);
         m.eval = &evalCond;
         m.frame = &f;
         m.domain = kernel::Domain::Two;
@@ -2535,9 +2535,9 @@ private:
     /// frame f (a deferred assertion's call, SIR_SPEC.md 5.7).
     Exit callWith(Frame& f, sir::SubroutineId s, const std::vector<std::vector<W4>>& args,
                   std::uint64_t& steps) {
-        const sir::Subroutine& sub = d_.subroutines[s];
+        const sir::Subroutine& sub = d_.subroutine(s);
         const Act caller = act_;
-        const std::uint32_t body = processCount() + s;
+        const std::uint32_t body = processCount() + s.index();
         std::vector<W4> vars = newVars(body);
         const Layout& l = layouts_[body];
         for (std::size_t i = 0; i < sub.params.size() && i < args.size(); ++i)
@@ -3594,7 +3594,7 @@ private:
             case Op::ReportCall: {
                 // The kernel runs or drops it (SCHEDULER_SPEC.md 15.2).
                 Deferred d;
-                d.subroutine = ops[1].id;
+                d.subroutine = ops[1].asSubroutine();
                 for (std::size_t i = 2; i < ops.size(); ++i) {
                     std::vector<W4> a(chunksOf(t(i)));
                     readOperand(ops[i], a.data(), static_cast<std::uint32_t>(a.size()));

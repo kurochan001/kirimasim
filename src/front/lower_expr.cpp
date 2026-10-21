@@ -3289,7 +3289,7 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
     // caller's automatic variables; slang rejects them already (13.3.2).
     for (const ast::Expression* a : args)
         if (readsAutomatic(*a)) unsupported(sl, "$strobe or $monitor of an automatic variable");
-    const sir::InstanceId inst = b_.isSub ? design_.subroutines[b_.proc].instance : proc().instance;
+    const sir::InstanceId inst = b_.isSub ? design_.subroutine(b_.sub()).instance : proc().instance;
     sir::Process p;
     p.name = processName(design_.instances[inst].scopeName,
                          std::string(file ? "$f" : "$") + (monitor ? "monitor" : "strobe"));

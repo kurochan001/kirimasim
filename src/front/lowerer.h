@@ -443,12 +443,12 @@ public:
     sir::Process& proc() { return design_.processes[b_.proc]; }
     // The parts of the body being lowered, a process or a subroutine.
     std::vector<sir::BasicBlock>& blocks() {
-        return b_.isSub ? design_.subroutines[b_.proc].blocks : proc().blocks;
+        return b_.isSub ? design_.subroutine(b_.sub()).blocks : proc().blocks;
     }
     sir::BasicBlock& block(sir::BlockId b) { return blocks()[b.index()]; }
     std::vector<sir::FrameVar>& frameVars() {
         if (!b_.isSub) return proc().frame;
-        sir::Subroutine& s = design_.subroutines[b_.proc];
+        sir::Subroutine& s = design_.subroutine(b_.sub());
         // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
         if (!sir::readsWaiterFrame(s.kind)) return s.frame;
         return s.frameOf.kind == sir::Owner::Kind::Process
@@ -456,7 +456,7 @@ public:
                    : design_.subroutines[s.frameOf.id].frame;
     }
     std::uint32_t& numTemps() {
-        return b_.isSub ? design_.subroutines[b_.proc].numTemps : proc().numTemps;
+        return b_.isSub ? design_.subroutine(b_.sub()).numTemps : proc().numTemps;
     }
     sir::Design& design() { return design_; }
     int precision() const { return precision_; }
@@ -677,7 +677,7 @@ public:
 
     /// The state of the procedure being lowered.
     struct Body {
-        std::uint32_t proc = 0;
+        std::uint32_t proc = 0;  ///< A process, or with isSub a subroutine (sub()).
         sir::BlockId block = sir::kEntryBlock;
         bool dead = false;  ///< The current point is unreachable.
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
@@ -724,6 +724,8 @@ public:
         /// The rise, fall and turn-off delays of a cont process whose
         /// writes are delayed (drive.delay; SIR_SPEC.md 5.4).
         std::optional<std::array<Val, 3>> delays;
+        /// proc as the subroutine it is, when isSub.
+        sir::SubroutineId sub() const { return sir::SubroutineId{proc}; }
     };
     Body& body() { return b_; }
 

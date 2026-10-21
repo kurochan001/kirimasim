@@ -292,7 +292,8 @@ std::vector<Case> cases() {
         {"disable", "needs a process, a subroutine or a block name", add(none(Op::Disable, {A}))},
         {"scope.enter", "needs a scope and its exit block", add(none(Op::ScopeEnter, {A, A}))},
         {"scope.leave", "needs a scope", add(none(Op::ScopeLeave, {A}))},
-        {"disable.task", "needs a task", add(none(Op::DisableTask, {Operand::subroutine(0)}))},
+        {"disable.task", "needs a task",
+         add(none(Op::DisableTask, {Operand::subroutine(SubroutineId{0})}))},
         {"strobe", "needs a postponed process", add(none(Op::Strobe, {A}))},
         {"udp kind", "needs a sequential UDP table",
          add(make(Op::UdpSeq, u4(1), N, {Operand::typeRow(0), Bit, Bit, Bit}))},
@@ -308,12 +309,14 @@ std::vector<Case> cases() {
         {"ref argument", "argument 'x' must be a ref",
          [](Design& d) {
              d.subroutines[0].params[0].dir = Direction::Ref;
-             add(none(Op::Call, {Operand::subroutine(0), Operand::temp(tA)})).apply(d);
+             add(none(Op::Call, {Operand::subroutine(SubroutineId{0}), Operand::temp(tA)}))
+                 .apply(d);
          }},
         {"array argument", "argument 'x' must be an array of its shape",
          [](Design& d) {
              d.subroutines[0].frame[0].dims = {{0, 3}};
-             add(none(Op::Call, {Operand::subroutine(0), Operand::temp(tA)})).apply(d);
+             add(none(Op::Call, {Operand::subroutine(SubroutineId{0}), Operand::temp(tA)}))
+                 .apply(d);
          }},
         {"udp inputs", "needs one value per input",
          add(make(Op::Udp, u4(1), N, {Operand::typeRow(0), Bit}))},
@@ -322,13 +325,14 @@ std::vector<Case> cases() {
         {"store.override outside an override process", "only an override process writes with it",
          add(none(Op::StoreOverride, {Operand::str("force"), Operand::slot(sF), A}))},
         {"report.call kind", "needs \"#0\" or \"final\" and a function",
-         add(none(Op::ReportCall, {Operand::str("now"), Operand::subroutine(0), A}))},
+         add(none(Op::ReportCall, {Operand::str("now"), Operand::subroutine(SubroutineId{0}), A}))},
         {"report.call arguments", "needs a function and one value per argument",
-         add(none(Op::ReportCall, {Operand::str("#0"), Operand::subroutine(0)}))},
+         add(none(Op::ReportCall, {Operand::str("#0"), Operand::subroutine(SubroutineId{0})}))},
         {"report.call argument type", "needs a value of its input's type",
-         add(none(Op::ReportCall, {Operand::str("#0"), Operand::subroutine(0), B}))},
+         add(none(Op::ReportCall, {Operand::str("#0"), Operand::subroutine(SubroutineId{0}), B}))},
         {"call", "first operand must be a subroutine", add(none(Op::Call, {A}))},
-        {"call arguments", "expects 1 arguments", add(none(Op::Call, {Operand::subroutine(0)}))},
+        {"call arguments", "expects 1 arguments",
+         add(none(Op::Call, {Operand::subroutine(SubroutineId{0})}))},
         {"syscall", "first operand must be the system task name", add(none(Op::Syscall, {A}))},
         {"builtin", "first operand must be the method name",
          add(make(Op::Builtin, u2(32), N, {A}))},
@@ -338,7 +342,8 @@ std::vector<Case> cases() {
          add(none(Op::WaitEvent, {A, Operand::block(BlockId{0})}))},
         {"wait.cond", "needs a guard", add(none(Op::WaitCond, {A, Operand::block(BlockId{0})}))},
         {"wait.cond of a function", "is not a guard",
-         add(none(Op::WaitCond, {Operand::subroutine(0), Operand::block(BlockId{0})}))},
+         add(none(Op::WaitCond,
+                  {Operand::subroutine(SubroutineId{0}), Operand::block(BlockId{0})}))},
         {"wait.named", "needs an event slot",
          add(none(Op::WaitNamed, {Operand::slot(sA), Operand::block(BlockId{0})}))},
         {"fork", "needs processes, a join kind and a block", add(none(Op::Fork, {}))},
@@ -349,7 +354,8 @@ std::vector<Case> cases() {
          add(none(Op::Fork, {A, Operand::str("join"), Operand::block(BlockId{0})}))},
         {"call.task", "needs a task and a block", add(none(Op::CallTask, {}))},
         {"call.task of a function", "calls only tasks that may wait",
-         add(none(Op::CallTask, {Operand::subroutine(0), Operand::block(BlockId{0})}))},
+         add(none(Op::CallTask,
+                  {Operand::subroutine(SubroutineId{0}), Operand::block(BlockId{0})}))},
 
         // Tables, subroutines and processes (SIR_SPEC.md 2 to 4, 7, 8).
         {"instance order", "parent must come before the child",
@@ -420,7 +426,8 @@ std::vector<Case> cases() {
         {"b words", "wrong number of b words", [](Design& d) { d.constants[c5].bWords = {0, 0}; }},
         {"task value", "a task returns no value",
          [](Design& d) { d.subroutines[1].returnType = u4(8); }},
-        {"slot owner", "subroutine out of range", [](Design& d) { d.slots[sA].subroutine = 9; }},
+        {"slot owner", "subroutine out of range",
+         [](Design& d) { d.slots[sA].subroutine = SubroutineId{9}; }},
         {"guard result", "a guard returns a 1-bit value",
          [](Design& d) { d.subroutines[2].returnType = u2(8); }},
         {"argument of a static subroutine", "of a static subroutine is in the frame",

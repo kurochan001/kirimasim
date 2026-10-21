@@ -688,8 +688,11 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
              sc = sc->asSymbol().getParentScope()) {
             if (&sc->asSymbol() == b_.subSymbol) {
                 // A guard's or watch's variables are those of the task that waits.
-                const sir::Subroutine& cur = design_.subroutines[b_.proc];
-                s.subroutine = sir::readsWaiterFrame(cur.kind) ? cur.frameOf.id : b_.proc;
+                // subSymbol is set here only when the waiter is a task, so its
+                // frameOf names a subroutine.
+                const sir::Subroutine& cur = design_.subroutine(b_.sub());
+                s.subroutine =
+                    sir::readsWaiterFrame(cur.kind) ? sir::SubroutineId{cur.frameOf.id} : b_.sub();
                 break;
             }
             if (sc->asSymbol().kind == ast::SymbolKind::InstanceBody) break;
@@ -742,8 +745,8 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
 
 void Lowerer::noteWrite(const sir::SlotRange& r) {
     const sir::Slot& s = design_.slots[r.slot];
-    if (b_.isSub) subWriteSites_[b_.proc].push_back({r, b_.at});
-    std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.proc] : proc().writes;
+    if (b_.isSub) subWriteSites_[b_.sub()].push_back({r, b_.at});
+    std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.sub()] : proc().writes;
     for (const sir::SlotRange& w : writes)
         if (sir::covers(s, w, r)) return;
     writes.push_back(r);
@@ -851,7 +854,7 @@ void Lowerer::finishDesign() {
     // (SCHEDULER_SPEC.md 6.3), nor is a deferred assertion's action, which
     // runs after the caller (16.4.1).
     const auto later = [&](sir::SubroutineId c) {
-        return design_.subroutines[c].kind == sir::SubroutineKind::Task || actions_.contains(c);
+        return design_.subroutine(c).kind == sir::SubroutineKind::Task || actions_.contains(c);
     };
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> writes = subWrites_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> reads = subReads_;
@@ -862,13 +865,13 @@ void Lowerer::finishDesign() {
             for (const sir::SubroutineId c : called)
                 if (!later(c))
                     for (const sir::SlotRange& r : std::vector(writes[c]))
-                        changed = add(writes[key.second], r) || changed;
+                        changed = add(writes[sir::SubroutineId{key.second}], r) || changed;
         }
         for (const auto& [key, called] : readCallees_) {
             if (!key.first) continue;
             for (const sir::SubroutineId c : called)
                 for (const sir::SlotRange& r : std::vector(reads[c]))
-                    changed = add(reads[key.second], r) || changed;
+                    changed = add(reads[sir::SubroutineId{key.second}], r) || changed;
         }
     }
     // A process writes what the functions it calls write; always_comb and
@@ -938,8 +941,8 @@ void Lowerer::checkTaskAndActionWrites() {
             if (!seen.insert(x).second) return;
             if (const auto a = actions_.find(x); a != actions_.end())
                 starts[key.second].push_back({x, a->second});
-            else if (design_.subroutines[x].kind != sir::SubroutineKind::Task)
-                if (const auto c = callees_.find({true, x}); c != callees_.end())
+            else if (design_.subroutine(x).kind != sir::SubroutineKind::Task)
+                if (const auto c = callees_.find({true, x.index()}); c != callees_.end())
                     for (const sir::SubroutineId y : c->second)
                         self(self, y);
         };
@@ -982,11 +985,11 @@ void Lowerer::checkTaskAndActionWrites() {
                                                 : "a task it calls"),
                                     callAt,
                                     action ? "the deferred assertion is here"
-                                           : "'" + design_.subroutines[start].name +
+                                           : "'" + design_.subroutine(start).name +
                                                  "' is called here");
                     }
                 }
-                if (const auto c = callees_.find({true, x}); c != callees_.end())
+                if (const auto c = callees_.find({true, x.index()}); c != callees_.end())
                     for (const sir::SubroutineId y : c->second)
                         if (seen.insert(y).second) todo.push_back(y);
             }

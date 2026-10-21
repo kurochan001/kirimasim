@@ -237,7 +237,7 @@ private:
 
     static std::string processWhere(ProcessId i) { return "process @" + std::to_string(i); }
     static std::string subroutineWhere(SubroutineId i) {
-        return "subroutine @" + std::to_string(i);
+        return "subroutine @" + std::to_string(i.index());
     }
 
     bool typeRefOk(TypeId t) const { return t == kNone || t < d_.types.size(); }
@@ -336,7 +336,7 @@ private:
             if (s.name.empty()) error(where, "slot has no name");
             if (!seen.insert(s.name).second) error(where, "slot name is not unique");
             if (s.instance >= d_.instances.size()) error(where, "instance out of range");
-            if (s.subroutine != kNone && s.subroutine >= d_.subroutines.size())
+            if (s.subroutine != kNone && s.subroutine.index() >= d_.subroutines.size())
                 error(where, "subroutine out of range");
             if (!typeRefOk(s.declType)) error(where, "type out of range");
             if (s.type.kind == TypeKind::Void) error(where, "slot has type void");
@@ -527,7 +527,7 @@ private:
         if (s.instance >= d_.instances.size()) error(where, "instance out of range", s.loc);
         Body body;
         body.where = where;
-        body.owner = {Owner::Kind::Subroutine, id};
+        body.owner = {Owner::Kind::Subroutine, id.index()};
         body.blocks = &s.blocks;
         body.frame = &s.frame;
         body.numTemps = s.numTemps;
@@ -554,7 +554,7 @@ private:
             if (o.kind == Owner::Kind::Process && o.id < d_.processes.size()) {
                 body.frame = &d_.processes[o.id].frame;
             } else if (o.kind == Owner::Kind::Subroutine && o.id < d_.subroutines.size() &&
-                       o.id != id) {
+                       o.id != id.index()) {
                 body.frame = &d_.subroutines[o.id].frame;
             } else {
                 error(where, a + " needs the process or subroutine whose frame it reads", s.loc);
@@ -594,11 +594,11 @@ private:
             if (!rangeOk(t.range)) error(where, "trigger slot range is invalid");
             if (t.guard == kNone) continue;
             // An iff guard reads the frame of the process (SIR_SPEC.md 7.2).
-            const std::string g = "trigger iff @" + std::to_string(t.guard);
-            if (t.guard >= d_.subroutines.size() ||
-                d_.subroutines[t.guard].kind != SubroutineKind::Guard)
+            const std::string g = "trigger iff @" + std::to_string(t.guard.index());
+            if (t.guard.index() >= d_.subroutines.size() ||
+                d_.subroutine(t.guard).kind != SubroutineKind::Guard)
                 error(where, g + " is not a guard", p.loc);
-            else if (const Owner& o = d_.subroutines[t.guard].frameOf;
+            else if (const Owner& o = d_.subroutine(t.guard).frameOf;
                      o.kind != Owner::Kind::Process || o.id != id)
                 error(where, g + " reads another frame", p.loc);
         }

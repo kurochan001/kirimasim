@@ -83,7 +83,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     b_ = Body{};
     b_.isSub = true;
     b_.subSymbol = &sym;
-    b_.proc = id;
+    b_.proc = id.index();
     b_.scale = timeScaleOf(*sym.getParentScope());
     b_.scope = sym.getHierarchicalPath();  // its own scope, also when called from elsewhere
     evalSymbol_ = &sym;
@@ -98,7 +98,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             const bool automatic = v.lifetime == ast::VariableLifetime::Automatic;
             const std::uint32_t first =
                 automatic ? structFrameVars(v, v.location) : structSlots(v, v.location);
-            const auto at = static_cast<std::uint32_t>(design_.subroutines[id].params.size());
+            const auto at = static_cast<std::uint32_t>(design_.subroutine(id).params.size());
             for (std::size_t k = 0; k < leaves.size(); ++k) {
                 sir::Param prm;
                 prm.name = name + leaves[k].path;
@@ -112,7 +112,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                     prm.type = design_.slots[leaf].type;
                     noteWrite({leaf, 0, 0, 0, 0});
                 }
-                design_.subroutines[id].params.push_back(std::move(prm));
+                design_.subroutine(id).params.push_back(std::move(prm));
             }
             return std::make_pair(at, static_cast<std::uint32_t>(leaves.size()));
         };
@@ -131,7 +131,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 shape.push_back(leafParams(*a, prm.name, prm.dir));
                 continue;
             }
-            shape.emplace_back(static_cast<std::uint32_t>(design_.subroutines[id].params.size()),
+            shape.emplace_back(static_cast<std::uint32_t>(design_.subroutine(id).params.size()),
                                1U);
             prm.type = typeOf(et, a->location);
             if (prm.dir == sir::Direction::Ref) {
@@ -150,7 +150,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 prm.slot = slotOf(*a, a->location);
                 noteWrite({prm.slot, 0, 0, 0, 0});  // written by every call (copy-in)
             }
-            design_.subroutines[id].params.push_back(std::move(prm));
+            design_.subroutine(id).params.push_back(std::move(prm));
         }
         if (sym.returnValVar != nullptr && aggregateRet) {
             // The function's own name as a variable (13.4.1), which slang
@@ -159,7 +159,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             // function, slots of their own in a static one, which every
             // return fills from it (SIR_SPEC.md 8).
             const ast::VariableSymbol& rv = *sym.returnValVar;
-            const bool automatic = design_.subroutines[id].automatic;
+            const bool automatic = design_.subroutine(id).automatic;
             const bool isStruct = unpackedStruct(ret) != nullptr;
             std::vector<sir::ArrayDim> dims;
             const ast::Type& et = arrayElement(ret, dims);
@@ -172,7 +172,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 structLeaves(ret, "", leaves);
             else
                 leaves.push_back({"", &ret, {}});
-            const auto at = static_cast<std::uint32_t>(design_.subroutines[id].params.size());
+            const auto at = static_cast<std::uint32_t>(design_.subroutine(id).params.size());
             for (std::size_t k = 0; k < leaves.size(); ++k) {
                 sir::Param prm;
                 prm.name = "$return" + leaves[k].path;
@@ -186,7 +186,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                                        leaves[k].dims, rv.location);
                     if (k == 0) b_.retSlots = prm.slot;
                 }
-                design_.subroutines[id].params.push_back(std::move(prm));
+                design_.subroutine(id).params.push_back(std::move(prm));
             }
             shape.emplace_back(at, static_cast<std::uint32_t>(leaves.size()));
             b_.retAggregate = {held, true};
@@ -218,7 +218,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
 void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (!b_.isSub) unsupported(sl, "return outside a subroutine");
     leaveScopes(0, sl);
-    const Type rt = design_.subroutines[b_.proc].returnType;
+    const Type rt = design_.subroutine(b_.sub()).returnType;
     if (b_.retAggregate && b_.retAggregateType != nullptr) {
         // The value goes to $return like an aggregate assignment
         // (SIR_SPEC.md 8, VALUE_SEMANTICS.md 3.13).
@@ -460,9 +460,9 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
     // (checkTaskAndActionWrites).
     if (sym.subroutineKind == ast::SubroutineKind::Task && !b_.isSub)
         taskCalls_[b_.proc].push_back({id, sl});
-    const std::vector<sir::Param> params = design_.subroutines[id].params;
-    const Type rt = design_.subroutines[id].returnType;
-    const bool waits = design_.subroutines[id].mayWait;
+    const std::vector<sir::Param> params = design_.subroutine(id).params;
+    const Type rt = design_.subroutine(id).returnType;
+    const bool waits = design_.subroutine(id).mayWait;
     const auto args = call.arguments();
     const auto formals = sym.getArguments();
     const std::vector<std::pair<std::uint32_t, std::uint32_t>> shape = argParams_[id];
@@ -512,7 +512,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             ops.push_back(refOf(*outputPlace(args[i]), prm.dir == sir::Direction::ConstRef, sl).op);
             continue;
         }
-        const sir::Subroutine& callee = design_.subroutines[id];
+        const sir::Subroutine& callee = design_.subroutine(id);
         const std::vector<sir::ArrayDim>& dims = prm.frameVar != sir::kNone
                                                      ? callee.frame[prm.frameVar].dims
                                                      : design_.slots[prm.slot].dims;

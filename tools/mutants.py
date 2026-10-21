@@ -647,7 +647,7 @@ MUTANTS = [
      "src/front/lower.cpp", "sub != nullptr && (!b_.isSub || b_.subSymbol != sub)) {",
      "false && sub != nullptr) {"),
     ("vm: a wait leaves out every function's variables", "src/vm/vm.cpp",
-     "return g != sir::kNone && seen[processCount() + g];", "return g != sir::kNone;"),
+     "return g != sir::kNone && seen[processCount() + g.index()];", "return g != sir::kNone;"),
     ("vm: the event a wait's function triggers is read", "src/vm/vm.cpp",
      "const bool target = isWriteTarget(in.op);", "const bool target = false;"),
     ("sir verify: a delay may be of any type", "src/sir/verify.cpp",
