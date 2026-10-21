@@ -115,7 +115,7 @@ MUTANTS = [
      "temp(in.result) = v(1);"),
     ("vm: a violation report names the process's instance", "src/vm/vm.cpp",
      "                line += ops[2].text;\n                line += \" @ \";",
-     "                line += d_.instances[p.instance].scopeName;\n                line += \" @ \";"),
+     "                line += d_.instance(p.instance).scopeName;\n                line += \" @ \";"),
     ("scheduler: reports confirmed in the order they were first held", "src/kernel/sim.cpp",
      "    // Reactive region; final ones wait for the Postponed region (15.2).\n    sortPending();\n",
      "    // Reactive region; final ones wait for the Postponed region (15.2).\n"),
