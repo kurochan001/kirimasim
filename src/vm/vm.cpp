@@ -491,6 +491,13 @@ class Interpreter;
 
 /// The frame of a process run by the VM (RUNTIME_ABI.md 4.3): where it
 /// goes on when the kernel resumes it, and its frame variables.
+/// A body the VM runs: process p is body p, and subroutine s is body
+/// processCount() + s. It has its own type, so that neither a process row
+/// nor a subroutine number can be given for one; Interpreter::bodyOf and
+/// bodyOfProcess make them.
+struct BodyTag;
+using BodyId = sir::Id<BodyTag>;
+
 struct Frame {
     Interpreter* vm = nullptr;
     std::uint32_t process = 0;      ///< Index in the SIR process table.
@@ -543,7 +550,7 @@ struct Frame {
     /// keeps its frame variables and the block to go on at. Their temps do
     /// not live across the call.task, so they start at 0.
     struct TaskCall {
-        std::uint32_t body = 0;
+        BodyId body{0};
         std::vector<W4> vars;
         std::uint32_t varsId = 0;
         sir::BlockId block{0};
@@ -556,7 +563,7 @@ struct Frame {
     // stands: its task calls, and the calls run on the C++ stack (call)
     // within the innermost one, each with the frame's births then.
     struct SyncCall {
-        std::uint32_t body = 0;
+        BodyId body{0};
         std::uint64_t children = 0;
         const sir::Instr* site = nullptr;  ///< The call in the caller; none for a deferred one.
     };
@@ -625,7 +632,7 @@ public:
         // elements of the arrays after them.
         layouts_.resize(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p) {
-            const auto& frame = bodyFrame(p);
+            const auto& frame = bodyFrame(BodyId{p});
             Layout& l = layouts_[p];
             l.offset.assign(frame.size(), 0);
             l.chunks.assign(frame.size(), 1);
@@ -643,8 +650,8 @@ public:
             }
         }
         for (std::uint32_t p = 0; p < bodies; ++p) {
-            const auto& blocks = bodyBlocks(p);
-            const std::uint32_t n = numTemps(p);
+            const auto& blocks = bodyBlocks(BodyId{p});
+            const std::uint32_t n = numTemps(BodyId{p});
             tempTypes_[p].resize(n);
             info_[p].resize(blocks.size());
             for (std::size_t b = 0; b < blocks.size(); ++b) {
@@ -675,11 +682,11 @@ public:
         }
         // After every temp has its type, which a later block may give.
         for (std::uint32_t p = 0; p < bodies; ++p) {
-            const auto& blocks = bodyBlocks(p);
+            const auto& blocks = bodyBlocks(BodyId{p});
             for (std::size_t b = 0; b < blocks.size(); ++b) {
                 for (std::size_t k = 0; k < blocks[b].instrs.size(); ++k) {
                     const sir::Instr& in = blocks[b].instrs[k];
-                    info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in);
+                    info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);
                 }
             }
         }
@@ -933,7 +940,7 @@ private:
     /// The body being run: a process or a called subroutine, its frame
     /// variables and where its temps start.
     struct Act {
-        std::uint32_t body = 0;
+        BodyId body{0};
         std::vector<W4>* vars = nullptr;
         std::size_t base = 0;
         std::uint32_t varsId = 0;
@@ -984,27 +991,36 @@ private:
     bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.
 
     std::uint32_t processCount() const { return static_cast<std::uint32_t>(d_.processes.size()); }
-    bool isSubBody(std::uint32_t body) const { return body >= processCount(); }
-    const sir::Subroutine& subOf(std::uint32_t body) const {
-        return d_.subroutines[body - processCount()];
+    /// The body of subroutine s, and of process p: the one place these
+    /// numbers become a body.
+    [[nodiscard]] BodyId bodyOf(sir::SubroutineId s) const {
+        return BodyId{processCount() + s.index()};
     }
-    const std::vector<sir::BasicBlock>& bodyBlocks(std::uint32_t body) const {
-        return isSubBody(body) ? subOf(body).blocks : d_.processes[body].blocks;
+    static BodyId bodyOfProcess(std::uint32_t p) { return BodyId{p}; }
+    bool isSubBody(BodyId body) const { return body.index() >= processCount(); }
+    const sir::Subroutine& subOf(BodyId body) const {
+        return d_.subroutines[body.index() - processCount()];
     }
-    const std::vector<sir::FrameVar>& bodyFrame(std::uint32_t body) const {
-        if (!isSubBody(body)) return d_.processes[body].frame;
+    const sir::Process& processOf(BodyId body) const { return d_.processes[body.index()]; }
+    const std::vector<sir::BasicBlock>& bodyBlocks(BodyId body) const {
+        return isSubBody(body) ? subOf(body).blocks : processOf(body).blocks;
+    }
+    const std::vector<sir::FrameVar>& bodyFrame(BodyId body) const {
+        if (!isSubBody(body)) return processOf(body).frame;
         const sir::Subroutine& s = subOf(body);
         // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
         if (!sir::readsWaiterFrame(s.kind)) return s.frame;
         return s.frameOf.kind == sir::Owner::Kind::Process ? d_.processes[s.frameOf.id].frame
                                                            : d_.subroutines[s.frameOf.id].frame;
     }
-    std::uint32_t numTemps(std::uint32_t body) const {
-        return isSubBody(body) ? subOf(body).numTemps : d_.processes[body].numTemps;
+    std::uint32_t numTemps(BodyId body) const {
+        return isSubBody(body) ? subOf(body).numTemps : processOf(body).numTemps;
     }
     /// The chunks a body's temps take on the temp stack.
-    std::uint32_t bodyTemps(std::uint32_t body) const { return tempTotal_[body]; }
-    W4& temp(sir::TempId id) { return tempStack_[act_.base + tempOff_[act_.body][id.index()]]; }
+    std::uint32_t bodyTemps(BodyId body) const { return tempTotal_[body.index()]; }
+    W4& temp(sir::TempId id) {
+        return tempStack_[act_.base + tempOff_[act_.body.index()][id.index()]];
+    }
     /// The W4 chunks of a value of type t (kernel/wide.h).
     static std::uint32_t chunksOf(sir::Type t) {
         return sir::isIntegral(t) && t.width > 64 ? (t.width + 63) / 64 : 1;
@@ -1130,7 +1146,7 @@ private:
         Frame& f = *place;
         f.vm = this;
         f.process = process;
-        f.vars = newVars(process);
+        f.vars = newVars(bodyOfProcess(process));
         f.varsId = enroll(f.vars);
         return f;
     }
@@ -1346,9 +1362,9 @@ private:
     sir::Type typeOf(const Operand& o) const { return typeIn(act_.body, o); }
 
     /// The type of an operand of an instruction of the given body.
-    sir::Type typeIn(std::uint32_t body, const Operand& o) const {
+    sir::Type typeIn(BodyId body, const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp: return tempTypes_[body][o.id];
+            case Operand::Kind::Temp: return tempTypes_[body.index()][o.id];
             case Operand::Kind::Const: return d_.constants[o.id].type;
             case Operand::Kind::Frame: return bodyFrame(body)[o.id].type;
             case Operand::Kind::Slot: return d_.slot(o.asSlot()).type;
@@ -1358,9 +1374,11 @@ private:
 
     W4 value(const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp: return tempStack_[act_.base + tempOff_[act_.body][o.id]];
+            case Operand::Kind::Temp:
+                return tempStack_[act_.base + tempOff_[act_.body.index()][o.id]];
             case Operand::Kind::Const: return consts_[constOff_[o.id]];
-            case Operand::Kind::Frame: return (*act_.vars)[layouts_[act_.body].wordOf(o.asFrame())];
+            case Operand::Kind::Frame:
+                return (*act_.vars)[layouts_[act_.body.index()].wordOf(o.asFrame())];
             default: return {0, 0};
         }
     }
@@ -1506,7 +1524,7 @@ private:
                 readSlotWide(o.asSlot(), o.firstElem, o.lsb, o.width, out);
                 return;
             case Operand::Kind::Temp: {
-                const W4* p = &tempStack_[act_.base + tempOff_[act_.body][o.id]];
+                const W4* p = &tempStack_[act_.base + tempOff_[act_.body.index()][o.id]];
                 for (std::uint32_t k = 0; k < chunks; ++k)
                     out[k] = p[k];
                 return;
@@ -1518,7 +1536,7 @@ private:
                 return;
             }
             case Operand::Kind::Frame: {
-                const W4* p = &(*act_.vars)[layouts_[act_.body].wordOf(o.asFrame())];
+                const W4* p = &(*act_.vars)[layouts_[act_.body.index()].wordOf(o.asFrame())];
                 for (std::uint32_t k = 0; k < chunks; ++k)
                     out[k] = p[k];
                 return;
@@ -1605,7 +1623,7 @@ private:
     kernel::MonitorSpec watchMonitor(Frame& f, const Operand& o) {
         const sir::Type t = d_.subroutines[o.id].returnType;
         kernel::MonitorSpec m;
-        readsOf(f, processCount() + o.id, m);
+        readsOf(f, bodyOf(o.asSubroutine()), m);
         m.eval = &evalWatch;
         m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.asSubroutine()});
         m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
@@ -1629,7 +1647,7 @@ private:
         for (;;) {
             Exit e = Exit::Ret;
             if (f.calls.empty()) {
-                enter({f.process, &f.vars, 0, f.varsId});
+                enter({bodyOfProcess(f.process), &f.vars, 0, f.varsId});
                 e = runBody(f, f.block, steps, ret);
             } else {
                 Frame::TaskCall& c = f.calls.back();
@@ -1702,7 +1720,7 @@ private:
         while (!f.scopes.empty() && f.scopes.back().calls > f.calls.size())
             f.scopes.pop_back();
         if (f.calls.empty())
-            writeOuts(s, c.site->operands, outs, f.vars, f.process);
+            writeOuts(s, c.site->operands, outs, f.vars, bodyOfProcess(f.process));
         else
             writeOuts(s, c.site->operands, outs, f.calls.back().vars, f.calls.back().body);
     }
@@ -1715,7 +1733,7 @@ private:
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutines[ops[0].id];
         Frame::TaskCall c;
-        c.body = processCount() + ops[0].id;
+        c.body = bodyOf(ops[0].asSubroutine());
         c.site = &in;
         c.children = f.births;
         c.vars = newVars(c.body);
@@ -1731,9 +1749,9 @@ private:
     /// The frame variables of a new activation of a body: a subroutine's at
     /// their defaults, a process's at 0 until its declarations run; array
     /// elements at their defaults.
-    std::vector<W4> newVars(std::uint32_t body) const {
+    std::vector<W4> newVars(BodyId body) const {
         const auto& frame = bodyFrame(body);
-        const Layout& l = layouts_[body];
+        const Layout& l = layouts_[body.index()];
         std::vector<W4> vars(l.size, W4{0, 0});
         for (std::size_t i = 0; i < frame.size(); ++i) {
             const bool array = !frame[i].dims.empty() && frame[i].type.kind != sir::TypeKind::Ref;
@@ -1767,11 +1785,13 @@ private:
     /// Element e of array frame variable fv of the running body: its first
     /// chunk.
     W4& frameElem(sir::FrameVarId fv, std::uint64_t e) {
-        const Layout& l = layouts_[act_.body];
+        const Layout& l = layouts_[act_.body.index()];
         return (*act_.vars)[l.wordOf(fv) + e * l.chunksOfVar(fv)];
     }
     /// Frame variable fv of the running body: its first chunk.
-    W4& frameVar(sir::FrameVarId fv) { return (*act_.vars)[layouts_[act_.body].wordOf(fv)]; }
+    W4& frameVar(sir::FrameVarId fv) {
+        return (*act_.vars)[layouts_[act_.body.index()].wordOf(fv)];
+    }
 
     static bool isArrayParam(const sir::Subroutine& s, const sir::Param& p, const sir::Design& d) {
         return p.frameVar != sir::kNone
@@ -1798,7 +1818,7 @@ private:
                              &out[e * c]);
             return out;
         }
-        const Layout& l = layouts_[act_.body];
+        const Layout& l = layouts_[act_.body.index()];
         const std::uint64_t n =
             sir::elementCount(bodyFrame(act_.body)[o.asFrame().index()]) * l.chunks[o.id];
         for (std::uint64_t k = 0; k < n; ++k)
@@ -1831,9 +1851,9 @@ private:
 
     /// Copies the arguments into the callee's formals (4.9.7). A static
     /// output keeps its value.
-    void bindArgs(std::uint32_t body, const sir::Subroutine& s,
-                  const std::vector<std::vector<W4>>& args, std::vector<W4>& vars) {
-        const Layout& l = layouts_[body];
+    void bindArgs(BodyId body, const sir::Subroutine& s, const std::vector<std::vector<W4>>& args,
+                  std::vector<W4>& vars) {
+        const Layout& l = layouts_[body.index()];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
             if (args[i].empty()) continue;  // an output
@@ -1849,9 +1869,9 @@ private:
     }
 
     /// The values of the outputs and inouts at the callee's end, as chunks.
-    std::vector<std::vector<W4>> readOuts(std::uint32_t body, const sir::Subroutine& s,
+    std::vector<std::vector<W4>> readOuts(BodyId body, const sir::Subroutine& s,
                                           const std::vector<W4>& vars) const {
-        const Layout& l = layouts_[body];
+        const Layout& l = layouts_[body.index()];
         std::vector<std::vector<W4>> outs(s.params.size());
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
@@ -1878,8 +1898,8 @@ private:
     /// blocking assignments (4.9.7).
     void writeOuts(const sir::Subroutine& s, const std::vector<Operand>& ops,
                    const std::vector<std::vector<W4>>& outs, std::vector<W4>& callerVars,
-                   std::uint32_t callerBody) {
-        const Layout& l = layouts_[callerBody];
+                   BodyId callerBody) {
+        const Layout& l = layouts_[callerBody.index()];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             if (outs[i].empty()) continue;
             const Operand& o = ops[1 + i];
@@ -1918,7 +1938,7 @@ private:
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
         const sir::Process& p = d_.processes[f.process];
-        const std::uint32_t body = act_.body;
+        const BodyId body = act_.body;
         for (;;) {
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
             bool jumped = false;
@@ -2095,7 +2115,7 @@ private:
                         }
                         break;
                     }
-                    case Op::Builtin: builtin(in, info_[body][b.index()][k]); break;
+                    case Op::Builtin: builtin(in, info_[body.index()][b.index()][k]); break;
                     case Op::DriveDelay: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[0], ops[1]);
                         const std::optional<std::uint64_t> rise = ticksOf(ops[2]);
@@ -2105,7 +2125,7 @@ private:
                             designError(f, in, "the delay takes the time past the largest time");
                             return Exit::Error;
                         }
-                        sched_.driveDelayed(info_[body][b.index()][k].driver,
+                        sched_.driveDelayed(info_[body.index()][b.index()][k].driver,
                                             {.slot = kernelSlot(ops[0].asSlot()),
                                              .elem = ops[0].firstElem,
                                              .lsb = ops[0].lsb,
@@ -2113,9 +2133,9 @@ private:
                                             buf.data(), *rise, *fall, *off);
                         break;
                     }
-                    case Op::Resolve: resolve(in, info_[body][b.index()][k]); break;
+                    case Op::Resolve: resolve(in, info_[body.index()][b.index()][k]); break;
                     case Op::Syscall: {
-                        const InstrInfo& info = info_[body][b.index()][k];
+                        const InstrInfo& info = info_[body.index()][b.index()][k];
                         if (info.task == SysTask::Stacktrace) {
                             stacktrace(f, in);
                             break;
@@ -2129,7 +2149,7 @@ private:
                         break;
                     }
                     case Op::OverrideStart: {
-                        const Exit e = overrideStart(in, info_[body][b.index()][k], steps);
+                        const Exit e = overrideStart(in, info_[body.index()][b.index()][k], steps);
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
                         break;
@@ -2149,8 +2169,8 @@ private:
                             kernel::FileTargets to = fileTargets(in, value(ops[1]), "$fmonitor");
                             Frame& m = newFrame(ops[0].id);
                             m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);
-                            sched_.addFileMonitor(m.kernelId, depsOf(ops[0].id).slots,
-                                                  std::move(to));
+                            sched_.addFileMonitor(
+                                m.kernelId, depsOf(bodyOfProcess(ops[0].id)).slots, std::move(to));
                             break;
                         }
                         // The new monitor starts afresh and shows what it
@@ -2158,11 +2178,11 @@ private:
                         Frame& m = *overrides_[ops[0].id];
                         freshVars(m);
                         monitor_ = &m;
-                        sched_.setMonitor(m.kernelId, depsOf(ops[0].id).slots);
+                        sched_.setMonitor(m.kernelId, depsOf(bodyOfProcess(ops[0].id)).slots);
                         break;
                     }
                     case Op::OverrideStop: {
-                        const kernel::Hold level = holdLevel(info_[body][b.index()][k]);
+                        const kernel::Hold level = holdLevel(info_[body.index()][b.index()][k]);
                         for (std::size_t i = 1; i < ops.size(); ++i)
                             sched_.release(level, partOf(ops[i]));
                         dropIdle(level);
@@ -2170,7 +2190,7 @@ private:
                     }
                     case Op::StoreOverride: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
-                        sched_.writeHeld(holdLevel(info_[body][b.index()][k]), f.kernelId,
+                        sched_.writeHeld(holdLevel(info_[body.index()][b.index()][k]), f.kernelId,
                                          {.slot = kernelSlot(ops[1].asSlot()),
                                           .elem = ops[1].firstElem,
                                           .lsb = ops[1].lsb,
@@ -2179,7 +2199,8 @@ private:
                         break;
                     }
                     default:
-                        if (!execute(f, p, in, info_[body][b.index()][k])) return Exit::Error;
+                        if (!execute(f, p, in, info_[body.index()][b.index()][k]))
+                            return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         break;
                 }
@@ -2223,7 +2244,7 @@ private:
         o.level = level;
         waitTriggers(o, d_.processes[ops[1].id]);
         const Act caller = act_;
-        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});
+        enter({bodyOfProcess(ops[1].id), &o.vars, caller.base + bodyTemps(caller.body), o.varsId});
         W4 ret{0, 0};
         const Exit e = runBody(o, sir::kEntryBlock, steps, ret);
         act_ = caller;
@@ -2246,7 +2267,7 @@ private:
         const Act caller = act_;
         std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         const std::uint32_t varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
-        enter({processCount() + g.index(), &vars, caller.base + bodyTemps(caller.body), varsId});
+        enter({bodyOf(g), &vars, caller.base + bodyTemps(caller.body), varsId});
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         act_ = caller;
         return e == Exit::Ret;
@@ -2272,13 +2293,14 @@ private:
 
     /// The slot parts a body reads, with what the functions it calls read.
     /// depsOf leaves out the variables of the functions it calls.
-    void collectReads(std::uint32_t body, GuardDeps& deps, std::vector<bool>& seen) const {
-        if (seen[body]) return;
+    void collectReads(BodyId body, GuardDeps& deps, std::vector<bool>& seen) const {
+        if (seen[body.index()]) return;
         const bool own = std::none_of(seen.begin(), seen.end(), [](bool b) { return b; });
-        seen[body] = true;
+        seen[body.index()] = true;
         for (const sir::BasicBlock& bb : bodyBlocks(body)) {
             for (const sir::Instr& in : bb.instrs) {
-                if (in.op == Op::Call) collectReads(processCount() + in.operands[0].id, deps, seen);
+                if (in.op == Op::Call)
+                    collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
                 // A ref of the body's own frame (that of the waiter); the
                 // refs of the functions it calls are bound by the call.
                 if (own && (in.op == Op::LoadRef || in.op == Op::LoadRefElem) &&
@@ -2311,9 +2333,9 @@ private:
 
     /// What a body (a guard, or a postponed process) reads, found on its
     /// first use.
-    const GuardDeps& depsOf(std::uint32_t body) {
+    const GuardDeps& depsOf(BodyId body) {
         if (guardDeps_.empty()) guardDeps_.resize(processCount() + d_.subroutines.size());
-        std::optional<GuardDeps>& cached = guardDeps_[body];
+        std::optional<GuardDeps>& cached = guardDeps_[body.index()];
         if (cached) return *cached;
         GuardDeps deps;
         std::vector<bool> seen(processCount() + d_.subroutines.size(), false);
@@ -2324,7 +2346,7 @@ private:
         // 9.5).
         const auto called = [&](sir::SlotId s) {
             const sir::SubroutineId g = d_.slot(s).subroutine;
-            return g != sir::kNone && seen[processCount() + g.index()];
+            return g != sir::kNone && seen[bodyOf(g).index()];
         };
         std::erase_if(deps.reads, [&](const sir::SlotRange& r) { return called(r.slot); });
         std::erase_if(deps.events, called);
@@ -2336,7 +2358,7 @@ private:
 
     /// The frame variables of a process back to their values at its start.
     void freshVars(Frame& f) {
-        const std::vector<W4> fresh = newVars(f.process);
+        const std::vector<W4> fresh = newVars(bodyOfProcess(f.process));
         std::copy(fresh.begin(), fresh.end(), f.vars.begin());
     }
 
@@ -2347,12 +2369,12 @@ private:
     /// The body reads the frame of the activation that waits, so a ref is
     /// found where the body's own reads find it, by its layout (SIR_SPEC.md
     /// 7.4).
-    void readsOf(const Frame& f, std::uint32_t body, kernel::MonitorSpec& m) {
+    void readsOf(const Frame& f, BodyId body, kernel::MonitorSpec& m) {
         const GuardDeps& deps = depsOf(body);
         m.slots = deps.slots;
         const std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         for (const GuardDeps::RefRead& rr : deps.refs) {
-            const W4 r = vars[layouts_[body].wordOf(rr.var)];
+            const W4 r = vars[layouts_[body.index()].wordOf(rr.var)];
             if (isFrameRef(r)) continue;
             m.slots.push_back({kernelSlot(leafSlot(refSlot(r), rr.leaf)),
                                rr.anyElement ? 0 : refElem(r), rr.anyElement ? 0U : 1U, 0, 0});
@@ -2373,7 +2395,7 @@ private:
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
         kernel::MonitorSpec m;
-        readsOf(f, processCount() + g.index(), m);
+        readsOf(f, bodyOf(g), m);
         m.eval = &evalCond;
         m.frame = &f;
         m.domain = kernel::Domain::Two;
@@ -2438,7 +2460,9 @@ private:
     /// what is outside it.
     Exit disable(Frame& f, const sir::Instr& in) {
         const bool task = in.op == Op::DisableTask;
-        const std::uint32_t target = task ? processCount() + in.operands[0].id : in.operands[0].id;
+        // The task's body, or the scope's number (#N).
+        const BodyId taskBody = task ? bodyOf(in.operands[0].asSubroutine()) : BodyId{};
+        const std::uint32_t scope = task ? 0 : in.operands[0].id;
         const bool inFunction =
             isSubBody(act_.body) && subOf(act_.body).kind == sir::SubroutineKind::Function;
         bool self = false;
@@ -2450,19 +2474,19 @@ private:
             if (!task) {
                 for (std::size_t i = 0; i < g.scopes.size() && !to; ++i) {
                     const Frame::ScopeAct& a = g.scopes[i];
-                    if (a.scope != target) continue;
+                    if (a.scope != scope) continue;
                     to = Frame::Unwind{a.calls, a.sync, a.exit};
                     children = a.children;
                     keep = i;
                 }
             } else {
                 for (std::size_t i = 0; i < g.calls.size() && !to; ++i)
-                    if (g.calls[i].body == target) {
+                    if (g.calls[i].body == taskBody) {
                         to = Frame::Unwind{static_cast<std::uint32_t>(i), 0, sir::kNone};
                         children = g.calls[i].children;
                     }
                 for (std::size_t j = 0; &g == &f && j < f.syncCalls.size() && !to; ++j)
-                    if (f.syncCalls[j].body == target) {
+                    if (f.syncCalls[j].body == taskBody) {
                         to = Frame::Unwind{static_cast<std::uint32_t>(f.calls.size()),
                                            static_cast<std::uint32_t>(j), sir::kNone};
                         children = f.syncCalls[j].children;
@@ -2534,10 +2558,10 @@ private:
     /// the caller's places like blocking assignments (SIR_SPEC.md 8, 4.9.7).
     Exit call(Frame& f, const sir::Instr& in, std::uint64_t& steps) {
         const auto& ops = in.operands;
-        const sir::Subroutine& s = d_.subroutines[ops[0].id];
+        const sir::Subroutine& s = d_.subroutine(ops[0].asSubroutine());
         if (tooDeep(f, in)) return Exit::Error;
         const Act caller = act_;
-        const std::uint32_t body = processCount() + ops[0].id;
+        const BodyId body = bodyOf(ops[0].asSubroutine());
         std::vector<W4> vars = newVars(body);
         // The arguments are read in the caller before anything is written.
         const std::vector<std::vector<W4>> args = readArgs(s, ops);
@@ -2582,9 +2606,9 @@ private:
                   std::uint64_t& steps) {
         const sir::Subroutine& sub = d_.subroutine(s);
         const Act caller = act_;
-        const std::uint32_t body = processCount() + s.index();
+        const BodyId body = bodyOf(s);
         std::vector<W4> vars = newVars(body);
-        const Layout& l = layouts_[body];
+        const Layout& l = layouts_[body.index()];
         for (std::size_t i = 0; i < sub.params.size() && i < args.size(); ++i)
             for (std::size_t k = 0; k < args[i].size(); ++k)
                 vars[l.wordOf(sub.params[i].frameVar) + k] = args[i][k];
@@ -2683,7 +2707,7 @@ private:
 
     /// Whether an instruction has an integral operand or result wider than
     /// 64 bits; those run in executeWide.
-    bool isWide(std::uint32_t body, const sir::Instr& in) const {
+    bool isWide(BodyId body, const sir::Instr& in) const {
         if (chunksOf(in.type) > 1) return true;
         for (const Operand& o : in.operands) {
             if (o.kind != Operand::Kind::Temp && o.kind != Operand::Kind::Const &&
@@ -3571,7 +3595,7 @@ private:
                 // A ref steps through the words of a value's chunks; from
                 // one leaf of a structure to the next one word at a time
                 // (front keeps wider members out of those).
-                std::size_t at = layouts_[act_.body].wordOf(o.asFrame());
+                std::size_t at = layouts_[act_.body.index()].wordOf(o.asFrame());
                 if (!fv.dims.empty()) {
                     if (ops.size() > 1) {
                         const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
@@ -4094,12 +4118,13 @@ private:
             return (l.file < d_.sources.size() ? d_.sources[l.file] : std::string("?")) + ":" +
                    std::to_string(l.line);
         };
-        const auto scopeOf = [&](std::uint32_t body) {
+        const auto scopeOf = [&](BodyId body) {
             return isSubBody(body) ? subOf(body).name
-                                   : d_.instance(d_.processes[body].instance).scopeName;
+                                   : d_.instance(processOf(body).instance).scopeName;
         };
         // The bodies from the process in, each with the call that entered it.
-        std::vector<std::pair<std::uint32_t, const sir::Instr*>> chain{{f.process, nullptr}};
+        std::vector<std::pair<BodyId, const sir::Instr*>> chain{
+            {bodyOfProcess(f.process), nullptr}};
         for (const Frame::TaskCall& c : f.calls)
             chain.emplace_back(c.body, c.site);
         for (const Frame::SyncCall& c : f.syncCalls)

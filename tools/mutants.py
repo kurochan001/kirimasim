@@ -332,8 +332,8 @@ MUTANTS = [
     ("vm: resolve ignores a driver's side slot", "src/vm/vm.cpp",
      "                d.one = side & kernel::mask(w);", "                d.one = ~side;"),
     ("vm: wait (expr) does not wait on what a function reads", "src/vm/vm.cpp",
-     "                if (in.op == Op::Call) collectReads(",
-     "                if (false) collectReads("),
+     "                if (in.op == Op::Call)\n                    collectReads(",
+     "                if (false)\n                    collectReads("),
     ("vm: wait (expr) misses the triggers of ev.triggered", "src/vm/vm.cpp",
      "                    m.events.push_back(kernel::eventOfHandle(h));",
      "                    (void)h;"),
@@ -652,7 +652,7 @@ MUTANTS = [
      "src/front/lower.cpp", "sub != nullptr && (!b_.isSub || b_.subSymbol != sub)) {",
      "false && sub != nullptr) {"),
     ("vm: a wait leaves out every function's variables", "src/vm/vm.cpp",
-     "return g != sir::kNone && seen[processCount() + g.index()];", "return g != sir::kNone;"),
+     "return g != sir::kNone && seen[bodyOf(g).index()];", "return g != sir::kNone;"),
     ("vm: the event a wait's function triggers is read", "src/vm/vm.cpp",
      "const bool target = isWriteTarget(in.op);", "const bool target = false;"),
     ("sir verify: a delay may be of any type", "src/sir/verify.cpp",
@@ -682,7 +682,7 @@ MUTANTS = [
      "                readOperand(ops[i + 1 + a], v + at, c);\n"
      "                for (std::uint32_t k = 0; k < c; ++k) (&temp(params[a].temp))[k] = v[at + k];\n"),
     ("vm: a ref a wait reads is looked up by its variable's number", "src/vm/vm.cpp",
-     "const W4 r = vars[layouts_[body].wordOf(rr.var)];", "const W4 r = vars[rr.var.index()];"),
+     "const W4 r = vars[layouts_[body.index()].wordOf(rr.var)];", "const W4 r = vars[rr.var.index()];"),
     ("front: a constant packed range counts elements as bits", "src/front/lower_expr.cpp",
      "const std::int64_t lsb = (down ? near - r.right : r.right - near) * ew;",
      "const std::int64_t lsb = down ? near - r.right : r.right - near;"),
@@ -802,12 +802,12 @@ MUTANTS = [
     ("vm: override.start waits on its triggers only after the first run", "src/vm/vm.cpp",
      "        waitTriggers(o, d_.processes[ops[1].id]);\n"
      "        const Act caller = act_;\n"
-     "        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
+     "        enter({bodyOfProcess(ops[1].id), &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
      "        W4 ret{0, 0};\n"
      "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n",
      "        const Act caller = act_;\n"
-     "        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
+     "        enter({bodyOfProcess(ops[1].id), &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
      "        W4 ret{0, 0};\n"
      "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n"
@@ -924,8 +924,8 @@ MUTANTS = [
      "    if (++runs > 1) context.output().write(\"again\\n\");\n"
      "    return Interpreter(design, context, options).run();"),
     ("vm: no instruction takes the wide path", "src/vm/vm.cpp",
-     "info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in);",
-     "info_[p][b][k].wide = wideHandles(in.op) && isWide(p, in) && false;"),
+     "info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);",
+     "info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in) && false;"),
     ("front: the elements of an array of gates or UDPs share one name", "src/front/lower.cpp",
      "    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size(); ++i)",
      "    for (std::size_t i = 0; i < g.arrayPath.size() && i < dims.size() && false; ++i)"),
