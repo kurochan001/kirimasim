@@ -41,7 +41,7 @@ The draft list of the design specification was checked against the standard and 
 Those in the standard but not in the design specification's list (approved by a human 2026-10-15):
 
 - `$system` (20.17.1): runs any shell command. It can break the reproducibility of tests (NFR-2), so by default it is an error, and it runs only with `--allow-system`.
-- `$dumplimit` (21.7.1.5) and the `$dumpports` family of extended VCD (21.7.3): covered by the waveform document.
+- `$dumplimit` (21.7.1.5) and the `$dumpports` family of extended VCD (21.7.3): covered by WAVEFORM.md.
 - The stochastic analysis tasks `$q_*` (20.15) and the PLA tasks (20.16): not supported; calling one is an error. Designs that use them are rare, and the inventory of tests found only tests with their names and no substance.
 
 ## 2. Where output goes
@@ -445,4 +445,4 @@ Each step takes its draws from the same S, in the order stated.
 - When `$monitor` first prints and when `$monitoron` prints (4), to be checked against Icarus 13.0 in P1.
 - `%v` and the strength model (3.10; P4).
 - Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc` (P3).
-- The waveform tasks (`$dumpfile` and so on) are written in the waveform document.
+- The waveform tasks (`$dumpfile` and so on) are written in WAVEFORM.md (2026-10-21).

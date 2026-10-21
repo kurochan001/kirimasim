@@ -529,6 +529,7 @@ holds.
 | [docs/spec/UNSPECIFIED_BEHAVIOR.md](docs/spec/UNSPECIFIED_BEHAVIOR.md) | What kirimasim does where the standard leaves the result open |
 | [docs/spec/SIR_SPEC.md](docs/spec/SIR_SPEC.md) | The intermediate representation |
 | [docs/spec/SYSTEM_TASKS.md](docs/spec/SYSTEM_TASKS.md) | System tasks and functions, message formats |
+| [docs/spec/WAVEFORM.md](docs/spec/WAVEFORM.md) | Waveforms: the VCD file, `$dump*` and `--wave` |
 | [docs/spec/CLI.md](docs/spec/CLI.md) | Command line, exit codes |
 | [docs/spec/TEST_SUITE.md](docs/spec/TEST_SUITE.md) | Test rules, the P1 exit criteria |
 | [docs/spec/RUNTIME_ABI.md](docs/spec/RUNTIME_ABI.md) | The boundary between the kernel and the tiers |

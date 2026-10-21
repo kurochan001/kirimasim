@@ -51,7 +51,7 @@ kirimasim --version | --help
 | `--bounds-check=off\|warn` | Report indices and positions out of range at run time, once per place (VALUE_SEMANTICS.md 3.11; approved 2026-10-19). Default `off` | M7 |
 | `--autoflush` | Write standard output out after every display task (SYSTEM_TASKS.md 2; approved 2026-10-19). Off by default | M7 |
 | `--seed=<n>` | The random seed (the random-number section of SYSTEM_TASKS.md; to be written in P1) | M7 |
-| `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (the waveform document; to be written in P1) | M7 |
+| `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (WAVEFORM.md 5; `.fst` waits for the decision on libfstapi) | M7 |
 | `--wave-glitches` | Record in the waveform every change within a time slot, not only the value at its end (approved 2026-10-19) | M7, with `--wave` |
 | `--mintypmax=min\|typ\|max` | Which delay of `min:typ:max` to use. Default `typ` (SCHEDULER_SPEC.md 12; approved 2026-10-19) | M7 |
 | `--report-pulses` | Report, as notes, the pulses that inertial delays remove (SCHEDULER_SPEC.md 12; approved 2026-10-19). Off by default | M7 |

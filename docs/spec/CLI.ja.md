@@ -51,7 +51,7 @@ kirimasim --version | --help
 | `--bounds-check=off\|warn` | 実行時の範囲の外の添字と位置を、箇所ごとに 1 回知らせる（VALUE_SEMANTICS.md の 3.11 節。2026-10-19 に承認）。既定は `off` | M7 |
 | `--autoflush` | 表示のタスクのたびに標準出力を書き出す（SYSTEM_TASKS.md の 2 節。2026-10-19 に承認）。既定は無効 | M7 |
 | `--seed=<n>` | 乱数のシード（SYSTEM_TASKS.md の乱数の節。P1 で書く） | M7 |
-| `--wave=<file>.fst\|.vcd`、`--wave-scope=<パターン>` | 波形の出力と範囲（波形の文書。P1 で書く） | M7 |
+| `--wave=<file>.fst\|.vcd`、`--wave-scope=<パターン>` | 波形の出力と範囲（WAVEFORM.md の 5 節。`.fst` は libfstapi の決定を待つ） | M7 |
 | `--wave-glitches` | 時刻スロットの終わりの値だけでなく、その中のすべての変化を波形に記録する（2026-10-19 に承認） | M7。`--wave` と同じ |
 | `--mintypmax=min\|typ\|max` | `min:typ:max` の遅延のどれを使うか。既定は `typ`（SCHEDULER_SPEC.md の 12 節。2026-10-19 に承認） | M7 |
 | `--report-pulses` | 慣性の遅延が消したパルスを情報として知らせる（SCHEDULER_SPEC.md の 12 節。2026-10-19 に承認）。既定は無効 | M7 |

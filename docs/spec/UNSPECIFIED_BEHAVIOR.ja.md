@@ -2,7 +2,7 @@
 
 [English](UNSPECIFIED_BEHAVIOR.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-優先度：P1。状態：**承認済み（2026-10-19）**。2026-10-19 にこの文書を書いた（承認済み）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。同日、A11 と A12 で渡す slang の上限のオプションを決めた（CLI.md 2.1。承認済み）。同日、N9（ソースの中の config から取るトップ）を足した（CLI.md 2.1。承認済み）。同日、N10（`` `unconnected_drive `` の下の変数の入力ポート）を足した（VALUE_SEMANTICS.md 5.3。承認済み）。2026-10-20 に、P6（開いていない記述子と、表 21-6 に無い type の `$fopen`）を足した（SYSTEM_TASKS.md 6.1。承認済み）。2026-10-21 に、そのような記述子からの入力を P6 に足した（SYSTEM_TASKS.md 6.3。承認済み）。同日、`$random` と `$dist_*` について附属書 N が決めていない所を K3 に足した（SYSTEM_TASKS.md 12。承認済み）。
+優先度：P1。状態：**承認済み（2026-10-19）**。2026-10-19 にこの文書を書いた（承認済み）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。同日、A11 と A12 で渡す slang の上限のオプションを決めた（CLI.md 2.1。承認済み）。同日、N9（ソースの中の config から取るトップ）を足した（CLI.md 2.1。承認済み）。同日、N10（`` `unconnected_drive `` の下の変数の入力ポート）を足した（VALUE_SEMANTICS.md 5.3。承認済み）。2026-10-20 に、P6（開いていない記述子と、表 21-6 に無い type の `$fopen`）を足した（SYSTEM_TASKS.md 6.1。承認済み）。2026-10-21 に、そのような記述子からの入力を P6 に足した（SYSTEM_TASKS.md 6.3。承認済み）。同日、`$random` と `$dist_*` について附属書 N が決めていない所を K3 に足した（SYSTEM_TASKS.md 12。承認済み）。同日、遅れて呼ばれた書き出しのタスクと `--wave` のときの扱いを D3 に足した（WAVEFORM.md。承認済み）。
 
 この文書は、IEEE 1800-2023 が順序や結果を決めていない所、実装に任せている所、文言どおりに実装すると実用のコードが壊れる所を挙げ、それぞれで kirimasim がどうするかを書きます。規格の本文は写さず、節番号を示します。この文書が頼る決まりの多くは、ほかの詳細仕様書に書いてあります。この文書はそれを参照として示し、ほかに置き場の無いもの（基本の方針（1）、診断の種類（4）、項目ごとの状態（6）、7 と 8 の一覧）だけをここに書きます。
 
@@ -147,7 +147,8 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | D2 | 4 値では、初期値の x から 0 や 1 への変化も辺。辺や事象の待ちで始まるプロセスは、時刻 0 に何かが走る前から待っているので、それを受け取る | — | 9.4.2 | P1 | approved 2026-10-19（SCHEDULER_SPEC.md 6.1） |
 | D2 | `--state=2` では x が無いのでこの辺は起きない。違いとして書く | — | 6.11 | P2 | later (P2) |
 | D3 | 時刻の途中の変化は、そのとき待っているプロセスだけが見る。島の最適化でもこれを落とさない | — | 9.4.2、4.7 | P1 | in force（SCHEDULER_SPEC.md 9.1） |
-| D3 | 波形は各時刻スロットの終わりの値を記録する。オプションですべての変化を記録する | `--wave-glitches` | 4.7 | P1 | approved 2026-10-19（CLI.md 2.2） |
+| D3 | 波形は各時刻スロットの終わりの値を記録する。オプションですべての変化を記録する | `--wave-glitches` | 4.7 | P1 | approved 2026-10-19（CLI.md 2.2、WAVEFORM.md 4） |
+| D3 | 最初より後の時刻の `$dumpvars` と、書き始めた後の `$dumpfile` は、実行時の警告を出して無視する。`--wave` のときは、設計の `$dumpfile` と `$dumpvars` を、実行時の警告を出して無視する | `kirima-dumpvars-late`、`kirima-dumpfile-late`、`kirima-dump-command-line` | 21.7.1 | P1 | approved 2026-10-21（WAVEFORM.md 4、5） |
 | D4 | `always_comb` の感度は、呼ぶ関数、パッケージの変数、階層参照をたどる | — | 9.2.2.2.1 | P1 | in force（SCHEDULER_SPEC.md 6.3） |
 | D4 | 静的に決まらない読み出し（ハンドルや仮想インタフェースを通すもの）は感度に入れず、警告を出す | `kirima-comb-dynamic-read` | 9.2.2.2.1 | P3 | later (P3) |
 | D5 | 最長の静的な接頭辞：変数の添字の `a[i]` は `a` 全体と `i` を購読し、定数の添字はそのビット範囲を購読する | — | 11.5.3 | P1 | in force（SCHEDULER_SPEC.md 6.3、9.5） |
@@ -389,7 +390,7 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | エラボレーションのエラー | `kirima-vif-in-sensitivity`（D10）、`kirima-constraint-unsupported`（K4）。`always_comb` などの複数の書き手と `uwire` の多重駆動は slang の診断（B4、E8） |
 | lint の警告 | `kirima-zero-delay-loop`（A1）、`kirima-always-no-wait`、`kirima-always-no-wait-path`（A2）、`kirima-empty-sensitivity`（A3）、`kirima-const-wait`（A4）、`kirima-comb-loop`（A6）、`kirima-self-trigger`（A9）、`kirima-shared-loop-var`（A10）、`kirima-monitor-side-effect`（A13）、`kirima-race-blocking`（B3、B6）、`kirima-multi-write`（B4）、`kirima-blk-nblk-mix`（B5）、`kirima-comb-read-before-write`（B12）、`kirima-comb-nba`（C7）、`kirima-final-nba`（C8）、`kirima-comb-dynamic-read`（D4）、`kirima-casex`（E6）、`kirima-const-out-of-range`（F7）、`kirima-side-effect-in-index`（G2）、`kirima-multi-side-effect`（G4）、`kirima-fork-loop-var`（H2）、`kirima-static-init-order`（J3）、`kirima-never-match`（L6）、`kirima-unconnected-drive-var`（N10）、`kirima-delay-rounded-zero`（O2）、`kirima-latch-inferred`、`kirima-no-latch`（R1）、`kirima-nonstandard`（R4） |
 | 情報 | `kirima-comb-loop-unsplit`（A7）、`wait(0)` の `kirima-const-wait`（A4）、消したパルス（C5） |
-| 実行時の警告 | `kirima-event-missed`（D8）、`kirima-cond-x`（E1、E2）、`kirima-out-of-range`（F7）、`kirima-static-task-reentry`（H1）、`kirima-randomize-failed`（K5）、`kirima-modport-violation`（N8）、`kirima-delay-unknown`、`kirima-delay-negative`（O4）、`kirima-readmem-range`、`kirima-readmem-short`（P4）、`kirima-dump-not-preserved`（P5）、`kirima-file-not-open`、`kirima-fopen-mode`（P6）、`kirima-dist-argument`（K3） |
+| 実行時の警告 | `kirima-event-missed`（D8）、`kirima-cond-x`（E1、E2）、`kirima-out-of-range`（F7）、`kirima-static-task-reentry`（H1）、`kirima-randomize-failed`（K5）、`kirima-modport-violation`（N8）、`kirima-delay-unknown`、`kirima-delay-negative`（O4）、`kirima-readmem-range`、`kirima-readmem-short`（P4）、`kirima-dump-not-preserved`（P5）、`kirima-file-not-open`、`kirima-fopen-mode`（P6）、`kirima-dist-argument`（K3）、`kirima-dumpvars-late`、`kirima-dumpfile-late`、`kirima-dump-command-line`（D3） |
 | 実行時のエラー | `kirima-readonly-write`（A13）、`kirima-ref-stale`（H4）、`kirima-dpi-not-context`（M4）、`kirima-dpi-task-wait`（M5）、`kirima-null-deref`（J2）、`kirima-time-overflow`（O3） |
 | 実行時の致命 | `kirima-zero-time-loop`（A1、A9、A14）、`kirima-comb-not-converged`（A6）、`kirima-process-limit`（A5）、`kirima-call-depth-limit`（A15） |
 
