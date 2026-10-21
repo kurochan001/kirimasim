@@ -2,7 +2,7 @@
 
 [日本語](AI_POLICY.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved).
+Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision).
 
 This document holds the rules for developing kirimasim together with AI. It restates the design specification's "policy for AI development".
 
@@ -15,7 +15,7 @@ This document holds the rules for developing kirimasim together with AI. It rest
 ## Marking commits
 
 - A commit made with AI carries the trailer `Assisted-by: <tool>:<model and version>` (for example `Assisted-by: Claude Code:claude-opus-5-5`).
-- `Signed-off-by:` is not required for now: the only writers are one human and AI, and code pull requests from outside are not accepted. DCO (or a CLA) comes in when code pull requests from outside are accepted.
+- `Signed-off-by:` is not used: the project does not run the DCO, and pull requests are turned off (`CONTRIBUTING.md`).
 - `Co-Authored-By` is not used for AI.
 
 ## What humans hold

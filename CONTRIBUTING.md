@@ -41,13 +41,6 @@ proposal issue is linked from those changes.
 The rest of this file describes the rules that collaborators follow when
 they change the repository.
 
-## Sign-off
-
-Commits do not need a `Signed-off-by` line for now. The project will
-introduce the Developer Certificate of Origin (DCO), or a contributor
-license agreement, when it starts accepting code pull requests from
-outside.
-
 ## Use of AI tools
 
 AI tools are welcome, and most of kirimasim's code is AI-generated. If an AI

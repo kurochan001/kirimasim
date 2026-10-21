@@ -578,30 +578,6 @@ def expected_change(tmp: Path) -> None:
                 "--head", "HEAD"], want_ok, cwd=repo)
 
 
-def dco(tmp: Path) -> None:
-    """check_dco.py, kept unused until DCO is introduced (its header), on a
-    scratch repository, so that it still works when it is needed."""
-    repo = tmp / "dco"
-    repo.mkdir()
-
-    def git(*args: str) -> None:
-        subprocess.run(["git", "-c", "user.name=A", "-c", "user.email=", *args],
-                       cwd=repo, check=True, capture_output=True)
-
-    git("init", "-q")
-    git("commit", "-q", "--allow-empty", "-m", "base")
-    git("tag", "base")
-    for name, message, want_ok in [
-        ("signed", "x\n\nSigned-off-by: A <>", True),
-        ("unsigned", "x", False),
-        ("signed_by_another", "x\n\nSigned-off-by: B <>", False),
-    ]:
-        git("checkout", "-q", "-B", name, "base")
-        git("commit", "-q", "--allow-empty", "-m", message)
-        expect("check_dco " + name, [sys.executable, str(TOOLS / "check_dco.py"), "--base", "base",
-                                     "--head", "HEAD"], want_ok, cwd=repo)
-
-
 def mutants_check(tmp: Path) -> None:
     """mutants.py --check on a copy of src/: it passes, and fails once the
     text that one mistake rewrites is changed."""
@@ -641,7 +617,6 @@ def main() -> int:
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)
-        dco(tmp)
         mutants_check(tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)

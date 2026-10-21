@@ -81,7 +81,7 @@ Fixing a bug with a branch for the shape of the symptom leaves the neighbouring 
 
 - One commit per purpose. Messages in English, the first line at most 72 characters.
 - When an AI helped, add the trailer `Assisted-by: Claude Code:<model name and version>`. Do not add `Co-Authored-By`.
-- Do not add `Signed-off-by`. DCO is not in operation now (DCO or a CLA will be introduced when PRs of code from outside are accepted).
+- Do not add `Signed-off-by`: the project does not use the DCO.
 - The author email of commits is the GitHub noreply address.
 
 ## Changes of expected values go in separate PRs
