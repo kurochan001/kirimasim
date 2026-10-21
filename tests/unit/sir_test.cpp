@@ -307,11 +307,12 @@ Design loopWithWait() {
     p.numTemps = 6;
     p.blocks.resize(5);
     p.blocks[0].instrs = {
-        make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::constant(ConstId{0})}, 1),
+        make(Op::Fstore, voidType(), kNone,
+             {Operand::frame(FrameVarId{0}), Operand::constant(ConstId{0})}, 1),
         make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
     };
     p.blocks[1].instrs = {
-        make(Op::Fload, s2(32), 0, {Operand::frame(0)}, 1),
+        make(Op::Fload, s2(32), 0, {Operand::frame(FrameVarId{0})}, 1),
         make(Op::Lt, u2(1), 1, {Operand::temp(TempId{0}), Operand::constant(ConstId{1})}, 1),
         make(Op::BrIf, voidType(), kNone,
              {Operand::temp(TempId{1}), Operand::block(BlockId{2}), Operand::block(BlockId{4})}, 1),
@@ -321,12 +322,13 @@ Design loopWithWait() {
              {Operand::constant(ConstId{2}), Operand::block(BlockId{3})}, 1),
     };
     p.blocks[3].instrs = {
-        make(Op::Fload, s2(32), 2, {Operand::frame(0)}, 1),
+        make(Op::Fload, s2(32), 2, {Operand::frame(FrameVarId{0})}, 1),
         make(Op::Trunc, u2(8), 3, {Operand::temp(TempId{2})}, 1),
         make(Op::To4, u4(8), 4, {Operand::temp(TempId{3})}, 1),
         make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(TempId{4})}, 1),
         make(Op::Add, s2(32), 5, {Operand::temp(TempId{2}), Operand::constant(ConstId{3})}, 1),
-        make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::temp(TempId{5})}, 1),
+        make(Op::Fstore, voidType(), kNone,
+             {Operand::frame(FrameVarId{0}), Operand::temp(TempId{5})}, 1),
         make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
     };
     p.blocks[4].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
@@ -422,14 +424,16 @@ TEST(Sir, EntryBlockHasNoParameters) {
 TEST(Sir, BlockAfterAWaitTakesNoArguments) {
     Design d = loopWithWait();
     d.processes[0].blocks[3].params = {{TempId{0}, s2(32)}};
-    d.processes[0].blocks[1].instrs[0] = make(Op::Fload, s2(32), 1, {Operand::frame(0)}, 1);
+    d.processes[0].blocks[1].instrs[0] =
+        make(Op::Fload, s2(32), 1, {Operand::frame(FrameVarId{0})}, 1);
     EXPECT_TRUE(mentions(verify(d), "the block after a wait takes no arguments"));
 }
 
 TEST(Sir, FrameVariableOutOfRange) {
     Design d = loopWithWait();
     d.processes[0].blocks[0].instrs[0] =
-        make(Op::Fstore, voidType(), kNone, {Operand::frame(1), Operand::constant(ConstId{0})}, 1);
+        make(Op::Fstore, voidType(), kNone,
+             {Operand::frame(FrameVarId{1}), Operand::constant(ConstId{0})}, 1);
     EXPECT_TRUE(mentions(verify(d), "frame variable out of range"));
 }
 
@@ -736,12 +740,12 @@ Design calls() {
     f.automatic = true;
     f.returnType = u4(8);
     f.frame = {{"a", u4(8), kNone}};
-    f.params = {{"a", Direction::Input, u4(8), kNone, 0}};
+    f.params = {{"a", Direction::Input, u4(8), kNone, FrameVarId{0}}};
     f.loc = at(10);
     f.numTemps = 2;
     f.blocks.resize(1);
     f.blocks[0].instrs = {
-        make(Op::Fload, u4(8), 0, {Operand::frame(0)}, 10),
+        make(Op::Fload, u4(8), 0, {Operand::frame(FrameVarId{0})}, 10),
         make(Op::Add, u4(8), 1, {Operand::temp(TempId{0}), Operand::constant(ConstId{1})}, 10),
         make(Op::Ret, voidType(), kNone, {Operand::temp(TempId{1})}, 10),
     };
@@ -1039,7 +1043,8 @@ TEST(Sir, MonitorOfAnAutomaticVariable) {
     Design d = loopWithWait();
     d.processes[0].blocks[3].instrs.insert(
         d.processes[0].blocks[3].instrs.begin(),
-        make(Op::Syscall, voidType(), kNone, {Operand::str("$monitor"), Operand::frame(0)}, 1));
+        make(Op::Syscall, voidType(), kNone,
+             {Operand::str("$monitor"), Operand::frame(FrameVarId{0})}, 1));
     EXPECT_TRUE(mentions(verify(d), "may not refer to an automatic variable"));
 }
 

@@ -152,12 +152,13 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 const std::uint32_t n = leafCount(v.getType());
                 for (std::uint32_t k = 0; k < n; ++k)
                     emitVoid(Op::Fstore,
-                             {Operand::frame(first + k), initial(frameVars()[first + k].type).op},
+                             {Operand::frame(sir::FrameVarId{first.index() + k}),
+                              initial(frameVar(sir::FrameVarId{first.index() + k}).type).op},
                              sl);
                 Stores stores;
                 Storage dst;
                 dst.frame = true;
-                dst.id = first;
+                dst.id = first.index();
                 if (init != nullptr)
                     assignAggregate(dst, v.getType(), *init, stores, sl);
                 else
@@ -175,12 +176,12 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             // Automatic: a frame variable, set each time the scope is
             // entered (SIR_SPEC.md 7.4).
             const sir::FrameVarId f = frameVarOf(v, sl);
-            const Type t = frameVars()[f].type;
+            const Type t = frameVar(f).type;
             const ast::Expression* init = v.getInitializer();
-            if (!frameVars()[f].dims.empty()) {
+            if (!frameVar(f).dims.empty()) {
                 // An array: its initializer element by element, or else
                 // every element's default.
-                const ArrayBase a{Place::Home::Frame, f};
+                const ArrayBase a{Place::Home::Frame, f.index()};
                 Stores stores;
                 if (init != nullptr) {
                     assignArray(a, {}, *init, stores, sl);
@@ -426,7 +427,7 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
     // Each index runs from the left bound to the right bound (12.7.3).
     const ast::ForeachLoopStatement::LoopDim& d = *dims[k];
     const sir::FrameVarId fv = frameVarOf(*d.loopVar, sl);
-    const Type t = frameVars()[fv].type;
+    const Type t = frameVar(fv).type;
     const slang::ConstantRange range = d.range.value_or(slang::ConstantRange{});
     const std::int64_t left = range.left;
     const std::int64_t right = range.right;

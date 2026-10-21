@@ -40,7 +40,7 @@ enum : std::uint32_t { tA, tB, tR, tS, tBit, tFree };
 // Constants.
 enum : std::uint32_t { c5, c2, c6, cReal, cString, cTrue };
 // Frame variables of the playground process.
-enum : FrameVarId { fV, fRef, fRefArr, fRefReal };
+enum : std::uint32_t { fV, fRef, fRefArr, fRefReal };
 
 Slot slot(std::string name, Type t, std::vector<ArrayDim> dims = {}, SlotKind kind = SlotKind::Var,
           std::uint32_t flags = 0) {
@@ -88,7 +88,7 @@ Design playground() {
     f.automatic = true;
     f.returnType = voidType();
     f.frame = {{"x", u4(8), kNone, {}, {}}};
-    f.params = {{"x", Direction::Input, u4(8), kNone, 0}};
+    f.params = {{"x", Direction::Input, u4(8), kNone, FrameVarId{0}}};
     f.blocks = {{{}, {none(Op::Ret, {})}}};
     f.loc = at(1);
     d.subroutines.push_back(f);
@@ -212,7 +212,7 @@ std::vector<Case> cases() {
         {"store.bits domain", "value must be integral, in the slot's domain and not wider",
          add(none(Op::StoreBits, {Operand::slot(sB), C2, A}))},
         {"fload type", "needs a frame variable of the result type that is not an array",
-         add(make(Op::Fload, u2(8), N, {Operand::frame(fV)}))},
+         add(make(Op::Fload, u2(8), N, {Operand::frame(FrameVarId{fV})}))},
         {"ref.make result", "needs a slot or frame variable and a ref result",
          add(make(Op::RefMake, u4(8), N, {Operand::slot(sA)}))},
         {"ref.make of a part", "needs a whole slot or frame variable",
@@ -220,15 +220,15 @@ std::vector<Case> cases() {
         {"ref.make indices", "needs no index or one per dimension",
          add(make(Op::RefMake, refType(), N, {Operand::slot(sM), C2, C2}))},
         {"load.ref.elem of a non-ref", "needs a ref argument",
-         add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(fV), C2}))},
+         add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(FrameVarId{fV}), C2}))},
         {"load.ref.elem indices", "needs one index per dimension of what it refers to",
-         add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(fRefArr)}))},
+         add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(FrameVarId{fRefArr})}))},
         {"load.ref.elem real index", "indices and the position must be integral",
-         add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(fRefArr), R}))},
+         add(make(Op::LoadRefElem, u4(8), N, {Operand::frame(FrameVarId{fRefArr}), R}))},
         {"load.ref.elem result", "result must have the type of what the ref refers to",
-         add(make(Op::LoadRefElem, u2(8), N, {Operand::frame(fRefArr), C2}))},
+         add(make(Op::LoadRefElem, u2(8), N, {Operand::frame(FrameVarId{fRefArr}), C2}))},
         {"store.ref.bits of a real", "needs a ref to an integral value",
-         add(none(Op::StoreRefBits, {Operand::frame(fRefReal), C2, A}))},
+         add(none(Op::StoreRefBits, {Operand::frame(FrameVarId{fRefReal}), C2, A}))},
         {"pow", "base and result must have the same integral type",
          add(make(Op::Pow, u4(8), N, {A, R}))},
         {"and", "operands and result must have the same integral type",
@@ -461,7 +461,7 @@ std::vector<Case> cases() {
         {"argument place", "needs exactly one place",
          [](Design& d) { d.subroutines[0].params[0].slot = sA; }},
         {"argument frame variable", "frame variable is invalid",
-         [](Design& d) { d.subroutines[0].params[0].frameVar = 7; }},
+         [](Design& d) { d.subroutines[0].params[0].frameVar = FrameVarId{7}; }},
         {"postponed process", "a postponed process has no triggers",
          [](Design& d) {
              Process p;

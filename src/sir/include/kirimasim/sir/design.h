@@ -28,7 +28,8 @@ struct BlockTag;
 using BlockId = Id<BlockTag>;
 struct TypeTag;
 using TypeId = Id<TypeTag>;
-using FrameVarId = std::uint32_t;
+struct FrameVarTag;
+using FrameVarId = Id<FrameVarTag>;
 struct SubroutineTag;
 using SubroutineId = Id<SubroutineTag>;
 using ProcessId = std::uint32_t;
@@ -376,6 +377,7 @@ struct Operand {
     [[nodiscard]] TempId asTemp() const { return TempId{id}; }
     [[nodiscard]] ConstId asConst() const { return ConstId{id}; }
     [[nodiscard]] TypeId asType() const { return TypeId{id}; }
+    [[nodiscard]] FrameVarId asFrame() const { return FrameVarId{id}; }
 
     static Operand of(Kind k, std::uint32_t id) {
         Operand o;
@@ -401,7 +403,7 @@ struct Operand {
         o.count = args;
         return o;
     }
-    static Operand frame(FrameVarId f) { return of(Kind::Frame, f); }
+    static Operand frame(FrameVarId f) { return of(Kind::Frame, f.index()); }
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s.index()); }
     static Operand process(ProcessId p) { return of(Kind::Process, p); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }

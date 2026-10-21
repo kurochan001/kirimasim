@@ -319,7 +319,7 @@ std::string toText(const Design& d) {
             out += "  param " + std::string(directionName(prm.dir)) + " " + quoted(prm.name) +
                    " : " + toString(prm.type) + " -> " +
                    (prm.slot != kNone ? "%s" + std::to_string(prm.slot)
-                                      : "%f" + std::to_string(prm.frameVar)) +
+                                      : "%f" + std::to_string(prm.frameVar.index())) +
                    "\n";
         }
         out += frameText(sub.frame) + blocksText(d, sub.blocks) + "}\n";

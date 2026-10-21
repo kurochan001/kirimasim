@@ -97,7 +97,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             structLeaves(v.getType(), "", leaves);
             const bool automatic = v.lifetime == ast::VariableLifetime::Automatic;
             const std::uint32_t first =
-                automatic ? structFrameVars(v, v.location) : structSlots(v, v.location);
+                automatic ? structFrameVars(v, v.location).index() : structSlots(v, v.location);
             const auto at = static_cast<std::uint32_t>(design_.subroutine(id).params.size());
             for (std::size_t k = 0; k < leaves.size(); ++k) {
                 sir::Param prm;
@@ -105,8 +105,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 prm.dir = dir;
                 const auto leaf = static_cast<std::uint32_t>(first + k);
                 if (automatic) {
-                    prm.frameVar = leaf;
-                    prm.type = frameVars()[leaf].type;
+                    prm.frameVar = sir::FrameVarId{leaf};
+                    prm.type = frameVar(prm.frameVar).type;
                 } else {
                     prm.slot = leaf;
                     prm.type = design_.slots[leaf].type;
@@ -165,7 +165,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             const ast::Type& et = arrayElement(ret, dims);
             if (!isStruct && unpackedStruct(et) != nullptr)
                 unsupported(rv.location, "function returning an array of structures");
-            const std::uint32_t held =
+            const sir::FrameVarId held =
                 isStruct ? structFrameVars(rv, rv.location) : frameVarOf(rv, rv.location);
             std::vector<Leaf> leaves;
             if (isStruct)
@@ -177,8 +177,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 sir::Param prm;
                 prm.name = "$return" + leaves[k].path;
                 prm.dir = sir::Direction::Output;
-                const auto leaf = static_cast<std::uint32_t>(held + k);
-                prm.type = frameVars()[leaf].type;
+                const sir::FrameVarId leaf{held.index() + static_cast<std::uint32_t>(k)};
+                prm.type = frameVar(leaf).type;
                 if (automatic) {
                     prm.frameVar = leaf;
                 } else {
@@ -189,7 +189,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 design_.subroutine(id).params.push_back(std::move(prm));
             }
             shape.emplace_back(at, static_cast<std::uint32_t>(leaves.size()));
-            b_.retAggregate = {held, true};
+            b_.retAggregate = {held.index(), true};
             b_.retAggregateType = &ret;
         } else if (sym.returnValVar != nullptr && !ret.isVoid()) {
             // The function's own name as a variable (13.4.1).
@@ -249,7 +249,7 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (e != nullptr) {
         v = coerce(lowerExpr(*e), rt, sl);
     } else if (b_.retFrame) {
-        v = emit(Op::Fload, frameVars()[*b_.retFrame].type, {Operand::frame(*b_.retFrame)}, sl);
+        v = emit(Op::Fload, frameVar(*b_.retFrame).type, {Operand::frame(*b_.retFrame)}, sl);
     } else if (b_.retSlot) {
         v = emit(Op::Load, design_.slots[*b_.retSlot].type, {Operand::slot(*b_.retSlot)}, sl);
     } else {
@@ -286,7 +286,7 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
                                     "64 bits");
         }
     }
-    ops.push_back(st->frame ? Operand::frame(st->id) : Operand::slot(st->id));
+    ops.push_back(st->frame ? Operand::frame(sir::FrameVarId{st->id}) : Operand::slot(st->id));
     ops.insert(ops.end(), st->elem.begin(), st->elem.end());
     for (const ast::Expression* ix : indices) {
         const Val iv = lowerExpr(*ix);
@@ -329,7 +329,8 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
         if (prm.dir != sir::Direction::Output) noteRead(r);
         return o;
     }
-    if (a && a->home == Place::Home::Frame && a->indices.empty()) return Operand::frame(a->slot);
+    if (a && a->home == Place::Home::Frame && a->indices.empty())
+        return Operand::frame(a->frameHome());
     if (prm.dir != sir::Direction::Input)
         unsupported(sl, "an output or inout array argument of this actual");
     const auto fv = static_cast<sir::FrameVarId>(frameVars().size());
@@ -339,9 +340,10 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     // would evaluate it twice, a function's value calling the function
     // again (4.9.7: an input is evaluated once, at the call).
     if (a)
-        copyArray(ArrayBase{Place::Home::Frame, fv}, {}, baseOf(*a), a->indices, stores, sl);
+        copyArray(ArrayBase{Place::Home::Frame, fv.index()}, {}, baseOf(*a), a->indices, stores,
+                  sl);
     else
-        assignArray(ArrayBase{Place::Home::Frame, fv}, {}, actual, stores, sl);
+        assignArray(ArrayBase{Place::Home::Frame, fv.index()}, {}, actual, stores, sl);
     flushStores(stores, false, sl);
     return Operand::frame(fv);
 }
@@ -498,7 +500,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                     ops.push_back(
                         coerce(loadPlace(storagePlace(leaf), sl), params[first + k].type, sl).op);
                 else
-                    ops.push_back(Operand::frame(leaf.id));
+                    ops.push_back(Operand::frame(sir::FrameVarId{leaf.id}));
             }
             if (prm.dir != sir::Direction::Input) {
                 const std::optional<Storage> dst = storageOf(*outputPlace(args[i]), sl);
@@ -514,7 +516,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         }
         const sir::Subroutine& callee = design_.subroutine(id);
         const std::vector<sir::ArrayDim>& dims = prm.frameVar != sir::kNone
-                                                     ? callee.frame[prm.frameVar].dims
+                                                     ? callee.frame[prm.frameVar.index()].dims
                                                      : design_.slots[prm.slot].dims;
         if (!dims.empty()) {
             ops.push_back(arrayArgument(*outputPlace(args[i]), prm, dims, sl));
@@ -530,7 +532,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         if (place.kind == ast::ExpressionKind::NamedValue) {
             const ast::Symbol& v = place.as<ast::NamedValueExpression>().symbol;
             if (const std::optional<sir::FrameVarId> f = findFrameVar(v)) {
-                if (frameVars()[*f].type == prm.type) {
+                if (frameVar(*f).type == prm.type) {
                     ops.push_back(Operand::frame(*f));
                     continue;
                 }
@@ -559,7 +561,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         const auto [first, count] = shape[args.size()];
         (void)first;
         for (std::uint32_t k = 0; k < count; ++k)
-            ops.push_back(Operand::frame(retTo->id + k));
+            ops.push_back(Operand::frame(sir::FrameVarId{retTo->id + k}));
     }
     Val result{Operand::temp(sir::TempId{0}), sir::voidType()};
     if (waits) {

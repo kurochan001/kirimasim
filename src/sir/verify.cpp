@@ -489,8 +489,10 @@ private:
     std::uint64_t paramElements(const Subroutine& s, const Param& p) const {
         if (p.slot != kNone && p.slot < d_.slots.size())
             return d_.slots[p.slot].dims.empty() ? 0 : elementCount(d_.slots[p.slot]);
-        if (p.frameVar < s.frame.size())
-            return s.frame[p.frameVar].dims.empty() ? 0 : elementCount(s.frame[p.frameVar]);
+        if (p.frameVar.index() < s.frame.size())
+            return s.frame[p.frameVar.index()].dims.empty()
+                       ? 0
+                       : elementCount(s.frame[p.frameVar.index()]);
         return 0;
     }
     /// The number of elements an array actual argument covers: a whole
@@ -576,11 +578,11 @@ private:
                 if (p.slot >= d_.slots.size() || !fits(d_.slots[p.slot].type, p.type) ||
                     p.dir == Direction::Ref || p.dir == Direction::ConstRef)
                     error(where, "argument '" + p.name + "' slot is invalid", s.loc);
-            } else if (p.frameVar >= s.frame.size()) {
+            } else if (p.frameVar.index() >= s.frame.size()) {
                 error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
             } else if (p.dir == Direction::Ref || p.dir == Direction::ConstRef
-                           ? s.frame[p.frameVar].type.kind != TypeKind::Ref
-                           : !fits(s.frame[p.frameVar].type, p.type)) {
+                           ? s.frame[p.frameVar.index()].type.kind != TypeKind::Ref
+                           : !fits(s.frame[p.frameVar.index()].type, p.type)) {
                 error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
             }
         }

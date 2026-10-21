@@ -677,7 +677,7 @@ MUTANTS = [
      "                readOperand(ops[i + 1 + a], v + at, c);\n"
      "                for (std::uint32_t k = 0; k < c; ++k) (&temp(params[a].temp))[k] = v[at + k];\n"),
     ("vm: a ref a wait reads is looked up by its variable's number", "src/vm/vm.cpp",
-     "const W4 r = vars[layouts_[body].offset[rr.var]];", "const W4 r = vars[rr.var];"),
+     "const W4 r = vars[layouts_[body].wordOf(rr.var)];", "const W4 r = vars[rr.var.index()];"),
     ("front: a constant packed range counts elements as bits", "src/front/lower_expr.cpp",
      "const std::int64_t lsb = (down ? near - r.right : r.right - near) * ew;",
      "const std::int64_t lsb = down ? near - r.right : r.right - near;"),

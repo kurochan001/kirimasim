@@ -308,7 +308,7 @@ public:
         /// refers to (SIR_SPEC.md 5.3, 7.4, 8).
         enum class Home : std::uint8_t { Slot, Frame, Ref };
         Home home = Home::Slot;
-        sir::FrameVarId frame = 0;
+        sir::FrameVarId frame{0};
         std::uint32_t leaf = 0;  ///< Ref: the leaf of a structure it refers to.
         sir::SlotId slot = 0;
         std::vector<sir::Operand> indices;  ///< Of an array element; of the character.
@@ -318,6 +318,10 @@ public:
         std::uint32_t width = 0;            ///< and the width.
         std::vector<Place> base;            ///< StringChar: the string; Concat: the parts.
         sir::Type type;                     ///< The type of the value there.
+        /// The frame variable, or ref argument, that an Element or Bits
+        /// place of home Frame or Ref lives in. It is kept in `slot` for
+        /// now; this is the one place that reads it as a frame variable.
+        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot}; }
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
     /// The place of a whole slot.
@@ -341,6 +345,8 @@ public:
         sir::SlotId slot = 0;
         std::vector<std::int64_t> indices;
         Place::Home home = Place::Home::Slot;  ///< slot is a frame variable unless Slot.
+        /// slot read as the frame variable it is, when home is not Slot.
+        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot}; }
     };
     /// An unpacked array: a slot, an array frame variable, or what an array
     /// ref argument refers to.
@@ -455,6 +461,7 @@ public:
                    ? design_.processes[s.frameOf.id].frame
                    : design_.subroutines[s.frameOf.id].frame;
     }
+    sir::FrameVar& frameVar(sir::FrameVarId f) { return frameVars()[f.index()]; }
     std::uint32_t& numTemps() {
         return b_.isSub ? design_.subroutine(b_.sub()).numTemps : proc().numTemps;
     }

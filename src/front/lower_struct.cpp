@@ -144,7 +144,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
     if (structElement(v.getType()) != nullptr) {
         if (auto it = b_.structFrames.find(sym); it != b_.structFrames.end()) {
             st.frame = true;
-            st.id = it->second;
+            st.id = it->second.index();
             return st;
         }
         if (!inSlot(*sym)) unsupported(sl, "automatic variable '" + std::string(v.name) + "' here");
@@ -153,7 +153,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
     }
     if (const std::optional<sir::FrameVarId> f = findFrameVar(*sym)) {
         st.frame = true;
-        st.id = *f;
+        st.id = f->index();
         return st;
     }
     if (!inSlot(*sym)) return std::nullopt;
@@ -170,7 +170,7 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
         const sir::FrameVar& fv = frameVars()[st.id];
         const bool ref = fv.type.kind == sir::TypeKind::Ref;
         p.kind = ref ? Place::Kind::Ref : Place::Kind::Frame;
-        p.frame = st.id;
+        p.frame = sir::FrameVarId{st.id};
         p.type = ref ? fv.target : fv.type;
         return p;
     }

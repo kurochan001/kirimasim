@@ -848,7 +848,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (unpackedStruct(*e.type) != nullptr)
                 unsupported(sl, "unpacked structure used as a whole here");
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
-                const sir::FrameVar& fv = frameVars()[*f];
+                const sir::FrameVar& fv = frameVar(*f);
                 if (!fv.dims.empty()) unsupported(sl, "an unpacked array as a value");
                 // A ref argument reads what it refers to (SIR_SPEC.md 8).
                 if (fv.type.kind == sir::TypeKind::Ref)
@@ -1216,7 +1216,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const sir::BlockId next = newBlock();
                 terminate(Op::BrIf, {read.op, Operand::block(store), Operand::block(next)}, sl);
                 setBlock(store);
-                lowerStore(t, emit(Op::Fload, frameVars()[f].type, {Operand::frame(f)}, sl), false,
+                lowerStore(t, emit(Op::Fload, frameVar(f).type, {Operand::frame(f)}, sl), false,
                            sl);
                 terminate(Op::Br, {Operand::block(next)}, sl);
                 setBlock(next);
@@ -1238,7 +1238,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 if (gets)
                     storeIfRead(*t, f, n);
                 else
-                    lowerStore(*t, emit(Op::Fload, frameVars()[f].type, {Operand::frame(f)}, sl),
+                    lowerStore(*t, emit(Op::Fload, frameVar(f).type, {Operand::frame(f)}, sl),
                                false, sl);
                 return coerce(n, rt, sl);
             }
@@ -2007,7 +2007,7 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
         terminate(Op::BrIf, {above.op, Operand::block(store), Operand::block(next)}, sl);
         setBlock(store);
         const Val v =
-            emit(Op::Fload, frameVars()[outs[i].second].type, {Operand::frame(outs[i].second)}, sl);
+            emit(Op::Fload, frameVar(outs[i].second).type, {Operand::frame(outs[i].second)}, sl);
         lowerStore(*outs[i].first, v, false, sl);
         terminate(Op::Br, {Operand::block(next)}, sl);
         setBlock(next);
@@ -2647,7 +2647,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 return placeOf(*c, sl);
             }
             if (const std::optional<sir::FrameVarId> f = findFrameVar(sym)) {
-                const sir::FrameVar& fv = frameVars()[*f];
+                const sir::FrameVar& fv = frameVar(*f);
                 if (!fv.dims.empty()) unsupported(sl, "assignment to a whole unpacked array");
                 const bool ref = fv.type.kind == sir::TypeKind::Ref;
                 p.kind = ref ? Place::Kind::Ref : Place::Kind::Frame;
@@ -2701,7 +2701,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     // Bits of an automatic variable, or of what a ref
                     // argument refers to (SIR_SPEC.md 7.4, 8).
                     p.home = leaf.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
-                    p.slot = leaf.frame;
+                    p.slot = leaf.frame.index();  // read back by frameHome()
                 } else {
                     p.slot = leaf.slot;
                     p.indices = leaf.indices;
@@ -2795,7 +2795,7 @@ Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width
     if (base.kind == Place::Kind::Frame || base.kind == Place::Kind::Ref) {
         // Bits of an automatic variable or of what a ref argument refers to.
         base.home = base.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
-        base.slot = base.frame;
+        base.slot = base.frame.index();  // read back by frameHome()
         base.kind = Place::Kind::Slot;
     }
     if (base.kind != Place::Kind::Slot && base.kind != Place::Kind::Element &&
@@ -2836,7 +2836,7 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
     // variable, or what a ref argument refers to (SIR_SPEC.md 5.3, 7.4, 8).
     const auto home = [&](Op slotOp, Op frameOp, Op refOp) {
         std::vector<Operand> ops{p.home == Place::Home::Slot ? Operand::slot(p.slot)
-                                                             : Operand::frame(p.slot)};
+                                                             : Operand::frame(p.frameHome())};
         ops.insert(ops.end(), p.indices.begin(), p.indices.end());
         if (p.home == Place::Home::Slot) noteRead(rangeOf(p));
         const Op op = p.home == Place::Home::Slot    ? slotOp
@@ -2954,7 +2954,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             const Val ev = coerce(v, p.type, sl);
             if (p.home != Place::Home::Slot) {
                 noNba();
-                std::vector<Operand> ops{Operand::frame(p.slot)};
+                std::vector<Operand> ops{Operand::frame(p.frameHome())};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(ev.op);
                 emitVoid(p.home == Place::Home::Frame ? Op::StoreElem : Op::StoreRefElem,
@@ -2974,7 +2974,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             if (p.home != Place::Home::Slot) {
                 noNba();
-                std::vector<Operand> ops{Operand::frame(p.slot)};
+                std::vector<Operand> ops{Operand::frame(p.frameHome())};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(pos.op);
                 ops.push_back(pv.op);
@@ -3405,7 +3405,7 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             unsupported(sl, name + " of a memory of this element type");
         std::vector<Operand> ops{
             Operand::str(name), coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl).op,
-            a->home == Place::Home::Slot ? Operand::slot(a->slot) : Operand::frame(a->slot)};
+            a->home == Place::Home::Slot ? Operand::slot(a->slot) : Operand::frame(a->frameHome())};
         // $readmem of a memory of an enumerated type takes its items' values
         // only (21.4.2): the enumeration's row follows the memory.
         const ast::Type* et = &m->type->getCanonicalType();
