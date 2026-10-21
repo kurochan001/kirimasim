@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "kirimasim/sir/id.h"
 #include "kirimasim/sir/types.h"
 
 namespace kirimasim::sir {
@@ -25,8 +26,6 @@ using TypeId = std::uint32_t;
 using FrameVarId = std::uint32_t;
 using SubroutineId = std::uint32_t;
 using ProcessId = std::uint32_t;
-
-inline constexpr std::uint32_t kNone = 0xffffffffU;
 
 /// Position in the source. Line and column start at 1; 0 means "missing".
 struct SourceLoc {
