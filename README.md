@@ -57,7 +57,7 @@ kirimasim's numbers were measured on 2026-10-21; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,165 | 1,162, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,165 | 1,163, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
