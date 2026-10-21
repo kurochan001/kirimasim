@@ -2,7 +2,7 @@
 
 [日本語](AI_POLICY.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision). On the same day, "Clean room" was widened to all code under the GPL or LGPL, to the sources that ideas may come from, and to tests (a person's decision).
+Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision). On the same day, "Clean room" was widened to all code under the GPL or LGPL, to the sources that ideas may come from, and to tests (a person's decision). The same day, "Record of human contributions" was added, and "Rules that protect expected values" was brought to commits, as `main` takes direct pushes and CI checks each pushed commit (approved).
 
 This document holds the rules for developing kirimasim together with AI. It restates the design specification's "policy for AI development".
 
@@ -31,10 +31,19 @@ Humans decide the following; AI only proposes.
 
 ## Rules that protect expected values
 
-- A change that alters, removes or loosens an expected value of an existing test goes in a pull request separate from changes to the implementation. So does a change that gets the same effect by deleting or replacing the body of an existing test.
-- New tests with their expected values, and new PerfCount items, may go in an implementation pull request; a human checks their grounds.
+- A change that alters, removes or loosens an expected value of an existing test goes in a commit separate from changes to the implementation. So does a change that gets the same effect by deleting or replacing the body of an existing test.
+- New tests with their expected values, and new PerfCount items, may go in an implementation commit; a human checks their grounds.
 - A change of an expected value states its reason and the clause of the standard, and a human approves it.
-- CI judges by the difference from the merge base of base and head to head.
+- CI judges each pushed commit by its own difference (`tools/check_expected_change.py`), and a pull request, should one be opened, by the difference from the merge base of base and head to head.
+
+## Record of human contributions
+
+How the law treats what AI generates differs from country to country and is not confirmed, so the history shows where a person's decisions and work are.
+
+- **Decisions on the specifications:** the commit that records a person's approval of a specification, or of a change to one, carries the trailer `Approved-by: <name> <noreply address>`. The status line of the document stays as it is: the date and "approved".
+- **Review:** when a person has read a commit made with AI before it is pushed, the commit carries `Reviewed-by: <name> <noreply address>`. A commit without it has not been read line by line by a person.
+- **What a person writes:** a commit that a person wrote without AI carries no `Assisted-by` (the converse of "Marking commits"). When a person and AI both wrote one, its message says which parts the person wrote.
+- **`:spec_check: human`:** the commit that turns a test's `ai` into `human` lists the tests checked and carries `Reviewed-by`. The header of the tests does not change. The number sampled and the errors found are reported at the end of P1, as TEST_SUITE.md says.
 
 ## Clean room
 

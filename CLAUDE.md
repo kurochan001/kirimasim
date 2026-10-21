@@ -82,6 +82,7 @@ Fixing a bug with a branch for the shape of the symptom leaves the neighbouring 
 - One commit per purpose. Messages in English, the first line at most 72 characters.
 - When an AI helped, add the trailer `Assisted-by: Claude Code:<model name and version>`. Do not add `Co-Authored-By`.
 - Do not add `Signed-off-by`: the project does not use the DCO.
+- A commit that records a person's approval of a specification or a change to one carries `Approved-by: <name> <noreply address>`; one a person read before it was pushed carries `Reviewed-by:` the same way (AI_POLICY.md, "Record of human contributions").
 - The author email of commits is the GitHub noreply address.
 
 ## Changes of expected values go in separate PRs

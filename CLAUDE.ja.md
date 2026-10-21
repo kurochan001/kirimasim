@@ -82,6 +82,7 @@ python3 tools/local_ci.py                 # 上の全部と clang-format・clang
 - 1 つの目的ごとに 1 コミット。メッセージは英語で、1 行目は 72 文字以内。
 - AI が手伝ったら、トレーラーに `Assisted-by: Claude Code:<モデル名と版>` を付ける。`Co-Authored-By` は付けない。
 - `Signed-off-by` は付けない。DCO の運用はしていない。
+- 人が仕様やその変更を承認したことを記録するコミットには、`Approved-by: <名前> <noreply のアドレス>` を付ける。push の前に人が読んだコミットには、同じ形で `Reviewed-by:` を付ける（AI_POLICY.md の「人の貢献の記録」）。
 - コミットの作者のメールアドレスは GitHub の noreply アドレスにする。
 
 ## 期待値を変える変更は別の PR にする
