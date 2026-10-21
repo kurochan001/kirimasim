@@ -6,14 +6,15 @@
 //
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
-// --max-steps, --max-scc-iter, --dump-sir and --stats=json. Exit codes are
-// those of CLI.md 5.
+// --max-steps, --max-scc-iter, --dump-sir, --stats=json, --wave,
+// --wave-scope and --wave-glitches. Exit codes are those of CLI.md 5.
 
 #include <charconv>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <exception>
 #include <memory>
 #include <string>
@@ -63,7 +64,8 @@ void printUsage(std::FILE* out) {
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-               "         --max-scc-iter=<n>, --dump-sir, --stats=json\n",
+               "         --max-scc-iter=<n>, --dump-sir, --stats=json, --wave=<file>.vcd,\n"
+               "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
 }
 
@@ -89,7 +91,10 @@ struct Options {
     std::uint64_t maxZeroDelay = 1000000;  // the defaults of CLI.md 2.6; 0: no limit
     std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
-    std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
+    std::uint64_t maxSccIter = 0;         // no effect until tier 2 has islands (P2)
+    std::string waveFile;                 // --wave
+    std::vector<std::string> waveScopes;  // --wave-scope
+    bool waveGlitches = false;
 };
 
 /// Reads the number of --name=<n>. False if it is not a whole number.
@@ -149,6 +154,36 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.maxTimeOk = true;
         } else if (arg == "--dump-sir") {
             o.dumpSir = true;
+        } else if (arg.starts_with("--wave=")) {
+            // A VCD file; FST waits for the decision on libfstapi
+            // (WAVEFORM.md 1).
+            o.waveFile = arg.substr(std::string_view("--wave=").size());
+            if (o.waveFile.ends_with(".fst")) {
+                std::fprintf(stderr,
+                             "kirimasim: error: %s: FST is not supported yet; use a .vcd file\n",
+                             argv[i]);
+                return kExitInputError;
+            }
+            if (!o.waveFile.ends_with(".vcd") || o.waveFile.size() == 4) {
+                std::fprintf(stderr, "kirimasim: error: %s needs a file ending in .vcd\n", argv[i]);
+                return kExitInputError;
+            }
+        } else if (arg.starts_with("--wave-scope=")) {
+            // Patterns separated by commas (WAVEFORM.md 5).
+            std::string_view rest = arg.substr(std::string_view("--wave-scope=").size());
+            for (;;) {
+                const std::size_t comma = rest.find(',');
+                const std::string_view p = rest.substr(0, comma);
+                if (p.empty()) {
+                    std::fprintf(stderr, "kirimasim: error: %s has an empty pattern\n", argv[i]);
+                    return kExitInputError;
+                }
+                o.waveScopes.emplace_back(p);
+                if (comma == std::string_view::npos) break;
+                rest.remove_prefix(comma + 1);
+            }
+        } else if (arg == "--wave-glitches") {
+            o.waveGlitches = true;
         } else if (arg == "-f" || arg == "--top") {
             if (i + 1 >= argc) {
                 std::fprintf(stderr, "kirimasim: error: %s needs a value\n", argv[i]);
@@ -277,6 +312,18 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.maxSteps = o.maxSteps;
     for (const std::string& a : o.plusargs)
         run.plusargs.push_back(a.substr(1));
+    // The waveform's date, read here as the time of day is an outside
+    // input (RUNTIME_ABI.md 9.3.8; WAVEFORM.md 3).
+    const std::time_t now = std::time(nullptr);
+    std::tm utc{};
+    char date[32] = "";
+    if (gmtime_r(&now, &utc) != nullptr)
+        std::strftime(date, sizeof date, "%Y-%m-%d %H:%M:%S UTC", &utc);
+    run.date = date;
+    run.version = std::string("kirimasim ") + kirimasim::driver::kVersion;
+    run.waveFile = o.waveFile;
+    run.waveScopes = o.waveScopes;
+    run.waveGlitches = o.waveGlitches;
     // SIGINT stops the run from here on; before, while compiling, it ends
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).
     context.scheduler().setInterruptFlag(&interruptRequested);

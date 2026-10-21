@@ -1,0 +1,17 @@
+$date
+$end
+$version
+	$dumpfile("d.vcd")
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$var integer 32 ! v [31:0] $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b0 !
+$end
+$comment the dump limit of 10 bytes was reached $end

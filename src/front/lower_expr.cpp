@@ -3449,6 +3449,52 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         emitVoid(Op::Syscall, std::move(ops), sl);
         return;
     }
+    if (name == "$dumpfile" && args.size() <= 1) {
+        // The call as written, for the $version of the VCD, then the name
+        // (WAVEFORM.md 3, 4).
+        std::vector<Operand> ops{Operand::str(name), Operand::str(sourceText(call.sourceRange))};
+        if (!args.empty())
+            ops.push_back(coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl).op);
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
+    if (name == "$dumpvars") {
+        // The levels, then each scope or variable as a row of the dump
+        // table: "scope" or "var" and a constant that gets the row once
+        // the table is made (SIR_SPEC.md 2). A variable of an unpacked
+        // structure is a scope (21.7.5).
+        std::vector<Operand> ops{Operand::str(name)};
+        if (!args.empty()) ops.push_back(coerce(lowerExpr(*args[0]), sir::u2(32), sl).op);
+        for (std::size_t i = 1; i < args.size(); ++i) {
+            const ast::Expression& e = *args[i];
+            const slang::SourceLocation at = e.sourceRange.start();
+            const ast::Symbol* s = e.kind == ast::ExpressionKind::ArbitrarySymbol
+                                       ? e.as<ast::ArbitrarySymbolExpression>().symbol.get()
+                                       : namedSymbol(e);
+            if (s == nullptr) unsupported(at, "$dumpvars of this argument");
+            const bool value = s->kind == ast::SymbolKind::Variable ||
+                               s->kind == ast::SymbolKind::Net ||
+                               s->kind == ast::SymbolKind::FormalArgument;
+            const bool scope =
+                !value || unpackedStruct(s->as<ast::ValueSymbol>().getType()) != nullptr;
+            const Val row = constant(sir::u2(32), 0);
+            dumpRefs_.push_back({row.op.id, s, scope});
+            ops.push_back(Operand::str(scope ? "scope" : "var"));
+            ops.push_back(row.op);
+        }
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
+    if ((name == "$dumpoff" || name == "$dumpon" || name == "$dumpall" || name == "$dumpflush") &&
+        args.empty()) {
+        emitVoid(Op::Syscall, {Operand::str(name)}, sl);
+        return;
+    }
+    if (name == "$dumplimit" && args.size() == 1) {
+        emitVoid(Op::Syscall, {Operand::str(name), coerce(lowerExpr(*args[0]), sir::u2(64), sl).op},
+                 sl);
+        return;
+    }
     if (name == "$finish" || name == "$stop") {
         std::uint64_t n = 1;  // the default argument (20.2)
         if (!args.empty()) {

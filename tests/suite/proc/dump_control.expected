@@ -1,0 +1,60 @@
+$date
+$end
+$version
+	$dumpfile("d.vcd")
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$var integer 32 ! v [31:0] $end
+$var real 64 " r $end
+$var event 1 # e $end
+$var reg 2 $ w [1:0] $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b1 !
+r1 "
+b1 $
+$end
+#1
+b10 !
+1#
+#2
+b11 !
+bz1 $
+$dumpoff
+bx !
+bx $
+$end
+#4
+$dumpon
+b101 !
+r2 "
+bz1 $
+$end
+#5
+b110 !
+$dumpall
+b110 !
+r2 "
+bz1 $
+$end
+#9
+$dumpoff
+bx !
+bx $
+$end
+$dumpon
+b110 !
+r2 "
+bz1 $
+$end
+#10
+$dumpall
+b110 !
+r2 "
+bz1 $
+$end

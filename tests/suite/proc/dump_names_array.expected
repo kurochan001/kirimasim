@@ -1,0 +1,12 @@
+$date
+$end
+$version
+	$dumpfile("d.vcd")
+$end
+$timescale
+	1 ns
+$end
+$enddefinitions $end
+#0
+$dumpvars
+$end

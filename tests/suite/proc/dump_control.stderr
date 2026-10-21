@@ -1,0 +1,4 @@
+dump_control.sv:45:8: warning: $dumpvars: dumping started at an earlier time; the call is ignored
+dump_control.sv:45:27: warning: $dumpfile: dumping has started; the call is ignored
+dump_control.sv:45:50: warning: $dumpvars: dumping started at an earlier time; the call is ignored
+dump_control.sv:46:19: warning: $dumpvars: dumping started at an earlier time; the call is ignored

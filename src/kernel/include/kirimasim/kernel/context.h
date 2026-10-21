@@ -11,6 +11,7 @@
 #include <cstdio>
 
 #include "kirimasim/kernel/counters.h"
+#include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/store.h"
@@ -27,7 +28,8 @@ public:
     /// A Context that writes where it is told (RUNTIME_ABI.md 9.3.10), and
     /// whose STDIN reads in (nothing for nullptr; SYSTEM_TASKS.md 6.3).
     explicit Context(OutputDestinations to, std::FILE* in = nullptr)
-        : output_(to), files_(output_, in), scheduler_(*this, store_, counters_) {}
+        : output_(to), files_(output_, in), dump_(output_, store_),
+          scheduler_(*this, store_, counters_) {}
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
 
@@ -37,6 +39,7 @@ public:
     [[nodiscard]] const Scheduler& scheduler() const { return scheduler_; }
     Output& output() { return output_; }
     Files& files() { return files_; }
+    Dump& dump() { return dump_; }
     Store& store() { return store_; }
     Strings& strings() { return strings_; }
     [[nodiscard]] const Strings& strings() const { return strings_; }
@@ -51,6 +54,7 @@ private:
     Files files_;  ///< After output_, which it writes to.
     Store store_;
     Strings strings_;
+    Dump dump_;  ///< After output_ and store_, which it reads and writes.
     Scheduler scheduler_;
     std::int32_t randomSeed_ = 0;
 };

@@ -526,6 +526,9 @@ void Scheduler::runSlot() {
         runRegion(Region::Postponed);
         strobeTargets_.clear();
         postponed_ = false;
+        // The waveform takes the values at the end of the time slot
+        // (WAVEFORM.md 4).
+        if (ctx_.dump().busy()) ctx_.dump().endSlot(*this);
     }
     // The arena of NBA values without a delay is freed with the slot.
     slotNbas_.clear();
@@ -882,6 +885,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cWrites_);
     if (!changed) return false;
     counters_.increment(cChanges_);
+    if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);  // --wave-glitches
     if (late) {
         change.slot = s;
         change.elem = elem;
@@ -1112,6 +1116,7 @@ void Scheduler::trigger(EventId e) {
     beginWalk();
     NamedEvent& ev = events_[e];
     ev.triggeredAt = time_;
+    if (ctx_.dump().glitches()) ctx_.dump().triggered(e, time_);  // --wave-glitches
     const auto waiters = std::move(ev.waiters);
     events_[e].waiters.clear();
     for (const Waiter& w : waiters)

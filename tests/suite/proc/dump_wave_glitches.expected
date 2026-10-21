@@ -1,0 +1,23 @@
+$date
+$end
+$version
+	--wave=d.vcd
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$var integer 32 ! v [31:0] $end
+$var event 1 " e $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b0 !
+$end
+#1
+b1 !
+b10 !
+b1 !
+1"
+1"

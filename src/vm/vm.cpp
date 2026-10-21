@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/memfile.h"
@@ -87,6 +88,13 @@ enum class SysTask : std::uint8_t {
     WriteMem,
     Random,
     Dist,
+    DumpFile,
+    DumpVars,
+    DumpOff,
+    DumpOn,
+    DumpAll,
+    DumpLimit,
+    DumpFlush,
     Unknown,
 };
 
@@ -243,6 +251,13 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$writememb" || name == "$writememh") return SysTask::WriteMem;
     if (name == "$random") return SysTask::Random;
     if (name.starts_with("$dist_")) return SysTask::Dist;
+    if (name == "$dumpfile") return SysTask::DumpFile;
+    if (name == "$dumpvars") return SysTask::DumpVars;
+    if (name == "$dumpoff") return SysTask::DumpOff;
+    if (name == "$dumpon") return SysTask::DumpOn;
+    if (name == "$dumpall") return SysTask::DumpAll;
+    if (name == "$dumplimit") return SysTask::DumpLimit;
+    if (name == "$dumpflush") return SysTask::DumpFlush;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -310,6 +325,8 @@ std::size_t minOperands(SysTask t) {
         case SysTask::ShortRealToBits:
         case SysTask::BitsToShortReal:
         case SysTask::Math1:
+        case SysTask::DumpFile:
+        case SysTask::DumpLimit:
         case SysTask::Clog2: return 2;
         default: return 1;
     }
@@ -553,8 +570,8 @@ class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
-          files_(ctx.files()), randomSeed_(ctx.randomSeed()), strings_(ctx.strings()),
-          counters_(ctx.counters()), options_(options) {
+          files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
+          strings_(ctx.strings()), counters_(ctx.counters()), options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         constOff_.reserve(d.constants.size());
@@ -769,6 +786,7 @@ public:
                                                              " is not supported by the VM yet"};
             }
         }
+        dump_.setup(dumpSetup());
         // After the kernel's own counters, which the first process registers.
         cInstrs_ = counters_.add("vm.instrs");
         counters_.increment(cInstrs_, initSteps);
@@ -776,6 +794,7 @@ public:
             sched_.start(k);
         sched_.run();
         sched_.runFinal(finals);
+        dump_.finish(sched_);
         const kernel::EndReason reason = sched_.reason();
         return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
     }
@@ -851,6 +870,7 @@ private:
     kernel::Store& store_;
     kernel::Output& output_;
     kernel::Files& files_;
+    kernel::Dump& dump_;
     std::int32_t& randomSeed_;  ///< $random with no argument (SYSTEM_TASKS.md 12.3).
     kernel::Strings& strings_;
     /// The places that gave a run-time warning, which each gives once
@@ -3913,6 +3933,65 @@ private:
         output_.message(line);
     }
 
+    /// What the waveform needs from the design and the run (WAVEFORM.md):
+    /// the dump table, made for the kernel, and the options.
+    kernel::DumpSetup dumpSetup() const {
+        kernel::DumpSetup s;
+        for (const sir::DumpScope& r : d_.dumpScopes) {
+            kernel::DumpScopeKind k = kernel::DumpScopeKind::Module;
+            switch (r.kind) {
+                case sir::DumpScopeKind::Module: k = kernel::DumpScopeKind::Module; break;
+                case sir::DumpScopeKind::Begin: k = kernel::DumpScopeKind::Begin; break;
+                case sir::DumpScopeKind::Fork: k = kernel::DumpScopeKind::Fork; break;
+                case sir::DumpScopeKind::Task: k = kernel::DumpScopeKind::Task; break;
+                case sir::DumpScopeKind::Function: k = kernel::DumpScopeKind::Function; break;
+            }
+            s.scopes.push_back({r.name, r.path, k, r.parent == sir::kNone ? UINT32_MAX : r.parent});
+        }
+        for (const sir::DumpVar& v : d_.dumpVars) {
+            kernel::DumpType t = kernel::DumpType::Reg;
+            switch (v.type) {
+                case sir::DumpType::Reg: t = kernel::DumpType::Reg; break;
+                case sir::DumpType::Integer: t = kernel::DumpType::Integer; break;
+                case sir::DumpType::Time: t = kernel::DumpType::Time; break;
+                case sir::DumpType::Real: t = kernel::DumpType::Real; break;
+                case sir::DumpType::Realtime: t = kernel::DumpType::Realtime; break;
+                case sir::DumpType::Event: t = kernel::DumpType::Event; break;
+                case sir::DumpType::Wire: t = kernel::DumpType::Wire; break;
+                case sir::DumpType::Tri: t = kernel::DumpType::Tri; break;
+                case sir::DumpType::Wand: t = kernel::DumpType::Wand; break;
+                case sir::DumpType::Triand: t = kernel::DumpType::Triand; break;
+                case sir::DumpType::Wor: t = kernel::DumpType::Wor; break;
+                case sir::DumpType::Trior: t = kernel::DumpType::Trior; break;
+                case sir::DumpType::Tri0: t = kernel::DumpType::Tri0; break;
+                case sir::DumpType::Tri1: t = kernel::DumpType::Tri1; break;
+                case sir::DumpType::Supply0: t = kernel::DumpType::Supply0; break;
+                case sir::DumpType::Supply1: t = kernel::DumpType::Supply1; break;
+            }
+            s.vars.push_back({v.scope, v.name, v.range, t, v.width, v.slot,
+                              d_.slots[v.slot].type.kind == sir::TypeKind::ShortReal});
+        }
+        s.date = options_.date;
+        s.version = options_.version;
+        s.timescale = sir::timeText(1, d_.timePrecision);
+        s.waveFile = options_.waveFile;
+        s.scopePatterns = options_.waveScopes;
+        s.glitches = options_.waveGlitches;
+        return s;
+    }
+
+    /// The warnings of a $dumpfile or $dumpvars that is ignored
+    /// (UNSPECIFIED_BEHAVIOR.md D3, WAVEFORM.md 4, 5).
+    void dumpWarning(const sir::Instr& in, std::string_view task, kernel::DumpCall r) {
+        if (r == kernel::DumpCall::Late)
+            warnOnce(in, std::string(task) +
+                             (task == "$dumpfile"
+                                  ? ": dumping has started; the call is ignored"
+                                  : ": dumping started at an earlier time; the call is ignored"));
+        else if (r == kernel::DumpCall::CommandLine)
+            warnOnce(in, std::string(task) + ": --wave sets what is dumped; the call is ignored");
+    }
+
     /// The files d names, with a warning when some of it is not open
     /// (SYSTEM_TASKS.md 6.1).
     kernel::FileTargets fileTargets(const sir::Instr& in, W4 d, std::string_view task) {
@@ -4085,6 +4164,34 @@ private:
                 sched_.setMonitoring(true);
                 return true;
             case SysTask::MonitorOff: sched_.setMonitoring(false); return true;
+            case SysTask::DumpFile:
+                // (call as written[, name]): dump.vcd when no name is given
+                // (WAVEFORM.md 4).
+                dumpWarning(in, "$dumpfile",
+                            dump_.file(ops.size() > 2 ? std::string(strings_.get(value(ops[2]).a))
+                                                      : std::string("dump.vcd"),
+                                       ops[1].text));
+                return true;
+            case SysTask::DumpVars: {
+                // ([levels[, "scope" | "var", row]...]): rows of the dump
+                // table (SIR_SPEC.md 2), kNone for something not dumped.
+                std::vector<std::uint32_t> scopes;
+                std::vector<std::uint32_t> vars;
+                for (std::size_t i = 2; i + 1 < ops.size(); i += 2) {
+                    const auto row = static_cast<std::uint32_t>(value(ops[i + 1]).a);
+                    if (row != sir::kNone) (ops[i].text == "scope" ? scopes : vars).push_back(row);
+                }
+                const auto levels =
+                    ops.size() > 1 ? static_cast<std::uint32_t>(value(ops[1]).a) : 0U;
+                dumpWarning(in, "$dumpvars",
+                            dump_.vars(sched_.time(), levels, scopes, vars, ops.size() <= 2));
+                return true;
+            }
+            case SysTask::DumpOff: dump_.off(); return true;
+            case SysTask::DumpOn: dump_.on(); return true;
+            case SysTask::DumpAll: dump_.all(); return true;
+            case SysTask::DumpLimit: dump_.limit(value(ops[1]).a); return true;
+            case SysTask::DumpFlush: dump_.flush(); return true;
             case SysTask::Display:
             case SysTask::Write:
             case SysTask::SFormatF: {

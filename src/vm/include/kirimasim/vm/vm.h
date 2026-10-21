@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/design.h"
@@ -29,6 +30,14 @@ struct RunOptions {
     std::uint64_t maxSteps = 0;
     /// The run-time plusargs, in order, without their leading + (CLI.md 2.4).
     std::vector<std::string> plusargs;
+    /// For the waveform (WAVEFORM.md 3, 5): when the run started, which
+    /// the driver reads ("YYYY-MM-DD hh:mm:ss UTC"; RUNTIME_ABI.md 9.3.8),
+    /// "kirimasim <version>", and --wave, --wave-scope and --wave-glitches.
+    std::string date;
+    std::string version;
+    std::string waveFile;
+    std::vector<std::string> waveScopes;
+    bool waveGlitches = false;
 };
 
 /// Runs the design to its end on the given context.

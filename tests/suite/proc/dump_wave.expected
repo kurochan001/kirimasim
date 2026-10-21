@@ -1,0 +1,38 @@
+$date
+$end
+$version
+	--wave=d.vcd
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$var integer 32 ! v [31:0] $end
+$var wire 1 " n $end
+$scope module u $end
+$var wire 1 " p $end
+$var integer 32 # sv [31:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b0 !
+0"
+b111 #
+$end
+#1
+b1 !
+1"
+#2
+$dumpoff
+bx !
+x"
+bx #
+$end
+#3
+$dumpon
+b1 !
+1"
+b111 #
+$end

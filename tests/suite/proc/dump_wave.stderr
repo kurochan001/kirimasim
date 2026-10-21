@@ -1,0 +1,2 @@
+dump_wave.sv:39:5: warning: $dumpfile: --wave sets what is dumped; the call is ignored
+dump_wave.sv:40:5: warning: $dumpvars: --wave sets what is dumped; the call is ignored

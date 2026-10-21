@@ -1,0 +1,29 @@
+$date
+$end
+$version
+	--wave=d.vcd
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$scope module a $end
+$var integer 32 ! sv [31:0] $end
+$upscope $end
+$scope begin gx2 $end
+$var reg 1 " q $end
+$scope module c $end
+$var integer 32 # sv [31:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b111 !
+1"
+b111 #
+$end
+#1
+b1000 !
+0"

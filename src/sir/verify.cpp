@@ -218,6 +218,7 @@ public:
         checkSlots();
         checkNames();
         checkConstants();
+        checkDump();
         for (std::size_t i = 0; i < d_.subroutines.size(); ++i)
             checkSubroutine(d_.subroutines[i], static_cast<SubroutineId>(i));
         for (std::size_t i = 0; i < d_.processes.size(); ++i)
@@ -368,6 +369,38 @@ private:
         for (const NameEntry& n : d_.names) {
             if (n.slot >= d_.slots.size()) error("name " + n.path, "slot out of range");
             if (!seen.insert(n.path).second) error("name " + n.path, "name is not unique");
+        }
+    }
+
+    // Rule 10: the dump table (SIR_SPEC.md 2, WAVEFORM.md 2).
+    void checkDump() {
+        for (std::size_t i = 0; i < d_.dumpScopes.size(); ++i) {
+            const DumpScope& s = d_.dumpScopes[i];
+            const std::string where = "dump scope " + std::to_string(i);
+            if (s.name.empty() || s.path.empty()) error(where, "scope has no name");
+            if (s.parent != kNone && s.parent >= i)
+                error(where, "the scope around it must come before it");
+        }
+        for (std::size_t i = 0; i < d_.dumpVars.size(); ++i) {
+            const DumpVar& v = d_.dumpVars[i];
+            const std::string where = "dump variable " + std::to_string(i);
+            if (v.scope >= d_.dumpScopes.size()) error(where, "scope out of range");
+            if (i > 0 && v.scope < d_.dumpVars[i - 1].scope)
+                error(where, "variables must come in the order of their scopes");
+            if (v.name.empty()) error(where, "variable has no name");
+            if (v.slot >= d_.slots.size()) {
+                error(where, "slot out of range");
+                continue;
+            }
+            const Slot& s = d_.slots[v.slot];
+            if (!s.dims.empty()) error(where, "an unpacked array is not dumped");
+            const bool real = v.type == DumpType::Real || v.type == DumpType::Realtime;
+            const bool realSlot =
+                s.type.kind == TypeKind::Real || s.type.kind == TypeKind::ShortReal;
+            if (real                        ? !realSlot
+                : v.type == DumpType::Event ? s.type.kind != TypeKind::Event
+                                            : !isIntegral(s.type) || v.width != s.type.width)
+                error(where, "the VCD type or size does not fit the slot");
         }
     }
 
@@ -1599,6 +1632,24 @@ private:
                     for (const Operand& o : ops)
                         if (o.kind == Operand::Kind::Frame)
                             bad("may not refer to an automatic variable");
+                    // The levels, then what to dump as rows of the dump
+                    // table (SIR_SPEC.md 2): "scope" or "var" and the row,
+                    // kNone for something that is not dumped.
+                    for (std::size_t i = 2; ops[0].text == "$dumpvars" && i < ops.size(); i += 2) {
+                        const bool scope =
+                            ops[i].kind == Operand::Kind::Text && ops[i].text == "scope";
+                        const bool var = ops[i].kind == Operand::Kind::Text && ops[i].text == "var";
+                        const std::uint64_t n = scope ? d_.dumpScopes.size() : d_.dumpVars.size();
+                        if ((!scope && !var) || i + 1 >= ops.size() ||
+                            ops[i + 1].kind != Operand::Kind::Const ||
+                            ops[i + 1].id >= d_.constants.size() ||
+                            d_.constants[ops[i + 1].id].aWords.empty() ||
+                            (d_.constants[ops[i + 1].id].aWords[0] >= n &&
+                             d_.constants[ops[i + 1].id].aWords[0] != kNone)) {
+                            bad("names a scope or variable that is no row of the dump table");
+                            break;
+                        }
+                    }
                 }
                 break;
             case Op::Builtin:

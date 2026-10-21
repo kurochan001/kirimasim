@@ -535,6 +535,49 @@ struct Subroutine {
     SourceLoc loc;
 };
 
+/// The kind of a scope of the dump table (WAVEFORM.md 2).
+enum class DumpScopeKind : std::uint8_t { Module, Begin, Fork, Task, Function };
+
+/// The VCD type of a variable of the dump table (WAVEFORM.md 2, 21.7.2.3).
+enum class DumpType : std::uint8_t {
+    Reg,
+    Integer,
+    Time,
+    Real,
+    Realtime,
+    Event,
+    Wire,
+    Tri,
+    Wand,
+    Triand,
+    Wor,
+    Trior,
+    Tri0,
+    Tri1,
+    Supply0,
+    Supply1,
+};
+
+/// A scope of the dump table (SIR_SPEC.md 2). The rows are in depth-first
+/// order, each after the scope around it.
+struct DumpScope {
+    std::string name;  ///< Its own name, as a VCD writes it.
+    std::string path;  ///< Its hierarchical name.
+    DumpScopeKind kind = DumpScopeKind::Module;
+    std::uint32_t parent = kNone;  ///< kNone for a top module.
+};
+
+/// A variable of the dump table (SIR_SPEC.md 2): the rows of a scope come
+/// in the order of declaration. Names that are one net share its slot.
+struct DumpVar {
+    std::uint32_t scope = 0;
+    std::string name;
+    std::string range;  ///< "[msb:lsb]", or empty (WAVEFORM.md 2).
+    DumpType type = DumpType::Reg;
+    std::uint32_t width = 1;  ///< The size the VCD gives.
+    SlotId slot = 0;
+};
+
 /// The SIR of one design.
 struct Design {
     /// The global time precision, as a power of ten of a second (-9 is
@@ -550,6 +593,10 @@ struct Design {
     std::vector<Subroutine> subroutines;
     std::vector<Process> processes;
     std::uint32_t numScopes = 0;  ///< Named blocks that disable reaches (#N).
+    /// The dump table (SIR_SPEC.md 2, WAVEFORM.md 2): read when dumping
+    /// starts, never while the design runs. The text form leaves it out.
+    std::vector<DumpScope> dumpScopes;
+    std::vector<DumpVar> dumpVars;
 };
 
 /// The storage domain of a value type (SIR_SPEC.md 3.2).

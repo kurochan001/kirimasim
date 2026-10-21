@@ -635,6 +635,25 @@ public:
     /// every static-init process is complete.
     void checkStaticInitOrder();
 
+    // The dump table (lower_dump.cpp; SIR_SPEC.md 2, WAVEFORM.md 2).
+    /// Makes the table once the design is lowered, and gives the arguments
+    /// of each $dumpvars their rows.
+    void buildDumpTable();
+    /// Adds a scope row for s, named by its path below `parent`'s.
+    std::uint32_t addDumpScope(const ast::Symbol& s, std::string path, sir::DumpScopeKind kind,
+                               std::uint32_t parent);
+    void dumpInstance(const ast::InstanceSymbol& inst, std::uint32_t parent);
+    /// The members of a scope at `row`: its variables (unless it is an
+    /// unnamed block, `named` false), then the scopes in it.
+    void dumpMembers(const ast::Scope& scope, std::uint32_t row, bool named);
+    void dumpVariable(const ast::ValueSymbol& v, std::uint32_t row);
+    /// An unpacked structure variable: a fork scope of its members.
+    void dumpStruct(const ast::VariableSymbol& v, std::uint32_t row);
+    void dumpFields(const ast::UnpackedStructType& st, sir::SlotId first, std::uint32_t row);
+    /// The text of a range of the source as written, or "" when it is not
+    /// in one file.
+    std::string sourceText(slang::SourceRange r) const;
+
     void noteWrite(const sir::SlotRange& r);
     void noteRead(const sir::SlotRange& r);
 
@@ -794,6 +813,16 @@ private:
     /// of a deferred assertion's action inside its function.
     std::map<const ast::Expression*, Val> substitutions_;
     const ast::RootSymbol* root_ = nullptr;
+    /// An argument of $dumpvars: the constant that gets its row of the dump
+    /// table, which is made last (buildDumpTable), and what it names.
+    struct DumpRef {
+        sir::ConstId constant = 0;
+        const ast::Symbol* symbol = nullptr;
+        bool scope = false;
+    };
+    std::vector<DumpRef> dumpRefs_;
+    std::map<const ast::Symbol*, std::uint32_t> dumpScopeRows_;
+    std::map<const ast::Symbol*, std::uint32_t> dumpVarRows_;
     /// For $typename: the typedefs that declare structures, unions and
     /// enumerations, and the anonymous ones of each namespace in order.
     std::map<const ast::Type*, const ast::TypeAliasType*> typeAliases_;

@@ -791,11 +791,20 @@ void Lowerer::lower(const ast::RootSymbol& root) {
         b_ = std::move(saved);
     }
     checkStaticInitOrder();
+    buildDumpTable();
     if (numErrors_ != 0) return;
     finishDesign();
     checkTaskAndActionWrites();
     resolveNets();
     finishDrives();
+}
+
+std::string Lowerer::sourceText(slang::SourceRange r) const {
+    const slang::SourceRange o = sm_.getFullyOriginalRange(r);
+    if (o.start().buffer() != o.end().buffer() || o.end().offset() < o.start().offset()) return {};
+    const std::string_view text = sm_.getSourceText(o.start().buffer());
+    if (o.end().offset() > text.size()) return {};
+    return std::string(text.substr(o.start().offset(), o.end().offset() - o.start().offset()));
 }
 
 std::string Lowerer::whereOf(const sir::SourceLoc& l) const {

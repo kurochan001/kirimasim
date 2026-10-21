@@ -104,6 +104,13 @@ own. CONTRIBUTING.md says what goes in this file.
   SYSTEM_TASKS.md 12; an argument of 0 or less where it is to be above 0
   gives the warning `kirima-dist-argument`. Before, each was reported as
   unsupported.
+- Waveforms: `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`,
+  `$dumplimit` and `$dumpflush` write a 4-state VCD file with the values
+  at the end of each time slot, and `--wave=<file>.vcd`, `--wave-scope`
+  and `--wave-glitches` dump from the command line (WAVEFORM.md). A
+  `$dumpvars` or `$dumpfile` called too late, or under `--wave`, is
+  ignored with a warning. Before, the tasks were reported as unsupported
+  and the options were unknown. FST is not supported yet.
 
 ### Changed
 
