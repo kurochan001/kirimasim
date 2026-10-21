@@ -29,6 +29,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <fstream>
 #include <functional>
 #include <memory>
@@ -269,7 +270,7 @@ int runCase(const std::string& name) {
 
 }  // namespace
 
-int main(int argc, char** argv) {
+int runTests(int argc, char** argv) {
     if (argc == 4 && std::string_view(argv[1]) == "probe") {
         const std::string file = argv[2];
         Outcome o;
@@ -285,4 +286,13 @@ int main(int argc, char** argv) {
         return 2;
     }
     return runCase(argv[1]);
+}
+
+int main(int argc, char** argv) {
+    try {
+        return runTests(argc, argv);
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "kirimasim_stack_tests: %s\n", e.what());
+    }
+    return 1;
 }

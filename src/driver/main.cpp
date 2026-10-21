@@ -13,6 +13,7 @@
 // --stats=json, --wave, --wave-scope and --wave-glitches. Exit codes are
 // those of CLI.md 5.
 
+#include <algorithm>
 #include <charconv>
 #include <csignal>
 #include <cstdint>
@@ -107,7 +108,8 @@ struct Options {
 
 /// Reads the number of --name=<n>. False if it is not a whole number.
 bool parseCount(std::string_view arg, std::string_view name, std::uint64_t& out) {
-    const std::string_view text = arg.substr(name.size() + 1);
+    std::string_view text = arg;
+    text.remove_prefix(std::min(text.size(), name.size() + 1));  // past "--name=
     const char* first = std::to_address(text.begin());
     const char* last = std::to_address(text.end());
     const auto r = std::from_chars(first, last, out);
