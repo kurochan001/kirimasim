@@ -1,0 +1,1 @@
+memory_enum_no_value.sv:30: error: $readmemh: "c.mem" line 2: 7 is no value of the enumerated type [top @ 1ns]

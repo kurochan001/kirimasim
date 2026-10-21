@@ -1,0 +1,1 @@
+memory_enum_z.sv:30: error: $readmemb: "c.mem" line 2: 1z is no value of the enumerated type [top @ 1ns]

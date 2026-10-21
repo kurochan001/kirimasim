@@ -1,0 +1,6 @@
+hex: A B C
+low_digits: L2 L0
+two_state_x: K0 K1
+down: A A C
+address: A B C
+two_dimensions: A B C A

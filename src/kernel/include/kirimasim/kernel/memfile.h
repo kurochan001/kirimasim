@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -40,16 +41,21 @@ struct MemLoad {
     /// kirima-readmem-short: a file with no address whose number of words
     /// differs from the number of words in the range.
     std::string count;
-    /// Text that is no number, address or comment; reading stopped there.
+    /// Text that is no number, address or comment, or a word that is no
+    /// value of the memory's enumerated type; reading stopped there.
     std::string error;
 };
 
 /// Reads `text` as $readmemh (hex) or $readmemb does into a memory of
 /// `dims` whose elements have `width` bits, 2-state ones taking x and z
 /// as 0; start and finish are the task's address arguments, when given.
+/// For a memory of an enumerated type, `items` holds the values of its
+/// items, each in chunks of the width, and a word that is none of them
+/// stops reading (21.4.2, SYSTEM_TASKS.md 7.1).
 MemLoad loadMemory(std::string_view text, bool hex, const std::vector<MemDim>& dims,
                    std::uint32_t width, std::optional<std::int64_t> start,
-                   std::optional<std::int64_t> finish, bool twoState);
+                   std::optional<std::int64_t> finish, bool twoState,
+                   std::span<const std::vector<W4>> items = {});
 
 /// The elements $writememb or $writememh writes, in order, for the same
 /// arguments: the range of $readmem, each dimension below the first from

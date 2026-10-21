@@ -96,8 +96,7 @@ own. CONTRIBUTING.md says what goes in this file.
   address arguments, on memories of one or more dimensions; an address out
   of the range and a count of words that does not match give warnings, and
   a file that cannot be read ends the run with code 2 (SYSTEM_TASKS.md 7).
-  Before, each was reported as unsupported. `$readmem` into a memory of an
-  enumerated type is still reported as unsupported.
+  Before, each was reported as unsupported.
 - `$random` and `$dist_uniform`, `$dist_normal`, `$dist_exponential`,
   `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang`, which
   give the values of IEEE 1800-2023 Annex N, written from a description in
@@ -111,6 +110,10 @@ own. CONTRIBUTING.md says what goes in this file.
   `$dumpvars` or `$dumpfile` called too late, or under `--wave`, is
   ignored with a warning. Before, the tasks were reported as unsupported
   and the options were unknown. FST is not supported yet.
+- `$readmemb` and `$readmemh` into a memory of an enumerated type: a word
+  that is the value of none of its items ends the run with code 2, the
+  words before it loaded (SYSTEM_TASKS.md 7.1, 21.4.2). Before, it was
+  reported as unsupported.
 
 ### Changed
 

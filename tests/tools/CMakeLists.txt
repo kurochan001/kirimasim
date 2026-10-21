@@ -135,6 +135,10 @@ add_test(NAME tools/gen_dump_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_dump_matrix.py --check)
 set_tests_properties(tools/gen_dump_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_memory_enum_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_memory_enum_matrix.py --check)
+set_tests_properties(tools/gen_memory_enum_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_memory_file_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_memory_file_matrix.py --check)
 set_tests_properties(tools/gen_memory_file_matrix PROPERTIES LABELS Tools)

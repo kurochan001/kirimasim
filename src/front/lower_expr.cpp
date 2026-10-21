@@ -3334,16 +3334,16 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             unsupported(sl, name + " of this memory");
         if (!sir::isIntegral(elemTypeOf(baseOf(*a))))
             unsupported(sl, name + " of a memory of this element type");
-        // A value out of an enumeration's range stops $readmem (21.4.2),
-        // which is not done yet.
-        const ast::Type* et = m->type;
-        while (et->isUnpackedArray())
-            et = et->getArrayElementType();
-        if (name.starts_with("$readmem") && et->isEnum())
-            unsupported(sl, name + " of a memory of an enumerated type");
         std::vector<Operand> ops{
             Operand::str(name), coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl).op,
             a->home == Place::Home::Slot ? Operand::slot(a->slot) : Operand::frame(a->slot)};
+        // $readmem of a memory of an enumerated type takes its items' values
+        // only (21.4.2): the enumeration's row follows the memory.
+        const ast::Type* et = &m->type->getCanonicalType();
+        while (et->isUnpackedArray())
+            et = &et->getArrayElementType()->getCanonicalType();
+        if (name.starts_with("$readmem") && et->isEnum())
+            ops.push_back(Operand::typeRow(enumRow(et->as<ast::EnumType>(), sl)));
         for (std::size_t i = 2; i < args.size(); ++i)
             ops.push_back(coerce(lowerExpr(*args[i]), integral(true, true, 64), sl).op);
         if (a->home == Place::Home::Slot) {

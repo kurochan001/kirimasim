@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -113,7 +114,8 @@ std::string hexText(std::int64_t a) {
 
 MemLoad loadMemory(std::string_view text, bool hex, const std::vector<MemDim>& dims,
                    std::uint32_t width, std::optional<std::int64_t> start,
-                   std::optional<std::int64_t> finish, bool twoState) {
+                   std::optional<std::int64_t> finish, bool twoState,
+                   std::span<const std::vector<W4>> items) {
     MemLoad out;
     const Range range = rangeOf(dims, start, finish);
     const std::int64_t lo = std::min(dims[0].left, dims[0].right);
@@ -205,6 +207,17 @@ MemLoad loadMemory(std::string_view text, bool hex, const std::vector<MemDim>& d
             if (twoState)
                 for (W4& ch : w.value)
                     ch = {ch.a & ~ch.b, 0};
+            // A memory of an enumerated type takes the values of its items
+            // only (21.4.2, SYSTEM_TASKS.md 7.1).
+            const auto same = [&](const std::vector<W4>& v) {
+                for (std::uint32_t n = 0; n < chunks; ++n)
+                    if (v[n].a != w.value[n].a || v[n].b != w.value[n].b) return false;
+                return true;
+            };
+            if (!items.empty() && std::none_of(items.begin(), items.end(), same))
+                return stop(out.error, "line " + std::to_string(line) + ": " +
+                                           std::string(text.substr(i, k - i)) +
+                                           " is no value of the enumerated type");
             out.words.push_back(std::move(w));
             if (++below == inner) {
                 below = 0;

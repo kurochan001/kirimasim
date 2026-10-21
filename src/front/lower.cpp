@@ -1801,6 +1801,23 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
     if (side && design_.processes.size() > first) sides_[first] = *side;
 }
 
+sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) {
+    // The items in declaration order, each with its value of the base type
+    // (SIR_SPEC.md 4.3).
+    if (const auto it = enumRows_.find(&et); it != enumRows_.end()) return it->second;
+    sir::TypeEntry t;
+    t.kind = sir::TypeEntryKind::Enum;
+    t.name = et.toString();
+    t.value = typeOf(et, sl);
+    for (const ast::EnumValueSymbol& item : et.values())
+        t.items.push_back(
+            {std::string(item.name), constantFrom(item.getValue(), t.value, sl).op.id});
+    const auto id = static_cast<sir::TypeId>(design_.types.size());
+    design_.types.push_back(std::move(t));
+    enumRows_.emplace(&et, id);
+    return id;
+}
+
 sir::TypeId Lowerer::udpTable(const ast::PrimitiveSymbol& prim, slang::SourceLocation sl) {
     // The type-table row of a UDP's table (SIR_SPEC.md 4.3), in slang's
     // form of the rows.

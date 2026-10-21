@@ -4022,9 +4022,13 @@ private:
         dims.reserve(adims.size());
         for (const sir::ArrayDim& d : adims)
             dims.push_back({d.left, d.right});
+        // A memory of an enumerated type: its row, then the addresses
+        // (SIR_SPEC.md 8).
+        const bool isEnum = ops.size() > 3 && ops[3].kind == Operand::Kind::Type;
+        const std::size_t first = isEnum ? 4 : 3;
         std::optional<std::int64_t> address[2];
-        for (std::size_t k = 0; k < 2 && 3 + k < ops.size(); ++k) {
-            const W4 a = value(ops[3 + k]);
+        for (std::size_t k = 0; k < 2 && first + k < ops.size(); ++k) {
+            const W4 a = value(ops[first + k]);
             if (a.b != 0) {
                 designErrorIn(p, in, std::string(task) + ": an address argument has x or z bits");
                 return true;
@@ -4066,8 +4070,14 @@ private:
             designErrorIn(p, in, std::string(task) + ": cannot open \"" + name + "\"");
             return true;
         }
+        std::vector<std::vector<W4>> items;
+        if (isEnum)
+            for (const sir::EnumItem& item : d_.types[ops[3].id].items) {
+                const std::uint32_t o = constOff_[item.value];
+                items.emplace_back(consts_.begin() + o, consts_.begin() + o + c);
+            }
         const kernel::MemLoad l = kernel::loadMemory(*text, hex, dims, et.width, address[0],
-                                                     address[1], !sir::isFourState(et));
+                                                     address[1], !sir::isFourState(et), items);
         for (const kernel::MemWord& w : l.words) {
             if (slot)
                 writeSlotWide(m.id, w.elem, 0, 0, w.value.data());
