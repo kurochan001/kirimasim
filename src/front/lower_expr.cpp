@@ -2007,17 +2007,37 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
     // default) toward the highest, at most count elements, each read as
     // $fread of an integral variable reads it, until one is not read whole
     // (SYSTEM_TASKS.md 6.3, 21.3.4.4). The count of bytes read is returned.
+    // A memory of unpacked structures reads each element's members in
+    // declaration order (21.3.4.4).
     const auto args = call.arguments();
     const ast::Expression* m = args[0];
     if (m->kind == ast::ExpressionKind::Assignment &&
         m->as<ast::AssignmentExpression>().isLValueArg())
         m = &m->as<ast::AssignmentExpression>().left();
-    const std::optional<ArrayTarget> a = arrayTarget(*m);
-    if (!a || dimsOf(baseOf(*a)).size() != a->indices.size() + 1)
-        unsupported(sl, "$fread into a memory of this kind");
-    const Type et = elemTypeOf(baseOf(*a));
-    if (!sir::isIntegral(et)) unsupported(sl, "$fread into a memory of this element type");
-    const sir::ArrayDim d = dimsOf(baseOf(*a)).back();
+    const ast::Type& mt = m->type->getCanonicalType();
+    const bool structs = structElement(mt) != nullptr;
+    std::optional<ArrayTarget> a;
+    std::optional<Storage> base;
+    sir::ArrayDim d;
+    if (structs) {
+        // One dimension of structures, whose leaves are slots or frame
+        // variables with that dimension (SIR_SPEC.md 4.2).
+        const auto* at = mt.kind == ast::SymbolKind::FixedSizeUnpackedArrayType
+                             ? &mt.as<ast::FixedSizeUnpackedArrayType>()
+                             : nullptr;
+        if (at == nullptr || unpackedStruct(at->elementType) == nullptr)
+            unsupported(sl, "$fread into a memory of this kind");
+        base = storageOf(*m, sl);
+        if (!base || !base->elem.empty()) unsupported(sl, "$fread into a memory of this kind");
+        d = {at->range.left, at->range.right};
+    } else {
+        a = arrayTarget(*m);
+        if (!a || dimsOf(baseOf(*a)).size() != a->indices.size() + 1)
+            unsupported(sl, "$fread into a memory of this kind");
+        if (!sir::isIntegral(elemTypeOf(baseOf(*a))))
+            unsupported(sl, "$fread into a memory of this element type");
+        d = dimsOf(baseOf(*a)).back();
+    }
     const std::int64_t lo = std::min(d.left, d.right);
     const std::int64_t hi = std::max(d.left, d.right);
     const Type i64 = sir::s2(64);
@@ -2032,14 +2052,11 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
     const sir::FrameVarId addr = newFrameVar(i64);
     const sir::FrameVarId left = newFrameVar(i64);
     const sir::FrameVarId total = newFrameVar(sir::s2(32));
-    const sir::FrameVarId elem = newFrameVar(et);
     emitVoid(Op::Fstore, {Operand::frame(addr), start.op}, sl);
     emitVoid(Op::Fstore, {Operand::frame(left), count.op}, sl);
     emitVoid(Op::Fstore, {Operand::frame(total), constant(sir::s2(32), 0).op}, sl);
     const sir::BlockId head = newBlock();
     const sir::BlockId body = newBlock();
-    const sir::BlockId store = newBlock();
-    const sir::BlockId after = newBlock();
     const sir::BlockId done = newBlock();
     terminate(Op::Br, {Operand::block(head)}, sl);
     // While the address is in the memory and the count is not used up.
@@ -2059,33 +2076,24 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
                   .op},
              sl);
     terminate(Op::BrIf, {more.op, Operand::block(body), Operand::block(done)}, sl);
-    // The element starts with its value, which the bytes not read keep.
+    // The element at the address: its one place, or its members' places.
     setBlock(body);
-    std::vector<std::int64_t> idx = a->indices;
-    idx.push_back(lo);
-    Place p = elementPlace(baseOf(*a), idx);
-    p.indices.back() = emit(Op::Fload, i64, {Operand::frame(addr)}, sl).op;
-    p.elem.reset();
-    emitVoid(Op::Fstore, {Operand::frame(elem), loadPlace(p, sl).op}, sl);
-    const Val n =
-        emit(Op::Syscall, sir::s2(32), {Operand::str("$fread"), Operand::frame(elem), desc.op}, sl);
-    emitVoid(Op::Fstore,
-             {Operand::frame(total),
-              emit(Op::Add, sir::s2(32),
-                   {emit(Op::Fload, sir::s2(32), {Operand::frame(total)}, sl).op, n.op}, sl)
-                  .op},
-             sl);
-    terminate(Op::BrIf,
-              {emit(Op::Gt, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl).op,
-               Operand::block(store), Operand::block(done)},
-              sl);
-    setBlock(store);
-    storePlace(p, emit(Op::Fload, et, {Operand::frame(elem)}, sl), false, sl);
-    // An element not read whole ends the reading.
-    const Val whole =
-        emit(Op::Eq, sir::u2(1), {n.op, constant(sir::s2(32), (et.width + 7) / 8).op}, sl);
-    terminate(Op::BrIf, {whole.op, Operand::block(after), Operand::block(done)}, sl);
-    setBlock(after);
+    const Val at2 = emit(Op::Fload, i64, {Operand::frame(addr)}, sl);
+    std::vector<Place> places;
+    if (structs) {
+        Storage e = *base;
+        e.elem.push_back(at2.op);
+        e.dynamic = true;
+        freadPlaces(e, mt.as<ast::FixedSizeUnpackedArrayType>().elementType, places, sl);
+    } else {
+        std::vector<std::int64_t> idx = a->indices;
+        idx.push_back(lo);
+        Place p = elementPlace(baseOf(*a), idx);
+        p.indices.back() = at2.op;
+        p.elem.reset();
+        places.push_back(std::move(p));
+    }
+    freadLeaves(places, desc, total, done, sl);
     emitVoid(Op::Fstore,
              {Operand::frame(addr),
               emit(Op::Add, i64,
@@ -2101,6 +2109,50 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
     terminate(Op::Br, {Operand::block(head)}, sl);
     setBlock(done);
     return coerce(emit(Op::Fload, sir::s2(32), {Operand::frame(total)}, sl), rt, sl);
+}
+
+void Lowerer::freadPlaces(const Storage& s, const ast::Type& t, std::vector<Place>& out,
+                          slang::SourceLocation sl) {
+    // Members that are integral, each read as an integral variable; a
+    // member array or real is not done yet.
+    std::vector<Leaf> leaves;
+    structLeaves(t, "", leaves);
+    for (const Leaf& l : leaves)
+        if (!l.dims.empty() || !l.type->getCanonicalType().isIntegral())
+            unsupported(sl, "$fread into a structure with a member of type '" + l.type->toString() +
+                                "'");
+    storagePlaces(s, t, out, sl);
+}
+
+void Lowerer::freadLeaves(const std::vector<Place>& places, const Val& desc, sir::FrameVarId total,
+                          sir::BlockId stop, slang::SourceLocation sl) {
+    // Each place as $fread of an integral variable reads it: it starts with
+    // its value, which the bytes not read keep, and one not read whole ends
+    // the reading (SYSTEM_TASKS.md 6.3). The bytes read add up in total.
+    for (const Place& p : places) {
+        const sir::FrameVarId f = newFrameVar(p.type);
+        emitVoid(Op::Fstore, {Operand::frame(f), loadPlace(p, sl).op}, sl);
+        const Val n = emit(Op::Syscall, sir::s2(32),
+                           {Operand::str("$fread"), Operand::frame(f), desc.op}, sl);
+        emitVoid(Op::Fstore,
+                 {Operand::frame(total),
+                  emit(Op::Add, sir::s2(32),
+                       {emit(Op::Fload, sir::s2(32), {Operand::frame(total)}, sl).op, n.op}, sl)
+                      .op},
+                 sl);
+        const sir::BlockId store = newBlock();
+        const sir::BlockId next = newBlock();
+        terminate(Op::BrIf,
+                  {emit(Op::Gt, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl).op,
+                   Operand::block(store), Operand::block(stop)},
+                  sl);
+        setBlock(store);
+        storePlace(p, emit(Op::Fload, p.type, {Operand::frame(f)}, sl), false, sl);
+        const Val whole =
+            emit(Op::Eq, sir::u2(1), {n.op, constant(sir::s2(32), (p.type.width + 7) / 8).op}, sl);
+        terminate(Op::BrIf, {whole.op, Operand::block(next), Operand::block(stop)}, sl);
+        setBlock(next);
+    }
 }
 
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {

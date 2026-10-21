@@ -114,6 +114,9 @@ own. CONTRIBUTING.md says what goes in this file.
   that is the value of none of its items ends the run with code 2, the
   words before it loaded (SYSTEM_TASKS.md 7.1, 21.4.2). Before, it was
   reported as unsupported.
+- `$fread` into a memory of unpacked structures reads each element's
+  members in declaration order (SYSTEM_TASKS.md 6.3, 21.3.4.4). Before, it
+  was reported as unsupported.
 
 ### Changed
 

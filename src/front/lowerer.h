@@ -554,6 +554,14 @@ public:
     /// The single places of the leaves of type t at s, in order.
     void storagePlaces(const Storage& s, const ast::Type& t, std::vector<Place>& out,
                        slang::SourceLocation sl);
+    /// The places $fread reads of a structure at s of type t, its members'
+    /// in declaration order (21.3.4.4); reported when one is not integral.
+    void freadPlaces(const Storage& s, const ast::Type& t, std::vector<Place>& out,
+                     slang::SourceLocation sl);
+    /// Reads each place as $fread of an integral variable, adding the bytes
+    /// to `total`; goes to `stop` at the first place not read whole.
+    void freadLeaves(const std::vector<Place>& places, const Val& desc, sir::FrameVarId total,
+                     sir::BlockId stop, slang::SourceLocation sl);
     /// The concatenation of integral places, four-state like `like`.
     Place concatPlace(std::vector<Place> parts, sir::Type like, slang::SourceLocation sl);
     /// A streaming concatenation as the target of an assignment (11.4.14.3).

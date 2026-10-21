@@ -1,0 +1,5 @@
+whole: 12 | 11 233 4 55 | 66 788 9 aa | bb cee e ee | ee eee e ee
+start: 10 | ee eee e ee | ee eee e ee | 11 233 4 55 | 66 788 9 aa
+start_count: 10 | ee eee e ee | 11 233 4 55 | 66 788 9 aa | ee eee e ee
+high_to_low: 10 | 11 233 4 55 | 66 788 9 aa | ee eee e ee | ee eee e ee
+ends_between_members: 8 | ee eee e ee | 11 233 4 55 | 66 788 e ee | ee eee e ee
