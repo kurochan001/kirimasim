@@ -518,8 +518,8 @@ struct Frame {
     std::uint64_t forkGroup = 0;  ///< This frame's latest join or join_any group.
     std::uint32_t groupSize = 0;
     std::uint32_t groupDone = 0;
-    Join pending = Join::None;               ///< What the frame waits for before going on.
-    kernel::EventId joinEvent = UINT32_MAX;  ///< Triggered when a child ends.
+    Join pending = Join::None;                  ///< What the frame waits for before going on.
+    kernel::EventId joinEvent = kernel::kNone;  ///< Triggered when a child ends.
     /// An override process: whether it holds a target and so runs when what
     /// it reads changes (SIR_SPEC.md 5.6), and at which level.
     bool holding = false;
@@ -720,7 +720,7 @@ public:
             if (d_.slot(s).type.kind != sir::TypeKind::Event) continue;
             const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slot(s)));
             for (std::uint32_t e = 0; e < n; ++e)
-                *store_.element(kernelSlot(s), e) = std::uint64_t{sched_.addEvent()} + 1;
+                *store_.element(kernelSlot(s), e) = kernel::eventHandle(sched_.addEvent());
         }
         // The slots assign and force may hold (SCHEDULER_SPEC.md 14.4). A
         // net, or a variable that a continuous assignment drives, gets its
@@ -914,7 +914,7 @@ private:
     /// (UNSPECIFIED_BEHAVIOR.md 4).
     std::set<const sir::Instr*> warned_;
     kernel::Counters& counters_;
-    kernel::CounterId cInstrs_ = 0;
+    kernel::CounterId cInstrs_{0};
     RunOptions options_;
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
@@ -1140,7 +1140,7 @@ private:
             --parent->liveChildren;
             if (c.group != 0 && c.group == parent->forkGroup) ++parent->groupDone;
             if (parent->pending != Frame::Join::None && !parent->finished &&
-                parent->joinEvent != UINT32_MAX)
+                parent->joinEvent != kernel::kNone)
                 sched_.trigger(parent->joinEvent);
         }
         tryRelease(c);
@@ -1161,7 +1161,7 @@ private:
         for (const Frame::TaskCall& c : f.calls)
             retire(c.varsId);
         retire(f.varsId);
-        if (f.joinEvent != UINT32_MAX) freeJoinEvents_.push_back(f.joinEvent);
+        if (f.joinEvent != kernel::kNone) freeJoinEvents_.push_back(f.joinEvent);
         sched_.releaseProcess(f.kernelId);
         f.vars = {};
         f.calls = {};
@@ -1218,7 +1218,7 @@ private:
             f.pending = Frame::Join::None;
             return false;
         }
-        if (f.joinEvent == UINT32_MAX) {
+        if (f.joinEvent == kernel::kNone) {
             if (freeJoinEvents_.empty()) {
                 f.joinEvent = sched_.addEvent();
             } else {
@@ -2343,7 +2343,7 @@ private:
             const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slot(s)));
             for (std::uint32_t e = 0; e < n; ++e)
                 if (const std::uint64_t h = *store_.element(kernelSlot(s), e); h != 0)
-                    m.events.push_back(static_cast<kernel::EventId>(h - 1));
+                    m.events.push_back(kernel::eventOfHandle(h));
         }
     }
 
@@ -3818,7 +3818,7 @@ private:
     std::optional<kernel::EventId> eventOf(const sir::Operand& o) const {
         const std::uint64_t h = readSlot(o.asSlot(), o.firstElem, 0, 0).a;
         if (h == 0) return std::nullopt;
-        return static_cast<kernel::EventId>(h - 1);
+        return kernel::eventOfHandle(h);
     }
 
     void builtin(const sir::Instr& in, const InstrInfo& info) {
@@ -3828,7 +3828,7 @@ private:
         if (info.method == Method::Triggered) {
             // False for a null event (15.5.3).
             const std::uint64_t h = v(1).a;
-            const bool on = h != 0 && sched_.triggered(static_cast<kernel::EventId>(h - 1));
+            const bool on = h != 0 && sched_.triggered(kernel::eventOfHandle(h));
             temp(in.result) = {on ? 1U : 0U, 0};
             return;
         }

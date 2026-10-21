@@ -23,6 +23,7 @@
 
 #include "kirimasim/kernel/abi.h"
 #include "kirimasim/kernel/counters.h"
+#include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/store.h"
 
 namespace kirimasim::kernel {
@@ -86,7 +87,16 @@ enum class Status : std::uint8_t {
 };
 
 using ProcessId = std::uint32_t;
-using EventId = std::uint32_t;
+struct EventTag;
+using EventId = Id<EventTag>;
+
+/// The handle an element of an event slot holds for event e: its number
+/// plus 1, 0 being null (SIR_SPEC.md 3.2.1); and the event of a handle that
+/// is not 0. Every reader and writer of event slots goes through these.
+constexpr std::uint64_t eventHandle(EventId e) { return std::uint64_t{e.index()} + 1; }
+constexpr EventId eventOfHandle(std::uint64_t h) {
+    return EventId{static_cast<std::uint32_t>(h - 1)};
+}
 
 /// Runs a process from where it waited until its next wait or its end. All
 /// three callback types are the C forms of abi.h, so every tier registers
@@ -540,7 +550,7 @@ private:
     /// that no list changes under a walk (RUNTIME_ABI.md 5).
     struct LateChange {
         bool trigger = false;
-        EventId event = 0;
+        EventId event{0};
         SlotId slot = 0;
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
@@ -594,11 +604,11 @@ private:
     std::vector<std::uint32_t> freeDeferred_;
 
     bool begun_ = false;
-    CounterId cTimeSlots_ = 0, cTimeAdvances_ = 0, cActiveLoops_ = 0, cReactiveLoops_ = 0;
+    CounterId cTimeSlots_{0}, cTimeAdvances_{0}, cActiveLoops_{0}, cReactiveLoops_{0};
     CounterId cEvents_[kNumRegions] = {};
-    CounterId cWakeups_ = 0, cCreated_ = 0, cFinished_ = 0, cKeptPeak_ = 0, cWrites_ = 0,
-              cChanges_ = 0, cNbaScheduled_ = 0;
-    CounterId cSubscriptions_ = 0, cMonitorEvals_ = 0, cEndTime_ = 0, cEndReason_ = 0;
+    CounterId cWakeups_{0}, cCreated_{0}, cFinished_{0}, cKeptPeak_{0}, cWrites_{0}, cChanges_{0},
+        cNbaScheduled_{0};
+    CounterId cSubscriptions_{0}, cMonitorEvals_{0}, cEndTime_{0}, cEndReason_{0};
 
     void begin();
     /// Resumes a process. `flushPoint`: whether resuming empties its queue of

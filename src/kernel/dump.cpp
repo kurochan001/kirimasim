@@ -393,7 +393,7 @@ void Dump::writeChanges(const Scheduler& s) {
         if (c.type == DumpType::Event) {
             // Triggered in this time slot, and not written as it happened.
             const std::uint64_t h = *store_.element(c.slot, 0);
-            if (h == 0 || !s.triggered(static_cast<EventId>(h - 1)) || c.eventAt == t) continue;
+            if (h == 0 || !s.triggered(eventOfHandle(h)) || c.eventAt == t) continue;
             stamp(t);
             chunk_ += '1' + c.id + '\n';
             c.eventAt = t;

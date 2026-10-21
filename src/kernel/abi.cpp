@@ -41,7 +41,8 @@ MonitorSpec specOf(const kirima_monitor& m) {
     MonitorSpec spec;
     for (std::uint32_t i = 0; i < m.num_slots; ++i)
         spec.slots.push_back(partOf(m.slots[i]));
-    spec.events.assign(m.events, m.events + m.num_events);
+    for (std::uint32_t i = 0; i < m.num_events; ++i)
+        spec.events.push_back(EventId{m.events[i]});
     spec.eval = m.eval;
     spec.frame = m.frame;
     spec.domain = static_cast<Domain>(m.domain);
@@ -65,18 +66,18 @@ constexpr kirima_kernel_api kApi = {
     [](kirima_context* c, std::uint32_t p, const kirima_monitor* m) {
         sched(c).waitMonitor(p, specOf(*m));
     },
-    [](kirima_context* c, std::uint32_t p, std::uint32_t e) { sched(c).waitNamed(p, e); },
+    [](kirima_context* c, std::uint32_t p, std::uint32_t e) { sched(c).waitNamed(p, EventId{e}); },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width,
        const std::uint64_t* value) { return sched(c).write(s, elem, lsb, width, value) ? 1 : 0; },
     [](kirima_context* c, std::uint32_t p, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width, const std::uint64_t* value,
        std::uint64_t delay) { sched(c).scheduleNba(p, s, elem, lsb, width, value, delay); },
-    [](kirima_context* c, std::uint32_t e) { sched(c).trigger(e); },
+    [](kirima_context* c, std::uint32_t e) { sched(c).trigger(EventId{e}); },
     [](kirima_context* c, std::uint32_t p, std::uint32_t e, std::uint64_t delay) {
-        sched(c).triggerNb(p, e, delay);
+        sched(c).triggerNb(p, EventId{e}, delay);
     },
-    [](kirima_context* c, std::uint32_t e) { return sched(c).triggered(e) ? 1 : 0; },
+    [](kirima_context* c, std::uint32_t e) { return sched(c).triggered(EventId{e}) ? 1 : 0; },
     [](kirima_context* c) { return sched(c).time(); },
     [](kirima_context* c, std::uint32_t reason, std::int32_t level) {
         sched(c).requestEnd(static_cast<EndReason>(reason), level);

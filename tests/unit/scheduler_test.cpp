@@ -162,11 +162,11 @@ public:
         ctx_.scheduler().waitEvent(p, {&item, 1});
     }
     void waitNamed(std::uint32_t p, std::uint32_t ev) override {
-        ctx_.scheduler().waitNamed(p, ev);
+        ctx_.scheduler().waitNamed(p, k::EventId{ev});
     }
-    void trigger(std::uint32_t ev) override { ctx_.scheduler().trigger(ev); }
+    void trigger(std::uint32_t ev) override { ctx_.scheduler().trigger(k::EventId{ev}); }
     void triggerNb(std::uint32_t p, std::uint32_t ev, std::uint64_t d) override {
-        ctx_.scheduler().triggerNb(p, ev, d);
+        ctx_.scheduler().triggerNb(p, k::EventId{ev}, d);
     }
     void waitTrue(std::uint32_t p, std::uint32_t slot) override {
         monitors_[p] = {this, slot};
@@ -455,7 +455,7 @@ TEST(Scheduler, NonblockingTriggerInTheNbaRegion) {
     KernelSim sim({{{trigNb(0)}}, {{waitNamed(0), log(1)}}});
     sim.run();
     EXPECT_EQ(sim.log(), "t0 p0 run\nt0 p1 run\nt0 p1 run\nt0 p1 L1 s0=0\n");
-    EXPECT_TRUE(sim.context().scheduler().triggered(0));
+    EXPECT_TRUE(sim.context().scheduler().triggered(k::EventId{0}));
 }
 
 TEST(Scheduler, WaitConditionWakesWhenTrue) {
@@ -738,7 +738,7 @@ TEST(Scheduler, ChangesMadeWhileWalkingAreAnnouncedAfterTheWalk) {
         std::vector<std::string> log;
         Waiter wp{&log, "p"};
         Waiter wq{&log, "q"};
-        WritingFrame f{a, b, 0};
+        WritingFrame f{a, b, k::EventId{0}};
         BitFrame fb{b};
         const k::ProcessId p = s.addProcess(&logOnce, &wp, Group::Active);
         const k::ProcessId q = s.addProcess(&logOnce, &wq, Group::Active);
@@ -1191,8 +1191,8 @@ kirima_status act(kirima_context* /*ctx*/, void* frame) {
 
 std::uint64_t counter(k::Context& ctx, std::string_view name) {
     const k::Counters& c = ctx.counters();
-    for (k::CounterId i = 0; i < c.size(); ++i)
-        if (c.name(i) == name) return c.value(i);
+    for (std::uint32_t i = 0; i < c.size(); ++i)
+        if (c.name(k::CounterId{i}) == name) return c.value(k::CounterId{i});
     return UINT64_MAX;
 }
 

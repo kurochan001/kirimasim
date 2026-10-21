@@ -14,10 +14,13 @@
 #include <string_view>
 #include <vector>
 
+#include "kirimasim/kernel/id.h"
+
 namespace kirimasim::kernel {
 
 /// Index of a counter inside a Counters table.
-using CounterId = std::uint32_t;
+struct CounterTag;
+using CounterId = Id<CounterTag>;
 
 /// A small table of named 64-bit counters.
 ///
@@ -32,12 +35,12 @@ public:
     /// Adds an entry that holds text instead of a number (only
     /// sim.end_reason; PERFORMANCE.md 3.1).
     CounterId addText(std::string_view name);
-    void setText(CounterId id, std::string_view text) { entries_[id].text = text; }
+    void setText(CounterId id, std::string_view text) { entries_[id.index()].text = text; }
 
-    void increment(CounterId id, std::uint64_t n = 1) { entries_[id].value += n; }
-    void set(CounterId id, std::uint64_t value) { entries_[id].value = value; }
-    [[nodiscard]] std::uint64_t value(CounterId id) const { return entries_[id].value; }
-    [[nodiscard]] std::string_view name(CounterId id) const { return entries_[id].name; }
+    void increment(CounterId id, std::uint64_t n = 1) { entries_[id.index()].value += n; }
+    void set(CounterId id, std::uint64_t value) { entries_[id.index()].value = value; }
+    [[nodiscard]] std::uint64_t value(CounterId id) const { return entries_[id.index()].value; }
+    [[nodiscard]] std::string_view name(CounterId id) const { return entries_[id.index()].name; }
     [[nodiscard]] std::size_t size() const { return entries_.size(); }
 
     /// Returns the counters as a single JSON object, in insertion order,

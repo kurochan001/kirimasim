@@ -217,7 +217,7 @@ void Scheduler::start(ProcessId p) {
 
 EventId Scheduler::addEvent() {
     events_.emplace_back();
-    return static_cast<EventId>(events_.size() - 1);
+    return EventId{static_cast<std::uint32_t>(events_.size() - 1)};
 }
 
 void Scheduler::ensureSlotTables() {
@@ -604,7 +604,7 @@ void Scheduler::execute(const Event& e) {
             freeDelayedNbas_.push_back(e.id);
             return;
         }
-        case Kind::TriggerNb: trigger(e.id); return;
+        case Kind::TriggerNb: trigger(EventId{e.id}); return;
         case Kind::Postponed: {
             if (e.gen == 0) {
                 runPostponed(e.id);
@@ -699,7 +699,7 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
                       [&](const MonitorRef& r) { return !live(r); });
     }
     for (const EventId e : m.events)
-        pushSwept(events_[e].monitors, events_[e].monitorLimit, ref,
+        pushSwept(events_[e.index()].monitors, events_[e.index()].monitorLimit, ref,
                   [&](const MonitorRef& r) { return !live(r); });
 }
 
@@ -707,7 +707,8 @@ void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
     freeMonitor(p);
     Process& proc = processes_[p];
     ++proc.gen;
-    pushSwept(events_[e].waiters, events_[e].waiterLimit, Waiter{p, proc.gen, flushPoint},
+    pushSwept(events_[e.index()].waiters, events_[e.index()].waiterLimit,
+              Waiter{p, proc.gen, flushPoint},
               [&](const Waiter& w) { return processes_[w.process].gen != w.gen; });
 }
 
@@ -1114,35 +1115,35 @@ void Scheduler::trigger(EventId e) {
         return;
     }
     beginWalk();
-    NamedEvent& ev = events_[e];
+    NamedEvent& ev = events_[e.index()];
     ev.triggeredAt = time_;
-    if (ctx_.dump().glitches()) ctx_.dump().triggered(e, time_);  // --wave-glitches
+    if (ctx_.dump().glitches()) ctx_.dump().triggered(e.index(), time_);  // --wave-glitches
     const auto waiters = std::move(ev.waiters);
-    events_[e].waiters.clear();
+    events_[e.index()].waiters.clear();
     for (const Waiter& w : waiters)
         if (processes_[w.process].gen == w.gen) wake(w.process, w.flushPoint);
-    const auto mons = events_[e].monitors;
+    const auto mons = events_[e.index()].monitors;
     std::vector<MonitorRef> keep;
     for (const MonitorRef ref : mons) {
         if (!live(ref)) continue;
         keep.push_back(ref);
         evaluateMonitor(ref.id);
     }
-    for (const MonitorRef ref : events_[e].monitors)  // added while evaluating
+    for (const MonitorRef ref : events_[e.index()].monitors)  // added while evaluating
         if (live(ref) && std::find_if(keep.begin(), keep.end(), [&](const MonitorRef& k) {
                              return k.id == ref.id && k.serial == ref.serial;
                          }) == keep.end())
             keep.push_back(ref);
-    events_[e].monitors = std::move(keep);
+    events_[e.index()].monitors = std::move(keep);
     endWalk();
 }
 
 void Scheduler::triggerNb(ProcessId p, EventId e, std::uint64_t delay) {
     const Region r = processes_[p].group == Group::Active ? Region::Nba : Region::ReNba;
-    schedule(r, {Kind::TriggerNb, r, e, 0}, delay);
+    schedule(r, {Kind::TriggerNb, r, e.index(), 0}, delay);
 }
 
-bool Scheduler::triggered(EventId e) const { return events_[e].triggeredAt == time_; }
+bool Scheduler::triggered(EventId e) const { return events_[e.index()].triggeredAt == time_; }
 
 // --- Pending reports (SCHEDULER_SPEC.md 15) -------------------------------------
 

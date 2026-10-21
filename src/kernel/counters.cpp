@@ -31,15 +31,15 @@ void appendJsonString(std::string& out, std::string_view s) {
 
 CounterId Counters::add(std::string_view name) {
     for (std::size_t i = 0; i < entries_.size(); ++i) {
-        if (entries_[i].name == name) return static_cast<CounterId>(i);
+        if (entries_[i].name == name) return CounterId{static_cast<std::uint32_t>(i)};
     }
     entries_.push_back(Entry{std::string(name), 0, false, {}});
-    return static_cast<CounterId>(entries_.size() - 1);
+    return CounterId{static_cast<std::uint32_t>(entries_.size() - 1)};
 }
 
 CounterId Counters::addText(std::string_view name) {
     const CounterId id = add(name);
-    entries_[id].isText = true;
+    entries_[id.index()].isText = true;
     return id;
 }
 
