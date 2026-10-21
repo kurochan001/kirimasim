@@ -62,13 +62,13 @@ Verilog and Verilator built from their main branches that day. kirimasim's
 sv-tests and own-suite results were measured again on 2026-10-21, after
 file input, `$random` and then waveforms came: sv-tests went from 195 to
 201, 209, then 210, and the own suite did not change. The repository's
-tests were counted after `$stacktrace` came, the same day, in the dev
+tests were counted after `$urandom` came, the same day, in the dev
 configuration (release adds one, the run to the default of
 `--max-slot-events`).
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 1,090 | 1,088, 2 skipped | — | — |
+| This repository's tests (CTest) | 1,101 | 1,099, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 210 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -149,7 +149,7 @@ and 1,133 of the own test suite.
 | Kind | Tests | What they check |
 | --- | --- | --- |
 | Unit tests (GoogleTest) | 168 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (9), time scales (7), UDP tables (4), counters (4), the Context (2), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
-| `tests/suite/` | 779 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (346), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
+| `tests/suite/` | 786 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (353), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
 | State and Contexts | 4 | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
 | Tools | 101 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
@@ -322,7 +322,9 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   forms) and file input (`$fgetc`, `$ungetc`, `$fgets`, `$fscanf`,
   `$fread`, `$ftell`, `$fseek`, `$rewind`, `$feof`, `$ferror`, and STDIN);
   `$readmemb`, `$readmemh`, `$writememb` and `$writememh`; `$random` and
-  the `$dist_*` functions, with the values of Annex N; `$stacktrace`.
+  the `$dist_*` functions, with the values of Annex N; `$urandom` and
+  `$urandom_range`, with a generator of each process seeded from
+  `--seed`; `$stacktrace`.
 - **Waveforms:** 4-state VCD from `$dumpfile`, `$dumpvars`, `$dumpoff`,
   `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush`, or from
   `--wave=<file>.vcd` with `--wave-scope` and `--wave-glitches`.
@@ -334,7 +336,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 | Not yet | Planned |
 | --- | --- |
-| `$urandom`, FST waveforms, the `%p` format, `%v` with resolved strengths, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`), `$fread` into structures with array or real members | P1 |
+| `randcase`, FST waveforms, the `%p` format, `%v` with resolved strengths, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`), `$fread` into structures with array or real members | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
@@ -492,7 +494,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 101 generators, 779 tests in `tests/suite/`, and 1,090
+  rules. There are 102 generators, 786 tests in `tests/suite/`, and 1,101
   CTest tests in all.
 - **Negative controls.** `tools/mutants.py` plants 343 known mistakes in the
   code, one at a time; every one of them must make some test fail.
