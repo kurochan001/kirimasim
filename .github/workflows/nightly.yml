@@ -164,6 +164,55 @@ jobs:
       - run: cmake --build --preset dev
       - run: ctest --preset dev --output-on-failure
 
+  # C++26. kirimasim is C++23 and uses no C++26 feature (CLAUDE.md); it moves
+  # once the compilers it supports all have C++26. Until then this job builds
+  # and tests it as C++26 with GCC 16 and with clang 22, the compiler of
+  # ci.yml, to show what the move would meet. A failure here does not fail
+  # the nightly run.
+  cxx26:
+    name: cxx26 (${{ matrix.compiler }})
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: gcc-16
+            os: ubuntu-26.04
+            cc: gcc-16
+            cxx: g++-16
+          - compiler: clang-22
+            os: ubuntu-24.04
+            cc: clang-22
+            cxx: clang++-22
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install GCC 16 (Ubuntu universe package)
+        if: matrix.compiler == 'gcc-16'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-16
+
+      - name: Install LLVM 22 (apt.llvm.org packages)
+        if: matrix.compiler == 'clang-22'
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+
+      - name: Show tool versions
+        run: |
+          "$CXX" --version
+          cmake --version
+
+      - run: cmake --preset dev -DCMAKE_CXX_STANDARD=26
+      - run: cmake --build --preset dev
+      - run: ctest --preset dev --output-on-failure
+
   # The P1 gates of TEST_SUITE.md ("How the P1 passing conditions are
   # measured"). The tables go to the job summary. Gates that are not met yet
   # do not fail the job; the decision is made at the end of P1 (M8).
