@@ -204,15 +204,15 @@ jobs:
         run: python3 tools/check_release_flags.py
 
   # The oldest compilers kirimasim is said to build with (README,
-  # "Building"): GCC 13 with its own libstdc++, Clang with libstdc++ 13 and
-  # with its own libc++, and Apple clang 17 from the oldest Xcode on the
-  # macOS runner. Clang 17 cannot build slang as C++23: with libstdc++ 13,
-  # expected-lite turns to a std::expected that is not there, and libc++ 17
-  # lacks std::views::join. Clang 18 and 19 are tried here, to keep the
-  # older one that builds. The Linux runner has GCC 13 and Clang 18; Clang 19
-  # comes from apt.llvm.org, and libc++ from Ubuntu's packages or from
-  # apt.llvm.org. Warnings are not errors here, as older compilers warn of
-  # other things.
+  # "Building"): GCC 13 with its own libstdc++, Clang 18 with libc++ 18,
+  # Clang 19 with libstdc++ 13, and Apple clang 17 from the oldest Xcode on
+  # the macOS runner. Older Clang cannot build slang as C++23 (tried
+  # 2026-10-21): with libstdc++ 13, Clang 17 and 18 stop where slang's
+  # expected-lite turns to a std::expected that libstdc++ does not give
+  # them, and libc++ 17 lacks std::views::join. The Linux runner has GCC 13
+  # and Clang 18; Clang 19 comes from apt.llvm.org, and libc++ 18 from
+  # Ubuntu's packages. Warnings are not errors here, as older compilers warn
+  # of other things.
   min-compilers:
     name: min-compilers (${{ matrix.name }})
     strategy:
@@ -224,12 +224,6 @@ jobs:
             os: ubuntu-24.04
             cc: gcc-13
             cxx: g++-13
-          - name: clang-18, libstdc++ 13
-            id: clang18-libstdcxx13
-            os: ubuntu-24.04
-            cc: clang-18
-            cxx: clang++-18
-            cxxflags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13
           - name: clang-18, libc++ 18
             id: clang18-libcxx18
             os: ubuntu-24.04
@@ -244,14 +238,6 @@ jobs:
             cc: clang-19
             cxx: clang++-19
             cxxflags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13
-          - name: clang-19, libc++ 19
-            id: clang19-libcxx19
-            os: ubuntu-24.04
-            llvm: 19
-            cc: clang-19
-            cxx: clang++-19
-            cxxflags: -stdlib=libc++
-            packages: libc++-19-dev libc++abi-19-dev
           - name: apple-clang-17, Xcode 26.0.1
             id: appleclang17
             os: macos-26
