@@ -39,11 +39,11 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 
 ### テストの結果
 
-2026-10-17 に測りました。Icarus Verilog と Verilator は、その日の main の最新の開発版をビルドして使いました。kirimasim の sv-tests と自前のテストの結果は、ファイルの読み込み、`$random`、波形が順に入った後の 2026-10-21 に測り直しました。sv-tests は 195 本から 201 本、209 本、そして 210 本になり、自前のテストは変わりませんでした。このリポジトリのテストは、同じ日に波形が入った後に、dev の構成で数えました（release では `--max-slot-events` の既定の値まで走らせるテストが 1 本増えます）。
+2026-10-17 に測りました。Icarus Verilog と Verilator は、その日の main の最新の開発版をビルドして使いました。kirimasim の sv-tests と自前のテストの結果は、ファイルの読み込み、`$random`、波形が順に入った後の 2026-10-21 に測り直しました。sv-tests は 195 本から 201 本、209 本、そして 210 本になり、自前のテストは変わりませんでした。このリポジトリのテストは、同じ日に `$stacktrace` が入った後に、dev の構成で数えました（release では `--max-slot-events` の既定の値まで走らせるテストが 1 本増えます）。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest） | 1,076 | 1,074、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest） | 1,090 | 1,088、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 210 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -87,7 +87,7 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 | 種類 | 本数 | 確かめていること |
 | --- | --- | --- |
 | ユニットテスト（GoogleTest） | 168 | SIR とその検証器（63）、参照モデルと突き合わせるスケジューラ（26）、`valsem`（14）、出力の書式（13）、強さ（9）、入力の読み取り（9）、時間の単位（7）、UDP の表（4）、カウンタ（4）、Context（2）、カーネルの速い演算と `valsem` の突き合わせ：1 語（6）と任意の幅（6）など |
-| `tests/suite/` | 767 | 期待する出力を持つシミュレーションのテストと、期待する誤りを持つ違法な設計。大半は `tools/` の生成器が作る。手続き（334）、スケジューリング（192）、値（75）、階層（51）、連続代入（39）、ネット（37）、違法な設計（35）など |
+| `tests/suite/` | 779 | 期待する出力を持つシミュレーションのテストと、期待する誤りを持つ違法な設計。大半は `tools/` の生成器が作る。手続き（346）、スケジューリング（192）、値（75）、階層（51）、連続代入（39）、ネット（37）、違法な設計（35）など |
 | `tests/dump_sir/` | 29 | front が作る中間表現 |
 | 状態と Context | 4 | 6 つの設計を、順に、別々のスレッドで同時に（front も含めて、また含めずに）、100 個の Context で代わる代わる動かし、どの実行も、その設計を単独で動かしたときと突き合わせる（RUNTIME_ABI.md の 9.8 節） |
 | 道具 | 101 | 生成器がリポジトリのファイルを作り直せること、テストを判定する道具の陰性対照、`tools/mutants.py` の誤りがどれもまだ入れられること、ベンチマークの設計が動くこと |
@@ -190,7 +190,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 - **関数とタスク：** static と automatic、再帰、`input`・`output`・`inout`・`ref` の引数、引数の既定値、unpacked の構造体と配列の引数、unpacked の構造体と配列を返す関数
 - **文と式：** `if`、`case`、`casez`、`casex`、`case inside`。違反の報告を含む `unique`、`unique0`、`priority`。すべてのループ、`break`、`continue`、`return`。ストリーミング、`inside`、ワイルドカードの等価、代入の演算子と増減を含むすべての演算子。代入のパターン
 - **アサーション：** 即時の `assert`、`assume`、`cover` と、遅延のもの（`#0`、`final`）
-- **システムタスクと関数：** `$display` と `$write`（`b`・`o`・`h` の付いた形も）、`$strobe`、`$monitor`、`$monitoron`、`$monitoroff`、`$sformat`、`$sformatf`、`$swrite`、`$sscanf`、`$time`、`$realtime`、`$timeformat`、`$printtimescale`、`$finish`、`$stop`、`$fatal`、`$error`、`$warning`、`$info`、`$stime`、`$timeunit`、`$timeprecision`、`%m` と `%l` の書式、変換（`$rtoi`、`$itor`、`$realtobits` など、`$signed`、`$unsigned`）、`$bits`、`$typename`、配列の問い合わせ、`$clog2` と実数の数学関数、`$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown`、`$test$plusargs`、`$value$plusargs`、ファイルの出力（`$fopen`、`$fclose`、`$fflush`、`$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor`。`b`・`o`・`h` の付いた形も）とファイルの読み込み（`$fgetc`、`$ungetc`、`$fgets`、`$fscanf`、`$fread`、`$ftell`、`$fseek`、`$rewind`、`$feof`、`$ferror`、STDIN）、`$readmemb`、`$readmemh`、`$writememb`、`$writememh`、附属書 N の値を出す `$random` と `$dist_*` の関数
+- **システムタスクと関数：** `$display` と `$write`（`b`・`o`・`h` の付いた形も）、`$strobe`、`$monitor`、`$monitoron`、`$monitoroff`、`$sformat`、`$sformatf`、`$swrite`、`$sscanf`、`$time`、`$realtime`、`$timeformat`、`$printtimescale`、`$finish`、`$stop`、`$fatal`、`$error`、`$warning`、`$info`、`$stime`、`$timeunit`、`$timeprecision`、`%m` と `%l` の書式、変換（`$rtoi`、`$itor`、`$realtobits` など、`$signed`、`$unsigned`）、`$bits`、`$typename`、配列の問い合わせ、`$clog2` と実数の数学関数、`$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown`、`$test$plusargs`、`$value$plusargs`、ファイルの出力（`$fopen`、`$fclose`、`$fflush`、`$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor`。`b`・`o`・`h` の付いた形も）とファイルの読み込み（`$fgetc`、`$ungetc`、`$fgets`、`$fscanf`、`$fread`、`$ftell`、`$fseek`、`$rewind`、`$feof`、`$ferror`、STDIN）、`$readmemb`、`$readmemh`、`$writememb`、`$writememh`、附属書 N の値を出す `$random` と `$dist_*` の関数、`$stacktrace`
 - **波形：** `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush`、またはコマンドラインの `--wave=<file>.vcd`（`--wave-scope` と `--wave-glitches` も）による 4 値の VCD
 - **スケジューリング：** IEEE 1800-2023 の時刻スロットのすべての領域と参照アルゴリズム。Observed 領域での保留の報告の確定と、Postponed 領域での `$strobe`・`$monitor` を含む
 
@@ -198,7 +198,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 | まだのもの | 予定 |
 | --- | --- |
-| アンパックの構造体と共用体への `$fread`、列挙型のメモリへの `$readmem`、`$urandom`、FST の波形、`%p` の書式、`$stacktrace`、実行時にしか決まらない書式（`$sformat`、`$sformatf`、`$sscanf`、`$value$plusargs`） | P1 |
+| `$urandom`、FST の波形、`%p` の書式、解決した強さを出す `%v`、実行時にしか決まらない書式（`$sformat`、`$sformatf`、`$sscanf`、`$value$plusargs`）、配列や実数のメンバを持つ構造体への `$fread` | P1 |
 | クラス、動的配列、キュー、連想配列、乱数化と制約、カバーグループ、並行アサーションと `$sampled`・`$stable`、クロッキングブロック、virtual interface、`let` | P3 |
 | program ブロック。program のコードは reactive の領域の組で動くもの（24.3.1）なので、今は未対応として報告する | P3 |
 | VPI、DPI-C | P3 |
@@ -327,7 +327,7 @@ flowchart TD
 
 - **仕様が先。** 値の意味、スケジューリング、システムタスク、SIR を [docs/spec/](docs/spec/) に書き、人の承認を受けてから実装します。規格が決めていない所は、kirimasim がどう読むかを仕様書に書きます。
 - **値の意味の参照は 1 つ。** `valsem` は、遅いが明らかに正しい演算の実装です。カーネルの速い演算は、それとファジングで突き合わせます（1 語の値と、複数の語の値の両方）。
-- **機構の行列。** 1 つの機構を、それが現れうる所の組み合わせで確かめます（たとえば `disable` なら、ブロックの中、fork の枝、別のプロセス、タスクから、それぞれ手続き、タスク、fork の枝の中で）。テストは `tools/` の生成器が作り、期待値は書いた規則から決まります。生成器は 99 個、`tests/suite/` のテストは 767 本、CTest のテストは全部で 1,076 本です。
+- **機構の行列。** 1 つの機構を、それが現れうる所の組み合わせで確かめます（たとえば `disable` なら、ブロックの中、fork の枝、別のプロセス、タスクから、それぞれ手続き、タスク、fork の枝の中で）。テストは `tools/` の生成器が作り、期待値は書いた規則から決まります。生成器は 101 個、`tests/suite/` のテストは 779 本、CTest のテストは全部で 1,090 本です。
 - **陰性対照。** `tools/mutants.py` は、知られた誤り 343 個を 1 つずつコードに入れます。どの誤りでも、どれかのテストが落ちなければなりません。
 - **他のシミュレータは証拠であって正解ではない。** Icarus Verilog と Verilator でもテストを動かし、規格と違うところはテストのヘッダに書きます。
 - **サニタイザと静的な検査：** AddressSanitizer、UndefinedBehaviorSanitizer、clang-format、clang-tidy を push の前に毎回走らせ、CI でも Linux（サニタイザは GCC でビルド）と macOS で走らせます。CI はさらに、状態と Context のテストを ThreadSanitizer の下で走らせ、`src/` が、一覧に載せた例外のほかに大域状態を持たないことを検査します（RUNTIME_ABI.md の 9 節）。
