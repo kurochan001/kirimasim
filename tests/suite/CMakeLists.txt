@@ -11,4 +11,13 @@ foreach(sv ${suite_files})
         COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/run_suite_test.py
             --kirimasim $<TARGET_FILE:kirimasim> ${sv})
     set_tests_properties(suite/${test_name} PROPERTIES LABELS Suite SKIP_RETURN_CODE 77)
+    # The matrix of nesting 1000 and 10000 deep (gen_nesting_depth_matrix.py):
+    # with the fake stacks of AddressSanitizer's check of use after return,
+    # on by default with GCC on Linux, each of the 10000 frames is slow to
+    # make, and a test took more than its 300 seconds. The check stays on
+    # for every other test.
+    if(test_name MATCHES "^proc/nesting_depth_")
+        set_tests_properties(suite/${test_name} PROPERTIES
+            ENVIRONMENT "ASAN_OPTIONS=detect_stack_use_after_return=0")
+    endif()
 endforeach()

@@ -89,7 +89,7 @@
         { "name": "release", "configurePreset": "release" },
         { "name": "asan", "configurePreset": "asan" },
         { "name": "ubsan", "configurePreset": "ubsan" },
-        { "name": "tsan", "configurePreset": "tsan", "targets": ["kirimasim_context_tests"] },
+        { "name": "tsan", "configurePreset": "tsan", "targets": ["kirimasim_context_tests", "kirimasim_stack_tests"] },
         { "name": "fuzz", "configurePreset": "fuzz", "targets": ["kirimasim_fuzz_compile"] }
     ],
     "testPresets": [

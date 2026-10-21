@@ -32,5 +32,8 @@ target_compile_definitions(kirimasim_stack_tests PRIVATE
 foreach(case front_small front_large function_small function_large task_small task_large
         guard_small guard_large deferred_small deferred_large default_thread)
     add_test(NAME stack_${case} COMMAND kirimasim_stack_tests ${case})
-    set_tests_properties(stack_${case} PROPERTIES LABELS Context)
+    # Recursion 10000 deep is slow with the fake stacks of AddressSanitizer's
+    # check of use after return (as in tests/suite/CMakeLists.txt).
+    set_tests_properties(stack_${case} PROPERTIES LABELS Context
+        ENVIRONMENT "ASAN_OPTIONS=detect_stack_use_after_return=0")
 endforeach()
