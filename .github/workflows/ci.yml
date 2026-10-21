@@ -204,11 +204,15 @@ jobs:
         run: python3 tools/check_release_flags.py
 
   # The oldest compilers kirimasim is said to build with (README,
-  # "Building"): GCC 13 with its own libstdc++, Clang 17 with libstdc++ 13
-  # and with libc++ 17, and Apple clang 17 from the oldest Xcode on the
-  # macOS runner. The Linux runner has GCC 13 and Clang 17; libc++ 17 comes
-  # from Ubuntu's packages. Warnings are not errors here, as older compilers
-  # warn of other things.
+  # "Building"): GCC 13 with its own libstdc++, Clang with libstdc++ 13 and
+  # with its own libc++, and Apple clang 17 from the oldest Xcode on the
+  # macOS runner. Clang 17 cannot build slang as C++23: with libstdc++ 13,
+  # expected-lite turns to a std::expected that is not there, and libc++ 17
+  # lacks std::views::join. Clang 18 and 19 are tried here, to keep the
+  # older one that builds. The Linux runner has GCC 13 and Clang 18; Clang 19
+  # comes from apt.llvm.org, and libc++ from Ubuntu's packages or from
+  # apt.llvm.org. Warnings are not errors here, as older compilers warn of
+  # other things.
   min-compilers:
     name: min-compilers (${{ matrix.name }})
     strategy:
@@ -220,19 +224,34 @@ jobs:
             os: ubuntu-24.04
             cc: gcc-13
             cxx: g++-13
-          - name: clang-17, libstdc++ 13
-            id: clang17-libstdcxx13
+          - name: clang-18, libstdc++ 13
+            id: clang18-libstdcxx13
             os: ubuntu-24.04
-            cc: clang-17
-            cxx: clang++-17
+            cc: clang-18
+            cxx: clang++-18
             cxxflags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13
-          - name: clang-17, libc++ 17
-            id: clang17-libcxx17
+          - name: clang-18, libc++ 18
+            id: clang18-libcxx18
             os: ubuntu-24.04
-            cc: clang-17
-            cxx: clang++-17
+            cc: clang-18
+            cxx: clang++-18
             cxxflags: -stdlib=libc++
-            packages: libc++-17-dev libc++abi-17-dev
+            packages: libc++-18-dev libc++abi-18-dev
+          - name: clang-19, libstdc++ 13
+            id: clang19-libstdcxx13
+            os: ubuntu-24.04
+            llvm: 19
+            cc: clang-19
+            cxx: clang++-19
+            cxxflags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13
+          - name: clang-19, libc++ 19
+            id: clang19-libcxx19
+            os: ubuntu-24.04
+            llvm: 19
+            cc: clang-19
+            cxx: clang++-19
+            cxxflags: -stdlib=libc++
+            packages: libc++-19-dev libc++abi-19-dev
           - name: apple-clang-17, Xcode 26.0.1
             id: appleclang17
             os: macos-26
@@ -246,6 +265,13 @@ jobs:
       CXXFLAGS: ${{ matrix.cxxflags }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install LLVM (apt.llvm.org packages)
+        if: matrix.llvm
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${{ matrix.llvm }}
 
       - name: Install the standard library
         if: matrix.packages
