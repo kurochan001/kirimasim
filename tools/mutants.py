@@ -449,9 +449,10 @@ MUTANTS = [
      "        c.children = f.births;\n",
      "        c.children = static_cast<std::uint32_t>(f.children.size());\n"),
     ("vm: a block tells its children by their place", "src/vm/vm.cpp",
-     "static_cast<std::uint32_t>(f.syncCalls.size()), f.births});",
      "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
-     "                             static_cast<std::uint32_t>(f.children.size())});"),
+     "                                            f.births});",
+     "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
+     "                                            f.children.size()});"),
     ("vm: a process is released while the kernel holds its reports", "src/vm/vm.cpp",
      "if (&f == running_ || sched_.hasPending(f.kernelId)) {", "if (&f == running_) {"),
     ("vm: a function's result wider than 64 bits keeps its low chunk", "src/vm/vm.cpp",
@@ -798,12 +799,12 @@ MUTANTS = [
      "        const Act caller = act_;\n"
      "        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
      "        W4 ret{0, 0};\n"
-     "        const Exit e = runBody(o, 0, steps, ret);\n"
+     "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n",
      "        const Act caller = act_;\n"
      "        enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});\n"
      "        W4 ret{0, 0};\n"
-     "        const Exit e = runBody(o, 0, steps, ret);\n"
+     "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n"
      "        waitTriggers(o, d_.processes[ops[1].id]);\n"),
     ("vm: always @* and always @(...) wait on their triggers while they run", "src/vm/vm.cpp",

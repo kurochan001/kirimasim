@@ -495,7 +495,7 @@ struct Frame {
     Interpreter* vm = nullptr;
     std::uint32_t process = 0;       ///< Index in the SIR process table.
     kernel::ProcessId kernelId = 0;  ///< Id in the kernel.
-    sir::BlockId block = 0;          ///< Block to resume at.
+    sir::BlockId block{0};           ///< Block to resume at.
     std::vector<W4> vars;            ///< Frame variables (SIR_SPEC.md 7.4).
     std::uint32_t varsId = 0;        ///< Their number for refs (Interpreter::enroll).
 
@@ -546,7 +546,7 @@ struct Frame {
         std::uint32_t body = 0;
         std::vector<W4> vars;
         std::uint32_t varsId = 0;
-        sir::BlockId block = 0;
+        sir::BlockId block{0};
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
         std::uint64_t children = 0;        ///< The frame's births when it was called.
     };
@@ -565,7 +565,7 @@ struct Frame {
     /// its exit, and where the frame stood when it began.
     struct ScopeAct {
         std::uint32_t scope = 0;
-        sir::BlockId exit = 0;
+        sir::BlockId exit{0};
         std::uint32_t calls = 0;
         std::uint32_t sync = 0;
         std::uint64_t children = 0;
@@ -1628,17 +1628,17 @@ private:
             case sir::ProcessKind::Ff:
             case sir::ProcessKind::FfPlain:
             case sir::ProcessKind::CombAt:
-                f.block = 0;
+                f.block = sir::kEntryBlock;
                 if (!early) waitTriggers(f, p);
                 return kernel::Status::Waiting;
             case sir::ProcessKind::Override:
                 // Idle once it holds nothing, until override.start again.
-                f.block = 0;
+                f.block = sir::kEntryBlock;
                 if (f.holding && !early) waitTriggers(f, p);
                 return kernel::Status::Waiting;
             case sir::ProcessKind::Postponed:
                 // Runs again from its start, each time the kernel runs it.
-                f.block = 0;
+                f.block = sir::kEntryBlock;
                 return kernel::Status::Waiting;
             default: return kernel::Status::Done;
         }
@@ -1690,7 +1690,7 @@ private:
         c.vars = newVars(c.body);
         bindArgs(c.body, s, readArgs(s, ops), c.vars);
         c.varsId = enroll(c.vars);
-        resumeAt(f) = ops.back().id;
+        resumeAt(f) = ops.back().asBlock();
         f.calls.push_back(std::move(c));
         return true;
     }
@@ -1886,7 +1886,7 @@ private:
         const sir::Process& p = d_.processes[f.process];
         const std::uint32_t body = act_.body;
         for (;;) {
-            const auto& instrs = bodyBlocks(body)[b].instrs;
+            const auto& instrs = bodyBlocks(body)[b.index()].instrs;
             bool jumped = false;
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 const sir::Instr& in = instrs[k];
@@ -1947,9 +1947,10 @@ private:
                         break;
                     }
                     case Op::ScopeEnter:
-                        f.scopes.push_back(
-                            {ops[0].id, ops[1].id, static_cast<std::uint32_t>(f.calls.size()),
-                             static_cast<std::uint32_t>(f.syncCalls.size()), f.births});
+                        f.scopes.push_back({ops[0].id, ops[1].asBlock(),
+                                            static_cast<std::uint32_t>(f.calls.size()),
+                                            static_cast<std::uint32_t>(f.syncCalls.size()),
+                                            f.births});
                         break;
                     case Op::ScopeLeave: leaveScope(f, ops[0].id); break;
                     case Op::DisableScope:
@@ -1968,7 +1969,7 @@ private:
                             fork(f, ops);
                         else
                             f.pending = Frame::Join::WaitFork;
-                        resumeAt(f) = ops.back().id;
+                        resumeAt(f) = ops.back().asBlock();
                         if (f.pending != Frame::Join::None && waitJoin(f)) return Exit::Waiting;
                         b = resumeAt(f);
                         jumped = true;
@@ -1982,7 +1983,7 @@ private:
                             designError(f, in, "the delay takes the time past the largest time");
                             return Exit::Error;
                         }
-                        resumeAt(f) = ops[1].id;
+                        resumeAt(f) = ops[1].asBlock();
                         return Exit::Waiting;
                     }
                     case Op::WaitEvent: {
@@ -2014,17 +2015,17 @@ private:
                             }
                         }
                         sched_.waitAny(f.kernelId, items_, monitors_);
-                        resumeAt(f) = ops.back().id;
+                        resumeAt(f) = ops.back().asBlock();
                         return Exit::Waiting;
                     }
                     case Op::WaitCond: {
                         const std::optional<bool> waits = waitCond(f, ops[0].id, steps);
                         if (!waits) return sched_.ending() ? Exit::Stop : Exit::Error;
                         if (*waits) {
-                            resumeAt(f) = ops[1].id;
+                            resumeAt(f) = ops[1].asBlock();
                             return Exit::Waiting;
                         }
-                        b = ops[1].id;
+                        b = ops[1].asBlock();
                         jumped = true;
                         break;
                     }
@@ -2035,7 +2036,7 @@ private:
                             return Exit::Error;
                         }
                         sched_.waitNamed(f.kernelId, *e);
-                        resumeAt(f) = ops[1].id;
+                        resumeAt(f) = ops[1].asBlock();
                         return Exit::Waiting;
                     }
                     case Op::Trigger:
@@ -2059,7 +2060,7 @@ private:
                         }
                         break;
                     }
-                    case Op::Builtin: builtin(in, info_[body][b][k]); break;
+                    case Op::Builtin: builtin(in, info_[body][b.index()][k]); break;
                     case Op::DriveDelay: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[0], ops[1]);
                         const std::optional<std::uint64_t> rise = ticksOf(ops[2]);
@@ -2069,14 +2070,14 @@ private:
                             designError(f, in, "the delay takes the time past the largest time");
                             return Exit::Error;
                         }
-                        sched_.driveDelayed(info_[body][b][k].driver, ops[0].id, ops[0].firstElem,
-                                            ops[0].lsb, ops[0].width, buf.data(), *rise, *fall,
-                                            *off);
+                        sched_.driveDelayed(info_[body][b.index()][k].driver, ops[0].id,
+                                            ops[0].firstElem, ops[0].lsb, ops[0].width, buf.data(),
+                                            *rise, *fall, *off);
                         break;
                     }
-                    case Op::Resolve: resolve(in, info_[body][b][k]); break;
+                    case Op::Resolve: resolve(in, info_[body][b.index()][k]); break;
                     case Op::Syscall: {
-                        const InstrInfo& info = info_[body][b][k];
+                        const InstrInfo& info = info_[body][b.index()][k];
                         if (info.task == SysTask::Stacktrace) {
                             stacktrace(f, in);
                             break;
@@ -2090,7 +2091,7 @@ private:
                         break;
                     }
                     case Op::OverrideStart: {
-                        const Exit e = overrideStart(in, info_[body][b][k], steps);
+                        const Exit e = overrideStart(in, info_[body][b.index()][k], steps);
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
                         break;
@@ -2123,7 +2124,7 @@ private:
                         break;
                     }
                     case Op::OverrideStop: {
-                        const kernel::Hold level = holdLevel(info_[body][b][k]);
+                        const kernel::Hold level = holdLevel(info_[body][b.index()][k]);
                         for (std::size_t i = 1; i < ops.size(); ++i)
                             sched_.release(level, partOf(ops[i]));
                         dropIdle(level);
@@ -2131,12 +2132,13 @@ private:
                     }
                     case Op::StoreOverride: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
-                        sched_.writeHeld(holdLevel(info_[body][b][k]), f.kernelId, ops[1].id,
-                                         ops[1].firstElem, ops[1].lsb, ops[1].width, buf.data());
+                        sched_.writeHeld(holdLevel(info_[body][b.index()][k]), f.kernelId,
+                                         ops[1].id, ops[1].firstElem, ops[1].lsb, ops[1].width,
+                                         buf.data());
                         break;
                     }
                     default:
-                        if (!execute(f, p, in, info_[body][b][k])) return Exit::Error;
+                        if (!execute(f, p, in, info_[body][b.index()][k])) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         break;
                 }
@@ -2148,7 +2150,7 @@ private:
                 }
             }
             if (!jumped) {
-                fail(p, "block bb" + std::to_string(b) + " has no terminator");
+                fail(p, "block bb" + std::to_string(b.index()) + " has no terminator");
                 return Exit::Error;
             }
         }
@@ -2182,7 +2184,7 @@ private:
         const Act caller = act_;
         enter({ops[1].id, &o.vars, caller.base + bodyTemps(caller.body), o.varsId});
         W4 ret{0, 0};
-        const Exit e = runBody(o, 0, steps, ret);
+        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);
         act_ = caller;
         return e;
     }
@@ -2204,7 +2206,7 @@ private:
         std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         const std::uint32_t varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
         enter({processCount() + g, &vars, caller.base + bodyTemps(caller.body), varsId});
-        const Exit e = runBody(f, 0, steps, ret);
+        const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         act_ = caller;
         return e == Exit::Ret;
     }
@@ -2499,7 +2501,7 @@ private:
         W4 ret{0, 0};
         ++callDepth_;
         f.syncCalls.push_back({body, f.births, &in});
-        const Exit e = runBody(f, 0, steps, ret);
+        const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         std::vector<W4> wide;
         if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
         f.syncCalls.pop_back();
@@ -2545,7 +2547,7 @@ private:
         W4 ret{0, 0};
         ++callDepth_;
         f.syncCalls.push_back({body, f.births});
-        const Exit e = runBody(f, 0, steps, ret);
+        const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         f.syncCalls.pop_back();
         --callDepth_;
         retire(act_.varsId);
@@ -2583,7 +2585,7 @@ private:
                 at += c;
             }
         }
-        return target.id;
+        return target.asBlock();
     }
 
     /// Runs one instruction that is not a terminator or a system call.

@@ -452,29 +452,29 @@ sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
 
 sir::BlockId Lowerer::newBlock() {
     blocks().emplace_back();
-    return static_cast<sir::BlockId>(blocks().size() - 1);
+    return sir::BlockId{static_cast<std::uint32_t>(blocks().size() - 1)};
 }
 
 Val Lowerer::blockParam(sir::BlockId b, sir::Type t) {
     const sir::TempId p = newTemp();
-    blocks()[b].params.push_back({p, t});
+    block(b).params.push_back({p, t});
     return {sir::Operand::temp(p), t};
 }
 
 Val Lowerer::emit(sir::Op op, sir::Type t, std::vector<sir::Operand> ops,
                   slang::SourceLocation sl) {
     const sir::TempId r = newTemp();
-    blocks()[b_.block].instrs.push_back({op, t, r, std::move(ops), loc(sl)});
+    block(b_.block).instrs.push_back({op, t, r, std::move(ops), loc(sl)});
     return {sir::Operand::temp(r), t};
 }
 
 void Lowerer::emitVoid(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
-    blocks()[b_.block].instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
+    block(b_.block).instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
 }
 
 void Lowerer::emitInto(sir::BlockId b, sir::Op op, std::vector<sir::Operand> ops,
                        slang::SourceLocation sl) {
-    blocks()[b].instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
+    block(b).instrs.push_back({op, sir::voidType(), sir::kNone, std::move(ops), loc(sl)});
 }
 
 void Lowerer::terminate(sir::Op op, std::vector<sir::Operand> ops, slang::SourceLocation sl) {
@@ -1785,7 +1785,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
                 return;
             }
             const auto at = static_cast<std::uint32_t>(p.kind == Place::Kind::Slot ? 0 : p.lsb);
-            const std::size_t start = blocks()[b_.block].instrs.size();
+            const std::size_t start = block(b_.block).instrs.size();
             const sir::Type flag = sir::u2(1);
             const Val unknown = inv(op2(sir::Op::Or, on, off));
             const auto is = [&](std::uint64_t value) {
@@ -1795,7 +1795,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
             const Val zero = inv(op2(sir::Op::And, unknown, is(1)));
             emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, at, 1), one.op}, sl);
             emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, w + at, 1), zero.op}, sl);
-            side = GateSide{start, blocks()[b_.block].instrs.size() - start, true};
+            side = GateSide{start, block(b_.block).instrs.size() - start, true};
         },
         strength, g.getDelay());
     if (side && design_.processes.size() > first) sides_[first] = *side;

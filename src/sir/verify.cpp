@@ -657,10 +657,14 @@ private:
         const auto bw = [&](std::size_t b) { return body.where + " bb" + std::to_string(b); };
         if (!blocks[0].params.empty()) error(bw(0), "the entry block has parameters");
 
+        // The graph below numbers the blocks as plain indices into its own
+        // vectors; a BlockId of an operand becomes one only here.
+        using Block = std::uint32_t;
+
         // Rule 3: each block ends with exactly one terminator; targets exist.
         // waitEdge[b] is set when b ends with a wait, so every edge out of
         // b crosses a wait.
-        std::vector<std::vector<BlockId>> succ(nb);
+        std::vector<std::vector<Block>> succ(nb);
         std::vector<bool> waitEdge(nb, false);
         for (std::size_t b = 0; b < nb; ++b) {
             const auto& instrs = blocks[b].instrs;
@@ -686,22 +690,22 @@ private:
             }
         }
         std::vector<bool> reach(nb, false);
-        std::vector<BlockId> work{0};
+        std::vector<Block> work{0};
         reach[0] = true;
         while (!work.empty()) {
-            const BlockId b = work.back();
+            const Block b = work.back();
             work.pop_back();
-            for (const BlockId s : succ[b])
+            for (const Block s : succ[b])
                 if (!reach[s]) reach[s] = true, work.push_back(s);
         }
         for (std::size_t b = 0; b < nb; ++b)
             if (!reach[b]) error(bw(b), "block is unreachable");
 
         // Dominators (iterative; bodies are small).
-        std::vector<std::vector<BlockId>> pred(nb);
+        std::vector<std::vector<Block>> pred(nb);
         for (std::size_t b = 0; b < nb; ++b)
-            for (const BlockId s : succ[b])
-                pred[s].push_back(static_cast<BlockId>(b));
+            for (const Block s : succ[b])
+                pred[s].push_back(static_cast<Block>(b));
         std::vector<std::vector<bool>> dom(nb, std::vector<bool>(nb, true));
         dom[0].assign(nb, false);
         dom[0][0] = true;
@@ -711,7 +715,7 @@ private:
                 if (!reach[b]) continue;
                 std::vector<bool> nd(nb, true);
                 bool any = false;
-                for (const BlockId q : pred[b]) {
+                for (const Block q : pred[b]) {
                     if (!reach[q]) continue;
                     any = true;
                     for (std::size_t i = 0; i < nb; ++i)
@@ -760,8 +764,8 @@ private:
             if (crossed[d].empty()) {
                 crossed[d].assign(nb, false);
                 std::vector<std::vector<bool>> seen(2, std::vector<bool>(nb, false));
-                std::vector<std::pair<BlockId, bool>> todo;
-                for (const BlockId s : succ[d])
+                std::vector<std::pair<Block, bool>> todo;
+                for (const Block s : succ[d])
                     todo.emplace_back(s, waitEdge[d]);
                 while (!todo.empty()) {
                     const auto [b, waited] = todo.back();
@@ -769,7 +773,7 @@ private:
                     if (b == d || seen[waited ? 1 : 0][b]) continue;
                     seen[waited ? 1 : 0][b] = true;
                     if (waited) crossed[d][b] = true;
-                    for (const BlockId s : succ[b])
+                    for (const Block s : succ[b])
                         todo.emplace_back(s, waited || waitEdge[b]);
                 }
             }

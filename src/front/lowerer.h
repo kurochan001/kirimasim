@@ -445,6 +445,7 @@ public:
     std::vector<sir::BasicBlock>& blocks() {
         return b_.isSub ? design_.subroutines[b_.proc].blocks : proc().blocks;
     }
+    sir::BasicBlock& block(sir::BlockId b) { return blocks()[b.index()]; }
     std::vector<sir::FrameVar>& frameVars() {
         if (!b_.isSub) return proc().frame;
         sir::Subroutine& s = design_.subroutines[b_.proc];
@@ -677,7 +678,7 @@ public:
     /// The state of the procedure being lowered.
     struct Body {
         std::uint32_t proc = 0;
-        sir::BlockId block = 0;
+        sir::BlockId block = sir::kEntryBlock;
         bool dead = false;  ///< The current point is unreachable.
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
         std::map<const ast::Symbol*, sir::FrameVarId> structFrames;  ///< The first leaf's.

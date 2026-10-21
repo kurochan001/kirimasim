@@ -53,8 +53,8 @@ Design counter() {
         make(Op::Load, u4(1), 0, {Operand::slot(1)}, 3),
         make(Op::Lnot, u4(1), 1, {Operand::temp(0)}, 3),
         make(Op::Truth, u4(1), 2, {Operand::temp(1)}, 3),
-        make(Op::BrIf, voidType(), kNone, {Operand::temp(2), Operand::block(1), Operand::block(2)},
-             3),
+        make(Op::BrIf, voidType(), kNone,
+             {Operand::temp(2), Operand::block(BlockId{1}), Operand::block(BlockId{2})}, 3),
     };
     p.blocks[1].instrs = {
         make(Op::Nba, voidType(), kNone, {Operand::slot(2), Operand::constant(0)}, 4),
@@ -156,8 +156,8 @@ TEST(Sir, TempDefinedTwice) {
 TEST(Sir, WaitInFlipFlop) {
     Design d = counter();
     auto& instrs = d.processes[0].blocks[1].instrs;
-    instrs.back() =
-        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(1), Operand::block(2)}, 4);
+    instrs.back() = make(Op::WaitDelay, voidType(), kNone,
+                         {Operand::constant(1), Operand::block(BlockId{2})}, 4);
     EXPECT_TRUE(mentions(verify(d), "wait.delay in a ff-plain process"));
 }
 
@@ -166,8 +166,8 @@ TEST(Sir, WaitInInitialIsAllowed) {
     d.processes[0].kind = ProcessKind::Initial;
     d.processes[0].triggers.clear();
     auto& instrs = d.processes[0].blocks[1].instrs;
-    instrs.back() =
-        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(1), Operand::block(2)}, 4);
+    instrs.back() = make(Op::WaitDelay, voidType(), kNone,
+                         {Operand::constant(1), Operand::block(BlockId{2})}, 4);
     EXPECT_TRUE(verify(d).empty());
 }
 
@@ -307,16 +307,17 @@ Design loopWithWait() {
     p.blocks.resize(5);
     p.blocks[0].instrs = {
         make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::constant(0)}, 1),
-        make(Op::Br, voidType(), kNone, {Operand::block(1)}, 1),
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
     };
     p.blocks[1].instrs = {
         make(Op::Fload, s2(32), 0, {Operand::frame(0)}, 1),
         make(Op::Lt, u2(1), 1, {Operand::temp(0), Operand::constant(1)}, 1),
-        make(Op::BrIf, voidType(), kNone, {Operand::temp(1), Operand::block(2), Operand::block(4)},
-             1),
+        make(Op::BrIf, voidType(), kNone,
+             {Operand::temp(1), Operand::block(BlockId{2}), Operand::block(BlockId{4})}, 1),
     };
     p.blocks[2].instrs = {
-        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(2), Operand::block(3)}, 1),
+        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(2), Operand::block(BlockId{3})},
+             1),
     };
     p.blocks[3].instrs = {
         make(Op::Fload, s2(32), 2, {Operand::frame(0)}, 1),
@@ -325,7 +326,7 @@ Design loopWithWait() {
         make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(4)}, 1),
         make(Op::Add, s2(32), 5, {Operand::temp(2), Operand::constant(3)}, 1),
         make(Op::Fstore, voidType(), kNone, {Operand::frame(0), Operand::temp(5)}, 1),
-        make(Op::Br, voidType(), kNone, {Operand::block(1)}, 1),
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
     };
     p.blocks[4].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
     d.processes.push_back(std::move(p));
@@ -345,17 +346,17 @@ Design loopWithParam() {
     p.numTemps = 3;
     p.blocks.resize(4);
     p.blocks[0].instrs = {
-        make(Op::Br, voidType(), kNone, {Operand::block(1, 1), Operand::constant(0)}, 1),
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1}, 1), Operand::constant(0)}, 1),
     };
     p.blocks[1].params = {{0, s2(32)}};
     p.blocks[1].instrs = {
         make(Op::Lt, u2(1), 1, {Operand::temp(0), Operand::constant(1)}, 1),
-        make(Op::BrIf, voidType(), kNone, {Operand::temp(1), Operand::block(2), Operand::block(3)},
-             1),
+        make(Op::BrIf, voidType(), kNone,
+             {Operand::temp(1), Operand::block(BlockId{2}), Operand::block(BlockId{3})}, 1),
     };
     p.blocks[2].instrs = {
         make(Op::Add, s2(32), 2, {Operand::temp(0), Operand::constant(2)}, 1),
-        make(Op::Br, voidType(), kNone, {Operand::block(1, 1), Operand::temp(2)}, 1),
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1}, 1), Operand::temp(2)}, 1),
     };
     p.blocks[3].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
     d.processes.push_back(std::move(p));
@@ -398,7 +399,8 @@ TEST(Sir, TempUsedAfterAWait) {
 
 TEST(Sir, BlockArgumentCount) {
     Design d = loopWithParam();
-    d.processes[0].blocks[2].instrs[1] = make(Op::Br, voidType(), kNone, {Operand::block(1)}, 1);
+    d.processes[0].blocks[2].instrs[1] =
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1);
     EXPECT_TRUE(mentions(verify(d), "bb1 takes 1 arguments"));
 }
 
@@ -738,7 +740,8 @@ Design calls() {
     t.blocks.resize(2);
     d.constants.push_back({u2(64), {1}, {}, {}});  // #2
     t.blocks[0].instrs = {
-        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(2), Operand::block(1)}, 11),
+        make(Op::WaitDelay, voidType(), kNone, {Operand::constant(2), Operand::block(BlockId{1})},
+             11),
     };
     t.blocks[1].instrs = {make(Op::Ret, voidType(), kNone, {}, 11)};
     d.subroutines = {std::move(f), std::move(t)};
@@ -752,7 +755,8 @@ Design calls() {
     p.blocks[0].instrs = {
         make(Op::Call, u4(8), 0, {Operand::subroutine(0), Operand::constant(0)}, 12),
         make(Op::Store, voidType(), kNone, {Operand::slot(2), Operand::temp(0)}, 12),
-        make(Op::CallTask, voidType(), kNone, {Operand::subroutine(1), Operand::block(1)}, 12),
+        make(Op::CallTask, voidType(), kNone, {Operand::subroutine(1), Operand::block(BlockId{1})},
+             12),
     };
     p.blocks[1].instrs = {make(Op::Ret, voidType(), kNone, {}, 12)};
     d.processes.push_back(std::move(p));
@@ -784,7 +788,7 @@ TEST(Sir, WaitingTaskNeedsCallTask) {
     d.processes[0].blocks[0].instrs[2] =
         make(Op::Call, voidType(), kNone, {Operand::subroutine(1)}, 12);
     d.processes[0].blocks[0].instrs.push_back(
-        make(Op::Br, voidType(), kNone, {Operand::block(1)}, 12));
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 12));
     EXPECT_TRUE(mentions(verify(d), "called with call.task"));
 }
 
@@ -798,7 +802,8 @@ TEST(Sir, WaitInAFunction) {
     Design d = calls();
     d.subroutines[1].kind = SubroutineKind::Function;
     d.subroutines[1].mayWait = false;
-    d.processes[0].blocks[0].instrs[2] = make(Op::Br, voidType(), kNone, {Operand::block(1)}, 12);
+    d.processes[0].blocks[0].instrs[2] =
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 12);
     EXPECT_TRUE(mentions(verify(d), "wait.delay in a function"));
 }
 
@@ -825,9 +830,9 @@ TEST(Sir, IffGuardBelongsToTheWaiter) {
         make(Op::Ret, voidType(), kNone, {Operand::temp(0)}, 13),
     };
     d.subroutines.push_back(std::move(g));
-    d.processes[0].blocks[0].instrs[2] =
-        make(Op::WaitEvent, voidType(), kNone,
-             {Operand::event(0, Edge::Pos), Operand::subroutine(2), Operand::block(1)}, 12);
+    d.processes[0].blocks[0].instrs[2] = make(
+        Op::WaitEvent, voidType(), kNone,
+        {Operand::event(0, Edge::Pos), Operand::subroutine(2), Operand::block(BlockId{1})}, 12);
     expectClean(d);
     EXPECT_NE(toText(d).find("wait.event posedge %s0 iff @2, bb1"), std::string::npos);
     d.subroutines[2].frameOf = {Owner::Kind::Subroutine, 1};
@@ -885,8 +890,9 @@ TEST(Sir, WatchItemBelongsToTheWaiter) {
     }
     Operand item = Operand::subroutine(2);
     item.edge = Edge::Pos;
-    d.processes[0].blocks[0].instrs[2] = make(
-        Op::WaitEvent, voidType(), kNone, {item, Operand::subroutine(3), Operand::block(1)}, 12);
+    d.processes[0].blocks[0].instrs[2] =
+        make(Op::WaitEvent, voidType(), kNone,
+             {item, Operand::subroutine(3), Operand::block(BlockId{1})}, 12);
     expectClean(d);
     EXPECT_NE(toText(d).find("wait.event posedge @2 iff @3, bb1"), std::string::npos);
     EXPECT_NE(toText(d).find("\"caller.event0\" watch"), std::string::npos);
@@ -898,8 +904,8 @@ TEST(Sir, WatchItemBelongsToTheWaiter) {
     bad.subroutines[2].frameOf = {Owner::Kind::Subroutine, 1};
     EXPECT_TRUE(mentions(verify(bad), "watch @2 reads another frame"));
     bad = d;  // a guard is no item
-    bad.processes[0].blocks[0].instrs[2] =
-        make(Op::WaitEvent, voidType(), kNone, {Operand::subroutine(3), Operand::block(1)}, 12);
+    bad.processes[0].blocks[0].instrs[2] = make(
+        Op::WaitEvent, voidType(), kNone, {Operand::subroutine(3), Operand::block(BlockId{1})}, 12);
     EXPECT_TRUE(mentions(verify(bad), "events must be slot ranges or watches"));
     bad = d;
     bad.processes[0].blocks[0].instrs[0] = make(Op::Call, u4(1), 0, {Operand::subroutine(2)}, 12);
@@ -978,7 +984,7 @@ TEST(Sir, ForkChildrenBelongToTheParent) {
     d.processes.push_back(std::move(child));
     d.processes[0].blocks[0].instrs[2] =
         make(Op::Fork, voidType(), kNone,
-             {Operand::process(1), Operand::str("join"), Operand::block(1)}, 12);
+             {Operand::process(1), Operand::str("join"), Operand::block(BlockId{1})}, 12);
     expectClean(d);
     d.processes[1].parent = {Owner::Kind::Process, 1};
     EXPECT_TRUE(mentions(verify(d), "has another parent"));
@@ -998,8 +1004,9 @@ TEST(Sir, ForkJoinNoneIsNotAWait) {
     auto& fb = d.subroutines[0].blocks;
     fb.resize(2);
     fb[1].instrs = {fb[0].instrs[2]};
-    fb[0].instrs[2] = make(Op::Fork, voidType(), kNone,
-                           {Operand::process(1), Operand::str("join_none"), Operand::block(1)}, 10);
+    fb[0].instrs[2] =
+        make(Op::Fork, voidType(), kNone,
+             {Operand::process(1), Operand::str("join_none"), Operand::block(BlockId{1})}, 10);
     expectClean(d);
     fb[0].instrs[2].operands[1].text = "join";
     EXPECT_TRUE(mentions(verify(d), "fork in a function"));

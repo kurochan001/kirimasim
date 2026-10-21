@@ -21,11 +21,15 @@ using SlotId = std::uint32_t;
 using InstanceId = std::uint32_t;
 using ConstId = std::uint32_t;
 using TempId = std::uint32_t;
-using BlockId = std::uint32_t;
+struct BlockTag;
+using BlockId = Id<BlockTag>;
 using TypeId = std::uint32_t;
 using FrameVarId = std::uint32_t;
 using SubroutineId = std::uint32_t;
 using ProcessId = std::uint32_t;
+
+/// Every body starts at its block 0, as the text form numbers them (bb0).
+inline constexpr BlockId kEntryBlock{0};
 
 /// Position in the source. Line and column start at 1; 0 means "missing".
 struct SourceLoc {
@@ -360,6 +364,10 @@ struct Operand {
     Edge edge = Edge::Any;    ///< An item of wait.event: the edge to wait for.
     std::string text;         ///< Text: system task or method name, or a word.
 
+    /// The row `id` names, as the kind of row it is; the verifier checks
+    /// that `kind` agrees.
+    [[nodiscard]] BlockId asBlock() const { return BlockId{id}; }
+
     static Operand of(Kind k, std::uint32_t id) {
         Operand o;
         o.kind = k;
@@ -380,7 +388,7 @@ struct Operand {
         return o;
     }
     static Operand block(BlockId b, std::uint32_t args = 0) {
-        Operand o = of(Kind::Block, b);
+        Operand o = of(Kind::Block, b.index());
         o.count = args;
         return o;
     }

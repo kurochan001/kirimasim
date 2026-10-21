@@ -104,19 +104,20 @@ Design swapDesign(Type t, Back back, const Value& a, const Value& b) {
     p.writes = {{0}, {1}};
     p.numTemps = 6;
     p.blocks.resize(back == Back::Br ? 4 : 3);
-    p.blocks[0].instrs = {none(Op::Br, {Operand::block(1, 3), A, zero, B})};
+    p.blocks[0].instrs = {none(Op::Br, {Operand::block(BlockId{1}, 3), A, zero, B})};
     p.blocks[1].params = {{tP, t}, {tN, u2(8)}, {tQ, t}};
-    std::vector<Operand> brIf = {Operand::temp(tD), Operand::block(2, 2), P, Q};
+    std::vector<Operand> brIf = {Operand::temp(tD), Operand::block(BlockId{2}, 2), P, Q};
     if (back == Back::BrIf)
-        brIf.insert(brIf.end(), {Operand::block(1, 3), Q, one, P});
+        brIf.insert(brIf.end(), {Operand::block(BlockId{1}, 3), Q, one, P});
     else
-        brIf.push_back(Operand::block(3));
+        brIf.push_back(Operand::block(BlockId{3}));
     p.blocks[1].instrs = {make(Op::Ceq, u2(1), tD, {N, one}), none(Op::BrIf, brIf)};
     p.blocks[2].params = {{tX, t}, {tY, t}};
     p.blocks[2].instrs = {none(Op::Store, {Operand::slot(0), Operand::temp(tX)}),
                           none(Op::Store, {Operand::slot(1), Operand::temp(tY)}),
                           none(Op::Ret, {})};
-    if (back == Back::Br) p.blocks[3].instrs = {none(Op::Br, {Operand::block(1, 3), Q, one, P})};
+    if (back == Back::Br)
+        p.blocks[3].instrs = {none(Op::Br, {Operand::block(BlockId{1}, 3), Q, one, P})};
     d.processes.push_back(std::move(p));
     return d;
 }

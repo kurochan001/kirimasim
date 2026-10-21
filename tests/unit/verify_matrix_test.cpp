@@ -187,7 +187,7 @@ std::vector<Case> cases() {
         {"wait.delay of a real", "needs an integral delay",
          [](Design& d) {
              auto& instrs = d.processes[0].blocks[0].instrs;
-             instrs.back() = none(Op::WaitDelay, {Operand::temp(tR), Operand::block(1)});
+             instrs.back() = none(Op::WaitDelay, {Operand::temp(tR), Operand::block(BlockId{1})});
              d.processes[0].blocks.push_back({{}, {none(Op::Ret, {})}});
          }},
         {"no result", "needs a result", add(make(Op::Add, voidType(), kNone, {A, A}))},
@@ -300,7 +300,7 @@ std::vector<Case> cases() {
          add(none(Op::DriveDelay, {A, A, C2, C2, C2}))},
         {"block arguments", "block arguments are missing",
          [](Design& d) {
-             Operand b = Operand::block(0);
+             Operand b = Operand::block(BlockId{0});
              b.count = 2;
              add(none(Op::Br, {b})).apply(d);
          }},
@@ -335,20 +335,21 @@ std::vector<Case> cases() {
         {"wait.event", "needs at least one event and a block", add(none(Op::WaitEvent, {}))},
         {"wait.event events",
          "events must be slot ranges or watches, each with an optional iff guard",
-         add(none(Op::WaitEvent, {A, Operand::block(0)}))},
-        {"wait.cond", "needs a guard", add(none(Op::WaitCond, {A, Operand::block(0)}))},
+         add(none(Op::WaitEvent, {A, Operand::block(BlockId{0})}))},
+        {"wait.cond", "needs a guard", add(none(Op::WaitCond, {A, Operand::block(BlockId{0})}))},
         {"wait.cond of a function", "is not a guard",
-         add(none(Op::WaitCond, {Operand::subroutine(0), Operand::block(0)}))},
+         add(none(Op::WaitCond, {Operand::subroutine(0), Operand::block(BlockId{0})}))},
         {"wait.named", "needs an event slot",
-         add(none(Op::WaitNamed, {Operand::slot(sA), Operand::block(0)}))},
+         add(none(Op::WaitNamed, {Operand::slot(sA), Operand::block(BlockId{0})}))},
         {"fork", "needs processes, a join kind and a block", add(none(Op::Fork, {}))},
         {"fork join kind", "join kind must be join, join_any or join_none",
-         add(none(Op::Fork, {Operand::process(0), Operand::str("join_all"), Operand::block(0)}))},
+         add(none(Op::Fork,
+                  {Operand::process(0), Operand::str("join_all"), Operand::block(BlockId{0})}))},
         {"fork children", "children must be processes",
-         add(none(Op::Fork, {A, Operand::str("join"), Operand::block(0)}))},
+         add(none(Op::Fork, {A, Operand::str("join"), Operand::block(BlockId{0})}))},
         {"call.task", "needs a task and a block", add(none(Op::CallTask, {}))},
         {"call.task of a function", "calls only tasks that may wait",
-         add(none(Op::CallTask, {Operand::subroutine(0), Operand::block(0)}))},
+         add(none(Op::CallTask, {Operand::subroutine(0), Operand::block(BlockId{0})}))},
 
         // Tables, subroutines and processes (SIR_SPEC.md 2 to 4, 7, 8).
         {"instance order", "parent must come before the child",
@@ -473,7 +474,8 @@ std::vector<Case> cases() {
              d.processes.push_back(p);
          }},
         {"no blocks", "has no blocks", [](Design& d) { d.subroutines[0].blocks.clear(); }},
-        {"branch target", "branch target out of range", add(none(Op::Br, {Operand::block(9)}))},
+        {"branch target", "branch target out of range",
+         add(none(Op::Br, {Operand::block(BlockId{9})}))},
         {"temp range", "out of range", add(make(Op::Add, u4(8), 99, {A, A}))},
     };
 }
