@@ -36,7 +36,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 10
+VERSION = 11
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -72,8 +72,8 @@ STATEMENTS = [
      False),
     ("display_d_string", "  string s = \"ab\";\n", "$display(\"%d\", «»s);", "%d of a string",
      False),
-    ("dist_normal", "  int seed = 1, y;\n", "y = «»$dist_normal(seed, 0, 1);",
-     "system function $dist_normal", False),
+    ("system_function", "  int y;\n", "y = «»$system(\"x\");",
+     "system function $system", False),
     ("sdf_annotate", "", "«»$sdf_annotate(\"x.sdf\");", "system task $sdf_annotate", False),
     ("event_var_index", "  event ev[2];\n  int i;\n", "@(«»ev[i]);",
      "event selected by an index that is not constant", True),
