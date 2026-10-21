@@ -98,6 +98,12 @@ own. CONTRIBUTING.md says what goes in this file.
   a file that cannot be read ends the run with code 2 (SYSTEM_TASKS.md 7).
   Before, each was reported as unsupported. `$readmem` into a memory of an
   enumerated type is still reported as unsupported.
+- `$random` and `$dist_uniform`, `$dist_normal`, `$dist_exponential`,
+  `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang`, which
+  give the values of IEEE 1800-2023 Annex N, written from a description in
+  SYSTEM_TASKS.md 12; an argument of 0 or less where it is to be above 0
+  gives the warning `kirima-dist-argument`. Before, each was reported as
+  unsupported.
 
 ### Changed
 

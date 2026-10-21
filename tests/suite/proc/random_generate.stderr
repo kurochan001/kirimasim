@@ -1,0 +1,5 @@
+random_generate.sv:227:11: warning: $dist_exponential: the mean is 0 or less; the result is 0
+random_generate.sv:228:15: warning: $dist_poisson: the mean is 0 or less; the result is 0
+random_generate.sv:229:15: warning: $dist_chi_square: the degree of freedom is 0 or less; the result is 0
+random_generate.sv:230:15: warning: $dist_t: the degree of freedom is 0 or less; the result is 0
+random_generate.sv:231:15: warning: $dist_erlang: k_stage is 0 or less; the result is 0

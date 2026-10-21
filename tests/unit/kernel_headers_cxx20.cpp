@@ -9,6 +9,7 @@
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/memfile.h"
+#include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/store.h"

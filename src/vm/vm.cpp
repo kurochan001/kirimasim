@@ -20,6 +20,7 @@
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/memfile.h"
+#include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/udp.h"
@@ -84,6 +85,8 @@ enum class SysTask : std::uint8_t {
     FError,
     ReadMem,
     WriteMem,
+    Random,
+    Dist,
     Unknown,
 };
 
@@ -238,6 +241,8 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$ferror") return SysTask::FError;
     if (name == "$readmemb" || name == "$readmemh") return SysTask::ReadMem;
     if (name == "$writememb" || name == "$writememh") return SysTask::WriteMem;
+    if (name == "$random") return SysTask::Random;
+    if (name.starts_with("$dist_")) return SysTask::Dist;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -270,6 +275,7 @@ SysTask resolveSysTask(std::string_view name) {
 std::size_t minOperands(SysTask t) {
     switch (t) {
         case SysTask::FSeek: return 4;
+        case SysTask::Dist: return 3;
         case SysTask::Fatal:
         case SysTask::Math2:
         case SysTask::FGets:
@@ -547,8 +553,8 @@ class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
-          files_(ctx.files()), strings_(ctx.strings()), counters_(ctx.counters()),
-          options_(options) {
+          files_(ctx.files()), randomSeed_(ctx.randomSeed()), strings_(ctx.strings()),
+          counters_(ctx.counters()), options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         constOff_.reserve(d.constants.size());
@@ -845,6 +851,7 @@ private:
     kernel::Store& store_;
     kernel::Output& output_;
     kernel::Files& files_;
+    std::int32_t& randomSeed_;  ///< $random with no argument (SYSTEM_TASKS.md 12.3).
     kernel::Strings& strings_;
     /// The places that gave a run-time warning, which each gives once
     /// (UNSPECIFIED_BEHAVIOR.md 4).
@@ -4243,6 +4250,49 @@ private:
             }
             case SysTask::ReadMem:
             case SysTask::WriteMem: return memoryFile(p, in, info.task == SysTask::ReadMem);
+            case SysTask::Random:
+            case SysTask::Dist: {
+                // (frame variable of the seed, arguments...): the seed is
+                // the frame variable's low 32 bits, which the function
+                // updates; $random alone uses the Context's seed (SYSTEM_TASKS.md 12).
+                const bool own = ops.size() > 1;
+                std::int32_t local =
+                    own ? static_cast<std::int32_t>(frameVar(ops[1].id).a) : randomSeed_;
+                const auto arg = [&](std::size_t i) {
+                    return static_cast<std::int32_t>(value(ops[i]).a);
+                };
+                const std::string_view name = ops[0].text;
+                kernel::DistResult r;
+                if (info.task == SysTask::Random)
+                    r.value = kernel::randomInt(local);
+                else if (name == "$dist_uniform")
+                    r = kernel::distUniform(local, arg(2), arg(3));
+                else if (name == "$dist_normal")
+                    r = kernel::distNormal(local, arg(2), arg(3));
+                else if (name == "$dist_exponential")
+                    r = kernel::distExponential(local, arg(2));
+                else if (name == "$dist_poisson")
+                    r = kernel::distPoisson(local, arg(2));
+                else if (name == "$dist_chi_square")
+                    r = kernel::distChiSquare(local, arg(2));
+                else if (name == "$dist_t")
+                    r = kernel::distT(local, arg(2));
+                else
+                    r = kernel::distErlang(local, arg(2), arg(3));
+                if (r.badArgument)
+                    warnOnce(in, std::string(name) + ": " +
+                                     (name == "$dist_erlang" ? "k_stage"
+                                      : name == "$dist_chi_square" || name == "$dist_t"
+                                          ? "the degree of freedom"
+                                          : "the mean") +
+                                     " is 0 or less; the result is 0");
+                if (own)
+                    frameVar(ops[1].id) = {static_cast<std::uint32_t>(local), 0};
+                else
+                    randomSeed_ = local;
+                temp(in.result) = {static_cast<std::uint32_t>(r.value), 0};
+                return true;
+            }
             case SysTask::FClose:
                 if (!files_.close(value(ops[1])))
                     warnOnce(in, "$fclose: " + notOpenText(value(ops[1])));

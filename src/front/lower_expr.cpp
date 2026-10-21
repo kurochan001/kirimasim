@@ -1263,6 +1263,45 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val c = coerce(lowerExpr(*args[0]), sir::u2(8), sl);
                 return coerce(sys(sir::s2(32), {c.op, lowerDescriptor(*args[1], sl).op}), rt, sl);
             }
+            if ((name == "$random" && args.size() <= 1) ||
+                (name.starts_with("$dist_") && !args.empty())) {
+                // $random([seed]) and $dist_*(seed, arguments...): the seed
+                // variable's low 32 bits, x and z as 0, go to a frame
+                // variable that the syscall updates; the variable gets it
+                // back, sign-extended, when it changed. $random alone uses
+                // the Context's seed (SYSTEM_TASKS.md 12.3).
+                // The arguments after the seed, as 32-bit integers.
+                const auto call32 = [&](std::vector<Operand> ops) {
+                    for (std::size_t i = 1; i < args.size(); ++i)
+                        ops.push_back(coerce(lowerExpr(*args[i]), sir::s2(32), sl).op);
+                    return sys(sir::s2(32), std::move(ops));
+                };
+                if (args.empty()) return coerce(call32({}), rt, sl);
+                // slang gives $random its seed converted to int.
+                const ast::Expression* seed = &outTarget(args[0])->unwrapImplicitConversions();
+                if (seed->kind != ast::ExpressionKind::NamedValue &&
+                    seed->kind != ast::ExpressionKind::HierarchicalValue &&
+                    seed->kind != ast::ExpressionKind::ElementSelect &&
+                    seed->kind != ast::ExpressionKind::RangeSelect &&
+                    seed->kind != ast::ExpressionKind::MemberAccess)
+                    error(sl, "the seed of " + name + " is to be a variable (20.14.1)");
+                if (!seed->type->isIntegral() || seed->type->getBitWidth() < 32)
+                    unsupported(sl, name + " with a seed variable narrower than 32 bits");
+                const sir::FrameVarId f = newFrameVar(sir::s2(32));
+                const Val before = coerce(lowerExpr(*seed), sir::s2(32), sl);
+                emitVoid(Op::Fstore, {Operand::frame(f), before.op}, sl);
+                const Val r = call32({Operand::frame(f)});
+                const Val after = emit(Op::Fload, sir::s2(32), {Operand::frame(f)}, sl);
+                const Val changed = emit(Op::Ne, sir::u2(1), {after.op, before.op}, sl);
+                const sir::BlockId store = newBlock();
+                const sir::BlockId next = newBlock();
+                terminate(Op::BrIf, {changed.op, Operand::block(store), Operand::block(next)}, sl);
+                setBlock(store);
+                lowerStore(*seed, coerce(after, typeOf(*seed->type, sl), sl), false, sl);
+                terminate(Op::Br, {Operand::block(next)}, sl);
+                setBlock(next);
+                return coerce(r, rt, sl);
+            }
             if (name == "$fseek" && args.size() == 3) {
                 const Val d = lowerDescriptor(*args[0], sl);
                 const Val offset = coerce(lowerExpr(*args[1]), integral(true, true, 32), sl);
@@ -3325,7 +3364,7 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     }
     if (name == "$fopen" || name == "$fgets" || name == "$fgetc" || name == "$ungetc" ||
         name == "$fread" || name == "$ftell" || name == "$fseek" || name == "$rewind" ||
-        name == "$feof" || name == "$ferror") {
+        name == "$feof" || name == "$ferror" || name == "$random" || name.starts_with("$dist_")) {
         (void)lowerExpr(call);  // its value unused
         return;
     }

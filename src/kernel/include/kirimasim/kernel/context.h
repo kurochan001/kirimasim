@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cstdio>
 
 #include "kirimasim/kernel/counters.h"
@@ -40,6 +41,9 @@ public:
     Strings& strings() { return strings_; }
     [[nodiscard]] const Strings& strings() const { return strings_; }
     [[nodiscard]] const Store& store() const { return store_; }
+    /// The seed of $random with no argument: one for the whole simulation,
+    /// starting at 0 (SYSTEM_TASKS.md 12.3).
+    std::int32_t& randomSeed() { return randomSeed_; }
 
 private:
     Counters counters_;
@@ -48,6 +52,7 @@ private:
     Store store_;
     Strings strings_;
     Scheduler scheduler_;
+    std::int32_t randomSeed_ = 0;
 };
 
 /// The C handle of a context (abi.h), and back.

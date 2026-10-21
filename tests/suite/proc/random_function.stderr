@@ -1,0 +1,5 @@
+random_function.sv:194:9: warning: $dist_exponential: the mean is 0 or less; the result is 0
+random_function.sv:195:13: warning: $dist_poisson: the mean is 0 or less; the result is 0
+random_function.sv:196:13: warning: $dist_chi_square: the degree of freedom is 0 or less; the result is 0
+random_function.sv:197:13: warning: $dist_t: the degree of freedom is 0 or less; the result is 0
+random_function.sv:198:13: warning: $dist_erlang: k_stage is 0 or less; the result is 0
