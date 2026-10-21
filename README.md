@@ -62,13 +62,13 @@ Verilog and Verilator built from their main branches that day. kirimasim's
 sv-tests and own-suite results were measured again on 2026-10-21 at
 1a780fc, after file input came: sv-tests went from 195 to 201, and the
 own suite did not change. The repository's tests were counted after
-`$stime`, `$timeunit` and `%l` came the same day, in the dev
+`$stime`, `$timeunit`, `%l` and `$readmem` came the same day, in the dev
 configuration (release adds one, the run to the default of
 `--max-slot-events`).
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 1,028 | 1,026, 2 skipped | — | — |
+| This repository's tests (CTest) | 1,036 | 1,034, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 201 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
@@ -149,10 +149,10 @@ and 1,133 of the own test suite.
 | Kind | Tests | What they check |
 | --- | --- | --- |
 | Unit tests (GoogleTest) | 168 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (9), time scales (7), UDP tables (4), counters (4), the Context (2), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
-| `tests/suite/` | 726 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (293), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
+| `tests/suite/` | 733 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (300), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
 | State and Contexts | 4 | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
-| Tools | 99 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
+| Tools | 100 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
 | Command line, event counts | 2 | Options and messages, the matrix of unsupported constructs (80 designs: each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`), loops that never advance time (9 designs, stopped by `--max-slot-events`), SIGINT (9 designs, on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them (141 calls in 2 designs), the positions of block statements in `--dump-sir` (144), writes to what `always_comb`, `always_latch` and `always_ff` write through tasks (9) and through the actions of deferred assertions (39); the counts of a fixed run (PerfCount) |
 
 </details>
@@ -320,7 +320,8 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   `$value$plusargs`; file output (`$fopen`, `$fclose`, `$fflush`,
   `$fdisplay`, `$fwrite`, `$fstrobe`, `$fmonitor`, with the `b`, `o`, `h`
   forms) and file input (`$fgetc`, `$ungetc`, `$fgets`, `$fscanf`,
-  `$fread`, `$ftell`, `$fseek`, `$rewind`, `$feof`, `$ferror`, and STDIN).
+  `$fread`, `$ftell`, `$fseek`, `$rewind`, `$feof`, `$ferror`, and STDIN);
+  `$readmemb`, `$readmemh`, `$writememb` and `$writememh`.
 - **Scheduling:** every region of the IEEE 1800-2023 time slot with the
   reference algorithm, including pending reports confirmed in the Observed
   region and `$strobe`/`$monitor` in the Postponed region.
@@ -329,7 +330,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 | Not yet | Planned |
 | --- | --- |
-| `$fread` into unpacked structures and unions, `$readmemh`/`$writememh`, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), the `%p` format, `$stacktrace`, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`) | P1 |
+| `$fread` into unpacked structures and unions, `$readmem` into memories of an enumerated type, `$random`/`$urandom`, waveforms (`$dumpvars`, VCD and FST), the `%p` format, `$stacktrace`, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`) | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
@@ -487,9 +488,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 96 generators, 726 tests in `tests/suite/`, and 1,028
+  rules. There are 97 generators, 733 tests in `tests/suite/`, and 1,036
   CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 325 known mistakes in the
+- **Negative controls.** `tools/mutants.py` plants 334 known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
