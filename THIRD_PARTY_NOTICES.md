@@ -23,15 +23,13 @@ does not ask this of copies that are solely machine-executable object code.
 | slang | main after v12.0 (`b6c67a8b06c6b98fbc1eaeaf0d7bf734e1b86dfa`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
 | {fmt} (fetched by slang) | 12.2.0 (`1be298e1bd68957e4cd352e1f676f00e07dcfb57`) | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
 | mimalloc (fetched by slang) | v3.5.3 (`d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45`) | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
-| toml++ (fetched by slang) | v3.4.0 (`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`) | MIT | Copyright (c) Mark Gillard (note 1) | https://github.com/marzer/tomlplusplus |
+| toml++ (fetched by slang) | v3.4.0 (`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`) | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
 | BS::thread_pool (in slang's `external/BS_thread_pool.hpp`, with slang's changes) | 5.1.0 | MIT | Copyright (c) 2021-2026 Barak Shoshany | https://github.com/bshoshany/thread-pool |
-| Boost.Regex (fetched by slang, from slang's copy) | boost-1.91.0 (`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`) | BSL-1.0 | John Maddock and others, in the headers of the files (note 2) | https://github.com/MikePopoloski/regex |
+| Boost.Regex (fetched by slang, from slang's copy) | boost-1.91.0 (`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`) | BSL-1.0 | John Maddock and others, in the headers of the files (note 1) | https://github.com/MikePopoloski/regex |
 | Boost.Unordered and Boost's concurrent containers (in slang's `external/boost_unordered.hpp` and `external/boost_concurrent.hpp`) | Boost 1.91.0 (slang commit `31d0107c8`) | BSL-1.0 | Peter Dimov, Joaquin M Lopez Munoz, Christian Mazakas, Braden Ganetsky, Daniel James and others, in the headers of the files | https://github.com/MikePopoloski/slang |
 | expected-lite (in slang's `external/expected.hpp`) | 0.9.0 | BSL-1.0 | Copyright (C) 2016-2025 Martin Moene | https://github.com/nonstd-lite/expected-lite |
 
-1. The fetched `LICENSE` file gives an e-mail address after the name; it is
-   left out here.
-2. The fetched tree of Boost.Regex has no license file of its own; the
+1. The fetched tree of Boost.Regex has no license file of its own; the
    headers of its files say that they are distributed under the Boost
    Software License 1.0.
 

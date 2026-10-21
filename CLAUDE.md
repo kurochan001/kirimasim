@@ -94,7 +94,7 @@ Changes that change, remove or loosen existing expected values (existing items o
 - Private design material (the originals of design specifications, figures, reports). Documents in the repository are summaries rewritten from them.
 - The name, code or internal information of the private predecessor project.
 - Copies of the text, figures or example code of IEEE 1800 (giving clause numbers and summarizing in your own words is fine).
-- Absolute paths of home directories, user names, email addresses (except GitHub noreply addresses and the contact in `CODE_OF_CONDUCT.md`), machine identifiers.
+- Absolute paths of home directories, user names, email addresses (except GitHub noreply addresses, the contact in `CODE_OF_CONDUCT.md`, and those in the copyright notices of third-party licences, which `THIRD_PARTY_NOTICES.md` reproduces as they are), machine identifiers.
 - Information about workplaces or work.
 - Output of commercial simulators.
 

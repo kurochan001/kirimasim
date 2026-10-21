@@ -13,14 +13,13 @@ kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions 
 | slang | v12.0 の後の main（`b6c67a8b06c6b98fbc1eaeaf0d7bf734e1b86dfa`） | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
 | {fmt}（slang が取得する） | 12.2.0（`1be298e1bd68957e4cd352e1f676f00e07dcfb57`） | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
 | mimalloc（slang が取得する） | v3.5.3（`d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45`） | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
-| toml++（slang が取得する） | v3.4.0（`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`） | MIT | Copyright (c) Mark Gillard（注 1） | https://github.com/marzer/tomlplusplus |
+| toml++（slang が取得する） | v3.4.0（`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`） | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
 | BS::thread_pool（slang の `external/BS_thread_pool.hpp`。slang が手を加えている） | 5.1.0 | MIT | Copyright (c) 2021-2026 Barak Shoshany | https://github.com/bshoshany/thread-pool |
-| Boost.Regex（slang が取得する。slang の複製） | boost-1.91.0（`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`） | BSL-1.0 | John Maddock ほか。各ファイルの先頭に書かれている（注 2） | https://github.com/MikePopoloski/regex |
+| Boost.Regex（slang が取得する。slang の複製） | boost-1.91.0（`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`） | BSL-1.0 | John Maddock ほか。各ファイルの先頭に書かれている（注 1） | https://github.com/MikePopoloski/regex |
 | Boost.Unordered と Boost の並行コンテナ（slang の `external/boost_unordered.hpp` と `external/boost_concurrent.hpp`） | Boost 1.91.0（slang のコミット `31d0107c8`） | BSL-1.0 | Peter Dimov、Joaquin M Lopez Munoz、Christian Mazakas、Braden Ganetsky、Daniel James ほか。ファイルの先頭に書かれている | https://github.com/MikePopoloski/slang |
 | expected-lite（slang の `external/expected.hpp`） | 0.9.0 | BSL-1.0 | Copyright (C) 2016-2025 Martin Moene | https://github.com/nonstd-lite/expected-lite |
 
-1. 取得した `LICENSE` ファイルには、名前の後にメールアドレスがあります。ここでは省きました。
-2. 取得した Boost.Regex の木には、それ自身のライセンスのファイルがありません。各ファイルの先頭に、Boost Software License 1.0 で配布すると書かれています。
+1. 取得した Boost.Regex の木には、それ自身のライセンスのファイルがありません。各ファイルの先頭に、Boost Software License 1.0 で配布すると書かれています。
 
 slang が取得する部品の版は、その slang のコミットが自分の `external/CMakeLists.txt` で固定しているものです。slang の `external/` は v12.0 と同じです。slang は静的ライブラリとしてビルドされ、実行ファイルにリンクされます。2026-10-21 に、`kirimasim` の release ビルドを `nm` で調べ、上の部品それぞれのシンボルを見つけました。expected-lite だけはシンボルが見えませんが、slang のヘッダが取り込むので挙げています。BS::thread_pool の作者は、使うソフトウェアにそのリポジトリへのリンクを求めています。取得元の列がそのリンクです。
 
