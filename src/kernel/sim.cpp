@@ -596,14 +596,15 @@ void Scheduler::execute(const Event& e) {
             scratch_.assign(arena_.begin() + static_cast<std::ptrdiff_t>(n.arenaOffset),
                             arena_.begin() + static_cast<std::ptrdiff_t>(n.arenaOffset + n.words));
             const std::vector<std::uint64_t> value = scratch_;
-            write(n.slot, n.elem, n.lsb, n.width, value.data());
+            write({.slot = n.slot, .elem = n.elem, .lsb = n.lsb, .width = n.width}, value.data());
             return;
         }
         case Kind::NbaDelayed: {
             NbaRecord& n = delayedNbas_[e.id];
             const std::vector<std::uint64_t> value = std::move(n.value);
             const NbaRecord where = n;
-            write(where.slot, where.elem, where.lsb, where.width, value.data());
+            write({.slot = where.slot, .elem = where.elem, .lsb = where.lsb, .width = where.width},
+                  value.data());
             delayedNbas_[e.id].value.clear();
             freeDelayedNbas_.push_back(e.id);
             return;
@@ -633,7 +634,7 @@ void Scheduler::execute(const Event& e) {
             if (!d.pending || d.gen != e.gen) return;  // dropped
             d.pending = false;
             const std::vector<std::uint64_t> value = d.value;
-            write(d.slot, d.elem, d.lsb, d.width, value.data());
+            write({.slot = d.slot, .elem = d.elem, .lsb = d.lsb, .width = d.width}, value.data());
             return;
         }
     }
@@ -720,8 +721,8 @@ void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
 
 // --- Effects -----------------------------------------------------------------
 
-bool Scheduler::write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
-                      const std::uint64_t* value) {
+bool Scheduler::write(SlotBits at, const std::uint64_t* value) {
+    auto [s, elem, lsb, width] = at;
     if (heldOf_.empty() || heldOf_[s.index()] == kNotHeld)
         return writeRaw(s, elem, lsb, width, value);
     // A held slot: the write goes to the value of the ordinary writes,
@@ -767,8 +768,8 @@ void Scheduler::hold(Hold level, ProcessId owner, const SlotPart& part) {
             who[std::uint64_t{e} * l.width + i] = owner;
 }
 
-void Scheduler::writeHeld(Hold level, ProcessId owner, SlotId s, std::uint32_t elem,
-                          std::uint32_t lsb, std::uint32_t width, const std::uint64_t* value) {
+void Scheduler::writeHeld(Hold level, ProcessId owner, SlotBits at, const std::uint64_t* value) {
+    auto [s, elem, lsb, width] = at;
     Held& h = held_[heldOf_[s.index()]];
     const SlotLayout& l = store_.layout(s);
     if (width == 0) {
@@ -1020,8 +1021,9 @@ void Scheduler::evaluateMonitor(std::uint32_t id) {
     if (fire) wake(again.process, true);  // frees the record; a flush point (15.4)
 }
 
-void Scheduler::scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint32_t lsb,
-                            std::uint32_t width, const std::uint64_t* value, std::uint64_t delay) {
+void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value,
+                            std::uint64_t delay) {
+    auto [s, elem, lsb, width] = at;
     begin();
     const SlotLayout& l = store_.layout(s);
     const std::uint32_t bits = width == 0 ? l.width : width;
@@ -1059,9 +1061,9 @@ std::uint32_t Scheduler::addDelayedDriver() {
     return static_cast<std::uint32_t>(drivers_.size() - 1);
 }
 
-void Scheduler::driveDelayed(std::uint32_t driver, SlotId s, std::uint32_t elem, std::uint32_t lsb,
-                             std::uint32_t width, const std::uint64_t* value, std::uint64_t rise,
-                             std::uint64_t fall, std::uint64_t off) {
+void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint64_t* value,
+                             std::uint64_t rise, std::uint64_t fall, std::uint64_t off) {
+    auto [s, elem, lsb, width] = at;
     begin();
     const SlotLayout& l = store_.layout(s);
     if (width == 0) {

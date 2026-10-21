@@ -153,10 +153,10 @@ public:
         return ctx_.store().element(k::SlotId{slot}, 0)[0];
     }
     void write(std::uint32_t slot, std::uint64_t v) override {
-        ctx_.scheduler().write(k::SlotId{slot}, 0, 0, 0, &v);
+        ctx_.scheduler().write({.slot = k::SlotId{slot}}, &v);
     }
     void nba(std::uint32_t p, std::uint32_t slot, std::uint64_t v, std::uint64_t d) override {
-        ctx_.scheduler().scheduleNba(k::ProcessId{p}, k::SlotId{slot}, 0, 0, 0, &v, d);
+        ctx_.scheduler().scheduleNba(k::ProcessId{p}, {.slot = k::SlotId{slot}}, &v, d);
     }
     void waitDelay(std::uint32_t p, std::uint64_t d) override {
         ctx_.scheduler().waitDelay(k::ProcessId{p}, d);
@@ -648,11 +648,11 @@ TEST(Scheduler, PosedgeOnFourStateSlots) {
     const k::ProcessId p = s.addProcess(&logOnce, &w, Group::Active);
     const k::WaitItem item{{slot, 0, 0, 0, 0}, Edge::Pos, nullptr, nullptr};
     s.waitEvent(p, {&item, 1});
-    const std::uint64_t one[2] = {1, 0};  // a = 1, b = 0: a known 1
-    s.write(slot, 0, 3, 1, one);          // bit 3: x -> 1; bit 0 stays x
+    const std::uint64_t one[2] = {1, 0};                 // a = 1, b = 0: a known 1
+    s.write({.slot = slot, .lsb = 3, .width = 1}, one);  // bit 3: x -> 1; bit 0 stays x
     s.run();
     EXPECT_TRUE(log.empty());
-    s.write(slot, 0, 0, 1, one);  // bit 0: x -> 1, a posedge
+    s.write({.slot = slot, .width = 1}, one);  // bit 0: x -> 1, a posedge
     s.run();
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
@@ -670,14 +670,14 @@ TEST(Scheduler, IffGuardIsReadOnlyWhenTheEventOccurs) {
     s.waitEvent(p, {&item, 1});
     const std::uint64_t one = 1;
     const std::uint64_t zero = 0;
-    s.write(en, 0, 0, 0, &one);  // the guard alone changing does nothing
+    s.write({.slot = en}, &one);  // the guard alone changing does nothing
     EXPECT_EQ(g.calls, 0);
-    s.write(clk, 0, 0, 0, &one);  // posedge, guard false: keep waiting
+    s.write({.slot = clk}, &one);  // posedge, guard false: keep waiting
     EXPECT_EQ(g.calls, 1);
-    s.write(clk, 0, 0, 0, &zero);  // negedge: guard not read
+    s.write({.slot = clk}, &zero);  // negedge: guard not read
     EXPECT_EQ(g.calls, 1);
     g.value = true;
-    s.write(clk, 0, 0, 0, &one);
+    s.write({.slot = clk}, &one);
     EXPECT_EQ(g.calls, 2);
     s.run();
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
@@ -707,7 +707,7 @@ void evalAndWrite(kirima_context* ctx, void* frame, std::uint64_t* out) {
     const auto* f = static_cast<WritingFrame*>(frame);
     out[0] = k::fromC(ctx).store().element(f->read, 0)[0] & 1U;
     const std::uint64_t v = out[0] + 1;
-    k::fromC(ctx).scheduler().write(f->written, 0, 0, 0, &v);
+    k::fromC(ctx).scheduler().write({.slot = f->written}, &v);
 }
 
 /// An iff that also triggers a named event.
@@ -765,7 +765,7 @@ TEST(Scheduler, ChangesMadeWhileWalkingAreAnnouncedAfterTheWalk) {
         const k::ProcessId q2 = s.addProcess(&logOnce, &wq2, Group::Active);
         s.waitMonitor(q2, mb);  // b & 1 is 1
         const std::uint64_t one = 1;
-        s.write(a, 0, 0, 0, &one);  // a & 1 becomes 1; writes b = 2: b & 1 becomes 0
+        s.write({.slot = a}, &one);  // a & 1 becomes 1; writes b = 2: b & 1 becomes 0
         s.run();
         std::sort(log.begin(), log.end());
         EXPECT_EQ(log, (std::vector<std::string>{"p@0", "q2@0"}));
@@ -787,7 +787,7 @@ TEST(Scheduler, ChangesMadeWhileWalkingAreAnnouncedAfterTheWalk) {
         const k::WaitItem item{{a, 0, 0, 0, 0}, Edge::Any, &guardAndTrigger, &f};
         s.waitAny(p, {&item, 1}, {});
         const std::uint64_t one = 1;
-        s.write(a, 0, 0, 0, &one);
+        s.write({.slot = a}, &one);
         s.run();
         std::sort(log.begin(), log.end());
         EXPECT_EQ(log, (std::vector<std::string>{"p@0", "r@0"}));
@@ -819,7 +819,7 @@ TEST(Scheduler, ChangesMadeWhileWalkingAreAnnouncedAfterTheWalk) {
         ma.width = 1;
         s.waitMonitor(p, ma);  // a & 1 is 0
         const std::uint64_t one = 1;
-        s.write(a, 0, 0, 0, &one);  // a & 1 becomes 1, and e is triggered
+        s.write({.slot = a}, &one);  // a & 1 becomes 1, and e is triggered
         s.run();
         EXPECT_EQ(log, std::vector<std::string>{"p@0"});
     }
@@ -834,7 +834,7 @@ TEST(Scheduler, MonitorWakesOnlyWhenTheValueChanges) {
     const std::uint64_t one = 1;
     const std::uint64_t three = 3;
     const std::uint64_t two = 2;
-    s.write(a, 0, 0, 0, &one);
+    s.write({.slot = a}, &one);
     std::vector<std::string> log;
     Waiter w{&log, "w"};
     BitFrame f{a};
@@ -846,10 +846,10 @@ TEST(Scheduler, MonitorWakesOnlyWhenTheValueChanges) {
     m.domain = k::Domain::Two;
     m.width = 1;
     s.waitMonitor(p, m);
-    s.write(a, 0, 0, 0, &three);  // a & 1 stays 1
+    s.write({.slot = a}, &three);  // a & 1 stays 1
     s.run();
     EXPECT_TRUE(log.empty());
-    s.write(a, 0, 0, 0, &two);  // a & 1 becomes 0
+    s.write({.slot = a}, &two);  // a & 1 becomes 0
     s.run();
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
@@ -880,12 +880,12 @@ TEST(Scheduler, MixedWaitEndsAtItsFirstItem) {
     s.waitAny(p, {&item, 1}, mons);
     const std::uint64_t two = 2;
     const std::uint64_t one = 1;
-    s.write(a, 0, 0, 0, &two);  // a & 1 stays 0
+    s.write({.slot = a}, &two);  // a & 1 stays 0
     s.run();
     EXPECT_TRUE(log.empty());
-    s.write(b, 0, 0, 0, &one);  // b & 1 becomes 1: wakes
-    s.write(a, 0, 0, 0, &one);  // the other items are gone
-    s.write(clk, 0, 0, 0, &one);
+    s.write({.slot = b}, &one);  // b & 1 becomes 1: wakes
+    s.write({.slot = a}, &one);  // the other items are gone
+    s.write({.slot = clk}, &one);
     s.run();
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
@@ -946,9 +946,9 @@ TEST(Scheduler, WaitListsDoNotGrowWithTheItemsLeftBehind) {
     const std::uint64_t zero = 0;
     const auto clocks = [&](int n) {
         for (int c = 0; c < n; ++c) {
-            s.write(clk, 0, 0, 0, &one);
+            s.write({.slot = clk}, &one);
             s.run();
-            s.write(clk, 0, 0, 0, &zero);
+            s.write({.slot = clk}, &zero);
             s.run();
             // A process killed while it waits on the event.
             const k::ProcessId q = s.addProcess(&logOnce, &w, Group::Active);
@@ -994,14 +994,14 @@ TEST(Scheduler, MonitorIffIsReadOnlyWhenItsEventOccurs) {
     const std::uint64_t two = 2;
     const std::uint64_t one = 1;
     const std::uint64_t zero = 0;
-    s.write(a, 0, 0, 0, &two);  // the value stays 0: guard not read
+    s.write({.slot = a}, &two);  // the value stays 0: guard not read
     EXPECT_EQ(g.calls, 0);
-    s.write(a, 0, 0, 0, &one);  // posedge, guard false: keep waiting
+    s.write({.slot = a}, &one);  // posedge, guard false: keep waiting
     EXPECT_EQ(g.calls, 1);
-    s.write(a, 0, 0, 0, &zero);  // negedge: guard not read
+    s.write({.slot = a}, &zero);  // negedge: guard not read
     EXPECT_EQ(g.calls, 1);
     g.value = true;
-    s.write(a, 0, 0, 0, &one);
+    s.write({.slot = a}, &one);
     EXPECT_EQ(g.calls, 2);
     s.run();
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
@@ -1071,10 +1071,10 @@ TEST(KernelAbi, WaitAnyTakesMonitorItemsWithIff) {
     api->wait_any(k::toC(ctx), p, nullptr, 0, &item, 1);
     const std::uint64_t one = 1;
     const std::uint64_t zero = 0;
-    s.write(a, 0, 0, 0, &one);  // guard false
-    s.write(a, 0, 0, 0, &zero);
+    s.write({.slot = a}, &one);  // guard false
+    s.write({.slot = a}, &zero);
     g.value = true;
-    s.write(a, 0, 0, 0, &one);
+    s.write({.slot = a}, &one);
     s.run();
     EXPECT_EQ(g.calls, 2);
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});

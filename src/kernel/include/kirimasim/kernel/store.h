@@ -16,6 +16,17 @@ struct SlotTag;
 using SlotId = Id<SlotTag>;
 
 /// Storage domain of a slot (SIR_SPEC.md 3.2).
+/// Bits [lsb, lsb + width) of element `elem` of a slot (width 0: the
+/// whole element). The writers take one of these rather than three plain
+/// numbers in a row, which could change places unseen; callers name the
+/// fields.
+struct SlotBits {
+    SlotId slot;
+    std::uint32_t elem = 0;
+    std::uint32_t lsb = 0;
+    std::uint32_t width = 0;
+};
+
 enum class Domain : std::uint8_t { Two, Four, Real, Handle };
 
 /// The value every bit of a slot starts with: 0 (two-state, real, handle;

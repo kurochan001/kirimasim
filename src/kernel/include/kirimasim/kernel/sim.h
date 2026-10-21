@@ -244,12 +244,10 @@ public:
     /// to end (join, join_any, wait fork).
     void waitNamed(ProcessId p, EventId e, bool flushPoint = true);
 
-    /// Writes bits [lsb, lsb + width) of element `elem` (width 0: all) from
-    /// `value`, laid out like a slot element from bit 0, and wakes the
-    /// processes whose subscriptions and monitors see a change. Returns
-    /// whether the value changed.
-    bool write(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
-               const std::uint64_t* value);
+    /// Writes the bits `at` names from `value`, laid out like a slot element
+    /// from bit 0, and wakes the processes whose subscriptions and monitors
+    /// see a change. Returns whether the value changed.
+    bool write(SlotBits at, const std::uint64_t* value);
     // Procedural continuous assignments (SCHEDULER_SPEC.md 14, SIR_SPEC.md
     // 5.6). A marked slot keeps, bit by bit, who holds it at each level and
     // the value that level gives, and the value its ordinary writes give.
@@ -267,8 +265,7 @@ public:
     void hold(Hold level, ProcessId owner, const SlotPart& part);
     /// Writes the bits of the part (laid out as in write()) that `owner`
     /// holds at `level`.
-    void writeHeld(Hold level, ProcessId owner, SlotId s, std::uint32_t elem, std::uint32_t lsb,
-                   std::uint32_t width, const std::uint64_t* value);
+    void writeHeld(Hold level, ProcessId owner, SlotBits at, const std::uint64_t* value);
     /// Ends the holds at `level` on `part` (10.6.1, 10.6.2). A net takes its
     /// drivers' value now. A variable that an assign still holds, or that
     /// a continuous assignment drives, takes that value when it is
@@ -286,22 +283,20 @@ public:
     /// continuous assignment, or the output of a gate or a UDP. It has at
     /// most one update pending.
     std::uint32_t addDelayedDriver();
-    /// drive.delay (SIR_SPEC.md 5.4): bits [lsb, lsb + width) of element
-    /// elem (width 0: all), laid out as in write(), take `value` after the
+    /// drive.delay (SIR_SPEC.md 5.4): the bits `at` names, laid out as in
+    /// write(), take `value` after the
     /// delay for the change from their value now (10.3.3, 28.16): to 1
     /// `rise`, to 0 `fall`, to z `off`, to x the least of the three, for a
     /// target of one bit; for a wider one, `fall` from a value that is not 0
     /// to 0, `off` to all z, else `rise`. A pending update of another value
     /// is dropped first; none is scheduled when the value is the one there
     /// now. Updates after 0 ticks go to the Inactive region.
-    void driveDelayed(std::uint32_t driver, SlotId s, std::uint32_t elem, std::uint32_t lsb,
-                      std::uint32_t width, const std::uint64_t* value, std::uint64_t rise,
-                      std::uint64_t fall, std::uint64_t off);
+    void driveDelayed(std::uint32_t driver, SlotBits at, const std::uint64_t* value,
+                      std::uint64_t rise, std::uint64_t fall, std::uint64_t off);
 
     /// Schedules a nonblocking update, `delay` ticks from now, in the NBA
     /// region of the scheduling process's group (SCHEDULER_SPEC.md 13).
-    void scheduleNba(ProcessId p, SlotId s, std::uint32_t elem, std::uint32_t lsb,
-                     std::uint32_t width, const std::uint64_t* value, std::uint64_t delay);
+    void scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value, std::uint64_t delay);
     /// `-> e`: wakes the processes waiting for e now.
     void trigger(EventId e);
     /// `->> e`: triggers e in the NBA region, `delay` ticks from now.

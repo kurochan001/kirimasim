@@ -73,11 +73,15 @@ constexpr kirima_kernel_api kApi = {
     },
     [](kirima_context* c, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width, const std::uint64_t* value) {
-        return sched(c).write(SlotId{s}, elem, lsb, width, value) ? 1 : 0;
+        return sched(c).write({.slot = SlotId{s}, .elem = elem, .lsb = lsb, .width = width}, value)
+                   ? 1
+                   : 0;
     },
     [](kirima_context* c, std::uint32_t p, std::uint32_t s, std::uint32_t elem, std::uint32_t lsb,
        std::uint32_t width, const std::uint64_t* value, std::uint64_t delay) {
-        sched(c).scheduleNba(ProcessId{p}, SlotId{s}, elem, lsb, width, value, delay);
+        sched(c).scheduleNba(ProcessId{p},
+                             {.slot = SlotId{s}, .elem = elem, .lsb = lsb, .width = width}, value,
+                             delay);
     },
     [](kirima_context* c, std::uint32_t e) { sched(c).trigger(EventId{e}); },
     [](kirima_context* c, std::uint32_t p, std::uint32_t e, std::uint64_t delay) {

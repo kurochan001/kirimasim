@@ -1402,13 +1402,15 @@ private:
     void writeSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.write(kernelSlot(s), elem, lsb, width, buf);
+        sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf);
     }
 
     void nbaSlot(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.scheduleNba(f.kernelId, kernelSlot(s), elem, lsb, width, buf, delay);
+        sched_.scheduleNba(f.kernelId,
+                           {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf,
+                           delay);
     }
 
     // Values of any width, in W4 chunks (kernel/wide.h). A two-state slot
@@ -1453,7 +1455,7 @@ private:
         }
         const std::uint32_t c = (w + 63) / 64;
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
-        sched_.write(kernelSlot(s), elem, lsb, width, buf.data());
+        sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf.data());
     }
 
     /// A value laid out for the kernel's write() into the slot range
@@ -1481,7 +1483,9 @@ private:
         }
         const std::vector<std::uint64_t> buf =
             packed(v, (w + 63) / 64, l.domain == kernel::Domain::Four);
-        sched_.scheduleNba(f.kernelId, kernelSlot(s), elem, lsb, width, buf.data(), delay);
+        sched_.scheduleNba(f.kernelId,
+                           {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width},
+                           buf.data(), delay);
     }
 
     /// Chunks laid out like a slot element: a and b words interleaved when
@@ -2102,9 +2106,11 @@ private:
                             return Exit::Error;
                         }
                         sched_.driveDelayed(info_[body][b.index()][k].driver,
-                                            kernelSlot(ops[0].asSlot()), ops[0].firstElem,
-                                            ops[0].lsb, ops[0].width, buf.data(), *rise, *fall,
-                                            *off);
+                                            {.slot = kernelSlot(ops[0].asSlot()),
+                                             .elem = ops[0].firstElem,
+                                             .lsb = ops[0].lsb,
+                                             .width = ops[0].width},
+                                            buf.data(), *rise, *fall, *off);
                         break;
                     }
                     case Op::Resolve: resolve(in, info_[body][b.index()][k]); break;
@@ -2165,8 +2171,11 @@ private:
                     case Op::StoreOverride: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
                         sched_.writeHeld(holdLevel(info_[body][b.index()][k]), f.kernelId,
-                                         kernelSlot(ops[1].asSlot()), ops[1].firstElem, ops[1].lsb,
-                                         ops[1].width, buf.data());
+                                         {.slot = kernelSlot(ops[1].asSlot()),
+                                          .elem = ops[1].firstElem,
+                                          .lsb = ops[1].lsb,
+                                          .width = ops[1].width},
+                                         buf.data());
                         break;
                     }
                     default:
