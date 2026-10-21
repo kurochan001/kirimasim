@@ -243,6 +243,14 @@ jobs:
             echo "::endgroup::"
           done || true
 
+      # The counts of the READMEs against what this run measured: sv-tests
+      # (with Icarus) and the own suite's P1 population (tools/readme_counts.py,
+      # docs/counts.json). It fails when they differ.
+      - name: README counts
+        run: |
+          python3 tools/readme_counts.py check --svtests build/svtests/results.json \
+            --population build/p1_population.out
+
       # Every test of the suite's latest main, so that tests added after the
       # population was chosen run too. Reported only: not a gate, and the
       # gate figure in the line it prints does not apply. Failures are shown

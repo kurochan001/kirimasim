@@ -80,6 +80,8 @@ python3 tools/local_ci.py
 
 CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を走らせて先に失敗を見つけてください。
 
+README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて走らせ、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を走らせてください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
+
 ## 変更の記録
 
 [CHANGELOG.md](CHANGELOG.md) は、kirimasim を使う人のためのものです。使う側から見て何が変わったかを書きます。細部はコミットの履歴にあります。

@@ -15,14 +15,16 @@ order:
    .clang-tidy, and tools/check_global_state.py with its clang-tidy probe,
 6. tools/check_expected_change.py on each commit that is not on the
    upstream branch yet, as CI checks each pushed commit (nothing to check
-   without an upstream branch).
+   without an upstream branch),
+7. tools/readme_counts.py check on the dev preset's tests (when it is
+   included), as CI does.
 
 clang-format and clang-tidy are taken from --llvm-bin, then from PATH,
 then from Homebrew's LLVM (/opt/homebrew/opt/llvm/bin). A missing tool is
 reported as "not run" and makes the result fail unless --skip-lint is given.
 
-Prints a summary that can be pasted into a push or PR description and
-exits with 1 if any step failed.
+Prints a summary to attach to the report of a push and exits with 1 if
+any step failed.
 """
 
 import argparse
@@ -129,9 +131,11 @@ def main() -> int:
     for preset in presets:
         # Warnings in kirimasim's own code are errors here, as in CI's clang
         # builds (KIRIMASIM_WERROR in CMakeLists.txt).
+        # The dev preset's results give the READMEs' counts (step 7).
+        junit = ["--output-junit", str(logs / "ctest-dev.xml")] if preset == "dev" else []
         for kind, cmd in (("configure", ["cmake", "--preset", preset, "-DKIRIMASIM_WERROR=ON"]),
                           ("build", ["cmake", "--build", "--preset", preset]),
-                          ("test", ["ctest", "--preset", preset])):
+                          ("test", ["ctest", "--preset", preset, *junit])):
             step = timed(f"{preset}: {kind}", cmd, logs / f"{preset}-{kind}.log")
             steps.append(step)
             if step.status != "ok":
@@ -153,6 +157,11 @@ def main() -> int:
         state += ["--clang-tidy", tidy_for_state]
     steps.append(timed("check_global_state", state, logs / "check_global_state.log"))
     steps.append(expected_changes(logs))
+    if "dev" in presets and (logs / "ctest-dev.xml").exists():
+        steps.append(timed("readme_counts",
+                           [sys.executable, "tools/readme_counts.py", "check", "--build",
+                            "build/dev", "--junit", str(logs / "ctest-dev.xml")],
+                           logs / "readme_counts.log"))
 
     clang_format = clang_tidy = None
     if not args.skip_lint:

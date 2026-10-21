@@ -43,12 +43,26 @@ for the specification, the tests, and review.** See
 The criteria and how they are measured are fixed in
 [docs/spec/TEST_SUITE.md](docs/spec/TEST_SUITE.md).
 
+<!-- counts:begin -->
+<!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
+
 | Criterion | Now | Met |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 212, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses), both on macOS; the nightly run on Linux counted Icarus 211 on 2026-10-20, one more in chapter 21, which test not confirmed yet | Yes on macOS; the next nightly run is to confirm Linux |
-| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), none fails; 15 stop at constructs of later work | Yes |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 212, Icarus Verilog 211 (14.0 devel, 04cc493, the build the criterion uses) | Yes |
+| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
-| No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The fuzz tests pass in every build; the nightly runs passed on each of the 4 nights so far (2026-10-17 to 2026-10-20) | Not yet |
+| No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 4 nights in a row, through 2026-10-20 | Not yet |
+
+kirimasim's numbers were measured on 2026-10-21; Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+
+| Test set | Tests | kirimasim | Icarus Verilog | Verilator |
+| --- | --- | --- | --- | --- |
+| This repository's tests (CTest, dev configuration) | 1,108 | 1,106, 2 skipped | — | — |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 212 | 213 | 321 |
+| Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
+
+This repository's tests by kind: unit tests (GoogleTest) 175, `tests/suite/` 791 (made by 103 generators under `tools/`), tools 107, `tests/dump_sir/` 29, state and Contexts 4, command line and event counts 2.
+<!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
 queues, associative arrays and classes (P3), and concurrent assertions
@@ -57,21 +71,9 @@ separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-
 
 ### Test results
 
-Measured on 2026-10-17, against the newest development versions of Icarus
-Verilog and Verilator built from their main branches that day. kirimasim's
-sv-tests and own-suite results were measured again on 2026-10-21, after
-file input, `$random`, waveforms and then `randcase` came: sv-tests went
-from 195 to 201, 209, 210, then 212, and the own suite did not change.
-The repository's tests were counted after `randcase` came, the same day,
-in the dev
-configuration (release adds one, the run to the default of
-`--max-slot-events`).
-
-| Test set | Tests | kirimasim | Icarus Verilog | Verilator |
-| --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 1,107 | 1,105, 2 skipped | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 212 | 213 | 321 |
-| Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
+The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
+the release configuration, CTest has one test more: the run to the default
+of `--max-slot-events`.
 
 The two skipped tests of this repository need clocking blocks (P3), or
 drivers that meet through a port between parts of nets (not supported
@@ -140,21 +142,22 @@ and 1,133 of the own test suite.
 - In the first table, a test that a simulator cannot build counts with its
   build step only; kirimasim stops early at an unsupported construct.
 - Versions and machine: kirimasim 8500bdc (release build) for the times;
-  its pass counts and the CTest row were measured again at 6e15f5e;
   Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
   8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple clang 21.
 
 <details>
 <summary>This repository's tests by kind</summary>
 
-| Kind | Tests | What they check |
-| --- | --- | --- |
-| Unit tests (GoogleTest) | 168 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (9), time scales (7), UDP tables (4), counters (4), the Context (2), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
-| `tests/suite/` | 791 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (358), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
-| `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
-| State and Contexts | 4 | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
-| Tools | 101 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
-| Command line, event counts | 2 | Options and messages, the matrix of unsupported constructs (80 designs: each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`), loops that never advance time (9 designs, stopped by `--max-slot-events`), SIGINT (9 designs, on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them (141 calls in 2 designs), the positions of block statements in `--dump-sir` (144), writes to what `always_comb`, `always_latch` and `always_ff` write through tasks (9) and through the actions of deferred assertions (39); the counts of a fixed run (PerfCount) |
+The counts of each kind are under [P1 exit criteria](#p1-exit-criteria).
+
+| Kind | What they check |
+| --- | --- |
+| Unit tests (GoogleTest) | SIR and its verifier, the scheduler against a reference model, `valsem`, output formats, strengths, input scanning, time scales, UDP tables, counters, the Context, the kernel's fast operations against `valsem` (one word and any width), and more |
+| `tests/suite/` | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures, scheduling, values, hierarchy, continuous assignments, nets, illegal designs, and others |
+| `tests/dump_sir/` | The intermediate representation that the front end makes |
+| State and Contexts | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
+| Tools | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
+| Command line, event counts | Options and messages, the matrix of unsupported constructs (each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`), loops that never advance time (stopped by `--max-slot-events`), SIGINT (on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them, the positions of block statements in `--dump-sir`, writes to what `always_comb`, `always_latch` and `always_ff` write through tasks and through the actions of deferred assertions; the counts of a fixed run (PerfCount) |
 
 </details>
 
@@ -495,9 +498,8 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 103 generators, 791 tests in `tests/suite/`, and 1,107
-  CTest tests in all.
-- **Negative controls.** `tools/mutants.py` plants 343 known mistakes in the
+  rules. The counts are under [P1 exit criteria](#p1-exit-criteria).
+- **Negative controls.** `tools/mutants.py` plants known mistakes in the
   code, one at a time; every one of them must make some test fail.
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
