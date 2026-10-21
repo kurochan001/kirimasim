@@ -2,7 +2,7 @@
 
 [日本語](AI_POLICY.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision).
+Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision). On the same day, "Clean room" was widened to all code under the GPL or LGPL, to the sources that ideas may come from, and to tests (a person's decision).
 
 This document holds the rules for developing kirimasim together with AI. It restates the design specification's "policy for AI development".
 
@@ -38,7 +38,9 @@ Humans decide the following; AI only proposes.
 
 ## Clean room
 
-- The AI that implements does not read the sources of Icarus Verilog or Verilator. Behavior is written into the specifications from the standard and from results of runs, and the implementation is made from those specifications. This procedure is kept on record.
+- The AI that implements is not given the source code of Icarus Verilog or Verilator to read, or any other source code under the GPL or LGPL (any version), and it does not port such code. Behavior is written into the specifications from the standard and from results of runs, and the implementation is made from those specifications. This procedure is kept on record.
+- Only ideas are taken from elsewhere, and their sources are limited to papers, official documentation, the discussion in issues, and design notes written by people that contain no code. Code quoted in any of these is not taken. When such an idea is used, the design note says where it came from: the section of `docs/spec/` that uses it names the source, and a longer note goes in `docs/notes/`.
+- Tests are treated the same way: the reproducing code of other projects' issues and their test suites are not copied; the test is written anew from what the bug is.
 - The text, figures and example code of the standard are not copied: only references by clause number and summaries in our own words.
 
 ## Contributions from outside

@@ -97,9 +97,12 @@ Changes that change, remove or loosen existing expected values (existing items o
 - Information about workplaces or work.
 - Output of commercial simulators.
 
-## Do not read the source of other simulators
+## Code under the GPL or LGPL, and where ideas may come from (approved 2026-10-21)
 
-Do not read the source code of Icarus Verilog and Verilator (clean room). Learn their behaviour from the standard and from the results of running them. slang is a dependency, so it may be read.
+- Do not read the source code of Icarus Verilog and Verilator (clean room), or any other source code under the GPL or LGPL (any version), and do not port it. Learn the behaviour of tools from the standard and from the results of running them. slang is a dependency under the MIT licence, so it may be read.
+- Take only ideas from elsewhere, and only from papers, official documentation, the discussion in issues, and design notes written by people that contain no code. Code quoted in any of these is not taken.
+- When an idea from such a source is used, the design note says where it came from: the section of `docs/spec/` that the idea goes into names the source (as SYSTEM_TASKS.md 13 names the publication of SplitMix64), and a longer note goes in `docs/notes/` as `<topic>.md` and `<topic>.ja.md`.
+- Tests are treated the same way: do not copy the reproducing code of other projects' issues, or their test suites. Write the test anew from what the bug is.
 
 ## Write "not confirmed" for what is not known
 

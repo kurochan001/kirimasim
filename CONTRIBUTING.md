@@ -100,8 +100,18 @@ they are protected:
   [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Do not copy text, figures, or example code from the IEEE 1800 standard.
   Cite section numbers and describe behavior in your own words.
-- Do not read or copy the source code of other simulators (for example,
-  Icarus Verilog or Verilator). Learn their behavior from their output only.
+- Do not read, copy or port the source code of other simulators (for
+  example, Icarus Verilog or Verilator), or any other source code under the
+  GPL or LGPL, and do not give such code to an AI tool to read. Learn the
+  behavior of tools from the standard and from their output only.
+- Take only ideas from elsewhere, and only from papers, official
+  documentation, the discussion in issues, and design notes written by
+  people that contain no code; code quoted in any of these is not taken.
+  When you use such an idea, write where it came from: the section of
+  `docs/spec/` that uses it names the source, and a longer note goes in
+  `docs/notes/` (in English and Japanese).
+- Tests too: do not copy reproducing code from other projects' issues, or
+  their test suites. Write the test anew from what the bug is.
 - Format with `clang-format` (the repository's `.clang-format`).
 
 ## Building and testing
