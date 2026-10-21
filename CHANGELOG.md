@@ -120,6 +120,10 @@ own. CONTRIBUTING.md says what goes in this file.
 - `$stacktrace`, as a task and as a function: the call's scope and place,
   then each call that led there (SYSTEM_TASKS.md 10.3). Before, it was
   reported as unsupported.
+- `$urandom` and `$urandom_range`, from a generator of each procedure and
+  fork branch seeded as 18.14 asks, and `--seed`, which the version line
+  now shows (SYSTEM_TASKS.md 13). Before, the functions were reported as
+  unsupported and `--seed` was an unknown option.
 
 ### Changed
 

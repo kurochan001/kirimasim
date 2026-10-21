@@ -17,6 +17,7 @@
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/strings.h"
 #include "kirimasim/kernel/udp.h"
+#include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/w4.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"

@@ -6,7 +6,7 @@
 //
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
-// --max-steps, --max-scc-iter, --dump-sir, --stats=json, --wave,
+// --max-steps, --max-scc-iter, --seed, --dump-sir, --stats=json, --wave,
 // --wave-scope and --wave-glitches. Exit codes are those of CLI.md 5.
 
 #include <charconv>
@@ -64,7 +64,8 @@ void printUsage(std::FILE* out) {
                "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-               "         --max-scc-iter=<n>, --dump-sir, --stats=json, --wave=<file>.vcd,\n"
+               "         --max-scc-iter=<n>, --seed=<n>, --dump-sir, --stats=json,\n"
+               "         --wave=<file>.vcd,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
 }
@@ -92,6 +93,7 @@ struct Options {
     std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxSccIter = 0;         // no effect until tier 2 has islands (P2)
+    std::uint64_t seed = 0;               // --seed (SYSTEM_TASKS.md 13.2)
     std::string waveFile;                 // --wave
     std::vector<std::string> waveScopes;  // --wave-scope
     bool waveGlitches = false;
@@ -129,7 +131,8 @@ int parseArgs(int argc, char** argv, Options& o) {
              {std::pair<std::string_view, std::uint64_t*>{"--max-zero-delay", &o.maxZeroDelay},
               {"--max-slot-events", &o.maxSlotEvents},
               {"--max-steps", &o.maxSteps},
-              {"--max-scc-iter", &o.maxSccIter}}) {
+              {"--max-scc-iter", &o.maxSccIter},
+              {"--seed", &o.seed}}) {
             if (!arg.starts_with(name) || arg.size() <= name.size() || arg[name.size()] != '=')
                 continue;
             if (!parseCount(arg, name, *field)) {
@@ -254,7 +257,8 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         return kExitInputError;
     }
     if (!o.dumpSir) {
-        std::string line = "kirimasim: info: " + versionText() + " args:";
+        std::string line =
+            "kirimasim: info: " + versionText() + " seed=" + std::to_string(o.seed) + " args:";
         for (const auto& a : o.original)
             line += " " + a;
         std::fprintf(stderr, "%s\n", line.c_str());
@@ -324,6 +328,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.waveFile = o.waveFile;
     run.waveScopes = o.waveScopes;
     run.waveGlitches = o.waveGlitches;
+    run.seed = o.seed;
     // SIGINT stops the run from here on; before, while compiling, it ends
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).
     context.scheduler().setInterruptFlag(&interruptRequested);

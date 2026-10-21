@@ -1263,6 +1263,19 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val c = coerce(lowerExpr(*args[0]), sir::u2(8), sl);
                 return coerce(sys(sir::s2(32), {c.op, lowerDescriptor(*args[1], sl).op}), rt, sl);
             }
+            if (name == "$urandom" && args.size() <= 1) {
+                // The next random number of the process's generator; a seed
+                // starts it again first (SYSTEM_TASKS.md 13.3).
+                std::vector<Operand> ops;
+                if (!args.empty()) ops.push_back(coerce(lowerExpr(*args[0]), sir::u2(32), sl).op);
+                return coerce(sys(sir::u2(32), std::move(ops)), rt, sl);
+            }
+            if (name == "$urandom_range" && (args.size() == 1 || args.size() == 2)) {
+                const Val maxval = coerce(lowerExpr(*args[0]), sir::u2(32), sl);
+                const Val minval = args.size() == 2 ? coerce(lowerExpr(*args[1]), sir::u2(32), sl)
+                                                    : constant(sir::u2(32), 0);
+                return coerce(sys(sir::u2(32), {maxval.op, minval.op}), rt, sl);
+            }
             if ((name == "$random" && args.size() <= 1) ||
                 (name.starts_with("$dist_") && !args.empty())) {
                 // $random([seed]) and $dist_*(seed, arguments...): the seed
@@ -3420,7 +3433,8 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     }
     if (name == "$fopen" || name == "$fgets" || name == "$fgetc" || name == "$ungetc" ||
         name == "$fread" || name == "$ftell" || name == "$fseek" || name == "$rewind" ||
-        name == "$feof" || name == "$ferror" || name == "$random" || name.starts_with("$dist_")) {
+        name == "$feof" || name == "$ferror" || name == "$random" || name.starts_with("$dist_") ||
+        name == "$urandom" || name == "$urandom_range") {
         (void)lowerExpr(call);  // its value unused
         return;
     }

@@ -38,6 +38,9 @@ struct RunOptions {
     std::string waveFile;
     std::vector<std::string> waveScopes;
     bool waveGlitches = false;
+    /// --seed: the default seed of $urandom, $urandom_range and randcase
+    /// (SYSTEM_TASKS.md 13.2).
+    std::uint64_t seed = 0;
 };
 
 /// Runs the design to its end on the given context.

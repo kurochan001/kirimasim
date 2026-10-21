@@ -25,6 +25,7 @@
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/udp.h"
+#include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"
 #include "kirimasim/sir/timescale.h"
@@ -88,6 +89,8 @@ enum class SysTask : std::uint8_t {
     WriteMem,
     Random,
     Dist,
+    Urandom,
+    UrandomRange,
     Stacktrace,
     DumpFile,
     DumpVars,
@@ -253,6 +256,8 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$random") return SysTask::Random;
     if (name.starts_with("$dist_")) return SysTask::Dist;
     if (name == "$stacktrace") return SysTask::Stacktrace;
+    if (name == "$urandom") return SysTask::Urandom;
+    if (name == "$urandom_range") return SysTask::UrandomRange;
     if (name == "$dumpfile") return SysTask::DumpFile;
     if (name == "$dumpvars") return SysTask::DumpVars;
     if (name == "$dumpoff") return SysTask::DumpOff;
@@ -292,6 +297,7 @@ SysTask resolveSysTask(std::string_view name) {
 std::size_t minOperands(SysTask t) {
     switch (t) {
         case SysTask::FSeek: return 4;
+        case SysTask::UrandomRange: return 3;
         case SysTask::Dist: return 3;
         case SysTask::Fatal:
         case SysTask::Math2:
@@ -516,6 +522,10 @@ struct Frame {
     /// it reads changes (SIR_SPEC.md 5.6), and at which level.
     bool holding = false;
     kernel::Hold level = kernel::Hold::Assign;
+    /// The generator of $urandom (SYSTEM_TASKS.md 13.2): the frame's own,
+    /// for a procedure or a fork branch.
+    kernel::Rng rng;
+    bool ownRng = false;
     /// The guard of the wait.cond it waits at (SIR_SPEC.md 7.2).
     sir::SubroutineId cond = 0;
     /// A guard or a watch of the event control it waits at, which the
@@ -722,6 +732,16 @@ public:
         // run-time error of the design ends the run with the reason error,
         // after which no other process runs but final does (16.2).
         std::uint64_t initSteps = 0;
+        // The generators of $urandom (SYSTEM_TASKS.md 13.2): one for each
+        // instance and package, from the seed and its name; the procedures
+        // take theirs from it in order, before any static initializer.
+        initRngs_.clear();
+        for (const sir::Instance& i : d_.instances)
+            initRngs_.push_back({kernel::initialState(options_.seed, i.scopeName)});
+        std::vector<kernel::Rng> procRngs(d_.processes.size());
+        for (std::uint32_t p = 0; p < d_.processes.size(); ++p)
+            if (isProcedure(d_.processes[p]))
+                procRngs[p] = initRngs_[d_.processes[p].instance].child();
         // The processes of $strobe and $monitor first: an initializer's
         // function may call them, and they wait on nothing until then.
         overrides_.assign(d_.processes.size(), nullptr);
@@ -751,6 +771,10 @@ public:
             if (proc.kind == sir::ProcessKind::StaticInit) continue;   // already run
             if (proc.kind == sir::ProcessKind::Postponed) continue;    // registered above
             Frame& f = newFrame(p);
+            if (isProcedure(proc)) {
+                f.rng = procRngs[p];
+                f.ownRng = true;
+            }
             switch (proc.kind) {
                 case sir::ProcessKind::Initial:
                 case sir::ProcessKind::General:
@@ -915,6 +939,9 @@ private:
     };
     std::vector<Layout> layouts_;              ///< By body.
     std::vector<kernel::UdpTable> udpTables_;  ///< By type-table row.
+    /// The initialization generator of each row of the instance table
+    /// (SYSTEM_TASKS.md 13.2).
+    std::vector<kernel::Rng> initRngs_;
     /// The frame variables of each live activation, by number, for refs
     /// (SIR_SPEC.md 8): a ref to a frame variable is its activation's
     /// number and the word's place in it.
@@ -1202,6 +1229,9 @@ private:
         }
         for (std::size_t i = 0; i + 2 < ops.size(); ++i) {
             Frame& c = newFrame(ops[i].id);
+            // Each branch, in order, is seeded from the parent (18.14.2).
+            c.rng = rngOf(f).child();
+            c.ownRng = true;
             c.parent = &f;
             c.group = none ? 0 : f.forkGroup;
             c.birth = f.births++;
@@ -2042,6 +2072,10 @@ private:
                         const InstrInfo& info = info_[body][b][k];
                         if (info.task == SysTask::Stacktrace) {
                             stacktrace(f, in);
+                            break;
+                        }
+                        if (info.task == SysTask::Urandom || info.task == SysTask::UrandomRange) {
+                            urandom(f, in, info.task == SysTask::UrandomRange);
                             break;
                         }
                         if (!syscall(p, in, info)) return Exit::Error;
@@ -3941,6 +3975,45 @@ private:
         output_.message(line);
     }
 
+    /// Whether a process is a procedure, which has a generator of its own:
+    /// an initial, always or final procedure (SYSTEM_TASKS.md 13.2).
+    static bool isProcedure(const sir::Process& p) {
+        if (p.parent.kind != sir::Owner::Kind::None) return false;  // a fork branch
+        switch (p.kind) {
+            case sir::ProcessKind::Initial:
+            case sir::ProcessKind::Final:
+            case sir::ProcessKind::General:
+            case sir::ProcessKind::Comb:
+            case sir::ProcessKind::Latch:
+            case sir::ProcessKind::CombAt:
+            case sir::ProcessKind::Ff:
+            case sir::ProcessKind::FfPlain: return true;
+            default: return false;
+        }
+    }
+
+    /// The generator a process draws from (SYSTEM_TASKS.md 13.2): its own,
+    /// for a procedure or a fork branch, or else its instance's
+    /// initialization generator.
+    kernel::Rng& rngOf(Frame& f) {
+        return f.ownRng ? f.rng : initRngs_[d_.processes[f.process].instance];
+    }
+
+    /// $urandom([seed]) and $urandom_range(maxval, minval) (SYSTEM_TASKS.md
+    /// 13.3): a seed starts the generator again from its low 32 bits.
+    void urandom(Frame& f, const sir::Instr& in, bool range) {
+        kernel::Rng& g = rngOf(f);
+        const auto& ops = in.operands;
+        if (range) {
+            const auto maxval = static_cast<std::uint32_t>(value(ops[1]).a);
+            const auto minval = static_cast<std::uint32_t>(value(ops[2]).a);
+            temp(in.result) = {kernel::urandomRange(g, maxval, minval), 0};
+            return;
+        }
+        if (ops.size() > 1) g.state = static_cast<std::uint32_t>(value(ops[1]).a);
+        temp(in.result) = {g.draw(), 0};
+    }
+
     /// $stacktrace (SYSTEM_TASKS.md 10.3): where it is called, with the
     /// scope front gives, then each call that led there, innermost first:
     /// the task or function, or the module instance of the procedure, and
@@ -4613,6 +4686,8 @@ private:
                 return true;
             }
             case SysTask::Stacktrace:  // runBody, which has the frame
+            case SysTask::Urandom:
+            case SysTask::UrandomRange:
             case SysTask::None:
             case SysTask::Unknown: break;
         }
