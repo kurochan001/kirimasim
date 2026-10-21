@@ -195,7 +195,10 @@ def main() -> int:
                                      text=True, check=False).stdout.strip()
                 if sdk:
                     cmd.append(f"--extra-arg=-isysroot{sdk}")
-            steps.append(timed("clang-tidy", cmd + git_files("src/*.cpp", "tests/*.cpp"),
+            # tests/fuzz/ is built by the fuzz preset only, so the dev build
+            # has no compile command for it.
+            steps.append(timed("clang-tidy",
+                               cmd + git_files("src/*.cpp", "tests/*.cpp", ":!tests/fuzz/*"),
                                logs / "clang-tidy.log"))
 
     head = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT,

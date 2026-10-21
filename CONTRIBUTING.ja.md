@@ -73,6 +73,17 @@ python3 tools/check_global_state.py
 
 release のビルドでは、`cmake --preset release` の後に `python3 tools/check_release_flags.py` も走らせてください。`asan` と `ubsan` のプリセットは、同じテストをサニタイザ付きで走らせます。`asan` は slang を mimalloc 無しでビルドします。mimalloc の確保した領域の中は、アドレスサニタイザから見えないためです。`tsan` のプリセットは、状態と Context のテスト（`tests/context/`、RUNTIME_ABI.md の 9.8 節）だけを、スレッドサニタイザ付きで、やはり mimalloc 無しでビルドして走らせます。`dev`、`asan`、`ubsan`、`tsan` のプリセットは、C++ の標準ライブラリの範囲の検査（libstdc++ は `_GLIBCXX_ASSERTIONS`、libc++ は extensive の hardening モード）も、slang の分も含めて有効にします。範囲外の添字は、その場で実行を止めます。`release` のプリセットは有効にしません。
 
+`fuzz` のプリセットは、libFuzzer のターゲット `kirimasim_fuzz_compile`（`tests/fuzz/`）を、アドレスサニタイザと未定義動作サニタイザ付きでビルドします。入力を 1 つの SystemVerilog のファイルとしてコンパイルし、設計を小さい上限の下で走らせます。libFuzzer のある clang（Homebrew か apt.llvm.org の LLVM）が要ります。Apple の clang にはありません。slang は、release と同じく表明無しでビルドします。slang の表明の失敗は slang に報告するもので、fuzz で先に進むものではないためです。
+
+```sh
+CC=/opt/homebrew/opt/llvm/bin/clang CXX=/opt/homebrew/opt/llvm/bin/clang++ cmake --preset fuzz
+cmake --build --preset fuzz
+ctest --preset fuzz                # tests/suite/ のテストを 1 回ずつ
+build/fuzz/tests/fuzz/kirimasim_fuzz_compile -max_total_time=600 <コーパスのディレクトリ>...
+```
+
+nightly の実行は、tests/suite/ と sv-tests を種にして 30 分 fuzz し、見つけたものを artifact に残します。
+
 kirimasim 自身のコードは `-Wall -Wextra -Wpedantic` でビルドします。`tools/local_ci.py` と CI の clang のビルドと同じく警告を誤りにするには、configure に `-DKIRIMASIM_WERROR=ON` を付けてください。
 
 CI が走らせる検査（4 つのプリセット、release のフラグの検査、禁止の機能の検査、大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査）を一度に走らせるには：

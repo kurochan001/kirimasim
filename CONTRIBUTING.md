@@ -144,6 +144,24 @@ standard library (`_GLIBCXX_ASSERTIONS` for libstdc++, the extensive
 hardening mode for libc++), for slang too: an index out of range stops the
 run at once. The `release` preset does not.
 
+The `fuzz` preset builds `kirimasim_fuzz_compile` (`tests/fuzz/`), a
+libFuzzer target that compiles each input as a SystemVerilog file and runs
+the design under small limits, with the address and undefined-behaviour
+sanitizers. It needs a clang with libFuzzer, from Homebrew's or
+apt.llvm.org's LLVM; Apple's clang has none. slang is built there without
+its assertions, as in a release: a failed assertion of slang is reported
+to slang, not fuzzed past.
+
+```sh
+CC=/opt/homebrew/opt/llvm/bin/clang CXX=/opt/homebrew/opt/llvm/bin/clang++ cmake --preset fuzz
+cmake --build --preset fuzz
+ctest --preset fuzz                # each test of tests/suite/ once
+build/fuzz/tests/fuzz/kirimasim_fuzz_compile -max_total_time=600 <corpus dir>...
+```
+
+The nightly run fuzzes for 30 minutes, seeded with tests/suite/ and
+sv-tests, and keeps what it finds as an artifact.
+
 kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
 `-DKIRIMASIM_WERROR=ON` to make the warnings errors, as `tools/local_ci.py`
 and CI's clang builds do.

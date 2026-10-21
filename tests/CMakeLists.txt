@@ -11,3 +11,9 @@ add_subdirectory(dump_sir)
 add_subdirectory(cli)
 add_subdirectory(perf_counts)
 add_subdirectory(tools)
+
+# The libFuzzer target, with the fuzz preset only (tests/fuzz/).
+option(KIRIMASIM_FUZZ "Build the libFuzzer target (the fuzz preset)" OFF)
+if(KIRIMASIM_FUZZ)
+    add_subdirectory(fuzz)
+endif()

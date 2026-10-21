@@ -354,9 +354,11 @@ jobs:
       # .clang-tidy (RUNTIME_ABI.md 9.3); without it, clang-tidy skips that
       # check without a word. The next step shows on a probe that this
       # clang-tidy reports what the check must.
+      # tests/fuzz/ is built by the fuzz preset only, so the dev build has no
+      # compile command for it.
       - name: clang-tidy
         run: >
-          git ls-files 'src/*.cpp' 'tests/*.cpp'
+          git ls-files 'src/*.cpp' 'tests/*.cpp' ':!tests/fuzz/*'
           | xargs clang-tidy-22 --experimental-custom-checks -p build/dev --quiet
 
       - name: Global state and its allowlist

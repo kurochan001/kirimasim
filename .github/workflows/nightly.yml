@@ -324,6 +324,68 @@ jobs:
             echo "::endgroup::"
           done || true
 
+  # libFuzzer on front and tier 1 (tests/fuzz/; the memory-safety plan,
+  # step 5), with AddressSanitizer and UndefinedBehaviorSanitizer: the
+  # tests of tests/suite/ once each, then 30 minutes of fuzzing seeded
+  # with them and with the tests of sv-tests (fetched here, not copied
+  # into the repository). The fuzzing is reported only, while its first
+  # findings are sorted out; what it finds is kept as an artifact.
+  fuzz:
+    runs-on: ubuntu-24.04
+    env:
+      CC: clang-22
+      CXX: clang++-22
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install LLVM 22 with libFuzzer (apt.llvm.org packages)
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+          sudo apt-get install -y libfuzzer-22-dev
+
+      - name: Cache FetchContent downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/fuzz/_deps/*-src
+            build/fuzz/_deps/*-subbuild
+            build/fuzz/_deps/*-tmp
+            build/fuzz/CMakeFiles/fc-stamp
+          key: fetchcontent-ubuntu-24.04-clang22-fuzz-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - run: cmake --preset fuzz
+      - run: cmake --build --preset fuzz
+      - run: ctest --preset fuzz --output-on-failure
+
+      - name: Fuzz for 30 minutes (report only)
+        continue-on-error: true
+        run: |
+          git init -q sv-tests
+          git -C sv-tests fetch -q --depth 1 https://github.com/chipsalliance/sv-tests.git \
+            15490e95fd978ada1c1dc59b7c4b53a7edb23b78
+          git -C sv-tests checkout -q FETCH_HEAD
+          mkdir -p build/fuzz-seeds build/fuzz-new build/fuzz-findings
+          find sv-tests/tests tests/suite -name '*.sv' -print0 |
+            while IFS= read -r -d '' f; do cp "$f" "build/fuzz-seeds/$(sha1sum < "$f" | cut -c1-16)"; done
+          build/fuzz/tests/fuzz/kirimasim_fuzz_compile -max_total_time=1800 -timeout=30 \
+            -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix=build/fuzz-findings/ \
+            build/fuzz-new build/fuzz-seeds > build/fuzz.log 2>&1 || status=$?
+          { echo "### fuzz"; echo '```'; grep -E '^stat::|ERROR|SUMMARY' build/fuzz.log | tail -20
+            echo '```'; echo "findings: $(ls build/fuzz-findings | wc -l)"; } >> "$GITHUB_STEP_SUMMARY"
+          tail -80 build/fuzz.log
+          exit "${status:-0}"
+
+      - name: Keep the findings
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-findings
+          path: build/fuzz-findings
+          if-no-files-found: ignore
+          retention-days: 30
+
   # The sv-tests gate on macOS (TEST_SUITE.md, "As many as Icarus or more"):
   # some tests depend on the C library, so each OS is measured against an
   # Icarus built there by the same procedure, and the READMEs keep both
