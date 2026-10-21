@@ -1,0 +1,18 @@
+c0 plain: 0a 0b cc ee ee ee ee ee
+c1 comments_addresses: 11 ee ee ee ee 55 66 77
+c2 start_finish_down: ee ee ee 0d 0c 0b 0a ee
+c3 start_only: ee ee ee ee ee 01 02 03
+c4 x_and_z: 0x z5 1x ee ee ee ee ee
+c5 two_state: 00 05 10 04
+c6 declared_down: ee ee ee ee ee ee 02 01
+c7 digits: ff 01 ee ee ee ee ee ee
+c8 binary: 1x01 0z11 0010 0001
+c9 wide: 123456789abcdef012 0000000000000000x1
+c10 dimensions: 12 11 10 22 21 20
+c11 dimensions_address: ee ee ee ee a1 a0
+c12 address_outside: 05 ee ee ee ee ee ee ee
+c13 past_the_range: ee ee ee ee ee ee 01 02
+c14 write_read_hex: 01 11 21 31 41 51 61 x0
+c15 write_read_binary_down: 0000 10xz 0011 0xx0
+c16 write_read_dimensions: 02 01 00 12 11 10
+c17 automatic: 01 02 03 04 05 06 07 08

@@ -19,6 +19,7 @@
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/udp.h"
@@ -81,6 +82,8 @@ enum class SysTask : std::uint8_t {
     Rewind,
     FEof,
     FError,
+    ReadMem,
+    WriteMem,
     Unknown,
 };
 
@@ -233,6 +236,8 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$rewind") return SysTask::Rewind;
     if (name == "$feof") return SysTask::FEof;
     if (name == "$ferror") return SysTask::FError;
+    if (name == "$readmemb" || name == "$readmemh") return SysTask::ReadMem;
+    if (name == "$writememb" || name == "$writememh") return SysTask::WriteMem;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -272,6 +277,8 @@ std::size_t minOperands(SysTask t) {
         case SysTask::FScanf:
         case SysTask::FRead:
         case SysTask::FError:
+        case SysTask::ReadMem:
+        case SysTask::WriteMem:
         case SysTask::Sscanf:
         case SysTask::ValuePlusargs: return 3;
         case SysTask::Error:
@@ -1197,8 +1204,11 @@ private:
     /// the form of the severity tasks, at the instruction's position and
     /// with the instance's name, then the end of the run, reason error.
     void designError(const Frame& f, const sir::Instr& in, const std::string& what) {
-        const sir::InstanceId inst =
-            isSubBody(act_.body) ? subOf(act_.body).instance : d_.processes[f.process].instance;
+        designErrorIn(d_.processes[f.process], in, what);
+    }
+    /// The same, given the process that runs.
+    void designErrorIn(const sir::Process& p, const sir::Instr& in, const std::string& what) {
+        const sir::InstanceId inst = isSubBody(act_.body) ? subOf(act_.body).instance : p.instance;
         std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
         line += ":" + std::to_string(in.loc.line) + ": error: " + what + " [" +
                 d_.instances[inst].scopeName + " @ " +
@@ -3905,6 +3915,87 @@ private:
         return to;
     }
 
+    /// $readmemb, $readmemh, $writememb and $writememh (file, memory[,
+    /// start[, finish]]): the memory is a slot or an array frame variable,
+    /// and the kernel decides which of its elements get which words
+    /// (SIR_SPEC.md 8, SYSTEM_TASKS.md 7). A file that cannot be opened,
+    /// and one with text that is no word, are run-time errors of the
+    /// design; an address out of the range and a count of words that does
+    /// not match give warnings.
+    bool memoryFile(const sir::Process& p, const sir::Instr& in, bool load) {
+        const auto& ops = in.operands;
+        const std::string_view task = ops[0].text;
+        const bool hex = task.back() == 'h';
+        const std::string name(strings_.get(value(ops[1]).a));
+        const Operand& m = ops[2];
+        const bool slot = m.kind == Operand::Kind::Slot;
+        const std::vector<sir::ArrayDim>& adims =
+            slot ? d_.slots[m.id].dims : bodyFrame(act_.body)[m.id].dims;
+        const sir::Type et = slot ? d_.slots[m.id].type : bodyFrame(act_.body)[m.id].type;
+        std::vector<kernel::MemDim> dims;
+        dims.reserve(adims.size());
+        for (const sir::ArrayDim& d : adims)
+            dims.push_back({d.left, d.right});
+        std::optional<std::int64_t> address[2];
+        for (std::size_t k = 0; k < 2 && 3 + k < ops.size(); ++k) {
+            const W4 a = value(ops[3 + k]);
+            if (a.b != 0) {
+                designErrorIn(p, in, std::string(task) + ": an address argument has x or z bits");
+                return true;
+            }
+            address[k] = static_cast<std::int64_t>(a.a);
+        }
+        const std::uint32_t c = chunksOf(et);
+        if (!load) {
+            // One word per line in hexadecimal or binary, every digit of
+            // the width (SYSTEM_TASKS.md 7.2).
+            std::string text;
+            std::vector<W4> v(c);
+            std::vector<std::uint64_t> words;
+            kernel::FormatSpec spec;
+            spec.conv = hex ? 'h' : 'b';
+            for (const std::uint32_t e : kernel::dumpOrder(dims, address[0], address[1])) {
+                if (slot)
+                    readSlotWide(m.id, e, 0, 0, v.data());
+                else
+                    for (std::uint32_t k = 0; k < c; ++k)
+                        v[k] = (&frameElem(m.id, e))[k];
+                words = packed(v.data(), c, sir::isFourState(et));
+                text +=
+                    kernel::formatInt({words.data(), et.width, sir::isFourState(et), false}, spec);
+                text += '\n';
+            }
+            std::FILE* f = std::fopen(name.c_str(), "w");
+            if (f == nullptr) {
+                designErrorIn(p, in,
+                              std::string(task) + ": cannot open \"" + name + "\" for writing");
+                return true;
+            }
+            std::fwrite(text.data(), 1, text.size(), f);
+            std::fclose(f);
+            return true;
+        }
+        const std::optional<std::string> text = kernel::readFile(name);
+        if (!text) {
+            designErrorIn(p, in, std::string(task) + ": cannot open \"" + name + "\"");
+            return true;
+        }
+        const kernel::MemLoad l = kernel::loadMemory(*text, hex, dims, et.width, address[0],
+                                                     address[1], !sir::isFourState(et));
+        for (const kernel::MemWord& w : l.words) {
+            if (slot)
+                writeSlotWide(m.id, w.elem, 0, 0, w.value.data());
+            else
+                for (std::uint32_t k = 0; k < c; ++k)
+                    (&frameElem(m.id, w.elem))[k] = w.value[k];
+        }
+        if (!l.range.empty()) warnOnce(in, std::string(task) + ": " + l.range);
+        if (!l.count.empty()) warnOnce(in, std::string(task) + ": " + l.count);
+        if (!l.error.empty())
+            designErrorIn(p, in, std::string(task) + ": \"" + name + "\" " + l.error);
+        return true;
+    }
+
     bool syscall(const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         switch (info.task) {
@@ -4150,6 +4241,8 @@ private:
                 temp(in.result) = {static_cast<std::uint32_t>(e), 0};
                 return true;
             }
+            case SysTask::ReadMem:
+            case SysTask::WriteMem: return memoryFile(p, in, info.task == SysTask::ReadMem);
             case SysTask::FClose:
                 if (!files_.close(value(ops[1])))
                     warnOnce(in, "$fclose: " + notOpenText(value(ops[1])));

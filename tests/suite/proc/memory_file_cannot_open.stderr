@@ -1,0 +1,1 @@
+memory_file_cannot_open.sv:24: error: $readmemh: cannot open "c.mem" [top @ 1ns]

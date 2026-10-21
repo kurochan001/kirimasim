@@ -1,0 +1,4 @@
+memory_file_task.sv:31:5: warning: $readmemh: the file has 3 words for the 8 of the range 0 to 7
+memory_file_task.sv:79:5: warning: $readmemh: the file has 2 words for the 8 of the range 0 to 7
+memory_file_task.sv:127:5: warning: $readmemh: address @9 in the file is outside the range 0 to 3
+memory_file_task.sv:135:5: warning: $readmemh: the file has 4 words for the 2 of the range 6 to 7

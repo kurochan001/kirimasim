@@ -92,6 +92,12 @@ own. CONTRIBUTING.md says what goes in this file.
   instance, `$unit` or `$root`), and the `%l` format, which prints
   `work.<module>` (SYSTEM_TASKS.md 3.8, 5.1, 5.2). Before, each was
   reported as unsupported.
+- `$readmemb`, `$readmemh`, `$writememb` and `$writememh`, with and without
+  address arguments, on memories of one or more dimensions; an address out
+  of the range and a count of words that does not match give warnings, and
+  a file that cannot be read ends the run with code 2 (SYSTEM_TASKS.md 7).
+  Before, each was reported as unsupported. `$readmem` into a memory of an
+  enumerated type is still reported as unsupported.
 
 ### Changed
 

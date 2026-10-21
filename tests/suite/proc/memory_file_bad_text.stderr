@@ -1,0 +1,1 @@
+memory_file_bad_text.sv:27: error: $readmemh: "c.mem" line 2: ''' is not part of a number, an address or a comment [top @ 1ns]

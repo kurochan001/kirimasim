@@ -3280,6 +3280,42 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         emitVoid(Op::Syscall, std::move(ops), sl);
         return;
     }
+    if ((name == "$readmemb" || name == "$readmemh" || name == "$writememb" ||
+         name == "$writememh") &&
+        args.size() >= 2 && args.size() <= 4) {
+        // (file, memory[, start[, finish]]): the memory is an operand of
+        // the syscall, which the kernel and the VM read or write element
+        // by element; $readmem counts as writing all of it (SIR_SPEC.md 8).
+        const ast::Expression* m = args[1];
+        if (m->kind == ast::ExpressionKind::Assignment &&
+            m->as<ast::AssignmentExpression>().isLValueArg())
+            m = &m->as<ast::AssignmentExpression>().left();
+        const std::optional<ArrayTarget> a = arrayTarget(*m);
+        if (!a || !a->indices.empty() || a->home == Place::Home::Ref)
+            unsupported(sl, name + " of this memory");
+        if (!sir::isIntegral(elemTypeOf(baseOf(*a))))
+            unsupported(sl, name + " of a memory of this element type");
+        // A value out of an enumeration's range stops $readmem (21.4.2),
+        // which is not done yet.
+        const ast::Type* et = m->type;
+        while (et->isUnpackedArray())
+            et = et->getArrayElementType();
+        if (name.starts_with("$readmem") && et->isEnum())
+            unsupported(sl, name + " of a memory of an enumerated type");
+        std::vector<Operand> ops{
+            Operand::str(name), coerce(lowerExpr(*args[0]), Type{sir::TypeKind::String, 0}, sl).op,
+            a->home == Place::Home::Slot ? Operand::slot(a->slot) : Operand::frame(a->slot)};
+        for (std::size_t i = 2; i < args.size(); ++i)
+            ops.push_back(coerce(lowerExpr(*args[i]), integral(true, true, 64), sl).op);
+        if (a->home == Place::Home::Slot) {
+            if (name.starts_with("$readmem"))
+                noteWrite({a->slot, 0, 0, 0, 0});
+            else
+                noteRead({a->slot, 0, 0, 0, 0});
+        }
+        emitVoid(Op::Syscall, std::move(ops), sl);
+        return;
+    }
     if (name == "$fclose" || name == "$fflush") {
         // $fflush with no argument flushes every file (SYSTEM_TASKS.md 6.2).
         std::vector<Operand> ops{Operand::str(name)};
