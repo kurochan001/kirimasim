@@ -30,16 +30,16 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "builtin_call_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 3
+VERSION = 4
 
 # (the statement, with ERR at the call, what it is)
 CALLS = [
     ('fd = ERR$system("x");', "system function $system"),
     ("fd = ERR$system(name);", "system function $system"),
     ('fd = ERR$system({name, " y"});', "system function $system"),
-    ('ERR$dumpfile("x.vcd");', "system task $dumpfile"),
-    ("ERR$dumpfile(name);", "system task $dumpfile"),
+    ('ERR$sdf_annotate("x.sdf");', "system task $sdf_annotate"),
     ("ERR$sdf_annotate(name);", "system task $sdf_annotate"),
+    ('ERR$sdf_annotate({name, ".sdf"});', "system task $sdf_annotate"),
 ]
 CONTAINERS = ["initial", "task", "function", "fork"]
 
