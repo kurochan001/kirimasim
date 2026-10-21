@@ -38,6 +38,7 @@
 #include "slang/numeric/ConstantValue.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
+#include "stack.h"
 
 namespace slang::driver {
 class Driver;
@@ -163,6 +164,12 @@ public:
     /// Reports such an error without throwing.
     void reportError(slang::SourceLocation sl, std::string_view what,
                      slang::SourceLocation noteAt = {}, std::string_view note = {});
+    /// Stops lowering with an error at sl when the stack of this thread is
+    /// nearly used up (RUNTIME_ABI.md 5). Each step of the recursion over
+    /// the syntax, lowerStatement and lowerExpr, calls it first.
+    void checkStack(slang::SourceLocation sl) {
+        if (stack_.nearlyUsedUp()) error(sl, "nested too deeply for the stack of this thread");
+    }
     /// Reports a warning, once for each source position however many
     /// instances lower it.
     void warning(slang::SourceLocation sl, std::string_view what);
@@ -752,6 +759,10 @@ public:
 private:
     const slang::SourceManager& sm_;
     int precision_;
+    /// The stack of the thread front runs on, read when front starts;
+    /// each step of the recursion over the syntax checks what is left
+    /// (RUNTIME_ABI.md 5; checkStack).
+    const StackRange stack_ = StackRange::ofThisThread();
     sir::Design design_;
     std::string diags_;
     std::size_t numErrors_ = 0;

@@ -41,6 +41,7 @@ enum class EndReason : std::uint8_t {
     Interrupted,
     Error,
     Internal,
+    ResourceLimit,  // last, so that the numbers abi.h's request_end takes stay
 };
 
 /// The name used in messages and in --stats=json: finish, quiescent, ...
@@ -361,6 +362,10 @@ public:
     /// error, code 2, and final still runs (SCHEDULER_SPEC.md 16.2, CLI.md
     /// 5). The tier that found it has written its line.
     void runtimeError() { requestEnd(EndReason::Error, 1); }
+    /// Ends the simulation at a limit on resources (CLI.md 2.7): the
+    /// reason resource_limit, code 6, and final still runs (SCHEDULER_SPEC.md
+    /// 16.2). The tier that reached it has written its line.
+    void resourceLimit() { requestEnd(EndReason::ResourceLimit, 1); }
     /// Whether the Postponed region of the time slot is running, where
     /// nothing may be written or scheduled (SCHEDULER_SPEC.md 2.2).
     [[nodiscard]] bool inPostponed() const { return postponed_; }

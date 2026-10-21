@@ -785,6 +785,7 @@ Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
 
 Val Lowerer::lowerExpr(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
+    checkStack(sl);
     if (!substitutions_.empty())
         if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
     // Assigning, comparing and printing events come with their handles (P3).

@@ -313,3 +313,12 @@ own. CONTRIBUTING.md says what goes in this file.
   slang now does all its work on the thread the driver sized, not on a
   thread pool with the system's default stack of 512 KiB (RUNTIME_ABI.md
   5; #35).
+- kirimasim stops before the stack of the thread it runs on runs out,
+  on any thread and in any build, not only on the driver's thread of 512
+  MiB: a call of the design with 1 MiB or less of stack left ends the run
+  with the reason resource_limit (exit code 6) and the line `<file>:<line>:
+  error: the stack of this thread is nearly used up [<instance> @ <time>]`,
+  and front stops with the diagnostic `nested too deeply for the stack of
+  this thread` (RUNTIME_ABI.md 5; #38). slang's own recursion, while it
+  binds a deeply nested expression before front lowers it, is not
+  checked.

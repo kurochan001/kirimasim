@@ -1,8 +1,8 @@
 {
   "measured": "2026-10-21",
   "ctest": {
-    "total": 1108,
-    "passed": 1106,
+    "total": 1119,
+    "passed": 1117,
     "skipped": 2
   },
   "kinds": {
@@ -10,7 +10,7 @@
     "suite": 791,
     "tools": 107,
     "dump_sir": 29,
-    "context": 4,
+    "context": 15,
     "cli": 2
   },
   "suite_tests": 791,

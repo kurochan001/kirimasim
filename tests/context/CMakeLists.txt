@@ -17,3 +17,17 @@ endforeach()
 # ThreadSanitizer while slang's Driver writes its colour flags (#32).
 add_test(NAME front_parallel COMMAND kirimasim_context_tests front)
 set_tests_properties(front_parallel PROPERTIES LABELS Context)
+
+# The stop before the stack of the running thread runs out (RUNTIME_ABI.md
+# 5): each case runs on a thread of the stack size it names.
+add_executable(kirimasim_stack_tests stack_test.cpp)
+target_link_libraries(kirimasim_stack_tests PRIVATE
+    kirimasim_front kirimasim_vm kirimasim_kernel kirimasim_sir Threads::Threads)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/stack)
+target_compile_definitions(kirimasim_stack_tests PRIVATE
+    KIRIMASIM_STACK_DIR="${CMAKE_CURRENT_BINARY_DIR}/stack")
+foreach(case front_small front_large function_small function_large task_small task_large
+        guard_small guard_large deferred_small deferred_large default_thread)
+    add_test(NAME stack_${case} COMMAND kirimasim_stack_tests ${case})
+    set_tests_properties(stack_${case} PROPERTIES LABELS Context)
+endforeach()

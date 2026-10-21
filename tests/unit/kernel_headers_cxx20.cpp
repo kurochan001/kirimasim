@@ -14,6 +14,7 @@
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/sim.h"
+#include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/strings.h"

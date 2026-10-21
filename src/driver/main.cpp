@@ -245,6 +245,7 @@ int exitCode(kirimasim::kernel::EndReason r) {
         case EndReason::Internal: return 3;
         case EndReason::TimeLimit: return 4;
         case EndReason::ZeroTimeLimit: return 5;
+        case EndReason::ResourceLimit: return 6;
         case EndReason::Interrupted: return 130;
     }
     return 3;

@@ -14,6 +14,7 @@
 #include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/sim.h"
+#include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strings.h"
 
@@ -47,6 +48,10 @@ public:
     /// The seed of $random with no argument: one for the whole simulation,
     /// starting at 0 (SYSTEM_TASKS.md 12.3).
     std::int32_t& randomSeed() { return randomSeed_; }
+    /// The stack of the thread running the design, which the tier reads
+    /// when the run starts; each call of the design checks what is left
+    /// (RUNTIME_ABI.md 5).
+    StackRange& stack() { return stack_; }
 
 private:
     Counters counters_;
@@ -57,6 +62,7 @@ private:
     Dump dump_;  ///< After output_ and store_, which it reads and writes.
     Scheduler scheduler_;
     std::int32_t randomSeed_ = 0;
+    StackRange stack_;
 };
 
 /// The C handle of a context (abi.h), and back.

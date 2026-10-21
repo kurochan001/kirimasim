@@ -66,6 +66,7 @@ slang::SourceLocation Lowerer::startOf(const ast::Statement& s) {
 void Lowerer::lowerStatement(const ast::Statement& s) {
     if (b_.dead) return;  // unreachable code is dropped
     const slang::SourceLocation sl = startOf(s);
+    checkStack(sl);
     // The writes of the statement are its own, until it ends.
     struct RestoreAt {
         Body& b;

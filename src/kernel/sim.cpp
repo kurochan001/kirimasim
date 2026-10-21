@@ -100,6 +100,7 @@ const char* endReasonName(EndReason r) {
         case EndReason::Fatal: return "fatal";
         case EndReason::TimeLimit: return "time_limit";
         case EndReason::ZeroTimeLimit: return "zero_time_limit";
+        case EndReason::ResourceLimit: return "resource_limit";
         case EndReason::Interrupted: return "interrupted";
         case EndReason::Error: return "error";
         case EndReason::Internal: return "internal";
@@ -428,9 +429,11 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
         processes_[p.index()].done = true;
         ++processes_[p.index()].gen;
         counters_.increment(cFinished_);
-        // A run-time error of the design that the final procedure made
-        // stays one (16.2); any other failure is internal.
-        const bool designError = ending_ && reason_ == EndReason::Error;
+        // A run-time error of the design, or a limit on resources, that
+        // the final procedure reached stays one (16.2); any other failure
+        // is internal.
+        const bool designError =
+            ending_ && (reason_ == EndReason::Error || reason_ == EndReason::ResourceLimit);
         if (st == Status::Error && reason_ != EndReason::Internal && !designError) {
             if (error_.empty()) error_ = "a final procedure failed";
             reason_ = EndReason::Internal;

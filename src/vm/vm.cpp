@@ -23,6 +23,7 @@
 #include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
+#include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/strength.h"
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/urandom.h"
@@ -603,7 +604,8 @@ public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
-          strings_(ctx.strings()), counters_(ctx.counters()), options_(options) {
+          strings_(ctx.strings()), counters_(ctx.counters()), stack_(ctx.stack()),
+          options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         constOff_.reserve(d.constants.size());
@@ -698,6 +700,7 @@ public:
 
     RunResult run() {
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
+        stack_ = kernel::StackRange::ofThisThread();
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
@@ -926,6 +929,7 @@ private:
     /// (UNSPECIFIED_BEHAVIOR.md 4).
     std::set<const sir::Instr*> warned_;
     kernel::Counters& counters_;
+    kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
     kernel::CounterId cInstrs_{0};
     RunOptions options_;
     kernel::TimeFormat timeFormat_;
@@ -985,12 +989,24 @@ private:
     /// simulation a stack that holds this many (RUNTIME_ABI.md 5).
     static constexpr std::size_t kMaxCallDepth = 10000;
 
-    /// One more call of f would nest deeper than kMaxCallDepth: reports the
-    /// run-time error of the design at the call (SCHEDULER_SPEC.md 16.2).
+    /// One more call of f would nest deeper than kMaxCallDepth, or the
+    /// stack of this thread is nearly used up: reports it at the call and
+    /// ends the run (SCHEDULER_SPEC.md 16.2, RUNTIME_ABI.md 5).
     bool tooDeep(const Frame& f, const sir::Instr& in) {
-        if (f.calls.size() + callDepth_ < kMaxCallDepth) return false;
-        designError(f, in, "calls nested more than " + std::to_string(kMaxCallDepth) + " deep");
+        if (f.calls.size() + callDepth_ >= kMaxCallDepth) {
+            designError(f, in, "calls nested more than " + std::to_string(kMaxCallDepth) + " deep");
+            return true;
+        }
+        if (!stack_.nearlyUsedUp()) return false;
+        stackLimit(instanceOf(d_.process(f.process)), in.loc);
         return true;
+    }
+    /// The stack of this thread is nearly used up where a call of the
+    /// design would start: the line of SCHEDULER_SPEC.md 16.2 at loc,
+    /// then the end of the run, reason resource_limit (RUNTIME_ABI.md 5).
+    void stackLimit(sir::InstanceId inst, sir::SourceLoc loc) {
+        output_.message(runtimeLine(inst, loc, "the stack of this thread is nearly used up"));
+        sched_.resourceLimit();
     }
     bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.
 
@@ -1312,13 +1328,21 @@ private:
     }
     /// The same, given the process that runs.
     void designErrorIn(const sir::Process& p, const sir::Instr& in, const std::string& what) {
-        const sir::InstanceId inst = isSubBody(act_.body) ? subOf(act_.body).instance : p.instance;
-        std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
-        line += ":" + std::to_string(in.loc.line) + ": error: " + what + " [" +
+        output_.message(runtimeLine(instanceOf(p), in.loc, what));
+        sched_.runtimeError();
+    }
+    /// The instance whose code runs: the subroutine's, or process p's.
+    sir::InstanceId instanceOf(const sir::Process& p) const {
+        return isSubBody(act_.body) ? subOf(act_.body).instance : p.instance;
+    }
+    /// The line of a run-time error of the design (SCHEDULER_SPEC.md
+    /// 16.2): `<file>:<line>: error: <what> [<instance> @ <time>]`.
+    std::string runtimeLine(sir::InstanceId inst, sir::SourceLoc loc, const std::string& what) {
+        std::string line = loc.file < d_.sources.size() ? d_.sources[loc.file] : "?";
+        line += ":" + std::to_string(loc.line) + ": error: " + what + " [" +
                 d_.instance(inst).scopeName + " @ " + messageTime(sched_.time(), d_.timePrecision) +
                 "]";
-        output_.message(line);
-        sched_.runtimeError();
+        return line;
     }
 
     /// Whether the instruction writes a variable or schedules an event,
@@ -2282,6 +2306,12 @@ private:
     /// Runs guard or watch g like guard(), its value in ret (and in
     /// retWide_ when wider than 64 bits). False on an error.
     bool runWaiter(Frame& f, sir::SubroutineId g, std::uint64_t& steps, W4& ret) {
+        // The kernel calls it in the middle of a write, which may be deep
+        // in the calls of another process (SCHEDULER_SPEC.md 9.5).
+        if (stack_.nearlyUsedUp()) {
+            stackLimit(d_.subroutine(g).instance, d_.subroutine(g).loc);
+            return false;
+        }
         const Act caller = act_;
         std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         const VarsId varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
@@ -2623,6 +2653,10 @@ private:
     Exit callWith(Frame& f, sir::SubroutineId s, const std::vector<std::vector<W4>>& args,
                   std::uint64_t& steps) {
         const sir::Subroutine& sub = d_.subroutine(s);
+        if (stack_.nearlyUsedUp()) {
+            stackLimit(sub.instance, sub.loc);
+            return Exit::Error;
+        }
         const Act caller = act_;
         const BodyId body = bodyOf(s);
         std::vector<W4> vars = newVars(body);
