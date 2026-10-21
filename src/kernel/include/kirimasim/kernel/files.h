@@ -53,11 +53,13 @@ public:
     // Input (SYSTEM_TASKS.md 6.3, 6.4). Each takes an fd and sets notOpen
     // when desc names no open fd (an mcd, x or z bits, a closed number);
     // then nothing is read and the error value is returned. Reading a file
-    // that only writes fails with EBADF.
+    // that only writes fails with EBADF, once what $ungetc pushed back on
+    // it has been read.
 
     /// $fgetc: the next byte, or -1 at the end of the file or on an error.
     int getChar(W4 desc, bool& notOpen);
-    /// $ungetc: pushes c back, to be read before the rest; 0, or -1.
+    /// $ungetc: pushes c back, to be read before the rest, on any open
+    /// file; 0, or -1.
     int ungetChar(int c, W4 desc, bool& notOpen);
     /// $fgets: reads up to a newline, which is included, the end of the
     /// file, or max characters (0 for no limit) into line.
@@ -99,7 +101,8 @@ private:
     std::uint32_t place(std::uint32_t row, std::FILE* f);
     /// The row of fd desc for input, or nullptr with notOpen set.
     File* reader(W4 desc, bool& notOpen);
-    /// Starts an operation that reads r: false, with EBADF, when r only writes.
+    /// Starts an operation that reads r: false, with EBADF, when r only
+    /// writes and has nothing pushed back.
     bool startRead(File& r);
     /// The next character of r, or -1 at the end or on an error.
     int take(File& r);

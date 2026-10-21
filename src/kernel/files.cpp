@@ -162,6 +162,9 @@ Files::File* Files::reader(W4 desc, bool& notOpen) {
 bool Files::startRead(File& r) {
     r.err = 0;
     if (!r.reads || r.f == nullptr) {
+        // What $ungetc pushed back is read all the same; take fails after
+        // it (SYSTEM_TASKS.md 6.3).
+        if (!r.back.empty()) return true;
         r.err = EBADF;
         return false;
     }
@@ -189,6 +192,10 @@ int Files::take(File& r) {
         r.back.pop_back();
         return c;
     }
+    if (!r.reads || r.f == nullptr) {  // a file that only writes
+        r.err = EBADF;
+        return -1;
+    }
     const int c = std::fgetc(r.f);
     if (c != EOF) return c;
     if (std::ferror(r.f) != 0) {
@@ -209,11 +216,9 @@ int Files::getChar(W4 desc, bool& notOpen) {
 int Files::ungetChar(int c, W4 desc, bool& notOpen) {
     File* r = reader(desc, notOpen);
     if (r == nullptr) return -1;
+    // Any open file takes it, one that only writes too (SYSTEM_TASKS.md
+    // 6.3): the next reads return it.
     r->err = 0;
-    if (!r->reads) {
-        r->err = EBADF;
-        return -1;
-    }
     r->back.push_back(static_cast<char>(c));
     return 0;
 }

@@ -146,6 +146,10 @@ own. CONTRIBUTING.md says what goes in this file.
   resource_limit and exit code 6, not error and code 2, and the line names
   the option: `calls nested more than <n> deep (--max-call-depth=<n>)`
   (SCHEDULER_SPEC.md 16.2, CLI.md 2.7).
+- `$ungetc` on a file opened only for writing returns 0, as for any
+  open file, and the reads that follow return the characters pushed back,
+  the last first, before they fail with EBADF (21.3.4.3, SYSTEM_TASKS.md
+  6.3). It returned -1 before, as the C library of macOS does.
 
 ### Fixed
 

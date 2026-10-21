@@ -33,7 +33,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 | 条件 | 今 | 達成 |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で Icarus Verilog 以上 | kirimasim 212 本、Icarus Verilog 211 本（14.0 devel、04cc493。合格条件で使う版） | 達成 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で Icarus Verilog 以上 | kirimasim 213 本、Icarus Verilog 211 本（14.0 devel、04cc493。合格条件で使う版） | 達成 |
 | 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,451 本が通る（99.0%）。失敗は 0 本で、15 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P3 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 4 晩続けて通った（2026-10-20 まで） | まだ |
@@ -42,11 +42,11 @@ kirimasim の数は 2026-10-21 に測ったもので、右の 2 列の Icarus Ve
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 1,152 | 1,149、2 本は飛ばす | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 212 | 213 | 321 |
+| このリポジトリのテスト（CTest、dev の構成） | 1,165 | 1,162、2 本は飛ばす | — | — |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 213 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）175、`tests/suite/` 823（`tools/` の 104 個の生成器が作る）、道具 108、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 2。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）175、`tests/suite/` 835（`tools/` の 105 個の生成器が作る）、道具 109、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 2。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラス（P3）と、並行アサーション（P3）です。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

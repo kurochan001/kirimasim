@@ -770,6 +770,13 @@ MUTANTS = [
     ("vm: the call one deeper than the limit runs", "src/vm/vm.cpp",
      "        if (f.calls.size() + callDepth_ >= options_.maxCallDepth) {",
      "        if (f.calls.size() + callDepth_ > options_.maxCallDepth) {"),
+    ("kernel: $ungetc refuses a file that only writes", "src/kernel/files.cpp",
+     "    r->err = 0;\n    r->back.push_back(static_cast<char>(c));\n    return 0;",
+     "    r->err = 0;\n    if (!r->reads) {\n        r->err = EBADF;\n        return -1;\n    }\n"
+     "    r->back.push_back(static_cast<char>(c));\n    return 0;"),
+    ("kernel: a file that only writes does not read what was pushed back", "src/kernel/files.cpp",
+     "        if (!r.back.empty()) return true;\n        r.err = EBADF;",
+     "        r.err = EBADF;"),
     ("vm: a call does not look at the stack left", "src/vm/vm.cpp",
      "        if (!stack_.nearlyUsedUp()) return false;",
      "        if (true) return false;"),
