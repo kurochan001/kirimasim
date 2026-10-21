@@ -29,8 +29,8 @@
   },
   "population": {
     "total": 1466,
-    "passed": 1451,
-    "failed": 0,
+    "passed": 1450,
+    "failed": 1,
     "unsupported": 15,
     "gate": 90
   },

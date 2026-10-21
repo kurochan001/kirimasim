@@ -49,7 +49,7 @@ The criteria and how they are measured are fixed in
 | Criterion | Now | Met |
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 213, Icarus Verilog 211; macOS: kirimasim 213, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
-| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
+| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,450 pass (98.9%), 1 fail; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 4 nights in a row, through 2026-10-20 | Not yet |
 
@@ -59,7 +59,7 @@ kirimasim's numbers were measured on 2026-10-21; Icarus Verilog's and Verilator'
 | --- | --- | --- | --- | --- |
 | This repository's tests (CTest, dev configuration) | 1,165 | 1,163, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
-| Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
+| Own test suite, P1 population | 1,466 | 1,450 | 1,274 | 1,329 |
 
 This repository's tests by kind: unit tests (GoogleTest) 175, `tests/suite/` 835 (made by 105 generators under `tools/`), tools 109, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 2.
 <!-- counts:end -->
