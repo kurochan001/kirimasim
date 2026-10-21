@@ -45,7 +45,7 @@ The criteria and how they are measured are fixed in
 
 | Criterion | Now | Met |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 210, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses), both on macOS; the nightly run on Linux counted Icarus 211 on 2026-10-20, one more in chapter 21, which test not confirmed yet | On macOS; not yet confirmed on Linux |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog | kirimasim 212, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses), both on macOS; the nightly run on Linux counted Icarus 211 on 2026-10-20, one more in chapter 21, which test not confirmed yet | Yes on macOS; the next nightly run is to confirm Linux |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), none fails; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The fuzz tests pass in every build; the nightly runs passed on each of the 4 nights so far (2026-10-17 to 2026-10-20) | Not yet |
@@ -60,16 +60,17 @@ separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-
 Measured on 2026-10-17, against the newest development versions of Icarus
 Verilog and Verilator built from their main branches that day. kirimasim's
 sv-tests and own-suite results were measured again on 2026-10-21, after
-file input, `$random` and then waveforms came: sv-tests went from 195 to
-201, 209, then 210, and the own suite did not change. The repository's
-tests were counted after `$urandom` came, the same day, in the dev
+file input, `$random`, waveforms and then `randcase` came: sv-tests went
+from 195 to 201, 209, 210, then 212, and the own suite did not change.
+The repository's tests were counted after `randcase` came, the same day,
+in the dev
 configuration (release adds one, the run to the default of
 `--max-slot-events`).
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest) | 1,101 | 1,099, 2 skipped | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 210 | 213 | 321 |
+| This repository's tests (CTest) | 1,107 | 1,105, 2 skipped | — | — |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 212 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
 The two skipped tests of this repository need clocking blocks (P3), or
@@ -149,7 +150,7 @@ and 1,133 of the own test suite.
 | Kind | Tests | What they check |
 | --- | --- | --- |
 | Unit tests (GoogleTest) | 168 | SIR and its verifier (63), the scheduler against a reference model (26), `valsem` (14), output formats (13), strengths (9), input scanning (9), time scales (7), UDP tables (4), counters (4), the Context (2), the kernel's fast operations against `valsem`: one word (6) and any width (6), and more |
-| `tests/suite/` | 786 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (353), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
+| `tests/suite/` | 791 | Simulation tests with expected output and illegal designs with the expected error, most of them made by the generators under `tools/`: procedures (358), scheduling (192), values (75), hierarchy (51), continuous assignments (39), nets (37), illegal designs (35), and others |
 | `tests/dump_sir/` | 29 | The intermediate representation that the front end makes |
 | State and Contexts | 4 | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
 | Tools | 101 | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
@@ -177,7 +178,7 @@ simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 | 14 Clocking blocks | 1 | 1 | 1 | 1 | |
 | 15 Interprocess synchronization | 2 | 0 | 0 | 2 | mailboxes (P3) |
 | 16 Assertions | 6 | 0 | 3 | 5 | concurrent assertions (P3) |
-| 18 Constrained random value generation | 22 | 8 | 8 | 22 | `randsequence` (12), `randcase` (2) |
+| 18 Constrained random value generation | 22 | 10 | 8 | 22 | `randsequence` (12) |
 | 20 Utility system tasks and functions | 38 | 37 | 34 | 37 | `$coverage_control` |
 | 21 I/O system tasks and functions | 27 | 25 | 25 | 26 | `$dumpports`, `$ungetc` on a file opened for writing (SYSTEM_TASKS.md 6.3) |
 | 22 Compiler directives | 6 | 6 | 6 | 6 | |
@@ -186,7 +187,7 @@ simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 | 26 Packages | 1 | 1 | 1 | 1 | |
 | UVM | 37 | 0 | 0 | 28 | the UVM library needs classes (P3) |
 | UVM random | 3 | 3 | 3 | 3 | |
-| **Total** | **344** | **210** | **213** | **321** | |
+| **Total** | **344** | **212** | **213** | **321** | |
 
 The P1 criterion compares kirimasim with the Icarus build that sv-tests
 pins (04cc493), which passes 210; the newest Icarus passes 213.
@@ -303,7 +304,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   structures and arrays as arguments, functions returning unpacked
   structures and arrays.
 - **Statements and expressions:** `if`, `case`, `casez`, `casex`,
-  `case inside`; `unique`, `unique0` and `priority` with their violation
+  `case inside`, `randcase`; `unique`, `unique0` and `priority` with their violation
   reports; every loop, `break`, `continue`, `return`; all operators
   including streaming, `inside`, wildcard equality, assignment operators and
   increments; assignment patterns.
@@ -336,7 +337,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 | Not yet | Planned |
 | --- | --- |
-| `randcase`, FST waveforms, the `%p` format, `%v` with resolved strengths, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`), `$fread` into structures with array or real members | P1 |
+| FST waveforms, the `%p` format, `%v` with resolved strengths, formats known only at run time (`$sformat`, `$sformatf`, `$sscanf`, `$value$plusargs`), `$fread` into structures with array or real members | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
@@ -494,7 +495,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
   generators under `tools/` whose expected output follows from the written
-  rules. There are 102 generators, 786 tests in `tests/suite/`, and 1,101
+  rules. There are 103 generators, 791 tests in `tests/suite/`, and 1,107
   CTest tests in all.
 - **Negative controls.** `tools/mutants.py` plants 343 known mistakes in the
   code, one at a time; every one of them must make some test fail.
