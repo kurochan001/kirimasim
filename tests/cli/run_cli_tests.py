@@ -69,6 +69,15 @@ CWD_CASES = [
     (["+incdir+include", '+define+GREETING="hi"', "macros.sv"], 0, "=hi 7\n", ""),
     (["parse", "+incdir+include", "macros.sv"], 0, "=", ""),
     (["macros.sv"], 2, "=", "macros.sv:4:10: error: 'macros_inc.svh'"),
+    # $stacktrace, innermost first: the call's scope, then the task or
+    # function, or the module instance of the procedure, that made each
+    # call (SYSTEM_TASKS.md 10.3).
+    (["stacktrace.sv"], 0,
+     "=top (stacktrace.sv:27)\n"
+     "top.u.f (stacktrace.sv:8)\ntop.u.t (stacktrace.sv:12)\ntop (stacktrace.sv:28)\n"
+     "top.fb (stacktrace.sv:31)\n"
+     "top.g.gt (stacktrace.sv:23)\ntop (stacktrace.sv:34)\n"
+     "top.u.w (stacktrace.sv:16)\ntop (stacktrace.sv:35)\n", ""),
 ]
 
 # (the plusarg that picks the call in end_tasks.sv, the reason for ending,

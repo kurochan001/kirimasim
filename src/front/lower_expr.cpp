@@ -3058,6 +3058,10 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
         lowerFormatArgs(args, ops, sl, 'd', name);
         return emit(Op::Syscall, st, std::move(ops), sl);
     }
+    if (name == "$stacktrace" && args.empty())
+        // The chain of calls as text (SYSTEM_TASKS.md 10.3): the scope of the
+        // call, known here; the VM adds the calls that led to it.
+        return emit(Op::Syscall, st, {Operand::str(name), Operand::str(b_.scope)}, sl);
     // The string methods (6.16): the string is the first argument.
     if (!isBuiltinMethod(call, ast::SymbolKind::StringType) || args.empty()) return std::nullopt;
     // A method that changes the string gets it as an lvalue argument.
@@ -3422,6 +3426,11 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     }
     if (name == "$monitoron" || name == "$monitoroff") {
         emitVoid(Op::Syscall, {Operand::str(name)}, sl);
+        return;
+    }
+    if (name == "$stacktrace" && args.empty()) {
+        // As a task it prints the chain of calls (SYSTEM_TASKS.md 10.3).
+        emitVoid(Op::Syscall, {Operand::str(name), Operand::str(b_.scope)}, sl);
         return;
     }
     if (name == "$timeformat" && (args.empty() || args.size() == 4)) {

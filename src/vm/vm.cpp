@@ -88,6 +88,7 @@ enum class SysTask : std::uint8_t {
     WriteMem,
     Random,
     Dist,
+    Stacktrace,
     DumpFile,
     DumpVars,
     DumpOff,
@@ -251,6 +252,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$writememb" || name == "$writememh") return SysTask::WriteMem;
     if (name == "$random") return SysTask::Random;
     if (name.starts_with("$dist_")) return SysTask::Dist;
+    if (name == "$stacktrace") return SysTask::Stacktrace;
     if (name == "$dumpfile") return SysTask::DumpFile;
     if (name == "$dumpvars") return SysTask::DumpVars;
     if (name == "$dumpoff") return SysTask::DumpOff;
@@ -327,6 +329,7 @@ std::size_t minOperands(SysTask t) {
         case SysTask::Math1:
         case SysTask::DumpFile:
         case SysTask::DumpLimit:
+        case SysTask::Stacktrace:
         case SysTask::Clog2: return 2;
         default: return 1;
     }
@@ -543,6 +546,7 @@ struct Frame {
     struct SyncCall {
         std::uint32_t body = 0;
         std::uint32_t children = 0;
+        const sir::Instr* site = nullptr;  ///< The call in the caller; none for a deferred one.
     };
     std::vector<SyncCall> syncCalls;
     /// The activations of scoped named blocks, innermost last: the block,
@@ -2036,6 +2040,10 @@ private:
                     case Op::Resolve: resolve(in, info_[body][b][k]); break;
                     case Op::Syscall: {
                         const InstrInfo& info = info_[body][b][k];
+                        if (info.task == SysTask::Stacktrace) {
+                            stacktrace(f, in);
+                            break;
+                        }
                         if (!syscall(p, in, info)) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         break;
@@ -2449,7 +2457,7 @@ private:
         bindArgs(body, s, args, vars);
         W4 ret{0, 0};
         ++callDepth_;
-        f.syncCalls.push_back({body, f.births});
+        f.syncCalls.push_back({body, f.births, &in});
         const Exit e = runBody(f, 0, steps, ret);
         std::vector<W4> wide;
         if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
@@ -3933,6 +3941,39 @@ private:
         output_.message(line);
     }
 
+    /// $stacktrace (SYSTEM_TASKS.md 10.3): where it is called, with the
+    /// scope front gives, then each call that led there, innermost first:
+    /// the task or function, or the module instance of the procedure, and
+    /// the place of the call. A task prints the lines; a function returns
+    /// them, with no newline after the last.
+    void stacktrace(const Frame& f, const sir::Instr& in) {
+        const auto where = [&](const sir::SourceLoc& l) {
+            return (l.file < d_.sources.size() ? d_.sources[l.file] : std::string("?")) + ":" +
+                   std::to_string(l.line);
+        };
+        const auto scopeOf = [&](std::uint32_t body) {
+            return isSubBody(body) ? subOf(body).name
+                                   : d_.instances[d_.processes[body].instance].scopeName;
+        };
+        // The bodies from the process in, each with the call that entered it.
+        std::vector<std::pair<std::uint32_t, const sir::Instr*>> chain{{f.process, nullptr}};
+        for (const Frame::TaskCall& c : f.calls)
+            chain.emplace_back(c.body, c.site);
+        for (const Frame::SyncCall& c : f.syncCalls)
+            chain.emplace_back(c.body, c.site);
+        std::string text = in.operands[1].text + " (" + where(in.loc) + ")";
+        for (std::size_t k = chain.size() - 1; k-- > 0;) {
+            const sir::Instr* site = chain[k + 1].second;
+            text += "\n" + scopeOf(chain[k].first) + " (" +
+                    (site != nullptr ? where(site->loc) : std::string("?")) + ")";
+        }
+        if (in.result != sir::kNone) {
+            temp(in.result) = {strings_.intern(text), 0};
+            return;
+        }
+        output_.write(text + "\n");
+    }
+
     /// What the waveform needs from the design and the run (WAVEFORM.md):
     /// the dump table, made for the kernel, and the options.
     kernel::DumpSetup dumpSetup() const {
@@ -4571,6 +4612,7 @@ private:
                 temp(in.result) = r;
                 return true;
             }
+            case SysTask::Stacktrace:  // runBody, which has the frame
             case SysTask::None:
             case SysTask::Unknown: break;
         }

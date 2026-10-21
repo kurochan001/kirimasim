@@ -117,6 +117,9 @@ own. CONTRIBUTING.md says what goes in this file.
 - `$fread` into a memory of unpacked structures reads each element's
   members in declaration order (SYSTEM_TASKS.md 6.3, 21.3.4.4). Before, it
   was reported as unsupported.
+- `$stacktrace`, as a task and as a function: the call's scope and place,
+  then each call that led there (SYSTEM_TASKS.md 10.3). Before, it was
+  reported as unsupported.
 
 ### Changed
 
