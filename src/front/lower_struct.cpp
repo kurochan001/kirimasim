@@ -175,7 +175,7 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
         return p;
     }
     const sir::Slot& slot = design().slots[st.id];
-    p.slot = sir::SlotId{st.id};  // a frame variable's number when st.frame
+    p.slot = sir::SlotId{st.id};
     p.type = slot.type;
     if (st.elem.empty()) {
         p.kind = Place::Kind::Slot;

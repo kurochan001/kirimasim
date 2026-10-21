@@ -1401,7 +1401,10 @@ Lowerer::Place Lowerer::arrayElementPlace(const ast::Expression& base,
     if (!st) unsupported(sl, "selecting from this array");
     Place p;
     p.kind = Place::Kind::Element;
-    p.slot = sir::SlotId{st->id};  // a frame variable's number when frame
+    if (st->frame)
+        p.frame = sir::FrameVarId{st->id};
+    else
+        p.slot = sir::SlotId{st->id};
     p.indices = st->elem;
     if (st->frame) {
         // An automatic array, or what an array ref argument refers to
@@ -2507,8 +2510,8 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
     if (!st->frame) return ArrayTarget{sir::SlotId{st->id}, st->constIdx};
     // An automatic array, or what an array ref argument refers to.
     const bool ref = frameVars()[st->id].type.kind == sir::TypeKind::Ref;
-    return ArrayTarget{sir::SlotId{st->id}, st->constIdx,
-                       ref ? Place::Home::Ref : Place::Home::Frame};
+    return ArrayTarget{
+        {}, st->constIdx, ref ? Place::Home::Ref : Place::Home::Frame, sir::FrameVarId{st->id}};
 }
 
 const std::vector<sir::ArrayDim>& Lowerer::dimsOf(ArrayBase b) {
@@ -2524,7 +2527,10 @@ Type Lowerer::elemTypeOf(ArrayBase b) {
     return sir::voidType();
 }
 
-Type Lowerer::homeType(const Place& p) { return elemTypeOf({p.home, p.slot.index()}); }
+Type Lowerer::homeType(const Place& p) {
+    return elemTypeOf(p.home == Place::Home::Slot ? ArrayBase{p.slot}
+                                                  : ArrayBase{p.home, p.frame.index()});
+}
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
     // The writes of an aggregate assignment, after every value of its right
@@ -2537,7 +2543,10 @@ Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t
     Place p;
     p.kind = Place::Kind::Element;
     p.home = s.home;
-    p.slot = sir::SlotId{s.id};  // a frame variable's number when s.frame
+    if (s.home == Place::Home::Slot)
+        p.slot = sir::SlotId{s.id};
+    else
+        p.frame = sir::FrameVarId{s.id};
     for (const std::int64_t i : indices)
         p.indices.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(i)).op);
     if (s.home == Place::Home::Slot) p.elem = elementNumber(design().slots[s.id], indices);
@@ -2702,7 +2711,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     // Bits of an automatic variable, or of what a ref
                     // argument refers to (SIR_SPEC.md 7.4, 8).
                     p.home = leaf.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
-                    p.slot = sir::SlotId{leaf.frame.index()};  // read back by frameHome()
+                    p.frame = leaf.frame;
                 } else {
                     p.slot = leaf.slot;
                     p.indices = leaf.indices;
@@ -2712,6 +2721,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 const Place el = arrayElementPlace(*acc->base, acc->indices, sl);
                 p.home = el.home;
                 p.slot = el.slot;
+                p.frame = el.frame;
                 p.indices = el.indices;
                 p.elem = el.elem;
             } else {
@@ -2796,7 +2806,6 @@ Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width
     if (base.kind == Place::Kind::Frame || base.kind == Place::Kind::Ref) {
         // Bits of an automatic variable or of what a ref argument refers to.
         base.home = base.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
-        base.slot = sir::SlotId{base.frame.index()};  // read back by frameHome()
         base.kind = Place::Kind::Slot;
     }
     if (base.kind != Place::Kind::Slot && base.kind != Place::Kind::Element &&

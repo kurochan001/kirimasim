@@ -304,7 +304,7 @@ public:
         };
         Kind kind = Kind::Slot;
         /// Where the variable of an Element or Bits place lives: in slot
-        /// `slot`, in frame variable `slot`, or where ref argument `slot`
+        /// `slot`, in frame variable `frame`, or where ref argument `frame`
         /// refers to (SIR_SPEC.md 5.3, 7.4, 8).
         enum class Home : std::uint8_t { Slot, Frame, Ref };
         Home home = Home::Slot;
@@ -319,9 +319,8 @@ public:
         std::vector<Place> base;            ///< StringChar: the string; Concat: the parts.
         sir::Type type;                     ///< The type of the value there.
         /// The frame variable, or ref argument, that an Element or Bits
-        /// place of home Frame or Ref lives in. It is kept in `slot` for
-        /// now; this is the one place that reads it as a frame variable.
-        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot.index()}; }
+        /// place of home Frame or Ref lives in.
+        [[nodiscard]] sir::FrameVarId frameHome() const { return frame; }
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
     /// The place of a whole slot.
@@ -342,11 +341,11 @@ public:
     /// An unpacked array in a slot, or a sub-array of one selected by
     /// constant indices (declared index values).
     struct ArrayTarget {
-        sir::SlotId slot{0};
+        sir::SlotId slot{0};  ///< When home is Slot.
         std::vector<std::int64_t> indices;
-        Place::Home home = Place::Home::Slot;  ///< slot is a frame variable unless Slot.
-        /// slot read as the frame variable it is, when home is not Slot.
-        [[nodiscard]] sir::FrameVarId frameHome() const { return sir::FrameVarId{slot.index()}; }
+        Place::Home home = Place::Home::Slot;
+        sir::FrameVarId frame{0};  ///< When home is Frame or Ref.
+        [[nodiscard]] sir::FrameVarId frameHome() const { return frame; }
     };
     /// An unpacked array: a slot, an array frame variable, or what an array
     /// ref argument refers to.
@@ -357,7 +356,9 @@ public:
         Place::Home home = Place::Home::Slot;
         std::uint32_t id = 0;
     };
-    static ArrayBase baseOf(const ArrayTarget& a) { return {a.home, a.slot.index()}; }
+    static ArrayBase baseOf(const ArrayTarget& a) {
+        return a.home == Place::Home::Slot ? ArrayBase{a.slot} : ArrayBase{a.home, a.frame.index()};
+    }
     const std::vector<sir::ArrayDim>& dimsOf(ArrayBase b);
     sir::Type elemTypeOf(ArrayBase b);
     /// The value type of the variable an Element or Bits place is in (one
