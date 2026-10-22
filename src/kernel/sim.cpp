@@ -611,10 +611,12 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::Nba: {
             const NbaRecord n = slotNbas_[e.id];
-            scratch_.assign(arena_.begin() + static_cast<std::ptrdiff_t>(n.arenaOffset),
-                            arena_.begin() + static_cast<std::ptrdiff_t>(n.arenaOffset + n.words));
-            const std::vector<std::uint64_t> value = scratch_;
-            write({.slot = n.slot, .elem = n.elem, .lsb = n.lsb, .width = n.width}, value.data());
+            // write consumes every input bit before calling guards or
+            // monitors, which may grow the arena and the record table.
+            // The value already lives until the end of this time slot
+            // (SCHEDULER_SPEC.md 5); no second snapshot is needed.
+            write({.slot = n.slot, .elem = n.elem, .lsb = n.lsb, .width = n.width},
+                  arena_.data() + n.arenaOffset);
             return;
         }
         case Kind::NbaDelayed: {

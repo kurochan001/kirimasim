@@ -133,6 +133,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Changed
 
+- Nonblocking updates without a delay use their saved values directly,
+  avoiding a temporary heap allocation for each update while retaining
+  the values until the time slot ends (SCHEDULER_SPEC.md 5, 13; #28).
 - Less overhead in tier 1 when starting and resuming processes, by reusing
   the queue for reclaiming ended processes and skipping file-monitor
   completion checks when no file monitors remain (SCHEDULER_SPEC.md 10.8,

@@ -1010,6 +1010,109 @@ TEST(Scheduler, MonitorIffIsReadOnlyWhenItsEventOccurs) {
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
 }
 
+struct NbaObserver {
+    k::SlotId slot;
+    k::SlotId side;
+    k::ProcessId process;
+    std::vector<std::vector<std::uint64_t>> values;
+    std::vector<std::uint64_t> times;
+};
+
+int observeNbaAndSchedule(kirima_context* ctx, void* frame) {
+    auto& c = k::fromC(ctx);
+    auto& f = *static_cast<NbaObserver*>(frame);
+    const auto* p = c.store().element(f.slot, 1);
+    f.values.emplace_back(p, p + c.store().layout(f.slot).elemWords);
+    f.times.push_back(c.scheduler().time());
+    // Grow the NBA arena and record table while an update is being
+    // announced. Neither may invalidate the update that is running.
+    const std::vector<std::uint64_t> side(64, f.values.size());
+    c.scheduler().scheduleNba(f.process, {.slot = f.side}, side.data(), 0);
+    return 0;  // Keep observing the next update too.
+}
+
+TEST(Scheduler, NbaSnapshotsAcrossDomainsAndRanges) {
+    // SCHEDULER_SPEC.md 5, 13 (4.9.4, 10.4.2): capture the RHS and target
+    // when scheduled, preserve statement order, and leave other bits and
+    // array elements alone. Cover values of one and multiple chunks,
+    // with zero and nonzero delays in NBA and Re-NBA.
+    for (const auto domain :
+         {k::Domain::Two, k::Domain::Four, k::Domain::Real, k::Domain::Handle}) {
+        for (const unsigned width : {1U, 63U, 64U, 65U, 127U, 128U, 129U, 260U}) {
+            for (const int offset : {-1, 0, 7, 63}) {
+                const bool integral = domain == k::Domain::Two || domain == k::Domain::Four;
+                if (!integral && (width != 64 || offset != -1)) continue;
+                for (const auto group : {Group::Active, Group::Reactive}) {
+                    for (const std::uint64_t delay : {0U, 3U}) {
+                        SCOPED_TRACE(::testing::Message()
+                                     << "domain=" << static_cast<int>(domain) << " width=" << width
+                                     << " offset=" << offset << " group=" << static_cast<int>(group)
+                                     << " delay=" << delay);
+                        k::Context ctx;
+                        auto& s = ctx.scheduler();
+                        const unsigned lsb = offset < 0 ? 0 : static_cast<unsigned>(offset);
+                        const unsigned targetWidth = offset < 0 ? width : lsb + width + 5;
+                        const auto slot = ctx.store().add(domain, targetWidth, 2, k::Init::Zero);
+                        const auto side = ctx.store().add(k::Domain::Two, 4096, 1, k::Init::Zero);
+                        // A slot that has had an override retains its base
+                        // value even after the override has been released.
+                        if (offset == 0 || offset == 63) s.markHeld(slot, false, false);
+                        std::vector<std::string> log;
+                        Waiter waiter{&log, "unexpected resume"};
+                        const auto process = s.addProcess(&logOnce, &waiter, group);
+                        NbaObserver observer{slot, side, process};
+                        const k::WaitItem item{
+                            {slot, 1, 1, 0, 0}, Edge::Any, &observeNbaAndSchedule, &observer};
+                        s.waitEvent(process, {&item, 1});
+                        const unsigned stride = domain == k::Domain::Four ? 2 : 1;
+                        const unsigned words = stride * ((width + 63) / 64);
+                        const auto targetWords = ctx.store().layout(slot).elemWords;
+                        std::vector<std::vector<std::uint64_t>> expected;
+                        for (unsigned phase = 0; phase < 2; ++phase) {
+                            std::vector<std::uint64_t> value(words, 0);
+                            std::vector<std::uint64_t> want(targetWords, 0);
+                            for (unsigned bit = 0; bit < width; ++bit) {
+                                for (unsigned plane = 0; plane < stride; ++plane) {
+                                    const bool set =
+                                        plane == 0 ? (bit % 3 == 0) != (phase != 0) : bit % 4 >= 2;
+                                    if (!set) continue;
+                                    value[stride * (bit / 64) + plane] |= std::uint64_t{1}
+                                                                          << (bit % 64);
+                                    want[stride * ((lsb + bit) / 64) + plane] |=
+                                        std::uint64_t{1} << ((lsb + bit) % 64);
+                                }
+                            }
+                            expected.push_back(want);
+                            s.scheduleNba(process,
+                                          {.slot = slot,
+                                           .elem = 1,
+                                           .lsb = lsb,
+                                           .width = offset < 0 ? 0 : width},
+                                          value.data(), delay);
+                            std::fill(value.begin(), value.end(), 0);  // RHS storage is reused.
+                        }
+                        const std::vector<std::uint64_t> zero(targetWords, 0);
+                        EXPECT_EQ(std::vector(ctx.store().element(slot, 1),
+                                              ctx.store().element(slot, 1) + targetWords),
+                                  zero);
+                        EXPECT_EQ(s.run(), EndReason::Quiescent);
+                        EXPECT_EQ(observer.values, expected);
+                        EXPECT_EQ(observer.times, (std::vector<std::uint64_t>{delay, delay}));
+                        EXPECT_EQ(std::vector(ctx.store().element(slot, 0),
+                                              ctx.store().element(slot, 0) + targetWords),
+                                  zero);
+                        EXPECT_EQ(std::vector(ctx.store().element(slot, 1),
+                                              ctx.store().element(slot, 1) + targetWords),
+                                  expected.back());
+                        EXPECT_EQ(ctx.store().element(side, 0)[63], 2U);
+                        EXPECT_TRUE(log.empty());
+                    }
+                }
+            }
+        }
+    }
+}
+
 // --- The C function table -------------------------------------------------------
 
 struct AbiProcess {
