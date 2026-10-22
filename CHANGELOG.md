@@ -133,6 +133,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Changed
 
+- Less overhead in tier 1 when starting and resuming processes, by reusing
+  the queue for reclaiming ended processes and skipping file-monitor
+  completion checks when no file monitors remain (SCHEDULER_SPEC.md 10.8,
+  SYSTEM_TASKS.md 6.2; #28).
 - Building and testing need Python 3.10 or later (the test tools already
   used its syntax; CMake asked for 3.8).
 - Run-time errors of the design end the run with exit code 2 and one line

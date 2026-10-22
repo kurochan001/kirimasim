@@ -1234,7 +1234,7 @@ private:
     /// closed (SYSTEM_TASKS.md 6.2).
     void sweep() {
         kernel::ProcessId endedProcess = kernel::kNone;
-        while (sched_.takeEndedFileMonitor(endedProcess)) {
+        while (!fileMonitorFrames_.empty() && sched_.takeEndedFileMonitor(endedProcess)) {
             for (std::size_t i = 0; i < fileMonitorFrames_.size(); ++i) {
                 if (fileMonitorFrames_[i]->kernelId != endedProcess) continue;
                 Frame& f = *fileMonitorFrames_[i];
@@ -1245,10 +1245,13 @@ private:
             }
         }
         if (later_.empty()) return;
-        std::vector<Frame*> again;
-        again.swap(later_);
-        for (Frame* f : again)
-            tryRelease(*f);
+        // Retry only the entries present at the start. tryRelease may
+        // append frames that still hold reports, or their parents; those
+        // wait for the next sweep. Keep the queue's allocation for reuse.
+        const std::size_t count = later_.size();
+        for (std::size_t i = 0; i < count; ++i)
+            tryRelease(*later_[i]);
+        later_.erase(later_.begin(), later_.begin() + static_cast<std::ptrdiff_t>(count));
     }
 
     /// The children of a frame from birth number `from` on, in the order
