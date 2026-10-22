@@ -4,8 +4,8 @@
 // Formatting of values for $display and its relatives (SYSTEM_TASKS.md 3).
 //
 // Every tier formats through these functions, so the output does not
-// depend on the tier. A format string is parsed once, when a design is
-// loaded, into pieces; running a display only walks the pieces.
+// depend on the tier. Constant formats are parsed once when a design is
+// loaded; runtime string-format calls parse the value at each call.
 //
 // This header is part of the kernel's public interface and must stay
 // compilable as C++20.
@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -44,8 +45,8 @@ struct FormatSpec {
     bool zero = false;
 };
 
-/// A piece of a parsed format: literal text, or a specifier that takes
-/// one argument.
+/// A piece of a parsed format: literal text, or a specifier. %m and %l
+/// take no argument; the others take one.
 struct FormatPiece {
     bool isSpec = false;
     std::string text;  ///< Literal text (with %% already turned into %).
@@ -90,5 +91,29 @@ std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& t
 /// rounding of real delays, SCHEDULER_SPEC.md 1).
 std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, int width,
                            bool left = false);
+
+/// A borrowed argument of a runtime string-format call. Integral storage
+/// has the same layout as IntValue; all views live through the call.
+struct FormatValue {
+    enum class Kind { Integral, Real, String, Empty };
+    Kind kind = Kind::Integral;
+    IntValue integral;
+    double real = 0;
+    std::string_view text;
+};
+
+struct StringFormatResult {
+    std::string text;
+    std::string error;
+    bool argumentMismatch = false;
+};
+
+/// $sformat/$sformatf (SYSTEM_TASKS.md 3.13): only format is interpreted;
+/// missing values print nothing, extra values are ignored, and either
+/// sets argumentMismatch for the caller's warning. tickScale converts the
+/// caller's time unit to global-precision ticks for %t.
+StringFormatResult formatStringCall(std::string_view format, std::span<const FormatValue> values,
+                                    std::string_view scope, std::string_view cell,
+                                    std::uint64_t tickScale, int precision, const TimeFormat& tf);
 
 }  // namespace kirimasim::kernel

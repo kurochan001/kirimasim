@@ -135,9 +135,41 @@ and exit code 2. Constant formats are still checked at elaboration.
 
 Supported scan conversions are `%b`, `%o`, `%d`, `%h`/`%x`, `%c`, `%s` and
 `%f`/`%e`/`%g`, with field widths, assignment suppression and `%%`.
-Runtime formats for `$sformat` and `$sformatf` remain
-unsupported. See [system tasks, section 6.3](spec/SYSTEM_TASKS.md#63-input)
+See [system tasks, section 6.3](spec/SYSTEM_TASKS.md#63-input)
 and [SIR implementation limits](spec/SIR_SPEC.md).
+
+## String formats computed at run time
+
+`$sformat` and `$sformatf` accept a runtime string or packed format, including
+function results. Only the format argument is interpreted; a string value
+containing `%` is printed as data.
+
+```systemverilog
+module top;
+  string fmt, written, returned;
+  initial begin
+    for (int i = 0; i < 2; i++) begin
+      fmt = i == 0 ? "%0d" : "%04h";
+      $sformat(written, fmt, 10);
+      returned = $sformatf(fmt, 10);
+      $display("%s|%s", written, returned);
+    end
+  end
+endmodule
+```
+
+```text
+10|10
+000a|000a
+```
+
+Numeric, string and real conversions use the existing format rules. `%t` uses
+the caller's time unit and `$timeformat`; `%m` and `%l` use the calling scope
+and cell. Missing values print nothing and extra values are ignored, with one
+warning per call site. All supplied values are evaluated, including extra ones.
+Invalid formats and incompatible types end with a diagnostic and exit code 2.
+X/Z-containing packed formats and `%p` remain unsupported. Constant formats
+retain elaboration checks. See [system tasks, section 3.13](spec/SYSTEM_TASKS.md#313-formatting-to-strings).
 
 ## Plusarg formats computed at run time
 

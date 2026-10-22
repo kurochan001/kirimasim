@@ -13,6 +13,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `$sformat` and `$sformatf` accept formats evaluated at run time, including
+  strings, packed values and function results. They share numeric/string
+  conversion, `%t` scaling and `%m`/`%l` handling; missing or extra values
+  warn and continue (SYSTEM_TASKS.md 3.13; 21.3.3).
 - `$value$plusargs` accepts a string or packed format evaluated at each
   call, including function results. Matching still uses the first plusarg,
   and unmatched calls leave the output and its index expressions untouched

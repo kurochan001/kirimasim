@@ -187,6 +187,8 @@ Recent implementation coverage (2026-10-23):
 - [Runtime scan formats](../../tools/gen_runtime_scan_matrix.py): 50 suite files covering string/packed formats, string/file input, partial assignments and evaluation order. An additional [CLI test runner](../../tests/cli/run_runtime_scan_tests.py) checks 23 diagnostic and input/copyback cases; three unit tests cover the kernel's format preparation.
 - [Runtime plusarg formats](../../tools/gen_runtime_plusargs_matrix.py): 50 suite files covering five format representations in ten contexts, repeated format changes, first-match selection, wide values and copyback indices. An additional [CLI test runner](../../tests/cli/run_runtime_plusargs_tests.py) checks 27 diagnostic/copyback cases; three unit tests cover prefix/conversion parsing and output-type validation.
 
+- [Runtime string formats](../../tools/gen_runtime_string_format_matrix.py): 50 suite files covering both `$sformat` and `$sformatf`, five format representations in ten contexts, wide/real/string values, time-unit scaling, scope text and evaluation order. An additional [CLI runner](../../tests/cli/run_runtime_string_format_tests.py) checks 26 diagnostic/evaluation cases; six unit tests cover the shared kernel formatter.
+
 These are additions within the existing suite, not new P1 passing conditions.
 [Runnable examples and limits](../P1_FEATURES.md) accompany them.
 

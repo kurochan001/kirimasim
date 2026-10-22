@@ -428,6 +428,14 @@ Amendment of M3b.
   - Arguments that are arrays of structures, and ref structure arguments, are reported as unsupported for now.
 - **disable:** disabling tasks and blocks follows SCHEDULER_SPEC.md 10.4.
 
+Implementation note (2026-10-23): a runtime `$sformat`/`$sformatf` uses the
+`$sformatf.runtime` syscall. Its operands after the name are scope text, cell
+text, the caller-to-global tick scale, the format value, then raw typed values.
+An empty text operand among those values denotes an empty argument. The kernel
+interprets the format and conversions; the VM marshals the values and reports
+the returned error or count-mismatch warning. The string result is copied to
+`$sformat`'s destination after the call. This needs no new SIR opcode.
+
 ## 9. Text form (draft)
 
 - Written by `--dump-sir`, in a form that can be read back. Tests of the lowering use this text as their expected values (added to what TEST_SUITE.md's rules protecting expected values cover).

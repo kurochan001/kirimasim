@@ -15,6 +15,8 @@
 #include <system_error>
 #include <vector>
 
+#include "kirimasim/kernel/wide.h"
+
 namespace kirimasim::kernel {
 
 namespace {
@@ -267,6 +269,8 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             case 'c':
             case 's':
             case 't': break;
+            case 'm':
+            case 'l': break;
             case 'e':
             case 'f':
             case 'g': break;
@@ -442,6 +446,91 @@ std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, in
     }
     if (negative && whole.find_first_not_of("0.") != std::string::npos) whole.insert(0, "-");
     return place(whole + tf.suffix, w, left, ' ');
+}
+
+StringFormatResult formatStringCall(std::string_view format, std::span<const FormatValue> values,
+                                    std::string_view scope, std::string_view cell,
+                                    std::uint64_t tickScale, int precision, const TimeFormat& tf) {
+    StringFormatResult out;
+    std::vector<FormatPiece> pieces;
+    if (!parseFormat(format, pieces, out.error)) return out;
+    std::size_t used = 0;
+    for (const FormatPiece& piece : pieces) {
+        if (!piece.isSpec) {
+            out.text += piece.text;
+            continue;
+        }
+        const FormatSpec& spec = piece.spec;
+        if (spec.conv == 'm') {
+            out.text += scope;
+            continue;
+        }
+        if (spec.conv == 'l') {
+            if (cell.empty()) {
+                out.error = "%l outside a module";
+                return out;
+            }
+            out.text += cell;
+            continue;
+        }
+        if (used == values.size()) {
+            out.argumentMismatch = true;
+            continue;
+        }
+        const FormatValue& value = values[used++];
+        if (value.kind == FormatValue::Kind::Empty) {
+            out.text += ' ';
+            continue;
+        }
+        if (value.kind == FormatValue::Kind::String) {
+            if (spec.conv != 's') {
+                out.error = std::string("%") + spec.conv + " of a string";
+                return out;
+            }
+            out.text += formatString(value.text, spec);
+            continue;
+        }
+        const bool realSpec = spec.conv == 'e' || spec.conv == 'f' || spec.conv == 'g';
+        if (value.kind == FormatValue::Kind::Real) {
+            if (realSpec) {
+                out.text += formatReal(value.real, spec);
+            } else if (spec.conv == 't') {
+                out.text += formatTimeReal(value.real * static_cast<double>(tickScale), precision,
+                                           tf, spec.width, spec.left);
+            } else {
+                W4 converted{};
+                wide::fromReal(&converted, 64, value.real, false);
+                const IntValue integral{&converted.a, 64, false, true};
+                out.text += formatInt(integral, spec);
+            }
+            continue;
+        }
+        const IntValue& integral = value.integral;
+        if (!realSpec && (spec.conv != 't' || tickScale == 1)) {
+            out.text += spec.conv == 't'
+                            ? formatTime(integral, precision, tf, spec.width, spec.left)
+                            : formatInt(integral, spec);
+            continue;
+        }
+        std::vector<W4> words(wide::chunks(integral.width));
+        for (std::size_t i = 0; i < words.size(); ++i)
+            words[i] = integral.fourState ? W4{integral.words[2 * i], integral.words[2 * i + 1]}
+                                          : W4{integral.words[i], 0};
+        if (realSpec) {
+            out.text +=
+                formatReal(wide::toReal(words.data(), integral.width, integral.isSigned), spec);
+        } else {
+            W4 ticks{};
+            wide::resize(&ticks, 64, words.data(), integral.width, integral.isSigned);
+            const W4 factor{tickScale, 0};
+            W4 scaled{};
+            wide::mul(&scaled, &ticks, &factor, 64);
+            const std::uint64_t packed[] = {scaled.a, scaled.b};
+            out.text += formatTime({packed, 64, true, false}, precision, tf, spec.width, spec.left);
+        }
+    }
+    out.argumentMismatch = out.argumentMismatch || used < values.size();
+    return out;
 }
 
 }  // namespace kirimasim::kernel

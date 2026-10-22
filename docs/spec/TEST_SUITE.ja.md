@@ -187,6 +187,8 @@ sv-tests は、`simulation` のテストの合否を、シミュレータの出�
 - [実行時の読み取り書式](../../tools/gen_runtime_scan_matrix.py)：スイートの 50 ファイル。文字列/packed の書式、文字列/ファイルの入力、一部だけの代入、評価順を確かめる。さらに [CLI のテスト](../../tests/cli/run_runtime_scan_tests.py)で診断と入力・書き戻しの 23 ケース、ユニットテストの 3 件でカーネルの書式の準備を確かめる。
 - [実行時のプラスアーグの書式](../../tools/gen_runtime_plusargs_matrix.py)：スイートの 50 ファイル。5 種類の書式を 10 種類の実行場所で使い、呼び出しごとの書式の変更、最初の一致、幅の広い値、書き戻しの添字を確かめる。さらに [CLI のテスト](../../tests/cli/run_runtime_plusargs_tests.py)で診断と書き戻しの 27 ケース、ユニットテストの 3 件で接頭辞・変換の読み取りと出力の型の検査を確かめる。
 
+- [実行時の文字列への書式](../../tools/gen_runtime_string_format_matrix.py)：スイートの 50 ファイル。`$sformat` と `$sformatf` の両方で、5 種類の書式と 10 種類の実行場所、幅の広い値・実数・文字列、時刻単位の換算、スコープ名、評価順を確かめる。さらに [CLI のテスト](../../tests/cli/run_runtime_string_format_tests.py)で診断と評価順の 26 ケース、ユニットテストの 6 件で共有カーネルの書式化を確かめる。
+
 既存のスイートへの追加であり、P1 の合格条件の追加ではない。
 [実行例と制限](../P1_FEATURES.ja.md)も用意している。
 

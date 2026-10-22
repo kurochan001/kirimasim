@@ -292,4 +292,71 @@ TEST(Format, ZeroFlag) {
     EXPECT_EQ(zero(Num(5, 32, true).value, 'd', 5, true), "5    ");
 }
 
+TEST(Format, RuntimeStringValues) {
+    const Num n(static_cast<std::uint32_t>(-3), 32, true);
+    const FormatValue args[] = {{FormatValue::Kind::Integral, n.value},
+                                {FormatValue::Kind::Integral, n.value},
+                                {.kind = FormatValue::Kind::Real, .real = 1.5},
+                                {.kind = FormatValue::Kind::String, .text = "literal %0d"}};
+    const auto out =
+        formatStringCall("%0d|%0.1f|%0d|%s", args, "top", "work.top", 1000, -12, TimeFormat{});
+    EXPECT_TRUE(out.error.empty());
+    EXPECT_FALSE(out.argumentMismatch);
+    EXPECT_EQ(out.text, "-3|-3.0|2|literal %0d");
+}
+
+TEST(Format, RuntimeWideValues) {
+    const std::string bits = std::string(65, '0') + "10xz" + std::string(60, '0');
+    const Bits n(bits);
+    const FormatValue args[] = {{FormatValue::Kind::Integral, n.value},
+                                {FormatValue::Kind::Integral, n.value}};
+    const auto out = formatStringCall("%b|%0.0f", args, "top", "work.top", 1, -9, TimeFormat{});
+    EXPECT_TRUE(out.error.empty());
+    EXPECT_EQ(out.text, bits + "|9223372036854775808");
+}
+
+TEST(Format, RuntimeTimeUnits) {
+    const Num n(2, 8);
+    const Bits x("xx");
+    const FormatValue args[] = {{FormatValue::Kind::Integral, n.value},
+                                {.kind = FormatValue::Kind::Real, .real = 1.255},
+                                {FormatValue::Kind::Integral, x.value}};
+    const TimeFormat tf{-9, 2, "ns", 0};
+    const auto out = formatStringCall("%t|%8t|%t", args, "top", "work.top", 1000, -12, tf);
+    EXPECT_TRUE(out.error.empty());
+    EXPECT_EQ(out.text, "2.00ns|  1.26ns|xns");
+    const auto unscaled = formatStringCall("%t", std::span(args).first(1), "", "", 1, -9, tf);
+    EXPECT_EQ(unscaled.text, "2.00ns");
+}
+
+TEST(Format, RuntimeScopeIsLiteral) {
+    const auto out = formatStringCall("%m|%l|%%m", {}, "top.%g", "work.unit", 1, -9, TimeFormat{});
+    EXPECT_TRUE(out.error.empty());
+    EXPECT_FALSE(out.argumentMismatch);
+    EXPECT_EQ(out.text, "top.%g|work.unit|%m");
+    const auto missing = formatStringCall("%l", {}, "p.run", "", 1, -9, TimeFormat{});
+    EXPECT_EQ(missing.error, "%l outside a module");
+}
+
+TEST(Format, RuntimeArgumentCountsAndEmpty) {
+    const Num n(7, 32);
+    const FormatValue args[] = {{FormatValue::Kind::Integral, n.value},
+                                {.kind = FormatValue::Kind::Empty}};
+    const auto missing = formatStringCall("A%0dB%0dC%0dD", args, "", "", 1, -9, TimeFormat{});
+    EXPECT_TRUE(missing.error.empty());
+    EXPECT_TRUE(missing.argumentMismatch);
+    EXPECT_EQ(missing.text, "A7B CD");
+    const auto extra = formatStringCall("A%0d", args, "", "", 1, -9, TimeFormat{});
+    EXPECT_TRUE(extra.argumentMismatch);
+    EXPECT_EQ(extra.text, "A7");
+}
+
+TEST(Format, RuntimeInvalidFormatsAndTypes) {
+    const FormatValue arg{.kind = FormatValue::Kind::String, .text = "seed"};
+    for (const std::string text : {"%", "%3", "%q", "%p", "%+d", "%.2d", "%0d", "%t"}) {
+        const auto out = formatStringCall(text, std::span(&arg, 1), "", "", 1, -9, TimeFormat{});
+        EXPECT_FALSE(out.error.empty()) << text;
+    }
+}
+
 }  // namespace

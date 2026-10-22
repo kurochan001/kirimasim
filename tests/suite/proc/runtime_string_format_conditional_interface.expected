@@ -1,0 +1,24 @@
+f radix [n=-12 h=0005 b=10xz o=5 %] 2
+f automatic_width [        -12|fffffff4] 0
+f wide [z00100011010001010110011110001001101010111100110111101111000000010010001101000101011001111000100110101011110011011110111100000001] 0
+f strings [text%0d|A B |literal %m %0d] 0
+f reals [1.25|-2.0E+00|5] 0
+f real_as_int [2|2] 0
+f wide_as_real [18446744073709551616] 0
+f time [2.00ns|  1.26ns] 0
+f scope [top.u|work.worker|%m] 0
+f empty_format [] 0
+f repeat [10] 0
+f repeat [000a] 0
+s radix [n=-12 h=0005 b=10xz o=5 %] 2
+s automatic_width [        -12|fffffff4] 0
+s wide [z00100011010001010110011110001001101010111100110111101111000000010010001101000101011001111000100110101011110011011110111100000001] 0
+s strings [text%0d|A B |literal %m %0d] 0
+s reals [1.25|-2.0E+00|5] 0
+s real_as_int [2|2] 0
+s wide_as_real [18446744073709551616] 0
+s time [2.00ns|  1.26ns] 0
+s scope [top.u|work.worker|%m] 0
+s empty_format [] 0
+s repeat [10] 0
+s repeat [000a] 0

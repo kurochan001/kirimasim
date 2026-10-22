@@ -172,6 +172,15 @@ The standard sets nothing for `-` (left-align) and `0` (pad with 0) in integer, 
 - `$sformat` reads only its second argument as a format. The format need not be constant (checked: 21.3.3). `$sformatf` does the same and returns the result as a string.
 - In `$sformat` and `$sformatf`, when there are too few or too many arguments for the format's specifiers, a warning is given and the run continues (checked: 21.3.3). A specifier with no argument prints nothing, and extra arguments are dropped (rule of this document). If the format is constant, it is an error at elaboration (checked: 21.3.3 allows making it an error when it is known statically).
 
+Implementation status (2026-10-23): runtime string and packed formats now use
+the kernel's `formatStringCall`. It shares `parseFormat` and the value formatters
+with constant formats, and handles type conversions, scope/cell text and caller
+time-unit scaling. Argument count mismatches warn once per call site; supplied
+arguments are evaluated even when unused. X/Z-containing packed formats remain
+unsupported. See the [examples](../P1_FEATURES.md),
+[mechanism matrix](../../tools/gen_runtime_string_format_matrix.py) and
+[diagnostic/evaluation tests](../../tests/cli/run_runtime_string_format_tests.py).
+
 ## 4. Delayed display and monitoring
 
 - `$strobe` prints with the values at the point after every event of the time it was called has finished, just before time advances (checked: 21.2.2). It is done in the Postponed region of SCHEDULER_SPEC.md.

@@ -131,9 +131,41 @@ packed の書式は、出力への代入やファイルの読み進めをせず�
 
 対応する読み取りの変換は `%b`、`%o`、`%d`、`%h`/`%x`、`%c`、`%s`、
 `%f`/`%e`/`%g` で、欄の幅、代入の抑制、`%%` も扱います。
-`$sformat` と `$sformatf` の実行時の書式は未対応です。
 [システムタスクの仕様書の 6.3 節](spec/SYSTEM_TASKS.ja.md)と
 [SIR の実装の制限](spec/SIR_SPEC.ja.md)を参照してください。
+
+## 実行時に決まる文字列への出力書式
+
+`$sformat` と `$sformatf` は文字列や packed 値の実行時の書式に対応し、
+関数の戻り値も使えます。書式の引数だけを解釈し、値の文字列に含まれる `%` は
+データとして出力します。
+
+```systemverilog
+module top;
+  string fmt, written, returned;
+  initial begin
+    for (int i = 0; i < 2; i++) begin
+      fmt = i == 0 ? "%0d" : "%04h";
+      $sformat(written, fmt, 10);
+      returned = $sformatf(fmt, 10);
+      $display("%s|%s", written, returned);
+    end
+  end
+endmodule
+```
+
+```text
+10|10
+000a|000a
+```
+
+数値・文字列・実数の変換は既存の書式の規則に従います。`%t` は呼び出し元の
+時刻単位と `$timeformat`、`%m` と `%l` は呼び出し元のスコープとセルを使います。
+足りない値は何も出さず、余分な値は出力せず、呼び出し箇所ごとに 1 回警告します。
+渡した値は、余分なものもすべて評価します。不正な書式や型の組み合わせは診断と
+終了コード 2 で実行を終えます。X/Z を含む packed の書式と `%p` は未対応です。
+定数の書式は引き続きエラボレーション時に検査します。
+[システムタスクの仕様書の 3.13 節](spec/SYSTEM_TASKS.ja.md)を参照してください。
 
 ## 実行時に決まるプラスアーグの書式
 

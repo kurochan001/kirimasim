@@ -3187,11 +3187,17 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
     // design. The format of $sformat and of $sformatf, then the first of
     // `args`, is a format whatever its form (3.13): a constant one is read
     // as a literal is, and as slang counts the arguments of literal formats
-    // only, a wrong count for it is reported here; one known only at run
-    // time is not implemented yet. A %t value is scaled from the caller's
+    // only, a wrong count for it is reported here. Runtime formats pass
+    // raw arguments and the scope/time metadata to the shared kernel.
+    // For constant formats a %t value is scaled from the caller's
     // time unit to ticks of the global precision here, so the VM needs no
     // unit.
     std::deque<char> pending;
+    std::string cell;
+    for (const ast::Symbol* sy = evalSymbol_; sy != nullptr && cell.empty();
+         sy = sy->getParentScope() != nullptr ? &sy->getParentScope()->asSymbol() : nullptr)
+        if (sy->kind == ast::SymbolKind::InstanceBody)
+            cell = "work." + std::string(sy->as<ast::InstanceBodySymbol>().getDefinition().name);
     const auto takeFormat = [&](const std::string& text, slang::SourceLocation at) {
         std::vector<char> convs;
         std::string bad;
@@ -3211,12 +3217,6 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
         pending.assign(convs.begin(), convs.end());
         // %l: <library>.<cell> of the module the call is in; the library is
         // work until chapter 33's libraries exist (SYSTEM_TASKS.md 3.8).
-        std::string cell;
-        for (const ast::Symbol* sy = evalSymbol_; sy != nullptr && cell.empty();
-             sy = sy->getParentScope() != nullptr ? &sy->getParentScope()->asSymbol() : nullptr)
-            if (sy->kind == ast::SymbolKind::InstanceBody)
-                cell =
-                    "work." + std::string(sy->as<ast::InstanceBodySymbol>().getDefinition().name);
         // Outside a module a %l has no cell: \x01 marks where it would go.
         const std::string f = withScope(text, b_.scope, cell.empty() ? "\x01" : cell);
         if (cell.empty() && f.find('\x01') != std::string::npos)
@@ -3233,9 +3233,32 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             std::optional<std::string> text;
             if (cv && cv->isString()) text = cv->str();
             if (cv && cv->isInteger()) text = stringBytes(cv->integer());
-            if (!text)
-                unsupported(arg->sourceRange.start(),
-                            std::string(formatOf) + " with a format that is not a constant");
+            if (!text) {
+                const Val format = lowerExpr(*arg);
+                if (!isString(format.type) && !sir::isIntegral(format.type))
+                    unsupported(arg->sourceRange.start(), "format of this type");
+                ops[0] = Operand::str("$sformatf.runtime");
+                ops.push_back(Operand::str(b_.scope));
+                ops.push_back(Operand::str(cell));
+                const int shift = timeScale().unit - precision();
+                if (shift < 0 || shift > 19) unsupported(sl, "%t with this time unit");
+                std::uint64_t scale = 1;
+                for (int i = 0; i < shift; ++i)
+                    scale *= 10;
+                ops.push_back(constant(sir::u2(64), scale).op);
+                ops.push_back(format.op);
+                for (const ast::Expression* value : args.subspan(1)) {
+                    if (value->kind == ast::ExpressionKind::EmptyArgument) {
+                        ops.push_back(Operand::str(""));
+                        continue;
+                    }
+                    const Val v = lowerExpr(*value);
+                    if (!isString(v.type) && !isReal(v.type) && !sir::isIntegral(v.type))
+                        unsupported(value->sourceRange.start(), "format argument of this type");
+                    ops.push_back(v.op);
+                }
+                return;
+            }
             takeFormat(*text, arg->sourceRange.start());
             counted = true;
             continue;

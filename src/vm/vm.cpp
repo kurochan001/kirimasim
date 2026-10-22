@@ -63,6 +63,7 @@ enum class SysTask : std::uint8_t {
     Math2,
     Clog2,
     SFormatF,
+    SFormatRuntime,
     Fatal,
     Error,
     Warning,
@@ -280,6 +281,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$bitstoshortreal") return SysTask::BitsToShortReal;
     if (name == "$clog2") return SysTask::Clog2;
     if (name == "$sformatf") return SysTask::SFormatF;
+    if (name == "$sformatf.runtime") return SysTask::SFormatRuntime;
     if (name == "$fatal") return SysTask::Fatal;
     if (name == "$error") return SysTask::Error;
     if (name == "$warning") return SysTask::Warning;
@@ -300,6 +302,7 @@ SysTask resolveSysTask(std::string_view name) {
 /// position: the name, then those.
 std::size_t minOperands(SysTask t) {
     switch (t) {
+        case SysTask::SFormatRuntime: return 5;
         case SysTask::FSeek: return 4;
         case SysTask::UrandomRange: return 3;
         case SysTask::Dist: return 3;
@@ -4531,6 +4534,53 @@ private:
             case SysTask::DumpAll: dump_.all(); return true;
             case SysTask::DumpLimit: dump_.limit(value(ops[1]).a); return true;
             case SysTask::DumpFlush: dump_.flush(); return true;
+            case SysTask::SFormatRuntime: {
+                // front supplies scope, cell, tick scale, format, raw values.
+                const std::optional<std::string> format = scanFormat(ops[4]);
+                if (!format) {
+                    designErrorIn(p, in,
+                                  "string format: unsupported: format with X/Z bits "
+                                  "(not implemented yet)");
+                    return false;
+                }
+                std::vector<std::vector<std::uint64_t>> storage(ops.size() - 5);
+                std::vector<kernel::FormatValue> values;
+                values.reserve(storage.size());
+                for (std::size_t i = 5; i < ops.size(); ++i) {
+                    kernel::FormatValue arg;
+                    if (ops[i].kind == Operand::Kind::Text) {
+                        arg.kind = kernel::FormatValue::Kind::Empty;
+                    } else {
+                        const sir::Type type = typeOf(ops[i]);
+                        if (type.kind == sir::TypeKind::String) {
+                            arg.kind = kernel::FormatValue::Kind::String;
+                            arg.text = strings_.get(value(ops[i]).a);
+                        } else if (isRealType(type)) {
+                            arg.kind = kernel::FormatValue::Kind::Real;
+                            arg.real = toReal(value(ops[i]), type);
+                        } else {
+                            storage[i - 5] = formatWords(ops[i]);
+                            arg.integral = {storage[i - 5].data(), type.width,
+                                            sir::isFourState(type), sir::isSigned(type)};
+                        }
+                    }
+                    values.push_back(arg);
+                }
+                const kernel::StringFormatResult result =
+                    kernel::formatStringCall(*format, values, ops[1].text, ops[2].text,
+                                             value(ops[3]).a, d_.timePrecision, timeFormat_);
+                if (!result.error.empty()) {
+                    designErrorIn(p, in,
+                                  "string format: unsupported: " + result.error +
+                                      " (not implemented yet)");
+                    return false;
+                }
+                if (result.argumentMismatch)
+                    warnOnce(in,
+                             "string format has a different number of arguments than conversions");
+                temp(in.result) = {strings_.intern(result.text), 0};
+                return true;
+            }
             case SysTask::Display:
             case SysTask::Write:
             case SysTask::SFormatF: {
