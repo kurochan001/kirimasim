@@ -39,7 +39,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 15
+VERSION = 16
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -116,12 +116,6 @@ STATEMENTS = [
      "$value$plusargs with this format", False),
     ("sscanf_specifier", "  int a;\n", "void'(«»$sscanf(\"1\", \"%q\", a));",
      "format specifier %q in $sscanf", False),
-    # A format known only at run time (SYSTEM_TASKS.md 3.13), for every task
-    # whose format is an argument in a fixed place.
-    ("sformatf_runtime_format", "  string s, f = \"%0d\";\n  int a;\n", "s = $sformatf(«»f, a);",
-     "$sformatf with a format that is not a constant", False),
-    ("sformat_runtime_format", "  string s, f = \"%0d\";\n  int a;\n", "$sformat(s, «»f, a);",
-     "$sformat with a format that is not a constant", False),
     ("member_run_time_bit", "  struct packed { logic [3:0] f; } sp;\n  int i = 1;\n",
      "«»sp.f[i] = 1'b1;", "a select known at run time of a member or a part", False),
     ("trigger_event_control", "  event e, e2;\n", "«»->> @(e2) e;",

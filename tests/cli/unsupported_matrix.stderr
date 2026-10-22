@@ -267,14 +267,6 @@ unsupported_matrix/sformat_const_too_many.sv:25:23: error: too many arguments fo
 unsupported_matrix/sformat_const_too_many.sv:30:25: error: too many arguments for the format
 unsupported_matrix/sformat_const_too_many.sv:35:25: error: too many arguments for the format
 unsupported_matrix/sformat_const_too_many.sv:8:23: error: too many arguments for the format
-unsupported_matrix/sformat_runtime_format.sv:10:17: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:13:17: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:16:17: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:20:17: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:24:17: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:29:19: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:34:19: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformat_runtime_format.sv:7:17: error: unsupported: $sformat with a format that is not a constant (not implemented yet)
 unsupported_matrix/sformatf_const_too_few.sv:11:19: error: no argument for the format's %h
 unsupported_matrix/sformatf_const_too_few.sv:14:19: error: no argument for the format's %h
 unsupported_matrix/sformatf_const_too_few.sv:17:19: error: no argument for the format's %h
@@ -283,14 +275,6 @@ unsupported_matrix/sformatf_const_too_few.sv:25:19: error: no argument for the f
 unsupported_matrix/sformatf_const_too_few.sv:30:21: error: no argument for the format's %h
 unsupported_matrix/sformatf_const_too_few.sv:35:21: error: no argument for the format's %h
 unsupported_matrix/sformatf_const_too_few.sv:8:19: error: no argument for the format's %h
-unsupported_matrix/sformatf_runtime_format.sv:10:19: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:13:19: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:16:19: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:20:19: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:24:19: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:29:21: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:34:21: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sformatf_runtime_format.sv:7:19: error: unsupported: $sformatf with a format that is not a constant (not implemented yet)
 unsupported_matrix/specify_path.sv:4:3: error: unsupported: specify block with path delays or timing checks (not implemented yet)
 unsupported_matrix/sscanf_fewer_targets.sv:12:11: error: $sscanf has fewer arguments than its format has conversions
 unsupported_matrix/sscanf_fewer_targets.sv:15:11: error: $sscanf has fewer arguments than its format has conversions
