@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,377 | 1,375, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,432 | 1,430, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 179, `tests/suite/` 1,036 (made by 110 generators under `tools/`), tools 114, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 4.
+This repository's tests by kind: unit tests (GoogleTest) 182, `tests/suite/` 1,086 (made by 111 generators under `tools/`), tools 115, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 5.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -350,6 +350,9 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   `--seed`; `$stacktrace`.
 - **Runtime scan formats:** `$sscanf` and `$fscanf` take a string or packed
   format evaluated at each call, including formats returned by functions.
+- **Runtime plusarg formats:** `$value$plusargs` takes a string or packed
+  format evaluated at each call, preserving first-match selection and leaving
+  the output unchanged when no argument matches.
 - **Waveforms:** 4-state VCD from `$dumpfile`, `$dumpvars`, `$dumpoff`,
   `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush`, or from
   `--wave=<file>.vcd` with `--wave-scope` and `--wave-glitches`.
@@ -361,7 +364,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 
 | Not yet | Planned |
 | --- | --- |
-| FST waveforms, the `%p` format, `%v` with resolved strengths, formats known only at run time (`$sformat`, `$sformatf`, `$value$plusargs`), `$fread` into structures with array or real members | P1 |
+| FST waveforms, the `%p` format, `%v` with resolved strengths, formats known only at run time (`$sformat`, `$sformatf`), `$fread` into structures with array or real members | P1 |
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
@@ -467,7 +470,7 @@ The design's output goes to standard output; kirimasim's own messages and
 the messages of `$error` and its relatives go to standard error.
 
 For runnable examples of runtime enum steps, wide streaming assignments,
-runtime scan formats, conditionless `for` loops and minimum/typical/maximum
+runtime scan and plusarg formats, conditionless `for` loops and minimum/typical/maximum
 delays, see [Recent P1 features](docs/P1_FEATURES.md).
 
 Options available now:

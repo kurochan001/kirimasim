@@ -311,6 +311,15 @@ Checked (21.6):
 
 How plusargs are passed is set in CLI.md.
 
+Implementation status (2026-10-23): `$value$plusargs` accepts runtime formats
+from strings and packed integral values. The kernel's `preparePlusargFormat`
+checks the prefix, conversion and output type; all tiers can use the same
+plan and `plusargValue` conversion. Output copyback follows SIR_SPEC.md 8,
+including evaluating output indices only on a match. Packed formats with X/Z
+bits are reported as unsupported. See the [example](../P1_FEATURES.md),
+[mechanism matrix](../../tools/gen_runtime_plusargs_matrix.py) and
+[diagnostic tests](../../tests/cli/run_runtime_plusargs_tests.py).
+
 ## 10. Form of messages
 
 ### 10.1 Severity tasks

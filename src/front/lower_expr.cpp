@@ -1964,10 +1964,9 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
     if (fc && fc->isString()) fmt = fc->str();
     if (fc && fc->isInteger() && (plus || !fc->integer().hasUnknown()))
         fmt = stringBytes(fc->integer());
-    if (!fmt && plus) unsupported(sl, name + " with a format that is not a constant");
     std::vector<char> convs;
     std::string bad;
-    if (plus) {
+    if (plus && fmt) {
         // name%conv: the one conversion after the name (21.6).
         const std::size_t pct = fmt->find('%');
         if (pct == std::string::npos || !scanConversions(fmt->substr(pct), convs, bad) ||

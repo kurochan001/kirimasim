@@ -62,6 +62,16 @@ struct ScanPlan {
 /// (SYSTEM_TASKS.md 6.3). Extra targets are ignored.
 ScanPlan prepareScanFormat(std::string_view format, std::span<const ScanTarget> targets);
 
+struct PlusargPlan {
+    std::string prefix;
+    char conv = 'd';  ///< Normalized as ScanValue::conv.
+    std::string error;
+};
+
+/// Splits a $value$plusargs format into its prefix and one conversion,
+/// checking the output type (SYSTEM_TASKS.md 9, SIR_SPEC.md 8).
+PlusargPlan preparePlusargFormat(std::string_view format, ScanTarget target);
+
 /// Reads `input` by `format` (a format parseScanFormat accepts). Returns
 /// the number of values assigned, which are put in `out` in order, or -1
 /// when the input ends before the first conversion. NUL characters count

@@ -3906,16 +3906,20 @@ private:
         return kernel::wide::toText(words.data(), type.width);
     }
 
+    /// Maps the tier's output type to the shared format checker's type.
+    kernel::ScanTarget scanTarget(sir::Type type) const {
+        return sir::isIntegral(type)                ? kernel::ScanTarget::Integral
+               : isRealType(type)                   ? kernel::ScanTarget::Real
+               : type.kind == sir::TypeKind::String ? kernel::ScanTarget::String
+                                                    : kernel::ScanTarget::Other;
+    }
+
     /// Resolves the tier's types for the shared scan-format checker.
     kernel::ScanPlan scanPlan(const sir::Instr& in, std::string_view format) const {
         if (in.operands[2].kind == Operand::Kind::Text) return {std::string(format), {}, false};
         std::vector<kernel::ScanTarget> targets;
         for (std::size_t i = 3; i < in.operands.size(); ++i) {
-            const sir::Type type = typeOf(in.operands[i]);
-            targets.push_back(sir::isIntegral(type)                ? kernel::ScanTarget::Integral
-                              : isRealType(type)                   ? kernel::ScanTarget::Real
-                              : type.kind == sir::TypeKind::String ? kernel::ScanTarget::String
-                                                                   : kernel::ScanTarget::Other);
+            targets.push_back(scanTarget(typeOf(in.operands[i])));
         }
         return kernel::prepareScanFormat(format, targets);
     }
@@ -4829,21 +4833,26 @@ private:
             case SysTask::ValuePlusargs: {
                 // The first plusarg that starts with the name before the %:
                 // the rest by the one conversion (SYSTEM_TASKS.md 9).
-                const std::string_view fmt = ops[1].text;
-                const std::size_t pct = fmt.find('%');
-                const std::string_view name = fmt.substr(0, pct);
-                char conv = 'd';
-                for (std::size_t k = pct + 1; k < fmt.size(); ++k) {
-                    if (fmt[k] >= '0' && fmt[k] <= '9') continue;
-                    conv = static_cast<char>(std::tolower(static_cast<unsigned char>(fmt[k])));
-                    break;
+                const std::optional<std::string> fmt = scanFormat(ops[1]);
+                if (!fmt) {
+                    designErrorIn(p, in,
+                                  "$value$plusargs: unsupported: format with X/Z bits "
+                                  "(not implemented yet)");
+                    return false;
                 }
-                if (conv == 'x') conv = 'h';
-                if (conv == 'e' || conv == 'g') conv = 'f';
+                const kernel::PlusargPlan plan =
+                    kernel::preparePlusargFormat(*fmt, scanTarget(typeOf(ops[2])));
+                if (!plan.error.empty()) {
+                    designErrorIn(p, in,
+                                  "$value$plusargs: unsupported: " + plan.error +
+                                      " (not implemented yet)");
+                    return false;
+                }
                 temp(in.result) = {0, 0};
                 for (const std::string& a : options_.plusargs) {
-                    if (!std::string_view(a).starts_with(name)) continue;
-                    const kernel::ScanValue v = kernel::plusargValue(a.substr(name.size()), conv);
+                    if (!std::string_view(a).starts_with(plan.prefix)) continue;
+                    const kernel::ScanValue v =
+                        kernel::plusargValue(a.substr(plan.prefix.size()), plan.conv);
                     scanned(v, typeOf(ops[2]), &frameVar(ops[2].asFrame()));
                     temp(in.result) = {1, 0};
                     break;

@@ -59,6 +59,12 @@ private:
 
 bool isDigit(char c) { return c >= '0' && c <= '9'; }
 
+bool acceptsTarget(char conv, ScanTarget type) {
+    return conv == 'f'   ? type == ScanTarget::Real
+           : conv == 's' ? type == ScanTarget::Integral || type == ScanTarget::String
+                         : type == ScanTarget::Integral;
+}
+
 /// One specifier: %[*][width]conv. width 0 is none.
 struct Spec {
     bool assigns = true;
@@ -270,15 +276,37 @@ ScanPlan prepareScanFormat(std::string_view format, std::span<const ScanTarget> 
             return plan;
         }
         const ScanTarget type = targets[target++];
-        const bool valid = s.conv == 'f' ? type == ScanTarget::Real
-                           : s.conv == 's'
-                               ? type == ScanTarget::Integral || type == ScanTarget::String
-                               : type == ScanTarget::Integral;
-        if (!valid) {
+        if (!acceptsTarget(s.conv, type)) {
             plan.error = std::string("%") + s.conv + " into a target of this type";
             return plan;
         }
     }
+    return plan;
+}
+
+PlusargPlan preparePlusargFormat(std::string_view format, ScanTarget target) {
+    PlusargPlan plan;
+    const std::size_t pct = format.find('%');
+    std::vector<ScanConversion> convs;
+    std::string bad;
+    if (pct == std::string_view::npos || !parseScanFormat(format.substr(pct), convs, bad)) {
+        plan.error = bad.empty() ? "format without a conversion" : "format specifier " + bad;
+        return plan;
+    }
+    // The first % must introduce the assigning conversion, rather than an
+    // escape: otherwise taking everything before it as the name would
+    // silently match a shorter prefix (SYSTEM_TASKS.md 9).
+    std::size_t firstEnd = pct;
+    Spec first;
+    if (convs.size() != 1 || !convs.front().assigns || !parseSpec(format, firstEnd, first, bad) ||
+        first.conv == '%' || !first.assigns) {
+        plan.error = "format must have one assigning conversion";
+        return plan;
+    }
+    plan.prefix = format.substr(0, pct);
+    plan.conv = convs.front().conv;
+    if (!acceptsTarget(plan.conv, target))
+        plan.error = std::string("%") + plan.conv + " into a target of this type";
     return plan;
 }
 

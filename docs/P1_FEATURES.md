@@ -135,9 +135,43 @@ and exit code 2. Constant formats are still checked at elaboration.
 
 Supported scan conversions are `%b`, `%o`, `%d`, `%h`/`%x`, `%c`, `%s` and
 `%f`/`%e`/`%g`, with field widths, assignment suppression and `%%`.
-Runtime formats for `$sformat`, `$sformatf` and `$value$plusargs` remain
+Runtime formats for `$sformat` and `$sformatf` remain
 unsupported. See [system tasks, section 6.3](spec/SYSTEM_TASKS.md#63-input)
 and [SIR implementation limits](spec/SIR_SPEC.md).
+
+## Plusarg formats computed at run time
+
+`$value$plusargs` accepts a runtime string or packed integral format, including
+function results. Here the same call site reads the first `+count=42` argument
+as decimal and then hexadecimal.
+
+```systemverilog
+module top;
+  string fmt;
+  int value, matched;
+  initial begin
+    for (int i = 0; i < 2; i++) begin
+      fmt = i == 0 ? "count=%d" : "count=%h";
+      matched = $value$plusargs(fmt, value);
+      $display("%0d %0d", matched, value);
+    end
+  end
+endmodule
+```
+
+Run with `build/dev/src/driver/kirimasim demo.sv +count=42 +count=99`:
+
+```text
+1 42
+1 66
+```
+
+The first matching plusarg wins. If none matches, the call returns 0 and leaves
+the output unchanged; functions in its output indices are not called. Supported
+formats and conversions follow [system tasks, section 9](spec/SYSTEM_TASKS.md#9-plusargs).
+Invalid runtime formats and incompatible output types end with a diagnostic and
+exit code 2. Packed formats containing X/Z bits and formats with `%%` before
+the conversion remain unsupported.
 
 ## A for loop with no condition
 

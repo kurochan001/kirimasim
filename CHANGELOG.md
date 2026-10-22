@@ -13,6 +13,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `$value$plusargs` accepts a string or packed format evaluated at each
+  call, including function results. Matching still uses the first plusarg,
+  and unmatched calls leave the output and its index expressions untouched
+  (SYSTEM_TASKS.md 9, SIR_SPEC.md 8; 21.6).
 - `$sscanf` and `$fscanf` accept formats evaluated at run time, from strings
   or packed values. Missing output arguments warn and stop reading before
   the missing field; X/Z bits in a packed format return -1 without reading

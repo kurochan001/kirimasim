@@ -310,6 +310,14 @@ kirimasim の形（本書の決まり）：
 
 プラスアーグの渡し方は CLI.md で定める。
 
+実装状況（2026-10-23）：`$value$plusargs` は文字列や packed の整数値の実行時の
+書式に対応する。カーネルの `preparePlusargFormat` が接頭辞・変換・出力の型を
+検査し、各層は同じ結果と `plusargValue` の変換を使える。出力の書き戻しは
+SIR_SPEC.md の 8 節に従い、一致したときだけ出力の添字を評価する。X/Z を含む
+packed の書式は未対応と報告する。[使い方](../P1_FEATURES.ja.md)、
+[メカニズムの行列](../../tools/gen_runtime_plusargs_matrix.py)、
+[診断のテスト](../../tests/cli/run_runtime_plusargs_tests.py)を参照。
+
 ## 10. メッセージの形
 
 ### 10.1 重大度のタスク

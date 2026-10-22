@@ -185,6 +185,7 @@ Recent implementation coverage (2026-10-23):
 - [Enum stepping](../../tools/gen_enum_step_matrix.py): 70 suite files covering runtime counts, enum base types, storage locations, process/subroutine contexts and evaluation side effects.
 - [Wide streaming targets](../../tools/gen_wide_unpack_matrix.py): 80 suite files covering word boundaries, stream directions and slice sizes, two/four-state values, automatic/ref targets and nonblocking assignments.
 - [Runtime scan formats](../../tools/gen_runtime_scan_matrix.py): 50 suite files covering string/packed formats, string/file input, partial assignments and evaluation order. An additional [CLI test runner](../../tests/cli/run_runtime_scan_tests.py) checks 23 diagnostic and input/copyback cases; three unit tests cover the kernel's format preparation.
+- [Runtime plusarg formats](../../tools/gen_runtime_plusargs_matrix.py): 50 suite files covering five format representations in ten contexts, repeated format changes, first-match selection, wide values and copyback indices. An additional [CLI test runner](../../tests/cli/run_runtime_plusargs_tests.py) checks 27 diagnostic/copyback cases; three unit tests cover prefix/conversion parsing and output-type validation.
 
 These are additions within the existing suite, not new P1 passing conditions.
 [Runnable examples and limits](../P1_FEATURES.md) accompany them.

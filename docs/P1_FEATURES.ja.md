@@ -131,9 +131,42 @@ packed の書式は、出力への代入やファイルの読み進めをせず�
 
 対応する読み取りの変換は `%b`、`%o`、`%d`、`%h`/`%x`、`%c`、`%s`、
 `%f`/`%e`/`%g` で、欄の幅、代入の抑制、`%%` も扱います。
-`$sformat`、`$sformatf`、`$value$plusargs` の実行時の書式は未対応です。
+`$sformat` と `$sformatf` の実行時の書式は未対応です。
 [システムタスクの仕様書の 6.3 節](spec/SYSTEM_TASKS.ja.md)と
 [SIR の実装の制限](spec/SIR_SPEC.ja.md)を参照してください。
+
+## 実行時に決まるプラスアーグの書式
+
+`$value$plusargs` は、文字列や packed の整数値の実行時の書式に対応します。
+関数の戻り値も使えます。この例は、同じ呼び出し箇所で最初の `+count=42` を
+10 進数、次に 16 進数として読みます。
+
+```systemverilog
+module top;
+  string fmt;
+  int value, matched;
+  initial begin
+    for (int i = 0; i < 2; i++) begin
+      fmt = i == 0 ? "count=%d" : "count=%h";
+      matched = $value$plusargs(fmt, value);
+      $display("%0d %0d", matched, value);
+    end
+  end
+endmodule
+```
+
+`build/dev/src/driver/kirimasim demo.sv +count=42 +count=99` で実行します。
+
+```text
+1 42
+1 66
+```
+
+最初に一致したプラスアーグを使います。一致しなければ 0 を返して出力の値を保ち、
+その添字の関数も呼びません。対応する書式と変換は
+[システムタスクの仕様書の 9 節](spec/SYSTEM_TASKS.ja.md)に従います。
+実行時の不正な書式や出力の型と合わない変換は、診断と終了コード 2 で実行を
+終えます。X/Z を含む packed の書式と、変換より前に `%%` がある書式は未対応です。
 
 ## 条件を省略した for ループ
 

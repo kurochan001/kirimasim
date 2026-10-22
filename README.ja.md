@@ -42,11 +42,11 @@ kirimasim の数は 2026-10-22 に測ったもので、右の 2 列の Icarus Ve
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 1,377 | 1,375、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 1,432 | 1,430、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 213 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）179、`tests/suite/` 1,036（`tools/` の 110 個の生成器が作る）、道具 114、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 4。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）182、`tests/suite/` 1,086（`tools/` の 111 個の生成器が作る）、道具 115、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 5。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラス（P3）と、並行アサーション（P3）です。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -205,6 +205,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 - **アサーション：** 即時の `assert`、`assume`、`cover` と、遅延のもの（`#0`、`final`）
 - **システムタスクと関数：** `$display` と `$write`（`b`・`o`・`h` の付いた形も）、`$strobe`、`$monitor`、`$monitoron`、`$monitoroff`、`$sformat`、`$sformatf`、`$swrite`、`$sscanf`、`$time`、`$realtime`、`$timeformat`、`$printtimescale`、`$finish`、`$stop`、`$fatal`、`$error`、`$warning`、`$info`、`$stime`、`$timeunit`、`$timeprecision`、`%m` と `%l` の書式、変換（`$rtoi`、`$itor`、`$realtobits` など、`$signed`、`$unsigned`）、`$bits`、`$typename`、配列の問い合わせ、`$clog2` と実数の数学関数、`$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown`、`$test$plusargs`、`$value$plusargs`、ファイルの出力（`$fopen`、`$fclose`、`$fflush`、`$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor`。`b`・`o`・`h` の付いた形も）とファイルの読み込み（`$fgetc`、`$ungetc`、`$fgets`、`$fscanf`、`$fread`、`$ftell`、`$fseek`、`$rewind`、`$feof`、`$ferror`、STDIN）、`$readmemb`、`$readmemh`、`$writememb`、`$writememh`、附属書 N の値を出す `$random` と `$dist_*` の関数、`--seed` から種を受け取るプロセスごとの生成器による `$urandom` と `$urandom_range`、`$stacktrace`
 - **実行時の入力書式：** `$sscanf` と `$fscanf` は、文字列や packed 値の書式を呼び出すたびに評価する。関数から返される書式にも対応。
+- **実行時のプラスアーグの書式：** `$value$plusargs` は、文字列や packed 値の書式を呼び出すたびに評価する。最初の一致を選び、一致しなければ出力の値を保つ。
 - **波形：** `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush`、またはコマンドラインの `--wave=<file>.vcd`（`--wave-scope` と `--wave-glitches` も）による 4 値の VCD
 - **スケジューリング：** IEEE 1800-2023 の時刻スロットのすべての領域と参照アルゴリズム。Observed 領域での保留の報告の確定と、Postponed 領域での `$strobe`・`$monitor` を含む
 
@@ -212,7 +213,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 | まだのもの | 予定 |
 | --- | --- |
-| FST の波形、`%p` の書式、解決した強さを出す `%v`、実行時にしか決まらない書式（`$sformat`、`$sformatf`、`$value$plusargs`）、配列や実数のメンバを持つ構造体への `$fread` | P1 |
+| FST の波形、`%p` の書式、解決した強さを出す `%v`、実行時にしか決まらない書式（`$sformat`、`$sformatf`）、配列や実数のメンバを持つ構造体への `$fread` | P1 |
 | クラス、動的配列、キュー、連想配列、乱数化と制約、カバーグループ、並行アサーションと `$sampled`・`$stable`、クロッキングブロック、virtual interface、`let` | P3 |
 | program ブロック。program のコードは reactive の領域の組で動くもの（24.3.1）なので、今は未対応として報告する | P3 |
 | VPI、DPI-C | P3 |
@@ -299,7 +300,7 @@ kirimasim: info: finish at 52 ns
 
 設計の出力は標準出力に、kirimasim 自身のメッセージと `$error` などのメッセージは標準エラーに出ます。
 
-実行時の列挙型の移動数、幅の広いストリーミング代入、実行時の読み取り書式、
+実行時の列挙型の移動数、幅の広いストリーミング代入、実行時の読み取り・プラスアーグの書式、
 条件を省略した `for`、最小・標準・最大の遅延の実行例は、
 [最近の P1 の機能](docs/P1_FEATURES.ja.md)を参照してください。
 

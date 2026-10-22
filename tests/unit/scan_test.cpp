@@ -252,4 +252,50 @@ TEST(Scan, RuntimeFormatExtraTargetsAndMalformedFormats) {
     }
 }
 
+TEST(Scan, PlusargRuntimePrefixAndConversion) {
+    struct Row {
+        const char* format;
+        const char* prefix;
+        char conv;
+        kirimasim::kernel::ScanTarget type;
+    };
+    using Target = kirimasim::kernel::ScanTarget;
+    const Row rows[] = {
+        {"n=%d", "n=", 'd', Target::Integral},     {"hex=%0X", "hex=", 'h', Target::Integral},
+        {"oct=%O", "oct=", 'o', Target::Integral}, {"bits=%b", "bits=", 'b', Target::Integral},
+        {"%s", "", 's', Target::String},           {"text=%s", "text=", 's', Target::Integral},
+        {"r=%E", "r=", 'f', Target::Real},         {"r=%g", "r=", 'f', Target::Real},
+        {"r=%f", "r=", 'f', Target::Real}};
+    for (const Row& row : rows) {
+        const auto plan = kirimasim::kernel::preparePlusargFormat(row.format, row.type);
+        EXPECT_TRUE(plan.error.empty()) << row.format;
+        EXPECT_EQ(plan.prefix, row.prefix);
+        EXPECT_EQ(plan.conv, row.conv);
+    }
+}
+
+TEST(Scan, PlusargRuntimeTargetTypes) {
+    using Target = kirimasim::kernel::ScanTarget;
+    const std::array types{Target::Integral, Target::String, Target::Real, Target::Other};
+    for (const char conv : std::string("bodhxsfeg")) {
+        for (const Target type : types) {
+            const std::string format = std::string("key=%") + conv;
+            const bool accepts = conv == 'f' || conv == 'e' || conv == 'g' ? type == Target::Real
+                                 : conv == 's' ? type == Target::Integral || type == Target::String
+                                               : type == Target::Integral;
+            const auto plan = kirimasim::kernel::preparePlusargFormat(format, type);
+            EXPECT_EQ(plan.error.empty(), accepts) << format << " type " << static_cast<int>(type);
+        }
+    }
+}
+
+TEST(Scan, PlusargRuntimeMalformedFormats) {
+    for (const std::string format : {"", "key=", "key=%", "key=%0", "key=%q", "key=%t", "key=%%",
+                                     "key=%d%d", "key=%*d", "key=%*d%s", "key=%%=%d"}) {
+        const auto plan = kirimasim::kernel::preparePlusargFormat(
+            format, kirimasim::kernel::ScanTarget::Integral);
+        EXPECT_FALSE(plan.error.empty()) << format;
+    }
+}
+
 }  // namespace
