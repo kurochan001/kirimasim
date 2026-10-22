@@ -13,6 +13,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `--bounds-check=off|warn` reports out-of-range or X/Z-containing indices
+  in packed selections and fixed unpacked arrays, including wide values,
+  automatic/ref storage and NBA targets. Warnings are given once per source
+  position, with a count at the end; values and event counts stay the same
+  (CLI.md 2.2, VALUE_SEMANTICS.md 3.11).
 - `$sformat` and `$sformatf` accept formats evaluated at run time, including
   strings, packed values and function results. They share numeric/string
   conversion, `%t` scaling and `%m`/`%l` handling; missing or extra values

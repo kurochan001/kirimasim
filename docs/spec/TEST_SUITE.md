@@ -189,7 +189,10 @@ Recent implementation coverage (2026-10-23):
 
 - [Runtime string formats](../../tools/gen_runtime_string_format_matrix.py): 50 suite files covering both `$sformat` and `$sformatf`, five format representations in ten contexts, wide/real/string values, time-unit scaling, scope text and evaluation order. An additional [CLI runner](../../tests/cli/run_runtime_string_format_tests.py) checks 26 diagnostic/evaluation cases; six unit tests cover the shared kernel formatter.
 
+- [Bounds-check matrix](../../tools/gen_bounds_check_matrix.py): 72 CLI designs across two/four states, widths 8/65/129 and twelve contexts, including automatic/ref storage and NBAs. The [runner](../../tests/cli/run_bounds_check_tests.py) compares default/off/warn output and counters, exact warning positions/order, repetition and end counts, plus four invalid options. A kernel unit test checks complete ranges against an independent interval predicate.
+
 These are additions within the existing suite, not new P1 passing conditions.
+
 [Runnable examples and limits](../P1_FEATURES.md) accompany them.
 
 Where they go and how their expected values are treated:

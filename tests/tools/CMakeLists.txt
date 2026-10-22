@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_bounds_check_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_bounds_check_matrix.py --check)
+set_tests_properties(tools/gen_bounds_check_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_runtime_string_format_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_runtime_string_format_matrix.py --check)
 set_tests_properties(tools/gen_runtime_string_format_matrix PROPERTIES LABELS Tools)

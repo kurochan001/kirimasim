@@ -4,6 +4,7 @@
 #include "kirimasim/vm/vm.h"
 
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cctype>
 #include <cmath>
@@ -12,6 +13,7 @@
 #include <cstdlib>
 #include <deque>
 #include <limits>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
@@ -852,6 +854,14 @@ public:
             sched_.start(k);
         sched_.run();
         sched_.runFinal(finals);
+        if (!boundsCounts_.empty()) {
+            std::uint64_t count = 0;
+            for (const auto& entry : boundsCounts_)
+                count += entry.second;
+            output_.message("kirimasim: info: bounds check: " + std::to_string(count) +
+                            " invalid accesses at " + std::to_string(boundsCounts_.size()) +
+                            " source positions");
+        }
         dump_.finish(sched_);
         const kernel::EndReason reason = sched_.reason();
         return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
@@ -934,6 +944,9 @@ private:
     /// The places that gave a run-time warning, which each gives once
     /// (UNSPECIFIED_BEHAVIOR.md 4).
     std::set<const sir::Instr*> warned_;
+    /// One source access can lower to several instructions (an update,
+    /// or the leaves of a structure). Bounds warnings name that access.
+    std::map<std::array<std::uint32_t, 3>, std::uint64_t> boundsCounts_;
     kernel::Counters& counters_;
     kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
     kernel::CounterId cInstrs_{0};
@@ -2901,6 +2914,7 @@ private:
                 return true;
             }
             case Op::LoadElem: {
+                if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
                     frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
@@ -2920,6 +2934,7 @@ private:
             }
             case Op::StoreElem:
             case Op::NbaElem: {
+                if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
                     frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
@@ -2940,6 +2955,7 @@ private:
             }
             case Op::StoreBits:
             case Op::NbaBits: {
+                if (options_.boundsCheck) checkBounds(in);
                 // A part at a run-time position: only the bits inside the
                 // element (VALUE_SEMANTICS.md 3.11).
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
@@ -3116,6 +3132,7 @@ private:
                 return true;
             }
             case Op::Bitsel: {
+                if (options_.boundsCheck) checkBounds(in);
                 const std::optional<std::int64_t> pos = indexOf(ops[1]);
                 const std::vector<W4> x = get(0);
                 if (!pos || *pos < 0 || *pos >= t(0).width) {
@@ -3130,6 +3147,7 @@ private:
             }
             case Op::Partsel:
             case Op::IdxPartsel: {
+                if (options_.boundsCheck) checkBounds(in);
                 const std::optional<std::int64_t> pos =
                     in.op == Op::Partsel
                         ? std::optional<std::int64_t>(static_cast<std::int64_t>(value(ops[1]).a))
@@ -3359,6 +3377,56 @@ private:
         }
     }
 
+    /// Decode the tier's operands for the existing index/bit-range checks.
+    /// This observes the access; the ordinary instructions still perform
+    /// it with the same defaults and clipping (VALUE_SEMANTICS.md 3.11).
+    void checkBounds(const sir::Instr& in) {
+        const auto& ops = in.operands;
+        bool invalid = false;
+        switch (in.op) {
+            case Op::Bitsel:
+            case Op::Partsel:
+            case Op::IdxPartsel:
+                invalid =
+                    !kernel::fullyInside(indexOf(ops[1]), in.type.width, typeOf(ops[0]).width);
+                break;
+            case Op::LoadElem:
+            case Op::StoreElem:
+            case Op::NbaElem:
+            case Op::StoreBits:
+            case Op::NbaBits:
+            case Op::LoadRefElem:
+            case Op::StoreRefElem:
+            case Op::StoreRefBits: {
+                const bool ref = in.op == Op::LoadRefElem || in.op == Op::StoreRefElem ||
+                                 in.op == Op::StoreRefBits;
+                const bool frame = ops[0].kind == Operand::Kind::Frame;
+                const sir::FrameVar* fv =
+                    frame ? &bodyFrame(act_.body)[ops[0].asFrame().index()] : nullptr;
+                const std::vector<sir::ArrayDim>& dims =
+                    frame ? fv->dims : d_.slot(ops[0].asSlot()).dims;
+                invalid = !elementOf(dims, ops, 1);
+                const bool bits =
+                    in.op == Op::StoreBits || in.op == Op::NbaBits || in.op == Op::StoreRefBits;
+                if (!invalid && bits) {
+                    const sir::Type type = ref     ? fv->target
+                                           : frame ? fv->type
+                                                   : d_.slot(ops[0].asSlot()).type;
+                    invalid = !kernel::fullyInside(indexOf(ops[dims.size() + 1]),
+                                                   typeOf(ops.back()).width, type.width);
+                }
+                break;
+            }
+            default: return;
+        }
+        if (invalid) {
+            std::uint64_t& count = boundsCounts_[{in.loc.file, in.loc.line, in.loc.column}];
+            if (++count == 1)
+                warnOnce(in, "index or packed selection is out of range or contains X/Z bits "
+                             "(--bounds-check=warn)");
+        }
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
@@ -3559,6 +3627,7 @@ private:
                 return true;
             }
             case Op::LoadElem: {
+                if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::optional<std::uint32_t> e =
                     elementOf(frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
@@ -3575,6 +3644,7 @@ private:
             }
             case Op::StoreElem:
             case Op::NbaElem: {
+                if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::optional<std::uint32_t> e =
                     elementOf(frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
@@ -3591,6 +3661,7 @@ private:
             }
             case Op::StoreBits:
             case Op::NbaBits: {
+                if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
                     frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].dims
@@ -3738,6 +3809,7 @@ private:
             case Op::LoadRefElem:
             case Op::StoreRefElem:
             case Op::StoreRefBits: {
+                if (options_.boundsCheck) checkBounds(in);
                 if (refWide(f, p, in)) return true;
                 const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].asFrame().index()];
                 const W4 r = frameVar(ops[0].asFrame());
@@ -3866,14 +3938,17 @@ private:
             // 3.11, 7.1, 7.2); X for no position, which to2 makes 0 for a
             // two-state result.
             case Op::Bitsel: {
+                if (options_.boundsCheck) checkBounds(in);
                 const std::optional<std::int64_t> pos = indexOf(ops[1]);
                 set(pos ? kernel::bits4(v(0), t(0).width, *pos, 1) : kernel::kW4X);
                 return true;
             }
             case Op::Partsel:
+                if (options_.boundsCheck) checkBounds(in);
                 set(kernel::bits4(v(0), t(0).width, static_cast<std::int64_t>(v(1).a), w));
                 return true;
             case Op::IdxPartsel: {
+                if (options_.boundsCheck) checkBounds(in);
                 const std::optional<std::int64_t> pos = indexOf(ops[1]);
                 set(pos ? kernel::bits4(v(0), t(0).width, *pos, w) : kernel::allX(w));
                 return true;

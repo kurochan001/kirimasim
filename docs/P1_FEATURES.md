@@ -234,6 +234,39 @@ ticks 3
 For loops that do not advance simulation time, `--max-steps=<n>` bounds execution.
 See the [CLI specification](spec/CLI.md) for limits and exit codes.
 
+## Runtime bounds warnings
+
+`--bounds-check=warn` reports indices that are out of range or contain X/Z,
+including a part-select that only partly overlaps the value.
+
+```systemverilog
+module top;
+  logic [7:0] value = 8'ha5;
+  logic [3:0] selected;
+  int index = 6;
+  initial begin
+    for (int repeat_count = 0; repeat_count < 2; repeat_count++) begin
+      selected = value[index +: 4];
+      $display("%b", selected);
+    end
+  end
+endmodule
+```
+
+```text
+xx10
+xx10
+```
+
+Run with `build/dev/src/driver/kirimasim --bounds-check=warn demo.sv`.
+Standard error gives one warning at the select's position, then a summary
+counting two invalid accesses at one source position. The same program with
+`--bounds-check=off` (the default) has the same design output and event counts.
+The check covers packed reads/writes, fixed unpacked arrays, automatic/ref
+storage and NBA targets. Warnings are counted per read/write access; a compound
+update can include both a read and a write. See [CLI.md](spec/CLI.md) and
+[value semantics, section 3.11](spec/VALUE_SEMANTICS.md).
+
 ## Minimum, typical and maximum delays
 
 ```systemverilog

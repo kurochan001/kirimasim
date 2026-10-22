@@ -6,6 +6,7 @@
 // to 64, with and without X and Z bits (VALUE_SEMANTICS.md 3).
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <random>
 #include <string>
@@ -238,6 +239,21 @@ TEST(W4Ops, CountBits) {
                              "countbits " + std::to_string(m) + " " + show(x, w)));
         }
     }
+}
+
+TEST(W4Ops, FullyInsideBounds) {
+    for (const std::uint32_t total : {1U, 8U, 63U, 64U, 65U, 129U, 260U}) {
+        for (const std::uint32_t width : {1U, 2U, 4U, 64U, 65U, 129U}) {
+            for (std::int64_t pos = -130; pos <= 261; ++pos) {
+                const bool expected = pos >= 0 && static_cast<std::uint64_t>(pos) + width <= total;
+                EXPECT_EQ(k::fullyInside(pos, width, total), expected)
+                    << pos << " + " << width << " in " << total;
+            }
+        }
+    }
+    EXPECT_FALSE(k::fullyInside(std::nullopt, 1, 8));
+    EXPECT_FALSE(k::fullyInside(std::numeric_limits<std::int64_t>::min(), 4, 129));
+    EXPECT_FALSE(k::fullyInside(std::numeric_limits<std::int64_t>::max(), 4, 129));
 }
 
 }  // namespace

@@ -228,6 +228,38 @@ ticks 3
 シミュレーション時刻が進まないループは、`--max-steps=<n>` で実行を制限できます。
 上限と終了コードは [CLI の仕様書](spec/CLI.ja.md)を参照してください。
 
+## 実行時の範囲外アクセスの警告
+
+`--bounds-check=warn` は、範囲外や X/Z を含む添字を知らせます。値に一部だけ
+重なる部分選択も対象です。
+
+```systemverilog
+module top;
+  logic [7:0] value = 8'ha5;
+  logic [3:0] selected;
+  int index = 6;
+  initial begin
+    for (int repeat_count = 0; repeat_count < 2; repeat_count++) begin
+      selected = value[index +: 4];
+      $display("%b", selected);
+    end
+  end
+endmodule
+```
+
+```text
+xx10
+xx10
+```
+
+`build/dev/src/driver/kirimasim --bounds-check=warn demo.sv` で実行します。
+標準エラーには選択の位置で 1 回警告し、最後に、1 か所で 2 回の不正なアクセスが
+あったと報告します。`--bounds-check=off`（既定）でも設計の出力とイベント回数は
+同じです。packed 値の読み書き、固定長の unpacked 配列、automatic/ref の格納先、
+NBA の代入先を検査します。回数は読み書きごとに数えるため、複合的な更新では
+読み取りと書き込みの両方を含むことがあります。[CLI の仕様書](spec/CLI.ja.md)と
+[値の意味の仕様書の 3.11 節](spec/VALUE_SEMANTICS.ja.md)を参照してください。
+
 ## 最小・標準・最大の遅延
 
 ```systemverilog

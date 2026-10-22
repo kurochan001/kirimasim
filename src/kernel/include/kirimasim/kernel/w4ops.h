@@ -363,6 +363,13 @@ inline std::optional<Inside> inside(std::int64_t pos, std::uint32_t w, std::int6
                   static_cast<std::uint32_t>(lo - pos)};
 }
 
+/// Whether every requested bit is inside the value. An unknown or
+/// unrepresentable position is outside (VALUE_SEMANTICS.md 3.11).
+inline bool fullyInside(std::optional<std::int64_t> pos, std::uint32_t width, std::uint32_t total) {
+    const std::optional<Inside> at = pos ? inside(*pos, width, total) : std::nullopt;
+    return at && at->skip == 0 && at->n == width;
+}
+
 /// x (xw bits) with the w bits of v written from bit pos: only the bits
 /// inside x.
 inline W4 writeBits4(W4 x, unsigned xw, std::int64_t pos, W4 v, unsigned w) {

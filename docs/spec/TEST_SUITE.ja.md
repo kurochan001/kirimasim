@@ -189,7 +189,10 @@ sv-tests は、`simulation` のテストの合否を、シミュレータの出�
 
 - [実行時の文字列への書式](../../tools/gen_runtime_string_format_matrix.py)：スイートの 50 ファイル。`$sformat` と `$sformatf` の両方で、5 種類の書式と 10 種類の実行場所、幅の広い値・実数・文字列、時刻単位の換算、スコープ名、評価順を確かめる。さらに [CLI のテスト](../../tests/cli/run_runtime_string_format_tests.py)で診断と評価順の 26 ケース、ユニットテストの 6 件で共有カーネルの書式化を確かめる。
 
+- [範囲の検査の行列](../../tools/gen_bounds_check_matrix.py)：CLI 用の 72 設計。2 値/4 値、幅 8/65/129、automatic/ref や NBA を含む 12 種類の実行場所を組み合わせる。[実行ツール](../../tests/cli/run_bounds_check_tests.py)で、既定/off/warn の出力と回数、警告の位置と順、繰り返しと最後の集計、不正なオプション 4 件を確かめる。カーネルのユニットテストでは、独立した区間の式で範囲全体が内側にあるかを検査する。
+
 既存のスイートへの追加であり、P1 の合格条件の追加ではない。
+
 [実行例と制限](../P1_FEATURES.ja.md)も用意している。
 
 置き場所と期待値の扱い：

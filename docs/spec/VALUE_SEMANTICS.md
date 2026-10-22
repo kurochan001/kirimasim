@@ -160,6 +160,15 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - Reading an unpacked array with an invalid index (out of range, or containing x or z) returns the default value of the element type: x for 4-state integral types, 0 for 2-state, 0.0 for reals, empty for strings, null for handles (checked: 7.4.5, Table 7-1). A write to an invalid index does nothing, except a write to `[$+1]` of a queue and making a new element of an associative array (checked: 7.4.5).
 - `--bounds-check` (CLI.md 2.2; approved 2026-10-19) reports, once per place, an index or position out of range at run time, or with x or z bits. It changes no value read or written.
 
+Implementation status (2026-10-23): tier 1 supports `--bounds-check=off|warn`
+for packed selects and fixed unpacked arrays, including wide values, frames,
+refs and NBA writes. `kernel::fullyInside` uses the same clipping rule as the
+value operations. The VM reports each source position once and counts invalid
+read/write accesses at the end; compound updates can contribute both a read and
+a write. The check does not change values, index evaluation or event counters.
+See the [usage example](../P1_FEATURES.md) and
+[CLI matrix](../../tools/gen_bounds_check_matrix.py).
+
 ### 3.12 Assignment operators, and increment and decrement operators
 
 Approved 2026-10-16.

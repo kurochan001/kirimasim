@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,490 | 1,488, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,493 | 1,491, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 188, `tests/suite/` 1,136 (made by 112 generators under `tools/`), tools 116, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 6.
+This repository's tests by kind: unit tests (GoogleTest) 189, `tests/suite/` 1,136 (made by 113 generators under `tools/`), tools 117, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 7.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -362,6 +362,9 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 - **Scheduling:** every region of the IEEE 1800-2023 time slot with the
   reference algorithm, including pending reports confirmed in the Observed
   region and `$strobe`/`$monitor` in the Postponed region.
+- **Bounds diagnostics:** `--bounds-check=warn` reports invalid packed
+  selections and fixed unpacked-array indices once per source position,
+  with a count at the end. Reads, writes and NBA updates keep their usual values.
 
 ### What does not work yet
 
@@ -487,6 +490,7 @@ Options available now:
 | `--max-call-depth=<n>` | Limit nested calls (default 10000); exceeding the limit ends with exit code 6 |
 | `--seed=<n>` | Seed for `$urandom`, `$urandom_range` and `randcase` (default 0) |
 | `--mintypmax=min\|typ\|max` | Select the minimum, typical or maximum expression of `min:typ:max` delays (default `typ`) |
+| `--bounds-check=off\|warn` | Warn about out-of-range and X/Z indices or packed selections, once per source position (default `off`) |
 | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches` | Write VCD, choose scopes, and include changes within a time slot |
 | `--dump-sir` | Print the intermediate representation instead of simulating |
 | `--stats=json` | Print counters of the run as JSON |

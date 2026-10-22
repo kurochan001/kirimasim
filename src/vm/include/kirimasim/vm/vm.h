@@ -54,6 +54,9 @@ struct RunOptions {
     /// --seed: the default seed of $urandom, $urandom_range and randcase
     /// (SYSTEM_TASKS.md 13.2).
     std::uint64_t seed = 0;
+    /// --bounds-check=warn: report invalid array indices and packed
+    /// selections once per source position without changing their values.
+    bool boundsCheck = false;
 };
 
 /// Runs the design to its end on the given context.

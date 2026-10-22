@@ -56,6 +56,12 @@ kirimasim --version | --help
 | `--mintypmax=min\|typ\|max` | `min:typ:max` の遅延のどれを使うか。既定は `typ`（SCHEDULER_SPEC.md の 12 節。2026-10-19 に承認） | M7 |
 | `--report-pulses` | 慣性の遅延が消したパルスを情報として知らせる（SCHEDULER_SPEC.md の 12 節。2026-10-19 に承認）。既定は無効 | M7 |
 
+実装状況（2026-10-23）：第 1 層は、packed 値の選択と固定長の unpacked 配列の
+アクセスに `--bounds-check=off|warn` を使える。automatic/ref の格納先と NBA も
+含む。最後の集計では不正な読み書きの回数とソース位置の数を出す。
+[VALUE_SEMANTICS.md の 3.11 節](VALUE_SEMANTICS.ja.md)と
+[使い方](../P1_FEATURES.ja.md)を参照。
+
 ### 2.3 出力と開発用
 
 | オプション | 意味 | 段 |

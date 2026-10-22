@@ -56,6 +56,12 @@ kirimasim --version | --help
 | `--mintypmax=min\|typ\|max` | Which delay of `min:typ:max` to use. Default `typ` (SCHEDULER_SPEC.md 12; approved 2026-10-19) | M7 |
 | `--report-pulses` | Report, as notes, the pulses that inertial delays remove (SCHEDULER_SPEC.md 12; approved 2026-10-19). Off by default | M7 |
 
+Implementation status (2026-10-23): `--bounds-check=off|warn` is implemented
+in tier 1 for packed selections and fixed unpacked-array accesses, including
+automatic/ref storage and NBA writes. The end summary counts invalid read/write
+accesses and source positions. See [VALUE_SEMANTICS.md 3.11](VALUE_SEMANTICS.md)
+and the [example](../P1_FEATURES.md).
+
 ### 2.3 Output and development
 
 | Option | Meaning | Stage |

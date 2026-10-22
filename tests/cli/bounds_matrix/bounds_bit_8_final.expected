@@ -1,0 +1,18 @@
+transition 0 1
+negative 0 1
+unknown 0 1
+huge 0
+partial 0000 10000010
+update 10000010
+array_write 11111111 2
+array_read 00000000 2
+array_bits 11111111
+transition 0 1
+negative 0 1
+unknown 0 1
+huge 0
+partial 0000 10000010
+update 10000010
+array_write 11111111 2
+array_read 00000000 2
+array_bits 11111111

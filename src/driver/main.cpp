@@ -10,8 +10,8 @@
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
 // --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
-// --stats=json, --mintypmax, --wave, --wave-scope and --wave-glitches. Exit codes are
-// those of CLI.md 5.
+// --stats=json, --mintypmax, --bounds-check, --wave, --wave-scope and --wave-glitches. Exit codes
+// are those of CLI.md 5.
 
 #include <algorithm>
 #include <charconv>
@@ -70,7 +70,7 @@ void printUsage(std::FILE* out) {
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
-               "         --stats=json, --mintypmax=min|typ|max,\n"
+               "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
                "         --wave=<file>.vcd,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
@@ -104,6 +104,7 @@ struct Options {
     std::string waveFile;                                           // --wave
     std::vector<std::string> waveScopes;                            // --wave-scope
     bool waveGlitches = false;
+    bool boundsCheck = false;
 };
 
 /// Reads the number of --name=<n>. False if it is not a whole number.
@@ -177,6 +178,13 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.maxTimeOk = true;
         } else if (arg == "--dump-sir") {
             o.dumpSir = true;
+        } else if (arg.starts_with("--bounds-check=")) {
+            const auto choice = arg.substr(std::string_view("--bounds-check=").size());
+            if (choice != "off" && choice != "warn") {
+                std::fprintf(stderr, "kirimasim: error: %s needs off or warn\n", argv[i]);
+                return kExitInputError;
+            }
+            o.boundsCheck = choice == "warn";
         } else if (arg.starts_with("--mintypmax=")) {
             const auto choice = arg.substr(std::string_view("--mintypmax=").size());
             if (choice != "min" && choice != "typ" && choice != "max") {
@@ -359,6 +367,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.waveFile = o.waveFile;
     run.waveScopes = o.waveScopes;
     run.waveGlitches = o.waveGlitches;
+    run.boundsCheck = o.boundsCheck;
     run.seed = o.seed;
     // SIGINT stops the run from here on; before, while compiling, it ends
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).
