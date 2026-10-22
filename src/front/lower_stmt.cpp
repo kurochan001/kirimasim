@@ -251,16 +251,22 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 frameVarOf(*v, sl);
             for (const ast::Expression* init : f.initializers)
                 lowerExpr(*init);
-            if (f.stopExpr == nullptr) unsupported(sl, "for loop without a condition");
             const sir::BlockId cond = newBlock();
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
             b_.loops.push_back(Loop{.named = b_.named.size()});
-            const Val c = lowerCondition(*f.stopExpr);
+            const std::optional<Val> c =
+                f.stopExpr != nullptr ? std::optional{lowerCondition(*f.stopExpr)} : std::nullopt;
             const sir::BlockId body = newBlock();
-            terminate(Op::BrIf, {c.op, Operand::block(body), Operand::block(breakTarget(loop))},
-                      sl);
+            // An omitted condition is true (12.7.1). Keep the same step
+            // and exit targets as every other for loop, including continue.
+            if (c) {
+                terminate(Op::BrIf,
+                          {c->op, Operand::block(body), Operand::block(breakTarget(loop))}, sl);
+            } else {
+                jump(body, sl);
+            }
             setBlock(body);
             lowerStatement(f.body);
             if (!b_.dead) jump(continueTarget(loop), sl);

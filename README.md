@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,166 | 1,164, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,168 | 1,166, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 835 (made by 105 generators under `tools/`), tools 109, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 2.
+This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 836 (made by 106 generators under `tools/`), tools 110, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 2.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -322,7 +322,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   structures and arrays.
 - **Statements and expressions:** `if`, `case`, `casez`, `casex`,
   `case inside`, `randcase`; `unique`, `unique0` and `priority` with their violation
-  reports; every loop, `break`, `continue`, `return`; all operators
+  reports; every loop (including `for (;;)`), `break`, `continue`, `return`; all operators
   including streaming, `inside`, wildcard equality, assignment operators and
   increments; assignment patterns.
 - **Assertions:** immediate `assert`, `assume` and `cover`, and deferred

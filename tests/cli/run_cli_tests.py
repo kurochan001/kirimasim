@@ -31,6 +31,7 @@ DESIGN = str(HERE / "display_finish.sv")
 DELAYS = str(HERE / "delays.sv")
 FINAL = str(HERE / "final.sv")
 SPIN = str(HERE / "spin.sv")
+FOR_SPIN = str(HERE / "for_omitted_spin.sv")
 ZERO_DELAY = str(HERE / "zero_delay.sv")
 VIOLATIONS = str(HERE / "violations.sv")
 WRITERS = str(HERE / "writers.sv")
@@ -157,6 +158,9 @@ CASES = [
     # The zero-time limits stop the run with code 5 and say which one; final
     # procedures still run.
     (["--max-steps=1000", SPIN], 5, "=final ran\n",
+     'kirimasim: error: time did not advance: process "top.initial0" ran 1000 instructions'
+     " without waiting (--max-steps=1000)\nkirimasim: info: zero_time_limit at 0 ns"),
+    (["--max-steps=1000", FOR_SPIN], 5, "=final ran\n",
      'kirimasim: error: time did not advance: process "top.initial0" ran 1000 instructions'
      " without waiting (--max-steps=1000)\nkirimasim: info: zero_time_limit at 0 ns"),
     (["--max-zero-delay=10", ZERO_DELAY], 5, "=final ran\n",

@@ -13,6 +13,8 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `for` loops with an omitted condition, including `for (;;)`, with
+  ordinary loop control and time waits (SIR_SPEC.md 7.2; 12.7.1, 12.8).
 - The `kirimasim` command: compile and run a design (`kirimasim
   <file>...`), `kirimasim parse`, `--version`; the input options `-f`,
   `+incdir+`, `+define+`, `--top` and `--timescale`; run-time plusargs
