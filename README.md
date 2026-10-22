@@ -91,60 +91,47 @@ P1 criterion (output, exit code and kirimasim's own messages), the others
 by their output only, with the suite's runners. Verilator is a two-state
 simulator, so tests that show x or z values fail with it.
 
-**Time** (summed over the tests; 6 tests at a time; one run, not the
-median of five that [PERFORMANCE.md](docs/spec/PERFORMANCE.md) asks for
-benchmarks).
+**Time (remeasured 2026-10-23)**: kirimasim `dec94ff` and Icarus Verilog
+`b25510638`, one run per test, up to six tests at a time. These are sums of
+per-test durations, not elapsed suite time or medians of five runs. See
+[conditions and raw data](docs/BENCHMARKS.md).
 
-> **Why Verilator is not in these tables.** Each test suite's runner builds
-> every test in a directory of its own, so Verilator compiles its own
-> runtime library again for every test: about 2.2 s of the 2.6 s C++ build
-> of a small test. A project builds that library once, so Verilator's times
-> here would mostly measure the rebuilding, not Verilator, and next to
-> kirimasim's they would read as a speed comparison that they are not. The
-> tests are also too short to compare the speed of simulation;
-> [Simulation speed](#simulation-speed) compares the three simulators.
+> Short tests mostly measure startup and preparation, so these tables do
+> not compare simulation speed. Verilator rebuilds the C++ program and
+> runtime for each test and was not timed here. The three-way run-speed
+> comparison is under [Simulation speed](#simulation-speed).
 
 | Test set | Simulator | Build step | Run step | Total |
 | --- | --- | --- | --- | --- |
-| sv-tests, 344 | kirimasim | 6.6 s | 0.1 s | 6.7 s |
-| | Icarus Verilog | 5.0 s | 33.3 s | 38.3 s |
-| | Verilator | — | — | not listed (see above) |
-| Own test suite, 1,466 | kirimasim | 14.1 s | 0.3 s | 14.4 s |
-| | Icarus Verilog | 20.8 s | 8.9 s | 29.7 s |
-| | Verilator | — | — | not listed (see above) |
+| sv-tests, 344 | kirimasim | 7.06 s | 0.18 s | 7.24 s |
+|  | Icarus Verilog | 4.79 s | 33.52 s | 38.31 s |
+| Own P1 population, 1,466 | kirimasim | 11.65 s | 1.15 s | 12.80 s |
+|  | Icarus Verilog | 21.54 s | 9.15 s | 30.70 s |
 
-Only the tests that all three simulators pass, from the same runs: 150
-tests of sv-tests (38 of them must be rejected, so they have no run step)
-and 1,133 of the own test suite.
+Only the tests **both measured simulators passed** in these runs are shown
+below. This selection differs from the previous three-way intersection.
+Of the 184 sv-tests cases, 43 expect rejection.
 
 | Test set | Simulator | Build step | Run step | Total |
 | --- | --- | --- | --- | --- |
-| sv-tests, 150 | kirimasim | 1.4 s | 0.1 s | 1.5 s |
-| | Icarus Verilog | 2.3 s | 20.9 s | 23.2 s |
-| | Verilator | — | — | not listed (see above) |
-| Own test suite, 1,133 | kirimasim | 10.8 s | 0.2 s | 11.0 s |
-| | Icarus Verilog | 16.1 s | 7.9 s | 24.0 s |
-| | Verilator | — | — | not listed (see above) |
+| sv-tests, 184 | kirimasim | 1.70 s | 0.09 s | 1.79 s |
+|  | Icarus Verilog | 2.51 s | 27.22 s | 29.73 s |
+| Own P1 population, 1,269 | kirimasim | 10.06 s | 1.00 s | 11.06 s |
+|  | Icarus Verilog | 18.75 s | 9.04 s | 27.79 s |
 
-- The build step is the work before the simulation starts: for kirimasim,
-  reading, elaborating and lowering the design to SIR (timed as a run with
-  `--dump-sir`); for Icarus, `iverilog`. The run step is the simulation:
-  for kirimasim, its whole run less the build step; for Icarus, `vvp`.
-- The tests are short, so the run steps mostly measure starting up.
-  kirimasim's run step is found by subtraction and is too small to tell
-  apart from noise; the run with `--dump-sir` also prints the SIR, so the
-  subtraction errs on the small side.
-- On this machine, the first start of a newly built program took about
-  0.2 s, and the next start of the same file under 0.01 s (tried with three
-  files that Icarus made; why macOS takes that time is not confirmed).
-  Icarus's run step in sv-tests is such a first start, since its runner
-  starts the compiled file itself; the own suite's runner starts `vvp` with
-  the file instead.
-- In the first table, a test that a simulator cannot build counts with its
-  build step only; kirimasim stops early at an unsupported construct.
-- Versions and machine: kirimasim 8500bdc (release build) for the times;
-  Icarus Verilog 14.0 (devel) f190dbb, Verilator 5.053 devel
-  8668340; Apple M5 Max (18 cores), 128 GB, macOS 27.0.1, Apple clang 21.
+- Preparation is reading, elaboration and lowering to SIR (`--dump-sir`)
+  for kirimasim, and `iverilog` for Icarus. Running is kirimasim's whole
+  duration less preparation (negative differences clamped to zero), or
+  starting Icarus's compiled program.
+- kirimasim's small differences include measurement noise and the effect
+  of printing SIR; they cannot be read as pure execution time. Tests that
+  fail to build still contribute their preparation time.
+- sv-tests is pinned at `15490e95fd97`; the 1,466 own tests use the frozen
+  list at `179c55de9c83`. The common subset uses the runners' verdicts in
+  these new runs.
+- Machine: Apple M5 Max (18 cores), 128 GiB, macOS 27.0.1. kirimasim is a
+  release build with AppleClang 21.0.0.21000334. The historical comparison
+  values in the exit-criteria tables retain their stated dates and tools.
 
 <details>
 <summary>This repository's tests by kind</summary>
@@ -240,56 +227,39 @@ kirimasim stops; it fails no test.
 
 ### Simulation speed
 
-The comparison was measured on 2026-10-17 with `tools/bench.py` on the four
-small designs under [bench/](bench/), the kinds that PERFORMANCE.md 5.2
-asks for in P1.
-Each design repeats its work the number of times given by `+n=` and prints
-a checksum; all three simulators print the same. kirimasim's column was
-measured again on 2026-10-20 at 08a0c3c.
+All three simulators were remeasured on 2026-10-23, five runs each, on the
+four designs under [bench/](bench/): kirimasim `dec94ff` (release), Icarus
+Verilog 14.0 devel `b25510638`, and Verilator 5.053 devel `2cb54975a`.
+The counts and expected checksums were unchanged; every measured run
+produced the expected result.
 
 | Design | What it does | `+n=` | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; the inputs change every time step | 3,000,000 | 4.89 s | 7.97 s | 0.16 s |
-| `nba_shift` | a 64-stage shift register and 16 accumulators in `always_ff`, all nonblocking | 1,000,000 | 11.23 s | 18.69 s | 0.16 s |
-| `proc_wait` | 64 processes that wait with `#` and 64 that wait for a named event | 1,000,000 | 3.91 s | 4.93 s | 1.76 s |
-| `fork_join` | four branches forked and joined in a loop, with `#`, `->` and `@` | 4,000,000 | 2.65 s | 4.14 s | 0.87 s |
+| `comb_chain` | 8 `always_comb` stages of 32-bit arithmetic; changing inputs | 3,000,000 | 5.043 s | 7.968 s | 0.142 s |
+| `nba_shift` | 64-stage shift register and 16 accumulators in `always_ff`, all NBA | 1,000,000 | 11.273 s | 18.739 s | 0.120 s |
+| `proc_wait` | 64 processes waiting with `#` and 64 waiting for named events | 1,000,000 | 3.966 s | 5.204 s | 1.817 s |
+| `fork_join` | Four branches forked and joined in a loop, with `#`, `->`, `@` | 4,000,000 | 2.763 s | 4.084 s | 0.843 s |
 
-- The times are of the simulation only: the median of five runs with the
-  count, less the median of five runs with `+n=1`. Starting the program,
-  reading the design and kirimasim's front end are in both runs and drop
-  out; a run with `+n=1` took 3 to 8 ms. Each program started once before
-  it was timed, so the first start of a newly built program is not in it.
-  Building is not in it either: iverilog took 0.01 s per design, and
-  Verilator 1.4 s with parallel build jobs.
-- kirimasim and Icarus Verilog interpret the design with four-state
-  values; Verilator compiles it to C++ and is two-state. kirimasim's
-  counterpart to Verilator is tier 2, C++ generation, in P2. Tier 1 has had
-  performance fixes. Verilator's lead is smallest where many processes
-  wait (`proc_wait`, `fork_join`).
-- Memory: a run used at most 11 MiB with kirimasim, 6 MiB with Icarus and
-  2 MiB with Verilator. Before 072d0c2, which releases the records of
-  finished processes (SCHEDULER_SPEC.md 10.8), kirimasim kept them all and
-  used 4,947 MiB on `fork_join`.
-- The versions and the machine are the same as in the test results above,
-  but kirimasim's column was measured again on 2026-10-20 at 08a0c3c. It
-  was 5 to 14% slower than at 394717f (4.53, 10.69, 3.46 and 2.33 s). At
-  cd422c8 it was 20 to 31% slower; most of that came from a check of the
-  width of every instruction's operands and from the layout of the check
-  of the Postponed region, both fixed since. The rest is spread over
-  later changes that made the run correct (#28).
-  `tools/bench.py` repeats the measurement; `--n` and `--runs` make it
-  quick.
-- On 2026-10-22, the process-reclamation change e5e0d70 reduced
-  `fork_join` from 2.802 s to 2.758 s (about 1.6%) in five interleaved
-  before/after runs on the same machine. `comb_chain` and `nba_shift`
-  changed by less than 1%. A comparison for `proc_wait` is not confirmed:
-  both builds' times varied widely; repeat the runs with the machine idle.
-  The performance issue #28 remains open. The table keeps the dated
-  three-simulator comparison above.
-- The nightly workflow measures kirimasim on Linux each night and puts a
-  warning in its summary when a time or the memory is 15% worse, or the
-  build 25% slower, than the median of the last seven nights
-  (PERFORMANCE.md 5.1). It fails nothing: shared runners swing widely.
+- Times are the median of five runs at the stated count less the median
+  of five runs with `+n=1`, after one warm-up start per program. The
+  `+n=1` medians were about 3–8 ms.
+- Design builds are separate: Icarus took 0.014–0.023 s, Verilator
+  1.528–1.641 s with parallel build jobs (one build per design).
+  kirimasim reads the design at runtime.
+- The median per-run peak RSS was 9.19–10.09 MiB for kirimasim,
+  5.33–5.86 MiB for Icarus and 2.00–2.16 MiB for Verilator.
+- On these four designs kirimasim was about 1.31–1.66 times faster than
+  Icarus; Verilator was about 2.2–93.9 times faster than kirimasim.
+  kirimasim and Icarus interpret four-state values; Verilator generates
+  C++ and runs with two-state values. kirimasim's C++ generation is P2
+  work. These small designs do not establish general performance.
+- [Measurement details](docs/BENCHMARKS.md) include CPU, OS, load, every
+  sample, design-specific build/startup/RSS values and reproduction steps.
+  This run alone does not establish a change against earlier versions.
+  Performance issue #28 remains open.
+- The separate Linux nightly measurement warns when runtime or RSS is
+  15% worse, or build time 25% worse, than the preceding seven nights'
+  median (PERFORMANCE.md 5.1).
 
 ### What works
 
@@ -588,6 +558,7 @@ holds.
 
 | Document | Content |
 | --- | --- |
+| [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Dated performance measurements, raw data and reproduction steps |
 | [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
 | [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model |
