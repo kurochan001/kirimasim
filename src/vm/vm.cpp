@@ -1062,8 +1062,11 @@ private:
     /// Released frames to reuse, frames to look at again, and the frame
     /// running now (SCHEDULER_SPEC.md 10.8).
     std::vector<Frame*> freeFrames_;
-    std::vector<W4> retWide_;  ///< A function's result wider than 64 bits, at its ret.
     std::vector<Frame*> later_;
+    /// The $fmonitor frames, which outlive the call that made them until
+    /// their files close (SYSTEM_TASKS.md 6.2).
+    std::vector<Frame*> fileMonitorFrames_;
+    std::vector<W4> retWide_;  ///< A function's result wider than 64 bits, at its ret.
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
     std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
@@ -1226,8 +1229,21 @@ private:
         }
     }
 
-    /// Looks again at the frames tryRelease left for later.
+    /// Looks again at the frames tryRelease left for later, and releases
+    /// the frames of file monitors the kernel ended because their files
+    /// closed (SYSTEM_TASKS.md 6.2).
     void sweep() {
+        kernel::ProcessId endedProcess = kernel::kNone;
+        while (sched_.takeEndedFileMonitor(endedProcess)) {
+            for (std::size_t i = 0; i < fileMonitorFrames_.size(); ++i) {
+                if (fileMonitorFrames_[i]->kernelId != endedProcess) continue;
+                Frame& f = *fileMonitorFrames_[i];
+                fileMonitorFrames_[i] = fileMonitorFrames_.back();
+                fileMonitorFrames_.pop_back();
+                ended(f);
+                break;
+            }
+        }
         if (later_.empty()) return;
         std::vector<Frame*> again;
         again.swap(later_);
@@ -2217,6 +2233,9 @@ private:
                             sched_.addFileMonitor(m.kernelId,
                                                   depsOf(bodyOfProcess(ops[0].asProcess())).slots,
                                                   std::move(to));
+                            // It lives until its files close; sweep frees
+                            // the frame when the kernel says it ended.
+                            fileMonitorFrames_.push_back(&m);
                             break;
                         }
                         // The new monitor starts afresh and shows what it
