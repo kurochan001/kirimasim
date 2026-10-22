@@ -17,7 +17,7 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-21)
+## Status (2026-10-22)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its

@@ -150,6 +150,14 @@ own. CONTRIBUTING.md says what goes in this file.
   open file, and the reads that follow return the characters pushed back,
   the last first, before they fail with EBADF (21.3.4.3, SYSTEM_TASKS.md
   6.3). It returned -1 before, as the C library of macOS does.
+- A `$fmonitor` whose last file closes lets go of the frame and the
+  process it made, so a design that opens and closes monitors many times
+  keeps its memory flat instead of growing with each call
+  (SYSTEM_TASKS.md 6.2; #37).
+- A checker instantiated under a module's default clocking no longer
+  stops with "no inferred clock in this context": `kirimasim parse`
+  accepts the design, and running it reports the clocking block and the
+  checker as unsupported for P3 (16.14.7, 17.4; #24).
 
 ### Fixed
 
