@@ -282,6 +282,13 @@ void Scheduler::addFileMonitor(ProcessId p, std::span<const SlotPart> parts, Fil
     countMonitorParts(fileMonitors_.back(), true);
 }
 
+bool Scheduler::takeEndedFileMonitor(ProcessId& ended) {
+    if (endedFileMonitors_.empty()) return false;
+    ended = endedFileMonitors_.back();
+    endedFileMonitors_.pop_back();
+    return true;
+}
+
 void Scheduler::setMonitoring(bool on) {
     monitorOn_ = on;
     if (on) monitor_.due = true;
@@ -520,7 +527,12 @@ void Scheduler::runSlot() {
         for (std::size_t i = 0; i < fileMonitors_.size();) {
             if (!ctx_.files().live(fileMonitors_[i].to)) {
                 countMonitorParts(fileMonitors_[i], false);
+                const ProcessId p = fileMonitors_[i].process;
                 fileMonitors_.erase(fileMonitors_.begin() + static_cast<std::ptrdiff_t>(i));
+                // The monitor ends with its last file; its process ends
+                // too, and the tier releases its frame (SYSTEM_TASKS.md 6.2).
+                kill(p);
+                endedFileMonitors_.push_back(p);
                 continue;
             }
             if (fileMonitors_[i].due) {

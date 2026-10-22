@@ -18,6 +18,7 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -48,6 +49,7 @@ ERROR_DESIGNS = [HERE / "later_work_matrix.sv", HERE / "later_work_override.sv",
 BLOCK_POSITIONS = HERE / "block_position_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 END_TASKS = str(HERE / "end_tasks.sv")
+FILE_MONITOR = str(HERE / "file_monitor_ends.sv")
 
 # Cases run in this directory, as -f reads the paths in its file from
 # the current directory (CLI.md 2.1): (arguments, exit code, text stdout
@@ -302,6 +304,30 @@ def main() -> int:
     except (IndexError, ValueError) as e:
         failures += 1
         print(f"FAIL: --stats=json: {e}\n{proc.stdout}", file=sys.stderr)
+
+    # A file monitor ends when its last file closes (SYSTEM_TASKS.md 6.2):
+    # its process and frame go with it, so the processes kept do not grow
+    # with the number of monitors the design makes (100 here). Without that,
+    # proc.kept_peak would be about 100.
+    with tempfile.TemporaryDirectory() as tmp:
+        proc = bounded_run.run([args.kirimasim, "--stats=json", FILE_MONITOR], cwd=tmp)
+        problems = []
+        if proc.returncode != 0:
+            problems.append(f"exit code {proc.returncode}")
+        if "done" not in proc.stdout.splitlines():
+            problems.append("stdout lacks 'done'")
+        try:
+            stats = json.loads(proc.stdout.splitlines()[-1])
+            kept = stats.get("proc.kept_peak")
+            if not isinstance(kept, int) or kept > 8:
+                problems.append(f"proc.kept_peak is {kept}, not at most 8")
+        except (IndexError, ValueError) as e:
+            problems.append(f"--stats=json: {e}")
+        if problems:
+            failures += 1
+            print(f"FAIL: a file monitor ends with its last file: {'; '.join(problems)}",
+                  file=sys.stderr)
+            print(f"--- stdout ---\n{proc.stdout}--- stderr ---\n{proc.stderr}", file=sys.stderr)
 
     # $finish and $stop end the run at 5ns with exit code 0; final runs and
     # nothing scheduled later does (SCHEDULER_SPEC.md 16.2, 9.2.3).

@@ -339,6 +339,10 @@ public:
     /// the monitor does; any number run at once, $monitoroff stops none,
     /// and one ends when none of `to` is open any more (SYSTEM_TASKS.md 6.2).
     void addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to);
+    /// A file monitor that ended because none of its files was open any
+    /// more (SYSTEM_TASKS.md 6.2), for the tier to release its frame. False
+    /// when no such monitor is waiting. The process is already ended.
+    bool takeEndedFileMonitor(ProcessId& ended);
     /// $monitoron and $monitoroff: monitoring on (the default) or off.
     /// Turning it on runs the monitor in this time slot's Postponed region.
     void setMonitoring(bool on);
@@ -583,6 +587,9 @@ private:
     // many of their parts are in it; whether monitoring is on.
     DisplayMonitor monitor_;
     std::vector<DisplayMonitor> fileMonitors_;
+    /// The file monitors that ended in the Postponed region, whose frames
+    /// the tier has not released yet (SYSTEM_TASKS.md 6.2).
+    std::vector<ProcessId> endedFileMonitors_;
     std::vector<std::uint32_t> monitorSlot_;
     bool monitorOn_ = true;
     // The files of the strobes with a descriptor of this time slot (a
