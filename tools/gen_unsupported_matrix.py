@@ -39,7 +39,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 13
+VERSION = 14
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -122,8 +122,6 @@ STATEMENTS = [
      "$sformatf with a format that is not a constant", False),
     ("sformat_runtime_format", "  string s, f = \"%0d\";\n  int a;\n", "$sformat(s, «»f, a);",
      "$sformat with a format that is not a constant", False),
-    ("sscanf_runtime_format", "  string f = \"%d\";\n  int a;\n",
-     "void'(«»$sscanf(\"1\", f, a));", "$sscanf with a format that is not a constant", False),
     ("value_plusargs_runtime_format", "  string f = \"n=%d\";\n  int a;\n",
      "void'(«»$value$plusargs(f, a));", "$value$plusargs with a format that is not a constant",
      False),

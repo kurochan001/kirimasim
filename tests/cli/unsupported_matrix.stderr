@@ -300,14 +300,6 @@ unsupported_matrix/sscanf_fewer_targets.sv:28:13: error: $sscanf has fewer argum
 unsupported_matrix/sscanf_fewer_targets.sv:33:13: error: $sscanf has fewer arguments than its format has conversions
 unsupported_matrix/sscanf_fewer_targets.sv:6:11: error: $sscanf has fewer arguments than its format has conversions
 unsupported_matrix/sscanf_fewer_targets.sv:9:11: error: $sscanf has fewer arguments than its format has conversions
-unsupported_matrix/sscanf_runtime_format.sv:10:11: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:13:11: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:16:11: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:20:11: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:24:11: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:29:13: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:34:13: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
-unsupported_matrix/sscanf_runtime_format.sv:7:11: error: unsupported: $sscanf with a format that is not a constant (not implemented yet)
 unsupported_matrix/sscanf_specifier.sv:12:11: error: unsupported: format specifier %q in $sscanf (not implemented yet)
 unsupported_matrix/sscanf_specifier.sv:15:11: error: unsupported: format specifier %q in $sscanf (not implemented yet)
 unsupported_matrix/sscanf_specifier.sv:19:11: error: unsupported: format specifier %q in $sscanf (not implemented yet)
