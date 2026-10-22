@@ -1,4 +1,4 @@
-# P1 gate population (TEST_SUITE.md): kirimasim-tests c983cf799b4d, 1466 of 1853 simulation tests; made by tools/p1_population.py select
+# P1 gate population (TEST_SUITE.md): kirimasim-tests 179c55de9c83, 1466 of 1853 simulation tests chosen at c983cf799b4d; made by tools/p1_population.py select
 ch10/test_adder_edge_cases
 ch10/test_alias_stmt
 ch10/test_assign_blocking
@@ -22,7 +22,7 @@ ch10/test_assign_proc
 ch10/test_assign_statements
 ch10/test_assign_var
 ch10/test_assign_wire
-ch10/test_assignment_forms
+ch10/test_assignment_kinds
 ch10/test_assignment_operators_basic
 ch10/test_assignment_ops
 ch10/test_assignment_pattern
