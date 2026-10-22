@@ -246,6 +246,15 @@ Prints the unit and precision of the same targets as 5.2 in one line, `Time scal
 - **How `$fscanf` takes characters (added 2026-10-21, approved):** `$fscanf` reads as `$sscanf` does, and takes from the file exactly the characters its conversions read; the next read starts at the first character not taken. `%f` on `1e+x`, for example, reads 1.0 and leaves `e+x`, as `$sscanf` does (rule of this document; for reference, checked 2026-10-21, Icarus takes `1e+x` and assigns nothing, as C's `fscanf` may).
 - **`$ungetc` (added 2026-10-21, approved):** any number of characters can be pushed back, and the last one pushed is read first (rule of this document; for reference, Icarus does the same with two). It returns 0, or -1 when the descriptor is not open. A file opened only for writing is open, so `$ungetc` returns 0 for it too (added 2026-10-21, approved).
 
+Implementation status (2026-10-23): `$sscanf` and `$fscanf` accept runtime
+formats from strings and packed integral values. Constants retain elaboration
+checks; runtime formats are validated by the shared kernel scanner. Only
+successfully assigned outputs are copied back. Missing outputs warn and stop
+before the missing conversion; an X/Z-containing format returns -1 without
+consuming input. See the [examples and supported conversions](../P1_FEATURES.md),
+the [runtime scan matrix](../../tools/gen_runtime_scan_matrix.py) and
+[CLI diagnostic tests](../../tests/cli/run_runtime_scan_tests.py).
+
 ### 6.4 Position, status, EOF
 
 - `$ftell`, `$fseek` and `$rewind` are the same as C's `ftell` and `fseek` (checked: 21.3.5). Changing the position discards what `$ungetc` pushed back. `$ftell` counts what was pushed back as not yet read (added 2026-10-21, approved).

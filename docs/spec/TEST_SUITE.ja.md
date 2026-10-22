@@ -180,6 +180,15 @@ sv-tests は、`simulation` のテストの合否を、シミュレータの出�
    - すでに群を覆っている今の生成器：`gen_zero_time_loop_matrix.py` と `gen_call_depth_matrix.py`（時刻が進まない実行）、`gen_delay_matrix.py` と `gen_delay_value_matrix.py`（遅延）、`gen_logic_matrix.py`、`gen_select_matrix.py`、`gen_cond_op_matrix.py`（x）、`gen_disable_matrix.py`、`gen_fork_matrix.py`、`gen_process_lifetime_matrix.py`（寿命）、`gen_format_flag_matrix.py` と `gen_format_source_matrix.py`（出力）。
    - 上限と診断は `:expected_exit:` と `:expected_stderr:` で確かめる。`:expected_diag:` のような項目は足さない。P2 以降の群は、そのフェーズで作る。
 
+最近の実装に対応するテスト（2026-10-23）：
+
+- [列挙型の移動](../../tools/gen_enum_step_matrix.py)：スイートの 70 ファイル。実行時の移動数、基底の型、格納場所、プロセスやサブルーチンの種類、評価の副作用を確かめる。
+- [幅の広いストリーミング代入先](../../tools/gen_wide_unpack_matrix.py)：スイートの 80 ファイル。語の境界、ストリームの向きとスライスの幅、2 値と 4 値、automatic/ref の代入先、ノンブロッキング代入を確かめる。
+- [実行時の読み取り書式](../../tools/gen_runtime_scan_matrix.py)：スイートの 50 ファイル。文字列/packed の書式、文字列/ファイルの入力、一部だけの代入、評価順を確かめる。さらに [CLI のテスト](../../tests/cli/run_runtime_scan_tests.py)で診断と入力・書き戻しの 23 ケース、ユニットテストの 3 件でカーネルの書式の準備を確かめる。
+
+既存のスイートへの追加であり、P1 の合格条件の追加ではない。
+[実行例と制限](../P1_FEATURES.ja.md)も用意している。
+
 置き場所と期待値の扱い：
 
 - 生成器は本体のリポジトリの `tools/` に置き、生成したテストもコミットする。生成器を変えて既存のテストの期待値が変わるときは、期待値を守る決まりどおり、実装と別の PR にする。

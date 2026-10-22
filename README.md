@@ -466,6 +466,10 @@ kirimasim: info: finish at 52 ns
 The design's output goes to standard output; kirimasim's own messages and
 the messages of `$error` and its relatives go to standard error.
 
+For runnable examples of runtime enum steps, wide streaming assignments,
+runtime scan formats, conditionless `for` loops and minimum/typical/maximum
+delays, see [Recent P1 features](docs/P1_FEATURES.md).
+
 Options available now:
 
 | Option | Meaning |

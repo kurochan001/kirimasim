@@ -457,6 +457,12 @@ This section was written in P1 (approved 2026-10-15).
 - `first()` and `last()` are the first and last members. `next(N)` and `prev(N)` are the members N after and before, wrapping around to the other end at the ends. If the present value is not a member, they return the default initial value of the enumerated type (the default of the base type; Table 6-7) (checked: 6.19.5.1 to 6.19.5.4).
 - `num()` is the number of members. `name()` is the name of the value, or the empty string if it is not a member (checked: 6.19.5.5, 6.19.5.6).
 
+Implementation status (2026-10-23): `next(N)` and `prev(N)` accept runtime
+counts. slang converts N to 32-bit `int unsigned`; front lowers stepping into
+SIR selections and arithmetic, evaluating the receiver and count once each,
+left to right. See the [usage example](../P1_FEATURES.md) and
+[enum stepping matrix](../../tools/gen_enum_step_matrix.py).
+
 ### 7.8 chandle
 
 Approved 2026-10-17.
@@ -475,6 +481,7 @@ Approved 2026-10-17.
   - Operands that are fixed-size unpacked arrays and unpacked structures are covered in P1 too. Elements and members are placed in foreach order for arrays (from the left bound, the rightmost dimension changing fastest) and in declaration order for structures (checked: 11.4.14.1). As targets, they are taken out in the same order.
   - `<<` as a target (unpacking) is the inverse of packing: after `{<< k {t}} = v`, the value of `{<< k {t}}` equals the top bits of `v` of the same width. When the last block is short (the width is not a multiple of k), v is cut from its left end into k bits each, and that sequence reversed is put in t (rule of this document; the standard says only "the reverse operation": 11.4.14.3). For reference (checked 2026-10-17): Verilator 5.052 applies the same cutting as packing when unpacking a short block, and packing again does not give back the original value. Icarus 13.0 and its development version do not accept streaming.
   - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P3.
+  - Implementation status (2026-10-23): streaming assignment targets wider than 64 bits are supported, including fixed unpacked arrays and structures, blocking assignments and nonblocking assignments to static targets. The [wide unpacking matrix](../../tools/gen_wide_unpack_matrix.py) covers widths around word boundaries, short slices, X/Z, automatic/ref targets and nonblocking value capture. See the [usage example](../P1_FEATURES.md) for current limits.
 - How the values of assignment patterns (10.9) are decided is expressed in SIR by unfolding them into assignments element by element. Assignment patterns of unpacked arrays and structures are written together with how arrays and structures are laid out in SIR_SPEC.md.
 - Operations on class handles (P3).
 - Compare the "not confirmed" items of 7.3, 7.4 and 7.6 with Icarus 13.0's results.

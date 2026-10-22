@@ -20,7 +20,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations<br/>(later: objects and GC, VPI, DPI-C, waveforms)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD<br/>(later: objects and GC, VPI, DPI-C)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -34,6 +34,10 @@ flowchart TD
 slang は改変せず、1 つのコミットに固定したライブラリとして使います。修正は上流に送ります。
 
 ## 3 つの実行の層と、1 つのカーネル
+
+2026-10-23 時点では、第 1 層と共有カーネルが現在の P1 の範囲を実装しています。
+第 2 層は P2 の予定で、第 3 層はその後です。以下の表と共通の実行の取り決めは、
+将来の層を含めた設計全体を示します。
 
 | 層 | 何か | 役割 |
 | --- | --- | --- |
@@ -62,7 +66,7 @@ slang は改変せず、1 つのコミットに固定したライブラリとし
 | `analysis` | X 到達解析、静的な島、レベル化、可観測性 | `sir` | 空 |
 | `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | SIR を直接解釈する。バイトコードは後で |
 | `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 空 |
-| `kernel` | 実行カーネル | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` を通してだけ、C++ のインターフェースとして見る | すべての領域を持つスケジューラ、スロットの格納、4 値の語の演算、ネットの解決、UDP の表、書式と読み取り、文字列、事象の回数、コンテキスト |
+| `kernel` | 実行カーネル | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` を通してだけ、C++ のインターフェースとして見る | すべての領域を持つスケジューラ、スロットの格納、4 値の語の演算、ネットの解決、UDP の表、ファイル入出力、書式と読み取り、文字列、VCD の出力、事象の回数、コンテキスト |
 | `solver_adapter` | 差し替えられる制約ソルバ | `sir`、選んだ外部のソルバ | P3 の予定 |
 | `fiber_backend` | 時間を使う DPI-C のタスクのためのファイバー | 選んだファイバーのライブラリだけ | P3 の予定 |
 | `valsem` | 値の意味の参照実装 | なし | 値の命令、辺、強さのあるネットの解決、UDP の表 |
@@ -109,4 +113,4 @@ flowchart TD
 
 - 速い値の演算は、乱数の入力で `valsem` と比べます。
 - 第 1 層と第 2 層は同じテストを走らせ、出力と、観測できる事象を比べる予定です（`--tier-check`）。
-- 性能の後退は、実時間ではなく**事象の回数**（`--stats=json`、`PerfCount` のテスト）で捕まえます。回数は機械の負荷や最適化の度合いに左右されないためです。
+- **事象の回数**（`--stats=json`、`PerfCount` のテスト）で、機械の負荷によらず処理量の変化を検出します。このテストの通過だけでは実行速度は分かりません。実時間と最大 RSS は `tools/bench.py` で別に測ります。[性能の仕様書](spec/PERFORMANCE.ja.md)を参照してください。

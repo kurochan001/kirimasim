@@ -180,6 +180,15 @@ Each is added in the stage that implements the feature, in the same PR as the im
    - Existing ones that cover groups already: `gen_zero_time_loop_matrix.py` and `gen_call_depth_matrix.py` (runs that do not advance time), `gen_delay_matrix.py` and `gen_delay_value_matrix.py` (delays), `gen_logic_matrix.py`, `gen_select_matrix.py` and `gen_cond_op_matrix.py` (x), `gen_disable_matrix.py`, `gen_fork_matrix.py` and `gen_process_lifetime_matrix.py` (lifetimes), `gen_format_flag_matrix.py` and `gen_format_source_matrix.py` (output).
    - Limits and diagnostics are checked with `:expected_exit:` and `:expected_stderr:`; no item such as `:expected_diag:` is added. Groups of P2 and later are made in their phase.
 
+Recent implementation coverage (2026-10-23):
+
+- [Enum stepping](../../tools/gen_enum_step_matrix.py): 70 suite files covering runtime counts, enum base types, storage locations, process/subroutine contexts and evaluation side effects.
+- [Wide streaming targets](../../tools/gen_wide_unpack_matrix.py): 80 suite files covering word boundaries, stream directions and slice sizes, two/four-state values, automatic/ref targets and nonblocking assignments.
+- [Runtime scan formats](../../tools/gen_runtime_scan_matrix.py): 50 suite files covering string/packed formats, string/file input, partial assignments and evaluation order. An additional [CLI test runner](../../tests/cli/run_runtime_scan_tests.py) checks 23 diagnostic and input/copyback cases; three unit tests cover the kernel's format preparation.
+
+These are additions within the existing suite, not new P1 passing conditions.
+[Runnable examples and limits](../P1_FEATURES.md) accompany them.
+
 Where they go and how their expected values are treated:
 
 - Generators go in `tools/` of the main repository, and the tests they make are committed too. When changing a generator changes the expected values of existing tests, it goes, by the rules protecting expected values, in a PR separate from implementation.
