@@ -10,7 +10,7 @@
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
 // --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
-// --stats=json, --wave, --wave-scope and --wave-glitches. Exit codes are
+// --stats=json, --mintypmax, --wave, --wave-scope and --wave-glitches. Exit codes are
 // those of CLI.md 5.
 
 #include <algorithm>
@@ -70,7 +70,7 @@ void printUsage(std::FILE* out) {
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
-               "         --stats=json,\n"
+               "         --stats=json, --mintypmax=min|typ|max,\n"
                "         --wave=<file>.vcd,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
@@ -177,6 +177,15 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.maxTimeOk = true;
         } else if (arg == "--dump-sir") {
             o.dumpSir = true;
+        } else if (arg.starts_with("--mintypmax=")) {
+            const auto choice = arg.substr(std::string_view("--mintypmax=").size());
+            if (choice != "min" && choice != "typ" && choice != "max") {
+                std::fprintf(stderr, "kirimasim: error: %s needs min, typ or max\n", argv[i]);
+                return kExitInputError;
+            }
+            // Let slang select every min:typ:max expression consistently
+            // during elaboration (CLI.md 2.2, SCHEDULER_SPEC.md 12).
+            o.slangArgs.emplace_back("--timing=" + std::string(choice));
         } else if (arg.starts_with("--wave=")) {
             // A VCD file; FST waits for the decision on libfstapi
             // (WAVEFORM.md 1).

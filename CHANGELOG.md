@@ -13,6 +13,9 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `--mintypmax=min|typ|max` selects delay expressions throughout the
+  design, including expressions evaluated at run time (CLI.md 2.2,
+  SCHEDULER_SPEC.md 12).
 - `for` loops with an omitted condition, including `for (;;)`, with
   ordinary loop control and time waits (SIR_SPEC.md 7.2; 12.7.1, 12.8).
 - The `kirimasim` command: compile and run a design (`kirimasim

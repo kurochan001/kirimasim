@@ -189,6 +189,8 @@ bool untrustedConstant(const ast::Expression& e) {
         return false;
     };
     switch (e.kind) {
+        case ast::ExpressionKind::MinTypMax:
+            return untrustedConstant(e.as<ast::MinTypMaxExpression>().selected());
         case ast::ExpressionKind::Call: return any(e.as<ast::CallExpression>().arguments());
         case ast::ExpressionKind::UnaryOp: {
             // slang folds +v as v; x or z makes every bit x
@@ -232,6 +234,8 @@ bool untrustedConstant(const ast::Expression& e) {
 /// Whether evaluating an expression can change anything.
 bool sideEffects(const ast::Expression& e) {
     switch (e.kind) {
+        case ast::ExpressionKind::MinTypMax:
+            return sideEffects(e.as<ast::MinTypMaxExpression>().selected());
         case ast::ExpressionKind::Assignment: return true;
         case ast::ExpressionKind::Call: {
             const auto& c = e.as<ast::CallExpression>();
@@ -804,6 +808,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         return constantFrom(*cv, typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
+        case ast::ExpressionKind::MinTypMax:
+            // slang chooses the branch for the whole compilation; only
+            // that expression is evaluated, even when it is not constant.
+            return lowerExpr(e.as<ast::MinTypMaxExpression>().selected());
         case ast::ExpressionKind::IntegerLiteral:
             return constantFrom(slang::ConstantValue(e.as<ast::IntegerLiteral>().getValue()),
                                 typeOf(*e.type, sl), sl);

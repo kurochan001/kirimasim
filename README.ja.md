@@ -42,11 +42,11 @@ kirimasim の数は 2026-10-22 に測ったもので、右の 2 列の Icarus Ve
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 1,168 | 1,166、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 1,170 | 1,168、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 213 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）176、`tests/suite/` 836（`tools/` の 106 個の生成器が作る）、道具 110、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 2。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）176、`tests/suite/` 836（`tools/` の 107 個の生成器が作る）、道具 111、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 3。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラス（P3）と、並行アサーション（P3）です。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -306,6 +306,7 @@ kirimasim: info: finish at 52 ns
 | `--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P2 の第 2 層まで効果は無い） |
 | `--max-call-depth=<n>` | 呼び出しの深さの上限（既定は 10000）。超えると終了コード 6 |
 | `--seed=<n>` | `$urandom`、`$urandom_range`、`randcase` のシード（既定は 0） |
+| `--mintypmax=min\|typ\|max` | `min:typ:max` の遅延で使う式を選ぶ（既定は `typ`） |
 | `--wave=<file>.vcd`、`--wave-scope=<パターン>[,<パターン>...]`、`--wave-glitches` | VCD の出力、スコープの選択、時刻スロットの途中の変化の記録 |
 | `--dump-sir` | シミュレーションの代わりに中間表現を出す |
 | `--stats=json` | 実行の回数のカウンタを JSON で出す |

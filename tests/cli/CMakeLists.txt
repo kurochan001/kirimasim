@@ -7,6 +7,11 @@ add_test(NAME cli/options
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/options PROPERTIES LABELS Cli)
 
+add_test(NAME cli/mintypmax
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_mintypmax_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/mintypmax PROPERTIES LABELS Cli)
+
 # The default of --max-slot-events takes seconds to reach (CLI.md 2.6:
 # about 7 in release and 32 in asan), so its case runs in the release
 # configuration only.

@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,168 | 1,166, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,170 | 1,168, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 836 (made by 106 generators under `tools/`), tools 110, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 2.
+This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 836 (made by 107 generators under `tools/`), tools 111, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 3.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -469,6 +469,7 @@ Options available now:
 | `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
 | `--max-call-depth=<n>` | Limit nested calls (default 10000); exceeding the limit ends with exit code 6 |
 | `--seed=<n>` | Seed for `$urandom`, `$urandom_range` and `randcase` (default 0) |
+| `--mintypmax=min\|typ\|max` | Select the minimum, typical or maximum expression of `min:typ:max` delays (default `typ`) |
 | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches` | Write VCD, choose scopes, and include changes within a time slot |
 | `--dump-sir` | Print the intermediate representation instead of simulating |
 | `--stats=json` | Print counters of the run as JSON |
