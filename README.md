@@ -17,14 +17,15 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-21)
+## Status (2026-10-22)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
 > first execution tier, an interpreter that for now runs SIR directly
 > (compiling SIR to bytecode comes later). Classes, dynamic arrays,
-> queues, randomization, concurrent assertions, VPI and DPI-C are not there
-> yet, and no work on speed has started. Anything kirimasim does not
+> queues, constrained randomization, concurrent assertions, VPI and DPI-C
+> are not there yet. Tier 1 has had performance and memory fixes; C++
+> generation is planned for P2. Anything kirimasim does not
 > support yet stops the run with an "unsupported" error at its source
 > position; it is never skipped silently.
 
@@ -165,7 +166,9 @@ The counts of each kind are under [P1 exit criteria](#p1-exit-criteria).
 <summary>sv-tests by chapter of IEEE 1800-2023</summary>
 
 Pinned sv-tests commit 15490e9, hand-written tests whose type includes
-simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
+simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`:
+kirimasim on 2026-10-22; the comparison builds of Icarus and Verilator on
+2026-10-17, as named under Test results.
 
 | Chapter | Tests | kirimasim | Icarus | Verilator | Where kirimasim stops |
 | --- | --- | --- | --- | --- | --- |
@@ -183,17 +186,19 @@ simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`.
 | 16 Assertions | 6 | 0 | 3 | 5 | concurrent assertions (P3) |
 | 18 Constrained random value generation | 22 | 10 | 8 | 22 | `randsequence` (12) |
 | 20 Utility system tasks and functions | 38 | 37 | 34 | 37 | `$coverage_control` |
-| 21 I/O system tasks and functions | 27 | 25 | 25 | 26 | `$dumpports`, `$ungetc` on a file opened for writing (SYSTEM_TASKS.md 6.3) |
+| 21 I/O system tasks and functions | 27 | 26 | 25 | 26 | `$dumpports` |
 | 22 Compiler directives | 6 | 6 | 6 | 6 | |
 | 23 Modules and hierarchy | 1 | 1 | 1 | 1 | |
 | 24 Programs | 1 | 0 | 1 | 1 | programs (P3) |
 | 26 Packages | 1 | 1 | 1 | 1 | |
 | UVM | 37 | 0 | 0 | 28 | the UVM library needs classes (P3) |
 | UVM random | 3 | 3 | 3 | 3 | |
-| **Total** | **344** | **212** | **213** | **321** | |
+| **Total** | **344** | **213** | **213** | **321** | |
 
-The P1 criterion compares kirimasim with the Icarus build that sv-tests
-pins (04cc493), which passes 210; the newest Icarus passes 213.
+The P1 criterion uses the Icarus build that sv-tests pins (04cc493):
+211 passes on Linux and 210 on macOS, against kirimasim's 213 on each.
+The Icarus column above uses the comparison build f190dbb, which passed
+213 on 2026-10-17.
 
 </details>
 
@@ -235,10 +240,12 @@ kirimasim stops; it fails no test.
 
 ### Simulation speed
 
-Measured on 2026-10-17 with `tools/bench.py` on the four small designs
-under [bench/](bench/), the kinds that PERFORMANCE.md 5.2 asks for in P1.
+The comparison was measured on 2026-10-17 with `tools/bench.py` on the four
+small designs under [bench/](bench/), the kinds that PERFORMANCE.md 5.2
+asks for in P1.
 Each design repeats its work the number of times given by `+n=` and prints
-a checksum; all three simulators print the same.
+a checksum; all three simulators print the same. kirimasim's column was
+measured again on 2026-10-20 at 08a0c3c.
 
 | Design | What it does | `+n=` | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- | --- |
@@ -256,8 +263,8 @@ a checksum; all three simulators print the same.
   Verilator 1.4 s with parallel build jobs.
 - kirimasim and Icarus Verilog interpret the design with four-state
   values; Verilator compiles it to C++ and is two-state. kirimasim's
-  counterpart to Verilator is tier 2, C++ generation, in P2; kirimasim has
-  had no speed work yet. Verilator's lead is smallest where many processes
+  counterpart to Verilator is tier 2, C++ generation, in P2. Tier 1 has had
+  performance fixes. Verilator's lead is smallest where many processes
   wait (`proc_wait`, `fork_join`).
 - Memory: a run used at most 11 MiB with kirimasim, 6 MiB with Icarus and
   2 MiB with Verilator. Before 072d0c2, which releases the records of
@@ -265,13 +272,20 @@ a checksum; all three simulators print the same.
   used 4,947 MiB on `fork_join`.
 - The versions and the machine are the same as in the test results above,
   but kirimasim's column was measured again on 2026-10-20 at 08a0c3c. It
-  is 5 to 14% slower than at 394717f (4.53, 10.69, 3.46 and 2.33 s). At
+  was 5 to 14% slower than at 394717f (4.53, 10.69, 3.46 and 2.33 s). At
   cd422c8 it was 20 to 31% slower; most of that came from a check of the
   width of every instruction's operands and from the layout of the check
   of the Postponed region, both fixed since. The rest is spread over
   later changes that made the run correct (#28).
   `tools/bench.py` repeats the measurement; `--n` and `--runs` make it
   quick.
+- On 2026-10-22, the process-reclamation change e5e0d70 reduced
+  `fork_join` from 2.802 s to 2.758 s (about 1.6%) in five interleaved
+  before/after runs on the same machine. `comb_chain` and `nba_shift`
+  changed by less than 1%. A comparison for `proc_wait` is not confirmed:
+  both builds' times varied widely; repeat the runs with the machine idle.
+  The performance issue #28 remains open. The table keeps the dated
+  three-simulator comparison above.
 - The nightly workflow measures kirimasim on Linux each night and puts a
   warning in its summary when a time or the memory is 15% worse, or the
   build 25% slower, than the median of the last seven nights
@@ -344,7 +358,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
 | Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
 | Program blocks: reported as unsupported, since their code belongs in the reactive region set (24.3.1) | P3 |
 | VPI, DPI-C | P3 |
-| Tier 2 (C++ generation) and any speed work | P2 |
+| Tier 2 (C++ generation) and further RTL speed optimizations | P2 |
 | MOS and bidirectional switches | P4 |
 
 ### Not planned for now
@@ -363,9 +377,9 @@ of the P1 population (TEST_SUITE.md, "90% of our own tests").
 - library map files (33.3); a config in the sources gives the top
   (CLI.md 2.1)
 - checkers and `randsequence`, to be considered later
-- an interactive debugger and a Python API of its own: waveforms are
-  written as FST for external viewers, and Python reaches kirimasim
-  through cocotb over VPI
+- an interactive debugger and a Python API of its own: waveforms use
+  external viewers (VCD now, FST planned), and Python access is planned
+  through cocotb over VPI (P3)
 
 ## Building
 
@@ -430,7 +444,7 @@ endmodule
 
 ```text
 $ build/dev/src/driver/kirimasim counter.sv
-kirimasim: info: kirimasim 0.0.0 (commit ...) args: counter.sv
+kirimasim: info: kirimasim 0.0.0 (commit ...) seed=0 args: counter.sv
 0: rst=1 q=x
 5: rst=1 q=0
 12: rst=0 q=0
@@ -438,6 +452,7 @@ kirimasim: info: kirimasim 0.0.0 (commit ...) args: counter.sv
 25: rst=0 q=2
 35: rst=0 q=3
 45: rst=0 q=4
+counter.sv:15: $finish at 52 ns
 kirimasim: info: finish at 52 ns
 ```
 
@@ -452,14 +467,19 @@ Options available now:
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
 | `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
+| `--max-call-depth=<n>` | Limit nested calls (default 10000); exceeding the limit ends with exit code 6 |
+| `--seed=<n>` | Seed for `$urandom`, `$urandom_range` and `randcase` (default 0) |
+| `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches` | Write VCD, choose scopes, and include changes within a time slot |
 | `--dump-sir` | Print the intermediate representation instead of simulating |
 | `--stats=json` | Print counters of the run as JSON |
 | `+<name>[=<value>]` | Plusargs for `$test$plusargs` and `$value$plusargs` |
 
 Exit codes: 0 for `$finish`, `$stop` or no more events; 1 for `$fatal`; 2
-for an error in the input, including an unsupported construct; 3 for an
-internal error; 4 when `--max-time` is reached; 5 when a zero-time limit is
-reached; 130 when SIGINT (Ctrl-C) stops the run. The full command line is
+for an error in the input, including an unsupported construct, or a
+run-time error of the design; 3 for an internal error; 4 when `--max-time`
+is reached; 5 when a zero-time limit is reached; 6 for excessive call
+depth or insufficient stack space;
+130 when SIGINT (Ctrl-C) stops the run. The full command line is
 in [docs/spec/CLI.md](docs/spec/CLI.md).
 
 ## How it works
@@ -476,7 +496,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations<br/>(later: objects and GC, VPI, DPI-C, waveforms)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD output<br/>(later: objects and GC, VPI, DPI-C)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -501,7 +521,11 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   the specification says which reading kirimasim takes.
 - **One reference for value semantics.** `valsem` is a slow but obviously
   correct implementation of the operators; the kernel's fast operations are
-  fuzzed against it (one-word and multi-word values).
+  fuzzed against it (one-word and multi-word values). The nightly workflow
+  runs the one-word and scheduler cross-checks at 100 times the normal
+  rounds, and now has a separate step at the same scale for values of
+  1 to 260 bits. Local runs of both steps passed on 2026-10-22; they do
+  not add to the consecutive-night count of the P1 criterion.
 - **Mechanism matrices.** Each mechanism is tested across the places it can
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
@@ -571,12 +595,12 @@ the same table with the Japanese terms.
 | lowering | Turning slang's elaborated design into SIR instructions |
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](docs/spec/SIR_SPEC.md)) |
 | `valsem` | The reference implementation of value semantics: slow, one bit at a time, and obviously correct. It decides what the operators, edges and case matches mean; every fast version is tested against it |
-| kernel | The execution kernel shared by every tier: scheduler, value operations, and later VPI, DPI-C and waveforms. It is linked with the user's design, so it depends on neither slang nor LLVM |
+| kernel | The execution kernel shared by every tier: scheduler, value operations and VCD output; later VPI and DPI-C. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P2) |
-| Context | The object that holds all run-time state of one simulation; kirimasim has no global state |
+| Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
 | `analysis` | Analyses for tier 2 (P2): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
-| static island | A part of the design that tier 2 is to compile as one block for speed (P2; CODEGEN_SPEC.md will define it) |
+| static island | A part of the design that tier 2 is to compile as one block for speed (P2; the first rules are in CODEGEN_SPEC.md) |
 | slot | A place in the kernel's store for a static variable, a net or an array of them |
 | frame / frame variable | The storage of a process's or a subroutine call's automatic variables |
 | W4 | The kernel's four-state 64-bit word: two planes a and b; 0 is a=0 b=0, 1 is a=1 b=0, z is a=0 b=1, x is a=1 b=1 |
