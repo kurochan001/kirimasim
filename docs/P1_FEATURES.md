@@ -3,7 +3,8 @@
 [日本語](P1_FEATURES.ja.md) · This English text is the main version.
 
 These examples describe tier 1 as of 2026-10-23. P1 is still in progress;
-see the [README](../README.md) for the full supported range and remaining work.
+see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
+and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), save one example at a time as
 `demo.sv` and run it from the repository root:
 

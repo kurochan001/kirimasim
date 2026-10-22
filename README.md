@@ -294,6 +294,8 @@ measured again on 2026-10-20 at 08a0c3c.
 ### What works
 
 Everything below runs on the tier 1 interpreter and is covered by tests.
+The [P1 support inventory](docs/P1_SUPPORT.md) lists the supported forms,
+their limits, system tasks/functions and implemented command-line options.
 
 - **Design structure:** modules, ports (input, output, inout), parameters
   and `defparam`, `generate`, arrays of instances, interfaces and modports,
@@ -308,7 +310,8 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   `prev`; `next(n)` and `prev(n)` also accept counts evaluated at run time.
 - **Nets:** `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`,
   `supply1`, `uwire`; drive strengths and resolution of several drivers;
-  continuous assignment and net delays (rise, fall, turn-off); built-in gates
+  continuous assignment delays (rise, fall, turn-off), including net declaration
+  assignments; built-in gates
   and pulls; user-defined primitives (combinational and sequential);
   `alias`.
 - **Procedures and timing:** `initial`, `always`, `always_comb`,
@@ -324,7 +327,7 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   structures and arrays.
 - **Statements and expressions:** `if`, `case`, `casez`, `casex`,
   `case inside`, `randcase`; `unique`, `unique0` and `priority` with their violation
-  reports; every loop (including `for (;;)`), `break`, `continue`, `return`; all operators
+  reports; loops (including `for (;;)`), `break`, `continue`, `return`; operators
   including streaming, `inside`, wildcard equality, assignment operators and
   increments; assignment patterns.
 - **Streaming assignments:** unpacking into targets wider than 64 bits,
@@ -585,6 +588,8 @@ holds.
 
 | Document | Content |
 | --- | --- |
+| [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
+| [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model |
 | [docs/spec/VALUE_SEMANTICS.md](docs/spec/VALUE_SEMANTICS.md) | Values, operators, nets, strengths, gates and UDPs |
 | [docs/spec/SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) | The time slot, regions, waits, processes, disable, pending reports |

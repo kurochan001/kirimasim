@@ -1,0 +1,151 @@
+# P1 の対応機能一覧
+
+[English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
+
+2026-10-23 時点、`dec94ff`（任意の範囲診断）までの第 1 層の実装をまとめます。
+その前の `4991983` には、実行時の `$sformat` / `$sformatf` 書式までが含まれます。
+`dec94ff` より前のビルドには `--bounds-check` はありません。
+利用している版は `kirimasim --version` で確認できます。
+
+P1 は進行中です。この一覧の「対応」は、記載した形を SIR に変換してインタプリタで
+実行でき、リポジトリにテストがあることを表します。機能同士のすべての組み合わせを
+保証するものではありません。`kirimasim parse` が通ることと、実行できることは別です。
+[仕様書](spec/SIR_SPEC.ja.md)には今後の実装予定も含まれますが、この一覧は実装済みの
+範囲を示します。
+
+最近の機能の実行例は[使い方と制限](P1_FEATURES.ja.md)、ビルド手順と完成条件は
+[README](../README.ja.md)を参照してください。
+
+## 言語と実行
+
+| 分野 | 対応する形 | 主な制限 |
+| --- | --- | --- |
+| フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
+| 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | module の `ref` ポート、`inout` ポートへの部分選択の接続は未対応 |
+| 共有する宣言 | package、import、`$unit`、interface、modport | virtual interface とクラスは未対応 |
+| 構成 | ソース内の config によるトップ選択と束縛。specify 内を含む specparam | ライブラリ対応表のファイル、specify のモジュールパスとタイミングチェックは未対応 |
+| 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |
+| その他の単一値 | `real`、`shortreal`、`realtime`、`string`、名前付きイベント、null の `chandle` | null 以外のハンドルに必要な DPI-C は未対応 |
+| 複合型 | packed/unpacked 構造体、packed 共用体、固定長の unpacked 配列、多次元配列、static な構造体配列、unpacked 配列のパラメータ | 動的配列、キュー、連想配列、unpacked 共用体は未対応。配列スライスへの代入には制限がある |
+| 列挙型 | 列挙値と `first`、`last`、`num`、`name`、`next`、`prev` | 実行時の `next(n)` / `prev(n)` の移動数は 32 ビット符号なしに変換する。使用例を参照 |
+| 式 | 算術、ビット、論理、リダクション、比較、シフト、三項式、連結、反復、キャスト、`inside`、ワイルドカード等価、代入演算子、増減、代入パターン | `matches` によるパターン付きの `if` と三項式は未対応 |
+| 選択 | packed 値のビット・部分・indexed-part 選択、packed 次元、固定長 unpacked 配列の添字、構造体メンバ | packed メンバや選択済みの部分を、実行時の添字でさらに選択して書く形は未対応 |
+| ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入と NBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
+| 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
+| 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final` | program は未対応。`final` は待てない |
+| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、`#`、時間単位・精度と丸め、min/typ/max の選択 | 配列全体への代入内時間制御、イベント制御付き NBA、実行時の添字で選ぶ配列要素への遅延付き NBA は未対応 |
+| イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、名前付きイベント、`->`、`->>`、`.triggered` | イベント式・`iff`・wait 条件の書き込み副作用は不可。実行時の添字で選ぶ名前付きイベント、名前付きイベントの `iff`、イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応 |
+| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、対応する名前付きブロックとタスクの disable | fork 内の変数宣言、fork の枝が捕捉してスコープ外まで使う automatic 変数、名前付き fork ブロックの disable などに未対応の形がある |
+| サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
+| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動の強さ | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
+| 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
+| プリミティブ | 組み込み論理ゲートとプル、組み合わせ・順序 UDP | MOS・双方向スイッチと、未接続ポートのある UDP インスタンスは未対応 |
+| ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |
+| 手続きからの駆動 | 対応する整数型の代入先への `assign` / `deassign`、`force` / `release` | 実数・unpacked 配列全体への指定と、ポート経由で接続されたネットの force は未対応 |
+| アサーション | 即時の `assert`、`assume`、`cover`。遅延即時アサーション（`#0`、`final`） | 並行アサーションと module 項目として書く遅延アサーションは未対応。遅延アサーションのアクションから、待つ可能性のあるタスクは呼べない |
+| スケジューラ | 時刻スロットの全領域と参照アルゴリズム。Observed で保留の報告を確定。Postponed で strobe/monitor を出力 | 領域の実装は、program・クロッキングブロック・並行アサーションの対応を意味しない |
+
+32 ビットを超える重みの `randcase` は未対応です。
+
+## システムタスク・関数・メソッド
+
+用途ごとにまとめます。display/write/strobe/monitor 系は、ファイル出力の形と
+`$swrite` を含め、`b`・`o`・`h` の接尾辞のある形にも対応します。
+
+| 用途 | 対応する名前・形 |
+| --- | --- |
+| コンソール出力 | `$display`、`$write`、`$strobe`、`$monitor`、`$monitoron`、`$monitoroff` |
+| 文字列への出力 | `$swrite`、`$sformat`、`$sformatf`。`$sformatf` の別名として `$psprintf` |
+| 診断と終了 | `$fatal`、`$error`、`$warning`、`$info`、`$finish`、`$stop`、`$stacktrace`（タスクと関数の形） |
+| 時刻 | `$time`、`$stime`、`$realtime`、`$timeunit`、`$timeprecision`、`$timeformat`、`$printtimescale` |
+| 変換 | `$signed`、`$unsigned`、`$rtoi`、`$itor`、`$realtobits`、`$bitstoreal`、`$shortrealtobits`、`$bitstoshortreal` |
+| 型と配列の問い合わせ | 対応する型への `$bits`、`$typename`、`$isunbounded`、`$dimensions`、`$unpacked_dimensions`、`$left`、`$right`、`$low`、`$high`、`$increment`、`$size` |
+| ビットの問い合わせ | `$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown` |
+| 整数の数学関数 | `$clog2` |
+| 実数の数学関数 | `$ln`、`$log10`、`$exp`、`$sqrt`、`$pow`、`$floor`、`$ceil`、`$sin`、`$cos`、`$tan`、`$asin`、`$acos`、`$atan`、`$atan2`、`$hypot`、`$sinh`、`$cosh`、`$tanh`、`$asinh`、`$acosh`、`$atanh` |
+| 文字列メソッド | `len`、`getc`、`putc`、`toupper`、`tolower`、`compare`、`icompare`、`substr`、`atoi`、`atohex`、`atooct`、`atobin`、`atoreal`、`itoa`、`hextoa`、`octtoa`、`bintoa`、`realtoa`。文字の添字アクセス |
+| プラスアーグ | `$test$plusargs`、`$value$plusargs`。コマンドラインの `+name` / `+name=value` |
+| ファイル管理・出力 | `$fopen`、`$fclose`、`$fflush`、`$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor` |
+| ファイル入力・位置 | `$fgetc`、`$ungetc`、`$fgets`、`$fscanf`、`$fread`、`$ftell`、`$fseek`、`$rewind`、`$feof`、`$ferror`。STDIN |
+| 文字列の入力 | `$sscanf` |
+| メモリファイル | アドレス範囲の指定を含む `$readmemb`、`$readmemh`、`$writememb`、`$writememh` |
+| 乱数 | `$random`、`$dist_uniform`、`$dist_normal`、`$dist_exponential`、`$dist_poisson`、`$dist_chi_square`、`$dist_t`、`$dist_erlang`。`--seed` を種とするプロセスごとの `$urandom`、`$urandom_range` |
+| VCD 制御 | `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush` |
+
+### 書式と入力の制限
+
+- `$strobe` と `$monitor` の引数から automatic 変数は読めません。
+- 出力の変換指定は `%b`、`%o`、`%h` / `%x`、`%d`、`%c`、`%s`、`%e`、`%f`、
+  `%g`、`%t`、`%m`、`%l`、`%%`。幅と対応するフラグを指定できます。
+  精度と `+`・空白・`#` のフラグは実数変換用です。`%p`、`%u`、`%z`、`%v` は未対応です。
+- `$sformat` と `$sformatf` は実行時の文字列・packed 整数の書式に対応します。
+  引数の過不足は警告して続けます。packed 書式に X/Z を含む形は未対応です。
+  書式の後の文字列リテラルは、パーセント記号を含んでいても値として扱います。
+- `$sscanf` と `$fscanf` は実行時の書式に対応します。2・8・10・16 進数、文字・文字列、
+  実数の変換、フィールド幅、代入抑止（`*`）、`%%` を使えます。入力の `%t`、`%u`、
+  `%z`、`%v`、`%m` は未対応です。packed 書式に X/Z があると入力を読まず `-1` を返します。
+  出力引数が足りない場合は警告し、その変換の前で止めます。
+- `$value$plusargs` は変換指定が 1 つの実行時書式に対応します。`%d`、`%o`、`%h` / `%x`、
+  `%b`、`%e`、`%f`、`%g`、`%s` と、その大文字・`%0` の形を使えます。最初の一致を選び、
+  一致しなければ出力の値を保ちます。複数の変換、先頭に `%%` のある接頭辞、X/Z を含む
+  packed 書式は未対応です。
+- `$fread` は整数の代入先とメモリに対応します。unpacked 構造体の一次元メモリは、
+  整数の末端メンバと入れ子の構造体を持てます。配列・実数メンバ、多次元の構造体メモリ、
+  unpacked 共用体は未対応です。
+- `ref` で渡されたメモリへのメモリファイル操作は未対応です。意図する意味は
+  [システムタスク仕様](spec/SYSTEM_TASKS.ja.md)、実行時書式の例は
+  [使い方と制限](P1_FEATURES.ja.md)を参照してください。
+
+## コマンドラインと波形
+
+| 用途 | 実装済みのインターフェース |
+| --- | --- |
+| 実行・確認 | `kirimasim [options] <files> [+plusargs]`、`kirimasim parse`、`--help`、`--version` |
+| ソースの入力 | slang を通した `-f`、`+incdir+`、`+define+`、`--top` |
+| 時間の選択 | `--timescale=<unit>/<precision>`、`--mintypmax=min\|typ\|max` |
+| シミュレーションの上限 | `--max-time`、`--max-time-ok`、`--max-zero-delay`、`--max-slot-events`、`--max-steps`、`--max-call-depth` |
+| 乱数の種 | `--seed=<n>` |
+| 内部の確認 | `--dump-sir`、`--stats=json` |
+| 範囲の診断（`dec94ff` から） | `--bounds-check=off\|warn`（既定は `off`）。不正な packed 選択・固定長配列の添字をソース位置ごとに 1 回警告し、最後にアクセス回数を出す。通常の読み書き・NBA の値は保つ |
+| VCD 出力 | `--wave=<file>.vcd`、`--wave-scope=<pattern>[,<pattern>...]`、`--wave-glitches`。4 値の波形。上記の dump タスクからも制御できる |
+
+`--max-scc-iter` は受け付けますが、P2 の静的な島の実装までは効果がありません。
+[CLI 仕様](spec/CLI.ja.md)にあるオプションがすべて実装済みというわけではありません。
+例えば `--cond-x`、`--init-values`、`--autoflush` は、現在の driver のオプションでは
+ありません。各ビルドの `--help` で確認してください。FST 出力は未対応です。
+
+## 残っている作業と対象範囲
+
+| 状態 | 機能 |
+| --- | --- |
+| P1 内で未実装 | FST、`%p`、解決した強さの `%v`、上記の未対応の構造体への `$fread`、一覧に挙げた P1 の形の残りの制限 |
+| P2 | 第 2 層の C++ 生成、静的な島の解析、RTL のさらなる性能改善 |
+| P3 | クラス・UVM、動的配列、キュー、連想配列、制約付き乱数化、カバーグループ、並行アサーションとサンプル値の関数、クロッキングブロック、program、virtual interface、`let`、VPI、DPI-C |
+| P4 | MOS と双方向のスイッチ |
+| 現在の対象外・後で検討 | VHDL・言語混在・アナログ・混在信号、SDF 注釈と暗号化 IP、specify のモジュールパス・タイミングチェック、利用者定義 nettype・`interconnect`・`trireg`、古い PLI、ライブラリ対応表のファイル、checker、`randsequence`、対話的デバッガ、独自の Python API |
+
+コンパイル型の実行バックエンドはまだありません。この一覧の実行機能はすべて第 1 層で
+動きます。Python との連携は、P3 の VPI を通す cocotb を予定しています。P1 の完成には
+README の正しさ・性能の基準を満たすことも必要で、機能数だけでは完成とはしません。
+
+## 確認の根拠と更新方法
+
+- [シミュレーションスイート](../tests/suite/)：`values`、`proc`、`sched`、`cont`、
+  `nets`、`hier` などに分けた実行例と期待値。
+- [ユニットテスト](../tests/unit/)：値の意味、スケジューラ、実行時処理の検査。
+- [未対応の形の行列](../tools/gen_unsupported_matrix.py)と
+  [CLI の入力](../tests/cli/unsupported_matrix/)：拒否する具体的な形とソース位置の診断。
+  キーワードの一覧より細かい範囲を確認できます。
+- 仕組みごとの行列：[ストリーミング](../tools/gen_stream_matrix.py)、
+  [列挙型の移動](../tools/gen_enum_step_matrix.py)、
+  [実行時の読み取り書式](../tools/gen_runtime_scan_matrix.py)、
+  [文字列の書式](../tools/gen_runtime_string_format_matrix.py)、
+  [プラスアーグの書式](../tools/gen_runtime_plusargs_matrix.py)、
+  [構造体のメモリ](../tools/gen_fread_struct_matrix.py)、
+  [範囲の診断](../tools/gen_bounds_check_matrix.py)。
+- 実装：[変換処理](../src/front/)、[インタプリタ](../src/vm/)、
+  [ランタイム](../src/kernel/)、[driver](../src/driver/main.cpp)。
+
+対応範囲を変えたら、日英の一覧、README の要約、該当するテストを更新してください。
+使用例は `P1_FEATURES`、規定する動作は `docs/spec/` に置きます。
+仕様書に予定があることだけを、実装済みの根拠にはしません。
