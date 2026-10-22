@@ -250,6 +250,38 @@ bool parseScanFormat(std::string_view format, std::vector<ScanConversion>& convs
     return true;
 }
 
+ScanPlan prepareScanFormat(std::string_view format, std::span<const ScanTarget> targets) {
+    ScanPlan plan;
+    plan.format = format;
+    std::size_t target = 0;
+    for (std::size_t i = 0; i < format.size(); ++i) {
+        if (format[i] != '%') continue;
+        const std::size_t start = i;
+        Spec s;
+        std::string bad;
+        if (!parseSpec(format, i, s, bad)) {
+            plan.error = "format specifier " + bad;
+            return plan;
+        }
+        if (s.conv == '%' || !s.assigns) continue;
+        if (target == targets.size()) {
+            plan.missingTargets = true;
+            plan.format.resize(start);
+            return plan;
+        }
+        const ScanTarget type = targets[target++];
+        const bool valid = s.conv == 'f' ? type == ScanTarget::Real
+                           : s.conv == 's'
+                               ? type == ScanTarget::Integral || type == ScanTarget::String
+                               : type == ScanTarget::Integral;
+        if (!valid) {
+            plan.error = std::string("%") + s.conv + " into a target of this type";
+            return plan;
+        }
+    }
+    return plan;
+}
+
 namespace {
 
 /// scanString and scanInput: the number of values assigned, or -1 when the

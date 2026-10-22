@@ -13,6 +13,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `$sscanf` and `$fscanf` accept formats evaluated at run time, from strings
+  or packed values. Missing output arguments warn and stop reading before
+  the missing field; X/Z bits in a packed format return -1 without reading
+  (SYSTEM_TASKS.md 6.3; 21.3.4.3).
 - Streaming assignment targets wider than 64 bits, including arrays,
   structures, automatic variables and ref arguments, with the inverse
   block order of `<<` and with NBA value capture (VALUE_SEMANTICS.md 8;

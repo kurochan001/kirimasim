@@ -3,6 +3,7 @@
 
 // Formatted reading for $sscanf and $fscanf (SYSTEM_TASKS.md 6.3, 21.3.4.3).
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -197,6 +198,58 @@ TEST(Scan, ParseFormat) {
     c.clear();
     EXPECT_FALSE(parseScanFormat("%t", c, bad));
     EXPECT_EQ(bad, "%t");
+}
+
+TEST(Scan, RuntimeFormatTargetTypes) {
+    using Target = kirimasim::kernel::ScanTarget;
+    struct Row {
+        const char* format;
+        std::array<bool, 4> accepts;  // integral, string, real, other
+    };
+    const Row rows[] = {{"%b", {true, false, false, false}}, {"%o", {true, false, false, false}},
+                        {"%d", {true, false, false, false}}, {"%h", {true, false, false, false}},
+                        {"%X", {true, false, false, false}}, {"%c", {true, false, false, false}},
+                        {"%s", {true, true, false, false}},  {"%f", {false, false, true, false}},
+                        {"%E", {false, false, true, false}}, {"%g", {false, false, true, false}}};
+    const std::array types{Target::Integral, Target::String, Target::Real, Target::Other};
+    for (const Row& row : rows) {
+        for (std::size_t i = 0; i < types.size(); ++i) {
+            const std::array targets{types[i]};
+            const auto plan = kirimasim::kernel::prepareScanFormat(row.format, targets);
+            EXPECT_EQ(plan.error.empty(), row.accepts[i]) << row.format << " type " << i;
+            EXPECT_FALSE(plan.missingTargets);
+        }
+    }
+}
+
+TEST(Scan, RuntimeFormatMissingTargetsStopReading) {
+    const std::array targets{kirimasim::kernel::ScanTarget::Integral};
+    const auto plan = kirimasim::kernel::prepareScanFormat("%d,%d", targets);
+    ASSERT_TRUE(plan.error.empty());
+    ASSERT_TRUE(plan.missingTargets);
+    EXPECT_EQ(plan.format, "%d,");
+    FromString input("12,34");
+    std::vector<ScanValue> out;
+    std::string unread;
+    EXPECT_EQ(scanInput(input, plan.format, out, unread), 1);
+    EXPECT_EQ(input.taken() - unread.size(), 3U);
+    ASSERT_EQ(out.size(), 1U);
+    EXPECT_EQ(out[0].bits.a, 12U);
+    const auto suppressed = kirimasim::kernel::prepareScanFormat("%*d %% %d", {});
+    EXPECT_TRUE(suppressed.missingTargets);
+    EXPECT_EQ(suppressed.format, "%*d %% ");
+}
+
+TEST(Scan, RuntimeFormatExtraTargetsAndMalformedFormats) {
+    const std::array targets{kirimasim::kernel::ScanTarget::Integral,
+                             kirimasim::kernel::ScanTarget::Other};
+    const auto extra = kirimasim::kernel::prepareScanFormat("%d", targets);
+    EXPECT_TRUE(extra.error.empty());
+    EXPECT_FALSE(extra.missingTargets);
+    for (const std::string format : {"%", "%5", "%q", "%t", "%u"}) {
+        const auto plan = kirimasim::kernel::prepareScanFormat(format, targets);
+        EXPECT_FALSE(plan.error.empty()) << format;
+    }
 }
 
 }  // namespace

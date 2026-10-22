@@ -3895,8 +3895,31 @@ private:
         return false;
     }
 
-    /// The string methods (6.16, VALUE_SEMANTICS.md 7.6). The ones that
-    /// change the string return the new one; front stores it.
+    /// The format of a scan: constant text or a value evaluated by front.
+    /// Unknown integral bits give EOF without reading (SYSTEM_TASKS.md 6.3).
+    std::optional<std::string> scanFormat(const Operand& o) const {
+        if (o.kind == Operand::Kind::Text) return o.text;
+        const sir::Type type = typeOf(o);
+        if (type.kind == sir::TypeKind::String) return std::string(strings_.get(value(o).a));
+        const std::vector<W4> words = chunks(o);
+        if (kernel::wide::hasUnknown(words.data(), type.width)) return std::nullopt;
+        return kernel::wide::toText(words.data(), type.width);
+    }
+
+    /// Resolves the tier's types for the shared scan-format checker.
+    kernel::ScanPlan scanPlan(const sir::Instr& in, std::string_view format) const {
+        if (in.operands[2].kind == Operand::Kind::Text) return {std::string(format), {}, false};
+        std::vector<kernel::ScanTarget> targets;
+        for (std::size_t i = 3; i < in.operands.size(); ++i) {
+            const sir::Type type = typeOf(in.operands[i]);
+            targets.push_back(sir::isIntegral(type)                ? kernel::ScanTarget::Integral
+                              : isRealType(type)                   ? kernel::ScanTarget::Real
+                              : type.kind == sir::TypeKind::String ? kernel::ScanTarget::String
+                                                                   : kernel::ScanTarget::Other);
+        }
+        return kernel::prepareScanFormat(format, targets);
+    }
+
     /// A value read by $sscanf or $value$plusargs in the type of its target
     /// (SYSTEM_TASKS.md 6.3, 9): the low bits of an integral value, a lone
     /// x or z in every bit, a string's characters, a real.
@@ -4589,9 +4612,22 @@ private:
             case SysTask::FScanf: {
                 // $fscanf(fd, format, frame variables...): as $sscanf, from
                 // the file (SYSTEM_TASKS.md 6.3).
+                const std::optional<std::string> format = scanFormat(ops[2]);
+                if (!format) {
+                    temp(in.result) = {0xffffffffU, 0};
+                    return true;
+                }
+                const kernel::ScanPlan plan = scanPlan(in, *format);
+                if (!plan.error.empty()) {
+                    designErrorIn(p, in,
+                                  "$fscanf: unsupported: " + plan.error + " (not implemented yet)");
+                    return false;
+                }
+                if (plan.missingTargets)
+                    warnOnce(in, "$fscanf has fewer arguments than its format has conversions");
                 bool notOpen = false;
                 scanValues_.clear();
-                const int n = files_.scan(value(ops[1]), ops[2].text, scanValues_, notOpen);
+                const int n = files_.scan(value(ops[1]), plan.format, scanValues_, notOpen);
                 if (notOpen) warnOnce(in, "$fscanf: " + notReadableText(value(ops[1])));
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
                     scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].asFrame()));
@@ -4756,6 +4792,19 @@ private:
                 // go to the frame variables, which the front copies to the
                 // targets (SIR_SPEC.md 8, SYSTEM_TASKS.md 6.3). An input with
                 // x or z bits gives -1.
+                const std::optional<std::string> format = scanFormat(ops[2]);
+                if (!format) {
+                    temp(in.result) = {0xffffffffU, 0};
+                    return true;
+                }
+                const kernel::ScanPlan plan = scanPlan(in, *format);
+                if (!plan.error.empty()) {
+                    designErrorIn(p, in,
+                                  "$sscanf: unsupported: " + plan.error + " (not implemented yet)");
+                    return false;
+                }
+                if (plan.missingTargets)
+                    warnOnce(in, "$sscanf has fewer arguments than its format has conversions");
                 std::string input;
                 const sir::Type it = typeOf(ops[1]);
                 const std::vector<W4> iv = chunks(ops[1]);
@@ -4771,7 +4820,7 @@ private:
                     return true;
                 }
                 scanValues_.clear();
-                n = kernel::scanString(input, ops[2].text, scanValues_);
+                n = kernel::scanString(input, plan.format, scanValues_);
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
                     scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].asFrame()));
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};

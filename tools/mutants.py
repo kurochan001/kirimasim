@@ -217,9 +217,9 @@ MUTANTS = [
      "            return withIndex(std::move(*base), *c);",
      "            return withIndex(std::move(*base), 0 * *c);"),
     ("vm: $sscanf drops the first value it reads", "src/vm/vm.cpp",
-     "n = kernel::scanString(input, ops[2].text, scanValues_);\n"
+     "n = kernel::scanString(input, plan.format, scanValues_);\n"
      "                for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)",
-     "n = kernel::scanString(input, ops[2].text, scanValues_);\n"
+     "n = kernel::scanString(input, plan.format, scanValues_);\n"
      "                for (std::size_t i = 1; i < scanValues_.size() && 3 + i < ops.size(); ++i)"),
     ("front: $sscanf assigns one target more than its count", "src/front/lower_expr.cpp",
      "        const Val above = emit(Op::Gt, sir::u2(1),",

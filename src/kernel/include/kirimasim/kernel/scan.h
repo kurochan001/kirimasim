@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -46,6 +47,20 @@ struct ScanConversion {
 /// The conversions of a format, in order. Returns false, with the offending
 /// specifier in `bad`, for one that kirimasim does not know or support yet.
 bool parseScanFormat(std::string_view format, std::vector<ScanConversion>& convs, std::string& bad);
+
+/// The type of an output argument, independent of any tier's type table.
+enum class ScanTarget { Integral, String, Real, Other };
+
+struct ScanPlan {
+    std::string format;
+    std::string error;
+    bool missingTargets = false;
+};
+
+/// Checks a run-time format against its output types. A missing target
+/// cuts the format before that conversion: warn, and do not read it
+/// (SYSTEM_TASKS.md 6.3). Extra targets are ignored.
+ScanPlan prepareScanFormat(std::string_view format, std::span<const ScanTarget> targets);
 
 /// Reads `input` by `format` (a format parseScanFormat accepts). Returns
 /// the number of values assigned, which are put in `out` in order, or -1

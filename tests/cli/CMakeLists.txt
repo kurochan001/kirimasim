@@ -1,6 +1,11 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME cli/runtime_scan
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_runtime_scan_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/runtime_scan PROPERTIES LABELS Cli)
+
 # Command-line tests: options, exit codes and messages (CLI.md).
 add_test(NAME cli/options
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_tests.py

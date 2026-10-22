@@ -1962,8 +1962,9 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
     const std::optional<slang::ConstantValue> fc = constantValue(*args[fmtArg]);
     std::optional<std::string> fmt;
     if (fc && fc->isString()) fmt = fc->str();
-    if (fc && fc->isInteger()) fmt = stringBytes(fc->integer());
-    if (!fmt) unsupported(sl, name + " with a format that is not a constant");
+    if (fc && fc->isInteger() && (plus || !fc->integer().hasUnknown()))
+        fmt = stringBytes(fc->integer());
+    if (!fmt && plus) unsupported(sl, name + " with a format that is not a constant");
     std::vector<char> convs;
     std::string bad;
     if (plus) {
@@ -1972,7 +1973,7 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
         if (pct == std::string::npos || !scanConversions(fmt->substr(pct), convs, bad) ||
             convs.size() != 1)
             unsupported(sl, name + " with this format");
-    } else if (!scanConversions(*fmt, convs, bad)) {
+    } else if (fmt && !scanConversions(*fmt, convs, bad)) {
         unsupported(sl, "format specifier " + bad + " in " + name);
     }
     const std::span<const ast::Expression* const> targets = args.subspan(fmtArg + 1);
@@ -1997,19 +1998,28 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
             unsupported(sl, name + " of an input of this type");
         ops.push_back(in.op);
     }
-    ops.push_back(Operand::str(*fmt));
+    if (fmt) {
+        ops.push_back(Operand::str(*fmt));
+    } else {
+        const Val format = lowerExpr(*args[fmtArg]);
+        if (!isString(format.type) && !sir::isIntegral(format.type))
+            unsupported(sl, name + " of a format of this type");
+        ops.push_back(format.op);
+    }
     std::vector<std::pair<const ast::Expression*, sir::FrameVarId>> outs;
-    for (std::size_t i = 0; i < convs.size(); ++i) {
+    for (std::size_t i = 0; i < (fmt ? convs.size() : targets.size()); ++i) {
         const ast::Expression* t = targets[i];
         if (t->kind == ast::ExpressionKind::Assignment &&
             t->as<ast::AssignmentExpression>().isLValueArg())
             t = &t->as<ast::AssignmentExpression>().left();
         const ast::Type& tt = t->type->getCanonicalType();
-        const char c = convs[i];
-        const bool ok = c == 'f'   ? tt.isFloating()
-                        : c == 's' ? tt.isString() || tt.isIntegral()
-                                   : tt.isIntegral();
-        if (!ok) unsupported(sl, std::string("%") + c + " into a target of this type");
+        if (fmt) {
+            const char c = convs[i];
+            const bool ok = c == 'f'   ? tt.isFloating()
+                            : c == 's' ? tt.isString() || tt.isIntegral()
+                                       : tt.isIntegral();
+            if (!ok) unsupported(sl, std::string("%") + c + " into a target of this type");
+        }
         const sir::FrameVarId f = newFrameVar(typeOf(tt, sl));
         ops.push_back(Operand::frame(f));
         outs.emplace_back(t, f);
