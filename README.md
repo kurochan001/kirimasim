@@ -17,7 +17,7 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-22)
+## Status (2026-10-23)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,241 | 1,239, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,322 | 1,320, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 906 (made by 108 generators under `tools/`), tools 112, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 3.
+This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 986 (made by 109 generators under `tools/`), tools 113, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 3.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -327,6 +327,9 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   reports; every loop (including `for (;;)`), `break`, `continue`, `return`; all operators
   including streaming, `inside`, wildcard equality, assignment operators and
   increments; assignment patterns.
+- **Streaming assignments:** unpacking into targets wider than 64 bits,
+  including fixed-size arrays and structures, with `>>` and `<<` block
+  ordering, blocking assignments and NBAs.
 - **Assertions:** immediate `assert`, `assume` and `cover`, and deferred
   ones (`#0`, `final`).
 - **System tasks and functions:** `$display` and `$write` (with the `b`,

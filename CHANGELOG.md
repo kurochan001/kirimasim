@@ -13,6 +13,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Streaming assignment targets wider than 64 bits, including arrays,
+  structures, automatic variables and ref arguments, with the inverse
+  block order of `<<` and with NBA value capture (VALUE_SEMANTICS.md 8;
+  11.4.14.3).
 - Enumeration `next(n)` and `prev(n)` accept counts evaluated at run time,
   including calls with side effects, and wrap in declaration order for
   two-state, four-state and wide base types (VALUE_SEMANTICS.md 7.7;

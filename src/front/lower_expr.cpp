@@ -1692,7 +1692,7 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
     // indices, as in any assignment.
     Val src = bitstreamOf(rhs, sl);
     const std::uint64_t w = s.getBitstreamWidth();
-    if (w == 0 || w > 64 || src.type.width < w) unsupported(sl, "unpacking this stream");
+    if (w == 0 || w > UINT32_MAX || src.type.width < w) unsupported(sl, "unpacking this stream");
     if (src.type.width > w)
         src = emit(Op::Partsel,
                    integral(sir::isFourState(src.type), false, static_cast<std::uint32_t>(w)),
