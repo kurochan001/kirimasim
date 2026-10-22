@@ -3052,13 +3052,15 @@ std::optional<Val> Lowerer::lowerEnumCall(const ast::CallExpression& call,
     if (!isName && !((name == "next" || name == "prev") && args.size() <= 2)) return std::nullopt;
     // next(N) and prev(N) wrap around; N is an int unsigned.
     std::size_t step = 0;
+    bool dynamicCount = false;
     if (!isName) {
         std::int64_t count = 1;
         if (args.size() == 2) {
             const std::optional<std::int64_t> c = constInt(*args[1]);
-            if (!c)
-                unsupported(sl, "enumeration method " + name + " with a count known at run time");
-            count = *c;
+            if (c)
+                count = *c;
+            else
+                dynamicCount = true;
         }
         step = static_cast<std::size_t>(count) % n;
         if (name == "prev") step = (n - step) % n;
@@ -3071,6 +3073,30 @@ std::optional<Val> Lowerer::lowerEnumCall(const ast::CallExpression& call,
     Val result = isName                 ? stringConstant("")
                  : sir::isFourState(vt) ? allXConstant(vt)
                                         : constant(vt, 0);
+    if (dynamicCount) {
+        // Read the receiver before the count, once each (3.1). slang binds
+        // N as int unsigned; the wider index arithmetic avoids overflow
+        // before wrapping in declaration order, even for N == 32'hffffffff.
+        const Type indexType = sir::u2(64);
+        const Val count = coerce(coerce(lowerExpr(*args[1]), sir::u2(32), sl), indexType, sl);
+        const Val size = constant(indexType, n);
+        Val delta = emit(Op::Mod, indexType, {count.op, size.op}, sl);
+        if (name == "prev") delta = emit(Op::Sub, indexType, {size.op, delta.op}, sl);
+        Val index = size;
+        for (std::size_t i = n; i-- > 0;) {
+            const Val hit = emit(Op::Ceq, sir::u2(1), {v.op, member(i).op}, sl);
+            index = emit(Op::Select, indexType, {hit.op, constant(indexType, i).op, index.op}, sl);
+        }
+        const Val valid = emit(Op::Ne, sir::u2(1), {index.op, size.op}, sl);
+        const Val offset = emit(Op::Add, indexType, {index.op, delta.op}, sl);
+        const Val target = emit(Op::Mod, indexType, {offset.op, size.op}, sl);
+        const Val fallback = result;
+        for (std::size_t i = n; i-- > 0;) {
+            const Val hit = emit(Op::Ceq, sir::u2(1), {target.op, constant(indexType, i).op}, sl);
+            result = emit(Op::Select, vt, {hit.op, member(i).op, result.op}, sl);
+        }
+        return emit(Op::Select, vt, {valid.op, result.op, fallback.op}, sl);
+    }
     for (std::size_t i = n; i-- > 0;) {
         const Val m = member(i);
         const Val hit = emit(Op::Ceq, sir::u2(1), {v.op, m.op}, sl);

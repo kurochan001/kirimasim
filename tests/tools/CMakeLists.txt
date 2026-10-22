@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_enum_step_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_enum_step_matrix.py --check)
+set_tests_properties(tools/gen_enum_step_matrix PROPERTIES LABELS Tools)
+
 # The judging tools must fail when they should (TEST_SUITE.md).
 add_test(NAME tools/negative_controls
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_tool_tests.py

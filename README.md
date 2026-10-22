@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,170 | 1,168, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,241 | 1,239, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 836 (made by 107 generators under `tools/`), tools 111, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 3.
+This repository's tests by kind: unit tests (GoogleTest) 176, `tests/suite/` 906 (made by 108 generators under `tools/`), tools 112, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 3.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -304,6 +304,8 @@ Everything below runs on the tier 1 interpreter and is covered by tests.
   unpacked structures, packed unions, fixed-size unpacked arrays (several
   dimensions, arrays of structures), unpacked array parameters, named
   events, `chandle` (null only, until DPI-C).
+- **Enumeration methods:** `first`, `last`, `num`, `name`, `next` and
+  `prev`; `next(n)` and `prev(n)` also accept counts evaluated at run time.
 - **Nets:** `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`,
   `supply1`, `uwire`; drive strengths and resolution of several drivers;
   continuous assignment and net delays (rise, fall, turn-off); built-in gates

@@ -13,6 +13,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Enumeration `next(n)` and `prev(n)` accept counts evaluated at run time,
+  including calls with side effects, and wrap in declaration order for
+  two-state, four-state and wide base types (VALUE_SEMANTICS.md 7.7;
+  6.19.5.3, 6.19.5.4).
 - `--mintypmax=min|typ|max` selects delay expressions throughout the
   design, including expressions evaluated at run time (CLI.md 2.2,
   SCHEDULER_SPEC.md 12).
