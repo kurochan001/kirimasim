@@ -1415,6 +1415,11 @@ def main() -> int:
         return 2
     build = ["cmake", "--build", "--preset", args.preset]
     test = ["ctest", "--preset", args.preset, "-j8"]
+    # Replacing an anchor intentionally makes these self-checks fail. That
+    # failure proves nothing about simulated values. Keep both on the clean
+    # baseline, but require another test to detect each compiled mutation.
+    mutated_test = test + ["-E", "^(tools/mutants_apply|tools/negative_controls)$",
+                           "--stop-on-failure"]
     if run(build) != 0:
         print("mutants: the unchanged sources do not build", file=sys.stderr)
         return 2
@@ -1438,7 +1443,7 @@ def main() -> int:
                 print(f"DOES NOT BUILD  {name}")
                 bad += 1
                 continue
-            rc, skipped = run_tests(test + ["--stop-on-failure"])
+            rc, skipped = run_tests(mutated_test)
             caught = rc != 0 or not skipped <= skipped_before
         finally:
             path.write_text(original, encoding="utf-8")

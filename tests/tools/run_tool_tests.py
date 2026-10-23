@@ -9,13 +9,16 @@ which must pass.
 """
 
 import argparse
+import contextlib
 import importlib.util
+import io
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 TOOLS = ROOT / "tools"
@@ -600,6 +603,44 @@ def mutants_check(tmp: Path) -> None:
         expect("mutants check " + name, run + [str(root)], not change)
 
 
+def mutant_detection(tmp: Path) -> None:
+    """Self-check failures cannot turn a surviving mutation into a catch."""
+    spec = importlib.util.spec_from_file_location("mutants_runner", TOOLS / "mutants.py")
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+    root = tmp / "mutants_runner"
+    (root / "src").mkdir(parents=True)
+    source = root / "src/probe.cpp"
+    source.write_text("correct")
+    for genuine_failure in (False, True):
+        calls = []
+
+        def tests(command):
+            calls.append(command)
+            if len(calls) == 1:
+                return 0, set()
+            exclusions = command[command.index("-E") + 1] if "-E" in command else ""
+            self_checks_disabled = all(name in exclusions for name in
+                                       ("tools/mutants_apply", "tools/negative_controls"))
+            # Without exclusions the anchor self-check fails even when the
+            # simulated behaviour is unchanged. A real failure still counts.
+            return int(genuine_failure or not self_checks_disabled), set()
+
+        output = io.StringIO()
+        with mock.patch.object(runner, "ROOT", root), \
+             mock.patch.object(runner, "MUTANTS", [("probe", "src/probe.cpp", "correct", "wrong")]), \
+             mock.patch.object(runner, "run", return_value=0), \
+             mock.patch.object(runner, "run_tests", side_effect=tests), \
+             mock.patch.object(sys, "argv", ["mutants.py"]), contextlib.redirect_stdout(output):
+            result = runner.main()
+        wanted = 0 if genuine_failure else 1
+        label = "caught" if genuine_failure else "SURVIVED"
+        if result != wanted or label not in output.getvalue() or len(calls) != 2:
+            failures.append("mutant detection misclassified a self-check or real test failure")
+        if source.read_text() != "correct":
+            failures.append("mutant detection did not restore its source")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True)
@@ -621,6 +662,7 @@ def main() -> int:
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)
         mutants_check(tmp)
+        mutant_detection(tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)
     if failures:
