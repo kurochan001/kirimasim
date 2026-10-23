@@ -9,6 +9,59 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Documentation and publication recheck (2026-10-24)
+
+The documentation recheck at `b78437a` keeps the implemented container range
+and its remaining forms separate. The array-method proposal remains awaiting
+approval; reductions and ordering described by that proposal are not enabled.
+The historical external population counts and performance measurements retain
+their recorded revisions and dates.
+
+Full publication CI on the working tree based on `b78437a` passes all four
+configure/build/test presets, release flags, banned features, SPDX, suite
+files, global state, expectation protection for all eight previously
+unpublished commits, README counts, clang-format and clang-tidy.
+Dev/ASan/UBSan each run 2,672 tests (2,670 pass, two known skips); release
+runs 2,673 (2,671 pass, the same skips). The skips remain
+`suite/cb/input_sample_1step` and `suite/nets/net_port_drivers_part`.
+The changed documents' 231 local link targets exist, and the identical
+English/Japanese reproducer below was rerun with the documented results.
+
+The expanded comparison was rerun at `b78437a`: the same 59 probes still have
+21 Icarus-passing gaps, and `--require-parity` returns 1. Compiler and runtime
+both report `14.0 (devel) (s20260301-411-gca6b8d376)`. The local artifact is
+`build/docs-publish-icarus-probes-20261024.json`; it is not a full coverage proof.
+
+A separate original probe confirms another required gap: `$fread` into a whole
+multidimensional integral memory (21.3.4.4). This probe is **not included** in
+the 59-probe inventory or its 21-gap count. Save this source as `probe.sv` in
+a scratch directory:
+
+```systemverilog
+module top;
+  bit [7:0] m[2][2];
+  int fd, n;
+  initial begin
+    fd = $fopen("bytes.bin", "rb");
+    n = $fread(m, fd);
+    $display("%0d %0d %0d", n, m[0][0], m[0][1]);
+  end
+endmodule
+```
+
+```sh
+python3 -c 'from pathlib import Path; Path("bytes.bin").write_bytes(bytes([4, 7]))'
+iverilog -g2012 -s top -o probe.vvp probe.sv
+vvp probe.vvp
+kirimasim probe.sv
+```
+
+The installed Icarus compiles and runs successfully, printing `2 4 7`.
+Kirimasim at `b78437a` exits 2 with `unsupported: $fread into a memory of this
+kind`. The support inventory now explicitly limits fixed integral memories to
+one dimension. This is a documentation correction, not an implementation of
+multidimensional input or a claim of complete Icarus parity.
+
 ## Runtime concatenation and queue rvalue slices (2026-10-24)
 
 Source `919d11f` extends the approved container contract with unpacked
@@ -151,7 +204,8 @@ python3 tools/icarus_feature_probe.py \
 External sv-tests/population counts and performance measurements retain their
 recorded revisions and dates; they were not remeasured in this round.
 
-Remaining work includes runtime array concatenation, slices, container
+At that revision, remaining work included runtime array concatenation and
+slices, now implemented as recorded above. Remaining work includes container
 conditional values, additional array methods, mixed/omitted dynamic foreach
 dimensions, nested/runtime dimension queries, implicit heap sensitivity,
 fixed-aggregate/class/event elements and the other P1 mechanisms. Class/VPI,

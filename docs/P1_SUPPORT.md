@@ -241,10 +241,13 @@ including the file-output forms and `$swrite`.
   and `%0` forms. The first matching argument wins. No match leaves the
   output unchanged. Multiple conversions, a leading `%%` prefix and X/Z
   packed formats are not supported.
-- `$fread` supports integral destinations and memories; one-dimensional
-  memories of unpacked structures may contain nested structures with
-  integral leaves. Array/real members, multidimensional structure memories
-  and unpacked unions are not supported.
+- `$fread` supports scalar integral destinations and one-dimensional fixed
+  integral memories. One-dimensional memories of unpacked structures may
+  contain nested structures with integral leaves. Whole multidimensional
+  integral memories, dynamic memories, array/real structure members,
+  multidimensional structure memories and unpacked unions are not supported.
+  An original two-dimensional byte-memory probe passes the installed Icarus
+  but is rejected here; see the [comparison record](notes/p1-icarus-progress.md).
 - Memory-file operations accept fixed memories passed through `ref`,
   including forwarding, waiting calls, automatic storage and references
   to array rows. Writemem also accepts `const ref`. See

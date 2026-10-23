@@ -79,7 +79,7 @@ Some ideas the design is built on:
 - **No global state.** All simulation state lives in a context object, so
   several simulations can run in one process.
 
-## Typed container heap: VM collection implemented, front integration pending
+## Typed container heap and tier 1 integration
 
 The [approved container contract](notes/dynamic-containers-proposal.md) is
 recorded in SIR_SPEC 4.2.1 and RUNTIME_ABI 6. Each Context owns a

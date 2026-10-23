@@ -8,6 +8,54 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
+## 文書更新と公開前の再確認（2026-10-24）
+
+`b78437a`の文書を照合し、コンテナの実装済みの範囲と残作業を明確にしました。
+配列メソッド修正案は引き続き承認待ちで、案に依存する縮約・並べ替えは有効化していません。
+外部母集団の件数と性能測定は、記録したコミット・測定日の値を保っています。
+
+`b78437a`を基にした作業ツリーで、公開前のローカルCIがすべて通過しました。
+4構成のconfigure・build・test、releaseフラグ、禁止事項、SPDX、スイートのファイル、
+グローバル状態、従来の未公開8コミットの期待値保護、README件数、clang-format・clang-tidyを
+含みます。dev・ASan・UBSanは各2,672件中2,670件成功、既知の2件がスキップです。
+releaseは2,673件中2,671件成功、同じ2件がスキップです。スキップは引き続き
+`suite/cb/input_sample_1step`と`suite/nets/net_port_drivers_part`です。
+更新文書のローカルリンク231件に欠落はなく、日英で同じ下記の再現例も実行して
+記載の結果を確認しました。
+
+`b78437a`で拡張比較を再実行し、同じ59プローブにIcarusだけが通る21本の差分が
+残っています。`--require-parity`は1を返しました。コンパイラ・ランタイムの表示はともに
+`14.0 (devel) (s20260301-411-gca6b8d376)`です。ローカルの結果は
+`build/docs-publish-icarus-probes-20261024.json`へ保存しました。全機能の対応の証明ではありません。
+
+別の独自入力では、整数の多次元メモリ全体への`$fread`（21.3.4.4）が必要な差分として
+確認できました。この入力は**59プローブにも、差分21本にも含めていません**。
+作業用ディレクトリで次のソースを`probe.sv`として保存すると再現できます。
+
+```systemverilog
+module top;
+  bit [7:0] m[2][2];
+  int fd, n;
+  initial begin
+    fd = $fopen("bytes.bin", "rb");
+    n = $fread(m, fd);
+    $display("%0d %0d %0d", n, m[0][0], m[0][1]);
+  end
+endmodule
+```
+
+```sh
+python3 -c 'from pathlib import Path; Path("bytes.bin").write_bytes(bytes([4, 7]))'
+iverilog -g2012 -s top -o probe.vvp probe.sv
+vvp probe.vvp
+kirimasim probe.sv
+```
+
+手元のIcarusはコンパイル・実行とも成功し、`2 4 7`を出力します。kirimasimの
+`b78437a`は終了コード2で、`unsupported: $fread into a memory of this kind`を
+報告します。対応一覧では整数の固定メモリを一次元に限定して明記しました。
+今回の修正は文書の訂正で、多次元入力の実装やIcarusとの完全な同等性を示すものではありません。
+
 ## 実行時の連結とキューの読み取りスライス（2026-10-24）
 
 `919d11f`で、承認済みのコンテナ契約のunpacked連結とキューの読み取りスライスを
@@ -126,7 +174,8 @@ python3 tools/icarus_feature_probe.py \
 
 外部sv-tests・母集団と性能測定は記載したコミット・測定日を保ち、この回では再計測していません。
 
-実行時の配列の連結、スライス、コンテナの条件演算、追加の配列メソッド、
+この時点で未対応だった実行時の配列の連結と読み取りスライスは、上記の実装で対応しました。
+コンテナの条件演算、追加の配列メソッド、
 混合・省略した動的foreach次元、入れ子・実行時の次元クエリ、暗黙のヒープ感度、
 固定複合型・class・event要素などは残作業です。クラス・VPI、スイッチ、specify・
 タイミングなども残り、Icarusの全範囲への対応は未完了です。

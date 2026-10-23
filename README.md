@@ -96,6 +96,11 @@ parity remain unconfirmed. A passing probe inventory would not by itself
 establish complete coverage; the inventory must expand as mechanisms and
 interfaces are checked.
 
+A separate original probe also confirms that `$fread` into a whole
+multidimensional integral memory passes the installed Icarus and is still
+unsupported here. It is not yet part of that 59-probe inventory; see the
+[reproducer and remaining work](docs/notes/p1-icarus-progress.md).
+
 #### Existing quantitative gates and measured results
 
 <!-- counts:begin -->
@@ -131,7 +136,7 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI rerun at revision `919d11f` on 2026-10-24 passed
+The publication CI rerun based on `b78437a` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
 clang-tidy. Dev has 2,672 tests: 2,670 pass and the same two known skips remain.
 The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
