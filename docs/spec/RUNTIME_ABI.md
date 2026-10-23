@@ -191,7 +191,7 @@ partial root set is passed to collection and failed marking sweeps nothing.
 Tests distinguish assignment failure (the old destination remains) from
 collection failure after assignment committed (both complete values remain).
 This implements roots for the current container SIR, not future class/DPI/VPI
-providers. Front lowering and heap-change notification remain
+providers. Front lowering remains
 unfinished; SystemVerilog dynamic containers are not enabled yet.
 
 The heap observation foundation is implemented with `Heap::setReadHook` and
@@ -205,8 +205,25 @@ after a successful commit; queue insertion/removal reports structure changes.
 Failed/no-op operations emit no changes. A clear or replacement changes a
 variable binding, not the old object's contents; its slot/frame publisher must
 supply that dependency. Observer callbacks must not throw, mutate or collect
-the heap. Scheduler subscription/reattachment and VM monitor capture are not
-yet connected; this API alone does not enable dynamic-container waits.
+the heap. `MonitorSpec::heap` captures reads under a scoped hook on every
+evaluation. The scheduler keeps weak watch counts on objects/cells and records
+matching monitor IDs with their serials in the shared ordered change queue.
+Tiers call `flushHeapChanges` after publishing a mutation and before their next
+instruction; native process returns and wait boundaries also drain it.
+During a guard/monitor walk, draining waits for its outermost end. Stale notices
+cannot reach reused records. Read sets are replaced only after complete capture;
+allocation failure reports ResourceLimit without accepting an incomplete set.
+Hook ownership is restored when the last heap monitor is removed.
+
+The VM uses SIR types and actual refs for guard/watch operands, including reads
+inside callees. A read-only, iterative `Heap::reaches` query filters the current
+private-container graph of called functions (SCHEDULER_SPEC 9.5); global and
+hierarchical reads remain dependencies. Graph queries emit no read observations
+and create no GC roots. Monitor metadata uses the heap's Context-local allocation
+source, allowing deterministic capture/notice failure tests. The VM diagnoses
+these limits at the responsible instruction and detaches waits before its
+callback frames expire. Public C++ metadata is extended; C ABI 0.3 is unchanged.
+Front source-language container lowering is still unfinished.
 
 Class, mailbox and weak-reference semantics extend the root descriptors when
 those mechanisms are implemented. Weak references are not marking edges;

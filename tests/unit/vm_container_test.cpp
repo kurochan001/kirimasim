@@ -985,62 +985,143 @@ TEST(VmContainer, InvalidIndicesReadDefaultsAndLeaveStorageUnchanged) {
             }
 }
 
-TEST(VmContainer, UnconnectedHeapWatchesReportUnsupportedWithoutReadingARefAsASlot) {
+TEST(VmContainer, HeapWatchesWakeForSizeAndStableCellChanges) {
     for (bool cellRef : {false, true})
-        for (bool event : {false, true}) {
-            SCOPED_TRACE(::testing::Message() << cellRef << '/' << event);
-            Program p;
-            const auto q = p.container(s4(32), true);
-            const auto home = p.slot(q);
-            const auto zero = p.constant(s4(64), 0);
-            const auto one = p.constant(s4(32), 1);
-            const auto saved = p.frame(refType(), s4(32));
-            if (cellRef) {
+        for (bool event : {false, true})
+            for (bool throughCall : {false, true}) {
+                SCOPED_TRACE(::testing::Message() << cellRef << '/' << event << '/' << throughCall);
+                Program p;
+                const auto q = p.container(s4(32), true);
+                const auto home = p.slot(q), done = p.slot(u2(1));
+                const auto zero = p.constant(s4(64), 0);
+                const auto one = p.constant(s4(32), 1);
+                const auto saved = p.frame(refType(), s4(32));
                 p.store(home, p.emit(Op::ContainerPack, q, {p.constant(s4(32), 0)}));
-                const auto ref = p.emit(Op::RefMake, refType(q.detail), {home});
-                p.store(saved, p.emit(Op::ContainerCell, refType(),
-                                      {Operand::typeRow(q.detail), ref, zero}));
-            }
-            p.emit(event ? Op::WaitEvent : Op::WaitCond, voidType(),
-                   {Operand::subroutine(SubroutineId{0}), Operand::block(BlockId{1})});
-            p.d.processes[0].blocks.resize(2);
-            p.d.processes[0].blocks[1].instrs = {{Op::Ret, voidType(), kNone, {}, {0, 1, 1}}};
-            Subroutine guard;
-            guard.name = "top.watch";
-            guard.kind = event ? SubroutineKind::Watch : SubroutineKind::Guard;
-            guard.returnType = u2(1);
-            guard.frameOf = {Owner::Kind::Process, 0};
-            guard.loc = {0, 43, 5};
-            guard.blocks.resize(1);
-            auto& code = guard.blocks[0].instrs;
-            if (cellRef) {
-                code = {{Op::LoadRef, s4(32), TempId{0}, {saved}, {0, 43, 5}},
+                if (cellRef) {
+                    const auto ref = p.emit(Op::RefMake, refType(q.detail), {home});
+                    p.store(saved, p.emit(Op::ContainerCell, refType(),
+                                          {Operand::typeRow(q.detail), ref, zero}));
+                }
+                p.emit(event ? Op::WaitEvent : Op::WaitCond, voidType(),
+                       {Operand::subroutine(SubroutineId{throughCall ? 1U : 0U}),
+                        Operand::block(BlockId{1})});
+                p.d.processes[0].blocks.resize(2);
+                p.emitAt(1, Op::Store, voidType(), {done, p.constant(u2(1), 1)});
+                p.emitAt(1, Op::Ret, voidType(), {});
+                Subroutine guard;
+                guard.name = "top.watch";
+                guard.kind = event ? SubroutineKind::Watch : SubroutineKind::Guard;
+                guard.returnType = u2(1);
+                guard.frameOf = {Owner::Kind::Process, 0};
+                guard.loc = {0, 43, 5};
+                guard.blocks.resize(1);
+                auto& code = guard.blocks[0].instrs;
+                if (cellRef) {
+                    code = {
+                        {Op::LoadRef, s4(32), TempId{0}, {saved}, {0, 43, 5}},
                         {Op::Ceq, u2(1), TempId{1}, {Operand::temp(TempId{0}), one}, {0, 43, 5}},
                         {Op::Ret, voidType(), kNone, {Operand::temp(TempId{1})}, {0, 43, 5}}};
-                guard.numTemps = 2;
-            } else {
-                code = {
-                    {Op::Load, q, TempId{0}, {home}, {0, 43, 5}},
-                    {Op::ContainerSize, u2(64), TempId{1}, {Operand::temp(TempId{0})}, {0, 43, 5}},
-                    {Op::Ceq,
-                     u2(1),
-                     TempId{2},
-                     {Operand::temp(TempId{1}), p.constant(u2(64), 1)},
-                     {0, 43, 5}},
-                    {Op::Ret, voidType(), kNone, {Operand::temp(TempId{2})}, {0, 43, 5}}};
-                guard.numTemps = 3;
+                    guard.numTemps = 2;
+                } else {
+                    code = {{Op::Load, q, TempId{0}, {home}, {0, 43, 5}},
+                            {Op::ContainerSize,
+                             u2(64),
+                             TempId{1},
+                             {Operand::temp(TempId{0})},
+                             {0, 43, 5}},
+                            {Op::Ceq,
+                             u2(1),
+                             TempId{2},
+                             {Operand::temp(TempId{1}), p.constant(u2(64), 2)},
+                             {0, 43, 5}},
+                            {Op::Ret, voidType(), kNone, {Operand::temp(TempId{2})}, {0, 43, 5}}};
+                    guard.numTemps = 3;
+                }
+                if (throughCall) {
+                    const auto target = cellRef ? s4(32) : q;
+                    const auto refTypeActual = refType(cellRef ? TypeId{kNone} : q.detail);
+                    Subroutine fn;
+                    fn.name = "top.read_ref";
+                    fn.automatic = true;
+                    fn.returnType = cellRef ? s4(32) : u2(64);
+                    FrameVar param;
+                    param.name = "value";
+                    param.type = refTypeActual;
+                    param.target = target;
+                    fn.frame.push_back(param);
+                    fn.params = {{"value", Direction::Ref, target, kNone, FrameVarId{0}}};
+                    fn.blocks.resize(1);
+                    fn.blocks[0].instrs = {{Op::LoadRef,
+                                            target,
+                                            TempId{0},
+                                            {Operand::frame(FrameVarId{0})},
+                                            {0, 42, 1}}};
+                    if (!cellRef)
+                        fn.blocks[0].instrs.push_back({Op::ContainerSize,
+                                                       u2(64),
+                                                       TempId{1},
+                                                       {Operand::temp(TempId{0})},
+                                                       {0, 42, 1}});
+                    fn.blocks[0].instrs.push_back({Op::Ret,
+                                                   voidType(),
+                                                   kNone,
+                                                   {Operand::temp(TempId{cellRef ? 0U : 1U})},
+                                                   {0, 42, 1}});
+                    fn.numTemps = cellRef ? 1 : 2;
+                    p.d.subroutines.push_back(std::move(fn));
+                    code = {{Op::RefMake,
+                             refTypeActual,
+                             TempId{0},
+                             {cellRef ? saved : home},
+                             {0, 43, 5}},
+                            {Op::Call,
+                             cellRef ? s4(32) : u2(64),
+                             TempId{1},
+                             {Operand::subroutine(SubroutineId{0}), Operand::temp(TempId{0})},
+                             {0, 43, 5}},
+                            {Op::Ceq,
+                             u2(1),
+                             TempId{2},
+                             {Operand::temp(TempId{1}), cellRef ? one : p.constant(u2(64), 2)},
+                             {0, 43, 5}},
+                            {Op::Ret, voidType(), kNone, {Operand::temp(TempId{2})}, {0, 43, 5}}};
+                    guard.numTemps = 3;
+                }
+                p.d.subroutines.push_back(std::move(guard));
+                Process writer;
+                writer.name = "top.writer";
+                writer.loc = {0, 45, 1};
+                writer.blocks.resize(2);
+                writer.numTemps = 1;
+                writer.blocks[0].instrs = {{Op::WaitDelay,
+                                            voidType(),
+                                            kNone,
+                                            {p.constant(u2(64), 1), Operand::block(BlockId{1})},
+                                            {0, 45, 1}}};
+                auto& codeWriter = writer.blocks[1].instrs;
+                codeWriter.push_back(
+                    {Op::RefMake, refType(q.detail), TempId{0}, {home}, {0, 46, 1}});
+                std::vector<Operand> mutation{Operand::typeRow(q.detail), Operand::temp(TempId{0})};
+                if (cellRef) mutation.push_back(zero);
+                mutation.push_back(one);
+                codeWriter.push_back({cellRef ? Op::ContainerWrite : Op::QueuePushBack,
+                                      voidType(),
+                                      kNone,
+                                      mutation,
+                                      {0, 47, 1}});
+                codeWriter.push_back({Op::Ret, voidType(), kNone, {}, {0, 48, 1}});
+                writer.writes = {{home.asSlot()}};
+                p.d.processes.push_back(std::move(writer));
+                ASSERT_TRUE(verifies(p.d));
+                Capture capture;
+                ASSERT_NE(capture.file, nullptr);
+                k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                const auto result = kirimasim::vm::run(p.d, ctx);
+                ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << capture.text();
+                EXPECT_EQ(stored(ctx, done, u2(1))[0].a, 1U);
+                EXPECT_EQ(ctx.scheduler().time(), 1U);
+                EXPECT_TRUE(capture.text().empty());
             }
-            p.d.subroutines.push_back(std::move(guard));
-            ASSERT_TRUE(verifies(p.d));
-            Capture capture;
-            ASSERT_NE(capture.file, nullptr);
-            k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-            const auto result = kirimasim::vm::run(p.d, ctx);
-            EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
-            EXPECT_NE(capture.text().find("container.sv:43: error: watching container values or "
-                                          "element refs is not supported yet"),
-                      std::string::npos);
-        }
 }
 
 TEST(VmContainer, IllegalCellNbasReportTheStandardRuleWithoutModifyingTheValue) {
@@ -1439,6 +1520,238 @@ TEST(VmContainer, KernelEndedActivationsDoNotKeepDeadValuesRooted) {
     EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
     EXPECT_EQ(ctx.heap().stats().containers, 0U);
     EXPECT_EQ(ctx.heap().stats().cells, 0U);
+}
+
+struct MonitorHeapArm {
+    VmHeapMemory& memory;
+    k::ProcessId process{0};
+    bool waited = false;
+    static kirima_status resume(kirima_context* context, void* frame) {
+        auto& arm = *static_cast<MonitorHeapArm*>(frame);
+        if (!arm.waited) {
+            arm.waited = true;
+            k::fromC(context).scheduler().waitDelay(arm.process, 0);
+            return static_cast<kirima_status>(k::Status::Waiting);
+        }
+        arm.memory.remaining = 0;
+        return static_cast<kirima_status>(k::Status::Done);
+    }
+};
+
+TEST(VmContainer, HeapMonitorFailuresHavePositionsAndWaitHooksNeverOutliveTheInterpreter) {
+    for (bool fail : {false, true})
+        for (bool event : {false, true}) {
+            SCOPED_TRACE(::testing::Message() << fail << '/' << event);
+            Program p;
+            const auto q = p.container(s4(32), true);
+            const auto home = p.slot(q);
+            p.store(home, p.emit(Op::ContainerPack, q, {p.constant(s4(32), 7)}));
+            p.emit(Op::WaitDelay, voidType(), {p.constant(u2(64), 0), Operand::block(BlockId{1})});
+            p.emitAt(1, event ? Op::WaitEvent : Op::WaitCond, voidType(),
+                     {Operand::subroutine(SubroutineId{0}), Operand::block(BlockId{2})});
+            p.d.processes[0].blocks[1].instrs.back().loc = {0, 43, 5};
+            p.emitAt(2, Op::Ret, voidType(), {});
+            Subroutine guard;
+            guard.name = "top.watch";
+            guard.kind = event ? SubroutineKind::Watch : SubroutineKind::Guard;
+            guard.returnType = u2(1);
+            guard.frameOf = {Owner::Kind::Process, 0};
+            guard.loc = {0, 43, 5};
+            guard.blocks.resize(1);
+            guard.numTemps = 3;
+            guard.blocks[0].instrs = {
+                {Op::Load, q, TempId{0}, {home}, {0, 43, 5}},
+                {Op::ContainerSize, u2(64), TempId{1}, {Operand::temp(TempId{0})}, {0, 43, 5}},
+                {Op::Ceq,
+                 u2(1),
+                 TempId{2},
+                 {Operand::temp(TempId{1}), p.constant(u2(64), 2)},
+                 {0, 43, 5}},
+                {Op::Ret, voidType(), kNone, {Operand::temp(TempId{2})}, {0, 43, 5}}};
+            p.d.subroutines.push_back(std::move(guard));
+            ASSERT_TRUE(verifies(p.d));
+            Capture capture;
+            ASSERT_NE(capture.file, nullptr);
+            VmHeapMemory memory;
+            k::Context ctx(k::OutputDestinations{capture.file, capture.file}, nullptr, &memory);
+            MonitorHeapArm arm{memory};
+            if (fail) {
+                arm.process =
+                    ctx.scheduler().addProcess(&MonitorHeapArm::resume, &arm, k::Group::Active);
+                ctx.scheduler().start(arm.process);
+            }
+            struct Hook {
+                unsigned calls = 0;
+                static void change(void* frame, k::HeapRoot) noexcept {
+                    ++static_cast<Hook*>(frame)->calls;
+                }
+            } hook;
+            ctx.heap().setChangeHook({&Hook::change, &hook});
+            const auto result = kirimasim::vm::run(p.d, ctx);
+            memory.remaining.reset();
+            ASSERT_EQ(result.reason, fail ? k::EndReason::ResourceLimit : k::EndReason::Quiescent)
+                << result.error << capture.text();
+            if (fail)
+                EXPECT_NE(
+                    capture.text().find("container.sv:43: error: container monitor resource limit"),
+                    std::string::npos);
+            else
+                EXPECT_TRUE(capture.text().empty());
+            const auto restored = ctx.heap().setChangeHook({});
+            EXPECT_EQ(restored.fn, &Hook::change);
+            EXPECT_EQ(restored.frame, &hook);
+            ctx.heap().setChangeHook(restored);
+            k::ContainerToken value{stored(ctx, home, q)[0].a};
+            const auto type = ctx.heap().actualType(value);
+            ASSERT_TRUE(type);
+            ASSERT_TRUE(ctx.heap().write(type.value, value, 0, std::array<k::W4, 1>{{{11, 0}}}));
+            ctx.scheduler().flushHeapChanges();
+            EXPECT_EQ(hook.calls, 1U);
+        }
+}
+
+TEST(VmContainer, HeapWaitsExcludeCalledPrivateContainersButKeepHierarchicalAndGlobalReads) {
+    for (bool called : {false, true})
+        for (bool nested : {false, true})
+            for (bool forwarded : {false, true})
+                for (bool event : {false, true}) {
+                    SCOPED_TRACE(::testing::Message()
+                                 << called << '/' << nested << '/' << forwarded << '/' << event);
+                    Program p;
+                    const auto inner = p.container(s4(32), true);
+                    const auto q = nested ? p.container(inner, true) : inner;
+                    const auto privateQ = p.slot(q), publicQ = p.slot(q);
+                    p.d.slots[privateQ.id].subroutine = SubroutineId{0};
+                    const auto phase = p.slot(u2(32)), observed = p.slot(u2(32));
+                    const auto zero = p.constant(s4(64), 0), leaf = p.constant(s4(32), 1);
+                    for (const auto& home : {privateQ, publicQ}) {
+                        const auto value = nested ? p.emit(Op::ContainerPack, inner, {leaf}) : leaf;
+                        p.store(home, p.emit(Op::ContainerPack, q, {value}));
+                    }
+                    Subroutine getter;
+                    getter.name = "top.getter";
+                    getter.returnType = u2(64);
+                    getter.blocks.resize(1);
+                    auto& code = getter.blocks[0].instrs;
+                    const auto emit = [&](Op op, Type t, std::vector<Operand> args) {
+                        const TempId id{getter.numTemps++};
+                        code.push_back({op, t, id, std::move(args), {0, 40, 1}});
+                        return Operand::temp(id);
+                    };
+                    std::vector<Operand> sizes;
+                    for (const auto& home : {privateQ, publicQ}) {
+                        auto value = emit(Op::Load, q, {home});
+                        if (nested) value = emit(Op::ContainerRead, inner, {value, zero});
+                        sizes.push_back(emit(Op::ContainerSize, u2(64), {value}));
+                    }
+                    const auto sum = emit(Op::Add, u2(64), sizes);
+                    code.push_back({Op::Ret, voidType(), kNone, {sum}, {0, 40, 1}});
+                    p.d.subroutines.push_back(getter);
+                    if (forwarded) {
+                        Subroutine wrapper;
+                        wrapper.name = "top.wrapper";
+                        wrapper.returnType = u2(64);
+                        wrapper.numTemps = 1;
+                        wrapper.blocks.resize(1);
+                        wrapper.blocks[0].instrs = {
+                            {Op::Call,
+                             u2(64),
+                             TempId{0},
+                             {Operand::subroutine(SubroutineId{0})},
+                             {0, 41, 1}},
+                            {Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, {0, 41, 1}}};
+                        p.d.subroutines.push_back(std::move(wrapper));
+                    }
+                    const SubroutineId guardId{static_cast<std::uint32_t>(p.d.subroutines.size())};
+                    Subroutine guard;
+                    guard.name = "top.guard";
+                    guard.kind = event ? SubroutineKind::Watch : SubroutineKind::Guard;
+                    guard.returnType = u2(1);
+                    guard.frameOf = {Owner::Kind::Process, 0};
+                    guard.loc = {0, 43, 1};
+                    guard.blocks.resize(1);
+                    Operand result;
+                    if (called) {
+                        guard.blocks[0].instrs.push_back(
+                            {Op::Call,
+                             u2(64),
+                             TempId{0},
+                             {Operand::subroutine(SubroutineId{forwarded ? 1U : 0U})},
+                             {0, 43, 1}});
+                        guard.numTemps = 1;
+                        result = Operand::temp(TempId{0});
+                    } else {
+                        guard.blocks = getter.blocks;
+                        guard.blocks[0].instrs.pop_back();
+                        guard.numTemps = getter.numTemps;
+                        result = sum;
+                    }
+                    const TempId test{guard.numTemps++};
+                    guard.blocks[0].instrs.push_back(
+                        {Op::Ge, u2(1), test, {result, p.constant(u2(64), 3)}, {0, 43, 1}});
+                    guard.blocks[0].instrs.push_back(
+                        {Op::Ret, voidType(), kNone, {Operand::temp(test)}, {0, 43, 1}});
+                    p.d.subroutines.push_back(std::move(guard));
+                    p.emit(event ? Op::WaitEvent : Op::WaitCond, voidType(),
+                           {Operand::subroutine(guardId), Operand::block(BlockId{1})});
+                    const auto at = p.emitAt(1, Op::Load, u2(32), {phase});
+                    p.emitAt(1, Op::Store, voidType(), {observed, at});
+                    p.emitAt(1, Op::Ret, voidType(), {});
+                    Process writer;
+                    writer.name = "top.writer";
+                    writer.blocks.resize(3);
+                    writer.blocks[0].instrs = {{Op::WaitDelay,
+                                                voidType(),
+                                                kNone,
+                                                {p.constant(u2(64), 1), Operand::block(BlockId{1})},
+                                                {0, 45, 1}}};
+                    for (unsigned step : {1U, 2U}) {
+                        const auto home = step == 1 ? privateQ : publicQ;
+                        const TempId binding{(step - 1) * (nested ? 2U : 1U)};
+                        const TempId element{binding.index() + 1};
+                        auto& out = writer.blocks[step].instrs;
+                        out.push_back({Op::Store,
+                                       voidType(),
+                                       kNone,
+                                       {phase, p.constant(u2(32), step)},
+                                       {0, 46, 1}});
+                        out.push_back(
+                            {Op::RefMake, refType(q.detail), binding, {home}, {0, 46, 1}});
+                        auto receiver = Operand::temp(binding);
+                        if (nested) {
+                            out.push_back({Op::ContainerCell,
+                                           refType(inner.detail),
+                                           element,
+                                           {Operand::typeRow(q.detail), receiver, zero},
+                                           {0, 46, 1}});
+                            receiver = Operand::temp(element);
+                        }
+                        out.push_back({Op::QueuePushBack,
+                                       voidType(),
+                                       kNone,
+                                       {Operand::typeRow(inner.detail), receiver, leaf},
+                                       {0, 46, 1}});
+                        out.push_back(
+                            step == 1 ? Instr{Op::WaitDelay,
+                                              voidType(),
+                                              kNone,
+                                              {p.constant(u2(64), 1), Operand::block(BlockId{2})},
+                                              {0, 47, 1}}
+                                      : Instr{Op::Ret, voidType(), kNone, {}, {0, 47, 1}});
+                    }
+                    writer.numTemps = nested ? 4 : 2;
+                    writer.writes = {{privateQ.asSlot()}, {publicQ.asSlot()}, {phase.asSlot()}};
+                    p.d.processes.push_back(std::move(writer));
+                    ASSERT_TRUE(verifies(p.d));
+                    Capture capture;
+                    ASSERT_NE(capture.file, nullptr);
+                    k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                    const auto resultRun = kirimasim::vm::run(p.d, ctx);
+                    ASSERT_EQ(resultRun.reason, k::EndReason::Quiescent)
+                        << resultRun.error << capture.text();
+                    EXPECT_EQ(stored(ctx, observed, u2(32))[0].a, called ? 2U : 1U);
+                    EXPECT_TRUE(capture.text().empty());
+                }
 }
 
 }  // namespace

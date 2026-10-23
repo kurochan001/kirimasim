@@ -77,7 +77,7 @@ copying, stable element cells, bounded queue mutation and exact tracing.
 Allocation failures roll back new objects; reclaimed entries use generations
 so stale tokens cannot name replacement values. These are kernel APIs,
 covered by [15 original unit tests](../tests/unit/heap_test.cpp),
-[15 conversion/snapshot/descriptor/observation tests](../tests/unit/heap_conversion_test.cpp) and an independent
+[16 conversion/snapshot/descriptor/observation tests](../tests/unit/heap_conversion_test.cpp) and an independent
 [`valsem` container model](../src/valsem/include/kirimasim/valsem/containers.h).
 The 100-sample check passed 2,520,000 operations; all six deliberate heap
 mutations were caught. The heap matrix is included in nightly reference checks.
@@ -96,7 +96,7 @@ text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container
 Ten new SIR tests cover 96 positive type/bound combinations, 49 malformed
 cases, argument bindings and fixed arrays of container receivers.
 The VM now dispatches all 16 instructions to the shared heap. Its
-[22 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
+[24 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
 element/bound/storage combinations, 72 ref-call combinations, selected fixed
 arrays, detached cells across task waits, packed writes against `valsem`,
 argument side effects, invalid indices, method warning positions and errors.
@@ -119,8 +119,16 @@ cell values have distinct identities; notifications follow committed changes,
 while equal normalized writes, failed operations and invalid selections do not
 emit changes. Five tests cover 40 write combinations, queue bounds, nested
 values, failures and hook ownership/isolation. Eight observation mutations were
-caught by actual assertions. These APIs are not yet connected to scheduler
-subscriptions or VM guard capture, so heap-dependent waits remain unsupported.
+caught by actual assertions. The scheduler now captures typed heap reads during
+monitor evaluation, keeps weak object/cell watch markers and queues notices in
+the shared change order. Dependencies reattach after selection or binding
+changes; detached cell refs retain their own identity. VM guard/watch calls and
+forwarded refs use the same mechanism. Private containers of called functions
+are excluded, while global and direct hierarchical reads remain dependencies.
+Five new scheduler tests cover precise reevaluation, cancellation/reuse,
+bounded lists, hook ownership and resource failures. VM tests add 16 private/
+global/hierarchical cases, eight direct/called wait cases and four cleanup/
+failure cases. Eight deliberate monitor mutations were caught.
 
 Nonblocking assignment to a dynamically sized array element is illegal
 (6.21, 10.4.2), including through a cell ref. Slang rejects direct source forms;
@@ -128,8 +136,7 @@ the VM gives the same reason for hand-built SIR. Element NBAs are not a missing
 P1 feature. Whole-value NBAs to eligible static variables are a different case.
 
 SystemVerilog dynamic arrays and queues remain unsupported. Front-end
-lowering, heap-dependent change notification and
-source-level execution/diagnostic matrices remain. Class/DPI/VPI roots are
+lowering and source-level execution/diagnostic matrices remain. Class/DPI/VPI roots are
 future mechanisms, not covered by the current container adapter. This extension does not
 establish full container support or the Icarus coverage target.
 
@@ -225,7 +232,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | Shared heap, typed SIR, VM execution and automatic typed-root collection are tested; front, heap-change notification and SystemVerilog execution tests remain |
+| P1 container integration | Shared heap, typed SIR, VM execution and automatic typed-root collection are tested; typed heap-dependent waits tested; front and SystemVerilog execution tests remain |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |

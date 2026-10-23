@@ -9,6 +9,45 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Kernel/VM heap-dependent monitors (2026-10-24)
+
+The scheduler now captures heap reads during guard/watch evaluation and
+reattaches dependencies after selection or binding changes. Weak watch counts
+on containers/cells skip unrelated writes. Matching monitor IDs and serials
+are queued in the existing ordered change stream after commit. The tier
+publishes each heap mutation before its next instruction; callbacks defer
+notifications until the outermost walk ends. A stale notice cannot evaluate a
+reused monitor record. Cancellation and interpreter exit restore hook ownership.
+
+The VM uses the same path for size and stable-cell reads, including ref reads
+inside called functions. As for static slot dependencies, private containers
+of called functions are excluded; global and direct hierarchical reads remain.
+The iterative, deduplicated `Heap::reaches` query examines current private
+container graphs without read notifications, GC marking or ownership changes.
+Capture/notice allocation failure returns ResourceLimit, with the responsible
+VM instruction's source position, and never accepts an incomplete read set.
+
+New tests comprise one heap query test, five scheduler tests and two VM tests.
+The scheduler checks selected/unselected cells, normalized no-ops, B-bit changes,
+structure/index/binding reattachment, size-only reads, detached cells, both
+process groups, 1,000 wait registrations with bounded lists, cancellation/reuse,
+hook ownership and capture/notice failure. VM matrices cover eight direct/called
+size/cell waits, 16 private/global/hierarchical/call-forwarding combinations and
+four resource/cleanup cases. The previous unsupported-watch unit now checks an
+actual wakeup/value/time; existing suite bodies and output expectations remain.
+
+All eight deliberate monitor mutations compiled and were caught by actual
+assertions (exact dependency matching, watch markers, reattachment, serials,
+hook ownership, private-variable exclusion, callee ref reads and incomplete
+capture). Restored heap/scheduler/VM tests pass 106 cases. Dev passes 2,171 of
+2,173 tests, with the same two known skips. There are 31 heap tests and 24
+container VM tests.
+
+Front lowering and source-language execution matrices still remain. No
+SystemVerilog dynamic-container feature is enabled by this extension. Classes,
+VPI, switches, specify/timing and the other full-P1 comparison gaps remain work;
+the finite inventory cannot prove Icarus 13.0-or-broader coverage.
+
 ## Typed heap observation foundation (2026-10-24)
 
 Source revision `2c674a6` exposes heap read/change hooks for the dynamic

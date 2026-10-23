@@ -16,7 +16,7 @@ no standard text, simulator code or external test was copied.
 The [shared kernel heap](../P1_SUPPORT.md#dynamic-container-foundation) is
 implemented and tested: typed layouts, stable cells, deep copying, bounded
 queue operations, transactional allocation failure and exact tracing with
-generation-checked reuse. Thirty kernel tests and the 2,520,000-operation
+generation-checked reuse. Thirty-one kernel tests and the 2,520,000-operation
 reference run pass. Eight new tests cover nested-bound conversion, actual-type
 snapshots, 432 combinations and transactional failures; six original and six
 additional conversion mutation checks have been caught by actual tests.
@@ -24,12 +24,13 @@ additional conversion mutation checks have been caught by actual tests.
 Typed SIR descriptors, receiver references, instructions, verification and
 text are also implemented (SIR_SPEC 5.8). The approved SystemVerilog contract
 below is only partly implemented. The VM now executes its 16 instructions in
-22 original SIR tests, preserving actual-bound variable refs and detached cell
+24 original SIR tests, preserving actual-bound variable refs and detached cell
 refs across calls/waits. Typed slots, live activations, cell refs, deferred
 arguments and owned scheduler values are roots for automatic region/slot-boundary
 collection (RUNTIME_ABI 6). Class/DPI/VPI roots are not implemented.
-Front lowering, heap-change
-notifications and language execution/diagnostic matrices remain.
+The scheduler and VM now connect typed heap-dependent watches/waits,
+reattachment and called-private-container exclusion (SCHEDULER_SPEC 9.5).
+Front lowering and language execution/diagnostic matrices remain.
 `new[]`, queue methods and dynamic
 container element access still stop as unsupported in execution. Kernel
 checks do not establish language support or full Icarus parity.

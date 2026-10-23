@@ -21,6 +21,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Heap-dependent SIR watches/waits capture typed reads and reattach after
+  index, structure or binding changes. The shared scheduler queues notices
+  with monitor serials, excludes called-private containers, restores hook
+  ownership and reports resource failures. Tests cover direct/called refs,
+  detached cells, cancellation/reuse and bounded registrations. SystemVerilog
+  container lowering remains unfinished.
+
 - Typed heap read/change observation hooks distinguish container structure
   from cell values. Notifications follow committed changes and skip equal
   normalized writes, failed operations and invalid selections. Scheduler/VM

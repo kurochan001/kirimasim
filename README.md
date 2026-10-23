@@ -38,15 +38,16 @@ for the specification, the tests, and review.** See
 The dynamic-array/queue execution amendment was approved on 2026-10-23.
 The shared kernel now has a typed heap with deep copying, stable element
 references, bounded queues, exact tracing and allocation-failure rollback.
-Its 30 kernel tests cover 432 nested-copy combinations, transactional failure
+Its 31 kernel tests cover 432 nested-copy combinations, transactional failure
 and actual-type snapshots, alongside 2,520,000 model-checked operations.
 Typed container SIR descriptors, references, instructions, verification and
-text are implemented. Twenty-two VM tests execute those instructions from original
+text are implemented. Twenty-four VM tests execute those instructions from original
 SIR inputs, including actual-bound refs, detached cells across waits and automatic
 collection at drained region/slot boundaries. Typed slots, live frames, cell refs,
 deferred calls and pending scheduler values retain their reachable objects.
-Front-end lowering and heap-change notification
-are still unfinished, so dynamic arrays and
+The scheduler now tracks heap-dependent waits, reattaches changed dependencies
+and excludes called functions' private containers. Front-end lowering
+is still unfinished, so dynamic arrays and
 queues cannot yet be executed from SystemVerilog. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
@@ -104,11 +105,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 2,165 | 2,163, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 2,173 | 2,171, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 285, `tests/suite/` 1,697 (made by 120 generators under `tools/`), tools 125, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
+This repository's tests by kind: unit tests (GoogleTest) 293, `tests/suite/` 1,697 (made by 120 generators under `tools/`), tools 125, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -420,7 +421,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Not yet | Scope and status |
 | --- | --- |
 | FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1; shared heap, typed SIR, VM execution and automatic typed-root collection tested; front and heap-change notification pending |
+| Dynamic arrays and queues | P1; shared heap, typed SIR, VM execution and automatic typed-root collection tested; heap-dependent SIR waits tested; front lowering pending |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
 | Tier 2 C++ generation and further RTL speed optimizations | P2 |

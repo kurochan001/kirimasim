@@ -308,6 +308,21 @@ The design specification's "two levels of waits" are carried over.
 | Expressions containing `ev.triggered` (`wait (ev.triggered)` and so on) | Monitor records whose dependencies include the event object | Triggers by `->` and `->>` also notify the monitor records depending on the event, and the expressions are evaluated again. The `triggered` state goes back to 0 when time advances, but that does not cause evaluation (checked: 15.5.3) |
 | Time | Future events | When the time is reached |
 
+Implementation status (2026-10-24): typed container SIR monitors capture
+container-structure and cell-value reads on each evaluation. Weak watch markers
+skip unrelated objects; a successful evaluation replaces the dependency set,
+so handle/index changes reattach it. Monitor IDs and serials join the existing
+ordered late-change queue. The tier drains committed heap notifications before
+its next instruction; guards defer them to the outermost walk's end. Cancellation
+invalidates queued notices and releases hook ownership. Read/notice allocation
+failure ends with ResourceLimit rather than using partial dependencies.
+
+Called functions' private container graphs are excluded like their private
+slots (VM dependency analysis); global and direct hierarchical reads remain.
+The graph query is read-only and adds no GC roots. The VM detaches its waits
+before destroying callback frames. These are kernel/VM checks on independent
+SIR, not SystemVerilog container support: front lowering remains unfinished.
+
 How a change of a slot's value wakes the processes waiting on it (where the diagram differs from the table and the items below, they hold):
 
 ```mermaid

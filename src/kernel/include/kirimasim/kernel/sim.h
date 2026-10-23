@@ -27,6 +27,7 @@
 
 #include "kirimasim/kernel/abi.h"
 #include "kirimasim/kernel/counters.h"
+#include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/store.h"
 
@@ -187,6 +188,9 @@ struct MonitorSpec {
     /// (9.4.2.3); null for none.
     GuardFn guard = nullptr;
     void* guardFrame = nullptr;
+    bool heap = false;  ///< Capture the expression's typed heap reads on each evaluation.
+    HeapResult<bool> (*heapReadFilter)(const void*, HeapRoot) noexcept = nullptr;
+    const void* heapReadFrame = nullptr;
 };
 
 /// The levels of a procedural continuous assignment; force is above
@@ -203,14 +207,18 @@ struct Limits {
 /// The scheduler of one Context.
 class Scheduler {
 public:
-    Scheduler(Context& ctx, Store& store, Counters& counters)
-        : ctx_(ctx), store_(store), counters_(counters) {}
+    Scheduler(Context& ctx, Store& store, Counters& counters);
 
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
     /// Typed interpretation belongs to the tier. The visitor sees only
     /// owned values: NBA snapshots, pending drivers and held storage.
     bool visitPendingValues(PendingValueVisitor visitor, void* frame) const noexcept;
+    /// Tiers call after publishing a heap mutation, before the next SIR
+    /// instruction. Native callbacks also drain at their return/wait boundary.
+    /// During a monitor/guard walk, notices wait in the shared change queue.
+    void flushHeapChanges() noexcept;
+    [[nodiscard]] bool heapMonitorLimited() const noexcept { return heapMonitorLimited_; }
     /// Starts the optional wall-clock budget, excluding front-end work.
     void setWallTimeLimit(std::uint64_t seconds, std::chrono::steady_clock::time_point start) {
         wallTimeLimit_ = seconds;
@@ -518,11 +526,13 @@ private:
         WaitItem item;
     };
     struct Monitor {
+        explicit Monitor(std::pmr::memory_resource* memory) : heapReads(memory) {}
         ProcessId process{0};
         std::uint64_t gen = 0;     ///< The process's wait it belongs to.
         std::uint64_t serial = 0;  ///< Changes when the record is reused.
         MonitorSpec spec;
         std::vector<std::uint64_t> last;
+        std::pmr::vector<HeapRoot> heapReads;
     };
     /// A reference to a monitor record from a slot or an event; stale when
     /// the record's serial has changed.
@@ -631,6 +641,8 @@ private:
     /// that no list changes under a walk (RUNTIME_ABI.md 5).
     struct LateChange {
         bool trigger = false;
+        bool heap = false;
+        MonitorRef monitor;
         EventId event{0};
         SlotId slot{0};
         std::uint32_t elem = 0;
@@ -639,7 +651,7 @@ private:
         std::vector<std::uint64_t> old;
         std::vector<std::uint64_t> now;
     };
-    std::vector<LateChange> lateChanges_;
+    std::pmr::vector<LateChange> lateChanges_;
     std::uint32_t walking_ = 0;          ///< Walks in progress.
     bool draining_ = false;              ///< lateChanges_ is being announced.
     std::vector<std::uint32_t> heldOf_;  ///< By slot: its row in held_; empty if none is marked.
@@ -734,6 +746,14 @@ private:
     /// whether the value changed.
     bool showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
     void evaluateMonitor(std::uint32_t id);
+    bool evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out);
+    static void changedHeap(void* frame, HeapRoot root) noexcept;
+    void heapLimit() noexcept;
+    std::vector<MonitorRef> heapMonitors_;
+    std::uint32_t heapMonitorLimit_ = 0;
+    std::size_t heapMonitorCount_ = 0;
+    HeapHook previousHeapHook_;
+    bool heapMonitorLimited_ = false;
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
     /// Adds a monitor record to p's current wait.
     void addMonitor(ProcessId p, const MonitorSpec& m);

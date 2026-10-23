@@ -518,11 +518,11 @@ using VarsId = sir::Id<VarsTag>;
 
 struct Frame {
     Interpreter* vm = nullptr;
-    sir::ProcessId process{0};      ///< Row in the SIR process table.
-    kernel::ProcessId kernelId{0};  ///< Id in the kernel.
-    sir::BlockId block{0};          ///< Block to resume at.
-    std::vector<W4> vars;           ///< Frame variables (SIR_SPEC.md 7.4).
-    VarsId varsId{0};               ///< Their number for refs (Interpreter::enroll).
+    sir::ProcessId process{0};                   ///< Row in the SIR process table.
+    kernel::ProcessId kernelId = kernel::kNone;  ///< Id in the kernel, once registered.
+    sir::BlockId block{0};                       ///< Block to resume at.
+    std::vector<W4> vars;                        ///< Frame variables (SIR_SPEC.md 7.4).
+    VarsId varsId{0};                            ///< Their number for refs (Interpreter::enroll).
 
     // Process control (SCHEDULER_SPEC.md 10).
     enum class Join : std::uint8_t { None, All, Any, WaitFork };
@@ -717,10 +717,14 @@ public:
         stack_ = kernel::StackRange::ofThisThread();
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
         struct RestoreHook {
+            Interpreter& vm;
             kernel::Scheduler& scheduler;
             kernel::SafePointHook old;
-            ~RestoreHook() { scheduler.setSafePointHook(old); }
-        } hook{sched_, sched_.setSafePointHook({})};
+            ~RestoreHook() {
+                vm.dropHeapWaits();
+                scheduler.setSafePointHook(old);
+            }
+        } hook{*this, sched_, sched_.setSafePointHook({})};
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
             const sir::Domain dom = sir::domainOf(s.type);
@@ -970,6 +974,8 @@ private:
     kernel::Heap& heap_;
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
+    bool heapWaits_ = false;
+    bool heapMonitorReported_ = false;
     std::set<std::array<std::uint32_t, 3>> heapWarned_;
     std::vector<bool> heapSlots_;
     std::vector<sir::SlotId> rootSlots_;
@@ -1149,7 +1155,9 @@ private:
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
     struct GuardDeps {
-        bool heap = false;  ///< Heap-change subscriptions are not connected yet.
+        bool heap = false;  ///< The body may read container structure or cell values.
+        Interpreter* vm = nullptr;
+        std::vector<sir::SlotId> privateContainers;
         /// What the body reads, as the SIR's ranges while they are found
         /// (collectReads), and as the kernel's parts once depsOf has left
         /// out the called functions' variables.
@@ -2667,11 +2675,13 @@ private:
                             }
                         }
                         sched_.waitAny(f.kernelId, items_, monitors_, namedItems_);
+                        if (reportHeapMonitorLimit(instanceOf(p), in.loc)) return Exit::Stop;
                         resumeAt(f) = ops.back().asBlock();
                         return Exit::Waiting;
                     }
                     case Op::WaitCond: {
                         const std::optional<bool> waits = waitCond(f, ops[0].asSubroutine(), steps);
+                        if (reportHeapMonitorLimit(instanceOf(p), in.loc)) return Exit::Stop;
                         if (!waits) return sched_.ending() ? Exit::Stop : Exit::Error;
                         if (*waits) {
                             resumeAt(f) = ops[1].asBlock();
@@ -2913,7 +2923,8 @@ private:
         seen[body.index()] = true;
         for (const sir::BasicBlock& bb : bodyBlocks(body)) {
             for (const sir::Instr& in : bb.instrs) {
-                if (sir::isContainerOp(in.op)) deps.heap = true;
+                if (sir::isContainerOp(in.op) || in.op == Op::LoadRef || in.op == Op::LoadRefElem)
+                    deps.heap = true;
                 if (in.op == Op::Call)
                     collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
                 // A ref of the body's own frame (that of the waiter); the
@@ -2953,6 +2964,7 @@ private:
         std::optional<GuardDeps>& cached = guardDeps_[body.index()];
         if (cached) return *cached;
         GuardDeps deps;
+        deps.vm = this;
         std::vector<bool> seen(processCount() + d_.subroutines.size(), false);
         collectReads(body, deps, seen);
         // The variables of a function the body calls are left out: the call
@@ -2965,6 +2977,9 @@ private:
         };
         std::erase_if(deps.reads, [&](const sir::SlotRange& r) { return called(r.slot); });
         std::erase_if(deps.events, called);
+        for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
+            if (sir::isContainer(d_.slots[i].type) && called(sir::SlotId{i}))
+                deps.privateContainers.push_back(sir::SlotId{i});
         // The kernel's parts, made from the SIR's slots in one place (#39).
         for (const sir::SlotRange& r : deps.reads)
             deps.slots.push_back({kernelSlot(r.slot), r.firstElem, r.numElems, r.lsb, r.width});
@@ -2984,26 +2999,54 @@ private:
     /// The body reads the frame of the activation that waits, so a ref is
     /// found where the body's own reads find it, by its layout (SIR_SPEC.md
     /// 7.4).
+    static kernel::HeapResult<bool> keepHeapRead(const void* frame,
+                                                 kernel::HeapRoot root) noexcept {
+        const auto& deps = *static_cast<const GuardDeps*>(frame);
+        const auto& vm = *deps.vm;
+        try {
+            std::vector<kernel::HeapRoot> privateRoots;
+            for (const auto slot : deps.privateContainers)
+                for (std::uint64_t e = 0; e < sir::elementCount(vm.d_.slot(slot)); ++e)
+                    privateRoots.push_back(kernel::HeapRoot::container(
+                        {*vm.store_.element(vm.kernelSlot(slot), static_cast<std::uint32_t>(e))}));
+            const auto privateRead = vm.heap_.reaches(privateRoots, root);
+            return {!privateRead.value, privateRead.status};
+        } catch (const std::bad_alloc&) {
+            return {false, {kernel::HeapError::ResourceLimit}};
+        } catch (const std::length_error&) {
+            return {false, {kernel::HeapError::ResourceLimit}};
+        }
+    }
+
+    void dropHeapWaits() noexcept {
+        if (!heapWaits_) return;
+        for (const auto& f : frames_)
+            if (!f.released && f.kernelId != kernel::kNone) sched_.cancelWait(f.kernelId);
+    }
+
+    bool reportHeapMonitorLimit(sir::InstanceId instance, sir::SourceLoc loc) {
+        if (!sched_.heapMonitorLimited()) return false;
+        if (!heapMonitorReported_) {
+            heapMonitorReported_ = true;
+            limitAt(instance, loc, "container monitor resource limit");
+        }
+        return true;
+    }
+
     bool readsOf(const Frame& f, BodyId body, kernel::MonitorSpec& m) {
         const GuardDeps& deps = depsOf(body);
-        const auto unsupportedHeapWatch = [&] {
-            const auto& s = subOf(body);
-            output_.message(
-                runtimeLine(s.instance, s.loc,
-                            "watching container values or element refs is not supported yet"));
-            sched_.runtimeError();
-        };
-        if (deps.heap) {
-            unsupportedHeapWatch();
-            return false;
+        m.heap = deps.heap;
+        if (!deps.privateContainers.empty()) {
+            m.heapReadFilter = &keepHeapRead;
+            m.heapReadFrame = &deps;
         }
         m.slots = deps.slots;
         const std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         for (const GuardDeps::RefRead& rr : deps.refs) {
             const W4 r = vars[layouts_[body.index()].wordOf(rr.var)];
             if (isHeapRef(r)) {
-                unsupportedHeapWatch();
-                return false;
+                m.heap = true;
+                continue;
             }
             if (isFrameRef(r)) continue;
             m.slots.push_back({kernelSlot(leafSlot(refSlot(r), rr.leaf)),
@@ -3015,6 +3058,7 @@ private:
                 if (const std::uint64_t h = *store_.element(kernelSlot(s), e); h != 0)
                     m.events.push_back(kernel::eventOfHandle(h));
         }
+        heapWaits_ = heapWaits_ || m.heap;
         return true;
     }
 
@@ -3984,11 +4028,16 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
-        if (sir::isContainerOp(in.op)) return executeContainer(f, in);
+        const auto publishHeap = [&](bool ok) {
+            sched_.flushHeapChanges();
+            reportHeapMonitorLimit(instanceOf(p), in.loc);
+            return ok && !sched_.ending();
+        };
+        if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));
         if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
              in.op == Op::LoadRefElem || in.op == Op::StoreRefElem || in.op == Op::StoreRefBits) &&
             isHeapRef(value(ops[0])))
-            return executeHeapRef(f, in);
+            return publishHeap(executeHeapRef(f, in));
         const bool delayedTarget = in.op == Op::NbaElemDelay || in.op == Op::NbaBitsDelay;
         const std::optional<std::uint64_t> delay =
             delayedTarget ? ticksOf(ops.back()) : std::optional<std::uint64_t>(0);

@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <memory_resource>
 #include <new>
 #include <random>
 #include <span>
@@ -1861,6 +1862,326 @@ TEST(Scheduler, PendingValueVisitorIncludesOwnedPayloadsAndSkipsCompletedDrivers
     std::sort(after.values.begin(), after.values.end());
     EXPECT_EQ(after.values, (std::vector<std::pair<std::uint32_t, std::uint64_t>>{
                                 {held.index(), 0}, {held.index(), 23}}));
+}
+
+struct HeapWatch {
+    k::HeapTypeId type;
+    k::HeapLayoutId layout;
+    k::SlotId binding{0}, index{0};
+    k::CellToken detached;
+    bool size = false, allow = false, valid = true;
+    unsigned evals = 0, guards = 0, resumes = 0;
+    static void eval(kirima_context* handle, void* frame, std::uint64_t* out) {
+        auto& s = *static_cast<HeapWatch*>(frame);
+        auto& ctx = k::fromC(handle);
+        ++s.evals;
+        if (s.size) {
+            const auto value = ctx.heap().size(s.type, {*ctx.store().element(s.binding, 0)});
+            s.valid = s.valid && static_cast<bool>(value);
+            out[0] = value.value;
+        } else {
+            k::W4 value{};
+            const auto status =
+                s.detached.bits != 0
+                    ? ctx.heap().readCell(s.layout, s.detached, {&value, 1})
+                    : ctx.heap().read(s.type, {*ctx.store().element(s.binding, 0)},
+                                      static_cast<std::int64_t>(*ctx.store().element(s.index, 0)),
+                                      {&value, 1});
+            s.valid = s.valid && static_cast<bool>(status);
+            out[0] = value.a;
+            out[1] = value.b;
+        }
+    }
+    static int iff(kirima_context*, void* frame) {
+        auto& s = *static_cast<HeapWatch*>(frame);
+        ++s.guards;
+        return s.allow ? 1 : 0;
+    }
+    static kirima_status resume(kirima_context*, void* frame) {
+        ++static_cast<HeapWatch*>(frame)->resumes;
+        return static_cast<kirima_status>(Status::Done);
+    }
+    k::MonitorSpec spec() {
+        k::MonitorSpec m;
+        m.heap = true;
+        if (detached.bits == 0) m.slots = {{binding}, {index}};
+        m.eval = &eval;
+        m.frame = this;
+        m.domain = size ? k::Domain::Two : k::Domain::Four;
+        m.width = 64;
+        m.guard = &iff;
+        m.guardFrame = this;
+        return m;
+    }
+};
+
+TEST(Scheduler, HeapMonitorsTrackSelectedCellsAndReattachAfterStructureAndBindingChanges) {
+    for (const auto group : {Group::Active, Group::Reactive}) {
+        k::Context ctx;
+        auto& heap = ctx.heap();
+        auto& scheduler = ctx.scheduler();
+        const auto layout = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+        ASSERT_TRUE(layout);
+        const auto type = heap.addType({k::ContainerKind::Queue, layout.value});
+        ASSERT_TRUE(type);
+        auto value = heap.fromValues(type.value, std::vector<k::W4>{{1, 0}, {2, 0}});
+        ASSERT_TRUE(value);
+        const auto original = value.value;
+        const auto selected = heap.cell(type.value, value.value, 1);
+        ASSERT_TRUE(selected);
+        HeapWatch watch{type.value, layout.value};
+        watch.binding = ctx.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+        watch.index = ctx.store().add(k::Domain::Two, 32, 1, k::Init::Zero);
+        *ctx.store().element(watch.binding, 0) = value.value.bits;
+        *ctx.store().element(watch.index, 0) = 1;
+        const auto p = scheduler.addProcess(&HeapWatch::resume, &watch, group);
+        scheduler.waitMonitor(p, watch.spec());
+        EXPECT_EQ(watch.evals, 1U);
+        ASSERT_TRUE(heap.write(type.value, value.value, 0, std::vector<k::W4>{{9, 0}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 1U);  // A different cell was not read.
+        ASSERT_TRUE(heap.write(type.value, value.value, 1, std::vector<k::W4>{{2, 0}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 1U);  // Equal normalized value.
+        ASSERT_TRUE(heap.insert(type.value, value.value, 0, std::vector<k::W4>{{7, 0}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 2U);
+        ASSERT_TRUE(heap.writeCell(layout.value, selected.value, std::vector<k::W4>{{13, 0}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 2U);  // Insertion moved the old selected cell away.
+        const std::uint64_t index = 2;
+        scheduler.write({.slot = watch.index}, &index);
+        EXPECT_EQ(watch.evals, 3U);
+        ASSERT_TRUE(heap.writeCell(layout.value, selected.value, std::vector<k::W4>{{14, 0}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 4U);
+        auto replacement =
+            heap.fromValues(type.value, std::vector<k::W4>{{31, 0}, {32, 0}, {33, 0}});
+        ASSERT_TRUE(replacement);
+        scheduler.write({.slot = watch.binding}, &replacement.value.bits);
+        EXPECT_EQ(watch.evals, 5U);
+        ASSERT_TRUE(heap.writeCell(layout.value, selected.value, std::vector<k::W4>{{15, 0}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 5U);  // Replacement removed old object dependencies.
+        watch.allow = true;
+        ASSERT_TRUE(heap.write(type.value, replacement.value, 2, std::vector<k::W4>{{33, 0x20}}));
+        scheduler.flushHeapChanges();
+        EXPECT_EQ(watch.evals, 6U);  // B bits alone are observable.
+        EXPECT_EQ(watch.guards, 5U);
+        ASSERT_EQ(scheduler.run(), EndReason::Quiescent);
+        EXPECT_EQ(watch.resumes, 1U);
+        EXPECT_TRUE(watch.valid);
+        ASSERT_TRUE(
+            heap.collect(std::vector<k::HeapRoot>{k::HeapRoot::container(replacement.value)}));
+        EXPECT_EQ(heap.actualType(original).status.error, k::HeapError::InvalidHandle);
+    }
+}
+
+TEST(Scheduler, HeapSizeMonitorsIgnoreValueWritesAndDetachedCellMonitorsIgnoreMovement) {
+    k::Context ctx;
+    auto& heap = ctx.heap();
+    auto& scheduler = ctx.scheduler();
+    const auto layout = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+    ASSERT_TRUE(layout);
+    const auto type = heap.addType({k::ContainerKind::Queue, layout.value});
+    ASSERT_TRUE(type);
+    auto value = heap.fromValues(type.value, std::vector<k::W4>{{1, 0}});
+    ASSERT_TRUE(value);
+    const auto cell = heap.cell(type.value, value.value, 0);
+    ASSERT_TRUE(cell);
+    HeapWatch size{type.value, layout.value}, detached{type.value, layout.value};
+    size.size = true;
+    size.binding = ctx.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+    size.index = ctx.store().add(k::Domain::Two, 32, 1, k::Init::Zero);
+    *ctx.store().element(size.binding, 0) = value.value.bits;
+    detached.detached = cell.value;
+    const auto a = scheduler.addProcess(&HeapWatch::resume, &size, Group::Active);
+    const auto b = scheduler.addProcess(&HeapWatch::resume, &detached, Group::Reactive);
+    scheduler.waitMonitor(a, size.spec());
+    scheduler.waitMonitor(b, detached.spec());
+    ASSERT_TRUE(heap.writeCell(layout.value, cell.value, std::vector<k::W4>{{9, 0}}));
+    scheduler.flushHeapChanges();
+    EXPECT_EQ(size.evals, 1U);
+    EXPECT_EQ(detached.evals, 2U);
+    ASSERT_TRUE(heap.erase(type.value, value.value, 0));
+    scheduler.flushHeapChanges();
+    EXPECT_EQ(size.evals, 2U);
+    EXPECT_EQ(detached.evals, 2U);
+    ASSERT_TRUE(heap.collect(std::vector<k::HeapRoot>{k::HeapRoot::cell(cell.value),
+                                                      k::HeapRoot::container(value.value)}));
+    detached.allow = true;
+    ASSERT_TRUE(heap.writeCell(layout.value, cell.value, std::vector<k::W4>{{11, 0}}));
+    scheduler.flushHeapChanges();
+    EXPECT_EQ(size.evals, 2U);
+    EXPECT_EQ(detached.evals, 3U);
+    ASSERT_EQ(scheduler.run(), EndReason::Quiescent);
+    EXPECT_EQ(detached.resumes, 1U);
+    EXPECT_EQ(size.resumes, 0U);
+    EXPECT_TRUE(size.valid && detached.valid);
+    scheduler.kill(a);
+}
+
+struct HeapNoticeCount {
+    unsigned calls = 0;
+    static void record(void* frame, k::HeapRoot) noexcept {
+        ++static_cast<HeapNoticeCount*>(frame)->calls;
+    }
+};
+
+TEST(Scheduler, HeapMonitorWaitReuseKeepsListsBoundedAndRestoresThePreviousHook) {
+    k::Context ctx;
+    auto& heap = ctx.heap();
+    auto& scheduler = ctx.scheduler();
+    const auto l = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+    ASSERT_TRUE(l);
+    const auto t = heap.addType({k::ContainerKind::Queue, l.value});
+    ASSERT_TRUE(t);
+    auto value = heap.fromValues(t.value, std::vector<k::W4>{{1, 0}});
+    ASSERT_TRUE(value);
+    HeapWatch watch{t.value, l.value};
+    watch.binding = ctx.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+    watch.index = ctx.store().add(k::Domain::Two, 32, 1, k::Init::Zero);
+    *ctx.store().element(watch.binding, 0) = value.value.bits;
+    HeapNoticeCount previous;
+    heap.setChangeHook({&HeapNoticeCount::record, &previous});
+    const auto p = scheduler.addProcess(&HeapWatch::resume, &watch, Group::Active);
+    for (unsigned i = 0; i < 1000; ++i) {
+        scheduler.waitMonitor(p, watch.spec());
+        // Existing slot-list sweeping keeps at most 16 entries per list.
+        ASSERT_LE(scheduler.waitListEntries(), 33U);
+    }
+    EXPECT_EQ(watch.evals, 1000U);
+    const auto spec = watch.spec();
+    scheduler.waitAny(p, {}, std::vector<k::MonitorSpec>{spec, spec});
+    watch.allow = true;
+    ASSERT_TRUE(heap.write(t.value, value.value, 0, std::vector<k::W4>{{9, 0}}));
+    scheduler.flushHeapChanges();
+    EXPECT_EQ(watch.evals, 1003U);  // First notice cancels both items; the second is stale.
+    EXPECT_EQ(previous.calls, 0U);
+    ASSERT_EQ(scheduler.run(), EndReason::Quiescent);
+    EXPECT_EQ(watch.resumes, 1U);
+    ASSERT_TRUE(heap.write(t.value, value.value, 0, std::vector<k::W4>{{11, 0}}));
+    EXPECT_EQ(previous.calls, 1U);
+    const auto restored = heap.setChangeHook({});
+    EXPECT_EQ(restored.fn, &HeapNoticeCount::record);
+    EXPECT_EQ(restored.frame, &previous);
+}
+
+class HeapMonitorMemory final : public std::pmr::memory_resource {
+public:
+    bool fail = false;
+
+private:
+    void* do_allocate(std::size_t bytes, std::size_t alignment) override {
+        if (fail) throw std::bad_alloc{};
+        return std::pmr::new_delete_resource()->allocate(bytes, alignment);
+    }
+    void do_deallocate(void* pointer, std::size_t bytes, std::size_t alignment) override {
+        std::pmr::new_delete_resource()->deallocate(pointer, bytes, alignment);
+    }
+    bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override {
+        return this == &other;
+    }
+};
+
+TEST(Scheduler, HeapMonitorCaptureAndNoticeFailuresReturnResourceLimitAndRestoreHooks) {
+    for (bool notice : {false, true}) {
+        HeapMonitorMemory memory;
+        k::Context ctx(k::OutputDestinations{}, nullptr, &memory);
+        auto& heap = ctx.heap();
+        auto& scheduler = ctx.scheduler();
+        const auto l = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+        ASSERT_TRUE(l);
+        const auto t = heap.addType({k::ContainerKind::Queue, l.value});
+        ASSERT_TRUE(t);
+        auto value = heap.fromValues(t.value, std::vector<k::W4>{{1, 0}});
+        ASSERT_TRUE(value);
+        const auto cell = heap.cell(t.value, value.value, 0);
+        ASSERT_TRUE(cell);
+        HeapWatch watch{t.value, l.value};
+        watch.binding = ctx.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+        watch.index = ctx.store().add(k::Domain::Two, 32, 1, k::Init::Zero);
+        *ctx.store().element(watch.binding, 0) = value.value.bits;
+        HeapNoticeCount reads, changes;
+        heap.setReadHook({&HeapNoticeCount::record, &reads});
+        heap.setChangeHook({&HeapNoticeCount::record, &changes});
+        const auto p = scheduler.addProcess(&HeapWatch::resume, &watch, Group::Active);
+        memory.fail = !notice;
+        scheduler.waitMonitor(p, watch.spec());
+        if (notice) {
+            ASSERT_FALSE(scheduler.ending());
+            memory.fail = true;
+            // Erasure commits without allocating; allocation of its queued
+            // notice fails afterwards. The committed empty queue remains valid.
+            ASSERT_TRUE(heap.erase(t.value, value.value, 0));
+        }
+        EXPECT_EQ(scheduler.reason(), EndReason::ResourceLimit);
+        EXPECT_TRUE(scheduler.heapMonitorLimited());
+        EXPECT_EQ(watch.evals, 1U);
+        EXPECT_EQ(watch.resumes, 0U);
+        memory.fail = false;
+        EXPECT_EQ(heap.size(t.value, value.value).value, notice ? 0U : 1U);
+        const auto oldRead = heap.setReadHook({});
+        EXPECT_EQ(oldRead.fn, &HeapNoticeCount::record);
+        EXPECT_EQ(oldRead.frame, &reads);
+        scheduler.kill(p);
+        const auto oldChange = heap.setChangeHook({});
+        EXPECT_EQ(oldChange.fn, &HeapNoticeCount::record);
+        EXPECT_EQ(oldChange.frame, &changes);
+        std::vector<k::W4> out(1);
+        ASSERT_TRUE(heap.readCell(l.value, cell.value, out));
+        EXPECT_EQ(out[0].a, 1U);
+    }
+}
+
+TEST(Scheduler, HeapMonitorNoticesCannotWakeAReusedRecord) {
+    k::Context ctx;
+    auto& heap = ctx.heap();
+    auto& scheduler = ctx.scheduler();
+    const auto l = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+    ASSERT_TRUE(l);
+    const auto t = heap.addType({k::ContainerKind::Queue, l.value});
+    ASSERT_TRUE(t);
+    auto value = heap.fromValues(t.value, std::vector<k::W4>{{1, 0}});
+    ASSERT_TRUE(value);
+    const auto cell = heap.cell(t.value, value.value, 0);
+    ASSERT_TRUE(cell);
+    HeapWatch first{t.value, l.value}, next{t.value, l.value};
+    first.detached = next.detached = cell.value;
+    const auto p = scheduler.addProcess(&HeapWatch::resume, &first, Group::Active);
+    const auto q = scheduler.addProcess(&HeapWatch::resume, &next, Group::Reactive);
+    struct Replace {
+        k::ProcessId old, fresh;
+        HeapWatch& next;
+        bool done = false;
+        static int guard(kirima_context* context, void* frame) {
+            auto& s = *static_cast<Replace*>(frame);
+            if (!s.done) {
+                s.done = true;
+                auto& scheduler = k::fromC(context).scheduler();
+                scheduler.kill(s.old);
+                scheduler.waitMonitor(s.fresh, s.next.spec());
+            }
+            return 1;
+        }
+    } replace{p, q, next};
+    auto m = first.spec();
+    m.guard = &Replace::guard;
+    m.guardFrame = &replace;
+    scheduler.waitAny(p, {}, std::vector<k::MonitorSpec>{m, m});
+    ASSERT_TRUE(heap.writeCell(l.value, cell.value, std::vector<k::W4>{{9, 0}}));
+    scheduler.flushHeapChanges();
+    EXPECT_TRUE(replace.done);
+    EXPECT_EQ(first.evals, 3U);
+    EXPECT_EQ(next.evals, 1U);  // Not evaluated for the old wait's second notice.
+    EXPECT_EQ(next.resumes, 0U);
+    next.allow = true;
+    ASSERT_TRUE(heap.writeCell(l.value, cell.value, std::vector<k::W4>{{11, 0}}));
+    scheduler.flushHeapChanges();
+    ASSERT_EQ(scheduler.run(), EndReason::Quiescent);
+    EXPECT_EQ(first.resumes, 0U);
+    EXPECT_EQ(next.resumes, 1U);
+    EXPECT_TRUE(first.valid && next.valid);
 }
 
 }  // namespace

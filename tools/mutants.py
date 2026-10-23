@@ -40,6 +40,14 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('heap monitor: loses exact changed-object filtering', 'src/kernel/sim.cpp', 'if (std::find(reads.begin(), reads.end(), root) == reads.end()) continue;', 'if (std::find(reads.begin(), reads.end(), root) != reads.end()) continue;'),
+    ('heap monitor: forgets object watch markers', 'src/kernel/sim.cpp', 'ctx_.heap().watch(root, true);', 'ctx_.heap().watch(root, false);'),
+    ('heap monitor: keeps only its first dependency set', 'src/kernel/sim.cpp', 'monitors_[id].heapReads.swap(reads.roots);', 'if (monitors_[id].heapReads.empty()) monitors_[id].heapReads.swap(reads.roots);'),
+    ('heap monitor: evaluates stale queued records', 'src/kernel/sim.cpp', 'if (live(c.monitor)) {', 'if (true) {'),
+    ('heap monitor: never restores the previous change hook', 'src/kernel/sim.cpp', 'ctx_.heap().setChangeHook(previousHeapHook_);', 'static_cast<void>(previousHeapHook_);'),
+    ('heap monitor: captures called function private values', 'src/vm/vm.cpp', 'if (!deps.privateContainers.empty()) {', 'if (false && !deps.privateContainers.empty()) {'),
+    ('heap monitor: misses heap refs read inside callees', 'src/vm/vm.cpp', 'if (sir::isContainerOp(in.op) || in.op == Op::LoadRef || in.op == Op::LoadRefElem)', 'if (sir::isContainerOp(in.op))'),
+    ('heap monitor: silently accepts incomplete read capture', 'src/kernel/sim.cpp', 'if (reads.error != HeapError::None) {', 'if (false && reads.error != HeapError::None) {'),
     ('heap observation: size reads lose structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    return {c ? c->cells.size() : 0, {}};', '    return {c ? c->cells.size() : 0, {}};'),
     ('heap observation: element selection loses structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    if (!c) return {};', '    if (!c) return {};'),
     ('heap observation: cell reads lose value dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::cell(cell));', '    static_cast<void>(cell);'),

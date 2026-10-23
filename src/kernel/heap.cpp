@@ -70,6 +70,26 @@ template <class T> const T* Heap::Pool<T>::get(std::uint64_t token) const noexce
     if (e.generation != token >> 32 || !e.value) return nullptr;
     return &*e.value;
 }
+template <class T> std::uint64_t* Heap::Pool<T>::watcherCount(std::uint64_t token) noexcept {
+    if (!get(token)) return nullptr;
+    return &entries[static_cast<std::uint32_t>(token) - 1].watchers;
+}
+void Heap::watch(HeapRoot root, bool on) noexcept {
+    auto* count = root.kind == HeapRoot::Kind::Container ? containers_.watcherCount(root.bits)
+                                                         : cells_.watcherCount(root.bits);
+    if (count != nullptr) {
+        if (on)
+            ++*count;
+        else if (*count != 0)
+            --*count;
+    }
+}
+bool Heap::watched(HeapRoot root) noexcept {
+    const auto* count = root.kind == HeapRoot::Kind::Container ? containers_.watcherCount(root.bits)
+                                                               : cells_.watcherCount(root.bits);
+    return count != nullptr && *count != 0;
+}
+
 template <class T>
 std::uint64_t Heap::Pool<T>::add(T value, std::pmr::vector<std::uint32_t>& allocated) {
     std::uint32_t index = 0;
@@ -96,6 +116,7 @@ template <class T> void Heap::Pool<T>::release(std::uint32_t index) noexcept {
     Entry<T>& e = entries[index];
     e.value.reset();
     e.marked = false;
+    e.watchers = 0;
     // Retire an entry rather than ever wrapping its generation.
     if (e.generation == std::numeric_limits<std::uint32_t>::max()) return;
     ++e.generation;
@@ -584,6 +605,38 @@ HeapStatus Heap::clear(HeapTypeId type, ContainerToken& value) noexcept {
     value = {};
     return {};
 }
+HeapResult<bool> Heap::reaches(std::span<const HeapRoot> roots, HeapRoot target) const noexcept {
+    return protectValue<bool>([&] {
+        std::pmr::vector<HeapRoot> work(roots.begin(), roots.end(), memory_);
+        std::pmr::vector<HeapRoot> visited(memory_);
+        while (!work.empty()) {
+            const auto root = work.back();
+            work.pop_back();
+            if (root.bits == 0) continue;
+            if (std::find(visited.begin(), visited.end(), root) != visited.end()) continue;
+            visited.push_back(root);
+            if (root.kind == HeapRoot::Kind::Container) {
+                const auto* c = containers_.get(root.bits);
+                if (!c) throw HeapFault{HeapError::InvalidHandle};
+                if (root == target) return true;
+                for (const auto childCell : c->cells)
+                    work.push_back(HeapRoot::cell(childCell));
+            } else if (root.kind == HeapRoot::Kind::Cell) {
+                const auto* c = cells_.get(root.bits);
+                if (!c) throw HeapFault{HeapError::InvalidHandle};
+                if (root == target) return true;
+                const auto& words = layouts_[c->layout.index()].words;
+                for (std::size_t i = 0; i < words.size(); ++i)
+                    if (words[i].nested != kNone)
+                        work.push_back(HeapRoot::container(ContainerToken{c->words[i].a}));
+            } else {
+                throw HeapFault{HeapError::InvalidType};
+            }
+        }
+        return false;
+    });
+}
+
 HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
     return protect([&] {
         for (auto& e : containers_.entries)

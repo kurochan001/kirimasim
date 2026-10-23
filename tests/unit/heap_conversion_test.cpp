@@ -839,4 +839,52 @@ TEST(Heap, FailedMutationsPublishNoChangesAndObserversBelongToOneHeap) {
     EXPECT_GT(failures, 3U);
 }
 
+TEST(Heap, ReachabilityQueriesAreWeakReadOnlyAndHandleSharedNestedValuesAndFailures) {
+    ConversionMemory memory;
+    Heap h(&memory);
+    const auto leaf = layout(h, std::array<HeapWord, 1>{{{0xff, true}}});
+    const auto q = type(h, ContainerKind::Queue, leaf);
+    const auto nested = layout(h, std::array<HeapWord, 1>{{{~std::uint64_t{0}, false, {0, 0}, q}}});
+    const auto outer = type(h, ContainerKind::DynamicArray, nested);
+    const auto child = h.fromValues(q, std::array<W4, 1>{{{7, 0}}});
+    const auto parent = h.construct(outer, 2);
+    ASSERT_TRUE(child);
+    ASSERT_TRUE(parent);
+    const auto a = h.cell(outer, parent.value, 0), b = h.cell(outer, parent.value, 1);
+    const auto cell = h.cell(q, child.value, 0);
+    ASSERT_TRUE(a);
+    ASSERT_TRUE(b);
+    ASSERT_TRUE(cell);
+    ASSERT_TRUE(h.storeNested(nested, a.value, child.value));
+    ASSERT_TRUE(h.storeNested(nested, b.value, child.value));
+    const auto unrelated = h.fromValues(q, std::array<W4, 1>{{{11, 0}}});
+    ASSERT_TRUE(unrelated);
+    const std::array<HeapRoot, 1> roots{{HeapRoot::container(parent.value)}};
+    ASSERT_TRUE(
+        h.collect(std::array<HeapRoot, 2>{{roots[0], HeapRoot::container(unrelated.value)}}));
+    EXPECT_FALSE(h.needsCollection());
+    HeapNotices reads;
+    h.setReadHook({&HeapNotices::record, &reads});
+    for (const auto target : {roots[0], HeapRoot::cell(a.value), HeapRoot::cell(b.value),
+                              HeapRoot::container(child.value), HeapRoot::cell(cell.value)}) {
+        const auto found = h.reaches(roots, target);
+        ASSERT_TRUE(found);
+        EXPECT_TRUE(found.value);
+    }
+    const auto absent = h.reaches(roots, HeapRoot::container(unrelated.value));
+    ASSERT_TRUE(absent);
+    EXPECT_FALSE(absent.value);
+    EXPECT_TRUE(reads.take().empty());
+    EXPECT_FALSE(h.needsCollection());
+    memory.remaining = 0;
+    EXPECT_EQ(h.reaches(roots, HeapRoot::cell(cell.value)).status.error, HeapError::ResourceLimit);
+    memory.remaining.reset();
+    ASSERT_TRUE(h.collect({}));
+    EXPECT_EQ(h.reaches(roots, roots[0]).status.error, HeapError::InvalidHandle);
+    const HeapRoot invalid{static_cast<HeapRoot::Kind>(99), 1};
+    EXPECT_EQ(h.reaches({&invalid, 1}, invalid).status.error, HeapError::InvalidType);
+    EXPECT_EQ(h.stats().containers, 0U);
+    EXPECT_EQ(h.stats().cells, 0U);
+}
+
 }  // namespace

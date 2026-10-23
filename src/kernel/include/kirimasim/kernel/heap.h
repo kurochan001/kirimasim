@@ -100,6 +100,7 @@ public:
 
     HeapHook setReadHook(HeapHook hook) noexcept;
     HeapHook setChangeHook(HeapHook hook) noexcept;
+    [[nodiscard]] std::pmr::memory_resource* memoryResource() const noexcept { return memory_; }
 
     HeapResult<HeapLayoutId> addLayout(std::span<const HeapWord> words) noexcept;
     HeapResult<HeapTypeId> addType(HeapType type) noexcept;
@@ -156,12 +157,16 @@ public:
     /// Marking failure leaves all objects alive. Tokens include generations;
     /// reclaimed entries can be reused without making old tokens valid again.
     HeapStatus collect(std::span<const HeapRoot> roots) noexcept;
+    /// Read-only graph query for monitor ownership filtering. Observations
+    /// are not tracing roots and querying does not invoke the read hook.
+    HeapResult<bool> reaches(std::span<const HeapRoot> roots, HeapRoot target) const noexcept;
     /// The heap graph changed since successful collection. The caller
     /// must also compare its root set: dropping a root needs no heap write.
     [[nodiscard]] bool needsCollection() const noexcept { return changed_; }
     [[nodiscard]] HeapStats stats() const noexcept;
 
 private:
+    friend class Scheduler;
     struct Layout {
         std::pmr::vector<HeapWord> words;
         HeapLayoutId equivalent;  ///< First layout of this shape, ignoring nested queue bounds.
@@ -178,6 +183,7 @@ private:
         std::optional<T> value;
         std::uint32_t generation = 1;
         bool marked = false;
+        std::uint64_t watchers = 0;
     };
     template <class T> struct Pool {
         explicit Pool(std::pmr::memory_resource* memory) : entries(memory), free(memory) {}
@@ -186,6 +192,7 @@ private:
         std::size_t freeCount = 0;
         T* get(std::uint64_t token) noexcept;
         const T* get(std::uint64_t token) const noexcept;
+        std::uint64_t* watcherCount(std::uint64_t token) noexcept;
         std::uint64_t add(T value, std::pmr::vector<std::uint32_t>& allocated);
         void release(std::uint32_t index) noexcept;
     };
@@ -211,6 +218,8 @@ private:
     HeapHook readHook_, changeHook_;
     void recordRead(HeapRoot root) const noexcept;
     void recordChange(HeapRoot root) const noexcept;
+    void watch(HeapRoot root, bool on) noexcept;
+    bool watched(HeapRoot root) noexcept;
 
     const HeapType* typeOf(HeapTypeId id) const noexcept;
     const Layout* layoutOf(HeapLayoutId id) const noexcept;

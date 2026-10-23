@@ -5,6 +5,8 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <new>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -136,6 +138,9 @@ const char* regionName(Region r) {
 }
 
 // --- Setup -------------------------------------------------------------------
+
+Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
+    : ctx_(ctx), store_(store), counters_(counters), lateChanges_(ctx.heap().memoryResource()) {}
 
 void Scheduler::begin() {
     if (begun_) return;
@@ -298,7 +303,7 @@ void Scheduler::ensureSlotTables() {
 }
 
 std::size_t Scheduler::waitListEntries() const {
-    std::size_t n = 0;
+    std::size_t n = heapMonitors_.size();
     for (const auto& l : subscriptions_)
         n += l.size();
     for (const auto& l : slotMonitors_)
@@ -375,6 +380,14 @@ void Scheduler::freeMonitor(ProcessId p) {
     Process& proc = processes_[p.index()];
     for (const std::uint32_t id : proc.monitors) {
         Monitor& m = monitors_[id];
+        for (const auto root : m.heapReads)
+            ctx_.heap().watch(root, false);
+        if (m.spec.heap && --heapMonitorCount_ == 0) {
+            ctx_.heap().setChangeHook(previousHeapHook_);
+            heapMonitors_.clear();
+            heapMonitorLimit_ = 0;
+        }
+        m.heapReads.clear();
         m.serial = ++monitorSerial_;  // references from slots and events go stale
         m.spec = {};
         freeMonitors_.push_back(id);
@@ -700,6 +713,7 @@ void Scheduler::execute(const Event& e) {
             counters_.increment(cWakeups_);
             // proc may be stale after the call: the table may have grown.
             const auto st = static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
+            flushHeapChanges();
             switch (st) {
                 case Status::Waiting: break;
                 case Status::Done:
@@ -766,6 +780,7 @@ void Scheduler::execute(const Event& e) {
 // --- Waits -------------------------------------------------------------------
 
 void Scheduler::waitDelay(ProcessId p, std::uint64_t ticks) {
+    flushHeapChanges();
     freeMonitor(p);
     Process& proc = processes_[p.index()];
     ++proc.gen;
@@ -786,6 +801,7 @@ void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) { waitAny(p, {}, 
 void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
                         std::span<const MonitorSpec> monitors,
                         std::span<const NamedWaitItem> named) {
+    flushHeapChanges();
     ensureSlotTables();
     freeMonitor(p);
     const std::uint64_t gen = ++processes_[p.index()].gen;
@@ -815,7 +831,9 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
         freeMonitors_.pop_back();
     } else {
         id = static_cast<std::uint32_t>(monitors_.size());
-        monitors_.emplace_back();
+        if (freeMonitors_.capacity() <= monitors_.size())
+            freeMonitors_.reserve(std::max(monitors_.size() + 1, freeMonitors_.capacity() * 2));
+        monitors_.emplace_back(ctx_.heap().memoryResource());
     }
     processes_[p.index()].monitors.push_back(id);
     Monitor& mon = monitors_[id];
@@ -823,8 +841,15 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
     mon.gen = processes_[p.index()].gen;
     mon.serial = ++monitorSerial_;
     mon.spec = m;
+    mon.heapReads.clear();
+    if (m.heap) {
+        if (heapMonitorCount_++ == 0)
+            previousHeapHook_ = ctx_.heap().setChangeHook({&changedHeap, this});
+        pushSwept(heapMonitors_, heapMonitorLimit_, MonitorRef{id, mon.serial},
+                  [&](const MonitorRef& r) { return !live(r); });
+    }
     mon.last.assign(elementWords(m.domain, m.width), 0);
-    m.eval(toC(ctx_), m.frame, mon.last.data());
+    if (!evalMonitorValue(id, mon.last)) return;
     counters_.increment(cMonitorEvals_);
     const MonitorRef ref{id, monitors_[id].serial};
     for (const SlotPart& part : m.slots) {
@@ -1040,9 +1065,15 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
 void Scheduler::endWalk() {
     if (--walking_ != 0 || draining_) return;
     draining_ = true;
-    for (std::size_t i = 0; i < lateChanges_.size(); ++i) {  // grows while announcing
+    for (std::size_t i = 0; i < lateChanges_.size() && !ending_; ++i) {  // grows while announcing
         LateChange c = std::move(lateChanges_[i]);
-        if (c.trigger)
+        if (c.heap) {
+            if (live(c.monitor)) {
+                beginWalk();
+                evaluateMonitor(c.monitor.id);
+                endWalk();
+            }
+        } else if (c.trigger)
             trigger(c.event);
         else
             notify(c.slot, c.elem, c.lsb, c.width, c.old.data(), c.now.data());
@@ -1126,24 +1157,125 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     endWalk();
 }
 
+void Scheduler::heapLimit() noexcept {
+    heapMonitorLimited_ = true;
+    resourceLimit();
+}
+
+void Scheduler::changedHeap(void* frame, HeapRoot root) noexcept {
+    auto& s = *static_cast<Scheduler*>(frame);
+    if (s.ending_ || !s.ctx_.heap().watched(root)) return;
+    try {
+        for (const MonitorRef ref : s.heapMonitors_) {
+            if (!s.live(ref)) continue;
+            const auto& reads = s.monitors_[ref.id].heapReads;
+            if (std::find(reads.begin(), reads.end(), root) == reads.end()) continue;
+            LateChange notice;
+            notice.heap = true;
+            notice.monitor = ref;
+            s.lateChanges_.push_back(std::move(notice));
+        }
+    } catch (const std::bad_alloc&) {
+        s.heapLimit();
+    } catch (const std::length_error&) {
+        s.heapLimit();
+    }
+}
+
+void Scheduler::flushHeapChanges() noexcept {
+    if (walking_ != 0 || draining_ || lateChanges_.empty() || ending_) return;
+    try {
+        beginWalk();
+        endWalk();
+    } catch (const std::bad_alloc&) {
+        walking_ = 0;
+        draining_ = false;
+        heapLimit();
+    } catch (const std::length_error&) {
+        walking_ = 0;
+        draining_ = false;
+        heapLimit();
+    }
+}
+
+bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out) {
+    const auto serial = monitors_[id].serial;
+    const EvalFn eval = monitors_[id].spec.eval;
+    void* const frame = monitors_[id].spec.frame;
+    if (!monitors_[id].spec.heap) {
+        eval(toC(ctx_), frame, out.data());
+        return monitors_[id].serial == serial;
+    }
+    struct Reads {
+        std::pmr::vector<HeapRoot> roots;
+        HeapResult<bool> (*filter)(const void*, HeapRoot) noexcept;
+        const void* filterFrame;
+        HeapError error = HeapError::None;
+        static void record(void* frame, HeapRoot root) noexcept {
+            auto& r = *static_cast<Reads*>(frame);
+            if (r.error != HeapError::None) return;
+            try {
+                if (r.filter != nullptr) {
+                    const auto keep = r.filter(r.filterFrame, root);
+                    if (!keep) {
+                        r.error = keep.status.error;
+                        return;
+                    }
+                    if (!keep.value) return;
+                }
+                if (std::find(r.roots.begin(), r.roots.end(), root) == r.roots.end())
+                    r.roots.push_back(root);
+            } catch (const std::bad_alloc&) {
+                r.error = HeapError::ResourceLimit;
+            } catch (const std::length_error&) {
+                r.error = HeapError::ResourceLimit;
+            }
+        }
+    } reads{std::pmr::vector<HeapRoot>(ctx_.heap().memoryResource()),
+            monitors_[id].spec.heapReadFilter, monitors_[id].spec.heapReadFrame};
+    struct Restore {
+        Heap& heap;
+        HeapHook previous;
+        ~Restore() { heap.setReadHook(previous); }
+    } restore{ctx_.heap(), ctx_.heap().setReadHook({&Reads::record, &reads})};
+    eval(toC(ctx_), frame, out.data());
+    if (reads.error != HeapError::None) {
+        if (reads.error == HeapError::ResourceLimit)
+            heapLimit();
+        else
+            fail("invalid heap monitor dependency");
+        return false;
+    }
+    if (ending_ || monitors_[id].serial != serial) return false;
+    // The callback can grow the monitor table. Reacquire the entry.
+    for (const auto root : monitors_[id].heapReads)
+        ctx_.heap().watch(root, false);
+    for (const auto root : reads.roots)
+        ctx_.heap().watch(root, true);
+    monitors_[id].heapReads.swap(reads.roots);
+    return true;
+}
+
 void Scheduler::evaluateMonitor(std::uint32_t id) {
     Monitor& m = monitors_[id];
     if (processes_[m.process.index()].gen != m.gen) return;  // already woken
-    const MonitorSpec& spec = m.spec;
+    const auto serial = m.serial;
     scratch_.assign(m.last.size(), 0);
-    spec.eval(toC(ctx_), spec.frame, scratch_.data());
+    if (!evalMonitorValue(id, scratch_)) return;
     counters_.increment(cMonitorEvals_);
+    const MonitorSpec& spec = monitors_[id].spec;
     bool fire = false;
     if (spec.untilTrue) {
         fire = isTrue(spec.domain, spec.width, scratch_.data());
-    } else if (!sameBits(spec.domain, m.last.data(), scratch_.data(), 0, spec.width)) {
-        fire =
-            spec.edge == Edge::Any || edgeMatches(spec.edge, logicAt(spec.domain, m.last.data(), 0),
-                                                  logicAt(spec.domain, scratch_.data(), 0));
+    } else if (!sameBits(spec.domain, monitors_[id].last.data(), scratch_.data(), 0, spec.width)) {
+        fire = spec.edge == Edge::Any ||
+               edgeMatches(spec.edge, logicAt(spec.domain, monitors_[id].last.data(), 0),
+                           logicAt(spec.domain, scratch_.data(), 0));
         // iff: read when the item's event occurs, and only then (9.4.2.3).
         if (fire && spec.guard != nullptr && spec.guard(toC(ctx_), spec.guardFrame) == 0)
             fire = false;
     }
+    if (monitors_[id].serial != serial) return;
     Monitor& again = monitors_[id];
     again.last = scratch_;
     if (fire) wake(again.process, true);  // frees the record; a flush point (15.4)

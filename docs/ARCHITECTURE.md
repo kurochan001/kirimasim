@@ -103,7 +103,7 @@ and text support are implemented (SIR_SPEC 5.8). Kernel copies apply destination
 bounds at every nested queue level; snapshots retain the actual source type.
 The VM mechanically maps typed operands to these APIs; references retain
 actual variable types even when empty, and cell refs carry stable tokens.
-Twenty-two original SIR tests exercise execution, calls, waits and error mapping.
+Twenty-four original SIR tests exercise execution, calls, waits and error mapping.
 After a region drains or the slot arena is cleared, a scoped scheduler hook
 publishes typed slots, live activations, cell refs, deferred call arguments and
 owned scheduler payloads. Ordinary numbers are not interpreted as handles.
@@ -112,9 +112,12 @@ No callback runs inside process/guard execution, after termination is requested
 or during final cleanup. SSA temporaries cannot cross waits (SIR_SPEC 5.1).
 Class, DPI and VPI root providers remain future work.
 Heap read/change hooks distinguish structure and cell values after commit;
-scheduler subscriptions and VM monitor capture still need connection.
-Front-end lowering and heap-dependent notifications are
-not connected yet. The
+the scheduler captures these reads and reattaches weak typed dependencies.
+Private containers of called functions are filtered with a read-only graph
+query. Notices join the existing ordered change queue, and the VM publishes
+mutations before continuing. Live wait ownership restores the prior hook;
+VM waits are detached before interpreter frames expire.
+Front-end lowering is not connected yet. The
 running SystemVerilog design does not yet use this heap or its collector.
 Full language support needs those connections and execution tests.
 
