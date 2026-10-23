@@ -39,6 +39,29 @@ The dev run has 2,154 tests: 2,152 pass and the two known skips remain.
 There are now 25 heap tests and 22 container VM tests. The targeted 49-test
 heap/VM/scheduler run passes.
 
+Full local CI at `71ee082` passes all four configure/build/test presets:
+dev/ASan/UBSan each have 2,154 tests (2,152 pass, two known skips), and
+release has 2,155 (2,153 pass, the same skips). Release flags, banned features,
+SPDX, suite files, global state, expectation protection for all six unpublished
+commits, README counts, clang-format and clang-tidy all pass. Expectation
+protection flags the changed unit assertions for review; the exact identity
+and count checks above explain the stricter reachable-value accounting.
+Local targets in the updated documentation were checked: 263 exist, none missing.
+
+The extended original probe inventory was rerun at `71ee082`: 44 probes,
+23 Icarus-passing gaps. Compiler and runtime both report
+`14.0 (devel) (s20260301-411-gca6b8d376)`. Exact-13.0 and complete parity remain
+unconfirmed. `--require-parity` returns 1 because those gaps remain. Reproduce:
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/heap-roots-icarus-probes.json --require-parity
+```
+
+External sv-tests/population counts and performance measurements retain their
+recorded revisions and dates; they were not remeasured in this documentation refresh.
+
 No collection occurs inside process/guard callbacks, after termination is
 requested or during final cleanup. The existing final termination policy is
 preserved (SCHEDULER_SPEC 16.2). Final allocations are released with Context.

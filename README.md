@@ -123,9 +123,9 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI run for source revision `c762840` on 2026-10-24 passed
+The local CI run at revision `71ee082` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,143 tests: 2,141 pass and the same two known skips remain.
+clang-tidy. Dev has 2,154 tests: 2,152 pass and the same two known skips remain.
 The extended comparison was also rerun: 44 probes and 23 Icarus-passing gaps
 remain. See the [validation record](docs/notes/p1-icarus-progress.md).
 The external sv-tests/population counts and performance measurements below
@@ -420,7 +420,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Not yet | Scope and status |
 | --- | --- |
 | FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1; shared heap, typed SIR and direct SIR execution in the VM tested; front, heap-change notification and complete root publication pending |
+| Dynamic arrays and queues | P1; shared heap, typed SIR, VM execution and automatic typed-root collection tested; front, heap-change notification and cell NBA targets pending |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
 | Tier 2 C++ generation and further RTL speed optimizations | P2 |
