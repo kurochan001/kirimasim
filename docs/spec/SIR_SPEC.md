@@ -413,7 +413,7 @@ Amendment of M3b.
 - A child inherits its parent's thread set (active or reactive).
 - **Not implemented yet (noted 2026-10-18, approved):** declarations in a fork block, and the automatic variables of the enclosing scope (an automatic task or block) read or written from fork branches, are reported as unsupported (CLI.md 5). The second is not set by this section yet: the parent's frame has to live past its return while the children run (6.21), which comes with the frames of P3.
 
-### 7.3 Program execution (approved 2026-10-23)
+### 7.6 Program execution (approved 2026-10-23)
 
 A named program has instance kind `program`; packages and compilation units
 still contain anonymous-program declarations without an additional instance.

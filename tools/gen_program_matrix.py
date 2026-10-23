@@ -8,20 +8,11 @@ tests/cli/.
   tools/gen_program_matrix.py           # writes the files
   tools/gen_program_matrix.py --check   # exit 1 if a file differs from what it would write
 
-Programs come in P3: their code runs in the reactive region set (24.3.1;
-SCHEDULER_SPEC.md, part 4). Until then kirimasim reports every program
-instance and every anonymous program as unsupported (CLI.md 5) instead of
-running it like a module. The axis is where the program is: a program that
-nothing instantiates (so a top-level instance), an instance in a module
-body, in a generate if block, in a generate for loop, the elements of an
-instance array, an instance two levels down, and an instance of a program
-declared inside a module; and anonymous programs in a package and in the
-compilation unit (24.6).
-
-Each place gives one error line with the position of the instance name, or
-of the keyword program of an anonymous program, and the instance's
-hierarchical path. tests/cli/run_cli_tests.py runs the design and checks
-these lines and the exit code 2.
+Program instances execute in the reactive region set (24.3.1), as approved
+on 2026-10-23 in docs/notes/program-execution-proposal.md. The existing
+hierarchy fixture is preserved, with a versioned generated-header update.
+All root initials print once; their relative order is unspecified, so the
+CLI checks the sorted multiset. Anonymous declarations emit no diagnostic.
 """
 
 import argparse
@@ -32,7 +23,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "program_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 1
+VERSION = 2
 
 # «what» marks the position that an error line reports: a comma-separated
 # list of instance paths, or "anonymous" for an anonymous program.
@@ -85,19 +76,9 @@ endmodule
 
 
 def files():
-    sv_lines, errors = [], []
-    for number, line in enumerate(TEMPLATE.format(version=VERSION).splitlines(), 1):
-        while m := re.search(r"«([^»]*)»", line):
-            column = m.start() + 1
-            for what in m.group(1).split(","):
-                text = ("anonymous program" if what == "anonymous"
-                        else f"program instance '{what}'")
-                errors.append(f"{NAME}.sv:{number}:{column}: error: unsupported: {text} "
-                              "(not implemented yet)")
-            line = line[:m.start()] + line[m.end():]
-        sv_lines.append(line)
-    return {f"{NAME}.sv": "\n".join(sv_lines) + "\n",
-            f"{NAME}.stderr": "\n".join(errors) + "\n"}
+    sv = re.sub(r"«[^»]*»", "", TEMPLATE.format(version=VERSION))
+    return {f"{NAME}.sv": sv, f"{NAME}.stderr": "",
+            f"{NAME}.stdout": "\n".join(["inner"] + ["leaf 1"] * 7 + ["solo"]) + "\n"}
 
 
 def main():

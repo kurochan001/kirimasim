@@ -377,13 +377,13 @@ def main() -> int:
         failures += 1
         print(f"FAIL: violation reports\n{proc.stdout}{proc.stderr}", file=sys.stderr)
 
-    # Every program instance and anonymous program is reported as
-    # unsupported, wherever it is, and nothing runs (CLI.md 5; the lines come
-    # from tools/gen_program_matrix.py).
+    # 24.3/24.3.1/24.6: every root initial runs in its own program;
+    # ordering among Reactive processes is unspecified. Check the multiset.
     proc = bounded_run.run([args.kirimasim, PROGRAM_MATRIX.name], cwd=HERE)
     want = PROGRAM_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
-    got = [line for line in proc.stderr.splitlines() if ": error: " in line]
-    if proc.returncode != 2 or proc.stdout != "" or sorted(got) != sorted(want):
+    got = [line for line in proc.stderr.splitlines() if not line.startswith("kirimasim: info:")]
+    stdout = PROGRAM_MATRIX.with_suffix(".stdout").read_text(encoding="utf-8").splitlines()
+    if proc.returncode != 0 or sorted(proc.stdout.splitlines()) != stdout or got != want:
         failures += 1
         print(f"FAIL: program matrix: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
               file=sys.stderr)
