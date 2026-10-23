@@ -2,6 +2,11 @@
 
 [日本語](SIR_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Program execution amendment (approved 2026-10-23):**
+[The approved program rules](../notes/program-execution-proposal.md) apply
+to instance identity, reactive scheduling, inherited execution origin and
+program completion. Implementation status is tracked separately.
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
@@ -407,6 +412,17 @@ Amendment of M3b.
 - Block item initializations of a fork are done by the parent before the `fork` instruction (checked: 9.3.2). Automatic variables of the fork block that children refer to are frame variables of the children, initialized by the `fork` instruction with the parent's values.
 - A child inherits its parent's thread set (active or reactive).
 - **Not implemented yet (noted 2026-10-18, approved):** declarations in a fork block, and the automatic variables of the enclosing scope (an automatic task or block) read or written from fork branches, are reported as unsupported (CLI.md 5). The second is not set by this section yet: the parent's frame has to live past its return while the children run (6.21), which comes with the frames of P3.
+
+### 7.3 Program execution (approved 2026-10-23)
+
+A named program has instance kind `program`; packages and compilation units
+still contain anonymous-program declarations without an additional instance.
+Program initial procedures and continuous assignments use the reactive set.
+Dynamic subroutine calls and forks inherit their caller's thread set and
+originating program. Static initialization remains before process execution.
+The kernel counts each program's root initial procedures and owns completion,
+descendant termination and `$exit`; tier adapters supply instance/process
+metadata. See the approved amendment for 24.3, 24.3.1, 24.3.2, 24.6 and 24.7.
 
 ## 8. Subroutines
 

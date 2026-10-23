@@ -1,14 +1,14 @@
 # program実行の仕様修正案
 
-[English](program-execution-proposal.md)。状態：提案中、承認待ち（2026-10-23）。
-この文書だけでは承認済みの仕様を変更しません。
+[English](program-execution-proposal.md)。状態：**承認済み（2026-10-23）**。
+本修正をSIR_SPEC・SCHEDULER_SPEC・SYSTEM_TASKSへ反映しました。実装は進行中です。
 
 P1_SCOPEはprogramをP1へ前倒ししますが、不足・矛盾する詳細は実装前のレビューが
 必要です。SCHEDULER_SPEC 16.1の `$exit` は全programの終了を待つ説明ですが、
 IEEE 1800-2023 24.7では実行スレッドが起源を持つprogramを終了します。
 この差とSIRの表現を具体化します。規格の節を手元で確認し、本文や例は転載していません。
 
-## 意味の修正案
+## 承認済みの意味の修正
 
 - 名前付きprogramのインスタンスをSIRの表で識別します。宣言・ポート・generate・
   対応済みの文は他のスコープと同じ変換と値の意味を使います。不正な項目と参照は

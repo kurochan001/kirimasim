@@ -2,6 +2,11 @@
 
 [日本語](SCHEDULER_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Program execution amendment (approved 2026-10-23):**
+[The approved program rules](../notes/program-execution-proposal.md) apply
+to instance identity, reactive scheduling, inherited execution origin and
+program completion. Implementation status is tracked separately.
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
@@ -537,7 +542,7 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 
 ### 16.1 Rules of the standard
 
-- `$finish` ends the simulator and returns control to the OS. `$stop` suspends the simulation. `$exit` waits until every program block has ended, then implicitly calls `$finish` (checked: 20.2).
+- `$finish` ends the simulator and returns control to the OS. `$stop` suspends the simulation. `$exit` terminates the initial procedures and descendants of the originating program; global finish follows when all programs with initial procedures have ended (24.7, 24.3; corrected and approved 2026-10-23). Outside a program-initial thread, ignore `$exit` without a warning (project choice).
 - `$finish` and `$stop` choose the amount of diagnostics with the argument 0, 1 or 2. 0 prints nothing, 1 (the default) the time and position, and 2 also statistics of memory and CPU time (checked: 20.2, Table 20-1).
 - `$fatal` gives a fatal run-time error and implicitly calls `$finish`. Its first argument means the same as `$finish`'s (checked: 20.10).
 - The messages of `$fatal`, `$error`, `$warning` and `$info` include the file name and line number of the call, the hierarchical name of the calling scope, and the simulation time (checked: 20.10).

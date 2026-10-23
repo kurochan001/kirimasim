@@ -2,6 +2,11 @@
 
 [日本語](SYSTEM_TASKS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Program execution amendment (approved 2026-10-23):**
+[The approved program rules](../notes/program-execution-proposal.md) apply
+to instance identity, reactive scheduling, inherited execution origin and
+program completion. Implementation status is tracked separately.
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.

@@ -1,7 +1,7 @@
 # Program execution amendment
 
-[日本語](program-execution-proposal.ja.md). Status: proposed, awaiting approval
-(2026-10-23). This document does not amend approved specifications yet.
+[日本語](program-execution-proposal.ja.md). Status: **approved (2026-10-23)**.
+Incorporated into SIR_SPEC, SCHEDULER_SPEC and SYSTEM_TASKS. Implementation is in progress.
 
 P1_SCOPE advances programs into P1 but requires review of missing or
 conflicting details before implementation. SCHEDULER_SPEC 16.1 currently
@@ -10,7 +10,7 @@ describes `$exit` as waiting for every program, whereas IEEE 1800-2023
 that detail and the SIR representation. The clauses were checked locally;
 this text paraphrases them without reproducing standard text or examples.
 
-## Proposed semantic amendment
+## Approved semantic amendment
 
 - A named program instance has its own identity in SIR's instance table.
   Its declarations, ports, generate scopes and supported statements use
