@@ -40,10 +40,10 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 18
+VERSION = 19
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
-ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit"}
+ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff"}
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -88,8 +88,8 @@ STATEMENTS = [
     ("wait_writes",
      "  int k;\n  function bit wr();\n    k++;\n    return 1'b1;\n  endfunction\n",
      "«»wait (wr());", "wait condition that writes a variable or net", True),
-    # wait.named has no guard; and an iff condition, like a wait condition,
-    # is evaluated in the middle of another write.
+    # Historical named-event iff input: now checked for acceptance.
+    # Guards are evaluated only when their own event occurs.
     ("event_named_iff", "  event ev;\n  logic en = 1'b1;\n", "@(«»ev iff en);",
      "named event with iff", True),
     ("iff_writes",
