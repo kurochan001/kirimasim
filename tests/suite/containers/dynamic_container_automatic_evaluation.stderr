@@ -1,0 +1,4 @@
+dynamic_container_automatic_evaluation.sv:30:38: warning: 'q' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
+dynamic_container_automatic_evaluation.sv:33:36: warning: 'i' is modified more than once in the same expression; the order of evaluation is undefined [-Wmulti-write]
+dynamic_container_automatic_evaluation.sv:33:36: warning: 'i' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
+dynamic_container_automatic_evaluation.sv:35:43: warning: 'q' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

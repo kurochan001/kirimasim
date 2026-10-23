@@ -434,6 +434,7 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
+    if (isDynamicContainer(t)) return containerType(t, sl);
     if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
     // A handle to a kernel event (SIR_SPEC.md 3.2.1).
     if (t.isEvent()) return sir::Type{sir::TypeKind::Event, 0};
@@ -670,7 +671,8 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         dims.push_back({a.range.left, a.range.right});
         t = &a.elementType.getCanonicalType();
     }
-    if (t->isUnpackedArray()) unsupported(sl, "variable of type '" + type.toString() + "'");
+    if (t->isUnpackedArray() && !isDynamicContainer(*t))
+        unsupported(sl, "variable of type '" + type.toString() + "'");
     sir::Slot s;
     // Static variables of unnamed blocks share a hierarchical path; the
     // second and later get "~2", "~3", ... (names are for diagnostics and
@@ -713,7 +715,8 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
     // in the frame (SIR_SPEC.md 7.4).
     std::vector<sir::ArrayDim> dims;
     const ast::Type& et = arrayElement(v.getType(), dims);
-    if (et.isUnpackedArray() || (!dims.empty() && unpackedStruct(et) != nullptr))
+    if ((et.isUnpackedArray() && !isDynamicContainer(et)) ||
+        (!dims.empty() && unpackedStruct(et) != nullptr))
         unsupported(sl, "automatic variable of type '" + v.getType().toString() + "'");
     const sir::Type t = typeOf(et, sl);
     // An event slot gets its event when the design starts (SIR_SPEC.md
@@ -824,6 +827,7 @@ std::string Lowerer::processName(const std::string& prefix, const std::string& k
 void Lowerer::dropProcesses(sir::ProcessId first) {
     design_.processes.resize(first.index());  // with any fork children
     combReads_.erase(first);
+    implicitLocations_.erase(implicitLocations_.lower_bound(first), implicitLocations_.end());
     strengths_.erase(strengths_.lower_bound(first), strengths_.end());
     netPorts_.erase(netPorts_.lower_bound(first), netPorts_.end());
     sides_.erase(sides_.lower_bound(first), sides_.end());
@@ -903,6 +907,25 @@ void Lowerer::finishDesign() {
                 skip = skip || sir::covers(s, t.range, r);
             if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
         }
+    }
+    // Static trigger ranges do not describe heap cells. Until implicit
+    // sensitivity has a typed heap encoding, diagnose it instead of running
+    // a process that misses element changes. Explicit guards/watches use
+    // the scheduler's heap monitor path.
+    for (const auto& [id, at] : implicitLocations_) {
+        const auto& process = design_.process(id);
+        bool heapRead = false;
+        for (const auto& trigger : process.triggers)
+            heapRead = heapRead || sir::isContainer(design_.slot(trigger.range.slot).type);
+        if (const auto called = readCallees_.byProcess.find(id);
+            called != readCallees_.byProcess.end())
+            for (const auto sub : called->second)
+                for (const auto& read : reads[sub]) {
+                    const auto& slot = design_.slot(read.slot);
+                    heapRead =
+                        heapRead || (slot.subroutine == sir::kNone && sir::isContainer(slot.type));
+                }
+        if (heapRead) report(at, "implicit sensitivity to dynamic container values");
     }
 }
 
@@ -2005,10 +2028,11 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
     if (strength != std::pair<std::uint8_t, std::uint8_t>{6, 6}) strengths_[first] = strength;
     // Evaluated again whenever an operand of the right-hand side changes
     // (10.3.2).
-    triggerOnReads();
+    triggerOnReads(sl);
 }
 
-void Lowerer::triggerOnReads() {
+void Lowerer::triggerOnReads(slang::SourceLocation sl) {
+    implicitLocations_[b_.proc] = sl;
     for (const sir::SlotRange& r : b_.reads) {
         const sir::Slot& s = design_.slot(r.slot);
         if (s.subroutine != sir::kNone) continue;
@@ -2129,7 +2153,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
             flushStores(stores, false, sl);
         } else {
             const sir::Type t = design_.slot(slot).type;
-            const Val val = coerce(lowerExpr(*v.getInitializer()), t, sl);
+            const Val val = copyValue(lowerExpr(*v.getInitializer()), t, sl);
             emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
             noteWrite({slot, 0, 0, 0, 0});
         }
@@ -2185,6 +2209,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 // The sensitivity is made once every call is known
                 // (finishDesign).
                 combReads_[b_.proc] = b_.reads;
+                implicitLocations_[b_.proc] = pb.location;
                 break;
             }
             case ast::ProceduralBlockKind::Always:
@@ -2256,7 +2281,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                     proc().kind = sir::ProcessKind::CombAt;
                     lowerStatement(bodyStmt.as<ast::TimedStatement>().stmt);
                     if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
-                    triggerOnReads();
+                    triggerOnReads(pb.location);
                     break;
                 }
                 if (!mayWait(bodyStmt))

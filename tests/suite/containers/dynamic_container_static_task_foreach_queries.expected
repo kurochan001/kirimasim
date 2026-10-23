@@ -1,0 +1,4 @@
+foreach 4 3
+nested_loop 6
+query 3 0 2 0 2 -1
+empty 0 -1

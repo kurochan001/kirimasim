@@ -84,6 +84,7 @@ bool inSlot(const ast::Symbol& s);
 
 /// A variable, or a formal argument of a subroutine (also a variable).
 bool isVariable(const ast::Symbol& s);
+bool isDynamicContainer(const ast::Type& type);
 /// The elements of an assignment pattern of any of its three forms, in
 /// order: slang expands the defaults and the names of a structured one;
 /// a replicated one repeats its elements its constant count of times
@@ -185,6 +186,16 @@ public:
     /// The SIR value type of a slang type; unsupported for anything other
     /// than integral types of 1 to 64 bits.
     sir::Type typeOf(const ast::Type& t, slang::SourceLocation sl);
+    sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);
+    Val copyValue(Val value, sir::Type destination, slang::SourceLocation sl);
+    sir::Type unboundedContainerType(sir::Type, slang::SourceLocation);
+    Val snapshotValue(Val value, slang::SourceLocation sl);
+    Val lowerContainerValue(const ast::Expression& e);
+    std::optional<Val> lowerContainerMethod(const ast::CallExpression& call,
+                                            slang::SourceLocation sl);
+    Val containerReference(const ast::Expression& e, bool isConst, slang::SourceLocation sl);
+    Val containerIndex(const ast::Expression& e, const Val& receiver, sir::Type type,
+                       slang::SourceLocation sl);
 
     // Statements (lower_stmt.cpp).
     void lowerStatement(const ast::Statement& s);
@@ -256,6 +267,7 @@ public:
     /// Whether a subroutine, or one it calls, writes a slot that is not a
     /// variable or argument of a subroutine.
     bool writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const;
+    void lowerDynamicForeach(const ast::ForeachLoopStatement&, std::size_t, slang::SourceLocation);
     void lowerForeach(const std::vector<const ast::ForeachLoopStatement::LoopDim*>& dims,
                       std::size_t k, const ast::Statement& body, slang::SourceLocation sl);
     /// The exit and continue blocks of loop number `loop`, made on first use.
@@ -322,7 +334,7 @@ public:
         /// Where the variable of an Element or Bits place lives: in slot
         /// `slot`, in frame variable `frame`, or where ref argument `frame`
         /// refers to (SIR_SPEC.md 5.3, 7.4, 8).
-        enum class Home : std::uint8_t { Slot, Frame, Ref };
+        enum class Home : std::uint8_t { Slot, Frame, Ref, Heap };
         Home home = Home::Slot;
         sir::FrameVarId frame{0};
         std::uint32_t leaf = 0;  ///< Ref: the leaf of a structure it refers to.
@@ -336,11 +348,15 @@ public:
         std::uint32_t windowWidth = 0;      ///< 0: the whole storage element.
         std::vector<Place> base;            ///< StringChar: the string; Concat: the parts.
         sir::Type type;                     ///< The type of the value there.
+        std::optional<Val> receiver;        ///< Heap: captured container-variable binding.
+        sir::Type container;                ///< Heap: the container descriptor.
+        sir::Type heapElement;              ///< Heap: original value before a packed select.
         /// The frame variable, or ref argument, that an Element or Bits
         /// place of home Frame or Ref lives in.
         [[nodiscard]] sir::FrameVarId frameHome() const { return frame; }
     };
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
+    Val referencePlace(const Place& place, bool isConst, slang::SourceLocation sl);
     /// The place of a whole slot.
     Place placeOfSlot(sir::SlotId s) {
         Place p;
@@ -868,6 +884,7 @@ private:
     std::map<sir::SubroutineId, slang::SourceLocation> actions_;
     /// The reads of each always_comb and always_latch, for its sensitivity.
     std::map<sir::ProcessId, std::vector<sir::SlotRange>> combReads_;
+    std::map<sir::ProcessId, slang::SourceLocation> implicitLocations_;
     /// From scanDisables: the named blocks and tasks a disable names, the
     /// blocks reached from outside their body, and the blocks that start
     /// processes they do not wait for or call tasks.
@@ -879,6 +896,7 @@ private:
     /// Expressions that stand for values already evaluated: the arguments
     /// of a deferred assertion's action inside its function.
     std::map<const ast::Expression*, Val> substitutions_;
+    std::vector<Val> queueLast_;  ///< The current queue selector's $ value.
     const ast::RootSymbol* root_ = nullptr;
     /// An argument of $dumpvars: the constant that gets its row of the dump
     /// table, which is made last (buildDumpTable), and what it names.
@@ -967,7 +985,7 @@ private:
     /// subroutines it calls read inside: the operands of a continuous
     /// assignment (10.3.2) and the implicit sensitivity of @* (9.4.2.2,
     /// SCHEDULER_SPEC.md 9.2).
-    void triggerOnReads();
+    void triggerOnReads(slang::SourceLocation);
     /// The next process name for a kind of process in a scope.
     std::string processName(const std::string& prefix, const std::string& kind);
     /// Drops the processes from number `first` on, after an unsupported

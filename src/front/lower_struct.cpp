@@ -92,7 +92,8 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::FrameVarId>(frameVars().size());
     for (const Leaf& l : leaves) {
-        if (l.type->getCanonicalType().isUnpackedArray() || !l.dims.empty())
+        if ((l.type->getCanonicalType().isUnpackedArray() && !isDynamicContainer(*l.type)) ||
+            !l.dims.empty())
             unsupported(sl, "automatic unpacked array in a structure or of structures");
         const sir::Type t = typeOf(*l.type, sl);
         if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
@@ -109,8 +110,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         // the call made now (SIR_SPEC.md 8).
         const auto& c = e.as<ast::CallExpression>();
         const ast::Type& rt = std::get<0>(c.subroutine)->getReturnType();
-        if (unpackedStruct(rt) == nullptr && !rt.getCanonicalType().isUnpackedArray())
-            return std::nullopt;
+        if (!isAggregate(rt)) return std::nullopt;
         return callAggregate(c);
     }
     if (isUnpackedMember(e)) {
@@ -127,7 +127,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         // more index, evaluated now.
         const auto& es = e.as<ast::ElementSelectExpression>();
         const ast::Type& vt = es.value().type->getCanonicalType();
-        if (!vt.isUnpackedArray()) return std::nullopt;
+        if (vt.kind != ast::SymbolKind::FixedSizeUnpackedArrayType) return std::nullopt;
         std::optional<Storage> base = storageOf(es.value(), sl);
         if (!base) return std::nullopt;
         if (const std::optional<std::int64_t> c = constInt(es.selector()))
@@ -251,7 +251,7 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         copyAggregate(std::move(dst), *src, t, out, sl);
         return;
     }
-    if (ct.isUnpackedArray()) {
+    if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
         const ast::Expression& r = unwrapAggregate(rhs);
         if (isPattern(r)) {
@@ -296,7 +296,7 @@ void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores
         }
         return;
     }
-    if (ct.isUnpackedArray()) {
+    if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         copyArrayStorage(std::move(dst), std::move(src), out, sl);
         return;
     }
@@ -349,7 +349,7 @@ void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Va
         }
         return;
     }
-    if (ct.isUnpackedArray()) {
+    if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         arrayValues(storageBase(s), fixedIndices(s, sl), out, sl);
         return;
     }
@@ -377,7 +377,7 @@ void Lowerer::storagePlaces(const Storage& s, const ast::Type& t, std::vector<Pl
         }
         return;
     }
-    if (ct.isUnpackedArray()) {
+    if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         arrayPlaces(storageBase(s), fixedIndices(s, sl), out);
         return;
     }

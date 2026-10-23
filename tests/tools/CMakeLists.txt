@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_dynamic_container_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_dynamic_container_matrix.py --check)
+set_tests_properties(tools/gen_dynamic_container_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_named_event_wait_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_named_event_wait_matrix.py --check)
 set_tests_properties(tools/gen_named_event_wait_matrix PROPERTIES LABELS Tools)

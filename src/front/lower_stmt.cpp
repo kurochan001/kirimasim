@@ -198,7 +198,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 flushStores(stores, false, sl);
                 return;
             }
-            const Val value = init != nullptr ? coerce(lowerExpr(*init), t, sl) : initial(t);
+            const Val value = init != nullptr ? copyValue(lowerExpr(*init), t, sl) : initial(t);
             emitVoid(Op::Fstore, {Operand::frame(f), value.op}, sl);
             return;
         }
@@ -210,6 +210,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             }
             if (e.kind == ast::ExpressionKind::Call) {
                 const auto& call = e.as<ast::CallExpression>();
+                if (lowerContainerMethod(call, sl)) return;
                 if (call.isSystemCall())
                     lowerSystemTask(call);
                 else
@@ -281,6 +282,13 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::ForeachLoop: {
             const auto& f = s.as<ast::ForeachLoopStatement>();
+            if (isDynamicContainer(*f.arrayRef.type)) {
+                for (const auto& dim : f.loopDims)
+                    if (dim.range || !dim.loopVar)
+                        unsupported(sl, "foreach with mixed or omitted dynamic dimensions");
+                lowerDynamicForeach(f, 0, sl);
+                return;
+            }
             std::vector<const ast::ForeachLoopStatement::LoopDim*> dims;
             for (const auto& d : f.loopDims) {
                 if (d.loopVar == nullptr) continue;
@@ -426,6 +434,52 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             return;
         default: unsupported(sl, "statement '" + std::string(ast::toString(s.kind)) + "'");
     }
+}
+
+// Dynamic foreach uses the same loop exits and frame indices as fixed
+// foreach. Save each dimension's entry bound across waits (12.7.3).
+void Lowerer::lowerDynamicForeach(const ast::ForeachLoopStatement& f, std::size_t k,
+                                  slang::SourceLocation sl) {
+    if (k == f.loopDims.size()) {
+        lowerStatement(f.body);
+        return;
+    }
+    auto value = lowerExpr(f.arrayRef);
+    for (std::size_t d = 0; d < k; ++d) {
+        if (!sir::isContainer(value.type)) unsupported(sl, "foreach of this nested dimension");
+        const auto index = frameVarOf(*f.loopDims[d].loopVar, sl);
+        const auto current = emit(Op::Fload, frameVar(index).type, {Operand::frame(index)}, sl);
+        const auto element = design_.types[value.type.detail.index()].value;
+        value = emit(Op::ContainerRead, element, {value.op, current.op}, sl);
+    }
+    if (!sir::isContainer(value.type)) unsupported(sl, "foreach of this nested dimension");
+    const auto limit = newFrameVar(sir::u2(64));
+    emitVoid(Op::Fstore,
+             {Operand::frame(limit), emit(Op::ContainerSize, sir::u2(64), {value.op}, sl).op}, sl);
+    const auto index = frameVarOf(*f.loopDims[k].loopVar, sl);
+    const auto type = frameVar(index).type;
+    emitVoid(Op::Fstore, {Operand::frame(index), constant(type, 0).op}, sl);
+    const auto cond = newBlock();
+    jump(cond, sl);
+    setBlock(cond);
+    const auto loop = b_.loops.size();
+    b_.loops.push_back(Loop{.named = b_.named.size()});
+    const auto i = coerce(emit(Op::Fload, type, {Operand::frame(index)}, sl), sir::u2(64), sl);
+    const auto n = emit(Op::Fload, sir::u2(64), {Operand::frame(limit)}, sl);
+    const auto test = emit(Op::Lt, sir::u2(1), {i.op, n.op}, sl);
+    const auto inner = newBlock();
+    terminate(Op::BrIf, {test.op, Operand::block(inner), Operand::block(breakTarget(loop))}, sl);
+    setBlock(inner);
+    lowerDynamicForeach(f, k + 1, sl);
+    if (!b_.dead) jump(continueTarget(loop), sl);
+    if (b_.loops[loop].continueTo != sir::kNone) {
+        setBlock(b_.loops[loop].continueTo);
+        const auto old = emit(Op::Fload, type, {Operand::frame(index)}, sl);
+        const auto next = emit(Op::Add, type, {old.op, constant(type, 1).op}, sl);
+        emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
+        jump(cond, sl);
+    }
+    endLoop(loop);
 }
 
 void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::LoopDim*>& dims,
@@ -837,7 +891,7 @@ void Lowerer::lowerOverride(const ast::ProceduralAssignStatement& s) {
                        h.range.width});
         }
         terminate(Op::Ret, {}, sl);
-        triggerOnReads();
+        triggerOnReads(sl);
     } catch (const Unsupported&) {
         b_ = std::move(saved);
         throw;

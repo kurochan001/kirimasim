@@ -1,0 +1,8 @@
+copy 3 1 1
+self 3 1
+invalid 1 1 1
+packed 1010
+append 7 1
+pop 1 1
+remaining 4
+clear 0 0

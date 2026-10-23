@@ -2929,7 +2929,13 @@ private:
                     collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
                 // A ref of the body's own frame (that of the waiter); the
                 // refs of the functions it calls are bound by the call.
-                if (own && (in.op == Op::LoadRef || in.op == Op::LoadRefElem) &&
+                const bool forwardedRef =
+                    in.op == Op::RefMake && in.operands[0].kind == Operand::Kind::Frame &&
+                    bodyFrame(body)[in.operands[0].id].type.kind == sir::TypeKind::Ref;
+                // Forwarding an enclosing ref also reads its binding. An
+                // empty container has no heap identity to observe; replacing
+                // its variable must still reevaluate the called expression.
+                if (own && (in.op == Op::LoadRef || in.op == Op::LoadRefElem || forwardedRef) &&
                     in.operands[0].kind == Operand::Kind::Frame) {
                     std::uint32_t leaf = 0;
                     if (in.op == Op::LoadRef && in.operands.size() == 2 &&

@@ -473,6 +473,20 @@ Val Lowerer::stringConstant(std::string bytes) {
 }
 
 Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceLocation sl) {
+    if (sir::isContainer(t)) {
+        const auto element = design_.types[t.detail.index()].value;
+        std::vector<Operand> values;
+        if (cv.isUnpacked()) {
+            for (const auto& value : cv.elements())
+                values.push_back(constantFrom(value, element, sl).op);
+        } else if (cv.isQueue()) {
+            for (const auto& value : *cv.queue())
+                values.push_back(constantFrom(value, element, sl).op);
+        } else {
+            unsupported(sl, "container constant of this kind");
+        }
+        return emit(Op::ContainerPack, t, std::move(values), sl);
+    }
     if (cv.isString()) {
         if (!isString(t)) unsupported(sl, "a string constant as a value of this type");
         return stringConstant(cv.str());
@@ -512,6 +526,8 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
 
 Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     if (v.type == want) return v;
+    if (sir::isContainer(v.type) && sir::isContainer(want))
+        return emit(Op::ContainerCopy, want, {v.op}, sl);
     if (isString(want) && sir::isIntegral(v.type)) {
         // Integer to string: its bytes, zero bytes dropped (6.16).
         if (v.op.kind == Operand::Kind::Const) {
@@ -808,6 +824,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         return constantFrom(*cv, typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
+        case ast::ExpressionKind::NewArray: return lowerContainerValue(e);
+        case ast::ExpressionKind::UnboundedLiteral:
+            if (!queueLast_.empty()) return queueLast_.back();
+            unsupported(sl, "unbounded literal outside a queue selector");
         case ast::ExpressionKind::MinTypMax:
             // slang chooses the branch for the whole compilation; only
             // that expression is evaluated, even when it is not constant.
@@ -883,6 +903,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::SimpleAssignmentPattern:
         case ast::ExpressionKind::StructuredAssignmentPattern:
         case ast::ExpressionKind::ReplicatedAssignmentPattern: {
+            if (isDynamicContainer(*e.type)) return lowerContainerValue(e);
             // A pattern of a packed type is the concatenation of its
             // elements, the first one most significant (10.9).
             if (!e.type->isIntegral())
@@ -937,6 +958,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::BinaryOp: return lowerBinary(e);
         case ast::ExpressionKind::ConditionalOp: {
             const auto& c = e.as<ast::ConditionalExpression>();
+            if (isDynamicContainer(*e.type)) unsupported(sl, "dynamic container conditional value");
             if (c.conditions.size() != 1 || c.conditions[0].pattern != nullptr)
                 unsupported(sl, "conditional operator with a pattern");
             const Type rt = typeOf(*e.type, sl);
@@ -979,6 +1001,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return emit(Op::Select, rt, {cond.op, l.op, r.op}, sl);
         }
         case ast::ExpressionKind::Concatenation: {
+            if (isDynamicContainer(*e.type)) return lowerContainerValue(e);
             if (e.type->isString()) {
                 // A string concatenation (11.4.12.2): every operand as a string.
                 std::vector<Operand> ops;
@@ -1021,6 +1044,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return coerce(rv, typeOf(*e.type, sl), sl);
         }
         case ast::ExpressionKind::Conversion: {
+            if (isDynamicContainer(*e.type)) return lowerContainerValue(e);
             const auto& c = e.as<ast::ConversionExpression>();
             const Type want = typeOf(*e.type, sl);
             if (isString(want) && c.operand().type->isIntegral() && !sideEffects(c.operand())) {
@@ -1065,6 +1089,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return coerce(b_.lvalueRefs.back(), typeOf(*e.type, sl), sl);
         case ast::ExpressionKind::Call: {
             const auto& call = e.as<ast::CallExpression>();
+            if (const auto container = lowerContainerMethod(call, sl)) return *container;
             const std::string name(call.getSubroutineName());
             if (!call.isSystemCall()) return lowerCall(call);
             if (name == "triggered" && call.arguments().size() == 1 &&
@@ -1155,7 +1180,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 name == "$low" || name == "$high" || name == "$increment" || name == "$size" ||
                 name == "$dimensions" || name == "$unpacked_dimensions") {
                 // The queries of 20.6 and 20.7 on a fixed type are constants
-                // (SYSTEM_TASKS.md 8); on dynamic data they come with it (P3).
+                // (SYSTEM_TASKS.md 8). Dynamic dimension queries use container.size.
                 if (const std::optional<slang::ConstantValue> cv = constantValue(e))
                     return constantFrom(*cv, rt, sl);
                 // $bits of an expression slang does not evaluate (a
@@ -1165,6 +1190,26 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 if (name == "$bits" && c.arguments().size() == 1 &&
                     c.arguments()[0]->type->isFixedSize())
                     return constant(rt, c.arguments()[0]->type->getBitstreamWidth());
+                if (isDynamicContainer(*args[0]->type) &&
+                    (name == "$size" || name == "$left" || name == "$low" || name == "$right" ||
+                     name == "$high" || name == "$increment")) {
+                    // Dynamic dimension one uses the shared container length;
+                    // other dimensions still require their own type traversal.
+                    if (args.size() == 2) {
+                        const auto dim = constantValue(*args[1]);
+                        if (!dim || !dim->isInteger() || dim->integer().as<std::int64_t>() != 1)
+                            unsupported(sl, "runtime or nested dynamic array query dimension");
+                    }
+                    const auto container = lowerExpr(*args[0]);
+                    const auto size = emit(Op::ContainerSize, sir::u2(64), {container.op}, sl);
+                    if (name == "$size") return coerce(size, rt, sl);
+                    if (name == "$left" || name == "$low") return constant(rt, 0);
+                    if (name == "$increment") return constant(rt, static_cast<std::uint64_t>(-1));
+                    const auto count = coerce(size, sir::s2(64), sl);
+                    return coerce(
+                        emit(Op::Sub, sir::s2(64), {count.op, constant(sir::s2(64), 1).op}, sl), rt,
+                        sl);
+                }
                 unsupported(sl, "system function " + name + " on this argument");
             }
             if (name == "$countbits" || name == "$countones" || name == "$onehot" ||
@@ -1461,6 +1506,11 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& es = e.as<ast::ElementSelectExpression>();
     const ast::Type& vt = es.value().type->getCanonicalType();
+    if (isDynamicContainer(vt)) {
+        const auto value = lowerExpr(es.value());
+        const auto index = containerIndex(es.selector(), value, value.type, sl);
+        return emit(Op::ContainerRead, typeOf(*e.type, sl), {value.op, index.op}, sl);
+    }
     if (vt.isUnpackedArray()) {
         if (structElement(*e.type) != nullptr)
             unsupported(sl, "unpacked structure used as a whole here");
@@ -1829,7 +1879,8 @@ Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::str
 }
 
 bool Lowerer::isAggregate(const ast::Type& t) {
-    return unpackedStruct(t) != nullptr || t.getCanonicalType().isUnpackedArray();
+    return unpackedStruct(t) != nullptr ||
+           t.getCanonicalType().kind == ast::SymbolKind::FixedSizeUnpackedArrayType;
 }
 
 void Lowerer::aggregateValues(const ast::Expression& e, const ast::Type& t, std::vector<Val>& out,
@@ -2420,8 +2471,7 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
                     &t.as<ast::DelayControl>().expr);
         return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
-    const bool aggregate = structElement(*a.left().type) != nullptr ||
-                           a.left().type->getCanonicalType().isUnpackedArray();
+    const bool aggregate = isAggregate(*a.left().type);
     if (aggregate && a.isNonBlocking() && !a.isCompound() &&
         t.kind == ast::TimingControlKind::Delay) {
         // Capture every leaf before issuing any update (VALUE_SEMANTICS
@@ -2442,11 +2492,11 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
         return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
     if (a.isCompound() || unpackedStruct(*a.left().type) != nullptr ||
-        a.left().type->getCanonicalType().isUnpackedArray() ||
-        a.left().kind == ast::ExpressionKind::Streaming)
+        isAggregate(*a.left().type) || a.left().kind == ast::ExpressionKind::Streaming)
         unsupported(sl, "intra-assignment timing control on this assignment");
     const Type lt = typeOf(*a.left().type, sl);
-    Val v = coerce(lowerExpr(a.right()), lt, sl);
+    Val v = sir::isContainer(lt) ? snapshotValue(lowerExpr(a.right()), sl)
+                                 : coerce(lowerExpr(a.right()), lt, sl);
     if (a.isNonBlocking()) {
         if (t.kind != ast::TimingControlKind::Delay)
             unsupported(sl, "nonblocking assignment with an event control");
@@ -2457,10 +2507,10 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
         storePlace(p, v, true, sl, ticks);
         return v;
     }
-    const sir::FrameVarId f = newFrameVar(lt);
+    const sir::FrameVarId f = newFrameVar(v.type);
     emitVoid(Op::Fstore, {Operand::frame(f), v.op}, sl);
     lowerTiming(t);
-    const Val later = emit(Op::Fload, lt, {Operand::frame(f)}, sl);
+    const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);
     lowerStore(a.left(), later, false, sl);
     return later;
 }
@@ -2468,6 +2518,13 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
 Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     const slang::SourceLocation sl = a.sourceRange.start();
     if (a.timingControl != nullptr) return lowerDelayedAssignment(a);
+    if (isDynamicContainer(*a.left().type)) {
+        if (a.isCompound()) unsupported(sl, "compound assignment to a dynamic container value");
+        const auto value = snapshotValue(lowerExpr(a.right()), sl);
+        const auto target = placeOf(a.left(), sl);
+        storePlace(target, value, a.isNonBlocking(), sl);
+        return a.isNonBlocking() ? value : loadPlace(target, sl);
+    }
     if (a.left().kind == ast::ExpressionKind::Streaming) {
         lowerUnpack(a.left().as<ast::StreamingConcatenationExpression>(), a.right(),
                     a.isNonBlocking(), sl);
@@ -2564,11 +2621,13 @@ Type Lowerer::elemTypeOf(ArrayBase b) {
         case Place::Home::Slot: return design().slot(b.slot).type;
         case Place::Home::Frame: return frameVar(b.frame).type;
         case Place::Home::Ref: return frameVar(b.frame).target;
+        case Place::Home::Heap: return sir::voidType();
     }
     return sir::voidType();
 }
 
 Type Lowerer::homeType(const Place& p) {
+    if (p.home == Place::Home::Heap) return p.heapElement;
     return elemTypeOf(p.home == Place::Home::Slot ? ArrayBase{p.slot} : ArrayBase{p.home, p.frame});
 }
 
@@ -2728,12 +2787,39 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 p.type = sir::u2(8);
                 return p;
             }
+            if (element && isDynamicContainer(*base.type)) {
+                p.kind = Place::Kind::Element;
+                p.home = Place::Home::Heap;
+                p.container = typeOf(*base.type, sl);
+                p.receiver = containerReference(base, false, sl);
+                p.indices = {containerIndex(lhs.as<ast::ElementSelectExpression>().selector(),
+                                            *p.receiver, p.container, sl)
+                                 .op};
+                p.type = p.heapElement = typeOf(*lhs.type, sl);
+                return p;
+            }
             if (element && base.type->isUnpackedArray()) {
                 if (structElement(*lhs.type) != nullptr)
                     unsupported(sl, "unpacked structure used as a whole here");
                 const std::optional<ArrayAccess> acc = arrayAccess(lhs);
                 if (!acc) unsupported(sl, "assignment to an element of this array");
                 return arrayElementPlace(*acc->base, acc->indices, sl);
+            }
+            if (base.kind == ast::ExpressionKind::ElementSelect &&
+                isDynamicContainer(*base.as<ast::ElementSelectExpression>().value().type)) {
+                p = placeOf(base, sl);
+                p.kind = Place::Kind::Bits;
+                p.width = lhs.type->getBitWidth();
+                p.type = typeOf(*lhs.type, sl);
+                if (element) {
+                    p.pos = bitPosition(lhs.as<ast::ElementSelectExpression>().selector(),
+                                        base.type->getFixedRange(), p.width);
+                } else {
+                    const auto part = partOf(lhs);
+                    p.pos = part.pos;
+                    p.lsb = part.lsb;
+                }
+                return p;
             }
             // Bits of a packed variable, or of an element of an array.
             const ast::Type& bt = base.type->getCanonicalType();
@@ -2902,6 +2988,21 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
 }
 
 Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
+    if (p.home == Place::Home::Heap) {
+        const auto container = emit(Op::LoadRef, p.container, {p.receiver->op}, sl);
+        auto value = emit(Op::ContainerRead, p.heapElement, {container.op, p.indices[0]}, sl);
+        if (p.kind == Place::Kind::Bits) {
+            if (p.windowWidth != 0)
+                value =
+                    emit(Op::Partsel, integral(sir::isFourState(value.type), false, p.windowWidth),
+                         {value.op, constant(sir::u2(32), p.windowLsb).op}, sl);
+            const auto pos =
+                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
+            value =
+                emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {value.op, pos.op}, sl);
+        }
+        return value;
+    }
     // The variable an Element or Bits place is in: a slot, a frame
     // variable, or what a ref argument refers to (SIR_SPEC.md 5.3, 7.4, 8).
     const auto home = [&](Op slotOp, Op frameOp, Op refOp) {
@@ -2954,6 +3055,40 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
 
 void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
                          std::optional<Val> delay) {
+    if (sir::isContainer(p.type) && !nonblocking && p.home != Place::Home::Heap) {
+        const auto ref = referencePlace(p, false, sl);
+        emitVoid(Op::ContainerAssign, {Operand::typeRow(p.type.detail), ref.op, v.op}, sl);
+        return;
+    }
+    if (p.home == Place::Home::Heap) {
+        if (nonblocking)
+            error(sl, "nonblocking assignment to a dynamically sized array element is illegal");
+        if (p.kind == Place::Kind::Bits) {
+            const auto ref = referencePlace(Place{.kind = Place::Kind::Element,
+                                                  .home = Place::Home::Heap,
+                                                  .indices = p.indices,
+                                                  .type = p.heapElement,
+                                                  .receiver = p.receiver,
+                                                  .container = p.container,
+                                                  .heapElement = p.heapElement},
+                                            false, sl);
+            const auto local = newFrameVar(sir::refType());
+            frameVar(local).target = p.heapElement;
+            emitVoid(Op::Fstore, {Operand::frame(local), ref.op}, sl);
+            auto target = Operand::frame(local);
+            target.lsb = p.windowLsb;
+            target.width = p.windowWidth;
+            const auto pos =
+                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
+            emitVoid(Op::StoreRefBits, {target, pos.op, coerce(v, p.type, sl).op}, sl);
+        } else {
+            const auto value = sir::isContainer(p.heapElement) ? v : coerce(v, p.heapElement, sl);
+            emitVoid(Op::ContainerWrite,
+                     {Operand::typeRow(p.container.detail), p.receiver->op, p.indices[0], value.op},
+                     sl);
+        }
+        return;
+    }
     const auto write = [&](Op blocking, Op nba, Op delayed, std::vector<Operand> ops) {
         if (delay) ops.push_back(delay->op);
         emitVoid(delay ? delayed : nonblocking ? nba : blocking, std::move(ops), sl);

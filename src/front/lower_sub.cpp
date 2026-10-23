@@ -70,8 +70,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     const ast::Type& ret = sym.getReturnType();
     // An unpacked structure or array comes back through $return
     // (SIR_SPEC.md 8).
-    const bool aggregateRet =
-        unpackedStruct(ret) != nullptr || ret.getCanonicalType().isUnpackedArray();
+    const bool aggregateRet = isAggregate(ret);
     s.returnType = ret.isVoid() || aggregateRet ? sir::voidType() : typeOf(ret, sl);
     // A task that may wait is called with call.task (SIR_SPEC.md 7.2, 8).
     s.mayWait = s.kind == sir::SubroutineKind::Task && mayWait(sym.getBody());
@@ -145,7 +144,11 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                     unsupported(a->location,
                                 "ref argument '" + prm.name + "' of a static subroutine");
                 prm.frameVar = static_cast<sir::FrameVarId>(frameVars().size());
-                frameVars().push_back({prm.name, sir::refType(), sir::kNone, dims, prm.type});
+                frameVars().push_back({prm.name,
+                                       sir::refType(sir::isContainer(prm.type) && dims.empty()
+                                                        ? prm.type.detail
+                                                        : sir::TypeId{sir::kNone}),
+                                       sir::kNone, dims, prm.type});
                 b_.frameVars.emplace(a, prm.frameVar);
             } else if (a->lifetime == ast::VariableLifetime::Automatic) {
                 prm.frameVar = frameVarOf(*a, a->location);
@@ -258,10 +261,14 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     } else {
         unsupported(sl, "function without a return value");
     }
-    terminate(Op::Ret, {coerce(v, rt, sl).op}, sl);
+    terminate(Op::Ret, {copyValue(v, rt, sl).op}, sl);
 }
 
 Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl) {
+    if (isDynamicContainer(*actual.type) ||
+        (actual.kind == ast::ExpressionKind::ElementSelect &&
+         isDynamicContainer(*actual.as<ast::ElementSelectExpression>().value().type)))
+        return containerReference(actual, isConst, sl);
     // The variable a ref argument refers to: a variable, an element of an
     // unpacked array, or a member of an unpacked structure (13.5.2), with
     // the indices evaluated now (SIR_SPEC.md 8). The call writes what it
@@ -322,7 +329,7 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     // 8). An input that is not a variable is first computed into an array
     // of the caller's frame.
     const std::optional<ArrayTarget> a = arrayTarget(actual);
-    if (a && a->home == Place::Home::Slot) {
+    if (a && a->home == Place::Home::Slot && !sir::isContainer(prm.type)) {
         const sir::Slot& slot = design_.slot(a->slot);
         Operand o = Operand::slot(a->slot);
         if (!a->indices.empty()) {
@@ -344,7 +351,7 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
         if (prm.dir != sir::Direction::Output) noteRead(r);
         return o;
     }
-    if (a && a->home == Place::Home::Frame && a->indices.empty())
+    if (a && a->home == Place::Home::Frame && a->indices.empty() && !sir::isContainer(prm.type))
         return Operand::frame(a->frameHome());
     if (prm.dir != sir::Direction::Input)
         unsupported(sl, "an output or inout array argument of this actual");
@@ -365,7 +372,7 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
 Val Lowerer::lowerCall(const ast::CallExpression& call) {
     const auto& sym = *std::get<0>(call.subroutine);
     const ast::Type& ret = sym.getReturnType();
-    if (unpackedStruct(ret) != nullptr || ret.getCanonicalType().isUnpackedArray()) {
+    if (isAggregate(ret)) {
         // An aggregate value not used: it still needs a place to go.
         (void)callAggregate(call);
         return {Operand::temp(sir::TempId{0}), sir::voidType()};
@@ -537,7 +544,17 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             continue;
         }
         if (prm.dir == sir::Direction::Input) {
-            ops.push_back(coerce(lowerExpr(*args[i]), prm.type, sl).op);
+            ops.push_back(copyValue(lowerExpr(*args[i]), prm.type, sl).op);
+            continue;
+        }
+        if (sir::isContainer(prm.type)) {
+            const auto fv = newFrameVar(prm.type);
+            const auto* actual = outputPlace(args[i]);
+            if (prm.dir == sir::Direction::Inout)
+                emitVoid(Op::Fstore,
+                         {Operand::frame(fv), copyValue(lowerExpr(*actual), prm.type, sl).op}, sl);
+            ops.push_back(Operand::frame(fv));
+            copies.push_back({actual, fv, prm.type});
             continue;
         }
         // An output or inout: a whole variable of the formal's type is
@@ -591,7 +608,9 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
     }
     for (const CopyBack& c : copies) {
         const Val v = emit(Op::Fload, c.type, {Operand::frame(c.fv)}, sl);
-        lowerStore(*c.place, coerce(v, typeOf(*c.place->type, sl), sl), false, sl);
+        lowerStore(*c.place,
+                   sir::isContainer(v.type) ? v : coerce(v, typeOf(*c.place->type, sl), sl), false,
+                   sl);
     }
     for (std::size_t k = 0; k < structOuts.size(); ++k) {
         Stores stores;
