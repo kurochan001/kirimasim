@@ -184,3 +184,14 @@ The 16-case seed inventory has seven Icarus-passing gaps; the extended
 38-case inventory has 25. Program VCD scopes remain unimplemented, as do
 classes, dynamic containers, clocking and concurrent assertions. This is
 progress toward the full P1 target, not a complete-parity claim.
+
+Program local CI passed dev/release/ASan/UBSan configure, build and tests,
+release flags, banned features, SPDX, suite files, global state, all six
+unpublished commit expectation checks, README counts, clang-format and
+clang-tidy. Four deliberate mutations (module-like program identity,
+Active initial execution, lost fork origin and unended descendants) each
+fail the program-specific tests; the restored implementation passes.
+
+The next [dynamic-container amendment](dynamic-containers-proposal.md)
+fills the missing heap/instruction contract, including stable outdated
+reference cells and tracing roots. It is proposed, not approved or implemented.
