@@ -15,6 +15,47 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Aggregate values before target effects
+
+Ordinary aggregate assignments and NBAs capture the RHS before evaluating
+runtime target selectors. This is kirimasim's approved order; IEEE leaves
+the relative order open. A selector that changes the source cannot change
+the already captured value. Container leaves also snapshot before later
+pattern members. See the [contract and verification](notes/aggregate-value-capture.md).
+
+```systemverilog
+module top;
+  typedef struct { int value; } row_t;
+  row_t a[2];
+  int index = 0, trace = 0;
+  function automatic int choose();
+    trace = trace * 10 + 2;
+    return index++;
+  endfunction
+  function automatic row_t source_value();
+    trace = trace * 10 + 1;
+    index = 1;
+    return '{7};
+  endfunction
+  initial begin
+    a[0] = '{0}; a[1] = '{0};
+    a[choose()] = source_value();
+    $display("%0d %0d", trace, index);
+    $display("%0d %0d", a[0].value, a[1].value);
+  end
+endmodule
+```
+
+```text
+12 2
+0 7
+```
+
+Runtime-selected fixed subarrays and structure elements' array members can
+be whole assignment targets. Explicit automatic structures with array
+members retain their existing restriction. Blocking whole-aggregate
+intra-assignment timing and event-controlled NBAs remain unsupported.
+
 ## Blocking assignment after repeated events
 
 An intra-assignment `repeat` captures the right-hand value and evaluates

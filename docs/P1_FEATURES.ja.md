@@ -15,6 +15,46 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 代入先の副作用より前に集約値を保持する
+
+通常の集約代入・NBAは、実行時の代入先の添字より先に右辺を保持します。
+これは承認済みのkirimasimの順序で、IEEEは左右の相対順を未規定としています。
+代入先の関数が元の値を変えても、保持した値は変わりません。コンテナのleafも
+後のパターンのメンバーより先に捕捉します。[契約と検証](notes/aggregate-value-capture.ja.md)を
+参照してください。
+
+```systemverilog
+module top;
+  typedef struct { int value; } row_t;
+  row_t a[2];
+  int index = 0, trace = 0;
+  function automatic int choose();
+    trace = trace * 10 + 2;
+    return index++;
+  endfunction
+  function automatic row_t source_value();
+    trace = trace * 10 + 1;
+    index = 1;
+    return '{7};
+  endfunction
+  initial begin
+    a[0] = '{0}; a[1] = '{0};
+    a[choose()] = source_value();
+    $display("%0d %0d", trace, index);
+    $display("%0d %0d", a[0].value, a[1].value);
+  end
+endmodule
+```
+
+```text
+12 2
+0 7
+```
+
+実行時に選ぶ固定の部分配列と、構造体要素の配列メンバー全体も代入先にできます。
+明示的なautomaticの配列メンバー付き構造体には既存の制限が残ります。
+集約値全体へのブロッキング代入内時間制御と、イベント制御付きNBAは引き続き未対応です。
+
 ## イベントを繰り返し待つブロッキング代入
 
 代入内の`repeat`は、右辺を保持してから回数を1回評価します。待機中に元の値や回数を

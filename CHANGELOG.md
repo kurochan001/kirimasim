@@ -13,6 +13,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Aggregate blocking and nonblocking assignments capture all RHS values
+  before runtime target selectors under the approved evaluation policy.
+  Container leaves snapshot before later field effects. Seventy-two original
+  source cases cover eight contexts, wide/two-/four-state payloads,
+  real/string members, runtime prefixes and deep values (VALUE_SEMANTICS
+  3.1/3.13, SIR_SPEC 7.3; IEEE leaves relative side order unspecified).
+
 - Integral `$fread` again follows the approved SIR_SPEC 8 copy-in/copyback
   interpretation of 4.9.7. A written result finds its target at copyback;
   a zero-byte result has no copyback. The earlier capture-once target rule
@@ -32,6 +39,15 @@ own. CONTRIBUTING.md says what goes in this file.
   eligible static container variables remain separate.
 
 ### Added
+
+- Whole fixed subarray assignment targets selected at run time, including
+  structure elements' array members, and function return storage for structures
+  containing fixed-array members. Explicit automatic aggregate array
+  declarations retain their existing restriction.
+
+- Recorded comparisons against existing Icarus 13.0 stable and 14.0 devel
+  binaries, with portable per-probe data. Two new RHS-order probes explicitly
+  identify the project policy; complete feature parity remains unconfirmed.
 
 - Blocking intra-assignment `repeat(count) @(...)` controls retain the full
   count once, preserve the earlier RHS and select the target after waiting.

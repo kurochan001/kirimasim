@@ -63,6 +63,11 @@ retains complete intervals before value projection, with exhaustive interval
 pair checks. Source-level MOS/switch execution and strength-aware formatting
 still require integration; this kernel API does not close those gaps.
 
+Aggregate blocking/NBA assignments now capture all RHS values before target
+effects, including container snapshots before later field expressions.
+Runtime-selected fixed subarrays and structure array members use the same
+path. See the [capture and verification note](docs/notes/aggregate-value-capture.md).
+
 Blocking intra-assignment `repeat(count) @(...)` now retains the RHS and the
 full count, then chooses the target after waiting. Nonpositive/X/Z counts
 skip the wait. Seventy-five original source cases cover eight execution
@@ -100,13 +105,14 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-current inventory has expanded to 72 probes, with 26 Icarus-passing gaps
-(including reductions, sorting, extrema and multidimensional binary input).
-Seven reference result mismatches are recorded separately. It uses Icarus
-`14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 coverage and complete
-parity remain unconfirmed. A passing probe inventory would not by itself
-establish complete coverage; the inventory must expand as mechanisms and
-interfaces are checked.
+inventory now has 75 original probes. With Icarus `13.0 (stable) (v13_0)`,
+20 Icarus-passing gaps and four reference result mismatches remain. With
+`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 26 and seven.
+These are separate reference baselines. See the
+[versioned results and conditions](docs/notes/icarus-13-comparison.md).
+Complete functional parity remains unconfirmed. A passing probe inventory
+would not by itself establish complete coverage; the inventory must expand
+as mechanisms and interfaces are checked.
 
 Integral `$fread` now accepts optional start/count arguments, evaluates
 supplied value arguments once and follows the approved copy-in/copyback
@@ -158,18 +164,19 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI at source `87ae3a2` on 2026-10-24 passes configure/build/test
-for all four configurations. Dev/ASan/UBSan each have 2,907 tests: 2,905 pass
-and the same two known skips remain. Release has 2,908 tests: 2,906 pass and
-the same skips. All 129 Tools tests and the 75 new repeated-event source
+Full local CI at source `917c715` on 2026-10-24 passes configure/build/test
+for all four configurations. Dev/ASan/UBSan each have 2,980 tests: 2,978 pass
+and the same two known skips remain. Release has 2,981 tests: 2,979 pass and
+the same skips. All 130 Tools tests and the 72 new aggregate-capture source
 cases pass. Static checks also pass, including expectation protection,
-README counts, clang-format and clang-tidy.
+README counts, clang-format and clang-tidy. Existing SIR dump expectations
+remain unchanged and all 29 pass.
 
-The comparison rerun records 72 original probes, with 26 Icarus-passing
-gaps and seven separately recorded reference mismatches. Exact-13.0 coverage
-and complete parity remain unconfirmed. See the
-[current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
-for versions, remaining proposals and the reproduction command.
+The same 75-probe inventory now has separate 13.0-stable and 14.0-development
+results: 13.0 has 20 Icarus-passing gaps and four reference mismatches;
+14.0 has 26 and seven.
+See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
+and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 

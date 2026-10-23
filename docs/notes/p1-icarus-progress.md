@@ -11,28 +11,35 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [blocking repeated event controls](repeated-event-controls.md),
+The current implementation includes [aggregate value capture](aggregate-value-capture.md),
+[blocking repeated event controls](repeated-event-controls.md), corrected
 [integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
-with the corrected copy-in/copyback rule and the
-[complete strength-interval kernel API](strength-range-foundation.md).
-The latter is a foundation: MOS/switch source execution and `%v` remain
-unsupported. The [supported inventory](../P1_SUPPORT.md) describes executable
-forms and their limits; P1 remains incomplete and C++ generation remains P2.
+and the [complete strength-interval kernel API](strength-range-foundation.md).
+The strength API remains a foundation: MOS/switch source execution and `%v`
+are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
+and limits. P1 remains incomplete; C++ generation remains P2.
 
-Full local CI at source `87ae3a2` passes configure/build/test for
-dev/release/ASan/UBSan. Dev/ASan/UBSan each run 2,907 tests (2,905 pass,
-two known skips); release runs 2,908 (2,906 pass, the same skips).
+Full local CI at source `917c715` passes configure/build/test for
+dev/release/ASan/UBSan. Dev/ASan/UBSan each run 2,980 tests (2,978 pass,
+two known skips); release runs 2,981 (2,979 pass, the same skips).
 Release flags, banned features, SPDX, suite files, global state, expectation
-protection for the source commit, README counts, clang-format and clang-tidy
-also pass. Unit/suite/tool/generator counts are 298/2,421/129/124. Existing
-suite bodies, expectations and performance counts remain unchanged.
+protection for the three unpublished commits, README counts, clang-format
+and clang-tidy also pass. Unit/suite/tool/generator counts are
+298/2,493/130/125. Existing suite bodies, expectations and performance counts
+remain unchanged. All 29 existing SIR dump tests pass.
 
-The comparison rerun at source `87ae3a2` records **72 original probes,
-26 Icarus-passing gaps and seven reference mismatches** in
-`build/repeated-event-icarus-probes.json`. Both Icarus compiler and runtime
-report `14.0 (devel) (s20260301-411-gca6b8d376)`. Exact-13.0 coverage and
-complete functional parity remain unconfirmed. Counts in the dated entries
-below describe their historical probe cohorts, not the current inventory.
+The same **75 original probes** now run against both installed references:
+
+- Icarus `13.0 (stable) (v13_0)`: 20 Icarus-passing gaps, four reference
+  result mismatches.
+- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 26 Icarus-passing gaps,
+  seven reference result mismatches.
+
+See the [versioned comparison and portable data](icarus-13-comparison.md).
+The compiler driver, preprocessor, parser/elaborator and runtime were all
+verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
+complete coverage, full parity and Linux results for these probes remain
+unconfirmed. Dated entries below retain their historical probe cohorts.
 
 Three detailed semantic amendments remain pending:
 
@@ -40,19 +47,40 @@ Three detailed semantic amendments remain pending:
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
 - [Array minimum/maximum execution](array-extrema-proposal.md).
 
-The external pass-rate measurements retain their 2026-10-22 provenance;
-performance measurements retain their 2026-10-23 provenance. Neither is a
-new measurement of the current source. See [benchmark conditions](../BENCHMARKS.md).
-
-To repeat the finite comparison after building:
+The broader development-version cases remain tracked. External pass-rate
+measurements keep their 2026-10-22 provenance; performance measurements keep
+their 2026-10-23 provenance. See [benchmark conditions](../BENCHMARKS.md).
 
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/repeated-event-icarus-probes.json --require-parity
+  --extended --output build/p1-feature-probes.json --require-parity
 ```
 
-The current result exits 1 because execution gaps remain. The JSON records
-versions, probe results, gaps and reference mismatches separately.
+This uses PATH; the [13.0 command](icarus-13-comparison.md#reproduce) selects
+matching binaries explicitly. Both measured references still give exit 1
+for remaining passing gaps. A zero result would not establish full parity.
+
+## Aggregate capture and exact-13.0 baseline (2026-10-24)
+
+Source `917c715` restores the already approved RHS-first rules for ordinary
+aggregate assignments and NBAs, and snapshots container leaves before
+later field/selector effects. It adds runtime fixed-subarray targets and
+fixed-array members in hidden function-return storage through existing SIR.
+The [72-source matrix and validation](aggregate-value-capture.md) cover eight
+contexts and 1/32/65/129-bit two/four-state payloads. The retained old binary
+fails 64 outputs and rejects eight forms; the corrected cases pass.
+Nine compiled aggregate mutations are caught without anchor/judging
+self-checks, including eight caught by new stdout expectations. Restored
+sources rebuild before full CI. No semantic amendment is needed to restore
+VALUE_SEMANTICS 3.1/3.13 and SIR_SPEC 7.3.
+
+Three comparison probes expand 72 to 75; both references reject these
+forms while kirimasim passes. Two probes explicitly test the project
+RHS-order policy, and one tests a standard runtime subarray target. The
+existing gap counts are unchanged. The new 13.0 and development records
+measure different baselines; their 20/26 and four/seven counts are not a
+cross-version improvement. Event-controlled NBAs still require independent
+registration and remain unsupported. Full P1 support remains unproven.
 
 ## Blocking repeated event controls (2026-10-24)
 

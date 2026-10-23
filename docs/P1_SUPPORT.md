@@ -10,7 +10,8 @@ The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
 This inventory describes tier 1 as of 2026-10-24, including dynamic arrays
-and queues, repeated blocking event controls, corrected integral `$fread`
+and queues, aggregate value capture before target effects, repeated blocking
+event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API is documented separately as a kernel foundation; it does not enable
@@ -58,6 +59,19 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.
+
+### Aggregate assignment capture
+
+Blocking and nonblocking aggregate assignments capture every RHS value
+before runtime target selectors. Container leaves snapshot before later
+pattern members can mutate their source. Whole fixed subarrays selected
+at run time, including structure elements' array members, use the same
+stores for ordinary assignment, NBA and delayed NBA. Automatic/static
+functions can return structures with fixed-array members. Explicit automatic
+structure variables with array members retain their existing limitation.
+The [72 original source cases and verification](notes/aggregate-value-capture.md)
+cover these forms. Event-controlled NBAs and blocking whole-aggregate
+intra-assignment timing remain unsupported.
 
 ### Repeated blocking event controls
 
