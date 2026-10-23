@@ -186,7 +186,9 @@ When collapsed, the name table keeps both the parent's and the child's names as 
 | `string` | String (a handle) |
 | `handle<class number>` | Class handle |
 | `chandle`, `event` | chandle, named event |
-| `dynarray<element type>`, `queue<element type>`, `assoc<key type, element type>` | Dynamic data (handles; dynamic arrays and queues P1, associative arrays follow P1_SCOPE) |
+| `dynarray<!T>`, `queue<!T>` | Typed container handles; !T is the descriptor row (5.8) |
+| `ref`, `ref<!T>` | Variable references; !T qualifies a container target (5.8) |
+| `assoc<key type, element type>` | Planned associative-array handles, under P1_SCOPE |
 
 - A signed `i4<w>` in the design specification's notation is written `s4<w>` (draft).
 - Enumerated types are handled as values of the base integral type, with the table of names and values in the type table (methods such as `name()` look up the table).
@@ -234,6 +236,7 @@ Amendment of M3b. Each row of the type table is referred to by its number (TypeI
 | Packed structures and unions | Name, value type of the whole, sequence of fields (name, position of the least significant bit, width, type number of the field). For unions every field starts at position 0 |
 | Unpacked structure | Name, sequence of members (name, type number) |
 | Unpacked array | Type number of the element, range of each dimension |
+| Dynamic array or queue | Element value type; queue capacity (0 means unbounded); nested descriptors precede parents (5.8) |
 | UDP (approved 2026-10-17) | Name, number of inputs, whether sequential, sequence of table rows (each row: the symbol for each input, the symbol of the present state if sequential, the symbol of the output), initial value (sequential UDPs) |
 | Class | P3 |
 
@@ -352,7 +355,69 @@ Approved 2026-10-17.
 - ref actual arguments (static variables only; checked: 16.4) use their values at the time S is called.
 - When the action block is a task that may wait, and deferred assertions written as module items (16.4.3), are reported as unsupported for now.
 
+### 5.8 Typed container encoding (approved contract of 2026-10-23)
+
+This encoding implements the [approved amendment](../notes/dynamic-containers-proposal.md).
+A value of `dynarray<!T>` or `queue<!T>` has width zero and refers to its
+container descriptor row `!T`; that row holds the element value type and,
+for queues, `capacity` (maximum element count, zero meaning unbounded).
+Nested descriptors precede their parents. Producers canonicalize identical
+element/bound descriptors. The current encoding admits integral, real,
+shortreal, string, chandle and nested-container elements. Fixed aggregate,
+event and class element representations remain implementation work.
+
+A `ref<!T>` names one variable of that container type, including a selected
+element of a fixed array of containers. Referring to the whole fixed array
+uses the existing unqualified ref form; it cannot be used as a single
+container receiver. Other scalar/aggregate refs retain their existing form.
+The verifier checks descriptor kind, target, operand count, element and
+result types, index types and argument bindings. Ref arguments use equivalent
+value types (6.22.2, 13.5.2): differing queue capacities, including nested ones,
+do not make the types inequivalent. A callee's logical ref descriptor may
+therefore differ from the actual variable's descriptor. Transport must retain
+the actual binding and capacity, even when the variable's handle is zero.
+
+| Instruction | Operands and result |
+| --- | --- |
+| `container.new` | Result is a dynamic-array value; operands are a signed four-state 64-bit size and a container initializer of the same element type |
+| `container.copy` | Result is the destination container type; source has an equivalent element type; copying applies destination bounds and makes independent cells |
+| `container.snapshot` | One container value; preserves its logical result type and copies the actual source value/bounds without conversion |
+| `container.assign` | `!T`, captured `ref<!T>` and a source container with an equivalent element type; copies into the actual target variable, applying its bounds; no result |
+| `container.pack` | Result is the container type; operands are zero or more values of its element type |
+| `container.size` | One container value; result is `i2<64>` (front converts to the language query's type) |
+| `container.read` | Container value and integral index; result is the element type |
+| `container.cell` | `!T`, captured `ref<!T>`, integral index; result is an element ref, qualified by the element descriptor when it is itself a container |
+| `container.write` | `!T`, captured `ref<!T>`, integral index and element value; no result |
+| `container.clear` | `!T` and captured `ref<!T>`; no result |
+| `queue.insert` | Queue `!T`, captured `ref<!T>`, integral index and element value; no result |
+| `queue.push.front`, `queue.push.back` | Queue `!T`, captured `ref<!T>` and element value; no result |
+| `queue.pop.front`, `queue.pop.back` | Queue `!T` and captured `ref<!T>`; result is the element type |
+| `queue.erase` | Queue `!T`, captured `ref<!T>` and integral index; no result |
+
+Changing operations read the receiver variable's then-current handle through
+the captured reference, after all argument operands have been computed. This
+keeps receiver binding separate from value evaluation. For method calls,
+front captures the receiver binding before evaluating arguments under the
+approved rule; for assignments it captures the RHS before target selectors
+under 7.3. Operand position does not replace this explicit SSA evaluation
+order. Raw load/store, frame and call/block-argument
+transport moves handles. Front uses `container.snapshot` to capture a value
+before later side effects, `container.copy` for a fresh value of a specified
+destination type, and `container.assign` for language assignments to variables.
+Assignment and queue mutations must use the actual target's capacity, not a
+possibly different ref formal's capacity. An empty container constant has handle zero
+and is printed `empty`. Nonempty container constants are invalid.
+
+These definitions and verifier/text support do not establish VM or language
+support. Connecting execution, roots, diagnostics and source-level matrices
+remains required under P1_SCOPE. C ABI 0.3 is unchanged by this internal SIR
+encoding.
+
 ## 6. Constants
+
+A container constant is only the empty handle zero, printed `empty`. A chandle
+constant is null, printed `null`. Nonempty container values are made by the
+typed instructions of 5.8 rather than embedded heap objects.
 
 - Small constants are written directly as operands of instructions; large ones are placed in the constant table.
 - Constants are the results of slang's constant evaluation. They are not computed again in SIR.

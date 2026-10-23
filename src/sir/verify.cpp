@@ -28,6 +28,13 @@ namespace {
 /// Instructions that produce no value.
 bool hasNoResult(Op op) {
     switch (op) {
+        case Op::ContainerAssign:
+        case Op::ContainerWrite:
+        case Op::ContainerClear:
+        case Op::QueueInsert:
+        case Op::QueuePushFront:
+        case Op::QueuePushBack:
+        case Op::QueueErase:
         case Op::Store:
         case Op::Nba:
         case Op::NbaDelay:
@@ -247,6 +254,32 @@ private:
 
     bool typeRefOk(TypeId t) const { return t == kNone || t.index() < d_.types.size(); }
 
+    Type containerType(TypeId row) const {
+        if (row.index() >= d_.types.size()) return voidType();
+        const TypeEntryKind kind = d_.types[row.index()].kind;
+        if (kind == TypeEntryKind::DynArray) return dynarrayType(row);
+        if (kind == TypeEntryKind::Queue) return queueType(row);
+        return voidType();
+    }
+    const Type* containerElement(Type t) const {
+        if (!isContainer(t) || t.width != 0 || containerType(t.detail) != t) return nullptr;
+        return &d_.types[t.detail.index()].value;
+    }
+    void checkValueType(Type t, const std::string& where, SourceLoc loc = {}) {
+        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Queue)) {
+            error(where, "unknown value type", loc);
+            return;
+        }
+        if (isContainer(t)) {
+            if (!containerElement(t))
+                error(where, "container type needs its matching descriptor", loc);
+        } else if (t.detail != kNone) {
+            if (t.kind != TypeKind::Ref || t.width != 0 ||
+                containerType(t.detail).kind == TypeKind::Void)
+                error(where, "only container values and refs may name a container descriptor", loc);
+        }
+    }
+
     void checkInstances() {
         for (std::size_t i = 0; i < d_.instances.size(); ++i) {
             const InstanceKind kind = d_.instances[i].kind;
@@ -264,6 +297,9 @@ private:
         for (std::size_t i = 0; i < d_.types.size(); ++i) {
             const TypeEntry& t = d_.types[i];
             const std::string where = "type !" + std::to_string(i);
+            checkValueType(t.value, where);
+            if (t.kind != TypeEntryKind::Queue && t.maxElements != 0)
+                error(where, "only a queue descriptor has a capacity");
             for (const Field& f : t.fields)
                 if (!typeRefOk(f.type)) error(where, "field type out of range");
             switch (t.kind) {
@@ -299,6 +335,20 @@ private:
                     if (!typeRefOk(t.element)) error(where, "element type out of range");
                     break;
                 case TypeEntryKind::Udp: checkUdp(t, where); break;
+                case TypeEntryKind::DynArray:
+                case TypeEntryKind::Queue: {
+                    const Type e = t.value;
+                    const bool scalar = (isIntegral(e) && e.width != 0) || isReal(e) ||
+                                        e.kind == TypeKind::String || e.kind == TypeKind::Chandle;
+                    if ((!scalar && !containerElement(e)) || (!isIntegral(e) && e.width != 0))
+                        error(where, "container element must be an implemented value type");
+                    if (isContainer(e) && e.detail.index() >= i)
+                        error(where, "nested container descriptor must precede its parent");
+                    if (!t.dims.empty() || !t.fields.empty() || !t.items.empty() ||
+                        !t.rows.empty() || t.element != kNone)
+                        error(where, "container descriptor has unrelated aggregate data");
+                    break;
+                }
             }
         }
     }
@@ -348,6 +398,9 @@ private:
             if (s.subroutine != kNone && s.subroutine.index() >= d_.subroutines.size())
                 error(where, "subroutine out of range");
             if (!typeRefOk(s.declType)) error(where, "type out of range");
+            checkValueType(s.type, where);
+            if (isContainer(s.type) && s.kind != SlotKind::Var)
+                error(where, "a container slot must be a variable");
             if (s.type.kind == TypeKind::Void) error(where, "slot has type void");
             if (isIntegral(s.type) && s.type.width == 0) error(where, "integral slot has width 0");
             if (s.driverOf != kNone) {
@@ -418,6 +471,13 @@ private:
         for (std::size_t i = 0; i < d_.constants.size(); ++i) {
             const Constant& c = d_.constants[i];
             const std::string where = "const #" + std::to_string(i);
+            checkValueType(c.type, where);
+            if (isContainer(c.type)) {
+                if (c.aWords.size() != 1 || c.aWords[0] != 0 || !c.bWords.empty() ||
+                    !c.bytes.empty())
+                    error(where, "a container constant must be empty");
+                continue;
+            }
             if (isString(c.type)) {
                 if (!c.aWords.empty() || !c.bWords.empty())
                     error(where, "string constant has words");
@@ -546,6 +606,7 @@ private:
         body.subroutine = &s;
         body.kindText = kindName(s.kind);
         body.waitsAllowed = s.kind == SubroutineKind::Task && s.mayWait;
+        checkValueType(s.returnType, where, s.loc);
         if (s.mayWait && s.kind != SubroutineKind::Task) error(where, "only tasks may wait", s.loc);
         if (s.kind == SubroutineKind::Task && s.returnType.kind != TypeKind::Void)
             error(where, "a task returns no value", s.loc);
@@ -575,6 +636,7 @@ private:
             error(where, "only guards read another frame", s.loc);
         }
         for (const Param& p : s.params) {
+            checkValueType(p.type, where, s.loc);
             const bool inSlot = p.slot != kNone;
             const bool inFrame = p.frameVar != kNone;
             if (inSlot == inFrame) {
@@ -590,10 +652,16 @@ private:
                     error(where, "argument '" + p.name + "' slot is invalid", s.loc);
             } else if (p.frameVar.index() >= s.frame.size()) {
                 error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
-            } else if (p.dir == Direction::Ref || p.dir == Direction::ConstRef
-                           ? s.frame[p.frameVar.index()].type.kind != TypeKind::Ref
-                           : !fits(s.frame[p.frameVar.index()].type, p.type)) {
-                error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
+            } else {
+                const FrameVar& f = s.frame[p.frameVar.index()];
+                const bool ref = p.dir == Direction::Ref || p.dir == Direction::ConstRef;
+                const bool badRef =
+                    f.type.kind != TypeKind::Ref ||
+                    (f.type.detail != kNone && f.target != p.type) ||
+                    (isContainer(p.type) &&
+                     f.type != (f.dims.empty() ? refType(p.type.detail) : refType()));
+                if (ref ? badRef : !fits(f.type, p.type))
+                    error(where, "argument '" + p.name + "' frame variable is invalid", s.loc);
             }
         }
         checkBody(body);
@@ -660,6 +728,15 @@ private:
     }
 
     void checkBody(const Body& body) {
+        for (const FrameVar& f : *body.frame) {
+            checkValueType(f.type, body.where);
+            checkValueType(f.target, body.where);
+            if (f.type.kind == TypeKind::Ref && (f.type.detail != kNone || isContainer(f.target)) &&
+                ((f.type.detail != kNone && f.target != containerType(f.type.detail)) ||
+                 f.type != (isContainer(f.target) && f.dims.empty() ? refType(f.target.detail)
+                                                                    : refType())))
+                error(body.where, "container ref target differs from its descriptor");
+        }
         const auto& blocks = *body.blocks;
         if (blocks.empty()) {
             error(body.where, "has no blocks");
@@ -759,6 +836,7 @@ private:
         for (std::size_t b = 0; b < nb; ++b) {
             for (const BlockParam& prm : blocks[b].params) {
                 if (prm.type.kind == TypeKind::Void) error(bw(b), "parameter has type void");
+                checkValueType(prm.type, bw(b));
                 define(prm.temp, b, -1, prm.type, {});
             }
             const auto& instrs = blocks[b].instrs;
@@ -899,6 +977,7 @@ private:
         else if (in.loc.file >= d_.sources.size())
             bad("source file out of range");
 
+        checkValueType(in.type, bw, in.loc);
         if (hasNoResult(in.op)) {
             if (in.result != kNone || in.type.kind != TypeKind::Void) bad("must not have a result");
         } else if ((in.result == kNone) != (in.type.kind == TypeKind::Void)) {
@@ -1055,7 +1134,9 @@ private:
                     ops[i].kind == Operand::Kind::Slot || ops[i].kind == Operand::Kind::Frame;
                 if (prm.dir == Direction::Ref || prm.dir == Direction::ConstRef) {
                     // A ref made by ref.make (SIR_SPEC.md 8).
-                    if (!isValue(i) || ty(i).kind != TypeKind::Ref)
+                    if (!isValue(i) || ty(i).kind != TypeKind::Ref ||
+                        (isContainer(prm.type) && paramElements(callee, prm) == 0 &&
+                         !equivalentValueTypes(d_, ty(i), refType(prm.type.detail))))
                         bad("argument '" + prm.name + "' must be a ref");
                     continue;
                 }
@@ -1079,6 +1160,98 @@ private:
 
         // Rule 1: operand and result types.
         switch (in.op) {
+            case Op::ContainerNew:
+            case Op::ContainerCopy:
+            case Op::ContainerSnapshot:
+            case Op::ContainerPack: {
+                const Type* element = containerElement(rt);
+                if (!element) {
+                    bad("result needs a container descriptor");
+                    break;
+                }
+                if (in.op == Op::ContainerPack) {
+                    for (std::size_t i = 0; i < ops.size(); ++i)
+                        if (!isValue(i) || !equivalentValueTypes(d_, ty(i), *element))
+                            bad("packed value must have the container element type");
+                    break;
+                }
+                const bool make = in.op == Op::ContainerNew;
+                if (!nOps(make ? 2 : 1)) break;
+                const std::size_t source = make ? 1 : 0;
+                const Type* from = containerElement(ty(source));
+                if (!isValue(source) || !from || !equivalentValueTypes(d_, *from, *element))
+                    bad("source must be a container with the same element type");
+                if (in.op == Op::ContainerSnapshot && rt != ty(0))
+                    bad("snapshot must preserve its source value type");
+                if (make && (rt.kind != TypeKind::DynArray || !isValue(0) || ty(0) != s4(64)))
+                    bad("construction needs a dynamic array and a signed four-state 64-bit size");
+                break;
+            }
+            case Op::ContainerSize:
+            case Op::ContainerRead: {
+                const bool read = in.op == Op::ContainerRead;
+                if (!nOps(read ? 2 : 1)) break;
+                const Type* element = containerElement(ty(0));
+                if (!isValue(0) || !element) {
+                    bad("needs a container value");
+                    break;
+                }
+                if (rt != (read ? *element : u2(64))) bad("incorrect container result type");
+                if (read && (!isValue(1) || !isIntegral(ty(1)) || ty(1).width == 0))
+                    bad("element index must be integral");
+                break;
+            }
+            case Op::ContainerCell:
+            case Op::ContainerAssign:
+            case Op::ContainerWrite:
+            case Op::ContainerClear:
+            case Op::QueueInsert:
+            case Op::QueuePushFront:
+            case Op::QueuePushBack:
+            case Op::QueuePopFront:
+            case Op::QueuePopBack:
+            case Op::QueueErase: {
+                const bool indexed = in.op == Op::ContainerCell || in.op == Op::ContainerWrite ||
+                                     in.op == Op::QueueInsert || in.op == Op::QueueErase;
+                const bool writes = in.op == Op::ContainerWrite || in.op == Op::QueueInsert ||
+                                    in.op == Op::QueuePushFront || in.op == Op::QueuePushBack;
+                const bool assign = in.op == Op::ContainerAssign;
+                const std::size_t n = 2 + (indexed ? 1 : 0) + (writes || assign ? 1 : 0);
+                if (!nOps(n)) break;
+                if (ops[0].kind != Operand::Kind::Type) {
+                    bad("needs a container type row");
+                    break;
+                }
+                const Type receiver = containerType(ops[0].asType());
+                const Type* element = containerElement(receiver);
+                if (!element) {
+                    bad("needs a container type row");
+                    break;
+                }
+                if (!isValue(1) || ty(1) != refType(receiver.detail))
+                    bad("receiver must be a captured ref to this container type");
+                const bool queue = in.op != Op::ContainerCell && in.op != Op::ContainerWrite &&
+                                   in.op != Op::ContainerClear && !assign;
+                if (queue && receiver.kind != TypeKind::Queue) bad("method needs a queue receiver");
+                if (indexed && (!isValue(2) || !isIntegral(ty(2)) || ty(2).width == 0))
+                    bad("element index must be integral");
+                if (assign) {
+                    const Type* source = containerElement(ty(2));
+                    if (!isValue(2) || !source || !equivalentValueTypes(d_, *source, *element))
+                        bad("assignment source must have an equivalent element type");
+                }
+                if (writes && (!isValue(n - 1) || !equivalentValueTypes(d_, ty(n - 1), *element)))
+                    bad("written value must have the container element type");
+                if (in.op == Op::ContainerCell) {
+                    const Type want =
+                        refType(isContainer(*element) ? element->detail : TypeId{kNone});
+                    if (rt != want) bad("cell ref result must describe the element target");
+                } else if ((in.op == Op::QueuePopFront || in.op == Op::QueuePopBack) &&
+                           rt != *element) {
+                    bad("pop result must have the container element type");
+                }
+                break;
+            }
             case Op::Load:
                 if (nOps(1) && ops[0].kind == Operand::Kind::Slot && ty(0) != rt)
                     bad("result type differs from the slot range " + toString(ty(0)));
@@ -1190,6 +1363,13 @@ private:
                 const std::size_t n = ops.size() - 1;
                 if ((n != 0 && n != s->dims->size()) || !indicesOk(1, n))
                     bad("needs no index or one per dimension");
+                Type target = s->type;
+                if (s->frame && target.kind == TypeKind::Ref)
+                    target = (*body.frame)[ops[0].id].target;
+                const bool single = s->dims->empty() || n == s->dims->size();
+                const Type want =
+                    isContainer(target) && single ? refType(target.detail) : refType();
+                if (rt != want) bad("ref result does not describe its target");
                 break;
             }
             case Op::LoadRef:
@@ -1203,7 +1383,11 @@ private:
                                 (n == 1 || constIndex(ops[1])) &&
                                 (load ? rt.kind != TypeKind::Void && rt.kind != TypeKind::Ref
                                       : isValue(ops.size() - 1));
-                if (!ok) bad("needs a ref, an optional constant leaf and a value");
+                if (!ok)
+                    bad("needs a ref, an optional constant leaf and a value");
+                else if (ty(0).detail != kNone && (n != 1 || (load ? rt : ty(ops.size() - 1)) !=
+                                                                 containerType(ty(0).detail)))
+                    bad("container ref access must use its target type without a leaf");
                 break;
             }
             case Op::LoadRefElem:

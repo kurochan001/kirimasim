@@ -19,8 +19,9 @@ queue operations, transactional allocation failure and exact tracing with
 generation-checked reuse. Fifteen kernel tests, the 2,520,000-operation
 reference run and six deliberate mutation checks pass.
 
-The approved SystemVerilog contract below is only partly implemented. Typed
-SIR/front/VM integration, complete safe-point roots, source-level diagnostics
+Typed SIR descriptors, receiver references, instructions, verification and
+text are also implemented (SIR_SPEC 5.8). The approved SystemVerilog contract
+below is only partly implemented. Front/VM integration, complete safe-point roots, source-level diagnostics
 and language execution matrices remain. `new[]`, queue methods and dynamic
 container element access still stop as unsupported in execution. Kernel
 checks do not establish language support or full Icarus parity.

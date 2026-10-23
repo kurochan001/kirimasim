@@ -3,6 +3,7 @@
 
 #include "kirimasim/sir/types.h"
 
+#include <cstddef>
 #include <cstdint>
 
 #include "kirimasim/sir/design.h"
@@ -34,7 +35,10 @@ std::string toString(Type t) {
         case TypeKind::String: return "string";
         case TypeKind::Event: return "event";
         case TypeKind::Chandle: return "chandle";
-        case TypeKind::Ref: return "ref";
+        case TypeKind::Ref:
+            return t.detail == kNone ? "ref" : "ref<!" + std::to_string(t.detail.index()) + ">";
+        case TypeKind::DynArray: return "dynarray<!" + std::to_string(t.detail.index()) + ">";
+        case TypeKind::Queue: return "queue<!" + std::to_string(t.detail.index()) + ">";
     }
     return "?";
 }
@@ -95,6 +99,22 @@ std::uint64_t elementCount(const FrameVar& f) {
 
 const char* opName(Op op) {
     switch (op) {
+        case Op::ContainerNew: return "container.new";
+        case Op::ContainerCopy: return "container.copy";
+        case Op::ContainerSnapshot: return "container.snapshot";
+        case Op::ContainerAssign: return "container.assign";
+        case Op::ContainerPack: return "container.pack";
+        case Op::ContainerSize: return "container.size";
+        case Op::ContainerRead: return "container.read";
+        case Op::ContainerCell: return "container.cell";
+        case Op::ContainerWrite: return "container.write";
+        case Op::ContainerClear: return "container.clear";
+        case Op::QueueInsert: return "queue.insert";
+        case Op::QueuePushFront: return "queue.push.front";
+        case Op::QueuePushBack: return "queue.push.back";
+        case Op::QueuePopFront: return "queue.pop.front";
+        case Op::QueuePopBack: return "queue.pop.back";
+        case Op::QueueErase: return "queue.erase";
         case Op::Load: return "load";
         case Op::Store: return "store";
         case Op::Nba: return "nba";
@@ -206,6 +226,48 @@ const char* opName(Op op) {
     return "?";
 }
 
+bool equivalentValueTypes(const Design& d, Type a, Type b) {
+    const auto descriptor = [&](TypeId id) {
+        if (id.index() >= d.types.size()) return voidType();
+        const auto kind = d.types[id.index()].kind;
+        if (kind == TypeEntryKind::DynArray) return dynarrayType(id);
+        if (kind == TypeEntryKind::Queue) return queueType(id);
+        return voidType();
+    };
+    if (a.kind == TypeKind::Ref && b.kind == TypeKind::Ref) {
+        if (a.detail == kNone || b.detail == kNone) return a == b;
+        if (a.width != 0 || b.width != 0) return false;
+        a = descriptor(a.detail);
+        b = descriptor(b.detail);
+        if (!isContainer(a) || !isContainer(b)) return false;
+    }
+    for (std::size_t remaining = d.types.size() + 1; remaining != 0; --remaining) {
+        if (a.kind != b.kind || a.width != b.width) return false;
+        if (!isContainer(a)) return a == b;
+        if (a.width != 0 || descriptor(a.detail) != a || descriptor(b.detail) != b) return false;
+        a = d.types[a.detail.index()].value;
+        b = d.types[b.detail.index()].value;
+    }
+    return false;
+}
+
+bool isContainerOp(Op op) { return op >= Op::ContainerNew && op <= Op::QueueErase; }
+
+bool isContainerMutation(Op op) {
+    switch (op) {
+        case Op::ContainerAssign:
+        case Op::ContainerWrite:
+        case Op::ContainerClear:
+        case Op::QueueInsert:
+        case Op::QueuePushFront:
+        case Op::QueuePushBack:
+        case Op::QueuePopFront:
+        case Op::QueuePopBack:
+        case Op::QueueErase: return true;
+        default: return false;
+    }
+}
+
 bool isTerminator(Op op) {
     switch (op) {
         case Op::Br:
@@ -292,6 +354,8 @@ const char* kindName(TypeEntryKind k) {
         case TypeEntryKind::UnpackedStruct: return "struct";
         case TypeEntryKind::Array: return "array";
         case TypeEntryKind::Udp: return "udp";
+        case TypeEntryKind::DynArray: return "dynarray";
+        case TypeEntryKind::Queue: return "queue";
     }
     return "?";
 }

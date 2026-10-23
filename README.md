@@ -39,7 +39,8 @@ The dynamic-array/queue execution amendment was approved on 2026-10-23.
 The shared kernel now has a typed heap with deep copying, stable element
 references, bounded queues, exact tracing and allocation-failure rollback.
 Its 15 kernel tests pass, including 2,520,000 model-checked operations and
-six deliberate mutation checks. SIR/front-end/VM integration and automatic
+six deliberate mutation checks. Typed container SIR descriptors, references,
+instructions, verification and text are now defined; front-end/VM integration and automatic
 root publication are still unfinished, so dynamic arrays and queues cannot
 yet be executed from SystemVerilog. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
@@ -98,11 +99,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 2,110 | 2,108, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 2,120 | 2,118, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 236, `tests/suite/` 1,691 (made by 120 generators under `tools/`), tools 125, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
+This repository's tests by kind: unit tests (GoogleTest) 246, `tests/suite/` 1,691 (made by 120 generators under `tools/`), tools 125, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

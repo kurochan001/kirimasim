@@ -8,7 +8,12 @@
 #include <cstdint>
 #include <string>
 
+#include "kirimasim/sir/id.h"
+
 namespace kirimasim::sir {
+
+struct TypeTag;
+using TypeId = Id<TypeTag>;
 
 /// Kind of a value type.
 enum class TypeKind : std::uint8_t {
@@ -23,6 +28,8 @@ enum class TypeKind : std::uint8_t {
     Event,      ///< Named event (a handle).
     Chandle,    ///< chandle.
     Ref,        ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
+    DynArray,   ///< Dynamic-array handle; detail names its type-table row.
+    Queue,      ///< Queue handle; detail names its type-table row.
 };
 
 /// A value type. Integral kinds carry a bit width of at least 1; other kinds
@@ -30,12 +37,20 @@ enum class TypeKind : std::uint8_t {
 struct Type {
     TypeKind kind = TypeKind::Void;
     std::uint32_t width = 0;
+    /// Container descriptor; also the target of a ref to one container
+    /// variable. kNone for other types and ordinary refs.
+    TypeId detail = kNone;
 
     friend bool operator==(const Type&, const Type&) = default;
 };
 
 inline Type voidType() { return {TypeKind::Void, 0}; }
-inline Type refType() { return {TypeKind::Ref, 0}; }
+inline Type refType(TypeId target = kNone) { return {TypeKind::Ref, 0, target}; }
+inline Type dynarrayType(TypeId row) { return {TypeKind::DynArray, 0, row}; }
+inline Type queueType(TypeId row) { return {TypeKind::Queue, 0, row}; }
+inline bool isContainer(Type t) {
+    return t.kind == TypeKind::DynArray || t.kind == TypeKind::Queue;
+}
 inline Type u2(std::uint32_t w) { return {TypeKind::U2, w}; }
 inline Type s2(std::uint32_t w) { return {TypeKind::S2, w}; }
 inline Type u4(std::uint32_t w) { return {TypeKind::U4, w}; }

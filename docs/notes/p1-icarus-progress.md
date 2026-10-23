@@ -9,7 +9,46 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-## Current snapshot (2026-10-23)
+## Typed container SIR implementation (2026-10-23)
+
+The heap foundation now has typed container descriptors/references, 16 SIR
+operations, verification and text support (SIR_SPEC 5.8). Captured receiver
+references separate binding from argument values. `container.snapshot`
+captures the actual source value, `container.copy` creates a value of a
+specified type, and `container.assign` applies the actual target variable's
+bounds. Raw handle transport does not implement language value copying.
+
+Checking 6.22.2 and 13.5.2 established that queue capacities do not distinguish
+equivalent ref targets, including nested queues. An original positive check
+failed with the initial strict-descriptor verifier; iterative equivalence
+now accepts it. Execution must preserve the actual target type/capacity,
+including empty variables, rather than replacing it with the formal's bound.
+
+Ten new SIR tests cover 96 type/bound combinations, 49 malformed cases,
+input/ref/const-ref arguments, individual/fixed-array container references
+and 2,500 nested equivalence levels. Negative cases require the corresponding
+diagnostic, so an unrelated rejection cannot hide a missed check.
+
+All nine deliberate mutations (receiver descriptor/kind, size type, copied
+element type, descriptor cycle, nonempty constant, ref-bound equivalence,
+snapshot type and assignment element compatibility) were caught by actual
+SIR tests, excluding mutation-tool anchor checks. The restored baseline passes.
+
+VM execution, front-end production, roots, diagnostics and change notification
+are not connected yet. Kernel copying across differing nested queue bounds
+and runtime references retaining actual target types still need integration
+and tests before the language producer is enabled. The 44 probes and 23
+Icarus-passing gaps remain open; the full P1 target is unfinished.
+
+An original kernel input with the same integral element type and inner queue
+capacity changed from 1 to 3 confirms that current `Heap::copy` returns
+InvalidHandle: it requires identical element-layout IDs. This is the next
+concrete mechanism to extend, rather than evidence of completed nested type
+conversion. Dev passes 2,120 tests: 2,118 pass and the same two known skips
+remain. Existing suite bodies and expected outputs were preserved.
+
+
+## Published baseline before this extension (2026-10-23)
 
 The published baseline `6a1830a` includes the five delayed-NBA/packed-target/
 named-event rounds and the approved dynamic-container heap foundation.

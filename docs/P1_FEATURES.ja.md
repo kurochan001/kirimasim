@@ -23,7 +23,7 @@ build/dev/src/driver/kirimasim demo.sv
 以下の例は、現在実行できる機能を示します。カーネルの実装の検査は次で実行できます。
 
 ```sh
-ctest --preset dev -R '^Heap[.]' --output-on-failure
+ctest --preset dev -R '^(Heap|ContainerSir)[.]' --output-on-failure
 ```
 
 ## 名前付きイベントの混合待ちと項ごとのiff

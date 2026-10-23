@@ -98,7 +98,8 @@ and cell roots and reuses unreachable entries with new generations; failed
 marking performs no sweep. These mechanisms have independent-model,
 allocation-failure, deep-nesting, stale-token and Context-isolation tests.
 
-The kernel API is implemented. Typed SIR instructions, front-end lowering,
+The kernel API and typed SIR descriptor/ref/instruction definitions, verifier
+and text support are implemented (SIR_SPEC 5.8). Front-end lowering,
 VM calls, source-level diagnostics and automatic publication of all live
 slots/frames/temporaries/pending events are not connected yet. Collection
 requires a complete root list at a permitted safe point outside DPI. The

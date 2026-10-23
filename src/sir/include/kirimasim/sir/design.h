@@ -30,8 +30,6 @@ struct TempTag;
 using TempId = Id<TempTag>;
 struct BlockTag;
 using BlockId = Id<BlockTag>;
-struct TypeTag;
-using TypeId = Id<TypeTag>;
 struct FrameVarTag;
 using FrameVarId = Id<FrameVarTag>;
 struct SubroutineTag;
@@ -132,6 +130,8 @@ enum class TypeEntryKind : std::uint8_t {
     UnpackedStruct,
     Array,
     Udp,  ///< The table of a user-defined primitive (VALUE_SEMANTICS.md 5.9).
+    DynArray,
+    Queue,
 };
 
 /// A row of a UDP table, in slang's form: one symbol per input, an edge
@@ -173,6 +173,9 @@ struct TypeEntry {
     bool sequential = false;
     std::vector<UdpRow> rows;
     char initial = 'x';
+    /// Container rows: value is the element type. Queue capacity, 0 for
+    /// unbounded; dynamic arrays always use 0 (SIR_SPEC.md 4.2.1).
+    std::uint64_t maxElements = 0;
 };
 
 /// A constant: an integral value of any width (four-state if the type is),
@@ -216,6 +219,25 @@ enum class Op : std::uint8_t {
     LoadRefElem,   ///< %r = load.ref.elem %fN, <index>...  (%fN: a ref argument)
     StoreRefElem,  ///< store.ref.elem %fN, <index>..., <value>
     StoreRefBits,  ///< store.ref.bits %fN, [<index>...,] <position>, <value>
+    // Typed containers (SIR_SPEC.md 4.2.1, 5.8). Container-changing
+    // instructions take a type row and a captured reference to the receiver
+    // variable; they read its current value after all argument operands.
+    ContainerNew,       ///< %r = container.new <s4<64> size>, <initializer>
+    ContainerCopy,      ///< %r = container.copy <container value>
+    ContainerSnapshot,  ///< %r = container.snapshot <value>; preserves actual source bounds
+    ContainerAssign,    ///< container.assign !T, <receiver ref>, <source container>
+    ContainerPack,      ///< %r = container.pack <element value>...
+    ContainerSize,      ///< %r:u2<64> = container.size <container value>
+    ContainerRead,      ///< %r = container.read <container value>, <index>
+    ContainerCell,      ///< %r:ref = container.cell !T, <receiver ref>, <index>
+    ContainerWrite,     ///< container.write !T, <receiver ref>, <index>, <element>
+    ContainerClear,     ///< container.clear !T, <receiver ref>
+    QueueInsert,        ///< queue.insert !T, <receiver ref>, <index>, <element>
+    QueuePushFront,     ///< queue.push.front !T, <receiver ref>, <element>
+    QueuePushBack,      ///< queue.push.back !T, <receiver ref>, <element>
+    QueuePopFront,      ///< %r = queue.pop.front !T, <receiver ref>
+    QueuePopBack,       ///< %r = queue.pop.back !T, <receiver ref>
+    QueueErase,         ///< queue.erase !T, <receiver ref>, <index>
     // Arithmetic (integral, real and shortreal).
     Add,
     Sub,
@@ -678,6 +700,13 @@ bool overlaps(const Slot& s, const SlotRange& a, const SlotRange& b);
 /// Text name of an opcode in the SIR text format (load, br.if, ...).
 const char* opName(Op op);
 /// Whether the instruction ends a basic block.
+/// Physical value-type equivalence; queue capacities do not distinguish
+/// equivalent ref targets (6.22.2, 13.5.2). Nested containers are iterative.
+bool equivalentValueTypes(const Design& design, Type a, Type b);
+bool isContainerOp(Op op);
+/// A container mutation changes the receiver through operand 1 (a ref),
+/// rather than publishing an updated handle as an instruction result.
+bool isContainerMutation(Op op);
 bool isTerminator(Op op);
 /// Whether the instruction writes the slot of its first operand
 /// (SIR_SPEC.md 3.4, 5.3).

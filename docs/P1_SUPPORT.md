@@ -81,10 +81,16 @@ covered by [15 unit tests](../tests/unit/heap_test.cpp) and an independent
 The 100-sample check passed 2,520,000 operations; all six deliberate heap
 mutations were caught. The heap matrix is included in nightly reference checks.
 
-SystemVerilog dynamic arrays and queues remain unsupported. Typed SIR
-operations, front-end lowering, VM calls, complete root publication at safe
+Typed container descriptors, receiver refs, 16 SIR operations, verifier and
+text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container-encoding-approved-contract-of-2026-10-23)).
+Ten new SIR tests cover 96 positive type/bound combinations, 49 malformed
+cases, argument bindings and fixed arrays of container receivers.
+SystemVerilog dynamic arrays and queues remain unsupported. Front-end
+lowering, VM calls, complete root publication at safe
 points and language-level diagnostics still need integration and execution
-matrices. Kernel warning/error categories are not yet source-level messages
+matrices. Kernel copies across differing nested queue bounds and runtime
+references retaining actual target types also need work; existing heap copy
+checks use their registered element layouts. Kernel warning/error categories are not yet source-level messages
 or exit codes for these constructs. This foundation does not establish full
 container support or the Icarus coverage target.
 
@@ -180,7 +186,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | The shared heap is implemented; typed SIR/front/VM integration, complete safe-point roots and SystemVerilog execution tests remain |
+| P1 container integration | The shared heap and typed SIR schema are implemented; front/VM integration, complete safe-point roots and SystemVerilog execution tests remain |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |

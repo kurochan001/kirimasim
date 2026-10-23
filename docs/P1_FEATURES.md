@@ -24,7 +24,7 @@ needs SIR/front/VM and complete root integration. The examples below cover
 currently executable features. For the kernel implementation checks, run:
 
 ```sh
-ctest --preset dev -R '^Heap[.]' --output-on-failure
+ctest --preset dev -R '^(Heap|ContainerSir)[.]' --output-on-failure
 ```
 
 ## Mixed named-event waits and per-item iff

@@ -164,7 +164,8 @@ std::string frameText(const std::vector<FrameVar>& frame) {
     for (std::size_t i = 0; i < frame.size(); ++i) {
         const FrameVar& f = frame[i];
         out += "  frame %f" + std::to_string(i) + " " + quoted(f.name) + " : " + toString(f.type);
-        if (f.type.kind == TypeKind::Ref) out += "<" + toString(f.target) + ">";
+        if (f.type.kind == TypeKind::Ref && f.type.detail == kNone)
+            out += "<" + toString(f.target) + ">";
         out += dimsText(f.dims);
         if (f.declType != kNone) out += " type=" + typeRef(f.declType);
         out += "\n";
@@ -201,6 +202,7 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
     std::string out = std::string(kindName(t.kind)) + " " + quoted(t.name);
     if (t.value.kind != TypeKind::Void) out += " : " + toString(t.value);
     if (t.kind == TypeEntryKind::Array) out += " elem=" + typeRef(t.element) + dimsText(t.dims);
+    if (t.kind == TypeEntryKind::Queue) out += " capacity=" + std::to_string(t.maxElements);
     if (t.kind == TypeEntryKind::Udp) {
         out += " inputs=" + std::to_string(t.inputs);
         if (t.sequential) out += " seq init=" + std::string(1, t.initial);
@@ -242,6 +244,8 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
 }  // namespace
 
 std::string constantText(const Constant& c) {
+    if (isContainer(c.type)) return "empty";
+    if (c.type.kind == TypeKind::Chandle) return "null";
     if (c.type.kind == TypeKind::String) return quoted(c.bytes);
     if (c.type.kind == TypeKind::Real || c.type.kind == TypeKind::ShortReal) {
         const std::uint64_t bits = c.aWords.empty() ? 0 : c.aWords[0];

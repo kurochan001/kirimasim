@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Typed container SIR descriptors, receiver references, 16 instructions,
+  verification and text support, including explicit snapshot/copy/assignment
+  operations and queue-bound equivalence for ref arguments (6.22.2, 7.5,
+  7.10, 13.5.2; SIR_SPEC 5.8). VM/front integration remains unfinished;
+  this is not yet executable SystemVerilog container support.
+
 - Context-owned typed container heap foundation: stable element references,
   deep copies, bounded queue operations, allocation-failure rollback and
   exact tracing with generation-checked table reuse (7.5, 7.10, 13.5.2;
