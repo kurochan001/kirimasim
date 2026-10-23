@@ -41,7 +41,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits; blocking and nonblocking assignments, including delayed streaming NBAs | No `with` clause, string target or nested streaming target; automatic targets cannot receive an NBA |
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
-| Assignment and delay | Blocking and nonblocking assignment, supported intra-assignment delays, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Blocking whole-array intra-assignment timing, event-controlled NBAs and delayed writes through refs/string characters are not implemented; automatic NBA targets remain illegal |
+| Assignment and delay | Blocking and nonblocking assignment, supported intra-assignment delays, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Blocking whole-fixed-array intra-assignment timing, event-controlled NBAs and delayed writes through refs/string characters are not implemented; automatic NBA targets remain illegal |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered` | Existing variable-write restrictions on event/wait conditions remain; no runtime-indexed named event, event-controlled `->>`, or `always_ff` trigger on a computed expression |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, disable of supported named blocks and tasks | Fork-local declarations, escaping automatic variables captured by fork branches and disable of a named fork block have unsupported forms |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
@@ -138,7 +138,11 @@ P1 feature. Whole-value NBAs to eligible static variables are a different case.
 Front lowering now connects the shared heap to executable SystemVerilog.
 The [original source matrix](../tools/gen_dynamic_container_matrix.py) has 240
 cases: eight execution contexts, five integral widths (1, 4, 32, 65, 129),
-two/four-state elements and additional mechanism combinations. The
+two/four-state elements and additional mechanism combinations.
+A [sequence matrix](../tools/gen_container_sequence_matrix.py) adds 256 cases
+across the same eight contexts and six widths (also 64), for 496 source cases
+in total. It checks fixed/dynamic/queue operands, returned arrays, nested
+actual bounds, value independence, held refs and side effects. The
 [CLI checks](../tests/cli/run_dynamic_container_tests.py) cover 11 positioned
 errors. Existing source bodies and expectations are unchanged.
 
@@ -155,12 +159,21 @@ errors. Existing source bodies and expectations are unchanged.
   intra-assignment delays retain their captured values. Explicit `wait` and
   expression watches use typed heap dependencies, including an empty ref
   forwarded to a called function.
+- Unpacked concatenation into dynamic arrays/queues accepts scalar elements,
+  nested elements, fixed arrays (including function results), dynamic arrays
+  and queues. Operands are evaluated once in source order. Buffers are
+  unbounded until the actual destination applies its bounds.
+- Reading `q[low:high]` slices evaluates the queue once and snapshots its
+  value before the bounds. Bounds are evaluated once left to right; `$`
+  uses the captured source length. Negative lows and excess highs are
+  clipped; reversed, X/Z and disjoint ranges return empty queues. Wide
+  unsigned bounds retain an extra sign bit during normalization.
 - `foreach` over one or more explicitly named dynamic dimensions, including
   waits/continue in the body; first-dimension `$size`, `$left`, `$right`, `$low`,
   `$high` and `$increment` queries.
 
-Remaining forms include runtime array operands in concatenations, queue slices,
-container conditional values, array ordering/reduction/locator methods, mixed
+Remaining forms include queue slices as assignment targets,
+container conditional values, dynamic-container reduction/ordering/locator methods, mixed
 or omitted dynamic foreach dimensions, runtime/nested query dimensions and
 fixed-aggregate/class/event elements. Implicit sensitivity (`always_comb`,
 `always_latch`, `always @*`, continuous assignments) to container values gives
@@ -169,6 +182,10 @@ heap changes. Fork capture of enclosing automatic storage remains the existing
 SIR_SPEC 7.5 limitation. Class/DPI/VPI roots and complete Icarus parity remain
 unfinished. These are incremental language features, not complete container
 support.
+
+Ordering methods on fixed arrays also remain unimplemented.
+The [array-method amendment](notes/array-methods-proposal.md) for reductions
+and ordering is awaiting approval under P1_SCOPE.
 
 ## System tasks, functions and methods
 
@@ -262,7 +279,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 240 source cases; remaining language forms are listed above |
+| P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |

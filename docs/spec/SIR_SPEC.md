@@ -412,7 +412,7 @@ The VM's dispatch and reference transport are exercised by independent SIR
 inputs. Typed root publication and automatic collection for the currently
 implemented container SIR are described in RUNTIME_ABI 6. This does not
 alone establish language support. As of 2026-10-24, front lowering and
-240 source cases plus 11 CLI diagnostic cases cover the
+240 core source cases, 256 sequence cases and 11 CLI diagnostic cases cover the
 [tested language subset](../P1_SUPPORT.md#dynamic-container-foundation);
 remaining forms and complete coverage still require implementation under P1_SCOPE. C ABI 0.3 is
 unchanged by this internal SIR encoding. As section 3.3 already requires,

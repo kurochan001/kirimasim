@@ -9,6 +9,72 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Runtime concatenation and queue rvalue slices (2026-10-24)
+
+Source `919d11f` extends the approved container contract with unpacked
+concatenation and reading queue slices (7.10.1, 7.10.4, 10.10). It adds no
+SIR operation or VM/kernel value rule. `Lowerer::appendContainerRange` is the
+common typed construction loop; unbounded buffers retain every converted
+operand until the actual destination applies its bounds. Operands can be
+scalars, fixed arrays, returned arrays, dynamic arrays, queues and nested
+values. Sources are evaluated once, in source order.
+
+Slices capture the source value before evaluating bounds once left to right;
+`$` uses that captured length. Normalization keeps a sign bit for arbitrary
+unsigned bounds and clips negative lows and excess highs. X/Z, reversed and
+disjoint ranges append nothing, including empty sources. Result elements
+are independent copies; existing refs survive queue assignment as detached
+cells under the approved lifetime rules. Slice assignment targets remain
+unsupported.
+
+The original sequence matrix adds 256 cases: eight execution contexts,
+six widths (1/4/32/64/65/129), two/four states and two destination kinds,
+plus 64 mechanism cases. Cases cover returned arrays, nested actual bounds,
+real/string values, held refs, source calls and in-place source changes from
+bound expressions. A separate signed/X/Z widening probe from 32 to 129 bits
+also passed. Existing suite bodies, expectations and performance counts are
+unchanged. The generator itself is registered with CTest.
+
+All nine deliberate sequence mistakes built and were caught by actual source
+output differences: extra elements, sign loss on each bound, unknown-to-zero
+conversion, excluding the last element, negative clipping, borrowed source
+values, repeated source evaluation and premature buffer bounds. The restored
+sequence/CLI run passes 257 tests. These focused checks exclude anchor-only
+and judging-tool self-checks, which cannot prove value semantics.
+
+Full local CI at `919d11f` passes all four configure/build/test presets and
+all static checks: release flags, banned features, SPDX, suite files, global
+state, expectation protection for the seven unpublished commits, README
+counts, clang-format and clang-tidy. Dev/ASan/UBSan each run 2,672 tests
+(2,670 pass, two known skips); release runs 2,673 (2,671 pass, the same skips).
+The documented concatenation/slice example runs with the recorded output
+and no warnings. Core and sequence container matrices now total 496 source
+cases, alongside the existing 11 CLI diagnostics.
+
+The expanded comparison was rerun with a binary reporting `919d11f`: 59
+probes and 21 Icarus-passing gaps remain. Runtime concatenation and queue
+slices pass kirimasim; those original inputs are rejected by the installed
+Icarus compiler. Compiler/runtime versions remain `14.0 (devel)
+(s20260301-411-gca6b8d376)`. `--require-parity` returns 1 for the remaining
+gaps. Exact-13.0 and complete parity remain unconfirmed. Historical external
+population and benchmark measurements retain their original dates/revisions.
+
+```sh
+ctest --preset dev -R 'container_sequence_' --output-on-failure
+python3 tools/mutants.py --only 'container sequence:'
+CTEST_PARALLEL_LEVEL=6 python3 tools/local_ci.py
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/container-sequence-icarus-probes.json --require-parity
+```
+
+The [array-method amendment](array-methods-proposal.md), recorded in `583c3d0`,
+awaits approval before enabling its dependent reductions/ordering. It covers
+empty results, key ordering, reference identity and a new shared value-swap
+operation. The independently approved sequence work above did not enable
+those proposal choices. Classes, VPI, switches, specify/timing and the other
+P1 gaps remain work; the full goal is still active.
+
 ## SystemVerilog dynamic-array and queue execution (2026-10-24)
 
 Implementation `a0cdade` connects front lowering to the existing shared heap;

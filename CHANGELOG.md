@@ -21,6 +21,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Runtime unpacked concatenation combines scalar, fixed-array, dynamic-array
+  and queue operands, including nested values and returned arrays. Queue
+  rvalue slices use the same typed construction loop, with clipping, `$`,
+  empty/X/Z ranges, wide unsigned bounds and source snapshots before bound
+  side effects. Another 256 original source cases cover eight contexts and
+  six widths (7.10.1, 7.10.4, 10.10; existing SIR_SPEC 5.8 operations).
+
 - SystemVerilog dynamic arrays and queues execute through the shared typed
   heap: construction, deep value copies, integral/real/string/nested elements,
   queue methods, actual-bound refs, detached cells, whole-value delayed

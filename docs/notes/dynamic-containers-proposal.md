@@ -33,7 +33,9 @@ reattachment and called-private-container exclusion (SCHEDULER_SPEC 9.5).
 Front lowering now executes construction, copying, element access, queue
 methods, typed refs, whole-value delayed assignments, explicit heap waits,
 dynamic foreach and first-dimension queries. The original source matrix has
-240 cases across eight contexts, plus 11 CLI diagnostic cases. The
+240 cases across eight contexts, plus 11 CLI diagnostic cases. A further
+256 source cases execute runtime unpacked concatenation and reading queue
+slices through the existing typed instructions, without extending this contract. The
 [tested subset and remaining forms](../P1_SUPPORT.md#dynamic-container-foundation)
 are recorded separately; this does not establish complete container or Icarus parity.
 

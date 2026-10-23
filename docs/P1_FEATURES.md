@@ -43,6 +43,31 @@ endmodule
 5
 ```
 
+## Runtime concatenation and queue slices
+
+Unpacked concatenation combines whole array/queue values with individual
+elements. Reading a queue slice copies the retained elements; later writes
+to that copy do not change the source. Bounds can be runtime expressions;
+X/Z or an empty/reversed selection produces an empty queue. Slice assignment
+targets remain unsupported.
+
+```systemverilog
+module top;
+  int q[$], r[$];
+  initial begin
+    q = '{4, 7};
+    r = {0, q, 9};
+    q = r[1:$-1];
+    q[0] = 8;
+    $display("%0d %0d %0d %0d", q.size(), q[0], q[1], r[1]);
+  end
+endmodule
+```
+
+```text
+2 8 7 4
+```
+
 ## Mixed named-event waits and per-item iff
 
 A single event control can mix named events, signal edges and expression

@@ -122,6 +122,10 @@ value snapshots/copies for the [tested language subset](P1_SUPPORT.md#dynamic-co
 Dynamic foreach bounds live in frames across waits; dimension queries reuse
 container size. Pattern temporaries retain all elements before an actual
 variable applies queue bounds, including through equivalent ref types.
+Runtime concatenation and queue slices share a typed sequence-building loop.
+An unbounded queue buffer receives converted elements before the actual
+language destination applies bounds; slice normalization preserves wide
+unsigned indices and rejects unknown ranges through the ordinary branch rules.
 Unimplemented language forms and implicit heap sensitivity are diagnosed;
 full container and Icarus coverage remain work.
 

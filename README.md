@@ -50,9 +50,11 @@ and excludes called functions' private containers. Front lowering now executes
 construction, deep copies, element access, queue methods, actual-bound refs,
 whole-value delayed assignments, explicit heap waits, dynamic foreach and
 first-dimension queries. An original 240-case source matrix spans eight execution
-contexts, with 11 additional CLI diagnostic cases. Container support remains
-partial: slices, runtime array concatenation, additional array methods and
-implicit heap sensitivity are among the remaining forms. See the
+contexts, with 11 additional CLI diagnostic cases. Another 256 source cases
+cover runtime unpacked concatenation and reading queue slices, including wide
+signed/unsigned bounds, X/Z and operand side effects. Container support remains
+partial: slice assignment targets, additional array methods and implicit heap
+sensitivity are among the remaining forms. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
@@ -129,9 +131,9 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI rerun at revision `50911e1` on 2026-10-24 passed
+The local CI rerun at revision `919d11f` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,415 tests: 2,413 pass and the same two known skips remain.
+clang-tidy. Dev has 2,672 tests: 2,670 pass and the same two known skips remain.
 The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
 The expanded 59-probe inventory has 21 gaps, including newly measured array
 reductions and queue sorting; the inventory remains incomplete. See the [validation record](docs/notes/p1-icarus-progress.md).
