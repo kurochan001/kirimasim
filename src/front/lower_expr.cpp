@@ -1305,39 +1305,18 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (name == "$fread" && args.size() >= 2 &&
                 args[0]->type->getCanonicalType().isIntegral()) {
                 // Integral destinations ignore start/count (21.3.4.4), but
-                // every supplied argument is evaluated once, left to right.
-                // Capture the target before those arguments, including its
-                // indices and any stable heap cell (VALUE_SEMANTICS.md 3.1).
+                // value arguments are evaluated once, left to right. Copy-in
+                // reads the actual now; a written output finds its target
+                // again at copyback, as SIR_SPEC.md 8 requires.
                 const ast::Expression* t = outTarget(args[0]);
                 const Type tt = typeOf(*t->type, sl);
-                Place target = placeOf(*t, sl);
-                if (target.home == Place::Home::Heap) {
-                    Place cell = target;
-                    cell.kind = Place::Kind::Element;
-                    cell.type = cell.heapElement;
-                    const auto ref = referencePlace(cell, false, sl);
-                    const auto held = newFrameVar(ref.type);
-                    frameVar(held).target = cell.type;
-                    emitVoid(Op::Fstore, {Operand::frame(held), ref.op}, sl);
-                    target.home = Place::Home::Ref;
-                    target.frame = held;
-                    target.indices.clear();
-                    if (target.kind == Place::Kind::Element) target.kind = Place::Kind::Ref;
-                }
                 const sir::FrameVarId f = newFrameVar(tt);
-                emitVoid(Op::Fstore, {Operand::frame(f), loadPlace(target, sl).op}, sl);
+                emitVoid(Op::Fstore, {Operand::frame(f), coerce(lowerExpr(*t), tt, sl).op}, sl);
                 const auto descriptor = lowerDescriptor(*args[1], sl);
                 for (std::size_t i = 2; i < args.size(); ++i)
                     if (args[i]->kind != ast::ExpressionKind::EmptyArgument) lowerExpr(*args[i]);
                 const Val n = sys(sir::s2(32), {Operand::frame(f), descriptor.op});
-                const auto store = newBlock();
-                const auto next = newBlock();
-                const auto read = emit(Op::Gt, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl);
-                terminate(Op::BrIf, {read.op, Operand::block(store), Operand::block(next)}, sl);
-                setBlock(store);
-                storePlace(target, emit(Op::Fload, tt, {Operand::frame(f)}, sl), false, sl);
-                jump(next, sl);
-                setBlock(next);
+                storeIfRead(*t, f, n);
                 return coerce(n, rt, sl);
             }
             if (name == "$fread" && args.size() >= 2) return lowerFreadMemory(call, rt, sl);

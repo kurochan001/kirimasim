@@ -1223,18 +1223,25 @@ MUTANTS = [
      '                    if (args[i]->kind != ast::ExpressionKind::EmptyArgument) lowerExpr(*args[i]);',
      'for (std::size_t i = args.size(); i-- > 2;)\n'
      '                    if (args[i]->kind != ast::ExpressionKind::EmptyArgument) lowerExpr(*args[i]);'),
-    ("scalar fread: evaluates the destination twice", "src/front/lower_expr.cpp",
-     'storePlace(target, emit(Op::Fload, tt, {Operand::frame(f)}, sl), false, sl);',
-     'lowerStore(*t, emit(Op::Fload, tt, {Operand::frame(f)}, sl), false, sl);'),
-    ("scalar fread: follows a replaced heap binding", "src/front/lower_expr.cpp",
-     'if (target.home == Place::Home::Heap) {',
-     'if (false && target.home == Place::Home::Heap) {'),
+    ("scalar fread: evaluates the copy-in selector twice", "src/front/lower_expr.cpp",
+     'emitVoid(Op::Fstore, {Operand::frame(f), coerce(lowerExpr(*t), tt, sl).op}, sl);',
+     'static_cast<void>(lowerExpr(*t));\n'
+     '                emitVoid(Op::Fstore, {Operand::frame(f), coerce(lowerExpr(*t), tt, sl).op}, sl);'),
+    ("scalar fread: copies in after optional arguments", "src/front/lower_expr.cpp",
+     '                emitVoid(Op::Fstore, {Operand::frame(f), coerce(lowerExpr(*t), tt, sl).op}, sl);\n'
+     '                const auto descriptor = lowerDescriptor(*args[1], sl);\n'
+     '                for (std::size_t i = 2; i < args.size(); ++i)\n'
+     '                    if (args[i]->kind != ast::ExpressionKind::EmptyArgument) lowerExpr(*args[i]);',
+     '                const auto descriptor = lowerDescriptor(*args[1], sl);\n'
+     '                for (std::size_t i = 2; i < args.size(); ++i)\n'
+     '                    if (args[i]->kind != ast::ExpressionKind::EmptyArgument) lowerExpr(*args[i]);\n'
+     '                emitVoid(Op::Fstore, {Operand::frame(f), coerce(lowerExpr(*t), tt, sl).op}, sl);'),
     ("scalar fread: clears unfilled old bits", "src/front/lower_expr.cpp",
-     'emitVoid(Op::Fstore, {Operand::frame(f), loadPlace(target, sl).op}, sl);',
+     'emitVoid(Op::Fstore, {Operand::frame(f), coerce(lowerExpr(*t), tt, sl).op}, sl);',
      'emitVoid(Op::Fstore, {Operand::frame(f), constant(tt, 0).op}, sl);'),
     ("scalar fread: copies back at EOF", "src/front/lower_expr.cpp",
-     'const auto read = emit(Op::Gt, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl);',
-     'const auto read = emit(Op::Ge, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl);'),
+     'const Val read = emit(Op::Gt, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl);',
+     'const Val read = emit(Op::Ge, sir::u2(1), {n.op, constant(sir::s2(32), 0).op}, sl);'),
     ("vm: $fgets into an integral variable reads any number of characters", "src/vm/vm.cpp",
      "files_.readLine(value(ops[2]), text ? 0 : t.width / 8, line, notOpen);",
      "files_.readLine(value(ops[2]), 0, line, notOpen);"),
