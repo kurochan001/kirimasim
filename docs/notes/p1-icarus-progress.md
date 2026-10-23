@@ -9,7 +9,41 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-## Latest documentation and comparison check (2026-10-23)
+## Nested-bound conversion and actual-type snapshots (2026-10-23)
+
+The next heap extension fixes the original nested queue copy failure recorded
+below. `Heap::copy` and `construct` accept equivalent element shapes rather
+than requiring identical registration IDs. Registration computes shape
+equivalence once, ignoring nested queue capacities but preserving kinds,
+word masks, state domains, defaults and field positions. Validation performs
+no allocation or native recursion; language type checking remains in the tier.
+
+The common iterative `Heap::clone` applies every destination queue bound and
+records any truncation in the transaction. Construction, whole copies,
+element writes, append, push and insert return that warning only after a
+successful commit. `Heap::snapshot` copies using the actual source type and
+bounds, preserving independent cells before later side effects.
+
+Eight new kernel tests cover 432 copy combinations, nine value-entry paths,
+branching aggregates, 2,500 nested levels, snapshot capacities, descriptor
+registration failures and each allocation stage of ten operation paths.
+They verify values, source independence, retained cell identities, detached
+roots, warnings and rollback/reuse. The positive matrix fails on the previous
+implementation and passes with the extension. The original C++20 probe now
+returns success instead of InvalidHandle. Six deliberately wrong conversions
+were caught by actual heap assertions; the restored baseline passes.
+
+Dev passes 2,128 tests: 2,126 pass and the same two known skips remain.
+All 23 heap tests pass. The independent scalar-container model was rerun at
+scale 100, seed 20261023, and passed 2,520,000 operations. No existing suite
+body or expected output was changed.
+
+Front/VM execution, actual variable metadata for ref bindings, complete roots,
+source-level diagnostics and notifications remain unfinished. This change
+does not enable SystemVerilog dynamic containers or close the last measured
+23 Icarus-passing gaps. The full P1 goal remains unachieved.
+
+## Published documentation and comparison check before this extension (2026-10-23)
 
 The typed container SIR implementation is `a8f63b5`. Source revision
 `f00c807` also makes descriptor initialization explicitly nonthrowing, fixing
@@ -69,11 +103,11 @@ and runtime references retaining actual target types still need integration
 and tests before the language producer is enabled. The 44 probes and 23
 Icarus-passing gaps remain open; the full P1 target is unfinished.
 
-An original kernel input with the same integral element type and inner queue
-capacity changed from 1 to 3 confirms that current `Heap::copy` returns
-InvalidHandle: it requires identical element-layout IDs. This is the next
-concrete mechanism to extend, rather than evidence of completed nested type
-conversion. Dev passes 2,120 tests: 2,118 pass and the same two known skips
+At the SIR stage, an original kernel input with the same integral element type
+and inner queue capacity changed from 1 to 3 confirmed that `Heap::copy`
+returned InvalidHandle: it required identical element-layout IDs. This is the
+mechanism addressed by the nested-bound extension above. At that
+stage, dev passed 2,120 tests: 2,118 pass and the same two known skips
 remain. Existing suite bodies and expected outputs were preserved.
 
 

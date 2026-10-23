@@ -20,8 +20,9 @@ messages go to standard error.
 The [kernel heap and typed SIR](P1_SUPPORT.md#dynamic-container-foundation)
 are implemented and tested, but `new[]`, queue methods and dynamic element
 access are not executable SystemVerilog features yet. The approved contract
-still needs front/VM integration, nested-bound conversion and complete root
-publication. The examples below cover currently executable features. For
+still needs front/VM integration and complete root publication. Nested-bound
+conversion and actual-type snapshots are tested through kernel APIs.
+The examples below cover currently executable features. For
 the kernel and SIR implementation checks, run:
 
 ```sh

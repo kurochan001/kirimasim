@@ -16,8 +16,10 @@ no standard text, simulator code or external test was copied.
 The [shared kernel heap](../P1_SUPPORT.md#dynamic-container-foundation) is
 implemented and tested: typed layouts, stable cells, deep copying, bounded
 queue operations, transactional allocation failure and exact tracing with
-generation-checked reuse. Fifteen kernel tests, the 2,520,000-operation
-reference run and six deliberate mutation checks pass.
+generation-checked reuse. Twenty-three kernel tests and the 2,520,000-operation
+reference run pass. Eight new tests cover nested-bound conversion, actual-type
+snapshots, 432 combinations and transactional failures; six original and six
+additional conversion mutation checks have been caught by actual tests.
 
 Typed SIR descriptors, receiver references, instructions, verification and
 text are also implemented (SIR_SPEC 5.8). The approved SystemVerilog contract

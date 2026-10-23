@@ -38,8 +38,9 @@ for the specification, the tests, and review.** See
 The dynamic-array/queue execution amendment was approved on 2026-10-23.
 The shared kernel now has a typed heap with deep copying, stable element
 references, bounded queues, exact tracing and allocation-failure rollback.
-Its 15 kernel tests pass, including 2,520,000 model-checked operations and
-six deliberate mutation checks. Typed container SIR descriptors, references,
+Its 23 kernel tests cover 432 nested-copy combinations, transactional failure
+and actual-type snapshots, alongside 2,520,000 model-checked operations.
+Typed container SIR descriptors, references,
 instructions, verification and text are implemented. Front-end/VM integration
 and automatic root publication are still unfinished, so dynamic arrays and
 queues cannot yet be executed from SystemVerilog. See the
@@ -99,11 +100,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 2,120 | 2,118, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 2,128 | 2,126, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 246, `tests/suite/` 1,691 (made by 120 generators under `tools/`), tools 125, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
+This repository's tests by kind: unit tests (GoogleTest) 254, `tests/suite/` 1,691 (made by 120 generators under `tools/`), tools 125, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -415,7 +416,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Not yet | Scope and status |
 | --- | --- |
 | FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1; shared kernel heap and typed SIR implemented; front/VM integration, nested-bound conversion and root publication pending |
+| Dynamic arrays and queues | P1; shared kernel heap, nested-bound conversion, snapshots and typed SIR implemented; front/VM integration and root publication pending |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
 | Tier 2 C++ generation and further RTL speed optimizations | P2 |

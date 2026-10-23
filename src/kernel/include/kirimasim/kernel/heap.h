@@ -96,9 +96,15 @@ public:
     /// Construction and whole-value copying always make independent cells,
     /// even on same-size resize and self-assignment. On failure, no token is
     /// published and all newly allocated objects are rolled back.
+    /// Equivalent nested queue types may differ in capacity. Each level uses
+    /// its destination capacity; any retained value that is truncated reports
+    /// BoundExceeded. Source-language type checking remains the tier's job.
     HeapResult<ContainerToken> construct(HeapTypeId type, std::optional<std::int64_t> size,
                                          ContainerToken initializer = {}) noexcept;
     HeapResult<ContainerToken> copy(HeapTypeId destination, ContainerToken source) noexcept;
+    /// Capture the actual source type and bounds, without a destination-type
+    /// conversion. Used before later expression side effects can replace it.
+    HeapResult<ContainerToken> snapshot(ContainerToken source) noexcept;
     HeapResult<ContainerToken> fromValues(HeapTypeId type, std::span<const W4> values) noexcept;
     HeapResult<std::uint64_t> size(HeapTypeId type, ContainerToken value) const noexcept;
 
@@ -135,6 +141,7 @@ public:
 private:
     struct Layout {
         std::pmr::vector<HeapWord> words;
+        HeapLayoutId equivalent;  ///< First layout of this shape, ignoring nested queue bounds.
     };
     struct Cell {
         HeapLayoutId layout;
@@ -166,6 +173,10 @@ private:
         std::pmr::vector<std::uint32_t> containers;
         std::pmr::vector<std::uint32_t> cells;
         bool committed = false;
+        bool truncated = false;
+        [[nodiscard]] HeapWarning warning() const noexcept {
+            return truncated ? HeapWarning::BoundExceeded : HeapWarning::None;
+        }
     };
 
     std::pmr::memory_resource* memory_;
@@ -176,6 +187,8 @@ private:
 
     const HeapType* typeOf(HeapTypeId id) const noexcept;
     const Layout* layoutOf(HeapLayoutId id) const noexcept;
+    bool equivalentLayouts(HeapLayoutId a, HeapLayoutId b) const noexcept;
+    bool equivalentTypes(HeapTypeId a, HeapTypeId b) const noexcept;
     HeapError check(HeapTypeId type, ContainerToken value) const noexcept;
     HeapError checkData(HeapLayoutId layout, std::span<const W4> data) const noexcept;
     CellToken cloneCell(Transaction& tx, HeapLayoutId layout, std::span<const W4> data);

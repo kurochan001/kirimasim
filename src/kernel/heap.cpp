@@ -111,6 +111,16 @@ const Heap::Layout* Heap::layoutOf(HeapLayoutId id) const noexcept {
 const HeapType* Heap::typeOf(HeapTypeId id) const noexcept {
     return id.index() < types_.size() ? &types_[id.index()] : nullptr;
 }
+bool Heap::equivalentLayouts(HeapLayoutId a, HeapLayoutId b) const noexcept {
+    const Layout* x = layoutOf(a);
+    const Layout* y = layoutOf(b);
+    return x && y && x->equivalent == y->equivalent;
+}
+bool Heap::equivalentTypes(HeapTypeId a, HeapTypeId b) const noexcept {
+    const HeapType* x = typeOf(a);
+    const HeapType* y = typeOf(b);
+    return x && y && x->kind == y->kind && equivalentLayouts(x->element, y->element);
+}
 std::size_t Heap::words(HeapLayoutId layout) const noexcept {
     const Layout* l = layoutOf(layout);
     return l ? l->words.size() : 0;
@@ -127,8 +137,31 @@ HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexce
                 throw HeapFault{HeapError::InvalidType};
         }
         if (layouts_.size() >= kNone) throw std::bad_alloc{};
-        Layout l{std::pmr::vector<HeapWord>(words.begin(), words.end(), memory_)};
         const HeapLayoutId id{static_cast<std::uint32_t>(layouts_.size())};
+        HeapLayoutId equivalent = id;
+        // Nested types must already exist, so their element shapes have
+        // canonical IDs. Comparing a shape needs neither recursion nor a
+        // runtime allocation, even for deep or branching container types.
+        for (const Layout& old : layouts_) {
+            if (old.words.size() != words.size()) continue;
+            bool same = true;
+            for (std::size_t i = 0; i < words.size(); ++i) {
+                const HeapWord &a = old.words[i], &b = words[i];
+                if (a.mask != b.mask || a.fourState != b.fourState || a.initial.a != b.initial.a ||
+                    a.initial.b != b.initial.b ||
+                    ((a.nested == kNone || b.nested == kNone)
+                         ? a.nested != b.nested
+                         : !equivalentTypes(a.nested, b.nested))) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) {
+                equivalent = old.equivalent;
+                break;
+            }
+        }
+        Layout l{std::pmr::vector<HeapWord>(words.begin(), words.end(), memory_), equivalent};
         layouts_.push_back(std::move(l));
         return id;
     });
@@ -157,8 +190,11 @@ HeapError Heap::checkData(HeapLayoutId layout, std::span<const W4> data) const n
     for (std::size_t i = 0; i < data.size(); ++i)
         if (l->words[i].nested != kNone) {
             if (data[i].b != 0) return HeapError::InvalidHandle;
-            const HeapError e = check(l->words[i].nested, ContainerToken{data[i].a});
-            if (e != HeapError::None) return e;
+            if (data[i].a != 0) {
+                const Container* c = containers_.get(data[i].a);
+                if (!c || !equivalentTypes(l->words[i].nested, c->type))
+                    return HeapError::InvalidHandle;
+            }
         }
     return HeapError::None;
 }
@@ -184,10 +220,14 @@ ContainerToken Heap::clone(Transaction& tx, HeapTypeId type, ContainerToken sour
     jobs.push_back({type, source, count, {}, 0});
     ContainerToken result;
     while (!jobs.empty()) {
-        const Job job = jobs.back();
+        Job job = jobs.back();
         jobs.pop_back();
         const HeapType& t = types_[job.type.index()];
         const Layout& l = layouts_[t.element.index()];
+        if (t.maxElements != 0 && job.count > t.maxElements) {
+            job.count = t.maxElements;
+            tx.truncated = true;
+        }
         // Include cell storage and value words, rather than only the token
         // vector, in the overflow check. All later size_t conversions fit.
         if (l.words.size() >
@@ -261,20 +301,24 @@ CellToken Heap::cloneCell(Transaction& tx, HeapLayoutId layout, std::span<const 
 }
 HeapResult<ContainerToken> Heap::construct(HeapTypeId type, std::optional<std::int64_t> size,
                                            ContainerToken initializer) noexcept {
-    return protectValue<ContainerToken>([&] {
+    bool truncated = false;
+    auto result = protectValue<ContainerToken>([&] {
         const HeapType* t = typeOf(type);
         if (!t || t->kind != ContainerKind::DynamicArray) throw HeapFault{HeapError::InvalidType};
         if (!size || *size < 0) throw HeapFault{HeapError::InvalidSize};
         if (initializer.bits != 0) {
             const Container* src = containers_.get(initializer.bits);
-            if (!src || types_[src->type.index()].element != t->element)
+            if (!src || !equivalentLayouts(types_[src->type.index()].element, t->element))
                 throw HeapFault{HeapError::InvalidHandle};
         }
         Transaction tx(*this);
         const ContainerToken out = clone(tx, type, initializer, static_cast<std::uint64_t>(*size));
+        truncated = tx.truncated;
         tx.committed = true;
         return out;
     });
+    if (result && truncated) result.status.warning = HeapWarning::BoundExceeded;
+    return result;
 }
 HeapResult<ContainerToken> Heap::copy(HeapTypeId destination, ContainerToken source) noexcept {
     std::uint64_t count = 0;
@@ -282,20 +326,26 @@ HeapResult<ContainerToken> Heap::copy(HeapTypeId destination, ContainerToken sou
     if (!dst) return {{}, failure(HeapError::InvalidType)};
     if (source.bits != 0) {
         const Container* src = containers_.get(source.bits);
-        if (!src || types_[src->type.index()].element != dst->element)
+        if (!src || !equivalentLayouts(types_[src->type.index()].element, dst->element))
             return {{}, failure(HeapError::InvalidHandle)};
         count = src->cells.size();
     }
-    const bool truncated = dst->maxElements != 0 && count > dst->maxElements;
-    if (truncated) count = dst->maxElements;
+    bool truncated = false;
     auto out = protectValue<ContainerToken>([&] {
         Transaction tx(*this);
         const ContainerToken result = clone(tx, destination, source, count);
+        truncated = tx.truncated;
         tx.committed = true;
         return result;
     });
     if (out && truncated) out.status.warning = HeapWarning::BoundExceeded;
     return out;
+}
+HeapResult<ContainerToken> Heap::snapshot(ContainerToken source) noexcept {
+    if (source.bits == 0) return {};
+    const Container* c = containers_.get(source.bits);
+    if (!c) return {{}, failure(HeapError::InvalidHandle)};
+    return copy(c->type, source);
 }
 HeapResult<ContainerToken> Heap::fromValues(HeapTypeId type, std::span<const W4> values) noexcept {
     bool truncated = false;
@@ -314,6 +364,7 @@ HeapResult<ContainerToken> Heap::fromValues(HeapTypeId type, std::span<const W4>
                                      : count;
         truncated = keep != count;
         Transaction tx(*this);
+        tx.truncated = truncated;
         ContainerToken result;
         if (keep != 0) {
             Container c{type, std::pmr::vector<CellToken>(memory_)};
@@ -324,6 +375,7 @@ HeapResult<ContainerToken> Heap::fromValues(HeapTypeId type, std::span<const W4>
                 containers_.get(result.bits)->cells.push_back(cell);
             }
         }
+        truncated = tx.truncated;
         tx.committed = true;
         return result;
     });
@@ -370,7 +422,7 @@ HeapStatus Heap::writeCell(HeapLayoutId layout, CellToken cell, std::span<const 
         auto copied = cloneWords(tx, layout, data);
         cells_.get(cell.bits)->words.swap(copied);
         tx.committed = true;
-        return HeapStatus{};
+        return HeapStatus{HeapError::None, tx.warning()};
     });
 }
 HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
@@ -413,10 +465,10 @@ HeapStatus Heap::insert(HeapTypeId type, ContainerToken& value, std::optional<st
         elements.insert(elements.begin() + static_cast<std::ptrdiff_t>(at), added);
         const bool truncated = t.maxElements != 0 && elements.size() > t.maxElements;
         if (truncated) elements.resize(static_cast<std::size_t>(t.maxElements));
+        tx.truncated = tx.truncated || truncated;
         value = destination;
         tx.committed = true;
-        return HeapStatus{HeapError::None,
-                          truncated ? HeapWarning::BoundExceeded : HeapWarning::None};
+        return HeapStatus{HeapError::None, tx.warning()};
     });
 }
 HeapStatus Heap::push(HeapTypeId type, ContainerToken& value, bool front,
@@ -449,7 +501,7 @@ HeapStatus Heap::pop(HeapTypeId type, ContainerToken& value, bool front,
             elements.pop_back();
         std::copy(copied.begin(), copied.end(), out.begin());
         tx.committed = true;
-        return HeapStatus{};
+        return HeapStatus{HeapError::None, tx.warning()};
     });
 }
 HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,

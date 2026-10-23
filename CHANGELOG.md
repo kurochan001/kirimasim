@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Nested container copies apply each destination queue's bound through the
+  common heap copy engine, including element writes and queue methods, with
+  truncation warnings and allocation-failure rollback. Actual-type snapshots
+  preserve source bounds (6.22.2, 7.5, 7.10.5; SIR_SPEC 5.8, RUNTIME_ABI 6).
+  Front/VM integration and SystemVerilog container execution remain unfinished.
+
 - Typed container SIR descriptors, receiver references, 16 instructions,
   verification and text support, including explicit snapshot/copy/assignment
   operations and queue-bound equivalence for ref arguments (6.22.2, 7.5,

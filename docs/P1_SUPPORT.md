@@ -76,10 +76,20 @@ on 2026-10-23. `Context::heap()` implements typed container storage, deep
 copying, stable element cells, bounded queue mutation and exact tracing.
 Allocation failures roll back new objects; reclaimed entries use generations
 so stale tokens cannot name replacement values. These are kernel APIs,
-covered by [15 unit tests](../tests/unit/heap_test.cpp) and an independent
+covered by [15 original unit tests](../tests/unit/heap_test.cpp),
+[eight conversion/snapshot tests](../tests/unit/heap_conversion_test.cpp) and an independent
 [`valsem` container model](../src/valsem/include/kirimasim/valsem/containers.h).
 The 100-sample check passed 2,520,000 operations; all six deliberate heap
 mutations were caught. The heap matrix is included in nightly reference checks.
+
+Copies now accept equivalent nested queue shapes with different capacities;
+each retained level uses the destination capacity and propagates truncation
+warnings. Shape equivalence is registered once without runtime allocation or
+native recursion. `Heap::snapshot` preserves the actual source type/capacity.
+The new tests cover 432 type/bound/value combinations, nine value-entry paths,
+branching aggregates, 2,500 nested levels and allocation failure at every
+stage of ten copy/mutation/snapshot paths. Six additional conversion mutations
+were caught by actual heap assertions, and the restored baseline passes.
 
 Typed container descriptors, receiver refs, 16 SIR operations, verifier and
 text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container-encoding-approved-contract-of-2026-10-23)).
@@ -88,9 +98,9 @@ cases, argument bindings and fixed arrays of container receivers.
 SystemVerilog dynamic arrays and queues remain unsupported. Front-end
 lowering, VM calls, complete root publication at safe
 points and language-level diagnostics still need integration and execution
-matrices. Kernel copies across differing nested queue bounds and runtime
-references retaining actual target types also need work; existing heap copy
-checks use their registered element layouts. Kernel warning/error categories are not yet source-level messages
+matrices. Runtime references still need to retain actual target types,
+including empty variables viewed through equivalent ref formals. Kernel
+warning/error categories are not yet source-level messages
 or exit codes for these constructs. This foundation does not establish full
 container support or the Icarus coverage target.
 

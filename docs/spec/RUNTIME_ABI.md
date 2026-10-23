@@ -133,6 +133,17 @@ destination. Size/byte overflow and allocation failure return `resource_limit`
 (exit code 6); no allocation exception crosses the kernel boundary and a
 failed operation leaves the destination unchanged.
 
+The C++ heap registers immutable element shapes without source-language types.
+Equivalent nested queue shapes may have different capacities (6.22.2);
+the tier still checks language type compatibility. Every retained nested
+value is copied using its destination type and capacity, and any truncation
+propagates `BoundExceeded` to the caller. Shape equivalence is computed at
+registration so validation requires neither allocation nor native recursion.
+`Heap::snapshot` instead copies using the actual source type and capacities,
+as required by SIR's `container.snapshot`; empty remains handle 0. A tier
+must retain the actual variable type in its reference binding even when its
+value is empty or the ref formal has a different equivalent queue bound.
+
 Collection traces exact typed roots supplied by each tier: slots, process and
 call frames, temporaries, retained reference cells, pending writes and events,
 reports and callbacks. It follows nested containers and reachable detached
