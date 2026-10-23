@@ -390,7 +390,7 @@ public:
     /// gets, all computed before any is written (VALUE_SEMANTICS.md 3.13).
     using Stores = std::vector<std::pair<Place, Val>>;
     void flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl,
-                     std::optional<Val> delay = std::nullopt);
+                     const std::optional<Val>& delay = std::nullopt);
     /// The element of array s at constant declared indices.
     Place elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices);
     /// Computes an unpacked array value (a pattern, another array, or nested

@@ -2573,7 +2573,7 @@ Type Lowerer::homeType(const Place& p) {
 }
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl,
-                          std::optional<Val> delay) {
+                          const std::optional<Val>& delay) {
     // The writes of an aggregate assignment, after every value of its right
     // side (VALUE_SEMANTICS.md 3.13).
     for (const auto& [place, value] : stores)
