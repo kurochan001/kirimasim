@@ -31,7 +31,8 @@ own. CONTRIBUTING.md says what goes in this file.
 - Typed heap read/change observation hooks distinguish container structure
   from cell values. Notifications follow committed changes and skip equal
   normalized writes, failed operations and invalid selections. Scheduler/VM
-  monitor integration and SystemVerilog container execution remain unfinished.
+  monitor integration is covered by the entry above; SystemVerilog container
+  execution remains unfinished.
 
 - Automatic typed-container collection after drained scheduling regions and
   slots, tracing typed storage, live activations, detached cell refs, deferred
@@ -43,25 +44,30 @@ own. CONTRIBUTING.md says what goes in this file.
   heap, with actual-target reference metadata, stable element refs, snapshots,
   source-position method warnings and resource-error mapping (SIR_SPEC 5.8).
   Independent SIR tests cover calls, waits, packed writes and allocation
-  failure. Front lowering, complete roots and heap-change notification remain unfinished; SystemVerilog containers are not enabled.
+  failure. Typed-root collection and heap-change notification are covered by the
+  entries above. Front lowering remains unfinished; SystemVerilog containers
+  are not enabled.
 
 - Nested container copies apply each destination queue's bound through the
   common heap copy engine, including element writes and queue methods, with
   truncation warnings and allocation-failure rollback. Actual-type snapshots
   preserve source bounds (6.22.2, 7.5, 7.10.5; SIR_SPEC 5.8, RUNTIME_ABI 6).
-  Front/VM integration and SystemVerilog container execution remain unfinished.
+  The VM integration is covered above; SystemVerilog container execution
+  remains unfinished.
 
 - Typed container SIR descriptors, receiver references, 16 instructions,
   verification and text support, including explicit snapshot/copy/assignment
   operations and queue-bound equivalence for ref arguments (6.22.2, 7.5,
-  7.10, 13.5.2; SIR_SPEC 5.8). VM/front integration remains unfinished;
-  this is not yet executable SystemVerilog container support.
+  7.10, 13.5.2; SIR_SPEC 5.8). VM integration is covered above; front
+  lowering remains unfinished.
+  This is not yet executable SystemVerilog container support.
 
 - Context-owned typed container heap foundation: stable element references,
   deep copies, bounded queue operations, allocation-failure rollback and
   exact tracing with generation-checked table reuse (7.5, 7.10, 13.5.2;
-  RUNTIME_ABI 6). SystemVerilog lowering and tier root publication remain
-  unfinished; this entry does not claim dynamic-array/queue language support.
+  RUNTIME_ABI 6). Typed-root publication and collection are covered above.
+  SystemVerilog lowering remains unfinished; this entry does not claim dynamic-array/queue
+  language support.
 
 - Named events can share event controls with signal subscriptions and
   expression watches, each with its own `iff`. False guards retain their

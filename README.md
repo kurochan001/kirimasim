@@ -124,7 +124,7 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI run at revision `71966e1` on 2026-10-24 passed
+The local CI rerun at revision `30c5dbc` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
 clang-tidy. Dev has 2,173 tests: 2,171 pass and the same two known skips remain.
 The extended comparison was also rerun: 44 probes and 23 Icarus-passing gaps
@@ -571,7 +571,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(tier integration, classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(SystemVerilog container lowering, classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -675,7 +675,7 @@ the same table with the Japanese terms.
 | lowering | Turning slang's elaborated design into SIR instructions |
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](docs/spec/SIR_SPEC.md)) |
 | `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
-| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; tier integration of the heap, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
+| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; SystemVerilog container lowering, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P2) |
 | Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |

@@ -9,6 +9,35 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Documentation refresh and publication checks (2026-10-24)
+
+The publication check reruns the committed implementation at `30c5dbc`.
+README diagrams and glossary entries, and older Unreleased changelog entries,
+now distinguish the implemented typed SIR/VM execution, automatic collection
+and heap-dependent waits from unfinished SystemVerilog container lowering.
+The uncommitted front-lowering work is excluded from this validation and
+publication; it is not evidence of supported language execution.
+
+The four local CI test presets pass: dev/ASan/UBSan each run 2,173 tests
+(2,171 pass, two known skips), and release runs 2,174 (2,172 pass, the same
+skips). Release flags, banned features, SPDX, suite files, global state,
+expectation protection for the five previously unpublished commits, README
+counts, clang-format and clang-tidy all pass. All 423 relative documentation
+links resolve. Only documentation was modified during this rerun.
+The extended original comparison at `30c5dbc` still has 44 probes
+and 23 Icarus-passing gaps. Both Icarus compiler and runtime report
+`14.0 (devel) (s20260301-411-gca6b8d376)`; `--require-parity` returns 1 as
+expected for those gaps. Exact-13.0 coverage and complete parity remain
+unconfirmed. Historical external-population counts and benchmark results
+retain their original measurement dates and revisions.
+
+```sh
+CTEST_PARALLEL_LEVEL=6 python3 tools/local_ci.py
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/docs-push-icarus-probes-20261024.json --require-parity
+```
+
 ## Kernel/VM heap-dependent monitors (2026-10-24)
 
 Source revision `71966e1` captures heap reads during guard/watch evaluation and

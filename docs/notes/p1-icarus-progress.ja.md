@@ -8,6 +8,32 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
+## 文書更新と公開前の検証（2026-10-24）
+
+コミット済みの実装`30c5dbc`を公開前に再検証しました。READMEの図・用語集と、
+CHANGELOGのUnreleasedに残っていた古い記述を更新し、実装済みの型付きSIR・VMの実行、
+自動回収、ヒープ依存の待機と、未完了のSystemVerilogコンテナ変換を区別しました。
+未コミットのfront変換の作業は、この検証と公開の対象に含めていません。
+言語の実行対応の根拠には扱いません。
+
+ローカルCIの4構成のテストが通過しました。dev・ASan・UBSanは各2,173件中2,171件成功、
+既知の2件がスキップです。releaseは2,174件中2,172件成功、同じ2件がスキップです。
+releaseフラグ、禁止事項、SPDX、スイートのファイル、グローバル状態、未公開の5コミットの
+期待値保護、README件数、clang-format、clang-tidyもすべて通過しました。文書内の相対リンク
+423件にリンク切れはありません。この再検証中の変更は文書のみです。
+`30c5dbc`で自作の拡張比較も再実行し、44プローブにIcarusだけが通る23本の差分が
+残っています。Icarusのコンパイラとランタイムはともに
+`14.0 (devel) (s20260301-411-gca6b8d376)`で、`--require-parity`は差分があるため
+想定どおり1を返します。厳密な13.0との比較と全面的な同等性は引き続き未確認です。
+外部母集団の件数と性能測定は、元の測定日・コミットの値を保っています。
+
+```sh
+CTEST_PARALLEL_LEVEL=6 python3 tools/local_ci.py
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/docs-push-icarus-probes-20261024.json --require-parity
+```
+
 ## カーネル・VMでのヒープに依存する監視（2026-10-24）
 
 実装コミット`71966e1`で、guard/watch評価中のヒープ読み取りを捕捉し、選択・結び付きの変更で

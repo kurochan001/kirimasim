@@ -96,7 +96,7 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 
 件数は、[P1 の合格条件](#p1-の合格条件)の表にあります。release の構成では、CTest のテストが 1 本増えます（`--max-slot-events` の既定の値まで走らせるテスト）。
 
-2026-10-24に`71966e1`で実行したローカルCIは、dev・release・ASan・UBSan、
+2026-10-24に`30c5dbc`で再実行したローカルCIは、dev・release・ASan・UBSan、
 clang-format・clang-tidyを含むすべての静的検査が通過しました。devは2,173件中
 2,171件成功、従来の2件がスキップです。拡張比較も再実行し、44プローブにIcarusだけが
 通る23本の差分が残っています。[検証記録](docs/notes/p1-icarus-progress.ja.md)を
@@ -426,7 +426,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(tier integration, classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(SystemVerilog container lowering, classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -492,7 +492,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | 下ろす（lowering） | slang がエラボレーションした設計を、SIR の命令に変えること |
 | SIR | kirimasim の中間表現。格納のスロットと、型の決まった命令でできていて、どの層が実行しても同じ（[SIR_SPEC.ja.md](docs/spec/SIR_SPEC.ja.md)） |
 | `valsem` | 値の意味の参照実装。整数のビットごとの演算と、独立したコンテナのセルのモデル。演算子、辺、case の一致の意味はここで決め、速い実装はすべてこれと突き合わせて確かめる |
-| カーネル（kernel） | すべての層が共有する実行カーネル。スケジューラ、値の演算、VCD出力、型付きヒープAPI。ヒープの実行層への接続、VPI、DPI-Cは未実装。利用者の設計と一緒にリンクするので、slang にも LLVM にも依存しない |
+| カーネル（kernel） | すべての層が共有する実行カーネル。スケジューラ、値の演算、VCD出力、型付きヒープAPI。型付きSIR・VMでのヒープ実行、自動回収、ヒープ依存の待機は実装済み。SystemVerilogのコンテナ変換、VPI、DPI-Cは未実装。利用者の設計と一緒にリンクするので、slang にも LLVM にも依存しない |
 | 第 1 層、VM | 第 1 層のインタプリタ（P1）。今は SIR を直接解釈する。SIR をレジスタ方式のバイトコードに変換して実行するのは後で |
 | 第 2 層 | SIR から C++ を生成して前もってビルドし、速く実行する層（P2） |
 | Context | 1 つのシミュレーションの実行時の状態を持つオブジェクト。独立した Context を同時に動かせる |
