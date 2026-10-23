@@ -619,7 +619,7 @@ The following points were applied to the design specification (v0.6) with a huma
 5. **When processes made by fork start** (9.3.2). For every kind of join, children do not start until the parent stops or ends. The design specification had no description.
 6. **The left side of force** (10.6.2). Bit- and part-selects of variables cannot be forced (constant selects of nets can). The design specification's FR-20 lists force of "part-selects", but the targets are limited to nets. The scope of force from VPI (`vpiForceFlag`) is checked in part 5.
 7. **The flush point of unique and priority violations** (12.4.2.1). The design specification took the flush point as "when the process enters its next wait", and discarded pending reports "only when the same process ran the same statement again before the flush point". In the standard, the flush points are "when resuming from a wait" and "when `always_comb` or `always_latch` starts again", and then **all** of that process's pending reports are discarded. Not discarding them on the execution of another process is the same as the design specification.
-8. **`$exit`** (20.2). A system task that waits for program blocks to end and then calls `$finish`; it is not in the design specification's list of system tasks. It is proposed to add it in P3 (together with program).
+8. **`$exit`** (20.2, 24.7). Ends the originating program; the details are incorporated into 16.1 and the amendment approved on 2026-10-23.
 9. **Running `final` when events run out** (9.2.3). The design specification says "final blocks run on every ending except an immediate one". The wording of the standard does not settle it, so it was recorded in 16.2 as an interpretation.
 
 ## 19. Not confirmed, to be written later

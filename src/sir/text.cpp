@@ -288,9 +288,10 @@ std::string toText(const Design& d) {
         out += "instance " + std::to_string(i) + " " + quoted(inst.scopeName) +
                " def=" + quoted(inst.definition) +
                " parent=" + (inst.parent == kNone ? "-" : std::to_string(inst.parent.index())) +
-               (inst.kind == InstanceKind::Package ? " package"
-                : inst.kind == InstanceKind::Unit  ? " unit"
-                                                   : "") +
+               (inst.kind == InstanceKind::Package   ? " package"
+                : inst.kind == InstanceKind::Unit    ? " unit"
+                : inst.kind == InstanceKind::Program ? " program"
+                                                     : "") +
                "\n";
     }
     for (std::size_t i = 0; i < d.types.size(); ++i)

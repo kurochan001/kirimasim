@@ -185,6 +185,65 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     return id;
 }
 
+ProgramId Scheduler::addProgram() {
+    const ProgramId id{static_cast<std::uint32_t>(programs_.size())};
+    programs_.emplace_back();
+    return id;
+}
+
+ProcessId Scheduler::addProgramInitial(ResumeFn fn, void* frame, ProgramId program) {
+    const ProcessId p = addProcess(fn, frame, Group::Reactive);
+    processes_[p.index()].program = program;
+    processes_[p.index()].programInitial = true;
+    if (programs_[program.index()].initials++ == 0) ++activePrograms_;
+    return p;
+}
+
+ProcessId Scheduler::addChildProcess(ResumeFn fn, void* frame, ProcessId parent) {
+    const Group group = processes_[parent.index()].group;
+    const ProgramId program = processes_[parent.index()].program;
+    const ProcessId child = addProcess(fn, frame, group);
+    processes_[child.index()].program = program;
+    return child;
+}
+
+void Scheduler::initialEnded(ProcessId p) {
+    Process& process = processes_[p.index()];
+    if (!process.programInitial) return;
+    process.programInitial = false;
+    const ProgramId program = process.program;
+    if (--programs_[program.index()].initials == 0) completeProgram(program);
+}
+
+void Scheduler::completeProgram(ProgramId program) {
+    Program& state = programs_[program.index()];
+    if (state.ended) return;
+    state.ended = true;
+    --activePrograms_;
+    // Only initial threads and their descendants carry this origin.
+    // Continuous assignments and final procedures are not terminated here.
+    for (std::uint32_t i = 0; i < processes_.size(); ++i) {
+        if (processes_[i].program != program || processes_[i].done) continue;
+        const ProcessId p{i};
+        processes_[i].programStopped = true;
+        endedProgramProcesses_.push_back(p);
+        kill(p);
+    }
+    if (activePrograms_ == 0) requestEnd(EndReason::Finish, 0);
+}
+
+void Scheduler::exitProgram(ProcessId caller) {
+    const ProgramId program = processes_[caller.index()].program;
+    if (program != kNone) completeProgram(program);
+}
+
+bool Scheduler::takeEndedProgramProcess(ProcessId& process) {
+    if (endedProgramProcesses_.empty()) return false;
+    process = endedProgramProcesses_.back();
+    endedProgramProcesses_.pop_back();
+    return true;
+}
+
 void Scheduler::releaseProcess(ProcessId p) {
     Process& proc = processes_[p.index()];
     proc.fn = nullptr;
@@ -204,14 +263,17 @@ void Scheduler::kill(ProcessId p) {
     proc.done = true;
     ++proc.gen;
     counters_.increment(cFinished_);
+    initialEnded(p);
 }
 
 void Scheduler::ended(ProcessId p) {
     freeMonitor(p);
     Process& proc = processes_[p.index()];
-    if (!proc.done) counters_.increment(cFinished_);
+    const bool wasDone = proc.done;
+    if (!wasDone) counters_.increment(cFinished_);
     proc.done = true;
     ++proc.gen;
+    if (!wasDone) initialEnded(p);
 }
 
 void Scheduler::start(ProcessId p) {

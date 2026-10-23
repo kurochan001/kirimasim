@@ -3652,6 +3652,10 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
                  sl);
         return;
     }
+    if (name == "$exit") {
+        emitVoid(Op::Syscall, {Operand::str(name)}, sl);
+        return;
+    }
     if (name == "$finish" || name == "$stop") {
         std::uint64_t n = 1;  // the default argument (20.2)
         if (!args.empty()) {

@@ -37,7 +37,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | 選択 | packed 値のビット・部分・indexed-part 選択、packed 次元、固定長 unpacked 配列の添字、構造体メンバ | packed メンバや選択済みの部分を、実行時の添字でさらに選択して書く形は未対応 |
 | ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入と NBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
-| 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final` | program は未対応。`final` は待てない |
+| 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、`#`、時間単位・精度と丸め、min/typ/max の選択 | 配列全体への代入内時間制御、イベント制御付き NBA、実行時の添字で選ぶ配列要素への遅延付き NBA は未対応 |
 | イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、名前付きイベント、`->`、`->>`、`.triggered` | イベント式・`iff`・wait 条件の書き込み副作用は不可。実行時の添字で選ぶ名前付きイベント、名前付きイベントの `iff`、イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、対応する名前付きブロックとタスクの disable | fork 内の変数宣言、fork の枝が捕捉してスコープ外まで使う automatic 変数、名前付き fork ブロックの disable などに未対応の形がある |
@@ -48,7 +48,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |
 | 手続きからの駆動 | 対応する整数型の代入先への `assign` / `deassign`、`force` / `release` | 実数・unpacked 配列全体への指定と、ポート経由で接続されたネットの force は未対応 |
 | アサーション | 即時の `assert`、`assume`、`cover`。遅延即時アサーション（`#0`、`final`） | 並行アサーションと module 項目として書く遅延アサーションは未対応。遅延アサーションのアクションから、待つ可能性のあるタスクは呼べない |
-| スケジューラ | 時刻スロットの全領域と参照アルゴリズム。Observed で保留の報告を確定。Postponed で strobe/monitor を出力 | 領域の実装は、program・クロッキングブロック・並行アサーションの対応を意味しない |
+| スケジューラ | 時刻スロットの全領域と参照アルゴリズム。Observed で保留の報告を確定。Postponed で strobe/monitor を出力 | programの呼び出しとforkは領域と起源を継承。クロッキングブロック・並行アサーションは未対応 |
 
 32 ビットを超える重みの `randcase` は未対応です。
 
@@ -107,6 +107,16 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
   [システムタスク仕様](spec/SYSTEM_TASKS.ja.md)と
   [使い方と制限](P1_FEATURES.ja.md)を参照してください。
 
+
+programのinitialと連続代入はreactive側で実行し、呼び出し・forkは領域と起源programを
+継承します。`$exit` は起源のprogramのinitialと子孫を終了し、programのinitialを
+起源に持たなければ無視します。各programの全initialが終わると残る子孫を終了し、
+initialを持つ全programが終わるとfinalを実行して終了します。空のprogramだけでは
+暗黙のfinishを行いません。[programの行列](../tools/gen_program_execution_matrix.py)は
+124本、カーネル7本・SIR1本のユニットテストは終了・再利用・メタデータを確認します。
+CLIは15組の不正入力と2インスタンスの識別を確認します。クラス・クロッキングブロック・
+並行アサーションの対応は含みません。programのスコープのVCD出力は未対応です（WAVEFORM 7）。
+
 ## コマンドラインと波形
 
 | 用途 | 実装済みのインターフェース |
@@ -136,7 +146,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | --- | --- |
 | P1 内で未実装 | FST、`%p`、解決した強さの `%v`、上記の未対応の構造体への `$fread`、一覧に挙げた P1 の形の残りの制限 |
 | P2 | 第 2 層の C++ 生成、静的な島の解析、RTL のさらなる性能改善 |
-| P3 | クラス・UVM、動的配列、キュー、連想配列、制約付き乱数化、カバーグループ、並行アサーションとサンプル値の関数、クロッキングブロック、program、virtual interface、`let`、VPI、DPI-C |
+| P3 | クラス・UVM、動的配列、キュー、連想配列、制約付き乱数化、カバーグループ、並行アサーションとサンプル値の関数、クロッキングブロック、virtual interface、`let`、VPI、DPI-C |
 | P4 | MOS と双方向のスイッチ |
 | 現在の対象外・後で検討 | VHDL・言語混在・アナログ・混在信号、SDF 注釈と暗号化 IP、specify のモジュールパス・タイミングチェック、利用者定義 nettype・`interconnect`・`trireg`、古い PLI、ライブラリ対応表のファイル、checker、`randsequence`、対話的デバッガ、独自の Python API |
 

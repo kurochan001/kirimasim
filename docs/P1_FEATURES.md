@@ -15,6 +15,50 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Programs and the reactive region set
+
+Program initial procedures and continuous assignments run in Reactive.
+Their #0 delays resume in Re-Inactive, and NBAs update in Re-NBA. Calls
+and fork branches inherit the executing thread's group and program origin,
+including code declared in modules, packages or interfaces. In this example,
+the design's NBA is processed before the program samples the input.
+
+The last initial of each program ends its remaining descendants. Once all
+programs with initials end, an implicit finish runs final procedures and
+prevents the module's later `future` line. `$exit` explicitly ends the
+originating program's initials and descendants; it is ignored outside a
+program-initial thread. Empty programs do not force finish. Anonymous-program
+subroutines are accepted, while slang keeps restrictions on outside references.
+Classes, clocking blocks, concurrent assertions and program VCD scopes are
+not enabled by this feature.
+
+```systemverilog
+module top;
+  logic clk = 0;
+  int data = 0;
+  initial begin #2; data = 5; data <= 7; clk = 1; #10; $display("future"); end
+  worker p(clk, data);
+endmodule
+program worker(input logic clk, input int data);
+  int sampled = 0;
+  initial begin
+    @(posedge clk);
+    $display("sample %0d", data);
+    sampled <= data;
+    #0; $display("before Re-NBA %0d", sampled);
+    #1; $display("after Re-NBA %0d", sampled);
+  end
+  final $display("program final");
+endprogram
+```
+
+```text
+sample 7
+before Re-NBA 0
+after Re-NBA 7
+program final
+```
+
 ## Writing unformatted binary words
 
 `%u` writes 2-state data and `%z` writes 4-state data, in complete 32-bit

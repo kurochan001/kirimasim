@@ -1117,4 +1117,16 @@ TEST(Sir, RealAndStringConstants) {
     EXPECT_TRUE(mentions(verify(d), "exactly one word"));
 }
 
+TEST(Sir, ProgramInstanceKindAndVerifier) {
+    Design d = counter();
+    d.instances[0].kind = InstanceKind::Program;
+    d.processes[0].kind = ProcessKind::Initial;
+    d.processes[0].triggers.clear();
+    EXPECT_TRUE(verify(d).empty());
+    EXPECT_NE(toText(d).find("parent=- program\n"), std::string::npos);
+    d.instances[0].kind = static_cast<InstanceKind>(255);
+    const auto errors = verify(d);
+    EXPECT_FALSE(errors.empty());
+}
+
 }  // namespace

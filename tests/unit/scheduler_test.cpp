@@ -1418,4 +1418,186 @@ TEST(Scheduler, StopErrorKeepsStopReasonAndOtherRequests) {
     EXPECT_EQ(c.scheduler().reason(), EndReason::Stop);
 }
 
+// 24.3/24.7: origin and completion are kernel state, independent of tiers.
+struct ProgramFrame {
+    k::ProcessId id{0};
+    std::uint64_t delay = 0;
+    bool waiting = false;
+    bool exit = false;
+    std::string tag;
+    std::vector<std::string>* log = nullptr;
+};
+
+kirima_status runProgramFrame(kirima_context* ctx, void* frame) {
+    auto& scheduler = k::fromC(ctx).scheduler();
+    auto& f = *static_cast<ProgramFrame*>(frame);
+    if (!f.waiting && f.delay != 0) {
+        f.waiting = true;
+        scheduler.waitDelay(f.id, f.delay);
+        return KIRIMA_WAITING;
+    }
+    if (f.log != nullptr) f.log->push_back(f.tag + std::to_string(scheduler.time()));
+    if (f.exit) scheduler.exitProgram(f.id);
+    return scheduler.finished(f.id) ? KIRIMA_KILLED : KIRIMA_DONE;
+}
+
+TEST(Scheduler, EmptyProgramsDoNotCauseFinish) {
+    k::Context c;
+    auto& scheduler = c.scheduler();
+    scheduler.addProgram();
+    std::vector<std::string> log;
+    ProgramFrame module{k::ProcessId{0}, 2, false, false, "module", &log};
+    module.id = scheduler.addProcess(&runProgramFrame, &module, Group::Active);
+    scheduler.start(module.id);
+    EXPECT_EQ(scheduler.run(), EndReason::Quiescent);
+    EXPECT_EQ(log, std::vector<std::string>{"module2"});
+}
+
+TEST(Scheduler, ProgramCompletionCountsInitialsAndEndsDescendants) {
+    k::Context c;
+    auto& scheduler = c.scheduler();
+    std::vector<std::string> log;
+    const k::ProgramId first = scheduler.addProgram();
+    const k::ProgramId second = scheduler.addProgram();
+    ProgramFrame a{k::ProcessId{0}, 1, false, false, "a", &log};
+    ProgramFrame b{k::ProcessId{0}, 3, false, false, "b", &log};
+    ProgramFrame child{k::ProcessId{0}, 2, false, false, "child", &log};
+    ProgramFrame late{k::ProcessId{0}, 20, false, false, "late", &log};
+    ProgramFrame keeper{k::ProcessId{0}, 4, false, false, "keeper", &log};
+    a.id = scheduler.addProgramInitial(&runProgramFrame, &a, first);
+    b.id = scheduler.addProgramInitial(&runProgramFrame, &b, first);
+    child.id = scheduler.addChildProcess(&runProgramFrame, &child, a.id);
+    late.id = scheduler.addChildProcess(&runProgramFrame, &late, child.id);
+    keeper.id = scheduler.addProgramInitial(&runProgramFrame, &keeper, second);
+    for (const k::ProcessId p : {a.id, b.id, child.id, late.id, keeper.id})
+        scheduler.start(p);
+    EXPECT_EQ(scheduler.processGroup(child.id), Group::Reactive);
+    EXPECT_EQ(scheduler.processGroup(late.id), Group::Reactive);
+    EXPECT_EQ(scheduler.run(), EndReason::Finish);
+    EXPECT_EQ(scheduler.time(), 4U);
+    EXPECT_EQ(log, (std::vector<std::string>{"a1", "child2", "b3", "keeper4"}));
+    EXPECT_TRUE(scheduler.finished(late.id));
+    EXPECT_TRUE(scheduler.programStopped(late.id));
+    EXPECT_FALSE(scheduler.programStopped(keeper.id));
+    k::ProcessId ended = k::kNone;
+    ASSERT_TRUE(scheduler.takeEndedProgramProcess(ended));
+    EXPECT_EQ(ended, late.id);
+    EXPECT_FALSE(scheduler.takeEndedProgramProcess(ended));
+}
+
+TEST(Scheduler, ProgramExitUsesInheritedOriginAndKeepsOtherPrograms) {
+    k::Context c;
+    auto& scheduler = c.scheduler();
+    std::vector<std::string> log;
+    const k::ProgramId first = scheduler.addProgram();
+    const k::ProgramId second = scheduler.addProgram();
+    ProgramFrame a{k::ProcessId{0}, 5, false, false, "unexpected", &log};
+    ProgramFrame b{k::ProcessId{0}, 6, false, false, "unexpected", &log};
+    ProgramFrame child{k::ProcessId{0}, 1, false, true, "exit", &log};
+    ProgramFrame keeper{k::ProcessId{0}, 3, false, false, "keeper", &log};
+    a.id = scheduler.addProgramInitial(&runProgramFrame, &a, first);
+    b.id = scheduler.addProgramInitial(&runProgramFrame, &b, first);
+    child.id = scheduler.addChildProcess(&runProgramFrame, &child, a.id);
+    keeper.id = scheduler.addProgramInitial(&runProgramFrame, &keeper, second);
+    for (const k::ProcessId p : {a.id, b.id, child.id, keeper.id})
+        scheduler.start(p);
+    EXPECT_EQ(scheduler.run(), EndReason::Finish);
+    EXPECT_EQ(log, (std::vector<std::string>{"exit1", "keeper3"}));
+    EXPECT_TRUE(scheduler.finished(a.id));
+    EXPECT_TRUE(scheduler.finished(b.id));
+    EXPECT_TRUE(scheduler.finished(child.id));
+    std::vector<k::ProcessId> ended;
+    k::ProcessId p = k::kNone;
+    while (scheduler.takeEndedProgramProcess(p))
+        ended.push_back(p);
+    std::sort(ended.begin(), ended.end());
+    EXPECT_EQ(ended, (std::vector<k::ProcessId>{a.id, b.id, child.id}));
+}
+
+TEST(Scheduler, ProgramExitOutsideInitialOriginIsIgnored) {
+    k::Context c;
+    auto& scheduler = c.scheduler();
+    scheduler.addProgram();
+    ProgramFrame module;
+    module.id = scheduler.addProcess(&runProgramFrame, &module, Group::Active);
+    ProgramFrame child;
+    child.id = scheduler.addChildProcess(&runProgramFrame, &child, module.id);
+    scheduler.exitProgram(child.id);
+    EXPECT_FALSE(scheduler.finished(child.id));
+    EXPECT_FALSE(scheduler.ending());
+    EXPECT_EQ(scheduler.processGroup(child.id), Group::Active);
+}
+
+struct ProgramNbaFrame {
+    k::ProcessId id{0};
+    k::SlotId slot{0};
+    unsigned stage = 0;
+    std::vector<std::uint64_t> observed;
+};
+
+kirima_status programNba(kirima_context* ctx, void* frame) {
+    auto& c = k::fromC(ctx);
+    auto& f = *static_cast<ProgramNbaFrame*>(frame);
+    f.observed.push_back(*c.store().element(f.slot, 0));
+    switch (f.stage++) {
+        case 0: {
+            const std::uint64_t value = 7;
+            c.scheduler().scheduleNba(f.id, {.slot = f.slot}, &value, 0);
+            c.scheduler().waitDelay(f.id, 0);
+            return KIRIMA_WAITING;
+        }
+        case 1: c.scheduler().waitDelay(f.id, 1); return KIRIMA_WAITING;
+        default: return KIRIMA_DONE;
+    }
+}
+
+TEST(Scheduler, ProgramZeroDelayPrecedesReNbaAndPositiveDelayResumesReactive) {
+    k::Context c;
+    ProgramNbaFrame f;
+    f.slot = c.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    *c.store().element(f.slot, 0) = 3;
+    const k::ProgramId program = c.scheduler().addProgram();
+    f.id = c.scheduler().addProgramInitial(&programNba, &f, program);
+    c.scheduler().start(f.id);
+    EXPECT_EQ(c.scheduler().run(), EndReason::Finish);
+    EXPECT_EQ(f.observed, (std::vector<std::uint64_t>{3, 3, 7}));
+    EXPECT_EQ(c.scheduler().processGroup(f.id), Group::Reactive);
+}
+
+TEST(Scheduler, ProgramsAreIsolatedBetweenContexts) {
+    k::Context first, second;
+    ProgramFrame a, b;
+    a.id =
+        first.scheduler().addProgramInitial(&runProgramFrame, &a, first.scheduler().addProgram());
+    b.id =
+        second.scheduler().addProgramInitial(&runProgramFrame, &b, second.scheduler().addProgram());
+    first.scheduler().start(a.id);
+    second.scheduler().start(b.id);
+    EXPECT_EQ(first.scheduler().run(), EndReason::Finish);
+    EXPECT_FALSE(second.scheduler().ending());
+    EXPECT_EQ(second.scheduler().run(), EndReason::Finish);
+}
+
+TEST(Scheduler, ReusedProgramRecordsDropOriginAndCancellation) {
+    k::Context c;
+    auto& scheduler = c.scheduler();
+    ProgramFrame first, child, keeper, module;
+    const k::ProgramId program = scheduler.addProgram();
+    first.id = scheduler.addProgramInitial(&runProgramFrame, &first, program);
+    child.id = scheduler.addChildProcess(&runProgramFrame, &child, first.id);
+    keeper.id = scheduler.addProgramInitial(&runProgramFrame, &keeper, scheduler.addProgram());
+    scheduler.ended(first.id);
+    EXPECT_TRUE(scheduler.programStopped(child.id));
+    k::ProcessId ended = k::kNone;
+    ASSERT_TRUE(scheduler.takeEndedProgramProcess(ended));
+    EXPECT_EQ(ended, child.id);
+    scheduler.releaseProcess(child.id);
+    module.id = scheduler.addProcess(&runProgramFrame, &module, Group::Active);
+    EXPECT_EQ(module.id, child.id);
+    EXPECT_FALSE(scheduler.programStopped(module.id));
+    scheduler.exitProgram(module.id);
+    EXPECT_FALSE(scheduler.ending());
+    EXPECT_FALSE(scheduler.finished(keeper.id));
+}
+
 }  // namespace

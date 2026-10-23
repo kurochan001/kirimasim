@@ -1,7 +1,9 @@
 # program実行の仕様修正案
 
 [English](program-execution-proposal.md)。状態：**承認済み（2026-10-23）**。
-本修正をSIR_SPEC・SCHEDULER_SPEC・SYSTEM_TASKSへ反映しました。実装は進行中です。
+本修正をSIR_SPEC・SCHEDULER_SPEC・SYSTEM_TASKSへ反映しました。共通カーネルへ実装しました。
+124本の実行行列とカーネル・SIR・CLIの検査で承認済みの仕組みを確認しました。
+言語機能全体の対応とIcarusとの全面的な同等性は未確認です。
 
 P1_SCOPEはprogramをP1へ前倒ししますが、不足・矛盾する詳細は実装前のレビューが
 必要です。SCHEDULER_SPEC 16.1の `$exit` は全programの終了を待つ説明ですが、
@@ -53,5 +55,5 @@ final、anonymous programのサブルーチンを確認します。既存スイ�
 保持します。既存の拒否期待値を変える必要がある場合は、実装より先に仕様上の根拠を
 示す別コミットにします。
 
-承認は実装を可能にするもので、実装済み・program全対応・Icarusとの全面的な同等性を
+承認後に実装しましたが、program全対応・Icarusとの全面的な同等性は
 宣言しません。クラス・動的な格納・VPIなどの差はP1_SCOPEに従い別の仕組みとして進めます。

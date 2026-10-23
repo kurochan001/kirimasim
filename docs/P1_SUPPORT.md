@@ -39,7 +39,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Selections | Packed bit/part/indexed-part selects, packed dimensions, fixed unpacked-array indexing, structure members | Writes through a runtime select of a packed member or an already selected part are not implemented |
 | Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits; blocking and nonblocking assignments | No `with` clause, string target or nested streaming target; automatic targets cannot receive an NBA |
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
-| Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final` | `program` blocks are not implemented; `final` cannot wait |
+| Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment, supported intra-assignment delays, `#` controls, time units/precision and rounding, min/typ/max selection | Whole-array intra-assignment timing, event-controlled NBAs and delayed NBAs to runtime array elements are not implemented |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events, `->`, `->>`, `.triggered` | No writing side effects in event expressions, `iff` or wait conditions; no runtime-indexed named event, named-event `iff`, event-controlled `->>`, or `always_ff` trigger on a computed expression |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, disable of supported named blocks and tasks | Fork-local declarations, escaping automatic variables captured by fork branches and disable of a named fork block have unsupported forms |
@@ -50,7 +50,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
 | Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a net connected through a port |
 | Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
-| Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Region infrastructure does not imply support for program blocks, clocking blocks or concurrent assertions |
+| Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.
 
@@ -147,7 +147,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | --- | --- |
 | Still pending in P1 | FST; `%p`; resolved-strength `%v`; the unsupported `$fread` structure shapes above; remaining gaps in the P1 forms listed here |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
-| P3 | Classes/UVM, dynamic arrays, queues, associative arrays, constrained randomization, covergroups, concurrent assertions and sampled-value functions, clocking blocks, program blocks, virtual interfaces, `let`, VPI and DPI-C |
+| P3 | Classes/UVM, dynamic arrays, queues, associative arrays, constrained randomization, covergroups, concurrent assertions and sampled-value functions, clocking blocks, virtual interfaces, `let`, VPI and DPI-C |
 | P4 | MOS and bidirectional switches |
 | Outside current scope / deferred | VHDL/mixed-language and analog/mixed-signal designs; SDF annotation and encrypted IP; specify module paths/timing checks; user-defined nettypes, `interconnect`, `trireg`; legacy PLI; library map files; checkers, `randsequence`, an interactive debugger and a standalone Python API |
 
@@ -155,6 +155,19 @@ There is no compiled-simulation backend yet: all executable features in
 this inventory run in tier 1. Python integration is planned through cocotb
 over VPI in P3. P1 completion also requires the correctness and performance
 gates in the README; the size of this list alone does not establish completion.
+
+
+Programs: initial procedures and continuous assignments use the reactive set,
+and calls/forks inherit the caller's group and originating program.
+`$exit` ends that origin's initial threads and descendants, and is ignored
+outside a program-initial thread. Once all initials of a program end, its
+remaining descendants end; after all programs with initials end, simulation
+finishes and runs final procedures. Empty programs cause no automatic finish.
+The [program matrix](../tools/gen_program_execution_matrix.py) covers 124
+suite cases; seven kernel tests and a SIR test cover lifetime, reuse and
+metadata. The CLI checks 15 illegal-input cases and two program identities.
+This does not enable classes, clocking blocks or concurrent assertions.
+Program scopes are not yet included in VCD dumping (WAVEFORM 7).
 
 ## Evidence and maintenance
 

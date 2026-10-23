@@ -15,6 +15,46 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## programとreactive側の実行
+
+programのinitialと連続代入はReactiveで動き、#0はRe-Inactiveへ、NBAはRe-NBAへ
+入ります。呼び出しとforkは実行するスレッドの領域と起源programを継承し、宣言場所が
+module・package・interfaceでも同じです。この例では設計側のNBAの後に入力を読みます。
+
+各programの最後のinitialが終わると残る子孫を終了し、initialを持つ全programの終了後は
+暗黙のfinishでfinalを実行します。そのためmoduleの後続の `future` は出ません。
+`$exit` は起源のprogramのinitialと子孫を明示的に終了し、programのinitialを起源に
+持たなければ無視します。空のprogramだけではfinishしません。anonymous programの
+サブルーチンにも対応しますが、外からの参照の制限はslangが保ちます。クラス・
+クロッキングブロック・並行アサーション・programのVCDスコープは未対応です。
+
+```systemverilog
+module top;
+  logic clk = 0;
+  int data = 0;
+  initial begin #2; data = 5; data <= 7; clk = 1; #10; $display("future"); end
+  worker p(clk, data);
+endmodule
+program worker(input logic clk, input int data);
+  int sampled = 0;
+  initial begin
+    @(posedge clk);
+    $display("sample %0d", data);
+    sampled <= data;
+    #0; $display("before Re-NBA %0d", sampled);
+    #1; $display("after Re-NBA %0d", sampled);
+  end
+  final $display("program final");
+endprogram
+```
+
+```text
+sample 7
+before Re-NBA 0
+after Re-NBA 7
+program final
+```
+
 ## 無書式のバイナリの語を書き出す
 
 `%u` は2値、`%z` は4値の生データを、32ビットの語にそろえて下位の語から

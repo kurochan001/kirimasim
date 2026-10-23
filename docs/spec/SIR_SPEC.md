@@ -424,6 +424,13 @@ The kernel counts each program's root initial procedures and owns completion,
 descendant termination and `$exit`; tier adapters supply instance/process
 metadata. See the approved amendment for 24.3, 24.3.1, 24.3.2, 24.6 and 24.7.
 
+
+Implementation status (2026-10-23): `program` instance rows select reactive
+root execution. The kernel registers root initials separately from fork
+children and owns dynamic origin, completion and `$exit`. The
+[program matrix](../../tools/gen_program_execution_matrix.py) checks these
+rules across scopes, placements, entries and widths.
+
 ## 8. Subroutines
 
 - **Subroutine table (amendment of M3b):** each row holds a number, a name, a kind (function or task), a lifetime (static or automatic), whether it may wait, a sequence of arguments (direction, type, place: a slot if static, a frame variable if automatic), the return type (functions; `void` included), a table of frame variables, and a sequence of basic blocks.

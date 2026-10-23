@@ -247,6 +247,10 @@ private:
 
     void checkInstances() {
         for (std::size_t i = 0; i < d_.instances.size(); ++i) {
+            const InstanceKind kind = d_.instances[i].kind;
+            if (kind != InstanceKind::Module && kind != InstanceKind::Package &&
+                kind != InstanceKind::Unit && kind != InstanceKind::Program)
+                error("instance " + std::to_string(i), "invalid instance kind");
             const InstanceId p = d_.instances[i].parent;
             if (p != kNone && p.index() >= i)
                 error("instance " + std::to_string(i), "parent must come before the child");

@@ -53,6 +53,7 @@ enum class SysTask : std::uint8_t {
     Display,
     Write,
     Finish,
+    Exit,
     Stop,
     Time,
     Realtime,
@@ -272,6 +273,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$dumpall") return SysTask::DumpAll;
     if (name == "$dumplimit") return SysTask::DumpLimit;
     if (name == "$dumpflush") return SysTask::DumpFlush;
+    if (name == "$exit") return SysTask::Exit;
     if (name == "$finish") return SysTask::Finish;
     if (name == "$stop") return SysTask::Stop;
     if (name == "$time") return SysTask::Time;
@@ -795,6 +797,10 @@ public:
             ended(f);
             sched_.ended(f.kernelId);
         }
+        std::vector<kernel::ProgramId> programs(d_.instances.size(), kernel::kNone);
+        for (std::size_t i = 0; i < d_.instances.size(); ++i)
+            if (d_.instances[i].kind == sir::InstanceKind::Program)
+                programs[i] = sched_.addProgram();
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
@@ -813,31 +819,36 @@ public:
                 // A continuous assignment is evaluated once at time 0, in
                 // Active like the procedures (SCHEDULER_SPEC.md 6.1).
                 case sir::ProcessKind::Cont:
-                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    if (proc.kind == sir::ProcessKind::Initial &&
+                        programs[proc.instance.index()] != kernel::kNone)
+                        f.kernelId =
+                            sched_.addProgramInitial(&resume, &f, programs[proc.instance.index()]);
+                    else
+                        f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     sched_.start(f.kernelId);
                     break;
                 case sir::ProcessKind::Ff:
                 case sir::ProcessKind::FfPlain:
                 // always @* does not run at time 0 (SCHEDULER_SPEC.md 6.2).
                 case sir::ProcessKind::CombAt:
-                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     waitTriggers(f, proc);
                     break;
                 case sir::ProcessKind::Comb:
                 case sir::ProcessKind::Latch:
                     // Started once at time 0 after every initial and always
                     // (SCHEDULER_SPEC.md 6.1).
-                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     combs.push_back(f.kernelId);
                     break;
                 case sir::ProcessKind::Final:
                     // Run once each when the simulation ends.
-                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     finals.push_back(f.kernelId);
                     break;
                 case sir::ProcessKind::Override:
                     // Runs from override.start to override.stop.
-                    f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     overrides_[p] = &f;
                     break;
                 default:
@@ -927,7 +938,7 @@ public:
         vm.running_ = f;
         const kernel::Status st = vm.runProcess(*f, steps);
         vm.counters_.increment(vm.cInstrs_, steps);
-        if (st == kernel::Status::Done) vm.ended(*f);
+        if (st == kernel::Status::Done || st == kernel::Status::Killed) vm.ended(*f);
         vm.running_ = nullptr;
         return static_cast<kirima_status>(st);
     }
@@ -1250,6 +1261,14 @@ private:
     /// closed (SYSTEM_TASKS.md 6.2).
     void sweep() {
         kernel::ProcessId endedProcess = kernel::kNone;
+        while (sched_.takeEndedProgramProcess(endedProcess)) {
+            for (Frame& f : frames_) {
+                if (!f.released && f.kernelId == endedProcess) {
+                    ended(f);
+                    break;
+                }
+            }
+        }
         while (!fileMonitorFrames_.empty() && sched_.takeEndedFileMonitor(endedProcess)) {
             for (std::size_t i = 0; i < fileMonitorFrames_.size(); ++i) {
                 if (fileMonitorFrames_[i]->kernelId != endedProcess) continue;
@@ -1336,7 +1355,7 @@ private:
             c.group = none ? 0 : f.forkGroup;
             c.birth = f.births++;
             c.place = static_cast<std::uint32_t>(f.children.size());
-            c.kernelId = sched_.addProcess(&resume, &c, kernel::Group::Active);
+            c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
             f.children.push_back(&c);
             ++f.liveChildren;
             sched_.start(c.kernelId);
@@ -1687,6 +1706,12 @@ private:
         item.guardFrame = &f.iffs.emplace_back(Frame::Callback{&f, g});
     }
 
+    kernel::Group processGroup(const sir::Process& process) const {
+        return d_.instance(process.instance).kind == sir::InstanceKind::Program
+                   ? kernel::Group::Reactive
+                   : kernel::Group::Active;
+    }
+
     /// The monitor record of a watch, an item on an expression: evaluated
     /// again when what the watch reads changes (SIR_SPEC.md 7.2,
     /// SCHEDULER_SPEC.md 9.5). f.watches has room for it.
@@ -2017,6 +2042,9 @@ private:
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
+        // A confirmed report can run after its originating process ended.
+        // Stop only when this execution is newly canceled by the kernel.
+        const bool wasStopped = sched_.programStopped(f.kernelId);
         const sir::Process& p = d_.process(f.process);
         const BodyId body = act_.body;
         for (;;) {
@@ -2078,6 +2106,7 @@ private:
                         }
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
+                        if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
                     }
                     case Op::ScopeEnter:
@@ -2224,14 +2253,16 @@ private:
                             urandom(f, in, info.task == SysTask::UrandomRange);
                             break;
                         }
-                        if (!syscall(p, in, info)) return Exit::Error;
+                        if (!syscall(f, p, in, info)) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
+                        if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
                     }
                     case Op::OverrideStart: {
                         const Exit e = overrideStart(in, info_[body.index()][b.index()][k], steps);
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
+                        if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
                     }
                     case Op::Strobe:
@@ -2287,6 +2318,7 @@ private:
                         if (!execute(f, p, in, info_[body.index()][b.index()][k]))
                             return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
+                        if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
                 }
                 // An NBA, a ->> or a driver's update with a delay past the
@@ -4527,7 +4559,7 @@ private:
         return true;
     }
 
-    bool syscall(const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+    bool syscall(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         switch (info.task) {
             case SysTask::Fatal:
@@ -4916,6 +4948,7 @@ private:
                 else if (!files_.flush(value(ops[1])))
                     warnOnce(in, "$fflush: " + notOpenText(value(ops[1])));
                 return true;
+            case SysTask::Exit: sched_.exitProgram(f.kernelId); return true;
             case SysTask::Finish:
             case SysTask::Stop: {
                 // 1 and 2 report the time and the place of the call, at the

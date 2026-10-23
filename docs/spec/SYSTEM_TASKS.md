@@ -408,6 +408,15 @@ kirimasim's form (rule of this document), one line on standard error:
 - `--stop` chooses whether `$stop` ends the run (SCHEDULER_SPEC.md 16.2, CLI.md 2.2; approved 2026-10-19). The line above is written whichever it chooses.
 - For `$finish(0)` and `$stop(0)`, the line of the reason for ending of SCHEDULER_SPEC.md 16.2 is not printed either (matching "prints nothing" of 20.2; approved 2026-10-15, with SCHEDULER_SPEC.md amended too). The reason for ending is kept in `--stats=json`.
 
+
+### 10.2.1 `$exit` (approved 2026-10-23)
+
+The kernel ends the initial procedures and descendants of the executing
+thread's originating program (24.7). Without a program-initial origin,
+ignore the call silently. The all-program completion rule then applies
+(SCHEDULER_SPEC 16.1). Implementation uses shared program metadata through
+calls and fork branches, independent of the lexical subroutine scope.
+
 ### 10.3 `$stacktrace`
 
 Called as a task it prints the chain of calls; called as a function it returns the same content as a string. The content is left to the implementation (checked: 20.17.2). kirimasim lists, from the innermost, one line each of `<hierarchical name of the scope> (<file>:<line>)` (rule of this document). Called as a task it writes to standard output (as `$display`; it is output the user asked for). The test suite does not put the content of `$stacktrace` in expected values. **The lines (added 2026-10-21, approved):** the first is where `$stacktrace` is called, with its scope as `%m` gives it; each line after it is the call that led to the one before, naming the task or function that made it, by its hierarchical name, or, for a procedure, the module instance it is in, with the place of the call (rule of this document). A fork branch is a process of its own, which no call led to. Called as a function, it returns the lines with a newline between them and none after the last, so that `$display("%s", $stacktrace)` prints what `$stacktrace;` does (rule of this document).

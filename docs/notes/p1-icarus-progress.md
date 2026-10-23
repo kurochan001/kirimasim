@@ -57,9 +57,9 @@ python3 tests/cli/run_binary_format_tests.py \
 ```
 
 The first command intentionally returns 1 on the current working tree:
-eight of the sixteen original probes pass Icarus and fail kirimasim. Seven
-are standard mechanisms: dynamic arrays, queues, class objects, programs,
-MOS switches, bidirectional switches, specify paths. The eighth, `wire real`, is an
+seven of the sixteen original probes pass Icarus and fail kirimasim. Six
+are standard mechanisms: dynamic arrays, queues, class objects,
+MOS switches, bidirectional switches, specify paths. The seventh, `wire real`, is an
 [Icarus extension](https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html);
 strict slang correctly rejects it. Supporting it needs an explicit
 compatibility policy, not relaxation of the default language checks.
@@ -135,7 +135,7 @@ python3 tools/icarus_feature_probe.py \
   --output build/p1-icarus-extended.json --require-parity
 ```
 
-26 probes pass Icarus and fail kirimasim. They include subcases of the
+25 probes pass Icarus and fail kirimasim after program execution was added. They include subcases of the
 existing gaps plus event-controlled NBAs, delayed NBAs with runtime array
 indices, nested packed selection targets and strengths across a bit-select
 port connection. This count is of probes, not distinct language features;
@@ -158,4 +158,29 @@ its four new binary unit tests; the normal sources pass after restoration.
 Final binary-input local CI passed all presets (dev, release, ASan, UBSan),
 release flags, banned features, SPDX, suite files, global state, unpublished
 commit expectation checks, README counts, clang-format and clang-tidy.
-Program implementation remains pending approval of the detailed amendment.
+The detailed program amendment is now approved and implemented; see the next section.
+
+## Program execution
+
+The program amendment was approved on 2026-10-23 before source changes.
+The shared scheduler now owns program initials, dynamic origin, descendant
+termination and `$exit`; SIR supplies program instance identities and the
+VM supplies root/child registration. Implicit program port assignments use
+the program's reactive set. Calls declared elsewhere retain the caller's
+set and origin. Natural completion and already confirmed report calls are
+kept distinct from newly canceled execution.
+
+The generated matrix has 124 cases: 96 combinations of subroutine scope,
+direct/task/fork entry, instance placement and 32/129-bit values, plus 28
+lifetime, exit, port, anonymous-program, deferred-call and stress cases.
+Seven new scheduler tests and one SIR test cover kernel semantics, context
+isolation and record reuse; CLI checks 15 illegal-input combinations and
+two program identities. The former rejection fixture keeps its design body
+and checks an unordered output multiset in a separate expectation commit.
+Existing suite bodies and expected values remain unchanged.
+
+Dev regression passes 1,711 cases: 1,709 pass and two known skips remain.
+The 16-case seed inventory has seven Icarus-passing gaps; the extended
+38-case inventory has 25. Program VCD scopes remain unimplemented, as do
+classes, dynamic containers, clocking and concurrent assertions. This is
+progress toward the full P1 target, not a complete-parity claim.

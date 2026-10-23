@@ -99,6 +99,8 @@ struct ProcessTag;
 using ProcessId = Id<ProcessTag>;
 struct EventTag;
 using EventId = Id<EventTag>;
+struct ProgramTag;
+using ProgramId = Id<ProgramTag>;
 
 /// The handle an element of an event slot holds for event e: its number
 /// plus 1, 0 being null (SIR_SPEC.md 3.2.1); and the event of a handle that
@@ -217,6 +219,22 @@ public:
     /// Registers a process; it does not run until start() is called. It
     /// may get the place of a released process (SCHEDULER_SPEC.md 10.8).
     ProcessId addProcess(ResumeFn fn, void* frame, Group group);
+    /// Program execution and lifetime (24.3, 24.3.1, 24.7). Register every
+    /// initial before run(); programs with no initials do not cause finish.
+    ProgramId addProgram();
+    ProcessId addProgramInitial(ResumeFn fn, void* frame, ProgramId program);
+    /// A fork child inherits its caller's group and program-initial origin.
+    ProcessId addChildProcess(ResumeFn fn, void* frame, ProcessId parent);
+    /// $exit ends the originating program; without such an origin, no-op.
+    void exitProgram(ProcessId caller);
+    /// Whether program completion canceled this execution. Natural process
+    /// completion alone does not cancel its already confirmed report calls.
+    [[nodiscard]] bool programStopped(ProcessId p) const {
+        return processes_[p.index()].programStopped;
+    }
+    /// Processes ended by program completion, for tier frame bookkeeping.
+    bool takeEndedProgramProcess(ProcessId& process);
+    [[nodiscard]] Group processGroup(ProcessId p) const { return processes_[p.index()].group; }
     /// Gives back the record of a process that has ended and holds no
     /// report (SCHEDULER_SPEC.md 10.8). Not while the process is running:
     /// the kernel marks it ended after it returns.
@@ -454,6 +472,9 @@ private:
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
+        ProgramId program = kNone;  ///< Dynamic initial origin, not lexical scope.
+        bool programInitial = false;
+        bool programStopped = false;
         std::uint64_t gen = 0;                ///< Number of the current wait.
         std::vector<std::uint32_t> monitors;  ///< Monitor records of the current wait.
         bool done = false;
@@ -462,6 +483,16 @@ private:
         std::uint32_t observed = 0;          ///< Those confirmed in the Observed region.
         std::uint64_t serial = 0;            ///< Creation order, for 15.4 (10.8).
     };
+    struct Program {
+        std::uint32_t initials = 0;
+        bool ended = false;
+    };
+    std::vector<Program> programs_;
+    std::uint32_t activePrograms_ = 0;
+    std::vector<ProcessId> endedProgramProcesses_;
+    void initialEnded(ProcessId p);
+    void completeProgram(ProgramId program);
+
     struct Subscription {
         ProcessId process{0};
         std::uint64_t gen = 0;

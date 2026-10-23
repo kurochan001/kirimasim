@@ -114,7 +114,7 @@ struct NameEntry {
 
 /// What a row of the instance table is: an instance, or a package or a
 /// compilation unit with variables or static subroutines (SIR_SPEC.md 2).
-enum class InstanceKind : std::uint8_t { Module, Package, Unit };
+enum class InstanceKind : std::uint8_t { Module, Package, Unit, Program };
 
 /// A row of the instance table.
 struct Instance {

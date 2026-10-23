@@ -768,13 +768,11 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     // Anonymous programs hold items that only programs use (24.6).
     for (const ast::CompilationUnitSymbol* unit : root.compilationUnits) {
         for (const ast::Symbol& m : unit->members()) {
-            reportProgram(m);
             reportDpiImport(m);
         }
     }
     for (const ast::PackageSymbol* pkg : root.getCompilation().getPackages()) {
         for (const ast::Symbol& m : pkg->members()) {
-            reportProgram(m);
             reportDpiImport(m);
         }
     }
@@ -1261,16 +1259,6 @@ std::optional<sir::InstanceId> Lowerer::rowOf(const ast::Symbol& s) {
     return rowFor(*scope);
 }
 
-void Lowerer::reportProgram(const ast::Symbol& s) {
-    if (s.kind == ast::SymbolKind::AnonymousProgram) {
-        report(s.location, "anonymous program");
-    } else if (s.kind == ast::SymbolKind::Instance &&
-               s.as<ast::InstanceSymbol>().getDefinition().definitionKind ==
-                   ast::DefinitionKind::Program) {
-        report(s.location, "program instance '" + s.getHierarchicalPath() + "'");
-    }
-}
-
 bool Lowerer::reportDpiImport(const ast::Symbol& s) {
     if (s.kind != ast::SymbolKind::Subroutine ||
         !s.as<ast::SubroutineSymbol>().flags.has(ast::MethodFlags::DPIImport))
@@ -1286,10 +1274,12 @@ bool Lowerer::reportDpiImport(const ast::Symbol& s) {
 void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent) {
     // Every instance comes here: at the top, in a module or a generate
     // block, and as an element of an instance array.
-    reportProgram(inst);
     const auto id = static_cast<sir::InstanceId>(design_.instances.size());
-    design_.instances.push_back(
-        {inst.getHierarchicalPath(), std::string(inst.getDefinition().name), parent});
+    design_.instances.push_back({inst.getHierarchicalPath(), std::string(inst.getDefinition().name),
+                                 parent,
+                                 inst.getDefinition().definitionKind == ast::DefinitionKind::Program
+                                     ? sir::InstanceKind::Program
+                                     : sir::InstanceKind::Module});
     instanceIds_[&inst] = id;
     instanceSyms_.push_back(&inst);
     mergePorts(inst);  // before the instance's own nets get slots
@@ -1459,12 +1449,13 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
             case ast::SymbolKind::ExplicitImport:     // names resolved by slang
             case ast::SymbolKind::WildcardImport:
             case ast::SymbolKind::EmptyMember:
-            case ast::SymbolKind::DefParam:       // slang applied the value (23.10)
-            case ast::SymbolKind::Specparam:      // a constant, used where it is named (6.20.5)
-            case ast::SymbolKind::NetAlias:       // one slot (aliasNets)
-            case ast::SymbolKind::Port:           // connected by the parent (lowerPorts)
-            case ast::SymbolKind::InterfacePort:  // names through it reach the interface
-            case ast::SymbolKind::Modport:        // a view of the interface's members (25.5)
+            case ast::SymbolKind::DefParam:          // slang applied the value (23.10)
+            case ast::SymbolKind::Specparam:         // a constant, used where it is named (6.20.5)
+            case ast::SymbolKind::NetAlias:          // one slot (aliasNets)
+            case ast::SymbolKind::Port:              // connected by the parent (lowerPorts)
+            case ast::SymbolKind::InterfacePort:     // names through it reach the interface
+            case ast::SymbolKind::Modport:           // a view of the interface's members (25.5)
+            case ast::SymbolKind::AnonymousProgram:  // declarations retain their enclosing scope
             case ast::SymbolKind::StatementBlock: continue;  // scopes inside procedures
             case ast::SymbolKind::Subroutine:                // lowered when first called
                 reportDpiImport(member);
@@ -1622,6 +1613,11 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
             case ast::ArgumentDirection::InOut: report(ps.location, "inout port"); break;
             case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
         }
+        // A program port is a program-scope object (24.3.2); its implicit
+        // assignment executes in that instance's reactive set as well.
+        if (design_.processes.size() > before &&
+            design_.instance(instanceIds_.at(&child)).kind == sir::InstanceKind::Program)
+            design_.processes[before].instance = instanceIds_.at(&child);
         if (betweenNets && design_.processes.size() > before)
             netPorts_.insert(static_cast<sir::ProcessId>(before));
     }
@@ -2030,8 +2026,10 @@ void Lowerer::ensureStaticInit(const ast::Symbol& at, slang::SourceLocation sl) 
         sir::Process p;
         // <instance>.$static; <package>::$static and $unit::$static (SIR_SPEC.md 7.1).
         p.name = design_.instance(instance_).scopeName +
-                 (design_.instance(instance_).kind == sir::InstanceKind::Module ? ".$static"
-                                                                                : "::$static");
+                 ((design_.instance(instance_).kind == sir::InstanceKind::Module ||
+                   design_.instance(instance_).kind == sir::InstanceKind::Program)
+                      ? ".$static"
+                      : "::$static");
         p.kind = sir::ProcessKind::StaticInit;
         p.instance = instance_;
         p.loc = loc(sl);
@@ -2076,7 +2074,8 @@ void Lowerer::checkStaticInitOrder() {
             // Another instance's variable: the standard sets no order
             // between instances. Any other: when its own is set later.
             const bool other =
-                *inst != *own && design_.instance(*inst).kind == sir::InstanceKind::Module;
+                *inst != *own && (design_.instance(*inst).kind == sir::InstanceKind::Module ||
+                                  design_.instance(*inst).kind == sir::InstanceKind::Program);
             const auto it = when.find(&s);
             if ((other || (it != when.end() && it->second > mine)) &&
                 std::find(early.begin(), early.end(), &s) == early.end())

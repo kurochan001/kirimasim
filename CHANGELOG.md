@@ -13,6 +13,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Program execution uses Reactive/Re-Inactive/Re-NBA through calls and
+  forks, with named program identities and anonymous-program subroutines.
+  The shared kernel ends descendants on program completion, implements
+  `$exit` by dynamic origin and finishes after all programs with initials
+  end. Empty programs and confirmed report calls keep their existing rules
+  (24.3, 24.3.1, 24.6, 24.7; SIR_SPEC 7.6, SCHEDULER_SPEC 16.1).
+
 - `$sscanf` and `$fscanf` read binary `%u`/`%z` fields at arbitrary integral
   widths, including runtime formats and automatic/ref destinations. Raw
   whitespace and NUL remain payload; incomplete fields leave targets

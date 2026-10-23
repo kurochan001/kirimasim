@@ -1,7 +1,9 @@
 # Program execution amendment
 
 [日本語](program-execution-proposal.ja.md). Status: **approved (2026-10-23)**.
-Incorporated into SIR_SPEC, SCHEDULER_SPEC and SYSTEM_TASKS. Implementation is in progress.
+Incorporated into SIR_SPEC, SCHEDULER_SPEC and SYSTEM_TASKS. The shared kernel now implements program lifetime and scheduling. The
+124-case execution matrix and kernel/SIR/CLI checks cover the approved
+mechanisms; complete language coverage and full Icarus parity remain unconfirmed.
 
 P1_SCOPE advances programs into P1 but requires review of missing or
 conflicting details before implementation. SCHEDULER_SPEC 16.1 currently
@@ -72,6 +74,6 @@ anonymous-program subroutines. Keep existing suite bodies and expected
 values. Before source changes, any existing rejection expectation that
 must change gets a separate specification-backed expectation commit.
 
-This amendment enables implementation; it does not claim implementation,
-complete program coverage, or full Icarus parity. Classes, dynamic storage,
+Approval preceded implementation. The validation does not claim
+complete program coverage or full Icarus parity. Classes, dynamic storage,
 VPI and other gaps continue as independent mechanisms under P1_SCOPE.

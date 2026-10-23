@@ -50,8 +50,8 @@ python3 tests/cli/run_binary_format_tests.py \
 ```
 
 現在の作業ツリーで最初のコマンドは終了コード1になります。16本の自作プローブ中、
-Icarusで通りkirimasimで通らないものが8本あります。標準の仕組みの7本は、
-動的配列、キュー、クラスのオブジェクト、program、MOS、双方向スイッチ、
+Icarusで通りkirimasimで通らないものが7本あります。標準の仕組みの6本は、
+動的配列、キュー、クラスのオブジェクト、MOS、双方向スイッチ、
 specifyパスです。もう1本の `wire real` は
 [Icarus独自拡張](https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html)で、
 厳密なslangは正しく拒否します。対応には明示した互換方針が必要です。
@@ -115,7 +115,7 @@ python3 tools/icarus_feature_probe.py \
   --output build/p1-icarus-extended.json --require-parity
 ```
 
-Icarusで通りkirimasimで通らないプローブは26件です。従来の差の細分化に加え、
+Icarusで通りkirimasimで通らないプローブは、program実行の追加後で25件です。従来の差の細分化に加え、
 イベント付きNBA、実行時の配列添字を持つ遅延NBA、入れ子のpacked選択への書き込み、
 ビット選択のポート接続を通る強さなどを含みます。これは言語機能数でなくプローブ数で、
 検査を増やすと実装の回帰がなくても増えます。
@@ -133,4 +133,23 @@ Icarusで終了コード0ですが、独自テストの派生側の期待値9で
 
 バイナリ入力の最終ローカルCIはdev・release・ASan・UBSan、releaseフラグ、禁止機能、
 SPDX、スイート、グローバル状態、未pushコミットの期待値保護、README件数、clang-format、
-clang-tidyが全て通過しました。programの実装は詳細修正案の承認待ちです。
+clang-tidyが全て通過しました。programの詳細修正は承認・実装済みとなり、次節に記録します。
+
+## programの実行
+
+2026-10-23に修正案が承認され、その後に実装しました。共通スケジューラがinitialの数、
+動的な起源、子孫の終了、`$exit` を管理し、SIRがprogramインスタンスを識別し、VMが
+根と子を登録します。暗黙のポート代入もprogramのreactive側で動きます。別の場所で
+宣言した呼び出しも、呼び出す側の領域と起源を保ちます。通常の終了と確定済みの遅延の
+呼び出しを、新たな打ち切りと区別します。
+
+生成行列は124本です。サブルーチンの宣言場所・直接/task/forkでの入り方・配置・32/129
+ビットの96組と、終了・exit・ポート・anonymous program・遅延処理・多数のprogramの
+28組です。新規カーネル7本とSIR1本は、意味・Contextの分離・レコード再利用を確認し、
+CLIは不正入力15組と2インスタンスの識別を確認します。従来の拒否用fixtureは設計本体を
+保ち、実装と別の期待値コミットで出力の集合を確認する形に変えました。既存スイートの
+本体と期待値は変更していません。
+
+dev回帰は1,711件中1,709件成功、既知の2件スキップです。初期16件のIcarusだけが通る差は
+7件、拡張38件では25件です。programのVCDスコープ、クラス・動的コンテナ・クロッキング・
+並行アサーションなどは未対応で、P1の目標へ進めた段階であり、全面的な同等性は未確認です。

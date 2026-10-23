@@ -898,7 +898,6 @@ private:
     /// Program code runs in the reactive region set (24.3.1), which comes
     /// with programs in P3 (SCHEDULER_SPEC.md, part 4); until then a program
     /// is not run like a module.
-    void reportProgram(const ast::Symbol& s);
     /// Whether s is a DPI-C import, which is not implemented yet (P3,
     /// 35.5): one is reported at its declaration, once, whether it is
     /// called or not (CLI.md 5), and never lowered to a body.

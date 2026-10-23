@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_program_execution_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_program_execution_matrix.py --check)
+set_tests_properties(tools/gen_program_execution_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/bounded_binary
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_bounded_binary.py)
 set_tests_properties(tools/bounded_binary PROPERTIES LABELS Tools)
