@@ -61,15 +61,25 @@ check pass. This confirms that the corrected oracle detects the mistake.
 
 ## Separate review boundaries
 
-AGENTS.md requires expectation corrections to be separate from source PRs.
-The local branches are prepared as a stack:
+AGENTS.md separates corrections to existing expectations from source PRs,
+and explicitly permits new tests alongside implementation. A publication
+audit found zero scalar-fread matrix files at `origin/main` (`aae29de`);
+all 459 local matrix files (153 cases) are new to that published base.
+Thus the unpublished feature's corrected new tests can be included with
+its implementation without modifying a published expectation. The complete
+diff against the published base passes `check_expected_change.py`.
+
+The local branches retain separate correction commits for review:
 
 - `codex/fread-copyback-expectations`: generator, suite correction and this
-  rationale only; no `src/` change. Review against the preceding main state.
+  rationale only; no `src/` change. Review against fixed base `70c7fb3`.
 - `codex/fread-copyback-implementation`: based on that expectation branch;
-  its source PR must use the expectation branch as base, so no existing
-  suite bodies or expected files enter the source diff.
+  review its source correction against the expectation branch, so no
+  existing suite bodies or expected files enter that isolated source diff.
 
-Do not combine the test-correction diff and source diff into one PR. Review
-the test correction first under 4.9.7 and the approved SIR_SPEC 8 rule.
-The dependent implementation then has to pass that stronger oracle.
+If a PR's base already contains these matrix files, keep their correction
+separate from its source PR. Relative to the original published base, the
+new-test exception applies. Review the oracle under 4.9.7 and approved
+SIR_SPEC 8; the implementation must pass that stronger oracle. The local
+review branches do not require a new semantic approval to restore existing
+approved rules, and do not block validated integration into local main.

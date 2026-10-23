@@ -306,9 +306,12 @@ see the input example below.
 For an integral destination, `$fread` reads ceil(width/8) bytes, most
 significant first. Optional start/count values do not restrict that read
 (21.3.4.4); their expressions are still evaluated once left to right under
-the project's argument-order rule. A selected destination captures its
-indices once before the later arguments. Partial EOF retains old bits in
-bytes not read, and zero-byte input does not overwrite the destination.
+the project's argument-order rule. SIR_SPEC 8 reads an integral actual for
+copy-in and finds its destination again when a positive byte result is
+copied back; an index with side effects can therefore run at both phases.
+Partial EOF retains unfilled bits from the copy-in value, and zero-byte input
+has no copyback. The [correction rationale](notes/fread-copyback-correction.md)
+explains the earlier unapproved capture-once mistake.
 
 ```systemverilog
 module top;

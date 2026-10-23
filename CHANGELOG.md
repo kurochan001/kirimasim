@@ -13,11 +13,16 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Integral `$fread` again follows the approved SIR_SPEC 8 copy-in/copyback
+  interpretation of 4.9.7. A written result finds its target at copyback;
+  a zero-byte result has no copyback. The earlier capture-once target rule
+  and nine mechanism oracles were incorrect. Expectation correction and
+  implementation are isolated in separate review branches.
+
 - Integral `$fread` destinations accept optional start/count arguments without
   using their values to limit input (21.3.4.4). Supplied expressions run once
-  in the approved left-to-right order. Destination indices are captured once,
-  including on EOF, and heap targets retain their captured cell across
-  argument side effects. An original matrix adds 153 source cases across nine
+  in the approved left-to-right order. Copy-in and copyback follow SIR_SPEC 8
+  as corrected above. An original matrix adds 153 source cases across nine
   contexts, eight widths and both state domains; existing expectations remain.
 
 - Diagnose a container-cell NBA as illegal under 6.21/10.4.2, with its source

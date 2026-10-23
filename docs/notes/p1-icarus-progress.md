@@ -9,6 +9,74 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Integral `$fread` copyback contract restored (2026-10-24)
+
+Source `6b39508` restores the already approved SIR_SPEC 8 argument rule;
+it does not introduce a new semantic amendment. System-function frame outputs
+copy back as blocking assignments, and an inout actual is evaluated for its
+input value and again for a written output. This is the project's approved
+4.9.7 interpretation. SYSTEM_TASKS 6.3 supplies the integral partial-read rule
+of 21.3.4.4. The early capture in `db40e27` conflicted with that contract.
+The [correction rationale](fread-copyback-correction.md) records the error,
+the independent evidence and the separate review boundaries.
+
+The expectation-only branch `codex/fread-copyback-expectations` at `2911a39`
+corrects nine mechanism oracles and raises the generator to version 2. All
+144 width/state/context value expectations remain unchanged. Two additional
+checks inside the mechanism cases test valid heap-element copyback at the
+new index and preservation of the input value across a later argument's
+mutation before partial EOF. With the old binary, all nine corrected cases
+fail through stdout differences; the 144 value cases and generator check pass.
+
+The dependent `codex/fread-copyback-implementation` branch reads the actual
+for copy-in, evaluates descriptor/start/count values once left to right,
+performs the shared byte input, and finds the target again only for a positive
+byte count. Direct queue-element expressions therefore select the variable's
+current value at copyback; a real ref actual keeps its established identity.
+On EOF/no write there is no copyback. `$fgets`, scans and plusargs keep their
+existing output-only copyback behavior. Kernel, VM and SIR encoding are unchanged.
+The corrected source passes all 154 focused source/generator tests.
+
+Two old negative controls were invalid: evaluating an inout selector for
+both phases and selecting from a replaced destination at copyback are not
+semantic defects under SIR_SPEC 8. Those earlier catches are retracted as
+conformance evidence. The corrected seven controls all build and fail actual
+source assertions: rejecting extra arguments, dropping/reversing optional
+argument effects, evaluating copy-in twice, delaying copy-in until after
+optional arguments, clearing unfilled old bits and copying back at EOF.
+One is caught as unsupported execution; six are stdout differences. Restored
+sources rebuild and all 154 focused tests pass; anchor/judging self-checks
+are excluded from the evidence.
+
+Full local CI at `6b39508` passes all four configure/build/test presets,
+release flags, banned features, SPDX, suite files, global state, the source
+commit's expectation guard against its review base, README counts,
+clang-format and clang-tidy. Dev/ASan/UBSan each run 2,826 tests (2,824 pass,
+two known skips); release runs 2,827 (2,825 pass, the same skips). The previous
+144 reference value comparisons remain valid; they did not test the
+incorrect phase-sensitive oracle. An additional original partial-input probe
+starts with `a[0]=24'h123456`, `a[1]=24'h654321`, i=0 and one input byte 81.
+`$fread(a[i++],fd,0,0)` returns 1, leaves i=2 and produces
+`a[0]=123456`, `a[1]=813456`, preserving the input actual's old low bits.
+
+The comparison was rerun with a binary reporting `6b39508`:
+`build/fread-copyback-icarus-probes.json` retains 68 probes, 26 Icarus-passing
+gaps and six reference mismatches. The phase-sensitive direct targets are
+not newly passing Icarus comparisons. Installed compiler/runtime remain
+`14.0 (devel) (s20260301-411-gca6b8d376)`; `--require-parity` returns 1.
+Exact-13.0 and complete P1 parity remain unconfirmed. Historical external
+population, performance and nightly measurements keep their dates/revisions.
+
+The isolated source review uses the expectation branch as base and changes
+no existing suite body or expected file; the expectation correction itself
+contains no `src/` change. Publication-boundary inspection also confirms all
+459 scalar-fread matrix files are new to `origin/main` (`aae29de`), so the
+new-test exception permits the unpublished feature's complete corrected diff
+in one PR against that original base. The published-base expectation guard
+passes. The review branches are retained, and the validated correction is
+integrated into local main without publishing a PR or pushing. Existing
+approved timing rules are restored; the three pending proposals remain pending.
+
 ## Array-extrema contract audit and comparison correction (2026-10-24)
 
 The next required mechanism check found a distinction between Icarus execution
@@ -73,20 +141,21 @@ pending; this audit does not approve them or enable the runtime methods.
 
 ## Integral binary-input arguments and captured targets (2026-10-24)
 
+**Correction:** the capture-once target policy at this historical revision
+was unapproved and contradicted SIR_SPEC 8. The restoration above supersedes
+that policy and the two invalid target-timing mutation labels below.
+
 Source `db40e27` completes integral `$fread` calls with optional start/count
 arguments (21.3.4.4). Their values do not restrict an integral read, while
 their supplied expressions execute once left to right under VALUE_SEMANTICS
 3.1. Empty optional arguments are accepted by strict slang. The existing
 kernel syscall and binary-input operation remain shared and unchanged.
 
-The destination is captured before the descriptor and optional arguments.
-Indices no longer run again at copyback, nor are they skipped at EOF.
-Packed selections, concatenations, automatic frames and forwarded refs use
-the same captured place. A heap selection retains the actual stable element
-cell, including packed parts and detached cells after an argument replaces
-the queue. Invalid heap indices retain the existing default/no-write rule.
-Partial reads preserve unfilled old bits; a zero-byte result does not copy
-back over changes made by argument expressions.
+At that revision, the destination was captured before later arguments and
+reused at copyback, including stable heap cells. That incorrectly replaced
+the approved copyback-time target evaluation. Partial reads and zero-byte
+copyback suppression are retained by the correction, with the target found
+at the approved phase.
 
 The [new matrix](../../tools/gen_scalar_fread_matrix.py) adds 153 original
 source cases: 144 width/state/context combinations and nine mechanism cases.
@@ -105,14 +174,12 @@ Kirimasim's registered cases retain the original standard-permitted spelling.
 The reference comparison does not establish the separate ref/side-effect
 mechanism cases or override the project's evaluation-order contract.
 
-Seven deliberate mistakes each built successfully and were caught by actual
-source assertions: rejecting extra arguments, dropping optional-argument
-side effects, reversing their order, evaluating the target twice, following
-a replaced heap binding, clearing unfilled old bits and copying back at EOF.
-One fails the source runner's supported-execution check; six produce wrong
-stdout. Anchor checks and judging-tool self-checks are not counted as
-semantic evidence. Sources were restored and all 154 focused source/generator
-tests passed. The bilingual runnable example prints `2 8112` in both engines.
+Historically, seven mutations built and triggered the old assertions. The
+two labeled as evaluating the target twice and following a replaced heap
+binding were valid under the approved contract, so these catches cannot
+establish conformance. The corrected oracle and controls above replace this
+invalid target-timing evidence. The runnable scalar-value example and its
+`2 8112` output in both engines remain valid.
 
 Two probes were appended without changing the original 59. With the
 unchanged baseline binary reporting `b78437a`, these 61 probes have 23
@@ -136,6 +203,7 @@ release runs 2,827 (2,825 pass, the same skips). Counts now include 2,346
 suite cases, 123 generators and 128 tool tests. Historical population and
 performance dates/revisions are unchanged. All 265 checked local links in
 the updated documents and new proposals exist.
+This mechanically green run did not detect the incorrect target-timing oracle.
 
 The [multidimensional-input proposal](fread-multidim-proposal.md) in
 `4af9ff0` records numerical-index traversal, linear start/count and

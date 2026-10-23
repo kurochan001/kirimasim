@@ -249,9 +249,13 @@ including the file-output forms and `$swrite`.
 - `$fread` supports scalar integral destinations and one-dimensional fixed
   integral memories. On integral destinations, optional start/count values
   do not limit input; supplied expressions still run once left to right.
-  Target indices are captured once, and heap targets retain their selected
-  cell when another argument replaces the container. Partial input retains
-  unfilled old bits; zero-byte input does not copy back. The
+  Under SIR_SPEC 8, an integral actual is evaluated for copy-in and its
+  destination is found again when a positive byte count is copied back.
+  Direct heap-element expressions select the then-current container;
+  actual refs retain their established reference semantics. Partial input
+  retains unfilled copy-in bits; zero-byte input does not copy back. See the
+  [oracle and implementation correction](notes/fread-copyback-correction.md).
+  The
   [153-case matrix](../tools/gen_scalar_fread_matrix.py) covers eight widths,
   two/four states and nine execution contexts, plus argument/storage checks.
   One-dimensional memories of unpacked structures may

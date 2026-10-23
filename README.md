@@ -98,7 +98,11 @@ establish complete coverage; the inventory must expand as mechanisms and
 interfaces are checked.
 
 Integral `$fread` now accepts optional start/count arguments, evaluates
-supplied expressions once and captures selected destinations once. On the
+supplied value arguments once and follows the approved copy-in/copyback
+rules for selected destinations. An inout target is evaluated for its input
+value and again when a positive-byte result is copied back. The earlier
+capture-once implementation is corrected in the separate
+[expectation/source review stack](docs/notes/fread-copyback-correction.md). On the
 earlier 61-probe inventory, this reduced the measured gaps from 23 to 22.
 Whole multidimensional integral memory input is included as a remaining
 gap; its [addressing proposal](docs/notes/fread-multidim-proposal.md) awaits
@@ -143,15 +147,16 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI rerun at source revision `db40e27` on 2026-10-24 passed
+The local CI rerun at corrected source `6b39508` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
 clang-tidy. Dev has 2,826 tests: 2,824 pass and the same two known skips remain.
 The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
 The earlier 61 probes retain 22 gaps, down from 23 before the integral
 `$fread` fix. Seven new extrema probes expand the inventory to 68, with
 26 Icarus-passing gaps and six separately recorded reference mismatches.
-The comparison tool's 128 Tools tests pass; no new runtime method is enabled
-by that audit. See the [validation record](docs/notes/p1-icarus-progress.md).
+All 128 Tools tests and the corrected scalar-input oracle pass in that run.
+The extrema audit adds no runtime method. See the
+[validation record](docs/notes/p1-icarus-progress.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 
