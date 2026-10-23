@@ -392,14 +392,23 @@ def main() -> int:
     # container, and nothing runs (CLI.md 5; the files and the lines come
     # from tools/gen_unsupported_matrix.py).
     got = []
+    accepted = set(UNSUPPORTED_MATRIX.with_suffix(".accepted").read_text(encoding="utf-8").splitlines())
     for sv in sorted(UNSUPPORTED_MATRIX.glob("*.sv")):
         rel = str(sv.relative_to(HERE))
         proc = bounded_run.run([args.kirimasim, rel], cwd=HERE)
-        got += [line for line in proc.stderr.splitlines() if ": error: " in line]
-        if proc.returncode != 2 or proc.stdout != "":
+        diagnostics = [line for line in proc.stderr.splitlines() if not line.startswith("kirimasim: info:")]
+        implemented = sv.stem in accepted
+        if implemented:
+            accepted.remove(sv.stem)
+        else:
+            got += [line for line in diagnostics if ": error: " in line]
+        if proc.returncode != (0 if implemented else 2) or proc.stdout != "" or (implemented and diagnostics):
             failures += 1
             print(f"FAIL: {rel}: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
                   file=sys.stderr)
+    if accepted:
+        failures += 1
+        print(f"FAIL: missing accepted historical inputs: {sorted(accepted)}", file=sys.stderr)
     want = UNSUPPORTED_MATRIX.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
     if sorted(got) != sorted(want):
         failures += 1
