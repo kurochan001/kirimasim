@@ -46,6 +46,25 @@ struct Capture {
     }
 };
 
+struct RootObserver {
+    k::ProcessId process{0};
+    bool waited = false;
+    bool observed = false;
+    k::HeapStats stats;
+    static kirima_status resume(kirima_context* context, void* frame) {
+        auto& state = *static_cast<RootObserver*>(frame);
+        auto& ctx = k::fromC(context);
+        if (!state.waited) {
+            state.waited = true;
+            ctx.scheduler().waitDelay(state.process, 0);
+            return static_cast<kirima_status>(k::Status::Waiting);
+        }
+        state.observed = true;
+        state.stats = ctx.heap().stats();
+        return static_cast<kirima_status>(k::Status::Done);
+    }
+};
+
 struct Program {
     Design d;
     Program() {
@@ -85,9 +104,13 @@ struct Program {
         return Operand::constant(id);
     }
     Operand emit(Op op, Type type, std::vector<Operand> args) {
+        return emitAt(0, op, type, std::move(args));
+    }
+    Operand emitAt(std::size_t block, Op op, Type type, std::vector<Operand> args) {
         auto& p = d.processes[0];
+        if (p.blocks.size() <= block) p.blocks.resize(block + 1);
         const TempId id = type == voidType() ? TempId{kNone} : TempId{p.numTemps++};
-        p.blocks[0].instrs.push_back({op, type, id, std::move(args), {0, 1, 1}});
+        p.blocks[block].instrs.push_back({op, type, id, std::move(args), {0, 1, 1}});
         return Operand::temp(id);
     }
     Operand slot(Type type) {
@@ -563,6 +586,8 @@ struct ArmHeap {
     std::size_t point;
     k::ProcessId process{0};
     bool waited = false;
+    k::SlotId snapshotSlot = k::kNone;
+    k::ContainerToken original;
     static kirima_status resume(kirima_context* context, void* frame) {
         auto& a = *static_cast<ArmHeap*>(frame);
         if (!a.waited) {
@@ -570,6 +595,8 @@ struct ArmHeap {
             k::fromC(context).scheduler().waitDelay(a.process, 1);
             return static_cast<kirima_status>(k::Status::Waiting);
         }
+        if (a.snapshotSlot != k::kNone)
+            a.original = {*k::fromC(context).store().element(a.snapshotSlot, 0)};
         a.memory.remaining = a.point;
         return static_cast<kirima_status>(k::Status::Done);
     }
@@ -577,6 +604,7 @@ struct ArmHeap {
 
 TEST(VmContainer, AllocationFailuresDuringAssignmentReturnResourceLimitWithoutReplacement) {
     bool completed = false;
+    unsigned assignmentFailures = 0, collectionFailures = 0;
     for (std::size_t point = 0; point < 100; ++point) {
         SCOPED_TRACE(point);
         Program p;
@@ -606,6 +634,7 @@ TEST(VmContainer, AllocationFailuresDuringAssignmentReturnResourceLimitWithoutRe
         VmHeapMemory memory;
         k::Context ctx(k::OutputDestinations{capture.file, capture.file}, nullptr, &memory);
         ArmHeap arm{memory, point};
+        arm.snapshotSlot = k::SlotId{home.id};
         arm.process = ctx.scheduler().addProcess(&ArmHeap::resume, &arm, k::Group::Active);
         ctx.scheduler().start(arm.process);
         const auto result = kirimasim::vm::run(p.d, ctx);
@@ -617,17 +646,45 @@ TEST(VmContainer, AllocationFailuresDuringAssignmentReturnResourceLimitWithoutRe
         if (result.reason == k::EndReason::Quiescent) {
             completed = true;
             EXPECT_GT(point, 5U);
+            EXPECT_NE(token, arm.original);
+            EXPECT_EQ(ctx.heap().stats().containers, 2U);
+            EXPECT_EQ(ctx.heap().stats().cells, 4U);
             break;
         }
         EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
-        EXPECT_NE(capture.text().find("container.sv:42: error: container resource limit"),
-                  std::string::npos);
-        // Initial child plus the deep copy in the outer value; failed
-        // replacement must release every newly allocated object.
-        EXPECT_EQ(ctx.heap().stats().containers, 3U);
-        EXPECT_EQ(ctx.heap().stats().cells, 7U);
+        const auto message = capture.text();
+        const bool collection =
+            message.find("container collection resource limit") != std::string::npos;
+        if (collection) {
+            ++collectionFailures;
+            EXPECT_NE(message.find("container.sv:42: error: container collection resource limit"),
+                      std::string::npos);
+            // Assignment committed before the safe point. Failed marking
+            // leaves BOTH complete values alive, with distinct cells.
+            EXPECT_NE(token, arm.original);
+            EXPECT_TRUE(ctx.heap().actualType(arm.original));
+            EXPECT_EQ(ctx.heap().stats().containers, 4U);
+            EXPECT_EQ(ctx.heap().stats().cells, 8U);
+            ASSERT_TRUE(
+                ctx.heap().collect(std::array<k::HeapRoot, 1>{{k::HeapRoot::container(token)}}));
+            EXPECT_EQ(ctx.heap().stats().containers, 2U);
+            EXPECT_EQ(ctx.heap().stats().cells, 4U);
+            EXPECT_EQ(ctx.heap().actualType(arm.original).status.error,
+                      k::HeapError::InvalidHandle);
+        } else {
+            ++assignmentFailures;
+            EXPECT_NE(message.find("container.sv:42: error: container resource limit"),
+                      std::string::npos);
+            EXPECT_EQ(token, arm.original);
+            // The initial unowned temporary was collected at time 0.
+            // A failed replacement preserves exactly the reachable value.
+            EXPECT_EQ(ctx.heap().stats().containers, 2U);
+            EXPECT_EQ(ctx.heap().stats().cells, 4U);
+        }
     }
     EXPECT_TRUE(completed);
+    EXPECT_GT(assignmentFailures, 0U);
+    EXPECT_GT(collectionFailures, 0U);
 }
 
 TEST(VmContainer, WaitingTaskKeepsDetachedElementReference) {
@@ -718,6 +775,8 @@ TEST(VmContainer, WaitingTaskKeepsDetachedElementReference) {
             EXPECT_EQ(oldWords[w].a, p.d.constants[changed.id].aWords[w]);
             EXPECT_EQ(currentWords[w].a, p.d.constants[replacement.id].aWords[w]);
         }
+        EXPECT_EQ(ctx.heap().stats().containers, 1U);
+        EXPECT_EQ(ctx.heap().stats().cells, 1U);
     }
 }
 
@@ -1012,6 +1071,372 @@ TEST(VmContainer, UnconnectedCellNbasReportUnsupportedWithoutWritingImmediately)
         for (unsigned w = 0; w < out.size(); ++w)
             EXPECT_EQ(out[w].a, p.d.constants[initial.id].aWords[w]);
     }
+}
+
+TEST(VmContainer, RegionCollectionKeepsTypedFramesCellsAndBoundedPools) {
+    for (Type e : {s2(1), s4(32), s4(129)})
+        for (bool automatic : {false, true})
+            for (bool nested : {false, true})
+                for (bool churn : {false, true}) {
+                    SCOPED_TRACE(::testing::Message() << toString(e) << '/' << automatic << '/'
+                                                      << nested << '/' << churn);
+                    Program p;
+                    const auto inner = p.container(e, true);
+                    const auto q = nested ? p.container(inner, true) : inner;
+                    const Type element = nested ? inner : e;
+                    const auto home = automatic ? p.frame(q) : p.slot(q);
+                    const auto saved =
+                        p.frame(refType(nested ? inner.detail : TypeId{kNone}), element);
+                    const auto counter = p.frame(u2(64));
+                    const auto zero = p.constant(s4(64), 0), tick = p.constant(u2(64), 0),
+                               one = p.constant(u2(64), 1), hundred = p.constant(u2(64), 100);
+                    const auto item = p.constant(e, 7), changed = p.constant(e, 11);
+                    const auto load = [&](std::size_t block, Type t, const Operand& h) {
+                        return p.emitAt(
+                            block, h.kind == Operand::Kind::Frame ? Op::Fload : Op::Load, t, {h});
+                    };
+                    const auto store = [&](std::size_t block, const Operand& h, const Operand& v) {
+                        p.emitAt(block, h.kind == Operand::Kind::Frame ? Op::Fstore : Op::Store,
+                                 voidType(), {h, v});
+                    };
+                    const auto make = [&](std::size_t block, const Operand& value) {
+                        const auto child =
+                            nested ? p.emitAt(block, Op::ContainerPack, inner, {value}) : value;
+                        return p.emitAt(block, Op::ContainerPack, q, {child});
+                    };
+                    store(0, home, make(0, item));
+                    const auto firstRef = p.emit(Op::RefMake, refType(q.detail), {home});
+                    p.store(saved, p.emit(Op::ContainerCell,
+                                          refType(nested ? inner.detail : TypeId{kNone}),
+                                          {Operand::typeRow(q.detail), firstRef, zero}));
+                    p.emit(Op::Br, voidType(), {Operand::block(BlockId{1})});
+                    if (churn) {
+                        const auto ref = p.emitAt(1, Op::RefMake, refType(q.detail), {home});
+                        const auto extra =
+                            nested ? p.emitAt(1, Op::ContainerPack, inner, {item}) : item;
+                        p.emitAt(1, Op::QueuePushBack, voidType(),
+                                 {Operand::typeRow(q.detail), ref, extra});
+                        p.emitAt(1, Op::QueuePopBack, element, {Operand::typeRow(q.detail), ref});
+                    } else
+                        store(1, home, make(1, item));
+                    store(1, counter,
+                          p.emitAt(1, Op::Add, u2(64), {load(1, u2(64), counter), one}));
+                    p.emitAt(1, Op::WaitDelay, voidType(), {tick, Operand::block(BlockId{2})});
+                    const auto again =
+                        p.emitAt(2, Op::Lt, u2(1), {load(2, u2(64), counter), hundred});
+                    p.emitAt(2, Op::BrIf, voidType(),
+                             {again, Operand::block(BlockId{1}), Operand::block(BlockId{3})});
+                    const auto oldRef =
+                        load(3, refType(nested ? inner.detail : TypeId{kNone}), saved);
+                    const auto before = p.emitAt(3, Op::LoadRef, element, {oldRef});
+                    const auto oldLeaf =
+                        nested ? p.emitAt(3, Op::ContainerRead, e, {before, zero}) : before;
+                    const auto oldResult = p.slot(e);
+                    store(3, oldResult, oldLeaf);
+                    if (nested) {
+                        const auto newChild = p.emitAt(3, Op::ContainerPack, inner, {changed});
+                        p.emitAt(3, Op::ContainerAssign, voidType(),
+                                 {Operand::typeRow(inner.detail), oldRef, newChild});
+                    } else
+                        p.emitAt(3, Op::StoreRef, voidType(), {oldRef, changed});
+                    const auto now =
+                        p.emitAt(3, Op::ContainerRead, element, {load(3, q, home), zero});
+                    const auto current =
+                        nested ? p.emitAt(3, Op::ContainerRead, e, {now, zero}) : now;
+                    const auto answer = p.slot(e);
+                    store(3, answer, current);
+                    p.emitAt(3, Op::Ret, voidType(), {});
+                    ASSERT_TRUE(verifies(p.d));
+                    Capture capture;
+                    ASSERT_NE(capture.file, nullptr);
+                    k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                    RootObserver observer;
+                    observer.process = ctx.scheduler().addProcess(&RootObserver::resume, &observer,
+                                                                  k::Group::Active);
+                    ctx.scheduler().start(observer.process);
+                    const auto result = kirimasim::vm::run(p.d, ctx);
+                    ASSERT_EQ(result.reason, k::EndReason::Quiescent)
+                        << result.error << capture.text();
+                    ASSERT_TRUE(observer.observed);
+                    EXPECT_EQ(observer.stats.containers, nested ? churn ? 2U : 3U : 1U);
+                    EXPECT_EQ(observer.stats.cells, nested ? churn ? 2U : 4U : churn ? 1U : 2U);
+                    EXPECT_EQ(stored(ctx, oldResult, e)[0].a, p.d.constants[item.id].aWords[0]);
+                    EXPECT_EQ(stored(ctx, answer, e)[0].a,
+                              p.d.constants[(churn ? changed : item).id].aWords[0]);
+                    EXPECT_EQ(ctx.heap().stats().containers, automatic ? 0U : nested ? 2U : 1U);
+                    EXPECT_EQ(ctx.heap().stats().cells, automatic ? 0U : nested ? 2U : 1U);
+                    EXPECT_LE(ctx.heap().stats().containerEntries, 8U);
+                    EXPECT_LE(ctx.heap().stats().cellEntries, 8U);
+                }
+}
+
+TEST(VmContainer, DroppingTheLastReferenceCollectsWithoutAnotherHeapMutation) {
+    Program p;
+    const auto q = p.container(s4(32), true);
+    const auto home = p.slot(q), ordinary = p.slot(s4(32));
+    const auto saved = p.frame(refType(), s4(32));
+    const auto zero = p.constant(s4(64), 0), tick = p.constant(u2(64), 1);
+    p.store(home, p.emit(Op::ContainerPack, q, {p.constant(s4(32), 7)}));
+    const auto ref = p.emit(Op::RefMake, refType(q.detail), {home});
+    p.store(saved, p.emit(Op::ContainerCell, refType(), {Operand::typeRow(q.detail), ref, zero}));
+    p.emit(Op::ContainerClear, voidType(), {Operand::typeRow(q.detail), ref});
+    p.emit(Op::WaitDelay, voidType(), {tick, Operand::block(BlockId{1})});
+    const auto plain = p.emitAt(1, Op::RefMake, refType(), {ordinary});
+    p.emitAt(1, Op::Fstore, voidType(), {saved, plain});
+    p.emitAt(1, Op::WaitDelay, voidType(), {tick, Operand::block(BlockId{2})});
+    p.emitAt(2, Op::Ret, voidType(), {});
+    ASSERT_TRUE(verifies(p.d));
+    Capture capture;
+    ASSERT_NE(capture.file, nullptr);
+    k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+    EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+    EXPECT_EQ(ctx.heap().stats().containers, 0U);
+    EXPECT_EQ(ctx.heap().stats().cells, 0U);
+}
+
+TEST(VmContainer, PendingNbaValuesAreRootsInBothSchedulingGroups) {
+    for (bool program : {false, true})
+        for (bool nested : {false, true})
+            for (unsigned delay : {0U, 1U, 9U}) {
+                SCOPED_TRACE(::testing::Message() << program << '/' << nested << '/' << delay);
+                Program p;
+                if (program) p.d.instances[0].kind = InstanceKind::Program;
+                const auto inner = p.container(s4(32), true);
+                const auto q = nested ? p.container(inner, true) : inner;
+                const auto destination = p.slot(q), source = p.frame(q), answer = p.slot(s4(32));
+                const auto zero = p.constant(s4(64), 0), item = p.constant(s4(32), 7);
+                const auto first = p.emit(Op::ContainerPack, inner, {item});
+                const auto value = nested ? p.emit(Op::ContainerPack, q, {first}) : first;
+                p.store(source, value);
+                p.emit(Op::NbaDelay, voidType(),
+                       {destination, p.load(q, source), p.constant(u2(64), delay)});
+                p.store(source, p.constant(q, 0));
+                p.emit(Op::WaitDelay, voidType(),
+                       {p.constant(u2(64), delay + 1), Operand::block(BlockId{1})});
+                auto current = p.emitAt(1, Op::Load, q, {destination});
+                if (nested) current = p.emitAt(1, Op::ContainerRead, inner, {current, zero});
+                const auto leaf = p.emitAt(1, Op::ContainerRead, s4(32), {current, zero});
+                p.emitAt(1, Op::Store, voidType(), {answer, leaf});
+                p.emitAt(1, Op::Ret, voidType(), {});
+                ASSERT_TRUE(verifies(p.d));
+                Capture capture;
+                ASSERT_NE(capture.file, nullptr);
+                k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                const auto result = kirimasim::vm::run(p.d, ctx);
+                ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
+                    << result.error << capture.text();
+                EXPECT_EQ(stored(ctx, answer, s4(32))[0].a, 7U);
+                EXPECT_EQ(ctx.heap().stats().containers, nested ? 2U : 1U);
+                EXPECT_EQ(ctx.heap().stats().cells, nested ? 2U : 1U);
+            }
+}
+
+TEST(VmContainer, FixedArraysOfContainerValuesSurviveRegionBoundaries) {
+    for (bool automatic : {false, true})
+        for (bool nested : {false, true})
+            for (bool descending : {false, true}) {
+                SCOPED_TRACE(::testing::Message()
+                             << automatic << '/' << nested << '/' << descending);
+                Program p;
+                const auto inner = p.container(s4(129), true);
+                const auto q = nested ? p.container(inner, true) : inner;
+                p.frame(s4(129));  // Root field offsets must include wide scalar fields.
+                const auto home = automatic ? p.frame(q) : p.slot(q);
+                const std::vector<ArrayDim> dims{{descending ? 2 : 0, descending ? 0 : 2}};
+                if (automatic)
+                    p.d.processes[0].frame[home.id].dims = dims;
+                else
+                    p.d.slots[home.id].dims = dims;
+                p.frame(u2(64));
+                const auto zero = p.constant(s4(64), 0);
+                std::vector<std::pair<Operand, Operand>> checks;
+                for (unsigned index = 0; index < 3; ++index) {
+                    const auto leaf = p.constant(s4(129), index + 1);
+                    auto value = p.emit(Op::ContainerPack, inner, {leaf});
+                    if (nested) value = p.emit(Op::ContainerPack, q, {value});
+                    const auto at = p.constant(s4(64), index);
+                    p.emit(Op::StoreElem, voidType(), {home, at, value});
+                    const auto output = p.slot(s4(129));
+                    auto current = p.emitAt(1, Op::LoadElem, q, {home, at});
+                    if (nested) current = p.emitAt(1, Op::ContainerRead, inner, {current, zero});
+                    p.emitAt(1, Op::Store, voidType(),
+                             {output, p.emitAt(1, Op::ContainerRead, s4(129), {current, zero})});
+                    checks.push_back({output, leaf});
+                }
+                p.emit(Op::WaitDelay, voidType(),
+                       {p.constant(u2(64), 1), Operand::block(BlockId{1})});
+                p.emitAt(1, Op::Ret, voidType(), {});
+                ASSERT_TRUE(verifies(p.d));
+                Capture capture;
+                ASSERT_NE(capture.file, nullptr);
+                k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                const auto result = kirimasim::vm::run(p.d, ctx);
+                ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << capture.text();
+                for (const auto& [output, expected] : checks) {
+                    const auto value = stored(ctx, output, s4(129));
+                    for (unsigned w = 0; w < value.size(); ++w)
+                        EXPECT_EQ(value[w].a, p.d.constants[expected.id].aWords[w]);
+                }
+                EXPECT_EQ(ctx.heap().stats().containers, automatic ? 0U : nested ? 6U : 3U);
+                EXPECT_EQ(ctx.heap().stats().cells, automatic ? 0U : nested ? 6U : 3U);
+            }
+}
+
+TEST(VmContainer, PrimitiveWordsThatResembleTokensAreNotRoots) {
+    for (Type e : {u2(64), u4(64), Type{TypeKind::Real, 0}})
+        for (bool automatic : {false, true}) {
+            Program p;
+            const auto q = p.container(s4(32), true);
+            const auto home = automatic ? p.frame(e) : p.slot(e);
+            const auto bits = p.constant(e, 0x100000001ULL, 0x8000000000000000ULL);
+            p.store(home, bits);
+            p.emit(Op::ContainerPack, q, {p.constant(s4(32), 7)});  // Unowned result.
+            p.emit(Op::WaitDelay, voidType(), {p.constant(u2(64), 1), Operand::block(BlockId{1})});
+            const auto output = p.slot(e);
+            const auto read = p.emitAt(1, automatic ? Op::Fload : Op::Load, e, {home});
+            p.emitAt(1, Op::Store, voidType(), {output, read});
+            p.emitAt(1, Op::Ret, voidType(), {});
+            ASSERT_TRUE(verifies(p.d));
+            Capture capture;
+            ASSERT_NE(capture.file, nullptr);
+            k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+            ASSERT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+            EXPECT_EQ(stored(ctx, output, e)[0].a, 0x100000001ULL);
+            EXPECT_EQ(stored(ctx, output, e)[0].b, isFourState(e) ? 0x8000000000000000ULL : 0U);
+            EXPECT_EQ(ctx.heap().stats().containers, 0U);
+            EXPECT_EQ(ctx.heap().stats().cells, 0U);
+        }
+}
+
+TEST(VmContainer, DeferredInputSnapshotsRemainRootsUntilObservedOrPostponedCalls) {
+    for (bool final : {false, true})
+        for (bool nested : {false, true})
+            for (bool multiple : {false, true})
+                for (bool automatic : {false, true}) {
+                    SCOPED_TRACE(::testing::Message()
+                                 << final << '/' << nested << '/' << multiple << '/' << automatic);
+                    Program p;
+                    const auto inner = p.container(s4(32), true);
+                    const auto q = nested ? p.container(inner, true) : inner;
+                    const auto source = p.slot(q);
+                    const auto zero = p.constant(s4(64), 0);
+                    std::vector<Operand> call{Operand::str(final ? "final" : "#0"),
+                                              Operand::subroutine(SubroutineId{0})};
+                    for (unsigned i = 0; i < (multiple ? 2U : 1U); ++i) {
+                        const auto first =
+                            p.emit(Op::ContainerPack, inner, {p.constant(s4(32), 7 + 2 * i)});
+                        const auto value = nested ? p.emit(Op::ContainerPack, q, {first}) : first;
+                        p.store(source, value);
+                        call.push_back(p.emit(Op::ContainerSnapshot, q, {p.load(q, source)}));
+                    }
+                    p.emit(Op::ReportCall, voidType(), std::move(call));
+                    const auto sourceRef = p.emit(Op::RefMake, refType(q.detail), {source});
+                    p.emit(Op::ContainerClear, voidType(), {Operand::typeRow(q.detail), sourceRef});
+                    p.emit(Op::WaitDelay, voidType(),
+                           {p.constant(u2(64), 1), Operand::block(BlockId{1})});
+                    p.emitAt(1, Op::Ret, voidType(), {});
+                    Program fn;
+                    fn.d.types = p.d.types;
+                    fn.d.constants = p.d.constants;
+                    Subroutine function;
+                    function.name = "top.report";
+                    function.automatic = automatic;
+                    for (unsigned i = 0; i < (multiple ? 2U : 1U); ++i) {
+                        const auto param = automatic ? fn.frame(q) : p.slot(q);
+                        if (!automatic) p.d.slots[param.id].subroutine = SubroutineId{0};
+                        function.params.push_back(
+                            {"value" + std::to_string(i), Direction::Input, q,
+                             automatic ? SlotId{kNone} : param.asSlot(),
+                             automatic ? param.asFrame() : FrameVarId{kNone}});
+                        auto value = fn.load(q, param);
+                        if (nested) value = fn.emit(Op::ContainerRead, inner, {value, zero});
+                        const auto leaf = fn.emit(Op::ContainerRead, s4(32), {value, zero});
+                        fn.emit(Op::Syscall, voidType(),
+                                {Operand::str("$display"), Operand::str("value=%0d"), leaf});
+                    }
+                    fn.end();
+                    function.frame = fn.d.processes[0].frame;
+                    function.blocks = fn.d.processes[0].blocks;
+                    function.numTemps = fn.d.processes[0].numTemps;
+                    function.loc = {0, 1, 1};
+                    p.d.constants = std::move(fn.d.constants);
+                    p.d.subroutines.push_back(std::move(function));
+                    ASSERT_TRUE(verifies(p.d));
+                    Capture capture;
+                    ASSERT_NE(capture.file, nullptr);
+                    k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                    const auto result = kirimasim::vm::run(p.d, ctx);
+                    ASSERT_EQ(result.reason, k::EndReason::Quiescent)
+                        << result.error << capture.text();
+                    EXPECT_EQ(capture.text(), multiple ? "value=7\nvalue=9\n" : "value=7\n");
+                    const unsigned count = automatic ? 0 : (multiple ? 2 : 1) * (nested ? 2 : 1);
+                    EXPECT_EQ(ctx.heap().stats().containers, count);
+                    EXPECT_EQ(ctx.heap().stats().cells, count);
+                }
+}
+
+TEST(VmContainer, RootHookIsRestoredAfterNormalAndFailedRuns) {
+    for (bool fail : {false, true}) {
+        Program p;
+        const auto q = p.container(s4(32), true);
+        const auto home = p.slot(q);
+        p.store(home, p.emit(Op::ContainerPack, q, {p.constant(s4(32), 7)}));
+        p.end();
+        ASSERT_TRUE(verifies(p.d));
+        Capture capture;
+        ASSERT_NE(capture.file, nullptr);
+        VmHeapMemory memory;
+        if (fail) memory.remaining = 0;
+        k::Context ctx(k::OutputDestinations{capture.file, capture.file}, nullptr, &memory);
+        unsigned visits = 0;
+        const auto callback = +[](void* frame) noexcept { ++*static_cast<unsigned*>(frame); };
+        ctx.scheduler().setSafePointHook({callback, &visits});
+        EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason,
+                  fail ? k::EndReason::ResourceLimit : k::EndReason::Quiescent);
+        memory.remaining.reset();
+        const auto restored = ctx.scheduler().setSafePointHook({});
+        EXPECT_EQ(restored.fn, callback);
+        EXPECT_EQ(restored.frame, &visits);
+        restored.fn(restored.frame);
+        EXPECT_EQ(visits, 1U);
+    }
+}
+
+struct StopSuspendedProcess {
+    k::ProcessId process{0};
+    k::ProcessId target{1};
+    bool waited = false;
+    static kirima_status resume(kirima_context* context, void* frame) {
+        auto& state = *static_cast<StopSuspendedProcess*>(frame);
+        auto& scheduler = k::fromC(context).scheduler();
+        if (!state.waited) {
+            state.waited = true;
+            scheduler.waitDelay(state.process, 1);
+            return static_cast<kirima_status>(k::Status::Waiting);
+        }
+        scheduler.kill(state.target);
+        return static_cast<kirima_status>(k::Status::Done);
+    }
+};
+
+TEST(VmContainer, KernelEndedActivationsDoNotKeepDeadValuesRooted) {
+    Program p;
+    const auto q = p.container(s4(32), true);
+    const auto home = p.frame(q);
+    p.store(home, p.emit(Op::ContainerPack, q, {p.constant(s4(32), 7)}));
+    p.emit(Op::WaitDelay, voidType(), {p.constant(u2(64), 10), Operand::block(BlockId{1})});
+    p.emitAt(1, Op::Ret, voidType(), {});
+    ASSERT_TRUE(verifies(p.d));
+    Capture capture;
+    ASSERT_NE(capture.file, nullptr);
+    k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+    StopSuspendedProcess stop;
+    stop.process =
+        ctx.scheduler().addProcess(&StopSuspendedProcess::resume, &stop, k::Group::Active);
+    ctx.scheduler().start(stop.process);
+    EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+    EXPECT_EQ(ctx.heap().stats().containers, 0U);
+    EXPECT_EQ(ctx.heap().stats().cells, 0U);
 }
 
 }  // namespace

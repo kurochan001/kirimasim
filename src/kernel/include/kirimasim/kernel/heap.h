@@ -143,6 +143,9 @@ public:
     /// Marking failure leaves all objects alive. Tokens include generations;
     /// reclaimed entries can be reused without making old tokens valid again.
     HeapStatus collect(std::span<const HeapRoot> roots) noexcept;
+    /// The heap graph changed since successful collection. The caller
+    /// must also compare its root set: dropping a root needs no heap write.
+    [[nodiscard]] bool needsCollection() const noexcept { return changed_; }
     [[nodiscard]] HeapStats stats() const noexcept;
 
 private:
@@ -191,6 +194,7 @@ private:
     std::pmr::vector<HeapType> types_;
     Pool<Container> containers_;
     Pool<Cell> cells_;
+    bool changed_ = false;
 
     const HeapType* typeOf(HeapTypeId id) const noexcept;
     const Layout* layoutOf(HeapLayoutId id) const noexcept;

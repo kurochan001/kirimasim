@@ -83,6 +83,14 @@ const char* regionName(Region r);
 /// The set of regions a thread runs in (SCHEDULER_SPEC.md 9.5).
 enum class Group : std::uint8_t { Active, Reactive };
 
+/// The tier's root publication/collection callback. It runs only after
+/// an outer region has drained, outside process and guard callbacks.
+struct SafePointHook {
+    void (*fn)(void*) noexcept = nullptr;
+    void* frame = nullptr;
+};
+using PendingValueVisitor = bool (*)(void*, SlotId, std::span<const std::uint64_t>) noexcept;
+
 /// Edge of an event-control item (VALUE_SEMANTICS.md 4.3).
 enum class Edge : std::uint8_t { Any, Pos, Neg, Both };
 
@@ -199,6 +207,10 @@ public:
         : ctx_(ctx), store_(store), counters_(counters) {}
 
     void setLimits(const Limits& l) { limits_ = l; }
+    SafePointHook setSafePointHook(SafePointHook hook) noexcept;
+    /// Typed interpretation belongs to the tier. The visitor sees only
+    /// owned values: NBA snapshots, pending drivers and held storage.
+    bool visitPendingValues(PendingValueVisitor visitor, void* frame) const noexcept;
     /// Starts the optional wall-clock budget, excluding front-end work.
     void setWallTimeLimit(std::uint64_t seconds, std::chrono::steady_clock::time_point start) {
         wallTimeLimit_ = seconds;
@@ -579,6 +591,8 @@ private:
     Store& store_;
     Counters& counters_;
     Limits limits_;
+    SafePointHook safePoint_;
+    void safePoint() noexcept;
 
     std::vector<Process> processes_;
     /// Released places to reuse, and the number of records kept (10.8).

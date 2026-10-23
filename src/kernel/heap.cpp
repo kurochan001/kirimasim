@@ -95,7 +95,10 @@ template <class T> void Heap::Pool<T>::release(std::uint32_t index) noexcept {
 
 Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(h.memory_) {}
 Heap::Transaction::~Transaction() {
-    if (committed) return;
+    if (committed) {
+        heap.changed_ = true;
+        return;
+    }
     for (const std::uint32_t i : cells)
         heap.cells_.release(i);
     for (const std::uint32_t i : containers)
@@ -451,6 +454,7 @@ HeapStatus Heap::storeNested(HeapLayoutId layout, CellToken cell, ContainerToken
     if (const HeapError e = check(l->words[0].nested, value); e != HeapError::None)
         return failure(e);
     c->words[0] = {value.bits, 0};
+    changed_ = true;
     return {};
 }
 HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
@@ -540,10 +544,12 @@ HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,
     const auto at = element(index, c ? c->cells.size() : 0);
     if (!at) return {HeapError::None, HeapWarning::InvalidIndex};
     c->cells.erase(c->cells.begin() + static_cast<std::ptrdiff_t>(*at));
+    changed_ = true;
     return {};
 }
 HeapStatus Heap::clear(HeapTypeId type, ContainerToken& value) noexcept {
     if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
+    changed_ = changed_ || value.bits != 0;
     value = {};
     return {};
 }
@@ -588,6 +594,7 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
         for (std::size_t i = 0; i < cells_.entries.size(); ++i)
             if (cells_.entries[i].value && !cells_.entries[i].marked)
                 cells_.release(static_cast<std::uint32_t>(i));
+        changed_ = false;
         return HeapStatus{};
     });
 }

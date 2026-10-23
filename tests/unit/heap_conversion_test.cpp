@@ -530,4 +530,39 @@ TEST(Heap, DescriptorQueriesAndOwnedNestedTransportKeepIdentity) {
     EXPECT_EQ(child(h, outer, parent.value, 0).bits, 0U);
 }
 
+TEST(Heap, CollectionChangeFlagTracksGraphMutationsAndFailedMarking) {
+    ConversionMemory memory;
+    Heap h(&memory);
+    const std::array<HeapWord, 1> fields{{{0xff, false, {0, 0}, kNone}}};
+    const auto q = type(h, ContainerKind::Queue, layout(h, fields));
+    EXPECT_FALSE(h.needsCollection());
+    const std::array<W4, 1> data{{{7, 0}}};
+    auto value = h.fromValues(q, data).value;
+    EXPECT_TRUE(h.needsCollection());
+    const auto roots = std::array<HeapRoot, 1>{{HeapRoot::container(value)}};
+    ASSERT_TRUE(h.collect(roots));
+    EXPECT_FALSE(h.needsCollection());
+    ASSERT_TRUE(h.write(q, value, 0, data));
+    EXPECT_TRUE(h.needsCollection());
+    memory.remaining = 0;
+    EXPECT_EQ(h.collect(roots).error, HeapError::ResourceLimit);
+    memory.remaining.reset();
+    EXPECT_TRUE(h.needsCollection());
+    EXPECT_EQ(length(h, q, value), 1U);
+    ASSERT_TRUE(h.collect(roots));
+    EXPECT_FALSE(h.needsCollection());
+    ASSERT_TRUE(h.erase(q, value, 0));
+    EXPECT_TRUE(h.needsCollection());
+    ASSERT_TRUE(h.collect(roots));
+    EXPECT_FALSE(h.needsCollection());
+    EXPECT_EQ(h.erase(q, value, 0).warning, HeapWarning::InvalidIndex);
+    EXPECT_FALSE(h.needsCollection());
+    ASSERT_TRUE(h.clear(q, value));
+    EXPECT_TRUE(h.needsCollection());
+    ASSERT_TRUE(h.collect({}));
+    EXPECT_FALSE(h.needsCollection());
+    EXPECT_EQ(h.stats().containers, 0U);
+    EXPECT_EQ(h.stats().cells, 0U);
+}
+
 }  // namespace

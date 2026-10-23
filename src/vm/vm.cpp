@@ -661,6 +661,7 @@ public:
                 l.chunks[i] = ref ? 1 : chunksOf(frame[i].type);
                 l.offset[i] = l.size;
                 l.size += frame[i].dims.empty() || ref ? l.chunks[i] : 1;
+                if (ref || sir::isContainer(frame[i].type)) l.roots.push_back(i);
             }
             for (std::size_t i = 0; i < frame.size(); ++i) {
                 if (frame[i].dims.empty() || frame[i].type.kind == sir::TypeKind::Ref) continue;
@@ -715,6 +716,11 @@ public:
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
         stack_ = kernel::StackRange::ofThisThread();
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
+        struct RestoreHook {
+            kernel::Scheduler& scheduler;
+            kernel::SafePointHook old;
+            ~RestoreHook() { scheduler.setSafePointHook(old); }
+        } hook{sched_, sched_.setSafePointHook({})};
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
             const sir::Domain dom = sir::domainOf(s.type);
@@ -722,6 +728,12 @@ public:
                 kernelDomain(dom), s.type.width, static_cast<std::uint32_t>(sir::elementCount(s)),
                 dom == sir::Domain::Four ? kernelInit(sir::initialValue(s.kind))
                                          : kernel::Init::Zero));
+            if (heapSlots_.size() <= kernelSlots_.back().index())
+                heapSlots_.resize(kernelSlots_.back().index() + 1, false);
+            heapSlots_[kernelSlots_.back().index()] = sir::isContainer(s.type);
+            if (sir::isContainer(s.type))
+                rootSlots_.push_back(
+                    sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
         }
         // The bits a driver drives are x until it first writes them
         // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
@@ -959,6 +971,13 @@ private:
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
     std::set<std::array<std::uint32_t, 3>> heapWarned_;
+    std::vector<bool> heapSlots_;
+    std::vector<sir::SlotId> rootSlots_;
+    std::vector<kernel::HeapRoot> roots_, publishedRoots_;
+    std::vector<bool> rootActivationsSeen_;
+    std::vector<VarsId> rootActivations_;
+    sir::SourceLoc heapSite_;
+    sir::InstanceId heapInstance_{0};
     /// The places that gave a run-time warning, which each gives once
     /// (UNSPECIFIED_BEHAVIOR.md 4).
     std::set<const sir::Instr*> warned_;
@@ -998,6 +1017,7 @@ private:
         /// element; and the chunks of the value or of one element.
         std::vector<std::size_t> offset;
         std::vector<std::uint32_t> chunks;
+        std::vector<std::size_t> roots;  ///< Typed container/reference fields only.
         /// Where frame variable fv starts among the activation's words, and
         /// its chunks: the one place a frame variable's number becomes a
         /// word offset (#1 took one for the other).
@@ -1015,7 +1035,13 @@ private:
     /// The frame variables of each live activation, by number, for refs
     /// (SIR_SPEC.md 8): a ref to a frame variable is its activation's
     /// number and the word's place in it.
-    std::vector<W4*> varSets_;
+    struct VarSet {
+        W4* words = nullptr;
+        std::size_t size = 0;
+        BodyId body{0};
+        bool live = false;
+    };
+    std::vector<VarSet> varSets_;
     std::vector<VarsId> freeVarSets_;
     Act act_;
     std::uint32_t callDepth_ = 0;  ///< Calls running on the C++ stack.
@@ -1213,7 +1239,7 @@ private:
         f.vm = this;
         f.process = process;
         f.vars = newVars(bodyOfProcess(process));
-        f.varsId = enroll(f.vars);
+        f.varsId = enroll(f.vars, bodyOfProcess(process));
         return f;
     }
 
@@ -1848,7 +1874,7 @@ private:
         c.children = f.births;
         c.vars = newVars(c.body);
         bindArgs(c.body, s, readArgs(s, ops), c.vars);
-        c.varsId = enroll(c.vars);
+        c.varsId = enroll(c.vars, c.body);
         resumeAt(f) = ops.back().asBlock();
         f.calls.push_back(std::move(c));
         return true;
@@ -1877,18 +1903,19 @@ private:
     }
 
     /// Gives an activation's frame variables a number for refs.
-    VarsId enroll(std::vector<W4>& vars) {
+    VarsId enroll(std::vector<W4>& vars, BodyId body) {
+        const VarSet entry{vars.data(), vars.size(), body, true};
         if (freeVarSets_.empty()) {
-            varSets_.push_back(vars.data());
+            varSets_.push_back(entry);
             return VarsId{static_cast<std::uint32_t>(varSets_.size() - 1)};
         }
         const VarsId id = freeVarSets_.back();
         freeVarSets_.pop_back();
-        varSets_[id.index()] = vars.data();
+        varSets_[id.index()] = entry;
         return id;
     }
     void retire(VarsId id) {
-        varSets_[id.index()] = nullptr;
+        varSets_[id.index()] = {};
         freeVarSets_.push_back(id);
     }
 
@@ -2055,12 +2082,148 @@ private:
     static bool isHeapRef(W4 r) { return (r.b >> 63) != 0; }
     static bool isFrameRef(W4 r) { return !isHeapRef(r) && (r.b & 1U) != 0; }
     W4& refWord(W4 r, std::uint64_t off) {
-        return varSets_[r.a >> 32][(r.a & 0xffffffffU) + off];  // the halves frameRef packs
+        return varSets_[r.a >> 32].words[(r.a & 0xffffffffU) + off];  // frameRef's halves
     }
     static sir::SlotId refSlot(W4 r) { return sir::SlotId{static_cast<std::uint32_t>(r.a)}; }
     static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
 
     // --- Typed container operands (SIR_SPEC.md 5.8) ---
+
+    void rootContainer(std::uint64_t bits) {
+        if (bits != 0) roots_.push_back(kernel::HeapRoot::container({bits}));
+    }
+    bool rootActivation(VarsId id) {
+        if (id.index() >= varSets_.size() || !varSets_[id.index()].live) return false;
+        if (!rootActivationsSeen_[id.index()]) {
+            rootActivationsSeen_[id.index()] = true;
+            rootActivations_.push_back(id);
+        }
+        return true;
+    }
+    bool rootReference(W4 ref) {
+        if (isHeapRef(ref)) {
+            if (ref.a != 0) roots_.push_back(kernel::HeapRoot::cell({ref.a}));
+            return true;
+        }
+        if (!isFrameRef(ref)) return true;  // The typed slots are already roots.
+        const VarsId vars{static_cast<std::uint32_t>(ref.a >> 32)};
+        if (vars.index() >= varSets_.size() || (ref.a & 0xffffffffU) >= varSets_[vars.index()].size)
+            return false;
+        // An interior ref keeps its activation live. Trace its typed
+        // fields, never arbitrary words that happen to resemble handles.
+        return rootActivation(vars);
+    }
+    static bool rootPendingValue(void* frame, kernel::SlotId slot,
+                                 std::span<const std::uint64_t> values) noexcept {
+        auto& vm = *static_cast<Interpreter*>(frame);
+        if (slot.index() >= vm.heapSlots_.size() || !vm.heapSlots_[slot.index()]) return true;
+        try {
+            for (const auto value : values)
+                vm.rootContainer(value);
+            return true;
+        } catch (const std::bad_alloc&) {
+            return false;
+        } catch (const std::length_error&) {
+            return false;
+        }
+    }
+    void collectionLimit() noexcept {
+        try {
+            limitAt(heapInstance_, heapSite_, "container collection resource limit");
+        } catch (...) {
+            // Failure to allocate the diagnostic must not escape the
+            // kernel callback, or prevent the resource-limit result.
+            sched_.resourceLimit();
+        }
+    }
+    static void collectSafePoint(void* frame) noexcept {
+        auto& vm = *static_cast<Interpreter*>(frame);
+        if (!vm.heapReady_ || vm.running_ != nullptr || vm.callDepth_ != 0) return;
+        try {
+            vm.collectRoots();
+        } catch (const std::bad_alloc&) {
+            vm.collectionLimit();
+        } catch (const std::length_error&) {
+            vm.collectionLimit();
+        }
+    }
+    void collectRoots() {
+        roots_.clear();
+        rootActivations_.clear();
+        rootActivationsSeen_.assign(varSets_.size(), false);
+        for (const auto slot : rootSlots_) {
+            const auto count = sir::elementCount(d_.slot(slot));
+            for (std::uint64_t e = 0; e < count; ++e)
+                rootContainer(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
+        }
+        for (const Frame& f : frames_) {
+            if (f.released || f.finished || sched_.finished(f.kernelId)) continue;
+            if (!rootActivation(f.varsId)) {
+                sched_.fail("invalid activation at a heap safe point");
+                return;
+            }
+            for (const auto& c : f.calls)
+                if (!rootActivation(c.varsId)) {
+                    sched_.fail("invalid task activation at a heap safe point");
+                    return;
+                }
+        }
+        for (const Deferred& call : deferred_) {
+            const auto& params = d_.subroutine(call.subroutine).params;
+            for (std::size_t i = 0; i < call.args.size(); ++i) {
+                for (const auto value : call.args[i]) {
+                    if (isRefParam(params[i]) || params[i].type.kind == sir::TypeKind::Ref) {
+                        if (!rootReference(value)) {
+                            sched_.fail("invalid deferred reference at a heap safe point");
+                            return;
+                        }
+                    } else if (sir::isContainer(params[i].type))
+                        rootContainer(value.a);
+                }
+            }
+        }
+        // References may keep an otherwise finished activation alive.
+        // Follow those edges iteratively, including cycles of refs.
+        for (std::size_t i = 0; i < rootActivations_.size(); ++i) {
+            const VarSet vars = varSets_[rootActivations_[i].index()];
+            const auto& fields = bodyFrame(vars.body);
+            const auto& layout = layouts_[vars.body.index()];
+            for (const auto field : layout.roots) {
+                const auto& fv = fields[field];
+                const auto at = layout.offset[field];
+                if (fv.type.kind == sir::TypeKind::Ref) {
+                    if (!rootReference(vars.words[at])) {
+                        sched_.fail("invalid frame reference at a heap safe point");
+                        return;
+                    }
+                } else {
+                    const auto count = fv.dims.empty() ? 1 : sir::elementCount(fv);
+                    for (std::uint64_t e = 0; e < count; ++e)
+                        rootContainer(vars.words[at + e].a);
+                }
+            }
+        }
+        if (!sched_.visitPendingValues(&rootPendingValue, this)) {
+            collectionLimit();
+            return;
+        }
+        const bool same = roots_.size() == publishedRoots_.size() &&
+                          std::equal(roots_.begin(), roots_.end(), publishedRoots_.begin(),
+                                     [](const auto& a, const auto& b) {
+                                         return a.kind == b.kind && a.bits == b.bits;
+                                     });
+        if (same && !heap_.needsCollection()) return;
+        const auto status = heap_.collect(roots_);
+        if (status.error == kernel::HeapError::ResourceLimit) {
+            collectionLimit();
+            return;
+        }
+        if (!status) {
+            sched_.fail("invalid typed root at a heap safe point");
+            return;
+        }
+        publishedRoots_.swap(roots_);
+    }
 
     bool heapStatus(Frame& f, const sir::Instr& in, kernel::HeapStatus status) {
         using E = kernel::HeapError;
@@ -2119,6 +2282,7 @@ private:
                 heapTypes_[i] = t.value;
             }
             heapReady_ = true;
+            sched_.setSafePointHook({&collectSafePoint, this});
             return true;
         } catch (const std::bad_alloc&) {
             return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
@@ -2184,6 +2348,8 @@ private:
         using kernel::ContainerToken;
         using kernel::HeapStatus;
         try {
+            heapSite_ = in.loc;
+            heapInstance_ = instanceOf(d_.process(f.process));
             if (!prepareHeap(f, in)) return false;
             const auto& ops = in.operands;
             const auto token = [&](std::size_t i) { return ContainerToken{value(ops[i]).a}; };
@@ -3029,7 +3195,7 @@ private:
         std::vector<W4> vars = newVars(body);
         // The arguments are read in the caller before anything is written.
         const std::vector<std::vector<W4>> args = readArgs(s, ops);
-        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars)});
+        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars, body)});
         bindArgs(body, s, args, vars);
         W4 ret{0, 0};
         ++callDepth_;
@@ -3076,11 +3242,8 @@ private:
         const Act caller = act_;
         const BodyId body = bodyOf(s);
         std::vector<W4> vars = newVars(body);
-        const Layout& l = layouts_[body.index()];
-        for (std::size_t i = 0; i < sub.params.size() && i < args.size(); ++i)
-            for (std::size_t k = 0; k < args[i].size(); ++k)
-                vars[l.wordOf(sub.params[i].frameVar) + k] = args[i][k];
-        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars)});
+        bindArgs(body, sub, args, vars);
+        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars, body)});
         W4 ret{0, 0};
         ++callDepth_;
         f.syncCalls.push_back({body, f.births});

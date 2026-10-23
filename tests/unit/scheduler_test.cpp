@@ -13,7 +13,10 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <new>
 #include <random>
+#include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -1762,6 +1765,102 @@ TEST(Scheduler, ReusedProgramRecordsDropOriginAndCancellation) {
     scheduler.exitProgram(module.id);
     EXPECT_FALSE(scheduler.ending());
     EXPECT_FALSE(scheduler.finished(keeper.id));
+}
+
+struct SafeBoundary {
+    k::ProcessId process{0};
+    unsigned step = 0;
+    unsigned visits = 0;
+    bool callback = false;
+    bool unsafe = false;
+    static void collect(void* frame) noexcept {
+        auto& s = *static_cast<SafeBoundary*>(frame);
+        s.unsafe = s.unsafe || s.callback;
+        ++s.visits;
+    }
+    static kirima_status resume(kirima_context* context, void* frame) {
+        auto& s = *static_cast<SafeBoundary*>(frame);
+        s.callback = true;
+        const bool done = s.step == 3;
+        if (!done) k::fromC(context).scheduler().waitDelay(s.process, s.step == 1 ? 1 : 0);
+        ++s.step;
+        s.callback = false;
+        return static_cast<kirima_status>(done ? Status::Done : Status::Waiting);
+    }
+};
+
+TEST(Scheduler, SafePointsFollowDrainedRegionsAndPreserveHookOwnership) {
+    k::Context context;
+    auto& scheduler = context.scheduler();
+    SafeBoundary state;
+    const auto previous = scheduler.setSafePointHook({&SafeBoundary::collect, &state});
+    EXPECT_EQ(previous.fn, nullptr);
+    state.process = scheduler.addProcess(&SafeBoundary::resume, &state, Group::Active);
+    scheduler.start(state.process);
+    EXPECT_EQ(scheduler.run(), EndReason::Quiescent);
+    EXPECT_FALSE(state.unsafe);
+    EXPECT_EQ(state.step, 4U);
+    EXPECT_GE(state.visits, 4U);
+    const auto hook = scheduler.setSafePointHook(previous);
+    EXPECT_EQ(hook.fn, &SafeBoundary::collect);
+    EXPECT_EQ(hook.frame, &state);
+}
+
+struct PendingValues {
+    std::vector<std::pair<std::uint32_t, std::uint64_t>> values;
+    bool stop = false;
+    unsigned calls = 0;
+    static bool visit(void* frame, k::SlotId slot, std::span<const std::uint64_t> values) noexcept {
+        auto& out = *static_cast<PendingValues*>(frame);
+        ++out.calls;
+        if (out.stop) return false;
+        try {
+            for (const auto v : values)
+                out.values.push_back({slot.index(), v});
+            return true;
+        } catch (const std::bad_alloc&) {
+            return false;
+        } catch (const std::length_error&) {
+            return false;
+        }
+    }
+};
+
+TEST(Scheduler, PendingValueVisitorIncludesOwnedPayloadsAndSkipsCompletedDrivers) {
+    k::Context context;
+    auto& scheduler = context.scheduler();
+    const auto nba = context.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+    const auto driver = context.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+    const auto held = context.store().add(k::Domain::Handle, 64, 1, k::Init::Zero);
+    SafeBoundary state;
+    const auto process = scheduler.addProcess(&SafeBoundary::resume, &state, Group::Active);
+    const std::uint64_t immediate = 9, delayed = 11, driven = 17, forced = 23;
+    scheduler.scheduleNba(process, {.slot = nba}, &immediate, 0);
+    scheduler.scheduleNba(process, {.slot = nba}, &delayed, 3);
+    const auto id = scheduler.addDelayedDriver();
+    scheduler.driveDelayed(id, {.slot = driver}, &driven, 2, 2, 2);
+    scheduler.markHeld(held, false, false);
+    scheduler.hold(k::Hold::Force, process, {.slot = held});
+    scheduler.writeHeld(k::Hold::Force, process, {.slot = held}, &forced);
+    PendingValues pending;
+    ASSERT_TRUE(scheduler.visitPendingValues(&PendingValues::visit, &pending));
+    std::sort(pending.values.begin(), pending.values.end());
+    EXPECT_EQ(pending.values,
+              (std::vector<std::pair<std::uint32_t, std::uint64_t>>{{nba.index(), 9},
+                                                                    {nba.index(), 11},
+                                                                    {driver.index(), 17},
+                                                                    {held.index(), 0},
+                                                                    {held.index(), 23}}));
+    PendingValues stop;
+    stop.stop = true;
+    EXPECT_FALSE(scheduler.visitPendingValues(&PendingValues::visit, &stop));
+    EXPECT_EQ(stop.calls, 1U);
+    EXPECT_EQ(scheduler.run(), EndReason::Quiescent);
+    PendingValues after;
+    ASSERT_TRUE(scheduler.visitPendingValues(&PendingValues::visit, &after));
+    std::sort(after.values.begin(), after.values.end());
+    EXPECT_EQ(after.values, (std::vector<std::pair<std::uint32_t, std::uint64_t>>{
+                                {held.index(), 0}, {held.index(), 23}}));
 }
 
 }  // namespace

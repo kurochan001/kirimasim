@@ -488,6 +488,42 @@ EndReason Scheduler::run() {
     return reason();
 }
 
+SafePointHook Scheduler::setSafePointHook(SafePointHook hook) noexcept {
+    return std::exchange(safePoint_, hook);
+}
+void Scheduler::safePoint() noexcept {
+    if (!ending_ && walking_ == 0 && !draining_ && safePoint_.fn != nullptr)
+        safePoint_.fn(safePoint_.frame);
+}
+bool Scheduler::visitPendingValues(PendingValueVisitor visitor, void* frame) const noexcept {
+    for (const NbaRecord& n : slotNbas_)
+        if (!visitor(frame, n.slot, {arena_.data() + n.arenaOffset, n.words})) return false;
+    for (const NbaRecord& n : delayedNbas_)
+        if (!n.value.empty() && !visitor(frame, n.slot, n.value)) return false;
+    for (const DelayedDriver& d : drivers_)
+        if (d.pending && !visitor(frame, d.slot, d.value)) return false;
+    for (std::size_t s = 0; s < heldOf_.size(); ++s) {
+        if (heldOf_[s] == kNotHeld) continue;
+        const Held& h = held_[heldOf_[s]];
+        const SlotId slot{static_cast<std::uint32_t>(s)};
+        if (!h.base.empty() && !visitor(frame, slot, h.base)) return false;
+        const SlotLayout& layout = store_.layout(slot);
+        const auto stride = elementWords(layout.domain, layout.width);
+        for (unsigned level = 0; level < 2; ++level) {
+            if (h.value[level].empty()) continue;
+            for (std::uint32_t e = 0; e < layout.elements; ++e) {
+                const auto first = h.owner[level].begin() + std::size_t{e} * layout.width;
+                const bool live = std::any_of(first, first + layout.width,
+                                              [](ProcessId owner) { return owner != kNoHolder; });
+                if (live && !visitor(frame, slot,
+                                     {h.value[level].data() + std::size_t{e} * stride, stride}))
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
 void Scheduler::runFinal(std::span<const ProcessId> finals) {
     if (reason() == EndReason::Internal) return;
     const bool wasEnding = ending_;
@@ -620,6 +656,7 @@ void Scheduler::runSlot() {
     // The arena of NBA values without a delay is freed with the slot.
     slotNbas_.clear();
     arena_.clear();
+    safePoint();
 }
 
 void Scheduler::runRegion(Region r) {
@@ -647,6 +684,7 @@ void Scheduler::runRegion(Region r) {
         q.pop_front();
         execute(e);
     }
+    safePoint();
 }
 
 void Scheduler::execute(const Event& e) {
