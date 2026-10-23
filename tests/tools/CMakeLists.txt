@@ -214,6 +214,10 @@ add_test(NAME tools/gen_fread_struct_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_fread_struct_matrix.py --check)
 set_tests_properties(tools/gen_fread_struct_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_scalar_fread_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_scalar_fread_matrix.py --check)
+set_tests_properties(tools/gen_scalar_fread_matrix PROPERTIES LABELS Tools)
+
 # The counts of the READMEs: what the repository gives without a build.
 add_test(NAME tools/readme_counts
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/readme_counts.py check)

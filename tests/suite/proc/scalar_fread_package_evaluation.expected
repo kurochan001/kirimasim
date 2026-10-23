@@ -1,0 +1,11 @@
+once 3 1234 1 8112a7 ffffff
+empty 0 1234 1 ffffff ffffff
+plain_once 3 12 1 8112a7 ffffff
+part 2 1234 ffff897f
+concat 2 ffff81 ffff12
+heap 4 1234 1 8112a700
+held 4 1 99
+no_copyback 0 000000
+ref 3 8112a7
+heap_part 2 00008900
+invalid 4 17

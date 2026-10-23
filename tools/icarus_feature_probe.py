@@ -131,6 +131,16 @@ EXTENDED.append(("switch_rtran", "28.8, 28.9",
     "module top; wire a,y; assign a=1'b1; rtran u(a,y); initial begin #1 $display(\"%b\",y); end endmodule",
     "1\n", []))
 
+# Keep new file-input observations separate from the original 59 probes.
+EXTENDED.extend([
+    ("integral_fread_ignored_range", "21.3.4.4",
+     'module top; bit[15:0] v; int fd,n; initial begin fd=$fopen("probe.mem","rb"); n=$fread(v,fd,19,0); $display("%0d %h",n,v); end endmodule',
+     "2 3132\n", []),
+    ("multidimensional_fread", "21.3.4.4",
+     'module top; bit[7:0] m[2][2]; int fd,n; initial begin fd=$fopen("probe.mem","rb"); n=$fread(m,fd,0,2); $display("%0d %h %h",n,m[0][0],m[0][1]); end endmodule',
+     "2 31 32\n", []),
+])
+
 
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
