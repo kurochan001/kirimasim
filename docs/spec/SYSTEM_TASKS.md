@@ -2,6 +2,11 @@
 
 [日本語](SYSTEM_TASKS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
+advances the Icarus-required subset of later-phase or out-of-scope work into
+P1. Existing semantic rules remain; missing details need review before code.
+Phase labels below describe the original plan, subject to this amendment.
+
 Priority: P0 (before P1 starts). Status: **approved (2026-10-15)**. On 2026-10-16, string literals passed to format specifiers (3.1) and the form of reports of unique and priority violations (10.4) were added (approved). The same day, reals with no format specifier, and swapping integer and real formats (3.6), were added (approved). On 2026-10-17, upper-case `%E` and `%G` (3, 3.6) were added (approved). The same day, how `%s` prints zero bytes in the middle of a value (3.5) was added (approved). The same day, the result of `$rtoi` for NaN, infinities and out-of-range values (8) was decided (approved). On 2026-10-18, a `%` with no conversion (3.1) was decided (approved). The same day, the details of the flags `-` and `0` (3.12) were decided (approved). The same day, how the time of the report of `$finish` and `$stop` is written, and when and in what form argument 2 writes its statistics (10.2), were decided (approved). The same day, the value that `?` reads as in `$sscanf` and `$fscanf` (6.3) was written down (approved). On 2026-10-19, `--stop` was referred to from 10.2 (approved). The same day, when standard output is written out, and `--autoflush`, were added to 2 (approved). The same day, a point UNSPECIFIED_BEHAVIOR.md leaves not decided was marked in 7.1 (approved). The same day, the range of `$readmemb` and `$readmemh` without a finish address was added to 7.1 (approved). The same day, the sentence of 11 on `%0t` was brought up to date (approved). On 2026-10-20, descriptors that are not open, `$fopen` with a type not in Table 21-6 and the files of the Context were added to 6.1, and when `$fstrobe` and `$fmonitor` read their descriptor, and how `$fclose` cancels them, to 6.2 (approved). On 2026-10-21, the descriptors input reads, standard input, files that only write, `$fgets` into an integral variable, `$fread`, how `$fscanf` takes characters and `$ungetc` were added to 6.3, and the error `$ferror` gives and when `$feof` is set to 6.4 (approved). On 2026-10-21, the digits of a word, the order of the lower dimensions, what a file that cannot be read does (7.1), and the order of the words $writemem writes (7.2) were set (approved). The same day, the section on `$random` and the `$dist_*` functions was added as 12, and "Not confirmed" became 13 (approved). The same day, what a word out of range of an enumerated type is, and the error it gives (7.1), were added (approved). The same day, `$fread` into memories of unpacked structures was added to 6.3 (approved). The same day, which scope each line of `$stacktrace` names, and the string it returns as a function, were added to 10.3 (approved). The same day, the section on `$urandom`, `$urandom_range`, `randcase` and the seed was added as 13, and "Not confirmed" became 14 (approved). The same day, the characters `$ungetc` pushes back on a file opened only for writing were added to 6.3 (approved). The interpretations and the rules of this document were approved by a human on 2026-10-15.
 
 This document sets what kirimasim's system tasks and system functions do. The test suite passes or fails on standard output, so the details of display formats are set too. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on.
@@ -154,6 +159,12 @@ Prints the net's strength in 3 characters (checked: 21.2.1.4). Written in P4 tog
 
 Writes the 2-state (`%u`) or 4-state (`%z`) representation of the value in 32-bit words, least significant word first, in the host's byte order. `%u` makes x and z 0. The 4-state representation of `%z` is the same as VPI's `s_vpi_vecval` (38.15) (checked: 21.2.1.1).
 
+Implementation status (2026-10-23): output uses the shared `formatInt`
+binary-word formatter for constant and runtime formats at any integral width.
+Packed destinations retain every byte; string results remove NUL according
+to VALUE_SEMANTICS.md 7.6. See the [binary matrix](../../tests/cli/run_binary_format_tests.py).
+Binary scan conversions remain unimplemented; approved semantics are in 6.3.
+
 ### 3.12 Flags not in the standard
 
 The standard sets nothing for `-` (left-align) and `0` (pad with 0) in integer, string and time formats (checked: 21.2.1.2 sets only the width). kirimasim gives them these meanings, close to C's (rule of this document; details approved 2026-10-18):
@@ -240,13 +251,42 @@ Prints the unit and precision of the same targets as 5.2 in one line, `Time scal
 - `$fscanf` and `$sscanf` (checked: 21.3.4.3):
   - White space in the format skips white space in the input. For `$sscanf`, NUL characters count as white space too.
   - An ordinary character must match the same character in the input.
-  - A `%` is followed by `*` to suppress the assignment, a maximum width, and the conversion character. Except for `%c`, leading white space of the input is skipped.
+  - A `%` is followed by `*` to suppress the assignment, a maximum width, and the conversion character. Except for `%c`, `%u` and `%z`, leading white space of the input is skipped (binary exception approved 2026-10-23).
   - The set of characters each conversion reads is as in Table 21-7. `%b`, `%o` and `%h` (`%x`) read, besides the digits of their radix, `x`, `X`, `z`, `Z`, `?` and `_` as digits. `?` is the digit z, as `?` in a number is z (VALUE_SEMANTICS.md 4.2), and a lone `?` for `%d` is z in every bit (interpretation; Table 21-7 lists `?` without its value. For reference, checked 2026-10-18: Icarus 13.0 and 14.0 (devel) read it as x). `%d` reads an optional sign (`+` or `-`) followed by decimal digits and `_`, or a single one of `x`, `X`, `z`, `Z`, `?`. **There are no radix prefixes (`0x`, `0o`, `0b`).** Reading `"0xCAFE"` with `%h` reads the 6 digits `0`, `x`, `C`, `A`, `F`, `E`, and a 4-state variable gets `32'h000xcafe`. Reading `"0o777"` with `%o` ends the field at `o`, and the value is 0.
   - `%f`, `%e` and `%g` read C's floating-point form. `%t` reads the same form and converts it by `$timeformat`.
   - A value that does not fit the variable puts its low bits in. If the destination is a real and the value cannot be represented, `+Inf` or `-Inf` is put in.
   - If the format or `$sscanf`'s input string has x or z bits, -1 is returned.
   - The return value is the number of items matched and assigned; -1 (EOF) if the input ran out before the first conversion.
   - What happens when there are too few arguments for the format is not set by the standard. kirimasim makes it an error (rule of this document; at elaboration if the format is constant, otherwise a warning at run time, and the missing ones are not read).
+- **Binary input (approved 2026-10-23; implementation pending):** `%u`/`%U`
+  and `%z`/`%Z` accept integral, enum and packed-aggregate destinations
+  represented by SIR, not unpacked aggregates. They do not extend
+  `$value$plusargs` (21.6). The encoding follows 21.3.4.3, Table 21-7,
+  21.2.1.1 and 38.15: least-significant 32-bit word first, native byte
+  order; `%u` reads value words and `%z` reads VPI value/mask pairs.
+  - Omitted width transfers the destination bit width rounded up to words.
+    Positive field width is the transfer bit width; mask bits above it,
+    then use ordinary zero extension/truncation and 4-to-2 conversion.
+    Width zero means omitted width. Suppressed `%*u`/`%*z` take no output
+    argument and default to 32 bits, or use their explicit positive width.
+    These width rules are project choices, not explicit Table 21-7 wording.
+  - Binary directives skip neither whitespace nor NUL, including packed
+    `$sscanf` payload. Explicit format whitespace still skips normally.
+    This approved interpretation gives raw transfer priority over the
+    general whitespace rule.
+  - Assign only a complete field. A short field consumes available bytes,
+    leaves its destination unchanged, marks file EOF and stops. Return
+    earlier assignment count, or -1 if no earlier directive converted.
+    A complete suppressed field counts as conversion, not assignment.
+    Whole-field rejection and this partial-EOF rule are project choices.
+  - Read only the field, without lookahead after a complete field. Leave
+    the next byte for subsequent reads; existing file pushback applies.
+    Constant and runtime formats share kernel semantics; front supplies
+    destination widths and copies back only successfully assigned fields.
+  - Preserve existing suite expectations and add mechanism matrices for
+    widths, X/Z, suppression, short fields, continuation and storage homes.
+    See the [approved rationale and reference limits](../notes/binary-scan-proposal.md),
+    including the deliberate width-zero difference from measured Icarus.
 - **Which descriptors are read (added 2026-10-21, approved):** the input functions take an fd. An mcd, an fd that is not open and a descriptor with x or z bits are not open: the run-time warning `kirima-file-not-open` (6.1) is given, and the function returns its error value: -1 for `$fgetc`, `$ungetc`, `$fscanf`, `$ftell`, `$fseek` and `$rewind`, and 0 for `$fgets`, `$fread` and `$feof` (rule of this document; 21.3.8 gives `$feof` only zero or nonzero, and a file that is not open has met no end. For reference, checked 2026-10-21: Icarus 13.0 and 14.0 devel warn too, and their `$feof` returns -1). `$ferror` on one returns the number of EBADF and its text with no warning, since it is the way to ask.
 - **Standard input (added 2026-10-21, approved):** `32'h8000_0000` reads kirimasim's standard input (checked: 21.3.1 names it STDIN; for reference, Icarus reads it too). `tools/run_suite_test.py` gives each test an empty standard input (TEST_SUITE.md).
 - **Files that only write (added 2026-10-21, approved):** reading a file opened with `w`, `wb`, `a` or `ab` fails with no warning: `$fgetc` returns -1, `$fgets` 0, `$fscanf` -1 and `$fread` 0, and `$ferror` then gives the number of EBADF (rule of this document; for reference, checked 2026-10-21, Icarus gives the same values). The types for update (`r+`, `w+`, `a+` and their `b` forms) read too (interpretation: Table 21-6 calls them reading and writing, although 21.3.4 names only `r` and `r+`). A character pushed back with `$ungetc` is read first all the same: the input functions return the pushed-back characters, the last pushed first, and only then fail as above (added 2026-10-21, approved; 21.3.4.3 has the next `$fgetc` of the fd return the pushed character, whatever the file was opened for. For reference, checked 2026-10-21 by running them: C libraries differ here, glibc 2.39 giving the character back and macOS failing `ungetc` with EBADF, and Icarus follows the C library of its OS).
@@ -295,6 +335,12 @@ Checked (21.4):
 - One word per line. Hexadecimal is lower case, with every digit of the word's width including leading zeros. x and z are written by the rule of 3.4 (rule of this document; the standard does not set the form of a line).
 - **The order of the words (added 2026-10-21, approved):** the address arguments take the range as `$readmem` takes it, and the words are written in the order `$readmem` reads that range, each dimension below the first from its low to its high index, so that reading the file back with the same arguments gives the same values (rule of this document; 21.5 says the range is written as `$readmem` reads it).
 - For unpacked arrays and dynamic arrays no addresses are written; for associative arrays a line `@<address>` precedes each word (checked: 21.5.3). Enumerated types are written as numbers (21.5.2).
+
+Implementation status (2026-10-23) for section 7: fixed memories passed
+through `ref` now use the same memory loader and dump ordering as direct
+memories. Writemem also accepts `const ref`; nested forwarding, waiting
+tasks, frame storage and selected rows are covered by the
+[reference-memory matrix](../../tools/gen_ref_memfile_matrix.py).
 
 ## 8. Conversion and queries
 

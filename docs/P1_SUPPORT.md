@@ -2,6 +2,12 @@
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
+The [approved P1 scope](spec/P1_SCOPE.md) now targets Icarus Verilog
+13.0-or-broader execution support, advancing the necessary later-phase
+mechanisms. This is a target; unsupported forms below remain unimplemented.
+See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
+Later-phase labels below are subject to this scope amendment.
+
 This inventory describes tier 1 as of 2026-10-23, including the execution
 controls below. The `b98744a` baseline predates `--autoflush`, `--stop` and
 `--max-wall-time`; `dec94ff` introduced bounds diagnostics. Check
@@ -80,7 +86,11 @@ including the file-output forms and `$swrite`.
 - Output conversions: `%b`, `%o`, `%h` / `%x`, `%d`, `%c`, `%s`, `%e`,
   `%f`, `%g`, `%t`, `%m`, `%l`, `%%`, with widths and supported flags.
   Precision and the `+`, space and `#` flags are for real conversions.
-  `%p`, `%u`, `%z` and `%v` are not implemented.
+  `%u` and `%z` write raw 32-bit words in native byte order, least
+  significant word first, with zero padding above the value's width;
+  `%u` clears X/Z. Console, file, postponed and string-format output use
+  the same implementation. Packed destinations retain NUL bytes; SV strings
+  omit them. `%p` and `%v` are not implemented.
 - `$sformat` and `$sformatf` accept runtime string or packed-integral
   formats. Missing or extra values warn and continue; X/Z bits in a packed
   format are not supported. Literal string values after the format remain
@@ -99,9 +109,10 @@ including the file-output forms and `$swrite`.
   memories of unpacked structures may contain nested structures with
   integral leaves. Array/real members, multidimensional structure memories
   and unpacked unions are not supported.
-- Memory-file operations on memories passed through `ref` are not
-  implemented. See [system tasks](spec/SYSTEM_TASKS.md) for the intended
-  semantics and [recent examples](P1_FEATURES.md) for runtime formats.
+- Memory-file operations accept fixed memories passed through `ref`,
+  including forwarding, waiting calls, automatic storage and references
+  to array rows. Writemem also accepts `const ref`. See
+  [system tasks](spec/SYSTEM_TASKS.md) and [examples](P1_FEATURES.md).
 
 ## Command line and waveforms
 
@@ -155,7 +166,9 @@ gates in the README; the size of this list alone does not establish completion.
   [runtime scans](../tools/gen_runtime_scan_matrix.py),
   [string formatting](../tools/gen_runtime_string_format_matrix.py),
   [plusarg formats](../tools/gen_runtime_plusargs_matrix.py),
-  [structure memories](../tools/gen_fread_struct_matrix.py) and
+  [structure memories](../tools/gen_fread_struct_matrix.py),
+  [reference memories](../tools/gen_ref_memfile_matrix.py),
+  [binary output](../tests/cli/run_binary_format_tests.py) and
   [bounds diagnostics](../tools/gen_bounds_check_matrix.py).
 - Implementation: [lowering](../src/front/), [interpreter](../src/vm/),
   [runtime](../src/kernel/) and [driver](../src/driver/main.cpp).

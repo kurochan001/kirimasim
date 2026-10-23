@@ -2,6 +2,12 @@
 
 [日本語](README.ja.md)
 
+The [P1 scope amendment](docs/spec/P1_SCOPE.md), approved 2026-10-23,
+sets Icarus Verilog 13.0-or-broader execution support as the target and
+advances the necessary P3/P4 and previously out-of-scope mechanisms into P1.
+This target is not achieved yet. See the [implemented inventory](docs/P1_SUPPORT.md)
+and [comparison gaps](docs/notes/p1-icarus-progress.md).
+
 kirimasim is an open-source SystemVerilog simulator in early development.
 Its goal is a simulator that does not give up any of the following:
 
@@ -34,10 +40,10 @@ for the specification, the tests, and review.** See
 | Phase | Content | Status |
 | --- | --- | --- |
 | P0 | Groundwork: build, CI, detailed specifications, test suite | Done |
-| P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (an interpreter of SIR) for RTL and simple testbenches | **In progress** |
+| P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (an interpreter of SIR) targeting Icarus Verilog 13.0-or-broader execution coverage | **In progress** |
 | P2 | Tier 2: SIR compiled ahead of time to C++, for speed | Planned |
-| P3 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks and programs, VPI, DPI-C | Planned |
-| P4 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned |
+| P3 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks and programs, VPI, DPI-C | Planned; required subset advanced to P1 |
+| P4 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned; required subset advanced to P1 |
 
 ### P1 exit criteria
 
@@ -58,11 +64,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,503 | 1,501, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,572 | 1,570, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 196, `tests/suite/` 1,136 (made by 113 generators under `tools/`), tools 117, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 10.
+This repository's tests by kind: unit tests (GoogleTest) 199, `tests/suite/` 1,199 (made by 114 generators under `tools/`), tools 119, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 11.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -329,6 +335,11 @@ their limits, system tasks/functions and implemented command-line options.
 - **Runtime string formats:** `$sformat` and `$sformatf` take string or packed
   formats evaluated at each call, with real/integer conversions, `%t` time-unit
   scaling and `%m`/`%l` scope information. Missing or extra values warn and continue.
+- **Binary formats:** `%u` and `%z` output complete 32-bit words at any integral
+  width. File and packed destinations retain zero bytes; SV strings omit them.
+- **Memory-file references:** readmem/writemem tasks accept fixed memories
+  through `ref`, including forwarded references and selected array rows;
+  writemem also accepts `const ref`.
 - **Waveforms:** 4-state VCD from `$dumpfile`, `$dumpvars`, `$dumpoff`,
   `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush`, or from
   `--wave=<file>.vcd` with `--wave-scope` and `--wave-glitches`.

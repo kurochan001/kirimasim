@@ -15,6 +15,73 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Writing unformatted binary words
+
+`%u` writes 2-state data and `%z` writes 4-state data, in complete 32-bit
+words, least significant word first, in native byte order. `%u` clears
+X/Z; `%z` writes the VPI-style value and unknown masks. Padding above the
+value's width is zero, including for signed values. Uppercase forms work too.
+
+```systemverilog
+module top;
+  logic [3:0] value = 4'b1xz0;
+  string format_value, result;
+  int fd;
+  initial begin
+    fd = $fopen("binary.bin", "wb");
+    $fwrite(fd, "%u%z", value, value);
+    $display("bytes=%0d", $ftell(fd));
+    $fclose(fd);
+    format_value = "%z";
+    result = $sformatf(format_value, value);
+    $display("string length=%0d", result.len());
+  end
+endmodule
+```
+
+```text
+bytes=12
+string length=2
+```
+
+Files and packed destinations of `$swrite`/`$sformat` keep every byte.
+SV strings cannot contain NUL, so string destinations and `$sformatf`
+omit zero bytes. To retain binary data, use a file or a packed destination.
+Binary input conversions in `$sscanf`/`$fscanf` are still not implemented.
+
+## Loading memories through reference arguments
+
+Readmem/writemem tasks accept fixed memories through `ref`, including
+automatic memories, forwarded references, waiting tasks and references to
+rows of multidimensional arrays. Writemem also accepts `const ref`.
+Address ranges, enumeration checks and X/Z conversion use the same kernel
+as direct calls.
+
+```systemverilog
+module top;
+  logic [7:0] memory[2:4];
+  int fd;
+  task automatic load(ref logic [7:0] m[2:4]);
+    $readmemh("input.mem", m);
+  endtask
+  function automatic void save(const ref logic [7:0] m[2:4]);
+    $writememh("output.mem", m);
+  endfunction
+  initial begin
+    fd = $fopen("input.mem", "w");
+    $fwrite(fd, "12 34 56\n");
+    $fclose(fd);
+    load(memory);
+    save(memory);
+    $display("%h %h %h", memory[2], memory[3], memory[4]);
+  end
+endmodule
+```
+
+```text
+12 34 56
+```
+
 ## Seeing output while a design waits
 
 `--autoflush` flushes stdout after each display/write/strobe/monitor task,

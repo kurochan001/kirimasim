@@ -2,6 +2,11 @@
 
 [日本語](WAVEFORM.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
+advances the Icarus-required subset of later-phase or out-of-scope work into
+P1. Existing semantic rules remain; missing details need review before code.
+Phase labels below describe the original plan, subject to this amendment.
+
 Priority: P1. Status: **approved (2026-10-21)**. The same day, what the implementation found the text did not say was added: the sizes of reals and events and how a reference is spelled (2), how the header is laid out (3), the control tasks in the state they set, `$dumpvars` with levels alone and naming what is not dumped, the texts of the warnings and the comment of `$dumplimit`, a file that cannot be opened, the end of a run cut short (4), the forms of `--wave` and `--wave-scope` and what they do without `--wave` (5), and how the tests read a dump (6) (approved).
 
 This document sets what kirimasim writes as waveforms: the 4-state VCD file of 21.7.1 and 21.7.2, written by the dump tasks of the design or by the command line's `--wave` (CLI.md 2.2). The text of the standard is not copied; it is summarized in this document's own words, with clause numbers. "Checked", "interpretation", "rule of this document" and "for reference" mean what they mean in SYSTEM_TASKS.md.

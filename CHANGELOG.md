@@ -17,7 +17,6 @@ own. CONTRIBUTING.md says what goes in this file.
   arbitrary-width integral and packed values, through console, file and
   string-format APIs. Packed destinations preserve zero bytes; string
   destinations omit them (SYSTEM_TASKS.md 3.11, VALUE_SEMANTICS.md 7.6).
-
 - Memory-file tasks accept fixed memories through `ref` arguments, with
   `const ref` for writing files, forwarding and waiting calls, and
   references to rows of multidimensional arrays (SYSTEM_TASKS.md 7,
@@ -180,6 +179,11 @@ own. CONTRIBUTING.md says what goes in this file.
   grows in proportion (CLI.md 2.7, RUNTIME_ABI.md 5).
 
 ### Changed
+
+- P1 now targets Icarus Verilog 13.0-or-broader execution coverage, bringing
+  necessary later-phase mechanisms into P1. Binary `%u`/`%z` input semantics
+  are approved, including width-zero, raw whitespace/NUL and partial-EOF
+  choices; input implementation remains pending (P1_SCOPE, SYSTEM_TASKS 6.3).
 
 - Nonblocking updates without a delay use their saved values directly,
   avoiding a temporary heap allocation for each update while retaining

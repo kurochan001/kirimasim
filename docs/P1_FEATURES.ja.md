@@ -15,6 +15,71 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 無書式のバイナリの語を書き出す
+
+`%u` は2値、`%z` は4値の生データを、32ビットの語にそろえて下位の語から
+ホストのバイト順で出力します。`%u` はX/Zを0にし、`%z` はVPIと同じ値と
+未知ビットのマスクを書きます。符号付きの値でも、幅の上の端数はゼロで埋めます。
+大文字の形にも対応します。
+
+```systemverilog
+module top;
+  logic [3:0] value = 4'b1xz0;
+  string format_value, result;
+  int fd;
+  initial begin
+    fd = $fopen("binary.bin", "wb");
+    $fwrite(fd, "%u%z", value, value);
+    $display("bytes=%0d", $ftell(fd));
+    $fclose(fd);
+    format_value = "%z";
+    result = $sformatf(format_value, value);
+    $display("string length=%0d", result.len());
+  end
+endmodule
+```
+
+```text
+bytes=12
+string length=2
+```
+
+ファイルと `$swrite`・`$sformat` の packed 出力先は全バイトを保ちます。
+文字列型にはNULを含められないので、文字列の出力先と `$sformatf` はゼロのバイトを
+取り除きます。バイナリを保存するにはファイルか packed 変数を使ってください。
+`$sscanf`・`$fscanf` のバイナリ入力書式は引き続き未対応です。
+
+## 参照引数で受け取ったメモリを読み書きする
+
+readmem/writemem 系は、固定メモリへの `ref` に対応します。自動変数、参照の転送、
+待機するタスク、多次元配列の行への参照でも使えます。writemem は `const ref` も
+使えます。アドレス範囲・列挙型の検査・X/Zの変換は、直接の呼び出しと共通です。
+
+```systemverilog
+module top;
+  logic [7:0] memory[2:4];
+  int fd;
+  task automatic load(ref logic [7:0] m[2:4]);
+    $readmemh("input.mem", m);
+  endtask
+  function automatic void save(const ref logic [7:0] m[2:4]);
+    $writememh("output.mem", m);
+  endfunction
+  initial begin
+    fd = $fopen("input.mem", "w");
+    $fwrite(fd, "12 34 56\n");
+    $fclose(fd);
+    load(memory);
+    save(memory);
+    $display("%h %h %h", memory[2], memory[3], memory[4]);
+  end
+endmodule
+```
+
+```text
+12 34 56
+```
+
 ## 設計が待っている間の出力を見る
 
 `--autoflush` は display・write・strobe・monitor 系のタスクごとに標準出力を
