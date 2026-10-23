@@ -1,0 +1,12 @@
+h whole mem: 12 34 56
+h whole copy: 12 34 56
+h reverse mem: 56 34 12
+h reverse copy: 56 34 12
+h partial mem: 56 12 12
+h partial copy: 56 12 12
+b whole mem: 12 34 56
+b whole copy: 12 34 56
+b reverse mem: 56 34 12
+b reverse copy: 56 34 12
+b partial mem: 56 12 12
+b partial copy: 56 12 12

@@ -5,6 +5,10 @@ add_test(NAME tools/bounded_binary
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_bounded_binary.py)
 set_tests_properties(tools/bounded_binary PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_ref_memfile_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_ref_memfile_matrix.py --check)
+set_tests_properties(tools/gen_ref_memfile_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_bounds_check_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_bounds_check_matrix.py --check)
 set_tests_properties(tools/gen_bounds_check_matrix PROPERTIES LABELS Tools)

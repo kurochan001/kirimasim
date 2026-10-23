@@ -18,6 +18,10 @@ own. CONTRIBUTING.md says what goes in this file.
   string-format APIs. Packed destinations preserve zero bytes; string
   destinations omit them (SYSTEM_TASKS.md 3.11, VALUE_SEMANTICS.md 7.6).
 
+- Memory-file tasks accept fixed memories through `ref` arguments, with
+  `const ref` for writing files, forwarding and waiting calls, and
+  references to rows of multidimensional arrays (SYSTEM_TASKS.md 7,
+  SIR_SPEC.md 8).
 - `--autoflush` publishes stdout after display/write/strobe/monitor output,
   including file tasks directed to stdout (CLI.md 2.2, SYSTEM_TASKS.md 2).
 - `--stop=finish|ignore|error` selects normal termination, continuation,

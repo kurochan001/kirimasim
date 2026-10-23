@@ -1,0 +1,12 @@
+h whole mem: 112345xz9 zzzzzzzzz xxxxxxxxx
+h whole copy: 112345xz9 zzzzzzzzz xxxxxxxxx
+h reverse mem: xxxxxxxxx zzzzzzzzz 112345xz9
+h reverse copy: xxxxxxxxx zzzzzzzzz 112345xz9
+h partial mem: xxxxxxxxx 112345xz9 112345xz9
+h partial copy: xxxxxxxxx 112345xz9 112345xz9
+b whole mem: 112345xz9 zzzzzzzzz xxxxxxxxx
+b whole copy: 112345xz9 zzzzzzzzz xxxxxxxxx
+b reverse mem: xxxxxxxxx zzzzzzzzz 112345xz9
+b reverse copy: xxxxxxxxx zzzzzzzzz 112345xz9
+b partial mem: xxxxxxxxx 112345xz9 112345xz9
+b partial copy: xxxxxxxxx 112345xz9 112345xz9

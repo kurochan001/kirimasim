@@ -3477,8 +3477,7 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             m->as<ast::AssignmentExpression>().isLValueArg())
             m = &m->as<ast::AssignmentExpression>().left();
         const std::optional<ArrayTarget> a = arrayTarget(*m);
-        if (!a || !a->indices.empty() || a->home == Place::Home::Ref)
-            unsupported(sl, name + " of this memory");
+        if (!a || !a->indices.empty()) unsupported(sl, name + " of this memory");
         if (!sir::isIntegral(elemTypeOf(baseOf(*a))))
             unsupported(sl, name + " of a memory of this element type");
         std::vector<Operand> ops{

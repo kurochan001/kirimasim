@@ -296,6 +296,18 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
         if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
         ops.push_back(iv.op);
     }
+    // A selected element can itself be a fixed array. The reference names
+    // its first element in declaration order; the formal retains the
+    // remaining dimensions (13.5.2, SIR_SPEC.md 8). Complete the coordinates
+    // here so every tier sees the same ordinary ref.make operation.
+    if (ops.size() > 1) {
+        const ast::Type* remaining = &actual.type->getCanonicalType();
+        while (remaining->isUnpackedArray()) {
+            const auto left = static_cast<std::uint64_t>(remaining->getFixedRange().left);
+            ops.push_back(constant(sir::s2(64), left).op);
+            remaining = &remaining->getArrayElementType()->getCanonicalType();
+        }
+    }
     if (!st->frame) {
         noteRead({st->slot, 0, 0, 0, 0});
         if (!isConst) noteWrite({st->slot, 0, 0, 0, 0});

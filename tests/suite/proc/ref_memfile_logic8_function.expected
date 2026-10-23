@@ -1,0 +1,12 @@
+h whole mem: z9 zz xx
+h whole copy: z9 zz xx
+h reverse mem: xx zz z9
+h reverse copy: xx zz z9
+h partial mem: xx z9 z9
+h partial copy: xx z9 z9
+b whole mem: z9 zz xx
+b whole copy: z9 zz xx
+b reverse mem: xx zz z9
+b reverse copy: xx zz z9
+b partial mem: xx z9 z9
+b partial copy: xx z9 z9

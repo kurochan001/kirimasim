@@ -4419,7 +4419,8 @@ private:
     }
 
     /// $readmemb, $readmemh, $writememb and $writememh (file, memory[,
-    /// start[, finish]]): the memory is a slot or an array frame variable,
+    /// start[, finish]]): the memory is a slot, an array frame variable,
+    /// or a ref to either, described by its formal's shape and target type,
     /// and the kernel decides which of its elements get which words
     /// (SIR_SPEC.md 8, SYSTEM_TASKS.md 7). A file that cannot be opened,
     /// and one with text that is no word, are run-time errors of the
@@ -4432,10 +4433,11 @@ private:
         const std::string name(strings_.get(value(ops[1]).a));
         const Operand& m = ops[2];
         const bool slot = m.kind == Operand::Kind::Slot;
-        const std::vector<sir::ArrayDim>& adims =
-            slot ? d_.slot(m.asSlot()).dims : bodyFrame(act_.body)[m.asFrame().index()].dims;
-        const sir::Type et =
-            slot ? d_.slot(m.asSlot()).type : bodyFrame(act_.body)[m.asFrame().index()].type;
+        const sir::FrameVar* frame = slot ? nullptr : &bodyFrame(act_.body)[m.asFrame().index()];
+        const bool ref = frame != nullptr && frame->type.kind == sir::TypeKind::Ref;
+        const W4 reference = ref ? frameVar(m.asFrame()) : W4{};
+        const std::vector<sir::ArrayDim>& adims = slot ? d_.slot(m.asSlot()).dims : frame->dims;
+        const sir::Type et = slot ? d_.slot(m.asSlot()).type : ref ? frame->target : frame->type;
         std::vector<kernel::MemDim> dims;
         dims.reserve(adims.size());
         for (const sir::ArrayDim& d : adims)
@@ -4465,9 +4467,12 @@ private:
             for (const std::uint32_t e : kernel::dumpOrder(dims, address[0], address[1])) {
                 if (slot)
                     readSlotWide(m.asSlot(), e, 0, 0, v.data());
+                else if (ref && !isFrameRef(reference))
+                    readSlotWide(refSlot(reference), refElem(reference) + e, 0, 0, v.data());
                 else
                     for (std::uint32_t k = 0; k < c; ++k)
-                        v[k] = (&frameElem(m.asFrame(), e))[k];
+                        v[k] = ref ? refWord(reference, std::uint64_t{e} * c + k)
+                                   : (&frameElem(m.asFrame(), e))[k];
                 words = packed(v.data(), c, sir::isFourState(et));
                 text +=
                     kernel::formatInt({words.data(), et.width, sir::isFourState(et), false}, spec);
@@ -4499,9 +4504,13 @@ private:
         for (const kernel::MemWord& w : l.words) {
             if (slot)
                 writeSlotWide(m.asSlot(), w.elem, 0, 0, w.value.data());
+            else if (ref && !isFrameRef(reference))
+                writeSlotWide(refSlot(reference), refElem(reference) + w.elem, 0, 0,
+                              w.value.data());
             else
                 for (std::uint32_t k = 0; k < c; ++k)
-                    (&frameElem(m.asFrame(), w.elem))[k] = w.value[k];
+                    (ref ? refWord(reference, std::uint64_t{w.elem} * c + k)
+                         : (&frameElem(m.asFrame(), w.elem))[k]) = w.value[k];
         }
         if (!l.range.empty()) warnOnce(in, std::string(task) + ": " + l.range);
         if (!l.count.empty()) warnOnce(in, std::string(task) + ": " + l.count);
