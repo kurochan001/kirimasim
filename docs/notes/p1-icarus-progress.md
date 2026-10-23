@@ -9,6 +9,35 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Latest documentation and comparison check (2026-10-23)
+
+The typed container SIR implementation is `a8f63b5`. Source revision
+`f00c807` also makes descriptor initialization explicitly nonthrowing, fixing
+the clang-tidy rejection of scalar types with static lifetime. Compile-time
+checks cover scalar initialization, absent descriptors and numeric IDs;
+all 72 Sir/ContainerSir tests pass.
+
+The full local CI run passes dev/release/ASan/UBSan configure/build/tests,
+release flags, banned features, SPDX, suite files, global state, expectation
+protection, README counts, clang-format and clang-tidy. Dev has 2,120 tests:
+2,118 pass, with the same two known skips. Existing suite expectations are
+unchanged; the initialization fix adds compile-time checks only.
+
+The extended comparison was rerun with `f00c807`: 44 original probes still
+leave 23 Icarus-passing gaps. Both installed Icarus compiler and runtime
+report `14.0 (devel) (s20260301-411-gca6b8d376)`. No SystemVerilog container
+execution or full parity is claimed. Reproduce this latest measurement with:
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/docs-update-icarus-probes-latest.json --require-parity
+```
+
+The expected exit code remains 1 because the measured gaps are open.
+External sv-tests/population counts and performance measurements retain
+their original revisions and measurement dates.
+
 ## Typed container SIR implementation (2026-10-23)
 
 The heap foundation now has typed container descriptors/references, 16 SIR

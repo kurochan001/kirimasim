@@ -40,9 +40,9 @@ The shared kernel now has a typed heap with deep copying, stable element
 references, bounded queues, exact tracing and allocation-failure rollback.
 Its 15 kernel tests pass, including 2,520,000 model-checked operations and
 six deliberate mutation checks. Typed container SIR descriptors, references,
-instructions, verification and text are now defined; front-end/VM integration and automatic
-root publication are still unfinished, so dynamic arrays and queues cannot
-yet be executed from SystemVerilog. See the
+instructions, verification and text are implemented. Front-end/VM integration
+and automatic root publication are still unfinished, so dynamic arrays and
+queues cannot yet be executed from SystemVerilog. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
@@ -118,9 +118,12 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI run for source/documentation baseline `6a1830a` on 2026-10-23
-passed dev/release/ASan/UBSan and all static checks. Its CTest counts are
-shown above. The external comparison and performance measurements below
+The local CI run for source revision `f00c807` on 2026-10-23 passed
+dev/release/ASan/UBSan and all static checks, including clang-format and
+clang-tidy. Dev has 2,120 tests: 2,118 pass and the same two known skips remain.
+The extended comparison was also rerun: 44 probes and 23 Icarus-passing gaps
+remain. See the [validation record](docs/notes/p1-icarus-progress.md).
+The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 
 The two skipped tests of this repository need clocking-block support, or
@@ -412,7 +415,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Not yet | Scope and status |
 | --- | --- |
 | FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1; shared kernel heap implemented, SIR/front/VM integration pending |
+| Dynamic arrays and queues | P1; shared kernel heap and typed SIR implemented; front/VM integration, nested-bound conversion and root publication pending |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
 | Tier 2 C++ generation and further RTL speed optimizations | P2 |

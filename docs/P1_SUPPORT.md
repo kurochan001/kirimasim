@@ -11,8 +11,8 @@ later-phase plans.
 
 This inventory describes tier 1 as of 2026-10-23, including delayed NBA
 snapshots, bounded packed selections and mixed named-event waits. The latest
-container work is a kernel foundation, described separately below. Check
-`kirimasim --help` for a build's options and `--version` for its revision.
+container work includes a kernel foundation and typed SIR, described separately
+below. Check `kirimasim --help` for a build's options and `--version` for its revision.
 
 P1 is in progress. “Supported” below means that the listed forms can be
 lowered to SIR and run by the interpreter, with tests in this repository.

@@ -8,6 +8,33 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
+## 最新の文書・比較の確認（2026-10-23）
+
+型付きコンテナSIRの実装は`a8f63b5`です。ソースの`f00c807`では、記述子の
+初期化が例外を投げないことを明示し、静的な寿命を持つスカラー型に対する
+clang-tidyのエラーを修正しました。スカラー型・未指定の記述子・数値IDの初期化を
+コンパイル時に確認し、Sir・ContainerSirの72テストもすべて通過しています。
+
+ローカルCI全体も、dev・release・ASan・UBSanの構成・ビルド・テスト、releaseの
+フラグ、禁止機能、SPDX、スイート、大域状態、期待値保護、README件数、
+clang-format・clang-tidyが通過しました。devは2,120件中2,118件成功、従来の
+2件がスキップです。既存スイートの期待値は変更せず、初期化の修正には
+コンパイル時の検査だけを追加しました。
+
+`f00c807`で拡張比較を再実行し、独自の44プローブにIcarusだけが通る23本の差分が
+残ることを確認しました。Icarusのコンパイラ・ランタイムはどちらも
+`14.0 (devel) (s20260301-411-gca6b8d376)`です。SystemVerilogのコンテナ実行と
+全面的な同等性は未達成です。最新の測定は次のコマンドで再実行できます。
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/docs-update-icarus-probes-latest.json --require-parity
+```
+
+差分が残っているため、終了コード1を想定しています。外部のsv-tests・母集団の
+件数と性能測定は、元のコミット・測定日の値を保っています。
+
 ## 型付きコンテナSIRの実装（2026-10-23）
 
 共通ヒープに続き、型付きコンテナの記述子・参照、16命令、検証器・テキスト形式を
