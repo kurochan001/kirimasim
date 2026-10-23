@@ -21,6 +21,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Typed heap read/change observation hooks distinguish container structure
+  from cell values. Notifications follow committed changes and skip equal
+  normalized writes, failed operations and invalid selections. Scheduler/VM
+  monitor integration and SystemVerilog container execution remain unfinished.
+
 - Automatic typed-container collection after drained scheduling regions and
   slots, tracing typed storage, live activations, detached cell refs, deferred
   call arguments and owned scheduler values (RUNTIME_ABI 6). Root-only changes

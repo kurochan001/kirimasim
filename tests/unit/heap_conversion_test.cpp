@@ -565,4 +565,278 @@ TEST(Heap, CollectionChangeFlagTracksGraphMutationsAndFailedMarking) {
     EXPECT_EQ(h.stats().cells, 0U);
 }
 
+struct HeapNotices {
+    std::array<HeapRoot, 128> values{};
+    std::size_t count = 0;
+    bool overflow = false;
+    static void record(void* frame, HeapRoot root) noexcept {
+        auto& n = *static_cast<HeapNotices*>(frame);
+        if (n.count == n.values.size()) {
+            n.overflow = true;
+            return;
+        }
+        n.values[n.count++] = root;
+    }
+    std::vector<HeapRoot> take() {
+        EXPECT_FALSE(overflow);
+        std::vector<HeapRoot> out(values.begin(), values.begin() + count);
+        count = 0;
+        return out;
+    }
+};
+
+TEST(Heap, ReadObservationDistinguishesStructureValuesAndMissingElements) {
+    for (const auto kind : {ContainerKind::DynamicArray, ContainerKind::Queue}) {
+        Heap h;
+        const auto l = layout(h, std::array<HeapWord, 1>{{{0xff, true}}});
+        const auto t = type(h, kind, l);
+        auto value = h.fromValues(t, std::array<W4, 2>{{{7, 0x20}, {9, 0x40}}});
+        ASSERT_TRUE(value);
+        const auto first = h.cell(t, value.value, 0);
+        ASSERT_TRUE(first);
+        const auto second = h.cell(t, value.value, 1);
+        ASSERT_TRUE(second);
+        HeapNotices reads;
+        EXPECT_EQ(h.setReadHook({&HeapNotices::record, &reads}).fn, nullptr);
+        ASSERT_TRUE(h.size(t, value.value));
+        EXPECT_EQ(reads.take(), (std::vector<HeapRoot>{HeapRoot::container(value.value)}));
+        std::array<W4, 1> out{};
+        ASSERT_TRUE(h.read(t, value.value, 0, out));
+        EXPECT_EQ(reads.take(), (std::vector<HeapRoot>{HeapRoot::container(value.value),
+                                                       HeapRoot::cell(first.value)}));
+        for (const auto index : {std::optional<std::int64_t>{}, std::optional<std::int64_t>{-1},
+                                 std::optional<std::int64_t>{2}}) {
+            ASSERT_TRUE(h.read(t, value.value, index, out));
+            EXPECT_EQ(reads.take(), (std::vector<HeapRoot>{HeapRoot::container(value.value)}));
+        }
+        const auto array = type(h, ContainerKind::DynamicArray, l);
+        for (unsigned operation : {0U, 1U, 2U}) {
+            const auto copied = operation == 0   ? h.copy(t, value.value)
+                                : operation == 1 ? h.snapshot(value.value)
+                                                 : h.construct(array, 2, value.value);
+            ASSERT_TRUE(copied);
+            EXPECT_EQ(reads.take(), (std::vector<HeapRoot>{HeapRoot::container(value.value),
+                                                           HeapRoot::cell(first.value),
+                                                           HeapRoot::cell(second.value)}));
+        }
+        ASSERT_TRUE(h.clear(t, value.value));
+        reads.take();
+        ASSERT_TRUE(h.readCell(l, first.value, out));
+        EXPECT_EQ(reads.take(), (std::vector<HeapRoot>{HeapRoot::cell(first.value)}));
+        ASSERT_TRUE(h.readCell(l, {}, out));
+        ASSERT_TRUE(h.read(t, {}, 0, out));
+        ASSERT_TRUE(h.size(t, {}));
+        EXPECT_TRUE(reads.take().empty());
+        ASSERT_TRUE(h.describeType(t));
+        ASSERT_TRUE(h.describeWord(l, 0));
+        EXPECT_TRUE(reads.take().empty());
+        // Observations are weak identities, not roots. Reuse must not make
+        // the old observation refer to a new cell of the same pool entry.
+        ASSERT_TRUE(h.collect({}));
+        EXPECT_EQ(h.readCell(l, first.value, out).error, HeapError::InvalidHandle);
+        EXPECT_TRUE(reads.take().empty());
+        ASSERT_TRUE(h.fromValues(t, std::array<W4, 1>{{{1, 0}}}));
+        EXPECT_EQ(h.readCell(l, first.value, out).error, HeapError::InvalidHandle);
+        EXPECT_TRUE(reads.take().empty());
+    }
+}
+
+struct CommittedCellNotice {
+    Heap& heap;
+    HeapLayoutId layout;
+    HeapNotices notices;
+    std::array<W4, 3> value{};
+    std::size_t words;
+    bool valid = true;
+    static void record(void* frame, HeapRoot root) noexcept {
+        auto& s = *static_cast<CommittedCellNotice*>(frame);
+        HeapNotices::record(&s.notices, root);
+        s.valid =
+            s.valid && root.kind == HeapRoot::Kind::Cell &&
+            static_cast<bool>(s.heap.readCell(s.layout, {root.bits}, {s.value.data(), s.words}));
+    }
+};
+
+TEST(Heap, ValueNotificationsFollowCommittedNormalizedChangesAcrossEntries) {
+    for (unsigned width : {1U, 32U, 64U, 65U, 129U})
+        for (bool four : {false, true})
+            for (const auto kind : {ContainerKind::DynamicArray, ContainerKind::Queue})
+                for (bool direct : {false, true}) {
+                    SCOPED_TRACE(::testing::Message()
+                                 << width << '/' << four << '/' << static_cast<unsigned>(kind)
+                                 << '/' << direct);
+                    Heap h;
+                    std::vector<HeapWord> fields;
+                    for (unsigned w = 0; w * 64 < width; ++w) {
+                        const auto bits = std::min(64U, width - w * 64);
+                        fields.push_back(
+                            {bits == 64 ? ~std::uint64_t{0} : (std::uint64_t{1} << bits) - 1,
+                             four});
+                    }
+                    const auto l = layout(h, fields);
+                    const auto t = type(h, kind, l);
+                    std::vector<W4> data(fields.size(), {1, 0});
+                    auto value = h.fromValues(t, data);
+                    ASSERT_TRUE(value);
+                    const auto cell = h.cell(t, value.value, 0);
+                    ASSERT_TRUE(cell);
+                    CommittedCellNotice changes{h, l, {}, {}, fields.size()};
+                    h.setChangeHook({&CommittedCellNotice::record, &changes});
+                    const auto write = [&](const std::vector<W4>& words) {
+                        return direct ? h.writeCell(l, cell.value, words)
+                                      : h.write(t, value.value, 0, words);
+                    };
+                    ASSERT_TRUE(write(data));
+                    EXPECT_TRUE(changes.notices.take().empty());
+                    data[0] = four ? W4{0, 1} : W4{0, 0};
+                    ASSERT_TRUE(write(data));
+                    EXPECT_TRUE(changes.valid);
+                    EXPECT_EQ(changes.notices.take(),
+                              (std::vector<HeapRoot>{HeapRoot::cell(cell.value)}));
+                    for (std::size_t w = 0; w < data.size(); ++w) {
+                        EXPECT_EQ(changes.value[w].a, data[w].a);
+                        EXPECT_EQ(changes.value[w].b, data[w].b);
+                    }
+                    ASSERT_TRUE(write(data));
+                    EXPECT_TRUE(changes.notices.take().empty());
+                    if (!four) {
+                        // X/Z clear on a two-state write before comparison.
+                        data[0] = {1, 1};
+                        ASSERT_TRUE(write(data));
+                        EXPECT_TRUE(changes.notices.take().empty());
+                    }
+                    std::vector<W4> out(fields.size());
+                    ASSERT_TRUE(h.readCell(l, cell.value, out));
+                    EXPECT_EQ(out[0].a, 0U);
+                    EXPECT_EQ(out[0].b, four ? 1U : 0U);
+                }
+}
+
+TEST(Heap, QueueNotificationsDistinguishStructuralChangesFromNoOps) {
+    for (unsigned bound : {0U, 1U, 3U}) {
+        Heap h;
+        const auto l = layout(h, std::array<HeapWord, 1>{{{0xff, false}}});
+        const auto q = type(h, ContainerKind::Queue, l, bound);
+        ContainerToken value;
+        HeapNotices changes;
+        h.setChangeHook({&HeapNotices::record, &changes});
+        const std::array<W4, 1> data{{{7, 0}}};
+        std::array<W4, 1> out{};
+        ASSERT_TRUE(h.push(q, value, false, data));
+        EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{HeapRoot::container(value)}));
+        const auto original = value;
+        EXPECT_EQ(h.insert(q, value, -1, data).warning, HeapWarning::InvalidIndex);
+        EXPECT_EQ(h.insert(q, value, {}, data).warning, HeapWarning::InvalidIndex);
+        EXPECT_TRUE(changes.take().empty());
+        if (bound == 1) {
+            EXPECT_EQ(h.push(q, value, false, data).warning, HeapWarning::BoundExceeded);
+            EXPECT_TRUE(changes.take().empty());
+        }
+        // Even at capacity, pushing at the front moves/replaces stable cells.
+        ASSERT_TRUE(h.push(q, value, true, data));
+        EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{HeapRoot::container(value)}));
+        ASSERT_TRUE(h.pop(q, value, false, out));
+        EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{HeapRoot::container(value)}));
+        if (bound != 1) {
+            ASSERT_TRUE(h.erase(q, value, 0));
+            EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{HeapRoot::container(value)}));
+        }
+        EXPECT_EQ(h.pop(q, value, false, out).warning, HeapWarning::EmptyPop);
+        EXPECT_EQ(h.erase(q, value, 0).warning, HeapWarning::InvalidIndex);
+        EXPECT_TRUE(changes.take().empty());
+        ASSERT_TRUE(h.clear(q, value));
+        // Clearing a variable does not mutate the object old refs still name.
+        // Its slot/frame publisher is responsible for the binding change.
+        EXPECT_TRUE(changes.take().empty());
+        EXPECT_EQ(length(h, q, original), 0U);
+    }
+}
+
+TEST(Heap, NestedTransportNotifiesOnlyTheChangedCellAndPreservesOtherHooks) {
+    Heap h;
+    const auto leaf = layout(h, std::array<HeapWord, 1>{{{0xff, true}}});
+    const auto q = type(h, ContainerKind::Queue, leaf);
+    const auto nested = layout(h, std::array<HeapWord, 1>{{{~std::uint64_t{0}, false, {0, 0}, q}}});
+    const auto outer = type(h, ContainerKind::DynamicArray, nested);
+    const auto a = h.fromValues(q, std::array<W4, 1>{{{7, 0}}});
+    const auto b = h.fromValues(q, std::array<W4, 1>{{{11, 0}}});
+    const auto parent = h.construct(outer, 1);
+    ASSERT_TRUE(a);
+    ASSERT_TRUE(b);
+    ASSERT_TRUE(parent);
+    const auto cell = h.cell(outer, parent.value, 0);
+    ASSERT_TRUE(cell);
+    HeapNotices reads, changes, temporary;
+    h.setReadHook({&HeapNotices::record, &reads});
+    h.setChangeHook({&HeapNotices::record, &changes});
+    ASSERT_TRUE(h.storeNested(nested, cell.value, a.value));
+    EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{HeapRoot::cell(cell.value)}));
+    ASSERT_TRUE(h.storeNested(nested, cell.value, a.value));
+    EXPECT_TRUE(changes.take().empty());
+    const auto old = h.setChangeHook({&HeapNotices::record, &temporary});
+    ASSERT_TRUE(h.storeNested(nested, cell.value, b.value));
+    EXPECT_TRUE(changes.take().empty());
+    EXPECT_EQ(temporary.take(), (std::vector<HeapRoot>{HeapRoot::cell(cell.value)}));
+    EXPECT_EQ(h.setChangeHook(old).frame, &temporary);
+    std::array<W4, 1> out{};
+    ASSERT_TRUE(h.readCell(nested, cell.value, out));
+    EXPECT_EQ(reads.take(), (std::vector<HeapRoot>{HeapRoot::cell(cell.value)}));
+    ASSERT_TRUE(h.read(q, {out[0].a}, 0, out));
+    const auto selected = h.cell(q, b.value, 0);
+    ASSERT_TRUE(selected);
+    EXPECT_EQ(reads.take(),
+              (std::vector<HeapRoot>{HeapRoot::container(b.value), HeapRoot::cell(selected.value),
+                                     HeapRoot::container(b.value)}));
+    ASSERT_TRUE(h.writeCell(leaf, selected.value, std::array<W4, 1>{{{9, 0}}}));
+    EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{HeapRoot::cell(selected.value)}));
+    const auto saved = h.setReadHook({});
+    ASSERT_TRUE(h.size(q, b.value));
+    EXPECT_TRUE(reads.take().empty());
+    EXPECT_EQ(h.setReadHook(saved).fn, nullptr);
+}
+
+TEST(Heap, FailedMutationsPublishNoChangesAndObserversBelongToOneHeap) {
+    unsigned failures = 0;
+    for (unsigned operation : {0U, 1U, 2U}) {
+        bool completed = false;
+        for (std::size_t point = 0; point < 50; ++point) {
+            ConversionMemory memory;
+            Heap h(&memory), unrelated;
+            const auto l = layout(h, std::array<HeapWord, 1>{{{0xff, true}}});
+            const auto q = type(h, ContainerKind::Queue, l);
+            const std::array<W4, 1> first{{{7, 0}}}, second{{{11, 0x20}}};
+            auto value = h.fromValues(q, first);
+            ASSERT_TRUE(value);
+            const auto token = h.cell(q, value.value, 0);
+            ASSERT_TRUE(token);
+            HeapNotices changes, other;
+            h.setChangeHook({&HeapNotices::record, &changes});
+            unrelated.setChangeHook({&HeapNotices::record, &other});
+            memory.remaining = point;
+            std::array<W4, 1> out{};
+            const auto status = operation == 0   ? h.writeCell(l, token.value, second)
+                                : operation == 1 ? h.push(q, value.value, true, second)
+                                                 : h.pop(q, value.value, false, out);
+            memory.remaining.reset();
+            EXPECT_TRUE(other.take().empty());
+            if (status) {
+                EXPECT_EQ(changes.take(), (std::vector<HeapRoot>{
+                                              operation == 0 ? HeapRoot::cell(token.value)
+                                                             : HeapRoot::container(value.value)}));
+                completed = true;
+                break;
+            }
+            ++failures;
+            EXPECT_EQ(status.error, HeapError::ResourceLimit);
+            EXPECT_TRUE(changes.take().empty());
+            EXPECT_EQ(length(h, q, value.value), 1U);
+            ASSERT_TRUE(h.readCell(l, token.value, out));
+            EXPECT_EQ(out[0].a, 7U);
+            EXPECT_EQ(out[0].b, 0U);
+        }
+        EXPECT_TRUE(completed);
+    }
+    EXPECT_GT(failures, 3U);
+}
+
 }  // namespace

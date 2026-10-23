@@ -47,6 +47,15 @@ std::optional<std::size_t> element(std::optional<std::int64_t> index, std::size_
 
 }  // namespace
 
+HeapHook Heap::setReadHook(HeapHook hook) noexcept { return std::exchange(readHook_, hook); }
+HeapHook Heap::setChangeHook(HeapHook hook) noexcept { return std::exchange(changeHook_, hook); }
+void Heap::recordRead(HeapRoot root) const noexcept {
+    if (root.bits != 0 && readHook_.fn != nullptr) readHook_.fn(readHook_.frame, root);
+}
+void Heap::recordChange(HeapRoot root) const noexcept {
+    if (root.bits != 0 && changeHook_.fn != nullptr) changeHook_.fn(changeHook_.frame, root);
+}
+
 template <class T> T* Heap::Pool<T>::get(std::uint64_t token) noexcept {
     const std::uint32_t low = static_cast<std::uint32_t>(token);
     if (low == 0 || low > entries.size()) return nullptr;
@@ -241,6 +250,7 @@ ContainerToken Heap::clone(Transaction& tx, HeapTypeId type, ContainerToken sour
     while (!jobs.empty()) {
         Job job = jobs.back();
         jobs.pop_back();
+        recordRead(HeapRoot::container(job.source));
         const HeapType& t = types_[job.type.index()];
         const Layout& l = layouts_[t.element.index()];
         if (t.maxElements != 0 && job.count > t.maxElements) {
@@ -271,6 +281,7 @@ ContainerToken Heap::clone(Transaction& tx, HeapTypeId type, ContainerToken sour
                     const CellToken old = containers_.get(job.source.bits)->cells[i];
                     const auto& oldWords = cells_.get(old.bits)->words;
                     std::copy(oldWords.begin(), oldWords.end(), data.begin());
+                    recordRead(HeapRoot::cell(old));
                 } else {
                     defaults(t.element, data);
                 }
@@ -404,12 +415,14 @@ HeapResult<ContainerToken> Heap::fromValues(HeapTypeId type, std::span<const W4>
 HeapResult<std::uint64_t> Heap::size(HeapTypeId type, ContainerToken value) const noexcept {
     if (const HeapError e = check(type, value); e != HeapError::None) return {0, failure(e)};
     const Container* c = containers_.get(value.bits);
+    recordRead(HeapRoot::container(value));
     return {c ? c->cells.size() : 0, {}};
 }
 HeapResult<CellToken> Heap::cell(HeapTypeId type, ContainerToken value,
                                  std::optional<std::int64_t> index) const noexcept {
     if (const HeapError e = check(type, value); e != HeapError::None) return {{}, failure(e)};
     const Container* c = containers_.get(value.bits);
+    recordRead(HeapRoot::container(value));
     if (!c) return {};
     const auto at = element(index, c->cells.size());
     return {at ? c->cells[*at] : CellToken{}, {}};
@@ -423,6 +436,7 @@ HeapStatus Heap::readCell(HeapLayoutId layout, CellToken cell, std::span<W4> out
     const Cell* c = cells_.get(cell.bits);
     if (!c || c->layout != layout) return failure(HeapError::InvalidHandle);
     std::copy(c->words.begin(), c->words.end(), out.begin());
+    recordRead(HeapRoot::cell(cell));
     return {};
 }
 HeapStatus Heap::read(HeapTypeId type, ContainerToken value, std::optional<std::int64_t> index,
@@ -432,17 +446,23 @@ HeapStatus Heap::read(HeapTypeId type, ContainerToken value, std::optional<std::
     return readCell(types_[type.index()].element, found.value, out);
 }
 HeapStatus Heap::writeCell(HeapLayoutId layout, CellToken cell, std::span<const W4> data) noexcept {
-    return protect([&] {
+    bool different = false;
+    const auto status = protect([&] {
         if (const HeapError e = checkData(layout, data); e != HeapError::None) return failure(e);
         if (cell.bits == 0) return HeapStatus{};
         const Cell* c = cells_.get(cell.bits);
         if (!c || c->layout != layout) return failure(HeapError::InvalidHandle);
         Transaction tx(*this);
         auto copied = cloneWords(tx, layout, data);
+        const auto& old = cells_.get(cell.bits)->words;
+        different = !std::equal(old.begin(), old.end(), copied.begin(),
+                                [](W4 a, W4 b) { return a.a == b.a && a.b == b.b; });
         cells_.get(cell.bits)->words.swap(copied);
         tx.committed = true;
         return HeapStatus{HeapError::None, tx.warning()};
     });
+    if (status && different) recordChange(HeapRoot::cell(cell));
+    return status;
 }
 HeapStatus Heap::storeNested(HeapLayoutId layout, CellToken cell, ContainerToken value) noexcept {
     const Layout* l = layoutOf(layout);
@@ -453,8 +473,10 @@ HeapStatus Heap::storeNested(HeapLayoutId layout, CellToken cell, ContainerToken
     if (!c || c->layout != layout) return failure(HeapError::InvalidHandle);
     if (const HeapError e = check(l->words[0].nested, value); e != HeapError::None)
         return failure(e);
+    const bool different = c->words[0].a != value.bits;
     c->words[0] = {value.bits, 0};
     changed_ = true;
+    if (different) recordChange(HeapRoot::cell(cell));
     return {};
 }
 HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
@@ -471,7 +493,8 @@ HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std
 }
 HeapStatus Heap::insert(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
                         std::span<const W4> data) noexcept {
-    return protect([&] {
+    bool inserted = false;
+    const auto status = protect([&] {
         if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
         const HeapType& t = types_[type.index()];
         if (t.kind != ContainerKind::Queue) return failure(HeapError::InvalidType);
@@ -500,8 +523,11 @@ HeapStatus Heap::insert(HeapTypeId type, ContainerToken& value, std::optional<st
         tx.truncated = tx.truncated || truncated;
         value = destination;
         tx.committed = true;
+        inserted = true;
         return HeapStatus{HeapError::None, tx.warning()};
     });
+    if (status && inserted) recordChange(HeapRoot::container(value));
+    return status;
 }
 HeapStatus Heap::push(HeapTypeId type, ContainerToken& value, bool front,
                       std::span<const W4> data) noexcept {
@@ -513,7 +539,8 @@ HeapStatus Heap::push(HeapTypeId type, ContainerToken& value, bool front,
 }
 HeapStatus Heap::pop(HeapTypeId type, ContainerToken& value, bool front,
                      std::span<W4> out) noexcept {
-    return protect([&] {
+    bool removed = false;
+    const auto status = protect([&] {
         if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
         const HeapType& t = types_[type.index()];
         if (t.kind != ContainerKind::Queue || out.size() != words(t.element))
@@ -533,8 +560,11 @@ HeapStatus Heap::pop(HeapTypeId type, ContainerToken& value, bool front,
             elements.pop_back();
         std::copy(copied.begin(), copied.end(), out.begin());
         tx.committed = true;
+        removed = true;
         return HeapStatus{HeapError::None, tx.warning()};
     });
+    if (status && removed) recordChange(HeapRoot::container(value));
+    return status;
 }
 HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,
                        std::optional<std::int64_t> index) noexcept {
@@ -545,6 +575,7 @@ HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,
     if (!at) return {HeapError::None, HeapWarning::InvalidIndex};
     c->cells.erase(c->cells.begin() + static_cast<std::ptrdiff_t>(*at));
     changed_ = true;
+    recordChange(HeapRoot::container(value));
     return {};
 }
 HeapStatus Heap::clear(HeapTypeId type, ContainerToken& value) noexcept {

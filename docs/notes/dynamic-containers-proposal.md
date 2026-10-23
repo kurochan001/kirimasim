@@ -16,7 +16,7 @@ no standard text, simulator code or external test was copied.
 The [shared kernel heap](../P1_SUPPORT.md#dynamic-container-foundation) is
 implemented and tested: typed layouts, stable cells, deep copying, bounded
 queue operations, transactional allocation failure and exact tracing with
-generation-checked reuse. Twenty-five kernel tests and the 2,520,000-operation
+generation-checked reuse. Thirty kernel tests and the 2,520,000-operation
 reference run pass. Eight new tests cover nested-bound conversion, actual-type
 snapshots, 432 combinations and transactional failures; six original and six
 additional conversion mutation checks have been caught by actual tests.

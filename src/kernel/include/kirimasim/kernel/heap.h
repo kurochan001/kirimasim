@@ -72,6 +72,16 @@ struct HeapRoot {
     std::uint64_t bits = 0;
     static HeapRoot container(ContainerToken t) { return {Kind::Container, t.bits}; }
     static HeapRoot cell(CellToken t) { return {Kind::Cell, t.bits}; }
+    friend bool operator==(HeapRoot, HeapRoot) = default;
+};
+/// A container dependency means its element sequence/size; a cell
+/// dependency means its value. Observers do not own or root their tokens.
+/// Callbacks must not throw; allocation failure in an observer belongs to
+/// that observer's caller. Changes are announced only after commit.
+/// Observers may inspect values but must not mutate or collect this heap.
+struct HeapHook {
+    void (*fn)(void*, HeapRoot) noexcept = nullptr;
+    void* frame = nullptr;
 };
 struct HeapStats {
     std::uint64_t containers = 0;
@@ -87,6 +97,9 @@ public:
     explicit Heap(std::pmr::memory_resource* memory = std::pmr::new_delete_resource());
     Heap(const Heap&) = delete;
     Heap& operator=(const Heap&) = delete;
+
+    HeapHook setReadHook(HeapHook hook) noexcept;
+    HeapHook setChangeHook(HeapHook hook) noexcept;
 
     HeapResult<HeapLayoutId> addLayout(std::span<const HeapWord> words) noexcept;
     HeapResult<HeapTypeId> addType(HeapType type) noexcept;
@@ -195,6 +208,9 @@ private:
     Pool<Container> containers_;
     Pool<Cell> cells_;
     bool changed_ = false;
+    HeapHook readHook_, changeHook_;
+    void recordRead(HeapRoot root) const noexcept;
+    void recordChange(HeapRoot root) const noexcept;
 
     const HeapType* typeOf(HeapTypeId id) const noexcept;
     const Layout* layoutOf(HeapLayoutId id) const noexcept;

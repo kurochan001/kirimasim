@@ -111,6 +111,8 @@ Collection runs when the heap or root set changes; failed marking sweeps nothing
 No callback runs inside process/guard execution, after termination is requested
 or during final cleanup. SSA temporaries cannot cross waits (SIR_SPEC 5.1).
 Class, DPI and VPI root providers remain future work.
+Heap read/change hooks distinguish structure and cell values after commit;
+scheduler subscriptions and VM monitor capture still need connection.
 Front-end lowering and heap-dependent notifications are
 not connected yet. The
 running SystemVerilog design does not yet use this heap or its collector.

@@ -40,6 +40,14 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('heap observation: size reads lose structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    return {c ? c->cells.size() : 0, {}};', '    return {c ? c->cells.size() : 0, {}};'),
+    ('heap observation: element selection loses structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    if (!c) return {};', '    if (!c) return {};'),
+    ('heap observation: cell reads lose value dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::cell(cell));', '    static_cast<void>(cell);'),
+    ('heap observation: equal normalized writes emit changes', 'src/kernel/heap.cpp', '    if (status && different) recordChange(HeapRoot::cell(cell));', '    if (status) recordChange(HeapRoot::cell(cell));'),
+    ('heap observation: failed insertions emit changes', 'src/kernel/heap.cpp', '    if (status && inserted) recordChange(HeapRoot::container(value));', '    if (!status || inserted) recordChange(HeapRoot::container(value));'),
+    ('heap observation: successful pops lose changes', 'src/kernel/heap.cpp', '    if (status && removed) recordChange(HeapRoot::container(value));', '    if (false && status && removed) recordChange(HeapRoot::container(value));'),
+    ('heap observation: nested transport always emits changes', 'src/kernel/heap.cpp', '    if (different) recordChange(HeapRoot::cell(cell));', '    if (different || cell.bits != 0) recordChange(HeapRoot::cell(cell));'),
+    ('heap observation: callbacks run before value commit', 'src/kernel/heap.cpp', '        cells_.get(cell.bits)->words.swap(copied);', '        recordChange(HeapRoot::cell(cell));\n        cells_.get(cell.bits)->words.swap(copied);'),
     ('container SIR: ref calls require identical queue bounds', "src/sir/verify.cpp",
      '!equivalentValueTypes(d_, ty(i), refType(prm.type.detail))',
      'ty(i) != refType(prm.type.detail)'),

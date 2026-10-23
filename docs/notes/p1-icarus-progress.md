@@ -9,6 +9,38 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Typed heap observation foundation (2026-10-24)
+
+The shared heap now exposes scoped read/change hooks for the dynamic
+monitor mechanism of SCHEDULER_SPEC 9.5. Reads distinguish container element
+sequence/size from individual cell values, including detached cells. Copying,
+snapshots and construction also observe the source cells they read. Unknown
+or out-of-range element selection still records the container structure, so
+future growth can invalidate that observation; empty/stale tokens do not
+fabricate a cell identity. Observations are weak identities, not GC roots.
+
+Committed writes emit a cell notice only after normalization changes its
+stored words; nested owned transport emits one when its handle changes.
+Insertion, push, pop and erase emit container-structure notices after commit.
+Failed operations, invalid indices, empty pops, dropped insertions and equal
+normalized writes emit no changes. Clearing/replacing a variable does not
+mutate the old object; slot/frame binding changes remain a separate dependency.
+Hooks are Context-local and exchange their previous owner. Callbacks must not
+throw, mutate or collect the heap; an observer owns its failure bookkeeping.
+
+Five new kernel tests cover read identities, 40 width/state/kind/entry write
+combinations, three queue bounds, nested transport, allocation failures on
+three mutation paths, hook ownership and isolation. Callback reads verify that
+changed values have already committed. All eight deliberate observation
+mutations were caught by actual assertions after compiling; the restored
+baseline passes. The targeted heap/SIR/VM/negative-source run passes 68 tests.
+The generator preserves all existing suite files and expectations.
+
+This is the observation API, not completed monitor integration. Scheduler
+subscription/reattachment and VM guard capture still need connection; front
+continues to reject SystemVerilog dynamic containers. Full Icarus parity
+remains unproven, and the full goal stays active.
+
 ## Correction: element NBAs are illegal (2026-10-24)
 
 Earlier integration lists below incorrectly treated container-cell NBA targets

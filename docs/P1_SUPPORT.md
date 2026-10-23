@@ -77,7 +77,7 @@ copying, stable element cells, bounded queue mutation and exact tracing.
 Allocation failures roll back new objects; reclaimed entries use generations
 so stale tokens cannot name replacement values. These are kernel APIs,
 covered by [15 original unit tests](../tests/unit/heap_test.cpp),
-[ten conversion/snapshot/descriptor/collection tests](../tests/unit/heap_conversion_test.cpp) and an independent
+[15 conversion/snapshot/descriptor/observation tests](../tests/unit/heap_conversion_test.cpp) and an independent
 [`valsem` container model](../src/valsem/include/kirimasim/valsem/containers.h).
 The 100-sample check passed 2,520,000 operations; all six deliberate heap
 mutations were caught. The heap matrix is included in nightly reference checks.
@@ -113,6 +113,14 @@ held storage. Primitive words are never guessed to be handles. Tests exercise
 cases, 16 deferred-call cases and root-only changes; pool tables stay bounded
 over 100 rounds. Failed marking retains every value. No collection runs inside
 a process callback, after termination is requested or during final cleanup.
+
+The heap also exposes read/change hooks: container structure and individual
+cell values have distinct identities; notifications follow committed changes,
+while equal normalized writes, failed operations and invalid selections do not
+emit changes. Five tests cover 40 write combinations, queue bounds, nested
+values, failures and hook ownership/isolation. Eight observation mutations were
+caught by actual assertions. These APIs are not yet connected to scheduler
+subscriptions or VM guard capture, so heap-dependent waits remain unsupported.
 
 Nonblocking assignment to a dynamically sized array element is illegal
 (6.21, 10.4.2), including through a cell ref. Slang rejects direct source forms;

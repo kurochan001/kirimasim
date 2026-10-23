@@ -194,6 +194,20 @@ This implements roots for the current container SIR, not future class/DPI/VPI
 providers. Front lowering and heap-change notification remain
 unfinished; SystemVerilog dynamic containers are not enabled yet.
 
+The heap observation foundation is implemented with `Heap::setReadHook` and
+`setChangeHook`. Hooks exchange their previous owner and stay within one
+Context. A read records a nonempty container's element sequence/size or a
+particular cell's value. Copying, snapshots and construction observe source
+cells as they read them. Unknown/out-of-range selections record the container
+structure without inventing a cell. Generation-checked observations do not
+keep objects alive. Value notifications compare normalized words and run only
+after a successful commit; queue insertion/removal reports structure changes.
+Failed/no-op operations emit no changes. A clear or replacement changes a
+variable binding, not the old object's contents; its slot/frame publisher must
+supply that dependency. Observer callbacks must not throw, mutate or collect
+the heap. Scheduler subscription/reattachment and VM monitor capture are not
+yet connected; this API alone does not enable dynamic-container waits.
+
 Class, mailbox and weak-reference semantics extend the root descriptors when
 those mechanisms are implemented. Weak references are not marking edges;
 unreachable referents become null. Their remaining details are separate work.
