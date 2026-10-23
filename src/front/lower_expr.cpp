@@ -1599,6 +1599,7 @@ Val Lowerer::lowerRangeSelect(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& rs = e.as<ast::RangeSelectExpression>();
     const ast::Type& vt = rs.value().type->getCanonicalType();
+    if (vt.kind == ast::SymbolKind::QueueType) return lowerQueueSlice(rs, sl);
     if (!vt.isIntegral()) unsupported(sl, "part-select of a value of this type");
     const Val v = lowerExpr(rs.value());
     const Part p = partOf(e);

@@ -3,6 +3,7 @@
 
 // Typed dynamic-container producers (SIR_SPEC 5.8). The shared heap
 // decides copying, bounds, stable cells and method diagnostics.
+#include <algorithm>
 #include <stdexcept>
 
 #include "lowerer.h"
@@ -144,6 +145,84 @@ Val Lowerer::containerIndex(const ast::Expression& e, const Val& receiver, Type 
     }
 }
 
+// Unbounded construction buffers preserve the complete operand sequence;
+// language assignments apply the actual destination's bounds afterwards.
+Type Lowerer::sequenceBufferType(Type element) {
+    for (std::uint32_t i = 0; i < design_.types.size(); ++i) {
+        const auto& row = design_.types[i];
+        if (row.kind == sir::TypeEntryKind::Queue && row.value == element && row.maxElements == 0)
+            return sir::queueType(sir::TypeId{i});
+    }
+    const auto id = sir::TypeId{static_cast<std::uint32_t>(design_.types.size())};
+    sir::TypeEntry row;
+    row.kind = sir::TypeEntryKind::Queue;
+    row.name = "$container" + std::to_string(id.index());
+    row.value = element;
+    design_.types.push_back(std::move(row));
+    return sir::queueType(id);
+}
+
+void Lowerer::appendContainerSequence(Type buffer, const Val& receiver, const Val& source,
+                                      slang::SourceLocation sl) {
+    const auto count = emit(Op::ContainerSize, sir::u2(64), {source.op}, sl);
+    appendContainerRange(buffer, receiver, source, constant(sir::u2(64), 0), count, sl);
+}
+
+void Lowerer::appendContainerRange(Type buffer, const Val& receiver, const Val& source,
+                                   const Val& first, const Val& limit, slang::SourceLocation sl) {
+    const auto element = design_.types[buffer.detail.index()].value;
+    const auto from = design_.types[source.type.detail.index()].value;
+    const auto index = newFrameVar(first.type);
+    emitVoid(Op::Fstore, {Operand::frame(index), first.op}, sl);
+    const auto condition = newBlock(), body = newBlock(), done = newBlock();
+    jump(condition, sl);
+    setBlock(condition);
+    const auto current = emit(Op::Fload, first.type, {Operand::frame(index)}, sl);
+    const auto test = emit(Op::Lt, sir::isFourState(first.type) ? sir::u4(1) : sir::u2(1),
+                           {current.op, limit.op}, sl);
+    terminate(Op::BrIf, {test.op, Operand::block(body), Operand::block(done)}, sl);
+    setBlock(body);
+    const auto value = emit(Op::ContainerRead, from, {source.op, current.op}, sl);
+    emitVoid(Op::QueuePushBack,
+             {Operand::typeRow(buffer.detail), receiver.op, coerce(value, element, sl).op}, sl);
+    const auto next = emit(Op::Add, first.type, {current.op, constant(first.type, 1).op}, sl);
+    emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
+    jump(condition, sl);
+    setBlock(done);
+}
+
+// Queue slices clamp signed bounds without truncating wide unsigned
+// indices. Unknown comparisons take no loop iterations (7.10.1).
+Val Lowerer::lowerQueueSlice(const ast::Expression& expression, slang::SourceLocation sl) {
+    const auto& slice = expression.as<ast::RangeSelectExpression>();
+    if (slice.getSelectionKind() != ast::RangeSelectionKind::Simple)
+        unsupported(sl, "indexed queue slice");
+    const auto source = snapshotValue(lowerExpr(slice.value()), sl);
+    auto first = containerIndex(slice.left(), source, source.type, sl);
+    auto last = containerIndex(slice.right(), source, source.type, sl);
+    const auto width = std::max({65U, first.type.width + (sir::isSigned(first.type) ? 0U : 1U),
+                                 last.type.width + (sir::isSigned(last.type) ? 0U : 1U)});
+    const auto bound = sir::s4(width);
+    first = coerce(first, bound, sl);
+    last = coerce(last, bound, sl);
+    const auto zero = constant(bound, 0), one = constant(bound, 1);
+    const auto count = coerce(emit(Op::ContainerSize, sir::u2(64), {source.op}, sl), bound, sl);
+    const auto end = emit(Op::Sub, bound, {count.op, one.op}, sl);
+    const auto negative = emit(Op::Lt, sir::u4(1), {first.op, zero.op}, sl);
+    first = emit(Op::Select, bound, {negative.op, zero.op, first.op}, sl);
+    const auto excess = emit(Op::Gt, sir::u4(1), {last.op, end.op}, sl);
+    last = emit(Op::Select, bound, {excess.op, end.op, last.op}, sl);
+    const auto limit = emit(Op::Add, bound, {last.op, one.op}, sl);
+    const auto type = unboundedContainerType(typeOf(*slice.type, sl), sl);
+    const auto buffer = sequenceBufferType(design_.types[type.detail.index()].value);
+    const auto storage = newFrameVar(buffer);
+    emitVoid(Op::Fstore, {Operand::frame(storage), constant(buffer, 0).op}, sl);
+    const auto receiver =
+        emit(Op::RefMake, sir::refType(buffer.detail), {Operand::frame(storage)}, sl);
+    appendContainerRange(buffer, receiver, source, first, limit, sl);
+    return coerce(emit(Op::Fload, buffer, {Operand::frame(storage)}, sl), type, sl);
+}
+
 Val Lowerer::lowerContainerValue(const ast::Expression& e) {
     const auto sl = e.sourceRange.start();
     const auto type = unboundedContainerType(typeOf(*e.type, sl), sl);
@@ -179,13 +258,35 @@ Val Lowerer::lowerContainerValue(const ast::Expression& e) {
         }
     }
     if (e.kind == ast::ExpressionKind::Concatenation) {
-        std::vector<Operand> values;
+        const auto buffer = sequenceBufferType(element);
+        const auto storage = newFrameVar(buffer);
+        emitVoid(Op::Fstore, {Operand::frame(storage), constant(buffer, 0).op}, sl);
+        const auto receiver =
+            emit(Op::RefMake, sir::refType(buffer.detail), {Operand::frame(storage)}, sl);
+        const auto& languageElement = *e.type->getArrayElementType();
         for (const auto* item : e.as<ast::ConcatenationExpression>().operands()) {
-            if (isDynamicContainer(*item->type) && !sir::isContainer(element))
-                unsupported(sl, "concatenation containing a runtime-sized array value");
-            values.push_back(snapshotValue(coerce(lowerExpr(*item), element, sl), sl).op);
+            // Slang has assignment-converted single elements, including
+            // nested arrays. Only the remaining array operands are flattened.
+            if (languageElement.isEquivalent(*item->type)) {
+                const auto value = coerce(lowerExpr(*item), element, sl);
+                emitVoid(Op::QueuePushBack,
+                         {Operand::typeRow(buffer.detail), receiver.op, value.op}, sl);
+            } else if (isDynamicContainer(*item->type)) {
+                const auto source = snapshotValue(lowerExpr(*item), sl);
+                appendContainerSequence(buffer, receiver, source, sl);
+            } else if (const auto source = arrayTarget(*item)) {
+                std::vector<Place> places;
+                arrayPlaces(baseOf(*source), source->indices, places);
+                for (const auto& place : places) {
+                    const auto value = coerce(loadPlace(place, sl), element, sl);
+                    emitVoid(Op::QueuePushBack,
+                             {Operand::typeRow(buffer.detail), receiver.op, value.op}, sl);
+                }
+            } else {
+                unsupported(sl, "unpacked concatenation operand of this form");
+            }
         }
-        return emit(Op::ContainerPack, type, std::move(values), sl);
+        return coerce(emit(Op::Fload, buffer, {Operand::frame(storage)}, sl), type, sl);
     }
     unsupported(sl, "dynamic container value of this expression kind");
 }

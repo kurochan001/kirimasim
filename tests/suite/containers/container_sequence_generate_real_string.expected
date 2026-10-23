@@ -1,0 +1,3 @@
+real 1.5 9.5 3.5
+string alpha changed delta
+string_slice beta slice gamma

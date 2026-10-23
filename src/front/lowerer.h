@@ -191,6 +191,12 @@ public:
     sir::Type unboundedContainerType(sir::Type, slang::SourceLocation);
     Val snapshotValue(const Val& value, slang::SourceLocation sl);
     Val lowerContainerValue(const ast::Expression& e);
+    Val lowerQueueSlice(const ast::Expression&, slang::SourceLocation);
+    sir::Type sequenceBufferType(sir::Type element);
+    void appendContainerSequence(sir::Type buffer, const Val& receiver, const Val& source,
+                                 slang::SourceLocation sl);
+    void appendContainerRange(sir::Type buffer, const Val& receiver, const Val& source,
+                              const Val& first, const Val& limit, slang::SourceLocation sl);
     std::optional<Val> lowerContainerMethod(const ast::CallExpression& call,
                                             slang::SourceLocation sl);
     Val containerReference(const ast::Expression& e, bool isConst, slang::SourceLocation sl);

@@ -1,0 +1,1 @@
+container_sequence_interface_source_selection.sv:19:48: warning: 'calls' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

@@ -1,0 +1,1 @@
+container_sequence_static_task_evaluation.sv:28:14: warning: 'q' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

@@ -1,0 +1,16 @@
+concat 8 1 1 1 1
+copy 1
+slice 2 1 1
+slice_copy 1
+clamp 3
+wide_high 3
+wide_low 0
+wide_mixed 0
+unknown_low 0
+unknown_high 0
+negative 2
+reversed 0
+last 1 1
+outside 0
+empty_slice 0
+empty_operand 2 1

@@ -1,0 +1,1 @@
+container_sequence_fork_source_selection.sv:22:53: warning: 'calls' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
