@@ -11,7 +11,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Typed heap observation foundation (2026-10-24)
 
-The shared heap now exposes scoped read/change hooks for the dynamic
+Source revision `2c674a6` exposes heap read/change hooks for the dynamic
 monitor mechanism of SCHEDULER_SPEC 9.5. Reads distinguish container element
 sequence/size from individual cell values, including detached cells. Copying,
 snapshots and construction also observe the source cells they read. Unknown
@@ -36,6 +36,30 @@ mutations were caught by actual assertions after compiling; the restored
 baseline passes. The targeted heap/SIR/VM/negative-source run passes 68 tests.
 The generator preserves all existing suite files and expectations.
 
+Full local CI at `2c674a6` passes configure/build/test for dev, release, ASan
+and UBSan. Dev/ASan/UBSan each run 2,165 tests: 2,163 pass and the same two
+known skips remain. Release runs 2,166: 2,164 pass, two skip. Release flags,
+banned features, SPDX, suite files, global state, expectation protection for
+both unpublished source commits, README counts, clang-format and clang-tidy
+all pass. Changed unit assertions are flagged for review; the cell-NBA test
+keeps the unchanged-value check and strengthens its exact prohibition/position
+check. There are 30 heap tests and 22 container VM tests. Local documentation
+targets were checked: 263 exist, none missing.
+
+The original extended inventory was rerun at `2c674a6`: 44 probes and
+23 Icarus-passing gaps remain. Both compiler and runtime report
+`14.0 (devel) (s20260301-411-gca6b8d376)`. Exact-13.0 and complete parity remain
+unconfirmed. `--require-parity` returns 1 because gaps remain. Reproduce:
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/heap-observation-icarus-probes.json --require-parity
+```
+
+External sv-tests/population and performance figures retain their dated
+revisions; this run does not remeasure them.
+
 This is the observation API, not completed monitor integration. Scheduler
 subscription/reattachment and VM guard capture still need connection; front
 continues to reject SystemVerilog dynamic containers. Full Icarus parity
@@ -56,6 +80,18 @@ VM's two original SIR cases now name the prohibition and check its source
 position while preserving the unchanged-value assertions. Element NBA execution
 remains rejected. The earlier statements calling it unfinished work are
 superseded by this correction; heap-dependent waits remain genuine work.
+
+Compiler-only comparison of those same six original negative cases with
+Icarus `14.0 (devel) (s20260301-411-gca6b8d376)` gives exit 0 for the two whole
+element targets, and compiler abort/exit 134 for the four bit/part targets.
+Runtime behavior of the accepted negative cases is unconfirmed. These are
+acceptance/diagnostic differences, not evidence that an illegal construct
+must become a kirimasim execution feature; strict slang diagnostics remain.
+Recheck the legal-side rejection with:
+
+```sh
+ctest --preset dev -R '^suite/illegal/nba_(dynamic_array|queue)_' --output-on-failure
+```
 
 ## Automatic typed-root collection (2026-10-24)
 

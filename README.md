@@ -123,9 +123,9 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI run at revision `71ee082` on 2026-10-24 passed
+The local CI run at revision `2c674a6` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,154 tests: 2,152 pass and the same two known skips remain.
+clang-tidy. Dev has 2,165 tests: 2,163 pass and the same two known skips remain.
 The extended comparison was also rerun: 44 probes and 23 Icarus-passing gaps
 remain. See the [validation record](docs/notes/p1-icarus-progress.md).
 The external sv-tests/population counts and performance measurements below
