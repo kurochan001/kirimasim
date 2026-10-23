@@ -64,19 +64,19 @@ template <class T> const T* Heap::Pool<T>::get(std::uint64_t token) const noexce
 template <class T>
 std::uint64_t Heap::Pool<T>::add(T value, std::pmr::vector<std::uint32_t>& allocated) {
     std::uint32_t index = 0;
-    if (free.empty()) {
+    if (freeCount == 0) {
         if (entries.size() >= std::numeric_limits<std::uint32_t>::max()) throw std::bad_alloc{};
-        // Reserve the eventual free-list entry BEFORE changing the pool, so
+        // Size the free-list storage BEFORE changing the pool, so
         // rollback and sweeping never need to allocate memory.
-        if (free.capacity() < entries.size() + 1)
-            free.reserve(std::max(entries.size() + 1, free.capacity() * 2));
+        if (free.size() < entries.size() + 1)
+            free.resize(std::max(entries.size() + 1, free.size() * 2));
         index = static_cast<std::uint32_t>(entries.size());
         allocated.push_back(index);
         entries.emplace_back();
     } else {
-        index = free.back();
+        index = free[freeCount - 1];
         allocated.push_back(index);
-        free.pop_back();
+        --freeCount;
     }
     Entry<T>& e = entries[index];
     e.value.emplace(std::move(value));
@@ -90,7 +90,7 @@ template <class T> void Heap::Pool<T>::release(std::uint32_t index) noexcept {
     // Retire an entry rather than ever wrapping its generation.
     if (e.generation == std::numeric_limits<std::uint32_t>::max()) return;
     ++e.generation;
-    free.push_back(index);
+    free[freeCount++] = index;
 }
 
 Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(h.memory_) {}
@@ -259,19 +259,19 @@ CellToken Heap::cloneCell(Transaction& tx, HeapLayoutId layout, std::span<const 
     auto words = cloneWords(tx, layout, data);
     return {cells_.add(Cell{layout, std::move(words)}, tx.cells)};
 }
-HeapResult<ContainerToken> Heap::construct(HeapTypeId type, std::int64_t size,
+HeapResult<ContainerToken> Heap::construct(HeapTypeId type, std::optional<std::int64_t> size,
                                            ContainerToken initializer) noexcept {
     return protectValue<ContainerToken>([&] {
         const HeapType* t = typeOf(type);
         if (!t || t->kind != ContainerKind::DynamicArray) throw HeapFault{HeapError::InvalidType};
-        if (size < 0) throw HeapFault{HeapError::InvalidSize};
+        if (!size || *size < 0) throw HeapFault{HeapError::InvalidSize};
         if (initializer.bits != 0) {
             const Container* src = containers_.get(initializer.bits);
             if (!src || types_[src->type.index()].element != t->element)
                 throw HeapFault{HeapError::InvalidHandle};
         }
         Transaction tx(*this);
-        const ContainerToken out = clone(tx, type, initializer, static_cast<std::uint64_t>(size));
+        const ContainerToken out = clone(tx, type, initializer, static_cast<std::uint64_t>(*size));
         tx.committed = true;
         return out;
     });
@@ -477,6 +477,8 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
         while (!work.empty()) {
             const HeapRoot root = work.back();
             work.pop_back();
+            if (root.kind != HeapRoot::Kind::Container && root.kind != HeapRoot::Kind::Cell)
+                return failure(HeapError::InvalidType);
             if (root.bits == 0) continue;
             if (root.kind == HeapRoot::Kind::Container) {
                 const Container* c = containers_.get(root.bits);

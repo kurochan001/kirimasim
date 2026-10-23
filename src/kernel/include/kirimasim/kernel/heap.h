@@ -92,10 +92,11 @@ public:
     HeapResult<HeapTypeId> addType(HeapType type) noexcept;
     [[nodiscard]] std::size_t words(HeapLayoutId layout) const noexcept;
 
+    /// A missing (X/Z) or negative construction size gives InvalidSize.
     /// Construction and whole-value copying always make independent cells,
     /// even on same-size resize and self-assignment. On failure, no token is
     /// published and all newly allocated objects are rolled back.
-    HeapResult<ContainerToken> construct(HeapTypeId type, std::int64_t size,
+    HeapResult<ContainerToken> construct(HeapTypeId type, std::optional<std::int64_t> size,
                                          ContainerToken initializer = {}) noexcept;
     HeapResult<ContainerToken> copy(HeapTypeId destination, ContainerToken source) noexcept;
     HeapResult<ContainerToken> fromValues(HeapTypeId type, std::span<const W4> values) noexcept;
@@ -152,6 +153,7 @@ private:
         explicit Pool(std::pmr::memory_resource* memory) : entries(memory), free(memory) {}
         std::pmr::vector<Entry<T>> entries;
         std::pmr::vector<std::uint32_t> free;
+        std::size_t freeCount = 0;
         T* get(std::uint64_t token) noexcept;
         const T* get(std::uint64_t token) const noexcept;
         std::uint64_t add(T value, std::pmr::vector<std::uint32_t>& allocated);

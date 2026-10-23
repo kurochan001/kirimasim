@@ -369,7 +369,7 @@ follows explicit container/cell roots, retains reachable detached cells and
 reuses reclaimed entries with new generations. Marking failure performs no
 sweep. The caller must supply all roots at an allowed safe point.
 
-Fourteen new kernel tests include 56 integral width/domain/bound combinations
+Fifteen new kernel tests include 56 integral width/domain/bound combinations
 and 450 operations each (25,200 total), compared after every operation and
 collection with the independent list-based `valsem::ContainerValue` model.
 Other tests cover 2,500 nested levels, real/shortreal/string/aggregate layouts,
@@ -378,7 +378,16 @@ construction/copy/mutation/marking, 4,096 table-reuse cycles and two isolated
 Contexts. Six deliberate mutations (wrong cell, shared nested value, leaked
 rollback cells, missed marking edge, ignored generation and wrong insertion
 position) were all caught by actual kernel tests, excluding helper checks.
-The restored baseline passes.
+The restored baseline passes. A 100-sample run seeded with `20261023` also
+passes 2,520,000 operations; independent samples keep its cost proportional
+to the scale. The nightly reference gate now includes the heap tests.
+
+Reclamation and rollback use pre-sized free-list storage and indexed writes,
+so their no-allocation contract is structural. A further fault-injection test
+reuses reclaimed entries, fails partway through copying and retries before
+collection, checking old reference contents and stale-token rejection. Missing
+(X/Z) construction sizes return InvalidSize; invalid root kinds are rejected
+even with token zero.
 
 This is the shared kernel foundation. The front end and execution tiers are
 not connected to these heap operations yet; SystemVerilog dynamic-array/queue

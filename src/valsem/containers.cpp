@@ -41,6 +41,7 @@ void ContainerValue::write(std::optional<std::int64_t> index, const Value& value
 }
 std::vector<Value> ContainerValue::values() const {
     std::vector<Value> out;
+    out.reserve(order_.size());
     for (const std::uint64_t cell : order_)
         out.push_back(readReference(cell));
     return out;
@@ -64,7 +65,7 @@ bool ContainerValue::insert(std::optional<std::int64_t> index, const Value& valu
     return true;
 }
 bool ContainerValue::erase(std::optional<std::int64_t> index) {
-    if (reference(index) == 0) return false;
+    if (!index || *index < 0 || static_cast<std::uint64_t>(*index) >= order_.size()) return false;
     order_.erase(order_.begin() + static_cast<std::ptrdiff_t>(*index));
     return true;
 }

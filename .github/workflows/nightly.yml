@@ -251,7 +251,7 @@ jobs:
         run: |
           KIRIMA_FUZZ_SCALE=100 KIRIMA_FUZZ_SEED=$(date -u +%Y%m%d) \
             build/release/tests/unit/kirimasim_unit_tests \
-            --gtest_filter='W4Ops.*:Valsem.*:Scheduler.*'
+            --gtest_filter='W4Ops.*:Valsem.*:Scheduler.*:Heap.*'
 
       # Also cross-check values of any width, including multiple words,
       # at the same scale. Keep the fixed P1 gate above separate.

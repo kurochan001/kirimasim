@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "fuzz.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/valsem/containers.h"
 #include "kirimasim/valsem/value.h"
@@ -39,17 +40,23 @@ std::vector<W4> encoded(const vs::Value& value) {
     std::vector<std::uint64_t> a, b;
     vs::toWords(value, a, b);
     std::vector<W4> out;
+    out.reserve(a.size());
     for (std::size_t i = 0; i < a.size(); ++i)
         out.push_back({a[i], b[i]});
     return out;
 }
-void expectWords(std::span<const W4> got, std::span<const W4> want) {
-    ASSERT_EQ(got.size(), want.size());
-    for (std::size_t i = 0; i < got.size(); ++i) {
-        EXPECT_EQ(got[i].a, want[i].a) << i;
-        EXPECT_EQ(got[i].b, want[i].b) << i;
-    }
+::testing::AssertionResult sameWords(std::span<const W4> got, std::span<const W4> want) {
+    if (got.size() != want.size())
+        return ::testing::AssertionFailure()
+               << "word count " << got.size() << " != " << want.size();
+    for (std::size_t i = 0; i < got.size(); ++i)
+        if (got[i].a != want[i].a || got[i].b != want[i].b)
+            return ::testing::AssertionFailure()
+                   << "word " << i << ": (" << got[i].a << ',' << got[i].b << ") != (" << want[i].a
+                   << ',' << want[i].b << ')';
+    return ::testing::AssertionSuccess();
 }
+
 HeapLayoutId scalar(Heap& h) {
     const std::array<HeapWord, 1> words{{{~std::uint64_t{0}, false, {0, 0}, kNone}}};
     const auto result = h.addLayout(words);
@@ -125,6 +132,7 @@ TEST(Heap, DescriptorAndHandleValidation) {
     const HeapTypeId a = arrayType(h, l), q = queueType(h, l);
     EXPECT_EQ(h.construct(q, 3).status.error, HeapError::InvalidType);
     EXPECT_EQ(h.construct(a, -1).status.error, HeapError::InvalidSize);
+    EXPECT_EQ(h.construct(a, std::nullopt).status.error, HeapError::InvalidSize);
     EXPECT_EQ(h.construct(a, std::numeric_limits<std::int64_t>::max()).status.error,
               HeapError::ResourceLimit);
     EXPECT_EQ(h.construct(HeapTypeId{100}, 1).status.error, HeapError::InvalidType);
@@ -141,129 +149,137 @@ TEST(Heap, IntegralOperationsAndStableReferencesMatchIndependentModel) {
         for (const bool four : {false, true}) {
             for (const unsigned capacity : {0U, 1U, 4U, 17U}) {
                 SCOPED_TRACE(::testing::Message() << width << '/' << four << '/' << capacity);
-                Heap h;
-                const auto l = h.addLayout(integralLayout(width, four));
-                ASSERT_TRUE(l);
-                const HeapTypeId a = arrayType(h, l.value);
-                const HeapTypeId q = queueType(h, l.value, capacity);
-                const auto initial =
-                    vs::filled(four ? vs::Logic::X : vs::Logic::Zero, width, false);
-                vs::ContainerValue am(initial);
-                vs::ContainerValue qm(initial, capacity ? std::optional<std::size_t>{capacity}
-                                                        : std::nullopt);
-                ContainerToken av, qv;
-                struct Ref {
-                    CellToken actual;
-                    std::uint64_t model;
-                    bool queue;
-                };
-                std::vector<Ref> refs;
-                std::mt19937_64 random(5091);
-                std::vector<W4> out((width + 63) / 64);
-                for (unsigned round = 0; round < 450; ++round) {
-                    std::vector<std::uint64_t> aw(out.size()), bw(out.size());
-                    for (std::size_t k = 0; k < aw.size(); ++k) {
-                        aw[k] = random();
-                        bw[k] = random();
-                    }
-                    auto v = vs::fromWords(aw, bw, width, false);
-                    if (!four) v = vs::to2(v);
-                    const auto data = encoded(v);
-                    const bool isQueue = (random() & 1U) != 0;
-                    auto& model = isQueue ? qm : am;
-                    auto& container = isQueue ? qv : av;
-                    const HeapTypeId type = isQueue ? q : a;
-                    const std::int64_t i =
-                        static_cast<std::int64_t>(random() % (model.size() + 5)) - 2;
-                    const auto index =
-                        random() % 9 == 0 ? std::nullopt : std::optional<std::int64_t>{i};
-                    switch (random() % 10) {
-                        case 0: {
-                            const auto n = static_cast<std::int64_t>(random() % 12);
-                            const bool keep = (random() & 1U) != 0;
-                            const auto made = h.construct(a, n, keep ? av : ContainerToken{});
-                            ASSERT_TRUE(made);
-                            av = made.value;
-                            am.resize(static_cast<std::size_t>(n), keep);
-                            break;
+                for (std::uint64_t sample = 0; sample < kirimasim::test::fuzzScale(); ++sample) {
+                    SCOPED_TRACE(sample);
+                    Heap h;
+                    const auto l = h.addLayout(integralLayout(width, four));
+                    ASSERT_TRUE(l);
+                    const HeapTypeId a = arrayType(h, l.value);
+                    const HeapTypeId q = queueType(h, l.value, capacity);
+                    const auto initial =
+                        vs::filled(four ? vs::Logic::X : vs::Logic::Zero, width, false);
+                    vs::ContainerValue am(initial);
+                    vs::ContainerValue qm(initial, capacity ? std::optional<std::size_t>{capacity}
+                                                            : std::nullopt);
+                    ContainerToken av, qv;
+                    struct Ref {
+                        CellToken actual;
+                        std::uint64_t model;
+                        bool queue;
+                    };
+                    std::vector<Ref> refs;
+                    const auto seed =
+                        kirimasim::test::fuzzSeed(5091 + sample * 0x9e3779b97f4a7c15ULL);
+                    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+                    std::mt19937_64 random(seed);
+                    std::vector<W4> out((width + 63) / 64);
+                    for (unsigned round = 0; round < 450; ++round) {
+                        std::vector<std::uint64_t> aw(out.size()), bw(out.size());
+                        for (std::size_t k = 0; k < aw.size(); ++k) {
+                            aw[k] = random();
+                            bw[k] = random();
                         }
-                        case 1:
-                            ASSERT_TRUE(h.write(type, container, index, data));
-                            model.write(index, v, isQueue);
-                            break;
-                        case 2: {
-                            const auto ref = h.cell(type, container, index);
-                            ASSERT_TRUE(ref);
-                            refs.push_back({ref.value, model.reference(index), isQueue});
-                            break;
-                        }
-                        case 3:
-                            if (!refs.empty()) {
-                                const Ref r = refs[random() % refs.size()];
-                                ASSERT_TRUE(h.writeCell(l.value, r.actual, data));
-                                (r.queue ? qm : am).writeReference(r.model, v);
+                        auto v = vs::fromWords(aw, bw, width, false);
+                        if (!four) v = vs::to2(v);
+                        const auto data = encoded(v);
+                        const bool isQueue = (random() & 1U) != 0;
+                        auto& model = isQueue ? qm : am;
+                        auto& container = isQueue ? qv : av;
+                        const HeapTypeId type = isQueue ? q : a;
+                        const std::int64_t i =
+                            static_cast<std::int64_t>(random() % (model.size() + 5)) - 2;
+                        const auto index =
+                            random() % 9 == 0 ? std::nullopt : std::optional<std::int64_t>{i};
+                        switch (random() % 10) {
+                            case 0: {
+                                const auto n = static_cast<std::int64_t>(random() % 12);
+                                const bool keep = (random() & 1U) != 0;
+                                const auto made = h.construct(a, n, keep ? av : ContainerToken{});
+                                ASSERT_TRUE(made);
+                                av = made.value;
+                                am.resize(static_cast<std::size_t>(n), keep);
+                                break;
                             }
-                            break;
-                        case 4:
-                            ASSERT_TRUE(h.insert(q, qv, index, data));
-                            (void)qm.insert(index, v);
-                            break;
-                        case 5:
-                            ASSERT_TRUE(h.erase(q, qv, index));
-                            (void)qm.erase(index);
-                            break;
-                        case 6: {
-                            const bool front = (random() & 1U) != 0;
-                            ASSERT_TRUE(h.pop(q, qv, front, out));
-                            expectWords(out, encoded(qm.pop(front)));
-                            break;
+                            case 1:
+                                ASSERT_TRUE(h.write(type, container, index, data));
+                                model.write(index, v, isQueue);
+                                break;
+                            case 2: {
+                                const auto ref = h.cell(type, container, index);
+                                ASSERT_TRUE(ref);
+                                refs.push_back({ref.value, model.reference(index), isQueue});
+                                break;
+                            }
+                            case 3:
+                                if (!refs.empty()) {
+                                    const Ref r = refs[random() % refs.size()];
+                                    ASSERT_TRUE(h.writeCell(l.value, r.actual, data));
+                                    (r.queue ? qm : am).writeReference(r.model, v);
+                                }
+                                break;
+                            case 4:
+                                ASSERT_TRUE(h.insert(q, qv, index, data));
+                                (void)qm.insert(index, v);
+                                break;
+                            case 5:
+                                ASSERT_TRUE(h.erase(q, qv, index));
+                                (void)qm.erase(index);
+                                break;
+                            case 6: {
+                                const bool front = (random() & 1U) != 0;
+                                ASSERT_TRUE(h.pop(q, qv, front, out));
+                                ASSERT_TRUE(sameWords(out, encoded(qm.pop(front))));
+                                break;
+                            }
+                            case 7: {
+                                const auto copied = h.copy(type, container);
+                                ASSERT_TRUE(copied);
+                                container = copied.value;
+                                model.replace(model.values());
+                                break;
+                            }
+                            case 8:
+                                ASSERT_TRUE(h.clear(type, container));
+                                model.clear();
+                                break;
+                            default: {
+                                const auto at = static_cast<std::int64_t>(qm.size());
+                                ASSERT_TRUE(h.insert(q, qv, at, data));
+                                (void)qm.insert(at, v);
+                                break;
+                            }
                         }
-                        case 7: {
-                            const auto copied = h.copy(type, container);
-                            ASSERT_TRUE(copied);
-                            container = copied.value;
-                            model.replace(model.values());
-                            break;
+                        // Collect with each kind of live root after every operation.
+                        std::vector<HeapRoot> roots{HeapRoot::container(av),
+                                                    HeapRoot::container(qv)};
+                        for (const Ref& r : refs)
+                            roots.push_back(HeapRoot::cell(r.actual));
+                        ASSERT_TRUE(h.collect(roots));
+                        for (const bool queue : {false, true}) {
+                            auto& m = queue ? qm : am;
+                            const auto c = queue ? qv : av;
+                            const auto t = queue ? q : a;
+                            const auto size = h.size(t, c);
+                            ASSERT_TRUE(size);
+                            ASSERT_EQ(size.value, m.size());
+                            for (std::int64_t at = -1; at <= static_cast<std::int64_t>(m.size());
+                                 ++at) {
+                                ASSERT_TRUE(h.read(t, c, at, out));
+                                ASSERT_TRUE(sameWords(out, encoded(m.read(at))));
+                            }
+                            ASSERT_TRUE(h.read(t, c, std::nullopt, out));
+                            ASSERT_TRUE(sameWords(out, encoded(initial)));
                         }
-                        case 8:
-                            ASSERT_TRUE(h.clear(type, container));
-                            model.clear();
-                            break;
-                        default: {
-                            const auto at = static_cast<std::int64_t>(qm.size());
-                            ASSERT_TRUE(h.insert(q, qv, at, data));
-                            (void)qm.insert(at, v);
-                            break;
+                        for (const Ref& r : refs) {
+                            ASSERT_TRUE(h.readCell(l.value, r.actual, out));
+                            ASSERT_TRUE(sameWords(
+                                out, encoded((r.queue ? qm : am).readReference(r.model))));
                         }
                     }
-                    // Collect with each kind of live root after every operation.
-                    std::vector<HeapRoot> roots{HeapRoot::container(av), HeapRoot::container(qv)};
-                    for (const Ref& r : refs)
-                        roots.push_back(HeapRoot::cell(r.actual));
-                    ASSERT_TRUE(h.collect(roots));
-                    for (const bool queue : {false, true}) {
-                        auto& m = queue ? qm : am;
-                        const auto c = queue ? qv : av;
-                        const auto t = queue ? q : a;
-                        const auto size = h.size(t, c);
-                        ASSERT_TRUE(size);
-                        ASSERT_EQ(size.value, m.size());
-                        for (std::int64_t at = -1; at <= static_cast<std::int64_t>(m.size());
-                             ++at) {
-                            ASSERT_TRUE(h.read(t, c, at, out));
-                            expectWords(out, encoded(m.read(at)));
-                        }
-                        ASSERT_TRUE(h.read(t, c, std::nullopt, out));
-                        expectWords(out, encoded(initial));
-                    }
-                    for (const Ref& r : refs) {
-                        ASSERT_TRUE(h.readCell(l.value, r.actual, out));
-                        expectWords(out, encoded((r.queue ? qm : am).readReference(r.model)));
-                    }
+                    ASSERT_TRUE(h.collect({}));
+                    EXPECT_EQ(h.stats().cells, 0U);
+                    EXPECT_EQ(h.stats().containers, 0U);
                 }
-                ASSERT_TRUE(h.collect({}));
-                EXPECT_EQ(h.stats().cells, 0U);
-                EXPECT_EQ(h.stats().containers, 0U);
             }
         }
     }
@@ -462,7 +478,7 @@ TEST(Heap, MixedElementLayoutDefaultsAndNormalization) {
     EXPECT_EQ(h.write(type, value, 0, invalid).error, HeapError::InvalidHandle);
     std::array<W4, 6> after{};
     ASSERT_TRUE(h.read(type, value, 0, after));
-    expectWords(after, out);
+    ASSERT_TRUE(sameWords(after, out));
 }
 
 TEST(Heap, DeepNestedCopyAndTracingUseNoNativeRecursion) {
@@ -521,6 +537,53 @@ TEST(Heap, AllocationFailureRollsBackEveryConstructionAndCopyStage) {
         }
         EXPECT_TRUE(completed);
     }
+}
+
+TEST(Heap, RollbackDuringReusedEntryAllocationPreservesRoots) {
+    bool completed = false;
+    for (std::size_t point = 0; point < 300; ++point) {
+        SCOPED_TRACE(point);
+        FailingMemory memory;
+        Heap h(&memory);
+        const auto n = nested(h);
+        const auto array = arrayType(h, n.leaf);
+        ContainerToken stale;
+        for (unsigned i = 0; i < 4; ++i)
+            stale = values(h, n.innerType, {11, 13, 17, 19});
+        const auto detached = h.cell(n.innerType, stale, 2).value;
+        const auto staleCell = h.cell(n.innerType, stale, 0).value;
+        const std::array<HeapRoot, 3> roots{
+            {HeapRoot::container(n.inner), HeapRoot::container(n.value), HeapRoot::cell(detached)}};
+        ASSERT_TRUE(h.collect(roots));
+        const auto before = h.stats();
+        memory.arm(point);
+        const auto made = h.copy(n.outerType, n.value);
+        memory.disarm();
+        if (made) {
+            completed = true;
+        } else {
+            EXPECT_EQ(made.status.error, HeapError::ResourceLimit);
+            EXPECT_EQ(h.stats().containers, before.containers);
+            EXPECT_EQ(h.stats().cells, before.cells);
+        }
+        // Reuse the rolled-back entries immediately, before any collection.
+        const auto retry = h.construct(array, 12, n.inner);
+        ASSERT_TRUE(retry);
+        EXPECT_EQ(at(h, array, retry.value, 1), 5U);
+        EXPECT_EQ(h.size(n.innerType, stale).status.error, HeapError::InvalidHandle);
+        std::array<W4, 1> out{};
+        EXPECT_EQ(h.readCell(n.leaf, staleCell, out).error, HeapError::InvalidHandle);
+        ASSERT_TRUE(h.readCell(n.leaf, detached, out));
+        EXPECT_EQ(out[0].a, 17U);
+        ASSERT_TRUE(h.collect(roots));
+        EXPECT_EQ(h.stats().containers, before.containers);
+        EXPECT_EQ(h.stats().cells, before.cells);
+        if (completed) {
+            EXPECT_GT(point, 5U);
+            break;
+        }
+    }
+    EXPECT_TRUE(completed);
 }
 
 TEST(Heap, AllocationFailureLeavesMutationAndOutputUnchanged) {
@@ -608,6 +671,8 @@ TEST(Heap, InvalidRootDoesNotPartiallyCollect) {
     const std::array<HeapRoot, 2> roots{
         {HeapRoot::container(ContainerToken{1}), HeapRoot::container(live)}};
     EXPECT_EQ(h.collect(roots).error, HeapError::InvalidHandle);
+    const HeapRoot invalid{static_cast<HeapRoot::Kind>(255), 0};
+    EXPECT_EQ(h.collect(std::array<HeapRoot, 1>{{invalid}}).error, HeapError::InvalidType);
     EXPECT_EQ(at(h, a, garbage, 0), 99U);
     EXPECT_EQ(h.stats().cells, 3U);
     ASSERT_TRUE(h.collect(std::array<HeapRoot, 1>{{HeapRoot::container(live)}}));
