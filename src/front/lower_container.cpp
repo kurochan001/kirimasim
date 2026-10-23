@@ -3,6 +3,8 @@
 
 // Typed dynamic-container producers (SIR_SPEC 5.8). The shared heap
 // decides copying, bounds, stable cells and method diagnostics.
+#include <cassert>
+
 #include "lowerer.h"
 
 #include "slang/ast/ASTVisitor.h"
@@ -17,10 +19,10 @@ using sir::Op;
 using sir::Operand;
 using sir::Type;
 
-const ast::Expression& methodReceiver(const ast::Expression& e) {
-    if (e.kind == ast::ExpressionKind::Assignment &&
-        e.as<ast::AssignmentExpression>().isLValueArg())
-        return e.as<ast::AssignmentExpression>().left();
+const ast::Expression* methodReceiver(const ast::Expression* e) {
+    if (e->kind == ast::ExpressionKind::Assignment &&
+        e->as<ast::AssignmentExpression>().isLValueArg())
+        return &e->as<ast::AssignmentExpression>().left();
     return e;
 }
 }  // namespace
@@ -81,11 +83,11 @@ Type Lowerer::unboundedContainerType(Type type, slang::SourceLocation sl) {
     return type;
 }
 
-Val Lowerer::snapshotValue(Val value, slang::SourceLocation sl) {
+Val Lowerer::snapshotValue(const Val& value, slang::SourceLocation sl) {
     return sir::isContainer(value.type) ? emit(Op::ContainerSnapshot, value.type, {value.op}, sl)
                                         : value;
 }
-Val Lowerer::copyValue(Val value, Type destination, slang::SourceLocation sl) {
+Val Lowerer::copyValue(const Val& value, Type destination, slang::SourceLocation sl) {
     if (sir::isContainer(destination)) return emit(Op::ContainerCopy, destination, {value.op}, sl);
     return coerce(value, destination, sl);
 }
@@ -94,6 +96,7 @@ Val Lowerer::referencePlace(const Place& place, bool isConst, slang::SourceLocat
     const auto type =
         sir::refType(sir::isContainer(place.type) ? place.type.detail : sir::TypeId{sir::kNone});
     if (place.home == Place::Home::Heap) {
+        assert(place.receiver.has_value());
         if (place.kind != Place::Kind::Element)
             unsupported(sl, "reference to a packed part of a dynamic element");
         return emit(
@@ -169,6 +172,7 @@ Val Lowerer::lowerContainerValue(const ast::Expression& e) {
             std::vector<Place> elements;
             arrayPlaces(baseOf(*array), array->indices, elements);
             std::vector<Operand> values;
+            values.reserve(elements.size());
             for (const auto& place : elements)
                 values.push_back(snapshotValue(coerce(loadPlace(place, sl), element, sl), sl).op);
             return emit(Op::ContainerPack, type, std::move(values), sl);
@@ -190,7 +194,7 @@ std::optional<Val> Lowerer::lowerContainerMethod(const ast::CallExpression& call
                                                  slang::SourceLocation sl) {
     if (!call.isSystemCall() || call.arguments().empty()) return std::nullopt;
     const auto args = call.arguments();
-    const auto& self = methodReceiver(*args[0]);
+    const auto& self = *methodReceiver(args[0]);
     if (!isDynamicContainer(*self.type)) return std::nullopt;
     const std::string_view name = call.getSubroutineName();
     const auto& builtin = std::get<ast::CallExpression::SystemCallInfo>(call.subroutine);

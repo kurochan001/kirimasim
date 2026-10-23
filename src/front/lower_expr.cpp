@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <cassert>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
@@ -2989,6 +2990,7 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
 
 Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
     if (p.home == Place::Home::Heap) {
+        assert(p.receiver.has_value());
         const auto container = emit(Op::LoadRef, p.container, {p.receiver->op}, sl);
         auto value = emit(Op::ContainerRead, p.heapElement, {container.op, p.indices[0]}, sl);
         if (p.kind == Place::Kind::Bits) {
@@ -3061,6 +3063,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         return;
     }
     if (p.home == Place::Home::Heap) {
+        assert(p.receiver.has_value());
         if (nonblocking)
             error(sl, "nonblocking assignment to a dynamically sized array element is illegal");
         if (p.kind == Place::Kind::Bits) {

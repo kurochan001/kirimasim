@@ -187,9 +187,9 @@ public:
     /// than integral types of 1 to 64 bits.
     sir::Type typeOf(const ast::Type& t, slang::SourceLocation sl);
     sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);
-    Val copyValue(Val value, sir::Type destination, slang::SourceLocation sl);
+    Val copyValue(const Val& value, sir::Type destination, slang::SourceLocation sl);
     sir::Type unboundedContainerType(sir::Type, slang::SourceLocation);
-    Val snapshotValue(Val value, slang::SourceLocation sl);
+    Val snapshotValue(const Val& value, slang::SourceLocation sl);
     Val lowerContainerValue(const ast::Expression& e);
     std::optional<Val> lowerContainerMethod(const ast::CallExpression& call,
                                             slang::SourceLocation sl);
