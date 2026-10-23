@@ -42,6 +42,8 @@ PROBES = [
 # Original additional mechanisms. Keep the 16-case seed inventory stable;
 # --extended selects these too, without claiming an exhaustive language list.
 EXTENDED = [
+    ("mixed_named_event_wait", "9.4.2, 15.5", "module top; event a,b; bit clk=0; initial begin @(a or b or posedge clk); $display(\"first %0t\",$time); @(a or b or posedge clk); $display(\"second %0t\",$time); end initial begin #1 ->a; ->b; #1 clk=1; end endmodule", "first 1\nsecond 2\n", []),
+    ("named_event_iff", "9.4.2.3", "module top; event a; logic en=0; initial begin @(a iff en); $display(\"%0t\",$time); end initial begin #1 ->a; #1 en=1; #1 ->a; end endmodule", "3\n", []),
     ("nested_packed_select_bounds", "7.4.5, 11.5.1", "module top; logic [1:0][7:0] a=16'h5500; int i=7; initial begin a[0][i+:3]=3'b111; $display(\"%h\",a); end endmodule", "5580\n", []),
     ("delayed_nba_streaming", "10.4.2, 11.4.14.3", "module top; logic [7:0] a[2]; logic [15:0] d; initial begin a='{0,0}; d=16'h1234; {<<8{a}} <= #2 d; d=0; #3 $display(\"%h %h\",a[0],a[1]); end endmodule", "34 12\n", []),
     ("delayed_nba_fixed_array", "7.6, 10.4.2", "module top; int a[2:1],b[0:1]; initial begin a='{0,0}; b='{12,34}; a <= #2 b; b='{90,91}; #3 $display(\"%0d %0d\",a[2],a[1]); end endmodule", "12 34\n", []),

@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("named mixed wait: ignores false iff", "src/kernel/sim.cpp",
+     "if (w.guard == nullptr || w.guard(toC(ctx_), w.guardFrame)) {",
+     "if (w.guard == nullptr || (w.guard(toC(ctx_), w.guardFrame), true)) {"),
+    ("named mixed wait: reads canceled guards", "src/kernel/sim.cpp",
+     "if (processes_[w.process.index()].gen != w.gen) continue;",
+     "if (false) continue;"),
+    ("named mixed wait: uses a different wait generation", "src/kernel/sim.cpp",
+     "Waiter{p, gen, true, item.guard, item.guardFrame},",
+     "Waiter{p, gen + 1, true, item.guard, item.guardFrame},"),
     ("packed parent: child writes use the whole storage boundary", "src/kernel/include/kirimasim/kernel/w4ops.h",
      "const std::int64_t limit = windowWidth == 0 ? xw : windowWidth;",
      "const std::int64_t limit = windowWidth == 0 ? xw : xw;"),

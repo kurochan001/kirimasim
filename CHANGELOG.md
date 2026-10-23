@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Named events can share event controls with signal subscriptions and
+  expression watches, each with its own `iff`. False guards retain their
+  item and the first satisfied item cancels the whole wait. C ABI 0.3
+  appends `wait_mixed` without changing old entries (9.4.2.3, 15.5;
+  SIR_SPEC 7.2, SCHEDULER_SPEC 9.5, RUNTIME_ABI 4.2).
+
 - Runtime child selections inside statically bounded packed members/parts
   preserve the parent boundary for writes and compound reads. Slots,
   automatic frames, refs and static NBA/delayed-NBA targets share kernel

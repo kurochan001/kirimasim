@@ -15,6 +15,44 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Mixed named-event waits and per-item iff
+
+A single event control can mix named events, signal edges and expression
+watches. Each item has its own optional `iff`, evaluated when that item
+occurs. A false or X condition keeps the item registered; changing only
+the condition does not wake the process. The first satisfied item ends
+the entire wait, including other named items, subscriptions and watches.
+A subsequent wait can register the same event again in the same time slot.
+Programs resume in their Reactive group. Runtime event indices remain
+unsupported. Both C++ and the additive C ABI 0.3 entry reach the same kernel.
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  event go;
+  logic enabled = 0;
+  bit clk = 0;
+  initial begin
+    @(go iff enabled or posedge clk);
+    $display("first %0t", $time);
+    @(go iff enabled or posedge clk);
+    $display("second %0t", $time);
+  end
+  initial begin
+    #1; ->go;
+    #1; enabled = 1;
+    #1; ->go;
+    #1; clk = 1;
+  end
+endmodule
+```
+
+```text
+first 3
+second 4
+```
+
+
 ## Runtime selects inside packed members and parts
 
 A runtime child selection now retains the boundary of its statically

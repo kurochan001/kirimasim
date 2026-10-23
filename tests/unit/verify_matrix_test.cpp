@@ -573,6 +573,19 @@ TEST(VerifyMatrix, PackedParentRangesVerifyAndWriteText) {
     }
 }
 
+TEST(VerifyMatrix, NamedEventWaitRejectsAnEdge) {
+    Design d = playground();
+    Operand event = Operand::slot(SlotId{sE});
+    event.edge = Edge::Pos;
+    d.processes[0].blocks[0].instrs.back() =
+        none(Op::WaitEvent, {event, Operand::block(BlockId{1})});
+    d.processes[0].blocks.push_back({{}, {none(Op::Ret, {})}});
+    const auto errors = verify(d);
+    ASSERT_EQ(errors.size(), 1U) << describe(errors);
+    EXPECT_NE(errors[0].message.find("named event items have no edge or packed range"),
+              std::string::npos);
+}
+
 TEST(VerifyMatrix, EveryCheckFires) {
     for (const Case& c : cases()) {
         Design d = playground();

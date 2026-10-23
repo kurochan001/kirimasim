@@ -1736,6 +1736,9 @@ private:
                                        d_.subroutines[o.id].kind == SubroutineKind::Watch;
                     if (o.kind == Operand::Kind::Slot || watch) {
                         if (watch) checkWaiter(body, o, SubroutineKind::Watch, bad);
+                        if (o.kind == Operand::Kind::Slot && ty(i).kind == TypeKind::Event &&
+                            (o.edge != Edge::Any || o.lsb != 0 || o.width != 0))
+                            bad("named event items have no edge or packed range");
                         afterItem = true;
                         continue;
                     }

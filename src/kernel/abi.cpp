@@ -55,6 +55,17 @@ MonitorSpec specOf(const kirima_monitor& m) {
     return spec;
 }
 
+std::vector<MonitorSpec> monitorItemsOf(const kirima_monitor_item* items, std::uint32_t n) {
+    std::vector<MonitorSpec> specs;
+    specs.reserve(n);
+    for (std::uint32_t i = 0; i < n; ++i) {
+        specs.push_back(specOf(items[i].monitor));
+        specs.back().guard = items[i].guard;
+        specs.back().guardFrame = items[i].guard_frame;
+    }
+    return specs;
+}
+
 constexpr kirima_kernel_api kApi = {
     KIRIMA_ABI_MAJOR,
     KIRIMA_ABI_MINOR,
@@ -102,14 +113,16 @@ constexpr kirima_kernel_api kApi = {
     },
     [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n,
        const kirima_monitor_item* monitors, std::uint32_t m) {
-        std::vector<MonitorSpec> specs;
-        specs.reserve(m);
-        for (std::uint32_t i = 0; i < m; ++i) {
-            specs.push_back(specOf(monitors[i].monitor));
-            specs.back().guard = monitors[i].guard;
-            specs.back().guardFrame = monitors[i].guard_frame;
-        }
-        sched(c).waitAny(ProcessId{p}, itemsOf(items, n), specs);
+        sched(c).waitAny(ProcessId{p}, itemsOf(items, n), monitorItemsOf(monitors, m));
+    },
+    [](kirima_context* c, std::uint32_t p, const kirima_wait_item* items, std::uint32_t n,
+       const kirima_monitor_item* monitors, std::uint32_t m, const kirima_named_wait_item* named,
+       std::uint32_t count) {
+        std::vector<NamedWaitItem> events;
+        events.reserve(count);
+        for (std::uint32_t i = 0; i < count; ++i)
+            events.push_back({EventId{named[i].event}, named[i].guard, named[i].guard_frame});
+        sched(c).waitAny(ProcessId{p}, itemsOf(items, n), monitorItemsOf(monitors, m), events);
     },
 };
 

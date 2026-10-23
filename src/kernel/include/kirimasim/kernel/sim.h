@@ -156,6 +156,13 @@ struct WaitItem {
     void* guardFrame = nullptr;
 };
 
+/// A named-event item in the same event control as slots or watches.
+struct NamedWaitItem {
+    EventId event{0};
+    GuardFn guard = nullptr;
+    void* guardFrame = nullptr;
+};
+
 /// An event control on an expression, or a `wait (expr)`: a monitor
 /// record (SCHEDULER_SPEC.md 9.5). The expression is evaluated again when
 /// one of its slots changes or one of its events is triggered.
@@ -275,7 +282,7 @@ public:
     /// the first item whose event occurs wakes the process and ends the
     /// others (SCHEDULER_SPEC.md 9.5).
     void waitAny(ProcessId p, std::span<const WaitItem> items,
-                 std::span<const MonitorSpec> monitors);
+                 std::span<const MonitorSpec> monitors, std::span<const NamedWaitItem> named = {});
     /// `flushPoint`: whether the trigger that ends the wait is a flush point
     /// of the process's pending reports (SCHEDULER_SPEC.md 15.3, 15.4): true
     /// for an event control on a named event, false for a wait for children
@@ -515,6 +522,8 @@ private:
         ProcessId process{0};
         std::uint64_t gen = 0;
         bool flushPoint = true;
+        GuardFn guard = nullptr;
+        void* guardFrame = nullptr;
     };
     struct NamedEvent {
         std::vector<Waiter> waiters;

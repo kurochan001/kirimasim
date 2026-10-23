@@ -293,3 +293,37 @@ three streaming mutations were detected by their respective new execution
 tests, excluding the mutation-tool self-checks. An initially surviving
 aggregate-index mutation exposed a missing differing-bound member case;
 that case was added before final validation. Restored sources pass.
+
+## Mixed named-event waits and per-item iff
+
+The fifth round registers named events, slot subscriptions and expression
+watches in one scheduler wait generation. `Scheduler::waitAny` owns the
+registration; `trigger` evaluates only the triggered item's guard, retains
+false guards and cancels stale items when any item wakes the process.
+`Lowerer::lowerTiming` emits typed named items and guards in `wait.event`;
+the VM decodes them. A single unguarded named wait keeps its old form.
+C ABI 0.3 appends `wait_mixed`, preserving all previous field offsets and
+entry signatures. Both APIs call the same kernel implementation.
+
+The 64-case matrix covers eight containers and eight event shapes,
+including same-slot rearming, false/X guards, changing a condition without
+an event, named/signal/watch mixtures, NBA triggers and Reactive resumes.
+Five new scheduler tests check guard invocation, bounded false-item lists,
+first-item cancellation, cancellation before guard access, queued triggers
+and registration before watch initialization. A C ABI test checks the new
+entry and retained table prefix; a SIR test rejects edges on named items.
+The old named-iff rejection fixture keeps its body and migrates to
+acceptance in a separate expectation commit. The example was executed.
+
+Dev passes 2,095 tests: 2,093 pass and the two known skips remain. Across
+these five rounds, 368 suite cases were added, along with kernel/SIR/CLI
+checks and generator checks. The comparison inventory now has 44 original
+probes: mixed named-event waiting passes both tools; named-event iff passes
+kirimasim and is rejected by the installed Icarus compiler. There are
+still 23 Icarus-passing gaps, seven in the original seed. Compiler/runtime
+versions remain `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 and
+complete parity are unconfirmed.
+
+The next dynamic-array/queue mechanism still requires approval of the
+[concrete amendment](dynamic-containers-proposal.md). It is not approved
+or implemented. These additions do not close the full P1 objective.

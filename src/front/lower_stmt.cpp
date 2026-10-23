@@ -1297,18 +1297,18 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                 if (i->kind != ast::TimingControlKind::SignalEvent)
                     unsupported(sl, "this event control");
                 const auto& se = i->as<ast::SignalEventControl>();
-                if (se.expr.type->isEvent()) {
-                    // @ev: wait for the next trigger of a named event
-                    // (SCHEDULER_SPEC.md 9.4).
-                    if (items.size() != 1) unsupported(sl, "event list with a named event");
-                    if (se.iffCondition != nullptr) unsupported(sl, "named event with iff");
-                    const sir::BlockId cont = newBlock();
-                    terminate(Op::WaitNamed, {eventOperand(se.expr, sl), Operand::block(cont)}, sl);
-                    setBlock(cont);
-                    return;
-                }
                 Operand o;
-                if (const std::optional<sir::SlotRange> r = eventSlot(se.expr)) {
+                if (se.expr.type->isEvent()) {
+                    // Keep the compact single, unguarded form. Lists and
+                    // iff items share the wait.event subscription generation.
+                    o = eventOperand(se.expr, sl);
+                    if (items.size() == 1 && se.iffCondition == nullptr) {
+                        const sir::BlockId cont = newBlock();
+                        terminate(Op::WaitNamed, {o, Operand::block(cont)}, sl);
+                        setBlock(cont);
+                        return;
+                    }
+                } else if (const std::optional<sir::SlotRange> r = eventSlot(se.expr)) {
                     o = Operand::slot(r->slot, r->lsb, r->width);
                     o.firstElem = r->firstElem;
                     o.numElems = r->numElems;

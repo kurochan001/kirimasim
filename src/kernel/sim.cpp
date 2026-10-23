@@ -746,7 +746,8 @@ void Scheduler::waitEvent(ProcessId p, std::span<const WaitItem> items) { waitAn
 void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) { waitAny(p, {}, {&m, 1}); }
 
 void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
-                        std::span<const MonitorSpec> monitors) {
+                        std::span<const MonitorSpec> monitors,
+                        std::span<const NamedWaitItem> named) {
     ensureSlotTables();
     freeMonitor(p);
     const std::uint64_t gen = ++processes_[p.index()].gen;
@@ -757,6 +758,10 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
             [&](const Subscription& x) { return processes_[x.process.index()].gen != x.gen; });
         counters_.increment(cSubscriptions_);
     }
+    for (const NamedWaitItem& item : named)
+        pushSwept(events_[item.event.index()].waiters, events_[item.event.index()].waiterLimit,
+                  Waiter{p, gen, true, item.guard, item.guardFrame},
+                  [&](const Waiter& w) { return processes_[w.process.index()].gen != w.gen; });
     // The monitors' first evaluation may write or trigger: announced once
     // the whole wait is registered.
     beginWalk();
@@ -1214,8 +1219,16 @@ void Scheduler::trigger(EventId e) {
     if (ctx_.dump().glitches()) ctx_.dump().triggered(e.index(), time_);  // --wave-glitches
     const auto waiters = std::move(ev.waiters);
     events_[e.index()].waiters.clear();
-    for (const Waiter& w : waiters)
-        if (processes_[w.process.index()].gen == w.gen) wake(w.process, w.flushPoint);
+    for (const Waiter& w : waiters) {
+        if (processes_[w.process.index()].gen != w.gen) continue;
+        if (w.guard == nullptr || w.guard(toC(ctx_), w.guardFrame)) {
+            if (processes_[w.process.index()].gen == w.gen) wake(w.process, w.flushPoint);
+        } else if (processes_[w.process.index()].gen == w.gen) {
+            // A false iff leaves this subscription live for the next trigger.
+            pushSwept(events_[e.index()].waiters, events_[e.index()].waiterLimit, w,
+                      [&](const Waiter& x) { return processes_[x.process.index()].gen != x.gen; });
+        }
+    }
     const auto mons = events_[e.index()].monitors;
     std::vector<MonitorRef> keep;
     for (const MonitorRef ref : mons) {

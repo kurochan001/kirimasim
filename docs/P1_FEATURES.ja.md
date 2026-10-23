@@ -15,6 +15,42 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 名前付きイベントの混合待ちと項ごとのiff
+
+1つのイベント制御で、名前付きイベント・信号の辺・式の監視を混ぜられます。
+各項の任意の `iff` は、その項のイベントが起きたときに評価します。偽・Xなら
+待ちを保ち、条件の変化だけでは再開しません。最初に条件を満たした項が待ち全体を
+終え、他の名前付き項・購読・監視も解除します。同じ時刻でも、次の待ちで同じ
+イベントへ再登録できます。programはReactive側で再開します。実行時のイベント添字は
+未対応です。C++と追加方式のC ABI 0.3は同じカーネルへ到達します。
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  event go;
+  logic enabled = 0;
+  bit clk = 0;
+  initial begin
+    @(go iff enabled or posedge clk);
+    $display("first %0t", $time);
+    @(go iff enabled or posedge clk);
+    $display("second %0t", $time);
+  end
+  initial begin
+    #1; ->go;
+    #1; enabled = 1;
+    #1; ->go;
+    #1; clk = 1;
+  end
+endmodule
+```
+
+```text
+first 3
+second 4
+```
+
+
 ## packedメンバー・部分範囲の中の実行時選択
 
 実行時に選ぶ子の範囲で、静的に選んだ親の境界を保持するようになりました。

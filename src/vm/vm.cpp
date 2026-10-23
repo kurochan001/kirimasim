@@ -1096,10 +1096,11 @@ private:
     std::vector<W4> retWide_;  ///< A function's result wider than 64 bits, at its ret.
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
-    std::vector<kernel::WaitItem> items_;          ///< Scratch for wait.event.
-    std::vector<kernel::MonitorSpec> monitors_;    ///< Scratch for wait.event.
-    std::vector<kernel::StrengthDriver> drivers_;  ///< Scratch for resolve.
-    std::vector<kernel::ScanValue> scanValues_;    ///< Scratch for $sscanf.
+    std::vector<kernel::WaitItem> items_;
+    std::vector<kernel::NamedWaitItem> namedItems_;  ///< Scratch for wait.event.
+    std::vector<kernel::MonitorSpec> monitors_;      ///< Scratch for wait.event.
+    std::vector<kernel::StrengthDriver> drivers_;    ///< Scratch for resolve.
+    std::vector<kernel::ScanValue> scanValues_;      ///< Scratch for $sscanf.
     /// By process: the frame of an override or postponed process.
     std::vector<Frame*> overrides_;
     Frame* monitor_ = nullptr;  ///< The postponed process of the $monitor in effect.
@@ -2157,33 +2158,45 @@ private:
                     case Op::WaitEvent: {
                         items_.clear();
                         monitors_.clear();
+                        namedItems_.clear();
                         // The kernel keeps pointers into these.
                         f.iffs.clear();
                         f.iffs.reserve(ops.size());
                         f.watches.clear();
                         f.watches.reserve(ops.size());
-                        bool onWatch = false;  // the last item is a watch
+                        enum class LastItem { Slot, Watch, Named };
+                        LastItem last = LastItem::Slot;
                         for (std::size_t i = 0; i + 1 < ops.size(); ++i) {
                             const Operand& o = ops[i];
                             if (o.kind == Operand::Kind::Subroutine &&
                                 d_.subroutines[o.id].kind == sir::SubroutineKind::Watch) {
                                 monitors_.push_back(watchMonitor(f, o));
-                                onWatch = true;
+                                last = LastItem::Watch;
                             } else if (o.kind == Operand::Kind::Subroutine) {  // the item's iff
-                                if (onWatch)
+                                if (last == LastItem::Watch)
                                     withIff(f, monitors_.back(), o.asSubroutine());
+                                else if (last == LastItem::Named)
+                                    withIff(f, namedItems_.back(), o.asSubroutine());
                                 else
                                     withIff(f, items_.back(), o.asSubroutine());
+                            } else if (d_.slot(o.asSlot()).type.kind == sir::TypeKind::Event) {
+                                const std::optional<kernel::EventId> e = eventOf(o);
+                                if (!e) {
+                                    fail(p, "wait on a null event");
+                                    return Exit::Error;
+                                }
+                                namedItems_.push_back({*e});
+                                last = LastItem::Named;
                             } else {
                                 kernel::WaitItem item;
                                 item.part = {kernelSlot(o.asSlot()), o.firstElem, o.numElems, o.lsb,
                                              o.width};
                                 item.edge = kernelEdge(o.edge);
                                 items_.push_back(item);
-                                onWatch = false;
+                                last = LastItem::Slot;
                             }
                         }
-                        sched_.waitAny(f.kernelId, items_, monitors_);
+                        sched_.waitAny(f.kernelId, items_, monitors_, namedItems_);
                         resumeAt(f) = ops.back().asBlock();
                         return Exit::Waiting;
                     }

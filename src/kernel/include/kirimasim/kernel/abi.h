@@ -25,7 +25,7 @@ extern "C" {
 
 /* ABI version (RUNTIME_ABI.md 2). 0.x while the table is a draft. */
 #define KIRIMA_ABI_MAJOR 0
-#define KIRIMA_ABI_MINOR 2
+#define KIRIMA_ABI_MINOR 3
 
 /* A simulation context; the kernel's Context behind an opaque pointer. */
 typedef struct kirima_context kirima_context;
@@ -99,6 +99,13 @@ typedef struct kirima_monitor_item {
     void* guard_frame;
 } kirima_monitor_item;
 
+/* A guarded named-event item. Since ABI 0.3. */
+typedef struct kirima_named_wait_item {
+    uint32_t event;
+    kirima_guard_fn guard;
+    void* guard_frame;
+} kirima_named_wait_item;
+
 /* The kernel's function table. Fields are only ever added at the end
  * (a minor version step); anything else is a major step. */
 typedef struct kirima_kernel_api {
@@ -141,6 +148,12 @@ typedef struct kirima_kernel_api {
     void (*wait_any)(kirima_context* ctx, uint32_t process, const kirima_wait_item* items,
                      uint32_t num_items, const kirima_monitor_item* monitors,
                      uint32_t num_monitors);
+    /* Since ABI 0.3: one wait also containing guarded named events. The
+     * first satisfied item cancels every other item of the same wait. */
+    void (*wait_mixed)(kirima_context* ctx, uint32_t process, const kirima_wait_item* items,
+                       uint32_t num_items, const kirima_monitor_item* monitors,
+                       uint32_t num_monitors, const kirima_named_wait_item* named,
+                       uint32_t num_named);
 } kirima_kernel_api;
 
 /* The kernel's table. */

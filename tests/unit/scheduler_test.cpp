@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <random>
 #include <string>
@@ -1185,6 +1186,169 @@ TEST(KernelAbi, WaitAnyTakesMonitorItemsWithIff) {
     s.run();
     EXPECT_EQ(g.calls, 2);
     EXPECT_EQ(log, std::vector<std::string>{"w@0"});
+}
+
+TEST(Scheduler, NamedIffRetainsFalseItemsAndCancelsOtherItems) {
+    for (const Group group : {Group::Active, Group::Reactive}) {
+        k::Context ctx;
+        auto& s = ctx.scheduler();
+        const k::EventId first = s.addEvent();
+        const k::EventId second = s.addEvent();
+        const k::SlotId clk = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+        const k::SlotId unrelated = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+        std::vector<std::string> log;
+        Waiter w{&log, "named"};
+        GuardState a;
+        GuardState b;
+        b.value = true;
+        const k::ProcessId p = s.addProcess(&logOnce, &w, group);
+        const k::WaitItem signal{{clk, 0, 0, 0, 0}, Edge::Pos, nullptr, nullptr};
+        const k::NamedWaitItem named[] = {{first, &guardFn, &a}, {second, &guardFn, &b}};
+        s.waitAny(p, {&signal, 1}, {}, named);
+        const std::uint64_t one = 1;
+        s.write({.slot = unrelated}, &one);
+        EXPECT_EQ(a.calls, 0);
+        EXPECT_EQ(b.calls, 0);
+        for (unsigned i = 0; i < 100; ++i)
+            s.trigger(first);
+        EXPECT_EQ(a.calls, 100);
+        EXPECT_EQ(s.waitListEntries(), 3U);
+        a.value = true;
+        s.trigger(first);
+        s.trigger(second);
+        s.write({.slot = clk}, &one);
+        s.run();
+        EXPECT_EQ(a.calls, 101);
+        EXPECT_EQ(b.calls, 0);
+        EXPECT_EQ(log, (std::vector<std::string>{"named@0"}));
+    }
+}
+
+TEST(Scheduler, MixedNamedSlotAndWatchWaitEndsAtItsFirstItem) {
+    for (unsigned winner = 0; winner < 3; ++winner) {
+        k::Context ctx;
+        auto& s = ctx.scheduler();
+        const k::EventId event = s.addEvent();
+        const k::SlotId clk = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+        const k::SlotId value = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+        std::vector<std::string> log;
+        Waiter w{&log, "mixed"};
+        GuardState guard;
+        guard.value = true;
+        BitFrame frame{value};
+        const k::ProcessId p = s.addProcess(&logOnce, &w, Group::Active);
+        const k::WaitItem signal{{clk, 0, 0, 0, 0}, Edge::Pos, nullptr, nullptr};
+        k::MonitorSpec monitor;
+        monitor.slots = {{value, 0, 0, 0, 0}};
+        monitor.eval = &evalBit0;
+        monitor.frame = &frame;
+        monitor.domain = k::Domain::Two;
+        monitor.width = 1;
+        const k::NamedWaitItem named{event, &guardFn, &guard};
+        s.waitAny(p, {&signal, 1}, {&monitor, 1}, {&named, 1});
+        const std::uint64_t one = 1;
+        if (winner == 0) s.trigger(event);
+        if (winner == 1) s.write({.slot = clk}, &one);
+        if (winner == 2) s.write({.slot = value}, &one);
+        s.trigger(event);
+        s.write({.slot = clk}, &one);
+        s.write({.slot = value}, &one);
+        s.run();
+        EXPECT_EQ(guard.calls, winner == 0 ? 1 : 0);
+        EXPECT_EQ(log, (std::vector<std::string>{"mixed@0"}));
+    }
+}
+
+TEST(Scheduler, NamedIffMayTriggerAnotherEventWhileListsAreWalked) {
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::EventId first = s.addEvent();
+    const k::EventId second = s.addEvent();
+    std::vector<std::string> log;
+    Waiter a{&log, "first"};
+    Waiter b{&log, "second"};
+    const k::ProcessId p = s.addProcess(&logOnce, &a, Group::Active);
+    const k::ProcessId q = s.addProcess(&logOnce, &b, Group::Active);
+    WritingFrame frame{k::SlotId{0}, k::SlotId{0}, second};
+    const k::NamedWaitItem item{first, &guardAndTrigger, &frame};
+    s.waitAny(p, {}, {}, {&item, 1});
+    s.waitNamed(q, second);
+    s.trigger(first);
+    s.run();
+    EXPECT_EQ(log, (std::vector<std::string>{"first@0", "second@0"}));
+}
+
+TEST(Scheduler, CanceledNamedWaitDoesNotReadItsOldGuard) {
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::EventId event = s.addEvent();
+    std::vector<std::string> log;
+    Waiter old{&log, "old"};
+    Waiter current{&log, "current"};
+    GuardState stale;
+    GuardState live;
+    live.value = true;
+    const k::ProcessId p = s.addProcess(&logOnce, &old, Group::Active);
+    const k::NamedWaitItem first{event, &guardFn, &stale};
+    s.waitAny(p, {}, {}, {&first, 1});
+    s.kill(p);
+    const k::ProcessId q = s.addProcess(&logOnce, &current, Group::Active);
+    const k::NamedWaitItem second{event, &guardFn, &live};
+    s.waitAny(q, {}, {}, {&second, 1});
+    s.trigger(event);
+    s.run();
+    EXPECT_EQ(stale.calls, 0);
+    EXPECT_EQ(live.calls, 1);
+    EXPECT_EQ(log, (std::vector<std::string>{"current@0"}));
+}
+
+TEST(Scheduler, NamedItemsAreRegisteredBeforeWatchInitialization) {
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::EventId event = s.addEvent();
+    const k::SlotId value = ctx.store().add(k::Domain::Two, 8, 1, k::Init::Zero);
+    std::vector<std::string> log;
+    Waiter waiter{&log, "initial"};
+    const k::ProcessId p = s.addProcess(&logOnce, &waiter, Group::Active);
+    WritingFrame frame{value, value, event};
+    k::MonitorSpec monitor;
+    monitor.slots = {{value, 0, 0, 0, 0}};
+    monitor.eval = &evalAndTrigger;
+    monitor.frame = &frame;
+    monitor.domain = k::Domain::Two;
+    monitor.width = 1;
+    GuardState guard;
+    guard.value = true;
+    const k::NamedWaitItem named{event, &guardFn, &guard};
+    s.waitAny(p, {}, {&monitor, 1}, {&named, 1});
+    EXPECT_EQ(guard.calls, 1);
+    EXPECT_TRUE(log.empty());
+    s.run();
+    EXPECT_EQ(log, (std::vector<std::string>{"initial@0"}));
+}
+
+TEST(KernelAbi, MixedWaitTakesGuardedNamedEvents) {
+    const kirima_kernel_api* api = kirima_get_kernel_api();
+    ASSERT_NE(api->wait_mixed, nullptr);
+    EXPECT_GE(api->abi_minor, 3U);
+    EXPECT_GT(offsetof(kirima_kernel_api, wait_mixed), offsetof(kirima_kernel_api, wait_any));
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    const k::EventId event = s.addEvent();
+    std::vector<std::string> log;
+    Waiter waiter{&log, "abi"};
+    GuardState guard;
+    const std::uint32_t p = api->add_process(k::toC(ctx), &logOnce, &waiter, KIRIMA_GROUP_REACTIVE);
+    const kirima_named_wait_item item{event.index(), &guardFn, &guard};
+    api->wait_mixed(k::toC(ctx), p, nullptr, 0, nullptr, 0, &item, 1);
+    s.trigger(event);
+    EXPECT_EQ(guard.calls, 1);
+    guard.value = true;
+    s.trigger(event);
+    s.trigger(event);
+    s.run();
+    EXPECT_EQ(guard.calls, 2);
+    EXPECT_EQ(log, (std::vector<std::string>{"abi@0"}));
 }
 
 // --- Random scripts against the reference model -----------------------------------
