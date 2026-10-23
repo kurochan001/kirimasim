@@ -11,6 +11,14 @@ No release yet. The Added section below sums up what works as of
 2026-10-18; from then on, each change a user can see has an entry of its
 own. CONTRIBUTING.md says what goes in this file.
 
+### Fixed
+
+- Diagnose a container-cell NBA as illegal under 6.21/10.4.2, with its source
+  position, and correct the integration inventory: this is a standard
+  restriction, not a missing P1 feature. New source tests cover dynamic arrays
+  and queues with whole-element, bit and part targets; whole-value NBAs to
+  eligible static container variables remain separate.
+
 ### Added
 
 - Automatic typed-container collection after drained scheduling regions and
@@ -23,8 +31,7 @@ own. CONTRIBUTING.md says what goes in this file.
   heap, with actual-target reference metadata, stable element refs, snapshots,
   source-position method warnings and resource-error mapping (SIR_SPEC 5.8).
   Independent SIR tests cover calls, waits, packed writes and allocation
-  failure. Front lowering, complete roots, heap-change notification and cell
-  NBA targets remain unfinished; SystemVerilog containers are not enabled.
+  failure. Front lowering, complete roots and heap-change notification remain unfinished; SystemVerilog containers are not enabled.
 
 - Nested container copies apply each destination queue's bound through the
   common heap copy engine, including element writes and queue methods, with

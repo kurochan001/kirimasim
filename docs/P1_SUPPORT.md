@@ -114,8 +114,13 @@ cases, 16 deferred-call cases and root-only changes; pool tables stay bounded
 over 100 rounds. Failed marking retains every value. No collection runs inside
 a process callback, after termination is requested or during final cleanup.
 
+Nonblocking assignment to a dynamically sized array element is illegal
+(6.21, 10.4.2), including through a cell ref. Slang rejects direct source forms;
+the VM gives the same reason for hand-built SIR. Element NBAs are not a missing
+P1 feature. Whole-value NBAs to eligible static variables are a different case.
+
 SystemVerilog dynamic arrays and queues remain unsupported. Front-end
-lowering, heap-dependent change notification, container-cell NBA targets and
+lowering, heap-dependent change notification and
 source-level execution/diagnostic matrices remain. Class/DPI/VPI roots are
 future mechanisms, not covered by the current container adapter. This extension does not
 establish full container support or the Icarus coverage target.
@@ -212,7 +217,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | Shared heap, typed SIR, VM execution and automatic typed-root collection are tested; front, heap-change notification, cell NBAs and SystemVerilog execution tests remain |
+| P1 container integration | Shared heap, typed SIR, VM execution and automatic typed-root collection are tested; front, heap-change notification and SystemVerilog execution tests remain |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |

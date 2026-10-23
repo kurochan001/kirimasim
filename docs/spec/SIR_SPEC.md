@@ -411,10 +411,15 @@ and is printed `empty`. Nonempty container constants are invalid.
 The VM's dispatch and reference transport are exercised by independent SIR
 inputs. Typed root publication and automatic collection for the currently
 implemented container SIR are described in RUNTIME_ABI 6. This does not
-establish language support: front lowering, heap-dependent notifications,
-cell NBA targets and source-level
+establish language support: front lowering, heap-dependent notifications
+and source-level
 execution/diagnostic matrices remain required under P1_SCOPE. C ABI 0.3 is
-unchanged by this internal SIR encoding.
+unchanged by this internal SIR encoding. As section 3.3 already requires,
+nonblocking assignment to a dynamic-array/queue element is illegal (6.21,
+10.4.2), including through a cell ref. This is not a missing execution feature.
+Slang rejects direct source forms; the VM diagnoses a hand-built cell-ref NBA
+as an illegal operation. This does not prohibit whole-value NBAs to eligible
+static container variables.
 
 ## 6. Constants
 

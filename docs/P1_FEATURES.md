@@ -20,7 +20,7 @@ messages go to standard error.
 The [kernel heap and typed SIR](P1_SUPPORT.md#dynamic-container-foundation)
 are implemented and tested, but `new[]`, queue methods and dynamic element
 access are not executable SystemVerilog features yet. The approved contract
-still needs front lowering, heap-change notification and container-cell NBA targets.
+still needs front lowering and heap-change notification.
 The VM executes the 16 typed instructions in independent SIR
 tests, including actual-bound refs, waits, snapshots and typed root publication
 for automatic collection at drained scheduling boundaries. These checks do not

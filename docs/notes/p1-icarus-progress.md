@@ -9,6 +9,22 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Correction: element NBAs are illegal (2026-10-24)
+
+Earlier integration lists below incorrectly treated container-cell NBA targets
+as a missing P1 feature. IEEE 1800-2023 6.21 and 10.4.2, and the existing
+SIR_SPEC 3.3, prohibit nonblocking writes to elements of dynamically sized
+arrays, including queues. No specification amendment or extension is adopted.
+Whole-value NBAs to eligible static container variables remain distinct.
+
+The pinned slang rejects original dynamic-array and queue inputs at parse
+with exit code 2 and the assignment's position. Six new generated negative
+cases cover both array kinds and whole-element, bit and part targets. The
+VM's two original SIR cases now name the prohibition and check its source
+position while preserving the unchanged-value assertions. Element NBA execution
+remains rejected. The earlier statements calling it unfinished work are
+superseded by this correction; heap-dependent waits remain genuine work.
+
 ## Automatic typed-root collection (2026-10-24)
 
 Source revision `3281727` adds automatic collection for the current container

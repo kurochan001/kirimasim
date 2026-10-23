@@ -45,7 +45,7 @@ text are implemented. Twenty-two VM tests execute those instructions from origin
 SIR inputs, including actual-bound refs, detached cells across waits and automatic
 collection at drained region/slot boundaries. Typed slots, live frames, cell refs,
 deferred calls and pending scheduler values retain their reachable objects.
-Front-end lowering, heap-change notification and container-cell NBA targets
+Front-end lowering and heap-change notification
 are still unfinished, so dynamic arrays and
 queues cannot yet be executed from SystemVerilog. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
@@ -420,7 +420,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Not yet | Scope and status |
 | --- | --- |
 | FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1; shared heap, typed SIR, VM execution and automatic typed-root collection tested; front, heap-change notification and cell NBA targets pending |
+| Dynamic arrays and queues | P1; shared heap, typed SIR, VM execution and automatic typed-root collection tested; front and heap-change notification pending |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
 | Tier 2 C++ generation and further RTL speed optimizations | P2 |

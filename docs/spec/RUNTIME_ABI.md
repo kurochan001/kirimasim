@@ -191,7 +191,7 @@ partial root set is passed to collection and failed marking sweeps nothing.
 Tests distinguish assignment failure (the old destination remains) from
 collection failure after assignment committed (both complete values remain).
 This implements roots for the current container SIR, not future class/DPI/VPI
-providers. Front lowering, heap-change notification and cell NBA targets remain
+providers. Front lowering and heap-change notification remain
 unfinished; SystemVerilog dynamic containers are not enabled yet.
 
 Class, mailbox and weak-reference semantics extend the root descriptors when

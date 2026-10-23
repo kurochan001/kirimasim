@@ -29,7 +29,7 @@ refs across calls/waits. Typed slots, live activations, cell refs, deferred
 arguments and owned scheduler values are roots for automatic region/slot-boundary
 collection (RUNTIME_ABI 6). Class/DPI/VPI roots are not implemented.
 Front lowering, heap-change
-notifications, cell NBAs and language execution/diagnostic matrices remain.
+notifications and language execution/diagnostic matrices remain.
 `new[]`, queue methods and dynamic
 container element access still stop as unsupported in execution. Kernel
 checks do not establish language support or full Icarus parity.

@@ -1043,7 +1043,7 @@ TEST(VmContainer, UnconnectedHeapWatchesReportUnsupportedWithoutReadingARefAsASl
         }
 }
 
-TEST(VmContainer, UnconnectedCellNbasReportUnsupportedWithoutWritingImmediately) {
+TEST(VmContainer, IllegalCellNbasReportTheStandardRuleWithoutModifyingTheValue) {
     for (Type e : {s4(32), s4(129)}) {
         Program p;
         const auto q = p.container(e, true);
@@ -1054,14 +1054,16 @@ TEST(VmContainer, UnconnectedCellNbasReportUnsupportedWithoutWritingImmediately)
         const auto cell = p.emit(Op::ContainerCell, refType(),
                                  {Operand::typeRow(q.detail), ref, p.constant(s4(64), 0)});
         p.emit(Op::NbaRef, voidType(), {cell, p.constant(e, 11)});
+        p.d.processes[0].blocks[0].instrs.back().loc = {0, 43, 5};
         p.end();
         ASSERT_TRUE(verifies(p.d));
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context ctx(k::OutputDestinations{capture.file, capture.file});
         EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Error);
-        EXPECT_NE(capture.text().find(
-                      "nonblocking writes through container-cell refs are not supported yet"),
+        EXPECT_NE(capture.text().find("container.sv:43: error: nonblocking assignment to a "
+                                      "dynamically sized array element is illegal "
+                                      "(IEEE 1800-2023 10.4.2)"),
                   std::string::npos);
         const k::ContainerToken token{stored(ctx, home, q)[0].a};
         const auto type = ctx.heap().actualType(token);

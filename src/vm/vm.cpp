@@ -2452,7 +2452,8 @@ private:
             const bool load = in.op == Op::LoadRef || in.op == Op::LoadRefElem;
             if (in.op == Op::NbaRef) {
                 designError(f, in,
-                            "nonblocking writes through container-cell refs are not supported yet");
+                            "nonblocking assignment to a dynamically sized array element is "
+                            "illegal (IEEE 1800-2023 10.4.2)");
                 return false;
             }
             if (ref.a == 0) {

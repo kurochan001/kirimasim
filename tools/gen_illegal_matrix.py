@@ -181,6 +181,23 @@ CASES = [
      (1, 22), "expected 'input'"),
 ]
 
+# Original matrix for 6.21 / 10.4.2: array kind x selected target shape.
+# This adds cases using the existing generation rules; older cases stay exact.
+for container, declaration, initialize in [
+    ("dynamic_array", "logic [15:0] value[];", "value = new[1];"),
+    ("queue", "logic [15:0] value[$];", "value.push_back('0);")]:
+    for shape, select, rhs in [("element", "value[0]", "16'h1234"),
+                               ("bit", "value[0][3]", "1'b1"),
+                               ("part", "value[0][7:4]", "4'ha")]:
+        statement = f"    {select} <= {rhs};"
+        source = (f"module top;\n  {declaration}\n  initial begin\n"
+                  f"    {initialize}\n{statement}\n  end\nendmodule")
+        CASES.append((f"nba_{container}_{shape}", "assignment nba array", "6.21 10.4.2",
+                      "a dynamically sized array element is written by a nonblocking assignment",
+                      source, (5, statement.index("<=") + 1),
+                      "nonblocking assignments to elements of dynamically sized arrays are not allowed"))
+
+
 
 def files():
     out = {}
