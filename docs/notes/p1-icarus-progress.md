@@ -11,7 +11,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Kernel/VM heap-dependent monitors (2026-10-24)
 
-The scheduler now captures heap reads during guard/watch evaluation and
+Source revision `71966e1` captures heap reads during guard/watch evaluation and
 reattaches dependencies after selection or binding changes. Weak watch counts
 on containers/cells skip unrelated writes. Matching monitor IDs and serials
 are queued in the existing ordered change stream after commit. The tier
@@ -42,6 +42,31 @@ hook ownership, private-variable exclusion, callee ref reads and incomplete
 capture). Restored heap/scheduler/VM tests pass 106 cases. Dev passes 2,171 of
 2,173 tests, with the same two known skips. There are 31 heap tests and 24
 container VM tests.
+
+Full local CI at `71966e1` passes all four configure/build/test presets:
+dev/ASan/UBSan each run 2,173 tests (2,171 pass, two known skips); release runs
+2,174 (2,172 pass, the same skips). Release flags, banned features, SPDX, suite
+files, global state, expectation protection for all four unpublished commits,
+README counts, clang-format and clang-tidy pass. The expectation guard flags
+the changed unsupported-watch unit for review: it now proves implemented
+wakeup/value/time instead of expecting the old unsupported diagnostic. Local
+documentation targets were checked: 269 exist, none missing.
+
+The original extended inventory was rerun at this revision: 44 probes and
+23 Icarus-passing gaps remain. Both compiler and runtime report
+`14.0 (devel) (s20260301-411-gca6b8d376)`. Exact-13.0 and complete parity remain
+unconfirmed. `--require-parity` returns 1 because the measured gaps remain.
+
+```sh
+ctest --preset dev -R '^(Heap|Scheduler|VmContainer)' --output-on-failure
+python3 tools/mutants.py --only 'heap monitor:'
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/heap-monitor-icarus-probes.json --require-parity
+```
+
+External sv-tests/population and benchmark figures retain their recorded
+revisions and dates; they were not remeasured in this implementation round.
 
 Front lowering and source-language execution matrices still remain. No
 SystemVerilog dynamic-container feature is enabled by this extension. Classes,
