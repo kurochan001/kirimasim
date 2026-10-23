@@ -604,7 +604,8 @@ public:
     Place concatPlace(std::vector<Place> parts, sir::Type like, slang::SourceLocation sl);
     /// A streaming concatenation as the target of an assignment (11.4.14.3).
     void lowerUnpack(const ast::StreamingConcatenationExpression& s, const ast::Expression& rhs,
-                     bool nonblocking, slang::SourceLocation sl);
+                     bool nonblocking, slang::SourceLocation sl,
+                     const ast::Expression* delay = nullptr);
     /// An array reduction method: sum, product, and, or, xor (7.12.3).
     Val lowerArrayReduction(const ast::CallExpression& call, const std::string& name, sir::Type rt,
                             slang::SourceLocation sl);

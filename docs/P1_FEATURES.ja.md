@@ -15,6 +15,33 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## ストリーミング対象への遅延付きNBA
+
+ストリーミング対象の `<=` に代入内遅延を使えるようになりました。
+ビット順、右辺の左側からの切り詰め、短い最終ブロック、2値への変換は通常の
+ストリーミングと共通です。右辺を先に、遅延と対象の添字をそれぞれ1回評価してから、
+共通の遅延書き込みで各leafを保持します。その後に値や添字を変えても予約した更新は
+変わりません。automaticな対象、入れ子のストリーミング対象、`with`の制限は残ります。
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  logic [7:0] bytes_out[2];
+  logic [15:0] data;
+  initial begin
+    bytes_out = '{0,0}; data = 16'h1234;
+    {<<8{bytes_out}} <= #2 data;
+    data = 0;
+    #3; $display("%h %h", bytes_out[0], bytes_out[1]);
+  end
+endmodule
+```
+
+```text
+34 12
+```
+
+
 ## 固定配列・構造体全体への遅延付きNBA
 
 集約値の遅延付きNBAは、全要素・メンバーの値を確定してから更新を予約します。

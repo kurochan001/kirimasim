@@ -1,0 +1,26 @@
+right_selected capture 1234 2 5
+right_selected before 0 0
+right_selected after 0 1 000000010
+right_array capture 12
+right_array before 0 0
+right_array after 1 0 000000010
+bit_selected capture 1234 2 5
+bit_selected before 0 0
+bit_selected after 0 0 000010010
+bit_array capture 12
+bit_array before 0 0
+bit_array after 0 1 000000010
+byte_selected capture 1234 2 5
+byte_selected before 0 0
+byte_selected after 0 1 000000010
+byte_array capture 12
+byte_array before 0 0
+byte_array after 1 0 000000010
+cross_selected capture 1234 2 5
+cross_selected before 0 0
+cross_selected after 0 1 000000010
+cross_array capture 12
+cross_array before 0 0
+cross_array after 1 0 000000010
+zero_before 0 0
+zero_after 1 1

@@ -15,6 +15,35 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Delayed streaming NBAs
+
+Streaming targets can now use an intra-assignment delay with `<=`.
+They share ordinary streaming's bit order, leftmost-source truncation,
+short final block handling and two-state conversion. The right value is
+computed before the delay and target selectors, each evaluated once. The
+shared delayed-store path then captures each leaf; later changes do not
+alter the pending update. Automatic targets, nested streaming targets and
+`with` clauses retain their existing restrictions.
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  logic [7:0] bytes_out[2];
+  logic [15:0] data;
+  initial begin
+    bytes_out = '{0,0}; data = 16'h1234;
+    {<<8{bytes_out}} <= #2 data;
+    data = 0;
+    #3; $display("%h %h", bytes_out[0], bytes_out[1]);
+  end
+endmodule
+```
+
+```text
+34 12
+```
+
+
 ## Whole fixed-array and structure delayed NBAs
 
 An aggregate delayed NBA captures every element/member before scheduling

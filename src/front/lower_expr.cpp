@@ -1685,12 +1685,15 @@ Val Lowerer::reverseBlocks(const Val& v, std::uint64_t size, bool fromRight,
 }
 
 void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
-                          const ast::Expression& rhs, bool nonblocking, slang::SourceLocation sl) {
+                          const ast::Expression& rhs, bool nonblocking, slang::SourceLocation sl,
+                          const ast::Expression* delay) {
     // The source's leftmost bits, as many as the targets take; for << the
     // inverse reordering; then the targets from the left like a
     // concatenation (11.4.14.3). The value comes before the targets'
     // indices, as in any assignment.
     Val src = bitstreamOf(rhs, sl);
+    const std::optional<Val> ticks =
+        delay ? std::optional<Val>(delayValue(*delay, sl)) : std::nullopt;
     const std::uint64_t w = s.getBitstreamWidth();
     if (w == 0 || w > UINT32_MAX || src.type.width < w) unsupported(sl, "unpacking this stream");
     if (src.type.width > w)
@@ -1711,7 +1714,7 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
         bitstreamPlaces(op, places, sl);
     }
     Place all = concatPlace(std::move(places), src.type, sl);
-    storePlace(all, src, nonblocking, sl);
+    storePlace(all, src, nonblocking, sl, ticks);
 }
 
 Val Lowerer::bitstreamOf(const ast::Expression& e, slang::SourceLocation sl) {
@@ -2411,6 +2414,12 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     // 9.4.5). The value lives in a frame variable across the wait.
     const slang::SourceLocation sl = a.sourceRange.start();
     const ast::TimingControl& t = *a.timingControl;
+    if (a.isNonBlocking() && t.kind == ast::TimingControlKind::Delay &&
+        a.left().kind == ast::ExpressionKind::Streaming) {
+        lowerUnpack(a.left().as<ast::StreamingConcatenationExpression>(), a.right(), true, sl,
+                    &t.as<ast::DelayControl>().expr);
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+    }
     const bool aggregate = structElement(*a.left().type) != nullptr ||
                            a.left().type->getCanonicalType().isUnpackedArray();
     if (aggregate && a.isNonBlocking() && !a.isCompound() &&

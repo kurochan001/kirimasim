@@ -13,6 +13,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Streaming NBA targets accept intra-assignment delays with the same
+  reorder, snapshot and target lowering as ordinary streaming and delayed
+  stores, including short final blocks and runtime selectors (10.4.2,
+  11.4.14.3; VALUE_SEMANTICS 8).
+
 - Delayed NBAs snapshot whole fixed arrays and unpacked structures,
   including nested fixed-array, real and string members. Aggregate copies
   retain runtime element prefixes and preserve each side's declared order

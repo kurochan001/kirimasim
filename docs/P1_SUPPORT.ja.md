@@ -35,7 +35,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | 列挙型 | 列挙値と `first`、`last`、`num`、`name`、`next`、`prev` | 実行時の `next(n)` / `prev(n)` の移動数は 32 ビット符号なしに変換する。使用例を参照 |
 | 式 | 算術、ビット、論理、リダクション、比較、シフト、三項式、連結、反復、キャスト、`inside`、ワイルドカード等価、代入演算子、増減、代入パターン | `matches` によるパターン付きの `if` と三項式は未対応 |
 | 選択 | packed 値のビット・部分・indexed-part 選択、packed 次元、固定長 unpacked 配列の添字、構造体メンバ | packed メンバや選択済みの部分を、実行時の添字でさらに選択して書く形は未対応 |
-| ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入と NBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
+| ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入とNBA、ストリーミング対象への遅延付きNBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA | 配列全体へのブロッキング代入内時間制御、イベント制御付きNBA、ref・文字列文字を通じた遅延付き書き込みは未対応。automaticな対象へのNBAは禁止 |

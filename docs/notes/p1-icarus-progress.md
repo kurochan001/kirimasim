@@ -245,3 +245,19 @@ compiler rejects both, so these are not Icarus-passing gaps. There are still
 parity are unconfirmed. Event-controlled NBAs, blocking aggregate timing,
 refs/string-character delayed targets and further aggregate forms remain
 work. The dynamic-container proposal is still awaiting approval.
+
+## Delayed streaming NBAs
+
+A third round reuses `Lowerer::lowerUnpack` and `storePlace` for streaming
+NBA targets with a delay. It preserves existing 11.4.14.3/VALUE_SEMANTICS 8
+reordering and captures the RHS, delay and selectors once in the established
+order. Another 64-case matrix crosses eight containers, four widths and
+two domains, with right/bit/byte/65-bit orders, partial final blocks,
+leftmost-source truncation, X/Z, runtime selectors, whole arrays and #0.
+Dev passes 1,908 tests: 1,906 pass and the two known skips remain.
+The bilingual example was executed. No existing expectations changed.
+
+A new original streaming-delay probe brings the extended inventory to 41;
+kirimasim passes it and the installed Icarus compiler rejects it. There
+remain 24 Icarus-passing gaps and seven in the original seed. These finite
+observations do not establish full parity or exact-13.0 support.

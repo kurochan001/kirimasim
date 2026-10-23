@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("streaming delayed NBA: ignores the delay", "src/front/lower_expr.cpp",
+     "storePlace(all, src, nonblocking, sl, ticks);",
+     "(void)ticks; storePlace(all, src, nonblocking, sl);"),
+    ("streaming delayed NBA: evaluates the RHS twice", "src/front/lower_expr.cpp",
+     "Val src = bitstreamOf(rhs, sl);",
+     "Val src = bitstreamOf(rhs, sl); src = bitstreamOf(rhs, sl);"),
+    ("streaming delayed NBA: evaluates the delay twice", "src/front/lower_expr.cpp",
+     "std::optional<Val>(delayValue(*delay, sl))",
+     "std::optional<Val>((delayValue(*delay, sl), delayValue(*delay, sl)))"),
     ("delayed NBA: wide array element goes to the first cell", "src/vm/vm.cpp",
      "nbaSlotWide(f, ops[0].asSlot(), *e, 0, 0, x.data(), delay);",
      "nbaSlotWide(f, ops[0].asSlot(), 0, 0, 0, x.data(), delay);"),
