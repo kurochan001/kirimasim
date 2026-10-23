@@ -828,6 +828,7 @@ void Lowerer::dropProcesses(sir::ProcessId first) {
     design_.processes.resize(first.index());  // with any fork children
     combReads_.erase(first);
     implicitLocations_.erase(implicitLocations_.lower_bound(first), implicitLocations_.end());
+    implicitOwnReads_.erase(implicitOwnReads_.lower_bound(first), implicitOwnReads_.end());
     strengths_.erase(strengths_.lower_bound(first), strengths_.end());
     netPorts_.erase(netPorts_.lower_bound(first), netPorts_.end());
     sides_.erase(sides_.lower_bound(first), sides_.end());
@@ -917,14 +918,33 @@ void Lowerer::finishDesign() {
         bool heapRead = false;
         for (const auto& trigger : process.triggers)
             heapRead = heapRead || sir::isContainer(design_.slot(trigger.range.slot).type);
-        if (const auto called = readCallees_.byProcess.find(id);
-            called != readCallees_.byProcess.end())
-            for (const auto sub : called->second)
-                for (const auto& read : reads[sub]) {
-                    const auto& slot = design_.slot(read.slot);
-                    heapRead =
-                        heapRead || (slot.subroutine == sir::kNone && sir::isContainer(slot.type));
-                }
+        for (const auto& read : implicitOwnReads_[id]) {
+            const auto& slot = design_.slot(read.slot);
+            bool written = false;
+            if (process.kind == sir::ProcessKind::Comb || process.kind == sir::ProcessKind::Latch)
+                for (const auto& write : process.writes)
+                    written = written || sir::covers(slot, write, read);
+            if (!written && sir::isContainer(slot.type)) heapRead = true;
+        }
+        std::set<sir::SubroutineId> called;
+        std::vector<sir::SubroutineId> pending;
+        if (const auto found = readCallees_.byProcess.find(id);
+            found != readCallees_.byProcess.end())
+            pending = found->second;
+        while (!pending.empty()) {
+            const auto sub = pending.back();
+            pending.pop_back();
+            if (!called.insert(sub).second) continue;
+            if (const auto nested = readCallees_.bySubroutine.find(sub);
+                nested != readCallees_.bySubroutine.end())
+                pending.insert(pending.end(), nested->second.begin(), nested->second.end());
+        }
+        for (const auto sub : called)
+            for (const auto& read : reads[sub]) {
+                const auto& slot = design_.slot(read.slot);
+                if (sir::isContainer(slot.type) && !called.contains(slot.subroutine))
+                    heapRead = true;
+            }
         if (heapRead) report(at, "implicit sensitivity to dynamic container values");
     }
 }
@@ -2033,6 +2053,7 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
 
 void Lowerer::triggerOnReads(slang::SourceLocation sl) {
     implicitLocations_[b_.proc] = sl;
+    implicitOwnReads_[b_.proc] = b_.reads;
     for (const sir::SlotRange& r : b_.reads) {
         const sir::Slot& s = design_.slot(r.slot);
         if (s.subroutine != sir::kNone) continue;
@@ -2210,6 +2231,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 // (finishDesign).
                 combReads_[b_.proc] = b_.reads;
                 implicitLocations_[b_.proc] = pb.location;
+                implicitOwnReads_[b_.proc] = b_.reads;
                 break;
             }
             case ast::ProceduralBlockKind::Always:

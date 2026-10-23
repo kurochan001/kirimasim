@@ -49,6 +49,14 @@ def main():
                       +statement+'\nendmodule\n')
             check(source, 'unsupported: implicit sensitivity to dynamic container values', r'3:\d+')
 
+        for expression in ('top.holder.q.size()', 'read_nested()'):
+            source = ('module top; int n;\n'
+                      'function int holder(); int q[$]; return 0; endfunction\n'
+                      'function automatic int read_nested(); return top.holder.q.size(); endfunction\n'
+                      'always_comb n='+expression+';\n'
+                      'initial begin #1; top.holder.q.push_back(1); end endmodule\n')
+            check(source, 'unsupported: implicit sensitivity to dynamic container values', r'4:\d+')
+
         # An enclosing automatic variable in a fork is still the explicit
         # SIR_SPEC 7.5 limit; do not silently alias or copy its storage.
         check('module top; task automatic run(); int q[$];\n'

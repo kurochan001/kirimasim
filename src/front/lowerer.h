@@ -885,6 +885,7 @@ private:
     /// The reads of each always_comb and always_latch, for its sensitivity.
     std::map<sir::ProcessId, std::vector<sir::SlotRange>> combReads_;
     std::map<sir::ProcessId, slang::SourceLocation> implicitLocations_;
+    std::map<sir::ProcessId, std::vector<sir::SlotRange>> implicitOwnReads_;
     /// From scanDisables: the named blocks and tasks a disable names, the
     /// blocks reached from outside their body, and the blocks that start
     /// processes they do not wait for or call tasks.

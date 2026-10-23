@@ -3,7 +3,7 @@
 
 // Typed dynamic-container producers (SIR_SPEC 5.8). The shared heap
 // decides copying, bounds, stable cells and method diagnostics.
-#include <cassert>
+#include <stdexcept>
 
 #include "lowerer.h"
 
@@ -96,7 +96,7 @@ Val Lowerer::referencePlace(const Place& place, bool isConst, slang::SourceLocat
     const auto type =
         sir::refType(sir::isContainer(place.type) ? place.type.detail : sir::TypeId{sir::kNone});
     if (place.home == Place::Home::Heap) {
-        assert(place.receiver.has_value());
+        if (!place.receiver) throw std::logic_error("missing heap receiver in lowering");
         if (place.kind != Place::Kind::Element)
             unsupported(sl, "reference to a packed part of a dynamic element");
         return emit(
