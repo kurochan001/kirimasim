@@ -195,6 +195,15 @@ EXTENDED.extend([
     ("array_nba_runtime_prefix", "7.6, 10.4.2",
      'module top; int a[2][2],b[2];int i=1;function automatic int choose();return i++;endfunction initial begin foreach(a[x,y])a[x][y]=0;b=\'{7,9};a[choose()]<=#1 b;#2;$display("%0d %0d %0d %0d",i,a[1][0],a[1][1],a[0][0]);end endmodule',
      "2 7 9 0\n", []),
+    ("blocking_array_intra_delay", "7.6, 9.4.5, 10.4.1",
+     'module top; int a[2],b[2]; initial begin a=\'{0,0};b=\'{7,9};a=#2 b;$display("%0t %0d %0d",$time,a[0],a[1]);end initial begin #1;b=\'{40,41};end endmodule',
+     "2 7 9\n", []),
+    ("blocking_array_intra_repeat", "7.6, 9.4.5, 10.4.1",
+     'module top; bit clk;int a[2],b[2];always #1 clk=~clk;initial begin a=\'{0,0};b=\'{7,9};a=repeat(2)@(posedge clk)b;$display("%0t %0d %0d",$time,a[0],a[1]);$finish(0);end initial begin #2;b=\'{40,41};end endmodule',
+     "3 7 9\n", []),
+    ("struct_array_declared_bounds", "7.6, 10.4.1",
+     'module top;typedef struct {int value;} item_t;item_t a[7:8],b[-1:-2];initial begin a=\'{\'{7},\'{9}};b=a;$display("%0d %0d",b[-1].value,b[-2].value);end endmodule',
+     "7 9\n", []),
 ])
 
 

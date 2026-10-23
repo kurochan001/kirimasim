@@ -40,6 +40,33 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('blocking aggregate timing: capture runs after the control',
+     'src/front/lower_expr.cpp',
+     '        assignAggregate(saved, *a.left().type, a.right(), captured, sl);\n'
+     '        flushStores(captured, false, sl);\n'
+     '        lowerTiming(t);',
+     '        lowerTiming(t);\n'
+     '        assignAggregate(saved, *a.left().type, a.right(), captured, sl);\n'
+     '        flushStores(captured, false, sl);'),
+    ('blocking aggregate timing: target captured before the control',
+     'src/front/lower_expr.cpp',
+     '        lowerTiming(t);\n'
+     '        const std::optional<Storage> dst = storageOf(a.left(), sl);',
+     '        const std::optional<Storage> dst = storageOf(a.left(), sl);\n'
+     '        lowerTiming(t);'),
+    ('blocking aggregate timing: rereads RHS on resume',
+     'src/front/lower_expr.cpp',
+     '        copyAggregate(*dst, saved, *a.left().type, resumed, sl);',
+     '        assignAggregate(*dst, *a.left().type, a.right(), resumed, sl);'),
+    ('blocking aggregate timing: first resumed leaf is lost',
+     'src/front/lower_expr.cpp',
+     '        flushStores(resumed, false, sl);',
+     '        if (!resumed.empty()) resumed.erase(resumed.begin());\n'
+     '        flushStores(resumed, false, sl);'),
+    ('structure array copy: source uses destination bounds',
+     'src/front/lower_struct.cpp',
+     'withIndex(src, from.left + (from.left <= from.right ? k : -k))',
+     'withIndex(src, to.left + (to.left <= to.right ? k : -k))'),
     ('aggregate NBA capture: target runs before RHS capture',
      'src/front/lower_expr.cpp',
      '    assignAggregate(dst ? *dst : tempStorage(*a.left().type, sl), *a.left().type, a.right(), values,\n'

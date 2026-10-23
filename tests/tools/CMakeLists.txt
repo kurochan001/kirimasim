@@ -33,6 +33,10 @@ add_test(NAME tools/gen_delayed_nba_aggregate_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delayed_nba_aggregate_matrix.py --check)
 set_tests_properties(tools/gen_delayed_nba_aggregate_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_blocking_aggregate_timing_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_blocking_aggregate_timing_matrix.py --check)
+set_tests_properties(tools/gen_blocking_aggregate_timing_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_delayed_nba_target_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delayed_nba_target_matrix.py --check)
 set_tests_properties(tools/gen_delayed_nba_target_matrix PROPERTIES LABELS Tools)
