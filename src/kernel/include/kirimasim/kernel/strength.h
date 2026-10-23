@@ -32,6 +32,23 @@ enum class NetKind : std::uint8_t {
     Uwire,
 };
 
+/// One bit's complete strength interval (VALUE_SEMANTICS.md 5.2):
+/// -7 <= lo <= hi <= 7. Negative points are 0, positive points are 1,
+/// and zero is highz. Keep both endpoints until a four-state read.
+struct StrengthRange {
+    std::int8_t lo = 0;
+    std::int8_t hi = 0;
+    friend bool operator==(const StrengthRange&, const StrengthRange&) = default;
+};
+
+/// Project a valid strength interval to a four-state bit (5.2).
+constexpr W4 strengthValue(StrengthRange signal) noexcept {
+    if (signal.lo == 0 && signal.hi == 0) return {0, 1};
+    if (signal.hi < 0) return {0, 0};
+    if (signal.lo > 0) return {1, 0};
+    return {1, 1};  // x, including L and H
+}
+
 /// One driver of a net: its value and its strengths for 1 and for 0, each
 /// from 0 (highz) to 7 (supply). A driver with a side slot (the L and H of
 /// a three-state gate, SIR_SPEC.md 3.5) drives its 1 side only on the bits
@@ -78,26 +95,9 @@ inline std::uint32_t addRange(std::uint32_t states, int lo, int hi) {
     return out;
 }
 
-}  // namespace detail
-
-/// One bit of a net (5.4): the four-state value of the narrowest range
-/// that holds the outcome of every choice of points, with L and H read as
-/// X (5.2). `bit` selects the bit of the driver values.
-inline W4 resolveBit(NetKind kind, const StrengthDriver* drivers, unsigned count, unsigned bit) {
-    std::uint32_t states = detail::stateBit(0, 1);
-    const auto range = [&](int lo, int hi) { states = detail::addRange(states, lo, hi); };
-    for (unsigned d = 0; d < count; ++d) {
-        const unsigned a = (drivers[d].value.a >> bit) & 1U;
-        const unsigned b = (drivers[d].value.b >> bit) & 1U;
-        const int s1 = ((drivers[d].one >> bit) & 1U) != 0 ? drivers[d].s1 : 0;
-        const int s0 = ((drivers[d].zero >> bit) & 1U) != 0 ? drivers[d].s0 : 0;
-        if (b == 0)
-            range(a != 0 ? s1 : -s0, a != 0 ? s1 : -s0);  // 1 or 0
-        else if (a != 0)
-            range(-s0, s1);  // x
-        else
-            range(0, 0);  // z
-    }
+/// Finish the point-choice states with the net's own driver and tie rule.
+inline StrengthRange finishRange(NetKind kind, std::uint32_t states) noexcept {
+    const auto range = [&](int lo, int hi) { states = addRange(states, lo, hi); };
     // The net's own pull or supply (5.3).
     if (kind == NetKind::Tri0) range(-5, -5);
     if (kind == NetKind::Tri1) range(5, 5);
@@ -127,10 +127,45 @@ inline W4 resolveBit(NetKind kind, const StrengthDriver* drivers, unsigned count
             hi = h > hi ? h : hi;
         }
     }
-    if (lo == 0 && hi == 0) return {0, 1};  // z
-    if (hi < 0) return {0, 0};              // 0
-    if (lo > 0) return {1, 0};              // 1
-    return {1, 1};                          // x, and L and H
+    return {static_cast<std::int8_t>(lo), static_cast<std::int8_t>(hi)};
+}
+
+}  // namespace detail
+
+/// Resolve valid strength intervals directly (5.4), including ambiguous
+/// intervals wholly on one side of zero. No allocation or early projection.
+inline StrengthRange resolveStrengths(NetKind kind, const StrengthRange* signals,
+                                      unsigned count) noexcept {
+    std::uint32_t states = detail::stateBit(0, 1);
+    for (unsigned d = 0; d < count; ++d)
+        states = detail::addRange(states, signals[d].lo, signals[d].hi);
+    return detail::finishRange(kind, states);
+}
+
+/// The complete result interval of one driver bit (5.3, 5.4). Driver
+/// strengths are 0..7 and bit is 0..63; side masks retain L/H distinctions.
+inline StrengthRange resolveStrengthBit(NetKind kind, const StrengthDriver* drivers, unsigned count,
+                                        unsigned bit) noexcept {
+    std::uint32_t states = detail::stateBit(0, 1);
+    const auto range = [&](int lo, int hi) { states = detail::addRange(states, lo, hi); };
+    for (unsigned d = 0; d < count; ++d) {
+        const unsigned a = (drivers[d].value.a >> bit) & 1U;
+        const unsigned b = (drivers[d].value.b >> bit) & 1U;
+        const int s1 = ((drivers[d].one >> bit) & 1U) != 0 ? drivers[d].s1 : 0;
+        const int s0 = ((drivers[d].zero >> bit) & 1U) != 0 ? drivers[d].s0 : 0;
+        if (b == 0)
+            range(a != 0 ? s1 : -s0, a != 0 ? s1 : -s0);  // 1 or 0
+        else if (a != 0)
+            range(-s0, s1);  // x
+        else
+            range(0, 0);  // z
+    }
+    return detail::finishRange(kind, states);
+}
+
+/// A four-state read of one resolved driver bit (5.2).
+inline W4 resolveBit(NetKind kind, const StrengthDriver* drivers, unsigned count, unsigned bit) {
+    return strengthValue(resolveStrengthBit(kind, drivers, count, bit));
 }
 
 /// A net of `width` bits (at most 64) with `count` drivers.

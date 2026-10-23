@@ -5,6 +5,8 @@
 // reference on cases worked out from 28.12, and the kernel's fast version
 // (kernel/strength.h) compared with the reference.
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <random>
 #include <string>
@@ -199,6 +201,131 @@ TEST(Strength, KernelMatchesReferenceWithSides) {
             const Logic got = v::fromWords({fast.a >> bit}, {fast.b >> bit}, 1, false).bits[0];
             ASSERT_EQ(got, slow) << "kind " << static_cast<int>(kind) << " bit " << bit;
         }
+    }
+}
+
+::testing::AssertionResult sameRanges(NetKind kind, const std::vector<k::StrengthRange>& signals) {
+    std::vector<Signal> inputs;
+    inputs.reserve(signals.size());
+    for (const auto signal : signals)
+        inputs.push_back({signal.lo, signal.hi});
+    const auto slow = v::resolveSignals(kind, inputs);
+    const auto fast = k::resolveStrengths(kernelKind(kind), signals.data(),
+                                          static_cast<unsigned>(signals.size()));
+    if (slow == Signal{fast.lo, fast.hi}) return ::testing::AssertionSuccess();
+    return ::testing::AssertionFailure()
+           << "kind " << static_cast<int>(kind) << ": fast [" << int(fast.lo) << ',' << int(fast.hi)
+           << "] reference [" << slow.lo << ',' << slow.hi << ']';
+}
+
+::testing::AssertionResult sameBitRange(NetKind kind, const std::vector<k::StrengthDriver>& drivers,
+                                        unsigned bit) {
+    std::vector<v::Driver> inputs;
+    inputs.reserve(drivers.size());
+    for (const auto& driver : drivers) {
+        const Logic value = ref({driver.value.a >> bit, driver.value.b >> bit}, 1).bits[0];
+        inputs.push_back({value, ((driver.one >> bit) & 1U) != 0 ? driver.s1 : 0,
+                          ((driver.zero >> bit) & 1U) != 0 ? driver.s0 : 0});
+    }
+    const auto slow = v::resolve(kind, inputs);
+    const auto fast = k::resolveStrengthBit(kernelKind(kind), drivers.data(),
+                                            static_cast<unsigned>(drivers.size()), bit);
+    if (slow == Signal{fast.lo, fast.hi}) return ::testing::AssertionSuccess();
+    return ::testing::AssertionFailure()
+           << "kind " << static_cast<int>(kind) << " bit " << bit << ": fast [" << int(fast.lo)
+           << ',' << int(fast.hi) << "] reference [" << slow.lo << ',' << slow.hi << ']';
+}
+
+TEST(Strength, KernelStrengthRangeProjection) {
+    for (int lo = -7; lo <= 7; ++lo)
+        for (int hi = lo; hi <= 7; ++hi) {
+            const k::StrengthRange signal{static_cast<std::int8_t>(lo),
+                                          static_cast<std::int8_t>(hi)};
+            EXPECT_EQ(ref(k::strengthValue(signal), 1).bits[0], v::valueOf({lo, hi}));
+        }
+
+    // Both intervals read as 1, but propagation must retain their distinct endpoints.
+    const k::StrengthRange uncertain{3, 6};
+    const k::StrengthRange strong{6, 6};
+    EXPECT_EQ(k::resolveStrengths(k::NetKind::Wire, &uncertain, 1), uncertain);
+    EXPECT_EQ(k::resolveStrengths(k::NetKind::Wire, &strong, 1), strong);
+    EXPECT_NE(uncertain, strong);
+    EXPECT_EQ(ref(k::strengthValue(uncertain), 1).bits[0], L1);
+    EXPECT_EQ(ref(k::strengthValue(strong), 1).bits[0], L1);
+    const k::StrengthDriver high{{1, 1}, 6, 6, 1, 0};
+    const k::StrengthDriver low{{1, 1}, 6, 6, 0, 1};
+    EXPECT_EQ(k::resolveStrengthBit(k::NetKind::Wire, &high, 1, 0), (k::StrengthRange{0, 6}));
+    EXPECT_EQ(k::resolveStrengthBit(k::NetKind::Wire, &low, 1, 0), (k::StrengthRange{-6, 0}));
+}
+
+TEST(Strength, KernelStrengthRangesMatchEveryPair) {
+    std::vector<k::StrengthRange> signals;
+    signals.reserve(120);
+    for (int lo = -7; lo <= 7; ++lo)
+        for (int hi = lo; hi <= 7; ++hi)
+            signals.push_back({static_cast<std::int8_t>(lo), static_cast<std::int8_t>(hi)});
+    ASSERT_EQ(signals.size(), 120U);
+    for (const auto kind : kKinds) {
+        ASSERT_TRUE(sameRanges(kind, {}));
+        for (const auto a : signals) {
+            ASSERT_TRUE(sameRanges(kind, {a}));
+            for (const auto b : signals)
+                ASSERT_TRUE(sameRanges(kind, {a, b}))
+                    << int(a.lo) << ',' << int(a.hi) << " / " << int(b.lo) << ',' << int(b.hi);
+        }
+    }
+}
+
+TEST(Strength, KernelStrengthBitMatchesEveryDriverAndMask) {
+    const k::W4 values[] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    for (const auto kind : kKinds)
+        for (const auto value : values)
+            for (std::uint8_t s1 = 0; s1 <= 7; ++s1)
+                for (std::uint8_t s0 = 0; s0 <= 7; ++s0)
+                    for (unsigned sides = 0; sides < 4; ++sides)
+                        ASSERT_TRUE(
+                            sameBitRange(kind, {{value, s1, s0, sides & 1U, sides >> 1U}}, 0))
+                            << unsigned(s1) << ',' << unsigned(s0) << " sides=" << sides;
+}
+
+TEST(Strength, KernelStrengthRangesMatchMultipleSignalsAndPermutations) {
+    const auto seed = kirimasim::test::fuzzSeed(0x72616e676573ULL);
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+    std::mt19937_64 rng{seed};
+    for (std::uint64_t n = 0; n < 512 * kirimasim::test::fuzzScale(); ++n) {
+        const auto kind = kKinds[rng() % std::size(kKinds)];
+        std::array<k::StrengthRange, 3> signals;
+        for (auto& signal : signals) {
+            int lo = static_cast<int>(rng() % 15) - 7;
+            int hi = static_cast<int>(rng() % 15) - 7;
+            if (lo > hi) std::swap(lo, hi);
+            signal = {static_cast<std::int8_t>(lo), static_cast<std::int8_t>(hi)};
+        }
+        std::array<unsigned, 3> order{0, 1, 2};
+        do {
+            ASSERT_TRUE(sameRanges(kind, {signals[order[0]], signals[order[1]], signals[order[2]]}))
+                << "round " << n;
+        } while (std::next_permutation(order.begin(), order.end()));
+    }
+}
+
+TEST(Strength, KernelStrengthBitMatchesMaskedWideWords) {
+    const auto seed = kirimasim::test::fuzzSeed(0x72616e676562ULL);
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+    std::mt19937_64 rng{seed};
+    for (std::uint64_t n = 0; n < 256 * kirimasim::test::fuzzScale(); ++n) {
+        const auto kind = kKinds[rng() % std::size(kKinds)];
+        const auto count = static_cast<unsigned>(rng() % 4);
+        std::vector<k::StrengthDriver> drivers;
+        drivers.reserve(count);
+        for (unsigned d = 0; d < count; ++d)
+            drivers.push_back({{rng(), rng()},
+                               static_cast<std::uint8_t>(rng() % 8),
+                               static_cast<std::uint8_t>(rng() % 8),
+                               rng(),
+                               rng()});
+        for (unsigned bit = 0; bit < 64; ++bit)
+            ASSERT_TRUE(sameBitRange(kind, drivers, bit)) << "round " << n;
     }
 }
 

@@ -51,6 +51,11 @@ Signal resolve(NetKind kind, const std::vector<Driver>& drivers) {
     ranges.reserve(drivers.size() + 1);
     for (const Driver& d : drivers)
         ranges.push_back(driverSignal(d));
+    return resolveSignals(kind, ranges);
+}
+
+Signal resolveSignals(NetKind kind, const std::vector<Signal>& signals) {
+    std::vector<Signal> ranges = signals;
     // The net's own driver (5.3: 28.15.1, 28.15.3).
     if (kind == NetKind::Tri0) ranges.push_back({-5, -5});
     if (kind == NetKind::Tri1) ranges.push_back({5, 5});

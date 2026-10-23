@@ -54,6 +54,10 @@ struct Driver {
 /// is [-s0, s1] and z is [0, 0].
 Signal driverSignal(const Driver& d);
 
+/// Resolve arbitrary valid strength intervals by enumerating all point
+/// choices (5.4), adding the net's own pull/supply driver (5.3).
+Signal resolveSignals(NetKind kind, const std::vector<Signal>& signals);
+
 /// The signal of one bit of a net of the given kind with these drivers,
 /// adding the pull of tri0 and tri1 and the supply of supply0 and supply1
 /// (5.3, 5.4).
