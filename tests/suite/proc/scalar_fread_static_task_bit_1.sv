@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: yes
 :nondeterministic: no
-:generator: gen_scalar_fread_matrix.py@1
+:generator: gen_scalar_fread_matrix.py@2
 :top_module: top
 :expected_stdout: @scalar_fread_static_task_bit_1.expected
 :expected_stderr: @scalar_fread_static_task_bit_1.stderr

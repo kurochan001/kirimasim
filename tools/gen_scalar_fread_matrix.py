@@ -7,6 +7,8 @@
 Start/count are evaluated as ordinary arguments but do not limit integral
 input. The independent bit-list model replaces available bytes from the top
 of ceil(width/8), truncates above width and retains unfilled old bits.
+SIR_SPEC 8 separately evaluates an inout actual for copy-in and copy-out;
+only outputs actually written are copied back (4.9.7 project interpretation).
 """
 
 import argparse
@@ -17,7 +19,7 @@ from pathlib import Path
 from gen_dynamic_container_matrix import HOMES, wrap
 
 OUT = Path(__file__).resolve().parent.parent / 'tests/suite/proc'
-VERSION = 1
+VERSION = 2
 CONTEXTS = (*HOMES, 'function')
 WIDTHS = (1, 7, 8, 9, 32, 64, 65, 129)
 DATA = bytes((0x81 + 73 * i) % 256 for i in range(40))
@@ -80,9 +82,12 @@ def output(name, program, expected):
                     stderr += (f"{name}.sv:{number}:{match.start()+1}: warning: 'trace' is both "
                                "read and modified in the same expression; the order of "
                                "evaluation is undefined [-Wread-write]\n")
-                if 'clear(a[0])' in line:
-                    column = line.index('clear(a[0])') + len('clear(') + 1
-                    stderr += (f"{name}.sv:{number}:{column}: warning: 'a[0]' is both read "
+                for target in ('a[0]', 'partial'):
+                    spelling = f'clear({target})'
+                    if spelling not in line:
+                        continue
+                    column = line.index(spelling) + len('clear(') + 1
+                    stderr += (f"{name}.sv:{number}:{column}: warning: '{target}' is both read "
                                "and modified in the same expression; the order of "
                                "evaluation is undefined [-Wread-write]\n")
     return {name + '.sv': text, name + '.expected': expected, name + '.stderr': stderr}
@@ -116,7 +121,7 @@ n=$fread(v,fd,0,0); $display("eof %0d %b",n,v); $fclose(fd);
 
 def mechanism_case(home):
     name = f'scalar_fread_{home}_evaluation'
-    variables = 'logic [23:0] a[2]; logic [31:0] bits; int fd,n,trace,idx; int q[$];'
+    variables = 'logic [23:0] a[2],partial; logic [31:0] bits; int fd,n,trace,idx; int q[$];'
     methods = '''function automatic int mark(ref int trace, input int digit, input int value);
 trace=trace*10+digit; return value; endfunction
 function automatic int pick(ref int trace, ref int idx);
@@ -128,6 +133,7 @@ return $fread(value,descriptor,0,0); endfunction
 '''
     body = fixture('data.bin', bytes([0x81, 0x12, 0xa7, 0x00]))
     body += '\n' + fixture('empty.bin', b'')
+    body += '\n' + fixture('short.bin', bytes([0x81]))
     for label, file in [('once', 'data.bin'), ('empty', 'empty.bin')]:
         body += f'''
 a[0]='1; a[1]='1; trace=0; idx=0; fd=$fopen("{file}","rb");
@@ -160,13 +166,22 @@ $display("heap_part %0d %h",n,q[0]); $fclose(fd);
 q='{17}; fd=$fopen("data.bin","rb");
 n=$fread(q[99],fd,0,0);
 $display("invalid %0d %0d",n,q[0]); $fclose(fd);
+q='{17,23}; trace=0; idx=0; fd=$fopen("data.bin","rb");
+n=$fread(q[pick(trace,idx)],mark(trace,2,fd),mark(trace,3,0),mark(trace,4,0));
+$display("heap_copyout %0d %0d %0d %h %h",n,trace,idx,q[0],q[1]); $fclose(fd);
+partial='1; fd=$fopen("short.bin","rb");
+n=$fread(partial,fd,clear(partial),0);
+$display("copyin %0d %h",n,partial); $fclose(fd);
 '''
     part = (0xffffffff & ~(0x1ff << 7)) | (0x112 << 7)
-    expected = ('once 3 1234 1 8112a7 ffffff\nempty 0 1234 1 ffffff ffffff\n'
-                'plain_once 3 12 1 8112a7 ffffff\n'
-                f'part 2 1234 {part:08x}\nconcat 2 ffff81 ffff12\n'
-                'heap 4 1234 1 8112a700\nheld 4 1 99\nno_copyback 0 000000\nref 3 8112a7\n'
-                'heap_part 2 00008900\ninvalid 4 17\n')
+    held = int.from_bytes(bytes([0x81, 0x12, 0xa7, 0x00]), 'big', signed=True)
+    expected = ('once 3 12341 2 ffffff 8112a7\nempty 0 1234 1 ffffff ffffff\n'
+                'plain_once 3 121 2 ffffff 8112a7\n'
+                f'part 2 12341 {part:08x}\nconcat 2 ffff81 ffff12\n'
+                f'heap 4 12341 2 00000011\nheld 4 1 {held}\n'
+                'no_copyback 0 000000\nref 3 8112a7\n'
+                'heap_part 2 00008900\ninvalid 4 17\n'
+                'heap_copyout 4 12341 2 00000011 8112a700\ncopyin 1 81ffff\n')
     return output(name, source(home, variables, methods, body), expected)
 
 
