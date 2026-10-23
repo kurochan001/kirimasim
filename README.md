@@ -47,8 +47,32 @@ for the specification, the tests, and review.** See
 
 ### P1 exit criteria
 
-The criteria and how they are measured are fixed in
-[docs/spec/TEST_SUITE.md](docs/spec/TEST_SUITE.md).
+**P1 is not complete.** The approved [P1 scope](docs/spec/P1_SCOPE.md)
+requires functional execution coverage at least as broad as Icarus Verilog
+13.0, in addition to the existing gates in
+[TEST_SUITE](docs/spec/TEST_SUITE.md). Passing the tables below alone does
+not complete P1.
+
+- Cover the standard mechanisms supported by Icarus, including the required
+  subset of dynamic containers, classes, programs, VPI, switch-level
+  modeling, specify paths and timing facilities. Earlier P3/P4 labels and
+  exclusions do not defer that subset beyond P1.
+- Record compiler/runtime versions and test mechanisms and their
+  interactions with original probes. Inventory extensions and external
+  interfaces separately; conflicting extensions need a reviewed compatibility
+  policy. Preserve IEEE value and scheduling semantics, four-state defaults,
+  the shared kernel, strict slang diagnostics and existing test expectations.
+- Meet all existing pass-rate and reference-value fuzzing gates below.
+
+The [implemented inventory](docs/P1_SUPPORT.md) and
+[comparison record](docs/notes/p1-icarus-progress.md) track progress. The
+current 38-probe inventory still has 25 Icarus-passing gaps. It uses Icarus
+`14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 coverage and complete
+parity remain unconfirmed. A passing probe inventory would not by itself
+establish complete coverage; the inventory must expand as mechanisms and
+interfaces are checked.
+
+#### Existing quantitative gates and measured results
 
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
@@ -72,8 +96,9 @@ This repository's tests by kind: unit tests (GoogleTest) 211, `tests/suite/` 1,3
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
-queues, associative arrays and classes (P3), and concurrent assertions
-(P3). The own test suite is kept in a
+queues, associative arrays, classes and concurrent assertions. The required
+Icarus-supported subset now belongs to P1; broader support retains its
+later-phase plan. The own test suite is kept in a
 separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests).
 
 ### Test results
@@ -85,8 +110,9 @@ of `--max-slot-events`.
 The two skipped tests of this repository need clocking blocks (P3), or
 drivers that meet through a port between parts of nets (not supported
 yet). Verilator leads sv-tests by far. Most of the gap is dynamic arrays,
-queues, associative arrays, classes and UVM, which kirimasim leaves to P3;
-`randsequence` comes next.
+queues, associative arrays, classes and UVM, followed by `randsequence`.
+The P1 scope amendment advances the required Icarus-supported subset;
+broader support retains its later-phase plan.
 
 The own test suite was written together with kirimasim, so it is not a
 neutral comparison. Each test was checked against the clauses of the
