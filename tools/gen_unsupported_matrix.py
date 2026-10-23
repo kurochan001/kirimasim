@@ -40,10 +40,10 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the rules below. Raise it whenever they change.
-VERSION = 17
+VERSION = 18
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
-ACCEPTED = {"nonblocking_delay_index"}
+ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit"}
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
