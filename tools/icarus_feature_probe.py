@@ -39,6 +39,43 @@ PROBES = [
     ("vcd", "21.7.1", "module top; bit a; initial begin $dumpfile(\"probe.vcd\"); $dumpvars(0,top); #1 a=1; #1; end endmodule", "", []),
 ]
 
+# Original additional mechanisms. Keep the 16-case seed inventory stable;
+# --extended selects these too, without claiming an exhaustive language list.
+EXTENDED = [
+    ("dynamic_resize_copy", "7.5", "module top; int a[]; initial begin a=new[2]; a[0]=12; a[1]=34; a=new[3](a); $display(\"%0d %0d %0d %0d\",a.size(),a[0],a[1],a[2]); a.delete(); $display(\"%0d\",a.size()); end endmodule", "3 12 34 0\n0\n", []),
+    ("queue_front_back", "7.10.2", "module top; int q[$]; int x,y; initial begin q.push_back(7); q.push_front(3); x=q.pop_back(); y=q.pop_front(); $display(\"%0d %0d %0d\",x,y,q.size()); end endmodule", "7 3 0\n", []),
+    ("class_constructor", "8.7", "class node; int v; function new(int n); v=n; endfunction endclass module top; node a,b; initial begin a=new(7); b=new(9); $display(\"%0d %0d\",a.v,b.v); end endmodule", "7 9\n", []),
+    ("class_virtual_dispatch", "8.20", "class base; virtual function int value(); return 3; endfunction endclass class derived extends base; function int value(); return 9; endfunction endclass module top; base b; derived d; initial begin d=new; b=d; $display(\"%0d\",b.value()); end endmodule", "9\n", []),
+    ("delayed_net_assignment", "6.7, 4.9.6", "`timescale 1ns/1ns\nmodule top; logic a=0; wire #2 y=a; initial begin #5 a=1; #1 $display(\"%b\",y); #2 $display(\"%b\",y); end endmodule", "0\n1\n", []),
+    ("bare_delayed_net", "6.7, 4.9.6", "`timescale 1ns/1ns\nmodule top; logic a=0; wire #2 y; assign y=a; initial begin #5 a=1; #1 $display(\"%b\",y); #2 $display(\"%b\",y); end endmodule", "0\n1\n", []),
+    ("event_controlled_nba", "10.4.2", "module top; bit clk=0; int d=7,q=1; initial begin q <= @(posedge clk) d; d=9; #2 clk=1; #1 $display(\"%0d\",q); end endmodule", "7\n", []),
+    ("delayed_nba_array_index", "10.4.2", "module top; int a[2]='{0,0}; int i=1; initial begin a[i] <= #2 7; i=0; #3 $display(\"%0d %0d\",a[0],a[1]); end endmodule", "0 7\n", []),
+    ("nested_packed_select", "7.4.1, 11.5.1", "module top; logic [1:0][7:0] a; int i=2; initial begin a=0; a[1][i+:3]=3'b101; $display(\"%h\",a); end endmodule", "1400\n", []),
+    ("array_slice_assignment", "7.4.6", "module top; int a[0:3]='{1,2,3,4}; int b[0:1]; initial begin b=a[1:2]; $display(\"%0d %0d\",b[0],b[1]); end endmodule", "2 3\n", []),
+    ("mixed_strength_port_bit", "23.3.3.7, 28.12", "module leaf(output wire y); assign (weak1,weak0) y=1'b0; endmodule module top; wire [1:0] y; leaf u(y[1]); assign (weak1,weak0) y[1]=1'b1; initial begin #1 $display(\"%b\",y[1]); end endmodule", "x\n", []),
+]
+for _primitive in ("nmos", "pmos", "rnmos", "rpmos"):
+    _enabled = 0 if _primitive.endswith("pmos") else 1
+    EXTENDED.append(("mos_" + _primitive, "28.7, 28.9",
+        "module top; logic en=0; wire y; " + _primitive + " u(y,1'b1,en); "
+        "initial begin #1 $display(\"%b\",y); en=1; #1 $display(\"%b\",y); "
+        "en=1'bx; #1 $display(\"%b\",y); en=1'bz; #1 $display(\"%b\",y); end endmodule",
+        ("1\nz\nx\nx\n" if _enabled == 0 else "z\n1\nx\nx\n"), []))
+for _primitive in ("tranif0", "tranif1", "rtranif0", "rtranif1"):
+    EXTENDED.append(("switch_" + _primitive, "28.8, 28.9",
+        "module top; logic en=0; wire a,y; assign a=1'b1; " + _primitive + " u(a,y,en); "
+        "initial begin #1 $display(\"%b\",y); en=1; #1 $display(\"%b\",y); "
+        "en=1'bx; #1 $display(\"%b\",y); en=1'bz; #1 $display(\"%b\",y); end endmodule",
+        ("1\nz\nx\nx\n" if _primitive.endswith("0") else "z\n1\nx\nx\n"), []))
+for _primitive in ("cmos", "rcmos"):
+    EXTENDED.append(("mos_" + _primitive, "28.7, 28.9",
+        "module top; logic n=0,p=1; wire y; " + _primitive + " u(y,1'b1,n,p); "
+        "initial begin #1 $display(\"%b\",y); n=1;p=0; #1 $display(\"%b\",y); "
+        "n=1'bx;p=1'bx; #1 $display(\"%b\",y); end endmodule", "z\n1\nx\n", []))
+EXTENDED.append(("switch_rtran", "28.8, 28.9",
+    "module top; wire a,y; assign a=1'b1; rtran u(a,y); initial begin #1 $display(\"%b\",y); end endmodule",
+    "1\n", []))
+
 
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
@@ -53,6 +90,8 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--require-parity", action="store_true",
                         help="fail when an Icarus-passing probe fails in kirimasim; still not a complete parity proof")
+    parser.add_argument("--extended", action="store_true", help="include additional original mechanism probes")
+    parser.add_argument("--only", action="append", help="select named probes (repeatable)")
     args = parser.parse_args()
     simulator = str(args.kirimasim.resolve())
     versions = {}
@@ -61,10 +100,17 @@ def main():
         r = bounded_run.run(cmd, text=False, timeout=10)
         versions[name] = (r.stdout or r.stderr).decode(errors="replace").splitlines()[0]
     results = []
-    for name, clause, source, expected, flags in PROBES:
+    selected = PROBES + EXTENDED if args.extended else PROBES
+    if args.only:
+        unknown = set(args.only) - {row[0] for row in selected}
+        if unknown:
+            parser.error("unknown probe(s): " + ", ".join(sorted(unknown)))
+        selected = [row for row in selected if row[0] in args.only]
+    for name, clause, source, expected, flags in selected:
         want = expected.encode() if isinstance(expected, str) else expected
         record = {"name": name, "clause": clause,
-                  "category": "icarus_extension" if name == "real_net" else "standard"}
+                  "category": "icarus_extension" if name == "real_net" else "standard",
+                  "expected_stdout_hex": want.hex()}
         if name == "real_net":
             record["clause"] = "Icarus extension: wire real"
             record["reference"] = "https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html"
@@ -96,8 +142,9 @@ def main():
                     if name == "vcd":
                         wave = directory / "probe.vcd"
                         passed = passed and wave.exists() and b"#1" in wave.read_bytes()
-                    record[engine] = {"status": "passed" if passed else "run_failed",
+                    record[engine] = {"status": "passed" if passed else "run_failed" if ran.returncode else "result_mismatch",
                                       "exit": ran.returncode, "stdout_hex": ran.stdout.hex(),
+                                      "compared_stdout_hex": actual.hex(),
                                       "diagnostic": normalized(ran.stderr, directory)}
                 except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
                     record[engine] = {"status": "limit", "diagnostic": str(error).replace(tmp, "<probe>")}

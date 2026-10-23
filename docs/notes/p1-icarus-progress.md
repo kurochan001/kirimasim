@@ -121,3 +121,41 @@ queues, classes, programs, MOS, bidirectional switches and specify paths)
 and the `wire real` extension. Full parity is still unconfirmed. The next
 [program execution amendment](program-execution-proposal.md) addresses a
 conflicting `$exit` description and missing execution metadata.
+
+## Expanded mechanism inventory
+
+`tools/icarus_feature_probe.py --extended` retains the original 16-case
+seed and adds 22 original probes (38 total). `--only <name>` selects an
+individual probe. The measured development executables still identify as
+Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`, not exact 13.0.
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/p1-icarus-extended.json --require-parity
+```
+
+26 probes pass Icarus and fail kirimasim. They include subcases of the
+existing gaps plus event-controlled NBAs, delayed NBAs with runtime array
+indices, nested packed selection targets and strengths across a bit-select
+port connection. This count is of probes, not distinct language features;
+adding probes can increase it without regressing the implementation.
+
+Net declaration assignments with delay pass both. The separate bare-net
+delay probe is rejected by both; array-slice assignment is also rejected
+by both in this measurement. The class virtual-method probe runs to code 0
+in Icarus but prints the base result 3, instead of the derived result 9
+specified by this original test (8.20). The report distinguishes normal-exit
+result mismatches from native execution failures, and records expected bytes
+alongside actual bytes. None of these outcomes establishes complete support
+or absence of support for its whole mechanism. No simulator source was read.
+
+Binary-input regression additionally passes dev (1,575 passes, two known
+skips). Three deliberate binary scanner mutations (skipping whitespace,
+ignoring destination widths, assigning short fields) are each detected by
+its four new binary unit tests; the normal sources pass after restoration.
+
+Final binary-input local CI passed all presets (dev, release, ASan, UBSan),
+release flags, banned features, SPDX, suite files, global state, unpublished
+commit expectation checks, README counts, clang-format and clang-tidy.
+Program implementation remains pending approval of the detailed amendment.
