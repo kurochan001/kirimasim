@@ -141,6 +141,32 @@ EXTENDED.extend([
      "2 31 32\n", []),
 ])
 
+# The oracle follows 7.12.1: an extremum result has at most one element,
+# even for equal keys. A reference result mismatch is not a passing gap.
+EXTENDED.extend([
+    ("dynamic_minimum_unique", "7.12.1",
+     'module top; int a[],q[$]; initial begin a=new[3]; a[0]=4;a[1]=7;a[2]=6; q=a.min(); $display("%0d %0d",q.size(),q[0]); end endmodule',
+     "1 4\n", []),
+    ("queue_maximum_unique", "7.12.1",
+     'module top; int a[$],q[$]; initial begin a.push_back(4);a.push_back(7);a.push_back(6); q=a.max(); $display("%0d %0d",q.size(),q[0]); end endmodule',
+     "1 7\n", []),
+    ("dynamic_minimum_duplicate", "7.12.1",
+     'module top; int a[],q[$]; initial begin a=new[3]; a[0]=4;a[1]=7;a[2]=4; q=a.min(); $display("%0d %0d",q.size(),q[0]); end endmodule',
+     "1 4\n", []),
+    ("queue_maximum_duplicate", "7.12.1",
+     'module top; int a[$],q[$]; initial begin a.push_back(4);a.push_back(7);a.push_back(7); q=a.max(); $display("%0d %0d",q.size(),q[0]); end endmodule',
+     "1 7\n", []),
+    ("dynamic_minimum_with_key", "7.12.1",
+     'module top; int a[],q[$]; initial begin a=new[3]; a[0]=4;a[1]=7;a[2]=6; q=a.min() with (-item); $display("%0d %0d",q.size(),q[0]); end endmodule',
+     "1 7\n", []),
+    ("dynamic_minimum_empty", "7.12.1",
+     'module top; int a[],q[$]; initial begin a=new[0]; q=a.min(); $display("%0d",q.size()); end endmodule',
+     "0\n", []),
+    ("queue_maximum_empty", "7.12.1",
+     'module top; int a[$],q[$]; initial begin q=a.max(); $display("%0d",q.size()); end endmodule',
+     "0\n", []),
+])
+
 
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
@@ -216,12 +242,17 @@ def main():
         results.append(record)
     gaps = [r["name"] for r in results
             if r["icarus"]["status"] == "passed" and r["kirimasim"]["status"] != "passed"]
+    reference_mismatches = [r["name"] for r in results
+                            if r["icarus"]["status"] == "result_mismatch"]
     report = {"scope": "original finite probes; complete feature parity not confirmed",
-              "versions": versions, "gaps": gaps, "probes": results}
+              "versions": versions, "gaps": gaps,
+              "reference_mismatches": reference_mismatches, "probes": results}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     for result in results:
         print(f"{result['name']}: Icarus={result['icarus']['status']}, kirimasim={result['kirimasim']['status']}")
+    if reference_mismatches:
+        print("Icarus result mismatches against the written oracle: " + ", ".join(reference_mismatches))
     return int(args.require_parity and bool(gaps))
 
 

@@ -641,6 +641,49 @@ def mutant_detection(tmp: Path) -> None:
             failures.append("mutant detection did not restore its source")
 
 
+def feature_probe_report(tmp: Path) -> None:
+    """Reference mismatches remain visible and cannot count as passing gaps."""
+    spec = importlib.util.spec_from_file_location("feature_probe", TOOLS / "icarus_feature_probe.py")
+    probe = importlib.util.module_from_spec(spec)
+    with mock.patch.object(sys, "path", [*sys.path, str(TOOLS)]):
+        spec.loader.exec_module(probe)
+    cases = [(name, "test", name, "7\n", []) for name in
+             ("confirmed_gap", "reference_wrong", "both_wrong", "both_correct")]
+
+    def engine(command, **kwargs):
+        if "-V" in command or "--version" in command:
+            return subprocess.CompletedProcess(command, 0, b"mock version\n", b"")
+        if command[0] == "iverilog":
+            return subprocess.CompletedProcess(command, 0, b"", b"")
+        name = (Path(kwargs["cwd"]) / "probe.sv").read_text().strip()
+        reference = command[0] == "vvp"
+        correct = name == "both_correct" or (reference and name == "confirmed_gap") or \
+            (not reference and name == "reference_wrong")
+        return subprocess.CompletedProcess(command, 0, b"7\n" if correct else b"9\n", b"")
+
+    for only in (None, "reference_wrong"):
+        report = tmp / ("feature_all.json" if only is None else "feature_reference_wrong.json")
+        arguments = ["icarus_feature_probe.py", "--kirimasim", str(tmp / "sim"),
+                     "--output", str(report), "--require-parity"]
+        if only:
+            arguments += ["--only", only]
+        with mock.patch.object(probe, "PROBES", cases), \
+             mock.patch.object(probe.bounded_run, "run", side_effect=engine), \
+             mock.patch.object(sys, "argv", arguments), contextlib.redirect_stdout(io.StringIO()):
+            code = probe.main()
+        data = json.loads(report.read_text())
+        gaps = ["confirmed_gap"] if only is None else []
+        mismatches = ["reference_wrong", "both_wrong"] if only is None else ["reference_wrong"]
+        if data["gaps"] != gaps or data["reference_mismatches"] != mismatches:
+            failures.append("feature probe confuses reference mismatches with passing gaps")
+        if code != int(only is None):
+            failures.append("feature probe require-parity exit ignores its passing-gap scope")
+        rows = {row["name"]: row for row in data["probes"]}
+        if rows["reference_wrong"]["icarus"]["status"] != "result_mismatch" or \
+                rows["reference_wrong"]["kirimasim"]["status"] != "passed":
+            failures.append("feature probe loses the independent per-engine result")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True)
@@ -663,6 +706,7 @@ def main() -> int:
         expected_change(tmp)
         mutants_check(tmp)
         mutant_detection(tmp)
+        feature_probe_report(tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)
     if failures:
