@@ -77,7 +77,7 @@ copying, stable element cells, bounded queue mutation and exact tracing.
 Allocation failures roll back new objects; reclaimed entries use generations
 so stale tokens cannot name replacement values. These are kernel APIs,
 covered by [15 original unit tests](../tests/unit/heap_test.cpp),
-[nine conversion/snapshot/descriptor tests](../tests/unit/heap_conversion_test.cpp) and an independent
+[ten conversion/snapshot/descriptor/collection tests](../tests/unit/heap_conversion_test.cpp) and an independent
 [`valsem` container model](../src/valsem/include/kirimasim/valsem/containers.h).
 The 100-sample check passed 2,520,000 operations; all six deliberate heap
 mutations were caught. The heap matrix is included in nightly reference checks.
@@ -96,7 +96,7 @@ text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container
 Ten new SIR tests cover 96 positive type/bound combinations, 49 malformed
 cases, argument bindings and fixed arrays of container receivers.
 The VM now dispatches all 16 instructions to the shared heap. Its
-[14 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
+[22 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
 element/bound/storage combinations, 72 ref-call combinations, selected fixed
 arrays, detached cells across task waits, packed writes against `valsem`,
 argument side effects, invalid indices, method warning positions and errors.
@@ -105,11 +105,19 @@ selection through forwarded array refs. Size errors and heap allocation
 failure map to Error/ResourceLimit with source positions; method warnings
 are given once per source position. Eight deliberate VM mutations were caught.
 
+Automatic collection now runs at drained region/slot boundaries. Typed roots
+cover slots and fixed arrays, live process/task activations, references to
+detached cells, deferred call arguments, NBA snapshots, pending drivers and
+held storage. Primitive words are never guessed to be handles. Tests exercise
+24 repeated replacement/churn combinations, 12 NBA cases, eight fixed-array
+cases, 16 deferred-call cases and root-only changes; pool tables stay bounded
+over 100 rounds. Failed marking retains every value. No collection runs inside
+a process callback, after termination is requested or during final cleanup.
+
 SystemVerilog dynamic arrays and queues remain unsupported. Front-end
-lowering, complete safe-point roots, heap-dependent change notification,
-container-cell NBA targets and source-level execution/diagnostic matrices
-remain. The VM does not yet collect this heap automatically; retaining cells
-through a wait is not evidence of complete GC roots. This extension does not
+lowering, heap-dependent change notification, container-cell NBA targets and
+source-level execution/diagnostic matrices remain. Class/DPI/VPI roots are
+future mechanisms, not covered by the current container adapter. This extension does not
 establish full container support or the Icarus coverage target.
 
 ## System tasks, functions and methods
@@ -204,7 +212,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | Shared heap, typed SIR and VM primitive execution are tested; front, complete roots, heap-change notification, cell NBAs and SystemVerilog execution tests remain |
+| P1 container integration | Shared heap, typed SIR, VM execution and automatic typed-root collection are tested; front, heap-change notification, cell NBAs and SystemVerilog execution tests remain |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |

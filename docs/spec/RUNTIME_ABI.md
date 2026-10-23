@@ -164,6 +164,36 @@ unbounded scalability from deferred collection. Unreachable table entries may
 be reused, but stale tokens must never name a different value. Collection and
 mutation report allocation failure without a partial replacement.
 
+Implementation status (2026-10-24): the interpreter installs a scoped
+`SafePointHook` when it first uses the container heap, and restores the prior
+hook on every exit. The scheduler calls it after an outer region drains and
+after the time-slot NBA arena is cleared, outside process and guard callbacks.
+It does not call it after termination is requested or during `final` cleanup;
+remaining allocations are released with the Context. This preserves the final
+termination policy of SCHEDULER_SPEC 16.2. No simulated event is added.
+
+The interpreter publishes container-typed slots (including static parameters
+and fixed-array elements), live process/task frame fields, frame references,
+retained cell references and deferred report arguments. Kernel-ended
+activations are not roots unless reached through a live reference. Traversal
+of activation references is iterative. `Scheduler::visitPendingValues` exposes
+owned immediate/delayed NBA snapshots, pending drivers and held base/override
+values; the interpreter filters them by their destination slot's type before
+interpreting any bits. Numeric, real and other opaque words are never guessed
+to be handles. SSA temporaries cannot cross a wait (SIR_SPEC 5.1), and
+collection is suppressed while a native process or synchronous call is active.
+
+The heap records committed graph mutations. The interpreter also compares
+the typed root set, so dropping the last reference triggers collection without
+another heap write, and repeated mutations of the same handle are collected.
+Root-publication or marking allocation failure reports ResourceLimit; no
+partial root set is passed to collection and failed marking sweeps nothing.
+Tests distinguish assignment failure (the old destination remains) from
+collection failure after assignment committed (both complete values remain).
+This implements roots for the current container SIR, not future class/DPI/VPI
+providers. Front lowering, heap-change notification and cell NBA targets remain
+unfinished; SystemVerilog dynamic containers are not enabled yet.
+
 Class, mailbox and weak-reference semantics extend the root descriptors when
 those mechanisms are implemented. Weak references are not marking edges;
 unreachable referents become null. Their remaining details are separate work.

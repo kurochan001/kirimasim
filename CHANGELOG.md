@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Automatic typed-container collection after drained scheduling regions and
+  slots, tracing typed storage, live activations, detached cell refs, deferred
+  call arguments and owned scheduler values (RUNTIME_ABI 6). Root-only changes
+  trigger collection; failed marking retains all values. This is tested with
+  original SIR inputs; SystemVerilog container execution remains unfinished.
+
 - Tier 1 executes the 16 typed container SIR instructions through the shared
   heap, with actual-target reference metadata, stable element refs, snapshots,
   source-position method warnings and resource-error mapping (SIR_SPEC 5.8).

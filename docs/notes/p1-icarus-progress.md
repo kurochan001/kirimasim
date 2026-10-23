@@ -9,6 +9,50 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Automatic typed-root collection (2026-10-24)
+
+Source revision `3281727` adds automatic collection for the current container
+SIR at drained region/slot boundaries. The VM publishes typed slots and fixed
+arrays, live process/task activations, retained frame/cell references and
+deferred call arguments. The scheduler exposes owned NBA snapshots, pending
+drivers and held values without depending on SIR. The VM filters these by slot
+type; ordinary numeric/real bits are not conservative roots. Stopped kernel
+activations are omitted unless a live reference reaches them.
+
+Eight new VM tests cover 24 repeated replacement/churn combinations, eight
+fixed-array cases, 12 active/reactive NBA cases, 16 deferred-call cases and six
+opaque-value cases, plus dropping the last reference without a heap mutation,
+restoring callback ownership and stopping a suspended activation. Each churn
+case runs 100 rounds and checks live counts and pool tables of at most eight
+entries. Detached cell writes remain visible while the reference lives.
+Deferred callbacks use the common `bindArgs` path for static and automatic
+parameters. One new heap test checks mutation tracking and failed marking;
+two scheduler tests check safe boundaries and owned pending payloads.
+
+Allocation tests now distinguish failed assignment from failed collection
+after a committed assignment. The former preserves the exact original token;
+the latter preserves both complete values until a successful retry. Exact
+counts exclude unreachable temporaries reclaimed by the new safe points.
+Existing suite bodies, expected output and performance counts are unchanged.
+
+The dev run has 2,154 tests: 2,152 pass and the two known skips remain.
+There are now 25 heap tests and 22 container VM tests. The targeted 49-test
+heap/VM/scheduler run passes.
+
+No collection occurs inside process/guard callbacks, after termination is
+requested or during final cleanup. The existing final termination policy is
+preserved (SCHEDULER_SPEC 16.2). Final allocations are released with Context.
+Class/DPI/VPI root providers, front lowering, heap-dependent change
+notification, cell NBA targets and language execution matrices remain work.
+SystemVerilog dynamic arrays and queues are still rejected, and the full
+Icarus-or-broader goal is not achieved.
+
+```sh
+ctest --preset dev -R '^(VmContainer|Heap|Scheduler[.](SafePoints|PendingValue))' --output-on-failure
+```
+
+The sections below record earlier stages and their then-current limitations.
+
 ## VM container instructions and actual references (2026-10-24)
 
 Source revision `c762840` mechanically dispatches the 16 typed SIR instructions to the

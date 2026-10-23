@@ -37,7 +37,7 @@ upstream.
 
 ## Three execution tiers, one kernel
 
-As of 2026-10-23, tier 1 and the shared kernel implement the subset listed
+As of 2026-10-24, tier 1 and the shared kernel implement the subset listed
 in [P1_SUPPORT](P1_SUPPORT.md). The full P1 coverage target is unfinished.
 Tier 2 is planned for P2; tier 3 comes later. The table and shared execution
 contract below describe the full design, including those future tiers.
@@ -79,7 +79,7 @@ Some ideas the design is built on:
 - **No global state.** All simulation state lives in a context object, so
   several simulations can run in one process.
 
-## Typed container heap: kernel implementation, tier integration pending
+## Typed container heap: VM collection implemented, front integration pending
 
 The [approved container contract](notes/dynamic-containers-proposal.md) is
 recorded in SIR_SPEC 4.2.1 and RUNTIME_ABI 6. Each Context owns a
@@ -103,10 +103,16 @@ and text support are implemented (SIR_SPEC 5.8). Kernel copies apply destination
 bounds at every nested queue level; snapshots retain the actual source type.
 The VM mechanically maps typed operands to these APIs; references retain
 actual variable types even when empty, and cell refs carry stable tokens.
-Fourteen original SIR tests exercise execution, calls, waits and error mapping.
-Front-end lowering, heap-dependent notifications, cell NBA targets and automatic
-publication of all live slots/frames/temporaries/pending events are not connected yet. Collection
-requires a complete root list at a permitted safe point outside DPI. The
+Twenty-two original SIR tests exercise execution, calls, waits and error mapping.
+After a region drains or the slot arena is cleared, a scoped scheduler hook
+publishes typed slots, live activations, cell refs, deferred call arguments and
+owned scheduler payloads. Ordinary numbers are not interpreted as handles.
+Collection runs when the heap or root set changes; failed marking sweeps nothing.
+No callback runs inside process/guard execution, after termination is requested
+or during final cleanup. SSA temporaries cannot cross waits (SIR_SPEC 5.1).
+Class, DPI and VPI root providers remain future work.
+Front-end lowering, heap-dependent notifications and cell NBA targets are
+not connected yet. The
 running SystemVerilog design does not yet use this heap or its collector.
 Full language support needs those connections and execution tests.
 

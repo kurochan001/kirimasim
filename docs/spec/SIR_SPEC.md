@@ -409,8 +409,10 @@ possibly different ref formal's capacity. An empty container constant has handle
 and is printed `empty`. Nonempty container constants are invalid.
 
 The VM's dispatch and reference transport are exercised by independent SIR
-inputs. This does not establish language support: front lowering, complete
-roots, heap-dependent notifications, cell NBA targets and source-level
+inputs. Typed root publication and automatic collection for the currently
+implemented container SIR are described in RUNTIME_ABI 6. This does not
+establish language support: front lowering, heap-dependent notifications,
+cell NBA targets and source-level
 execution/diagnostic matrices remain required under P1_SCOPE. C ABI 0.3 is
 unchanged by this internal SIR encoding.
 
