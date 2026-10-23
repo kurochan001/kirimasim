@@ -873,13 +873,15 @@ private:
             if (off < 0 || static_cast<std::uint64_t>(off) >= n) return whole;
             elem = elem * n + static_cast<std::uint64_t>(off);
         }
-        SlotRange t{ops[0].asSlot(), static_cast<std::uint32_t>(elem), nIdx == 0 ? 0U : 1U, 0, 0};
+        SlotRange t{ops[0].asSlot(), static_cast<std::uint32_t>(elem), nIdx == 0 ? 0U : 1U,
+                    bits ? ops[0].lsb : 0, bits ? ops[0].width : 0};
         if (bits) {
             const std::optional<std::int64_t> pos = constIndex(ops[1 + nIdx]);
             const std::uint32_t w =
                 operandType(body, ops[ops.size() - (delayed ? 2 : 1)], tempType).width;
-            if (pos && *pos >= 0 && w != 0 && *pos + w <= slot.type.width) {
-                t.lsb = static_cast<std::uint32_t>(*pos);
+            const std::uint32_t limit = ops[0].width ? ops[0].width : slot.type.width;
+            if (pos && *pos >= 0 && w != 0 && *pos <= limit && w <= limit - *pos) {
+                t.lsb = ops[0].lsb + static_cast<std::uint32_t>(*pos);
                 t.width = w;
             }
         }
@@ -968,7 +970,10 @@ private:
             if (ops.empty() || ops[0].kind != Operand::Kind::Slot || ops[0].id >= d_.slots.size())
                 return nullptr;
             const Operand& o = ops[0];
-            if (o.lsb != 0 || o.width != 0 || o.firstElem != 0 || o.numElems != 0) return nullptr;
+            const bool bits =
+                in.op == Op::StoreBits || in.op == Op::NbaBits || in.op == Op::NbaBitsDelay;
+            if ((!bits && (o.lsb != 0 || o.width != 0)) || o.firstElem != 0 || o.numElems != 0)
+                return nullptr;
             return &d_.slots[o.id];
         };
         // The element type and dimensions of the first operand of an
@@ -992,6 +997,12 @@ private:
             for (std::size_t i = first; i < first + n; ++i)
                 if (!isIntegral(ty(i))) return false;
             return true;
+        };
+        const auto windowOk = [&](Type t) {
+            const Operand& o = ops[0];
+            const std::uint32_t width = o.width ? o.width : t.width;
+            return o.firstElem == 0 && o.numElems == 0 && o.lsb <= t.width &&
+                   width <= t.width - o.lsb;
         };
 
         // A block operand at position i with its arguments: the target's
@@ -1139,6 +1150,7 @@ private:
                     bad("needs a whole integral slot or frame variable");
                     break;
                 }
+                if (!windowOk(s->type)) bad("invalid packed parent range");
                 const std::size_t n = s->dims->size();
                 if (ops.size() != n + 3 + (delayed ? 1 : 0)) {
                     bad("needs one index per dimension, a position and a value");  // rule 11
@@ -1217,6 +1229,8 @@ private:
                 if (!indicesOk(1, in.op == Op::StoreRefBits ? n + 1 : n))
                     bad("indices and the position must be integral");
                 const Type target = (*body.frame)[ops[0].id].target;
+                if (in.op == Op::StoreRefBits && !windowOk(target))
+                    bad("invalid packed parent range");
                 if (in.op != Op::LoadRefElem && !isValue(want - 1)) bad("needs a value");
                 if (in.op == Op::LoadRefElem && rt != target)
                     bad("result must have the type of what the ref refers to");

@@ -2772,13 +2772,13 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     const Val pos = bitPosition(lhs.as<ast::ElementSelectExpression>().selector(),
                                                 bt.getFixedRange(), w);
                     if (pos.op.kind != Operand::Kind::Const)
-                        unsupported(sl, "a select known at run time of a member or a part");
+                        return narrowRuntime(std::move(inner), pos, w, sl);
                     return narrow(
                         std::move(inner),
                         static_cast<std::int64_t>(design().constants[pos.op.id].aWords[0]), w, sl);
                 }
                 const Part part = partOf(lhs);
-                if (part.pos) unsupported(sl, "a select known at run time of a member or a part");
+                if (part.pos) return narrowRuntime(std::move(inner), *part.pos, w, sl);
                 return narrow(std::move(inner), part.lsb, w, sl);
             }
             const std::uint32_t w = lhs.type->getBitWidth();
@@ -2838,6 +2838,22 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
     }
 }
 
+Lowerer::Place Lowerer::narrowRuntime(Place base, const Val& pos, std::uint32_t width,
+                                      slang::SourceLocation sl) {
+    // Keep the parent's boundary instead of merely adding its offset:
+    // an invalid child index must never reach a neighbouring member.
+    if (base.kind != Place::Kind::Bits || base.pos || base.lsb < 0 ||
+        base.lsb + base.width > (base.windowWidth ? base.windowWidth : homeType(base).width))
+        unsupported(sl, "a runtime select of this parent packed range");
+    base.windowLsb += static_cast<std::uint32_t>(base.lsb);
+    base.windowWidth = base.width;
+    base.pos = pos;
+    base.lsb = 0;
+    base.width = width;
+    base.type = integral(sir::isFourState(homeType(base)), false, width);
+    return base;
+}
+
 Lowerer::Place Lowerer::narrow(Place base, std::int64_t lsb, std::uint32_t width,
                                slang::SourceLocation sl) {
     // Bits lsb .. lsb + width - 1 of an integral place. A select outside
@@ -2874,6 +2890,11 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
     if (!p.indices.empty() && !p.elem) return {p.slot, 0, 0, 0, 0};
     const std::uint32_t elem = p.elem.value_or(0);
     const std::uint32_t count = p.elem ? 1 : 0;
+    if (p.windowWidth != 0) {
+        if (!p.pos && p.lsb >= 0 && p.lsb + p.width <= p.windowWidth)
+            return {p.slot, elem, count, p.windowLsb + static_cast<std::uint32_t>(p.lsb), p.width};
+        return {p.slot, elem, count, p.windowLsb, p.windowWidth};
+    }
     if (p.kind == Place::Kind::Bits && !p.pos && p.lsb >= 0 &&
         p.lsb + p.width <= design_.slot(p.slot).type.width)
         return {p.slot, elem, count, static_cast<std::uint32_t>(p.lsb), p.width};
@@ -2918,8 +2939,11 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
         }
         case Place::Kind::Bits: {
             const bool whole = p.indices.empty();
-            const Val all = home(whole ? Op::Load : Op::LoadElem, whole ? Op::Fload : Op::LoadElem,
-                                 whole ? Op::LoadRef : Op::LoadRefElem);
+            Val all = home(whole ? Op::Load : Op::LoadElem, whole ? Op::Fload : Op::LoadElem,
+                           whole ? Op::LoadRef : Op::LoadRefElem);
+            if (p.windowWidth != 0)
+                all = emit(Op::Partsel, integral(sir::isFourState(all.type), false, p.windowWidth),
+                           {all.op, constant(sir::u2(32), p.windowLsb).op}, sl);
             const Val pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             return emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {all.op, pos.op}, sl);
@@ -3026,11 +3050,15 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         }
         case Place::Kind::Bits: {
             const Val pv = coerce(v, p.type, sl);
+            Operand target =
+                p.home == Place::Home::Slot ? Operand::slot(p.slot) : Operand::frame(p.frameHome());
+            target.lsb = p.windowLsb;
+            target.width = p.windowWidth;
             const Val pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             if (p.home != Place::Home::Slot) {
                 noNba();
-                std::vector<Operand> ops{Operand::frame(p.frameHome())};
+                std::vector<Operand> ops{target};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(pos.op);
                 ops.push_back(pv.op);
@@ -3039,7 +3067,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                 return;
             }
             const sir::Slot& slot = design().slot(p.slot);
-            if (!p.pos && p.indices.empty()) {
+            if (!p.pos && p.indices.empty() && p.windowWidth == 0) {
                 // A constant part of a whole variable: an ordinary store to a
                 // slot range. A part wholly outside writes nothing (3.11).
                 if (p.lsb >= static_cast<std::int64_t>(slot.type.width) ||
@@ -3053,7 +3081,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                     return;
                 }
             }
-            std::vector<Operand> ops{Operand::slot(p.slot)};
+            std::vector<Operand> ops{target};
             ops.insert(ops.end(), p.indices.begin(), p.indices.end());
             ops.push_back(pos.op);
             ops.push_back(pv.op);

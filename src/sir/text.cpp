@@ -83,7 +83,8 @@ std::string operandText(const Design& d, const Operand& o) {
         }
         case Operand::Kind::Block: return "bb" + std::to_string(o.id);
         case Operand::Kind::Text: return quoted(o.text);
-        case Operand::Kind::Frame: return "%f" + std::to_string(o.id);
+        case Operand::Kind::Frame:
+            return "%f" + std::to_string(o.id) + rangeText(0, 0, o.lsb, o.width);
         case Operand::Kind::Subroutine:
             // A watch in wait.event has its edge.
             return (o.edge == Edge::Any ? "" : std::string(edgeName(o.edge)) + " ") + "@" +

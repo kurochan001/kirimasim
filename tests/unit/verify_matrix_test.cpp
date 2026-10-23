@@ -540,6 +540,39 @@ TEST(VerifyMatrix, DelayedNbaTargetsVerifyAndWriteText) {
     }
 }
 
+TEST(VerifyMatrix, PackedParentRangesVerifyAndWriteText) {
+    for (const Op op : {Op::StoreBits, Op::NbaBitsDelay, Op::StoreRefBits}) {
+        const bool ref = op == Op::StoreRefBits;
+        const unsigned homes = op == Op::StoreBits ? 2 : 1;
+        for (unsigned home = 0; home < homes; ++home) {
+            Design d = playground();
+            Operand target = ref         ? Operand::frame(FrameVarId{fRef})
+                             : home == 0 ? Operand::slot(SlotId{sA})
+                                         : Operand::frame(FrameVarId{fV});
+            target.lsb = 2;
+            target.width = 4;
+            std::vector<Operand> ops{target, Operand::constant(ConstId{c2}),
+                                     Operand::temp(TempId{tA})};
+            if (op == Op::NbaBitsDelay) ops.push_back(Operand::constant(ConstId{c2}));
+            add(none(op, std::move(ops))).apply(d);
+            EXPECT_TRUE(verify(d).empty()) << describe(verify(d));
+            const std::string name = target.kind == Operand::Kind::Frame ? "%f" : "%s";
+            EXPECT_NE(toText(d).find(name + std::to_string(target.id) + "[5:2]"),
+                      std::string::npos);
+        }
+    }
+    for (const bool ref : {false, true}) {
+        Design d = playground();
+        Operand target = Operand::frame(FrameVarId{ref ? fRef : fV});
+        target.lsb = 7;
+        target.width = 2;
+        add(none(ref ? Op::StoreRefBits : Op::StoreBits,
+                 {target, Operand::constant(ConstId{c2}), Operand::temp(TempId{tA})}))
+            .apply(d);
+        EXPECT_NE(describe(verify(d)).find("invalid packed parent range"), std::string::npos);
+    }
+}
+
 TEST(VerifyMatrix, EveryCheckFires) {
     for (const Case& c : cases()) {
         Design d = playground();

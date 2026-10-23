@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("packed parent: child writes use the whole storage boundary", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "const std::int64_t limit = windowWidth == 0 ? xw : windowWidth;",
+     "const std::int64_t limit = windowWidth == 0 ? xw : xw;"),
+    ("packed parent: child writes forget the parent offset", "src/kernel/include/kirimasim/kernel/w4ops.h",
+     "return Inside{windowLsb + static_cast<std::uint32_t>(lo),",
+     "return Inside{static_cast<std::uint32_t>(lo),"),
+    ("packed parent: compound reads use the whole storage value", "src/front/lower_expr.cpp",
+     "if (p.windowWidth != 0)\n                all = emit(Op::Partsel,",
+     "if (false)\n                all = emit(Op::Partsel,"),
     ("streaming delayed NBA: ignores the delay", "src/front/lower_expr.cpp",
      "storePlace(all, src, nonblocking, sl, ticks);",
      "(void)ticks; storePlace(all, src, nonblocking, sl);"),
@@ -458,8 +467,8 @@ MUTANTS = [
      "if ((x[0].a >> 63) != (neg ? 1U : 0U)) return std::nullopt;", ""),
     ("kernel: a part wholly below a value is written",
      "src/kernel/include/kirimasim/kernel/w4ops.h",
-     "if (pos >= xw || pos <= -static_cast<std::int64_t>(w)) return std::nullopt;",
-     "if (pos >= xw) return std::nullopt;"),
+     "pos <= -static_cast<std::int64_t>(w))\n        return std::nullopt;",
+     "false)\n        return std::nullopt;"),
     ("vm: a string index is read from its low word only", "src/vm/vm.cpp",
      "const std::optional<std::int64_t> i = indexOf(ops[1]);",
      "const std::optional<std::int64_t> i = kernel::position4(v(1), t(1).width, sir::isSigned(t(1)));"),

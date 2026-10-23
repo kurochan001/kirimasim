@@ -15,6 +15,33 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Runtime selects inside packed members and parts
+
+A runtime child selection now retains the boundary of its statically
+selected parent. Only the valid parent bits are written; adjacent members
+or packed elements stay unchanged. Compound assignments read the same
+bounded parent. Slots, automatic frames and refs use the shared kernel
+clipping rule; static targets also support NBA and delayed NBA capture.
+The example writes only bit 7 of the low byte, preserving the upper byte.
+Runtime child selects with a runtime-position parent, or with a constant
+parent range outside storage, still have unsupported forms.
+
+```systemverilog
+module top;
+  logic [1:0][7:0] value = 16'h5500;
+  int index = 7;
+  initial begin
+    value[0][index+:3] = 3'b111;
+    $display("%h", value);
+  end
+endmodule
+```
+
+```text
+5580
+```
+
+
 ## Delayed streaming NBAs
 
 Streaming targets can now use an intra-assignment delay with `<=`.

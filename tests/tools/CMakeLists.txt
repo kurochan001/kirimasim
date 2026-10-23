@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_nested_packed_target_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_nested_packed_target_matrix.py --check)
+set_tests_properties(tools/gen_nested_packed_target_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_delayed_nba_stream_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delayed_nba_stream_matrix.py --check)
 set_tests_properties(tools/gen_delayed_nba_stream_matrix PROPERTIES LABELS Tools)

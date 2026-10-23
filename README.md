@@ -66,7 +66,7 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-current 41-probe inventory still has 24 Icarus-passing gaps. It uses Icarus
+current 42-probe inventory still has 23 Icarus-passing gaps. It uses Icarus
 `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 coverage and complete
 parity remain unconfirmed. A passing probe inventory would not by itself
 establish complete coverage; the inventory must expand as mechanisms and
@@ -88,11 +88,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,908 | 1,906, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 2,023 | 2,021, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 212, `tests/suite/` 1,515 (made by 118 generators under `tools/`), tools 123, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
+This repository's tests by kind: unit tests (GoogleTest) 214, `tests/suite/` 1,627 (made by 119 generators under `tools/`), tools 124, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 14.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

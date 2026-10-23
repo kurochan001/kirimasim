@@ -1662,9 +1662,11 @@ private:
     /// element; only the bits inside the element (VALUE_SEMANTICS.md 3.11).
     void storeBits(const Frame& f, sir::SlotId s, std::uint32_t elem,
                    std::optional<std::int64_t> pos, W4 v, std::uint32_t width, bool nba,
-                   std::uint64_t delay = 0) {
+                   std::uint64_t delay = 0, std::uint32_t windowLsb = 0,
+                   std::uint32_t windowWidth = 0) {
         const std::optional<kernel::Inside> in =
-            pos ? kernel::inside(*pos, width, d_.slot(s).type.width) : std::nullopt;
+            pos ? kernel::inside(*pos, width, d_.slot(s).type.width, windowLsb, windowWidth)
+                : std::nullopt;
         if (!in) return;
         const W4 part{(v.a >> in->skip) & kernel::mask(in->n),
                       (v.b >> in->skip) & kernel::mask(in->n)};
@@ -3014,7 +3016,8 @@ private:
                 const sir::Type et = frame ? bodyFrame(act_.body)[ops[0].asFrame().index()].type
                                            : d_.slot(ops[0].asSlot()).type;
                 const unsigned vw = t(n + 2).width;
-                const std::optional<kernel::Inside> at = kernel::inside(*pos, vw, et.width);
+                const std::optional<kernel::Inside> at =
+                    kernel::inside(*pos, vw, et.width, ops[0].lsb, ops[0].width);
                 if (!at) return true;
                 const std::vector<W4> x = get(n + 2);
                 std::vector<W4> part(kw::chunks(at->n));
@@ -3336,7 +3339,8 @@ private:
         const std::optional<std::int64_t> pos = indexOf(ops[n + 1]);
         if (!pos) return true;
         const unsigned vw = typeOf(ops[n + 2]).width;
-        const std::optional<kernel::Inside> at = kernel::inside(*pos, vw, fv.target.width);
+        const std::optional<kernel::Inside> at =
+            kernel::inside(*pos, vw, fv.target.width, ops[0].lsb, ops[0].width);
         if (!at) return true;
         const std::vector<W4> x = chunks(ops[n + 2]);
         std::vector<W4> part(kw::chunks(at->n));
@@ -3457,7 +3461,8 @@ private:
                                            : frame ? fv->type
                                                    : d_.slot(ops[0].asSlot()).type;
                     invalid = !kernel::fullyInside(indexOf(ops[dims.size() + 1]),
-                                                   typeOf(ops[dims.size() + 2]).width, type.width);
+                                                   typeOf(ops[dims.size() + 2]).width, type.width,
+                                                   ops[0].lsb, ops[0].width);
                 }
                 break;
             }
@@ -3733,11 +3738,11 @@ private:
                     if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
                         cell = kernel::writeBits4(
                             cell, bodyFrame(act_.body)[ops[0].asFrame().index()].type.width, *pos,
-                            v(n + 2), t(n + 2).width);
+                            v(n + 2), t(n + 2).width, ops[0].lsb, ops[0].width);
                     return true;
                 }
                 storeBits(f, ops[0].asSlot(), e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
-                          in.op != Op::StoreBits, *delay);
+                          in.op != Op::StoreBits, *delay, ops[0].lsb, ops[0].width);
                 return true;
             }
             case Op::Udp:
@@ -3890,10 +3895,10 @@ private:
                     W4& cell = refWord(r, e);
                     if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
                         cell = kernel::writeBits4(cell, fv.target.width, *pos, v(n + 2),
-                                                  t(n + 2).width);
+                                                  t(n + 2).width, ops[0].lsb, ops[0].width);
                 } else {
                     storeBits(f, refSlot(r), refElem(r) + e, indexOf(ops[n + 1]), v(n + 2),
-                              t(n + 2).width, false);
+                              t(n + 2).width, false, 0, ops[0].lsb, ops[0].width);
                 }
                 return true;
             }

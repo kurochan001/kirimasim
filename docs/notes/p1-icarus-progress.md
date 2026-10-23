@@ -261,3 +261,35 @@ A new original streaming-delay probe brings the extended inventory to 41;
 kirimasim passes it and the installed Icarus compiler rejects it. There
 remain 24 Icarus-passing gaps and seven in the original seed. These finite
 observations do not establish full parity or exact-13.0 support.
+
+## Bounded nested packed targets
+
+The fourth round retains a static parent bit range in `store.bits`,
+`nba.bits`, their delay form and `store.ref.bits`. `Lowerer::narrowRuntime`
+keeps that range, and compound reads select it before their child. The
+kernel's `inside` clips relative positions inside the parent and returns
+absolute storage ranges; narrow/wide VM paths only decode these operands.
+Frame ranges are verified and represented in SIR text too. Runtime-position
+parents and out-of-storage constant parents remain explicit unsupported forms.
+
+The new 112-case matrix crosses 14 storage/execution forms, four widths
+and two domains. It checks X/Z and wide indices, partial ranges, compound
+reads, single evaluation, adjacent bits/elements, slots, frames, refs,
+packed members, ordinary NBA and delayed NBA. A new kernel test compares
+20,000 bounded writes with composed `valsem` operations (scaled with the
+existing fuzz setting); a new SIR test checks range validation and text.
+The historical packed-member rejection fixture keeps its input body and
+moves to acceptance in a separate expectation commit.
+
+Dev passes 2,023 tests: 2,021 pass and the two known skips remain. The
+bilingual example was executed. A new original boundary probe and the
+previous nested-select probe pass both tools: the extended inventory now
+has 42 probes and 23 Icarus-passing gaps; the seed remains seven gaps.
+The compiler/runtime versions and exact-13.0/full-parity limitations have
+not changed.
+
+All three delayed-target mutations, all three aggregate mutations and all
+three streaming mutations were detected by their respective new execution
+tests, excluding the mutation-tool self-checks. An initially surviving
+aggregate-index mutation exposed a missing differing-bound member case;
+that case was added before final validation. Restored sources pass.

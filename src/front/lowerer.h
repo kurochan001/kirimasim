@@ -332,6 +332,8 @@ public:
         std::optional<Val> pos;             ///< Bits: a position known at run time,
         std::int64_t lsb = 0;               ///< or a constant one;
         std::uint32_t width = 0;            ///< and the width.
+        std::uint32_t windowLsb = 0;        ///< Parent packed range of a nested select.
+        std::uint32_t windowWidth = 0;      ///< 0: the whole storage element.
         std::vector<Place> base;            ///< StringChar: the string; Concat: the parts.
         sir::Type type;                     ///< The type of the value there.
         /// The frame variable, or ref argument, that an Element or Bits
@@ -349,6 +351,7 @@ public:
     /// Bits lsb .. lsb + width - 1 of an integral place: a member of a
     /// packed structure, or a part of a member or part.
     Place narrow(Place base, std::int64_t lsb, std::uint32_t width, slang::SourceLocation sl);
+    Place narrowRuntime(Place base, const Val& pos, std::uint32_t width, slang::SourceLocation sl);
     Val loadPlace(const Place& p, slang::SourceLocation sl);
     void storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
                     std::optional<Val> delay = std::nullopt);

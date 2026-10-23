@@ -354,26 +354,34 @@ struct Inside {
     std::uint32_t skip = 0;
 };
 
-/// Nothing when no bit is inside.
-inline std::optional<Inside> inside(std::int64_t pos, std::uint32_t w, std::int64_t xw) {
-    if (pos >= xw || pos <= -static_cast<std::int64_t>(w)) return std::nullopt;
+/// Nothing when no bit is inside. A nonzero windowWidth bounds a child
+/// selection to its parent; the returned lo is absolute in the storage.
+inline std::optional<Inside> inside(std::int64_t pos, std::uint32_t w, std::int64_t xw,
+                                    std::uint32_t windowLsb = 0, std::uint32_t windowWidth = 0) {
+    const std::int64_t limit = windowWidth == 0 ? xw : windowWidth;
+    if (windowLsb > xw || limit > xw - windowLsb || pos >= limit ||
+        pos <= -static_cast<std::int64_t>(w))
+        return std::nullopt;
     const std::int64_t lo = pos < 0 ? 0 : pos;
-    const std::int64_t hi = pos + w < xw ? pos + w : xw;  // exclusive
-    return Inside{static_cast<std::uint32_t>(lo), static_cast<std::uint32_t>(hi - lo),
+    const std::int64_t hi = pos + w < limit ? pos + w : limit;  // exclusive
+    return Inside{windowLsb + static_cast<std::uint32_t>(lo), static_cast<std::uint32_t>(hi - lo),
                   static_cast<std::uint32_t>(lo - pos)};
 }
 
 /// Whether every requested bit is inside the value. An unknown or
 /// unrepresentable position is outside (VALUE_SEMANTICS.md 3.11).
-inline bool fullyInside(std::optional<std::int64_t> pos, std::uint32_t width, std::uint32_t total) {
-    const std::optional<Inside> at = pos ? inside(*pos, width, total) : std::nullopt;
+inline bool fullyInside(std::optional<std::int64_t> pos, std::uint32_t width, std::uint32_t total,
+                        std::uint32_t windowLsb = 0, std::uint32_t windowWidth = 0) {
+    const std::optional<Inside> at =
+        pos ? inside(*pos, width, total, windowLsb, windowWidth) : std::nullopt;
     return at && at->skip == 0 && at->n == width;
 }
 
 /// x (xw bits) with the w bits of v written from bit pos: only the bits
 /// inside x.
-inline W4 writeBits4(W4 x, unsigned xw, std::int64_t pos, W4 v, unsigned w) {
-    const std::optional<Inside> in = inside(pos, w, xw);
+inline W4 writeBits4(W4 x, unsigned xw, std::int64_t pos, W4 v, unsigned w,
+                     std::uint32_t windowLsb = 0, std::uint32_t windowWidth = 0) {
+    const std::optional<Inside> in = inside(pos, w, xw, windowLsb, windowWidth);
     if (!in) return x;
     const std::uint64_t m = mask(in->n) << in->lo;
     x.a = (x.a & ~m) | (((v.a >> in->skip) << in->lo) & m);

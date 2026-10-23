@@ -350,8 +350,11 @@ enum class Edge : std::uint8_t { Any, Pos, Neg, Both };
 ///
 /// A Block operand is followed by its `count` arguments. A Slot operand
 /// covers bits [lsb, lsb + width) (width 0: all bits) of elements
-/// [firstElem, firstElem + numElems) (numElems 0: all elements). An item
-/// of wait.event is a Slot operand or the Subroutine operand of a watch,
+/// [firstElem, firstElem + numElems) (numElems 0: all elements). A target
+/// of a bit-write instruction may bound its parent with lsb/width; the
+/// position is then relative to that range. Frame operands of bit writes
+/// use the same parent-range fields (SIR_SPEC.md 5.3).
+/// An item of wait.event is a Slot operand or the Subroutine operand of a watch,
 /// either with its edge, and may be followed by the Subroutine operand of
 /// a guard, its iff.
 struct Operand {

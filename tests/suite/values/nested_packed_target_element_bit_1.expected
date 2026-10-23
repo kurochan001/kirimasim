@@ -1,0 +1,32 @@
+zero write 1101 1
+neighbors 0000 0000
+zero xor 1101 1
+neighbors 0000 0000
+middle write 1101 1
+neighbors 0000 0000
+middle xor 1101 1
+neighbors 0000 0000
+high write 1101 1
+neighbors 0000 0000
+high xor 1101 1
+neighbors 0000 0000
+below write 1001 1
+neighbors 0000 0000
+below xor 1001 1
+neighbors 0000 0000
+outside write 1001 1
+neighbors 0000 0000
+outside xor 1001 1
+neighbors 0000 0000
+x write 1001 1
+neighbors 0000 0000
+x xor 1001 1
+neighbors 0000 0000
+z write 1001 1
+neighbors 0000 0000
+z xor 1001 1
+neighbors 0000 0000
+wide write 1001 1
+neighbors 0000 0000
+wide xor 1001 1
+neighbors 0000 0000

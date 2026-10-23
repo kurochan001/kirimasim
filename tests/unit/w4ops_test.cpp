@@ -222,6 +222,29 @@ TEST(W4Ops, SelectsConcatenationAndWrites) {
     }
 }
 
+TEST(W4Ops, WritesStayInsidePackedParent) {
+    Gen g;
+    for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
+        const unsigned total = g.width();
+        const unsigned low = static_cast<unsigned>(n % total);
+        const unsigned width = 1 + static_cast<unsigned>((n / total) % (total - low));
+        const unsigned valueWidth = g.width();
+        const W4 before = g.next(total);
+        const W4 value = g.next(valueWidth);
+        const std::int64_t position = static_cast<std::int64_t>(n % (width + 8)) - 4;
+        const v::Value root = ref(before, total, false);
+        const v::Value parent = v::bits(root, low, width);
+        const v::Value changed =
+            v::writeBits(parent, v::fromWords({static_cast<std::uint64_t>(position)}, {}, 64, true),
+                         ref(value, valueWidth, false));
+        const v::Value expected = v::writeBits(root, v::fromWords({low}, {}, 64, false), changed);
+        ASSERT_TRUE(same(k::writeBits4(before, total, position, value, valueWidth, low, width),
+                         expected, "nested packed write"));
+        EXPECT_EQ(k::fullyInside(position, valueWidth, total, low, width),
+                  position >= 0 && position + valueWidth <= width);
+    }
+}
+
 TEST(W4Ops, CountBits) {
     Gen g;
     SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77346f7073ULL)));

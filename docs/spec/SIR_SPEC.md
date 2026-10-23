@@ -293,6 +293,17 @@ Amendment of M3b.
 - The first operand can be, instead of a slot, a frame variable that is an array (7.4) (approved 2026-10-17).
 - The delayed forms lower the existing delayed-NBA rule of SCHEDULER_SPEC 5 and 13 for runtime targets; they add no value or scheduling choice. Like the other NBA forms, they require static storage. Invalid indices write nothing and partially valid bit ranges update only their valid bits (VALUE_SEMANTICS 3.11). The shared kernel keeps the captured range/value until its NBA or Re-NBA update; returning from the issuing task or fork does not re-evaluate or discard it.
 
+For bit-write instructions, the first operand's bit range can bound a
+statically selected packed parent. This applies to slot and frame operands,
+including `store.ref.bits` on a ref frame variable. The position is relative
+to that parent; clip inside it before adding the storage offset. Width 0
+retains the whole-element form. Reads for a compound assignment select the
+same parent before applying the runtime child position. This lowers the
+existing 7.4.5/11.5.1 and VALUE_SEMANTICS 3.11 rules, with no new value choice.
+The verifier checks bounds and write sets, and text prints parent ranges on
+frame operands too. Runtime-position parents and out-of-storage constant
+parents are not enabled by this implementation.
+
 ### 5.4 Writes of continuous assignments with delays
 
 Approved 2026-10-17.

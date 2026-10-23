@@ -42,6 +42,7 @@ PROBES = [
 # Original additional mechanisms. Keep the 16-case seed inventory stable;
 # --extended selects these too, without claiming an exhaustive language list.
 EXTENDED = [
+    ("nested_packed_select_bounds", "7.4.5, 11.5.1", "module top; logic [1:0][7:0] a=16'h5500; int i=7; initial begin a[0][i+:3]=3'b111; $display(\"%h\",a); end endmodule", "5580\n", []),
     ("delayed_nba_streaming", "10.4.2, 11.4.14.3", "module top; logic [7:0] a[2]; logic [15:0] d; initial begin a='{0,0}; d=16'h1234; {<<8{a}} <= #2 d; d=0; #3 $display(\"%h %h\",a[0],a[1]); end endmodule", "34 12\n", []),
     ("delayed_nba_fixed_array", "7.6, 10.4.2", "module top; int a[2:1],b[0:1]; initial begin a='{0,0}; b='{12,34}; a <= #2 b; b='{90,91}; #3 $display(\"%0d %0d\",a[2],a[1]); end endmodule", "12 34\n", []),
     ("delayed_nba_unpacked_struct", "10.4.2, 10.9.2", "module top; typedef struct {int v; int words[2];} row_t; row_t a[2],b; int i=1; initial begin b='{v:7,words:'{12,34}}; a[i] <= #2 b; i=0; b='{v:0,words:'{0,0}}; #3 $display(\"%0d %0d %0d\",a[1].v,a[1].words[0],a[1].words[1]); end endmodule", "7 12 34\n", []),

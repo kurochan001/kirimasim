@@ -13,6 +13,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Runtime child selections inside statically bounded packed members/parts
+  preserve the parent boundary for writes and compound reads. Slots,
+  automatic frames, refs and static NBA/delayed-NBA targets share kernel
+  clipping, preserving neighbouring bits (7.4.5, 11.5.1; SIR_SPEC 5.3).
+
 - Streaming NBA targets accept intra-assignment delays with the same
   reorder, snapshot and target lowering as ordinary streaming and delayed
   stores, including short final blocks and runtime selectors (10.4.2,
