@@ -30,10 +30,12 @@ arguments and owned scheduler values are roots for automatic region/slot-boundar
 collection (RUNTIME_ABI 6). Class/DPI/VPI roots are not implemented.
 The scheduler and VM now connect typed heap-dependent watches/waits,
 reattachment and called-private-container exclusion (SCHEDULER_SPEC 9.5).
-Front lowering and language execution/diagnostic matrices remain.
-`new[]`, queue methods and dynamic
-container element access still stop as unsupported in execution. Kernel
-checks do not establish language support or full Icarus parity.
+Front lowering now executes construction, copying, element access, queue
+methods, typed refs, whole-value delayed assignments, explicit heap waits,
+dynamic foreach and first-dimension queries. The original source matrix has
+240 cases across eight contexts, plus 11 CLI diagnostic cases. The
+[tested subset and remaining forms](../P1_SUPPORT.md#dynamic-container-foundation)
+are recorded separately; this does not establish complete container or Icarus parity.
 
 ## Values and operations
 

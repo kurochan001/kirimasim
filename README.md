@@ -28,8 +28,8 @@ for the specification, the tests, and review.** See
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
 > first execution tier, an interpreter that for now runs SIR directly
-> (compiling SIR to bytecode comes later). Classes, dynamic arrays,
-> queues, constrained randomization, concurrent assertions, VPI and DPI-C
+> (compiling SIR to bytecode comes later). Classes,
+> constrained randomization, concurrent assertions, VPI and DPI-C
 > are not there yet. Tier 1 has had performance and memory fixes; C++
 > generation is planned for P2. Anything kirimasim does not
 > support yet stops the run with an "unsupported" error at its source
@@ -46,9 +46,13 @@ SIR inputs, including actual-bound refs, detached cells across waits and automat
 collection at drained region/slot boundaries. Typed slots, live frames, cell refs,
 deferred calls and pending scheduler values retain their reachable objects.
 The scheduler now tracks heap-dependent waits, reattaches changed dependencies
-and excludes called functions' private containers. Front-end lowering
-is still unfinished, so dynamic arrays and
-queues cannot yet be executed from SystemVerilog. See the
+and excludes called functions' private containers. Front lowering now executes
+construction, deep copies, element access, queue methods, actual-bound refs,
+whole-value delayed assignments, explicit heap waits, dynamic foreach and
+first-dimension queries. An original 240-case source matrix spans eight execution
+contexts, with 11 additional CLI diagnostic cases. Container support remains
+partial: slices, runtime array concatenation, additional array methods and
+implicit heap sensitivity are among the remaining forms. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
@@ -83,7 +87,8 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-current 44-probe inventory still has 23 Icarus-passing gaps. It uses Icarus
+current inventory has expanded to 59 probes, with 21 Icarus-passing gaps
+(including newly measured array reductions and queue sorting). It uses Icarus
 `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 coverage and complete
 parity remain unconfirmed. A passing probe inventory would not by itself
 establish complete coverage; the inventory must expand as mechanisms and
@@ -124,11 +129,12 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI rerun at revision `30c5dbc` on 2026-10-24 passed
+The local CI rerun at revision `50911e1` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,173 tests: 2,171 pass and the same two known skips remain.
-The extended comparison was also rerun: 44 probes and 23 Icarus-passing gaps
-remain. See the [validation record](docs/notes/p1-icarus-progress.md).
+clang-tidy. Dev has 2,415 tests: 2,413 pass and the same two known skips remain.
+The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
+The expanded 59-probe inventory has 21 gaps, including newly measured array
+reductions and queue sorting; the inventory remains incomplete. See the [validation record](docs/notes/p1-icarus-progress.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 
@@ -421,7 +427,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Not yet | Scope and status |
 | --- | --- |
 | FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1; shared heap, typed SIR, VM execution and automatic typed-root collection tested; heap-dependent SIR waits tested; front lowering pending |
+| Dynamic arrays and queues | P1, partial language execution; constructors, copies, elements, methods, refs, delays, explicit waits, dynamic foreach and first-dimension queries tested; remaining forms in P1_SUPPORT |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
 | Tier 2 C++ generation and further RTL speed optimizations | P2 |
@@ -571,7 +577,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(SystemVerilog container lowering, classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(remaining container forms, classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -675,7 +681,7 @@ the same table with the Japanese terms.
 | lowering | Turning slang's elaborated design into SIR instructions |
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](docs/spec/SIR_SPEC.md)) |
 | `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
-| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; SystemVerilog container lowering, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
+| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; additional SystemVerilog container forms, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P2) |
 | Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
@@ -770,8 +776,8 @@ compile to C++ too.
 
 Not yet. The required Icarus-supported class and container mechanisms are
 P1 work; broader UVM and constrained randomization retain their later-phase
-plans. The container heap is implemented, but its SystemVerilog integration
-is pending. UVM is to run as ordinary SystemVerilog source, with no special
+plans. A tested SystemVerilog dynamic-array/queue subset uses the shared
+heap; broader container forms and classes remain unfinished. UVM is to run as ordinary SystemVerilog source, with no special
 handling of its classes.
 
 ### Can it write waveforms?

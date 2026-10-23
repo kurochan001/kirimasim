@@ -117,9 +117,13 @@ Private containers of called functions are filtered with a read-only graph
 query. Notices join the existing ordered change queue, and the VM publishes
 mutations before continuing. Live wait ownership restores the prior hook;
 VM waits are detached before interpreter frames expire.
-Front-end lowering is not connected yet. The
-running SystemVerilog design does not yet use this heap or its collector.
-Full language support needs those connections and execution tests.
+Front lowering now emits typed heap instructions, binding refs and explicit
+value snapshots/copies for the [tested language subset](P1_SUPPORT.md#dynamic-container-foundation).
+Dynamic foreach bounds live in frames across waits; dimension queries reuse
+container size. Pattern temporaries retain all elements before an actual
+variable applies queue bounds, including through equivalent ref types.
+Unimplemented language forms and implicit heap sensitivity are diagnosed;
+full container and Icarus coverage remain work.
 
 ## Libraries
 

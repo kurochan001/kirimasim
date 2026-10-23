@@ -15,22 +15,32 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
-## Dynamic containers: integration pending
+## Dynamic arrays and queues
 
-The [kernel heap and typed SIR](P1_SUPPORT.md#dynamic-container-foundation)
-are implemented and tested, but `new[]`, queue methods and dynamic element
-access are not executable SystemVerilog features yet. The approved contract
-still needs front lowering and source-language execution matrices.
-Heap-dependent SIR watches/waits now use the scheduler's typed dependencies,
-including reattachment, stable cells and called-private-variable exclusion.
-The VM executes the 16 typed instructions in independent SIR
-tests, including actual-bound refs, waits, snapshots and typed root publication
-for automatic collection at drained scheduling boundaries. These checks do not
-enable language execution. The examples below cover currently executable
-features. For the kernel, SIR and VM implementation checks, run:
+The tested language subset now uses the shared typed heap for construction,
+copying, element access and queue methods. Values copied by assignment or
+by-value arguments have independent elements; refs retain actual bounds and
+stable cells. See the [inventory and remaining forms](P1_SUPPORT.md#dynamic-container-foundation).
 
-```sh
-ctest --preset dev -R '^(Heap|ContainerSir|VmContainer)[.]' --output-on-failure
+```systemverilog
+module top;
+  int a[], q[$], last;
+  initial begin
+    a = new[3];
+    a[1] = 7;
+    q = '{4, 5};
+    q[$+1] = a[1];
+    last = q.pop_back();
+    $display("%0d %0d %0d", a.size(), q.size(), last);
+    foreach (q[i]) $display("%0d", q[i]);
+  end
+endmodule
+```
+
+```text
+3 2 7
+4
+5
 ```
 
 ## Mixed named-event waits and per-item iff

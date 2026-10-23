@@ -9,6 +9,88 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## SystemVerilog dynamic-array and queue execution (2026-10-24)
+
+Implementation `a0cdade` connects front lowering to the existing shared heap;
+`5b5f440` and `50911e1` complete static checks and hierarchical diagnostics.
+The [support inventory](../P1_SUPPORT.md#dynamic-container-foundation) and
+[executable example](../P1_FEATURES.md#dynamic-arrays-and-queues) describe the
+implemented range. This is partial container support, not completion of P1.
+
+The common lowering path now handles construction, initialization, deep
+assignment copies, element and packed writes, queue methods, actual-bound refs,
+value arguments/returns, nested values and container members of fixed arrays
+and unpacked structures. Whole-value delayed assignments keep snapshots.
+Dynamic foreach saves its bounds in frames across waits, and first-dimension
+queries use the shared size operation (7.5, 7.6, 7.10, 12.7.3, 13.5, 20.7;
+SIR_SPEC 5.8). Queue pattern temporaries retain all elements until the actual
+variable applies its bounds, including nested equivalent ref types. Wide
+indices keep their full integral width. Element NBAs remain illegal.
+
+The source matrix adds 240 original cases: 160 width/state/kind/context
+combinations and 80 mechanism cases. Eight contexts cover module initials,
+automatic and static tasks, forks, interfaces, packages, programs and generate.
+Additional cases cover argument isolation, moved/detached refs, nested bounds,
+evaluation order, real/shortreal/string/null-chandle values, explicit heap waits,
+delayed copies, foreach/queries and fixed/structure members. Eleven CLI cases
+check negative/X/Z sizes and positioned diagnostics for implicit heap sensitivity
+and the existing enclosing-automatic fork restriction. Existing suite bodies,
+expected output and performance counts are unchanged.
+
+Source tests found that forwarding an empty container ref into a called guard
+lost its variable-binding dependency. The VM's shared ref transport now records
+that binding, while the kernel still decides heap changes and scheduling.
+Direct/called waits wake after the empty variable is replaced. Hierarchical
+container reads, including through called functions, are explicitly rejected in
+implicit sensitivity until its static trigger encoding can represent heap reads.
+
+Mutation validation also exposed a judging-tool defect: replacing an anchor
+makes `tools/mutants_apply` fail even if simulated values are unchanged.
+`40a8f87` keeps anchor/judging self-checks on the clean baseline and excludes
+those two self-checks during mutated runs. A regression reproduces the old
+false catch, checks a surviving mutation and a genuine failure, and checks
+source restoration. Focused compiled runs separately caught all nine deliberate
+container mistakes through actual source-output differences or CLI assertions;
+all nine built, and the restored 241-case source/CLI baseline passed. Self-check
+failures are not used as evidence of correct simulator semantics.
+
+Full local CI at `50911e1` passes dev/release/ASan/UBSan, release flags,
+banned features, SPDX, suite files, global state, expectation protection for
+all four unpublished commits, README counts, clang-format and clang-tidy.
+Dev/ASan/UBSan run 2,415 tests (2,413 pass, two known skips); release runs
+2,416 (2,414 pass, the same skips). The corrected runner's judging-tool
+regression passes as part of these runs. The documentation example also runs
+with the recorded output and no warnings.
+
+The original 44 comparison probes now have 19 Icarus-passing gaps, down from
+23. Fifteen original container probes were added, including remaining forms
+rather than only successful ones. The expanded inventory has 59 probes and
+21 Icarus-passing gaps; the two newly measured gaps are dynamic-array `sum()`
+and queue `sort()`. Both Icarus compiler and runtime report
+`14.0 (devel) (s20260301-411-gca6b8d376)`; the simulator binary reports
+`50911e1`. `--require-parity` returns 1 as expected. Exact-13.0 and complete
+parity remain unconfirmed. On the three-element dynamic-array query probe,
+Icarus returns 2 for `$increment`, while kirimasim retains -1 under the locally
+checked rule of 20.7. No expectation was weakened to match that divergence.
+
+```sh
+CTEST_PARALLEL_LEVEL=6 python3 tools/local_ci.py
+ctest --preset dev -R '^(suite/containers/|cli/dynamic_containers$)' --output-on-failure
+python3 tools/mutants.py --only 'container front:'
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/front-container-icarus-expanded.json --require-parity
+```
+
+External sv-tests/population counts and performance measurements retain their
+recorded revisions and dates; they were not remeasured in this round.
+
+Remaining work includes runtime array concatenation, slices, container
+conditional values, additional array methods, mixed/omitted dynamic foreach
+dimensions, nested/runtime dimension queries, implicit heap sensitivity,
+fixed-aggregate/class/event elements and the other P1 mechanisms. Class/VPI,
+switches, specify/timing and complete Icarus coverage remain unfinished.
+
 ## Documentation refresh and publication checks (2026-10-24)
 
 The publication check reruns the committed implementation at `30c5dbc`.

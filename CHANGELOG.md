@@ -21,53 +21,59 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- SystemVerilog dynamic arrays and queues execute through the shared typed
+  heap: construction, deep value copies, integral/real/string/nested elements,
+  queue methods, actual-bound refs, detached cells, whole-value delayed
+  assignments, explicit heap waits, dynamic foreach and first-dimension
+  queries. Original matrices add 240 source cases across eight execution
+  contexts, plus 11 positioned CLI diagnostics. Forwarded refs retain
+  empty-variable binding dependencies. Implicit heap sensitivity and remaining
+  container forms are explicit unsupported cases; complete P1 parity remains
+  unfinished (7.5, 7.6, 7.10, 10.4.2, 13.5; SIR_SPEC 5.8).
+
 - Heap-dependent SIR watches/waits capture typed reads and reattach after
   index, structure or binding changes. The shared scheduler queues notices
   with monitor serials, excludes called-private containers, restores hook
   ownership and reports resource failures. Tests cover direct/called refs,
-  detached cells, cancellation/reuse and bounded registrations. SystemVerilog
-  container lowering remains unfinished.
+  detached cells, cancellation/reuse and bounded registrations.
 
 - Typed heap read/change observation hooks distinguish container structure
   from cell values. Notifications follow committed changes and skip equal
   normalized writes, failed operations and invalid selections. Scheduler/VM
-  monitor integration is covered by the entry above; SystemVerilog container
-  execution remains unfinished.
+  monitor integration is covered by the entry above.
 
 - Automatic typed-container collection after drained scheduling regions and
   slots, tracing typed storage, live activations, detached cell refs, deferred
   call arguments and owned scheduler values (RUNTIME_ABI 6). Root-only changes
   trigger collection; failed marking retains all values. This is tested with
-  original SIR inputs; SystemVerilog container execution remains unfinished.
+  original SIR inputs.
 
 - Tier 1 executes the 16 typed container SIR instructions through the shared
   heap, with actual-target reference metadata, stable element refs, snapshots,
   source-position method warnings and resource-error mapping (SIR_SPEC 5.8).
   Independent SIR tests cover calls, waits, packed writes and allocation
   failure. Typed-root collection and heap-change notification are covered by the
-  entries above. Front lowering remains unfinished; SystemVerilog containers
-  are not enabled.
+  entries above. Language integration is described above;
+  complete container coverage remains unfinished.
 
 - Nested container copies apply each destination queue's bound through the
   common heap copy engine, including element writes and queue methods, with
   truncation warnings and allocation-failure rollback. Actual-type snapshots
   preserve source bounds (6.22.2, 7.5, 7.10.5; SIR_SPEC 5.8, RUNTIME_ABI 6).
-  The VM integration is covered above; SystemVerilog container execution
-  remains unfinished.
+  VM integration is covered above.
 
 - Typed container SIR descriptors, receiver references, 16 instructions,
   verification and text support, including explicit snapshot/copy/assignment
   operations and queue-bound equivalence for ref arguments (6.22.2, 7.5,
-  7.10, 13.5.2; SIR_SPEC 5.8). VM integration is covered above; front
-  lowering remains unfinished.
-  This is not yet executable SystemVerilog container support.
+  7.10, 13.5.2; SIR_SPEC 5.8). VM and language integration are covered above;
+  full container coverage remains unfinished.
 
 - Context-owned typed container heap foundation: stable element references,
   deep copies, bounded queue operations, allocation-failure rollback and
   exact tracing with generation-checked table reuse (7.5, 7.10, 13.5.2;
   RUNTIME_ABI 6). Typed-root publication and collection are covered above.
-  SystemVerilog lowering remains unfinished; this entry does not claim dynamic-array/queue
-  language support.
+  Language integration is covered above; this foundation alone does not
+  establish full dynamic-array/queue coverage.
 
 - Named events can share event controls with signal subscriptions and
   expression watches, each with its own `iff`. False guards retain their

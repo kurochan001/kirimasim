@@ -11,8 +11,8 @@ later-phase plans.
 
 This inventory describes tier 1 as of 2026-10-24, including delayed NBA
 snapshots, bounded packed selections and mixed named-event waits. The latest
-container work includes a kernel foundation and typed SIR, described separately
-below. Check `kirimasim --help` for a build's options and `--version` for its revision.
+container work includes executable language forms and a shared typed heap,
+described separately below. Check `kirimasim --help` for a build's options and `--version` for its revision.
 
 P1 is in progress. “Supported” below means that the listed forms can be
 lowered to SIR and run by the interpreter, with tests in this repository.
@@ -34,7 +34,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Configuration | Source-level configs, top selection and bindings; specparams, including in specify blocks | Library map files, specify module paths and timing checks are not supported |
 | Integral values | Arbitrary-width 2-state and 4-state values, signed and unsigned arithmetic, X/Z propagation and conversions | Practical memory and execution limits still apply |
 | Other scalar values | `real`, `shortreal`, `realtime`, `string`, named events, null `chandle` | Non-null handles need DPI-C, which is not implemented |
-| Aggregates | Packed/unpacked structures, packed unions, fixed unpacked arrays, multidimensional arrays, static arrays of structures, unpacked array parameters | Dynamic arrays, queues, associative arrays and unpacked unions are not implemented; array slices are not generally assignable |
+| Aggregates | Packed/unpacked structures, packed unions, fixed unpacked arrays, multidimensional arrays, static arrays of structures, unpacked array parameters | Dynamic arrays/queues have the tested subset below; associative arrays and unpacked unions are not implemented; array slices are not generally assignable |
 | Enumerations | Enum values and `first`, `last`, `num`, `name`, `next`, `prev` | Runtime `next(n)` / `prev(n)` counts are converted to 32-bit unsigned values; see the example guide |
 | Expressions | Arithmetic, bitwise, logical, reduction and comparison operations; shifts; ternary expressions; concatenation, replication, casts, `inside`, wildcard equality, assignment operators, increments and assignment patterns | Pattern-matching `matches` forms of `if` and the conditional operator are not implemented |
 | Selections | Packed bit/part/indexed-part selects, packed dimensions, fixed unpacked-array indexing, structure members; runtime writes/compound reads inside a statically bounded packed member or part, including NBA/delayed NBA | Runtime child selects whose parent position also varies, or whose constant parent range itself lies outside storage, remain unsupported |
@@ -135,10 +135,40 @@ Nonblocking assignment to a dynamically sized array element is illegal
 the VM gives the same reason for hand-built SIR. Element NBAs are not a missing
 P1 feature. Whole-value NBAs to eligible static variables are a different case.
 
-SystemVerilog dynamic arrays and queues remain unsupported. Front-end
-lowering and source-level execution/diagnostic matrices remain. Class/DPI/VPI roots are
-future mechanisms, not covered by the current container adapter. This extension does not
-establish full container support or the Icarus coverage target.
+Front lowering now connects the shared heap to executable SystemVerilog.
+The [original source matrix](../tools/gen_dynamic_container_matrix.py) has 240
+cases: eight execution contexts, five integral widths (1, 4, 32, 65, 129),
+two/four-state elements and additional mechanism combinations. The
+[CLI checks](../tests/cli/run_dynamic_container_tests.py) cover 11 positioned
+errors. Existing source bodies and expectations are unchanged.
+
+- Dynamic-array `new[size]`, optional fixed/dynamic initializers, resize,
+  `size()` and `delete()`; queue patterns, scalar concatenation, indexing,
+  `[$]`/`[$+1]`, delete/insert/push/pop methods and actual destination bounds.
+- Integral, real, shortreal, string, null-chandle and nested-container values;
+  fixed arrays and unpacked structures containing containers. Assignment,
+  initialization, input/output/inout arguments and function returns copy values.
+- Ref arguments retain actual bounds, including nested equivalent queue types.
+  Waiting calls retain moved/detached element cells. Method receiver bindings
+  precede argument evaluation; RHS snapshots precede target selectors.
+- Whole-value NBAs to eligible static variables, delayed NBAs and blocking
+  intra-assignment delays retain their captured values. Explicit `wait` and
+  expression watches use typed heap dependencies, including an empty ref
+  forwarded to a called function.
+- `foreach` over one or more explicitly named dynamic dimensions, including
+  waits/continue in the body; first-dimension `$size`, `$left`, `$right`, `$low`,
+  `$high` and `$increment` queries.
+
+Remaining forms include runtime array operands in concatenations, queue slices,
+container conditional values, array ordering/reduction/locator methods, mixed
+or omitted dynamic foreach dimensions, runtime/nested query dimensions and
+fixed-aggregate/class/event elements. Implicit sensitivity (`always_comb`,
+`always_latch`, `always @*`, continuous assignments) to container values gives
+an explicit unsupported diagnostic: static trigger ranges cannot yet encode
+heap changes. Fork capture of enclosing automatic storage remains the existing
+SIR_SPEC 7.5 limitation. Class/DPI/VPI roots and complete Icarus parity remain
+unfinished. These are incremental language features, not complete container
+support.
 
 ## System tasks, functions and methods
 
@@ -232,7 +262,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | Shared heap, typed SIR, VM execution and automatic typed-root collection are tested; typed heap-dependent waits tested; front and SystemVerilog execution tests remain |
+| P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 240 source cases; remaining language forms are listed above |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
