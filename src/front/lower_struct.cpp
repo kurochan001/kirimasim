@@ -127,7 +127,7 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         // more index, evaluated now.
         const auto& es = e.as<ast::ElementSelectExpression>();
         const ast::Type& vt = es.value().type->getCanonicalType();
-        if (!vt.isUnpackedArray() || structElement(vt) == nullptr) return std::nullopt;
+        if (!vt.isUnpackedArray()) return std::nullopt;
         std::optional<Storage> base = storageOf(es.value(), sl);
         if (!base) return std::nullopt;
         if (const std::optional<std::int64_t> c = constInt(es.selector()))
@@ -180,6 +180,11 @@ Lowerer::Place Lowerer::storagePlace(Storage st) {
         p.kind = ref ? Place::Kind::Ref : Place::Kind::Frame;
         p.frame = st.var;
         p.type = ref ? fv.target : fv.type;
+        if (!fv.dims.empty()) {
+            p.kind = Place::Kind::Element;
+            p.home = ref ? Place::Home::Ref : Place::Home::Frame;
+            p.indices = std::move(st.elem);
+        }
         return p;
     }
     const sir::Slot& slot = design().slot(st.slot);
@@ -247,7 +252,21 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         return;
     }
     if (ct.isUnpackedArray()) {
-        assignArray(storageBase(dst), fixedIndices(dst, sl), rhs, out, sl);
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const ast::Expression& r = unwrapAggregate(rhs);
+        if (isPattern(r)) {
+            const std::vector<const ast::Expression*> elems = patternElements(r);
+            if (elems.size() != at.range.width())
+                unsupported(sl, "assignment pattern of this size");
+            const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+            for (std::size_t k = 0; k < elems.size(); ++k)
+                assignAggregate(withIndex(dst, at.range.left + static_cast<std::int64_t>(k) * step),
+                                at.elementType, *elems[k], out, sl);
+        } else {
+            const std::optional<Storage> src = storageOf(r, sl);
+            if (!src) unsupported(sl, "assignment of this unpacked array value");
+            copyArrayStorage(std::move(dst), *src, out, sl);
+        }
         return;
     }
     Place p = storagePlace(std::move(dst));
@@ -278,12 +297,36 @@ void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores
         return;
     }
     if (ct.isUnpackedArray()) {
-        copyArray(storageBase(dst), fixedIndices(dst, sl), storageBase(src), fixedIndices(src, sl),
-                  out, sl);
+        copyArrayStorage(std::move(dst), std::move(src), out, sl);
         return;
     }
     const Val v = loadPlace(storagePlace(std::move(src)), sl);
     out.emplace_back(storagePlace(std::move(dst)), v);
+}
+
+void Lowerer::copyArrayStorage(Storage dst, Storage src, Stores& out, slang::SourceLocation sl) {
+    // The prefix may contain runtime indices, evaluated once by storageOf.
+    // Walk the remaining dimensions from each side's own left bound (7.6).
+    const std::vector<sir::ArrayDim> td = dimsOf(storageBase(dst));
+    const std::vector<sir::ArrayDim> sd = dimsOf(storageBase(src));
+    if (dst.elem.size() > td.size() || src.elem.size() > sd.size() ||
+        td.size() - dst.elem.size() != sd.size() - src.elem.size())
+        unsupported(sl, "assignment of an unpacked array of another shape");
+    if (dst.elem.size() == td.size()) {
+        const Place to = storagePlace(std::move(dst));
+        const Val value = coerce(loadPlace(storagePlace(std::move(src)), sl), to.type, sl);
+        out.emplace_back(to, value);
+        return;
+    }
+    const sir::ArrayDim t = td[dst.elem.size()];
+    const sir::ArrayDim s = sd[src.elem.size()];
+    const auto count = [](sir::ArrayDim d) {
+        return (d.left <= d.right ? d.right - d.left : d.left - d.right) + 1;
+    };
+    if (count(t) != count(s)) unsupported(sl, "assignment of an unpacked array of another shape");
+    for (std::int64_t k = 0; k < count(t); ++k)
+        copyArrayStorage(withIndex(dst, t.left + (t.left <= t.right ? k : -k)),
+                         withIndex(src, s.left + (s.left <= s.right ? k : -k)), out, sl);
 }
 
 void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Val>& out,

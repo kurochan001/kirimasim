@@ -42,6 +42,8 @@ PROBES = [
 # Original additional mechanisms. Keep the 16-case seed inventory stable;
 # --extended selects these too, without claiming an exhaustive language list.
 EXTENDED = [
+    ("delayed_nba_fixed_array", "7.6, 10.4.2", "module top; int a[2:1],b[0:1]; initial begin a='{0,0}; b='{12,34}; a <= #2 b; b='{90,91}; #3 $display(\"%0d %0d\",a[2],a[1]); end endmodule", "12 34\n", []),
+    ("delayed_nba_unpacked_struct", "10.4.2, 10.9.2", "module top; typedef struct {int v; int words[2];} row_t; row_t a[2],b; int i=1; initial begin b='{v:7,words:'{12,34}}; a[i] <= #2 b; i=0; b='{v:0,words:'{0,0}}; #3 $display(\"%0d %0d %0d\",a[1].v,a[1].words[0],a[1].words[1]); end endmodule", "7 12 34\n", []),
     ("dynamic_resize_copy", "7.5", "module top; int a[]; initial begin a=new[2]; a[0]=12; a[1]=34; a=new[3](a); $display(\"%0d %0d %0d %0d\",a.size(),a[0],a[1],a[2]); a.delete(); $display(\"%0d\",a.size()); end endmodule", "3 12 34 0\n0\n", []),
     ("queue_front_back", "7.10.2", "module top; int q[$]; int x,y; initial begin q.push_back(7); q.push_front(3); x=q.pop_back(); y=q.pop_front(); $display(\"%0d %0d %0d\",x,y,q.size()); end endmodule", "7 3 0\n", []),
     ("class_constructor", "8.7", "class node; int v; function new(int n); v=n; endfunction endclass module top; node a,b; initial begin a=new(7); b=new(9); $display(\"%0d %0d\",a.v,b.v); end endmodule", "7 9\n", []),

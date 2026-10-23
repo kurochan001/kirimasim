@@ -13,6 +13,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Delayed NBAs snapshot whole fixed arrays and unpacked structures,
+  including nested fixed-array, real and string members. Aggregate copies
+  retain runtime element prefixes and preserve each side's declared order
+  through the common storage traversal (7.6, 10.4.2, 10.9; VALUE_SEMANTICS 3.13).
+
 - Delayed NBAs capture runtime fixed-array indices, packed bit/part positions
   and concatenation targets, including wide values and partial ranges. The
   shared kernel retains their captured updates across task/fork completion

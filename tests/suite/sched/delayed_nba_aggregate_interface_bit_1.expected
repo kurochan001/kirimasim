@@ -1,0 +1,13 @@
+before 0 0
+copy 1 0 1 0
+overlap 0 1
+calls 4
+pattern 1 0 1 0
+record 1 captured 1.5 1 0
+neighbor 0 0
+source_index 2
+record_copy 1 captured 1.5 1 0
+record_pattern 1 pattern 2.5 1 0
+member_bounds 1 0
+zero_before 1
+zero_after 1 1

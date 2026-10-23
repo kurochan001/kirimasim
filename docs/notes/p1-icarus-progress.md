@@ -221,3 +221,27 @@ Dev passes 1,778 tests: 1,776 pass and the two known skips remain. The
 16-case seed still has seven. The compiler/runtime remain
 `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 and full parity remain
 unconfirmed. The runnable example in both P1_FEATURES versions was checked.
+
+## Aggregate delayed NBAs
+
+A further round extends the same scalar delayed-store mechanism to whole
+fixed arrays and unpacked structures. `Lowerer::flushStores` delays an
+already captured aggregate snapshot. `copyArrayStorage` retains runtime
+prefix indices of structure array members and traverses remaining dimensions
+from each side's own left bound; ordinary aggregate assignments share this
+path. No new value/scheduling choice or dependency was introduced.
+
+Another 64-case matrix crosses the same eight containers, four widths and
+two domains. It covers differing array bounds, self-overlap, patterns with
+counted side effects, default patterns, real/string/fixed-array members,
+dynamic source and destination structure indices, and zero-delay NBA/Re-NBA.
+Existing aggregate, structure and SIR tests also pass. Dev has 1,843 tests:
+1,841 pass and the two known skips remain. The runnable example was checked.
+
+Two new original probes make the extended inventory 40 cases. Whole-array
+and unpacked-structure delayed NBAs pass kirimasim; the installed Icarus
+compiler rejects both, so these are not Icarus-passing gaps. There are still
+24 such gaps, and seven in the original 16-case seed. Exact-13.0 and full
+parity are unconfirmed. Event-controlled NBAs, blocking aggregate timing,
+refs/string-character delayed targets and further aggregate forms remain
+work. The dynamic-container proposal is still awaiting approval.

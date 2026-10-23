@@ -386,7 +386,8 @@ public:
     /// The writes of an aggregate assignment: each place with the value it
     /// gets, all computed before any is written (VALUE_SEMANTICS.md 3.13).
     using Stores = std::vector<std::pair<Place, Val>>;
-    void flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl);
+    void flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl,
+                     std::optional<Val> delay = std::nullopt);
     /// The element of array s at constant declared indices.
     Place elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices);
     /// Computes an unpacked array value (a pattern, another array, or nested
@@ -559,6 +560,8 @@ public:
     ArrayBase storageBase(const Storage& s);
     /// The constant element indices of s; reported when they are not.
     std::vector<std::int64_t> fixedIndices(const Storage& s, slang::SourceLocation sl);
+    /// Copy remaining array dimensions while retaining evaluated prefixes.
+    void copyArrayStorage(Storage dst, Storage src, Stores& out, slang::SourceLocation sl);
     /// The element of an unpacked array named by base and indices, its
     /// indices evaluated in order.
     Place arrayElementPlace(const ast::Expression& base,

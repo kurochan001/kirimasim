@@ -2411,6 +2411,27 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     // 9.4.5). The value lives in a frame variable across the wait.
     const slang::SourceLocation sl = a.sourceRange.start();
     const ast::TimingControl& t = *a.timingControl;
+    const bool aggregate = structElement(*a.left().type) != nullptr ||
+                           a.left().type->getCanonicalType().isUnpackedArray();
+    if (aggregate && a.isNonBlocking() && !a.isCompound() &&
+        t.kind == ast::TimingControlKind::Delay) {
+        // Capture every leaf before issuing any update (VALUE_SEMANTICS
+        // 3.13). Use the ordinary aggregate assignment's typed places,
+        // then the same delayed stores as a scalar NBA (10.4.2).
+        Stores stores;
+        if (structElement(*a.left().type) != nullptr) {
+            const std::optional<Storage> dst = storageOf(a.left(), sl);
+            if (!dst) unsupported(sl, "assignment to this unpacked structure");
+            assignAggregate(*dst, *a.left().type, a.right(), stores, sl);
+        } else {
+            const std::optional<ArrayTarget> target = arrayTarget(a.left());
+            if (!target) unsupported(sl, "assignment to this unpacked array");
+            assignArray(baseOf(*target), target->indices, a.right(), stores, sl);
+        }
+        const Val ticks = delayValue(t.as<ast::DelayControl>().expr, sl);
+        flushStores(stores, true, sl, ticks);
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+    }
     if (a.isCompound() || unpackedStruct(*a.left().type) != nullptr ||
         a.left().type->getCanonicalType().isUnpackedArray() ||
         a.left().kind == ast::ExpressionKind::Streaming)
@@ -2542,11 +2563,12 @@ Type Lowerer::homeType(const Place& p) {
     return elemTypeOf(p.home == Place::Home::Slot ? ArrayBase{p.slot} : ArrayBase{p.home, p.frame});
 }
 
-void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl) {
+void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl,
+                          std::optional<Val> delay) {
     // The writes of an aggregate assignment, after every value of its right
     // side (VALUE_SEMANTICS.md 3.13).
     for (const auto& [place, value] : stores)
-        storePlace(place, value, nonblocking, sl);
+        storePlace(place, value, nonblocking, sl, delay);
 }
 
 Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices) {

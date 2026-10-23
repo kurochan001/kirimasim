@@ -398,6 +398,18 @@ Approved 2026-10-17.
 - `nba target, value` holds the target of the update (slot and bit range, with indices at their values when it runs) and the value. With a delay it is `nba.delay target, value, delay` (SCHEDULER_SPEC.md 5, 13).
 - The right side is evaluated first and the left side's indices after (the rule of SCHEDULER_SPEC.md 13). The order of SIR's instructions follows this too.
 
+### Aggregate delayed-NBA lowering
+
+Implementation of the existing 7.3 and VALUE_SEMANTICS 3.13 rules: fixed
+arrays and unpacked structures capture every leaf value before emitting
+any delayed update. Ordinary aggregate assignment and delayed NBA use the
+same typed storage traversal. Runtime prefixes of array members of
+structures are retained once; remaining dimensions are copied from each
+side's own left bound. Each captured leaf then uses the scalar/element
+NBA delay instructions of 5.3/7.3. This introduces no new scheduling or
+value choice. Blocking aggregate intra-assignment timing and aggregate
+event-controlled NBAs remain unimplemented.
+
 ### 7.4 Frames
 
 - The state of a process (automatic variables, values across waits, the resume position, the pending queues of unique, priority and deferred assertions) is placed in its frame. The layout of frames is the same whatever the tier (RUNTIME_ABI.md 4.3).

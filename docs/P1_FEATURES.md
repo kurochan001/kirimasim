@@ -15,6 +15,35 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Whole fixed-array and structure delayed NBAs
+
+An aggregate delayed NBA captures every element/member before scheduling
+any update. Arrays map from each declaration's left bound. Changes to the
+source after the statement, and returning from a calling function/task, do
+not change the captured values. Structures can include fixed arrays, real
+and string members. Runtime prefixes of array members of structures use
+the same storage-copy mechanism as ordinary assignments.
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  int a[2:1], b[0:1];
+  initial begin
+    a = '{0,0}; b = '{12,34};
+    a <= #2 b;
+    b = '{90,91};
+    #1; $display("before %0d %0d", a[2], a[1]);
+    #2; $display("after %0d %0d", a[2], a[1]);
+  end
+endmodule
+```
+
+```text
+before 0 0
+after 12 34
+```
+
+
 ## Delayed NBAs with runtime targets
 
 Delayed NBAs now support runtime fixed-array indices, packed bit and part
@@ -22,7 +51,7 @@ positions, and concatenations of those targets. The right value, target
 and delay are captured when issued; later changes do not redirect the
 update. Only valid bits of a partial selection are scheduled. Updates use
 the issuing thread's NBA/Re-NBA set and survive its task/fork returning.
-Automatic targets remain illegal; event-controlled NBAs, whole-array
+Automatic targets remain illegal; event-controlled NBAs, blocking whole-array
 timing and delayed targets through refs or string characters remain
 unsupported.
 
