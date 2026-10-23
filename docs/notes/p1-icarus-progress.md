@@ -11,7 +11,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## VM container instructions and actual references (2026-10-24)
 
-Tier 1 now mechanically dispatches the 16 typed SIR instructions to the
+Source revision `c762840` mechanically dispatches the 16 typed SIR instructions to the
 shared heap. Layout/type registration occurs once and kernel errors return
 through the existing source-position paths. Variable references carry their
 actual type even when empty or viewed through a different equivalent ref
@@ -37,6 +37,14 @@ passes. Existing suite bodies and expectations were kept.
 Dev has 2,143 tests: 2,141 pass and the two known skips remain. Targeted
 clang-tidy, banned-feature, formatting and mutation-anchor checks pass.
 
+Full local CI on `c762840` passes dev/release/ASan/UBSan configure/build/tests,
+release flags, banned features, SPDX, suite files, global state, expectation
+protection for all three unpublished commits, README counts, clang-format and
+clang-tidy. The extended original comparison was rerun at the same revision:
+44 probes and 23 Icarus-passing gaps remain. Both installed Icarus compiler
+and runtime report `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 and
+full parity remain unconfirmed.
+
 This does not enable SystemVerilog dynamic containers. Front lowering,
 complete safe-point roots and collection, heap-dependent change notification,
 cell NBA targets and source-level execution/diagnostic matrices remain. The
@@ -51,7 +59,12 @@ check that rejection leaves the value unchanged. The last measured
 ```sh
 ctest --preset dev -R '^(Heap|ContainerSir|VmContainer)[.]' --output-on-failure
 python3 tools/mutants.py --only 'container VM:'
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/container-vm-icarus-probes.json --require-parity
 ```
+
+The final command returns 1 because the measured gaps remain.
 
 ## Nested-bound conversion and actual-type snapshots (2026-10-23)
 
