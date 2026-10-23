@@ -1918,7 +1918,8 @@ namespace {
 /// The conversions of a $sscanf format that assign, in order, as letters
 /// (%x is h; %e and %g are f); false with the specifier in `bad` for one
 /// that is not supported (SIR_SPEC.md 8, SYSTEM_TASKS.md 6.3).
-bool scanConversions(std::string_view f, std::vector<char>& convs, std::string& bad) {
+bool scanConversions(std::string_view f, std::vector<char>& convs, std::string& bad,
+                     bool allowBinary = true) {
     for (std::size_t i = 0; i < f.size(); ++i) {
         if (f[i] != '%') continue;
         bool assigns = true;
@@ -1937,7 +1938,8 @@ bool scanConversions(std::string_view f, std::vector<char>& convs, std::string& 
         if (c == '%') continue;
         if (c == 'x') c = 'h';
         if (c == 'e' || c == 'g') c = 'f';
-        if (std::string_view("bohdcsf").find(c) == std::string_view::npos) {
+        if ((allowBinary ? std::string_view("bohdcsfuz") : std::string_view("bohdcsf")).find(c) ==
+            std::string_view::npos) {
             bad = std::string("%") + f[i];
             return false;
         }
@@ -1969,7 +1971,7 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
     if (plus && fmt) {
         // name%conv: the one conversion after the name (21.6).
         const std::size_t pct = fmt->find('%');
-        if (pct == std::string::npos || !scanConversions(fmt->substr(pct), convs, bad) ||
+        if (pct == std::string::npos || !scanConversions(fmt->substr(pct), convs, bad, false) ||
             convs.size() != 1)
             unsupported(sl, name + " with this format");
     } else if (fmt && !scanConversions(*fmt, convs, bad)) {

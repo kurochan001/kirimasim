@@ -57,10 +57,9 @@ python3 tests/cli/run_binary_format_tests.py \
 ```
 
 The first command intentionally returns 1 on the current working tree:
-ten of the sixteen original probes pass Icarus and fail kirimasim. Nine
+eight of the sixteen original probes pass Icarus and fail kirimasim. Seven
 are standard mechanisms: dynamic arrays, queues, class objects, programs,
-MOS switches, bidirectional switches, specify paths, `%u` scanning and
-`%z` scanning. The tenth, `wire real`, is an
+MOS switches, bidirectional switches, specify paths. The eighth, `wire real`, is an
 [Icarus extension](https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html);
 strict slang correctly rejects it. Supporting it needs an explicit
 compatibility policy, not relaxation of the default language checks.
@@ -88,7 +87,7 @@ against the current specifications. Their general whitespace rule and the
 choices needed for transfer widths and partial fields need an explicit
 [binary-scan amendment](binary-scan-proposal.md), approved on 2026-10-23
 together with the phase-scope amendment. The semantic rules are now in
-SYSTEM_TASKS 6.3 and SIR_SPEC 8. Binary-input implementation remains pending;
+SYSTEM_TASKS 6.3 and SIR_SPEC 8. Binary-input implementation is recorded in the next section;
 existing expectations are unchanged.
 
 An original [observation tool](../../tools/binary_scan_probe.py) records
@@ -98,3 +97,27 @@ approved project rules. Width-zero behavior differs, and grouped runs also
 exposed native crashes in two installed Icarus development builds; see
 the amendment for the recorded limits. These results guide review rather
 than claiming conformance or full parity.
+
+## Binary-input implementation
+
+The third round implements the approved binary scan rules in shared kernel
+`readBinary`, with destination widths from SIR. Constant/runtime formats,
+file/packed/string inputs and all ten containers use the same semantics.
+The CLI matrix checks 40 programs / 17,120 conversions, two continuation
+programs and 40 rejected formats/types. Four added unit tests cover raw
+bytes, every byte of short fields, widths, masks, suppression and type rules.
+Existing suite bodies and expected output remain unchanged.
+
+```sh
+python3 tools/binary_scan_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --engine kirimasim \
+  --require-kirimasim --output build/binary-scan-all-implemented.json
+```
+
+All 448 project-rule observations match. The nonzero-width reference subset
+also matches in both tools (374/374 each). The initial feature probe now has
+eight Icarus-passing gaps: seven standard mechanisms (dynamic arrays,
+queues, classes, programs, MOS, bidirectional switches and specify paths)
+and the `wire real` extension. Full parity is still unconfirmed. The next
+[program execution amendment](program-execution-proposal.md) addresses a
+conflicting `$exit` description and missing execution metadata.

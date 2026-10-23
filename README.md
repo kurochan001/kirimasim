@@ -64,11 +64,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,572 | 1,570, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,577 | 1,575, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 199, `tests/suite/` 1,199 (made by 114 generators under `tools/`), tools 119, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 11.
+This repository's tests by kind: unit tests (GoogleTest) 203, `tests/suite/` 1,199 (made by 114 generators under `tools/`), tools 119, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 12.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -337,6 +337,8 @@ their limits, system tasks/functions and implemented command-line options.
   scaling and `%m`/`%l` scope information. Missing or extra values warn and continue.
 - **Binary formats:** `%u` and `%z` output complete 32-bit words at any integral
   width. File and packed destinations retain zero bytes; SV strings omit them.
+  `$sscanf`/`$fscanf` also read these native words, preserving raw whitespace
+  and NUL and assigning only complete fields. Width zero means omitted width.
 - **Memory-file references:** readmem/writemem tasks accept fixed memories
   through `ref`, including forwarded references and selected array rows;
   writemem also accepts `const ref`.

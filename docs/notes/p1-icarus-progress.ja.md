@@ -50,9 +50,9 @@ python3 tests/cli/run_binary_format_tests.py \
 ```
 
 現在の作業ツリーで最初のコマンドは終了コード1になります。16本の自作プローブ中、
-Icarusで通りkirimasimで通らないものが10本あります。標準の仕組みの9本は、
+Icarusで通りkirimasimで通らないものが8本あります。標準の仕組みの7本は、
 動的配列、キュー、クラスのオブジェクト、program、MOS、双方向スイッチ、
-specifyパス、`%u` の読み取り、`%z` の読み取りです。もう1本の `wire real` は
+specifyパスです。もう1本の `wire real` は
 [Icarus独自拡張](https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html)で、
 厳密なslangは正しく拒否します。対応には明示した互換方針が必要です。
 
@@ -75,10 +75,30 @@ refメモリの例から、その仕組み全体の対応は判断できませ�
 一般的な空白処理と、転送幅・途中のフィールドの選択には明記した修正が必要なので、
 [バイナリ入力の修正](binary-scan-proposal.ja.md)を作成しました。2026-10-23に
 段階の範囲変更とともに承認され、SYSTEM_TASKS 6.3・SIR_SPEC 8へ反映しました。
-入力実装は今後の作業で、既存の期待値は変更していません。
+入力実装は次節に記録し、既存の実行期待値は変更していません。
 
 自作の[観測ツール](../../tools/binary_scan_probe.py)は448ケースを持ち、実行の失敗と
 観測結果を区別します。幅0を除く部分は374件の観測を完了し、承認済みの本仕様の規則と
 一致しました。幅0の動作には差があり、まとめた実行では既存のIcarus開発版2種類の
 ネイティブな異常終了もありました。制限は修正案に記録しています。レビューの材料であり、
 規格適合や全面的な同等性を主張するものではありません。
+
+## バイナリ入力の実装
+
+3回目では承認済み規則を共通カーネルの `readBinary` へ実装し、SIRの出力先幅を
+渡します。定数・実行時の書式、ファイル・packed・文字列入力、10種類の呼び出し場所が
+同じ意味を使います。CLI行列は40プログラム・17,120変換、継続の2プログラム、拒否する
+40組を確認します。新規ユニットテスト4本は生バイト、不足する各バイト、幅、マスク、
+抑止、型を確認します。既存スイートの本体と実行期待値は保持しています。
+
+```sh
+python3 tools/binary_scan_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --engine kirimasim \
+  --require-kirimasim --output build/binary-scan-all-implemented.json
+```
+
+本仕様の448件すべてが一致しました。幅0を除く比較も両ツールで374件ずつ全て一致します。
+初期プローブの差は8件になりました。標準の7件は動的配列・キュー・クラス・program・
+MOS・双方向スイッチ・specifyパスで、他に `wire real` 独自拡張が残ります。
+全面的な同等性は未確認です。次の[program実行の修正案](program-execution-proposal.ja.md)は
+`$exit` の説明の食い違いと実行メタデータの不足を解決します。

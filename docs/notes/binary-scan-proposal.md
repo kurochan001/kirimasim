@@ -3,7 +3,8 @@
 [日本語](binary-scan-proposal.ja.md). Status: **approved (2026-10-23)**.
 Incorporated into [SYSTEM_TASKS 6.3](../spec/SYSTEM_TASKS.md#63-input) and
 [SIR_SPEC 8](../spec/SIR_SPEC.md#8-subroutines).
-Implementation remains pending.
+Implementation now uses the shared kernel scanner. The matrix checks
+40 programs / 17,120 conversions plus continuation and rejection cases.
 
 P1's SYSTEM_TASKS.md 6.3 includes file input; SIR_SPEC.md 8 previously
 explicitly rejected `%u` and `%z`. This approved amendment removes that
@@ -113,8 +114,10 @@ python3 tools/binary_scan_probe.py \
 
 All 374 selected cases produced complete observations with no differences
 from the candidate in that run; the report records the 74 excluded cases.
-kirimasim rejects the binary format before execution, so it produces zero
-observations. No failure or warning line is mistaken for another case's
+Before implementation, kirimasim rejected the binary format and produced zero
+observations. The implemented scanner now matches all 448 project-rule cases;
+the nonzero-width comparison gives 374 observations with no differences for
+both kirimasim and the reference tool. No failure or warning line is mistaken for another case's
 trace, and zero observations are never reported as a passing comparison.
 
 The [official standard page](https://standards.ieee.org/ieee/1800/7743/)

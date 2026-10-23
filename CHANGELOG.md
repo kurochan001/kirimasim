@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `$sscanf` and `$fscanf` read binary `%u`/`%z` fields at arbitrary integral
+  widths, including runtime formats and automatic/ref destinations. Raw
+  whitespace and NUL remain payload; incomplete fields leave targets
+  unchanged. Width zero follows the approved omitted-width rule
+  (SYSTEM_TASKS.md 6.3, SIR_SPEC.md 8).
+
 - `%u` and `%z` write unformatted 2-state and 4-state words, including
   arbitrary-width integral and packed values, through console, file and
   string-format APIs. Packed destinations preserve zero bytes; string
@@ -183,7 +189,7 @@ own. CONTRIBUTING.md says what goes in this file.
 - P1 now targets Icarus Verilog 13.0-or-broader execution coverage, bringing
   necessary later-phase mechanisms into P1. Binary `%u`/`%z` input semantics
   are approved, including width-zero, raw whitespace/NUL and partial-EOF
-  choices; input implementation remains pending (P1_SCOPE, SYSTEM_TASKS 6.3).
+  choices (P1_SCOPE, SYSTEM_TASKS 6.3).
 
 - Nonblocking updates without a delay use their saved values directly,
   avoiding a temporary heap allocation for each update while retaining

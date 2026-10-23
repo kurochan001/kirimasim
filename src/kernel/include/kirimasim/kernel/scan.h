@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
@@ -23,11 +24,11 @@ namespace kirimasim::kernel {
 
 /// One value that a conversion read and assigns.
 struct ScanValue {
-    /// b, o, h, d or c for an integral value; s for a string; f for a real
+    /// b, o, h, d, c, u or z for an integral value; s for a string; f for a real
     /// (also %e and %g).
     char conv = 'd';
     W4 bits{0, 0};  ///< b, o, h, d, c: the value's 64 low bits.
-    /// b, o, h, d: every bit read, least significant chunk first; for d the
+    /// b, o, h, d, u, z: every bit read, least significant chunk first; for d the
     /// magnitude, with `negative` for a minus sign. bits is its low chunk
     /// (negated for d with a minus sign).
     std::vector<W4> wide;
@@ -75,8 +76,11 @@ PlusargPlan preparePlusargFormat(std::string_view format, ScanTarget target);
 /// Reads `input` by `format` (a format parseScanFormat accepts). Returns
 /// the number of values assigned, which are put in `out` in order, or -1
 /// when the input ends before the first conversion. NUL characters count
-/// as white space.
-int scanString(std::string_view input, std::string_view format, std::vector<ScanValue>& out);
+/// as white space except inside binary fields. widths names the bit width
+/// of each assigning target; an absent width defaults to 32 bits. Explicit
+/// binary field widths override it (SYSTEM_TASKS.md 6.3).
+int scanString(std::string_view input, std::string_view format, std::vector<ScanValue>& out,
+               std::span<const std::uint32_t> widths = {});
 
 /// Where scanInput takes its characters from: get() gives the next one,
 /// or -1 at the end of the input.
@@ -94,7 +98,7 @@ public:
 /// look at but did not use are put in `unread`, in order, for the caller
 /// to give back.
 int scanInput(ScanInput& input, std::string_view format, std::vector<ScanValue>& out,
-              std::string& unread);
+              std::string& unread, std::span<const std::uint32_t> widths = {});
 
 /// The value of the rest of a plusarg after its name, read by the one
 /// conversion of $value$plusargs (SYSTEM_TASKS.md 9): an empty rest gives 0

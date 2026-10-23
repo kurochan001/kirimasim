@@ -163,7 +163,7 @@ Implementation status (2026-10-23): output uses the shared `formatInt`
 binary-word formatter for constant and runtime formats at any integral width.
 Packed destinations retain every byte; string results remove NUL according
 to VALUE_SEMANTICS.md 7.6. See the [binary matrix](../../tests/cli/run_binary_format_tests.py).
-Binary scan conversions remain unimplemented; approved semantics are in 6.3.
+Binary scan conversions use the shared input scanner under the rules of 6.3.
 
 ### 3.12 Flags not in the standard
 
@@ -258,7 +258,7 @@ Prints the unit and precision of the same targets as 5.2 in one line, `Time scal
   - If the format or `$sscanf`'s input string has x or z bits, -1 is returned.
   - The return value is the number of items matched and assigned; -1 (EOF) if the input ran out before the first conversion.
   - What happens when there are too few arguments for the format is not set by the standard. kirimasim makes it an error (rule of this document; at elaboration if the format is constant, otherwise a warning at run time, and the missing ones are not read).
-- **Binary input (approved 2026-10-23; implementation pending):** `%u`/`%U`
+- **Binary input (approved and implemented 2026-10-23):** `%u`/`%U`
   and `%z`/`%Z` accept integral, enum and packed-aggregate destinations
   represented by SIR, not unpacked aggregates. They do not extend
   `$value$plusargs` (21.6). The encoding follows 21.3.4.3, Table 21-7,
@@ -296,7 +296,12 @@ Prints the unit and precision of the same targets as 5.2 in one line, `Time scal
 - **`$ungetc` (added 2026-10-21, approved):** any number of characters can be pushed back, and the last one pushed is read first (rule of this document; for reference, Icarus does the same with two). It returns 0, or -1 when the descriptor is not open. A file opened only for writing is open, so `$ungetc` returns 0 for it too (added 2026-10-21, approved).
 
 Implementation status (2026-10-23): `$sscanf` and `$fscanf` accept runtime
-formats from strings and packed integral values. Constants retain elaboration
+formats from strings and packed integral values, including binary `%u`/`%z`.
+The [binary scan matrix](../../tests/cli/run_binary_scan_tests.py) checks
+40 programs / 17,120 conversions, two continuation programs and 40 rejected
+formats/types. The [observation tool](../../tools/binary_scan_probe.py) checks
+448 project-rule cases, with 374 nonzero-width reference comparisons.
+Constants retain elaboration
 checks; runtime formats are validated by the shared kernel scanner. Only
 successfully assigned outputs are copied back. Missing outputs warn and stop
 before the missing conversion; an X/Z-containing format returns -1 without

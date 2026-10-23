@@ -36,7 +36,7 @@ and P1_SUPPORT. Detailed amendments must precede each implementation.
 
 Unformatted `%u` and `%z` output is implemented (SYSTEM_TASKS.md 3.11).
 The separate [binary-input amendment](binary-scan-proposal.md) was also
-approved on 2026-10-23; its implementation remains pending.
+approved on 2026-10-23 and is now implemented by the shared scanner.
 
 The installed comparison executable currently reports
 `Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)`.

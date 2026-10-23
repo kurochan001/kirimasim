@@ -238,7 +238,8 @@ void Files::readLine(W4 desc, std::size_t max, std::string& line, bool& notOpen)
     }
 }
 
-int Files::scan(W4 desc, std::string_view format, std::vector<ScanValue>& out, bool& notOpen) {
+int Files::scan(W4 desc, std::string_view format, std::vector<ScanValue>& out, bool& notOpen,
+                std::span<const std::uint32_t> widths) {
     File* r = reader(desc, notOpen);
     if (r == nullptr || !startRead(*r)) return -1;
     class FromFile final : public ScanInput {
@@ -251,7 +252,7 @@ int Files::scan(W4 desc, std::string_view format, std::vector<ScanValue>& out, b
         File& file_;
     } in(*this, *r);
     std::string unread;
-    const int n = scanInput(in, format, out, unread);
+    const int n = scanInput(in, format, out, unread, widths);
     // What the scan looked at and did not use is read next.
     r->back.append(unread.rbegin(), unread.rend());
     return n;

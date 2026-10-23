@@ -113,6 +113,10 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--exclude-zero-width", action="store_true",
                         help="observe nonzero and omitted widths separately; record the excluded cases")
+    parser.add_argument("--engine", choices=("icarus", "kirimasim"), action="append",
+                        help="observe only the selected executable(s)")
+    parser.add_argument("--require-kirimasim", action="store_true",
+                        help="fail unless every kirimasim trace matches the approved project rules")
     args = parser.parse_args()
     rows = cases()
     excluded = []
@@ -123,7 +127,7 @@ def main():
               "cases": [{**row, "data": row["data"].hex(), "candidate": candidate(row)} for row in rows],
               "excluded_zero_width_cases": len(excluded),
               "engines": {}}
-    for engine in ("icarus", "kirimasim"):
+    for engine in args.engine or ("icarus", "kirimasim"):
         with tempfile.TemporaryDirectory(prefix="kirimasim-binary-scan-") as tmp:
             root = Path(tmp)
             source = root / "scan.sv"
@@ -170,6 +174,10 @@ def main():
                        "not compared (no result traces)")
         print(f"{engine}: {record['status']}, {len(record.get('traces', {}))}/{len(rows)} observations, "
               f"candidate differences: {differences}")
+    if args.require_kirimasim:
+        record = report["engines"].get("kirimasim", {})
+        return int(not record.get("candidate_comparison_complete") or
+                   bool(record.get("candidate_differences")))
     return 0
 
 

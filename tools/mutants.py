@@ -217,15 +217,22 @@ MUTANTS = [
      "            return withIndex(std::move(*base), *c);",
      "            return withIndex(std::move(*base), 0 * *c);"),
     ("vm: $sscanf drops the first value it reads", "src/vm/vm.cpp",
-     "n = kernel::scanString(input, plan.format, scanValues_);\n"
+     "n = kernel::scanString(input, plan.format, scanValues_, scanWidths(in));\n"
      "                for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)",
-     "n = kernel::scanString(input, plan.format, scanValues_);\n"
+     "n = kernel::scanString(input, plan.format, scanValues_, scanWidths(in));\n"
      "                for (std::size_t i = 1; i < scanValues_.size() && 3 + i < ops.size(); ++i)"),
     ("front: $sscanf assigns one target more than its count", "src/front/lower_expr.cpp",
      "        const Val above = emit(Op::Gt, sir::u2(1),",
      "        const Val above = emit(Op::Ge, sir::u2(1),"),
     ("kernel: %c skips white space", "src/kernel/scan.cpp",
-     "        if (s.conv != 'c') skipSpace();", "        skipSpace();"),
+     "        if (s.conv != 'c' && !binary) skipSpace();", "        if (!binary) skipSpace();"),
+    ("kernel: binary scans skip raw whitespace", "src/kernel/scan.cpp",
+     "if (s.conv != 'c' && !binary) skipSpace();", "if (s.conv != 'c') skipSpace();"),
+    ("kernel: binary scans ignore destination widths", "src/kernel/scan.cpp",
+     "const std::size_t width = s.width != 0 ? s.width : targetWidth;",
+     "const std::size_t width = s.width != 0 ? s.width : 32; (void)targetWidth;"),
+    ("kernel: binary short fields assign partial values", "src/kernel/scan.cpp",
+     "if (!input.has(in)) return false;", "if (!input.has(in)) return true;"),
     ("front: a stream into an array is put at the right end", "src/front/lower_expr.cpp",
      "                          {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);",
      "                          {constant(sir::u2(all.width - st.type.width), 0).op, st.op}, sl);"),

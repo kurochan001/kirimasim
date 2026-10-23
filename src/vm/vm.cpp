@@ -4002,6 +4002,14 @@ private:
         return kernel::prepareScanFormat(format, targets);
     }
 
+    /// Output widths supplied by SIR; the kernel decides transfer sizes.
+    std::vector<std::uint32_t> scanWidths(const sir::Instr& in) const {
+        std::vector<std::uint32_t> widths;
+        for (std::size_t i = 3; i < in.operands.size(); ++i)
+            widths.push_back(typeOf(in.operands[i]).width);
+        return widths;
+    }
+
     /// A value read by $sscanf or $value$plusargs in the type of its target
     /// (SYSTEM_TASKS.md 6.3, 9): the low bits of an integral value, a lone
     /// x or z in every bit, a string's characters, a real.
@@ -4776,7 +4784,8 @@ private:
                     warnOnce(in, "$fscanf has fewer arguments than its format has conversions");
                 bool notOpen = false;
                 scanValues_.clear();
-                const int n = files_.scan(value(ops[1]), plan.format, scanValues_, notOpen);
+                const int n =
+                    files_.scan(value(ops[1]), plan.format, scanValues_, notOpen, scanWidths(in));
                 if (notOpen) warnOnce(in, "$fscanf: " + notReadableText(value(ops[1])));
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
                     scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].asFrame()));
@@ -4969,7 +4978,7 @@ private:
                     return true;
                 }
                 scanValues_.clear();
-                n = kernel::scanString(input, plan.format, scanValues_);
+                n = kernel::scanString(input, plan.format, scanValues_, scanWidths(in));
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
                     scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].asFrame()));
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};

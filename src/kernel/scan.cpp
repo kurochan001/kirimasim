@@ -5,6 +5,8 @@
 
 #include "kirimasim/kernel/scan.h"
 
+#include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -98,7 +100,9 @@ bool parseSpec(std::string_view f, std::size_t& i, Spec& s, std::string& bad) {
         case 'd':
         case 'c':
         case 's':
-        case 'f': s.conv = c; return true;
+        case 'f':
+        case 'u':
+        case 'z': s.conv = c; return true;
         default: bad = std::string("%") + f[i]; return false;
     }
 }
@@ -126,6 +130,41 @@ bool radixDigit(char c, unsigned bits, W4& d) {
         return false;
     if (v >= (1U << bits)) return false;
     d = {v, 0};
+    return true;
+}
+
+/// Complete native 32-bit words, least significant first. Neither NUL nor
+/// whitespace is skipped, and a short field is consumed but never assigned
+/// (SYSTEM_TASKS.md 6.3, approved 2026-10-23).
+bool readBinary(Chars& input, std::size_t& in, const Spec& s, std::uint32_t targetWidth,
+                ScanValue& v) {
+    const std::size_t width = s.width != 0 ? s.width : targetWidth;
+    const std::size_t words = width / 32 + (width % 32 != 0 ? 1 : 0);
+    v.conv = s.conv;
+    for (std::size_t word = 0; word < words; ++word) {
+        std::uint32_t a = 0;
+        std::uint32_t b = 0;
+        for (unsigned part = 0; part < (s.conv == 'z' ? 2U : 1U); ++part) {
+            std::array<char, 4> bytes{};
+            for (char& byte : bytes) {
+                if (!input.has(in)) return false;
+                byte = input.at(in++);
+            }
+            (part == 0 ? a : b) = std::bit_cast<std::uint32_t>(bytes);
+        }
+        const std::size_t remaining = width - word * 32;
+        if (remaining < 32) {
+            const auto mask = (std::uint32_t{1} << remaining) - 1;
+            a &= mask;
+            b &= mask;
+        }
+        // Append only after reading a whole word, and publish the value
+        // only when every word of the field is present.
+        if (word % 2 == 0) v.wide.push_back({0, 0});
+        v.wide.back().a |= std::uint64_t{a} << (word % 2 * 32);
+        v.wide.back().b |= std::uint64_t{b} << (word % 2 * 32);
+    }
+    v.bits = v.wide.empty() ? W4{} : v.wide.front();
     return true;
 }
 
@@ -305,6 +344,10 @@ PlusargPlan preparePlusargFormat(std::string_view format, ScanTarget target) {
     }
     plan.prefix = format.substr(0, pct);
     plan.conv = convs.front().conv;
+    if (plan.conv == 'u' || plan.conv == 'z') {
+        plan.error = std::string("format specifier %") + plan.conv;
+        return plan;
+    }
     if (!acceptsTarget(plan.conv, target))
         plan.error = std::string("%") + plan.conv + " into a target of this type";
     return plan;
@@ -315,7 +358,8 @@ namespace {
 /// scanString and scanInput: the number of values assigned, or -1 when the
 /// input ends before the first conversion (21.3.4.3); `in` ends at the
 /// first character not used.
-int scan(Chars& input, std::size_t& in, std::string_view format, std::vector<ScanValue>& out) {
+int scan(Chars& input, std::size_t& in, std::string_view format, std::vector<ScanValue>& out,
+         std::span<const std::uint32_t> widths) {
     int count = 0;
     bool converted = false;
     const auto skipSpace = [&] {
@@ -337,7 +381,8 @@ int scan(Chars& input, std::size_t& in, std::string_view format, std::vector<Sca
         Spec s;
         std::string bad;
         if (!parseSpec(format, i, s, bad)) return count;
-        if (s.conv != 'c') skipSpace();
+        const bool binary = s.conv == 'u' || s.conv == 'z';
+        if (s.conv != 'c' && !binary) skipSpace();
         if (!input.has(in)) return converted ? count : -1;
         if (s.conv == '%') {
             if (input.at(in) != '%') return count;
@@ -345,7 +390,14 @@ int scan(Chars& input, std::size_t& in, std::string_view format, std::vector<Sca
             continue;
         }
         ScanValue v;
-        if (!readField(input, in, s, v)) return count;
+        const std::uint32_t width = s.assigns && static_cast<std::size_t>(count) < widths.size()
+                                        ? widths[static_cast<std::size_t>(count)]
+                                        : 32;
+        if (binary) {
+            if (!readBinary(input, in, s, width, v)) return converted ? count : -1;
+        } else if (!readField(input, in, s, v)) {
+            return count;
+        }
         converted = true;
         if (s.assigns) {
             out.push_back(std::move(v));
@@ -357,17 +409,18 @@ int scan(Chars& input, std::size_t& in, std::string_view format, std::vector<Sca
 
 }  // namespace
 
-int scanString(std::string_view input, std::string_view format, std::vector<ScanValue>& out) {
+int scanString(std::string_view input, std::string_view format, std::vector<ScanValue>& out,
+               std::span<const std::uint32_t> widths) {
     Chars chars(input);
     std::size_t in = 0;
-    return scan(chars, in, format, out);
+    return scan(chars, in, format, out, widths);
 }
 
 int scanInput(ScanInput& input, std::string_view format, std::vector<ScanValue>& out,
-              std::string& unread) {
+              std::string& unread, std::span<const std::uint32_t> widths) {
     Chars chars(input);
     std::size_t in = 0;
-    const int n = scan(chars, in, format, out);
+    const int n = scan(chars, in, format, out, widths);
     unread = chars.from(in);
     return n;
 }

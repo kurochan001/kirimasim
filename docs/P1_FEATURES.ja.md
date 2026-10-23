@@ -47,7 +47,45 @@ string length=2
 ファイルと `$swrite`・`$sformat` の packed 出力先は全バイトを保ちます。
 文字列型にはNULを含められないので、文字列の出力先と `$sformatf` はゼロのバイトを
 取り除きます。バイナリを保存するにはファイルか packed 変数を使ってください。
-`$sscanf`・`$fscanf` のバイナリ入力書式は引き続き未対応です。
+`$sscanf`・`$fscanf` も同じ語形式を読みます。次の入力例を参照してください。
+
+## 無書式のバイナリの語を読み込む
+
+`%u`・`%z` は下位の32ビット語からホストのバイト順で読みます。幅の省略と0は
+代入先のビット幅を語へ切り上げ、正の幅はバイト数でなく転送するビット数です。
+その幅の上を落としてからゼロ拡張・切り捨てを行います。`%z` は4値の出力先では
+X/Zを保ち、2値の出力先では不明なビットを0にします。plusargsの書式には使えません。
+
+空白・NULもデータで、packedの `$sscanf` 入力でも同じです。書式自身の空白は
+従来どおり読み飛ばします。完全なフィールドだけを代入し、不足時は読めた分を消費し、
+出力先を保ち、ファイルのEOFを立てます。完全なフィールドの直後はEOFの先読みを
+しません。幅0は承認済みの本仕様の選択で、Icarusの実測とは差があります。
+
+```systemverilog
+module top;
+  logic [3:0] written = 4'b1xz0, loaded;
+  logic [32:0] wide = '1;
+  string fmt;
+  int fd, count;
+  initial begin
+    fd = $fopen("binary.bin", "wb");
+    $fwrite(fd, "%z", written);
+    $fclose(fd);
+    fd = $fopen("binary.bin", "rb");
+    fmt = "%z";
+    count = $fscanf(fd, fmt, loaded);
+    $display("read=%0d value=%b bytes=%0d eof=%0d", count, loaded, $ftell(fd), $feof(fd));
+    $fclose(fd);
+    count = $sscanf(32'h44444444, "%4u", wide);
+    $display("read=%0d low nibble=%h", count, wide);
+  end
+endmodule
+```
+
+```text
+read=1 value=1xz0 bytes=8 eof=0
+read=1 low nibble=000000004
+```
 
 ## 参照引数で受け取ったメモリを読み書きする
 

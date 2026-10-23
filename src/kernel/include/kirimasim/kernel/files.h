@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -69,7 +70,8 @@ public:
     void readLine(W4 desc, std::size_t max, std::string& line, bool& notOpen);
     /// $fscanf: as scanString, taking from the file exactly the characters
     /// the conversions read; -1 when the input ends first or on an error.
-    int scan(W4 desc, std::string_view format, std::vector<ScanValue>& out, bool& notOpen);
+    int scan(W4 desc, std::string_view format, std::vector<ScanValue>& out, bool& notOpen,
+             std::span<const std::uint32_t> widths = {});
     /// $fread: up to n bytes into bytes.
     void readBytes(W4 desc, std::size_t n, std::string& bytes, bool& notOpen);
     /// $ftell: the position of the next byte read, what was pushed back

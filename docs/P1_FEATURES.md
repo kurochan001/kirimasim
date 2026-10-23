@@ -47,7 +47,49 @@ string length=2
 Files and packed destinations of `$swrite`/`$sformat` keep every byte.
 SV strings cannot contain NUL, so string destinations and `$sformatf`
 omit zero bytes. To retain binary data, use a file or a packed destination.
-Binary input conversions in `$sscanf`/`$fscanf` are still not implemented.
+Binary input formats in `$sscanf` and `$fscanf` use the same word encoding;
+see the input example below.
+
+## Reading unformatted binary words
+
+`%u`/`%z` read least-significant native 32-bit words first. Omitted and
+zero field width use the destination bit width rounded up to words;
+positive width is transfer bits, not bytes. Bits above that width are
+masked before zero extension or truncation. `%z` retains X/Z in four-state
+targets; two-state targets clear unknown bits. These formats are not
+plusarg conversions.
+
+Raw whitespace and NUL are payload, including packed `$sscanf` input.
+Explicit whitespace in a format still skips normally. Only complete fields
+assign; a short field consumes available bytes, preserves its target, and
+sets file EOF. A complete field does not look ahead to detect EOF. Width
+zero is the approved project rule and differs from measured Icarus behavior.
+
+```systemverilog
+module top;
+  logic [3:0] written = 4'b1xz0, loaded;
+  logic [32:0] wide = '1;
+  string fmt;
+  int fd, count;
+  initial begin
+    fd = $fopen("binary.bin", "wb");
+    $fwrite(fd, "%z", written);
+    $fclose(fd);
+    fd = $fopen("binary.bin", "rb");
+    fmt = "%z";
+    count = $fscanf(fd, fmt, loaded);
+    $display("read=%0d value=%b bytes=%0d eof=%0d", count, loaded, $ftell(fd), $feof(fd));
+    $fclose(fd);
+    count = $sscanf(32'h44444444, "%4u", wide);
+    $display("read=%0d low nibble=%h", count, wide);
+  end
+endmodule
+```
+
+```text
+read=1 value=1xz0 bytes=8 eof=0
+read=1 low nibble=000000004
+```
 
 ## Loading memories through reference arguments
 

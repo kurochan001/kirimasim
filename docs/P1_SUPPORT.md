@@ -97,8 +97,11 @@ including the file-output forms and `$swrite`.
   values, even when they contain percent signs.
 - `$sscanf` and `$fscanf` accept runtime formats: binary/octal/decimal/hex,
   character/string and real conversions, field widths, assignment suppression
-  (`*`) and `%%`. Scan conversions `%t`, `%u`, `%z`, `%v` and `%m` are not
-  implemented. An X/Z packed format returns `-1` without reading input;
+  (`*`) and `%%`. Unformatted `%u`/`%z` (also uppercase) read complete
+  native 32-bit words into integral/enum/packed targets. Omitted or zero
+  width uses the destination bit width; explicit width sets transfer bits.
+  Raw whitespace/NUL is payload, and short fields leave the target unchanged.
+  Scan conversions `%t`, `%v` and `%m` are not implemented. An X/Z packed format returns `-1` without reading input;
   insufficient output arguments warn and stop before that conversion.
 - `$value$plusargs` accepts runtime formats with one conversion:
   `%d`, `%o`, `%h` / `%x`, `%b`, `%e`, `%f`, `%g`, `%s`, including uppercase

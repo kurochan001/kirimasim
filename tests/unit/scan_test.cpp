@@ -4,6 +4,7 @@
 // Formatted reading for $sscanf and $fscanf (SYSTEM_TASKS.md 6.3, 21.3.4.3).
 
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -246,7 +247,7 @@ TEST(Scan, RuntimeFormatExtraTargetsAndMalformedFormats) {
     const auto extra = kirimasim::kernel::prepareScanFormat("%d", targets);
     EXPECT_TRUE(extra.error.empty());
     EXPECT_FALSE(extra.missingTargets);
-    for (const std::string format : {"%", "%5", "%q", "%t", "%u"}) {
+    for (const std::string format : {"%", "%5", "%q", "%t", "%v"}) {
         const auto plan = kirimasim::kernel::prepareScanFormat(format, targets);
         EXPECT_FALSE(plan.error.empty()) << format;
     }
@@ -295,6 +296,146 @@ TEST(Scan, PlusargRuntimeMalformedFormats) {
         const auto plan = kirimasim::kernel::preparePlusargFormat(
             format, kirimasim::kernel::ScanTarget::Integral);
         EXPECT_FALSE(plan.error.empty()) << format;
+    }
+}
+
+// Independent native-word payloads: the scanner never uses its formatter
+// to build expected inputs (21.3.4.3, SYSTEM_TASKS.md 6.3).
+std::string binaryWords(std::initializer_list<std::uint32_t> words) {
+    std::string bytes;
+    for (const std::uint32_t word : words) {
+        const auto chars = std::bit_cast<std::array<char, 4>>(word);
+        bytes.append(chars.data(), chars.size());
+    }
+    return bytes;
+}
+
+TEST(Scan, BinaryWidthsAndMasks) {
+    for (const std::uint32_t width : {1U, 4U, 31U, 32U, 33U, 63U, 64U, 65U, 127U, 129U}) {
+        for (const char conv : std::string("uzUZ")) {
+            for (const bool explicitWidth : {false, true}) {
+                const bool four = conv == 'z' || conv == 'Z';
+                const std::uint32_t transfer = explicitWidth ? 33U : width;
+                std::string bytes;
+                for (std::uint32_t i = 0; i < (transfer + 31) / 32; ++i)
+                    bytes += four ? binaryWords({0xabcdef01U + i, 0x12345678U + i})
+                                  : binaryWords({0xabcdef01U + i});
+                FromString input(bytes + "!");
+                std::vector<ScanValue> values;
+                std::string unread;
+                const std::string format = std::string("%") + (explicitWidth ? "33" : "0") + conv;
+                const std::array widths{width};
+                ASSERT_EQ(scanInput(input, format, values, unread, widths), 1);
+                EXPECT_EQ(input.taken(), bytes.size());
+                EXPECT_TRUE(unread.empty());
+                ASSERT_EQ(values.size(), 1U);
+                ASSERT_EQ(values[0].wide.size(), (transfer + 63) / 64);
+                for (std::uint32_t bit = 0; bit < values[0].wide.size() * 64; ++bit) {
+                    const auto a = values[0].wide[bit / 64].a >> (bit % 64) & 1U;
+                    const auto b = values[0].wide[bit / 64].b >> (bit % 64) & 1U;
+                    EXPECT_EQ(a, bit < transfer ? (0xabcdef01U + bit / 32) >> (bit % 32) & 1U : 0);
+                    EXPECT_EQ(b, four && bit < transfer
+                                     ? (0x12345678U + bit / 32) >> (bit % 32) & 1U
+                                     : 0);
+                }
+                EXPECT_EQ(values[0].bits.a, values[0].wide[0].a);
+                EXPECT_EQ(values[0].bits.b, values[0].wide[0].b);
+            }
+        }
+    }
+}
+
+TEST(Scan, BinaryShortFieldsAndSuppression) {
+    for (const std::uint32_t width : {4U, 33U, 65U, 129U}) {
+        for (const char conv : std::string("uz")) {
+            const std::size_t size =
+                (static_cast<std::size_t>(width) + 31) / 32 * (conv == 'u' ? 4U : 8U);
+            for (std::size_t length = 0; length < size; ++length) {
+                const std::string data(length, 'A');
+                for (const bool preceding : {false, true}) {
+                    FromString input((preceding ? "7:" : "") + data);
+                    const std::array widths{32U, width};
+                    std::vector<ScanValue> values;
+                    std::string unread;
+                    const std::string format = std::string(preceding ? "%d:" : "") + "%" + conv;
+                    EXPECT_EQ(scanInput(input, format, values, unread,
+                                        preceding
+                                            ? std::span<const std::uint32_t>(widths)
+                                            : std::span<const std::uint32_t>(widths).subspan(1)),
+                              preceding ? 1 : -1);
+                    EXPECT_EQ(values.size(), preceding ? 1U : 0U);
+                    EXPECT_EQ(input.taken(), length + (preceding ? 2 : 0));
+                    EXPECT_TRUE(unread.empty());
+                }
+            }
+        }
+    }
+    const std::string data = binaryWords({0x20, 0x09, 0x00});
+    auto values = scan(data + "Q", "%*u%*z%c", 1);
+    ASSERT_EQ(values.size(), 1U);
+    EXPECT_EQ(values[0].bits.a, static_cast<unsigned>('Q'));
+    EXPECT_TRUE(scan(data.substr(0, 4), "%*u%z", 0).empty());
+    values = scan(data, "%u%z", 2);
+    EXPECT_EQ(values[0].bits.a, 0x20U);
+    EXPECT_EQ(values[1].bits.a, 0x09U);
+    EXPECT_EQ(values[1].bits.b, 0x00U);
+    // Explicit format whitespace still skips; raw NUL never does.
+    values = scan(" \t" + binaryWords({0x41410041}), " %u", 1);
+    ASSERT_EQ(values.size(), 1U);
+    EXPECT_EQ(values[0].bits.a, 0x41410041U);
+}
+
+TEST(Scan, BinarySuppressedWidthsAndRawBytes) {
+    for (const std::uint32_t width : {4U, 33U, 65U, 129U}) {
+        for (const char conv : std::string("uz")) {
+            const std::size_t size =
+                (static_cast<std::size_t>(width) + 31) / 32 * (conv == 'u' ? 4U : 8U);
+            FromString input(std::string(size, '\0') + "Q");
+            std::vector<ScanValue> values;
+            std::string unread;
+            const std::array widths{8U};
+            ASSERT_EQ(scanInput(input, "%*" + std::to_string(width) + conv + "%c", values, unread,
+                                widths),
+                      1);
+            ASSERT_EQ(values.size(), 1U);
+            EXPECT_EQ(values[0].bits.a, static_cast<unsigned>('Q'));
+            EXPECT_EQ(input.taken(), size + 1);
+            EXPECT_TRUE(unread.empty());
+        }
+    }
+    for (const unsigned char first : {0, 9, 10, 13, 32, 255}) {
+        const std::string data{static_cast<char>(first), 'A', '\0', 'B'};
+        const std::array<char, 4> bytes{static_cast<char>(first), 'A', '\0', 'B'};
+        const std::uint32_t expected = std::bit_cast<std::uint32_t>(bytes);
+        const auto values = scan(data, "%u", 1);
+        ASSERT_EQ(values.size(), 1U);
+        EXPECT_EQ(values[0].bits.a, expected);
+        FromString input(data);
+        std::vector<ScanValue> streamed;
+        std::string unread;
+        ASSERT_EQ(scanInput(input, "%u", streamed, unread), 1);
+        ASSERT_EQ(streamed.size(), 1U);
+        EXPECT_EQ(streamed[0].bits.a, expected);
+        EXPECT_EQ(input.taken(), 4U);
+    }
+}
+
+TEST(Scan, BinaryTypesAndPlusargExclusion) {
+    using Target = kirimasim::kernel::ScanTarget;
+    for (const char conv : std::string("uzUZ")) {
+        std::vector<ScanConversion> conversions;
+        std::string bad;
+        ASSERT_TRUE(parseScanFormat(std::string("%*") + conv + "%" + conv, conversions, bad));
+        ASSERT_EQ(conversions.size(), 2U);
+        EXPECT_FALSE(conversions[0].assigns);
+        for (const Target type : {Target::Integral, Target::String, Target::Real, Target::Other}) {
+            const std::array targets{type};
+            const auto plan =
+                kirimasim::kernel::prepareScanFormat(std::string("%") + conv, targets);
+            EXPECT_EQ(plan.error.empty(), type == Target::Integral);
+            EXPECT_FALSE(kirimasim::kernel::preparePlusargFormat(std::string("key=%") + conv, type)
+                             .error.empty());
+        }
     }
 }
 
