@@ -19,7 +19,7 @@ namespace kirimasim::sir {
 /// kind, and to the plain number 0xffffffff that other rows still use.
 struct None {
     // Implicit on purpose: `x == kNone` for a plain number.
-    constexpr operator std::uint32_t() const { return 0xffffffffU; }
+    constexpr operator std::uint32_t() const noexcept { return 0xffffffffU; }
 };
 inline constexpr None kNone{};
 
@@ -27,8 +27,8 @@ inline constexpr None kNone{};
 template <class Tag> class Id {
 public:
     constexpr Id() = default;
-    constexpr explicit Id(std::uint32_t v) : v_(v) {}
-    constexpr Id(None) : v_(kNone) {}  // Implicit on purpose: `SlotId s = kNone;`
+    constexpr explicit Id(std::uint32_t v) noexcept : v_(v) {}
+    constexpr Id(None) noexcept : v_(kNone) {}  // Implicit on purpose: `SlotId s = kNone;`
 
     /// The number, to index the table this Id is a row of.
     [[nodiscard]] constexpr std::uint32_t index() const { return v_; }

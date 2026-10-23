@@ -21,6 +21,12 @@ namespace {
 
 using namespace kirimasim::sir;
 
+// Scalar types now default their descriptor to kNone. That initialization
+// must remain nonthrowing, including constant objects with static lifetime.
+static_assert(noexcept(Type{TypeKind::Real, 0}));
+static_assert(noexcept(TypeId{kNone}));
+static_assert(noexcept(TypeId{0}));
+
 SourceLoc at(std::uint32_t line, std::uint32_t col = 1) { return {0, line, col}; }
 
 Instr make(Op op, Type t, std::uint32_t r, std::vector<Operand> ops, std::uint32_t line) {
