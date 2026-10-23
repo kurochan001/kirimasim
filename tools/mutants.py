@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("delayed NBA: wide array element goes to the first cell", "src/vm/vm.cpp",
+     "nbaSlotWide(f, ops[0].asSlot(), *e, 0, 0, x.data(), delay);",
+     "nbaSlotWide(f, ops[0].asSlot(), 0, 0, 0, x.data(), delay);"),
+    ("delayed NBA: wide bit range updates one tick late", "src/vm/vm.cpp",
+     "nbaSlotWide(f, ops[0].asSlot(), e, at->lo, at->n, part.data(), delay);",
+     "nbaSlotWide(f, ops[0].asSlot(), e, at->lo, at->n, part.data(), delay + 1);"),
+    ("delayed NBA: narrow array element updates one tick late", "src/vm/vm.cpp",
+     "nbaSlot(f, ops[0].asSlot(), *e, 0, 0, v(valueAt), *delay);",
+     "nbaSlot(f, ops[0].asSlot(), *e, 0, 0, v(valueAt), *delay + 1);"),
     ("kernel and4: x & 0 is x", "src/kernel/include/kirimasim/kernel/w4.h",
      "(~x.a & ~x.b) | (~y.a & ~y.b);  // either side is a known 0",
      "(~x.a & ~x.b) & (~y.a & ~y.b);  // either side is a known 0"),

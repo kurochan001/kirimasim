@@ -15,6 +15,34 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 実行時に選ぶ対象への遅延付きNBA
+
+固定配列の実行時の添字、packedのビット・部分範囲、それらの連結への遅延付きNBAに
+対応しました。右辺・対象・遅延は発行時に確定し、その後に値や添字を変えても更新先は
+変わりません。部分的に有効な範囲は有効なビットだけ更新します。発行元のNBA・Re-NBAを
+使い、発行したtask・forkが戻っても更新を保持します。automaticな対象は禁止のままで、
+イベント制御付きNBA、配列全体の時間制御、refや文字列文字を通じた遅延付き更新は未対応です。
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  logic [64:0] words[2];
+  int index = 1;
+  logic [64:0] data = 65'h10000000000000001;
+  initial begin
+    words[0] = 0; words[1] = 0;
+    words[index] <= #2 data;
+    index = 0; data = 0;
+    #3; $display("%h %h", words[0], words[1]);
+  end
+endmodule
+```
+
+```text
+00000000000000000 10000000000000001
+```
+
+
 ## programとreactive側の実行
 
 programのinitialと連続代入はReactiveで動き、#0はRe-Inactiveへ、NBAはRe-NBAへ

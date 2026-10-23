@@ -15,6 +15,37 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Delayed NBAs with runtime targets
+
+Delayed NBAs now support runtime fixed-array indices, packed bit and part
+positions, and concatenations of those targets. The right value, target
+and delay are captured when issued; later changes do not redirect the
+update. Only valid bits of a partial selection are scheduled. Updates use
+the issuing thread's NBA/Re-NBA set and survive its task/fork returning.
+Automatic targets remain illegal; event-controlled NBAs, whole-array
+timing and delayed targets through refs or string characters remain
+unsupported.
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  logic [64:0] words[2];
+  int index = 1;
+  logic [64:0] data = 65'h10000000000000001;
+  initial begin
+    words[0] = 0; words[1] = 0;
+    words[index] <= #2 data;
+    index = 0; data = 0;
+    #3; $display("%h %h", words[0], words[1]);
+  end
+endmodule
+```
+
+```text
+00000000000000000 10000000000000001
+```
+
+
 ## Programs and the reactive region set
 
 Program initial procedures and continuous assignments run in Reactive.

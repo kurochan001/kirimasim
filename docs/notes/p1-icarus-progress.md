@@ -195,3 +195,29 @@ fail the program-specific tests; the restored implementation passes.
 The next [dynamic-container amendment](dynamic-containers-proposal.md)
 fills the missing heap/instruction contract, including stable outdated
 reference cells and tracing roots. It is proposed, not approved or implemented.
+
+## Runtime targets of delayed NBAs
+
+The next round implements the existing 10.4.2/9.4.5 and SCHEDULER_SPEC 5/13
+rule for fixed-array indices, packed bit/part positions and concatenations.
+`Lowerer::storePlace` supplies the same evaluated places used by ordinary
+writes; `nba.elem.delay` and `nba.bits.delay` pass captured ranges and
+values to the shared kernel's existing NBA scheduling. No new semantic
+choice or dependency was needed. Ref/string-character delayed targets and
+event-controlled NBAs remain unsupported.
+
+The new matrix has 64 cases: eight containers, 1/32/65/129-bit widths and
+two/four-state storage. It checks descending/negative/multidimensional
+indices, single evaluation, value and delay capture, partial and X/Z/wide
+indices, X/Z data, concatenations, packed members, ordering and NBA/Re-NBA.
+CLI checks 42 execution/diagnostic combinations and both SIR spellings;
+one new verifier unit checks valid forms and ten negative rows check
+malformed operands and forbidden frame targets. The old rejection fixture
+keeps its design body and now checks acceptance in a separate expectation
+commit, justified by 10.4.2. New tests check the resulting values.
+
+Dev passes 1,778 tests: 1,776 pass and the two known skips remain. The
+38 original comparison probes now have 24 Icarus-passing gaps; the original
+16-case seed still has seven. The compiler/runtime remain
+`14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 and full parity remain
+unconfirmed. The runnable example in both P1_FEATURES versions was checked.

@@ -198,13 +198,15 @@ enum class Op : std::uint8_t {
     /// drive.delay <slot range>, <value>, <rise>, <fall>, <off>: a delayed
     /// write of a continuous assignment, gate or UDP (SIR_SPEC.md 5.4).
     DriveDelay,
-    LoadElem,   ///< %r = load.elem <slot>, <index>...
-    StoreElem,  ///< store.elem <slot>, <index>..., <value>
-    NbaElem,    ///< nba.elem <slot>, <index>..., <value>
-    StoreBits,  ///< store.bits <slot>, [<index>...,] <position>, <value>
-    NbaBits,    ///< nba.bits <slot>, [<index>...,] <position>, <value>
-    Fload,      ///< %r = fload %fN
-    Fstore,     ///< fstore %fN, <value>
+    LoadElem,      ///< %r = load.elem <slot>, <index>...
+    StoreElem,     ///< store.elem <slot>, <index>..., <value>
+    NbaElem,       ///< nba.elem <slot>, <index>..., <value>
+    NbaElemDelay,  ///< nba.elem.delay <slot>, <index>..., <value>, <delay>
+    StoreBits,     ///< store.bits <slot>, [<index>...,] <position>, <value>
+    NbaBits,       ///< nba.bits <slot>, [<index>...,] <position>, <value>
+    NbaBitsDelay,  ///< nba.bits.delay <slot>, [<index>...,] <position>, <value>, <delay>
+    Fload,         ///< %r = fload %fN
+    Fstore,        ///< fstore %fN, <value>
     // References, for ref arguments (SIR_SPEC.md 8). A reference names a
     // slot or a frame variable, and an element of it when indexed.
     RefMake,       ///< %r = ref.make <slot | %fN>, [<index>...]

@@ -103,6 +103,7 @@ const char* opName(Op op) {
         case Op::LoadElem: return "load.elem";
         case Op::StoreElem: return "store.elem";
         case Op::NbaElem: return "nba.elem";
+        case Op::NbaElemDelay: return "nba.elem.delay";
         case Op::StoreBits: return "store.bits";
         case Op::RefMake: return "ref.make";
         case Op::LoadRef: return "load.ref";
@@ -112,6 +113,7 @@ const char* opName(Op op) {
         case Op::StoreRefElem: return "store.ref.elem";
         case Op::StoreRefBits: return "store.ref.bits";
         case Op::NbaBits: return "nba.bits";
+        case Op::NbaBitsDelay: return "nba.bits.delay";
         case Op::Fload: return "fload";
         case Op::Fstore: return "fstore";
         case Op::Add: return "add";
@@ -323,8 +325,10 @@ bool writesSlot(Op op) {
         case Op::DriveDelay:
         case Op::StoreElem:
         case Op::NbaElem:
+        case Op::NbaElemDelay:
         case Op::StoreBits:
-        case Op::NbaBits: return true;
+        case Op::NbaBits:
+        case Op::NbaBitsDelay: return true;
         default: return false;
     }
 }

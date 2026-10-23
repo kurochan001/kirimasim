@@ -2421,23 +2421,10 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
         if (t.kind != ast::TimingControlKind::Delay)
             unsupported(sl, "nonblocking assignment with an event control");
         const Val ticks = delayValue(t.as<ast::DelayControl>().expr, sl);
-        // The target is a fixed range of a slot: a whole variable, an
-        // element or bits at constant positions (SIR_SPEC.md 5.3).
+        // Capture every target index now; storePlace handles the same
+        // places as an undelayed write (SIR_SPEC.md 5.3, 7.3).
         const Place p = placeOf(a.left(), sl);
-        const sir::Slot& slot = design().slot(p.slot);
-        const bool fixedElem = p.kind == Place::Kind::Element ? p.elem.has_value()
-                               : p.kind == Place::Kind::Bits  ? p.indices.empty() || p.elem
-                                                              : p.kind == Place::Kind::Slot;
-        const bool fixedBits = p.kind != Place::Kind::Bits ||
-                               (!p.pos && p.lsb >= 0 && p.lsb + p.width <= slot.type.width);
-        if (!fixedElem || !fixedBits || (p.kind == Place::Kind::Slot && !slot.dims.empty()))
-            unsupported(sl, "delayed nonblocking assignment to this target");
-        const sir::SlotRange r = rangeOf(p);
-        Operand o = Operand::slot(r.slot, r.lsb, r.width);
-        o.firstElem = r.firstElem;
-        o.numElems = r.numElems;
-        emitVoid(Op::NbaDelay, {o, coerce(v, p.type, sl).op, ticks.op}, sl);
-        noteWrite(r);
+        storePlace(p, v, true, sl, ticks);
         return v;
     }
     const sir::FrameVarId f = newFrameVar(lt);
@@ -2910,7 +2897,12 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
     unsupported(sl, "reading this target");
 }
 
-void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl) {
+void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
+                         std::optional<Val> delay) {
+    const auto write = [&](Op blocking, Op nba, Op delayed, std::vector<Operand> ops) {
+        if (delay) ops.push_back(delay->op);
+        emitVoid(delay ? delayed : nonblocking ? nba : blocking, std::move(ops), sl);
+    };
     // An automatic variable takes no NBA (10.4.2): not through a ref either,
     // unless the ref names a whole static variable (nba.ref).
     const auto noNba = [&] {
@@ -2945,6 +2937,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             return;
         }
         case Place::Kind::Ref: {
+            if (delay) unsupported(sl, "delayed nonblocking assignment through a ref");
             std::vector<Operand> ops{Operand::frame(p.frame)};
             if (p.leaf != 0) ops.push_back(constant(sir::u2(32), p.leaf).op);
             ops.push_back(coerce(v, p.type, sl).op);
@@ -2953,11 +2946,12 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         }
         case Place::Kind::Slot: {
             const Val sv = coerce(v, p.type, sl);
-            emitVoid(nonblocking ? Op::Nba : Op::Store, {Operand::slot(p.slot), sv.op}, sl);
+            write(Op::Store, Op::Nba, Op::NbaDelay, {Operand::slot(p.slot), sv.op});
             noteWrite(rangeOf(p));
             return;
         }
         case Place::Kind::StringChar: {
+            if (delay) unsupported(sl, "delayed nonblocking assignment to a string character");
             // s[i] = c is s.putc(i, c) (6.16.3): the new string to s.
             const Type st{sir::TypeKind::String, 0};
             const Val str = loadPlace(p.base[0], sl);
@@ -2977,7 +2971,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                 lsb -= w;
                 const Val bits = emit(Op::Partsel, integral(sir::isFourState(all.type), false, w),
                                       {all.op, constant(sir::u2(32), lsb).op}, sl);
-                storePlace(part, bits, nonblocking, sl);
+                storePlace(part, bits, nonblocking, sl, delay);
             }
             return;
         }
@@ -2995,7 +2989,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             std::vector<Operand> ops{Operand::slot(p.slot)};
             ops.insert(ops.end(), p.indices.begin(), p.indices.end());
             ops.push_back(ev.op);
-            emitVoid(nonblocking ? Op::NbaElem : Op::StoreElem, std::move(ops), sl);
+            write(Op::StoreElem, Op::NbaElem, Op::NbaElemDelay, std::move(ops));
             noteWrite(rangeOf(p));
             return;
         }
@@ -3021,10 +3015,9 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                     p.lsb + static_cast<std::int64_t>(p.width) <= 0)
                     return;
                 if (p.lsb >= 0 && p.lsb + p.width <= slot.type.width) {
-                    emitVoid(
-                        nonblocking ? Op::Nba : Op::Store,
-                        {Operand::slot(p.slot, static_cast<std::uint32_t>(p.lsb), p.width), pv.op},
-                        sl);
+                    write(
+                        Op::Store, Op::Nba, Op::NbaDelay,
+                        {Operand::slot(p.slot, static_cast<std::uint32_t>(p.lsb), p.width), pv.op});
                     noteWrite(rangeOf(p));
                     return;
                 }
@@ -3033,7 +3026,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             ops.insert(ops.end(), p.indices.begin(), p.indices.end());
             ops.push_back(pos.op);
             ops.push_back(pv.op);
-            emitVoid(nonblocking ? Op::NbaBits : Op::StoreBits, std::move(ops), sl);
+            write(Op::StoreBits, Op::NbaBits, Op::NbaBitsDelay, std::move(ops));
             noteWrite(rangeOf(p));
             return;
         }

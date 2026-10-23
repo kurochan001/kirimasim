@@ -285,10 +285,13 @@ Amendment of M3b.
 | `nba.elem slot, index..., value` | NBA to an element. The indices are decided by their values when the instruction runs (7.3) |
 | `store.bits slot, [index...,] position, value` | Writes, in the slot (or the element of an array), as many bits as the value's width starting at bit `position`. `position` is a run-time value. Out of range and x/z are handled as in VALUE_SEMANTICS.md 3.11 |
 | `nba.bits slot, [index...,] position, value` | The NBA version of `store.bits` |
+| `nba.elem.delay slot, index..., value, delay` | `nba.elem` with an integral delay in design-precision ticks (7.3). Capture indices and value when issued |
+| `nba.bits.delay slot, [index...,] position, value, delay` | `nba.bits` with the same delay. Capture and clip the target range when issued |
 
 - A write with constant indices and position is expressed by an ordinary `store` or `nba` with the slot's bit range (`%s3[7:4]` and the like) and constant element indices.
 - A read of a part decided at run time reads the whole with `load` or `load.elem`, then selects with `idxpartsel`.
 - The first operand can be, instead of a slot, a frame variable that is an array (7.4) (approved 2026-10-17).
+- The delayed forms lower the existing delayed-NBA rule of SCHEDULER_SPEC 5 and 13 for runtime targets; they add no value or scheduling choice. Like the other NBA forms, they require static storage. Invalid indices write nothing and partially valid bit ranges update only their valid bits (VALUE_SEMANTICS 3.11). The shared kernel keeps the captured range/value until its NBA or Re-NBA update; returning from the issuing task or fork does not re-evaluate or discard it.
 
 ### 5.4 Writes of continuous assignments with delays
 

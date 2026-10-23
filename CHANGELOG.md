@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Delayed NBAs capture runtime fixed-array indices, packed bit/part positions
+  and concatenation targets, including wide values and partial ranges. The
+  shared kernel retains their captured updates across task/fork completion
+  and uses NBA/Re-NBA according to the issuing thread (10.4.2, 9.4.5;
+  SIR_SPEC 5.3, SCHEDULER_SPEC 5, 13).
+
 - Program execution uses Reactive/Re-Inactive/Re-NBA through calls and
   forks, with named program identities and anonymous-program subroutines.
   The shared kernel ends descendants on program completion, implements

@@ -38,7 +38,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入と NBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
-| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、`#`、時間単位・精度と丸め、min/typ/max の選択 | 配列全体への代入内時間制御、イベント制御付き NBA、実行時の添字で選ぶ配列要素への遅延付き NBA は未対応 |
+| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結への遅延付きNBA | 配列全体への代入内時間制御、イベント制御付きNBA、ref・文字列文字を通じた遅延付き書き込みは未対応。automaticな対象へのNBAは禁止 |
 | イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、名前付きイベント、`->`、`->>`、`.triggered` | イベント式・`iff`・wait 条件の書き込み副作用は不可。実行時の添字で選ぶ名前付きイベント、名前付きイベントの `iff`、イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、対応する名前付きブロックとタスクの disable | fork 内の変数宣言、fork の枝が捕捉してスコープ外まで使う automatic 変数、名前付き fork ブロックの disable などに未対応の形がある |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |

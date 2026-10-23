@@ -34,8 +34,10 @@ bool hasNoResult(Op op) {
         case Op::DriveDelay:
         case Op::StoreElem:
         case Op::NbaElem:
+        case Op::NbaElemDelay:
         case Op::StoreBits:
         case Op::NbaBits:
+        case Op::NbaBitsDelay:
         case Op::Fstore:
         case Op::Trigger:
         case Op::TriggerNb:
@@ -852,9 +854,13 @@ private:
         const SlotRange whole{ops[0].asSlot(), 0, 0, 0, 0};
         if (ops[0].id >= d_.slots.size()) return whole;
         const Slot& slot = d_.slots[ops[0].id];
-        const bool bits = in.op == Op::StoreBits || in.op == Op::NbaBits;
+        const bool bits =
+            in.op == Op::StoreBits || in.op == Op::NbaBits || in.op == Op::NbaBitsDelay;
+        const bool delayed = in.op == Op::NbaElemDelay || in.op == Op::NbaBitsDelay;
         // slot, indices..., [position,] value
-        const std::size_t nIdx = ops.size() < (bits ? 3U : 2U) ? 0 : ops.size() - (bits ? 3 : 2);
+        const std::size_t extra = (bits ? 3U : 2U) + (delayed ? 1U : 0U);
+        if (ops.size() < extra) return whole;
+        const std::size_t nIdx = ops.size() - extra;
         if (nIdx != slot.dims.size()) return whole;
         std::uint64_t elem = 0;
         for (std::size_t d = 0; d < nIdx; ++d) {
@@ -870,7 +876,8 @@ private:
         SlotRange t{ops[0].asSlot(), static_cast<std::uint32_t>(elem), nIdx == 0 ? 0U : 1U, 0, 0};
         if (bits) {
             const std::optional<std::int64_t> pos = constIndex(ops[1 + nIdx]);
-            const std::uint32_t w = operandType(body, ops.back(), tempType).width;
+            const std::uint32_t w =
+                operandType(body, ops[ops.size() - (delayed ? 2 : 1)], tempType).width;
             if (pos && *pos >= 0 && w != 0 && *pos + w <= slot.type.width) {
                 t.lsb = static_cast<std::uint32_t>(*pos);
                 t.width = w;
@@ -1097,16 +1104,19 @@ private:
                 break;
             case Op::LoadElem:
             case Op::StoreElem:
-            case Op::NbaElem: {
+            case Op::NbaElem:
+            case Op::NbaElemDelay: {
+                const bool delayed = in.op == Op::NbaElemDelay;
                 // An automatic variable takes no NBA (10.4.2).
                 const std::optional<Base> s = elemBase();
                 if (!s || s->dims->empty() || s->type.kind == TypeKind::Ref ||
-                    (s->frame && in.op == Op::NbaElem)) {
+                    (s->frame && in.op != Op::StoreElem && in.op != Op::LoadElem)) {
                     bad("needs a whole unpacked array slot or frame variable");
                     break;
                 }
                 const std::size_t n = s->dims->size();
-                const std::size_t want = 1 + n + (in.op == Op::LoadElem ? 0 : 1);
+                const std::size_t want =
+                    1 + n + (in.op == Op::LoadElem ? 0 : 1) + (delayed ? 1 : 0);
                 if (ops.size() != want) {
                     bad("needs one index per dimension");  // rule 11
                     break;
@@ -1114,20 +1124,23 @@ private:
                 if (!indicesOk(1, n)) bad("indices must be integral");
                 if (in.op == Op::LoadElem) {
                     if (rt != s->type) bad("result must have the element type");
-                } else if (!isValue(want - 1) || !fits(s->type, ty(want - 1))) {
+                } else if (!isValue(n + 1) || !fits(s->type, ty(n + 1))) {
                     bad("value does not fit the element type");
                 }
+                if (delayed && !delayOk(n + 2)) bad("the delay must be integral");
                 break;
             }
             case Op::StoreBits:
-            case Op::NbaBits: {
+            case Op::NbaBits:
+            case Op::NbaBitsDelay: {
+                const bool delayed = in.op == Op::NbaBitsDelay;
                 const std::optional<Base> s = elemBase();
-                if (!s || !isIntegral(s->type) || (s->frame && in.op == Op::NbaBits)) {
+                if (!s || !isIntegral(s->type) || (s->frame && in.op != Op::StoreBits)) {
                     bad("needs a whole integral slot or frame variable");
                     break;
                 }
                 const std::size_t n = s->dims->size();
-                if (ops.size() != n + 3) {
+                if (ops.size() != n + 3 + (delayed ? 1 : 0)) {
                     bad("needs one index per dimension, a position and a value");  // rule 11
                     break;
                 }
@@ -1135,6 +1148,7 @@ private:
                 const Type v = ty(n + 2);
                 if (!isValue(n + 2) || !sameDomain(v, s->type) || v.width > s->type.width)
                     bad("value must be integral, in the slot's domain and not wider");
+                if (delayed && !delayOk(n + 3)) bad("the delay must be integral");
                 break;
             }
             case Op::Fload:

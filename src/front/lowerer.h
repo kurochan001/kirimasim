@@ -350,7 +350,8 @@ public:
     /// packed structure, or a part of a member or part.
     Place narrow(Place base, std::int64_t lsb, std::uint32_t width, slang::SourceLocation sl);
     Val loadPlace(const Place& p, slang::SourceLocation sl);
-    void storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl);
+    void storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
+                    std::optional<Val> delay = std::nullopt);
     /// What a read or write of a place covers (SIR_SPEC.md 3.4).
     sir::SlotRange rangeOf(const Place& p) const;
     Val lowerAssignment(const ast::AssignmentExpression& a);

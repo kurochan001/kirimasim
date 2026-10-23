@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "kirimasim/sir/design.h"
+#include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 
 namespace {
@@ -203,6 +204,26 @@ std::vector<Case> cases() {
          add(none(Op::NbaDelay, {Operand::slot(SlotId{sA}), R, C2}))},
         {"nba.delay delay", "the delay must be integral",
          add(none(Op::NbaDelay, {Operand::slot(SlotId{sA}), A, R}))},
+        {"nba.elem.delay missing delay", "needs one index per dimension",
+         add(none(Op::NbaElemDelay, {Operand::slot(SlotId{sM}), C2, A}))},
+        {"nba.elem.delay delay", "the delay must be integral",
+         add(none(Op::NbaElemDelay, {Operand::slot(SlotId{sM}), C2, A, R}))},
+        {"nba.elem.delay value", "value does not fit the element type",
+         add(none(Op::NbaElemDelay, {Operand::slot(SlotId{sM}), C2, R, C2}))},
+        {"nba.elem.delay index", "indices must be integral",
+         add(none(Op::NbaElemDelay, {Operand::slot(SlotId{sM}), R, A, C2}))},
+        {"nba.elem.delay frame", "needs a whole unpacked array slot or frame variable",
+         add(none(Op::NbaElemDelay, {Operand::frame(FrameVarId{fV}), C2, A, C2}))},
+        {"nba.bits.delay missing operands", "needs one index per dimension",
+         add(none(Op::NbaBitsDelay, {Operand::slot(SlotId{sA})}))},
+        {"nba.bits.delay delay", "the delay must be integral",
+         add(none(Op::NbaBitsDelay, {Operand::slot(SlotId{sA}), C2, A, R}))},
+        {"nba.bits.delay value", "value must be integral",
+         add(none(Op::NbaBitsDelay, {Operand::slot(SlotId{sA}), C2, R, C2}))},
+        {"nba.bits.delay position", "indices and the position must be integral",
+         add(none(Op::NbaBitsDelay, {Operand::slot(SlotId{sA}), R, A, C2}))},
+        {"nba.bits.delay frame", "needs a whole integral slot or frame variable",
+         add(none(Op::NbaBitsDelay, {Operand::frame(FrameVarId{fV}), C2, A, C2}))},
         {"drive.delay outside cont", "only a cont process writes with it",
          add(none(Op::DriveDelay, {Operand::slot(SlotId{sW}), A, C2, C2, C2}))},
         {"load.elem of a scalar", "needs a whole unpacked array slot or frame variable",
@@ -503,6 +524,20 @@ std::string describe(const std::vector<VerifyError>& errors) {
 TEST(VerifyMatrix, PlaygroundVerifies) {
     const auto errors = verify(playground());
     EXPECT_TRUE(errors.empty()) << describe(errors);
+}
+
+TEST(VerifyMatrix, DelayedNbaTargetsVerifyAndWriteText) {
+    for (const Op op : {Op::NbaElemDelay, Op::NbaBitsDelay}) {
+        Design d = playground();
+        std::vector<Operand> ops{Operand::slot(SlotId{sM}), Operand::constant(ConstId{c2})};
+        if (op == Op::NbaBitsDelay) ops.push_back(Operand::constant(ConstId{c2}));
+        ops.push_back(Operand::temp(TempId{tA}));
+        ops.push_back(Operand::constant(ConstId{c2}));
+        add(none(op, std::move(ops))).apply(d);
+        EXPECT_TRUE(verify(d).empty()) << describe(verify(d));
+        EXPECT_NE(toText(d).find(opName(op)), std::string::npos);
+        EXPECT_TRUE(writesSlot(op));
+    }
 }
 
 TEST(VerifyMatrix, EveryCheckFires) {

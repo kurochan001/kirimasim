@@ -1430,7 +1430,9 @@ private:
             case Op::NbaDelay:
             case Op::DriveDelay:
             case Op::NbaElem:
+            case Op::NbaElemDelay:
             case Op::NbaBits:
+            case Op::NbaBitsDelay:
             case Op::NbaRef:
             case Op::Trigger:
             case Op::TriggerNb:
@@ -1659,14 +1661,15 @@ private:
     /// Writes `width` bits of v at a run-time position `pos` of an
     /// element; only the bits inside the element (VALUE_SEMANTICS.md 3.11).
     void storeBits(const Frame& f, sir::SlotId s, std::uint32_t elem,
-                   std::optional<std::int64_t> pos, W4 v, std::uint32_t width, bool nba) {
+                   std::optional<std::int64_t> pos, W4 v, std::uint32_t width, bool nba,
+                   std::uint64_t delay = 0) {
         const std::optional<kernel::Inside> in =
             pos ? kernel::inside(*pos, width, d_.slot(s).type.width) : std::nullopt;
         if (!in) return;
         const W4 part{(v.a >> in->skip) & kernel::mask(in->n),
                       (v.b >> in->skip) & kernel::mask(in->n)};
         if (nba)
-            nbaSlot(f, s, elem, in->lo, in->n, part);
+            nbaSlot(f, s, elem, in->lo, in->n, part, delay);
         else
             writeSlot(s, elem, in->lo, in->n, part);
     }
@@ -2407,8 +2410,10 @@ private:
             case Op::DriveDelay:
             case Op::StoreElem:
             case Op::NbaElem:
+            case Op::NbaElemDelay:
             case Op::StoreBits:
             case Op::NbaBits:
+            case Op::NbaBitsDelay:
             case Op::Trigger:
             case Op::TriggerNb: return true;
             default: return false;
@@ -2886,7 +2891,8 @@ private:
         return kernel::wide::position(x.data(), t.width, sir::isSigned(t));
     }
 
-    bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+    bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info,
+                     std::uint64_t delay) {
         namespace kw = kernel::wide;
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
@@ -2965,7 +2971,8 @@ private:
                 return true;
             }
             case Op::StoreElem:
-            case Op::NbaElem: {
+            case Op::NbaElem:
+            case Op::NbaElemDelay: {
                 if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
@@ -2973,7 +2980,7 @@ private:
                           : d_.slot(ops[0].asSlot()).dims;
                 const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);
                 if (!e) return true;  // an invalid index writes nothing
-                const std::vector<W4> x = get(ops.size() - 1);
+                const std::vector<W4> x = get(dims.size() + 1);
                 if (frame) {
                     W4* dst = &frameElem(ops[0].asFrame(), *e);
                     for (std::size_t k = 0; k < x.size(); ++k)
@@ -2981,12 +2988,13 @@ private:
                 } else if (in.op == Op::StoreElem) {
                     writeSlotWide(ops[0].asSlot(), *e, 0, 0, x.data());
                 } else {
-                    nbaSlotWide(f, ops[0].asSlot(), *e, 0, 0, x.data());
+                    nbaSlotWide(f, ops[0].asSlot(), *e, 0, 0, x.data(), delay);
                 }
                 return true;
             }
             case Op::StoreBits:
-            case Op::NbaBits: {
+            case Op::NbaBits:
+            case Op::NbaBitsDelay: {
                 if (options_.boundsCheck) checkBounds(in);
                 // A part at a run-time position: only the bits inside the
                 // element (VALUE_SEMANTICS.md 3.11).
@@ -3018,7 +3026,7 @@ private:
                 } else if (in.op == Op::StoreBits) {
                     writeSlotWide(ops[0].asSlot(), e, at->lo, at->n, part.data());
                 } else {
-                    nbaSlotWide(f, ops[0].asSlot(), e, at->lo, at->n, part.data());
+                    nbaSlotWide(f, ops[0].asSlot(), e, at->lo, at->n, part.data(), delay);
                 }
                 return true;
             }
@@ -3372,8 +3380,10 @@ private:
             case Op::Mul:
             case Op::Nba:
             case Op::NbaBits:
+            case Op::NbaBitsDelay:
             case Op::NbaDelay:
             case Op::NbaElem:
+            case Op::NbaElemDelay:
             case Op::Ne:
             case Op::Neg:
             case Op::Not:
@@ -3425,8 +3435,10 @@ private:
             case Op::LoadElem:
             case Op::StoreElem:
             case Op::NbaElem:
+            case Op::NbaElemDelay:
             case Op::StoreBits:
             case Op::NbaBits:
+            case Op::NbaBitsDelay:
             case Op::LoadRefElem:
             case Op::StoreRefElem:
             case Op::StoreRefBits: {
@@ -3438,14 +3450,14 @@ private:
                 const std::vector<sir::ArrayDim>& dims =
                     frame ? fv->dims : d_.slot(ops[0].asSlot()).dims;
                 invalid = !elementOf(dims, ops, 1);
-                const bool bits =
-                    in.op == Op::StoreBits || in.op == Op::NbaBits || in.op == Op::StoreRefBits;
+                const bool bits = in.op == Op::StoreBits || in.op == Op::NbaBits ||
+                                  in.op == Op::NbaBitsDelay || in.op == Op::StoreRefBits;
                 if (!invalid && bits) {
                     const sir::Type type = ref     ? fv->target
                                            : frame ? fv->type
                                                    : d_.slot(ops[0].asSlot()).type;
                     invalid = !kernel::fullyInside(indexOf(ops[dims.size() + 1]),
-                                                   typeOf(ops.back()).width, type.width);
+                                                   typeOf(ops[dims.size() + 2]).width, type.width);
                 }
                 break;
             }
@@ -3470,7 +3482,14 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
-        if (info.wide) return executeWide(f, p, in, info);
+        const bool delayedTarget = in.op == Op::NbaElemDelay || in.op == Op::NbaBitsDelay;
+        const std::optional<std::uint64_t> delay =
+            delayedTarget ? ticksOf(ops.back()) : std::optional<std::uint64_t>(0);
+        if (!delay) {
+            designError(f, in, "the delay takes the time past the largest time");
+            return false;
+        }
+        if (info.wide) return executeWide(f, p, in, info, *delay);
         if (!ops.empty() &&
             (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
             // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the
@@ -3675,7 +3694,8 @@ private:
                 return true;
             }
             case Op::StoreElem:
-            case Op::NbaElem: {
+            case Op::NbaElem:
+            case Op::NbaElemDelay: {
                 if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::optional<std::uint32_t> e =
@@ -3683,16 +3703,18 @@ private:
                                     : d_.slot(ops[0].asSlot()).dims,
                               ops, 1);
                 if (!e) return true;  // an invalid index writes nothing
+                const std::size_t valueAt = ops.size() - (delayedTarget ? 2 : 1);
                 if (frame)
-                    frameElem(ops[0].asFrame(), *e) = v(ops.size() - 1);
+                    frameElem(ops[0].asFrame(), *e) = v(valueAt);
                 else if (in.op == Op::StoreElem)
-                    writeSlot(ops[0].asSlot(), *e, 0, 0, v(ops.size() - 1));
+                    writeSlot(ops[0].asSlot(), *e, 0, 0, v(valueAt));
                 else
-                    nbaSlot(f, ops[0].asSlot(), *e, 0, 0, v(ops.size() - 1));
+                    nbaSlot(f, ops[0].asSlot(), *e, 0, 0, v(valueAt), *delay);
                 return true;
             }
             case Op::StoreBits:
-            case Op::NbaBits: {
+            case Op::NbaBits:
+            case Op::NbaBitsDelay: {
                 if (options_.boundsCheck) checkBounds(in);
                 const bool frame = ops[0].kind == Operand::Kind::Frame;
                 const std::vector<sir::ArrayDim>& dims =
@@ -3715,7 +3737,7 @@ private:
                     return true;
                 }
                 storeBits(f, ops[0].asSlot(), e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
-                          in.op == Op::NbaBits);
+                          in.op != Op::StoreBits, *delay);
                 return true;
             }
             case Op::Udp:
