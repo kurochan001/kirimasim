@@ -119,13 +119,34 @@ flowchart LR
 - Future multithreaded execution (P4) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
 - **Functions the kernel calls for waits (added 2026-10-18, approved):** the eval and guard functions of waits (the expressions of monitor records, and `iff`) may write the variables of the subroutines they call and trigger events, as the SystemVerilog they come from may; front rejects other writes (SCHEDULER_SPEC.md 9.5). The kernel calls them while it walks its lists of waiters and monitor records, so it keeps such a change or trigger and announces it, in the order made, when the outermost walk ends, in the same time slot. These functions do not wait, and do not call the table's functions that run processes.
 
-## 6. GC and safepoints (P3)
+## 6. Typed heap, GC and safepoints (P1 amendment approved 2026-10-23)
 
-- GC runs only at chosen safepoints (between time slots, or at the boundaries of regions). The conditions are that no temporary of generated code is left outside a frame, and that no DPI call is in progress.
-- While a time-consuming DPI-C task is stopped on a fiber, it counts as "in a DPI call", and GC does not run.
-- Roots of GC: process frames, static members of classes, slots of handle types, the values of pending events and NBAs, the contents of mailboxes, monitor records.
-- References of `weak_reference` are not followed by marking; after marking, if the object referred to is not alive, the reference is made null.
-- The details are written in P3 (the design specification's "object model and GC").
+The [approved container amendment](../notes/dynamic-containers-proposal.md)
+defines the execution contract for dynamic arrays and queues (7.5, 7.10,
+13.5.2). The Context owns typed containers and stable element cells. Kernel
+layout descriptors contain no slang or SIR types. Handle 0 denotes empty.
+A container holds cell tokens, rather than addresses into a growing vector.
+Insertion preserves retained cells; deletion and replacement detach old cells.
+Active references keep detached cells alive and writable. Whole-value copies,
+including nested containers, allocate independent cells before replacing the
+destination. Size/byte overflow and allocation failure return `resource_limit`
+(exit code 6); no allocation exception crosses the kernel boundary and a
+failed operation leaves the destination unchanged.
+
+Collection traces exact typed roots supplied by each tier: slots, process and
+call frames, temporaries, retained reference cells, pending writes and events,
+reports and callbacks. It follows nested containers and reachable detached
+cells. Collection runs only between time slots or at region boundaries with
+all temporaries registered and no DPI call in progress. A suspended DPI task
+still counts as a call in progress. An incremental implementation may defer
+collection to such a boundary; it must not collect with missing roots or claim
+unbounded scalability from deferred collection. Unreachable table entries may
+be reused, but stale tokens must never name a different value. Collection and
+mutation report allocation failure without a partial replacement.
+
+Class, mailbox and weak-reference semantics extend the root descriptors when
+those mechanisms are implemented. Weak references are not marking edges;
+unreachable referents become null. Their remaining details are separate work.
 
 ## 7. Libraries embedded in other simulators (P4)
 

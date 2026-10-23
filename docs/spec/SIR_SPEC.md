@@ -109,7 +109,7 @@ The SIR of one design consists of the following.
 - Slots of type `event` each get one event object of the kernel, made at elaboration. The default is not null (checked: 6.8, Table 6-7). They become null only when reading an element of an array that does not exist (Table 7-1) and when null is assigned (15.5.5; P3).
 - The default of type `string` is the empty string. A handle of 0 is taken as the empty string (rule of this document), so that no object is allocated each time a string of length 0 is made. `len()`, concatenation and comparison treat 0 as a string of length 0.
 - The default of classes, interface classes, chandles and virtual interfaces is null (0).
-- The default of dynamic arrays, queues and associative arrays is empty (0 elements). A handle of 0 is taken as empty (rule of this document; P3).
+- The default of dynamic arrays, queues and associative arrays is empty (0 elements). A handle of 0 is taken as empty (rule of this document; dynamic arrays and queues are P1 under the amendment approved 2026-10-23).
 
 ### 3.2.2 Extra bits
 
@@ -186,7 +186,7 @@ When collapsed, the name table keeps both the parent's and the child's names as 
 | `string` | String (a handle) |
 | `handle<class number>` | Class handle |
 | `chandle`, `event` | chandle, named event |
-| `dynarray<element type>`, `queue<element type>`, `assoc<key type, element type>` | Dynamic data (P3; handles) |
+| `dynarray<element type>`, `queue<element type>`, `assoc<key type, element type>` | Dynamic data (handles; dynamic arrays and queues P1, associative arrays follow P1_SCOPE) |
 
 - A signed `i4<w>` in the design specification's notation is written `s4<w>` (draft).
 - Enumerated types are handled as values of the base integral type, with the table of names and values in the type table (methods such as `name()` look up the table).
@@ -208,6 +208,21 @@ Amendment of M3b:
 - **Fixed-size arrays whose elements are unpacked structures (approved 2026-10-17):** one slot with the array's dimensions for each innermost member (held as an array per member). `a[i].x` is element `i` of member `x`'s slot, and the index computation is the same as for arrays whose elements are not structures. If a member is an unpacked array, the slot is multidimensional, with the member's dimensions after the array's (`a[i].b[j]` is element `(i, j)`). Assignments of whole elements and whole arrays are unfolded into assignments per member and per element (VALUE_SEMANTICS.md 3.13). An assignment of a whole element with an index decided at run time (`a[i] = s`) evaluates the index expression once and does `store.elem` per member with that value. The slot's name is `<array name>.<member name>`.
 - **Unpacked unions:** their layout is decided later (11). In P1 they are reported as unsupported constructs.
 - **Classes:** the layout of fields and the table of virtual methods (indexed by number) are held in the type table. A parameterized class becomes a separate class for each specialization slang made (P3).
+
+### 4.2.1 Dynamic containers (approved 2026-10-23)
+
+The [approved amendment](../notes/dynamic-containers-proposal.md) governs
+construction, deep copying, methods, invalid indices, bounds, argument
+evaluation and stable element references. `dynarray<T>` and `queue<T>` are
+typed handles into the Context heap (RUNTIME_ABI 6). Their type descriptions
+retain the element layout and queue bound. Typed construction, copying,
+length, element read/write/reference, mutation and traversal operations must
+be checked by the verifier and represented in the text form. The front end
+selects the type and target; execution tiers pass operands and roots to the
+shared kernel. An implementation may report an unfinished form as unsupported;
+that is a remaining P1 gap, rather than a change to this contract. Negative or
+unknown construction sizes give design runtime error (code 2); allocation or
+size/byte overflow gives resource_limit (code 6), without partial replacement.
 
 ### 4.3 Type table
 

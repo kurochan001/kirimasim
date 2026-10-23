@@ -1,8 +1,8 @@
 # Dynamic array and queue execution amendment
 
-[日本語](dynamic-containers-proposal.ja.md). Status: proposed, awaiting approval
-(2026-10-23). No implementation or specification change is authorized by this
-proposal alone.
+[日本語](dynamic-containers-proposal.ja.md). Status: approved by the user on 2026-10-23. The approval covers this
+execution contract, including its explicit project choices. Implementation is
+in progress; this document does not claim completed container support.
 
 P1_SCOPE advances the Icarus-required dynamic containers into P1. SIR_SPEC
 currently describes their default empty handles but not their instructions;
@@ -23,7 +23,7 @@ no standard text, simulator code or external test was copied.
 - `new[size]` evaluates its size before its optional initializer. Convert
   the size to the required signed 64-bit integral domain. Zero produces
   an empty array; negative size is a design runtime error, code 2 (7.5.1).
-  **Project choice requiring approval:** an X/Z-containing size also gives
+  **Approved project choice:** an X/Z-containing size also gives
   a design runtime error, rather than guessing zero or allocating an
   unknown amount. An initializer contributes the common prefix; additional
   elements receive their type's default. Growing or shrinking always makes
