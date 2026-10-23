@@ -91,6 +91,9 @@ public:
     HeapResult<HeapLayoutId> addLayout(std::span<const HeapWord> words) noexcept;
     HeapResult<HeapTypeId> addType(HeapType type) noexcept;
     [[nodiscard]] std::size_t words(HeapLayoutId layout) const noexcept;
+    HeapResult<HeapTypeId> actualType(ContainerToken value) const noexcept;
+    HeapResult<HeapType> describeType(HeapTypeId type) const noexcept;
+    HeapResult<HeapWord> describeWord(HeapLayoutId layout, std::size_t word) const noexcept;
 
     /// A missing (X/Z) or negative construction size gives InvalidSize.
     /// Construction and whole-value copying always make independent cells,
@@ -120,6 +123,10 @@ public:
                                std::optional<std::int64_t> index) const noexcept;
     HeapStatus readCell(HeapLayoutId layout, CellToken cell, std::span<W4> out) const noexcept;
     HeapStatus writeCell(HeapLayoutId layout, CellToken cell, std::span<const W4> data) noexcept;
+    /// Transport an already-owned nested value into a single-container cell.
+    /// This is raw handle storage, not a language value assignment: callers
+    /// perform copy/snapshot first. The actual destination type must match.
+    HeapStatus storeNested(HeapLayoutId layout, CellToken cell, ContainerToken value) noexcept;
 
     /// Queue movement preserves retained cell tokens. Removed cells remain
     /// usable through rooted references until an exact collection frees them.

@@ -125,6 +125,22 @@ std::size_t Heap::words(HeapLayoutId layout) const noexcept {
     const Layout* l = layoutOf(layout);
     return l ? l->words.size() : 0;
 }
+HeapResult<HeapTypeId> Heap::actualType(ContainerToken value) const noexcept {
+    if (value.bits == 0) return {kNone, {}};
+    const Container* c = containers_.get(value.bits);
+    if (!c) return {kNone, failure(HeapError::InvalidHandle)};
+    return {c->type, {}};
+}
+HeapResult<HeapType> Heap::describeType(HeapTypeId type) const noexcept {
+    const HeapType* t = typeOf(type);
+    return t ? HeapResult<HeapType>{*t, {}}
+             : HeapResult<HeapType>{{}, failure(HeapError::InvalidType)};
+}
+HeapResult<HeapWord> Heap::describeWord(HeapLayoutId layout, std::size_t word) const noexcept {
+    const Layout* l = layoutOf(layout);
+    return l && word < l->words.size() ? HeapResult<HeapWord>{l->words[word], {}}
+                                       : HeapResult<HeapWord>{{}, failure(HeapError::InvalidType)};
+}
 HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexcept {
     return protectValue<HeapLayoutId>([&] {
         if (words.empty()) throw HeapFault{HeapError::InvalidType};
@@ -424,6 +440,18 @@ HeapStatus Heap::writeCell(HeapLayoutId layout, CellToken cell, std::span<const 
         tx.committed = true;
         return HeapStatus{HeapError::None, tx.warning()};
     });
+}
+HeapStatus Heap::storeNested(HeapLayoutId layout, CellToken cell, ContainerToken value) noexcept {
+    const Layout* l = layoutOf(layout);
+    if (!l || l->words.size() != 1 || l->words[0].nested == kNone)
+        return failure(HeapError::InvalidType);
+    if (cell.bits == 0) return {};
+    Cell* c = cells_.get(cell.bits);
+    if (!c || c->layout != layout) return failure(HeapError::InvalidHandle);
+    if (const HeapError e = check(l->words[0].nested, value); e != HeapError::None)
+        return failure(e);
+    c->words[0] = {value.bits, 0};
+    return {};
 }
 HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
                        std::span<const W4> data) noexcept {

@@ -2,7 +2,7 @@
 
 [日本語](P1_FEATURES.ja.md) · This English text is the main version.
 
-These examples describe tier 1 as of 2026-10-23. P1 is still in progress;
+These examples describe tier 1 as of 2026-10-24. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), save one example at a time as
@@ -20,13 +20,14 @@ messages go to standard error.
 The [kernel heap and typed SIR](P1_SUPPORT.md#dynamic-container-foundation)
 are implemented and tested, but `new[]`, queue methods and dynamic element
 access are not executable SystemVerilog features yet. The approved contract
-still needs front/VM integration and complete root publication. Nested-bound
-conversion and actual-type snapshots are tested through kernel APIs.
-The examples below cover currently executable features. For
-the kernel and SIR implementation checks, run:
+still needs front lowering, complete root publication and heap-change
+notification. The VM executes the 16 typed instructions in independent SIR
+tests, including actual-bound refs, waits and snapshots. These checks do not
+enable language execution. The examples below cover currently executable
+features. For the kernel, SIR and VM implementation checks, run:
 
 ```sh
-ctest --preset dev -R '^(Heap|ContainerSir)[.]' --output-on-failure
+ctest --preset dev -R '^(Heap|ContainerSir|VmContainer)[.]' --output-on-failure
 ```
 
 ## Mixed named-event waits and per-item iff

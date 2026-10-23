@@ -1,6 +1,6 @@
 # P1 expansion toward Icarus coverage
 
-[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-23.
+[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-24.
 
 The goal is broader P1 functional support than Icarus Verilog 13.0.
 Complete parity is **not confirmed**. The previous pass-rate gates and the
@@ -8,6 +8,50 @@ small probes below cannot establish it. The
 [scope amendment](p1-icarus-scope-proposal.md) was approved on 2026-10-23
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
+
+## VM container instructions and actual references (2026-10-24)
+
+Tier 1 now mechanically dispatches the 16 typed SIR instructions to the
+shared heap. Layout/type registration occurs once and kernel errors return
+through the existing source-position paths. Variable references carry their
+actual type even when empty or viewed through a different equivalent ref
+formal. Element references carry stable cell tokens, actual layouts and their
+origin for Postponed checks. Advancing a forwarded fixed-array frame ref
+preserves its type metadata.
+
+Fourteen new independent SIR tests cover 216 element/bound/storage combinations,
+72 ref-call combinations, four forwarded-array cases, 36 selected-cell cases,
+96 packed writes against `valsem`, 12 receiver/argument-side-effect cases,
+32 invalid-index cases and four waiting-task cases. They also check source
+positions, once-per-position warnings, invalid sizes, overflow, deterministic
+allocation failures and eight Postponed combinations. A new kernel test
+checks copied descriptors, stale handles and already-owned nested transport.
+
+The positive instruction matrix fails with the previous VM implementation,
+and passes after restoring this extension. All eight deliberate mutations
+(formal receiver bounds, frame-ref metadata, snapshot conversion, wrong cell
+index, repeated warnings, four-state defaults, Postponed origin and size-error
+classification) were caught by actual VM assertions; the restored baseline
+passes. Existing suite bodies and expectations were kept.
+
+Dev has 2,143 tests: 2,141 pass and the two known skips remain. Targeted
+clang-tidy, banned-feature, formatting and mutation-anchor checks pass.
+
+This does not enable SystemVerilog dynamic containers. Front lowering,
+complete safe-point roots and collection, heap-dependent change notification,
+cell NBA targets and source-level execution/diagnostic matrices remain. The
+adapter does not collect automatically yet, so a detached cell surviving a
+wait is not evidence of root completeness. Deferred writes through cell refs
+and heap-dependent watched expressions are explicitly rejected in this
+intermediate implementation. Four guard/watch cases check the diagnostic
+before a cell token can be mistaken for a slot reference; two cell-NBA cases
+check that rejection leaves the value unchanged. The last measured
+23 Icarus-passing gaps and the full P1 objective remain open.
+
+```sh
+ctest --preset dev -R '^(Heap|ContainerSir|VmContainer)[.]' --output-on-failure
+python3 tools/mutants.py --only 'container VM:'
+```
 
 ## Nested-bound conversion and actual-type snapshots (2026-10-23)
 

@@ -9,7 +9,7 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-23, including delayed NBA
+This inventory describes tier 1 as of 2026-10-24, including delayed NBA
 snapshots, bounded packed selections and mixed named-event waits. The latest
 container work includes a kernel foundation and typed SIR, described separately
 below. Check `kirimasim --help` for a build's options and `--version` for its revision.
@@ -77,7 +77,7 @@ copying, stable element cells, bounded queue mutation and exact tracing.
 Allocation failures roll back new objects; reclaimed entries use generations
 so stale tokens cannot name replacement values. These are kernel APIs,
 covered by [15 original unit tests](../tests/unit/heap_test.cpp),
-[eight conversion/snapshot tests](../tests/unit/heap_conversion_test.cpp) and an independent
+[nine conversion/snapshot/descriptor tests](../tests/unit/heap_conversion_test.cpp) and an independent
 [`valsem` container model](../src/valsem/include/kirimasim/valsem/containers.h).
 The 100-sample check passed 2,520,000 operations; all six deliberate heap
 mutations were caught. The heap matrix is included in nightly reference checks.
@@ -95,14 +95,22 @@ Typed container descriptors, receiver refs, 16 SIR operations, verifier and
 text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container-encoding-approved-contract-of-2026-10-23)).
 Ten new SIR tests cover 96 positive type/bound combinations, 49 malformed
 cases, argument bindings and fixed arrays of container receivers.
+The VM now dispatches all 16 instructions to the shared heap. Its
+[14 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
+element/bound/storage combinations, 72 ref-call combinations, selected fixed
+arrays, detached cells across task waits, packed writes against `valsem`,
+argument side effects, invalid indices, method warning positions and errors.
+Actual variable types survive equivalent ref formals, empty values and
+selection through forwarded array refs. Size errors and heap allocation
+failure map to Error/ResourceLimit with source positions; method warnings
+are given once per source position. Eight deliberate VM mutations were caught.
+
 SystemVerilog dynamic arrays and queues remain unsupported. Front-end
-lowering, VM calls, complete root publication at safe
-points and language-level diagnostics still need integration and execution
-matrices. Runtime references still need to retain actual target types,
-including empty variables viewed through equivalent ref formals. Kernel
-warning/error categories are not yet source-level messages
-or exit codes for these constructs. This foundation does not establish full
-container support or the Icarus coverage target.
+lowering, complete safe-point roots, heap-dependent change notification,
+container-cell NBA targets and source-level execution/diagnostic matrices
+remain. The VM does not yet collect this heap automatically; retaining cells
+through a wait is not evidence of complete GC roots. This extension does not
+establish full container support or the Icarus coverage target.
 
 ## System tasks, functions and methods
 
@@ -196,7 +204,7 @@ a blocking host operation. Final procedures finish without that deadline.
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
-| P1 container integration | The shared heap and typed SIR schema are implemented; front/VM integration, complete safe-point roots and SystemVerilog execution tests remain |
+| P1 container integration | Shared heap, typed SIR and VM primitive execution are tested; front, complete roots, heap-change notification, cell NBAs and SystemVerilog execution tests remain |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |

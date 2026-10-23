@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <memory_resource>
 
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/dump.h"
@@ -32,8 +33,10 @@ public:
     Context() : Context(OutputDestinations{stdout, stderr}, stdin) {}
     /// A Context that writes where it is told (RUNTIME_ABI.md 9.3.10), and
     /// whose STDIN reads in (nothing for nullptr; SYSTEM_TASKS.md 6.3).
-    explicit Context(OutputDestinations to, std::FILE* in = nullptr)
-        : output_(to), files_(output_, in), dump_(output_, store_),
+    /// The optional heap allocation source must outlive the Context.
+    explicit Context(OutputDestinations to, std::FILE* in = nullptr,
+                     std::pmr::memory_resource* heapMemory = std::pmr::new_delete_resource())
+        : output_(to), files_(output_, in), heap_(heapMemory), dump_(output_, store_),
           scheduler_(*this, store_, counters_) {}
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;

@@ -13,6 +13,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Tier 1 executes the 16 typed container SIR instructions through the shared
+  heap, with actual-target reference metadata, stable element refs, snapshots,
+  source-position method warnings and resource-error mapping (SIR_SPEC 5.8).
+  Independent SIR tests cover calls, waits, packed writes and allocation
+  failure. Front lowering, complete roots, heap-change notification and cell
+  NBA targets remain unfinished; SystemVerilog containers are not enabled.
+
 - Nested container copies apply each destination queue's bound through the
   common heap copy engine, including element writes and queue methods, with
   truncation warnings and allocation-failure rollback. Actual-type snapshots

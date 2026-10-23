@@ -408,10 +408,11 @@ Assignment and queue mutations must use the actual target's capacity, not a
 possibly different ref formal's capacity. An empty container constant has handle zero
 and is printed `empty`. Nonempty container constants are invalid.
 
-These definitions and verifier/text support do not establish VM or language
-support. Connecting execution, roots, diagnostics and source-level matrices
-remains required under P1_SCOPE. C ABI 0.3 is unchanged by this internal SIR
-encoding.
+The VM's dispatch and reference transport are exercised by independent SIR
+inputs. This does not establish language support: front lowering, complete
+roots, heap-dependent notifications, cell NBA targets and source-level
+execution/diagnostic matrices remain required under P1_SCOPE. C ABI 0.3 is
+unchanged by this internal SIR encoding.
 
 ## 6. Constants
 

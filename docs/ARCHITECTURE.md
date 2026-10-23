@@ -101,9 +101,11 @@ allocation-failure, deep-nesting, stale-token and Context-isolation tests.
 The kernel API and typed SIR descriptor/ref/instruction definitions, verifier
 and text support are implemented (SIR_SPEC 5.8). Kernel copies apply destination
 bounds at every nested queue level; snapshots retain the actual source type.
-Front-end lowering,
-VM calls, source-level diagnostics and automatic publication of all live
-slots/frames/temporaries/pending events are not connected yet. Collection
+The VM mechanically maps typed operands to these APIs; references retain
+actual variable types even when empty, and cell refs carry stable tokens.
+Fourteen original SIR tests exercise execution, calls, waits and error mapping.
+Front-end lowering, heap-dependent notifications, cell NBA targets and automatic
+publication of all live slots/frames/temporaries/pending events are not connected yet. Collection
 requires a complete root list at a permitted safe point outside DPI. The
 running SystemVerilog design does not yet use this heap or its collector.
 Full language support needs those connections and execution tests.

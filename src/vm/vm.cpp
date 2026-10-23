@@ -14,8 +14,10 @@
 #include <deque>
 #include <limits>
 #include <map>
+#include <new>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -25,6 +27,7 @@
 #include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
@@ -614,8 +617,8 @@ public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
-          strings_(ctx.strings()), counters_(ctx.counters()), stack_(ctx.stack()),
-          options_(options) {
+          strings_(ctx.strings()), heap_(ctx.heap()), counters_(ctx.counters()),
+          stack_(ctx.stack()), options_(options) {
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         constOff_.reserve(d.constants.size());
@@ -952,6 +955,10 @@ private:
     kernel::Dump& dump_;
     std::int32_t& randomSeed_;  ///< $random with no argument (SYSTEM_TASKS.md 12.3).
     kernel::Strings& strings_;
+    kernel::Heap& heap_;
+    std::vector<kernel::HeapTypeId> heapTypes_;
+    bool heapReady_ = false;
+    std::set<std::array<std::uint32_t, 3>> heapWarned_;
     /// The places that gave a run-time warning, which each gives once
     /// (UNSPECIFIED_BEHAVIOR.md 4).
     std::set<const sir::Instr*> warned_;
@@ -1077,7 +1084,7 @@ private:
     }
     /// The W4 chunks of a value of type t (kernel/wide.h).
     static std::uint32_t chunksOf(sir::Type t) {
-        return sir::isIntegral(t) && t.width > 64 ? (t.width + 63) / 64 : 1;
+        return sir::isIntegral(t) && t.width > 64 ? (t.width - 1) / 64 + 1 : 1;
     }
     /// Enters a body: its temps above the current ones.
     void enter(Act a) {
@@ -1116,6 +1123,7 @@ private:
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
     struct GuardDeps {
+        bool heap = false;  ///< Heap-change subscriptions are not connected yet.
         /// What the body reads, as the SIR's ranges while they are found
         /// (collectReads), and as the kernel's parts once depsOf has left
         /// out the called functions' variables.
@@ -1416,6 +1424,7 @@ private:
         const auto ownSlot = [&](sir::SlotId s) {
             return s.index() < d_.slots.size() && d_.slot(s).subroutine != sir::kNone;
         };
+        if (sir::isContainerMutation(in.op)) return !localRef(value(ops[1]));
         switch (in.op) {
             case Op::Store: return !ownSlot(ops[0].asSlot());
             case Op::StoreElem:
@@ -1425,7 +1434,7 @@ private:
             case Op::StoreRefElem:  // the reference is the frame variable's value
             case Op::StoreRefBits: {
                 const W4 r = value(ops[0]);
-                return !isFrameRef(r) && !ownSlot(refSlot(r));
+                return !localRef(r);
             }
             case Op::Nba:
             case Op::NbaDelay:
@@ -1724,7 +1733,7 @@ private:
     kernel::MonitorSpec watchMonitor(Frame& f, const Operand& o) {
         const sir::Type t = d_.subroutines[o.id].returnType;
         kernel::MonitorSpec m;
-        readsOf(f, bodyOf(o.asSubroutine()), m);
+        if (!readsOf(f, bodyOf(o.asSubroutine()), m)) return m;
         m.eval = &evalWatch;
         m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.asSubroutine()});
         m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
@@ -2022,10 +2031,12 @@ private:
 
     // --- References (SIR_SPEC.md 8) ---
 
-    /// A ref is a frame variable's word or element (tag 1: the activation's
-    /// number in the high half of a, the word's place in the low half), or
-    /// an element of a slot (the slot in a, the element in b above the
-    /// tag).
+    /// Frame refs pack the activation in a's high half and its word in
+    /// the low half; bit 0 of b is 1. Slot refs pack the slot in a's low
+    /// half and the element above bit 0 of b. Actual container type + 1
+    /// lives above the frame tag in b, or in a's high half for a slot.
+    /// Cell refs use bit 63 of b, the cell token in a and layout + 1 in
+    /// b's bits 1..32; bit 0 records whether its origin is local.
     /// A ref to word `at` of activation `vars`; nothing when the word's
     /// place does not fit the low half, which it would overrun into the
     /// activation's number.
@@ -2035,15 +2046,306 @@ private:
     }
     /// The frame ref `words` words further on, on the same terms.
     static std::optional<W4> refStep(W4 r, std::uint64_t words) {
-        return frameRef(VarsId{static_cast<std::uint32_t>(r.a >> 32)}, (r.a & 0xffffffffU) + words);
+        auto moved =
+            frameRef(VarsId{static_cast<std::uint32_t>(r.a >> 32)}, (r.a & 0xffffffffU) + words);
+        if (moved) moved->b = r.b;  // Preserve the actual container type, if present.
+        return moved;
     }
     static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s.index(), std::uint64_t{e} << 1}; }
-    static bool isFrameRef(W4 r) { return (r.b & 1U) != 0; }
+    static bool isHeapRef(W4 r) { return (r.b >> 63) != 0; }
+    static bool isFrameRef(W4 r) { return !isHeapRef(r) && (r.b & 1U) != 0; }
     W4& refWord(W4 r, std::uint64_t off) {
         return varSets_[r.a >> 32][(r.a & 0xffffffffU) + off];  // the halves frameRef packs
     }
     static sir::SlotId refSlot(W4 r) { return sir::SlotId{static_cast<std::uint32_t>(r.a)}; }
     static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
+
+    // --- Typed container operands (SIR_SPEC.md 5.8) ---
+
+    bool heapStatus(Frame& f, const sir::Instr& in, kernel::HeapStatus status) {
+        using E = kernel::HeapError;
+        if (status.error == E::ResourceLimit) {
+            limitAt(instanceOf(d_.process(f.process)), in.loc, "container resource limit");
+            return false;
+        }
+        if (status.error == E::InvalidSize) {
+            designError(f, in, "dynamic-array size is negative or contains X/Z bits");
+            return false;
+        }
+        if (!status) {
+            fail(d_.process(f.process), "invalid typed container operand or reference");
+            return false;
+        }
+        if (status.warning != kernel::HeapWarning::None &&
+            heapWarned_.insert({in.loc.file, in.loc.line, in.loc.column}).second) {
+            const std::string_view text = status.warning == kernel::HeapWarning::BoundExceeded
+                                              ? "queue operation exceeds its declared bound"
+                                          : status.warning == kernel::HeapWarning::EmptyPop
+                                              ? "pop from an empty queue"
+                                              : "queue method index is invalid";
+            warnOnce(in, text);
+        }
+        return true;
+    }
+
+    bool prepareHeap(Frame& f, const sir::Instr& in) {
+        if (heapReady_) return true;
+        try {
+            heapTypes_.assign(d_.types.size(), kernel::kNone);
+            for (std::size_t i = 0; i < d_.types.size(); ++i) {
+                const sir::TypeEntry& te = d_.types[i];
+                if (te.kind != sir::TypeEntryKind::DynArray && te.kind != sir::TypeEntryKind::Queue)
+                    continue;
+                const sir::Type e = te.value;
+                const unsigned width = sir::isIntegral(e)                   ? e.width
+                                       : e.kind == sir::TypeKind::ShortReal ? 32
+                                                                            : 64;
+                std::vector<kernel::HeapWord> words;
+                for (std::uint64_t bit = 0; bit < width; bit += 64) {
+                    const std::uint64_t mask = kernel::mask(
+                        static_cast<unsigned>(std::min<std::uint64_t>(64, width - bit)));
+                    const bool four = sir::isFourState(e);
+                    words.push_back(
+                        {mask, four, four ? W4{mask, mask} : W4{0, 0},
+                         sir::isContainer(e) ? heapTypes_[e.detail.index()] : kernel::kNone});
+                }
+                const auto l = heap_.addLayout(words);
+                if (!heapStatus(f, in, l.status)) return false;
+                const auto t = heap_.addType({te.kind == sir::TypeEntryKind::DynArray
+                                                  ? kernel::ContainerKind::DynamicArray
+                                                  : kernel::ContainerKind::Queue,
+                                              l.value, te.maxElements});
+                if (!heapStatus(f, in, t.status)) return false;
+                heapTypes_[i] = t.value;
+            }
+            heapReady_ = true;
+            return true;
+        } catch (const std::bad_alloc&) {
+            return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+        } catch (const std::length_error&) {
+            return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+        }
+    }
+
+    static kernel::HeapLayoutId refLayout(W4 r) {
+        return kernel::HeapLayoutId{static_cast<std::uint32_t>(r.b >> 1) - 1};
+    }
+    bool localRef(W4 r) const {
+        return isHeapRef(r) ? (r.b & 1U) != 0
+                            : isFrameRef(r) || d_.slot(refSlot(r)).subroutine != sir::kNone;
+    }
+    W4 typedRef(W4 r, sir::Type type) const {
+        if (!sir::isContainer(type)) return r;
+        const auto encoded = std::uint64_t{heapTypes_[type.detail.index()].index()} + 1;
+        if (isFrameRef(r))
+            r.b |= encoded << 1;
+        else
+            r.a |= encoded << 32;
+        return r;
+    }
+    kernel::HeapResult<kernel::HeapTypeId> receiverType(W4 r) const {
+        if (isHeapRef(r)) {
+            const auto w = heap_.describeWord(refLayout(r), 0);
+            return {w.value.nested, w.status};
+        }
+        const auto encoded = static_cast<std::uint32_t>(isFrameRef(r) ? r.b >> 1 : r.a >> 32);
+        return {encoded ? kernel::HeapTypeId{encoded - 1} : kernel::HeapTypeId{kernel::kNone}, {}};
+    }
+    kernel::HeapResult<kernel::HeapTypeId> valueHeapType(sir::Type nominal,
+                                                         kernel::ContainerToken value) const {
+        auto t = heap_.actualType(value);
+        if (t && t.value == kernel::kNone) t.value = heapTypes_[nominal.detail.index()];
+        return t;
+    }
+    bool readReceiver(Frame& f, const sir::Instr& in, W4 r, kernel::ContainerToken& out) {
+        W4 value{};
+        if (isHeapRef(r)) {
+            if (!heapStatus(f, in,
+                            heap_.readCell(refLayout(r), kernel::CellToken{r.a}, {&value, 1})))
+                return false;
+        } else {
+            value = isFrameRef(r) ? refWord(r, 0) : readSlot(refSlot(r), refElem(r), 0, 0);
+        }
+        out = {value.a};
+        return true;
+    }
+    bool storeReceiver(Frame& f, const sir::Instr& in, W4 r, kernel::ContainerToken value) {
+        if (isHeapRef(r))
+            return heapStatus(f, in,
+                              heap_.storeNested(refLayout(r), kernel::CellToken{r.a}, value));
+        if (isFrameRef(r))
+            refWord(r, 0) = {value.bits, 0};
+        else
+            writeSlot(refSlot(r), refElem(r), 0, 0, {value.bits, 0});
+        return true;
+    }
+
+    bool executeContainer(Frame& f, const sir::Instr& in) {
+        using kernel::ContainerToken;
+        using kernel::HeapStatus;
+        try {
+            if (!prepareHeap(f, in)) return false;
+            const auto& ops = in.operands;
+            const auto token = [&](std::size_t i) { return ContainerToken{value(ops[i]).a}; };
+            const auto put = [&](ContainerToken t) { temp(in.result) = {t.bits, 0}; };
+            if (in.op == Op::ContainerNew || in.op == Op::ContainerCopy ||
+                in.op == Op::ContainerSnapshot) {
+                const auto t = heapTypes_[in.type.detail.index()];
+                const auto result = in.op == Op::ContainerNew
+                                        ? heap_.construct(t, indexOf(ops[0]), token(1))
+                                    : in.op == Op::ContainerCopy ? heap_.copy(t, token(0))
+                                                                 : heap_.snapshot(token(0));
+                if (!heapStatus(f, in, result.status)) return false;
+                put(result.value);
+                return true;
+            }
+            if (in.op == Op::ContainerPack) {
+                const sir::Type element = d_.types[in.type.detail.index()].value;
+                const std::size_t c = chunksOf(element);
+                std::vector<W4> words;
+                if (ops.size() > words.max_size() / c)
+                    return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+                words.resize(ops.size() * c);
+                for (std::size_t i = 0; i < ops.size(); ++i)
+                    readOperand(ops[i], words.data() + i * c, static_cast<std::uint32_t>(c));
+                const auto result = heap_.fromValues(heapTypes_[in.type.detail.index()], words);
+                if (!heapStatus(f, in, result.status)) return false;
+                put(result.value);
+                return true;
+            }
+            if (in.op == Op::ContainerSize || in.op == Op::ContainerRead) {
+                const auto t = valueHeapType(typeOf(ops[0]), token(0));
+                if (!heapStatus(f, in, t.status)) return false;
+                if (in.op == Op::ContainerSize) {
+                    const auto result = heap_.size(t.value, token(0));
+                    if (!heapStatus(f, in, result.status)) return false;
+                    temp(in.result) = {result.value, 0};
+                    return true;
+                }
+                return heapStatus(f, in,
+                                  heap_.read(t.value, token(0), indexOf(ops[1]),
+                                             {&temp(in.result), chunksOf(in.type)}));
+            }
+            const W4 ref = value(ops[1]);
+            const auto t = receiverType(ref);
+            if (!heapStatus(f, in, t.status)) return false;
+            const auto desc = heap_.describeType(t.value);
+            if (!heapStatus(f, in, desc.status)) return false;
+            ContainerToken current;
+            if (!readReceiver(f, in, ref, current)) return false;
+            if (in.op == Op::ContainerCell) {
+                const auto cell = heap_.cell(t.value, current, indexOf(ops[2]));
+                if (!heapStatus(f, in, cell.status)) return false;
+                temp(in.result) = {cell.value.bits,
+                                   (std::uint64_t{1} << 63) |
+                                       ((std::uint64_t{desc.value.element.index()} + 1) << 1) |
+                                       (localRef(ref) ? 1U : 0U)};
+                return true;
+            }
+            if (isHeapRef(ref) && ref.a == 0) {
+                if (in.result != sir::kNone) fillDefault(&temp(in.result), in.type);
+                return true;  // Invalid element writes leave storage unchanged.
+            }
+            if (in.op == Op::ContainerAssign) {
+                const auto result = heap_.copy(t.value, token(2));
+                if (!heapStatus(f, in, result.status)) return false;
+                return storeReceiver(f, in, ref, result.value);
+            }
+            HeapStatus status;
+            if (in.op == Op::ContainerClear)
+                status = heap_.clear(t.value, current);
+            else if (in.op == Op::QueueErase)
+                status = heap_.erase(t.value, current, indexOf(ops[2]));
+            else if (in.op == Op::QueuePopFront || in.op == Op::QueuePopBack)
+                status = heap_.pop(t.value, current, in.op == Op::QueuePopFront,
+                                   {&temp(in.result), chunksOf(in.type)});
+            else {
+                const auto data = chunks(ops.back());
+                if (in.op == Op::ContainerWrite)
+                    status = heap_.write(t.value, current, indexOf(ops[2]), data);
+                else if (in.op == Op::QueueInsert)
+                    status = heap_.insert(t.value, current, indexOf(ops[2]), data);
+                else if (in.op == Op::QueuePushFront || in.op == Op::QueuePushBack)
+                    status = heap_.push(t.value, current, in.op == Op::QueuePushFront, data);
+                else
+                    return heapStatus(f, in, {kernel::HeapError::InvalidType});
+            }
+            if (!heapStatus(f, in, status)) return false;
+            return storeReceiver(f, in, ref, current);
+        } catch (const std::bad_alloc&) {
+            return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+        } catch (const std::length_error&) {
+            return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+        }
+    }
+
+    bool executeHeapRef(Frame& f, const sir::Instr& in) {
+        try {
+            const auto& ops = in.operands;
+            const W4 ref = value(ops[0]);
+            const bool load = in.op == Op::LoadRef || in.op == Op::LoadRefElem;
+            if (in.op == Op::NbaRef) {
+                designError(f, in,
+                            "nonblocking writes through container-cell refs are not supported yet");
+                return false;
+            }
+            if (ref.a == 0) {
+                if (load) fillDefault(&temp(in.result), in.type);
+                return true;
+            }
+            const auto layout = refLayout(ref);
+            std::vector<W4> data(heap_.words(layout));
+            if (!heapStatus(f, in, heap_.readCell(layout, kernel::CellToken{ref.a}, data)))
+                return false;
+            const bool whole = in.op == Op::LoadRef || in.op == Op::StoreRef;
+            std::size_t off = 0, valueAt = ops.size() - 1;
+            sir::Type target = load ? in.type : typeOf(ops.back());
+            if (whole) {
+                if (ops.size() - (load ? 0 : 1) == 2) off = value(ops[1]).a;
+            } else {
+                const sir::FrameVar& fv = bodyFrame(act_.body)[ops[0].asFrame().index()];
+                target = fv.target;
+                if (!fv.dims.empty()) {
+                    const auto e = elementOf(fv.dims, ops, 1);
+                    if (!e) {
+                        if (load) fillDefault(&temp(in.result), in.type);
+                        return true;
+                    }
+                    off = std::size_t{*e} * chunksOf(target);
+                }
+                valueAt = fv.dims.size() + 1;
+            }
+            const std::size_t count = chunksOf(target);
+            if (off > data.size() || count > data.size() - off)
+                return heapStatus(f, in, {kernel::HeapError::InvalidType});
+            if (load) {
+                std::copy_n(data.data() + off, chunksOf(in.type), &temp(in.result));
+                return true;
+            }
+            if (in.op == Op::StoreRefBits) {
+                const auto pos = indexOf(ops[valueAt]);
+                if (!pos) return true;
+                const unsigned width = typeOf(ops[valueAt + 1]).width;
+                const auto at = kernel::inside(*pos, width, target.width, ops[0].lsb, ops[0].width);
+                if (!at) return true;
+                const auto input = chunks(ops[valueAt + 1]);
+                std::vector<W4> part(kernel::wide::chunks(at->n));
+                kernel::wide::bits(part.data(), at->n, input.data(), width, at->skip);
+                kernel::wide::put(data.data() + off, at->lo, part.data(), at->n);
+            } else if (sir::isContainer(target)) {
+                return heapStatus(
+                    f, in,
+                    heap_.storeNested(layout, kernel::CellToken{ref.a}, {value(ops[valueAt]).a}));
+            } else {
+                readOperand(ops[valueAt], data.data() + off, static_cast<std::uint32_t>(count));
+            }
+            return heapStatus(f, in, heap_.writeCell(layout, kernel::CellToken{ref.a}, data));
+        } catch (const std::bad_alloc&) {
+            return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+        } catch (const std::length_error&) {
+            return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
+        }
+    }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
@@ -2171,6 +2473,7 @@ private:
                             if (o.kind == Operand::Kind::Subroutine &&
                                 d_.subroutines[o.id].kind == sir::SubroutineKind::Watch) {
                                 monitors_.push_back(watchMonitor(f, o));
+                                if (sched_.ending()) return Exit::Error;
                                 last = LastItem::Watch;
                             } else if (o.kind == Operand::Kind::Subroutine) {  // the item's iff
                                 if (last == LastItem::Watch)
@@ -2443,6 +2746,7 @@ private:
         seen[body.index()] = true;
         for (const sir::BasicBlock& bb : bodyBlocks(body)) {
             for (const sir::Instr& in : bb.instrs) {
+                if (sir::isContainerOp(in.op)) deps.heap = true;
                 if (in.op == Op::Call)
                     collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
                 // A ref of the body's own frame (that of the waiter); the
@@ -2513,12 +2817,27 @@ private:
     /// The body reads the frame of the activation that waits, so a ref is
     /// found where the body's own reads find it, by its layout (SIR_SPEC.md
     /// 7.4).
-    void readsOf(const Frame& f, BodyId body, kernel::MonitorSpec& m) {
+    bool readsOf(const Frame& f, BodyId body, kernel::MonitorSpec& m) {
         const GuardDeps& deps = depsOf(body);
+        const auto unsupportedHeapWatch = [&] {
+            const auto& s = subOf(body);
+            output_.message(
+                runtimeLine(s.instance, s.loc,
+                            "watching container values or element refs is not supported yet"));
+            sched_.runtimeError();
+        };
+        if (deps.heap) {
+            unsupportedHeapWatch();
+            return false;
+        }
         m.slots = deps.slots;
         const std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         for (const GuardDeps::RefRead& rr : deps.refs) {
             const W4 r = vars[layouts_[body.index()].wordOf(rr.var)];
+            if (isHeapRef(r)) {
+                unsupportedHeapWatch();
+                return false;
+            }
             if (isFrameRef(r)) continue;
             m.slots.push_back({kernelSlot(leafSlot(refSlot(r), rr.leaf)),
                                rr.anyElement ? 0 : refElem(r), rr.anyElement ? 0U : 1U, 0, 0});
@@ -2529,6 +2848,7 @@ private:
                 if (const std::uint64_t h = *store_.element(kernelSlot(s), e); h != 0)
                     m.events.push_back(kernel::eventOfHandle(h));
         }
+        return true;
     }
 
     /// wait.cond: goes on when the guard is true, else waits on a monitor
@@ -2539,7 +2859,7 @@ private:
         const std::optional<bool> now = guard(f, g, steps);
         if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;
         kernel::MonitorSpec m;
-        readsOf(f, bodyOf(g), m);
+        if (!readsOf(f, bodyOf(g), m)) return std::nullopt;
         m.eval = &evalCond;
         m.frame = &f;
         m.domain = kernel::Domain::Two;
@@ -3500,6 +3820,11 @@ private:
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);
             temp(in.result) = r;
         };
+        if (sir::isContainerOp(in.op)) return executeContainer(f, in);
+        if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
+             in.op == Op::LoadRefElem || in.op == Op::StoreRefElem || in.op == Op::StoreRefBits) &&
+            isHeapRef(value(ops[0])))
+            return executeHeapRef(f, in);
         const bool delayedTarget = in.op == Op::NbaElemDelay || in.op == Op::NbaBitsDelay;
         const std::optional<std::uint64_t> delay =
             delayedTarget ? ticksOf(ops.back()) : std::optional<std::uint64_t>(0);
@@ -3785,6 +4110,10 @@ private:
             }
             case Op::RefMake: {
                 const Operand& o = ops[0];
+                const sir::Type target = o.kind == Operand::Kind::Slot
+                                             ? d_.slot(o.asSlot()).type
+                                             : bodyFrame(act_.body)[o.asFrame().index()].type;
+                if (sir::isContainer(target) && !prepareHeap(f, in)) return false;
                 if (o.kind == Operand::Kind::Slot) {
                     std::uint32_t e = 0;
                     if (ops.size() > 1) {
@@ -3796,7 +4125,7 @@ private:
                         }
                         e = *el;
                     }
-                    set(slotRef(o.asSlot(), e));
+                    set(typedRef(slotRef(o.asSlot(), e), target));
                     return true;
                 }
                 const sir::FrameVar& fv = bodyFrame(act_.body)[o.asFrame().index()];
@@ -3844,7 +4173,7 @@ private:
                     fail(p, "ref past the words of its frame");
                     return false;
                 }
-                set(*ref);
+                set(typedRef(*ref, target));
                 return true;
             }
             case Op::LoadRef:

@@ -11,20 +11,23 @@ The target remains the full P1 coverage objective.
 The referenced clauses were checked locally. All descriptions are paraphrases;
 no standard text, simulator code or external test was copied.
 
-## Implementation status (2026-10-23)
+## Implementation status (2026-10-24)
 
 The [shared kernel heap](../P1_SUPPORT.md#dynamic-container-foundation) is
 implemented and tested: typed layouts, stable cells, deep copying, bounded
 queue operations, transactional allocation failure and exact tracing with
-generation-checked reuse. Twenty-three kernel tests and the 2,520,000-operation
+generation-checked reuse. Twenty-four kernel tests and the 2,520,000-operation
 reference run pass. Eight new tests cover nested-bound conversion, actual-type
 snapshots, 432 combinations and transactional failures; six original and six
 additional conversion mutation checks have been caught by actual tests.
 
 Typed SIR descriptors, receiver references, instructions, verification and
 text are also implemented (SIR_SPEC 5.8). The approved SystemVerilog contract
-below is only partly implemented. Front/VM integration, complete safe-point roots, source-level diagnostics
-and language execution matrices remain. `new[]`, queue methods and dynamic
+below is only partly implemented. The VM now executes its 16 instructions in
+14 original SIR tests, preserving actual-bound variable refs and detached cell
+refs across calls/waits. Front lowering, complete safe-point roots, heap-change
+notifications, cell NBAs and language execution/diagnostic matrices remain.
+`new[]`, queue methods and dynamic
 container element access still stop as unsupported in execution. Kernel
 checks do not establish language support or full Icarus parity.
 

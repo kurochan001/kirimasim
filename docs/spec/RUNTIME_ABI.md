@@ -144,6 +144,15 @@ as required by SIR's `container.snapshot`; empty remains handle 0. A tier
 must retain the actual variable type in its reference binding even when its
 value is empty or the ref formal has a different equivalent queue bound.
 
+The VM's variable refs retain that actual type alongside slot/frame identity;
+cell refs hold generation-checked cell tokens and their registered layout.
+Read-only descriptor queries return copies rather than addresses that later
+registration could invalidate. `Heap::storeNested` transports an already-owned
+value into a one-container cell without another copy; its type must exactly
+match the actual destination. Language assignments still use the explicit
+copy operation first. A Context may receive an allocation source for its heap,
+which must outlive it, so adapter failures can be checked deterministically.
+
 Collection traces exact typed roots supplied by each tier: slots, process and
 call frames, temporaries, retained reference cells, pending writes and events,
 reports and callbacks. It follows nested containers and reachable detached

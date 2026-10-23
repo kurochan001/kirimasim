@@ -482,4 +482,52 @@ TEST(Heap, DeepBoundConversionUsesNoNativeRecursion) {
     EXPECT_EQ(out[0].a, 7U);
 }
 
+TEST(Heap, DescriptorQueriesAndOwnedNestedTransportKeepIdentity) {
+    Heap h;
+    const std::array<HeapWord, 1> scalar{{{0xff, false, {0, 0}, kNone}}};
+    const auto leaf = layout(h, scalar);
+    const auto a = type(h, ContainerKind::Queue, leaf, 1);
+    const auto b = type(h, ContainerKind::Queue, leaf, 3);
+    const auto nested = nestedLayout(h, a);
+    const auto outer = type(h, ContainerKind::Queue, nested);
+    const std::array<W4, 1> empty{};
+    const auto parent = h.fromValues(outer, empty);
+    ASSERT_TRUE(parent);
+    const auto cell = h.cell(outer, parent.value, 0);
+    ASSERT_TRUE(cell);
+    const std::array<W4, 1> data{{{7, 0}}};
+    const auto owned = h.fromValues(a, data), different = h.fromValues(b, data);
+    ASSERT_TRUE(owned);
+    ASSERT_TRUE(different);
+    EXPECT_EQ(h.actualType(owned.value).value, a);
+    EXPECT_EQ(h.actualType({}).value, kNone);
+    auto descriptor = h.describeType(a);
+    ASSERT_TRUE(descriptor);
+    EXPECT_EQ(descriptor.value.element, leaf);
+    EXPECT_EQ(descriptor.value.maxElements, 1U);
+    descriptor.value.maxElements = 99;
+    EXPECT_EQ(h.describeType(a).value.maxElements, 1U);
+    auto word = h.describeWord(nested, 0);
+    ASSERT_TRUE(word);
+    EXPECT_EQ(word.value.nested, a);
+    word.value.nested = b;
+    EXPECT_EQ(h.describeWord(nested, 0).value.nested, a);
+    const auto before = h.stats();
+    ASSERT_TRUE(h.storeNested(nested, cell.value, owned.value));
+    EXPECT_EQ(child(h, outer, parent.value, 0), owned.value);
+    EXPECT_EQ(h.stats().containers, before.containers);
+    EXPECT_EQ(h.stats().cells, before.cells);
+    EXPECT_EQ(h.storeNested(nested, cell.value, different.value).error, HeapError::InvalidHandle);
+    EXPECT_EQ(child(h, outer, parent.value, 0), owned.value);
+    EXPECT_EQ(h.storeNested(leaf, cell.value, owned.value).error, HeapError::InvalidType);
+    EXPECT_EQ(h.describeType(HeapTypeId{kNone}).status.error, HeapError::InvalidType);
+    EXPECT_EQ(h.describeWord(nested, 1).status.error, HeapError::InvalidType);
+    EXPECT_EQ(h.describeWord(HeapLayoutId{kNone}, 0).status.error, HeapError::InvalidType);
+    ASSERT_TRUE(h.collect(std::array<HeapRoot, 1>{{HeapRoot::container(parent.value)}}));
+    EXPECT_EQ(h.actualType(different.value).status.error, HeapError::InvalidHandle);
+    EXPECT_EQ(h.actualType(owned.value).value, a);
+    ASSERT_TRUE(h.storeNested(nested, cell.value, {}));
+    EXPECT_EQ(child(h, outer, parent.value, 0).bits, 0U);
+}
+
 }  // namespace
