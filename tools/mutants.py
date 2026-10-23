@@ -40,6 +40,22 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('repeated event: count truncates to a signed low word',
+     'src/front/lower_stmt.cpp', 'const Val count = lowerExpr(repeated.expr);',
+     'const Val count = coerce(lowerExpr(repeated.expr), sir::s2(32), sl);'),
+    ('repeated event: zero count waits once',
+     'src/front/lower_stmt.cpp',
+     'emit(Op::Gt, truth, {left.op, constant(count.type, 0).op}, sl)',
+     'emit(Op::Ge, truth, {left.op, constant(count.type, 0).op}, sl)'),
+    ('repeated event: blocking target captured before the control',
+     'src/front/lower_expr.cpp',
+     '    lowerTiming(t);\n'
+     '    const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);\n'
+     '    lowerStore(a.left(), later, false, sl);',
+     '    const Place early = placeOf(a.left(), sl);\n'
+     '    lowerTiming(t);\n'
+     '    const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);\n'
+     '    storePlace(early, later, false, sl);'),
     ('container sequence: loops append one extra source element',
      'src/front/lower_container.cpp', 'emit(Op::Lt, sir::isFourState(first.type)',
      'emit(Op::Le, sir::isFourState(first.type)'),

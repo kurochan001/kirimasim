@@ -133,11 +133,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 2,831 | 2,829, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 2,907 | 2,905, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 298, `tests/suite/` 2,346 (made by 123 generators under `tools/`), tools 128, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 298, `tests/suite/` 2,421 (made by 124 generators under `tools/`), tools 129, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

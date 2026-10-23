@@ -1331,6 +1331,31 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
 void Lowerer::lowerTiming(const ast::TimingControl& t) {
     const slang::SourceLocation sl = t.sourceRange.start();
     switch (t.kind) {
+        case ast::TimingControlKind::RepeatedEvent: {
+            // 9.4.5: capture the full count once. Nonpositive or unknown
+            // counts skip the event control, including its first wait.
+            const auto& repeated = t.as<ast::RepeatedEventControl>();
+            const Val count = lowerExpr(repeated.expr);
+            if (!sir::isIntegral(count.type)) unsupported(sl, "repeat event count of this type");
+            const sir::FrameVarId remaining = newFrameVar(count.type);
+            emitVoid(Op::Fstore, {Operand::frame(remaining), count.op}, sl);
+            const sir::BlockId test = newBlock();
+            const sir::BlockId wait = newBlock();
+            const sir::BlockId done = newBlock();
+            jump(test, sl);
+            setBlock(test);
+            const Val left = emit(Op::Fload, count.type, {Operand::frame(remaining)}, sl);
+            const Type truth = sir::isFourState(count.type) ? sir::u4(1) : sir::u2(1);
+            const Val more = emit(Op::Gt, truth, {left.op, constant(count.type, 0).op}, sl);
+            terminate(Op::BrIf, {more.op, Operand::block(wait), Operand::block(done)}, sl);
+            setBlock(wait);
+            const Val next = emit(Op::Sub, count.type, {left.op, constant(count.type, 1).op}, sl);
+            emitVoid(Op::Fstore, {Operand::frame(remaining), next.op}, sl);
+            lowerTiming(repeated.event);
+            jump(test, sl);
+            setBlock(done);
+            return;
+        }
         case ast::TimingControlKind::Delay: {
             const Val ticks = delayValue(t.as<ast::DelayControl>().expr, sl);
             const sir::BlockId cont = newBlock();

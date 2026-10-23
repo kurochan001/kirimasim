@@ -1,0 +1,17 @@
+capture 123 2 3 0 1
+real 2.5 4
+string saved 5
+x 0 6
+z 0 7
+named 1 9
+mixed 0 11
+watch 1 13
+concat 1 0 15
+skip_zero 1 0
+skip_negative 1 0
+skip_wide_negative 1 0
+skip_x 1 0
+skip_z 1 0
+skip_mixed_x 1 0
+skip_mixed_z 1 0
+zero_effects 123 1 0 1

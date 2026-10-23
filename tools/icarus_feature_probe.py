@@ -168,6 +168,23 @@ EXTENDED.extend([
 ])
 
 
+# Blocking repeat-event controls are distinct from event-controlled NBAs.
+EXTENDED.extend([
+    ("blocking_repeated_event_capture", "9.4.5, 10.4.1",
+     'module top; bit clk=0; int q=1,d=7,n=2; always #1 clk=~clk; initial begin q=repeat(n) @(posedge clk) d; $display("%0d %0t",q,$time); $finish(0); end initial begin #2; d=9; n=7; end endmodule',
+     "7 3\n", []),
+    ("blocking_repeated_event_zero_unknown", "9.4.5",
+     'module top; event e; int q; logic signed [128:0] n; initial begin n=-3; q=repeat(n) @(e) 7; n=\'x; q=repeat(n) @(e) 9; $display("%0d %0t",q,$time); end endmodule',
+     "9 0\n", []),
+    ("blocking_repeated_event_wide_count", "9.4.5",
+     'module top; bit clk=0; int q; logic [64:0] n=65\'h10000000000000001; always #1 clk=~clk; initial q=repeat(n) @(posedge clk) 7; initial begin #6; $display("%0d",q); $finish(0); end endmodule',
+     "0\n", []),
+    ("blocking_repeated_event_one_bit_unknown", "9.4.5",
+     'module top; event e; int x_result,z_result; logic [0:0] x_count,z_count; initial begin x_count=\'x; x_result=repeat(x_count) @(e) 7; end initial begin z_count=\'z; z_result=repeat(z_count) @(e) 9; end initial begin #1; $display("%0d %0d",x_result,z_result); end endmodule',
+     "7 9\n", []),
+])
+
+
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
     return re.sub(r"^kirimasim: info: .*\n?", "", text, flags=re.M)[:4000]

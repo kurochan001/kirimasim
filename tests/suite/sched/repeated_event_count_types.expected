@@ -1,0 +1,6 @@
+one_bit_unsigned 7 1
+one_bit_signed 9 0
+one_bit_x 10 0
+one_bit_z 11 0
+four_bit_count 14 5
+two_state_zero 15 0
