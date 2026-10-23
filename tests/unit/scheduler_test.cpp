@@ -10,6 +10,7 @@
 // and scans them. Random scripts must give the same log on both.
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <random>
 #include <string>
@@ -1352,6 +1353,69 @@ TEST(Scheduler, HeldReportsGoInCreationOrder) {
     s.run();
     EXPECT_LT(r2.id, r1.id);
     EXPECT_EQ(log, "12");
+}
+
+TEST(Scheduler, StopPoliciesAreContextLocal) {
+    k::Context one, two;
+    two.scheduler().setStopAction(k::StopAction::Ignore);
+    one.scheduler().requestEnd(EndReason::Stop, 2);
+    two.scheduler().requestEnd(EndReason::Stop, 2);
+    EXPECT_TRUE(one.scheduler().ending());
+    EXPECT_EQ(one.scheduler().reason(), EndReason::Stop);
+    EXPECT_FALSE(one.scheduler().ignoredStopStatistics());
+    EXPECT_FALSE(two.scheduler().ending());
+    EXPECT_TRUE(two.scheduler().ignoredStopStatistics());
+    two.scheduler().requestEnd(EndReason::Finish, 0);
+    EXPECT_EQ(two.scheduler().reason(), EndReason::Finish);
+}
+
+TEST(Scheduler, WallTimeLimitIsLocalAndTakenOnce) {
+    k::Context one, two;
+    const auto started = std::chrono::steady_clock::now() - std::chrono::seconds(2);
+    one.scheduler().setWallTimeLimit(1, started);
+    EXPECT_TRUE(one.scheduler().takeInterrupt());
+    EXPECT_EQ(one.scheduler().reason(), EndReason::WallTimeLimit);
+    EXPECT_EQ(one.scheduler().endNote(), "wall-clock limit reached: 1 seconds (--max-wall-time=1)");
+    EXPECT_FALSE(one.scheduler().takeInterrupt());
+    EXPECT_FALSE(two.scheduler().takeInterrupt());
+    EXPECT_FALSE(two.scheduler().ending());
+}
+
+TEST(Scheduler, WallTimeZeroAndLargeLimitsDoNotExpire) {
+    k::Context c;
+    const auto started = std::chrono::steady_clock::now() - std::chrono::seconds(2);
+    c.scheduler().setWallTimeLimit(0, started);
+    EXPECT_FALSE(c.scheduler().takeInterrupt());
+    c.scheduler().setWallTimeLimit(UINT64_MAX, started);
+    EXPECT_FALSE(c.scheduler().takeInterrupt());
+    EXPECT_FALSE(c.scheduler().ending());
+}
+
+TEST(Scheduler, WallTimeDoesNotInterruptFinalProcedures) {
+    k::Context c;
+    c.scheduler().setWallTimeLimit(1, std::chrono::steady_clock::now() - std::chrono::seconds(2));
+    bool completed = false;
+    const auto finish = [](kirima_context* ctx, void* frame) -> kirima_status {
+        *static_cast<bool*>(frame) = !k::fromC(ctx).scheduler().takeInterrupt();
+        return KIRIMA_DONE;
+    };
+    const k::ProcessId finals[] = {c.scheduler().addProcess(finish, &completed, Group::Active)};
+    c.scheduler().requestEnd(EndReason::Finish, 0);
+    c.scheduler().runFinal(finals);
+    EXPECT_TRUE(completed);
+    EXPECT_EQ(c.scheduler().reason(), EndReason::Finish);
+    EXPECT_EQ(c.scheduler().level(), 0);
+}
+
+TEST(Scheduler, StopErrorKeepsStopReasonAndOtherRequests) {
+    k::Context c;
+    c.scheduler().setStopAction(k::StopAction::Error);
+    c.scheduler().requestEnd(EndReason::Stop, 1);
+    EXPECT_TRUE(c.scheduler().ending());
+    EXPECT_EQ(c.scheduler().reason(), EndReason::Stop);
+    EXPECT_EQ(c.scheduler().level(), 1);
+    c.scheduler().requestEnd(EndReason::Fatal, 1);
+    EXPECT_EQ(c.scheduler().reason(), EndReason::Stop);
 }
 
 }  // namespace

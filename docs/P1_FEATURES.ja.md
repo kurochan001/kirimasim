@@ -15,6 +15,77 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 設計が待っている間の出力を見る
+
+`--autoflush` は display・write・strobe・monitor 系のタスクごとに標準出力を
+フラッシュします。標準出力宛のファイルタスクも含みます。既定は無効で、出力の内容や
+スケジューリングは変えません。次のプロンプトは、設計が標準入力を待つ前に届きます。
+
+```systemverilog
+module top;
+  int character;
+  initial begin
+    $write("ready> ");
+    character = $fgetc(32'h8000_0000);
+    $display("read=%0d", character);
+  end
+endmodule
+```
+
+```sh
+printf x | build/dev/src/driver/kirimasim --autoflush demo.sv
+```
+
+```text
+ready> read=120
+```
+
+## `$stop` の動作を選ぶ
+
+```systemverilog
+module top;
+  initial begin
+    $display("before");
+    $stop(1);
+    $display("after");
+  end
+  final $display("final");
+endmodule
+```
+
+`--stop=ignore` で実行すると、次の出力になります。
+
+```text
+before
+after
+final
+```
+
+既定の `--stop=finish` は `after` を出さず、終了コード 0 で終了します。
+`--stop=error` は同じ出力で終了コード 1 です。どちらも終了理由は `stop` のままです。
+無視して継続する場合も、引数が 1・2 なら呼び出し位置の報告を出します。
+引数 2 は、継続後の実行終了時に統計を要求します。
+
+## 実時間に上限を設ける
+
+```systemverilog
+module top;
+  int count;
+  initial forever count++;
+  final $display("final");
+endmodule
+```
+
+```sh
+build/dev/src/driver/kirimasim --max-wall-time=1 --max-steps=0 demo.sv
+```
+
+`final` を出し、理由 `wall_time_limit`・終了コード 4 で終了します。
+上限はシミュレーション開始からの整数秒で、コンパイルは含みません。0 で無効です。
+`--max-time-ok` ではこの終了コードを変えません。カーネルはイベント実行前、第 1 層は
+静的初期化を含む分岐で検査します。待っているホスト側の処理を強制中断するものでは
+ありません。final は、期限に止められず完了します。
+
 ## 実行時に決まる列挙型の移動数
 
 `next(n)` と `prev(n)` は変数の移動数を受け取り、宣言の順に進み、端で反対の端に

@@ -1,6 +1,21 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME cli/autoflush
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_autoflush_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/autoflush PROPERTIES LABELS Cli)
+
+add_test(NAME cli/stop
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_stop_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/stop PROPERTIES LABELS Cli)
+
+add_test(NAME cli/wall_time
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_wall_time_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/wall_time PROPERTIES LABELS Cli)
+
 add_test(NAME cli/bounds_check
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_bounds_check_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

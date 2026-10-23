@@ -10,11 +10,13 @@
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
 // --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
-// --stats=json, --mintypmax, --bounds-check, --wave, --wave-scope and --wave-glitches. Exit codes
+// --stats=json, --mintypmax, --bounds-check, --autoflush, --stop,
+// --max-wall-time, --wave, --wave-scope and --wave-glitches. Exit codes
 // are those of CLI.md 5.
 
 #include <algorithm>
 #include <charconv>
+#include <chrono>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -63,17 +65,19 @@ extern "C" void kirimasimOnInterrupt(int /*signal*/) {
 namespace {
 
 void printUsage(std::FILE* out) {
-    std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
-               "       kirimasim parse [options] <file>...\n"
-               "       kirimasim --version\n"
-               "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
-               "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
-               "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
-               "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
-               "         --wave=<file>.vcd,\n"
-               "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
-               out);
+    std::fputs(
+        "usage: kirimasim [options] <file>... [+plusarg]...\n"
+        "       kirimasim parse [options] <file>...\n"
+        "       kirimasim --version\n"
+        "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
+        "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
+        "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
+        "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
+        "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn, --autoflush,\n"
+        "         --stop=finish|ignore|error, --max-wall-time=<seconds>,\n"
+        "         --wave=<file>.vcd,\n"
+        "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
+        out);
 }
 
 std::string versionText() {
@@ -98,6 +102,7 @@ struct Options {
     std::uint64_t maxZeroDelay = 1000000;  // the defaults of CLI.md 2.6; 0: no limit
     std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
+    std::uint64_t maxWallTime = 0;
     std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
     std::uint64_t maxCallDepth = kirimasim::vm::kDefaultCallDepth;  // CLI.md 2.7
     std::uint64_t seed = 0;                                         // --seed (SYSTEM_TASKS.md 13.2)
@@ -105,6 +110,8 @@ struct Options {
     std::vector<std::string> waveScopes;                            // --wave-scope
     bool waveGlitches = false;
     bool boundsCheck = false;
+    bool autoFlush = false;
+    kirimasim::kernel::StopAction stopAction = kirimasim::kernel::StopAction::Finish;
 };
 
 /// Reads the number of --name=<n>. False if it is not a whole number.
@@ -150,6 +157,7 @@ int parseArgs(int argc, char** argv, Options& o) {
              {std::pair<std::string_view, std::uint64_t*>{"--max-zero-delay", &o.maxZeroDelay},
               {"--max-slot-events", &o.maxSlotEvents},
               {"--max-steps", &o.maxSteps},
+              {"--max-wall-time", &o.maxWallTime},
               {"--max-scc-iter", &o.maxSccIter},
               {"--seed", &o.seed}}) {
             if (!arg.starts_with(name) || arg.size() <= name.size() || arg[name.size()] != '=')
@@ -165,6 +173,21 @@ int parseArgs(int argc, char** argv, Options& o) {
             if (!parseCallDepth(arg, o.maxCallDepth)) return kExitInputError;
         } else if (arg == "--stats=json") {
             o.statsJson = true;
+        } else if (arg == "--autoflush") {
+            o.autoFlush = true;
+        } else if (arg.starts_with("--stop=")) {
+            const auto choice = arg.substr(std::string_view("--stop=").size());
+            if (choice == "finish")
+                o.stopAction = kirimasim::kernel::StopAction::Finish;
+            else if (choice == "ignore")
+                o.stopAction = kirimasim::kernel::StopAction::Ignore;
+            else if (choice == "error")
+                o.stopAction = kirimasim::kernel::StopAction::Error;
+            else {
+                std::fprintf(stderr, "kirimasim: error: %s needs finish, ignore or error\n",
+                             argv[i]);
+                return kExitInputError;
+            }
         } else if (arg.starts_with("--max-time=")) {
             o.maxTime = arg.substr(std::string_view("--max-time=").size());
             // The precision is not known yet; check the form with the
@@ -280,7 +303,8 @@ int exitCode(kirimasim::kernel::EndReason r) {
         case EndReason::Fatal: return 1;
         case EndReason::Error: return 2;
         case EndReason::Internal: return 3;
-        case EndReason::TimeLimit: return 4;
+        case EndReason::TimeLimit:
+        case EndReason::WallTimeLimit: return 4;
         case EndReason::ZeroTimeLimit: return 5;
         case EndReason::ResourceLimit: return 6;
         case EndReason::Interrupted: return 130;
@@ -373,13 +397,17 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).
     context.scheduler().setInterruptFlag(&interruptRequested);
     std::signal(SIGINT, kirimasimOnInterrupt);
+    if (o.maxWallTime != 0)
+        context.scheduler().setWallTimeLimit(o.maxWallTime, std::chrono::steady_clock::now());
     const auto result = kirimasim::vm::run(compiled.design, context, run);
     context.output().flush();
     const auto reason = result.reason;
     if (reason == kirimasim::kernel::EndReason::Internal) {
         std::fprintf(stderr, "kirimasim: internal error: %s\n", result.error.c_str());
     } else {
-        if (!context.scheduler().endNote().empty())
+        if (reason == kirimasim::kernel::EndReason::WallTimeLimit)
+            std::fprintf(stderr, "kirimasim: error: %s\n", context.scheduler().endNote().c_str());
+        else if (!context.scheduler().endNote().empty())
             std::fprintf(stderr, "kirimasim: error: time did not advance: %s\n",
                          context.scheduler().endNote().c_str());
         const bool silent = (reason == kirimasim::kernel::EndReason::Finish ||
@@ -392,13 +420,17 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         }
         // $finish(2) and $stop(2): the statistics, the values of
         // --stats=json once the run has ended (SYSTEM_TASKS.md 10.2).
-        if ((reason == kirimasim::kernel::EndReason::Finish ||
-             reason == kirimasim::kernel::EndReason::Stop) &&
-            context.scheduler().level() == 2)
+        if (((reason == kirimasim::kernel::EndReason::Finish ||
+              reason == kirimasim::kernel::EndReason::Stop) &&
+             context.scheduler().level() == 2) ||
+            context.scheduler().ignoredStopStatistics())
             std::fprintf(stderr, "kirimasim: info: statistics %s",
                          context.counters().toJson().c_str());
     }
     if (reason == kirimasim::kernel::EndReason::TimeLimit && o.maxTimeOk) return kExitOk;
+    if (reason == kirimasim::kernel::EndReason::Stop &&
+        o.stopAction == kirimasim::kernel::StopAction::Error)
+        return 1;
     return exitCode(reason);
 }
 
@@ -410,6 +442,8 @@ int run(int argc, char** argv) {
     // STDIN reads standard input (SYSTEM_TASKS.md 6.3).
     kirimasim::kernel::Context context(kirimasim::kernel::OutputDestinations{stdout, stderr},
                                        stdin);
+    context.output().setAutoFlush(o.autoFlush);
+    context.scheduler().setStopAction(o.stopAction);
     const int code = o.command == "parse" ? runParse(context, o) : runDesign(context, o);
     if (o.statsJson) {
         // The JSON is the last line of stdout (PERFORMANCE.md 3.1).

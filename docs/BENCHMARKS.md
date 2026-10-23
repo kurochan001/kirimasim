@@ -2,9 +2,12 @@
 
 [日本語](BENCHMARKS.ja.md) · This English text is the main version.
 
-Remeasured on 2026-10-23 with the current tier 1 build and the comparison
+Remeasured on 2026-10-23 with tier 1 at `dec94ff21979` and the comparison
 simulators below. This supports the [README summary](../README.md); it does
 not change performance acceptance criteria.
+
+The execution-control options in [P1 features](P1_FEATURES.md) were added
+after these runs; their performance has not been remeasured here.
 
 ## Conditions
 

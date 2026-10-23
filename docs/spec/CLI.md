@@ -62,6 +62,16 @@ automatic/ref storage and NBA writes. The end summary counts invalid read/write
 accesses and source positions. See [VALUE_SEMANTICS.md 3.11](VALUE_SEMANTICS.md)
 and the [example](../P1_FEATURES.md).
 
+`--autoflush`, `--stop=finish|ignore|error` and `--max-wall-time` are also
+implemented in tier 1. Stdout flushing belongs to the Context's Output;
+stop policy and wall-clock checks belong to its Scheduler. Wall-clock
+expiration is checked at the SIGINT safe points, including during static
+initialization, and does not interrupt final procedures. See the
+[examples](../P1_FEATURES.md) and CLI tests for
+[live output](../../tests/cli/run_autoflush_tests.py),
+[stop policy](../../tests/cli/run_stop_tests.py) and
+[wall-clock stopping](../../tests/cli/run_wall_time_tests.py).
+
 ### 2.3 Output and development
 
 | Option | Meaning | Stage |

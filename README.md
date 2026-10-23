@@ -58,11 +58,11 @@ kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator'
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 1,493 | 1,491, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 1,503 | 1,501, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 189, `tests/suite/` 1,136 (made by 113 generators under `tools/`), tools 117, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 7.
+This repository's tests by kind: unit tests (GoogleTest) 196, `tests/suite/` 1,136 (made by 113 generators under `tools/`), tools 117, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 10.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -335,6 +335,9 @@ their limits, system tasks/functions and implemented command-line options.
 - **Scheduling:** every region of the IEEE 1800-2023 time slot with the
   reference algorithm, including pending reports confirmed in the Observed
   region and `$strobe`/`$monitor` in the Postponed region.
+- **Execution controls:** `--autoflush` publishes stdout during a run;
+  `--stop=finish|ignore|error` chooses what `$stop` does; `--max-wall-time`
+  limits elapsed simulation seconds and runs final procedures before ending.
 - **Bounds diagnostics:** `--bounds-check=warn` reports invalid packed
   selections and fixed unpacked-array indices once per source position,
   with a count at the end. Reads, writes and NBA updates keep their usual values.
@@ -460,6 +463,9 @@ Options available now:
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
 | `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
+| `--max-wall-time=<seconds>` | Limit simulation wall-clock time (whole seconds, 0 disables); exit code 4 even with `--max-time-ok` |
+| `--stop=finish\|ignore\|error` | End normally, continue after `$stop`, or end with code 1 (default `finish`) |
+| `--autoflush` | Flush stdout after every display/write/monitor task; off by default |
 | `--max-call-depth=<n>` | Limit nested calls (default 10000); exceeding the limit ends with exit code 6 |
 | `--seed=<n>` | Seed for `$urandom`, `$urandom_range` and `randcase` (default 0) |
 | `--mintypmax=min\|typ\|max` | Select the minimum, typical or maximum expression of `min:typ:max` delays (default `typ`) |
@@ -469,10 +475,11 @@ Options available now:
 | `--stats=json` | Print counters of the run as JSON |
 | `+<name>[=<value>]` | Plusargs for `$test$plusargs` and `$value$plusargs` |
 
-Exit codes: 0 for `$finish`, `$stop` or no more events; 1 for `$fatal`; 2
+Exit codes: 0 for `$finish`, the default `$stop` or no more events; 1 for `$fatal`
+or `--stop=error`; 2
 for an error in the input, including an unsupported construct, or a
 run-time error of the design; 3 for an internal error; 4 when `--max-time`
-is reached; 5 when a zero-time limit is reached; 6 for excessive call
+or `--max-wall-time` is reached; 5 when a zero-time limit is reached; 6 for excessive call
 depth or insufficient stack space;
 130 when SIGINT (Ctrl-C) stops the run. The full command line is
 in [docs/spec/CLI.md](docs/spec/CLI.md).

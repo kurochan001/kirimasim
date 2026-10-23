@@ -62,6 +62,14 @@ kirimasim --version | --help
 [VALUE_SEMANTICS.md の 3.11 節](VALUE_SEMANTICS.ja.md)と
 [使い方](../P1_FEATURES.ja.md)を参照。
 
+`--autoflush`・`--stop=finish|ignore|error`・`--max-wall-time` も第 1 層で実装済み。
+標準出力のフラッシュは Context の Output、停止方針と実時間の検査は Scheduler が
+持つ。実時間は、静的初期化を含む SIGINT の検査点で調べ、final は中断しない。
+[使用例](../P1_FEATURES.ja.md)と、CLI の
+[実行中の出力](../../tests/cli/run_autoflush_tests.py)・
+[停止方針](../../tests/cli/run_stop_tests.py)・
+[実時間の上限](../../tests/cli/run_wall_time_tests.py)のテストを参照。
+
 ### 2.3 出力と開発用
 
 | オプション | 意味 | 段 |

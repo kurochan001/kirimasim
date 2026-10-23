@@ -15,6 +15,79 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Seeing output while a design waits
+
+`--autoflush` flushes stdout after each display/write/strobe/monitor task,
+including file tasks directed to stdout. It defaults off and does not
+change the text or scheduling. A reader can see this prompt before the
+design waits for standard input:
+
+```systemverilog
+module top;
+  int character;
+  initial begin
+    $write("ready> ");
+    character = $fgetc(32'h8000_0000);
+    $display("read=%0d", character);
+  end
+endmodule
+```
+
+```sh
+printf x | build/dev/src/driver/kirimasim --autoflush demo.sv
+```
+
+```text
+ready> read=120
+```
+
+## Choosing what `$stop` does
+
+```systemverilog
+module top;
+  initial begin
+    $display("before");
+    $stop(1);
+    $display("after");
+  end
+  final $display("final");
+endmodule
+```
+
+With `--stop=ignore`, the output is:
+
+```text
+before
+after
+final
+```
+
+The default `--stop=finish` omits `after` and exits with code 0;
+`--stop=error` does the same with code 1. Both keep the reason `stop`.
+Ignored calls still print their call-site report when their argument is
+1 or 2; argument 2 requests statistics at the eventual end of the run.
+
+## Limiting wall-clock time
+
+```systemverilog
+module top;
+  int count;
+  initial forever count++;
+  final $display("final");
+endmodule
+```
+
+```sh
+build/dev/src/driver/kirimasim --max-wall-time=1 --max-steps=0 demo.sv
+```
+
+The output is `final`, and the exit code is 4, with reason `wall_time_limit`.
+The budget is a whole number of seconds from the start of simulation;
+compilation is excluded and 0 disables it. `--max-time-ok` does not change
+that code. The kernel checks before events, and tier 1 checks at branches,
+including static initialization. This does not preempt a blocking host
+operation. Final procedures run to completion without the expired budget.
+
 ## Enum steps computed at run time
 
 `next(n)` and `prev(n)` accept a variable count and follow declaration order,

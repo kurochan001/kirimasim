@@ -13,6 +13,15 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- `--autoflush` publishes stdout after display/write/strobe/monitor output,
+  including file tasks directed to stdout (CLI.md 2.2, SYSTEM_TASKS.md 2).
+- `--stop=finish|ignore|error` selects normal termination, continuation,
+  or exit code 1 for `$stop`; ignored `$stop(2)` still reports statistics
+  at the eventual end (SCHEDULER_SPEC.md 16.2, SYSTEM_TASKS.md 10.2).
+- `--max-wall-time=<seconds>` limits elapsed simulation time, excluding
+  compilation. It checks VM branches and kernel event boundaries, runs
+  final procedures to completion and ends with `wall_time_limit` / code 4,
+  even with `--max-time-ok` (CLI.md 2.7, SCHEDULER_SPEC.md 16.2).
 - `--bounds-check=off|warn` reports out-of-range or X/Z-containing indices
   in packed selections and fixed unpacked arrays, including wide values,
   automatic/ref storage and NBA targets. Warnings are given once per source

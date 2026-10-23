@@ -102,6 +102,7 @@ const char* endReasonName(EndReason r) {
         case EndReason::Stop: return "stop";
         case EndReason::Fatal: return "fatal";
         case EndReason::TimeLimit: return "time_limit";
+        case EndReason::WallTimeLimit: return "wall_time_limit";
         case EndReason::ZeroTimeLimit: return "zero_time_limit";
         case EndReason::ResourceLimit: return "resource_limit";
         case EndReason::Interrupted: return "interrupted";
@@ -430,6 +431,7 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
     const bool wasEnding = ending_;
     const EndReason endReason = reason_;
     const int endLevel = level_;
+    runningFinal_ = true;
     for (const ProcessId p : finals) {
         if (processes_[p.index()].done) continue;
         ending_ = false;
@@ -450,6 +452,7 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
         }
         if (ending_) break;  // $finish, or a failure
     }
+    runningFinal_ = false;
     if (ending_ && reason_ == EndReason::Internal) {
         counters_.setText(cEndReason_, endReasonName(EndReason::Internal));
         return;
@@ -1266,7 +1269,23 @@ void Scheduler::confirmFinals() {
 
 // --- Ending ------------------------------------------------------------------
 
+bool Scheduler::takeWallTimeLimit() {
+    const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::steady_clock::now() - wallStarted_)
+                             .count();
+    if (elapsed < 0 || static_cast<std::uint64_t>(elapsed) < wallTimeLimit_) return false;
+    interruptTaken_ = true;
+    const std::string n = std::to_string(wallTimeLimit_);
+    setEndNote("wall-clock limit reached: " + n + " seconds (--max-wall-time=" + n + ")");
+    requestEnd(EndReason::WallTimeLimit, 1);
+    return true;
+}
+
 void Scheduler::requestEnd(EndReason r, int level) {
+    if (r == EndReason::Stop && stopAction_ == StopAction::Ignore) {
+        ignoredStopStatistics_ = ignoredStopStatistics_ || level == 2;
+        return;
+    }
     if (ending_) return;
     ending_ = true;
     reason_ = r;
@@ -1279,9 +1298,11 @@ void Scheduler::fail(std::string message) {
 }
 
 void Output::write(std::string_view text) {
-    if (text.empty()) return;
-    std::fwrite(text.data(), 1, text.size(), to_.out);
-    atLineStart_ = text.back() == '\n';
+    if (!text.empty()) {
+        std::fwrite(text.data(), 1, text.size(), to_.out);
+        atLineStart_ = text.back() == '\n';
+    }
+    if (autoFlush_) flush();
 }
 
 void Output::flush() { std::fflush(to_.out); }

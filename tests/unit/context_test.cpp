@@ -41,6 +41,41 @@ std::string contents(std::FILE* f) {
     return text;
 }
 
+TEST(Context, AutoFlushIsOptionalAndLocal) {
+    const File out1(std::tmpfile()), out2(std::tmpfile()), err(std::tmpfile());
+    ASSERT_TRUE(out1 && out2 && err);
+    ASSERT_EQ(std::setvbuf(out1.get(), nullptr, _IOFBF, BUFSIZ), 0);
+    ASSERT_EQ(std::setvbuf(out2.get(), nullptr, _IOFBF, BUFSIZ), 0);
+    Context one(OutputDestinations{out1.get(), err.get()});
+    Context two(OutputDestinations{out2.get(), err.get()});
+    one.output().setAutoFlush(true);
+    one.output().write("ready");
+    two.output().write("buffered");
+    struct stat first{}, second{};
+    ASSERT_EQ(fstat(fileno(out1.get()), &first), 0);
+    ASSERT_EQ(fstat(fileno(out2.get()), &second), 0);
+    EXPECT_EQ(first.st_size, 5);
+    EXPECT_EQ(second.st_size, 0);
+    EXPECT_FALSE(one.output().atLineStart());
+    EXPECT_EQ(contents(out1.get()), "ready");
+    EXPECT_EQ(contents(out2.get()), "buffered");
+}
+
+TEST(Context, AutoFlushEmptyWritePublishesPendingOutput) {
+    const File out(std::tmpfile()), err(std::tmpfile());
+    ASSERT_TRUE(out && err);
+    ASSERT_EQ(std::setvbuf(out.get(), nullptr, _IOFBF, BUFSIZ), 0);
+    Context c(OutputDestinations{out.get(), err.get()});
+    c.output().write("pending\n");
+    c.output().setAutoFlush(true);
+    c.output().write("");
+    struct stat st{};
+    ASSERT_EQ(fstat(fileno(out.get()), &st), 0);
+    EXPECT_EQ(st.st_size, 8);
+    EXPECT_TRUE(c.output().atLineStart());
+    EXPECT_EQ(contents(out.get()), "pending\n");
+}
+
 // Each of two Contexts writes its output and its messages, one after the
 // other, to its own pair of files; each file holds only what its Context
 // wrote, in order.

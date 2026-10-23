@@ -2,10 +2,10 @@
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
-This inventory describes the tier 1 implementation as of 2026-10-23, through
-`dec94ff` (optional bounds diagnostics). The preceding baseline, `4991983`,
-includes runtime `$sformat` / `$sformatf` formats; builds before `dec94ff` do
-not have `--bounds-check`. Check your build with `kirimasim --version`.
+This inventory describes tier 1 as of 2026-10-23, including the execution
+controls below. The `b98744a` baseline predates `--autoflush`, `--stop` and
+`--max-wall-time`; `dec94ff` introduced bounds diagnostics. Check
+`kirimasim --help` for a build's options and `--version` for its revision.
 
 P1 is in progress. “Supported” below means that the listed forms can be
 lowered to SIR and run by the interpreter, with tests in this repository.
@@ -111,6 +111,9 @@ including the file-output forms and `$swrite`.
 | Source input | `-f`, `+incdir+`, `+define+`, `--top` through slang |
 | Time selection | `--timescale=<unit>/<precision>`, `--mintypmax=min\|typ\|max` |
 | Simulation limits | `--max-time`, `--max-time-ok`, `--max-zero-delay`, `--max-slot-events`, `--max-steps`, `--max-call-depth` |
+| Live output | `--autoflush` flushes stdout after each display/write/strobe/monitor, including file tasks directed to stdout; default off |
+| Stop policy | `--stop=finish\|ignore\|error`; default `finish`; `ignore` resumes the caller, `error` ends with code 1 and reason `stop`; `$stop(2)` requests statistics at the eventual end |
+| Wall-clock limit | `--max-wall-time=<seconds>`; whole seconds, 0 disables; compilation excluded; ends with code 4 / `wall_time_limit` and runs `final`; `--max-time-ok` does not apply |
 | Random seed | `--seed=<n>` |
 | Inspection | `--dump-sir`, `--stats=json` |
 | Bounds diagnostics (from `dec94ff`) | `--bounds-check=off\|warn` (default `off`): warn once per source position for invalid packed selections/fixed-array indices and print final access counts; normal read/write/NBA values are preserved |
@@ -119,8 +122,10 @@ including the file-output forms and `$swrite`.
 `--max-scc-iter` is accepted but has no effect until P2's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
 automatically implemented: for example, `--cond-x`, `--init-values` and
-`--autoflush` are not current driver options. Use `--help` to inspect a build.
-FST output is not implemented.
+`--max-procs` are not current driver options. Use `--help` to inspect a build.
+FST output is not implemented. The wall-clock limit is checked before events
+and at VM branches, including static initialization; it does not preempt
+a blocking host operation. Final procedures finish without that deadline.
 
 ## Remaining work and scope
 

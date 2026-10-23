@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -44,11 +45,15 @@ enum class EndReason : std::uint8_t {
     Interrupted,
     Error,
     Internal,
-    ResourceLimit,  // last, so that the numbers abi.h's request_end takes stay
+    ResourceLimit,
+    WallTimeLimit,  // Append reasons so that existing request_end numbers stay.
 };
 
 /// The name used in messages and in --stats=json: finish, quiescent, ...
 const char* endReasonName(EndReason r);
+
+/// CLI.md 2.2: $stop ends normally, continues, or ends with a failing code.
+enum class StopAction : std::uint8_t { Finish, Ignore, Error };
 
 /// The 17 regions of a time slot, in order (SCHEDULER_SPEC.md 2.1).
 enum class Region : std::uint8_t {
@@ -185,17 +190,28 @@ public:
         : ctx_(ctx), store_(store), counters_(counters) {}
 
     void setLimits(const Limits& l) { limits_ = l; }
+    /// Starts the optional wall-clock budget, excluding front-end work.
+    void setWallTimeLimit(std::uint64_t seconds, std::chrono::steady_clock::time_point start) {
+        wallTimeLimit_ = seconds;
+        wallStarted_ = start;
+    }
+    void setStopAction(StopAction action) { stopAction_ = action; }
+    /// A $stop(2) that continued still requests statistics at the eventual end.
+    [[nodiscard]] bool ignoredStopStatistics() const { return ignoredStopStatistics_; }
     /// The flag that the driver's SIGINT handler sets (CLAUDE.md,
     /// RUNTIME_ABI.md 4.4); nothing when no handler is installed.
     void setInterruptFlag(const volatile std::sig_atomic_t* flag) { interruptFlag_ = flag; }
-    /// Ends the run with the reason interrupted when SIGINT has come and the
-    /// run has not taken it yet (SCHEDULER_SPEC.md 16.2). Taken once, so
-    /// that final procedures run to their end. True when it ends the run.
+    /// Takes SIGINT or an expired wall-clock budget at a safe point
+    /// (SCHEDULER_SPEC.md 16.2). Taken once so final procedures can complete.
     bool takeInterrupt() {
-        if (interruptTaken_ || interruptFlag_ == nullptr || *interruptFlag_ == 0) return false;
-        interruptTaken_ = true;
-        requestEnd(EndReason::Interrupted, 1);
-        return true;
+        if (interruptTaken_) return false;
+        if (interruptFlag_ != nullptr && *interruptFlag_ != 0) {
+            interruptTaken_ = true;
+            requestEnd(EndReason::Interrupted, 1);
+            return true;
+        }
+        if (wallTimeLimit_ != 0 && !runningFinal_) return takeWallTimeLimit();
+        return false;
     }
 
     /// Registers a process; it does not run until start() is called. It
@@ -398,6 +414,7 @@ public:
     [[nodiscard]] const std::string& error() const { return error_; }
 
 private:
+    bool takeWallTimeLimit();
     /// Show: a released held variable shows its value (id: the slot, gen:
     /// the element). Drive: a delayed driver's update (id: the driver).
     /// Postponed: a strobe's run (id: the process). Deferred: a deferred
@@ -606,6 +623,11 @@ private:
     std::uint64_t eventsThisSlot_ = 0;
     const volatile std::sig_atomic_t* interruptFlag_ = nullptr;
     bool interruptTaken_ = false;
+    std::uint64_t wallTimeLimit_ = 0;
+    std::chrono::steady_clock::time_point wallStarted_{};
+    bool runningFinal_ = false;
+    StopAction stopAction_ = StopAction::Finish;
+    bool ignoredStopStatistics_ = false;
     std::string error_;
     bool postponed_ = false;  ///< The Postponed region is running (2.2).
     bool overflow_ = false;   ///< A delay went past the largest time (8).
@@ -687,6 +709,8 @@ class Output {
 public:
     explicit Output(OutputDestinations to) : to_(to) {}
 
+    /// --autoflush: publish each output write immediately (SYSTEM_TASKS.md 2).
+    void setAutoFlush(bool enabled) { autoFlush_ = enabled; }
     void write(std::string_view text);
     /// The design's text on the messages' destination (STDERR, 21.3.1),
     /// after flushing the output's.
@@ -703,6 +727,7 @@ public:
 private:
     OutputDestinations to_;
     bool atLineStart_ = true;
+    bool autoFlush_ = false;
 };
 
 }  // namespace kirimasim::kernel

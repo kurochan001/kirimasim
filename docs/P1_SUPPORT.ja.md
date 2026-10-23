@@ -2,10 +2,10 @@
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
 
-2026-10-23 時点、`dec94ff`（任意の範囲診断）までの第 1 層の実装をまとめます。
-その前の `4991983` には、実行時の `$sformat` / `$sformatf` 書式までが含まれます。
-`dec94ff` より前のビルドには `--bounds-check` はありません。
-利用している版は `kirimasim --version` で確認できます。
+2026-10-23 時点の第 1 層を、以下の実行制御を含めてまとめます。
+`b98744a` の基準版には `--autoflush`・`--stop`・`--max-wall-time` はありません。
+範囲診断は `dec94ff` で追加されました。各ビルドのオプションは `kirimasim --help`、
+コミットは `--version` で確認してください。
 
 P1 は進行中です。この一覧の「対応」は、記載した形を SIR に変換してインタプリタで
 実行でき、リポジトリにテストがあることを表します。機能同士のすべての組み合わせを
@@ -104,6 +104,9 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | ソースの入力 | slang を通した `-f`、`+incdir+`、`+define+`、`--top` |
 | 時間の選択 | `--timescale=<unit>/<precision>`、`--mintypmax=min\|typ\|max` |
 | シミュレーションの上限 | `--max-time`、`--max-time-ok`、`--max-zero-delay`、`--max-slot-events`、`--max-steps`、`--max-call-depth` |
+| 実行中の出力 | `--autoflush`。display・write・strobe・monitor ごとに標準出力をフラッシュ。標準出力宛のファイルタスクも含む。既定は無効 |
+| 停止の方針 | `--stop=finish\|ignore\|error`（既定 `finish`）。`ignore` は呼び出し元を継続。`error` は理由 `stop` のまま終了コード 1。`$stop(2)` は継続後の実行終了時にも統計を要求する |
+| 実時間の上限 | `--max-wall-time=<秒数>`。整数秒、0 で無効。コンパイルは含めず、`final` を実行して終了コード 4・理由 `wall_time_limit` で終了。`--max-time-ok` は適用しない |
 | 乱数の種 | `--seed=<n>` |
 | 内部の確認 | `--dump-sir`、`--stats=json` |
 | 範囲の診断（`dec94ff` から） | `--bounds-check=off\|warn`（既定は `off`）。不正な packed 選択・固定長配列の添字をソース位置ごとに 1 回警告し、最後にアクセス回数を出す。通常の読み書き・NBA の値は保つ |
@@ -111,8 +114,10 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 
 `--max-scc-iter` は受け付けますが、P2 の静的な島の実装までは効果がありません。
 [CLI 仕様](spec/CLI.ja.md)にあるオプションがすべて実装済みというわけではありません。
-例えば `--cond-x`、`--init-values`、`--autoflush` は、現在の driver のオプションでは
+例えば `--cond-x`、`--init-values`、`--max-procs` は、現在の driver のオプションでは
 ありません。各ビルドの `--help` で確認してください。FST 出力は未対応です。
+実時間の上限は、イベント実行前と VM の分岐（静的初期化を含む）で検査します。
+待っているホスト側の処理を強制的に中断するものではありません。final は期限に止められず完了します。
 
 ## 残っている作業と対象範囲
 
