@@ -28,6 +28,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- The comparison utility adds seven original array-extrema probes and a
+  `reference_mismatches` report field. Single-result expectations follow
+  7.12.1 even for tied keys; reference mismatches remain separate from
+  Icarus-passing execution gaps, with judging-tool regressions.
+
 - Runtime unpacked concatenation combines scalar, fixed-array, dynamic-array
   and queue operands, including nested values and returned arrays. Queue
   rvalue slices use the same typed construction loop, with clipping, `$`,

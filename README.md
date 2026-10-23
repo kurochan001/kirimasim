@@ -89,8 +89,9 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-current inventory has expanded to 61 probes, with 22 Icarus-passing gaps
-(including array reductions, queue sorting and multidimensional binary input). It uses Icarus
+current inventory has expanded to 68 probes, with 26 Icarus-passing gaps
+(including reductions, sorting, extrema and multidimensional binary input).
+Six reference result mismatches are recorded separately. It uses Icarus
 `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 coverage and complete
 parity remain unconfirmed. A passing probe inventory would not by itself
 establish complete coverage; the inventory must expand as mechanisms and
@@ -98,10 +99,14 @@ interfaces are checked.
 
 Integral `$fread` now accepts optional start/count arguments, evaluates
 supplied expressions once and captures selected destinations once. On the
-same expanded 61 probes, this reduces the measured gaps from 23 to 22.
+earlier 61-probe inventory, this reduced the measured gaps from 23 to 22.
 Whole multidimensional integral memory input is included as a remaining
 gap; its [addressing proposal](docs/notes/fread-multidim-proposal.md) awaits
 approval. See the [comparison record](docs/notes/p1-icarus-progress.md).
+Array `min()`/`max()` remain unsupported; their
+[execution proposal](docs/notes/array-extrema-proposal.md) awaits review.
+The standard requires at most one result, including tied keys; the measured
+Icarus duplicate results are not the expected output.
 
 #### Existing quantitative gates and measured results
 
@@ -142,10 +147,11 @@ The local CI rerun at source revision `db40e27` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
 clang-tidy. Dev has 2,826 tests: 2,824 pass and the same two known skips remain.
 The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
-The expanded 61-probe inventory has 22 gaps, down from 23 on those same
-inputs before the integral `$fread` fix. It includes remaining reductions,
-queue sorting and multidimensional binary input; the inventory remains
-incomplete. See the [validation record](docs/notes/p1-icarus-progress.md).
+The earlier 61 probes retain 22 gaps, down from 23 before the integral
+`$fread` fix. Seven new extrema probes expand the inventory to 68, with
+26 Icarus-passing gaps and six separately recorded reference mismatches.
+The comparison tool's 128 Tools tests pass; no new runtime method is enabled
+by that audit. See the [validation record](docs/notes/p1-icarus-progress.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 

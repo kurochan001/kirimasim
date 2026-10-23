@@ -186,6 +186,11 @@ support.
 Ordering methods on fixed arrays also remain unimplemented.
 The [array-method amendment](notes/array-methods-proposal.md) for reductions
 and ordering is awaiting approval under P1_SCOPE.
+`min()` and `max()` also remain unsupported. Their separate
+[execution proposal](notes/array-extrema-proposal.md) is awaiting review of
+traversal, equal/unknown keys and key side effects. The checked standard
+returns at most one element, including tied extreme keys; the installed
+Icarus's duplicate-result observations are recorded as reference mismatches.
 
 ## System tasks, functions and methods
 

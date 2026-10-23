@@ -9,6 +9,68 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Array-extrema contract audit and comparison correction (2026-10-24)
+
+The next required mechanism check found a distinction between Icarus execution
+and the standard oracle. IEEE 1800-2023 7.12.1 was checked locally: empty
+min/max input returns an empty queue; a nonempty input returns one selected
+element, including tied extreme keys. The earlier observation that Icarus
+returns both tied elements remains a valid measurement, but it is not the
+standard expected result. The older paragraph below now marks that distinction.
+No existing simulator expectation has been changed to imitate the reference.
+
+Tool revision `8c55153` appends seven original probes without changing the
+previous 61: unique minimum/maximum, duplicate minimum/maximum, a projected
+key, and empty dynamic/queue input. On int values `[4,7,6]`, the installed
+Icarus returns one minimum 4 and maximum 7, while kirimasim diagnoses the
+methods as unsupported. Empty input gives Icarus an empty result. These four
+probes confirm missing execution support independently of the tied-key cases.
+
+For `[4,7,4]` and `[4,7,7]`, Icarus returns two results where one is required.
+For `[4,7,6].min() with (-item)`, it returns 4 where selecting by the key
+requires the original element 7. The latter three cases are reference
+`result_mismatch` records, not Icarus-passing gaps. The pinned slang MIT
+constant evaluator has a one-element min/max result path; that source
+observation is not a completed test of constant/parameter forms. No Icarus
+or Verilator source or tests were read.
+
+The finite inventory now has **68 probes, 26 Icarus-passing gaps and six
+separate reference result mismatches**. The previous 61 retain 22 gaps; the
+four added passing cases account for the increase to 26. The other three
+reference mismatches retain their prior inputs: `nested_packed_select_bounds`,
+`class_virtual_dispatch` and `dynamic_array_queries`. All per-engine statuses,
+outputs and diagnostics remain in the report. This is an expanded inventory,
+not a runtime regression or a full-coverage proof.
+
+The JSON report now explicitly includes `reference_mismatches`, alongside
+`gaps`. The `--require-parity` exit contract still checks only Icarus-passing
+gaps: a zero exit cannot certify that the simulator or the reference meets
+every oracle. New judging-tool tests cover a confirmed gap, a wrong reference,
+both engines wrong and both correct, plus a reference-only selection. They
+preserve independent statuses and prevent reference mismatches being counted
+as passing gaps. All 128 dev Tools tests pass, including these regressions.
+No native implementation changed in this audit. The last four-preset native
+CI record remains `db40e27`, not a new four-preset run at the tool revision.
+
+The local result is `build/extremum-icarus-probes.json`; its simulator binary
+reports `db40e27`. Both installed Icarus compiler/runtime report `14.0 (devel)
+(s20260301-411-gca6b8d376)`. `--require-parity` returns 1 for the remaining
+gaps. Exact-13.0 and complete P1 parity remain unconfirmed. Population,
+performance, nightly and CTest counts retain their measured dates/revisions.
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/extremum-icarus-probes.json --require-parity
+ctest --preset dev -L Tools --output-on-failure
+```
+
+The [extrema proposal](array-extrema-proposal.md), recorded in `b8abd43`, requests review of traversal,
+tied/unordered keys, source snapshots and exactly-once effectful key evaluation
+before implementation, as P1_SCOPE requires for missing semantic details.
+The separate reduction/ordering and multidimensional-input proposals remain
+pending; this audit does not approve them or enable the runtime methods.
+
 ## Integral binary-input arguments and captured targets (2026-10-24)
 
 Source `db40e27` completes integral `$fread` calls with optional start/count
@@ -87,7 +149,11 @@ Exploratory inputs outside those 61 probes also expose dynamic-array
 and `[4,7,7]`, Icarus returns queues `[4,4]` and `[7,7]`, while kirimasim
 diagnoses the methods as unsupported. These observations are not included
 in the inventory's 22-gap count; their full locator/value rules need checking
-before implementation. The finite inventory remains incomplete.
+before implementation. **Subsequent standard check:** 7.12.1 requires one
+result even for tied extreme keys. The two-element observations above are
+reference mismatches, not correct expected output. Unique-key inputs
+separately establish the missing execution support. See the newer audit above.
+The finite inventory remains incomplete.
 
 ## Documentation and publication recheck (2026-10-24)
 
