@@ -1,0 +1,355 @@
+{
+  "measured": "2026-10-24",
+  "kirimasim_source": "d3e1338840d962acbc015db6fdf66a43f1f9c44d",
+  "purpose": "Design evidence only; observations are not approved kirimasim oracles. All sources are original. No simulator sources or tests were read.",
+  "versions": {
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "probes": [
+    {
+      "name": "auto_condition",
+      "reference": "13",
+      "source": "module top;int q; task automatic arm(input bit c);q<=@(posedge c) 7;endtask initial begin arm(0);#1;$display(\"%0d\",q);end endmodule\n",
+      "compile_exit": 1,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:1: error: automatically allocated variables may not be referenced in intra-assignment event controls of non-blocking assignments."
+      ]
+    },
+    {
+      "name": "capture_count_index",
+      "reference": "13",
+      "source": "module top; event e; int q[2]; int count=2,idx; initial begin q[0]=0; q[1]=0; q[idx++]<=repeat(count) @(e)7; count=9; ->e; ->e; #1 $display(\"%0d %0d %0d\",idx,q[0],q[1]); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "1 7 0\n",
+      "diagnostic": []
+    },
+    {
+      "name": "disable_owner",
+      "reference": "13",
+      "source": "module top;event e;int q; initial begin fork begin:arm q<=@(e) 7; #10;end begin #1;disable arm; ->e;#1;$display(\"%0d\",q);end join end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "event_after_drained_nba",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=2; q<=@(e)1; #1 $display(\"before %0d\",q); ->e; #1 $display(\"after %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 2\nafter 1\n",
+      "diagnostic": []
+    },
+    {
+      "name": "event_after_immediate",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=2; q<=@(e)1; ->e; #1 $display(\"q %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "q 2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "event_before_immediate",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=@(e)1; ->e; q<=2; #1 $display(\"q %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "q 2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "immediate_order",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=@(e)1; ->e; q<=2; #1; $display(\"%0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "immediate_registration",
+      "reference": "13",
+      "source": "module top;event e;int q; initial begin q<=@(e) 7;->e;#1;$display(\"%0d\",q);end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "or_duplicate_named",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=repeat(2) @(e or e) 7; #1 ->e; #1 $display(\"one %0d\",q); ->e; #1 $display(\"two %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "one 7\ntwo 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "or_overlap",
+      "reference": "13",
+      "source": "module top; bit x; int q; initial begin q<=repeat(2) @(x or (x^0)) 7; #1 x=1; #1 $display(\"one %0d\",q); x=0; #1 $display(\"two %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "one 7\ntwo 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "or_overlap_same_thread",
+      "reference": "13",
+      "source": "module top; bit x; int q; initial begin q<=repeat(2) @(x or (x^0)) 7; x=1; x=0; #1 $display(\"q %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "q 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "repeat_zero",
+      "reference": "13",
+      "source": "module top;event e;int q; initial begin q<=repeat(0) @(e) 7;#1;$display(\"%0d\",q);end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "reverse_order",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=2; q<=@(e)1; ->e; #1; $display(\"%0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "same_thread_repeat",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=repeat(2)@(e)7; ->e; ->e; #1; $display(\"%0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "wait_fork",
+      "reference": "13",
+      "source": "module top; event e; int q; initial begin q<=@(e)7; wait fork; $display(\"before %0d\",q); ->e; #1; $display(\"after %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 0\nafter 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "auto_condition",
+      "reference": "14",
+      "source": "module top;int q; task automatic arm(input bit c);q<=@(posedge c) 7;endtask initial begin arm(0);#1;$display(\"%0d\",q);end endmodule\n",
+      "compile_exit": 1,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:1: error: automatically allocated variables may not be referenced in intra-assignment event controls of non-blocking assignments."
+      ]
+    },
+    {
+      "name": "capture_count_index",
+      "reference": "14",
+      "source": "module top; event e; int q[2]; int count=2,idx; initial begin q[0]=0; q[1]=0; q[idx++]<=repeat(count) @(e)7; count=9; ->e; ->e; #1 $display(\"%0d %0d %0d\",idx,q[0],q[1]); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "1 7 0\n",
+      "diagnostic": []
+    },
+    {
+      "name": "disable_owner",
+      "reference": "14",
+      "source": "module top;event e;int q; initial begin fork begin:arm q<=@(e) 7; #10;end begin #1;disable arm; ->e;#1;$display(\"%0d\",q);end join end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "event_after_drained_nba",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=2; q<=@(e)1; #1 $display(\"before %0d\",q); ->e; #1 $display(\"after %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 2\nafter 1\n",
+      "diagnostic": []
+    },
+    {
+      "name": "event_after_immediate",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=2; q<=@(e)1; ->e; #1 $display(\"q %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "q 2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "event_before_immediate",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=@(e)1; ->e; q<=2; #1 $display(\"q %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "q 2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "immediate_order",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=@(e)1; ->e; q<=2; #1; $display(\"%0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "immediate_registration",
+      "reference": "14",
+      "source": "module top;event e;int q; initial begin q<=@(e) 7;->e;#1;$display(\"%0d\",q);end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "or_duplicate_named",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=repeat(2) @(e or e) 7; #1 ->e; #1 $display(\"one %0d\",q); ->e; #1 $display(\"two %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "one 7\ntwo 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "or_overlap",
+      "reference": "14",
+      "source": "module top; bit x; int q; initial begin q<=repeat(2) @(x or (x^0)) 7; #1 x=1; #1 $display(\"one %0d\",q); x=0; #1 $display(\"two %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "one 7\ntwo 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "or_overlap_same_thread",
+      "reference": "14",
+      "source": "module top; bit x; int q; initial begin q<=repeat(2) @(x or (x^0)) 7; x=1; x=0; #1 $display(\"q %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "q 7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "repeat_zero",
+      "reference": "14",
+      "source": "module top;event e;int q; initial begin q<=repeat(0) @(e) 7;#1;$display(\"%0d\",q);end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "reverse_order",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=2; q<=@(e)1; ->e; #1; $display(\"%0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "2\n",
+      "diagnostic": []
+    },
+    {
+      "name": "same_thread_repeat",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=repeat(2)@(e)7; ->e; ->e; #1; $display(\"%0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "7\n",
+      "diagnostic": []
+    },
+    {
+      "name": "wait_fork",
+      "reference": "14",
+      "source": "module top; event e; int q; initial begin q<=@(e)7; wait fork; $display(\"before %0d\",q); ->e; #1; $display(\"after %0d\",q); end endmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 0\nafter 7\n",
+      "diagnostic": []
+    }
+  ],
+  "strict_front_parse": {
+    "auto_condition": {
+      "exit": 2,
+      "diagnostic": [
+        "error: cannot refer to automatic variable 'c' from intra-assignment event control of nonblocking assignment"
+      ]
+    },
+    "capture_count_index": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "disable_owner": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "event_after_drained_nba": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "event_after_immediate": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "event_before_immediate": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "immediate_order": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "immediate_registration": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "or_duplicate_named": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "or_overlap": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "or_overlap_same_thread": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "repeat_zero": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "reverse_order": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "same_thread_repeat": {
+      "exit": 0,
+      "diagnostic": []
+    },
+    "wait_fork": {
+      "exit": 0,
+      "diagnostic": []
+    }
+  }
+}
