@@ -9,6 +9,53 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Current implementation and review status (2026-10-24)
+
+The current implementation includes [integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
+with the corrected copy-in/copyback rule and the
+[complete strength-interval kernel API](strength-range-foundation.md).
+The latter is a foundation: MOS/switch source execution and `%v` remain
+unsupported. The [supported inventory](../P1_SUPPORT.md) describes executable
+forms and their limits; P1 remains incomplete and C++ generation remains P2.
+
+Full pre-push local CI at revision `51cafd2` passes configure/build/test
+for dev/release/ASan/UBSan.
+Dev/ASan/UBSan each run 2,831 tests (2,829 pass, two known skips); release
+runs 2,832 (2,830 pass, the same skips). Runtime sources, tests and tools
+are unchanged from `30a6ebc`; this refresh edits documentation only.
+Release flags, banned features, SPDX, suite files, global state, expectation
+protection for all eleven unpublished commits, README counts, clang-format
+and clang-tidy also pass. The combined diff against the publication base
+`aae29de` passes the expectation guard as well.
+
+The comparison rerun with a binary reporting `51cafd204560` records **68
+original probes, 26 Icarus-passing gaps and six reference mismatches** in
+`build/doc-refresh-icarus-probes.json`. Both Icarus compiler and runtime
+report `14.0 (devel) (s20260301-411-gca6b8d376)`. Exact-13.0 coverage and
+complete functional parity remain unconfirmed. Counts in the dated entries
+below describe their historical probe cohorts, not the current inventory.
+
+Three detailed semantic amendments remain pending; this documentation
+refresh does not approve or implement them:
+
+- [Array reductions and ordering](array-methods-proposal.md).
+- [Multidimensional binary memory addressing](fread-multidim-proposal.md).
+- [Array minimum/maximum execution](array-extrema-proposal.md).
+
+The external pass-rate measurements retain their 2026-10-22 provenance;
+performance measurements retain their 2026-10-23 provenance. Neither is a
+new measurement of the current source. See [benchmark conditions](../BENCHMARKS.md).
+
+To repeat the finite comparison after building:
+
+```sh
+python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
+  --extended --output build/doc-refresh-icarus-probes.json --require-parity
+```
+
+The current result exits 1 because execution gaps remain. The JSON records
+versions, probe results, gaps and reference mismatches separately.
+
 ## Complete strength-interval resolver foundation (2026-10-24)
 
 Source `30a6ebc` exposes the complete interval result already specified by

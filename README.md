@@ -152,16 +152,19 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI rerun at source `30a6ebc` on 2026-10-24 passed
-dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,831 tests: 2,829 pass and the same two known skips remain.
-The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
-The earlier 61 probes retain 22 gaps, down from 23 before the integral
-`$fread` fix. Seven new extrema probes expand the inventory to 68, with
-26 Icarus-passing gaps and six separately recorded reference mismatches.
-All 128 Tools tests and the corrected scalar-input oracle pass in that run.
-The extrema audit adds no runtime method. See the
-[validation record](docs/notes/p1-icarus-progress.md).
+The pre-push local CI rerun at revision `51cafd2` on 2026-10-24 passes
+configure/build/test for all four configurations. Dev/ASan/UBSan each have
+2,831 tests: 2,829 pass and the same two known skips remain. Release has 2,832 tests: 2,830 pass and the same
+skips. All 128 Tools tests and the corrected scalar-input oracle pass.
+Runtime sources are unchanged from the strength-interval implementation
+`30a6ebc`. All static checks also pass, including expectation protection,
+README counts, clang-format and clang-tidy.
+
+The comparison rerun records 68 original probes, with 26 Icarus-passing
+gaps and six separately recorded reference mismatches. Exact-13.0 coverage
+and complete parity remain unconfirmed. See the
+[current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
+for versions, remaining proposals and the reproduction command.
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 

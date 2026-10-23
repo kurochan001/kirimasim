@@ -8,6 +8,49 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
+## 現在の実装とレビュー状況（2026-10-24）
+
+最新の実装には、承認済みのコピー入力・書き戻し規則へ訂正した
+[整数のバイナリ入力](../P1_FEATURES.ja.md#freadで整数へバイナリ入力する)と、
+[完全な強さ区間のカーネルAPI](strength-range-foundation.ja.md)が含まれます。
+後者は基盤で、MOS・スイッチのソース実行と`%v`は引き続き未対応です。
+[対応機能一覧](../P1_SUPPORT.ja.md)に実行可能な形と制限を記載しています。
+P1は未完了で、C++生成はP2の予定です。
+
+公開前にリビジョン`51cafd2`でローカルCIを再実行し、dev・release・ASan・UBSanの
+configure・build・testがすべて通過しました。dev・ASan・UBSanは各2,831件中2,829件成功、既知の2件が
+スキップです。releaseは2,832件中2,830件成功、同じ2件がスキップです。
+実行時のソース・テスト・道具は`30a6ebc`から変わらず、今回の更新は文書だけです。
+releaseフラグ、禁止事項、SPDX、スイートのファイル、大域状態、未公開11コミットの
+期待値保護、README件数、clang-format・clang-tidyもすべて通過しました。
+公開基準の`aae29de`からの全差分でも、期待値保護を通過しました。
+
+`51cafd204560`と表示するバイナリで比較を再実行し、**独自プローブ68本、
+Icarusだけが通る差分26本、参照側の不一致6本**を
+`build/doc-refresh-icarus-probes.json`へ記録しました。Icarusのコンパイラ・ランタイムは
+ともに`14.0 (devel) (s20260301-411-gca6b8d376)`です。13.0そのものの対応範囲と
+全面的な同等性は未確認です。以下の日付付き記録の件数は当時のプローブの集まりを指し、
+現在の一覧の件数ではありません。
+
+細部の意味について、以下の3案が承認待ちです。この文書更新で承認・実装したものではありません。
+
+- [配列の縮約・並べ替え](array-methods-proposal.ja.md)。
+- [多次元バイナリメモリの番地](fread-multidim-proposal.ja.md)。
+- [配列の最小・最大の実行](array-extrema-proposal.ja.md)。
+
+外部の通過率は2026-10-22、性能は2026-10-23の測定記録を維持します。
+現在のソースで再計測した値ではありません。[測定条件](../BENCHMARKS.ja.md)を参照してください。
+
+ビルド後、有限の比較を再実行するには以下を使います。
+
+```sh
+python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
+  --extended --output build/doc-refresh-icarus-probes.json --require-parity
+```
+
+現在は実行機能の差分が残るため終了コード1です。JSONには版、個別の結果、差分、
+参照側の不一致を区別して記録します。
+
 ## 駆動強さの完全な区間解決の基盤（2026-10-24）
 
 `30a6ebc`で、既存のVALUE_SEMANTICS 5.2–5.4が定める完全な区間の結果を公開しました。
