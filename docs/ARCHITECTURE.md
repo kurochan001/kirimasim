@@ -21,7 +21,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap API<br/>(front integration, classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -128,6 +128,26 @@ language destination applies bounds; slice normalization preserves wide
 unsigned indices and rejects unknown ranges through the ordinary branch rules.
 Unimplemented language forms and implicit heap sensitivity are diagnosed;
 full container and Icarus coverage remain work.
+
+## Assignment capture and suspension
+
+The front end captures all RHS leaves of an aggregate assignment before
+evaluating runtime target selectors. Container leaves are snapshotted when
+captured, so later field expressions cannot change an earlier captured value.
+Ordinary assignments, immediate NBAs and delayed NBAs share this lowering
+path, including runtime-selected fixed subarrays and structure array members.
+This implements the existing approved evaluation order through existing SIR
+instructions; it adds no VM opcode or kernel scheduling rule. See
+[aggregate value capture](notes/aggregate-value-capture.md).
+
+Blocking intra-assignment `repeat(count) @(...)` holds the earlier RHS and
+the full typed count in frames across ordinary SIR waits. The count is
+evaluated once; nonpositive or X/Z counts skip waiting. The actual target is
+chosen after the waits. SSA temporaries themselves do not cross a wait.
+See [repeated event controls](notes/repeated-event-controls.md).
+Blocking whole-aggregate intra-assignment timing and event-controlled NBAs
+remain unsupported. In particular, blocking repeated waits do not implement
+the independently pending control required by an event-controlled NBA.
 
 ## Strength intervals before value projection
 

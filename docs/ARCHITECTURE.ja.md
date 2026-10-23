@@ -20,7 +20,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap API<br/>(front integration, classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -96,6 +96,23 @@ frontは[検証済みの言語範囲](P1_SUPPORT.ja.md#動的コンテナの共�
 使います。上限なしの一時キューへ要素を変換してから、実際の言語の代入先で上限を適用します。
 スライスの正規化は広い符号なし添字を保ち、X/Zの範囲は通常の分岐規則で空になります。
 コンテナ全体とIcarusの範囲への対応は未完了です。
+
+## 代入値の保持と待機
+
+frontは集約代入の右辺の全leafを保持してから、対象の実行時の添字を評価します。
+コンテナのleafは捕捉時にスナップショットを作るので、後のフィールド式が先に保持した
+値を変更しません。通常代入・即時NBA・遅延付きNBAは共通の変換を使い、実行時に
+選ぶ固定の部分配列と構造体要素の配列メンバーにも対応します。既存のSIR命令で
+承認済みの評価順を実現し、VM命令やカーネルのスケジューリング規則は追加していません。
+[集約値の保持](notes/aggregate-value-capture.ja.md)を参照してください。
+
+ブロッキング代入内の`repeat(count) @(...)`は、先に評価した右辺と型・幅を保った
+回数をフレームに保持し、通常のSIRの待機をまたぎます。回数は1回だけ評価し、
+非正数・X/Zなら待機を省きます。実際の代入先は待機後に選びます。SSA一時値自体は
+待機をまたぎません。[繰り返しイベント制御](notes/repeated-event-controls.ja.md)を
+参照してください。集約値全体へのブロッキング代入内時間制御とイベント制御付きNBAは
+未対応です。ブロッキングの繰り返し待機では、イベント制御付きNBAに必要な、発行元の
+実行とは独立して保留される制御を実現していません。
 
 ## 値への射影前の駆動強さの区間
 

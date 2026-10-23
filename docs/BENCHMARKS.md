@@ -6,8 +6,12 @@ Remeasured on 2026-10-23 with tier 1 at `dec94ff21979` and the comparison
 simulators below. This supports the [README summary](../README.md); it does
 not change performance acceptance criteria.
 
-The execution-control options in [P1 features](P1_FEATURES.md) were added
-after these runs; their performance has not been remeasured here.
+The execution-control options in [P1 features](P1_FEATURES.md), container
+integration, repeated event controls and aggregate capture changes were added
+after these runs. Their performance has not been remeasured here. The latest
+[functional validation](notes/p1-icarus-progress.md) and
+[Icarus 13.0 feature comparison](notes/icarus-13-comparison.md) use newer
+sources; neither updates the timing or memory results below.
 
 ## Conditions
 

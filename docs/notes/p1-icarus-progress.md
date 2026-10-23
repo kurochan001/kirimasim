@@ -22,8 +22,8 @@ and limits. P1 remains incomplete; C++ generation remains P2.
 Full local CI at source `917c715` passes configure/build/test for
 dev/release/ASan/UBSan. Dev/ASan/UBSan each run 2,980 tests (2,978 pass,
 two known skips); release runs 2,981 (2,979 pass, the same skips).
-Release flags, banned features, SPDX, suite files, global state, expectation
-protection for the three unpublished commits, README counts, clang-format
+Release flags, banned features, SPDX, suite files, global state, per-commit
+expectation protection, README counts, clang-format
 and clang-tidy also pass. Unit/suite/tool/generator counts are
 298/2,493/130/125. Existing suite bodies, expectations and performance counts
 remain unchanged. All 29 existing SIR dump tests pass.
