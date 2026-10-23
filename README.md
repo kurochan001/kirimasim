@@ -35,6 +35,16 @@ for the specification, the tests, and review.** See
 > support yet stops the run with an "unsupported" error at its source
 > position; it is never skipped silently.
 
+The dynamic-array/queue execution amendment was approved on 2026-10-23.
+The shared kernel now has a typed heap with deep copying, stable element
+references, bounded queues, exact tracing and allocation-failure rollback.
+Its 15 kernel tests pass, including 2,520,000 model-checked operations and
+six deliberate mutation checks. SIR/front-end/VM integration and automatic
+root publication are still unfinished, so dynamic arrays and queues cannot
+yet be executed from SystemVerilog. See the
+[implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
+and [approved contract](docs/notes/dynamic-containers-proposal.md).
+
 ### Phases
 
 | Phase | Content | Status |
@@ -42,7 +52,7 @@ for the specification, the tests, and review.** See
 | P0 | Groundwork: build, CI, detailed specifications, test suite | Done |
 | P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (an interpreter of SIR) targeting Icarus Verilog 13.0-or-broader execution coverage | **In progress** |
 | P2 | Tier 2: SIR compiled ahead of time to C++, for speed | Planned |
-| P3 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks and programs, VPI, DPI-C | Planned; required subset advanced to P1 |
+| P3 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks, VPI, DPI-C | Planned; required subset advanced to P1 |
 | P4 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned; required subset advanced to P1 |
 
 ### P1 exit criteria
@@ -84,7 +94,7 @@ interfaces are checked.
 | The mandatory test list (except the one that needs P3) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 
-kirimasim's numbers were measured on 2026-10-22; Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests and population counts for kirimasim were measured on 2026-10-22; Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
@@ -107,7 +117,12 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The two skipped tests of this repository need clocking blocks (P3), or
+The local CI run for source/documentation baseline `6a1830a` on 2026-10-23
+passed dev/release/ASan/UBSan and all static checks. Its CTest counts are
+shown above. The external comparison and performance measurements below
+retain their recorded revisions and dates.
+
+The two skipped tests of this repository need clocking-block support, or
 drivers that meet through a port between parts of nets (not supported
 yet). Verilator leads sv-tests by far. Most of the gap is dynamic arrays,
 queues, associative arrays, classes and UVM, followed by `randsequence`.
@@ -169,6 +184,8 @@ Of the 184 sv-tests cases, 43 expect rejection.
 <summary>This repository's tests by kind</summary>
 
 The counts of each kind are under [P1 exit criteria](#p1-exit-criteria).
+The kernel tests now also cover stable container cells, deep copying,
+allocation-failure rollback and exact tracing against an independent model.
 
 | Kind | What they check |
 | --- | --- |
@@ -184,33 +201,37 @@ The counts of each kind are under [P1 exit criteria](#p1-exit-criteria).
 <details>
 <summary>sv-tests by chapter of IEEE 1800-2023</summary>
 
+These chapter tables retain historical measurements. Some gaps, including
+program execution, were implemented afterward. Use
+[P1_SUPPORT](docs/P1_SUPPORT.md) for current execution support.
+
 Pinned sv-tests commit 15490e9, hand-written tests whose type includes
 simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`:
 kirimasim on 2026-10-22; the comparison builds of Icarus and Verilator on
 2026-10-17, as named under Test results.
 
-| Chapter | Tests | kirimasim | Icarus | Verilator | Where kirimasim stops |
+| Chapter | Tests | kirimasim | Icarus | Verilator | Where the measured build stops |
 | --- | --- | --- | --- | --- | --- |
 | 5 Lexical conventions | 1 | 1 | 1 | 1 | |
 | 6 Data types | 16 | 16 | 11 | 14 | |
-| 7 Aggregate data types | 91 | 31 | 47 | 88 | dynamic arrays (23), queues (17) and associative arrays (14), all P3; tagged unions |
-| 8 Classes | 15 | 9 | 12 | 12 | classes (P3) |
-| 9 Processes | 6 | 4 | 4 | 6 | sequences (P3); one test depends on the order of processes at time 0, which 4.7 leaves open |
+| 7 Aggregate data types | 91 | 31 | 47 | 88 | dynamic arrays (23), queues (17) and associative arrays (14); tagged unions |
+| 8 Classes | 15 | 9 | 12 | 12 | classes |
+| 9 Processes | 6 | 4 | 4 | 6 | sequences; one test depends on the order of processes at time 0, which 4.7 leaves open |
 | 10 Assignment statements | 3 | 3 | 3 | 3 | |
-| 11 Operators and expressions | 51 | 48 | 37 | 48 | tagged unions (2), streaming a dynamic array (P3) |
+| 11 Operators and expressions | 51 | 48 | 37 | 48 | tagged unions (2), streaming a dynamic array |
 | 12 Procedural programming statements | 2 | 2 | 2 | 2 | |
 | 13 Tasks and functions | 14 | 14 | 13 | 14 | |
 | 14 Clocking blocks | 1 | 1 | 1 | 1 | |
-| 15 Interprocess synchronization | 2 | 0 | 0 | 2 | mailboxes (P3) |
-| 16 Assertions | 6 | 0 | 3 | 5 | concurrent assertions (P3) |
+| 15 Interprocess synchronization | 2 | 0 | 0 | 2 | mailboxes |
+| 16 Assertions | 6 | 0 | 3 | 5 | concurrent assertions |
 | 18 Constrained random value generation | 22 | 10 | 8 | 22 | `randsequence` (12) |
 | 20 Utility system tasks and functions | 38 | 37 | 34 | 37 | `$coverage_control` |
 | 21 I/O system tasks and functions | 27 | 26 | 25 | 26 | `$dumpports` |
 | 22 Compiler directives | 6 | 6 | 6 | 6 | |
 | 23 Modules and hierarchy | 1 | 1 | 1 | 1 | |
-| 24 Programs | 1 | 0 | 1 | 1 | programs (P3) |
+| 24 Programs | 1 | 0 | 1 | 1 | programs |
 | 26 Packages | 1 | 1 | 1 | 1 | |
-| UVM | 37 | 0 | 0 | 28 | the UVM library needs classes (P3) |
+| UVM | 37 | 0 | 0 | 28 | the UVM library needs classes |
 | UVM random | 3 | 3 | 3 | 3 | |
 | **Total** | **344** | **213** | **213** | **321** | |
 
@@ -235,23 +256,23 @@ kirimasim stops; it fails no test.
 | 4 Scheduling semantics | 13 | 13 | 13 | 9 | |
 | 5 Lexical conventions | 20 | 20 | 20 | 16 | |
 | 6 Data types | 226 | 226 | 187 | 200 | |
-| 7 Aggregate data types | 90 | 87 | 55 | 90 | dynamic arrays, associative arrays, `sort` (3, P3) |
+| 7 Aggregate data types | 90 | 87 | 55 | 90 | dynamic arrays, associative arrays, `sort` (3) |
 | 9 Processes | 72 | 72 | 71 | 65 | |
 | 10 Assignment statements | 84 | 84 | 77 | 81 | |
 | 11 Operators and expressions | 347 | 347 | 309 | 312 | |
 | 12 Procedural programming statements | 106 | 106 | 96 | 102 | |
 | 13 Tasks and functions | 76 | 76 | 50 | 76 | |
 | 15 Interprocess synchronization | 3 | 3 | 1 | 3 | |
-| 16 Assertions | 21 | 18 | 16 | 19 | `$sampled`, `$stable` (3, P3) |
+| 16 Assertions | 21 | 18 | 16 | 19 | `$sampled`, `$stable` (3) |
 | 18 Constrained random value generation | 1 | 0 | 0 | 1 | `randsequence` (1) |
 | 20 Utility system tasks and functions | 149 | 149 | 144 | 117 | |
 | 21 I/O system tasks and functions | 57 | 57 | 56 | 52 | |
 | 22 Compiler directives | 14 | 14 | 14 | 14 | |
 | 23 Modules and hierarchy | 45 | 45 | 43 | 42 | |
-| 25 Interfaces | 29 | 26 | 18 | 29 | virtual interfaces (3, P3) |
+| 25 Interfaces | 29 | 26 | 18 | 29 | virtual interfaces (3) |
 | 26 Packages | 20 | 20 | 16 | 20 | |
 | 27 Generate constructs | 62 | 62 | 62 | 53 | |
-| 28 Gate-level and switch-level modeling | 22 | 17 | 22 | 20 | MOS and bidirectional switches (5, P4) |
+| 28 Gate-level and switch-level modeling | 22 | 17 | 22 | 20 | MOS and bidirectional switches (5) |
 | 29 User-defined primitives | 6 | 6 | 3 | 5 | |
 | **Total** | **1,466** | **1,451** | **1,274** | **1,329** | |
 
@@ -387,34 +408,33 @@ their limits, system tasks/functions and implemented command-line options.
 
 ### What does not work yet
 
-| Not yet | Planned |
+| Not yet | Scope and status |
 | --- | --- |
-| FST waveforms, the `%p` format, `%v` with resolved strengths, `$fread` into structures with array or real members | P1 |
-| Classes, dynamic arrays, queues, associative arrays, randomization and constraints, covergroups, concurrent assertions and `$sampled`/`$stable`, clocking blocks, virtual interfaces, `let` | P3 |
-| Classes, dynamic containers, switches, specify timing and external interfaces | Required subset advanced into P1; implementation in progress |
-| VPI, DPI-C | P3 |
-| Tier 2 (C++ generation) and further RTL speed optimizations | P2 |
-| MOS and bidirectional switches | P4 |
+| FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
+| Dynamic arrays and queues | P1; shared kernel heap implemented, SIR/front/VM integration pending |
+| Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
+| Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
+| Tier 2 C++ generation and further RTL speed optimizations | P2 |
 
-### Not planned for now
+### Other unsupported forms and comparison work
 
-The design leaves these out of its scope for now. kirimasim reports them
-as unsupported where it meets them, and tests that use them are left out
-of the P1 population (TEST_SUITE.md, "90% of our own tests").
+The frozen RTL population retains its historical exclusions (TEST_SUITE.md,
+"90% of our own tests"). Those exclusions do not define the full P1 target:
+[P1_SCOPE](docs/spec/P1_SCOPE.md) advances any required Icarus-supported
+subset into P1. The following forms also remain unsupported:
 
-- VHDL and designs in mixed languages; analog and mixed-signal designs
-- SDF back-annotation (`$sdf_annotate`), annotation of gate delays, and
-  encrypted IP
-- specify blocks with module paths or timing checks (a specify block with
-  only specparams works), user-defined nettypes and `interconnect`, and
-  `trireg`
-- the old PLI (`tf_` and `acc_` routines)
-- library map files (33.3); a config in the sources gives the top
-  (CLI.md 2.1)
-- checkers and `randsequence`, to be considered later
-- an interactive debugger and a Python API of its own: waveforms use
-  external viewers (VCD now, FST planned), and Python access is planned
-  through cocotb over VPI (P3)
+- VHDL/mixed-language and analog/mixed-signal designs, outside the current
+  language targets.
+- SDF annotation (`$sdf_annotate`), gate-delay annotation, encrypted IP,
+  legacy PLI (`tf_`/`acc_`) and library map files (33.3). External interfaces
+  and extensions need inventory and any necessary compatibility policy.
+- Specify module paths and timing checks; user-defined nettypes,
+  `interconnect`, `trireg`, checkers and `randsequence`. The required subset
+  follows measured Icarus coverage. Specparam-only specify blocks and
+  source configs for top selection are supported.
+- An interactive debugger and a standalone Python API remain planned.
+  Waveforms use external viewers (VCD now, FST pending); cocotb integration
+  depends on the unfinished VPI work, including the interfaces needed in P1.
 
 ## Building
 
@@ -541,7 +561,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD output<br/>(later: objects and GC, VPI, DPI-C)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(tier integration, classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -567,10 +587,12 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **One reference for value semantics.** `valsem` is a slow but obviously
   correct implementation of the operators; the kernel's fast operations are
   fuzzed against it (one-word and multi-word values). The nightly workflow
-  runs the one-word and scheduler cross-checks at 100 times the normal
-  rounds, and now has a separate step at the same scale for values of
+  runs one-word, scheduler and container-model cross-checks at 100 times
+  the normal rounds, with a separate step at the same scale for values of
   1 to 260 bits. Local runs of both steps passed on 2026-10-22; they do
-  not add to the consecutive-night count of the P1 criterion.
+  not add to the consecutive-night count of the P1 criterion. The separate
+  heap run passed 2,520,000 operations on 2026-10-23; it also does not add
+  a night to that count.
 - **Mechanism matrices.** Each mechanism is tested across the places it can
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
@@ -642,8 +664,8 @@ the same table with the Japanese terms.
 | `front` | kirimasim's library that runs slang and lowers its result to SIR |
 | lowering | Turning slang's elaborated design into SIR instructions |
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](docs/spec/SIR_SPEC.md)) |
-| `valsem` | The reference implementation of value semantics: slow, one bit at a time, and obviously correct. It decides what the operators, edges and case matches mean; every fast version is tested against it |
-| kernel | The execution kernel shared by every tier: scheduler, value operations and VCD output; later VPI and DPI-C. It is linked with the user's design, so it depends on neither slang nor LLVM |
+| `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
+| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; tier integration of the heap, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P2) |
 | Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
@@ -702,7 +724,7 @@ the same table with the Japanese terms.
 | mandatory tests | A fixed list of tests that must not fail, apart from any pass rate (TEST_SUITE.md); for P1, all but the one that needs P3 must pass |
 | sv-tests | The CHIPS Alliance's public SystemVerilog test collection |
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
-| DPI-C / VPI | The standard interfaces to C code and to tools (P3) |
+| DPI-C / VPI | The standard interfaces to C code and tools; unimplemented, with the required Icarus-supported subset advanced into P1 |
 | FST | A compact waveform file format (later) |
 | checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |
 
@@ -736,9 +758,11 @@ compile to C++ too.
 
 ### Does it run UVM?
 
-Not yet. UVM needs classes, dynamic arrays, queues and constrained
-randomization, which are planned for P3. UVM is then to run as ordinary
-SystemVerilog source, with no special handling of its classes.
+Not yet. The required Icarus-supported class and container mechanisms are
+P1 work; broader UVM and constrained randomization retain their later-phase
+plans. The container heap is implemented, but its SystemVerilog integration
+is pending. UVM is to run as ordinary SystemVerilog source, with no special
+handling of its classes.
 
 ### Can it write waveforms?
 

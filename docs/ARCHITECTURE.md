@@ -21,7 +21,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P2)"]
         t3["tier 3: JIT<br/>(later)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD<br/>(later: objects and GC, VPI, DPI-C)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap API<br/>(tier integration, classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -37,7 +37,8 @@ upstream.
 
 ## Three execution tiers, one kernel
 
-As of 2026-10-23, tier 1 and the shared kernel implement the current P1 range.
+As of 2026-10-23, tier 1 and the shared kernel implement the subset listed
+in [P1_SUPPORT](P1_SUPPORT.md). The full P1 coverage target is unfinished.
 Tier 2 is planned for P2; tier 3 comes later. The table and shared execution
 contract below describe the full design, including those future tiers.
 
@@ -72,10 +73,37 @@ Some ideas the design is built on:
   proven statically, tier 2 generates a four-state and a two-state version
   of an island and picks one at run time.
 - **One definition of meaning.** Each operation's meaning is defined once,
-  in `valsem`, as a slow one-bit-at-a-time reference. Fast versions are
-  tested against it.
+  in `valsem`, as a slow reference: integral operations work one bit at a
+  time, and container values have an independent cell model. Fast versions
+  are tested against it.
 - **No global state.** All simulation state lives in a context object, so
   several simulations can run in one process.
+
+## Typed container heap: kernel implementation, tier integration pending
+
+The [approved container contract](notes/dynamic-containers-proposal.md) is
+recorded in SIR_SPEC 4.2.1 and RUNTIME_ABI 6. Each Context owns a
+[`Heap`](../src/kernel/include/kirimasim/kernel/heap.h) alongside its slot
+store and strings. Layout descriptors describe words and nested-container
+edges without importing slang or SIR. Empty containers use token zero;
+nonempty containers and stable element cells use generation-checked tokens.
+Queue movement retains surviving cells, while replacement and deletion can
+detach cells still reachable through references. Value copying makes
+independent elements and recursively copies nested container values.
+
+Allocation uses transactions; failure rolls back new objects before the
+destination changes. Reclamation writes to pre-sized free-entry storage.
+Copying and tracing are iterative. `Heap::collect` traces explicit container
+and cell roots and reuses unreachable entries with new generations; failed
+marking performs no sweep. These mechanisms have independent-model,
+allocation-failure, deep-nesting, stale-token and Context-isolation tests.
+
+The kernel API is implemented. Typed SIR instructions, front-end lowering,
+VM calls, source-level diagnostics and automatic publication of all live
+slots/frames/temporaries/pending events are not connected yet. Collection
+requires a complete root list at a permitted safe point outside DPI. The
+running SystemVerilog design does not yet use this heap or its collector.
+Full language support needs those connections and execution tests.
 
 ## Libraries
 
@@ -88,10 +116,10 @@ Dependencies run only in the directions listed here.
 | `analysis` | X-reachability, static islands, levelization, observability | `sir` | Empty |
 | `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
 | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Empty |
-| `kernel` | The execution kernel | libfstapi (later); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD output, event counters, context |
+| `kernel` | The execution kernel | libfstapi (later); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD output, typed container heap API, event counters, context |
 | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P3 |
 | `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P3 |
-| `valsem` | Reference implementations of value semantics | nothing | Value instructions, edges, net resolution with strengths, UDP tables |
+| `valsem` | Reference implementations of value semantics | nothing | Value instructions, edges, net resolution with strengths, UDP tables, integral-container cell model |
 | `driver` | The `kirimasim` command line | everything | Compile and run, `parse`, `--version`, the input options, `--dump-sir`, `--stats=json`, the run limits, stopping on SIGINT |
 
 The same directions as a picture (an arrow means "depends on"; where it

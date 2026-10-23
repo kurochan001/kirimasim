@@ -17,10 +17,10 @@ Dependencies go only in the directions of the table below. Do not add to `target
 | `analysis` | X-reachability analysis, static islands, levelization, observability | `sir` | Empty |
 | `vm` | Tier 1 (making and running bytecode) | `sir`, `kernel` | Interprets SIR directly (bytecode comes later) |
 | `codegen` | Tier 2 (generating and building C++) | `sir`, `analysis` | Empty |
-| `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (later). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | Scheduler with every region, slot storage, 4-state word operations, net resolution, UDP tables, formatting and scanning, strings, event counters, Context |
+| `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (later). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | Scheduler with every region, slot storage, 4-state word operations, net resolution, UDP tables, formatting and scanning, strings, VCD, typed container heap API, event counters, Context |
 | `solver_adapter` | The replaceable port for constraint solvers | `sir`, the external solver adopted | Made in P3 |
 | `fiber_backend` | Fibers that stop and resume time-consuming DPI-C tasks | Only the library adopted | Made in P3 |
-| `valsem` | Reference implementation of value semantics (slow but plainly correct) | Nothing | Value instructions, edges, net resolution with strengths, UDP tables |
+| `valsem` | Reference implementation of value semantics (slow but plainly correct) | Nothing | Value instructions, edges, net resolution with strengths, UDP tables, integral-container cell model |
 | `driver` | The executable `kirimasim` | Everything | Compile and run, `parse`, `--version`, and the options of CLI.md 2 implemented so far (`--dump-sir`, `--stats=json`, the run limits and others) |
 
 - `kernel` is linked together with the user's design, so it must not depend on slang or LLVM.

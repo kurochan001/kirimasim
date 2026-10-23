@@ -6,11 +6,12 @@ The [approved P1 scope](spec/P1_SCOPE.md) now targets Icarus Verilog
 13.0-or-broader execution support, advancing the necessary later-phase
 mechanisms. This is a target; unsupported forms below remain unimplemented.
 See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
-Later-phase labels below are subject to this scope amendment.
+The remaining-work section distinguishes required P1 coverage from broader
+later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-23, including the execution
-controls below. The `b98744a` baseline predates `--autoflush`, `--stop` and
-`--max-wall-time`; `dec94ff` introduced bounds diagnostics. Check
+This inventory describes tier 1 as of 2026-10-23, including delayed NBA
+snapshots, bounded packed selections and mixed named-event waits. The latest
+container work is a kernel foundation, described separately below. Check
 `kirimasim --help` for a build's options and `--version` for its revision.
 
 P1 is in progress. “Supported” below means that the listed forms can be
@@ -53,6 +54,39 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.
+
+### Program completion
+
+Programs: initial procedures and continuous assignments use the reactive set,
+and calls/forks inherit the caller's group and originating program.
+`$exit` ends that origin's initial threads and descendants, and is ignored
+outside a program-initial thread. Once all initials of a program end, its
+remaining descendants end; after all programs with initials end, simulation
+finishes and runs final procedures. Empty programs cause no automatic finish.
+The [program matrix](../tools/gen_program_execution_matrix.py) covers 124
+suite cases; seven kernel tests and a SIR test cover lifetime, reuse and
+metadata. The CLI checks 15 illegal-input cases and two program identities.
+This does not enable classes, clocking blocks or concurrent assertions.
+Program scopes are not yet included in VCD dumping (WAVEFORM 7).
+
+## Dynamic-container foundation
+
+The [execution amendment](notes/dynamic-containers-proposal.md) was approved
+on 2026-10-23. `Context::heap()` implements typed container storage, deep
+copying, stable element cells, bounded queue mutation and exact tracing.
+Allocation failures roll back new objects; reclaimed entries use generations
+so stale tokens cannot name replacement values. These are kernel APIs,
+covered by [15 unit tests](../tests/unit/heap_test.cpp) and an independent
+[`valsem` container model](../src/valsem/include/kirimasim/valsem/containers.h).
+The 100-sample check passed 2,520,000 operations; all six deliberate heap
+mutations were caught. The heap matrix is included in nightly reference checks.
+
+SystemVerilog dynamic arrays and queues remain unsupported. Typed SIR
+operations, front-end lowering, VM calls, complete root publication at safe
+points and language-level diagnostics still need integration and execution
+matrices. Kernel warning/error categories are not yet source-level messages
+or exit codes for these constructs. This foundation does not establish full
+container support or the Icarus coverage target.
 
 ## System tasks, functions and methods
 
@@ -145,29 +179,23 @@ a blocking host operation. Final procedures finish without that deadline.
 
 | Status | Features |
 | --- | --- |
-| Still pending in P1 | FST; `%p`; resolved-strength `%v`; the unsupported `$fread` structure shapes above; remaining gaps in the P1 forms listed here |
+| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
+| P1 container integration | The shared heap is implemented; typed SIR/front/VM integration, complete safe-point roots and SystemVerilog execution tests remain |
 | P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
-| P3 | Classes/UVM, dynamic arrays, queues, associative arrays, constrained randomization, covergroups, concurrent assertions and sampled-value functions, clocking blocks, virtual interfaces, `let`, VPI and DPI-C |
-| P4 | MOS and bidirectional switches |
-| Outside current scope / deferred | VHDL/mixed-language and analog/mixed-signal designs; SDF annotation and encrypted IP; specify module paths/timing checks; user-defined nettypes, `interconnect`, `trireg`; legacy PLI; library map files; checkers, `randsequence`, an interactive debugger and a standalone Python API |
+| Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
+| Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
+| Outside the current language targets | VHDL/mixed-language and analog/mixed-signal designs |
 
-There is no compiled-simulation backend yet: all executable features in
-this inventory run in tier 1. Python integration is planned through cocotb
-over VPI in P3. P1 completion also requires the correctness and performance
-gates in the README; the size of this list alone does not establish completion.
+The [approved scope](spec/P1_SCOPE.md) controls this classification. Features
+such as checkers, `randsequence`, user-defined nettypes, `interconnect` and
+`trireg` remain unsupported; whether a form is required in P1 depends on
+verified Icarus coverage. Other planned tooling includes an interactive
+debugger and a standalone Python API.
 
-
-Programs: initial procedures and continuous assignments use the reactive set,
-and calls/forks inherit the caller's group and originating program.
-`$exit` ends that origin's initial threads and descendants, and is ignored
-outside a program-initial thread. Once all initials of a program end, its
-remaining descendants end; after all programs with initials end, simulation
-finishes and runs final procedures. Empty programs cause no automatic finish.
-The [program matrix](../tools/gen_program_execution_matrix.py) covers 124
-suite cases; seven kernel tests and a SIR test cover lifetime, reuse and
-metadata. The CLI checks 15 illegal-input cases and two program identities.
-This does not enable classes, clocking blocks or concurrent assertions.
-Program scopes are not yet included in VCD dumping (WAVEFORM 7).
+There is no compiled-simulation backend yet: executable language features
+in this inventory run in tier 1. Python integration through cocotb depends
+on the unfinished VPI work; required Icarus-supported interfaces belong to
+P1. Completion requires the README gates and functional coverage evidence.
 
 ## Evidence and maintenance
 

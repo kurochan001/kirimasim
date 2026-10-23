@@ -92,7 +92,8 @@ def render(c, lang):
             f"rounds | The nightly fuzz runs passed on {f['nights']} nights in a row, through "
             f"{f['through']} | {yes(fuzz_met)} |",
             "",
-            f"kirimasim's numbers were measured on {c['measured']}; Icarus Verilog's and "
+            "The external sv-tests and population counts for kirimasim were measured on "
+            f"{c['measured']}; Icarus Verilog's and "
             f"Verilator's in the last two columns on {o['measured']}, from their main branches "
             "that day. The nightly run measures sv-tests and the population again, and fails "
             "when they differ from these.",
@@ -135,7 +136,8 @@ def render(c, lang):
             f"ファジングを 7 回続けて | 夜間のファジングは {f['nights']} 晩続けて通った"
             f"（{f['through']} まで） | {yes(fuzz_met)} |",
             "",
-            f"kirimasim の数は {c['measured']} に測ったもので、右の 2 列の Icarus Verilog と "
+            f"kirimasim の外部 sv-tests・母集団の数は {c['measured']} に測ったもので、"
+            "右の 2 列の Icarus Verilog と "
             f"Verilator の数は {o['measured']} に、その日の main からビルドして測ったものです。"
             "nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。",
             "",

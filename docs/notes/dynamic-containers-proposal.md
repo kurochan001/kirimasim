@@ -4,13 +4,26 @@
 execution contract, including its explicit project choices. Implementation is
 in progress; this document does not claim completed container support.
 
-P1_SCOPE advances the Icarus-required dynamic containers into P1. SIR_SPEC
-currently describes their default empty handles but not their instructions;
-RUNTIME_ABI 6 leaves heap and collection details unwritten. This amendment
-provides that missing execution contract. The target remains the full P1
-coverage objective; this is the next mechanism, not a replacement target.
+When this amendment was proposed, P1_SCOPE had advanced the required
+dynamic containers into P1, while the heap/instruction contract was still
+incomplete. Approval is now reflected in SIR_SPEC 4.2.1 and RUNTIME_ABI 6.
+The target remains the full P1 coverage objective.
 The referenced clauses were checked locally. All descriptions are paraphrases;
 no standard text, simulator code or external test was copied.
+
+## Implementation status (2026-10-23)
+
+The [shared kernel heap](../P1_SUPPORT.md#dynamic-container-foundation) is
+implemented and tested: typed layouts, stable cells, deep copying, bounded
+queue operations, transactional allocation failure and exact tracing with
+generation-checked reuse. Fifteen kernel tests, the 2,520,000-operation
+reference run and six deliberate mutation checks pass.
+
+The approved SystemVerilog contract below is only partly implemented. Typed
+SIR/front/VM integration, complete safe-point roots, source-level diagnostics
+and language execution matrices remain. `new[]`, queue methods and dynamic
+container element access still stop as unsupported in execution. Kernel
+checks do not establish language support or full Icarus parity.
 
 ## Values and operations
 

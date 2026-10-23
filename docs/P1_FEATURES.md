@@ -15,6 +15,18 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Dynamic containers: integration pending
+
+The [kernel heap foundation](P1_SUPPORT.md#dynamic-container-foundation) is
+implemented and tested, but `new[]`, queue methods and dynamic element access
+are not executable SystemVerilog features yet. The approved contract still
+needs SIR/front/VM and complete root integration. The examples below cover
+currently executable features. For the kernel implementation checks, run:
+
+```sh
+ctest --preset dev -R '^Heap[.]' --output-on-failure
+```
+
 ## Mixed named-event waits and per-item iff
 
 A single event control can mix named events, signal edges and expression

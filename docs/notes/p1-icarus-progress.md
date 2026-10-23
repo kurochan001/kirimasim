@@ -9,6 +9,42 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Current snapshot (2026-10-23)
+
+The published baseline `6a1830a` includes the five delayed-NBA/packed-target/
+named-event rounds and the approved dynamic-container heap foundation.
+Its push-time local CI passed dev/release/ASan/UBSan, static checks and all
+14 then-unpublished commit expectation checks. Dev has 2,110 tests:
+2,108 pass and the two known skips remain. The changes were pushed to main.
+
+The heap has 15 kernel tests, a passing 2,520,000-operation model comparison
+and six caught mutations. SIR/front/VM integration, complete safe-point
+roots and SystemVerilog dynamic-container execution are unfinished. The
+44-probe comparison still has 23 Icarus-passing gaps; exact-13.0 coverage
+and complete parity remain unconfirmed. See [P1_SUPPORT](../P1_SUPPORT.md)
+for the current inventory and [architecture](../ARCHITECTURE.md) for the
+kernel/language boundary.
+
+The extended inventory was rerun with the `6a1830a` binary during this
+documentation update: 44 probes and the same 23 gaps. Both installed Icarus
+compiler and runtime report `14.0 (devel) (s20260301-411-gca6b8d376)`.
+Reproduce the comparison with:
+
+```sh
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/docs-update-icarus-probes.json --require-parity
+```
+
+`--require-parity` currently returns 1 because these gaps remain. This
+finite inventory does not establish full language or interface parity.
+
+## Implementation history
+
+The sections below record each round's measurements and decisions. Their
+counts and approval status describe that round, rather than the latest
+snapshot above.
+
 Two implementation-and-test rounds have added:
 
 - Unformatted `%u` and `%z` output through the common kernel formatter,
@@ -245,7 +281,8 @@ compiler rejects both, so these are not Icarus-passing gaps. There are still
 24 such gaps, and seven in the original 16-case seed. Exact-13.0 and full
 parity are unconfirmed. Event-controlled NBAs, blocking aggregate timing,
 refs/string-character delayed targets and further aggregate forms remain
-work. The dynamic-container proposal is still awaiting approval.
+work. The dynamic-container proposal was subsequently approved; its current
+implementation status is summarized at the top of this document.
 
 ## Delayed streaming NBAs
 
