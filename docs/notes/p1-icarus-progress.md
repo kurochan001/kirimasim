@@ -11,7 +11,8 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [aggregate value capture](aggregate-value-capture.md),
+The current implementation includes [aggregate blocking timing](blocking-aggregate-timing.md),
+[aggregate value capture](aggregate-value-capture.md),
 [blocking repeated event controls](repeated-event-controls.md), corrected
 [integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
 and the [complete strength-interval kernel API](strength-range-foundation.md).
@@ -19,16 +20,18 @@ The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
-Full local CI at source `917c715` passes configure/build/test for
-dev/release/ASan/UBSan. Dev/ASan/UBSan each run 2,980 tests (2,978 pass,
-two known skips); release runs 2,981 (2,979 pass, the same skips).
+Full local CI on the combined review stack `396131e` passes configure/build/test
+for dev/release/ASan/UBSan. Dev/ASan/UBSan each run 3,055 tests (3,053 pass,
+two known skips); release runs 3,056 (3,054 pass, the same skips).
 Release flags, banned features, SPDX, suite files, global state, per-commit
-expectation protection, README counts, clang-format
-and clang-tidy also pass. Unit/suite/tool/generator counts are
-298/2,493/130/125. Existing suite bodies, expectations and performance counts
-remain unchanged. All 29 existing SIR dump tests pass.
+expectation protection, README counts, clang-format and clang-tidy also pass.
+Unit/suite/tool/generator counts are 298/2,567/131/126. Existing suite bodies,
+suite expectations and performance counts remain unchanged; the obsolete six
+CLI rejection lines are isolated in the expectation-only review branch below.
+All 29 existing SIR dump tests pass. Five compiled mutations are caught by
+actual new source stdout, with anchor/judging self-checks excluded.
 
-The same **75 original probes** now run against both installed references:
+The same **78 original probes** now run against both installed references:
 
 - Icarus `13.0 (stable) (v13_0)`: 20 Icarus-passing gaps, four reference
   result mismatches.
@@ -41,11 +44,12 @@ verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
 unconfirmed. Dated entries below retain their historical probe cohorts.
 
-Three detailed semantic amendments remain pending:
+Four detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
 - [Array minimum/maximum execution](array-extrema-proposal.md).
+- [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep
@@ -59,6 +63,37 @@ python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim
 This uses PATH; the [13.0 command](icarus-13-comparison.md#reproduce) selects
 matching binaries explicitly. Both measured references still give exit 1
 for remaining passing gaps. A zero result would not establish full parity.
+
+## Blocking aggregate timing and positional copies (2026-10-24)
+
+Implementation `6195846` adds blocking intra-assignment delay/event/repeat for
+whole fixed arrays, unpacked structures and structure arrays, using the
+existing approved rules and private typed frames. It also corrects structure
+array copies to match each side's own declared bounds. The
+[74-source matrix](blocking-aggregate-timing.md) adds eight contexts, wide
+two/four-state payloads, concurrent automatic ref calls, container roots,
+guarded events, large counts and invalid targets. The retained old binary
+rejects 72 and miscomputes two; all new cases pass. Five compiled mutations
+are detected by their new stdout expectations, excluding self-check failures.
+
+The historical CLI input with six delayed array statements stays byte-identical.
+Its obsolete unsupported expectations are retired separately in `36aa2ae`,
+without implementation changes. The implementation review uses that branch
+as its base and passes the expectation-protection check. The combined tested
+stack is `396131e`; no old suite or performance oracle is weakened there.
+
+The same 78-probe inventory is measured on both references: 20/four gaps/
+reference mismatches for 13.0, 26/seven for development. The earlier 75 retain
+all statuses; the three additions pass kirimasim and fail reference compilation.
+Their [portable records](icarus-13-comparison.md) are separate from the earlier
+75-probe artifacts. These are new execution forms, not a measured reduction
+of Icarus-passing gaps.
+
+An [event-NBA amendment](event-nba-proposal.md) now specifies registration,
+count coalescing, origin/RNG lifetime, pending queue order and a shared SIR/kernel
+contract. Fifteen original programs have 30 versioned reference observations.
+The proposal remains pending; its observed overlapping-item and NBA-order
+differences are not adopted as oracles. Full P1 coverage remains unproven.
 
 ## Aggregate capture and exact-13.0 baseline (2026-10-24)
 

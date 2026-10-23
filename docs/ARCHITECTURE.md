@@ -145,8 +145,10 @@ the full typed count in frames across ordinary SIR waits. The count is
 evaluated once; nonpositive or X/Z counts skip waiting. The actual target is
 chosen after the waits. SSA temporaries themselves do not cross a wait.
 See [repeated event controls](notes/repeated-event-controls.md).
-Blocking whole-aggregate intra-assignment timing and event-controlled NBAs
-remain unsupported. In particular, blocking repeated waits do not implement
+Whole aggregates also use private typed frame snapshots across blocking
+intra-assignment controls; the actual selectors are evaluated after the wait.
+See [aggregate blocking timing](notes/blocking-aggregate-timing.md).
+Event-controlled NBAs remain unsupported. In particular, blocking repeated waits do not implement
 the independently pending control required by an event-controlled NBA.
 
 ## Strength intervals before value projection

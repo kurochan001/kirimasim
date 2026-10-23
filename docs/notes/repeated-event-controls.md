@@ -28,8 +28,9 @@ typed frame storage and collection roots.
 
 The tested targets include fixed-array elements, packed concatenations,
 automatic variables, real/string values and whole dynamic containers.
-Whole fixed-array/unpacked-structure intra-assignment timing remains
-unsupported. Event-controlled **nonblocking** assignments remain a separate
+Whole fixed-array/unpacked-structure timing was unsupported at this revision;
+[subsequent work implements blocking aggregate timing](blocking-aggregate-timing.md).
+Event-controlled **nonblocking** assignments remain a separate
 gap: they must register without stopping the issuing thread. This blocking
 loop does not provide that asynchronous registration.
 

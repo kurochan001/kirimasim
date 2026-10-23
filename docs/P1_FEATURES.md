@@ -53,8 +53,10 @@ endmodule
 
 Runtime-selected fixed subarrays and structure elements' array members can
 be whole assignment targets. Explicit automatic structures with array
-members retain their existing restriction. Blocking whole-aggregate
-intra-assignment timing and event-controlled NBAs remain unsupported.
+members retain their existing restriction. Whole aggregates now also support
+blocking intra-assignment delay/event/repeat controls through private typed
+frame snapshots. See the [implementation and review evidence](notes/blocking-aggregate-timing.md).
+Event-controlled NBAs remain unsupported.
 
 ## Blocking assignment after repeated events
 
@@ -63,8 +65,8 @@ the count once. Changes to either during the wait do not change the saved
 value or number of events. Zero, negative or X/Z counts wait for no events.
 The count retains its width and signedness; the blocking target is selected
 after waiting. See the [contract and evidence](notes/repeated-event-controls.md).
-Event-controlled nonblocking assignments and whole fixed-array/structure
-blocking intra-assignment timing remain unsupported.
+Whole fixed arrays and unpacked structures use the same timing rules, including
+runtime-selected targets. Event-controlled nonblocking assignments remain unsupported.
 
 ```systemverilog
 `timescale 1ns/1ns

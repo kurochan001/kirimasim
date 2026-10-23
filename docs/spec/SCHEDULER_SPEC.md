@@ -320,8 +320,10 @@ failure ends with ResourceLimit rather than using partial dependencies.
 Called functions' private container graphs are excluded like their private
 slots (VM dependency analysis); global and direct hierarchical reads remain.
 The graph query is read-only and adds no GC roots. The VM detaches its waits
-before destroying callback frames. These are kernel/VM checks on independent
-SIR, not SystemVerilog container support: front lowering remains unfinished.
+before destroying callback frames. These kernel/VM checks use independent SIR
+and do not alone establish language coverage. Front lowering now executes the
+[tested container subset](../P1_SUPPORT.md#dynamic-container-foundation);
+remaining forms are recorded there. This status update changes no wait rule.
 
 How a change of a slot's value wakes the processes waiting on it (where the diagram differs from the table and the items below, they hold):
 
