@@ -10,7 +10,7 @@
 
 ## 入れ子の上限変換と実際の型を保つスナップショット（2026-10-23）
 
-以下に記録した入れ子のキューのコピー失敗を、共通ヒープで修正しました。
+以下に記録した入れ子のキューのコピー失敗を、共通ヒープの`480037e`で修正しました。
 `Heap::copy`と`construct`は登録IDの一致ではなく要素配置の同値性で検査します。
 登録時に、入れ子のキュー上限を除いた配置の同値性を計算し、種類・語のマスク・
 2値/4値・既定値・フィールド位置は区別します。値の検査では確保やネイティブな再帰を
@@ -31,6 +31,26 @@
 dev全体は2,128件中2,126件成功、従来の2件がスキップです。ヒープの23テストも通過しました。
 独立したスカラーコンテナのモデル比較を倍率100、seed 20261023で再実行し、252万操作が
 通過しました。既存スイートの本体・期待値は変更していません。
+
+`480037e`のローカルCI全体は、dev・release・ASan・UBSanの構成・ビルド・テスト、
+releaseのフラグ、禁止機能、SPDX、スイート、大域状態、期待値保護、README件数、
+clang-format・clang-tidyが通過しました。同じコミットで拡張した独自比較も再実行し、
+44プローブにIcarusだけが通る23本の差分が残っています。インストール済みの
+コンパイラ・ランタイムは`14.0 (devel) (s20260301-411-gca6b8d376)`です。
+
+```sh
+ctest --preset dev -R '^Heap[.]' --output-on-failure
+KIRIMA_FUZZ_SCALE=100 KIRIMA_FUZZ_SEED=20261023 \
+  build/dev/tests/unit/kirimasim_unit_tests \
+  --gtest_filter=Heap.IntegralOperationsAndStableReferencesMatchIndependentModel
+python3 tools/mutants.py --only 'heap conversion:'
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/nested-conversion-icarus-probes.json --require-parity
+```
+
+最後のコマンドは差分が残っているため終了コード1になります。上の変異検査の証拠は、
+アンカー確認ではなく実際のヒープのアサーションによるものです。
 
 front・VMの実行、refの結び付きに実際の対象変数の型を持つ処理、全ルート、
 ソース位置付きの診断と変更通知は未接続です。SystemVerilogの動的コンテナの実行と、

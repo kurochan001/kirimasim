@@ -11,7 +11,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Nested-bound conversion and actual-type snapshots (2026-10-23)
 
-The next heap extension fixes the original nested queue copy failure recorded
+Source revision `480037e` fixes the original nested queue copy failure recorded
 below. `Heap::copy` and `construct` accept equivalent element shapes rather
 than requiring identical registration IDs. Registration computes shape
 equivalence once, ignoring nested queue capacities but preserving kinds,
@@ -37,6 +37,27 @@ Dev passes 2,128 tests: 2,126 pass and the same two known skips remain.
 All 23 heap tests pass. The independent scalar-container model was rerun at
 scale 100, seed 20261023, and passed 2,520,000 operations. No existing suite
 body or expected output was changed.
+
+Full local CI on `480037e` passes dev/release/ASan/UBSan configure/build/tests,
+release flags, banned features, SPDX, suite files, global state, expectation
+protection, README counts, clang-format and clang-tidy. The extended original
+comparison was rerun at the same revision: 44 probes and 23 Icarus-passing
+gaps remain, using the installed compiler/runtime
+`14.0 (devel) (s20260301-411-gca6b8d376)`.
+
+```sh
+ctest --preset dev -R '^Heap[.]' --output-on-failure
+KIRIMA_FUZZ_SCALE=100 KIRIMA_FUZZ_SEED=20261023 \
+  build/dev/tests/unit/kirimasim_unit_tests \
+  --gtest_filter=Heap.IntegralOperationsAndStableReferencesMatchIndependentModel
+python3 tools/mutants.py --only 'heap conversion:'
+python3 tools/icarus_feature_probe.py \
+  --kirimasim build/dev/src/driver/kirimasim --extended \
+  --output build/nested-conversion-icarus-probes.json --require-parity
+```
+
+The final command returns 1 because the comparison gaps remain. Mutation
+evidence above came from actual heap assertions, rather than an anchor check.
 
 Front/VM execution, actual variable metadata for ref bindings, complete roots,
 source-level diagnostics and notifications remain unfinished. This change
