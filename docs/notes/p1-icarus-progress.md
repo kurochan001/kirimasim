@@ -327,3 +327,20 @@ complete parity are unconfirmed.
 The next dynamic-array/queue mechanism still requires approval of the
 [concrete amendment](dynamic-containers-proposal.md). It is not approved
 or implemented. These additions do not close the full P1 objective.
+
+## Mutation validation of all five rounds
+
+All 15 deliberate mutations, three per mechanism, were detected by the
+new execution/reference tests. The packed-target checks catch losing the
+parent bound, losing its offset and reading the whole root in a compound
+assignment. Named-wait checks catch ignoring false iff, reading canceled
+guards and registering named items in a different generation. All restored
+baselines pass. Mutation-tool self-checks were excluded from this evidence.
+The entries are retained in `tools/mutants.py` for future validation.
+
+The publication check is `tools/local_ci.py`: dev/release/ASan/UBSan builds
+and tests, release flags, banned features, SPDX, suite files, global state,
+each unpublished commit's expectation boundary, README counts and both
+Clang tools. Its summary accompanies publication. Existing expectation
+migrations remain separate from implementation commits. The dynamic-
+container amendment remains unapproved; the P1 objective is not complete.
