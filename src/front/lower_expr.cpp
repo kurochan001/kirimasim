@@ -332,7 +332,7 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
         auto conv = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
         if (conv == 'x') conv = 'h';
         if (conv == 'm' || conv == 'l') continue;  // take no argument (withScope)
-        if (std::string_view("bohdcstefg").find(conv) == std::string_view::npos) {
+        if (std::string_view("bohdcstefguz").find(conv) == std::string_view::npos) {
             bad = std::string("format specifier %") + f[i];
             return false;
         }
@@ -3570,12 +3570,15 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             lowerFormatArgs(args.subspan(1), ops, sl, 'd', name);
         else
             lowerFormatArgs(args.subspan(1), ops, sl, radix);
-        const Val v = emit(Op::Syscall, Type{sir::TypeKind::String, 0}, std::move(ops), sl);
         const ast::Expression* dest = args[0];
         if (dest->kind == ast::ExpressionKind::Assignment &&
             dest->as<ast::AssignmentExpression>().isLValueArg())
             dest = &dest->as<ast::AssignmentExpression>().left();
-        lowerStore(*dest, coerce(v, typeOf(*dest->type, sl), sl), false, sl);
+        // Format into the destination's type: integral destinations retain
+        // raw zero bytes, while SV strings cannot contain them (6.16).
+        const Type target = typeOf(*dest->type, sl);
+        const Val v = emit(Op::Syscall, target, std::move(ops), sl);
+        lowerStore(*dest, v, false, sl);
         return;
     }
     if (name == "$sscanf" || name == "$fscanf" || name == "$value$plusargs") {

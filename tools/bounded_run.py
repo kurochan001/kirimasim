@@ -31,13 +31,14 @@ class OutputLimit(Exception):
 
 
 def run(cmd: list[str], *, cwd=None, timeout: float | None = None,
-        merge_stderr: bool = False) -> subprocess.CompletedProcess:
+        merge_stderr: bool = False, text: bool = True) -> subprocess.CompletedProcess:
     """As subprocess.run(cmd, cwd=cwd, timeout=timeout, capture_output=True,
     text=True, check=False) with an empty standard input, with standard
     error in standard output when
     merge_stderr is set. Raises OutputLimit when a stream goes past LIMIT,
     and subprocess.TimeoutExpired, after stopping the program, as
-    subprocess.run does."""
+    subprocess.run does. With text=False, returns the captured bytes without
+    decoding or newline conversion (for unformatted binary output)."""
     proc = subprocess.Popen(cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT if merge_stderr else subprocess.PIPE)
     over: list[str] = []
@@ -72,10 +73,12 @@ def run(cmd: list[str], *, cwd=None, timeout: float | None = None,
     if over:
         raise OutputLimit(cmd, over[0])
 
-    def text(parts: list[bytes]) -> str:
+    def decode(parts: list[bytes]) -> str | bytes:
+        if not text:
+            return b"".join(parts)
         # What text=True gives: the locale's encoding, and universal newlines.
         s = b"".join(parts).decode(locale.getpreferredencoding(False))
         return s.replace("\r\n", "\n").replace("\r", "\n")
 
-    return subprocess.CompletedProcess(cmd, proc.returncode, text(out),
-                                       None if merge_stderr else text(err))
+    return subprocess.CompletedProcess(cmd, proc.returncode, decode(out),
+                                       None if merge_stderr else decode(err))

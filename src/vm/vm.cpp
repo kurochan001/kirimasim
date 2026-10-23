@@ -4222,6 +4222,17 @@ private:
         return kernel::formatInt(iv, spec);
     }
 
+    /// Marshal formatted bytes into the result type supplied by front.
+    void formattedResult(const sir::Instr& in, std::string bytes) {
+        if (in.type.kind == sir::TypeKind::String) {
+            temp(in.result) = {strings_.intern(kernel::formattedString(std::move(bytes))), 0};
+            return;
+        }
+        std::vector<W4> words(chunksOf(in.type));
+        kernel::wide::fromText(words.data(), in.type.width, bytes);
+        setWide(in, words);
+    }
+
     /// The text of the format operands from `i` on: a text operand is a
     /// format; the values after it fill its specifiers, and values left
     /// over print in decimal (SYSTEM_TASKS.md 3.1).
@@ -4653,7 +4664,7 @@ private:
                 if (result.argumentMismatch)
                     warnOnce(in,
                              "string format has a different number of arguments than conversions");
-                temp(in.result) = {strings_.intern(result.text), 0};
+                formattedResult(in, result.text);
                 return true;
             }
             case SysTask::Display:
@@ -4664,7 +4675,7 @@ private:
                 if (!formatted) return false;
                 std::string text = *formatted;
                 if (info.task == SysTask::SFormatF) {
-                    temp(in.result) = {strings_.intern(text), 0};
+                    formattedResult(in, std::move(text));
                     return true;
                 }
                 if (info.task == SysTask::Display) text += '\n';

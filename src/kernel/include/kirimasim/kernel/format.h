@@ -57,7 +57,9 @@ struct FormatPiece {
 /// `error`, for a specifier kirimasim does not know or support yet.
 bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std::string& error);
 
-/// Formats an integral value with %b, %o, %h, %d, %c or %s (3.2 to 3.5).
+/// Formats an integral value with %b, %o, %h, %d, %c or %s (3.2 to 3.5),
+/// or complete binary words with %u or %z (3.11). Binary output ignores
+/// field width and preserves every byte, including zeros.
 std::string formatInt(const IntValue& v, const FormatSpec& spec);
 
 /// Formats a real with %e, %f or %g as C does; infinities and NaN are
@@ -78,6 +80,10 @@ struct TimeFormat {
 /// Formats a value of the string type with %s: its characters, in the
 /// written width if there is one (3.5, 3.12).
 std::string formatString(std::string_view text, const FormatSpec& spec);
+
+/// A formatted byte buffer assigned to an SV string (VALUE_SEMANTICS.md
+/// 7.6). Integral destinations instead retain zeros through fromText.
+std::string formattedString(std::string bytes);
 
 /// Formats a time given in ticks of the global precision `precision` with
 /// %t (3.7). `width` overrides the minimum width when it is not -1; `left`
@@ -103,6 +109,8 @@ struct FormatValue {
 };
 
 struct StringFormatResult {
+    /// Formatted bytes, which may contain NUL. The caller marshals them
+    /// into a packed result or applies formattedString for an SV string.
     std::string text;
     std::string error;
     bool argumentMismatch = false;

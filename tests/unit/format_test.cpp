@@ -4,6 +4,8 @@
 // Tests for the formatting of $display values (SYSTEM_TASKS.md 3). The
 // expected texts follow the examples and rules of that section.
 
+#include <array>
+#include <bit>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -44,6 +46,58 @@ struct Num {
 
 std::string fmt(const IntValue& v, char conv, int width = -1) {
     return formatInt(v, {conv, width});
+}
+
+std::string nativeWords(std::initializer_list<std::uint32_t> words) {
+    std::string text;
+    for (const std::uint32_t word : words) {
+        const auto bytes = std::bit_cast<std::array<char, 4>>(word);
+        text.append(bytes.data(), bytes.size());
+    }
+    return text;
+}
+
+TEST(Format, UnformattedWords) {
+    // 21.2.1.1: raw words, not text digits; X and Z both become 0 in %u.
+    const Bits mixed("1xz0");
+    EXPECT_EQ(fmt(mixed.value, 'u'), nativeWords({8}));
+    EXPECT_EQ(fmt(mixed.value, 'z'), nativeWords({12, 6}));
+    EXPECT_EQ(fmt(Num(0, 1).value, 'u'), std::string(4, '\0'));
+    EXPECT_EQ(fmt(Num(0, 1).value, 'z'), std::string(8, '\0'));
+    EXPECT_EQ(fmt(Num(0x00414200, 32).value, 'u'), nativeWords({0x00414200}));
+    // No sign extension, even in an incomplete final word.
+    EXPECT_EQ(fmt(Num(31, 5, true).value, 'z'), nativeWords({31, 0}));
+    EXPECT_EQ(fmt(Num(UINT64_MAX, 33, true).value, 'u'), nativeWords({UINT32_MAX, 1}));
+}
+
+TEST(Format, UnformattedWideAndPadding) {
+    const std::uint64_t words[] = {0x0123456789abcdef, 0xfedcba9876543210, UINT64_MAX};
+    const IntValue value{words, 129, false, true};
+    const std::string expected = nativeWords({0x89abcdef, 0x01234567, 0x76543210, 0xfedcba98, 1});
+    EXPECT_EQ(fmt(value, 'u'), expected);
+    EXPECT_EQ(fmt(value, 'u', 100), expected);
+    const Bits unknown("x" + std::string(64, 'z'));
+    EXPECT_EQ(fmt(unknown.value, 'u'), std::string(12, '\0'));
+    EXPECT_EQ(fmt(unknown.value, 'z'), nativeWords({0, UINT32_MAX, 0, UINT32_MAX, 1, 1}));
+}
+
+TEST(Format, UnformattedParseAndRuntime) {
+    std::vector<FormatPiece> pieces;
+    std::string error;
+    ASSERT_TRUE(parseFormat("%u%Z", pieces, error));
+    ASSERT_EQ(pieces.size(), 2U);
+    EXPECT_EQ(pieces[0].spec.conv, 'u');
+    EXPECT_EQ(pieces[1].spec.conv, 'z');
+    const Bits value("1xz0");
+    FormatValue arg;
+    arg.integral = value.value;
+    const std::array args{arg, arg};
+    const auto result = formatStringCall("%u%z", args, "top", "work.top", 1, -9, {});
+    EXPECT_TRUE(result.error.empty());
+    EXPECT_FALSE(result.argumentMismatch);
+    EXPECT_EQ(result.text, nativeWords({8, 12, 6}));
+    // SV strings cannot hold NUL; packed targets keep the raw buffer.
+    EXPECT_EQ(formattedString(result.text), std::string("\x08\x0c\x06", 3));
 }
 
 TEST(Format, AutomaticWidth) {

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <charconv>
 #include <cmath>
 #include <cstddef>
@@ -196,6 +197,30 @@ std::string formatChars(const IntValue& v, int width, bool left) {
     return place(std::move(bytes), w, left, ' ');
 }
 
+/// SYSTEM_TASKS.md 3.11: complete 32-bit words in native byte order,
+/// least significant word first. Bits beyond the value's width are zero.
+std::string formatBinary(const IntValue& v, bool fourState) {
+    std::string bytes;
+    const std::size_t words = (static_cast<std::size_t>(v.width) + 31) / 32;
+    bytes.reserve(words * (fourState ? 8 : 4));
+    const auto append = [&](std::uint32_t word) {
+        const auto chars = std::bit_cast<std::array<char, 4>>(word);
+        bytes.append(chars.data(), chars.size());
+    };
+    for (std::size_t word = 0; word < words; ++word) {
+        std::uint32_t a = 0;
+        std::uint32_t b = 0;
+        for (unsigned k = 0; k < 32 && word * 32 + k < v.width; ++k) {
+            const Bit bit = bitOf(v, static_cast<std::uint32_t>(word * 32 + k));
+            if (bit.a && (fourState || !bit.b)) a |= std::uint32_t{1} << k;
+            if (bit.b) b |= std::uint32_t{1} << k;
+        }
+        append(a);
+        if (fourState) append(b);
+    }
+    return bytes;
+}
+
 }  // namespace
 
 bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std::string& error) {
@@ -268,6 +293,8 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             case 'd':
             case 'c':
             case 's':
+            case 'u':
+            case 'z':
             case 't': break;
             case 'm':
             case 'l': break;
@@ -304,6 +331,8 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
 
 std::string formatInt(const IntValue& v, const FormatSpec& spec) {
     switch (spec.conv) {
+        case 'u': return formatBinary(v, false);
+        case 'z': return formatBinary(v, true);
         case 'd': return formatDecimal(v, spec.width, spec.left, spec.zero);
         case 'c': {
             unsigned c = 0;
@@ -331,6 +360,11 @@ std::string formatString(std::string_view text, const FormatSpec& spec) {
     // The characters as they are, in a written width (3.5).
     return place(std::string(text), spec.width > 0 ? static_cast<std::size_t>(spec.width) : 0,
                  spec.left, ' ');
+}
+
+std::string formattedString(std::string bytes) {
+    std::erase(bytes, '\0');
+    return bytes;
 }
 
 std::string formatReal(double v, const FormatSpec& spec) {
