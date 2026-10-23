@@ -542,7 +542,8 @@ public:
                         const std::vector<sir::ArrayDim>& outer, slang::SourceLocation sl);
     /// The frame variables of an automatic variable of an unpacked
     /// structure type, one per leaf in order: the first one.
-    sir::FrameVarId structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl);
+    sir::FrameVarId structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl,
+                                    bool returnValue = false);
     /// Where the value an expression names lives: a frame variable or a
     /// slot. For an unpacked structure, its first leaf, the others
     /// following in order (SIR_SPEC.md 4.2).
@@ -601,6 +602,8 @@ public:
     Place storagePlace(Storage st);
     /// An assignment with a delay or event control inside it (9.4.5).
     Val lowerDelayedAssignment(const ast::AssignmentExpression& a);
+    /// Capture aggregate values before target effects (VALUE_SEMANTICS 3.1, 3.13).
+    Val lowerAggregateAssignment(const ast::AssignmentExpression& a, const ast::Expression* delay);
     /// The stream of a streaming concatenation used as a value (11.4.14).
     Val lowerStream(const ast::StreamingConcatenationExpression& s, slang::SourceLocation sl);
     /// v with its blocks of `size` bits in reverse order, sliced from the

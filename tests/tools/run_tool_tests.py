@@ -648,7 +648,8 @@ def feature_probe_report(tmp: Path) -> None:
     with mock.patch.object(sys, "path", [*sys.path, str(TOOLS)]):
         spec.loader.exec_module(probe)
     cases = [(name, "test", name, "7\n", []) for name in
-             ("confirmed_gap", "reference_wrong", "both_wrong", "both_correct")]
+             ("confirmed_gap", "reference_wrong", "both_wrong", "both_correct",
+              "aggregate_nba_rhs_order", "aggregate_blocking_rhs_order")]
 
     def engine(command, **kwargs):
         if "-V" in command or "--version" in command:
@@ -657,7 +658,8 @@ def feature_probe_report(tmp: Path) -> None:
             return subprocess.CompletedProcess(command, 0, b"", b"")
         name = (Path(kwargs["cwd"]) / "probe.sv").read_text().strip()
         reference = command[0] == "vvp"
-        correct = name == "both_correct" or (reference and name == "confirmed_gap") or \
+        correct = name in ("both_correct", "aggregate_nba_rhs_order", "aggregate_blocking_rhs_order") or \
+            (reference and name == "confirmed_gap") or \
             (not reference and name == "reference_wrong")
         return subprocess.CompletedProcess(command, 0, b"7\n" if correct else b"9\n", b"")
 
@@ -682,6 +684,11 @@ def feature_probe_report(tmp: Path) -> None:
         if rows["reference_wrong"]["icarus"]["status"] != "result_mismatch" or \
                 rows["reference_wrong"]["kirimasim"]["status"] != "passed":
             failures.append("feature probe loses the independent per-engine result")
+        if only is None:
+            for name in ("aggregate_nba_rhs_order", "aggregate_blocking_rhs_order"):
+                row = rows[name]
+                if row["category"] != "project_policy" or "unspecified" not in row.get("policy", ""):
+                    failures.append("feature probe mislabels the project evaluation order as a standard rule")
 
 
 def main() -> int:

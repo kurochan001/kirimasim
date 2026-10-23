@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_aggregate_nba_capture_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_aggregate_nba_capture_matrix.py --check)
+set_tests_properties(tools/gen_aggregate_nba_capture_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_repeated_event_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_repeated_event_matrix.py --check)
 set_tests_properties(tools/gen_repeated_event_matrix PROPERTIES LABELS Tools)

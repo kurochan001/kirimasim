@@ -172,7 +172,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             if (!isStruct && unpackedStruct(et) != nullptr)
                 unsupported(rv.location, "function returning an array of structures");
             const sir::FrameVarId held =
-                isStruct ? structFrameVars(rv, rv.location) : frameVarOf(rv, rv.location);
+                isStruct ? structFrameVars(rv, rv.location, true) : frameVarOf(rv, rv.location);
             std::vector<Leaf> leaves;
             if (isStruct)
                 structLeaves(ret, "", leaves);
@@ -384,20 +384,13 @@ Lowerer::Storage Lowerer::tempStorage(const ast::Type& t, slang::SourceLocation 
     Storage st;
     st.frame = true;
     st.var = sir::FrameVarId{static_cast<std::uint32_t>(frameVars().size())};  // the next one
-    if (unpackedStruct(t) != nullptr) {
-        std::vector<Leaf> leaves;
-        structLeaves(t, "", leaves);
-        for (const Leaf& l : leaves) {
-            if (l.type->getCanonicalType().isUnpackedArray() || !l.dims.empty())
-                unsupported(sl, "automatic unpacked array in a structure or of structures");
-            frameVars().push_back({"", typeOf(*l.type, sl), sir::kNone, {}, {}});
-        }
-        return st;
+    std::vector<Leaf> leaves;
+    structLeaves(t, "", leaves);
+    for (const Leaf& leaf : leaves) {
+        std::vector<sir::ArrayDim> dims = leaf.dims;
+        const ast::Type& element = arrayElement(*leaf.type, dims);
+        frameVars().push_back({"", typeOf(element, sl), sir::kNone, std::move(dims), {}});
     }
-    std::vector<sir::ArrayDim> dims;
-    const ast::Type& et = arrayElement(t, dims);
-    if (unpackedStruct(et) != nullptr) unsupported(sl, "array of structures held here");
-    frameVars().push_back({"", typeOf(et, sl), sir::kNone, std::move(dims), {}});
     return st;
 }
 

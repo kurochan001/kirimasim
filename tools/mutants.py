@@ -40,6 +40,37 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('aggregate NBA capture: target runs before RHS capture',
+     'src/front/lower_expr.cpp',
+     '    assignAggregate(dst ? *dst : tempStorage(*a.left().type, sl), *a.left().type, a.right(), values,\n'
+     '                    sl);',
+     '    if (!dst) dst = storageOf(a.left(), sl);\n'
+     '    assignAggregate(dst ? *dst : tempStorage(*a.left().type, sl), *a.left().type, a.right(), values,\n'
+     '                    sl);'),
+    ('aggregate NBA capture: a pattern borrows a container value',
+     'src/front/lower_struct.cpp',
+     'snapshotValue(coerce(lowerExpr(rhs), p.type, sl), sl)',
+     'coerce(lowerExpr(rhs), p.type, sl)'),
+    ('aggregate NBA capture: a copied structure borrows a container value',
+     'src/front/lower_struct.cpp',
+     'snapshotValue(loadPlace(storagePlace(std::move(src)), sl), sl)',
+     'loadPlace(storagePlace(std::move(src)), sl)'),
+    ('aggregate NBA capture: a copied array borrows a container value',
+     'src/front/lower_struct.cpp',
+     'snapshotValue(coerce(loadPlace(storagePlace(std::move(src)), sl), to.type, sl), sl)',
+     'coerce(loadPlace(storagePlace(std::move(src)), sl), to.type, sl)'),
+    ('aggregate NBA capture: an array pattern borrows a container value',
+     'src/front/lower_expr.cpp',
+     'snapshotValue(coerce(lowerExpr(*r), elemTypeOf(s), sl), sl)',
+     'coerce(lowerExpr(*r), elemTypeOf(s), sl)'),
+    ('aggregate NBA capture: each leaf evaluates the delay again',
+     'src/front/lower_expr.cpp',
+     '    for (std::size_t i = 0; i < targets.size(); ++i)\n'
+     '        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks);',
+     '    for (std::size_t i = 0; i < targets.size(); ++i) {\n'
+     '        if (delay != nullptr) (void)delayValue(*delay, sl);\n'
+     '        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks);\n'
+     '    }'),
     ('repeated event: count truncates to a signed low word',
      'src/front/lower_stmt.cpp', 'const Val count = lowerExpr(repeated.expr);',
      'const Val count = coerce(lowerExpr(repeated.expr), sir::s2(32), sl);'),
@@ -388,8 +419,8 @@ MUTANTS = [
      "        copyArrayStorage(std::move(dst), std::move(src), out, sl);",
      "        (void)src;"),
     ("aggregate delayed NBA: ignores the delay", "src/front/lower_expr.cpp",
-     "flushStores(stores, true, sl, ticks);",
-     "(void)ticks; flushStores(stores, true, sl);"),
+     'delay != nullptr ? std::optional{delayValue(*delay, sl)} : std::nullopt;',
+     'delay != nullptr ? std::optional{((void)delayValue(*delay, sl), constant(sir::u2(64), 0))} : std::nullopt;'),
     ("aggregate array copy: uses destination indices for the source", "src/front/lower_struct.cpp",
      "withIndex(src, s.left + (s.left <= s.right ? k : -k)), out, sl);",
      "withIndex(src, t.left + (t.left <= t.right ? k : -k)), out, sl);"),

@@ -86,18 +86,22 @@ std::vector<std::int64_t> Lowerer::fixedIndices(const Storage& s, slang::SourceL
     return s.constIdx;
 }
 
-sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl) {
+sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl,
+                                         bool returnValue) {
     if (auto it = b_.structFrames.find(&v); it != b_.structFrames.end()) return it->second;
     std::vector<Leaf> leaves;
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::FrameVarId>(frameVars().size());
     for (const Leaf& l : leaves) {
-        if ((l.type->getCanonicalType().isUnpackedArray() && !isDynamicContainer(*l.type)) ||
-            !l.dims.empty())
+        if (!returnValue &&
+            ((l.type->getCanonicalType().isUnpackedArray() && !isDynamicContainer(*l.type)) ||
+             !l.dims.empty()))
             unsupported(sl, "automatic unpacked array in a structure or of structures");
-        const sir::Type t = typeOf(*l.type, sl);
+        std::vector<sir::ArrayDim> dims = l.dims;
+        const ast::Type& element = arrayElement(*l.type, dims);
+        const sir::Type t = typeOf(element, sl);
         if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
-        frameVars().push_back({std::string(v.name) + l.path, t, sir::kNone});
+        frameVars().push_back({std::string(v.name) + l.path, t, sir::kNone, std::move(dims), {}});
     }
     b_.structFrames.emplace(&v, first);
     return first;
@@ -270,7 +274,7 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         return;
     }
     Place p = storagePlace(std::move(dst));
-    const Val v = coerce(lowerExpr(rhs), p.type, sl);
+    const Val v = snapshotValue(coerce(lowerExpr(rhs), p.type, sl), sl);
     out.emplace_back(std::move(p), v);
 }
 
@@ -300,7 +304,7 @@ void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores
         copyArrayStorage(std::move(dst), std::move(src), out, sl);
         return;
     }
-    const Val v = loadPlace(storagePlace(std::move(src)), sl);
+    const Val v = snapshotValue(loadPlace(storagePlace(std::move(src)), sl), sl);
     out.emplace_back(storagePlace(std::move(dst)), v);
 }
 
@@ -314,7 +318,8 @@ void Lowerer::copyArrayStorage(Storage dst, Storage src, Stores& out, slang::Sou
         unsupported(sl, "assignment of an unpacked array of another shape");
     if (dst.elem.size() == td.size()) {
         const Place to = storagePlace(std::move(dst));
-        const Val value = coerce(loadPlace(storagePlace(std::move(src)), sl), to.type, sl);
+        const Val value =
+            snapshotValue(coerce(loadPlace(storagePlace(std::move(src)), sl), to.type, sl), sl);
         out.emplace_back(to, value);
         return;
     }
@@ -378,7 +383,14 @@ void Lowerer::storagePlaces(const Storage& s, const ast::Type& t, std::vector<Pl
         return;
     }
     if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
-        arrayPlaces(storageBase(s), fixedIndices(s, sl), out);
+        // Keep runtime prefixes of array members captured by storageOf;
+        // remaining dimensions follow this array's declared order.
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        for (std::int64_t i = at.range.left;; i += step) {
+            storagePlaces(withIndex(s, i), at.elementType, out, sl);
+            if (i == at.range.right) break;
+        }
         return;
     }
     out.push_back(storagePlace(s));

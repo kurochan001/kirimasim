@@ -2464,6 +2464,48 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
 
 // --- Assignments -------------------------------------------------------------
 
+Val Lowerer::lowerAggregateAssignment(const ast::AssignmentExpression& a,
+                                      const ast::Expression* delay) {
+    const slang::SourceLocation sl = a.sourceRange.start();
+    // A fixed layout emits no runtime target evaluation and can be reused
+    // as pending stores. Other targets use a private layout until every
+    // RHS value is captured (VALUE_SEMANTICS 3.1, 3.13; SIR_SPEC.md 7.3).
+    const auto fixedTarget = [&](const ast::Expression& e, auto&& self) -> bool {
+        checkStack(e.sourceRange.start());
+        if (e.kind == ast::ExpressionKind::NamedValue ||
+            e.kind == ast::ExpressionKind::HierarchicalValue)
+            return true;
+        if (isUnpackedMember(e)) return self(e.as<ast::MemberAccessExpression>().value(), self);
+        if (e.kind == ast::ExpressionKind::ElementSelect) {
+            const auto& select = e.as<ast::ElementSelectExpression>();
+            return select.value().type->getCanonicalType().kind ==
+                       ast::SymbolKind::FixedSizeUnpackedArrayType &&
+                   constInt(select.selector()).has_value() && self(select.value(), self);
+        }
+        return false;
+    };
+    std::optional<Storage> dst =
+        fixedTarget(a.left(), fixedTarget) ? storageOf(a.left(), sl) : std::nullopt;
+    Stores values;
+    assignAggregate(dst ? *dst : tempStorage(*a.left().type, sl), *a.left().type, a.right(), values,
+                    sl);
+    const std::optional<Val> ticks =
+        delay != nullptr ? std::optional{delayValue(*delay, sl)} : std::nullopt;
+    if (dst) {
+        flushStores(values, a.isNonBlocking(), sl, ticks);
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+    }
+    dst = storageOf(a.left(), sl);
+    if (!dst) unsupported(sl, "aggregate assignment target");
+    std::vector<Place> targets;
+    storagePlaces(*dst, *a.left().type, targets, sl);
+    if (targets.size() != values.size())
+        throw std::logic_error("aggregate capture and target shapes differ");
+    for (std::size_t i = 0; i < targets.size(); ++i)
+        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks);
+    return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+}
+
 Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     // a = #d b and a = @(e) b compute b first and assign it when the delay
     // or event comes, the target's indices then; a <= #d b decides both
@@ -2479,24 +2521,8 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     }
     const bool aggregate = isAggregate(*a.left().type);
     if (aggregate && a.isNonBlocking() && !a.isCompound() &&
-        t.kind == ast::TimingControlKind::Delay) {
-        // Capture every leaf before issuing any update (VALUE_SEMANTICS
-        // 3.13). Use the ordinary aggregate assignment's typed places,
-        // then the same delayed stores as a scalar NBA (10.4.2).
-        Stores stores;
-        if (structElement(*a.left().type) != nullptr) {
-            const std::optional<Storage> dst = storageOf(a.left(), sl);
-            if (!dst) unsupported(sl, "assignment to this unpacked structure");
-            assignAggregate(*dst, *a.left().type, a.right(), stores, sl);
-        } else {
-            const std::optional<ArrayTarget> target = arrayTarget(a.left());
-            if (!target) unsupported(sl, "assignment to this unpacked array");
-            assignArray(baseOf(*target), target->indices, a.right(), stores, sl);
-        }
-        const Val ticks = delayValue(t.as<ast::DelayControl>().expr, sl);
-        flushStores(stores, true, sl, ticks);
-        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
-    }
+        t.kind == ast::TimingControlKind::Delay)
+        return lowerAggregateAssignment(a, &t.as<ast::DelayControl>().expr);
     if (a.isCompound() || unpackedStruct(*a.left().type) != nullptr ||
         isAggregate(*a.left().type) || a.left().kind == ast::ExpressionKind::Streaming)
         unsupported(sl, "intra-assignment timing control on this assignment");
@@ -2569,25 +2595,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
             storePlace(all, st, a.isNonBlocking(), sl);
             return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
         }
-    }
-    if (structElement(*a.left().type) != nullptr) {
-        // An unpacked structure, or an array of them, is assigned member by
-        // member and element by element (7.2.2, 10.9.2, SIR_SPEC.md 4.2).
-        const std::optional<Storage> dst = storageOf(a.left(), sl);
-        if (!dst) unsupported(sl, "assignment to this unpacked structure");
-        Stores stores;
-        assignAggregate(*dst, *a.left().type, a.right(), stores, sl);
-        flushStores(stores, a.isNonBlocking(), sl);
-        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
-    }
-    if (a.left().type->getCanonicalType().isUnpackedArray()) {
-        // An unpacked array is assigned element by element (7.6, 10.9.1).
-        const std::optional<ArrayTarget> target = arrayTarget(a.left());
-        if (!target) unsupported(sl, "assignment to this unpacked array");
-        Stores stores;
-        assignArray(baseOf(*target), target->indices, a.right(), stores, sl);
-        flushStores(stores, a.isNonBlocking(), sl);
-        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+        return lowerAggregateAssignment(a, nullptr);
     }
     const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
     lowerStore(a.left(), v, a.isNonBlocking(), sl);
@@ -2668,7 +2676,7 @@ void Lowerer::assignArray(ArrayBase s, std::vector<std::int64_t> indices,
     const std::size_t level = indices.size();
     if (level == dims.size()) {
         // One element: its value, for its constant indices (SIR_SPEC.md 5.3).
-        const Val v = coerce(lowerExpr(*r), elemTypeOf(s), sl);
+        const Val v = snapshotValue(coerce(lowerExpr(*r), elemTypeOf(s), sl), sl);
         out.emplace_back(elementPlace(s, indices), v);
         return;
     }
@@ -2707,7 +2715,8 @@ void Lowerer::copyArray(ArrayBase to, std::vector<std::int64_t> toIndices, Array
     const std::vector<sir::ArrayDim> td = dimsOf(to);
     const std::vector<sir::ArrayDim> fd = dimsOf(from);
     if (toIndices.size() == td.size()) {
-        const Val v = coerce(loadPlace(elementPlace(from, fromIndices), sl), elemTypeOf(to), sl);
+        const Val v = snapshotValue(
+            coerce(loadPlace(elementPlace(from, fromIndices), sl), elemTypeOf(to), sl), sl);
         out.emplace_back(elementPlace(to, toIndices), v);
         return;
     }

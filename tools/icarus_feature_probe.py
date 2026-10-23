@@ -185,6 +185,19 @@ EXTENDED.extend([
 ])
 
 
+EXTENDED.extend([
+    ("aggregate_nba_rhs_order", "10.4.2; SIR_SPEC 7.3",
+     'module top; typedef struct {int value;} row_t; row_t a[2]; int idx,trace; function automatic int choose(); trace=trace*10+2;return idx++;endfunction function automatic row_t source_value();trace=trace*10+1;idx=1;return \'{7};endfunction initial begin a[0]=\'{0};a[1]=\'{0};a[choose()]<=#1 source_value();$display("%0d %0d",trace,idx);#2;$display("%0d %0d",a[0].value,a[1].value);end endmodule',
+     "12 2\n0 7\n", []),
+    ("aggregate_blocking_rhs_order", "10.4.1; VALUE_SEMANTICS 3.1",
+     'module top; typedef struct {int value;} row_t; row_t a[2]; int idx,trace; function automatic int choose();trace=trace*10+2;return idx++;endfunction function automatic row_t source_value();trace=trace*10+1;idx=1;return \'{7};endfunction initial begin a[0]=\'{0};a[1]=\'{0};a[choose()]=source_value();$display("%0d %0d",trace,idx);$display("%0d %0d",a[0].value,a[1].value);end endmodule',
+     "12 2\n0 7\n", []),
+    ("array_nba_runtime_prefix", "7.6, 10.4.2",
+     'module top; int a[2][2],b[2];int i=1;function automatic int choose();return i++;endfunction initial begin foreach(a[x,y])a[x][y]=0;b=\'{7,9};a[choose()]<=#1 b;#2;$display("%0d %0d %0d %0d",i,a[1][0],a[1][1],a[0][0]);end endmodule',
+     "2 7 9 0\n", []),
+])
+
+
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
     return re.sub(r"^kirimasim: info: .*\n?", "", text, flags=re.M)[:4000]
@@ -222,6 +235,12 @@ def main():
         if name == "real_net":
             record["clause"] = "Icarus extension: wire real"
             record["reference"] = "https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html"
+        if name in ("aggregate_nba_rhs_order", "aggregate_blocking_rhs_order"):
+            record["category"] = "project_policy"
+            basis = "SIR_SPEC 7.3" if name == "aggregate_nba_rhs_order" else "VALUE_SEMANTICS 3.1"
+            clause = "10.4.2" if name == "aggregate_nba_rhs_order" else "10.4.1"
+            record["policy"] = (basis + " evaluates RHS before target selectors; IEEE " +
+                                clause + " leaves their relative order unspecified")
         for engine in ("icarus", "kirimasim"):
             with tempfile.TemporaryDirectory(prefix="kirimasim-feature-") as tmp:
                 directory = Path(tmp)
