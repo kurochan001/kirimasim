@@ -33,6 +33,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Blocking intra-assignment `repeat(count) @(...)` controls retain the full
+  count once, preserve the earlier RHS and select the target after waiting.
+  Nonpositive/X/Z counts skip the wait. Seventy-five original source cases
+  cover typed counts, eight execution contexts, mixed/guarded events and
+  scalar/container snapshots. Event-controlled NBAs remain unsupported
+  (9.4.5; existing SCHEDULER_SPEC 8).
+
 - The shared strength resolver exposes complete signed intervals before
   four-state projection, for arbitrary input intervals and masked driver
   bits. Existing value APIs use the same calculation. Five new tests check

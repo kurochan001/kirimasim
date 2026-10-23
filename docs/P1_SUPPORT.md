@@ -10,7 +10,8 @@ The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
 This inventory describes tier 1 as of 2026-10-24, including dynamic arrays
-and queues, corrected integral `$fread` copyback, delayed NBA snapshots,
+and queues, repeated blocking event controls, corrected integral `$fread`
+copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API is documented separately as a kernel foundation; it does not enable
 MOS/switch execution. Check `kirimasim --help` for a build's options and
@@ -44,7 +45,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits; blocking and nonblocking assignments, including delayed streaming NBAs | No `with` clause, string target or nested streaming target; automatic targets cannot receive an NBA |
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
-| Assignment and delay | Blocking and nonblocking assignment, supported intra-assignment delays, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Blocking whole-fixed-array intra-assignment timing, event-controlled NBAs and delayed writes through refs/string characters are not implemented; automatic NBA targets remain illegal |
+| Assignment and delay | Blocking and nonblocking assignment, supported intra-assignment delays, blocking `repeat(count) @(...)`, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Blocking whole-fixed-array intra-assignment timing, event-controlled NBAs and delayed writes through refs/string characters are not implemented; automatic NBA targets remain illegal |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered` | Existing variable-write restrictions on event/wait conditions remain; no runtime-indexed named event, event-controlled `->>`, or `always_ff` trigger on a computed expression |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, disable of supported named blocks and tasks | Fork-local declarations, escaping automatic variables captured by fork branches and disable of a named fork block have unsupported forms |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
@@ -57,6 +58,16 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.
+
+### Repeated blocking event controls
+
+Blocking intra-assignment `repeat(count) @(...)` retains the RHS and count,
+then chooses its target after waiting. Nonpositive/X/Z counts skip all event
+waits, preserving count width and signedness. Named, mixed, watched and guarded
+events use the existing wait machinery. The [75 original source cases](notes/repeated-event-controls.md)
+include automatic targets, real/string values, packed concatenations and
+container snapshots. Event-controlled NBAs and whole fixed-array/structure
+blocking intra-assignment timing remain unsupported.
 
 ### Strength-resolution kernel
 

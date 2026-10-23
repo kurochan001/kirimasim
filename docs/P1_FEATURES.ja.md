@@ -15,6 +15,34 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## イベントを繰り返し待つブロッキング代入
+
+代入内の`repeat`は、右辺を保持してから回数を1回評価します。待機中に元の値や回数を
+変えても、保存した値と待つ回数は変わりません。0・負・X/Zの回数ではイベントを待たず、
+回数の幅と符号を保ちます。ブロッキング代入先は待機後に選びます。
+[契約と検証](notes/repeated-event-controls.ja.md)も参照してください。
+イベント制御付きの非ブロッキング代入と、固定配列・構造体全体のブロッキング代入内制御は
+引き続き未対応です。
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  bit clk = 0;
+  int q = 1, data = 7, count = 2;
+  always #1 clk = ~clk;
+  initial begin
+    q = repeat(count) @(posedge clk) data;
+    $display("%0d %0t", q, $time);
+    $finish(0);
+  end
+  initial begin #2; data = 9; count = 7; end
+endmodule
+```
+
+```text
+7 3
+```
+
 ## 動的配列とキュー
 
 構築、値のコピー、要素アクセス、キューのメソッドを、共通の型付きヒープで実行します。

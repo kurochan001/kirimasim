@@ -11,32 +11,30 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
+The current implementation includes [blocking repeated event controls](repeated-event-controls.md),
+[integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
 with the corrected copy-in/copyback rule and the
 [complete strength-interval kernel API](strength-range-foundation.md).
 The latter is a foundation: MOS/switch source execution and `%v` remain
 unsupported. The [supported inventory](../P1_SUPPORT.md) describes executable
 forms and their limits; P1 remains incomplete and C++ generation remains P2.
 
-Full pre-push local CI at revision `51cafd2` passes configure/build/test
-for dev/release/ASan/UBSan.
-Dev/ASan/UBSan each run 2,831 tests (2,829 pass, two known skips); release
-runs 2,832 (2,830 pass, the same skips). Runtime sources, tests and tools
-are unchanged from `30a6ebc`; this refresh edits documentation only.
+Full local CI at source `87ae3a2` passes configure/build/test for
+dev/release/ASan/UBSan. Dev/ASan/UBSan each run 2,907 tests (2,905 pass,
+two known skips); release runs 2,908 (2,906 pass, the same skips).
 Release flags, banned features, SPDX, suite files, global state, expectation
-protection for all eleven unpublished commits, README counts, clang-format
-and clang-tidy also pass. The combined diff against the publication base
-`aae29de` passes the expectation guard as well.
+protection for the source commit, README counts, clang-format and clang-tidy
+also pass. Unit/suite/tool/generator counts are 298/2,421/129/124. Existing
+suite bodies, expectations and performance counts remain unchanged.
 
-The comparison rerun with a binary reporting `51cafd204560` records **68
-original probes, 26 Icarus-passing gaps and six reference mismatches** in
-`build/doc-refresh-icarus-probes.json`. Both Icarus compiler and runtime
+The comparison rerun at source `87ae3a2` records **72 original probes,
+26 Icarus-passing gaps and seven reference mismatches** in
+`build/repeated-event-icarus-probes.json`. Both Icarus compiler and runtime
 report `14.0 (devel) (s20260301-411-gca6b8d376)`. Exact-13.0 coverage and
 complete functional parity remain unconfirmed. Counts in the dated entries
 below describe their historical probe cohorts, not the current inventory.
 
-Three detailed semantic amendments remain pending; this documentation
-refresh does not approve or implement them:
+Three detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
@@ -50,11 +48,31 @@ To repeat the finite comparison after building:
 
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/doc-refresh-icarus-probes.json --require-parity
+  --extended --output build/repeated-event-icarus-probes.json --require-parity
 ```
 
 The current result exits 1 because execution gaps remain. The JSON records
 versions, probe results, gaps and reference mismatches separately.
+
+## Blocking repeated event controls (2026-10-24)
+
+Source `87ae3a2` implements the existing approved SCHEDULER_SPEC 8/9.4.5
+rule with frame-held counts and ordinary SIR waits. It adds no opcode,
+dependency or scheduling choice. Seventy-five new source cases cover eight
+execution contexts, integral/real/string/container snapshots, typed counts,
+late targets, mixed events and `iff`. All pass. Forty-eight match Icarus;
+26 cannot compile there and one narrow-count case reaches its watchdog.
+Three deliberate compiled mutations fail actual new stdout expectations;
+anchor/judging self-check failures are not counted as semantic evidence.
+See the [execution and validation note](repeated-event-controls.md).
+
+Four new comparison probes expand the inventory from 68 to 72. On the same
+72, the old binary reporting `51cafd204560` has 29 Icarus-passing gaps and
+the new source has 26; the original 68 retain their 26 gaps. A one-bit X/Z
+count probe follows the no-wait rule of 9.4.5: kirimasim prints `7 9`, while
+Icarus prints `0 0`. It is the seventh reference mismatch, not a passing gap.
+No existing oracle is weakened. Event-controlled NBAs still need asynchronous
+registration and remain unsupported. Full P1 parity is not established.
 
 ## Complete strength-interval resolver foundation (2026-10-24)
 

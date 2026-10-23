@@ -15,6 +15,35 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Blocking assignment after repeated events
+
+An intra-assignment `repeat` captures the right-hand value and evaluates
+the count once. Changes to either during the wait do not change the saved
+value or number of events. Zero, negative or X/Z counts wait for no events.
+The count retains its width and signedness; the blocking target is selected
+after waiting. See the [contract and evidence](notes/repeated-event-controls.md).
+Event-controlled nonblocking assignments and whole fixed-array/structure
+blocking intra-assignment timing remain unsupported.
+
+```systemverilog
+`timescale 1ns/1ns
+module top;
+  bit clk = 0;
+  int q = 1, data = 7, count = 2;
+  always #1 clk = ~clk;
+  initial begin
+    q = repeat(count) @(posedge clk) data;
+    $display("%0d %0t", q, $time);
+    $finish(0);
+  end
+  initial begin #2; data = 9; count = 7; end
+endmodule
+```
+
+```text
+7 3
+```
+
 ## Dynamic arrays and queues
 
 The tested language subset now uses the shared typed heap for construction,
