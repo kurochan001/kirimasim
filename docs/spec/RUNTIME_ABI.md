@@ -158,7 +158,8 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 - The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
 - How temporaries are allocated when the frame layout is shared between tiers.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).
-- The details of GC, fibers and DPI-C tasks (P3).
+- Class/mailbox/weak-reference GC extensions, fibers and DPI-C tasks;
+  the dynamic-container heap and collection contract is specified in section 6.
 - (Approved 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P3; 6).
 - (Approved 2026-10-19.) `$finish` called inside a DPI-C export is marked and returned to C, and the run starts to end at the end of the SystemVerilog statement; `svLogicVecVal` arguments and the storage of open arrays are valid only during the call (P3).
 - (Approved 2026-10-19.) Only static islands with no side effects run in parallel; processes with `$display`, DPI-C, random numbers or `$finish` run on the main thread in the default order, so that results do not change with the number of threads (P4).

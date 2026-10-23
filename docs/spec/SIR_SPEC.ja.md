@@ -98,7 +98,7 @@ SIR（slot-indexed IR）は、slang のエラボレーションの結果から�
 | 2 値 | 2 値の型の値 | 64 ビットの語の列（幅 64 以下は 1 語） |
 | 4 値 | 4 値の型の値 | 64 ビットごとの `(a, b)` の組の列。a と b は隣り合わせに置く（VALUE_SEMANTICS.md の 1.3 節） |
 | 実数 | `real`、`realtime`、`shortreal` | `double`（`shortreal` は `float`） |
-| ハンドル | クラス、文字列、動的配列、キュー、連想配列、event、chandle、virtual interface | 実行カーネルのオブジェクトへのポインタ。null は 0。既定値は 3.2.1 |
+| ハンドル | クラス、文字列、動的配列、キュー、連想配列、event、chandle、virtual interface | 実行カーネルのハンドル。動的コンテナはContext内の世代付きトークン（RUNTIME_ABI 6）。null は 0。既定値は 3.2.1 |
 
 - 領域は宣言の型だけで決める（M3b の改訂）。解析で X が来ないと分かったスロットを 2 値の形で持つのは、第 2 層が自分の配置として行う（P2）。
 

@@ -194,7 +194,8 @@ fail the program-specific tests; the restored implementation passes.
 
 The next [dynamic-container amendment](dynamic-containers-proposal.md)
 fills the missing heap/instruction contract, including stable outdated
-reference cells and tracing roots. It is proposed, not approved or implemented.
+reference cells and tracing roots. It was later approved on 2026-10-23;
+the heap foundation and remaining integration are recorded below.
 
 ## Runtime targets of delayed NBAs
 
@@ -394,3 +395,13 @@ not connected to these heap operations yet; SystemVerilog dynamic-array/queue
 support and automatic safe-point root publication remain unfinished. The
 44-probe inventory and its 23 Icarus-passing gaps therefore remain unchanged.
 This foundation does not complete the approved amendment or the P1 target.
+
+
+The final source validation at `3d7b1a4` passes `tools/local_ci.py`:
+dev/release/ASan/UBSan configure, build and tests; release flags; banned
+features; SPDX; suite files; global state; all 13 then-unpublished commit
+expectation checks; README counts; clang-format and clang-tidy. Dev has
+2,110 tests: 2,108 pass and the same two known skips remain. The unit assertion
+review notices reflect indenting the unchanged matrix and replacing its
+word comparator with an equivalent fatal assertion; comparisons of length,
+a and b remain present. No suite body or existing expected output changed.

@@ -100,7 +100,7 @@ The SIR of one design consists of the following.
 | 2-state | Values of 2-state types | A sequence of 64-bit words (1 word for widths up to 64) |
 | 4-state | Values of 4-state types | A sequence of `(a, b)` pairs per 64 bits, a and b placed next to each other (VALUE_SEMANTICS.md 1.3) |
 | Real | `real`, `realtime`, `shortreal` | `double` (`float` for `shortreal`) |
-| Handle | Classes, strings, dynamic arrays, queues, associative arrays, events, chandles, virtual interfaces | A pointer to an object of the execution kernel. null is 0. Defaults in 3.2.1 |
+| Handle | Classes, strings, dynamic arrays, queues, associative arrays, events, chandles, virtual interfaces | An execution-kernel handle; dynamic containers use Context-local generation-checked tokens (RUNTIME_ABI 6). null is 0. Defaults in 3.2.1 |
 
 - The area is decided by the declared type alone (amendment of M3b). Holding slots that analysis showed never receive X in 2-state form is something tier 2 does as its own layout (P2).
 
