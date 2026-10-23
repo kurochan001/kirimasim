@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Context-owned typed container heap foundation: stable element references,
+  deep copies, bounded queue operations, allocation-failure rollback and
+  exact tracing with generation-checked table reuse (7.5, 7.10, 13.5.2;
+  RUNTIME_ABI 6). SystemVerilog lowering and tier root publication remain
+  unfinished; this entry does not claim dynamic-array/queue language support.
+
 - Named events can share event controls with signal subscriptions and
   expression watches, each with its own `iff`. False guards retain their
   item and the first satisfied item cancels the whole wait. C ABI 0.3

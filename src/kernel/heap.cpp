@@ -1,0 +1,521 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#include "kirimasim/kernel/heap.h"
+
+#include <algorithm>
+#include <limits>
+#include <new>
+#include <stdexcept>
+#include <utility>
+
+namespace kirimasim::kernel {
+namespace {
+
+struct HeapFault {
+    HeapError error;
+};
+HeapStatus failure(HeapError error) { return {error, HeapWarning::None}; }
+
+template <class T, class F> HeapResult<T> protectValue(F&& f) noexcept {
+    try {
+        return {f(), {}};
+    } catch (const HeapFault& e) {
+        return {{}, failure(e.error)};
+    } catch (const std::bad_alloc&) {
+        return {{}, failure(HeapError::ResourceLimit)};
+    } catch (const std::length_error&) {
+        return {{}, failure(HeapError::ResourceLimit)};
+    }
+}
+template <class F> HeapStatus protect(F&& f) noexcept {
+    try {
+        return f();
+    } catch (const HeapFault& e) {
+        return failure(e.error);
+    } catch (const std::bad_alloc&) {
+        return failure(HeapError::ResourceLimit);
+    } catch (const std::length_error&) {
+        return failure(HeapError::ResourceLimit);
+    }
+}
+
+std::optional<std::size_t> element(std::optional<std::int64_t> index, std::size_t count) {
+    if (!index || *index < 0 || static_cast<std::uint64_t>(*index) >= count) return {};
+    return static_cast<std::size_t>(*index);
+}
+
+}  // namespace
+
+template <class T> T* Heap::Pool<T>::get(std::uint64_t token) noexcept {
+    const std::uint32_t low = static_cast<std::uint32_t>(token);
+    if (low == 0 || low > entries.size()) return nullptr;
+    Entry<T>& e = entries[low - 1];
+    if (e.generation != token >> 32 || !e.value) return nullptr;
+    return &*e.value;
+}
+template <class T> const T* Heap::Pool<T>::get(std::uint64_t token) const noexcept {
+    const std::uint32_t low = static_cast<std::uint32_t>(token);
+    if (low == 0 || low > entries.size()) return nullptr;
+    const Entry<T>& e = entries[low - 1];
+    if (e.generation != token >> 32 || !e.value) return nullptr;
+    return &*e.value;
+}
+template <class T>
+std::uint64_t Heap::Pool<T>::add(T value, std::pmr::vector<std::uint32_t>& allocated) {
+    std::uint32_t index = 0;
+    if (free.empty()) {
+        if (entries.size() >= std::numeric_limits<std::uint32_t>::max()) throw std::bad_alloc{};
+        // Reserve the eventual free-list entry BEFORE changing the pool, so
+        // rollback and sweeping never need to allocate memory.
+        if (free.capacity() < entries.size() + 1)
+            free.reserve(std::max(entries.size() + 1, free.capacity() * 2));
+        index = static_cast<std::uint32_t>(entries.size());
+        allocated.push_back(index);
+        entries.emplace_back();
+    } else {
+        index = free.back();
+        allocated.push_back(index);
+        free.pop_back();
+    }
+    Entry<T>& e = entries[index];
+    e.value.emplace(std::move(value));
+    return (std::uint64_t{e.generation} << 32) | (std::uint64_t{index} + 1);
+}
+template <class T> void Heap::Pool<T>::release(std::uint32_t index) noexcept {
+    if (index >= entries.size() || !entries[index].value) return;
+    Entry<T>& e = entries[index];
+    e.value.reset();
+    e.marked = false;
+    // Retire an entry rather than ever wrapping its generation.
+    if (e.generation == std::numeric_limits<std::uint32_t>::max()) return;
+    ++e.generation;
+    free.push_back(index);
+}
+
+Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(h.memory_) {}
+Heap::Transaction::~Transaction() {
+    if (committed) return;
+    for (const std::uint32_t i : cells)
+        heap.cells_.release(i);
+    for (const std::uint32_t i : containers)
+        heap.containers_.release(i);
+}
+
+Heap::Heap(std::pmr::memory_resource* memory)
+    : memory_(memory), layouts_(memory), types_(memory), containers_(memory), cells_(memory) {}
+
+const Heap::Layout* Heap::layoutOf(HeapLayoutId id) const noexcept {
+    return id.index() < layouts_.size() ? &layouts_[id.index()] : nullptr;
+}
+const HeapType* Heap::typeOf(HeapTypeId id) const noexcept {
+    return id.index() < types_.size() ? &types_[id.index()] : nullptr;
+}
+std::size_t Heap::words(HeapLayoutId layout) const noexcept {
+    const Layout* l = layoutOf(layout);
+    return l ? l->words.size() : 0;
+}
+HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexcept {
+    return protectValue<HeapLayoutId>([&] {
+        if (words.empty()) throw HeapFault{HeapError::InvalidType};
+        for (const HeapWord& w : words) {
+            if (w.mask == 0 || ((w.initial.a | w.initial.b) & ~w.mask) != 0 ||
+                (!w.fourState && w.initial.b != 0))
+                throw HeapFault{HeapError::InvalidType};
+            if (w.nested != kNone && (!typeOf(w.nested) || w.mask != ~std::uint64_t{0} ||
+                                      w.fourState || w.initial.a != 0 || w.initial.b != 0))
+                throw HeapFault{HeapError::InvalidType};
+        }
+        if (layouts_.size() >= kNone) throw std::bad_alloc{};
+        Layout l{std::pmr::vector<HeapWord>(words.begin(), words.end(), memory_)};
+        const HeapLayoutId id{static_cast<std::uint32_t>(layouts_.size())};
+        layouts_.push_back(std::move(l));
+        return id;
+    });
+}
+HeapResult<HeapTypeId> Heap::addType(HeapType type) noexcept {
+    return protectValue<HeapTypeId>([&] {
+        if (!layoutOf(type.element) ||
+            (type.kind != ContainerKind::DynamicArray && type.kind != ContainerKind::Queue) ||
+            (type.kind == ContainerKind::DynamicArray && type.maxElements != 0))
+            throw HeapFault{HeapError::InvalidType};
+        if (types_.size() >= kNone) throw std::bad_alloc{};
+        const HeapTypeId id{static_cast<std::uint32_t>(types_.size())};
+        types_.push_back(type);
+        return id;
+    });
+}
+HeapError Heap::check(HeapTypeId type, ContainerToken value) const noexcept {
+    if (!typeOf(type)) return HeapError::InvalidType;
+    if (value.bits == 0) return HeapError::None;
+    const Container* c = containers_.get(value.bits);
+    return c && c->type == type ? HeapError::None : HeapError::InvalidHandle;
+}
+HeapError Heap::checkData(HeapLayoutId layout, std::span<const W4> data) const noexcept {
+    const Layout* l = layoutOf(layout);
+    if (!l || data.size() != l->words.size()) return HeapError::InvalidType;
+    for (std::size_t i = 0; i < data.size(); ++i)
+        if (l->words[i].nested != kNone) {
+            if (data[i].b != 0) return HeapError::InvalidHandle;
+            const HeapError e = check(l->words[i].nested, ContainerToken{data[i].a});
+            if (e != HeapError::None) return e;
+        }
+    return HeapError::None;
+}
+void Heap::defaults(HeapLayoutId layout, std::span<W4> out) const noexcept {
+    const auto& ws = layouts_[layout.index()].words;
+    for (std::size_t i = 0; i < ws.size(); ++i)
+        out[i] = ws[i].initial;
+}
+
+// Iterative deep copying also handles very deep nested container types
+// without consuming the native call stack. Parents are referred to by token,
+// never by a pointer that allocation could invalidate.
+ContainerToken Heap::clone(Transaction& tx, HeapTypeId type, ContainerToken source,
+                           std::uint64_t count) {
+    struct Job {
+        HeapTypeId type;
+        ContainerToken source;
+        std::uint64_t count;
+        CellToken parent;
+        std::size_t word;
+    };
+    std::pmr::vector<Job> jobs(memory_);
+    jobs.push_back({type, source, count, {}, 0});
+    ContainerToken result;
+    while (!jobs.empty()) {
+        const Job job = jobs.back();
+        jobs.pop_back();
+        const HeapType& t = types_[job.type.index()];
+        const Layout& l = layouts_[t.element.index()];
+        // Include cell storage and value words, rather than only the token
+        // vector, in the overflow check. All later size_t conversions fit.
+        if (l.words.size() >
+            (std::numeric_limits<std::size_t>::max() - sizeof(Entry<Cell>) - sizeof(CellToken)) /
+                sizeof(W4))
+            throw std::bad_alloc{};
+        const std::size_t bytes =
+            sizeof(Entry<Cell>) + sizeof(CellToken) + l.words.size() * sizeof(W4);
+        if (job.count > std::numeric_limits<std::size_t>::max() / bytes) throw std::bad_alloc{};
+        ContainerToken made;
+        if (job.count != 0) {
+            Container c{job.type, std::pmr::vector<CellToken>(memory_)};
+            c.cells.reserve(static_cast<std::size_t>(job.count));
+            made.bits = containers_.add(std::move(c), tx.containers);
+            const Container* src = containers_.get(job.source.bits);
+            const std::size_t copied =
+                src ? std::min(src->cells.size(), static_cast<std::size_t>(job.count)) : 0;
+            for (std::size_t i = 0; i < job.count; ++i) {
+                std::pmr::vector<W4> data(l.words.size(), memory_);
+                if (i < copied) {
+                    // Reacquire after every allocation into either pool.
+                    const CellToken old = containers_.get(job.source.bits)->cells[i];
+                    const auto& oldWords = cells_.get(old.bits)->words;
+                    std::copy(oldWords.begin(), oldWords.end(), data.begin());
+                } else {
+                    defaults(t.element, data);
+                }
+                const CellToken cell{cells_.add(Cell{t.element, std::move(data)}, tx.cells)};
+                containers_.get(made.bits)->cells.push_back(cell);
+                for (std::size_t w = 0; w < l.words.size(); ++w) {
+                    const HeapTypeId child = l.words[w].nested;
+                    if (child == kNone) continue;
+                    const ContainerToken old{cells_.get(cell.bits)->words[w].a};
+                    if (old.bits != 0) {
+                        const Container* oldContainer = containers_.get(old.bits);
+                        jobs.push_back({child, old, oldContainer->cells.size(), cell, w});
+                    }
+                }
+            }
+        }
+        if (job.parent.bits != 0)
+            cells_.get(job.parent.bits)->words[job.word] = {made.bits, 0};
+        else
+            result = made;
+    }
+    return result;
+}
+std::pmr::vector<W4> Heap::cloneWords(Transaction& tx, HeapLayoutId layout,
+                                      std::span<const W4> data) {
+    if (const HeapError e = checkData(layout, data); e != HeapError::None) throw HeapFault{e};
+    const auto& ws = layouts_[layout.index()].words;
+    std::pmr::vector<W4> out(data.begin(), data.end(), memory_);
+    for (std::size_t i = 0; i < ws.size(); ++i) {
+        const HeapWord& w = ws[i];
+        if (w.nested != kNone && out[i].a != 0) {
+            const ContainerToken old{out[i].a};
+            const std::size_t count = containers_.get(old.bits)->cells.size();
+            out[i] = {clone(tx, w.nested, old, count).bits, 0};
+        } else if (w.fourState) {
+            out[i].a &= w.mask;
+            out[i].b &= w.mask;
+        } else {
+            out[i] = {out[i].a & ~out[i].b & w.mask, 0};
+        }
+    }
+    return out;
+}
+CellToken Heap::cloneCell(Transaction& tx, HeapLayoutId layout, std::span<const W4> data) {
+    auto words = cloneWords(tx, layout, data);
+    return {cells_.add(Cell{layout, std::move(words)}, tx.cells)};
+}
+HeapResult<ContainerToken> Heap::construct(HeapTypeId type, std::int64_t size,
+                                           ContainerToken initializer) noexcept {
+    return protectValue<ContainerToken>([&] {
+        const HeapType* t = typeOf(type);
+        if (!t || t->kind != ContainerKind::DynamicArray) throw HeapFault{HeapError::InvalidType};
+        if (size < 0) throw HeapFault{HeapError::InvalidSize};
+        if (initializer.bits != 0) {
+            const Container* src = containers_.get(initializer.bits);
+            if (!src || types_[src->type.index()].element != t->element)
+                throw HeapFault{HeapError::InvalidHandle};
+        }
+        Transaction tx(*this);
+        const ContainerToken out = clone(tx, type, initializer, static_cast<std::uint64_t>(size));
+        tx.committed = true;
+        return out;
+    });
+}
+HeapResult<ContainerToken> Heap::copy(HeapTypeId destination, ContainerToken source) noexcept {
+    std::uint64_t count = 0;
+    const HeapType* dst = typeOf(destination);
+    if (!dst) return {{}, failure(HeapError::InvalidType)};
+    if (source.bits != 0) {
+        const Container* src = containers_.get(source.bits);
+        if (!src || types_[src->type.index()].element != dst->element)
+            return {{}, failure(HeapError::InvalidHandle)};
+        count = src->cells.size();
+    }
+    const bool truncated = dst->maxElements != 0 && count > dst->maxElements;
+    if (truncated) count = dst->maxElements;
+    auto out = protectValue<ContainerToken>([&] {
+        Transaction tx(*this);
+        const ContainerToken result = clone(tx, destination, source, count);
+        tx.committed = true;
+        return result;
+    });
+    if (out && truncated) out.status.warning = HeapWarning::BoundExceeded;
+    return out;
+}
+HeapResult<ContainerToken> Heap::fromValues(HeapTypeId type, std::span<const W4> values) noexcept {
+    bool truncated = false;
+    auto out = protectValue<ContainerToken>([&] {
+        const HeapType* t = typeOf(type);
+        if (!t) throw HeapFault{HeapError::InvalidType};
+        const std::size_t n = words(t->element);
+        if (values.size() % n != 0) throw HeapFault{HeapError::InvalidType};
+        const std::size_t count = values.size() / n;
+        for (std::size_t i = 0; i < count; ++i)
+            if (const HeapError e = checkData(t->element, values.subspan(i * n, n));
+                e != HeapError::None)
+                throw HeapFault{e};
+        const std::size_t keep = t->maxElements != 0 && count > t->maxElements
+                                     ? static_cast<std::size_t>(t->maxElements)
+                                     : count;
+        truncated = keep != count;
+        Transaction tx(*this);
+        ContainerToken result;
+        if (keep != 0) {
+            Container c{type, std::pmr::vector<CellToken>(memory_)};
+            c.cells.reserve(keep);
+            result.bits = containers_.add(std::move(c), tx.containers);
+            for (std::size_t i = 0; i < keep; ++i) {
+                const CellToken cell = cloneCell(tx, t->element, values.subspan(i * n, n));
+                containers_.get(result.bits)->cells.push_back(cell);
+            }
+        }
+        tx.committed = true;
+        return result;
+    });
+    if (out && truncated) out.status.warning = HeapWarning::BoundExceeded;
+    return out;
+}
+HeapResult<std::uint64_t> Heap::size(HeapTypeId type, ContainerToken value) const noexcept {
+    if (const HeapError e = check(type, value); e != HeapError::None) return {0, failure(e)};
+    const Container* c = containers_.get(value.bits);
+    return {c ? c->cells.size() : 0, {}};
+}
+HeapResult<CellToken> Heap::cell(HeapTypeId type, ContainerToken value,
+                                 std::optional<std::int64_t> index) const noexcept {
+    if (const HeapError e = check(type, value); e != HeapError::None) return {{}, failure(e)};
+    const Container* c = containers_.get(value.bits);
+    if (!c) return {};
+    const auto at = element(index, c->cells.size());
+    return {at ? c->cells[*at] : CellToken{}, {}};
+}
+HeapStatus Heap::readCell(HeapLayoutId layout, CellToken cell, std::span<W4> out) const noexcept {
+    if (!layoutOf(layout) || words(layout) != out.size()) return failure(HeapError::InvalidType);
+    if (cell.bits == 0) {
+        defaults(layout, out);
+        return {};
+    }
+    const Cell* c = cells_.get(cell.bits);
+    if (!c || c->layout != layout) return failure(HeapError::InvalidHandle);
+    std::copy(c->words.begin(), c->words.end(), out.begin());
+    return {};
+}
+HeapStatus Heap::read(HeapTypeId type, ContainerToken value, std::optional<std::int64_t> index,
+                      std::span<W4> out) const noexcept {
+    const auto found = cell(type, value, index);
+    if (!found) return found.status;
+    return readCell(types_[type.index()].element, found.value, out);
+}
+HeapStatus Heap::writeCell(HeapLayoutId layout, CellToken cell, std::span<const W4> data) noexcept {
+    return protect([&] {
+        if (const HeapError e = checkData(layout, data); e != HeapError::None) return failure(e);
+        if (cell.bits == 0) return HeapStatus{};
+        const Cell* c = cells_.get(cell.bits);
+        if (!c || c->layout != layout) return failure(HeapError::InvalidHandle);
+        Transaction tx(*this);
+        auto copied = cloneWords(tx, layout, data);
+        cells_.get(cell.bits)->words.swap(copied);
+        tx.committed = true;
+        return HeapStatus{};
+    });
+}
+HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
+                       std::span<const W4> data) noexcept {
+    if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
+    const HeapType& t = types_[type.index()];
+    if (const HeapError e = checkData(t.element, data); e != HeapError::None) return failure(e);
+    const auto count = size(type, value).value;
+    if (t.kind == ContainerKind::Queue && index && *index >= 0 &&
+        static_cast<std::uint64_t>(*index) == count)
+        return insert(type, value, index, data);
+    const auto target = cell(type, value, index);
+    return writeCell(t.element, target.value, data);
+}
+HeapStatus Heap::insert(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,
+                        std::span<const W4> data) noexcept {
+    return protect([&] {
+        if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
+        const HeapType& t = types_[type.index()];
+        if (t.kind != ContainerKind::Queue) return failure(HeapError::InvalidType);
+        if (const HeapError e = checkData(t.element, data); e != HeapError::None) return failure(e);
+        Container* c = containers_.get(value.bits);
+        const std::size_t count = c ? c->cells.size() : 0;
+        if (!index || *index < 0 || static_cast<std::uint64_t>(*index) > count)
+            return HeapStatus{HeapError::None, HeapWarning::InvalidIndex};
+        const std::size_t at = static_cast<std::size_t>(*index);
+        if (t.maxElements != 0 && at >= t.maxElements)
+            return HeapStatus{HeapError::None, HeapWarning::BoundExceeded};
+        Transaction tx(*this);
+        ContainerToken destination = value;
+        if (!c) {
+            Container empty{type, std::pmr::vector<CellToken>(memory_)};
+            empty.cells.reserve(1);
+            destination.bits = containers_.add(std::move(empty), tx.containers);
+        } else {
+            c->cells.reserve(count + 1);
+        }
+        const CellToken added = cloneCell(tx, t.element, data);
+        auto& elements = containers_.get(destination.bits)->cells;
+        elements.insert(elements.begin() + static_cast<std::ptrdiff_t>(at), added);
+        const bool truncated = t.maxElements != 0 && elements.size() > t.maxElements;
+        if (truncated) elements.resize(static_cast<std::size_t>(t.maxElements));
+        value = destination;
+        tx.committed = true;
+        return HeapStatus{HeapError::None,
+                          truncated ? HeapWarning::BoundExceeded : HeapWarning::None};
+    });
+}
+HeapStatus Heap::push(HeapTypeId type, ContainerToken& value, bool front,
+                      std::span<const W4> data) noexcept {
+    const auto count = size(type, value);
+    if (!count) return count.status;
+    if (count.value > std::numeric_limits<std::int64_t>::max())
+        return failure(HeapError::ResourceLimit);
+    return insert(type, value, front ? 0 : static_cast<std::int64_t>(count.value), data);
+}
+HeapStatus Heap::pop(HeapTypeId type, ContainerToken& value, bool front,
+                     std::span<W4> out) noexcept {
+    return protect([&] {
+        if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
+        const HeapType& t = types_[type.index()];
+        if (t.kind != ContainerKind::Queue || out.size() != words(t.element))
+            return failure(HeapError::InvalidType);
+        const Container* c = containers_.get(value.bits);
+        if (!c || c->cells.empty()) {
+            defaults(t.element, out);
+            return HeapStatus{HeapError::None, HeapWarning::EmptyPop};
+        }
+        const CellToken old = front ? c->cells.front() : c->cells.back();
+        Transaction tx(*this);
+        const auto copied = cloneWords(tx, t.element, cells_.get(old.bits)->words);
+        auto& elements = containers_.get(value.bits)->cells;
+        if (front)
+            elements.erase(elements.begin());
+        else
+            elements.pop_back();
+        std::copy(copied.begin(), copied.end(), out.begin());
+        tx.committed = true;
+        return HeapStatus{};
+    });
+}
+HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,
+                       std::optional<std::int64_t> index) noexcept {
+    if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
+    if (types_[type.index()].kind != ContainerKind::Queue) return failure(HeapError::InvalidType);
+    Container* c = containers_.get(value.bits);
+    const auto at = element(index, c ? c->cells.size() : 0);
+    if (!at) return {HeapError::None, HeapWarning::InvalidIndex};
+    c->cells.erase(c->cells.begin() + static_cast<std::ptrdiff_t>(*at));
+    return {};
+}
+HeapStatus Heap::clear(HeapTypeId type, ContainerToken& value) noexcept {
+    if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
+    value = {};
+    return {};
+}
+HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
+    return protect([&] {
+        for (auto& e : containers_.entries)
+            e.marked = false;
+        for (auto& e : cells_.entries)
+            e.marked = false;
+        std::pmr::vector<HeapRoot> work(roots.begin(), roots.end(), memory_);
+        while (!work.empty()) {
+            const HeapRoot root = work.back();
+            work.pop_back();
+            if (root.bits == 0) continue;
+            if (root.kind == HeapRoot::Kind::Container) {
+                const Container* c = containers_.get(root.bits);
+                if (!c) return failure(HeapError::InvalidHandle);
+                auto& entry = containers_.entries[static_cast<std::uint32_t>(root.bits) - 1];
+                if (entry.marked) continue;
+                entry.marked = true;
+                for (const CellToken cell : c->cells)
+                    work.push_back(HeapRoot::cell(cell));
+            } else if (root.kind == HeapRoot::Kind::Cell) {
+                const Cell* c = cells_.get(root.bits);
+                if (!c) return failure(HeapError::InvalidHandle);
+                auto& entry = cells_.entries[static_cast<std::uint32_t>(root.bits) - 1];
+                if (entry.marked) continue;
+                entry.marked = true;
+                const auto& ws = layouts_[c->layout.index()].words;
+                for (std::size_t i = 0; i < ws.size(); ++i)
+                    if (ws[i].nested != kNone)
+                        work.push_back(HeapRoot::container(ContainerToken{c->words[i].a}));
+            } else {
+                return failure(HeapError::InvalidType);
+            }
+        }
+        for (std::size_t i = 0; i < containers_.entries.size(); ++i)
+            if (containers_.entries[i].value && !containers_.entries[i].marked)
+                containers_.release(static_cast<std::uint32_t>(i));
+        for (std::size_t i = 0; i < cells_.entries.size(); ++i)
+            if (cells_.entries[i].value && !cells_.entries[i].marked)
+                cells_.release(static_cast<std::uint32_t>(i));
+        return HeapStatus{};
+    });
+}
+HeapStats Heap::stats() const noexcept {
+    HeapStats out{0, 0, containers_.entries.size(), cells_.entries.size()};
+    for (const auto& e : containers_.entries)
+        if (e.value) ++out.containers;
+    for (const auto& e : cells_.entries)
+        if (e.value) ++out.cells;
+    return out;
+}
+
+}  // namespace kirimasim::kernel

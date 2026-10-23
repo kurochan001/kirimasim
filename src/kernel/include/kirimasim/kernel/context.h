@@ -16,6 +16,7 @@
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
+#include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
@@ -45,6 +46,8 @@ public:
     Files& files() { return files_; }
     Dump& dump() { return dump_; }
     Store& store() { return store_; }
+    Heap& heap() { return heap_; }
+    [[nodiscard]] const Heap& heap() const { return heap_; }
     Strings& strings() { return strings_; }
     [[nodiscard]] const Strings& strings() const { return strings_; }
     [[nodiscard]] const Store& store() const { return store_; }
@@ -62,6 +65,7 @@ private:
     Files files_;  ///< After output_, which it writes to.
     Store store_;
     Strings strings_;
+    Heap heap_;
     Dump dump_;  ///< After output_ and store_, which it reads and writes.
     Scheduler scheduler_;
     std::int32_t randomSeed_ = 0;

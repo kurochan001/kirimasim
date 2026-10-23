@@ -324,9 +324,9 @@ still 23 Icarus-passing gaps, seven in the original seed. Compiler/runtime
 versions remain `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 and
 complete parity are unconfirmed.
 
-The next dynamic-array/queue mechanism still requires approval of the
-[concrete amendment](dynamic-containers-proposal.md). It is not approved
-or implemented. These additions do not close the full P1 objective.
+The [dynamic-container amendment](dynamic-containers-proposal.md) was
+approved on 2026-10-23 after this round. Its implementation status is
+recorded below. These additions do not close the full P1 objective.
 
 ## Mutation validation of all five rounds
 
@@ -342,5 +342,46 @@ The publication check is `tools/local_ci.py`: dev/release/ASan/UBSan builds
 and tests, release flags, banned features, SPDX, suite files, global state,
 each unpublished commit's expectation boundary, README counts and both
 Clang tools. Its summary accompanies publication. Existing expectation
-migrations remain separate from implementation commits. The dynamic-
-container amendment remains unapproved; the P1 objective is not complete.
+migrations remain separate from implementation commits. The dynamic-container amendment was subsequently approved; the P1
+objective is not complete.
+
+## Approved dynamic-container heap foundation
+
+The user approved the complete dynamic-array/queue amendment on 2026-10-23,
+including its project choices. SIR_SPEC 4.2.1 and RUNTIME_ABI 6 record the
+contract in both languages before implementation.
+
+`Context::heap()` now owns a typed heap with generation-checked container
+and element-cell tokens. `Heap::construct`, `copy`, `fromValues` and nested
+writes make independent values; queue insertion, deletion and movement keep
+the identities of retained cells. Old refs can read and write detached
+cells. Destination queue bounds apply to copying and insertion, and the
+kernel returns warning categories for the execution tier to report.
+Flattened element layouts preserve integral words, real/string/opaque-handle
+words and typed nested-container edges, without slang or SIR dependencies.
+
+Allocation uses a selectable standard memory resource. Transactions roll
+back every newly allocated container and cell on failure; failed mutations
+leave the variable, old refs and output buffers unchanged. Public operations
+return errors and do not leak allocation exceptions. Iterative copying and
+tracing handle deep nesting without recursive native calls. Exact collection
+follows explicit container/cell roots, retains reachable detached cells and
+reuses reclaimed entries with new generations. Marking failure performs no
+sweep. The caller must supply all roots at an allowed safe point.
+
+Fourteen new kernel tests include 56 integral width/domain/bound combinations
+and 450 operations each (25,200 total), compared after every operation and
+collection with the independent list-based `valsem::ContainerValue` model.
+Other tests cover 2,500 nested levels, real/shortreal/string/aggregate layouts,
+same-size resize, self-copy, queue truncation, every allocation point of
+construction/copy/mutation/marking, 4,096 table-reuse cycles and two isolated
+Contexts. Six deliberate mutations (wrong cell, shared nested value, leaked
+rollback cells, missed marking edge, ignored generation and wrong insertion
+position) were all caught by actual kernel tests, excluding helper checks.
+The restored baseline passes.
+
+This is the shared kernel foundation. The front end and execution tiers are
+not connected to these heap operations yet; SystemVerilog dynamic-array/queue
+support and automatic safe-point root publication remain unfinished. The
+44-probe inventory and its 23 Icarus-passing gaps therefore remain unchanged.
+This foundation does not complete the approved amendment or the P1 target.
