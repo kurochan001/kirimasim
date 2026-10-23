@@ -129,6 +129,22 @@ unsigned indices and rejects unknown ranges through the ordinary branch rules.
 Unimplemented language forms and implicit heap sensitivity are diagnosed;
 full container and Icarus coverage remain work.
 
+## Strength intervals before value projection
+
+The shared kernel exposes the complete strength hull defined by
+VALUE_SEMANTICS 5.2–5.4. `StrengthRange` retains both signed endpoints;
+`resolveStrengths` accepts arbitrary intervals and `resolveStrengthBit`
+handles driver words with side masks. `strengthValue` is the explicit
+four-state projection. Existing value resolution delegates to that same
+calculation, so retaining metadata does not fork the value rules.
+
+The fast point-state implementation is allocation-free and C++20. The
+independent `valsem::resolveSignals` enumerates choices directly; all
+interval pairs, single-driver masks, permutations and wide-word bits are
+cross-checked. See the [API and verification scope](notes/strength-range-foundation.md).
+The VM still consumes projected values. Resolved net-interval storage/transport,
+strength-only propagation and MOS/switch/format integration remain work.
+
 ## Libraries
 
 Dependencies run only in the directions listed here.

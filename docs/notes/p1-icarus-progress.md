@@ -9,6 +9,65 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Complete strength-interval resolver foundation (2026-10-24)
+
+Source `30a6ebc` exposes the complete interval result already specified by
+VALUE_SEMANTICS 5.2–5.4. It adds no resolution policy or semantic amendment.
+The previous kernel computed a hull but returned only 0/1/X/Z. Ranges such
+as `[3,6]` and `[6,6]` both project to 1, so a value-only interface loses
+information needed by MOS/switch propagation. The
+[API and verification note](strength-range-foundation.md) describes the scope.
+
+The allocation-free C++20 kernel now provides `StrengthRange`,
+`resolveStrengths`, `resolveStrengthBit` and explicit `strengthValue`
+projection. Arbitrary intervals, including ambiguous strengths entirely
+on one side of zero, share the same point-state hull and wired-tie rule
+as driver-bit resolution. Existing `resolveBit`/`resolve4` value interfaces
+delegate to that calculation. The independent `valsem::resolveSignals`
+enumerates point choices rather than using the kernel algorithm.
+
+Five new unit tests cover all 120 valid intervals, 158,400 interval-pair
+comparisons under eleven net kinds, empty/single intervals, 11,264 complete
+driver/strength/side-mask cases, 512 seeded triples in six permutations and
+16,384 masked wide-word bit cases at default fuzz scale. The existing nine
+strength tests remain unchanged and pass alongside the new five. The public
+kernel-header C++20 target builds. A standalone C++20 caller also compiles
+without exceptions/RTTI and preserves `[-7,-6]` while reading it as logic 0.
+
+Four deliberate mutations compile successfully and pass the prior nine
+value-only strength tests but fail actual new range assertions. They collapse
+either same-value endpoint, keep only the highest input point or ignore later
+inputs. In particular, the endpoint collapses keep the four-state result
+unchanged while corrupting strength information. Restored sources rebuild
+and all fourteen strength tests pass. The local focused logs are separate
+from anchor/judging-tool self-checks, which are not semantic evidence.
+
+Full local CI at `30a6ebc` passes all four configure/build/test presets,
+release flags, banned features, SPDX, suite files, global state, expectation
+protection for all ten unpublished commits, README counts, clang-format and
+clang-tidy. Dev/ASan/UBSan each run 2,831 tests (2,829 pass, two known skips);
+release runs 2,832 (2,830 pass, the same skips). Unit tests now total 298;
+suite/tool/generator counts remain 2,346/128/123. No existing suite or
+performance expectation was changed.
+
+The comparison rerun with a binary reporting `30a6ebc` retains 68 probes,
+26 Icarus-passing gaps and six reference mismatches in
+`build/strength-range-icarus-probes.json`. Installed Icarus compiler/runtime
+both report `14.0 (devel) (s20260301-411-gca6b8d376)`.
+`--require-parity` returns 1 for the remaining gaps; exact-13.0 and complete
+P1 parity remain unconfirmed. No source-level MOS gap is counted as closed.
+Matching the original cohort by the 44 probe names in tool revision
+`50911e1` still gives 19 gaps, with no missing names. Probe additions can
+change their list positions, so that historical cohort is identified by name.
+
+The source-level VM still consumes projected values. Resolved net-interval metadata,
+strength-only change propagation, MOS control/attenuation, bidirectional
+networks and `%v` integration remain unfinished. This foundation does not
+close those language gaps or change the full P1 target. Missing integration
+contracts still require review; the existing three semantic proposals remain
+pending. Historical population, performance and nightly measurements keep
+their recorded dates and revisions.
+
 ## Integral `$fread` copyback contract restored (2026-10-24)
 
 Source `6b39508` restores the already approved SIR_SPEC 8 argument rule;

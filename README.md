@@ -58,6 +58,11 @@ sensitivity are among the remaining forms. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
+The [shared strength resolver](docs/notes/strength-range-foundation.md) now
+retains complete intervals before value projection, with exhaustive interval
+pair checks. Source-level MOS/switch execution and strength-aware formatting
+still require integration; this kernel API does not close those gaps.
+
 ### Phases
 
 | Phase | Content | Status |
@@ -147,9 +152,9 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The local CI rerun at corrected source `6b39508` on 2026-10-24 passed
+The local CI rerun at source `30a6ebc` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,826 tests: 2,824 pass and the same two known skips remain.
+clang-tidy. Dev has 2,831 tests: 2,829 pass and the same two known skips remain.
 The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
 The earlier 61 probes retain 22 gaps, down from 23 before the integral
 `$fread` fix. Seven new extrema probes expand the inventory to 68, with

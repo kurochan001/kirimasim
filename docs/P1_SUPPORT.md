@@ -55,6 +55,16 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 `randcase` weights wider than 32 bits are not implemented.
 
+### Strength-resolution kernel
+
+The shared kernel now exposes complete strength intervals before four-state
+projection, following the approved VALUE_SEMANTICS 5.2–5.4 rule. Five added
+unit tests compare full endpoints, including 158,400 interval pairs under
+11 net kinds. Four compiled mutations pass the old value-only tests but
+fail the new range assertions. See the [API and evidence](notes/strength-range-foundation.md).
+This is the kernel foundation for propagation; MOS/bidirectional primitives,
+strength-aware formatting and resolved-interval metadata through SIR/VM remain unsupported.
+
 ### Program completion
 
 Programs: initial procedures and continuous assignments use the reactive set,

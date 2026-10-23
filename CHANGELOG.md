@@ -33,6 +33,14 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- The shared strength resolver exposes complete signed intervals before
+  four-state projection, for arbitrary input intervals and masked driver
+  bits. Existing value APIs use the same calculation. Five new tests check
+  full endpoints against the independent point enumerator, including all
+  158,400 interval pairs across eleven net kinds. Four compiled mutations
+  expose errors missed by the previous value-only tests. MOS/switch source
+  integration and strength-aware formatting remain work (VALUE_SEMANTICS 5.2–5.4).
+
 - The comparison utility adds seven original array-extrema probes and a
   `reference_mismatches` report field. Single-result expectations follow
   7.12.1 even for tied keys; reference mismatches remain separate from
