@@ -13,6 +13,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Integral `$fread` destinations accept optional start/count arguments without
+  using their values to limit input (21.3.4.4). Supplied expressions run once
+  in the approved left-to-right order. Destination indices are captured once,
+  including on EOF, and heap targets retain their captured cell across
+  argument side effects. An original matrix adds 153 source cases across nine
+  contexts, eight widths and both state domains; existing expectations remain.
+
 - Diagnose a container-cell NBA as illegal under 6.21/10.4.2, with its source
   position, and correct the integration inventory: this is a standard
   restriction, not a missing P1 feature. New source tests cover dynamic arrays

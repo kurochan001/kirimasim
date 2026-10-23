@@ -284,6 +284,36 @@ string length=2
 取り除きます。バイナリを保存するにはファイルか packed 変数を使ってください。
 `$sscanf`・`$fscanf` も同じ語形式を読みます。次の入力例を参照してください。
 
+## `$fread`で整数へバイナリ入力する
+
+整数の代入先ではceil(幅/8)バイトを上位から読みます。start・countを指定しても
+読み取りを制限しません（21.3.4.4）。指定した式はプロジェクトの引数評価規則に従い、
+左から1回ずつ評価します。選択した代入先の添字も、後続の引数より前に1回だけ捕捉します。
+途中のEOFでは読めなかったバイトの旧値を保ち、0バイトなら代入先を上書きしません。
+
+```systemverilog
+module top;
+  bit [15:0] value;
+  int fd, n;
+  initial begin
+    fd = $fopen("bytes.bin", "wb");
+    $fwrite(fd, "%c%c", 8'h81, 8'h12);
+    $fclose(fd);
+    fd = $fopen("bytes.bin", "rb");
+    n = $fread(value, fd, 19, 0);
+    $display("%0d %h", n, value);
+    $fclose(fd);
+  end
+endmodule
+```
+
+```text
+2 8112
+```
+
+メモリの代入先では、引き続きstart・countが対象の要素を選びます。多次元メモリ全体は
+未対応で、番地の規則は[修正案の承認待ち](notes/fread-multidim-proposal.ja.md)です。
+
 ## 無書式のバイナリの語を読み込む
 
 `%u`・`%z` は下位の32ビット語からホストのバイト順で読みます。幅の省略と0は

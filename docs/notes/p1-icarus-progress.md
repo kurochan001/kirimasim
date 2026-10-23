@@ -9,6 +9,86 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+## Integral binary-input arguments and captured targets (2026-10-24)
+
+Source `db40e27` completes integral `$fread` calls with optional start/count
+arguments (21.3.4.4). Their values do not restrict an integral read, while
+their supplied expressions execute once left to right under VALUE_SEMANTICS
+3.1. Empty optional arguments are accepted by strict slang. The existing
+kernel syscall and binary-input operation remain shared and unchanged.
+
+The destination is captured before the descriptor and optional arguments.
+Indices no longer run again at copyback, nor are they skipped at EOF.
+Packed selections, concatenations, automatic frames and forwarded refs use
+the same captured place. A heap selection retains the actual stable element
+cell, including packed parts and detached cells after an argument replaces
+the queue. Invalid heap indices retain the existing default/no-write rule.
+Partial reads preserve unfilled old bits; a zero-byte result does not copy
+back over changes made by argument expressions.
+
+The [new matrix](../../tools/gen_scalar_fread_matrix.py) adds 153 original
+source cases: 144 width/state/context combinations and nine mechanism cases.
+Widths are 1/7/8/9/32/64/65/129, in two/four states. Nine contexts include
+module initials, automatic/static tasks, forks, interfaces, packages,
+programs, generate and functions. Cases check ignored negative/zero/unknown
+values, omitted start, file position, partial EOF, target evaluation,
+ref/packed/concat/heap storage and held identities. Intentional argument
+side effects retain strict slang's positioned warnings. Existing suite
+bodies, expectations and performance counters are unchanged.
+
+All 144 value combinations also match the installed Icarus's output. For
+these reference-only runs, the empty-start spelling is replaced by explicit
+zero, because Icarus rejects the empty argument; expected output is unchanged.
+Kirimasim's registered cases retain the original standard-permitted spelling.
+The reference comparison does not establish the separate ref/side-effect
+mechanism cases or override the project's evaluation-order contract.
+
+Seven deliberate mistakes each built successfully and were caught by actual
+source assertions: rejecting extra arguments, dropping optional-argument
+side effects, reversing their order, evaluating the target twice, following
+a replaced heap binding, clearing unfilled old bits and copying back at EOF.
+One fails the source runner's supported-execution check; six produce wrong
+stdout. Anchor checks and judging-tool self-checks are not counted as
+semantic evidence. Sources were restored and all 154 focused source/generator
+tests passed. The bilingual runnable example prints `2 8112` in both engines.
+
+Two probes were appended without changing the original 59. With the
+unchanged baseline binary reporting `b78437a`, these 61 probes have 23
+Icarus-passing gaps; the new integral call passes after the fix, leaving 22.
+The original 59 retain 21 gaps; the additional remaining gap is whole
+multidimensional `$fread`, now included in the inventory. This inventory
+extension must not be mistaken for a regression from 21 to 22 or for a
+complete coverage proof. Exact-13.0 and complete parity remain unconfirmed.
+
+The final comparison binary reports `db40e27`; compiler/runtime both report
+`14.0 (devel) (s20260301-411-gca6b8d376)`. Local before/after reports are
+`build/scalar-fread-before-icarus-probes.json` and
+`build/scalar-fread-after-icarus-probes.json`. `--require-parity` returns 1
+because the remaining gaps are real, not a successful full-parity check.
+
+Full local CI at `db40e27` passes dev/release/ASan/UBSan configure/build/test,
+release flags, banned features, SPDX, suite files, global state, expectation
+protection for both unpushed commits, README counts, clang-format and
+clang-tidy. Dev/ASan/UBSan each run 2,826 tests (2,824 pass, two known skips);
+release runs 2,827 (2,825 pass, the same skips). Counts now include 2,346
+suite cases, 123 generators and 128 tool tests. Historical population and
+performance dates/revisions are unchanged. All 265 checked local links in
+the updated documents and new proposals exist.
+
+The [multidimensional-input proposal](fread-multidim-proposal.md) in
+`4af9ff0` records numerical-index traversal, linear start/count and
+cross-row original observations. Its address interpretation awaits review
+under P1_SCOPE before implementation. The separate
+[array-method proposal](array-methods-proposal.md) also remains pending.
+Classes, VPI, switches, specify/timing and the other P1 gaps remain work.
+
+Exploratory inputs outside those 61 probes also expose dynamic-array
+`min()` and queue `max()` gaps (7.12.1). For original int inputs `[4,7,4]`
+and `[4,7,7]`, Icarus returns queues `[4,4]` and `[7,7]`, while kirimasim
+diagnoses the methods as unsupported. These observations are not included
+in the inventory's 22-gap count; their full locator/value rules need checking
+before implementation. The finite inventory remains incomplete.
+
 ## Documentation and publication recheck (2026-10-24)
 
 The documentation recheck at `b78437a` keeps the implemented container range

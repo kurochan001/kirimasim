@@ -89,17 +89,19 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-current inventory has expanded to 59 probes, with 21 Icarus-passing gaps
-(including newly measured array reductions and queue sorting). It uses Icarus
+current inventory has expanded to 61 probes, with 22 Icarus-passing gaps
+(including array reductions, queue sorting and multidimensional binary input). It uses Icarus
 `14.0 (devel) (s20260301-411-gca6b8d376)`; exact-13.0 coverage and complete
 parity remain unconfirmed. A passing probe inventory would not by itself
 establish complete coverage; the inventory must expand as mechanisms and
 interfaces are checked.
 
-A separate original probe also confirms that `$fread` into a whole
-multidimensional integral memory passes the installed Icarus and is still
-unsupported here. It is not yet part of that 59-probe inventory; see the
-[reproducer and remaining work](docs/notes/p1-icarus-progress.md).
+Integral `$fread` now accepts optional start/count arguments, evaluates
+supplied expressions once and captures selected destinations once. On the
+same expanded 61 probes, this reduces the measured gaps from 23 to 22.
+Whole multidimensional integral memory input is included as a remaining
+gap; its [addressing proposal](docs/notes/fread-multidim-proposal.md) awaits
+approval. See the [comparison record](docs/notes/p1-icarus-progress.md).
 
 #### Existing quantitative gates and measured results
 
@@ -136,12 +138,14 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The publication CI rerun based on `b78437a` on 2026-10-24 passed
+The local CI rerun at source revision `db40e27` on 2026-10-24 passed
 dev/release/ASan/UBSan and all static checks, including clang-format and
-clang-tidy. Dev has 2,672 tests: 2,670 pass and the same two known skips remain.
+clang-tidy. Dev has 2,826 tests: 2,824 pass and the same two known skips remain.
 The original 44-probe comparison now has 19 Icarus-passing gaps, down from 23.
-The expanded 59-probe inventory has 21 gaps, including newly measured array
-reductions and queue sorting; the inventory remains incomplete. See the [validation record](docs/notes/p1-icarus-progress.md).
+The expanded 61-probe inventory has 22 gaps, down from 23 on those same
+inputs before the integral `$fread` fix. It includes remaining reductions,
+queue sorting and multidimensional binary input; the inventory remains
+incomplete. See the [validation record](docs/notes/p1-icarus-progress.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 

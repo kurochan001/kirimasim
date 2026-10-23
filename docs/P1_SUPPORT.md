@@ -242,7 +242,14 @@ including the file-output forms and `$swrite`.
   output unchanged. Multiple conversions, a leading `%%` prefix and X/Z
   packed formats are not supported.
 - `$fread` supports scalar integral destinations and one-dimensional fixed
-  integral memories. One-dimensional memories of unpacked structures may
+  integral memories. On integral destinations, optional start/count values
+  do not limit input; supplied expressions still run once left to right.
+  Target indices are captured once, and heap targets retain their selected
+  cell when another argument replaces the container. Partial input retains
+  unfilled old bits; zero-byte input does not copy back. The
+  [153-case matrix](../tools/gen_scalar_fread_matrix.py) covers eight widths,
+  two/four states and nine execution contexts, plus argument/storage checks.
+  One-dimensional memories of unpacked structures may
   contain nested structures with integral leaves. Whole multidimensional
   integral memories, dynamic memories, array/real structure members,
   multidimensional structure memories and unpacked unions are not supported.

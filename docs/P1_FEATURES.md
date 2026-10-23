@@ -301,6 +301,39 @@ omit zero bytes. To retain binary data, use a file or a packed destination.
 Binary input formats in `$sscanf` and `$fscanf` use the same word encoding;
 see the input example below.
 
+## Integral binary input with `$fread`
+
+For an integral destination, `$fread` reads ceil(width/8) bytes, most
+significant first. Optional start/count values do not restrict that read
+(21.3.4.4); their expressions are still evaluated once left to right under
+the project's argument-order rule. A selected destination captures its
+indices once before the later arguments. Partial EOF retains old bits in
+bytes not read, and zero-byte input does not overwrite the destination.
+
+```systemverilog
+module top;
+  bit [15:0] value;
+  int fd, n;
+  initial begin
+    fd = $fopen("bytes.bin", "wb");
+    $fwrite(fd, "%c%c", 8'h81, 8'h12);
+    $fclose(fd);
+    fd = $fopen("bytes.bin", "rb");
+    n = $fread(value, fd, 19, 0);
+    $display("%0d %h", n, value);
+    $fclose(fd);
+  end
+endmodule
+```
+
+```text
+2 8112
+```
+
+For a memory destination, start/count still select elements. Whole
+multidimensional memories remain unsupported; their proposed address rule
+[awaits approval](notes/fread-multidim-proposal.md).
+
 ## Reading unformatted binary words
 
 `%u`/`%z` read least-significant native 32-bit words first. Omitted and
