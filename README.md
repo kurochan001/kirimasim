@@ -112,7 +112,7 @@ include all join kinds; automatic variables captured by children remain unsuppor
 | --- | --- | --- |
 | P0 | Groundwork: build, CI, detailed specifications, test suite | Done |
 | P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (an interpreter of SIR) targeting Icarus Verilog 13.0-or-broader execution coverage | **In progress** |
-| P2 | SIR v1: finalize SIR and the kernel boundary for tier 2 ([details proposed](docs/notes/sir-v1-proposal.md)) | Planned |
+| P2 | SIR v1: finalize SIR and the kernel boundary for tier 2 ([direction approved; details under review](docs/notes/sir-v1-proposal.md)) | Planned |
 | P3 | Tier 2: SIR compiled ahead of time to C++, for speed | Planned |
 | P4 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks, VPI, DPI-C | Planned; required subset advanced to P1 |
 | P5 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned; required subset advanced to P1 |

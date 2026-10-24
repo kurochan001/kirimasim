@@ -1,9 +1,46 @@
 # P2 proposal: SIR v1, ready for tier 2
 
-[日本語](sir-v1-proposal.ja.md). Status: **proposal (not approved)**,
-2026-10-24. English is authoritative. This note proposes amendments; it
-approves no implementation, dependency, installation or expected-value change.
-The [phase mapping](phase-renumbering.md) is already a human decision.
+[日本語](sir-v1-proposal.ja.md). Status: **direction approved (2026-10-24);
+detailed contract pending review**. English is authoritative. Originally
+proposed on 2026-10-24; the user subsequently approved the recommendations
+recorded below. Detailed EBNF, record schemas, API prototypes and reference
+layout remain drafts. The [phase mapping](phase-renumbering.md) is a separate
+approved decision. This approval adds no dependency or installation and changes
+no existing test expectation.
+
+## Approved direction (2026-10-24)
+
+The user's approval covers the following recommendations, including the
+qualifications given when recommending them:
+
+1. Prepare P2 alongside P1, keep P1 the priority, and freeze SIR v1 only after
+   P1 completes. The final grammar freeze moves from the old P1 deadline to P2;
+   other P1 scope and exit obligations remain in P1. Keep formatVersion at 0
+   until the P2 gates pass.
+2. Use a complete canonical record format 1 that preserves dump metadata,
+   constant identity and declared counts. Keep the existing v0 diagnostic
+   output during migration. The exact grammar/schema and public CLI spelling
+   still need review.
+3. Generate the Op enum, names, common verification metadata and specification
+   table from one schema, with CI consistency checks. Keep complex type rules
+   in named validators. Resolve the inventoried semantic gaps separately.
+4. Evaluate 16-byte cells with 8-byte alignment as the conservative baseline.
+   Measure before freezing the layout; settle reference-token representation
+   after P1 activation and lifetime rules are established.
+5. Organize the C boundary by typed services such as waits, process management,
+   containers and files. Appendix B's 181 A rows are coverage candidates, not
+   approval of 181 public functions or of their proposed names/prototypes.
+   Preserve tier 1's direct C++ calls; keep ABI 0.x during preparation and
+   target ABI 1.0 at P2 exit after coverage and boundary tests pass.
+6. Fix analysis side-table format and invalidation rules in P2; missing or
+   stale results mean unknown. Select and implement analysis algorithms in P3.
+
+Approved preparation order: **Op schema and consistency checks → v1 parser and
+roundtrip checks → shared semantic decisions and service API design → frame and
+ABI freeze**. Detailed approval of the items still listed in section 6 is a
+later review step. This record changes documentation only; it does not mark P2
+started or complete, approve the entire draft verbatim, or approve the pending
+P1 semantic proposals.
 
 ## 1. Purpose and scope
 
@@ -253,7 +290,7 @@ Every bullet of SIR_SPEC 11 and RUNTIME_ABI 8 is accounted for below. A
 | ABI 8 finish in DPI export / argument lifetime | Encode generic end/status and borrowed-buffer lifetime rules now | DPI-specific exports, svLogicVecVal/open arrays in P4 unless required by P1 |
 | ABI 8 parallel static islands | Record side-effect summaries and serial reference semantics | Scheduling/thread partition algorithms and parallel execution in P5 |
 
-## 3. Proposed decisions (none approved by this note)
+## 3. Design details (approved direction; remaining drafts identified above)
 
 ### D1. Text grammar, parser and version
 
@@ -410,7 +447,8 @@ order, rightmost index fastest. Place FrameVarId rows in order using
 leaves follow their finalized SIR descriptor, not an ad hoc C++ struct.
 
 A reference is a kernel-defined opaque token, not the VM's current bit tagging.
-Recommend a fixed 16-byte token (two uint64 fields) backed by a Context table
+A still-unapproved candidate is a fixed 16-byte token (two uint64 fields)
+backed by a Context table
 containing kind, activation/cell identity, generation, element/leaf/window and
 permissions. It fits a cell; stale reference validation and GC roots are kernel
 operations. If the completed P1 cannot safely fit the token identity/generation
@@ -434,16 +472,19 @@ ABI 3/4.3/6/8, automatic-capture and class-runtime proposals (still unapproved).
 
 ### D4. Complete C boundary; preserve tier 1's direct C++ path
 
-Appendix B is the concrete function-addition inventory: each **A** row proposes
-a C entry with the printed name, not a second implementation. Every such entry
-adapts to the same kernel operation the C++ API uses. No std types, exceptions,
+Appendix B is the operation-coverage inventory: each **A** row records a
+candidate C entry and its required behavior. The approved direction is to group
+these operations into typed services, retaining a mapping from every inventory
+row to its service. The 181 candidate functions, their names and prototypes are
+not approved individually. Each finalized service reaches the same kernel
+implementation as the C++ API. No std types, exceptions,
 RTTI, VM Frame or SIR Design object crosses the C boundary. Use fixed-width
 integers, pointer/count byte or word spans, opaque Context-owned IDs, and plain
 C structs. Result buffers belong to the caller; borrowed views expire at the
 specified call/checkpoint, never implicitly after some later allocation.
 
-The additions are grouped as follows (each spelling in Appendix B is part of
-the proposal; detailed prototypes must be reviewed before implementation):
+The required coverage is grouped as follows; final service boundaries,
+entry names, prototypes and H/I exceptions require review before implementation:
 
 - Scheduler/process/activation: child/program registration, startup/final/end
   reporting, delayed-driver operations, cancellation/kill/release, fork/join,
@@ -544,14 +585,20 @@ semantic amendments and all exit gates. Advantage: gaps are discovered early;
 cost: recurring schema churn and extra coordination. Record the commit/hash of
 every baseline and never call a partial current inventory “P2 complete”.
 
-Human chooses A or B. This proposal authorizes neither automatically.
+Option B was selected by the user on 2026-10-24. The approval covers this
+sequence and the P2 freeze deadline; the detailed contracts still identified
+as pending require review before their implementation.
 **Affected:** SIR 1/9/11 (current P1 grammar deadline), ABI 8, P1_SCOPE, README.
 
 ## 4. Milestones and exit criteria
 
-1. **M0 — approve the contract:** choose D1–D7; reconcile spec-only Ops, readback
-   scope, pending P1 proposals and the grammar deadline. Publish amended specs
-   only after approval. The phase renumbering alone is not that approval.
+1. **M0 — complete detailed contract review:** the direction and parallel
+   preparation/post-P1 freeze sequence are approved on 2026-10-24. Review the
+   remaining grammar/schema, API, reference-layout and semantic decisions in
+   section 6; reconcile spec-only Ops and pending P1 proposals. Incorporate the
+   approved direction into the affected specifications before implementation;
+   preserve the distinction between approved direction and pending details.
+   M0 is not complete merely because the direction is approved.
 2. **M1 — executable Op/schema contract:** complete every P1 Op/type/task/method
    signature and effect rule; CI checks enum/generated metadata/spec set equality
    and stale generation. Negative controls must show missing/extra Ops, wrong
@@ -619,25 +666,30 @@ for hiding startup costs; compact-frame alternatives require measured evidence.
   a serialization library) require a separate human decision and installation
   approval. None is required by the recommended path or installed here.
 
-## 6. Points to decide
+## 6. Points to decide (detailed review remains)
 
-1. Approve the P2 scope/grammar-deadline amendment and choose P1-first or parallel
-   preparation with post-P1 freeze (D7 recommendation: partial parallel).
-2. Choose full canonical record format 1 versus completing the current line
-   syntax; approve inclusion of dump/count/constant identity and a separate v0
-   diagnostic mode/CLI contract.
-3. Choose generated single-source Op/signature metadata versus complete
-   consistency checking; resolve inside/cond.x and incomplete verifier contracts.
-4. Approve conservative 16-byte cells, kernel reference tokens, activation/root
-   layout rules, or request measured compact/VM-compatible alternatives.
-5. Approve the C API additions/owner assignments and host/header exceptions;
-   choose ABI 1.0 at P2 exit versus continued 0.x, and Windows contract evidence.
-6. Approve separate analysis-table identity/unknown/invalidation rules; algorithms
-   remain P3. Decide how inherited Priority P3 headings for assertion/randomize/
-   library-export specs relate to their P4/P5 delivery plans (renumbering did
-   not settle that preexisting discrepancy).
+1. Finalize the exact format-1 EBNF and field schemas, byte/number rules,
+   versioning details and public v0/v1 dump/load CLI spelling. The complete
+   record-format direction and post-P1 freeze have been selected.
+2. Finalize the Op/task/method schema and generated-consumer interfaces;
+   resolve inside/cond.x and incomplete verifier contracts without silently
+   weakening approved semantics or existing expectations.
+3. Review measured frame-layout results, reference-token size/representation,
+   activation/root lifetime and target-specific checks after the relevant P1
+   contracts are established. The 16-byte cell / 8-byte alignment choice is an
+   evaluation baseline, not a frozen ABI.
+4. Review service boundaries, API names/prototypes/count, error and ownership
+   rules, and every host/header exception against all inventory rows. The 181
+   A rows and additional candidate service names are not an approved function
+   list. Define Windows boundary evidence before enabling Windows AOT.
+5. Review the exact analysis side-table schema, hashes/IDs and invalidation
+   validation. The separate-table and unknown-on-missing/stale principles are
+   selected; analysis algorithms remain P3.
+6. Resolve inherited Priority P3 headings for assertion/randomize/library-export
+   versus their P4/P5 delivery plans, and obtain the separate approvals for
+   any still-pending P1 semantic amendments. This approval does not settle them.
 
-## Proposal verification record
+## Original proposal verification record
 
 The phase-change full local CI and explicit expected-change result are recorded
 in [phase-renumbering](phase-renumbering.md#validation-2026-10-24). For this
@@ -786,7 +838,7 @@ Verifier line numbers are entry points into checks, not external sources.
 
 ## Appendix B. Complete kernel API inventory and additions
 
-274 distinct API references. A = proposed addition before P3; H = host/tier-internal exception reviewed in P3; I = public-inline implementation path reviewed in P3; existing = current C entry. There are 181 A rows (including three partial existing services), 19 H rows, 60 I rows and 14 fully covered rows. H stack/counter access does not authorize generated code to bypass stop/stack checks: D4 process_checkpoint provides those checks. Each listed line is in src/vm/vm.cpp. API wrappers take C-compatible views rather than the original C++ signatures.
+274 distinct API references. A = candidate coverage requiring a reviewed service before P3 (not an approved public-function list); H = host/tier-internal exception reviewed in P3; I = public-inline implementation path reviewed in P3; existing = current C entry. There are 181 A rows (including three partial existing services), 19 H rows, 60 I rows and 14 fully covered rows. H stack/counter access does not authorize generated code to bypass stop/stack checks: D4 process_checkpoint provides those checks. Each listed line is in src/vm/vm.cpp. API wrappers take C-compatible views rather than the original C++ signatures.
 
 | C++ API reference | vm.cpp lines | ABI 0.3 / missing group | Proposed entry or explicit deferral |
 | --- | --- | --- | --- |

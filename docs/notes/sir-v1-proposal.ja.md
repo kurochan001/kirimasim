@@ -1,9 +1,34 @@
 # P2の提案：SIR v1――tier 2へ渡せる形の確定
 
-[English](sir-v1-proposal.md)。Status: **proposal (not approved)**、2026-10-24。
-英語版が正本です。本書は仕様の修正案であり、実装・依存・ツールの導入・期待値変更を
-承認するものではありません。[フェーズ番号の対応](phase-renumbering.ja.md)は人間が
-決めた事項ですが、P2の技術的な詳細は今回の承認に含まれません。
+[English](sir-v1-proposal.md)。Status: **direction approved (2026-10-24);
+detailed contract pending review**。英語版が正本です。2026-10-24の提案後、下記の推奨方針を
+人が承認しました。EBNF・record schema・API prototype・参照配置の詳細は引き続き案です。
+[フェーズ番号の対応](phase-renumbering.ja.md)は別の承認済み事項です。
+この承認で依存・道具を導入せず、既存の期待値も変更しません。
+
+## 承認された方針（2026-10-24）
+
+推奨時に説明した留保を含め、次の方針が承認されました。
+
+1. P1を優先しながらP2を並行準備し、SIR v1の凍結はP1完了後に行います。
+   旧仕様のP1中の最終文法確定をP2へ移し、他のP1範囲・合格条件はP1に保ちます。
+   P2のgateが揃うまでformatVersionは0です。
+2. dump表・定数identity・宣言した個数を保存する完全な正規record形式v1を使います。
+   移行中は既存v0診断出力を保ちます。正確な文法・schema・公開CLI名は後続レビューです。
+3. 共通schemaからOp enum・名前・基本検証metadata・仕様表を生成し、CIで照合します。
+   複雑な型規則は名前付きvalidatorにします。棚卸しで見つかった意味の不足は別に解決します。
+4. 16byte cell・8byte整列を保守的な評価基準にし、測定してから配置を凍結します。
+   参照tokenの表現はP1のactivation・寿命規則が固まってから決めます。
+5. C境界は待ち・process管理・container・fileなどの型付きサービス単位で整理します。
+   付録Bの181個のA行は対応漏れを調べる候補であり、181公開関数や名前・prototypeの
+   一括承認ではありません。tier 1のC++直接呼び出しを保ち、準備中はABI 0.x、
+   全対応と境界テストが揃うP2完了時にABI 1.0へ安定させる方針です。
+6. 解析別表の形式と失効規則をP2で決め、欠落・古い結果はunknownとします。
+   アルゴリズムの選定と実装はP3です。
+
+承認された準備順は、**Op schemaと照合 → v1パーサと往復検査 → 意味の共有とサービスAPI設計
+→ frame・ABIの凍結**です。6節の詳細は後続レビューで決めます。この記録は文書の更新であり、
+P2の開始・完了、本書の全詳細、承認待ちのP1意味修正案を承認した扱いにはしません。
 
 ## 1. 目的と範囲
 
@@ -222,7 +247,7 @@ P4以降にできるのはP1で必要な範囲の外だけです。
 | ABI 8 DPI exportのfinish/引数寿命 | 一般の終了/status/借用buffer寿命は今決める | DPI特有のexport/svLogicVecVal/open arrayは、P1に不要な部分はP4 |
 | ABI 8 並列static island | 副作用要約と逐次参照意味を記録 | thread分割/並列実行はP5 |
 
-## 3. 決めること（本書だけでは未承認）
+## 3. 設計詳細（方針は承認済み、詳細の留保は上記参照）
 
 ### D1. テキスト文法・パーサ・版
 
@@ -342,7 +367,7 @@ chandle・container tokenは1個のcellです。cellはuint64語2本の16byte、
 右端次元が最も速く進みます。FrameVarId順にoffset=alignUp(previousEnd,8)、
 全体size=alignUp(end,8)とします。unpacked集約のleafは確定したSIR descriptorに従います。
 
-refはVMの現行bit tagを公開せずkernelの不透明tokenにします。案はuint64×2の16byteで、
+refはVMの現行bit tagを公開せずkernelの不透明tokenにします。未承認の詳細候補はuint64×2の16byteで、
 Contextの表にkind・activation/cell identity・generation・要素/leaf/window・権限を持たせます。
 世代の切り捨ては認めません。完了したP1を安全に表現できなければ、v1凍結前に別サイズを
 承認します。無効refとGC rootはkernelが検査し、実行時pointerは保存形式に出しません。
@@ -360,11 +385,13 @@ frontが明示FrameVarにします。NBAや遅延呼び出しは自分の捕捉�
 
 ### D4. C境界を揃え、tier 1のC++直接呼び出しは保つ
 
-付録Bの**A行が追加する具体的な関数名の一覧**です。C/C++の両経路は同じkernel実装へ
-入ります。std型・例外・RTTI・VM Frame・SIR DesignはC境界に出さず、固定幅整数、
+付録Bの**A行は必要な操作に対応するC entryの候補**です。承認された方針に従い、
+型付きサービスへ整理し、各行がどのサービスで満たされるか対応表を保ちます。
+181候補の関数数・名前・prototypeは個別には未承認です。確定したC/C++の両経路は
+同じkernel実装へ入ります。std型・例外・RTTI・VM Frame・SIR DesignはC境界に出さず、固定幅整数、
 pointer/countのbyte・word span、Context所有の不透明ID、plain C構造体を使います。
 結果bufferは呼び出し側所有です。借用viewの有効期限は呼び出し/指定checkpointまでと明記し、
-後の確保の都合で暗黙に無効化しません。prototypeの詳細は実装前に別途レビューします。
+後の確保の都合で暗黙に無効化しません。サービス境界・entry名・prototype・H/I例外は実装前に別途レビューします。
 
 - プロセス・activation：子/program登録、起動・final・終了報告、遅延driver、cancel・kill・解放、
   fork/join・scope/task unwind、flushしないjoin待ち、heap付きmonitor、override、file/global monitor。
@@ -439,13 +466,16 @@ P1完了・残る意味修正の人の承認・全gate達成後にだけ凍結�
 繰り返しのschema変更・調整コストがあります。毎回の基準commit/hashを記録し、
 現在の部分的な一覧でP2完了とはしません。
 
-選ぶのは人間で、本書だけではどちらも開始を承認しません。
+2026-10-24に人がB案を選びました。進め方とP2での凍結期限は承認済みです。
+未確定と記した詳細契約は、実装前に後続レビューを行います。
 **影響：** SIR 1・9・11のP1中の文法期限、ABI 8、P1_SCOPE、README。
 
 ## 4. マイルストーンと完了条件
 
-1. **M0：契約の承認。** D1〜D7、仕様だけのOp、読み戻しの範囲、P1の未承認案、
-   文法の期限を決めます。仕様修正は承認後です。フェーズ変更の承認と混同しません。
+1. **M0：詳細契約のレビュー。** 方針と並行準備・P1後凍結の順序は2026-10-24に承認済みです。
+   6節に残る文法/schema・API・参照配置・意味の判断をレビューし、仕様だけのOpとP1の
+   未承認案を整合します。実装前に承認された方針を対象仕様へ反映し、詳細の未確定と区別します。
+   方針の承認だけでM0完了とはしません。
 2. **M1：実行できるOp/schema契約。** P1の全Op・型・task/methodのシグネチャとeffectを
    揃え、CIでenum・生成metadata・仕様表の集合一致と生成物の古さを検査します。
    Op不足/追加・待ち/型/シグネチャの誤り・古い別表を陰性対照で拒否できることを示します。
@@ -492,17 +522,22 @@ PerfCount期待値と10%の回帰検査を保ち、期待値変更は別の承�
 - MLIR・LLVM FileCheck・parser framework・serialization libraryを含む依存や新しい道具の導入は
   別途人が決めます。推奨案はそれらを必要とせず、今回も導入していません。
 
-## 6. Points to decide（人が決めること）
+## 6. Points to decide（後続レビューで決める詳細）
 
-1. P2範囲と文法期限の修正、P1後に開始か一部並行か（D7の推奨は並行準備・P1後凍結）。
-2. 完全なrecord形式v1か現行行形式の拡張か。dump/個数/定数identityの保存とv0診断表示・CLI契約。
-3. schema生成か完全な照合か。inside/cond.xと不十分な型検査をどう整合するか。
-4. 16byte cell・kernel ref token・activation/root配置を承認するか、測定付きcompact/VM互換案を選ぶか。
-5. C API追加・責任分担・host/inline例外。P2完了時ABI 1.0か0.x継続か、Windowsの確認条件。
-6. 解析別表のidentity/unknown/失効規則。アルゴリズムはP3。assertion/randomize/library-exportの
-   Priority P3と、P4/P5の実装計画の関係（番号変更では元からある不一致を解決していません）。
+1. format 1の正確なEBNF・field schema・byte/数の規則・版管理・v0/v1 dump/loadの公開CLI名。
+   完全なrecord形式とP1後の凍結は選択済みです。
+2. Op/task/method schemaと生成物の境界。inside/cond.xと不足するverifier契約を、
+   承認済みの意味や既存期待値を黙って緩めずに整合する方法。
+3. frame配置の測定結果、ref tokenのサイズ・表現、activation/rootの寿命、対象別の検査。
+   P1の関連契約が固まってからレビューします。16byte cell・8byte整列は評価基準で、ABI凍結ではありません。
+4. サービス境界・API名/prototype/関数数・エラー/所有権、各host/inline例外と全参照の対応。
+   181個のA行と追加サービス候補名は関数一覧として未承認です。Windows AOT有効化前の確認条件も決めます。
+5. 解析別表の正確なschema・hash/ID・失効検査。別表化と欠落/古い結果をunknownとする方針は
+   選択済みで、アルゴリズムはP3です。
+6. assertion/randomize/library-exportのPriority P3とP4/P5の実装計画の関係、
+   承認待ちのP1意味修正案の個別承認。この方針承認では解決していません。
 
-## 提案文書自体の検査記録
+## 当初の提案文書の検査記録
 
 フェーズ変更の全local CIと明示的な期待値保護検査は[対応ノート](phase-renumbering.ja.md)に
 記載しました。本提案はenumの124件と全Op名、英日274 API行・行番号・181追加entry名、
@@ -650,7 +685,7 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 
 ## 付録B. カーネルAPI全件と追加案
 
-274種類のAPI参照です。A= P3前の追加案、H= host/tier内部に残しP3で再確認する例外、I= 公開inline実装を使いP3で再確認する例外、existing= 現存C entryです。Aは181行（現存サービスの部分的な不足3件を含む）、Hは19行、Iは60行、完全対応は14行です。Hのstack/counterは生成コードの停止・stack検査を省く許可ではなく、D4のprocess_checkpointで実施します。行番号はすべてsrc/vm/vm.cppです。追加関数は元のC++ signatureをそのまま公開せず、C互換viewへ適合します。関数名と行番号は英語正本と同一です。
+274種類のAPI参照です。A= P3前にレビュー済みサービスで満たす操作の候補（公開関数一覧の承認ではない）、H= host/tier内部に残しP3で再確認する例外、I= 公開inline実装を使いP3で再確認する例外、existing= 現存C entryです。Aは181行（現存サービスの部分的な不足3件を含む）、Hは19行、Iは60行、完全対応は14行です。Hのstack/counterは生成コードの停止・stack検査を省く許可ではなく、D4のprocess_checkpointで実施します。行番号はすべてsrc/vm/vm.cppです。追加関数は元のC++ signatureをそのまま公開せず、C互換viewへ適合します。関数名と行番号は英語正本と同一です。
 
 | C++ API参照 | vm.cpp行 | ABI 0.3の対応／不足する群 | 追加entry案または例外の理由 |
 | --- | --- | --- | --- |
