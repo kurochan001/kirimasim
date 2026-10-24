@@ -40,6 +40,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- UDP lowering, verification and shared-kernel/VM transport accept more than
+  32 inputs. Original sources through 257 inputs and independent value/SIR
+  checks cover matching, state order, X/Z, delay and strength. Dense edge
+  tables retain a pinned-slang compilation-scaling limitation, recorded with
+  bounded original reproducers; no warning or dependency was relaxed.
+
 - Fork-local declarations execute through the parent's existing lifetime and
   initialization rules; static storage is shared, declarations are not child
   processes, and declaration-only forks need no wait. Seventy-two original

@@ -15,6 +15,30 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 32入力を超えるUDP
+
+既存のUDP規則のまま、32入力を超える評価に対応しました。独自の33入力の組合せ例を
+次のように実行できます。
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/nets/wide_udp_module_comb_33.sv
+```
+
+```text
+zero 0
+one_input 0
+both 1
+unknown x
+dominate 0
+other_zero 0
+high_z x
+z_zero 0
+```
+
+[106ソースの証拠と制限](notes/wide-udp-inputs.ja.md)に順序UDPと広い入力の転送も含めます。
+密な辺の網羅性表ではslangのコンパイル時間が増える問題が残り、UDPソース全体の対応完了
+とは扱いません。
+
 ## fork内の宣言と親での初期化
 
 fork内の宣言は、親で寿命どおり初期化し、子に数えたり`join_any`を満たしたりしません。

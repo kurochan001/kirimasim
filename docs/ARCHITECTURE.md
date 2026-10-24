@@ -151,6 +151,12 @@ See [aggregate blocking timing](notes/blocking-aggregate-timing.md).
 Event-controlled NBAs remain unsupported. In particular, blocking repeated waits do not implement
 the independently pending control required by an event-controlled NBA.
 
+[Wide UDP execution](notes/wide-udp-inputs.md) uses shared-kernel matching
+with stable input getters for large operand lists. A prefix state view keeps
+terminal-order semantics without variable-size evaluator scratch. The VM
+transports typed operands; dense source coverage checking remains a separate
+slang compilation boundary.
+
 [Fork declarations](notes/fork-local-declarations.md) use the parent's existing
 lifetime path before executable children are created. Static storage is shared;
 uncaptured automatic declarations initialize in the parent frame. Declarations

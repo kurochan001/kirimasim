@@ -62,6 +62,28 @@ EXTENDED = [
 ]
 # Original container mechanisms include both implemented and remaining forms.
 # Keep the original seed and earlier extended probes for revision comparisons.
+def wide_udp_source(sequential=False,dense=False):
+ n=33;names=[f'i{i}' for i in range(n)];rows=[]
+ def row(tokens,state,out):return ' '.join(tokens)+(' : '+state if sequential else '')+' : '+out+';'
+ if dense:
+  for edge in ['p','n']:
+   for data in ['0','1']:
+    a=['?']*n;a[0]=edge;a[1]=data;rows.append(row(a,'?',data))
+  a=['?']*n;a[0]='*';a[1]='x';rows.append(row(a,'?','x'))
+  for i in range(1,n):
+   a=['?']*n;a[i]='*';rows.append(row(a,'?','-'))
+  body="d='0;d[1]=1;#1;d[0]=1;#1;$display(\"%b\",q);"
+ elif sequential:
+  for edge,out in [('r','1'),('f','0')]:
+   a=['?']*n;a[0]=edge;rows.append(row(a,'?',out))
+  body="d='0;#1;d[0]=1;#1;$display(\"%b\",q);d[0]=0;#1;$display(\"%b\",q);"
+ else:
+  for bit in ['0','1']:
+   a=['?']*n;a[-1]=bit;rows.append(row(a,'',bit))
+  body="d='0;#1;$display(\"%b\",q);d[32]=1;#1;$display(\"%b\",q);"
+ text='primitive wide(q,'+','.join(names)+');output q;'+('reg q;' if sequential else '')+'input '+','.join(names)+';table '+ '\n'.join(rows)+' endtable endprimitive module top;reg [32:0] d;wire q;wide u(q,'+','.join(f'd[{i}]' for i in range(n))+');initial begin '+body+'end endmodule'
+ return text
+
 EXTENDED.extend([
     ("dynamic_value_copy", "7.5, 7.6",
      "module top; int a[],b[]; initial begin a=new[2]; a[0]=7; b=a; b[0]=9; $display(\"%0d %0d\",a[0],b[0]); end endmodule",
@@ -222,6 +244,12 @@ EXTENDED.extend([
     ("resolved_net_array", "6.6, 28.12",
      'module top;wire [7:0] a[2];assign a[0]=8\'h0f;assign a[0]=8\'hf0;assign a[1]=8\'hzz;assign a[1]=8\'h5a;initial #1 $display("%h %h",a[0],a[1]);endmodule',
      "xx 5a\n", []),
+    ("wide_udp_comb", "29.3.2, 29.4",
+     wide_udp_source(), "0\n1\n", []),
+    ("wide_udp_seq", "29.3.2, 29.5, 29.6",
+     wide_udp_source(sequential=True), "1\n0\n", []),
+    ("dense_udp_coverage", "29.3.2, 29.6",
+     wide_udp_source(sequential=True, dense=True), "1\n", []),
 ])
 
 
@@ -301,7 +329,7 @@ def main():
                                       "compared_stdout_hex": actual.hex(),
                                       "diagnostic": normalized(ran.stderr, directory)}
                 except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
-                    record[engine] = {"status": "limit", "diagnostic": str(error).replace(tmp, "<probe>")}
+                    record[engine] = {"status": "limit", "diagnostic": type(error).__name__ + ": per-probe subprocess limit"}
         results.append(record)
     gaps = [r["name"] for r in results
             if r["icarus"]["status"] == "passed" and r["kirimasim"]["status"] != "passed"]

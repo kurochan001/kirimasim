@@ -623,9 +623,19 @@ MUTANTS = [
      "        if (delay != nullptr) b_.delays = delaysOf(*delay, sl);",
      "        if (false) b_.delays = delaysOf(*delay, sl);"),
     ("kernel: a UDP's level rows do not decide", "src/kernel/include/kirimasim/kernel/udp.h",
-     "            if (detail::udpLevel(r, v, t.inputs, t.inputs))\n"
+     "            if (udpLevel(r, read, t.inputs, t.inputs))\n"
      "                return r.output == kUdpKeep ? state : r.output;",
      "            if (false)\n                return r.output == kUdpKeep ? state : r.output;"),
+    ("front: a UDP restores the obsolete 32-input limit", "src/front/lower.cpp",
+     "    t.inputs = static_cast<std::uint32_t>(prim.ports.size() - 1);",
+     "    t.inputs = static_cast<std::uint32_t>(prim.ports.size() - 1);\n"
+     "    if (t.inputs > 32) unsupported(sl, \"wide UDP mutation\");"),
+    ("vm: wide UDP inputs wrap at the old buffer size", "src/vm/vm.cpp",
+     "return code(v(1ULL + i));", "return code(v(1ULL + (i % 32)));"),
+    ("kernel: a wide UDP sees future input changes", "src/kernel/include/kirimasim/kernel/udp.h",
+     "i <= k ? cur(i) : prev(i)", "(t.inputs > 32 || i <= k) ? cur(i) : prev(i)"),
+    ("kernel: a wide UDP reads z without normalization", "src/kernel/include/kirimasim/kernel/udp.h",
+     "detail::udpKnown(read(i))", "t.inputs > 32 ? read(i) : detail::udpKnown(read(i))"),
     ("kernel: an unlisted UDP change keeps the state", "src/kernel/include/kirimasim/kernel/udp.h",
      "    return edge >= 0 ? static_cast<std::uint8_t>(edge) : kUdpX;",
      "    return edge >= 0 ? static_cast<std::uint8_t>(edge) : state;"),

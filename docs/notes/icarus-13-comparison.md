@@ -1,7 +1,7 @@
 # Icarus 13.0 and development-version comparison
 
 [日本語](icarus-13-comparison.ja.md). Measured 2026-10-24 at kirimasim
-source `c6d9c3d` (fork declaration lowering), documentation-build banner `392687e`, dev build on macOS/arm64. No installation was added and
+source `52652eb` (wide UDP evaluation), dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
 ## Verified versions and results
@@ -9,13 +9,13 @@ no other simulator source or tests were read.
 Existing binaries report `13.0 (stable) (v13_0)` for the compiler driver,
 preprocessor, parser/elaborator and runtime. The additional baseline's
 compiler/runtime report `14.0 (devel) (s20260301-411-gca6b8d376)`.
-Both ran the same 84 original probes from
+Both ran the same 87 original probes from
 [`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py):
 
-- **13.0 stable:** 24 Icarus-passing gaps and four reference result
-  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus13-array-port-probes.json).
-- **14.0 devel:** 30 Icarus-passing gaps and seven reference result
-  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus14-array-port-probes.json).
+- **13.0 stable:** 25 Icarus-passing gaps and four reference result
+  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus13-wide-udp-probes.json).
+- **14.0 devel:** 31 Icarus-passing gaps and seven reference result
+  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus14-wide-udp-probes.json).
 
 The six additional development-version gaps are array sum, queue sorting
 and the unique/empty min/max probes. Version 13.0 does not compile those
@@ -31,11 +31,29 @@ A reference mismatch can coexist with missing kirimasim support: class
 virtual dispatch is still unsupported. The JSON records each engine's
 status independently; these mechanisms must not disappear from P1 work.
 
-The inventory has 81 standard-mechanism probes, two `project_policy`
+The inventory has 84 standard-mechanism probes, two `project_policy`
 RHS-order probes and one `icarus_extension` (`wire real`). IEEE permits
 either side's evaluation first in the policy probes; their oracle tests
 the existing approved kirimasim order. Extensions and project choices are
 identified rather than presented as universal IEEE requirements.
+
+## Wide UDP inputs and the dense compilation boundary
+
+The newly inventoried `wide_udp_comb` and `wide_udp_seq` pass both references
+and the new native source. `dense_udp_coverage` passes both references and
+reaches the native 15-second subprocess bound. The expanded baseline has
+27/33 gaps and the current native 25/31; the baseline combines the retained
+84-item records with three fresh probes on the same old native source.
+All older 84 engine statuses and passing judged outputs are unchanged, and
+the older 24/30 counts retain their original cohort. Reference mismatches
+remain four/seven. Counts must not hide the newly measured compiler boundary.
+
+The [106-source matrix, kernel/SIR checks and controls](wide-udp-inputs.md)
+provide wider mechanism evidence. The 54 dense source variants remain a
+separate unresolved frontend limit, with [bounded observations](../measurements/2026-10-24/udp-edge-coverage-observations.json).
+Earlier 84-item [13.0](../measurements/2026-10-24/icarus13-array-port-probes.json)
+and [development](../measurements/2026-10-24/icarus14-array-port-probes.json)
+records are unchanged. Complete UDP/P1 source coverage remains unconfirmed.
 
 ## Fixed-array ports and resolved net arrays added to the inventory
 
@@ -134,9 +152,9 @@ their `-V` output. `iverilog -V` reports its helper components too.
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
   --iverilog "$IVERILOG_13" --vvp "$VVP_13" --extended \
-  --output build/icarus13-array-port-probes.json --require-parity
+  --output build/icarus13-wide-udp-probes.json --require-parity
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/icarus14-array-port-probes.json --require-parity
+  --extended --output build/icarus14-wide-udp-probes.json --require-parity
 ```
 
 The second command uses PATH, so verify its compiler/runtime versions rather

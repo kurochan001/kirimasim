@@ -1,6 +1,6 @@
 # Icarus 13.0と開発版による比較
 
-[English](icarus-13-comparison.md)。2026-10-24、`c6d9c3d`（fork宣言の変換、文書更新後の表示`392687e`）のdevビルド、
+[English](icarus-13-comparison.md)。2026-10-24、`52652eb`（広いUDPの評価）のdevビルド、
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
@@ -9,12 +9,12 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 既存のバイナリで、コンパイラdriver・プリプロセッサ・parser/elaborator・runtimeが
 すべて`13.0 (stable) (v13_0)`と表示することを確認しました。追加の比較対象は、
 コンパイラ・runtimeともに`14.0 (devel) (s20260301-411-gca6b8d376)`です。
-両方で[`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py)の独自84プローブを実行しました。
+両方で[`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py)の独自87プローブを実行しました。
 
-- **13.0 stable：** Icarusだけが通る差分24件、参照結果の不一致4件。
-  [個別の可搬的な記録](../measurements/2026-10-24/icarus13-array-port-probes.json)。
-- **14.0 devel：** Icarusだけが通る差分30件、参照結果の不一致7件。
-  [個別の可搬的な記録](../measurements/2026-10-24/icarus14-array-port-probes.json)。
+- **13.0 stable：** Icarusだけが通る差分25件、参照結果の不一致4件。
+  [個別の可搬的な記録](../measurements/2026-10-24/icarus13-wide-udp-probes.json)。
+- **14.0 devel：** Icarusだけが通る差分31件、参照結果の不一致7件。
+  [個別の可搬的な記録](../measurements/2026-10-24/icarus14-wide-udp-probes.json)。
 
 開発版だけの追加6差分は、配列の和、キューの並べ替え、最小・最大の重複なし・空の
 プローブです。13.0はこれらをコンパイルできません。重複・withキーの最小最大の3件も
@@ -27,10 +27,24 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 参照が不一致でもkirimasimの未対応がなくなるわけではなく、クラスのvirtual dispatchは
 依然未対応です。JSONは両エンジンの状態を独立に記録し、P1の作業から消しません。
 
-一覧は規格の仕組み81本、右辺順序を検査する`project_policy` 2本、
+一覧は規格の仕組み84本、右辺順序を検査する`project_policy` 2本、
 `icarus_extension` 1本（`wire real`）です。順序の2本ではIEEEは左右のどちらを先に
 評価してもよく、期待値は既存の承認済みkirimasimの順序です。
 拡張とプロジェクトの方針は、規格共通の要件とは区別して記載します。
+
+## 広いUDPと密な表のコンパイル境界
+
+追加した`wide_udp_comb`・`wide_udp_seq`は両参照と現nativeで通り、`dense_udp_coverage`は
+両参照で通ってnativeの15秒subprocess上限に達します。拡張後の旧baselineは差分27/33件、
+現nativeは25/31件です。旧baselineは保持した84件と、同じ旧nativeソースでの追加3件を
+組み合わせています。以前の84件の状態と通過した比較出力は同じで、当時の24/30件も保ちます。
+参照不一致4/7件も変わらず、新しいコンパイル境界を件数で隠しません。
+
+[106ソース・kernel/SIR・誤実装の検査](wide-udp-inputs.ja.md)で仕組みを広く確認します。
+密な54ソースは別の未解決のフロントエンド境界として[時間上限付き観測](../measurements/2026-10-24/udp-edge-coverage-observations.json)を保ちます。
+以前の84件の[13.0](../measurements/2026-10-24/icarus13-array-port-probes.json)と
+[開発版](../measurements/2026-10-24/icarus14-array-port-probes.json)は上書きしません。
+UDP/P1ソース全体の対応は引き続き未確認です。
 
 ## 固定長配列ポートと解決対象のネット配列を一覧へ追加
 
@@ -110,9 +124,9 @@ fork全範囲の対応とは扱いません。可搬的なデータは旧native�
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
   --iverilog "$IVERILOG_13" --vvp "$VVP_13" --extended \
-  --output build/icarus13-array-port-probes.json --require-parity
+  --output build/icarus13-wide-udp-probes.json --require-parity
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/icarus14-array-port-probes.json --require-parity
+  --extended --output build/icarus14-wide-udp-probes.json --require-parity
 ```
 
 2本目はPATHを使うため、開発版と決めつけずにコンパイラ・runtimeの版を確認してください。

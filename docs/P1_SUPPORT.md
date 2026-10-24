@@ -60,6 +60,15 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 `randcase` weights wider than 32 bits are not implemented.
 
+### UDP input counts and compilation limits
+
+The fixed 32-input evaluator/transport limit is removed. [106 original sources](notes/wide-udp-inputs.md)
+cover counts through 257, and independent kernel/SIR tests cover wide terminal
+matching, state order and operand validation. Direct kernel/reference checks
+also use 65,537 inputs; source compilation at that count is unconfirmed.
+Dense hold-row tables can exceed bounded compilation probes in pinned slang.
+They remain a tracked frontend limitation; no diagnostic or dependency is relaxed.
+
 ### Aggregate assignment capture
 
 Blocking and nonblocking aggregate assignments capture every RHS value

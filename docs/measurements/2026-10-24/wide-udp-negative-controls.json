@@ -1,0 +1,94 @@
+{
+  "meaning": "Compiled implementation corruptions; old four UDP tests pass, new real source stdout or wide value assertions detect each. No judging self-checks counted.",
+  "cases": [
+    {
+      "name": "front_limit",
+      "build_exit": 0,
+      "old_tests_exit": 0,
+      "wide_test_exit": 0,
+      "source_results": [
+        {
+          "name": "wide_udp_module_comb_33",
+          "exit": 2,
+          "expected_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820310a756e6b6e6f776e20780a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20780a7a5f7a65726f20300a",
+          "actual_stdout_hex": "",
+          "caught": true
+        },
+        {
+          "name": "wide_udp_module_comb_129",
+          "exit": 2,
+          "expected_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820310a756e6b6e6f776e20780a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20780a7a5f7a65726f20300a",
+          "actual_stdout_hex": "",
+          "caught": true
+        },
+        {
+          "name": "wide_udp_program_comb_257",
+          "exit": 2,
+          "expected_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820310a756e6b6e6f776e20780a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20780a7a5f7a65726f20300a",
+          "actual_stdout_hex": "",
+          "caught": true
+        },
+        {
+          "name": "wide_udp_instance_array_comb_65",
+          "exit": 2,
+          "expected_stdout_hex": "7a65726f203020300a6f6e655f696e707574203020300a626f7468203120310a756e6b6e6f776e207820780a646f6d696e617465203020300a6f746865725f7a65726f203020300a686967685f7a207820780a7a5f7a65726f203020300a",
+          "actual_stdout_hex": "",
+          "caught": true
+        }
+      ]
+    },
+    {
+      "name": "vm_wrap",
+      "build_exit": 0,
+      "old_tests_exit": 0,
+      "wide_test_exit": 1,
+      "source_results": [
+        {
+          "name": "wide_udp_module_comb_33",
+          "exit": 0,
+          "expected_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820310a756e6b6e6f776e20780a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20780a7a5f7a65726f20300a",
+          "actual_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820300a756e6b6e6f776e20300a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20300a7a5f7a65726f20300a",
+          "caught": true
+        },
+        {
+          "name": "wide_udp_module_comb_129",
+          "exit": 0,
+          "expected_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820310a756e6b6e6f776e20780a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20780a7a5f7a65726f20300a",
+          "actual_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820300a756e6b6e6f776e20300a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20300a7a5f7a65726f20300a",
+          "caught": true
+        },
+        {
+          "name": "wide_udp_program_comb_257",
+          "exit": 0,
+          "expected_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820310a756e6b6e6f776e20780a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20780a7a5f7a65726f20300a",
+          "actual_stdout_hex": "7a65726f20300a6f6e655f696e70757420300a626f746820300a756e6b6e6f776e20300a646f6d696e61746520300a6f746865725f7a65726f20300a686967685f7a20300a7a5f7a65726f20300a",
+          "caught": true
+        },
+        {
+          "name": "wide_udp_instance_array_comb_65",
+          "exit": 0,
+          "expected_stdout_hex": "7a65726f203020300a6f6e655f696e707574203020300a626f7468203120310a756e6b6e6f776e207820780a646f6d696e617465203020300a6f746865725f7a65726f203020300a686967685f7a207820780a7a5f7a65726f203020300a",
+          "actual_stdout_hex": "7a65726f203020300a6f6e655f696e707574203020300a626f7468203020300a756e6b6e6f776e203020300a646f6d696e617465203020300a6f746865725f7a65726f203020300a686967685f7a203020300a7a5f7a65726f203020300a",
+          "caught": true
+        }
+      ]
+    },
+    {
+      "name": "future_prefix",
+      "build_exit": 0,
+      "old_tests_exit": 0,
+      "wide_test_exit": 1,
+      "source_results": []
+    },
+    {
+      "name": "raw_z",
+      "build_exit": 0,
+      "old_tests_exit": 0,
+      "wide_test_exit": 1,
+      "source_results": []
+    }
+  ],
+  "restored": true,
+  "source_revision": "52652eb3f085f380fddf8a48043eeb77f69651be",
+  "measured": "2026-10-24"
+}

@@ -15,6 +15,30 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## UDP inputs beyond 32
+
+The evaluator accepts more than 32 inputs under the existing UDP rules.
+For an original 33-input combinational example, run:
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/nets/wide_udp_module_comb_33.sv
+```
+
+```text
+zero 0
+one_input 0
+both 1
+unknown x
+dominate 0
+other_zero 0
+high_z x
+z_zero 0
+```
+
+The [106-source evidence and limits](notes/wide-udp-inputs.md) include sequential
+values and wide input transport. Dense edge-coverage tables still expose a
+slang compilation-scaling limit; this is not complete UDP source support.
+
 ## Fork declarations and parent initialization
 
 Fork declarations initialize according to their lifetime in the parent; they

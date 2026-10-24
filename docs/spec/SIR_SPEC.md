@@ -337,6 +337,13 @@ Approved 2026-10-17.
 - `%r = udp.seq !table, state, previous input..., present input...`: a sequential UDP. Returns the state after applying, one at a time, the changes from the previous inputs to the present inputs by the rules of VALUE_SEMANTICS.md 5.9.
 - `!table` is the UDP row of the type table (4.3; the number `!N` of a row of the type table in the text form; changed from `@table` on 2026-10-17, since `@N` is used for numbers of processes and subroutines). An instance of a sequential UDP keeps its state and previous inputs in slots per instance (`<instance>.$state`, `<instance>.$prev`). The initial value of the state slot is put in by static-init (the initial value of VALUE_SEMANTICS.md 5.9). An instance with an initial value and a delay has a third slot, `<instance>.$started` (two-state, 0 at the start): the first time its process runs, it writes the state to the output with `store`, without the delay, and sets the slot, so that only the later changes take the delay (VALUE_SEMANTICS.md 5.9; added 2026-10-20, approved). `<instance>` of an element of an array of instances is the array's name with the element's indices, `<array>[i]` (added 2026-10-20, approved).
 
+Implementation status (2026-10-24): the former 32-input lowering/verifier and
+transport limits are removed. `udp.seq` operand counts are checked in 64-bit
+arithmetic; the kernel evaluates wide input/state views without allocating a
+fixed input array. The [source and independent SIR evidence](../notes/wide-udp-inputs.md)
+retains the existing UDP meaning. Dense edge-coverage source compilation still
+has a pinned-slang scaling boundary; strict diagnostics are unchanged.
+
 ### 5.6 Instructions of procedural continuous assignments
 
 Approved 2026-10-17.

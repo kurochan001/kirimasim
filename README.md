@@ -35,6 +35,12 @@ for the specification, the tests, and review.** See
 > support yet stops the run with an "unsupported" error at its source
 > position; it is never skipped silently.
 
+UDP evaluation now accepts input counts beyond 32 through the shared kernel.
+[106 original sources and independent value checks](docs/notes/wide-udp-inputs.md)
+cover late terminals, state, X/Z, delays and strength. A dense-table compilation
+scaling problem remains in pinned slang; complete wide UDP source coverage
+is unconfirmed and strict diagnostics remain unchanged.
+
 The dynamic-array/queue execution amendment was approved on 2026-10-23.
 The shared kernel now has a typed heap with deep copying, stable element
 references, bounded queues, exact tracing and allocation-failure rollback.
@@ -121,17 +127,18 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory now has 84 original probes. With Icarus `13.0 (stable) (v13_0)`,
-24 Icarus-passing gaps and four reference result mismatches remain. With
-`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 30 and seven.
+inventory now has 87 original probes. With Icarus `13.0 (stable) (v13_0)`,
+25 Icarus-passing gaps and four reference result mismatches remain. With
+`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 31 and seven.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
 would not by itself establish complete coverage; the inventory must expand
 as mechanisms and interfaces are checked.
-The earlier 82 statuses are unchanged. Whole fixed-array ports and resolved
-net arrays pass both references and remain unsupported natively. Adding them
-increases the inventory's gap count; production code is unchanged.
+The earlier 84 statuses are unchanged. The two newly inventoried wide UDP
+examples now pass both references and native execution. A new dense-coverage
+source still reaches the native subprocess bound. On the same expanded list,
+the retained baseline has 27/33 gaps and the current native 25/31.
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
 records 32 original programs and remains pending review.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
@@ -173,11 +180,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 3,205 | 3,203, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 3,317 | 3,315, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 299, `tests/suite/` 2,712 (made by 128 generators under `tools/`), tools 135, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 304, `tests/suite/` 2,818 (made by 129 generators under `tools/`), tools 136, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -192,18 +199,17 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI at `392687e` (native source `c6d9c3d`) passes all four configurations (2026-10-24).
-Dev/ASan/UBSan each have 3,205 tests: 3,203 pass and two known skips remain.
-Release has 3,206 tests: 3,204 pass and the same skips. All 135 Tools tests
-and 72 new fork-declaration sources pass. Static checks, README counts,
-clang-format and clang-tidy pass. All 29 existing SIR dump expectations are
-unchanged. Three compiled controls fail actual new stdout; a fourth fails
-real source SIR verification. Aggregate and fork CLI expectation corrections
-remain separate review baselines.
+Full local CI passes with native source `52652eb` and the registry/count
+follow-up (2026-10-24). Dev/ASan/UBSan each run 3,317 tests: 3,315 pass and
+two known skips remain. Release runs 3,318: 3,316 pass and the same skips.
+All 136 Tools tests, 106 new source cases and five new unit tests pass.
+Release flags, banned features, SPDX, suite files, global state, expectation
+protection, README counts, clang-format and clang-tidy pass. Existing suite
+bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
 
-The same 84-probe inventory has separate 13.0-stable and 14.0-development
-results: 13.0 has 24 Icarus-passing gaps and four reference mismatches;
-14.0 has 30 and seven.
+The same 87-probe inventory has separate 13.0-stable and 14.0-development
+results: 13.0 has 25 Icarus-passing gaps and four reference mismatches;
+14.0 has 31 and seven.
 See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below

@@ -1,0 +1,507 @@
+{
+  "measured": "2026-10-24",
+  "purpose": "Original edge-coverage compilation scaling probes; timeouts are measured bounds, not proof of nontermination.",
+  "native_banner": "kirimasim 0.0.0 (commit 392687e67966), built with AppleClang 21.0.0.21000334",
+  "source_revision": "c6d9c3d49459f3a554b6b12635eb78861b51f5a2",
+  "cases": [
+    {
+      "inputs": 3,
+      "source": "`timescale 1ns/1ns\nprimitive udp_value(result,i0,i1,i2);\noutput result;\nreg result;\ninput i0,i1,i2;\ninitial result=1'b1;\ntable\n? 0 (01) : ? : 0;\n? 1 (01) : ? : 1;\n? ? (?0) : ? : -;\n* ? ? : ? : -;\n? * ? : ? : -;\nendtable\nendprimitive\nmodule top;\nlogic [2:0] data;\nwire result;\nudp_value cell0(result,data[0],data[1],data[2]);\ninitial begin\ndata='0;#1;\n$display(\"initial %b\",result);\nend\nendmodule\n",
+      "source_sha256": "e0391669d1f1fda1971c9587ff7ddb6672a2eaa190ef5f0496170ed41008cbfc",
+      "results": {
+        "native_parse": {
+          "exit": 0,
+          "elapsed_seconds": 0.011,
+          "status": "completed",
+          "diagnostic": []
+        },
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        }
+      }
+    },
+    {
+      "inputs": 5,
+      "source": "`timescale 1ns/1ns\nprimitive udp_value(result,i0,i1,i2,i3,i4);\noutput result;\nreg result;\ninput i0,i1,i2,i3,i4;\ninitial result=1'b1;\ntable\n? ? ? 0 (01) : ? : 0;\n? ? ? 1 (01) : ? : 1;\n? ? ? ? (?0) : ? : -;\n* ? ? ? ? : ? : -;\n? * ? ? ? : ? : -;\n? ? * ? ? : ? : -;\n? ? ? * ? : ? : -;\nendtable\nendprimitive\nmodule top;\nlogic [4:0] data;\nwire result;\nudp_value cell0(result,data[0],data[1],data[2],data[3],data[4]);\ninitial begin\ndata='0;#1;\n$display(\"initial %b\",result);\nend\nendmodule\n",
+      "source_sha256": "6c5785f1d2724936a2074aeca9375fef8d7ccc31cd4172a49260acf1817d1e47",
+      "results": {
+        "native_parse": {
+          "exit": 0,
+          "elapsed_seconds": 0.02,
+          "status": "completed",
+          "diagnostic": []
+        },
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        }
+      }
+    },
+    {
+      "inputs": 9,
+      "source": "`timescale 1ns/1ns\nprimitive udp_value(result,i0,i1,i2,i3,i4,i5,i6,i7,i8);\noutput result;\nreg result;\ninput i0,i1,i2,i3,i4,i5,i6,i7,i8;\ninitial result=1'b1;\ntable\n? ? ? ? ? ? ? 0 (01) : ? : 0;\n? ? ? ? ? ? ? 1 (01) : ? : 1;\n? ? ? ? ? ? ? ? (?0) : ? : -;\n* ? ? ? ? ? ? ? ? : ? : -;\n? * ? ? ? ? ? ? ? : ? : -;\n? ? * ? ? ? ? ? ? : ? : -;\n? ? ? * ? ? ? ? ? : ? : -;\n? ? ? ? * ? ? ? ? : ? : -;\n? ? ? ? ? * ? ? ? : ? : -;\n? ? ? ? ? ? * ? ? : ? : -;\n? ? ? ? ? ? ? * ? : ? : -;\nendtable\nendprimitive\nmodule top;\nlogic [8:0] data;\nwire result;\nudp_value cell0(result,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8]);\ninitial begin\ndata='0;#1;\n$display(\"initial %b\",result);\nend\nendmodule\n",
+      "source_sha256": "e83173bfcb416c4779447fff11d7f8f088ab3cc06b29b129c4e9b7fe6a3b57fa",
+      "results": {
+        "native_parse": {
+          "exit": 0,
+          "elapsed_seconds": 0.037,
+          "status": "completed",
+          "diagnostic": []
+        },
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        }
+      }
+    },
+    {
+      "inputs": 13,
+      "source": "`timescale 1ns/1ns\nprimitive udp_value(result,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12);\noutput result;\nreg result;\ninput i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12;\ninitial result=1'b1;\ntable\n? ? ? ? ? ? ? ? ? ? ? 0 (01) : ? : 0;\n? ? ? ? ? ? ? ? ? ? ? 1 (01) : ? : 1;\n? ? ? ? ? ? ? ? ? ? ? ? (?0) : ? : -;\n* ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? * ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? * ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? * ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? * ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? * ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? * ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? * ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? * ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? * ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? * ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? * ? : ? : -;\nendtable\nendprimitive\nmodule top;\nlogic [12:0] data;\nwire result;\nudp_value cell0(result,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12]);\ninitial begin\ndata='0;#1;\n$display(\"initial %b\",result);\nend\nendmodule\n",
+      "source_sha256": "0b7ec8996aa077bc6f52b742bfc4df62d13aca98e689b770b1403ef12e52e630",
+      "results": {
+        "native_parse": {
+          "status": "timeout",
+          "timeout_seconds": 2,
+          "elapsed_seconds": 2.006
+        },
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        }
+      }
+    },
+    {
+      "inputs": 17,
+      "source": "`timescale 1ns/1ns\nprimitive udp_value(result,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16);\noutput result;\nreg result;\ninput i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16;\ninitial result=1'b1;\ntable\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 0 (01) : ? : 0;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 1 (01) : ? : 1;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? (?0) : ? : -;\n* ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? : ? : -;\nendtable\nendprimitive\nmodule top;\nlogic [16:0] data;\nwire result;\nudp_value cell0(result,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12],data[13],data[14],data[15],data[16]);\ninitial begin\ndata='0;#1;\n$display(\"initial %b\",result);\nend\nendmodule\n",
+      "source_sha256": "6889fa9ccd605b0083efeb3e51bf3c3ff37501f781453ff5f881190425975550",
+      "results": {
+        "native_parse": {
+          "status": "timeout",
+          "timeout_seconds": 2,
+          "elapsed_seconds": 2.004
+        },
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 1\n"
+        }
+      }
+    },
+    {
+      "inputs": 33,
+      "source": "`timescale 1ns/1ns\nprimitive udp_value(result,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32);\noutput result;\nreg result;\ninput i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32;\ninitial result=1'b1;\ntable\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 0 (01) : ? : 0;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 1 (01) : ? : 1;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? (?0) : ? : -;\n* ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? : ? : -;\nendtable\nendprimitive\nmodule top;\nlogic [32:0] data;\nwire result;\nudp_value cell0(result,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12],data[13],data[14],data[15],data[16],data[17],data[18],data[19],data[20],data[21],data[22],data[23],data[24],data[25],data[26],data[27],data[28],data[29],data[30],data[31],data[32]);\ninitial begin\ndata='0;#1;\n$display(\"initial %b\",result);\nend\nendmodule\n",
+      "source_sha256": "05c4aba7cd89deedb2f50662c2a00765b8ea26e3abff60529c8745fc5fadaab4",
+      "results": {
+        "native_parse": {
+          "status": "timeout",
+          "timeout_seconds": 2,
+          "elapsed_seconds": 2.003
+        },
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 0\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "initial 0\n"
+        }
+      }
+    }
+  ],
+  "platform": "macOS/arm64",
+  "slang_revision": "3b351a52b15755b896d3b0144ae0432547d86618",
+  "slang_source": "https://github.com/MikePopoloski/slang/blob/3b351a52b15755b896d3b0144ae0432547d86618/source/ast/symbols/MemberSymbols.cpp#L1212",
+  "sample_summary": "An interrupted dense 65-input parse was observed inside checkPrimitiveEdgeCombinations / BitTrie::contains. No raw process trace, machine identifiers or implementation assertion text is included.",
+  "dense_source_variants": [
+    {
+      "name": "wide_udp_module_seq_31",
+      "source_sha256": "28b04dd5e8656906321abe14912ffc522e9f1e6b9a614018223806757c7a8fd9",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_31",
+      "source_sha256": "8851da8a82b11baa8979b3d71629c4a8f9bb83ec0504f83c1c460ddd8f39df35",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_31",
+      "source_sha256": "4ef07011f4a6f42d31722be5ff9dd8258430807299f61a4dc70622e3f257e747",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_31",
+      "source_sha256": "21283e3ca71cfbe172a97ebd22b4524b99b8377284f3358e131cb1f4ac183df4",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_31",
+      "source_sha256": "d28b19efa1fe51a07502123f7da84e2013c1c90b1aaeea4af242b4d7a1ec7263",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_32",
+      "source_sha256": "660cebe86120383609e0802bc1da24c0ccf898541b4ded9157b973d1c0ec84fb",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_32",
+      "source_sha256": "a6c0f14d99d09dfa6332f6103b1f680c8a49d8e2a55e0053cf712fe77d3983aa",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_32",
+      "source_sha256": "023cab2ecba98c9065e802a738032ac4dbf135a675ed6bb3eb3e0bce202a7cd5",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_32",
+      "source_sha256": "0d9d2652bd7b9386416ee28af98da7b53846654f44ec4023246dd7dd54cec029",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_32",
+      "source_sha256": "33f117fc020f70d742a652c2535b1f81f04f827cbe0d0e443dfe8ebb515b6cb8",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_33",
+      "source_sha256": "1cae1f1f4ee667072efa5d9876be115efaa4fdd5be83b245feb8d71d95b0d33b",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_33",
+      "source_sha256": "cab539a7506c2af758af7681fc18a62e262955660813c1a6e3c87d51d56e6347",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_33",
+      "source_sha256": "993be52fd72f1d86eb971a4b9365e3b97be6c0f4b5f1050a8fe04979ed964d30",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_33",
+      "source_sha256": "83f024a6e091195d78a77afd54577cc8570e71b130e7088667fa71b7c941ddac",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_33",
+      "source_sha256": "0a8386cb993052e4ebd78c062cec8779fad58ef012c4976b73f0ec184b31efb5",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_63",
+      "source_sha256": "dabd129fb4be455f94bcb0b125b4861cf05e8a42139d3d7cee01734087a0d0aa",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_63",
+      "source_sha256": "611e1c3362cb47a6c75e8f7e23dd3c371df96b7ecf6ad8a73ba7dd7406b93cb5",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_63",
+      "source_sha256": "90386a0df4c25e1b09c1fe85b11e539487663307ae01908ee551deb6a2b5085f",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_63",
+      "source_sha256": "e229f1431314b0445b7711000830f215e7aa6c93f7ca79ce1f5c2af4bda16e12",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_63",
+      "source_sha256": "a60cfa5619634f8293720a3b4e3c52de95ec8d7f6cd997333bda710ad7f0272c",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_64",
+      "source_sha256": "0af98a6054804891ee164aaf584afffda9151cf635374031043f8b7238a023be",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_64",
+      "source_sha256": "2990675ccd57f4c4210c260fe5d2daf555fa83e4baa8aed10492182319027406",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_64",
+      "source_sha256": "842fb8ff620bcf7cf55811ae9c6e64606992fa57325b841f3b0a88afc34e23e3",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_64",
+      "source_sha256": "c035a2b725135632a937d74e589ea0d4292d30cb6e9a1a36f85dd5bff7472c7c",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_64",
+      "source_sha256": "dd867578243cd5553d8568270f40942b3b62e931a55c8da744cd9052f1056b95",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_65",
+      "source_sha256": "2c788bcb95c6c79750dc53cff2c7c58ed33340ee11f6e53939e537ca5bef836b",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_65",
+      "source_sha256": "273086a53c61926a4355edbac5d28470301e30707261a3a09b54f54984106ec6",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_65",
+      "source_sha256": "7538dc5731cb367bdb1aa6f0d35422633c881331011a0e6c748af3ef4a057272",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_65",
+      "source_sha256": "7dfc49e5ca65aa5d44693dc7b4cbca423e8cb27a294b5ffb007bba2288e478a7",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_65",
+      "source_sha256": "d4251f94b788231211e4aa3f8410c54bc022275dd5a77fd41203bfd592baadd6",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_127",
+      "source_sha256": "98843a7e9bf031747084f7491edd1cf0baef6cbd52d1d48393140b8158e22adb",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_127",
+      "source_sha256": "27994b9e3a5e469e82e95ecb43ebddcd5ef5264a53007cd9a0bca964a1dc7fd0",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_127",
+      "source_sha256": "0cc02ec50a4722fbe56d81c0656a0b6b9148f021542f118539b2a50eba847579",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_127",
+      "source_sha256": "dbaa9918616b9bfb7e392ed8ab7904290d33a9c06890eda6ceeacab65e3325f6",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_127",
+      "source_sha256": "af14b4c9f086b66833d8355bf58147336def14007662f294a9b77c05c76fb1b4",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_128",
+      "source_sha256": "3168e44276188d5e7808722f1185d8c76435ee293adc5b079fa80cc5c987e8ad",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_128",
+      "source_sha256": "fb8a5eb4dba06a70cda271432114b83a9b7cfdc52f1b221d193da76f61be2653",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_128",
+      "source_sha256": "ed957dd0bdb378fa8fc118313525834fd27fcf5768dec397b28208395c3e0ad3",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_128",
+      "source_sha256": "71a2a5d71acaf77c34163e1a0841da37615c3d883be0b44e9d086bb66569076c",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_128",
+      "source_sha256": "97538063903fc821516a559bfe5533b5901c35e6c7126af9a1fd42ab10237783",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_129",
+      "source_sha256": "ac6d7b0db0a77a7c40a81ac2a2ae1114fd392c5f653963f8c6363547a9ec14ab",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_129",
+      "source_sha256": "def07e1414b3bb29f1895abae583533eb55413f53ee6880b3e2bd2c799895978",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_129",
+      "source_sha256": "64d93a956e49888fc789672e5cce35de3f96f331a62d4815a53bef46158e2b69",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_129",
+      "source_sha256": "6fec61ed187b438c03525147a269db6ce35b9b1e69abb32cb65ca8ea26dc834c",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_129",
+      "source_sha256": "ae5fd5f3e2a6431d80659daa1cdbe33b28ef5e19c58e4051cae1958a612c04b6",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_module_seq_257",
+      "source_sha256": "ee829081fdfe73b50526a0bd2786127ee38d18bda0780bbcbbb9e7ae26760024",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_generate_seq_257",
+      "source_sha256": "7d833c89828ccee174bc24346c81c94a067114f424aeda74d3d0634eb982ac92",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_interface_seq_257",
+      "source_sha256": "fa935fa938b7d616e96ecc59dca864e9d90a9ece97d5e680944eab636a187738",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_program_seq_257",
+      "source_sha256": "d705feb6bf2042ce86d0c1bc3e3fe7db52ac882fd697894a9293ee28fb319a93",
+      "proposed_stdout_hex": "696e697469616c20310a6461746120310a7269736520310a66616c6c20310a686f6c6420310a7a65726f20300a756e6b6e6f776e5f6461746120300a756e6b6e6f776e5f636c6f636b656420780a7265636f76657220310a756e7573656420310a756e757365645f7a20310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_instance_array_seq_257",
+      "source_sha256": "1ccc6e310472c08c01a9e0e751f60ccf55aaf1c1bff2520024a0ac2a8b811b2c",
+      "proposed_stdout_hex": "696e697469616c203120310a64617461203120310a72697365203120310a66616c6c203120310a686f6c64203120310a7a65726f203020300a756e6b6e6f776e5f64617461203020300a756e6b6e6f776e5f636c6f636b6564207820780a7265636f766572203120310a756e75736564203120310a756e757365645f7a203120310a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_delayed_module_33",
+      "source_sha256": "6e659fdeeeea06e65f0db869c0502df2ed01f1b98c46c4b21d6b09b7e6e8c406",
+      "proposed_stdout_hex": "696e697469616c20310a6265666f726520310a64656c69766572656420300a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_delayed_generate_65",
+      "source_sha256": "361643a9d3e31093438f2a7f121dfae4bfb25fe17783312eb86f192bab5453e4",
+      "proposed_stdout_hex": "696e697469616c20310a6265666f726520310a64656c69766572656420300a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_delayed_interface_129",
+      "source_sha256": "9dade55bc1b5c356cbd30a634de664f23caa4855019c0aed8bad8a9668bb1dbe",
+      "proposed_stdout_hex": "696e697469616c20310a6265666f726520310a64656c69766572656420300a",
+      "status": "source coverage checking pending; not a passing suite case"
+    },
+    {
+      "name": "wide_udp_delayed_program_257",
+      "source_sha256": "5d8141ba00ce3992bc19ee2faca71048b28f95eec9ec5b6605b716030502ee90",
+      "proposed_stdout_hex": "696e697469616c20310a6265666f726520310a64656c69766572656420300a",
+      "status": "source coverage checking pending; not a passing suite case"
+    }
+  ],
+  "reproduce_variants": [
+    "python3",
+    "tools/gen_wide_udp_matrix.py",
+    "--dense-sequential-repro-dir",
+    "build/udp-coverage-repros"
+  ],
+  "variant_generator_sha256": "543e0572be5efe4985aa8b97288bc056af23087d2b9a0bc00ab35931679d0ae5",
+  "dependency_policy": "Pinned slang and strict diagnostics remain unchanged; no dependency code was patched and no warning was disabled.",
+  "finite_reproducer": {
+    "source": "primitive wide(q,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32);output q;reg q;input i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32;table p 0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 0;\np 1 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 1;\nn 0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 0;\nn 1 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 1;\n* x ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : x;\n? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? : ? : -;\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * : ? : -; endtable endprimitive module top;reg [32:0] d;wire q;wide u(q,d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],d[13],d[14],d[15],d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],d[32]);initial begin d='0;d[1]=1;#1;d[0]=1;#1;$display(\"%b\",q);end endmodule\n",
+    "source_sha256": "71a0cdcd51fe8c88d0ebc6ad2e1d0a5730bf1105e6a278233701edcef9182540",
+    "native_parse": {
+      "status": "timeout",
+      "timeout_seconds": 2
+    },
+    "native_execute_before": {
+      "status": "timeout",
+      "timeout_seconds": 15
+    },
+    "native_execute_after": {
+      "status": "timeout",
+      "timeout_seconds": 15
+    },
+    "references": {
+      "13": {
+        "status": "passed",
+        "stdout": "1\n"
+      },
+      "14": {
+        "status": "passed",
+        "stdout": "1\n"
+      }
+    }
+  }
+}

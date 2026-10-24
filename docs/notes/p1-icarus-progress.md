@@ -11,7 +11,8 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [fork-local declarations](fork-local-declarations.md),
+The current implementation includes [wide UDP input evaluation](wide-udp-inputs.md),
+[fork-local declarations](fork-local-declarations.md),
 [wide L/H strength masks](wide-gate-strength.md),
 [aggregate blocking timing](blocking-aggregate-timing.md),
 [aggregate value capture](aggregate-value-capture.md),
@@ -29,36 +30,37 @@ and unresolved interval/force/startup questions. These exploratory observations
 are separate from the feature inventory below and do not approve new semantics
 or add implemented support.
 
-Full local CI at `392687e` (native source `c6d9c3d`) passes configure/build/test for dev/release/ASan/UBSan.
-Dev/ASan/UBSan each run 3,205 tests (3,203 pass, two known skips); release runs
-3,206 (3,204 pass, the same skips). Release flags, banned features, SPDX,
-suite files, global state, per-commit expectation protection, README counts,
-clang-format and clang-tidy also pass. Unit/suite/tool/generator counts are
-299/2,712/135/128. Existing suite bodies, suite expectations and performance
-counts are unchanged; aggregate and fork CLI corrections remain separate
-review baselines. All 29 existing SIR dumps pass. Three fork-declaration
-mutations fail actual new stdout and another fails real source SIR verification;
-anchor/judging self-checks are excluded as evidence. All 72 new sources pass
-natively; both measured references match 58, reject nine and differ on five.
+The UDP implementation at `52652eb` passes 106 new source cases and five
+new unit tests. Four compiled controls pass the older four UDP tests and fail
+new source stdout or wide value assertions. The old level-row mutant follows
+the new helper; all 507 registered controls apply.
 
-The same **84 original probes** now run against both installed references:
+Full local CI passes with native source `52652eb` and the registry/count
+follow-up (2026-10-24). Dev/ASan/UBSan each run 3,317 tests: 3,315 pass and
+two known skips remain. Release runs 3,318: 3,316 pass and the same skips.
+All 136 Tools tests, 106 new source cases and five new unit tests pass.
+Release flags, banned features, SPDX, suite files, global state, expectation
+protection, README counts, clang-format and clang-tidy pass. Existing suite
+bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
 
-- Icarus `13.0 (stable) (v13_0)`: 24 Icarus-passing gaps, four reference
+The same **87 original probes** now run against both installed references:
+
+- Icarus `13.0 (stable) (v13_0)`: 25 Icarus-passing gaps, four reference
   result mismatches.
-- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 30 Icarus-passing gaps,
+- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 31 Icarus-passing gaps,
   seven reference result mismatches.
 
 See the [versioned comparison and portable data](icarus-13-comparison.md).
 The compiler driver, preprocessor, parser/elaborator and runtime were all
 verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
-unconfirmed. All earlier 82 statuses and passing judged outputs are unchanged.
-The added whole fixed-array port and resolved-net-array cases pass both references
-and remain native gaps. Production code is unchanged; the count increases because
-the inventory now includes two more unsupported mechanisms. The 82-item comparison
-retains its 22/28 gap counts. The previous 81-item comparison retains
-its measured 21/27 current-native and 22/28 previous-native gap counts. Dated
-entries below retain their historical probe cohorts.
+unconfirmed. All earlier 84 statuses and passing judged outputs are unchanged.
+The new combinational/sequential wide UDP probes pass both references and native
+execution. A new dense table still reaches the native 15-second subprocess bound.
+The expanded baseline has 27/33 gaps and the current native 25/31; it combines
+preserved 84-item records and three fresh probes on the same retained source.
+The earlier 84-item cohort retains 24/30 gaps. This closes two newly inventoried
+mechanisms and exposes a compiler limit, without changing older cohort results.
 
 Eight detailed semantic amendments remain pending:
 
@@ -97,10 +99,19 @@ matches 36 legal model outputs, rejects 15 legal sources and differs on one;
 rejects the other 48 legal examples. Explicit input-var reevaluation differs
 in the references; their acceptance of two illegal writer programs does not
 justify weakening slang. No array-port or resolved-array implementation is added.
-This documentation/probe follow-up passes all 135 Tools tests, source-hash
+The earlier array-port documentation/probe follow-up passed all 135 Tools tests, source-hash
 checks, passing-output comparisons and changed-document file-link checks.
-Production source and existing test expectations remain at `c6d9c3d`; the
-full four-configuration CI evidence above is from `392687e`.
+At that step, production source and expectations were at `c6d9c3d`, with
+full four-configuration CI at `392687e`. The subsequent UDP source is described above.
+
+The [UDP record](wide-udp-inputs.md) separates 106 passing native source cases
+from 54 dense source variants blocked by pinned slang coverage checking.
+Both references match 25 of the runnable cases; their remaining compilation,
+execution and value differences are preserved. Direct kernel/reference checks
+also cover 65,537 inputs, without claiming source compilation at that size.
+The [bounded compilation data](../measurements/2026-10-24/udp-edge-coverage-observations.json)
+and [upstream issue draft](slang-udp-coverage-issue-draft.md) preserve the unresolved
+frontend behavior. No upstream issue/comment has been sent.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep
