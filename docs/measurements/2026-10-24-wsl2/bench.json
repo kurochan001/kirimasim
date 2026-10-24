@@ -1,0 +1,2866 @@
+{
+ "info": {
+  "machine": {
+   "os": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+   "cores": 32,
+   "load_average": [
+    0.17,
+    0.53,
+    1.68
+   ],
+   "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+   "memory_gib": 110,
+   "distribution": "Ubuntu 24.04.4 LTS"
+  },
+  "runs": 5,
+  "timeout_seconds": 600,
+  "versions": {
+   "kirimasim": "kirimasim 0.0.0 (commit 31160083c77d), built with Clang 20.1.8",
+   "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-25-g07dd50d37)",
+   "verilator": "Verilator 5.050 2026-07-01 rev v5.050-60-g3d2421f3b",
+   "nvc": "nvc 1.23.0 (Using LLVM 22.1.8)",
+   "lyra": "a2313fd (bazel -c opt)",
+   "lyra_llvm": "a2313fd (bazel -c opt)"
+  }
+ },
+ "counts": {
+  "comb_chain": 3000000,
+  "fork_join": 4000000,
+  "nba_shift": 1000000,
+  "proc_wait": 1000000
+ },
+ "results": {
+  "kirimasim": {
+   "comb_chain": {
+    "build_seconds": null,
+    "build": null,
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.005219770002440782,
+       "max_rss_mib": 1.84375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.003977593998570228,
+       "max_rss_mib": 1.46484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0037022280012024567,
+       "max_rss_mib": 1.19921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.005073819000244839,
+       "max_rss_mib": 0.87109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.005393772000388708,
+       "max_rss_mib": 0.875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0032815119993756525,
+       "max_rss_mib": 1.77734375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 8.183582141999068,
+       "max_rss_mib": 23.39453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 7.98481526100295,
+       "max_rss_mib": 23.44140625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 8.17138058799901,
+       "max_rss_mib": 23.421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 8.04501075799999,
+       "max_rss_mib": 23.49609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 8.24076333300036,
+       "max_rss_mib": 23.47265625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      }
+     ]
+    },
+    "base_seconds": 0.003977593998570228,
+    "whole_seconds": 8.17138058799901,
+    "simulation_seconds": 8.16740299400044,
+    "max_rss_mib": 23.44140625,
+    "all_seconds": [
+     [
+      0.003977593998570228,
+      0.0037022280012024567,
+      0.005073819000244839,
+      0.005393772000388708,
+      0.0032815119993756525
+     ],
+     [
+      8.183582141999068,
+      7.98481526100295,
+      8.17138058799901,
+      8.04501075799999,
+      8.24076333300036
+     ]
+    ]
+   },
+   "fork_join": {
+    "build_seconds": null,
+    "build": null,
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0061856379979872145,
+       "max_rss_mib": 0.875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.00308611199943698,
+       "max_rss_mib": 1.19921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0038389449982787482,
+       "max_rss_mib": 0.86328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.003559640001185471,
+       "max_rss_mib": 0.87109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.00460989199928008,
+       "max_rss_mib": 0.9453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0032786259980639443,
+       "max_rss_mib": 1.19921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 4.097140040998056,
+       "max_rss_mib": 21.5859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.215491013001156,
+       "max_rss_mib": 21.5,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.243639903997973,
+       "max_rss_mib": 21.58203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.334839995000948,
+       "max_rss_mib": 21.484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.229346903997794,
+       "max_rss_mib": 21.5,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      }
+     ]
+    },
+    "base_seconds": 0.003559640001185471,
+    "whole_seconds": 4.229346903997794,
+    "simulation_seconds": 4.225787263996608,
+    "max_rss_mib": 21.5,
+    "all_seconds": [
+     [
+      0.00308611199943698,
+      0.0038389449982787482,
+      0.003559640001185471,
+      0.00460989199928008,
+      0.0032786259980639443
+     ],
+     [
+      4.097140040998056,
+      4.215491013001156,
+      4.243639903997973,
+      4.334839995000948,
+      4.229346903997794
+     ]
+    ]
+   },
+   "nba_shift": {
+    "build_seconds": null,
+    "build": null,
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.006144924998807255,
+       "max_rss_mib": 1.78125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.004217261001031147,
+       "max_rss_mib": 1.1328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.005814627998915967,
+       "max_rss_mib": 1.13671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.004058161001012195,
+       "max_rss_mib": 0.9453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.004775998000695836,
+       "max_rss_mib": 0.9453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.003957541997806402,
+       "max_rss_mib": 1.1328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 20.516175664997718,
+       "max_rss_mib": 23.515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 19.729570644001797,
+       "max_rss_mib": 23.5078125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 19.75937781399989,
+       "max_rss_mib": 23.53515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 20.194015273998957,
+       "max_rss_mib": 23.50390625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 20.910191055001633,
+       "max_rss_mib": 23.6640625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      }
+     ]
+    },
+    "base_seconds": 0.004217261001031147,
+    "whole_seconds": 20.194015273998957,
+    "simulation_seconds": 20.189798012997926,
+    "max_rss_mib": 23.515625,
+    "all_seconds": [
+     [
+      0.004217261001031147,
+      0.005814627998915967,
+      0.004058161001012195,
+      0.004775998000695836,
+      0.003957541997806402
+     ],
+     [
+      20.516175664997718,
+      19.729570644001797,
+      19.75937781399989,
+      20.194015273998957,
+      20.910191055001633
+     ]
+    ]
+   },
+   "proc_wait": {
+    "build_seconds": null,
+    "build": null,
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.008890044999134261,
+       "max_rss_mib": 1.45703125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.005316385002515744,
+       "max_rss_mib": 1.1328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.005280284000036772,
+       "max_rss_mib": 0.9453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.005450018001283752,
+       "max_rss_mib": 1.19921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.00553388700063806,
+       "max_rss_mib": 1.1328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.005032277000282193,
+       "max_rss_mib": 1.0703125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 6.331207188999542,
+       "max_rss_mib": 25.2578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 6.1624984859990946,
+       "max_rss_mib": 25.08203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 6.109646869001153,
+       "max_rss_mib": 25.31640625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 6.126441093001631,
+       "max_rss_mib": 25.25,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 6.140141820997087,
+       "max_rss_mib": 25.57421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      }
+     ]
+    },
+    "base_seconds": 0.005316385002515744,
+    "whole_seconds": 6.140141820997087,
+    "simulation_seconds": 6.134825435994571,
+    "max_rss_mib": 25.2578125,
+    "all_seconds": [
+     [
+      0.005316385002515744,
+      0.005280284000036772,
+      0.005450018001283752,
+      0.00553388700063806,
+      0.005032277000282193
+     ],
+     [
+      6.331207188999542,
+      6.1624984859990946,
+      6.109646869001153,
+      6.126441093001631,
+      6.140141820997087
+     ]
+    ]
+   }
+  },
+  "icarus": {
+   "comb_chain": {
+    "build_seconds": 0.023442090998287313,
+    "build": {
+     "seconds": 0.023442090998287313,
+     "steps": [
+      {
+       "command": [
+        "iverilog",
+        "-g2012",
+        "-o",
+        "${WORK}/bench.vvp",
+        "${PROJECT_ROOT}/bench/comb_chain.sv"
+       ],
+       "seconds": 0.023442090998287313,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.002988465999806067,
+       "max_rss_mib": 1.00390625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.002478981998137897,
+       "max_rss_mib": 1.0859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0034432319989718962,
+       "max_rss_mib": 0.7890625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0037409449978440534,
+       "max_rss_mib": 0.84765625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0034246629984409083,
+       "max_rss_mib": 0.94921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0034775839994836133,
+       "max_rss_mib": 0.8671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 13.235170150997874,
+       "max_rss_mib": 7.80078125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 13.36813016800079,
+       "max_rss_mib": 7.79296875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 13.269927258999815,
+       "max_rss_mib": 7.80078125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 12.991698598001676,
+       "max_rss_mib": 7.8046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 13.333247778999066,
+       "max_rss_mib": 7.7421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      }
+     ]
+    },
+    "base_seconds": 0.0034432319989718962,
+    "whole_seconds": 13.269927258999815,
+    "simulation_seconds": 13.266484027000843,
+    "max_rss_mib": 7.80078125,
+    "all_seconds": [
+     [
+      0.002478981998137897,
+      0.0034432319989718962,
+      0.0037409449978440534,
+      0.0034246629984409083,
+      0.0034775839994836133
+     ],
+     [
+      13.235170150997874,
+      13.36813016800079,
+      13.269927258999815,
+      12.991698598001676,
+      13.333247778999066
+     ]
+    ]
+   },
+   "fork_join": {
+    "build_seconds": 0.004628149999916786,
+    "build": {
+     "seconds": 0.004628149999916786,
+     "steps": [
+      {
+       "command": [
+        "iverilog",
+        "-g2012",
+        "-o",
+        "${WORK}/bench.vvp",
+        "${PROJECT_ROOT}/bench/fork_join.sv"
+       ],
+       "seconds": 0.004628149999916786,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.002872665998438606,
+       "max_rss_mib": 0.90625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0028138779998698737,
+       "max_rss_mib": 0.96875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.00337510000099428,
+       "max_rss_mib": 0.8515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0035091499994450714,
+       "max_rss_mib": 0.86328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0034182820018031634,
+       "max_rss_mib": 0.86328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0035719700026675127,
+       "max_rss_mib": 0.859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 6.030302978000691,
+       "max_rss_mib": 7.6953125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 6.048724543998105,
+       "max_rss_mib": 7.69921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 6.132761595999909,
+       "max_rss_mib": 7.71484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 6.280436847999226,
+       "max_rss_mib": 7.640625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 6.281744083000376,
+       "max_rss_mib": 7.7578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      }
+     ]
+    },
+    "base_seconds": 0.0034182820018031634,
+    "whole_seconds": 6.132761595999909,
+    "simulation_seconds": 6.129343313998106,
+    "max_rss_mib": 7.69921875,
+    "all_seconds": [
+     [
+      0.0028138779998698737,
+      0.00337510000099428,
+      0.0035091499994450714,
+      0.0034182820018031634,
+      0.0035719700026675127
+     ],
+     [
+      6.030302978000691,
+      6.048724543998105,
+      6.132761595999909,
+      6.280436847999226,
+      6.281744083000376
+     ]
+    ]
+   },
+   "nba_shift": {
+    "build_seconds": 0.023763606997817988,
+    "build": {
+     "seconds": 0.023763606997817988,
+     "steps": [
+      {
+       "command": [
+        "iverilog",
+        "-g2012",
+        "-o",
+        "${WORK}/bench.vvp",
+        "${PROJECT_ROOT}/bench/nba_shift.sv"
+       ],
+       "seconds": 0.023763606997817988,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.003517632998409681,
+       "max_rss_mib": 1.0,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0030048769986024126,
+       "max_rss_mib": 1.1171875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0036025520021212287,
+       "max_rss_mib": 0.87890625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.003592824999941513,
+       "max_rss_mib": 0.953125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.003786749999562744,
+       "max_rss_mib": 1.13671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.003770995001104893,
+       "max_rss_mib": 1.01953125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 24.0493173879986,
+       "max_rss_mib": 7.859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 24.3362904300011,
+       "max_rss_mib": 7.83203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 24.420262016999914,
+       "max_rss_mib": 7.8671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 24.318122550001135,
+       "max_rss_mib": 7.80859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 24.1402651770004,
+       "max_rss_mib": 7.8671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      }
+     ]
+    },
+    "base_seconds": 0.0036025520021212287,
+    "whole_seconds": 24.318122550001135,
+    "simulation_seconds": 24.314519997999014,
+    "max_rss_mib": 7.859375,
+    "all_seconds": [
+     [
+      0.0030048769986024126,
+      0.0036025520021212287,
+      0.003592824999941513,
+      0.003786749999562744,
+      0.003770995001104893
+     ],
+     [
+      24.0493173879986,
+      24.3362904300011,
+      24.420262016999914,
+      24.318122550001135,
+      24.1402651770004
+     ]
+    ]
+   },
+   "proc_wait": {
+    "build_seconds": 0.007827417000953574,
+    "build": {
+     "seconds": 0.007827417000953574,
+     "steps": [
+      {
+       "command": [
+        "iverilog",
+        "-g2012",
+        "-o",
+        "${WORK}/bench.vvp",
+        "${PROJECT_ROOT}/bench/proc_wait.sv"
+       ],
+       "seconds": 0.007827417000953574,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.004516363998845918,
+       "max_rss_mib": 0.92578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0038098299992270768,
+       "max_rss_mib": 0.984375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.004409036999277305,
+       "max_rss_mib": 0.8984375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.004611044001649134,
+       "max_rss_mib": 0.98046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.00457150700094644,
+       "max_rss_mib": 0.84375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.004610932999639772,
+       "max_rss_mib": 0.83203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 5.544745209001121,
+       "max_rss_mib": 8.15625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.528889347999211,
+       "max_rss_mib": 8.203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.385719851998147,
+       "max_rss_mib": 8.1953125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.403158860000985,
+       "max_rss_mib": 8.171875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.346023829999467,
+       "max_rss_mib": 8.19140625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      }
+     ]
+    },
+    "base_seconds": 0.00457150700094644,
+    "whole_seconds": 5.403158860000985,
+    "simulation_seconds": 5.398587353000039,
+    "max_rss_mib": 8.19140625,
+    "all_seconds": [
+     [
+      0.0038098299992270768,
+      0.004409036999277305,
+      0.004611044001649134,
+      0.00457150700094644,
+      0.004610932999639772
+     ],
+     [
+      5.544745209001121,
+      5.528889347999211,
+      5.385719851998147,
+      5.403158860000985,
+      5.346023829999467
+     ]
+    ]
+   }
+  },
+  "verilator": {
+   "comb_chain": {
+    "build_seconds": 0.33140992500193533,
+    "build": {
+     "seconds": 0.33140992500193533,
+     "steps": [
+      {
+       "command": [
+        "verilator",
+        "--binary",
+        "--timing",
+        "-Wno-fatal",
+        "-Wno-lint",
+        "-Wno-style",
+        "--build-jobs",
+        "0",
+        "-Mdir",
+        "${WORK}/obj",
+        "--prefix",
+        "Vbench",
+        "${PROJECT_ROOT}/bench/comb_chain.sv"
+       ],
+       "seconds": 0.33140992500193533,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0012377570019452833,
+       "max_rss_mib": 0.87109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0011786160030169412,
+       "max_rss_mib": 1.30859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0016733920019760262,
+       "max_rss_mib": 0.8046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0015286039997590706,
+       "max_rss_mib": 0.99609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.001652425002248492,
+       "max_rss_mib": 0.7890625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0014903880000929348,
+       "max_rss_mib": 1.18359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 0.17343282900037593,
+       "max_rss_mib": 3.75,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 0.17637173800176242,
+       "max_rss_mib": 3.74609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 0.17556146000060835,
+       "max_rss_mib": 3.75,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 0.17397240699938266,
+       "max_rss_mib": 3.74609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 0.1731569670009776,
+       "max_rss_mib": 3.734375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      }
+     ]
+    },
+    "base_seconds": 0.0015286039997590706,
+    "whole_seconds": 0.17397240699938266,
+    "simulation_seconds": 0.17244380299962359,
+    "max_rss_mib": 3.74609375,
+    "all_seconds": [
+     [
+      0.0011786160030169412,
+      0.0016733920019760262,
+      0.0015286039997590706,
+      0.001652425002248492,
+      0.0014903880000929348
+     ],
+     [
+      0.17343282900037593,
+      0.17637173800176242,
+      0.17556146000060835,
+      0.17397240699938266,
+      0.1731569670009776
+     ]
+    ]
+   },
+   "fork_join": {
+    "build_seconds": 0.34093841000139946,
+    "build": {
+     "seconds": 0.34093841000139946,
+     "steps": [
+      {
+       "command": [
+        "verilator",
+        "--binary",
+        "--timing",
+        "-Wno-fatal",
+        "-Wno-lint",
+        "-Wno-style",
+        "--build-jobs",
+        "0",
+        "-Mdir",
+        "${WORK}/obj",
+        "--prefix",
+        "Vbench",
+        "${PROJECT_ROOT}/bench/fork_join.sv"
+       ],
+       "seconds": 0.34093841000139946,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0012848430014855694,
+       "max_rss_mib": 1.30859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0012465090003388468,
+       "max_rss_mib": 0.80078125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.00165739499789197,
+       "max_rss_mib": 0.75390625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.001580634001584258,
+       "max_rss_mib": 0.7890625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0014847189995634835,
+       "max_rss_mib": 1.578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0014054619969101623,
+       "max_rss_mib": 0.86328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 0.9739221530035138,
+       "max_rss_mib": 3.796875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 0.9993750330031617,
+       "max_rss_mib": 3.796875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 0.9877610820003611,
+       "max_rss_mib": 3.7578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 1.0120469920002506,
+       "max_rss_mib": 3.921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 1.0250586610018217,
+       "max_rss_mib": 3.7578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      }
+     ]
+    },
+    "base_seconds": 0.0014847189995634835,
+    "whole_seconds": 0.9993750330031617,
+    "simulation_seconds": 0.9978903140035982,
+    "max_rss_mib": 3.796875,
+    "all_seconds": [
+     [
+      0.0012465090003388468,
+      0.00165739499789197,
+      0.001580634001584258,
+      0.0014847189995634835,
+      0.0014054619969101623
+     ],
+     [
+      0.9739221530035138,
+      0.9993750330031617,
+      0.9877610820003611,
+      1.0120469920002506,
+      1.0250586610018217
+     ]
+    ]
+   },
+   "nba_shift": {
+    "build_seconds": 0.34108646899767336,
+    "build": {
+     "seconds": 0.34108646899767336,
+     "steps": [
+      {
+       "command": [
+        "verilator",
+        "--binary",
+        "--timing",
+        "-Wno-fatal",
+        "-Wno-lint",
+        "-Wno-style",
+        "--build-jobs",
+        "0",
+        "-Mdir",
+        "${WORK}/obj",
+        "--prefix",
+        "Vbench",
+        "${PROJECT_ROOT}/bench/nba_shift.sv"
+       ],
+       "seconds": 0.34108646899767336,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0013128310019965284,
+       "max_rss_mib": 0.87109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0011546029963938054,
+       "max_rss_mib": 1.375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0015979359995981213,
+       "max_rss_mib": 1.30859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0015840369997022208,
+       "max_rss_mib": 1.18359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0016695640006219037,
+       "max_rss_mib": 0.87109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0015704289980931208,
+       "max_rss_mib": 0.8046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 0.15098657400085358,
+       "max_rss_mib": 3.7890625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 0.15280422299838392,
+       "max_rss_mib": 3.7421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 0.15144469199731247,
+       "max_rss_mib": 3.75390625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 0.1523130380010116,
+       "max_rss_mib": 3.78515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 0.15379657100129407,
+       "max_rss_mib": 3.74609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      }
+     ]
+    },
+    "base_seconds": 0.0015840369997022208,
+    "whole_seconds": 0.1523130380010116,
+    "simulation_seconds": 0.15072900100130937,
+    "max_rss_mib": 3.75390625,
+    "all_seconds": [
+     [
+      0.0011546029963938054,
+      0.0015979359995981213,
+      0.0015840369997022208,
+      0.0016695640006219037,
+      0.0015704289980931208
+     ],
+     [
+      0.15098657400085358,
+      0.15280422299838392,
+      0.15144469199731247,
+      0.1523130380010116,
+      0.15379657100129407
+     ]
+    ]
+   },
+   "proc_wait": {
+    "build_seconds": 0.3301562790002208,
+    "build": {
+     "seconds": 0.3301562790002208,
+     "steps": [
+      {
+       "command": [
+        "verilator",
+        "--binary",
+        "--timing",
+        "-Wno-fatal",
+        "-Wno-lint",
+        "-Wno-style",
+        "--build-jobs",
+        "0",
+        "-Mdir",
+        "${WORK}/obj",
+        "--prefix",
+        "Vbench",
+        "${PROJECT_ROOT}/bench/proc_wait.sv"
+       ],
+       "seconds": 0.3301562790002208,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0013042030004726257,
+       "max_rss_mib": 1.125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0011210080010641832,
+       "max_rss_mib": 1.125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0016980840009637177,
+       "max_rss_mib": 1.3125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0016565459991397802,
+       "max_rss_mib": 0.796875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0015933549984765705,
+       "max_rss_mib": 0.8046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0018134379970433656,
+       "max_rss_mib": 0.87109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 2.172750908997841,
+       "max_rss_mib": 3.91015625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 2.1701264980001724,
+       "max_rss_mib": 3.8828125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 2.228656791998219,
+       "max_rss_mib": 3.921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 2.1839716539980145,
+       "max_rss_mib": 3.8828125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 2.2705932969984133,
+       "max_rss_mib": 3.92578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      }
+     ]
+    },
+    "base_seconds": 0.0016565459991397802,
+    "whole_seconds": 2.1839716539980145,
+    "simulation_seconds": 2.1823151079988747,
+    "max_rss_mib": 3.91015625,
+    "all_seconds": [
+     [
+      0.0011210080010641832,
+      0.0016980840009637177,
+      0.0016565459991397802,
+      0.0015933549984765705,
+      0.0018134379970433656
+     ],
+     [
+      2.172750908997841,
+      2.1701264980001724,
+      2.228656791998219,
+      2.1839716539980145,
+      2.2705932969984133
+     ]
+    ]
+   }
+  },
+  "nvc": {
+   "comb_chain": {
+    "build_seconds": 0.013111364998621866,
+    "build": {
+     "seconds": 0.013111364998621866,
+     "steps": [
+      {
+       "command": [
+        "nvc",
+        "-a",
+        "${PROJECT_ROOT}/bench/comb_chain.sv"
+       ],
+       "seconds": 0.013111364998621866,
+       "exit_code": 1,
+       "timed_out": false
+      }
+     ],
+     "error": "nvc exit code 1",
+     "diagnostics": "** Error: unexpected unsigned number while parsing assignment pattern, expecting {\n    > ${PROJECT_ROOT}/bench/comb_chain.sv:26\n    |\n 26 |     sum = '0;\n    |            ^ this token was unexpected\n** Error: no visible declaration for 'i'\n    > ${PROJECT_ROOT}/bench/comb_chain.sv:27\n    |\n 27 |     for (int i = 0; i < n; i++) begin\n    |                     ^\n"
+    },
+    "error": "nvc exit code 1",
+    "stage": "build",
+    "diagnostics": "** Error: unexpected unsigned number while parsing assignment pattern, expecting {\n    > ${PROJECT_ROOT}/bench/comb_chain.sv:26\n    |\n 26 |     sum = '0;\n    |            ^ this token was unexpected\n** Error: no visible declaration for 'i'\n    > ${PROJECT_ROOT}/bench/comb_chain.sv:27\n    |\n 27 |     for (int i = 0; i < n; i++) begin\n    |                     ^\n"
+   },
+   "fork_join": {
+    "build_seconds": 0.012883239000075264,
+    "build": {
+     "seconds": 0.012883239000075264,
+     "steps": [
+      {
+       "command": [
+        "nvc",
+        "-a",
+        "${PROJECT_ROOT}/bench/fork_join.sv"
+       ],
+       "seconds": 0.012883239000075264,
+       "exit_code": 1,
+       "timed_out": false
+      }
+     ],
+     "error": "nvc exit code 1",
+     "diagnostics": "** Error: unexpected identifier while parsing event control, expecting one of (, * or (*)\n    > ${PROJECT_ROOT}/bench/fork_join.sv:27\n    |\n 27 |           @e b = b + a;\n    |            ^ this token was unexpected\n"
+    },
+    "error": "nvc exit code 1",
+    "stage": "build",
+    "diagnostics": "** Error: unexpected identifier while parsing event control, expecting one of (, * or (*)\n    > ${PROJECT_ROOT}/bench/fork_join.sv:27\n    |\n 27 |           @e b = b + a;\n    |            ^ this token was unexpected\n"
+   },
+   "nba_shift": {
+    "build_seconds": 0.013617408996651648,
+    "build": {
+     "seconds": 0.013617408996651648,
+     "steps": [
+      {
+       "command": [
+        "nvc",
+        "-a",
+        "${PROJECT_ROOT}/bench/nba_shift.sv"
+       ],
+       "seconds": 0.013617408996651648,
+       "exit_code": 1,
+       "timed_out": false
+      }
+     ],
+     "error": "nvc exit code 1",
+     "diagnostics": "** Error: unexpected ] while parsing constant range, expecting :\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:11\n    |\n 11 |   logic [15:0] sr[64];\n    |                     ^ this token was unexpected\n** Error: unexpected identifier while parsing data declaration, expecting one of =, , or ;\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:12\n    |\n 12 |   logic [31:0] acc[16];\n    |                ^^^ this token was unexpected\n** Error: unexpected unsigned number while parsing assignment pattern, expecting {\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:21\n    |\n 21 |       for (int i = 0; i < 64; i++) sr[i] <= '0;\n    |                                              ^ this token was unexpected\n** Error: unexpected genvar while parsing variable lvalue, expecting one of { or identifier\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:29\n    |\n 29 |   for (genvar g = 0; g < 16; g++) begin : accs\n    |        ^^^^^^ this token was unexpected\n** Error: no visible declaration for 'g'\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:29\n    |\n 29 |   for (genvar g = 0; g < 16; g++) begin : accs\n    |                      ^\n** Error: unexpected unsigned number while parsing assignment pattern, expecting {\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:40\n    |\n 40 |     sum = '0;\n    |            ^ this token was unexpected\n** Error: no visible declaration for 'g'\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:41\n    |\n 41 |     for (int g = 0; g < 16; g++) sum = sum ^ (acc[g] << g);\n    |                     ^\n** Error: no visible declaration for 'acc'\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:41\n    |\n 41 |     for (int g = 0; g < 16; g++) sum = sum ^ (acc[g] << g);\n    |                                               ^^^\n"
+    },
+    "error": "nvc exit code 1",
+    "stage": "build",
+    "diagnostics": "** Error: unexpected ] while parsing constant range, expecting :\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:11\n    |\n 11 |   logic [15:0] sr[64];\n    |                     ^ this token was unexpected\n** Error: unexpected identifier while parsing data declaration, expecting one of =, , or ;\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:12\n    |\n 12 |   logic [31:0] acc[16];\n    |                ^^^ this token was unexpected\n** Error: unexpected unsigned number while parsing assignment pattern, expecting {\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:21\n    |\n 21 |       for (int i = 0; i < 64; i++) sr[i] <= '0;\n    |                                              ^ this token was unexpected\n** Error: unexpected genvar while parsing variable lvalue, expecting one of { or identifier\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:29\n    |\n 29 |   for (genvar g = 0; g < 16; g++) begin : accs\n    |        ^^^^^^ this token was unexpected\n** Error: no visible declaration for 'g'\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:29\n    |\n 29 |   for (genvar g = 0; g < 16; g++) begin : accs\n    |                      ^\n** Error: unexpected unsigned number while parsing assignment pattern, expecting {\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:40\n    |\n 40 |     sum = '0;\n    |            ^ this token was unexpected\n** Error: no visible declaration for 'g'\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:41\n    |\n 41 |     for (int g = 0; g < 16; g++) sum = sum ^ (acc[g] << g);\n    |                     ^\n** Error: no visible declaration for 'acc'\n    > ${PROJECT_ROOT}/bench/nba_shift.sv:41\n    |\n 41 |     for (int g = 0; g < 16; g++) sum = sum ^ (acc[g] << g);\n    |                                               ^^^\n"
+   },
+   "proc_wait": {
+    "build_seconds": 0.013317319000634598,
+    "build": {
+     "seconds": 0.013317319000634598,
+     "steps": [
+      {
+       "command": [
+        "nvc",
+        "-a",
+        "${PROJECT_ROOT}/bench/proc_wait.sv"
+       ],
+       "seconds": 0.013317319000634598,
+       "exit_code": 1,
+       "timed_out": false
+      }
+     ],
+     "error": "nvc exit code 1",
+     "diagnostics": "** Error: unexpected ] while parsing constant range, expecting :\n   > ${PROJECT_ROOT}/bench/proc_wait.sv:9\n   |\n 9 |   int timed[64];\n   |               ^ this token was unexpected\n** Error: unexpected identifier while parsing event control, expecting one of (, * or (*)\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:22\n    |\n 22 |       @tick;\n    |        ^^^^ this token was unexpected\n** Error: no visible declaration for 'evented'\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:23\n    |\n 23 |       evented[g] = evented[g] + 1;\n    |       ^^^^^^^\n** Error: unexpected longint while parsing statement item, expecting one of :, ;, identifier, @, #, begin, fork, system task, void, if, forever, while, repeat, do, for, wait, case, casex, casez, ->, assign, deassign, force, release, return or assert\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:28\n    |\n 28 |     longint sum;\n    |     ^^^^^^^ this token was unexpected\n** Error: no visible declaration for 'sum'\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:31\n    |\n 31 |     sum = 0;\n    |     ^^^\n** Error: unexpected longint while parsing expression, expecting one of identifier, string, number, unsigned number, real, system task, (, {, null, -, ~, !, &, |, ^, ~&, ~|, ++, ~^ or --\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:32\n    |\n 32 |     for (int g = 0; g < 64; g++) sum = sum + longint'(timed[g]) * (g + 3) + evented[g];\n    |                                              ^^^^^^^\n    |                                              this token was unexpected\n"
+    },
+    "error": "nvc exit code 1",
+    "stage": "build",
+    "diagnostics": "** Error: unexpected ] while parsing constant range, expecting :\n   > ${PROJECT_ROOT}/bench/proc_wait.sv:9\n   |\n 9 |   int timed[64];\n   |               ^ this token was unexpected\n** Error: unexpected identifier while parsing event control, expecting one of (, * or (*)\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:22\n    |\n 22 |       @tick;\n    |        ^^^^ this token was unexpected\n** Error: no visible declaration for 'evented'\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:23\n    |\n 23 |       evented[g] = evented[g] + 1;\n    |       ^^^^^^^\n** Error: unexpected longint while parsing statement item, expecting one of :, ;, identifier, @, #, begin, fork, system task, void, if, forever, while, repeat, do, for, wait, case, casex, casez, ->, assign, deassign, force, release, return or assert\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:28\n    |\n 28 |     longint sum;\n    |     ^^^^^^^ this token was unexpected\n** Error: no visible declaration for 'sum'\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:31\n    |\n 31 |     sum = 0;\n    |     ^^^\n** Error: unexpected longint while parsing expression, expecting one of identifier, string, number, unsigned number, real, system task, (, {, null, -, ~, !, &, |, ^, ~&, ~|, ++, ~^ or --\n    > ${PROJECT_ROOT}/bench/proc_wait.sv:32\n    |\n 32 |     for (int g = 0; g < 64; g++) sum = sum + longint'(timed[g]) * (g + 3) + evented[g];\n    |                                              ^^^^^^^\n    |                                              this token was unexpected\n"
+   }
+  },
+  "lyra": {
+   "comb_chain": {
+    "build_seconds": 5.496170227997936,
+    "build": {
+     "seconds": 5.496170227997936,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "comb_chain",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/comb_chain.sv"
+       ],
+       "seconds": 5.496170227997936,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.001583305998792639,
+       "max_rss_mib": 0.859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0012829859988414682,
+       "max_rss_mib": 1.38671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.001679544999205973,
+       "max_rss_mib": 1.1171875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0017778670007828623,
+       "max_rss_mib": 0.78515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.001508490000560414,
+       "max_rss_mib": 0.78125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.001643390001845546,
+       "max_rss_mib": 0.7578125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 30.224102451000363,
+       "max_rss_mib": 4.484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 30.10010787599822,
+       "max_rss_mib": 4.48046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 29.86966628600203,
+       "max_rss_mib": 4.44140625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 30.14082263599994,
+       "max_rss_mib": 4.484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 30.21423214400056,
+       "max_rss_mib": 4.4765625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      }
+     ]
+    },
+    "base_seconds": 0.001643390001845546,
+    "whole_seconds": 30.14082263599994,
+    "simulation_seconds": 30.139179245998093,
+    "max_rss_mib": 4.48046875,
+    "all_seconds": [
+     [
+      0.0012829859988414682,
+      0.001679544999205973,
+      0.0017778670007828623,
+      0.001508490000560414,
+      0.001643390001845546
+     ],
+     [
+      30.224102451000363,
+      30.10010787599822,
+      29.86966628600203,
+      30.14082263599994,
+      30.21423214400056
+     ]
+    ]
+   },
+   "fork_join": {
+    "build_seconds": 5.2602170089994615,
+    "build": {
+     "seconds": 5.2602170089994615,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "fork_join",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/fork_join.sv"
+       ],
+       "seconds": 5.2602170089994615,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0016471420021844096,
+       "max_rss_mib": 1.05859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.00139643399961642,
+       "max_rss_mib": 1.63671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.001873241999419406,
+       "max_rss_mib": 1.57421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0015775399988342542,
+       "max_rss_mib": 0.86328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.001619790000404464,
+       "max_rss_mib": 0.86328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0015324520027206745,
+       "max_rss_mib": 1.12109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 15.291398973000469,
+       "max_rss_mib": 4.43359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 15.429250803001196,
+       "max_rss_mib": 4.46875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 15.208015191998129,
+       "max_rss_mib": 4.43359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 15.217943104002188,
+       "max_rss_mib": 4.46875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 15.24170962900098,
+       "max_rss_mib": 4.46875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      }
+     ]
+    },
+    "base_seconds": 0.0015775399988342542,
+    "whole_seconds": 15.24170962900098,
+    "simulation_seconds": 15.240132089002145,
+    "max_rss_mib": 4.46875,
+    "all_seconds": [
+     [
+      0.00139643399961642,
+      0.001873241999419406,
+      0.0015775399988342542,
+      0.001619790000404464,
+      0.0015324520027206745
+     ],
+     [
+      15.291398973000469,
+      15.429250803001196,
+      15.208015191998129,
+      15.217943104002188,
+      15.24170962900098
+     ]
+    ]
+   },
+   "nba_shift": {
+    "build_seconds": 6.387595435997355,
+    "build": {
+     "seconds": 6.387595435997355,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "nba_shift",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/nba_shift.sv"
+       ],
+       "seconds": 6.387595435997355,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0017918830017151777,
+       "max_rss_mib": 0.8671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0014613140010624193,
+       "max_rss_mib": 1.12109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.001768725000147242,
+       "max_rss_mib": 1.12109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0019040330007555895,
+       "max_rss_mib": 0.8671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0018342930015933234,
+       "max_rss_mib": 0.79296875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0017719799980113748,
+       "max_rss_mib": 1.12109375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 143.2577666670004,
+       "max_rss_mib": 4.609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 143.318878656999,
+       "max_rss_mib": 4.64453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 144.71243868799866,
+       "max_rss_mib": 4.6484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 141.94079610999688,
+       "max_rss_mib": 4.64453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 141.79504560699934,
+       "max_rss_mib": 4.64453125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      }
+     ]
+    },
+    "base_seconds": 0.0017719799980113748,
+    "whole_seconds": 143.2577666670004,
+    "simulation_seconds": 143.25599468700239,
+    "max_rss_mib": 4.64453125,
+    "all_seconds": [
+     [
+      0.0014613140010624193,
+      0.001768725000147242,
+      0.0019040330007555895,
+      0.0018342930015933234,
+      0.0017719799980113748
+     ],
+     [
+      143.2577666670004,
+      143.318878656999,
+      144.71243868799866,
+      141.94079610999688,
+      141.79504560699934
+     ]
+    ]
+   },
+   "proc_wait": {
+    "build_seconds": 5.985633185999177,
+    "build": {
+     "seconds": 5.985633185999177,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "proc_wait",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/proc_wait.sv"
+       ],
+       "seconds": 5.985633185999177,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.002087376000417862,
+       "max_rss_mib": 1.375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.001765486002113903,
+       "max_rss_mib": 1.30859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0021735849986725952,
+       "max_rss_mib": 0.8671875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.002221874998213025,
+       "max_rss_mib": 0.8046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.002317413000127999,
+       "max_rss_mib": 0.79296875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0021192720014369115,
+       "max_rss_mib": 0.93359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 70.39921757000047,
+       "max_rss_mib": 4.80859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 70.41397883000172,
+       "max_rss_mib": 4.84375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 70.24065989399969,
+       "max_rss_mib": 4.84375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 70.63986055499845,
+       "max_rss_mib": 4.78515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 70.49033555499773,
+       "max_rss_mib": 4.84765625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      }
+     ]
+    },
+    "base_seconds": 0.0021735849986725952,
+    "whole_seconds": 70.41397883000172,
+    "simulation_seconds": 70.41180524500305,
+    "max_rss_mib": 4.84375,
+    "all_seconds": [
+     [
+      0.001765486002113903,
+      0.0021735849986725952,
+      0.002221874998213025,
+      0.002317413000127999,
+      0.0021192720014369115
+     ],
+     [
+      70.39921757000047,
+      70.41397883000172,
+      70.24065989399969,
+      70.63986055499845,
+      70.49033555499773
+     ]
+    ]
+   }
+  },
+  "lyra_llvm": {
+   "comb_chain": {
+    "build_seconds": 0.4218178679984703,
+    "build": {
+     "seconds": 0.4218178679984703,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "comb_chain",
+        "--backend",
+        "llvm",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/comb_chain.sv"
+       ],
+       "seconds": 0.4218178679984703,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0015997239970602095,
+       "max_rss_mib": 0.8359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0012377999992168043,
+       "max_rss_mib": 1.328125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0019138739990012255,
+       "max_rss_mib": 0.69921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0016370090015698224,
+       "max_rss_mib": 0.8046875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0015816400009498466,
+       "max_rss_mib": 0.83984375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      },
+      {
+       "seconds": 0.0016076120009529404,
+       "max_rss_mib": 0.90234375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=1 sum=0b114273"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 2.769578632000048,
+       "max_rss_mib": 5.32421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 2.754835086998355,
+       "max_rss_mib": 5.26953125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 2.738897385999735,
+       "max_rss_mib": 5.26171875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 2.750330982999003,
+       "max_rss_mib": 5.19921875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      },
+      {
+       "seconds": 2.7218668750028883,
+       "max_rss_mib": 5.32421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "comb_chain n=3000000 sum=d3369c10"
+      }
+     ]
+    },
+    "base_seconds": 0.0016076120009529404,
+    "whole_seconds": 2.750330982999003,
+    "simulation_seconds": 2.74872337099805,
+    "max_rss_mib": 5.26953125,
+    "all_seconds": [
+     [
+      0.0012377999992168043,
+      0.0019138739990012255,
+      0.0016370090015698224,
+      0.0015816400009498466,
+      0.0016076120009529404
+     ],
+     [
+      2.769578632000048,
+      2.754835086998355,
+      2.738897385999735,
+      2.750330982999003,
+      2.7218668750028883
+     ]
+    ]
+   },
+   "fork_join": {
+    "build_seconds": 0.434947320001811,
+    "build": {
+     "seconds": 0.434947320001811,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "fork_join",
+        "--backend",
+        "llvm",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/fork_join.sv"
+       ],
+       "seconds": 0.434947320001811,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0016227359992626589,
+       "max_rss_mib": 0.8359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0012117909973312635,
+       "max_rss_mib": 1.203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0020273000009183306,
+       "max_rss_mib": 0.70703125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0016941920002864208,
+       "max_rss_mib": 1.15234375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0017165540011774283,
+       "max_rss_mib": 0.82421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      },
+      {
+       "seconds": 0.0017474970009061508,
+       "max_rss_mib": 0.90625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=1 a=1 b=1 c=1 d=0"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 4.809114144001796,
+       "max_rss_mib": 5.33203125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.69696576899878,
+       "max_rss_mib": 5.21484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.480136226997274,
+       "max_rss_mib": 5.27734375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.606756729997869,
+       "max_rss_mib": 5.32421875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      },
+      {
+       "seconds": 4.6910815040027956,
+       "max_rss_mib": 5.296875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "fork_join n=4000000 a=4000000 b=8000002000000 c=84764928 d=13057792"
+      }
+     ]
+    },
+    "base_seconds": 0.0017165540011774283,
+    "whole_seconds": 4.6910815040027956,
+    "simulation_seconds": 4.689364950001618,
+    "max_rss_mib": 5.296875,
+    "all_seconds": [
+     [
+      0.0012117909973312635,
+      0.0020273000009183306,
+      0.0016941920002864208,
+      0.0017165540011774283,
+      0.0017474970009061508
+     ],
+     [
+      4.809114144001796,
+      4.69696576899878,
+      4.480136226997274,
+      4.606756729997869,
+      4.6910815040027956
+     ]
+    ]
+   },
+   "nba_shift": {
+    "build_seconds": 0.46978974100056803,
+    "build": {
+     "seconds": 0.46978974100056803,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "nba_shift",
+        "--backend",
+        "llvm",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/nba_shift.sv"
+       ],
+       "seconds": 0.46978974100056803,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0016268520012090448,
+       "max_rss_mib": 0.91015625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.001247684998816112,
+       "max_rss_mib": 1.41796875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0017187730009027291,
+       "max_rss_mib": 0.8828125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0016750330032664351,
+       "max_rss_mib": 1.41796875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0017513140010123607,
+       "max_rss_mib": 0.81640625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      },
+      {
+       "seconds": 0.0017102620004152413,
+       "max_rss_mib": 0.9140625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1 sum=00000000"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 6.232691679997515,
+       "max_rss_mib": 5.55859375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 5.936070621999534,
+       "max_rss_mib": 5.5546875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 5.970713881000847,
+       "max_rss_mib": 5.65625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 6.061156114999903,
+       "max_rss_mib": 5.54296875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      },
+      {
+       "seconds": 6.095287457999802,
+       "max_rss_mib": 5.3359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "nba_shift n=1000000 sum=1b0c71c3"
+      }
+     ]
+    },
+    "base_seconds": 0.0017102620004152413,
+    "whole_seconds": 6.061156114999903,
+    "simulation_seconds": 6.059445852999488,
+    "max_rss_mib": 5.5546875,
+    "all_seconds": [
+     [
+      0.001247684998816112,
+      0.0017187730009027291,
+      0.0016750330032664351,
+      0.0017513140010123607,
+      0.0017102620004152413
+     ],
+     [
+      6.232691679997515,
+      5.936070621999534,
+      5.970713881000847,
+      6.061156114999903,
+      6.095287457999802
+     ]
+    ]
+   },
+   "proc_wait": {
+    "build_seconds": 0.4315974000019196,
+    "build": {
+     "seconds": 0.4315974000019196,
+     "steps": [
+      {
+       "command": [
+        "lyra",
+        "build",
+        "--top",
+        "proc_wait",
+        "--backend",
+        "llvm",
+        "--cache-dir",
+        "${WORK}/cache",
+        "-o",
+        "${WORK}/bench_lyra",
+        "${PROJECT_ROOT}/bench/proc_wait.sv"
+       ],
+       "seconds": 0.4315974000019196,
+       "exit_code": 0,
+       "timed_out": false
+      }
+     ]
+    },
+    "runs": {
+     "warmup": [
+      {
+       "seconds": 0.0018762859981507063,
+       "max_rss_mib": 1.3515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "small": [
+      {
+       "seconds": 0.0015447719997609966,
+       "max_rss_mib": 0.81640625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0018509920009819325,
+       "max_rss_mib": 0.84375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0019283279980299994,
+       "max_rss_mib": 1.1484375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0018573929992271587,
+       "max_rss_mib": 0.828125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      },
+      {
+       "seconds": 0.0022355280016199686,
+       "max_rss_mib": 0.6953125,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1 sum=15255"
+      }
+     ],
+     "large": [
+      {
+       "seconds": 5.902431364997028,
+       "max_rss_mib": 5.734375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.960183946001052,
+       "max_rss_mib": 5.8515625,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 6.042338286999438,
+       "max_rss_mib": 5.74609375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.934977485998388,
+       "max_rss_mib": 5.8359375,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      },
+      {
+       "seconds": 5.909588284997881,
+       "max_rss_mib": 5.875,
+       "rss_source": "VmHWM",
+       "exit_code": 0,
+       "timed_out": false,
+       "result_line": "proc_wait n=1000000 sum=35376317874"
+      }
+     ]
+    },
+    "base_seconds": 0.0018573929992271587,
+    "whole_seconds": 5.934977485998388,
+    "simulation_seconds": 5.933120092999161,
+    "max_rss_mib": 5.8359375,
+    "all_seconds": [
+     [
+      0.0015447719997609966,
+      0.0018509920009819325,
+      0.0019283279980299994,
+      0.0018573929992271587,
+      0.0022355280016199686
+     ],
+     [
+      5.902431364997028,
+      5.960183946001052,
+      6.042338286999438,
+      5.934977485998388,
+      5.909588284997881
+     ]
+    ]
+   }
+  }
+ }
+}

@@ -23,7 +23,8 @@
   1・5・15 分の負荷平均は 2.37・2.54・3.26。この測定ではベンチマーク、sv-tests、
   自前スイートを順番に実行し、互いを重ねていません。OS の背景処理は止めていません。
 - 使用した比較用ツールはローカルにある上記の版です。各プロジェクトの最新版かは未確認です。
-  Linux や別の CPU での結果はこの測定には含みません。
+  [Linux での 5 つのシミュレータ](#linuxwsl2での-5-つのシミュレータ2026-10-24)の節より前の表は、
+  この macOS の測定だけです。その節は別の機械、別の版での別の測定で、数値を混ぜません。
 
 ## シミュレーション時間
 
@@ -80,6 +81,53 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
 | `nba_shift` | 9.19 | 5.50 | 2.00 |
 | `proc_wait` | 10.09 | 5.86 | 2.16 |
 | `fork_join` | 9.19 | 5.33 | 2.06 |
+
+## Linux（WSL2）での 5 つのシミュレータ（2026-10-24）
+
+2026-10-24 の 13:49〜14:22 UTC に、同じ 4 つの設計・回数・期待する結果で、nvc と Lyra に
+対応させた [tools/bench.py](../tools/bench.py) で測りました。上の macOS の測定とは別の測定で、
+機械も、Icarus Verilog と Verilator の版も違います。
+
+- kirimasim 0.0.0、コミット `31160083c77d`、release ビルド（`-O3 -DNDEBUG`）、clang 20.1.8。
+- Icarus Verilog 13.0 stable、`v13_0-25-g07dd50d37`。
+- Verilator 5.050、`v5.050-60-g3d2421f3b`。生成した C++ は `ccache g++ -Os`（g++ 15.2.0）で
+  コンパイルし、mold でリンクしています。
+- nvc 1.23.0（LLVM 22.1.8）。r1.23.0 のリリースからビルドしました。
+- Lyra は `a2313fdc8707` を `bazel build -c opt` でビルドしました。既定の backend は C++ backend です
+  （`--backend` なしで作ったプログラムは、`--backend cpp` で作ったものと同じファイルになります）。
+  Lyra の README が主としている LLVM backend は、別の列にしました。どちらも Lyra の既定の `-O 0` で、
+  設計ごとに空のキャッシュへ 1 回ビルドしました。設計は clang 20.1.8 でコンパイルされます。
+- AMD Ryzen 9 7950X（WSL2 から 32 論理 CPU）、110 GiB、Ubuntu 24.04.4 LTS on WSL2、
+  kernel 6.18.33.1、glibc 2.39。測定前の負荷平均は 0.17・0.53・1.68、測定中は 0.17〜1.24 で、
+  測定のほかに CPU を使う処理はありませんでした。
+
+秒数（本来の回数の中央値から `+n=1` の中央値を引いたもの）。測った 5 列の本来の回数の実行
+100 回はすべて終了コード 0 で期待する行を出し、`+n=1` の実行はすべて `n=1` を出しました。
+
+| 設計 | `+n=` | kirimasim | Icarus Verilog | Verilator | nvc | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | 解析で失敗 | 30.139 s | 2.749 s |
+| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | 解析で失敗 | 143.256 s | 6.059 s |
+| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | 解析で失敗 | 70.412 s | 5.933 s |
+| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | 解析で失敗 | 15.240 s | 4.689 s |
+
+- nvc 1.23.0 は、4 つの設計すべてを `nvc -a` で受け付けません。診断は macOS と同じで、
+  `--keywords=1800-2017` と `--keywords=1800-2023` でも同じです。nvc の Verilog では、設計が `+n=` を
+  読むのに使う `$value$plusargs` も登録されていないので、nvc は何も測っていません。
+  設計の VHDL 版は別の比較になるので、作っていません。
+- ここでは kirimasim は、Icarus Verilog 13.0 より 3 つの設計で約 1.20〜1.62 倍速く、`proc_wait` では
+  約 1.14 倍遅くなりました（より新しい Icarus と比べた macOS の測定とは違います）。Verilator は
+  kirimasim より約 2.8〜134 倍速く、Lyra の既定の backend は kirimasim より約 3.6〜11.5 倍遅く
+  なりました。Lyra の LLVM backend は、`comb_chain` と `nba_shift` で約 3.0〜3.3 倍速く、
+  `fork_join` で約 1.11 倍遅く、`proc_wait` では実行のばらつきの範囲内でした。
+- `+n=1` の実行は、どのツールも 1〜6 ms でした。別に計ったビルドの時間は、Icarus が
+  0.005〜0.024 s、Verilator が温まった ccache で 0.33〜0.34 s、ccache を切って各 1 回で 2.53〜2.63 s、
+  Lyra が空のキャッシュで 5.3〜6.4 s（既定）と 0.42〜0.47 s（LLVM backend）です。
+- 最大 RSS（本来の回数の 5 回の中央値、MiB）は、kirimasim 21.5〜25.3、Icarus 7.7〜8.2、
+  Verilator 3.7〜3.9、Lyra 4.5〜4.8（既定）と 5.3〜5.8（LLVM）です。Linux では、tools/bench.py は
+  各プログラムの `VmHWM` を読むようになりました。子の `ru_maxrss` には起動元の Python の分も
+  入るので、夜間のジョブを含むこれまでの Linux の値は、約 19 MiB を下回ることがありません。
+- 生データ：[bench.json](measurements/2026-10-24-wsl2/bench.json)。
 
 ## 短いテスト群の時間
 

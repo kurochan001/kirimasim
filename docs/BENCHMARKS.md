@@ -26,8 +26,10 @@ sources; neither updates the timing or memory results below.
   own suite were run sequentially, without overlapping each other. OS
   background processes were not stopped.
 - These are locally available comparison builds; whether they are the
-  projects' newest versions is not confirmed. No Linux or other-CPU
-  measurements are included here.
+  projects' newest versions is not confirmed. The tables below up to
+  [Five simulators on Linux](#five-simulators-on-linux-wsl2-2026-10-24) are
+  these macOS runs only; that section is a separate measurement on another
+  machine with other tool versions, and its numbers are not mixed with these.
 
 ## Simulation time
 
@@ -86,6 +88,63 @@ maximum over all samples.
 | `nba_shift` | 9.19 | 5.50 | 2.00 |
 | `proc_wait` | 10.09 | 5.86 | 2.16 |
 | `fork_join` | 9.19 | 5.33 | 2.06 |
+
+## Five simulators on Linux (WSL2), 2026-10-24
+
+Measured on 2026-10-24, 13:49–14:22 UTC, with the same four designs, counts
+and expected results, by [tools/bench.py](../tools/bench.py) extended for nvc
+and Lyra. It is a separate measurement from the macOS one above: another
+machine, and Icarus Verilog and Verilator at other versions.
+
+- kirimasim 0.0.0, commit `31160083c77d`, release build (`-O3 -DNDEBUG`),
+  clang 20.1.8.
+- Icarus Verilog 13.0 stable, `v13_0-25-g07dd50d37`.
+- Verilator 5.050, `v5.050-60-g3d2421f3b`; the generated C++ is compiled with
+  `ccache g++ -Os` (g++ 15.2.0) and linked with mold.
+- nvc 1.23.0 (LLVM 22.1.8), built from the r1.23.0 release.
+- Lyra at `a2313fdc8707`, built with `bazel build -c opt`. Its default backend
+  is the C++ backend (a program built without `--backend` is the same file as
+  one built with `--backend cpp`); the LLVM backend, which Lyra's README calls
+  the main one, is a column of its own. Both at Lyra's default `-O 0`, each
+  design built once into an empty cache; designs are compiled with clang 20.1.8.
+- AMD Ryzen 9 7950X (32 logical CPUs under WSL2), 110 GiB, Ubuntu 24.04.4 LTS
+  on WSL2, kernel 6.18.33.1, glibc 2.39. Load average before the runs
+  0.17/0.53/1.68, and 0.17–1.24 during them; the runs were the only work on
+  the machine.
+
+Seconds (large-run median less the `+n=1` median). All 100 large runs of the
+five measured columns had exit status 0 and the expected line, and every
+`+n=1` run printed `n=1`.
+
+| Design | `+n=` | kirimasim | Icarus Verilog | Verilator | nvc | Lyra (C++ backend, default) | Lyra (LLVM backend) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | analysis fails | 30.139 s | 2.749 s |
+| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | analysis fails | 143.256 s | 6.059 s |
+| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | analysis fails | 70.412 s | 5.933 s |
+| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | analysis fails | 15.240 s | 4.689 s |
+
+- nvc 1.23.0 rejects all four designs at `nvc -a`, with the same diagnostics
+  as on macOS, also with `--keywords=1800-2017` and `--keywords=1800-2023`.
+  Its Verilog does not register `$value$plusargs` either, which the designs
+  read `+n=` with, so nothing of nvc is measured. A VHDL version of the
+  designs, which would be another comparison, is not made.
+- Here kirimasim was about 1.20–1.62 times faster than Icarus Verilog 13.0 on
+  three designs and about 1.14 times slower on `proc_wait`, unlike the macOS
+  run against a newer Icarus. Verilator was about 2.8–134 times faster than
+  kirimasim. Lyra's default backend was about 3.6–11.5 times slower than
+  kirimasim; its LLVM backend was about 3.0–3.3 times faster on `comb_chain`
+  and `nba_shift`, about 1.11 times slower on `fork_join`, and within the
+  spread of the runs on `proc_wait`.
+- `+n=1` runs took 1–6 ms for every tool. Builds, timed apart: Icarus
+  0.005–0.024 s; Verilator 0.33–0.34 s with a warm ccache, and 2.53–2.63 s
+  once each with ccache turned off; Lyra 5.3–6.4 s (default) and 0.42–0.47 s
+  (LLVM backend) into an empty cache.
+- Peak RSS (median of the five large runs, MiB): kirimasim 21.5–25.3, Icarus
+  7.7–8.2, Verilator 3.7–3.9, Lyra 4.5–4.8 (default) and 5.3–5.8 (LLVM). On
+  Linux, tools/bench.py now reads each program's `VmHWM`: `ru_maxrss` of a
+  child also counts the Python process it was started from, so earlier Linux
+  numbers, including the nightly job's, cannot be below about 19 MiB.
+- Raw data: [bench.json](measurements/2026-10-24-wsl2/bench.json).
 
 ## Short test-suite times
 
