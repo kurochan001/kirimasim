@@ -167,6 +167,11 @@ cross-checked. See the [API and verification scope](notes/strength-range-foundat
 The VM still consumes projected values. Resolved net-interval storage/transport,
 strength-only propagation and MOS/switch/format integration remain work.
 
+Static-strength driver operands can carry full-width two-state side masks for
+L/H, including unaligned halves across 64-bit words. The
+[wide-mask front/VM path](notes/wide-gate-strength.md) reaches the same kernel
+resolver, without adding a strength policy or storing resolved intervals.
+
 ## Libraries
 
 Dependencies run only in the directions listed here.

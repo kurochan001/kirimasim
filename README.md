@@ -63,6 +63,11 @@ retains complete intervals before value projection, with exhaustive interval
 pair checks. Source-level MOS/switch execution and strength-aware formatting
 still require integration; this kernel API does not close those gaps.
 
+Wide three-state gates now retain both L/H side-mask halves across word
+boundaries. All 73 new source cases match Icarus 13.0 and development builds.
+See [scope and validation](docs/notes/wide-gate-strength.md). Delayed side-only
+timing remains a [pending semantic amendment](docs/notes/delayed-gate-side-proposal.md).
+
 Aggregate blocking/NBA assignments now capture all RHS values before target
 effects, including container snapshots before later field expressions.
 Runtime-selected fixed subarrays and structure array members use the same
@@ -111,7 +116,7 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory now has 78 original probes. With Icarus `13.0 (stable) (v13_0)`,
+inventory now has 79 original probes. With Icarus `13.0 (stable) (v13_0)`,
 20 Icarus-passing gaps and four reference result mismatches remain. With
 `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 26 and seven.
 These are separate reference baselines. See the
@@ -151,11 +156,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 3,055 | 3,053, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 3,131 | 3,129, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 298, `tests/suite/` 2,567 (made by 126 generators under `tools/`), tools 131, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 299, `tests/suite/` 2,640 (made by 127 generators under `tools/`), tools 133, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -170,17 +175,16 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI on the combined review stack `396131e` passes all four
-configurations (2026-10-24). Dev/ASan/UBSan each have 3,055 tests: 3,053 pass
-and the same two known skips remain. Release has 3,056 tests: 3,054 pass and
-the same skips. All 131 Tools tests and 74 new aggregate-timing sources pass.
-Static checks, README counts, clang-format and clang-tidy also pass. All 29
-existing SIR dump expectations remain unchanged. Five compiled mutations
-are caught by actual new stdout expectations. The six historical CLI
-rejection expectations are isolated in a separate review baseline; see
-[implementation and expectation separation](docs/notes/blocking-aggregate-timing.md).
+Full local CI at `57a64ef` passes all four configurations (2026-10-24).
+Dev/ASan/UBSan each have 3,131 tests: 3,129 pass and the same two known skips
+remain. Release has 3,132 tests: 3,130 pass and the same skips. All 133 Tools
+tests and 73 new wide-gate sources pass. Static checks, README counts,
+clang-format and clang-tidy also pass. All 29 existing SIR dump expectations
+remain unchanged. Four compiled mutations fail actual new stdout; a fifth
+fails the independent delayed-gate rejection check. The earlier aggregate
+expectation correction remains isolated in its separate review baseline.
 
-The same 78-probe inventory now has separate 13.0-stable and 14.0-development
+The same 79-probe inventory now has separate 13.0-stable and 14.0-development
 results: 13.0 has 20 Icarus-passing gaps and four reference mismatches;
 14.0 has 26 and seven.
 See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)

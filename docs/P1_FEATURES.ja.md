@@ -15,6 +15,35 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 広いネットでL/Hを解決する
+
+広い解決対象ネットでも、三状態ゲートの片側のL/H強さマスクを保持します。
+両半分が語の途中に来る場合にも対応します。[独自73件の参照比較と制限](notes/wide-gate-strength.ja.md)を
+参照してください。解決対象ネットの遅延付き三状態出力は、承認待ちの
+[sideの遅延案](notes/delayed-gate-side-proposal.ja.md)が必要です。
+
+```systemverilog
+module top;
+  logic [64:0] data = '0;
+  logic control = 'x;
+  wire [64:0] q0, q1;
+  bufif1 g0[64:0](q0, data, control);
+  bufif1 g1[64:0](q1, data, control);
+  assign (weak1, weak0) q0 = '0;
+  assign (weak1, weak0) q1 = '1;
+  initial begin
+    #1; $display("%0d %0d", q0 === '0, q1 === 'x);
+    data = '1;
+    #1; $display("%0d %0d", q0 === 'x, q1 === '1);
+  end
+endmodule
+```
+
+```text
+1 1
+1 1
+```
+
 ## 代入先の副作用より前に集約値を保持する
 
 通常の集約代入・NBAは、実行時の代入先の添字より先に右辺を保持します。

@@ -15,6 +15,36 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Wide L/H gate resolution
+
+Three-state gates retain their one-sided L/H strength masks on wide resolved
+nets. Both mask halves can cross word boundaries. See the
+[73-case reference comparison and limits](notes/wide-gate-strength.md).
+Delayed three-state outputs on resolved nets still require the pending
+[side-timing amendment](notes/delayed-gate-side-proposal.md).
+
+```systemverilog
+module top;
+  logic [64:0] data = '0;
+  logic control = 'x;
+  wire [64:0] q0, q1;
+  bufif1 g0[64:0](q0, data, control);
+  bufif1 g1[64:0](q1, data, control);
+  assign (weak1, weak0) q0 = '0;
+  assign (weak1, weak0) q1 = '1;
+  initial begin
+    #1; $display("%0d %0d", q0 === '0, q1 === 'x);
+    data = '1;
+    #1; $display("%0d %0d", q0 === 'x, q1 === '1);
+  end
+endmodule
+```
+
+```text
+1 1
+1 1
+```
+
 ## Aggregate values before target effects
 
 Ordinary aggregate assignments and NBAs capture the RHS before evaluating

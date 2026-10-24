@@ -10,7 +10,7 @@ The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
 This inventory describes tier 1 as of 2026-10-24, including dynamic arrays
-and queues, whole-aggregate blocking timing, value capture before target effects, repeated blocking
+and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
@@ -85,6 +85,14 @@ container snapshots. Whole fixed arrays and unpacked structures now use the
 same blocking timing rules. Event-controlled NBAs remain unsupported.
 
 ### Strength-resolution kernel
+
+Three-state gates now carry their L/H side masks through wide vectors, including
+unaligned 64-bit boundaries. Another [73 original cases](notes/wide-gate-strength.md)
+match both measured Icarus versions. Masked and unmasked drivers share the
+existing kernel resolver; this is not arbitrary MOS interval transport.
+Delayed three-state outputs on resolved nets remain unsupported, including
+short-circuit controls; their [side-timing proposal](notes/delayed-gate-side-proposal.md)
+awaits approval.
 
 The shared kernel now exposes complete strength intervals before four-state
 projection, following the approved VALUE_SEMANTICS 5.2–5.4 rule. Five added

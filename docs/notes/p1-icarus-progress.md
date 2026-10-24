@@ -11,7 +11,8 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [aggregate blocking timing](blocking-aggregate-timing.md),
+The current implementation includes [wide L/H strength masks](wide-gate-strength.md),
+[aggregate blocking timing](blocking-aggregate-timing.md),
 [aggregate value capture](aggregate-value-capture.md),
 [blocking repeated event controls](repeated-event-controls.md), corrected
 [integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
@@ -20,18 +21,18 @@ The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
-Full local CI on the combined review stack `396131e` passes configure/build/test
-for dev/release/ASan/UBSan. Dev/ASan/UBSan each run 3,055 tests (3,053 pass,
-two known skips); release runs 3,056 (3,054 pass, the same skips).
-Release flags, banned features, SPDX, suite files, global state, per-commit
-expectation protection, README counts, clang-format and clang-tidy also pass.
-Unit/suite/tool/generator counts are 298/2,567/131/126. Existing suite bodies,
-suite expectations and performance counts remain unchanged; the obsolete six
-CLI rejection lines are isolated in the expectation-only review branch below.
-All 29 existing SIR dump tests pass. Five compiled mutations are caught by
-actual new source stdout, with anchor/judging self-checks excluded.
+Full local CI at `57a64ef` passes configure/build/test for dev/release/ASan/UBSan.
+Dev/ASan/UBSan each run 3,131 tests (3,129 pass, two known skips); release runs
+3,132 (3,130 pass, the same skips). Release flags, banned features, SPDX,
+suite files, global state, per-commit expectation protection, README counts,
+clang-format and clang-tidy also pass. Unit/suite/tool/generator counts are
+299/2,640/133/127. Existing suite bodies, suite expectations and performance
+counts are unchanged; the older aggregate CLI correction remains a separate
+review baseline. All 29 existing SIR dumps pass. Four wide-mask mutations fail
+new stdout expectations and another fails the real delayed rejection check;
+anchor/judging self-checks are excluded as evidence.
 
-The same **78 original probes** now run against both installed references:
+The same **79 original probes** now run against both installed references:
 
 - Icarus `13.0 (stable) (v13_0)`: 20 Icarus-passing gaps, four reference
   result mismatches.
@@ -44,12 +45,13 @@ verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
 unconfirmed. Dated entries below retain their historical probe cohorts.
 
-Four detailed semantic amendments remain pending:
+Five detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
 - [Array minimum/maximum execution](array-extrema-proposal.md).
 - [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
+- [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep
@@ -63,6 +65,40 @@ python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim
 This uses PATH; the [13.0 command](icarus-13-comparison.md#reproduce) selects
 matching binaries explicitly. Both measured references still give exit 1
 for remaining passing gaps. A zero result would not establish full parity.
+
+## Wide L/H side masks and the delayed boundary (2026-10-24)
+
+`37a2726` implements the already approved two-state side-mask representation
+without the old 32-bit front restriction. The VM preserves both halves at the
+full net width and parses mixed driver tuples; the front tracks their actual
+control-flow block. The [73-source matrix](wide-gate-strength.md) covers four
+three-state gates, six widths through 257 bits, both net directions and
+module/generate/interface signals, plus short-circuit function controls.
+All 73 pass the current native binary and both measured Icarus versions;
+all 73 stop as unsupported on the retained old binary.
+
+An independent SIR test covers eight widths, both weak background values and
+both driver orders. Four compiled corruptions fail new source stdout, with
+three also detected by the independent SIR assertions. Existing expectations
+and all 29 SIR dumps remain unchanged.
+
+`57a64ef` preserves the unreviewed delayed-side boundary in all blocks. Six
+positioned rejections and six undelayed unresolved-net acceptances cover
+widths 1/65/257 and function controls; reverting the guard to the entry block
+is detected by this real CLI test. All five compiled controls exclude
+anchor/judging self-check failures as evidence, and restore/rebuild source.
+
+On the same 79-item inventory, 13.0 gaps change 21 to 20 and development gaps
+27 to 26. The other 78 statuses and four/seven reference mismatches stay
+unchanged. [Versioned portable records](icarus-13-comparison.md) include the
+old native results; historical 75/78-item files are preserved. This does not
+establish complete 13.0 coverage or remeasure performance.
+
+The [delayed-side proposal](delayed-gate-side-proposal.md) records six
+exploratory observations, distinguishes ordinary value transitions from
+side-only timing and specifies complete-state cancellation/atomic updates.
+Its experimental implementation was removed pending approval. MOS/switches
+and arbitrary resolved-interval propagation remain unfinished.
 
 ## Blocking aggregate timing and positional copies (2026-10-24)
 

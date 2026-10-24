@@ -14,7 +14,7 @@ stays X, schedules propagation or changes the side fields immediately.
 IEEE 1800-2023 28.16/Table 28-9 does not give a separate L/H-to-L/H row.
 This missing detail changes observable resolution against another driver.
 
-P1_SCOPE requires review before implementing missing detailed semantics.
+[P1_SCOPE](../spec/P1_SCOPE.md) requires review before implementing missing detailed semantics.
 The complete experimental delayed-side path was removed from the working
 implementation pending this review. The independent wide-mask transport
 correction implements the already defined undelayed 5.8 behavior and can
