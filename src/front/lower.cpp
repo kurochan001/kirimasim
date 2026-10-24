@@ -1174,7 +1174,7 @@ void Lowerer::resolveNets() {
             const auto sid = static_cast<sir::SlotId>(design_.slots.size());
             design_.slots.push_back(std::move(ss));
             sideSlots.push_back(sid);
-            std::vector<sir::Instr>& instrs = p.blocks[0].instrs;
+            std::vector<sir::Instr>& instrs = p.blocks[side->second.block.index()].instrs;
             for (std::size_t i = side->second.first; i < side->second.first + side->second.count;
                  ++i) {
                 if (instrs[i].op != sir::Op::Store) continue;
@@ -1226,7 +1226,7 @@ void Lowerer::resolveNets() {
     // A three-state gate on a net that does not resolve writes L and H as
     // x alone (SIR_SPEC.md 3.5): its side computation goes.
     for (const auto& [proc, side] : sides_) {
-        std::vector<sir::Instr>& instrs = design_.process(proc).blocks[0].instrs;
+        std::vector<sir::Instr>& instrs = design_.process(proc).blocks[side.block.index()].instrs;
         const auto at = instrs.begin() + static_cast<std::ptrdiff_t>(side.first);
         instrs.erase(at, at + static_cast<std::ptrdiff_t>(side.count));
     }
@@ -1823,7 +1823,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
                                    ? w == 1
                                    : !p.pos && p.indices.empty() && p.width == 1 && p.lsb >= 0 &&
                                          p.lsb < static_cast<std::int64_t>(w);
-            if (!fixed || !design_.slot(p.slot).dims.empty() || 2 * w > 64) {
+            if (!fixed || !design_.slot(p.slot).dims.empty()) {
                 side = GateSide{0, 0, false};
                 return;
             }
@@ -1838,7 +1838,7 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
             const Val zero = inv(op2(sir::Op::And, unknown, is(1)));
             emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, at, 1), one.op}, sl);
             emitVoid(sir::Op::Store, {sir::Operand::slot(sir::kNone, w + at, 1), zero.op}, sl);
-            side = GateSide{start, block(b_.block).instrs.size() - start, true};
+            side = GateSide{start, block(b_.block).instrs.size() - start, true, b_.block};
         },
         strength, g.getDelay());
     if (side && design_.processes.size() > first.index()) sides_[first] = *side;

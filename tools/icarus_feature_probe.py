@@ -204,6 +204,9 @@ EXTENDED.extend([
     ("struct_array_declared_bounds", "7.6, 10.4.1",
      'module top;typedef struct {int value;} item_t;item_t a[7:8],b[-1:-2];initial begin a=\'{\'{7},\'{9}};b=a;$display("%0d %0d",b[-1].value,b[-2].value);end endmodule',
      "7 9\n", []),
+    ("wide_tristate_masks", "28.6, 28.12",
+     'module top;logic[64:0] data=\'0;logic control=\'x;wire[64:0]q;bufif1 g[64:0](q,data,control);assign(weak1,weak0)q=\'1;initial begin #1;$display("%b",q);data=\'1;#1;$display("%b",q);end endmodule',
+     "x" * 65 + "\n" + "1" * 65 + "\n", []),
 ])
 
 

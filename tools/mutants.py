@@ -40,6 +40,18 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('wide gate strength: zero half uses a fixed word offset',
+     'src/vm/vm.cpp', 'sideWord(sides[d], w + 64 * k)',
+     'sideWord(sides[d], 64 + 64 * k)'),
+    ('wide gate strength: one half ignores the side mask',
+     'src/vm/vm.cpp', 'driver.one = sideWord(sides[d], 64 * k);',
+     'driver.one = ~std::uint64_t{0};'),
+    ('wide gate strength: mask words repeat the first word',
+     'src/vm/vm.cpp', 'const auto word = bit / 64;',
+     'const auto word = 0U;'),
+    ('wide gate strength: side writes use the entry block',
+     'src/front/lower.cpp', 'p.blocks[side->second.block.index()].instrs',
+     'p.blocks[0].instrs'),
     ('blocking aggregate timing: capture runs after the control',
      'src/front/lower_expr.cpp',
      '        assignAggregate(saved, *a.left().type, a.right(), captured, sl);\n'

@@ -3345,21 +3345,44 @@ private:
     void resolve(const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const unsigned w = in.type.width;
-        if (const std::uint32_t c = chunksOf(in.type); c > 1) {
-            // Bit by bit (VALUE_SEMANTICS.md 5.4), so chunk by chunk. A net
-            // this wide has no side slots (front).
+        if (const std::uint32_t c = chunksOf(in.type);
+            c > 1 || (w > 32 && std::any_of(ops.begin() + 1, ops.end(), [&](const Operand& o) {
+                          return typeOf(o).width > 64;
+                      }))) {
+            // Side halves can start between words. Extract each half at
+            // the net's full width, not at the current chunk's width.
             std::vector<std::vector<W4>> values;
+            std::vector<std::vector<W4>> sides;
             std::vector<std::pair<std::uint8_t, std::uint8_t>> strengths;
-            for (std::size_t i = 1; i + 2 < ops.size(); i += 3) {
+            for (std::size_t i = 1; i + 2 < ops.size();) {
                 values.push_back(chunks(ops[i]));
                 strengths.emplace_back(static_cast<std::uint8_t>(value(ops[i + 1]).a),
                                        static_cast<std::uint8_t>(value(ops[i + 2]).a));
+                i += 3;
+                sides.push_back(i < ops.size() && !sir::isFourState(typeOf(ops[i]))
+                                    ? chunks(ops[i++])
+                                    : std::vector<W4>{});
             }
+            const auto sideWord = [](const std::vector<W4>& mask, std::uint32_t bit) {
+                const auto word = bit / 64;
+                const auto shift = bit % 64;
+                std::uint64_t result = mask[word].a >> shift;
+                if (shift != 0 && word + 1 < mask.size())
+                    result |= mask[word + 1].a << (64 - shift);
+                return result;
+            };
             W4* r = &temp(in.result);
             for (std::uint32_t k = 0; k < c; ++k) {
                 drivers_.clear();
-                for (std::size_t d = 0; d < values.size(); ++d)
-                    drivers_.push_back({values[d][k], strengths[d].first, strengths[d].second});
+                for (std::size_t d = 0; d < values.size(); ++d) {
+                    kernel::StrengthDriver driver{values[d][k], strengths[d].first,
+                                                  strengths[d].second};
+                    if (!sides[d].empty()) {
+                        driver.one = sideWord(sides[d], 64 * k);
+                        driver.zero = sideWord(sides[d], w + 64 * k);
+                    }
+                    drivers_.push_back(driver);
+                }
                 r[k] = kernel::resolve4(info.netKind, drivers_.data(),
                                         static_cast<unsigned>(drivers_.size()),
                                         w - 64 * k < 64 ? w - 64 * k : 64);
