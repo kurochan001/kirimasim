@@ -414,6 +414,16 @@ C ABI 0.3は変わらない。3.3節の既存の規則どおり、動的配列�
 これは実行機能の不足ではない。直接のソースはslangが拒否し、独自SIRのセル参照への
 NBAもVMが不正操作として診断する。適格なstaticコンテナ変数への値全体のNBAは禁止しない。
 
+#### 配列メソッドの実装表現の修正（2026-10-25承認）
+
+VALUE_SEMANTICS 7.9と[承認した契約](../notes/array-methods-proposal.ja.md)により、
+`container.swap.values !T, ref<!T>, first, second`を追加します。結果はなく、整数添字の幅を保ちます。
+実際のreceiverの既存cellの値を交換し、長さ・cellの識別を変えず、入れ子の所有値をコピーしません。
+不正・同一の添字は何もしません。検証器は記述子とrefの等価性・整数添字を確認し、VMは既存の
+幅の広い添字の復号で`Heap::swapValues`へ渡します。frontが縮約・整列・検索を既存のループと
+共有の比較へ変換し、[min/max](../notes/array-extrema-proposal.ja.md)には新命令を加えません。
+formatVersionは0、C ABIは0.3のままです。
+
 ### 5.9 型付き代入パターン表示の実装表現（2026-10-24）
 
 SYSTEM_TASKS 3.9の既存の値・表記を実行するための表現で、新しい書式方針ではありません。
@@ -431,6 +441,11 @@ record・packed record、固定配列、unionの最初のメンバー、選択�
 [実装・検証・再開箇所](../notes/pattern-sir-execution.ja.md)を参照してください。
 
 ## 6. 定数
+
+**配列の縮約の例外（2026-10-25承認）：** VALUE_SEMANTICS 7.9の空入力の値は、slangが
+定数評価できるメソッド式にも適用します。空のproduct・andについて食い違うslangの結果を
+採用せず、frontが縮約の呼び出し式を同じ実行時の規則で変換します。
+この例外で変換していないparameterの形は、明示的な制限として残します。
 
 コンテナの定数は空のハンドル0だけで、`empty`と表示する。chandleの定数はnullで、
 `null`と表示する。非空のコンテナはヒープの物体を定数に埋め込まず、5.8の型付き命令で作る。

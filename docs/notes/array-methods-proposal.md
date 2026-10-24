@@ -1,7 +1,8 @@
 # Runtime array reduction and ordering amendment
 
-[日本語](array-methods-proposal.ja.md). Status: **proposal, awaiting approval**.
-This does not change the approved specifications or enable execution yet.
+[日本語](array-methods-proposal.ja.md). Status: **approved (2026-10-25)**;
+implementation in progress. The proposal below is retained as the decision
+record; approval requests and future tense describe its original proposal state.
 
 ## Purpose and authority
 

@@ -316,6 +316,27 @@ consuming input. See the [examples and supported conversions](../P1_FEATURES.md)
 the [runtime scan matrix](../../tools/gen_runtime_scan_matrix.py) and
 [CLI diagnostic tests](../../tests/cli/run_runtime_scan_tests.py).
 
+#### Multidimensional integral `$fread` (approved 2026-10-25)
+
+The [approved contract](../notes/fread-multidim-proposal.md) extends 6.3.
+For two or more remaining fixed unpacked dimensions, start is a zero-based
+linear scalar-leaf address, count counts scalar leaves, and the rightmost
+dimension varies fastest. Every dimension traverses its lower numerical
+index upward, irrespective of its declaration direction. Default start is
+zero and default count permits the remaining memory. An invalid start or
+nonpositive count reads nothing and returns zero. One-dimensional memories
+retain their actual-index start and existing diagnostics.
+
+Each leaf uses the existing integral binary-input operation: most-significant
+byte first, ceil(width/8) bytes, truncation above its width and old bits for
+unread bytes. Return total bytes and stop after a partial leaf. Preserve
+ordinary write notifications and two/four-state conversion. Capture an
+accepted selected-memory prefix first, then evaluate descriptor, start and
+count once left to right. Slot, frame and actual-ref storage use the same
+traversal through existing typed operations. Linear addressing is the
+approved project interpretation of 7.4.4/21.3.4.4; dynamic memories and
+multidimensional structure memories remain separate work.
+
 ### 6.4 Position, status, EOF
 
 - `$ftell`, `$fseek` and `$rewind` are the same as C's `ftell` and `fseek` (checked: 21.3.5). Changing the position discards what `$ungetc` pushed back. `$ftell` counts what was pushed back as not yet read (added 2026-10-21, approved).

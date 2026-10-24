@@ -484,6 +484,38 @@ Approved 2026-10-17.
 - As a truth value, null is 0 and anything else 1.
 - In P1, 0 of the handle space is null (SIR_SPEC.md 3.2.1).
 
+### 7.9 Runtime array methods (approved 2026-10-25)
+
+The [reduction/ordering contract](../notes/array-methods-proposal.md) and
+[extrema contract](../notes/array-extrema-proposal.md) are normative here.
+Reductions visit increasing cardinality order, initializing a nonempty fold
+with its first value (including X/Z). A `with` expression supplies value and
+result type. Empty sum/or/xor return zero, product one and integral and all
+ones; no empty-input key is evaluated. These approved project choices also
+govern runtime-folded constant expressions; parameter forms not lowered by
+that exception remain an explicit limitation (SIR_SPEC 6).
+
+Reverse/sort/rsort exchange values in existing element cells, retaining refs
+at each index; nested owned values move without copying their cells. Sorting
+is stable: only a definitely true shared relational comparison moves a value
+past its neighbour, so X/Z/NaN do not define a new total order. Capture the
+receiver binding before keys; evaluate pure `with` keys once per element,
+in increasing cardinality order, before moving values. Effectful ordering
+keys remain an explicitly diagnosed initial limitation.
+
+Min/max return an independent unbounded queue containing zero elements for
+empty input and exactly one source element otherwise. Traverse fixed arrays
+from declared left to right and dynamic arrays/queues from zero upward;
+nested arrays remain elements. The first candidate survives equal or
+unknown/unordered comparisons; replace it only for a definitely true shared
+less/greater comparison. Evaluate the receiver once and snapshot it before
+evaluating each key exactly once, including the first. Effectful keys follow
+that order but cannot change the snapshot; empty input evaluates none.
+Return the element, not its key, with existing independent-value copy rules.
+These deterministic traversal, tie, unknown and effectful-key rules are
+approved project choices. Front emits common typed operations; VM only
+transports them. Unsupported source representations remain P1 work.
+
 ## 8. Not confirmed, to be written later
 
 - Reduction of strength through switches (MOS and bidirectional), and bidirectional resolution (28.7 to 28.9, 28.13, 28.14; phase 4; 5.1).

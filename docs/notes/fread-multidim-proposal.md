@@ -1,7 +1,8 @@
 # Multidimensional binary memory input: proposed contract
 
-[日本語](fread-multidim-proposal.ja.md). Proposed 2026-10-24; **not approved
-or implemented**. SYSTEM_TASKS 6.3 defines binary input for a memory, but
+[日本語](fread-multidim-proposal.ja.md). Proposed 2026-10-24; **approved
+2026-10-25; implementation in progress**. The proposal below is retained as
+the decision record; its approval requests are historical. SYSTEM_TASKS 6.3 defines binary input for a memory, but
 does not map a multidimensional memory to the scalar start/count arguments.
 [P1_SCOPE](../spec/P1_SCOPE.md) requires review of incomplete semantic rules
 before implementation. No dependency or installation is proposed.

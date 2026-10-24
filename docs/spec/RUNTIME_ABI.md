@@ -246,6 +246,19 @@ Class, mailbox and weak-reference semantics extend the root descriptors when
 those mechanisms are implemented. Weak references are not marking edges;
 unreachable referents become null. Their remaining details are separate work.
 
+### Array value exchange (approved 2026-10-25)
+
+The [approved ordering contract](../notes/array-methods-proposal.md) adds the
+C++20 `Heap::swapValues(type, actualContainer, first, second)` operation.
+Validate both indices/type/handle before commit; invalid/equal indices do
+nothing. Exchange normalized cell contents, preserving each cell identity,
+container size and nested owned values. Allocate no new heap object.
+Notify only changed cells after commit and update tracing bookkeeping for
+nested values. Observer-metadata allocation failure follows the existing
+positioned ResourceLimit policy; do not accept incomplete notifications.
+Tier 1 still uses the C++ kernel API directly. No external function-table
+entry, C ABI change, new dependency or exception across the boundary is added.
+
 ## 7. Libraries embedded in other simulators (P5)
 
 A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P3).

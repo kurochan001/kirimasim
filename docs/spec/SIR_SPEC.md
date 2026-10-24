@@ -439,6 +439,18 @@ Slang rejects direct source forms; the VM diagnoses a hand-built cell-ref NBA
 as an illegal operation. This does not prohibit whole-value NBAs to eligible
 static container variables.
 
+#### Array-method encoding amendment (approved 2026-10-25)
+
+VALUE_SEMANTICS 7.9 and the [approved method contract](../notes/array-methods-proposal.md)
+add `container.swap.values !T, ref<!T>, first, second`: no result; integral
+indices retain their widths. Exchange values in existing actual-receiver
+cells without resizing, copying nested owned values or changing cell identity.
+Invalid/equal indices are no-ops. The verifier checks descriptor/ref
+equivalence and integral indices. VM forwards to `Heap::swapValues` using
+existing wide-index decoding. Front emits reduction/ordering/locator loops
+and shared comparisons; [min/max](../notes/array-extrema-proposal.md) need no
+new opcode. FormatVersion stays 0; C ABI 0.3 is unchanged.
+
 ### 5.9 Typed assignment-pattern execution encoding (2026-10-24)
 
 This encodes the existing value/output rules of SYSTEM_TASKS 3.9; it selects
@@ -459,6 +471,12 @@ Front's literal/runtime argument bridge remains unfinished, so source `%p`
 is still unsupported. See the [implementation/checkpoint](../notes/pattern-sir-execution.md).
 
 ## 6. Constants
+
+**Array reduction exception (approved 2026-10-25):** VALUE_SEMANTICS 7.9's
+empty-input identities also apply when a method expression could be folded
+by slang. Front lowers reduction call expressions through its runtime rules
+rather than accepting slang's conflicting empty product/and result. Parameter
+forms not yet lowered through this exception remain an explicit limitation.
 
 A container constant is only the empty handle zero, printed `empty`. A chandle
 constant is null, printed `null`. Nonempty container values are made by the
