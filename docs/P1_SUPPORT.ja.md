@@ -106,6 +106,12 @@ automatic初期化は入るたびに行います。宣言だけのforkにも対�
 [記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は承認待ちで、
 automatic event変数も未対応です。
 
+### 固定長配列ポートの境界
+
+固定長unpacked配列全体のポートと、解決が必要なネット配列は未対応です。pullのない未接続
+配列には既存の既定値が適用されます。[接続・解決の契約案](notes/fixed-array-ports-proposal.ja.md)に
+独自の観測を記録し、承認待ちとしています。
+
 ### programの終了
 
 programのinitialと連続代入はreactive側で実行し、呼び出し・forkは領域と起源programを

@@ -121,19 +121,21 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory now has 82 original probes. With Icarus `13.0 (stable) (v13_0)`,
-22 Icarus-passing gaps and four reference result mismatches remain. With
-`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 28 and seven.
+inventory now has 84 original probes. With Icarus `13.0 (stable) (v13_0)`,
+24 Icarus-passing gaps and four reference result mismatches remain. With
+`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 30 and seven.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
 would not by itself establish complete coverage; the inventory must expand
 as mechanisms and interfaces are checked.
-The earlier 81 statuses are unchanged. The newly inventoried automatic event
-case passes both references and remains unsupported natively. Its addition
+The earlier 82 statuses are unchanged. Whole fixed-array ports and resolved
+net arrays pass both references and remain unsupported natively. Adding them
 increases the inventory's gap count; production code is unchanged.
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
 records 32 original programs and remains pending review.
+The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
+adds 59 original design observations, with legality boundaries kept separate.
 
 The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
 records 28 original programs and 56 reference observations separately from
@@ -190,7 +192,7 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI at `c6d9c3d` passes all four configurations (2026-10-24).
+Full local CI at `392687e` (native source `c6d9c3d`) passes all four configurations (2026-10-24).
 Dev/ASan/UBSan each have 3,205 tests: 3,203 pass and two known skips remain.
 Release has 3,206 tests: 3,204 pass and the same skips. All 135 Tools tests
 and 72 new fork-declaration sources pass. Static checks, README counts,
@@ -199,9 +201,9 @@ unchanged. Three compiled controls fail actual new stdout; a fourth fails
 real source SIR verification. Aggregate and fork CLI expectation corrections
 remain separate review baselines.
 
-The same 82-probe inventory has separate 13.0-stable and 14.0-development
-results: 13.0 has 22 Icarus-passing gaps and four reference mismatches;
-14.0 has 28 and seven.
+The same 84-probe inventory has separate 13.0-stable and 14.0-development
+results: 13.0 has 24 Icarus-passing gaps and four reference mismatches;
+14.0 has 30 and seven.
 See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below

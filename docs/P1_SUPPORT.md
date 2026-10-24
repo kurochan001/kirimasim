@@ -117,6 +117,13 @@ remain unsupported and are explicitly measured in the expanded comparison.
 The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
 is pending review; automatic event variables are also still unsupported.
 
+### Fixed-array port boundary
+
+Whole fixed unpacked array ports and arrays of nets requiring resolution
+remain unsupported. Unconnected arrays without pulls have existing defaults.
+The [array-port and resolution contract proposal](notes/fixed-array-ports-proposal.md)
+records original observations and remains pending review.
+
 ### Program completion
 
 Programs: initial procedures and continuous assignments use the reactive set,

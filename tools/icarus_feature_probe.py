@@ -216,6 +216,12 @@ EXTENDED.extend([
     ("automatic_event_capture", "6.8, 6.21, 9.3.2, 15.5",
      'module top;int seen;task automatic run();event ready;fork begin @ready;seen=7;end begin #1;->ready;end join endtask initial begin run();$display("%0d",seen);end endmodule',
      "7\n", []),
+    ("fixed_array_ports", "4.9.6, 7.6, 23.3.3.5",
+     'module leaf(input wire [7:0] p[2:1],output wire [7:0] q[3:2]);assign q[3]=p[2];assign q[2]=p[1];endmodule module top;wire [7:0] a[4:5],b[8:7];assign a[4]=8\'h12;assign a[5]=8\'h34;leaf u(a,b);initial #1 $display("%h %h",b[8],b[7]);endmodule',
+     "12 34\n", []),
+    ("resolved_net_array", "6.6, 28.12",
+     'module top;wire [7:0] a[2];assign a[0]=8\'h0f;assign a[0]=8\'hf0;assign a[1]=8\'hzz;assign a[1]=8\'h5a;initial #1 $display("%h %h",a[0],a[1]);endmodule',
+     "xx 5a\n", []),
 ])
 
 

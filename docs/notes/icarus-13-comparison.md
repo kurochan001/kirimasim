@@ -1,7 +1,7 @@
 # Icarus 13.0 and development-version comparison
 
 [日本語](icarus-13-comparison.ja.md). Measured 2026-10-24 at kirimasim
-source `c6d9c3d` (fork declaration lowering), dev build on macOS/arm64. No installation was added and
+source `c6d9c3d` (fork declaration lowering), documentation-build banner `392687e`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
 ## Verified versions and results
@@ -9,13 +9,13 @@ no other simulator source or tests were read.
 Existing binaries report `13.0 (stable) (v13_0)` for the compiler driver,
 preprocessor, parser/elaborator and runtime. The additional baseline's
 compiler/runtime report `14.0 (devel) (s20260301-411-gca6b8d376)`.
-Both ran the same 82 original probes from
+Both ran the same 84 original probes from
 [`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py):
 
-- **13.0 stable:** 22 Icarus-passing gaps and four reference result
-  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus13-automatic-capture-probes.json).
-- **14.0 devel:** 28 Icarus-passing gaps and seven reference result
-  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus14-automatic-capture-probes.json).
+- **13.0 stable:** 24 Icarus-passing gaps and four reference result
+  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus13-array-port-probes.json).
+- **14.0 devel:** 30 Icarus-passing gaps and seven reference result
+  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus14-array-port-probes.json).
 
 The six additional development-version gaps are array sum, queue sorting
 and the unique/empty min/max probes. Version 13.0 does not compile those
@@ -31,15 +31,32 @@ A reference mismatch can coexist with missing kirimasim support: class
 virtual dispatch is still unsupported. The JSON records each engine's
 status independently; these mechanisms must not disappear from P1 work.
 
-The inventory has 79 standard-mechanism probes, two `project_policy`
+The inventory has 81 standard-mechanism probes, two `project_policy`
 RHS-order probes and one `icarus_extension` (`wire real`). IEEE permits
 either side's evaluation first in the policy probes; their oracle tests
 the existing approved kirimasim order. Extensions and project choices are
 identified rather than presented as universal IEEE requirements.
 
+## Fixed-array ports and resolved net arrays added to the inventory
+
+`fixed_array_ports` and `resolved_net_array` pass both references and remain
+positioned unsupported cases natively. All earlier 82 statuses and passing
+judged outputs are unchanged. Production source is unchanged; inventory growth
+raises the gap counts from 22/28 to 24/30, with four/seven reference mismatches.
+The 82-item [13.0](../measurements/2026-10-24/icarus13-automatic-capture-probes.json)
+and [development](../measurements/2026-10-24/icarus14-automatic-capture-probes.json)
+records retain their earlier counts and provenance.
+
+The [whole-array port and resolution proposal](fixed-array-ports-proposal.md)
+records 59 separate design programs, including seven illegal controls. Its
+models and reference disagreements remain review evidence; no implementation
+or approved oracle is implied. It covers declaration-order alias mapping,
+continuous typed copies, element-wise resolution and unconnected input pulls.
+Broader partial-port strength transport still requires its separate contract.
+
 ## Automatic events added to the inventory
 
-`automatic_event_capture` passes both references and reports a positioned
+At the automatic-event step, `automatic_event_capture` passes both references and reports a positioned
 unsupported automatic-event diagnostic in native execution. The earlier 81
 statuses and passing judged outputs are unchanged; no production code changed
 for this measurement. Adding this mechanism increases gaps from 21/27 to
@@ -117,9 +134,9 @@ their `-V` output. `iverilog -V` reports its helper components too.
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
   --iverilog "$IVERILOG_13" --vvp "$VVP_13" --extended \
-  --output build/icarus13-automatic-capture-probes.json --require-parity
+  --output build/icarus13-array-port-probes.json --require-parity
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/icarus14-automatic-capture-probes.json --require-parity
+  --extended --output build/icarus14-array-port-probes.json --require-parity
 ```
 
 The second command uses PATH, so verify its compiler/runtime versions rather

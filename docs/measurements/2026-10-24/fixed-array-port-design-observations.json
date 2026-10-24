@@ -1,0 +1,2287 @@
+{
+  "measured": "2026-10-24",
+  "repository_context": "392687e67966c41e6815602a900063c98c9112ee",
+  "native_source_revision": "c6d9c3d49459f3a554b6b12635eb78861b51f5a2",
+  "purpose": "Original fixed-array port observations for contract review; proposed models are not approved oracles. No production implementation added.",
+  "versions": {
+    "native": "kirimasim 0.0.0 (commit 392687e67966), built with AppleClang 21.0.0.21000334",
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "cases": [
+    {
+      "name": "input_net_1",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [0:0] p[7:6]);endmodule\nmodule top;logic [0:0] x[4:5];wire [0:0] a[4:5];assign a[4]=x[4];assign a[5]=x[5];leaf u(a);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===1'b0,u.p[6]==={1{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={1{1'bx}},u.p[6]==={1{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "47175f2a94ef06224b1f48bb4b532665c705aab312324f5e0ddddaa758dca705",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_net_1.sv:3:90: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_var_actual_1",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [0:0] p[7:6]);endmodule\nmodule top;logic [0:0] x[4:5];leaf u(x);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===1'b0,u.p[6]==={1{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={1{1'bx}},u.p[6]==={1{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "8d80b44d8b98375599af1a601bedf7e546c4c337cd9f8dbe8cbdfbfde864a1d8",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_var_actual_1.sv:3:38: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_net_1",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire [0:0] p[7:6]);logic [0:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='1;#2;x='x;y='z;end endmodule module top;wire [0:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===1'b0,a[5]==={1{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={1{1'bx}},a[5]==={1{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "409f0a61419430c13610490f2f7bcfab95fa3ea653ad8076e90858ee45686a89",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_net_1.sv:2:170: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_var_1",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [0:0] p[7:6]);initial begin p[7]='0;p[6]='1;#2;p[7]='x;p[6]='z;end endmodule module top;wire [0:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===1'b0,a[5]==={1{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={1{1'bx}},a[5]==={1{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "dcbe6e46624887263421ddf55bfdddd705216a39119be2ee0be44a11d356584f",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_var_1.sv:2:139: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "inout_1",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [0:0] p[7:6]);logic [0:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='z;#2;x='z;y='1;#2;x='0;y='z;end endmodule\nmodule top;wire [0:0] a[4:5];logic [0:0] x,y;assign a[4]=x;assign a[5]=y;leaf u(a);initial begin x='z;y='1;#1;$display(\"start %0d %0d\",a[4]===1'b0,a[5]==={1{1'b1}});#1;x='1;y='z;#1;$display(\"change %0d %0d\",a[4]==={1{1'b1}},a[5]==={1{1'b1}});#1;x='1;y='z;#1;$display(\"resolve %0d %0d\",a[4]==={1{1'bx}},a[5]==={1{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "43bfe6ff312caa59bbf5a2da31f4b07a66bdb66e558114d63f84bc1d1e02fce6",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_1.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_1.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/inout_1.sv:2:30: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_net_32",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [31:0] p[7:6]);endmodule\nmodule top;logic [31:0] x[4:5];wire [31:0] a[4:5];assign a[4]=x[4];assign a[5]=x[5];leaf u(a);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===32'b0,u.p[6]==={32{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={32{1'bx}},u.p[6]==={32{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "584011af2f576fc16755ff66482911ef9b1aa2ed26ff1ef730d6c13e03bb1feb",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_net_32.sv:3:92: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_var_actual_32",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [31:0] p[7:6]);endmodule\nmodule top;logic [31:0] x[4:5];leaf u(x);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===32'b0,u.p[6]==={32{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={32{1'bx}},u.p[6]==={32{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "707ad1891cc40895186cf1ad4d377e4715fd362d20900106833f5e2e97938958",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_var_actual_32.sv:3:39: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_net_32",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire [31:0] p[7:6]);logic [31:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='1;#2;x='x;y='z;end endmodule module top;wire [31:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===32'b0,a[5]==={32{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={32{1'bx}},a[5]==={32{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "3a5b4e3fbc38379f07aca36c5360ce961da9e2335251fe7726753d19917d997e",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_net_32.sv:2:173: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_var_32",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [31:0] p[7:6]);initial begin p[7]='0;p[6]='1;#2;p[7]='x;p[6]='z;end endmodule module top;wire [31:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===32'b0,a[5]==={32{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={32{1'bx}},a[5]==={32{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "d483ebdf3291ef4c0a05e1a4494b2aa770896797675f709bf3c6138c5e85f7ee",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_var_32.sv:2:141: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "inout_32",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [31:0] p[7:6]);logic [31:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='z;#2;x='z;y='1;#2;x='0;y='z;end endmodule\nmodule top;wire [31:0] a[4:5];logic [31:0] x,y;assign a[4]=x;assign a[5]=y;leaf u(a);initial begin x='z;y='1;#1;$display(\"start %0d %0d\",a[4]===32'b0,a[5]==={32{1'b1}});#1;x='1;y='z;#1;$display(\"change %0d %0d\",a[4]==={32{1'b1}},a[5]==={32{1'b1}});#1;x='1;y='z;#1;$display(\"resolve %0d %0d\",a[4]==={32{1'bx}},a[5]==={32{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "1e696c8d64d7b99f84bcfd3c6eb76d821daf6bb7c416cf28e88a93f4f0f2bee8",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_32.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_32.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/inout_32.sv:2:31: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_net_65",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [64:0] p[7:6]);endmodule\nmodule top;logic [64:0] x[4:5];wire [64:0] a[4:5];assign a[4]=x[4];assign a[5]=x[5];leaf u(a);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===65'b0,u.p[6]==={65{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={65{1'bx}},u.p[6]==={65{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "6a78202b7e9d32c603cd6d699d959a6750fdaa60e6e0289c9bfa9685043e999a",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_net_65.sv:3:92: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_var_actual_65",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [64:0] p[7:6]);endmodule\nmodule top;logic [64:0] x[4:5];leaf u(x);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===65'b0,u.p[6]==={65{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={65{1'bx}},u.p[6]==={65{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "c8c6cd339ac095f399da1d1f1703365b4655b7d455f6c69dac38a6f26d52cb86",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_var_actual_65.sv:3:39: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_net_65",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire [64:0] p[7:6]);logic [64:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='1;#2;x='x;y='z;end endmodule module top;wire [64:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===65'b0,a[5]==={65{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={65{1'bx}},a[5]==={65{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "e180bc519d623c35d35d43f6adb339c628bf43a836e01a8617193a4462d76b0c",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_net_65.sv:2:173: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_var_65",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [64:0] p[7:6]);initial begin p[7]='0;p[6]='1;#2;p[7]='x;p[6]='z;end endmodule module top;wire [64:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===65'b0,a[5]==={65{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={65{1'bx}},a[5]==={65{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "9f32594ecfd58006406a67f0ba4eadcb270c2c3ea110e35626d9cfebf1ff6039",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_var_65.sv:2:141: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "inout_65",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [64:0] p[7:6]);logic [64:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='z;#2;x='z;y='1;#2;x='0;y='z;end endmodule\nmodule top;wire [64:0] a[4:5];logic [64:0] x,y;assign a[4]=x;assign a[5]=y;leaf u(a);initial begin x='z;y='1;#1;$display(\"start %0d %0d\",a[4]===65'b0,a[5]==={65{1'b1}});#1;x='1;y='z;#1;$display(\"change %0d %0d\",a[4]==={65{1'b1}},a[5]==={65{1'b1}});#1;x='1;y='z;#1;$display(\"resolve %0d %0d\",a[4]==={65{1'bx}},a[5]==={65{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "45409013bf71dd9ea64c1457bf76e5ddc5f169cf0b9fdf00934db8e27f3d0f04",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_65.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_65.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/inout_65.sv:2:31: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_net_129",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [128:0] p[7:6]);endmodule\nmodule top;logic [128:0] x[4:5];wire [128:0] a[4:5];assign a[4]=x[4];assign a[5]=x[5];leaf u(a);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===129'b0,u.p[6]==={129{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={129{1'bx}},u.p[6]==={129{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "bcff6ea2f15ccc8a0242793ce85fb1c43cd0a08646a273122e55b59a0fedcaa6",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_net_129.sv:3:94: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_var_actual_129",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [128:0] p[7:6]);endmodule\nmodule top;logic [128:0] x[4:5];leaf u(x);initial begin x[4]='0;x[5]='1;#1;$display(\"start %0d %0d\",u.p[7]===129'b0,u.p[6]==={129{1'b1}});x[4]='x;x[5]='z;#1;$display(\"change %0d %0d\",u.p[7]==={129{1'bx}},u.p[6]==={129{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "42f3cde9fec089b2a63b6948bb33f80c0ca5c3581b652b125fcd6f711e4d5b5e",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_var_actual_129.sv:3:40: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_net_129",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire [128:0] p[7:6]);logic [128:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='1;#2;x='x;y='z;end endmodule module top;wire [128:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===129'b0,a[5]==={129{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={129{1'bx}},a[5]==={129{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "fe07c5d5085d62dd3ab7367cd4d651c759d486e3ba8497eb57514322ba01b83b",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_net_129.sv:2:176: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_var_129",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [128:0] p[7:6]);initial begin p[7]='0;p[6]='1;#2;p[7]='x;p[6]='z;end endmodule module top;wire [128:0] a[4:5];leaf u(a);initial begin #1;$display(\"start %0d %0d\",a[4]===129'b0,a[5]==={129{1'b1}});#2;$display(\"change %0d %0d\",a[4]==={129{1'bx}},a[5]==={129{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "f427779d2007ecd8f9b64cbde503a5711725821b768a184169c0eee23f6adbd2",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "start 1 1\nchange 1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_var_129.sv:2:143: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "inout_129",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [128:0] p[7:6]);logic [128:0] x,y;assign p[7]=x;assign p[6]=y;initial begin x='0;y='z;#2;x='z;y='1;#2;x='0;y='z;end endmodule\nmodule top;wire [128:0] a[4:5];logic [128:0] x,y;assign a[4]=x;assign a[5]=y;leaf u(a);initial begin x='z;y='1;#1;$display(\"start %0d %0d\",a[4]===129'b0,a[5]==={129{1'b1}});#1;x='1;y='z;#1;$display(\"change %0d %0d\",a[4]==={129{1'b1}},a[5]==={129{1'b1}});#1;x='1;y='z;#1;$display(\"resolve %0d %0d\",a[4]==={129{1'bx}},a[5]==={129{1'bz}});end endmodule\n",
+      "proposed_stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "01d4b711a361170d90c8a28685686f52793a691d7598745e2d8c7b6575929180",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_129.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_129.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/inout_129.sv:2:32: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "scalar_port_control",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p,output wire [7:0] q);assign q=p;endmodule module top;logic [7:0] p=8'h69;wire [7:0] q;leaf u(p,q);initial begin #1;$display(\"%h\",q);end endmodule\n",
+      "proposed_stdout": "69\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "implemented_control",
+      "source_sha256": "b7924fcd0ce6a7ac972c43f192d6dbd5ad3f9ba5f98e52ff6eeeb76e8bd071e5",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "69\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "69\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 0,
+          "stdout": "69\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        }
+      }
+    },
+    {
+      "name": "multidimensional",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[4:3][-2:0],output wire [7:0] q[8:9][7:5]);for(genvar a=0;a<2;a++)for(genvar b=0;b<3;b++)assign q[8+a][7-b]=p[4-a][-2+b];endmodule module top;wire [7:0] p[-3:-2][11:9],q[1:0][-4:-2];for(genvar a=0;a<2;a++)for(genvar b=0;b<3;b++)assign p[-3+a][11-b]=8'(a*10+b);leaf u(p,q);initial begin #1;foreach(q[a,b])$write(\"%0d \",q[a][b]);$display;end endmodule\n",
+      "proposed_stdout": "0 1 2 10 11 12 \n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "f23a85442d485e20e309077791da127baccf0ccd203f35db272052038a5dddb3",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0 1 2 10 11 12 \n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0 1 2 10 11 12 \n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/multidimensional.sv:2:298: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/multidimensional.sv:2:300: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "array_slice_connection",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[2:1]);endmodule module top;wire [7:0] a[9:5];for(genvar i=5;i<=9;i++)assign a[i]=8'(i);leaf u(a[8:7]);initial begin #1;$display(\"%0d %0d\",u.p[2],u.p[1]);end endmodule\n",
+      "proposed_stdout": "8 7\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "6a6165dbf85d95ae9382377c37729c9a82e8e246abab56dd4820eb137e840910",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/array_slice_connection.sv:2: sorry: Array slices are not yet supported for continuous assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/array_slice_connection.sv:2: sorry: Array slices are not yet supported for continuous assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/array_slice_connection.sv:2:126: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "instance_array_distribute",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[7:6],output wire [7:0] q);assign q=p[7]+p[6];endmodule module top;wire [7:0] a[-1:0][4:5],q[2:1];assign a[-1][4]=1;assign a[-1][5]=2;assign a[0][4]=10;assign a[0][5]=20;leaf u[2:1](a,q);initial begin #1;$display(\"%0d %0d\",q[2],q[1]);end endmodule\n",
+      "proposed_stdout": "3 30\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "e5a3cf8fbc19793cef4f2912ece6e3cca060d209c507d369325fe1355ee654ec",
+      "results": {
+        "13": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/instance_array_distribute.sv:2:213: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/instance_array_distribute.sv:2:213: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "instance_array_replicate",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[7:6],output wire [7:0] q);assign q=p[7]+p[6];endmodule module top;wire [7:0] a[4:5],q[2:1];assign a[4]=7;assign a[5]=9;leaf u[2:1](a,q);initial begin #1;$display(\"%0d %0d\",q[2],q[1]);end endmodule\n",
+      "proposed_stdout": "16 16\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "48d9cdb85acc4b7b5e5d42d3e7018636797bd3eeb5529858d77dbb1522c146ce",
+      "results": {
+        "13": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/instance_array_replicate.sv:2:163: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/instance_array_replicate.sv:2:163: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_expression",
+      "source": "`timescale 1ns/1ns\ntypedef logic [7:0] pair_t[2];module leaf(input wire [7:0] p[2]);endmodule module top;pair_t a,b;bit pick;leaf u(pick?a:b);initial begin a='{1,2};b='{7,9};pick=0;#1;$display(\"%0d %0d\",u.p[0],u.p[1]);pick=1;#1;$display(\"%0d %0d\",u.p[0],u.p[1]);end endmodule\n",
+      "proposed_stdout": "7 9\n1 2\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "dcfaa496dd973fc4c5c676bad525d16d0022bc6dd48bb878d4ce44e3c33c807b",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_expression.sv:2:114: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "two_state_output",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output bit [64:0] p[3:2]);initial begin p[3]='x;p[2]='1;end endmodule module top;wire [64:0] a[-2:-1];leaf u(a);initial begin #1;$display(\"%0d %0d\",a[-2]===65'b0,a[-1]==='1);end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "7.6, 23.3.3.5",
+      "role": "legality_boundary",
+      "initial_hypothesis_rejected": "The original per-element widening hypothesis is rejected by strict elaboration; incompatible widths, signedness or state domains of fixed-array elements are a legality boundary, not an execution gap.",
+      "source_sha256": "12678a56822c69f74e6253c4e73cb8acb2c3b353fc3893fd5e179a395659f420",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/two_state_output.sv:2: error: Element types are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/two_state_output.sv:2: error: Element types are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/two_state_output.sv:2:122: error: value of type 'bit[64:0]$[3:2]' cannot be assigned to type 'logic[64:0]$[-2:-1]'"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/two_state_output.sv:2:122: error: value of type 'bit[64:0]$[3:2]' cannot be assigned to type 'logic[64:0]$[-2:-1]'"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "packed_struct_element",
+      "source": "`timescale 1ns/1ns\ntypedef struct packed{logic [64:0] x;logic [7:0] y;} word_t;module leaf(input word_t p[2]);endmodule module top;word_t a[2];leaf u(a);initial begin a[0]='{'1,8'h59};a[1]='{'0,8'ha6};#1;$display(\"%0d %h %0d %h\",u.p[0].x==='1,u.p[0].y,u.p[1].x==='0,u.p[1].y);end endmodule\n",
+      "proposed_stdout": "1 59 1 a6\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "84702651b310ea11bb0d9e8b3c0e16521e20a1f4d0d1a3cffc26a8a7616a8660",
+      "results": {
+        "13": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/packed_struct_element.sv:2:132: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "real_variable_port",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input real p[3:2],output real q[7:8]);assign q[7]=p[3]+0.5;assign q[8]=p[2]+0.5;endmodule module top;real a[2],b[2];leaf u(a,b);initial begin a[0]=1.0;a[1]=2.0;#1;$display(\"%.1f %.1f\",b[0],b[1]);end endmodule\n",
+      "proposed_stdout": "1.5 2.5\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "919c0b5ab7c98457c267c4d40b9a30cf8f084c66d0c769ab9fd98701391ea202",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1.5 2.5\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1.5 2.5\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/real_variable_port.sv:2:136: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/real_variable_port.sv:2:138: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "string_variable_port",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input string p[3:2],output string q[7:8]);assign q[7]=p[3];assign q[8]=p[2];endmodule module top;string a[2],b[2];leaf u(a,b);initial begin a[0]=\"left\";a[1]=\"right\";#1;$display(\"%s %s\",b[0],b[1]);end endmodule\n",
+      "proposed_stdout": "left right\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "99e7ac7343d92ef35190015be610a1b54ed53531fa9b03c016251421be06c46b",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe>/string_variable_port.sv:2: error: Net `p` can not be of type `string`.",
+            "<probe>/string_variable_port.sv:2: sorry: Port `q` of module `leaf` with type `string` is not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe>/string_variable_port.sv:2: error: Net `p` can not be of type `string`.",
+            "<probe>/string_variable_port.sv:2: sorry: Port `q` of module `leaf` with type `string` is not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/string_variable_port.sv:2:134: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/string_variable_port.sv:2:136: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "program_input",
+      "source": "`timescale 1ns/1ns\nprogram leaf(input wire [7:0] p[3:2]);initial begin #1;$display(\"%0d %0d\",p[3],p[2]);end endprogram module top;wire [7:0] a[2];assign a[0]=7;assign a[1]=9;leaf u(a);endmodule\n",
+      "proposed_stdout": "7 9\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "e6bbb136d912698d501508da29008510b29ecfb0e1e8cb7134972c02e690f55a",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/program_input.sv:2:163: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "interface_input",
+      "source": "`timescale 1ns/1ns\ninterface leaf(input wire [7:0] p[3:2]);initial begin #1;$display(\"%0d %0d\",p[3],p[2]);end endinterface module top;wire [7:0] a[2];assign a[0]=7;assign a[1]=9;leaf u(a);endmodule\n",
+      "proposed_stdout": "7 9\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "1b2dc8b22a17ebd4d46fd12308d98e27b6085269dfb20af6cb429b7c25adcd22",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/interface_input.sv:2:167: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "unconnected_pull0",
+      "source": "`timescale 1ns/1ns\n`unconnected_drive pull0\nmodule leaf(input wire [7:0] p[3:2]);endmodule\n`nounconnected_drive\nmodule top;leaf u();initial begin #1;$display(\"%h %h\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "00 00\n",
+      "clause": "6.6, 22.9, 23.3.3.3",
+      "role": "proposal_only",
+      "source_sha256": "9af5780e951c71258a5e2210e7b6f66cd887861d2a17994492821a31a65c6bdc",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "00 00\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "00 00\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_pull0.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/unconnected_pull0.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_pull0.sv:3:30: error: unsupported: unpacked array port left unconnected under `unconnected_drive (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "unconnected_pull1",
+      "source": "`timescale 1ns/1ns\n`unconnected_drive pull1\nmodule leaf(input wire [7:0] p[3:2]);endmodule\n`nounconnected_drive\nmodule top;leaf u();initial begin #1;$display(\"%h %h\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "ff ff\n",
+      "clause": "6.6, 22.9, 23.3.3.3",
+      "role": "proposal_only",
+      "source_sha256": "c05ff89fb96de1f9058e4bf2f1275ad9a8006df205194173d4e16cba685789e0",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "ff ff\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "ff ff\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_pull1.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/unconnected_pull1.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_pull1.sv:3:30: error: unsupported: unpacked array port left unconnected under `unconnected_drive (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "unconnected_z",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[3:2]);endmodule module top;leaf u();initial begin #1;$display(\"%h %h\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "zz zz\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "94842d22e70c791dcfcf73eac3d1b8f09e0632d622c1af60dc0568e3dc9daada",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "zz zz\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "zz zz\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_z.sv:2:64: warning: input port 'p' has no connection [-Wunconnected-input-port]"
+          ],
+          "run_exit": 0,
+          "stdout": "zz zz\n",
+          "run_diagnostic": [
+            "<probe>/unconnected_z.sv:2:64: warning: input port 'p' has no connection [-Wunconnected-input-port]"
+          ],
+          "status": "model_match"
+        }
+      }
+    },
+    {
+      "name": "unconnected_output_inout",
+      "source": "`timescale 1ns/1ns\n`unconnected_drive pull1\nmodule leaf(output wire [7:0] o[2],inout wire [7:0] p[2]);endmodule\n`nounconnected_drive\nmodule top;leaf u();initial begin #1;$display(\"%h %h %h %h\",u.o[0],u.o[1],u.p[0],u.p[1]);end endmodule\n",
+      "proposed_stdout": "zz zz zz zz\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "54d18fc49a0e3e8e2fce7413dd0420aab73a47309e945ac0abdb568beed587e6",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/unconnected_output_inout.sv:3: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/unconnected_output_inout.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_output_inout.sv:5:17: warning: inout port 'p' has no connection [-Wunconnected-inout-port]",
+            "<probe>/unconnected_output_inout.sv:5:17: warning: output port 'o' has no connection [-Wunconnected-output-port]"
+          ],
+          "run_exit": 0,
+          "stdout": "zz zz zz zz\n",
+          "run_diagnostic": [
+            "<probe>/unconnected_output_inout.sv:5:17: warning: inout port 'p' has no connection [-Wunconnected-inout-port]",
+            "<probe>/unconnected_output_inout.sv:5:17: warning: output port 'o' has no connection [-Wunconnected-output-port]"
+          ],
+          "status": "model_match"
+        }
+      }
+    },
+    {
+      "name": "multiple_driver",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [7:0] p[2]);assign p[0]=8'h0f;assign p[1]=8'hzz;endmodule module top;wire [7:0] a[2];assign a[0]=8'hf0;assign a[1]=8'h5a;leaf u(a);initial begin #1;$display(\"%h %h\",a[0],a[1]);end endmodule\n",
+      "proposed_stdout": "xx 5a\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "df50b2755a61d948a231fe02f3dd7fdc1e3b33de4f257921c8e3e5e6488840b3",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/multiple_driver.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/multiple_driver.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/multiple_driver.sv:2:30: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "strength_resolution",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [7:0] p[2]);assign (weak1,weak0) p[0]=8'hff;assign (weak1,weak0) p[1]=8'h00;endmodule module top;wire [7:0] a[2];assign (pull1,pull0) a[0]=8'h00;assign (pull1,pull0) a[1]=8'hff;leaf u(a);initial begin #1;$display(\"%h %h\",a[0],a[1]);end endmodule\n",
+      "proposed_stdout": "00 ff\n",
+      "clause": "23.3.3.7, 28.12",
+      "role": "proposal_only",
+      "source_sha256": "4c13480084b8c2f142982734b163e8a9cebd58f1f8a385df3c7d1cfcb2234980",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/strength_resolution.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/strength_resolution.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/strength_resolution.sv:2:30: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "force_collapsed_element",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [7:0] p[2]);assign p[0]=8'h12;assign p[1]=8'h34;endmodule module top;wire [7:0] a[2];leaf u(a);initial begin #1;force a[0]=8'hff;#1;$display(\"%h %h %h\",a[0],u.p[0],a[1]);release a[0];#1;$display(\"%h %h\",a[0],u.p[0]);end endmodule\n",
+      "proposed_stdout": "ff ff 34\n12 12\n",
+      "clause": "10.6.2, 23.3.3.7",
+      "role": "proposal_only",
+      "source_sha256": "42c8bd0998462cd825de6020724d5a9c508ca28cc3ea09cb27bfa41a7361f2f3",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/force_collapsed_element.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/force_collapsed_element.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/force_collapsed_element.sv:2:30: error: unsupported: inout port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "invalid_dimension_count",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[2][2]);endmodule module top;wire [7:0] a[4];leaf u(a);endmodule\n",
+      "proposed_stdout": null,
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "legality_boundary",
+      "source_sha256": "925e1312d12143fce3c5dd996fb983c99b7324b4077c7268c34d501486fa41d9",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/invalid_dimension_count.sv:2: error: Unpacked dimensions are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/invalid_dimension_count.sv:2: error: Unpacked dimensions are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/invalid_dimension_count.sv:2:83: error: no implicit conversion from 'logic[7:0]$[4]' to 'logic[7:0]$[2][2]'; explicit conversion exists, are you missing a cast?"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/invalid_dimension_count.sv:2:83: error: no implicit conversion from 'logic[7:0]$[4]' to 'logic[7:0]$[2][2]'; explicit conversion exists, are you missing a cast?"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "invalid_dimension_size",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[3]);endmodule module top;wire [7:0] a[2];leaf u(a);endmodule\n",
+      "proposed_stdout": null,
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "legality_boundary",
+      "source_sha256": "bd2f974effc1fc9646e1db5f72fd9b6ef0d8fba5f73ab4c7e379467521f16a3a",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/invalid_dimension_size.sv:2: error: Unpacked dimensions are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/invalid_dimension_size.sv:2: error: Unpacked dimensions are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/invalid_dimension_size.sv:2:80: error: value of type 'logic[7:0]$[2]' cannot be assigned to type 'logic[7:0]$[3]'"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/invalid_dimension_size.sv:2:80: error: value of type 'logic[7:0]$[2]' cannot be assigned to type 'logic[7:0]$[3]'"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "input_variable_explicit",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input var logic [7:0] p[2]);endmodule module top;logic [7:0] a[2];leaf u(a);initial begin a='{7,9};#1;$display(\"%0d %0d\",u.p[0],u.p[1]);end endmodule\n",
+      "proposed_stdout": "7 9\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "492656c29906c716537b97bd54e26d15218ee50eeb767bc3acc1216b345deedd",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "x x\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "x x\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_variable_explicit.sv:2:86: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "inout_variable_illegal",
+      "source": "`timescale 1ns/1ns\nmodule leaf(inout wire [7:0] p[2]);endmodule module top;logic [7:0] a[2];leaf u(a);endmodule\n",
+      "proposed_stdout": null,
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "legality_boundary",
+      "source_sha256": "bdb4a05c25586c5231f6971fc3406c8988ca1c8b84a6cf09da6f52563147eafe",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_variable_illegal.sv:2: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "legality_rejected"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/inout_variable_illegal.sv:1: sorry: Inout ports with unpacked dimensions are not supported."
+          ],
+          "status": "legality_rejected"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/inout_variable_illegal.sv:2:81: error: 'a' cannot be connected to 'inout' port (only nets are allowed)"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/inout_variable_illegal.sv:2:81: error: 'a' cannot be connected to 'inout' port (only nets are allowed)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "matching_bounds",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[2:1],output wire [7:0] q[2:1]);assign q[2]=p[2];assign q[1]=p[1];endmodule module top;wire [7:0] a[2:1],b[2:1];assign a[2]=8'h27;assign a[1]=8'h81;leaf u(a,b);initial begin #1;$display(\"%h %h\",b[2],b[1]);end endmodule\n",
+      "proposed_stdout": "27 81\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "1ca1824bfe2f12fa609e9c1ad5f3af8c19f73e220043af67beb856e89b05dc6f",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "27 81\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "27 81\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/matching_bounds.sv:2:186: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/matching_bounds.sv:2:188: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "two_level_hierarchy",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[2],output wire [7:0] q[2]);assign q[0]=p[0];assign q[1]=p[1];endmodule module middle(input wire [7:0] p[4:3],output wire [7:0] q[-1:0]);leaf u(p,q);endmodule module top;wire [7:0] a[8:9],b[7:6];assign a[8]=8'h27;assign a[9]=8'h81;middle u(a,b);initial begin #1;$display(\"%h %h\",b[7],b[6]);end endmodule\n",
+      "proposed_stdout": "27 81\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "e909934526585b1e2d53b3f7a48d2dd363c144b5613696d845e04b63654b505e",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "27 81\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "27 81\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/two_level_hierarchy.sv:2:271: error: unsupported: unpacked array port (not implemented yet)",
+            "<probe>/two_level_hierarchy.sv:2:273: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_to_variable",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [7:0] p[2]);initial begin p='{7,9};#2;p='{10,20};end endmodule module top;logic [7:0] a[3:2];leaf u(a);initial begin #1;$display(\"%0d %0d\",a[3],a[2]);#2;$display(\"%0d %0d\",a[3],a[2]);end endmodule\n",
+      "proposed_stdout": "7 9\n10 20\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "0ad6c38c5a64a14773f9421c66b22fcda7b3f0e308e14edd637223444a964ae0",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n10 20\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n10 20\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_to_variable.sv:2:126: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "signed_element_conversion",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input logic signed [31:0] p[3:2]);endmodule module top;logic [7:0] a[2];leaf u(a);initial begin a='{8'h80,8'hff};#1;$display(\"%0d %0d\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "7.6, 23.3.3.5",
+      "role": "legality_boundary",
+      "initial_hypothesis_rejected": "The original per-element widening hypothesis is rejected by strict elaboration; incompatible widths, signedness or state domains of fixed-array elements are a legality boundary, not an execution gap.",
+      "source_sha256": "af769818e5cf2e65eb0534ab167bf4d192c3ea2c5d208f75ce5f0a11e8c25334",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/signed_element_conversion.sv:2: error: Element types are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/signed_element_conversion.sv:2: error: Element types are not compatible in array assignment.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "legality_rejected"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/signed_element_conversion.sv:2:92: error: value of type 'logic[7:0]$[2]' cannot be assigned to type 'logic signed[31:0]$[3:2]'"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/signed_element_conversion.sv:2:92: error: value of type 'logic[7:0]$[2]' cannot be assigned to type 'logic signed[31:0]$[3:2]'"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "default_input_value",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input logic [7:0] p[3:2]='{7,9});endmodule module top;leaf u();initial begin #1;$display(\"%0d %0d\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "7 9\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "f08186c1cc87b2f5018db4d062c1cd458c61cd0bf844a2dde64b17184113d2e7",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/default_input_value.sv:2:38: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "unconnected_weak_pull0",
+      "source": "`timescale 1ns/1ns\n`unconnected_drive pull0\nmodule leaf(input wire [7:0] p[3:2]);assign (weak1,weak0) p[3]=8'h55;assign (weak1,weak0) p[2]=8'haa;endmodule\n`nounconnected_drive\nmodule top;leaf u();initial begin #1;$display(\"%h %h\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "00 00\n",
+      "clause": "22.9, 23.3.3.3, 28.12",
+      "role": "proposal_only",
+      "source_sha256": "e965779bcd8489f553551a1119528bc3ba446a51006d257c7524505893de4cd1",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "00 00\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "00 00\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_weak_pull0.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_weak_pull0.sv:3:59: warning: input net port 'p' coerced to 'inout' [-Wport-coercion]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/unconnected_weak_pull0.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_weak_pull0.sv:3:59: warning: input net port 'p' coerced to 'inout' [-Wport-coercion]"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "unconnected_weak_pull1",
+      "source": "`timescale 1ns/1ns\n`unconnected_drive pull1\nmodule leaf(input wire [7:0] p[3:2]);assign (weak1,weak0) p[3]=8'h55;assign (weak1,weak0) p[2]=8'haa;endmodule\n`nounconnected_drive\nmodule top;leaf u();initial begin #1;$display(\"%h %h\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "ff ff\n",
+      "clause": "22.9, 23.3.3.3, 28.12",
+      "role": "proposal_only",
+      "source_sha256": "32b6a47bcf1e70180ca068991ee20b9e65e2c29bfcdef6a701b9e0b51a9952be",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "ff ff\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "ff ff\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_weak_pull1.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_weak_pull1.sv:3:59: warning: input net port 'p' coerced to 'inout' [-Wport-coercion]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/unconnected_weak_pull1.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_weak_pull1.sv:3:59: warning: input net port 'p' coerced to 'inout' [-Wport-coercion]"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "unconnected_variable_pull",
+      "source": "`timescale 1ns/1ns\n`unconnected_drive pull1\nmodule leaf(input var logic [7:0] p[2]);endmodule\n`nounconnected_drive\nmodule top;leaf u();initial begin #1;$display(\"%h %h\",u.p[0],u.p[1]);end endmodule\n",
+      "proposed_stdout": "xx xx\n",
+      "clause": "22.9, 23.3.3.2",
+      "role": "proposal_only",
+      "source_sha256": "300c548b7e5082effb4f9d72b724f38f988b51369836187591eddacb5645de6a",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/unconnected_variable_pull.sv:5: sorry: Can not pull floating input type 'reg'.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe>/unconnected_variable_pull.sv:5: sorry: Can not pull floating input type 'reg'.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe>/unconnected_variable_pull.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]"
+          ],
+          "run_exit": 0,
+          "stdout": "xx xx\n",
+          "run_diagnostic": [
+            "<probe>/unconnected_variable_pull.sv:5:17: warning: input port 'p' has no connection [-Wunconnected-input-port]",
+            "<probe>/unconnected_variable_pull.sv:3:35: warning: `unconnected_drive does not pull input port 'p', a variable; it keeps the initial value of its type"
+          ],
+          "status": "model_match"
+        }
+      }
+    },
+    {
+      "name": "input_variable_write_illegal",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input var logic [7:0] p[2]);initial p[0]=0;endmodule module top;logic [7:0] a[2];leaf u(a);endmodule\n",
+      "proposed_stdout": null,
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "legality_boundary",
+      "source_sha256": "6113be7730d0cbac30db7aa14c977d27c6c7519a18eaf4f0e39bf4114514b9ff",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "",
+          "run_diagnostic": [],
+          "status": "accepted_illegal_source"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "",
+          "run_diagnostic": [],
+          "status": "accepted_illegal_source"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/input_variable_write_illegal.sv:2:49: error: cannot assign to input port 'p'"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/input_variable_write_illegal.sv:2:49: error: cannot assign to input port 'p'"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_variable_writer_illegal",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [7:0] p[2]);initial p='{1,2};endmodule module top;logic [7:0] a[2];leaf u(a);initial a[0]=3;endmodule\n",
+      "proposed_stdout": null,
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "legality_boundary",
+      "source_sha256": "483588eaaff72b3b577928c19c6dfba1597e87567b3358a827589440fb33214f",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "",
+          "run_diagnostic": [],
+          "status": "accepted_illegal_source"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "",
+          "run_diagnostic": [],
+          "status": "accepted_illegal_source"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe>/output_variable_writer_illegal.sv:2:111: error: cannot mix continuous and procedural assignments to variable 'a[0]' [-Wmixed-var-assigns]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_variable_writer_illegal.sv:2:111: error: cannot mix continuous and procedural assignments to variable 'a[0]' [-Wmixed-var-assigns]"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "one_element_change",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire [7:0] p[3:2]);endmodule module top;logic [7:0] a[2];leaf u(a);initial begin a='{1,2};#1;$display(\"%0d %0d\",u.p[3],u.p[2]);a[1]=9;#1;$display(\"%0d %0d\",u.p[3],u.p[2]);end endmodule\n",
+      "proposed_stdout": "1 2\n1 9\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "f2eef4dfa8b82d579d72cc36332565292c2941c3ca8ba464fbd8a0290f18af81",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 2\n1 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 2\n1 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/one_element_change.sv:2:83: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "output_bit_change",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output logic [7:0] p[2]);initial begin p='{8'h55,8'haa};#2;p[0][0]=0;end endmodule module top;logic [7:0] a[5:4];leaf u(a);initial begin #1;$display(\"%h %h\",a[5],a[4]);#2;$display(\"%h %h\",a[5],a[4]);end endmodule\n",
+      "proposed_stdout": "55 aa\n54 aa\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "f397f3ab684cf05c895ee9605cb20c6b56a54fb0e80b0919bf690bdf3e247f45",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "55 aa\n54 aa\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "55 aa\n54 aa\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/output_bit_change.sv:2:133: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "two_state_compatible_output",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output bit [64:0] p[3:2]);initial begin p[3]='x;p[2]='1;end endmodule module top;bit [64:0] a[-2:-1];leaf u(a);initial begin #1;$display(\"%0d %0d\",a[-2]===65'b0,a[-1]==='1);end endmodule\n",
+      "proposed_stdout": "1 1\n",
+      "clause": "4.9.6, 6.22.2, 23.3.3.2, 23.3.3.3, 23.3.3.5",
+      "role": "proposal_only",
+      "source_sha256": "3e9c0bc855b60706e73c6ea265d635fd75f326496756a0658bb7114045fdd324",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/two_state_compatible_output.sv:2:121: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "resolved_array_without_ports",
+      "source": "`timescale 1ns/1ns\nmodule top;wire [7:0] a[2];assign a[0]=8'h0f;assign a[0]=8'hf0;assign a[1]=8'hzz;assign a[1]=8'h5a;initial begin #1;$display(\"%h %h\",a[0],a[1]);end endmodule\n",
+      "proposed_stdout": "xx 5a\n",
+      "clause": "6.6, 28.12",
+      "role": "proposal_only",
+      "source_sha256": "ce3a9ab71aa933505bad0c40de91d35098d106bc670511a9e19550bc88cc2baf",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "xx 5a\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "xx 5a\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/resolved_array_without_ports.sv:2:35: error: unsupported: an array of nets with several drivers (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "resolved_output_array",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire [7:0] p[2]);assign p[0]=8'h0f;assign p[0]=8'hf0;assign p[1]=8'h5a;endmodule module top;wire [7:0] a[2];leaf u(a);initial begin #1;$display(\"%h %h\",a[0],a[1]);end endmodule\n",
+      "proposed_stdout": "xx 5a\n",
+      "clause": "6.6, 23.3.3.3, 28.12",
+      "role": "proposal_only",
+      "source_sha256": "a93a01cd323f748f8c0148fc1e6dee6f8b20b750682ae10681c01de45f5cf242",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "xx 5a\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "xx 5a\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/resolved_output_array.sv:2:135: error: unsupported: unpacked array port (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    },
+    {
+      "name": "resolved_strength_array_without_ports",
+      "source": "`timescale 1ns/1ns\nmodule top;wire [7:0] a[2];assign (weak1,weak0) a[0]=8'hff;assign (pull1,pull0) a[0]=8'h00;assign (weak1,weak0) a[1]=8'h00;assign (pull1,pull0) a[1]=8'hff;initial begin #1;$display(\"%h %h\",a[0],a[1]);end endmodule\n",
+      "proposed_stdout": "00 ff\n",
+      "clause": "6.6, 28.12",
+      "role": "proposal_only",
+      "source_sha256": "485d95503cbd20a35ec48945a4785635ac1c22d82860a92c0c43745144d4a8ea",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "00 ff\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "00 ff\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe>/resolved_strength_array_without_ports.sv:2:49: error: unsupported: an array of nets with several drivers (not implemented yet)"
+          ],
+          "status": "runtime_failed"
+        }
+      }
+    }
+  ],
+  "platform": "macOS/arm64",
+  "source_origin": "59 original programs; no other simulator source/tests read.",
+  "commands": {
+    "reference_compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "probe.vvp",
+      "probe.sv"
+    ],
+    "reference_run": [
+      "vvp",
+      "probe.vvp"
+    ],
+    "native_parse": [
+      "kirimasim",
+      "parse",
+      "probe.sv"
+    ],
+    "native_run": [
+      "kirimasim",
+      "probe.sv"
+    ]
+  },
+  "portability": "Paths normalized; reference backend assertion expressions omitted; exit codes retained.",
+  "summary": {
+    "case_count": 59,
+    "legal_model_cases": 52,
+    "legality_boundaries": 7,
+    "legal_results": {
+      "13": {
+        "model_match": 36,
+        "compile_failed": 15,
+        "result_mismatch": 1
+      },
+      "14": {
+        "model_match": 36,
+        "compile_failed": 15,
+        "result_mismatch": 1
+      },
+      "native": {
+        "runtime_failed": 48,
+        "model_match": 4
+      }
+    },
+    "native_parse": {
+      "0": 52,
+      "2": 7
+    },
+    "reference_pass_native_gap": {
+      "13": [
+        "input_net_1",
+        "input_var_actual_1",
+        "output_net_1",
+        "output_var_1",
+        "input_net_32",
+        "input_var_actual_32",
+        "output_net_32",
+        "output_var_32",
+        "input_net_65",
+        "input_var_actual_65",
+        "output_net_65",
+        "output_var_65",
+        "input_net_129",
+        "input_var_actual_129",
+        "output_net_129",
+        "output_var_129",
+        "multidimensional",
+        "real_variable_port",
+        "program_input",
+        "interface_input",
+        "unconnected_pull0",
+        "unconnected_pull1",
+        "matching_bounds",
+        "two_level_hierarchy",
+        "output_to_variable",
+        "default_input_value",
+        "unconnected_weak_pull0",
+        "unconnected_weak_pull1",
+        "one_element_change",
+        "output_bit_change",
+        "two_state_compatible_output",
+        "resolved_array_without_ports",
+        "resolved_output_array",
+        "resolved_strength_array_without_ports"
+      ],
+      "14": [
+        "input_net_1",
+        "input_var_actual_1",
+        "output_net_1",
+        "output_var_1",
+        "input_net_32",
+        "input_var_actual_32",
+        "output_net_32",
+        "output_var_32",
+        "input_net_65",
+        "input_var_actual_65",
+        "output_net_65",
+        "output_var_65",
+        "input_net_129",
+        "input_var_actual_129",
+        "output_net_129",
+        "output_var_129",
+        "multidimensional",
+        "real_variable_port",
+        "program_input",
+        "interface_input",
+        "unconnected_pull0",
+        "unconnected_pull1",
+        "matching_bounds",
+        "two_level_hierarchy",
+        "output_to_variable",
+        "default_input_value",
+        "unconnected_weak_pull0",
+        "unconnected_weak_pull1",
+        "one_element_change",
+        "output_bit_change",
+        "two_state_compatible_output",
+        "resolved_array_without_ports",
+        "resolved_output_array",
+        "resolved_strength_array_without_ports"
+      ]
+    }
+  }
+}

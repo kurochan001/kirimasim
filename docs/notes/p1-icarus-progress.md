@@ -29,7 +29,7 @@ and unresolved interval/force/startup questions. These exploratory observations
 are separate from the feature inventory below and do not approve new semantics
 or add implemented support.
 
-Full local CI at `c6d9c3d` passes configure/build/test for dev/release/ASan/UBSan.
+Full local CI at `392687e` (native source `c6d9c3d`) passes configure/build/test for dev/release/ASan/UBSan.
 Dev/ASan/UBSan each run 3,205 tests (3,203 pass, two known skips); release runs
 3,206 (3,204 pass, the same skips). Release flags, banned features, SPDX,
 suite files, global state, per-commit expectation protection, README counts,
@@ -41,25 +41,26 @@ mutations fail actual new stdout and another fails real source SIR verification;
 anchor/judging self-checks are excluded as evidence. All 72 new sources pass
 natively; both measured references match 58, reject nine and differ on five.
 
-The same **82 original probes** now run against both installed references:
+The same **84 original probes** now run against both installed references:
 
-- Icarus `13.0 (stable) (v13_0)`: 22 Icarus-passing gaps, four reference
+- Icarus `13.0 (stable) (v13_0)`: 24 Icarus-passing gaps, four reference
   result mismatches.
-- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 28 Icarus-passing gaps,
+- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 30 Icarus-passing gaps,
   seven reference result mismatches.
 
 See the [versioned comparison and portable data](icarus-13-comparison.md).
 The compiler driver, preprocessor, parser/elaborator and runtime were all
 verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
-unconfirmed. All earlier 81 statuses and passing judged outputs are unchanged.
-The added automatic-event case passes both references and remains a native gap.
-Production code is unchanged; the count increases because the inventory now
-includes another unsupported mechanism. The previous 81-item comparison retains
+unconfirmed. All earlier 82 statuses and passing judged outputs are unchanged.
+The added whole fixed-array port and resolved-net-array cases pass both references
+and remain native gaps. Production code is unchanged; the count increases because
+the inventory now includes two more unsupported mechanisms. The 82-item comparison
+retains its 22/28 gap counts. The previous 81-item comparison retains
 its measured 21/27 current-native and 22/28 previous-native gap counts. Dated
 entries below retain their historical probe cohorts.
 
-Seven detailed semantic amendments remain pending:
+Eight detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
@@ -68,6 +69,7 @@ Seven detailed semantic amendments remain pending:
 - [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
 - [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).
 - [Shared automatic storage, fork capture and automatic event ownership](automatic-capture-proposal.md).
+- [Whole fixed-array ports, alias views, element-wise resolution and pulls](fixed-array-ports-proposal.md).
 
 The MOS proposal covers thirteen switch probes and one partial-port probe in
 the existing 13.0 gap list. Its new 18-source matrix records 2,304 scalar
@@ -86,6 +88,19 @@ shared kernel. Its [32 original source observations](../measurements/2026-10-24/
 include native parse/run results and both references. They are design evidence,
 not approved oracles. Event rebinding and event output/inout copyback remain
 outside that proposal; no production implementation has been added.
+
+The [array-port proposal](fixed-array-ports-proposal.md) records
+[59 original design programs](../measurements/2026-10-24/fixed-array-port-design-observations.json).
+Strict slang accepts 52 and rejects seven legality controls. Each reference
+matches 36 legal model outputs, rejects 15 legal sources and differs on one;
+34 model-matched sources remain native gaps. Native passes four controls and
+rejects the other 48 legal examples. Explicit input-var reevaluation differs
+in the references; their acceptance of two illegal writer programs does not
+justify weakening slang. No array-port or resolved-array implementation is added.
+This documentation/probe follow-up passes all 135 Tools tests, source-hash
+checks, passing-output comparisons and changed-document file-link checks.
+Production source and existing test expectations remain at `c6d9c3d`; the
+full four-configuration CI evidence above is from `392687e`.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep
