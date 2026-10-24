@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 """Measures the simulation speed of kirimasim on the designs under bench/,
-and of Icarus Verilog and Verilator for comparison (PERFORMANCE.md 5).
+and of Icarus Verilog, Verilator, nvc and Lyra for comparison (PERFORMANCE.md 5).
 
 Each design takes +n=<count>, the amount of work, and prints one result line
 that starts with its name. Its header gives the count to measure with
@@ -19,13 +19,21 @@ before it is timed, then --runs times with each count, alternating; the
 medians are subtracted.
 
 Icarus is iverilog -g2012, then vvp. Verilator is verilator --binary --timing
-with its default C++ options, then the built program. Their build steps are
-timed once and reported apart; kirimasim has no build step.
+with its default C++ options, then the built program. nvc is nvc -a, then
+nvc -e of the design's top, then nvc -r. Lyra is lyra build with its
+default backend, into an empty cache, then the built program; --lyra-llvm
+does the same with --backend llvm, as a column of its own. Their build steps are timed once and reported
+apart; kirimasim has no build step.
 
 Writes results.json and summary.md to --out and prints the summary. They
 record the tools' versions and the machine's CPU, cores, memory, OS and load
-average, and no host name or user name (PERFORMANCE.md 5.3). The exit code is
-1 when a run fails or a result line differs from the expected one.
+average, and no host name or user name (PERFORMANCE.md 5.3). results.json
+also keeps every run: its seconds, maximum RSS, exit code, whether it reached
+the time limit, and its result line. A run with +n=1 has to print the line
+for n=1, so that a tool that does not pass the count on is found. A design
+that fails keeps the step it failed at (build, warmup, small, large or
+output) and the end of that step's messages. The exit code is 1 when a step
+fails or a result line differs from the expected one.
 
   tools/bench.py --kirimasim build/release/src/driver/kirimasim \\
       --iverilog <icarus>/bin/iverilog --verilator <verilator>/bin/verilator \\
@@ -54,7 +62,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / "bench"
 TIMEOUT = 600
-NAMES = {"kirimasim": "kirimasim", "icarus": "Icarus Verilog", "verilator": "Verilator"}
+NAMES = {"kirimasim": "kirimasim", "icarus": "Icarus Verilog", "verilator": "Verilator",
+         "nvc": "nvc", "lyra": "Lyra", "lyra_llvm": "Lyra (LLVM backend)"}
+# The option that names each tool's executable.
+OPTIONS = {"kirimasim": "kirimasim", "icarus": "iverilog", "verilator": "verilator",
+           "nvc": "nvc", "lyra": "lyra", "lyra_llvm": "lyra_llvm"}
+# How much of a failing step's messages results.json keeps.
+TAIL = 4000
 
 
 def header(path: Path) -> tuple[int, str]:
@@ -69,47 +83,147 @@ def header(path: Path) -> tuple[int, str]:
     return n, expect
 
 
-def run(cmd: list[str], cwd: Path) -> tuple[float, float, int, str]:
-    """Runs cmd; returns its seconds, its maximum RSS in MiB, its exit code
-    and its standard output."""
-    start = time.monotonic()
-    p = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE,
-                         stderr=subprocess.DEVNULL, text=True)
-    timer = threading.Timer(TIMEOUT, p.kill)
-    timer.start()
-    out = p.stdout.read()
-    _, status, usage = os.wait4(p.pid, 0)
-    seconds = time.monotonic() - start
-    timer.cancel()
-    p.returncode = 0  # reaped by wait4 above
-    p.stdout.close()
+def watch_peak(pid: int, name: str, done: threading.Event, peak: list) -> None:
+    """Keeps in peak[0] the last VmHWM, in KiB, of the process once it runs
+    the program called name. On Linux, ru_maxrss of a child includes the
+    memory of the Python process it was started from, until it ran the
+    program, so a program smaller than this script shows this script's size;
+    VmHWM counts the program alone. The samples before the program runs, when
+    the process is still a copy of Python, are left out by its name."""
+    status = Path(f"/proc/{pid}/status")
+    while not done.is_set():
+        try:
+            text = status.read_text(errors="ignore")
+        except OSError:
+            return
+        comm = re.search(r"^Name:\s*(.*)$", text, re.M)
+        hwm = re.search(r"^VmHWM:\s*(\d+) kB", text, re.M)
+        if comm and hwm and comm.group(1) == name[:15]:
+            peak[0] = int(hwm.group(1))
+        done.wait(0.01)
+
+
+def run(cmd: list[str], cwd: Path, env: dict | None = None) -> dict:
+    """Runs cmd; returns its seconds, its maximum RSS in MiB, its exit code,
+    whether it was stopped at the time limit, its standard output and the
+    end of its standard error. On Linux the RSS is the program's VmHWM, or
+    None for a run too short to sample; on macOS it is ru_maxrss."""
+    stopped, done, peak = threading.Event(), threading.Event(), [None]
+    linux = sys.platform.startswith("linux")
+    with tempfile.TemporaryFile() as err:
+        start = time.monotonic()
+        p = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=err, text=True,
+                             env=env)
+
+        def stop() -> None:
+            stopped.set()
+            p.kill()
+
+        timer = threading.Timer(TIMEOUT, stop)
+        timer.start()
+        watcher = None
+        if linux:
+            watcher = threading.Thread(target=watch_peak,
+                                       args=(p.pid, Path(cmd[0]).name, done, peak))
+            watcher.start()
+        out = p.stdout.read()
+        _, status, usage = os.wait4(p.pid, 0)
+        seconds = time.monotonic() - start
+        done.set()
+        timer.cancel()
+        if watcher is not None:
+            watcher.join()
+        p.returncode = 0  # reaped by wait4 above
+        p.stdout.close()
+        err.seek(0)
+        messages = err.read().decode(errors="replace")
     rc = os.WEXITSTATUS(status) if os.WIFEXITED(status) else 128 + os.WTERMSIG(status)
-    # ru_maxrss is in bytes on macOS and in KiB on Linux.
-    rss = usage.ru_maxrss / (1 << 20 if sys.platform == "darwin" else 1 << 10)
-    return seconds, rss, rc, out
+    if linux:
+        rss = None if peak[0] is None else peak[0] / (1 << 10)
+    else:
+        rss = usage.ru_maxrss / (1 << 20)  # in bytes on macOS
+    return {"seconds": seconds, "max_rss_mib": rss, "rss_source": "VmHWM" if linux
+            else "ru_maxrss", "exit_code": rc, "timed_out": stopped.is_set(),
+            "stdout": out, "stderr": messages}
+
+
+def scrub(text: str, work: Path) -> str:
+    """Puts names in place of the directories of this machine, so that
+    results.json holds no home directory or user name (PERFORMANCE.md 5.3)."""
+    return (text.replace(str(work), "${WORK}").replace(str(ROOT), "${PROJECT_ROOT}")
+            .replace(str(Path.home()), "${HOME}"))
+
+
+def build_steps(steps: list[list[str]], work: Path, env: dict | None = None) -> dict:
+    """Runs the build steps in order, up to the first that fails. Returns
+    their total seconds and, for a failure, the step and its messages."""
+    record = {"seconds": 0.0, "steps": []}
+    for cmd in steps:
+        r = run(cmd, work, env)
+        record["seconds"] += r["seconds"]
+        record["steps"].append({"command": [Path(cmd[0]).name]
+                                + [scrub(a, work) for a in cmd[1:]],
+                                "seconds": r["seconds"], "exit_code": r["exit_code"],
+                                "timed_out": r["timed_out"]})
+        if r["exit_code"] != 0 or r["timed_out"]:
+            record["error"] = (f"{Path(cmd[0]).name} "
+                               + ("reached the time limit" if r["timed_out"]
+                                  else f"exit code {r['exit_code']}"))
+            record["diagnostics"] = scrub((r["stdout"] + r["stderr"])[-TAIL:], work)
+            break
+    return record
 
 
 def prepare(tool: str, exe: str, design: Path, work: Path):
-    """Builds the design for the tool. Returns the build seconds (None for
-    kirimasim), an error text or None, and a function from a count to the
-    command that runs it."""
+    """Builds the design for the tool. Returns the build record (None for
+    kirimasim) and a function from a count to the command that runs it."""
+    top = design.stem
     if tool == "kirimasim":
-        return None, None, lambda n: [exe, str(design), f"+n={n}"]
+        return None, lambda n: [exe, str(design), f"+n={n}"]
     if tool == "icarus":
         compiled = work / "bench.vvp"
-        seconds, _, rc, _ = run([exe, "-g2012", "-o", str(compiled), str(design)], work)
+        build = build_steps([[exe, "-g2012", "-o", str(compiled), str(design)]], work)
         vvp = str(Path(exe).with_name("vvp"))
-        return seconds, (f"iverilog exit code {rc}" if rc else None), \
-            lambda n: [vvp, "-n", str(compiled), f"+n={n}"]
-    seconds, _, rc, _ = run([exe, "--binary", "--timing", "-Wno-fatal", "-Wno-lint",
-                             "-Wno-style", "--build-jobs", "0", "-Mdir", str(work / "obj"),
-                             "--prefix", "Vbench", str(design)], work)
+        return build, lambda n: [vvp, "-n", str(compiled), f"+n={n}"]
+    if tool == "nvc":
+        build = build_steps([[exe, "-a", str(design)], [exe, "-e", top]], work)
+        return build, lambda n: [exe, "-r", top, f"+n={n}"]
+    if tool in ("lyra", "lyra_llvm"):
+        program = work / "bench_lyra"
+        # An empty cache of its own, so that the build is a whole compile and
+        # nothing from another run is reused.
+        backend = ["--backend", "llvm"] if tool == "lyra_llvm" else []
+        build = build_steps([[exe, "build", "--top", top, *backend, "--cache-dir",
+                              str(work / "cache"), "-o", str(program), str(design)]], work)
+        return build, lambda n: [str(program), f"+n={n}"]
+    build = build_steps([[exe, "--binary", "--timing", "-Wno-fatal", "-Wno-lint",
+                          "-Wno-style", "--build-jobs", "0", "-Mdir", str(work / "obj"),
+                          "--prefix", "Vbench", str(design)]], work)
     program = str(work / "obj" / "Vbench")
-    return seconds, (f"verilator exit code {rc}" if rc else None), lambda n: [program, f"+n={n}"]
+    return build, lambda n: [program, f"+n={n}"]
 
 
 def result_line(name: str, out: str) -> str | None:
     return next((line for line in out.splitlines() if line.startswith(name + " ")), None)
+
+
+def sample(name: str, r: dict) -> dict:
+    """What results.json keeps of a run."""
+    return {"seconds": r["seconds"], "max_rss_mib": r["max_rss_mib"],
+            "rss_source": r["rss_source"],
+            "exit_code": r["exit_code"], "timed_out": r["timed_out"],
+            "result_line": result_line(name, r["stdout"])}
+
+
+def median_or_none(values) -> float | None:
+    known = [v for v in values if v is not None]
+    return statistics.median(known) if known else None
+
+
+def failure(record: dict, stage: str, error: str, r: dict, work: Path) -> dict:
+    record.update({"error": error, "stage": stage,
+                   "diagnostics": scrub((r["stdout"] + r["stderr"])[-TAIL:], work)})
+    return record
 
 
 def measure(tool: str, exe: str, design: Path, n: int, expect: str | None,
@@ -117,28 +231,47 @@ def measure(tool: str, exe: str, design: Path, n: int, expect: str | None,
     name = design.stem
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
-        build, error, command = prepare(tool, exe, design, work)
-        if error:
-            return {"error": error, "build_seconds": build}
-        run(command(1), work)  # the first start of a newly built program
+        build, command = prepare(tool, exe, design, work)
+        record = {"build_seconds": None if build is None else build["seconds"],
+                  "build": build}
+        if build is not None and "error" in build:
+            record.update({"error": build["error"], "stage": "build",
+                           "diagnostics": build["diagnostics"]})
+            return record
+        warm = run(command(1), work)  # the first start of a newly built program
         small, large = [], []
         for _ in range(runs):
             small.append(run(command(1), work))
             large.append(run(command(n), work))
-    for seconds, rss, rc, out in small + large:
-        if rc != 0:
-            return {"error": f"exit code {rc}", "build_seconds": build}
-    for seconds, rss, rc, out in large:
-        line = result_line(name, out)
+    record["runs"] = {"warmup": [sample(name, warm)],
+                      "small": [sample(name, r) for r in small],
+                      "large": [sample(name, r) for r in large]}
+    for stage, rs in (("warmup", [warm]), ("small", small), ("large", large)):
+        for r in rs:
+            if r["timed_out"]:
+                return failure(record, stage, "reached the time limit", r, work)
+            if r["exit_code"] != 0:
+                return failure(record, stage, f"exit code {r['exit_code']}", r, work)
+    # A run with +n=1 has to say n=1: a tool that drops the plusarg would
+    # otherwise time the same work twice.
+    for r in [warm] + small:
+        line = result_line(name, r["stdout"])
+        if line is None or not line.startswith(f"{name} n=1 "):
+            return failure(record, "output", f"result line {line!r} of a run with +n=1", r,
+                           work)
+    for r in large:
+        line = result_line(name, r["stdout"])
         if line is None or (expect is not None and line != expect):
-            return {"error": f"result line {line!r}, expected {expect!r}",
-                    "build_seconds": build}
-    base = statistics.median(r[0] for r in small)
-    whole = statistics.median(r[0] for r in large)
-    return {"build_seconds": build, "base_seconds": base, "whole_seconds": whole,
-            "simulation_seconds": whole - base,
-            "max_rss_mib": statistics.median(r[1] for r in large),
-            "all_seconds": [[r[0] for r in small], [r[0] for r in large]]}
+            return failure(record, "output", f"result line {line!r}, expected {expect!r}", r,
+                           work)
+    base = statistics.median(r["seconds"] for r in small)
+    whole = statistics.median(r["seconds"] for r in large)
+    record.update({"base_seconds": base, "whole_seconds": whole,
+                   "simulation_seconds": whole - base,
+                   "max_rss_mib": median_or_none(r["max_rss_mib"] for r in large),
+                   "all_seconds": [[r["seconds"] for r in small],
+                                   [r["seconds"] for r in large]]})
+    return record
 
 
 def text_of(cmd: list[str]) -> str:
@@ -164,6 +297,10 @@ def machine() -> dict:
         mem = re.search(r"^MemTotal:\s*(\d+) kB", meminfo, re.M)
         info["cpu"] = cpu.group(1) if cpu else "unknown"
         info["memory_gib"] = round(int(mem.group(1)) / (1 << 20)) if mem else None
+        release = Path("/etc/os-release")
+        name = re.search(r'^PRETTY_NAME="?([^"\n]*)', release.read_text(errors="ignore"),
+                         re.M) if release.exists() else None
+        info["distribution"] = name.group(1) if name else "unknown"
     return info
 
 
@@ -171,7 +308,7 @@ def seconds_cell(r: dict | None, key: str) -> str:
     if r is None:
         return "—"
     if "error" in r:
-        return "fails"
+        return f"fails ({r.get('stage', 'unknown')})"
     value = r.get(key)
     return "—" if value is None else f"{value:.3f} s"
 
@@ -202,7 +339,8 @@ def summary(designs: list[str], counts: dict, tools: list[str], results: dict,
         cells = []
         for t in tools:
             r = results[t].get(d)
-            cells.append("—" if r is None or "error" in r else f"{r['max_rss_mib']:.0f}")
+            cells.append("—" if r is None or "error" in r or r["max_rss_mib"] is None
+                         else f"{r['max_rss_mib']:.1f}")
         out.append(f"| {d} | {counts[d]:,} | " + " | ".join(cells) + " |")
     out += ["", "Versions:"] + [f"- {NAMES[t]}: {info['versions'][t]}" for t in tools]
     m = info["machine"]
@@ -216,29 +354,35 @@ def main() -> int:
     ap.add_argument("--kirimasim", help="the kirimasim executable (a release build)")
     ap.add_argument("--iverilog", help="Icarus Verilog's iverilog; vvp must be next to it")
     ap.add_argument("--verilator", help="the verilator executable")
+    ap.add_argument("--nvc", help="the nvc executable")
+    ap.add_argument("--lyra", help="the lyra executable (its default backend)")
+    ap.add_argument("--lyra-llvm", help="the lyra executable, run with --backend llvm")
+    ap.add_argument("--lyra-version", help="what to record as lyra's version (its commit)")
     ap.add_argument("--runs", type=int, default=5, help="runs with each count (default 5)")
     ap.add_argument("--n", type=int, help="run every design with this count instead")
     ap.add_argument("--only", nargs="*", help="names of the designs to run")
     ap.add_argument("--out", required=True, type=Path, help="directory for the results")
     args = ap.parse_args()
 
-    tools = [t for t in NAMES if getattr(args, t if t != "icarus" else "iverilog")]
+    tools = [t for t in NAMES if getattr(args, OPTIONS[t])]
     if not tools:
-        ap.error("give at least one of --kirimasim, --iverilog and --verilator")
+        ap.error("give at least one of " + ", ".join("--" + o for o in OPTIONS.values()))
     # The runs start in a temporary directory, so paths must be absolute.
     exes = {t: (str(Path(e).resolve()) if e and os.sep in e else e)
-            for t, e in (("kirimasim", args.kirimasim), ("icarus", args.iverilog),
-                         ("verilator", args.verilator))}
+            for t, e in ((t, getattr(args, OPTIONS[t])) for t in NAMES)}
     designs = sorted(p.stem for p in BENCH.glob("*.sv"))
     if args.only:
         designs = [d for d in designs if d in args.only]
 
-    info = {"machine": machine(), "runs": args.runs,
-            "versions": {"kirimasim": text_of([exes["kirimasim"], "--version"]) if args.kirimasim
-                         else None,
-                         "icarus": text_of([exes["icarus"], "-V"]) if args.iverilog else None,
-                         "verilator": text_of([exes["verilator"], "--version"])
-                         if args.verilator else None}}
+    # lyra has no --version, so --lyra-version says which commit was built.
+    version_flag = {"icarus": "-V"}
+    versions = {t: text_of([exes[t], version_flag.get(t, "--version")])
+                if exes[t] and not t.startswith("lyra") else None for t in NAMES}
+    for t in ("lyra", "lyra_llvm"):
+        if exes[t]:
+            versions[t] = args.lyra_version or "not recorded (lyra has no --version)"
+    info = {"machine": machine(), "runs": args.runs, "timeout_seconds": TIMEOUT,
+            "versions": versions}
     counts, results, failed = {}, {t: {} for t in tools}, False
     for d in designs:
         n, expect = header(BENCH / f"{d}.sv")

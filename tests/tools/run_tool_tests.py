@@ -492,6 +492,64 @@ def bench_report(tmp: Path) -> None:
                             f"{sorted(got)}, expected {sorted(want)}\n{p.stdout}{p.stderr}")
 
 
+def bench_tool(tmp: Path) -> None:
+    """bench.py (PERFORMANCE.md 5): with stand-in simulators, a result line
+    that differs, a count that does not reach the design, a run that fails
+    and a build that fails each make it exit 1 and record the step, and an
+    honest stand-in passes."""
+    expect = "comb_chain n=3000000 sum=d3369c10"
+    for name, body, option, want_stage in [
+        ("honest", f"print('{expect}' if n == 3000000 else f'comb_chain n={{n}} sum=0')",
+         "--kirimasim", None),
+        ("mismatch", "print(f'comb_chain n={n} sum=0')", "--kirimasim", "output"),
+        ("count_ignored", f"print('{expect}')", "--kirimasim", "output"),
+        ("exit_code", "sys.exit(3)", "--kirimasim", "warmup"),
+        ("build_fails", "sys.exit(1)", "--iverilog", "build"),
+    ]:
+        root = tmp / ("bench_tool_" + name)
+        root.mkdir()
+        fake = root / "sim"
+        fake.write_text("#!/usr/bin/env python3\nimport sys\n"
+                        "n = next((int(a[3:]) for a in sys.argv if a.startswith('+n=')), 0)\n"
+                        + body + "\n", encoding="utf-8")
+        fake.chmod(0o755)
+        p = subprocess.run([sys.executable, str(TOOLS / "bench.py"), option, str(fake),
+                            "--only", "comb_chain", "--runs", "1", "--out", str(root / "out")],
+                           capture_output=True, text=True, check=False)
+        tool = "kirimasim" if option == "--kirimasim" else "icarus"
+        try:
+            r = json.loads((root / "out" / "results.json").read_text())["results"][tool][
+                "comb_chain"]
+        except (OSError, KeyError, ValueError):
+            r = {}
+        got = r.get("stage") if "error" in r else None
+        if (p.returncode == 0) != (want_stage is None) or got != want_stage:
+            failures.append(f"bench.py {name}: exit code {p.returncode}, stage {got!r}, "
+                            f"expected {want_stage!r}\n{p.stdout}{p.stderr}")
+    # On Linux, the maximum RSS is the program's own, not that of the Python
+    # process that started it: a small shell stand-in stays far below it.
+    if not sys.platform.startswith("linux"):
+        return
+    root = tmp / "bench_tool_rss"
+    root.mkdir()
+    fake = root / "sim"
+    fake.write_text("#!/bin/sh\nsleep 0.2\nfor a; do case $a in +n=*) n=${a#+n=};; esac; done\n"
+                    f"if [ \"$n\" = 3000000 ]; then echo '{expect}'; "
+                    "else echo \"comb_chain n=$n sum=0\"; fi\n", encoding="utf-8")
+    fake.chmod(0o755)
+    p = subprocess.run([sys.executable, str(TOOLS / "bench.py"), "--kirimasim", str(fake),
+                        "--only", "comb_chain", "--runs", "1", "--out", str(root / "out")],
+                       capture_output=True, text=True, check=False)
+    try:
+        rss = json.loads((root / "out" / "results.json").read_text())["results"][
+            "kirimasim"]["comb_chain"]["max_rss_mib"]
+    except (OSError, KeyError, ValueError):
+        rss = None
+    if p.returncode != 0 or rss is None or rss >= 8:
+        failures.append(f"bench.py rss: exit code {p.returncode}, maximum RSS {rss!r} MiB, "
+                        f"expected the shell's, under 8 MiB\n{p.stdout}{p.stderr}")
+
+
 def suite_files(tmp: Path) -> None:
     for name, files, skips, want_ok in [
         ("paired", ["a.sv", "a.expected", "a.stderr"], "", True),
@@ -708,6 +766,7 @@ def main() -> int:
         banned_state(tmp)
         global_state(tmp)
         bench_report(tmp)
+        bench_tool(tmp)
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)
