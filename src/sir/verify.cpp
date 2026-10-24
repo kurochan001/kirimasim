@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
@@ -230,6 +231,8 @@ public:
         checkSlots();
         checkNames();
         checkConstants();
+        patterns_ = validatePatterns(d_);
+        errors_.insert(errors_.end(), patterns_.errors.begin(), patterns_.errors.end());
         checkDump();
         for (std::size_t i = 0; i < d_.subroutines.size(); ++i)
             checkSubroutine(d_.subroutines[i], static_cast<SubroutineId>(i));
@@ -240,6 +243,7 @@ public:
     }
 
 private:
+    PatternValidation patterns_;
     const Design& d_;
     std::vector<VerifyError> errors_;
 
@@ -1019,6 +1023,9 @@ private:
                 case Operand::Kind::Process:
                     if (o.id >= d_.processes.size()) bad("process out of range");
                     break;
+                case Operand::Kind::Pattern:
+                    if (o.id >= d_.patterns.size()) bad("pattern layout out of range");
+                    break;
                 case Operand::Kind::Type:
                     if (o.id >= d_.types.size()) bad("type out of range");
                     break;
@@ -1160,6 +1167,24 @@ private:
 
         // Rule 1: operand and result types.
         switch (in.op) {
+            case Op::FormatPattern: {
+                if (rt != Type{TypeKind::String, 0}) bad("pattern result must be string");
+                if (ops.size() < 2 || ops[0].kind != Operand::Kind::Pattern ||
+                    ops[0].id >= d_.patterns.size() || ops[1].kind != Operand::Kind::Text ||
+                    (ops[1].text != "named" && ops[1].text != "positional")) {
+                    bad("pattern needs a layout and named/positional mode");
+                    break;
+                }
+                std::vector<Type> actual;
+                for (std::size_t i = 2; i < ops.size(); ++i) {
+                    if (!isValue(i)) bad("pattern payload must be a value");
+                    actual.push_back(ty(i));
+                }
+                if (patterns_.errors.empty() &&
+                    !patternArguments(d_, PatternId{ops[0].id}, patterns_.shapes, actual))
+                    bad("pattern payload does not match the layout");
+                break;
+            }
             case Op::ContainerNew:
             case Op::ContainerCopy:
             case Op::ContainerSnapshot:

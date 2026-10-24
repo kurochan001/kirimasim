@@ -20,6 +20,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- A display monitor can observe a change in an existing queue cell without
+  replacing its container handle. Heap reads are captured during the actual
+  Postponed callback and detached with the registration's lifetime. The new
+  heap-backed file-monitor combinations still need a dedicated matrix.
+
 - Aggregate blocking and nonblocking assignments capture all RHS values
   before runtime target selectors under the approved evaluation policy.
   Container leaves snapshot before later field effects. Seventy-two original
@@ -46,6 +51,11 @@ own. CONTRIBUTING.md says what goes in this file.
   eligible static container variables remain separate.
 
 ### Added
+
+- Typed pattern layouts, verification, text and `pattern.format` execution
+  connect to the shared renderer. Eleven independent SIR tests cover nested
+  values, packed fields, containers, guards, monitors and resource limits.
+  Source `%p` still requires front's literal/runtime format bridge.
 
 - A shared-kernel assignment-pattern renderer handles borrowed typed values,
   nested aggregates, enums, quoted SV strings and supplied handle identities.

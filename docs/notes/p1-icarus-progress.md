@@ -11,6 +11,13 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
+The [typed-pattern SIR/execution checkpoint](pattern-sir-execution.md) also fixes
+display-monitor dependencies on existing queue cells. All 122 selected tests,
+including eleven new SIR tests, and all 21 CI checks pass. Latest dev/ASan/UBSan
+have 3,340 passes out of 3,342; release has 3,341 out of 3,343, with the same
+two skips. Source `%p` front integration and dedicated heap file-monitor
+matrices remain. Comparison counts below retain their earlier provenance.
+
 The current implementation includes [wide UDP input evaluation](wide-udp-inputs.md),
 [fork-local declarations](fork-local-declarations.md),
 [wide L/H strength masks](wide-gate-strength.md),

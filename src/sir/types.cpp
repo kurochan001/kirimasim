@@ -197,6 +197,7 @@ const char* opName(Op op) {
         case Op::DisableFork: return "disable.fork";
         case Op::Call: return "call";
         case Op::Syscall: return "syscall";
+        case Op::FormatPattern: return "pattern.format";
         case Op::Builtin: return "builtin";
         case Op::ReportDefer: return "report.defer";
         case Op::ReportCall: return "report.call";

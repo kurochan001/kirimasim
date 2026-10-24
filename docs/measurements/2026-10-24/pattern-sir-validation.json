@@ -1,0 +1,230 @@
+{
+  "measured": "2026-10-24",
+  "repository_base": "cd8051291845f415010c298af9656cf89d80d9bf",
+  "provenance": "Measured uncommitted typed-pattern SIR/execution and display-heap follow-up; content hashes identify exact code and registry. No source %p support is claimed.",
+  "native_banner": "kirimasim 0.0.0 (commit cd8051291845), built with AppleClang 21.0.0.21000334",
+  "platform": "macOS/arm64",
+  "source_hashes": {
+    "src/kernel/include/kirimasim/kernel/sim.h": "2163b6c69c03e4b1797058e0dbd368ee7fe1171583f7fa76ce74f5bdc8290e2a",
+    "src/kernel/sim.cpp": "ff266ee56ceff0a4a33d8c8bffcfc0051c5eae25e7b50e6bb1e12e56864963db",
+    "src/sir/CMakeLists.txt": "f016284bbfb8b90b00fbb8690b5a09e3d9ff88801bb5a5598941fa1139658ee9",
+    "src/sir/include/kirimasim/sir/design.h": "ada06317bbd92691f6774a6374cd3d4daee9303525a340be975954976add29f7",
+    "src/sir/include/kirimasim/sir/pattern.h": "904d824af374ca5b56d3d5229dbaf29bee8ead0fcf96d303f09605e7f49c315d",
+    "src/sir/pattern.cpp": "3616e4b251356a3f1595ce3775e29b1fbd87e80f913554ca998e1c79cdcc6e91",
+    "src/sir/text.cpp": "5abba7020ab03ca6d602582fd91746b61e53cb40922e9b135d86fc901b7af3f6",
+    "src/sir/types.cpp": "4dd7815bdb574d8bc7c60bfa8ae5544b8018665d31743168c6d8c132fffa0fca",
+    "src/sir/verify.cpp": "7d3c7b91356d4ad9c0dcd2099c12d730b67a4f462bf99beb86a09e240f304635",
+    "src/vm/vm.cpp": "ba18d20b704715303c7563e02fdc3ff089e4d8e688055b04ea1a8f125dc14753",
+    "tests/unit/CMakeLists.txt": "c273744a3a83b33551c13b6b1f5c3380a53c1ba6d915ddad70a95fa06954c0d6",
+    "tests/unit/pattern_sir_test.cpp": "599e30b520dea69506280fba5886a8b5aa1a83636b155acd16ff0ae04310fc62",
+    "tools/mutants.py": "d220745e673cab657ecdc3736a790694c1e942408b943c446080ade8d69a8855"
+  },
+  "targeted_tests": {
+    "count": 122,
+    "result": "passed",
+    "suites": [
+      "PatternSir",
+      "Pattern",
+      "Format",
+      "Scheduler",
+      "VmContainer"
+    ],
+    "new_pattern_sir_tests": 11
+  },
+  "local_ci": {
+    "result": "all checks passed",
+    "checks": [
+      {
+        "check": "dev: configure",
+        "status": "ok",
+        "seconds": 0.9
+      },
+      {
+        "check": "dev: build",
+        "status": "ok",
+        "seconds": 0.0
+      },
+      {
+        "check": "dev: test",
+        "status": "ok",
+        "seconds": 49.0
+      },
+      {
+        "check": "release: configure",
+        "status": "ok",
+        "seconds": 0.9
+      },
+      {
+        "check": "release: build",
+        "status": "ok",
+        "seconds": 10.4
+      },
+      {
+        "check": "release: test",
+        "status": "ok",
+        "seconds": 41.1
+      },
+      {
+        "check": "asan: configure",
+        "status": "ok",
+        "seconds": 0.9
+      },
+      {
+        "check": "asan: build",
+        "status": "ok",
+        "seconds": 11.1
+      },
+      {
+        "check": "asan: test",
+        "status": "ok",
+        "seconds": 65.5
+      },
+      {
+        "check": "ubsan: configure",
+        "status": "ok",
+        "seconds": 0.9
+      },
+      {
+        "check": "ubsan: build",
+        "status": "ok",
+        "seconds": 12.2
+      },
+      {
+        "check": "ubsan: test",
+        "status": "ok",
+        "seconds": 59.1
+      },
+      {
+        "check": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.0
+      },
+      {
+        "check": "check_banned",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "check": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "check": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "check": "check_global_state",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "check": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.0
+      },
+      {
+        "check": "readme_counts",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "check": "clang-format",
+        "status": "ok",
+        "seconds": 0.5
+      },
+      {
+        "check": "clang-tidy",
+        "status": "ok",
+        "seconds": 66.9
+      }
+    ],
+    "tests": {
+      "dev": {
+        "total": 3342,
+        "passed": 3340,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "release": {
+        "total": 3343,
+        "passed": 3341,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "asan": {
+        "total": 3342,
+        "passed": 3340,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "ubsan": {
+        "total": 3342,
+        "passed": 3340,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      }
+    },
+    "clang_format": "22.1.8",
+    "clang_tidy": "22.1.8",
+    "compiler": "Apple clang 21.0.0",
+    "command": [
+      "python3",
+      "-u",
+      "tools/local_ci.py",
+      "--llvm-bin",
+      "<installed-LLVM-22-bin>"
+    ],
+    "test_parallelism": 6
+  },
+  "mutation_registry": {
+    "entries": 513,
+    "all_anchors_apply": true,
+    "compiled_new_campaign": false
+  },
+  "original_probe": {
+    "name": "queue_monitor_cell",
+    "source": "module top;\n  int values[$];\n  initial begin\n    values.push_back(0);\n    $monitor(\"%0d\", values[0]);\n    #2 values[0] = 9;\n  end\nendmodule\n",
+    "source_sha256": "f931e46725a73f9ed1396b2dc6bcbed33cd2b9bbbfff2237b96119e7dee07c80",
+    "proposed_stdout": "0\n9\n",
+    "clause": "21.2.1.2; existing SYSTEM_TASKS 4 and SIR_SPEC 7.1",
+    "engines": {
+      "before": {
+        "exit": 0,
+        "stdout": "0\n",
+        "status": "result_mismatch"
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "0\n9\n",
+        "status": "model_match"
+      },
+      "13": {
+        "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+        "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)",
+        "compile_exit": 0,
+        "exit": 0,
+        "stdout": "SORRY: <probe.sv>:5: currently only simple signals or constant expressions may be passed to $monitor.\nNOTE: You can work around this by assigning the desired expression to an\n      intermediate net (using a continuous assignment) and passing that net\n      to $monitor.\n",
+        "status": "unsupported_runtime"
+      },
+      "14": {
+        "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+        "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)",
+        "compile_exit": 0,
+        "exit": 0,
+        "stdout": "SORRY: <probe.sv>:5: currently only simple signals or constant expressions may be passed to $monitor.\nNOTE: You can work around this by assigning the desired expression to an\n      intermediate net (using a continuous assignment) and passing that net\n      to $monitor.\n",
+        "status": "unsupported_runtime"
+      }
+    },
+    "baseline_provenance": "Retained before binary reports cd80512 and includes the uncommitted SIR/VM pattern adapter, before display-heap registration was added; it is not a pristine cd80512 binary."
+  }
+}

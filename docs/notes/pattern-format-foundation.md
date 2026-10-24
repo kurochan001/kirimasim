@@ -86,3 +86,5 @@ suite files, global state, expectation protection, README counts and LLVM
 records source/unit/registry hashes and per-check results. Existing source
 suite bodies, expected outputs and performance counts are unchanged. External
 pass rates retain 2026-10-22 provenance; performance retains 2026-10-23 provenance.
+
+See the subsequent [SIR/execution checkpoint and resume steps](pattern-sir-execution.md).

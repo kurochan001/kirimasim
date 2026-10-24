@@ -24,6 +24,8 @@ struct SlotTag;
 using SlotId = Id<SlotTag>;
 struct InstanceTag;
 using InstanceId = Id<InstanceTag>;
+struct PatternTag;
+using PatternId = Id<PatternTag>;
 struct ConstTag;
 using ConstId = Id<ConstTag>;
 struct TempTag;
@@ -191,6 +193,43 @@ struct Constant {
     std::string bytes;
 };
 
+/// Formatting metadata selected by front (SYSTEM_TASKS 3.9). These are
+/// presentation layouts, independent of the storage/type table.
+struct PatternMember {
+    std::string name;
+    PatternId layout = kNone;
+    bool escaped = false;
+    std::uint32_t lsb = 0;  ///< Used only by packed record/union layouts.
+};
+struct PatternEnumerator {
+    std::string name;
+    ConstId value = kNone;
+    bool escaped = false;
+};
+struct PatternLayout {
+    enum class Kind {
+        Integral,
+        Real,
+        String,
+        Enumeration,
+        Record,
+        PackedRecord,
+        Array,
+        Union,
+        PackedUnion,
+        TaggedUnion,
+        Container
+    };
+    Kind kind = Kind::Integral;
+    Type value;
+    std::vector<PatternEnumerator> enumerators;
+    std::vector<PatternMember> members;
+    PatternId element = kNone;
+    std::uint64_t count = 0;  ///< Fixed-array count; containers use runtime size.
+    std::string tag;
+    bool tagEscaped = false;
+};
+
 /// Instruction opcodes (SIR_SPEC.md 5.2, 5.3 and 7.2).
 enum class Op : std::uint8_t {
     // Reads and writes of slots (SIR_SPEC.md 5.3) and frame variables (7.4).
@@ -349,9 +388,10 @@ enum class Op : std::uint8_t {
     DisableScope,  ///< disable.scope #N: every activation of block N ends at its exit.
     DisableTask,   ///< disable.task @T: every call of task T ends.
     // Calls.
-    Call,     ///< [%r =] call @N, <argument>...
-    Syscall,  ///< [%r =] syscall "$name", <operand>...
-    Builtin,  ///< [%r =] builtin "name", <operand>...
+    Call,           ///< [%r =] call @N, <argument>...
+    Syscall,        ///< [%r =] syscall "$name", <operand>...
+    FormatPattern,  ///< %r = pattern.format !pN, "named" | "positional", <value>...
+    Builtin,        ///< [%r =] builtin "name", <operand>...
     // Terminators. The continuation block of a wait comes last.
     Br,         ///< br bbN(<argument>...)
     BrIf,       ///< br.if %c, bbT(...), bbF(...)  (x and z count as false)
@@ -389,8 +429,9 @@ struct Operand {
         Frame,
         Subroutine,
         Process,
-        Type,   ///< A row of the type table (!N).
-        Scope,  ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
+        Pattern,  ///< A formatting layout (!pN).
+        Type,     ///< A row of the type table (!N).
+        Scope,    ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
     };
     Kind kind = Kind::Temp;
     std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
@@ -440,6 +481,7 @@ struct Operand {
     static Operand frame(FrameVarId f) { return of(Kind::Frame, f.index()); }
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s.index()); }
     static Operand process(ProcessId p) { return of(Kind::Process, p.index()); }
+    static Operand pattern(PatternId p) { return of(Kind::Pattern, p.index()); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
     static Operand str(std::string s) {
@@ -638,6 +680,7 @@ struct DumpVar {
 
 /// The SIR of one design.
 struct Design {
+    std::vector<PatternLayout> patterns;
     /// The global time precision, as a power of ten of a second (-9 is
     /// 1 ns): the smallest precision of all design elements. Delays and
     /// the simulation time count steps of it (SCHEDULER_SPEC.md 1).

@@ -429,6 +429,25 @@ Slang rejects direct source forms; the VM diagnoses a hand-built cell-ref NBA
 as an illegal operation. This does not prohibit whole-value NBAs to eligible
 static container variables.
 
+### 5.9 Typed assignment-pattern execution encoding (2026-10-24)
+
+This encodes the existing value/output rules of SYSTEM_TASKS 3.9; it selects
+no new formatting policy. `Design::patterns` has PatternIds distinct from
+TypeIds. Layouts describe integral/real/string/enum values, records, packed
+records, fixed arrays, first-member unions, selected tags and typed dynamic
+arrays/queues. Names, escaping, packed offsets, enum constants, child layouts,
+counts and value types are explicit. The graph must be acyclic, with checked
+references, types and size arithmetic; tiers do not infer source types.
+
+`%r = pattern.format !pN, "named" | "positional", <value>...` returns string.
+Unpacked records/fixed arrays consume scalar payloads in declaration order;
+packed shapes consume one vector, and containers one typed handle. The
+verifier checks mode, count and types. The VM builds borrowed views for the
+shared renderer, using Context resources and existing failure rules. This
+neither provides display identities nor enables an unimplemented source type.
+Front's literal/runtime argument bridge remains unfinished, so source `%p`
+is still unsupported. See the [implementation/checkpoint](../notes/pattern-sir-execution.md).
+
 ## 6. Constants
 
 A container constant is only the empty handle zero, printed `empty`. A chandle

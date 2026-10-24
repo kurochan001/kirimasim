@@ -310,7 +310,8 @@ including the file-output forms and `$swrite`.
 ### Formatting and input limits
 
 The [assignment-pattern renderer](notes/pattern-format-foundation.md) is a
-shared-kernel API foundation. Typed SIR/front integration remains, so source
+shared-kernel API foundation. [Typed SIR/execution](notes/pattern-sir-execution.md)
+is connected, while front format-argument integration remains, so source
 `%p` stays unsupported; this does not enable class identities or associative
 array ordering.
 

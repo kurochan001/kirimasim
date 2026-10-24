@@ -10,6 +10,12 @@
 
 ## 現在の実装とレビュー状況（2026-10-24）
 
+[型付きpatternのSIR・実行処理](pattern-sir-execution.ja.md)を追加し、既存queue要素の
+変更をdisplay monitorへ伝える経路も修正しました。新規SIR 11件を含む対象122件、
+全CI 21項目が成功しています。最新はdev・ASan・UBSanが各3,342件中3,340件、
+releaseが3,343件中3,341件成功で、既知の同じ2件をスキップします。source `%p`の
+front接続とheap file-monitorの専用行列は残っています。以下の比較値は以前の測定の来歴を保ちます。
+
 最新の実装には、[広いUDP入力の評価](wide-udp-inputs.ja.md)、
 [fork内の宣言](fork-local-declarations.ja.md)、
 [広いL/H強さマスク](wide-gate-strength.ja.md)、

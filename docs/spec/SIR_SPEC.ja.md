@@ -406,6 +406,22 @@ C ABI 0.3は変わらない。3.3節の既存の規則どおり、動的配列�
 これは実行機能の不足ではない。直接のソースはslangが拒否し、独自SIRのセル参照への
 NBAもVMが不正操作として診断する。適格なstaticコンテナ変数への値全体のNBAは禁止しない。
 
+### 5.9 型付き代入パターン表示の実装表現（2026-10-24）
+
+SYSTEM_TASKS 3.9の既存の値・表記を実行するための表現で、新しい書式方針ではありません。
+`Design::patterns`のPatternIdは型表のTypeIdと別です。レイアウトには整数・real・string・enum、
+record・packed record、固定配列、unionの最初のメンバー、選択済みtag、動的配列・queueを記録します。
+メンバー名・escape・packed offset、enum定数、子レイアウト・個数・値型を明示し、実行層が
+ソース型を推測しない形にします。表は循環のないグラフで、参照・型・個数のoverflowを検査します。
+
+`%r = pattern.format !pN, "named" | "positional", <value>...`はstringを返します。
+非packedのrecord・固定配列は宣言順のスカラーpayloadを並べ、packed形状はベクトル1つ、
+コンテナは型付きハンドル1つを取ります。mode・数・型は検証器が確認します。VMは借用viewを
+組み立てて共有rendererへ渡し、Contextのresourceと既存の失敗規則を使います。表示用ハンドルの
+識別や未実装のソース型を有効にする命令ではありません。frontの定数・runtime書式引数への
+接続は残作業で、ソース`%p`は引き続き未対応です。
+[実装・検証・再開箇所](../notes/pattern-sir-execution.ja.md)を参照してください。
+
 ## 6. 定数
 
 コンテナの定数は空のハンドル0だけで、`empty`と表示する。chandleの定数はnullで、

@@ -262,7 +262,7 @@ frontから共通ヒープへ接続し、SystemVerilogから実行できるよ�
 ### 書式と入力の制限
 
 共有カーネルには[代入パターン表示API](notes/pattern-format-foundation.ja.md)を追加しましたが、
-SIR・frontは未接続で、ソース`%p`は未対応です。クラス識別や連想配列の順序を有効にする
+[SIR・実行処理は接続](notes/pattern-sir-execution.ja.md)しましたが、frontの書式引数の接続は残り、ソース`%p`は未対応です。クラス識別や連想配列の順序を有効にする
 変更でもありません。
 
 - `$strobe` と `$monitor` の引数から automatic 変数は読めません。
