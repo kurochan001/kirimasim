@@ -63,10 +63,21 @@ retains complete intervals before value projection, with exhaustive interval
 pair checks. Source-level MOS/switch execution and strength-aware formatting
 still require integration; this kernel API does not close those gaps.
 
+Wide three-state gates now retain both L/H side-mask halves across word
+boundaries. All 73 new source cases match Icarus 13.0 and development builds.
+See [scope and validation](docs/notes/wide-gate-strength.md). Delayed side-only
+timing remains a [pending semantic amendment](docs/notes/delayed-gate-side-proposal.md).
+
 Aggregate blocking/NBA assignments now capture all RHS values before target
 effects, including container snapshots before later field expressions.
 Runtime-selected fixed subarrays and structure array members use the same
 path. See the [capture and verification note](docs/notes/aggregate-value-capture.md).
+
+Whole fixed arrays and unpacked structures now also support blocking
+intra-assignment delay/event/repeat controls. Typed private frames retain
+the RHS across waits, and the actual target is chosen afterwards. Another
+74 original source cases cover these forms and differing-bound structure
+copies. See [implementation and separate expectation review](docs/notes/blocking-aggregate-timing.md).
 
 Blocking intra-assignment `repeat(count) @(...)` now retains the RHS and the
 full count, then chooses the target after waiting. Nonpositive/X/Z counts
@@ -105,7 +116,7 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory now has 75 original probes. With Icarus `13.0 (stable) (v13_0)`,
+inventory now has 79 original probes. With Icarus `13.0 (stable) (v13_0)`,
 20 Icarus-passing gaps and four reference result mismatches remain. With
 `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 26 and seven.
 These are separate reference baselines. See the
@@ -113,6 +124,11 @@ These are separate reference baselines. See the
 Complete functional parity remains unconfirmed. A passing probe inventory
 would not by itself establish complete coverage; the inventory must expand
 as mechanisms and interfaces are checked.
+
+The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
+records 28 original programs and 56 reference observations separately from
+that inventory. Switch execution remains unsupported; strength-only changes,
+cycles, force and startup expose detailed contracts still requiring review.
 
 Integral `$fread` now accepts optional start/count arguments, evaluates
 supplied value arguments once and follows the approved copy-in/copyback
@@ -145,11 +161,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 2,980 | 2,978, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 3,131 | 3,129, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 298, `tests/suite/` 2,493 (made by 125 generators under `tools/`), tools 130, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 299, `tests/suite/` 2,640 (made by 127 generators under `tools/`), tools 133, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -164,15 +180,17 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI at source `917c715` on 2026-10-24 passes configure/build/test
-for all four configurations. Dev/ASan/UBSan each have 2,980 tests: 2,978 pass
-and the same two known skips remain. Release has 2,981 tests: 2,979 pass and
-the same skips. All 130 Tools tests and the 72 new aggregate-capture source
-cases pass. Static checks also pass, including expectation protection,
-README counts, clang-format and clang-tidy. Existing SIR dump expectations
-remain unchanged and all 29 pass.
+Full local CI rerun for this documentation update on base `e4376f1` passes
+all four configurations (2026-10-24); native source is unchanged from `57a64ef`.
+Dev/ASan/UBSan each have 3,131 tests: 3,129 pass and the same two known skips
+remain. Release has 3,132 tests: 3,130 pass and the same skips. All 133 Tools
+tests and 73 new wide-gate sources pass. Static checks, README counts,
+clang-format and clang-tidy also pass. All 29 existing SIR dump expectations
+remain unchanged. Four compiled mutations fail actual new stdout; a fifth
+fails the independent delayed-gate rejection check. The earlier aggregate
+expectation correction remains isolated in its separate review baseline.
 
-The same 75-probe inventory now has separate 13.0-stable and 14.0-development
+The same 79-probe inventory now has separate 13.0-stable and 14.0-development
 results: 13.0 has 20 Icarus-passing gaps and four reference mismatches;
 14.0 has 26 and seven.
 See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)

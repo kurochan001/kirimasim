@@ -290,13 +290,24 @@ void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores
         return;
     }
     if (structElement(ct) != nullptr) {
-        // Element by element; both sides have the same type, so the same
-        // ranges (7.6).
+        // Assignment-compatible arrays can have different declared bounds.
+        // Match their elements by position, preserving runtime prefixes (7.6).
         const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
-        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
-        for (std::int64_t i = at.range.left;; i += step) {
-            copyAggregate(withIndex(dst, i), withIndex(src, i), at.elementType, out, sl);
-            if (i == at.range.right) break;
+        const std::vector<sir::ArrayDim> td = dimsOf(storageBase(dst));
+        const std::vector<sir::ArrayDim> sd = dimsOf(storageBase(src));
+        if (dst.elem.size() >= td.size() || src.elem.size() >= sd.size())
+            unsupported(sl, "assignment of an array of structures of another shape");
+        const sir::ArrayDim to = td[dst.elem.size()];
+        const sir::ArrayDim from = sd[src.elem.size()];
+        const auto count = [](sir::ArrayDim d) {
+            return (d.left <= d.right ? d.right - d.left : d.left - d.right) + 1;
+        };
+        if (count(to) != count(from))
+            unsupported(sl, "assignment of an array of structures of another shape");
+        for (std::int64_t k = 0; k < count(to); ++k) {
+            copyAggregate(withIndex(dst, to.left + (to.left <= to.right ? k : -k)),
+                          withIndex(src, from.left + (from.left <= from.right ? k : -k)),
+                          at.elementType, out, sl);
         }
         return;
     }

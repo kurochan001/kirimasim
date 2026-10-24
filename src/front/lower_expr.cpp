@@ -2523,6 +2523,21 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     if (aggregate && a.isNonBlocking() && !a.isCompound() &&
         t.kind == ast::TimingControlKind::Delay)
         return lowerAggregateAssignment(a, &t.as<ast::DelayControl>().expr);
+    if (aggregate && !a.isNonBlocking() && !a.isCompound()) {
+        // Only private frame storage survives this wait. Capture all RHS
+        // leaves now and choose the actual target after the control (8).
+        const Storage saved = tempStorage(*a.left().type, sl);
+        Stores captured;
+        assignAggregate(saved, *a.left().type, a.right(), captured, sl);
+        flushStores(captured, false, sl);
+        lowerTiming(t);
+        const std::optional<Storage> dst = storageOf(a.left(), sl);
+        if (!dst) unsupported(sl, "aggregate assignment target");
+        Stores resumed;
+        copyAggregate(*dst, saved, *a.left().type, resumed, sl);
+        flushStores(resumed, false, sl);
+        return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+    }
     if (a.isCompound() || unpackedStruct(*a.left().type) != nullptr ||
         isAggregate(*a.left().type) || a.left().kind == ast::ExpressionKind::Streaming)
         unsupported(sl, "intra-assignment timing control on this assignment");

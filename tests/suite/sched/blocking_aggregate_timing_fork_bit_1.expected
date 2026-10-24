@@ -1,0 +1,7 @@
+delay 123 2 2 0 0 1 0
+zero 13 1 2 1 0
+edge 13 2 3 1 0
+repeat 123 2 5 1 0
+skip 123 1 5 1 0
+record 13 2 7 1 0 2.5 saved
+invalid 13 10 8 1 0

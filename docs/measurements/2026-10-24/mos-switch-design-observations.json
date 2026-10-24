@@ -1,0 +1,573 @@
+{
+  "measured": "2026-10-24",
+  "purpose": "Exploratory MOS and bidirectional-switch observations; not approved test oracles or implemented kirimasim support. Separate from the 79-item feature inventory.",
+  "platform": "Darwin/arm64",
+  "versions": {
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "commands": {
+    "compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "probe.vvp",
+      "probe.sv"
+    ],
+    "run": [
+      "vvp",
+      "probe.vvp"
+    ]
+  },
+  "source_origin": "Original programs written for this investigation. No other simulator source or tests were read.",
+  "kirimasim_execution": "Not measured in this exploratory dataset; MOS/bidirectional source integration remains unsupported.",
+  "summary": {
+    "original_sources": 28,
+    "reference_observations": 56,
+    "successful_compile_and_run": 56,
+    "matching_reference_stdout_pairs": 28
+  },
+  "interpretation": "Reference agreement is observational evidence, not proof of IEEE conformance. Positive intervals, wired-net channels, force transit and delayed startup require specification review.",
+  "probes": [
+    {
+      "name": "root_removed_ring",
+      "source": "`timescale 1ns/1ns\nmodule top;bit drive=1;wire a,b,c;assign a=drive?1'b1:1'bz;tran t0(a,b),t1(b,c),t2(c,a);initial begin #1;$display(\"on %b%b%b\",a,b,c);drive=0;#1;$display(\"off %b%b%b\",a,b,c);end endmodule\n",
+      "source_sha256": "3218ce4f22062029d03df67a4c968de6a7893712bab358900d6492e001cb25b6",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "on 111\noff zzz\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "on 111\noff zzz\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "floating_self",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a;tran t(a,a);initial begin #1;$display(\"%b %v\",a,a);end endmodule\n",
+      "source_sha256": "68c24f65fd2cec14924a48000a97da65afde521a8ffd479d75094305d8ee8920",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "z HiZ\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "z HiZ\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "resistive_chain",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b,c,d,e,f,g;assign(supply1,supply0)a=1'b1;rtran t0(a,b),t1(b,c),t2(c,d),t3(d,e),t4(e,f),t5(f,g);initial begin #1;$display(\"%v %v %v %v %v %v %v\",a,b,c,d,e,f,g);end endmodule\n",
+      "source_sha256": "9d72eb0f234b553fae274263e0f75ac4e05ec08afb3fdd6cac59098cda109655",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 Pu1 We1 Me1 Sm1 Sm1 Sm1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 Pu1 We1 Me1 Sm1 Sm1 Sm1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "nonresistive_chain",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b,c;assign(supply1,supply0)a=1'b1;tran t(a,b);nmos m(c,b,1'b1);initial begin #1;$display(\"%v %v %v\",a,b,c);end endmodule\n",
+      "source_sha256": "28a853ee538dc22703eabb75310e6a69d543d24cbfa1a18c1018c75ca070303b",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 St1 St1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 St1 St1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "strength_only",
+      "source": "`timescale 1ns/1ns\nmodule top;bit boost=0;int changes;wire a,y;assign(weak1,weak0)a=1'b1;assign(strong1,strong0)a=boost?1'b1:1'bz;nmos m(y,a,1'b1);assign(pull1,pull0)y=1'b0;always @(a)changes++;initial begin #2;changes=0;$display(\"before %b %b %v\",a,y,a);boost=1;#1;$display(\"after %b %b %v %0d\",a,y,a,changes);end endmodule\n",
+      "source_sha256": "0fff1c5e327587075abdcd78d817a30e75dfcd2dc74dcccc4ed4aa4645914a83",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before 1 0 We1\nafter 1 1 St1 0\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before 1 0 We1\nafter 1 1 St1 0\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "positive_range",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,y;bufif1 g(a,1'b1,1'bx);assign(weak1,weak0)a=1'b1;nmos m(y,a,1'b1);assign(pull1,pull0)y=1'b0;initial begin #1;$display(\"%b %v %b %v\",a,a,y,y);end endmodule\n",
+      "source_sha256": "e9c7dfa07b48db903df4ddd962d7751a8f2afe9c26bfdb2b7fc10e07079b27bf",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "1 631 1 St1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "1 631 1 St1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mos_z_unknown",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b,c,d,e,f;nmos n(a,1'bz,1'bx);pmos p(b,1'bz,1'bx);rnmos rn(c,1'bz,1'bz);rpmos rp(d,1'bz,1'bz);cmos cm(e,1'bz,1'bx,1'bx);rcmos rc(f,1'bz,1'bx,1'bx);initial begin #1;$display(\"%b%b%b%b%b%b\",a,b,c,d,e,f);end endmodule\n",
+      "source_sha256": "818625cedaf6aeb9590b5042bb736f4edb67223a762a2c0531a09308fe40ed22",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "zzzzzz\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "zzzzzz\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mixed_wire_wand",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a;wand b;assign(strong1,strong0)a=1'b1;assign(strong1,strong0)b=1'b0;tran t(a,b);initial begin #1;$display(\"%b %b %v %v\",a,b,a,b);end endmodule\n",
+      "source_sha256": "9e398ecab49c71bf7760c002d8cfaca40e097fdb8ba6abdeb0c875bbdd583df2",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "x x StX StX\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "x x StX StX\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mixed_wire_wor",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a;wor b;assign(strong1,strong0)a=1'b0;assign(strong1,strong0)b=1'b1;tran t(a,b);initial begin #1;$display(\"%b %b %v %v\",a,b,a,b);end endmodule\n",
+      "source_sha256": "65f45e3be32e1264aec677572591d8fdf6cffd15eb18c2eef7ff50a68b764d70",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "x x StX StX\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "x x StX StX\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "unknown_complementary_controls",
+      "source": "`timescale 1ns/1ns\nmodule top;logic en='x;wire a,b,c;assign a=1'b0;assign b=1'b1;tranif1 t0(a,c,en);tranif0 t1(b,c,en);initial begin #1;$display(\"%b%b%b\",a,b,c);end endmodule\n",
+      "source_sha256": "3f62a2f51258e7bb617fa4e0190598834b48161785c2f6ae38872bc3b1c7e76e",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "resistive_diamond",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b,c,d;assign(supply1,supply0)a=1'b1;rtran t0(a,b);tran t1(a,c),t2(b,d);rtran t3(c,d);initial begin #1;$display(\"%v %v %v %v\",a,b,c,d);end endmodule\n",
+      "source_sha256": "577c971364ec7af101d7c503b1ee2e9bde0de174f96fcf8f4c267a2db38025bc",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 Pu1 St1 Pu1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 Pu1 St1 Pu1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "force_tran",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b;assign(strong1,strong0)a=1'b1;tran t(a,b);initial begin #1;force a=0;#1;$display(\"forced %b%b %v %v\",a,b,a,b);release a;#1;$display(\"released %b%b\",a,b);end endmodule\n",
+      "source_sha256": "aa54b2bacb0936e4f5c7bf0e01ec3220a47739e97947efff77f7e824806ad20e",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "forced 00 St0 St0\nreleased 11\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "forced 00 St0 St0\nreleased 11\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "force_tranif",
+      "source": "`timescale 1ns/1ns\nmodule top;logic en=1;wire a,b;assign(strong1,strong0)a=1'b1;assign(strong1,strong0)b=1'b1;tranif1 t(a,b,en);initial begin #1;force a=0;#1;$display(\"forced %b%b %v %v\",a,b,a,b);en=0;#1;$display(\"off %b%b\",a,b);release a;#1;$display(\"released %b%b\",a,b);end endmodule\n",
+      "source_sha256": "01a7541993075de991c6694e994beb19f341370776298890990c561cef46c3f4",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "forced 0x St0 StX\noff 01\nreleased 11\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "forced 0x St0 StX\noff 01\nreleased 11\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "force_rtran",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b;assign(strong1,strong0)a=1'b1;assign(strong1,strong0)b=1'b1;rtran t(a,b);initial begin #1;force a=0;#1;$display(\"forced %b%b %v %v\",a,b,a,b);release a;#1;$display(\"released %b%b\",a,b);end endmodule\n",
+      "source_sha256": "ee072e09d77ce0302b74f57b2dd3e90db88f0d72b23170be224730caa5b0f155",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "forced 01 St0 St1\nreleased 11\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "forced 01 St0 St1\nreleased 11\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "port_supply_identity",
+      "source": "`timescale 1ns/1ns\nmodule drive_cell(output wire y);assign(supply1,supply0)y=1'b1;endmodule module top;wire[1:0]a;wire b;drive_cell u(a[1]);tran t(a[1],b);initial begin #1;$display(\"%v %v\",a[1],b);end endmodule\n",
+      "source_sha256": "8f3d52e959f6fd5480b015f79fb8a6cc012ad37a07d604e065280b98c8f4dea6",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 St1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "Su1 St1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "cmos_mixed_control",
+      "source": "`timescale 1ns/1ns\nmodule top;logic n=0,p=0;wire a,b;cmos c(a,1'b1,n,p);rcmos r(b,1'b1,n,p);initial begin #1;$display(\"00 %b %b\",a,b);n=1;p=1;#1;$display(\"11 %b %b\",a,b);n=1;p='x;#1;$display(\"1x %b %b\",a,b);n='x;p=0;#1;$display(\"x0 %b %b\",a,b);end endmodule\n",
+      "source_sha256": "5b7afe02ed289eb89a5614280eb264514b914af0823627167c764b9e4b391e1e",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "00 1 1\n11 1 1\n1x 1 1\nx0 1 1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "00 1 1\n11 1 1\n1x 1 1\nx0 1 1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "uniform_wand",
+      "source": "`timescale 1ns/1ns\nmodule top;wand a,b,c;assign a=1'b1;assign b=1'b0;tran t0(a,b),t1(b,c);initial begin #1;$display(\"%b%b%b\",a,b,c);end endmodule\n",
+      "source_sha256": "d2ee560498fac9a5847ce2f9a29bac5d967db9869e80056ef5fb42a5f27891fa",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "uniform_wor",
+      "source": "`timescale 1ns/1ns\nmodule top;wor a,b,c;assign a=1'b0;assign b=1'b1;tran t0(a,b),t1(b,c);initial begin #1;$display(\"%b%b%b\",a,b,c);end endmodule\n",
+      "source_sha256": "9fbc6cc256794fc742643db65fbd724cdaabe8fe4ffd567c6f93cf5309e9f4e0",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mixed_wired_transit",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,c;wand b;assign a=1'b1;assign b=1'b0;tran t0(a,b),t1(b,c);initial begin #1;$display(\"%b%b%b\",a,b,c);end endmodule\n",
+      "source_sha256": "00938c5b82c0d588d3e167da49baa8db3aff88796b6ad24745a7497c2f4f23d9",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "xxx\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "force_crossing_tran",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b,c;assign b=1'b1;tran t0(a,b),t1(a,c);initial begin #1;force a=0;#1;$display(\"%b%b%b %v %v %v\",a,b,c,a,b,c);end endmodule\n",
+      "source_sha256": "40895b509cda2b5e94ad37630f34b3354205e1382dbb42e0cba364508f77e2a1",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "0xx St0 StX StX\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "0xx St0 StX StX\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "force_crossing_controlled",
+      "source": "`timescale 1ns/1ns\nmodule top;logic en=1;wire a,b,c;assign b=1'b1;tranif1 t0(a,b,en),t1(a,c,en);initial begin #1;force a=0;#1;$display(\"%b%b%b %v %v %v\",a,b,c,a,b,c);end endmodule\n",
+      "source_sha256": "b9c63f7cf0e978e0faf6a95c673611b40d44a6a03c5fb831f673c173fd1c016a",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "0xx St0 StX StX\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "0xx St0 StX StX\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "force_highz_transit",
+      "source": "`timescale 1ns/1ns\nmodule top;logic en=1;wire a,b,c;assign b=1'b1;tranif1 t0(a,b,en),t1(a,c,en);initial begin #1;force a=1'bz;#1;$display(\"%b%b%b %v %v %v\",a,b,c,a,b,c);end endmodule\n",
+      "source_sha256": "e30287fb9d89201a6028d9aeb84fafb3916f988e547948876d7da54d80b8c607",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "z11 HiZ St1 St1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "z11 HiZ St1 St1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mos_delayed_weak_start",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,y;assign(weak1,weak0)a=1'b1;nmos #(5)m(y,a,1'b1);assign(pull1,pull0)y=1'b0;initial begin #1;$display(\"before %b %v\",y,y);#5;$display(\"after %b %v\",y,y);end endmodule\n",
+      "source_sha256": "066c1e75b728010290535c271c10002a87d61db95544414393c7b1982ffa785e",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before 0 Pu0\nafter 0 Pu0\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before 0 Pu0\nafter 0 Pu0\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "rmos_delayed_weak_start",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,y;assign(weak1,weak0)a=1'b1;rnmos #(5)m(y,a,1'b1);assign(pull1,pull0)y=1'b0;initial begin #1;$display(\"before %b %v\",y,y);#5;$display(\"after %b %v\",y,y);end endmodule\n",
+      "source_sha256": "bd0351b1bb9c59e5381c22122e7648ff19154fae6fc3accd492e41255db69745",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before 0 Pu0\nafter 0 Pu0\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before 0 Pu0\nafter 0 Pu0\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mos_delayed_start",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,y;assign(weak1,weak0)a=1'b1;nmos #(5)m(y,a,1'b1);initial begin #1;$display(\"before %b %v\",y,y);#5;$display(\"after %b %v\",y,y);end endmodule\n",
+      "source_sha256": "3f29ae44bce37802c6d9717098fac95cb2ee88647c6cfa331e61e349ef2589c4",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before x WeH\nafter 1 We1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before x WeH\nafter 1 We1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "rmos_delayed_start",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,y;assign(weak1,weak0)a=1'b1;rnmos #(5)m(y,a,1'b1);initial begin #1;$display(\"before %b %v\",y,y);#5;$display(\"after %b %v\",y,y);end endmodule\n",
+      "source_sha256": "7ce15a5718a31300415e6fc492863f72bfe316bf3f786d9211d7e7e32d825f19",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before x StX\nafter 1 St1\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "before x StX\nafter 1 St1\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mos_directed_feedback_drop",
+      "source": "`timescale 1ns/1ns\nmodule top;bit drive=1;wire a,b;assign a=drive?1'b1:1'bz;nmos m0(b,a,1'b1),m1(a,b,1'b1);initial begin #1;$display(\"on %b%b\",a,b);drive=0;#1;$display(\"off %b%b\",a,b);end endmodule\n",
+      "source_sha256": "044a018349244dc9a6f8c3d94dd47d08f76f1d003fe99c60dc3990a770d9ef9c",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "on 11\noff 11\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "on 11\noff 11\n",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "mos_directed_floating",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b;nmos m0(b,a,1'b1),m1(a,b,1'b1);initial begin #1;$display(\"%b%b\",a,b);end endmodule\n",
+      "source_sha256": "e5d7a4efde6f9f8e3e73380f21b0d6ad4d1ee1150255883e6c8047767471a912",
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "zz\n",
+          "diagnostic": []
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "zz\n",
+          "diagnostic": []
+        }
+      }
+    }
+  ]
+}

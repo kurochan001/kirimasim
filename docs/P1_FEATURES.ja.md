@@ -15,6 +15,35 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 広いネットでL/Hを解決する
+
+広い解決対象ネットでも、三状態ゲートの片側のL/H強さマスクを保持します。
+両半分が語の途中に来る場合にも対応します。[独自73件の参照比較と制限](notes/wide-gate-strength.ja.md)を
+参照してください。解決対象ネットの遅延付き三状態出力は、承認待ちの
+[sideの遅延案](notes/delayed-gate-side-proposal.ja.md)が必要です。
+
+```systemverilog
+module top;
+  logic [64:0] data = '0;
+  logic control = 'x;
+  wire [64:0] q0, q1;
+  bufif1 g0[64:0](q0, data, control);
+  bufif1 g1[64:0](q1, data, control);
+  assign (weak1, weak0) q0 = '0;
+  assign (weak1, weak0) q1 = '1;
+  initial begin
+    #1; $display("%0d %0d", q0 === '0, q1 === 'x);
+    data = '1;
+    #1; $display("%0d %0d", q0 === 'x, q1 === '1);
+  end
+endmodule
+```
+
+```text
+1 1
+1 1
+```
+
 ## 代入先の副作用より前に集約値を保持する
 
 通常の集約代入・NBAは、実行時の代入先の添字より先に右辺を保持します。
@@ -53,7 +82,9 @@ endmodule
 
 実行時に選ぶ固定の部分配列と、構造体要素の配列メンバー全体も代入先にできます。
 明示的なautomaticの配列メンバー付き構造体には既存の制限が残ります。
-集約値全体へのブロッキング代入内時間制御と、イベント制御付きNBAは引き続き未対応です。
+集約値全体へのブロッキング代入内の遅延・イベント・repeatにも、非公開の型付きフレームの
+スナップショットで対応しました。[実装と別レビューの検証](notes/blocking-aggregate-timing.ja.md)を
+参照してください。イベント制御付きNBAは引き続き未対応です。
 
 ## イベントを繰り返し待つブロッキング代入
 
@@ -61,8 +92,8 @@ endmodule
 変えても、保存した値と待つ回数は変わりません。0・負・X/Zの回数ではイベントを待たず、
 回数の幅と符号を保ちます。ブロッキング代入先は待機後に選びます。
 [契約と検証](notes/repeated-event-controls.ja.md)も参照してください。
-イベント制御付きの非ブロッキング代入と、固定配列・構造体全体のブロッキング代入内制御は
-引き続き未対応です。
+固定配列・unpacked構造体全体にも同じ時間制御の規則を適用し、対象を実行時に選べます。
+イベント制御付きの非ブロッキング代入は引き続き未対応です。
 
 ```systemverilog
 `timescale 1ns/1ns

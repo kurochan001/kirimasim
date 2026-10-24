@@ -145,8 +145,10 @@ the full typed count in frames across ordinary SIR waits. The count is
 evaluated once; nonpositive or X/Z counts skip waiting. The actual target is
 chosen after the waits. SSA temporaries themselves do not cross a wait.
 See [repeated event controls](notes/repeated-event-controls.md).
-Blocking whole-aggregate intra-assignment timing and event-controlled NBAs
-remain unsupported. In particular, blocking repeated waits do not implement
+Whole aggregates also use private typed frame snapshots across blocking
+intra-assignment controls; the actual selectors are evaluated after the wait.
+See [aggregate blocking timing](notes/blocking-aggregate-timing.md).
+Event-controlled NBAs remain unsupported. In particular, blocking repeated waits do not implement
 the independently pending control required by an event-controlled NBA.
 
 ## Strength intervals before value projection
@@ -164,6 +166,18 @@ interval pairs, single-driver masks, permutations and wide-word bits are
 cross-checked. See the [API and verification scope](notes/strength-range-foundation.md).
 The VM still consumes projected values. Resolved net-interval storage/transport,
 strength-only propagation and MOS/switch/format integration remain work.
+
+Static-strength driver operands can carry full-width two-state side masks for
+L/H, including unaligned halves across 64-bit words. The
+[wide-mask front/VM path](notes/wide-gate-strength.md) reaches the same kernel
+resolver, without adding a strength policy or storing resolved intervals.
+
+The [MOS/switch investigation](notes/mos-switch-investigation.md) records why
+the remaining network model needs full strength transport, internal strength-only
+dependencies and physical driver ownership across cycles. Directed MOS feedback
+and passive bidirectional paths have distinct observations; port identity also
+differs from a strength-reducing channel. Force, wired-net combinations and
+delayed startup still require reviewed contracts before implementation.
 
 ## Libraries
 

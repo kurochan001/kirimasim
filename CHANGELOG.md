@@ -40,6 +40,22 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Three-state gates retain full-width L/H side masks across word boundaries,
+  including 33–64-bit nets whose side operands occupy multiple words and
+  short-circuit control expressions. Another 73 original cases match both
+  measured Icarus versions. A separate CLI check preserves the unsupported
+  delayed-side boundary across all blocks while its timing amendment awaits
+  review (28.6, 28.12; existing VALUE_SEMANTICS 5.8 and SIR_SPEC 3.5).
+
+- Whole fixed-array, unpacked-structure and structure-array blocking
+  intra-assignment delay/event/repeat controls retain typed private snapshots
+  across waits and evaluate the actual target afterwards. Another 74 original
+  cases cover eight contexts, wide four-state values, automatic ref calls,
+  container roots and differing declared bounds. Structure-array copies now
+  match each side by position for ordinary assignments and NBAs too. The six
+  historical rejection expectations are reviewed separately from implementation
+  (7.6, 9.4.5; existing SCHEDULER_SPEC 8).
+
 - Whole fixed subarray assignment targets selected at run time, including
   structure elements' array members, and function return storage for structures
   containing fixed-array members. Explicit automatic aggregate array

@@ -15,6 +15,36 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Wide L/H gate resolution
+
+Three-state gates retain their one-sided L/H strength masks on wide resolved
+nets. Both mask halves can cross word boundaries. See the
+[73-case reference comparison and limits](notes/wide-gate-strength.md).
+Delayed three-state outputs on resolved nets still require the pending
+[side-timing amendment](notes/delayed-gate-side-proposal.md).
+
+```systemverilog
+module top;
+  logic [64:0] data = '0;
+  logic control = 'x;
+  wire [64:0] q0, q1;
+  bufif1 g0[64:0](q0, data, control);
+  bufif1 g1[64:0](q1, data, control);
+  assign (weak1, weak0) q0 = '0;
+  assign (weak1, weak0) q1 = '1;
+  initial begin
+    #1; $display("%0d %0d", q0 === '0, q1 === 'x);
+    data = '1;
+    #1; $display("%0d %0d", q0 === 'x, q1 === '1);
+  end
+endmodule
+```
+
+```text
+1 1
+1 1
+```
+
 ## Aggregate values before target effects
 
 Ordinary aggregate assignments and NBAs capture the RHS before evaluating
@@ -53,8 +83,10 @@ endmodule
 
 Runtime-selected fixed subarrays and structure elements' array members can
 be whole assignment targets. Explicit automatic structures with array
-members retain their existing restriction. Blocking whole-aggregate
-intra-assignment timing and event-controlled NBAs remain unsupported.
+members retain their existing restriction. Whole aggregates now also support
+blocking intra-assignment delay/event/repeat controls through private typed
+frame snapshots. See the [implementation and review evidence](notes/blocking-aggregate-timing.md).
+Event-controlled NBAs remain unsupported.
 
 ## Blocking assignment after repeated events
 
@@ -63,8 +95,8 @@ the count once. Changes to either during the wait do not change the saved
 value or number of events. Zero, negative or X/Z counts wait for no events.
 The count retains its width and signedness; the blocking target is selected
 after waiting. See the [contract and evidence](notes/repeated-event-controls.md).
-Event-controlled nonblocking assignments and whole fixed-array/structure
-blocking intra-assignment timing remain unsupported.
+Whole fixed arrays and unpacked structures use the same timing rules, including
+runtime-selected targets. Event-controlled nonblocking assignments remain unsupported.
 
 ```systemverilog
 `timescale 1ns/1ns

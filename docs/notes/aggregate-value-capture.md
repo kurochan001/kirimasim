@@ -32,8 +32,9 @@ including array members of selected structure elements. Hidden function-return
 storage can hold fixed-array members in an unpacked structure, for both
 automatic and static functions. Explicit automatic structure variables with
 array members, arrays of structures as arguments, and structure refs retain
-their existing unsupported forms. Blocking whole-aggregate intra-assignment
-timing and event-controlled NBAs remain unfinished.
+their existing unsupported forms. At this revision, blocking whole-aggregate
+timing was unfinished; [subsequent work implements it](blocking-aggregate-timing.md).
+Event-controlled NBAs remain unfinished.
 
 ## Source evidence
 

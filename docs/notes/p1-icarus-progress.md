@@ -11,7 +11,9 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [aggregate value capture](aggregate-value-capture.md),
+The current implementation includes [wide L/H strength masks](wide-gate-strength.md),
+[aggregate blocking timing](blocking-aggregate-timing.md),
+[aggregate value capture](aggregate-value-capture.md),
 [blocking repeated event controls](repeated-event-controls.md), corrected
 [integral binary input](../P1_FEATURES.md#integral-binary-input-with-fread)
 and the [complete strength-interval kernel API](strength-range-foundation.md).
@@ -19,16 +21,27 @@ The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
-Full local CI at source `917c715` passes configure/build/test for
-dev/release/ASan/UBSan. Dev/ASan/UBSan each run 2,980 tests (2,978 pass,
-two known skips); release runs 2,981 (2,979 pass, the same skips).
-Release flags, banned features, SPDX, suite files, global state, per-commit
-expectation protection, README counts, clang-format
-and clang-tidy also pass. Unit/suite/tool/generator counts are
-298/2,493/130/125. Existing suite bodies, expectations and performance counts
-remain unchanged. All 29 existing SIR dump tests pass.
+The latest [MOS/switch investigation](mos-switch-investigation.md) records
+28 original programs and 56 observations across both reference versions.
+It identifies strength-only dependencies, passive cycles, port attenuation
+and unresolved interval/force/startup questions. These exploratory observations
+are separate from the feature inventory below and do not approve new semantics
+or add implemented support.
 
-The same **75 original probes** now run against both installed references:
+Full local CI rerun for this documentation update on base `e4376f1` passes
+configure/build/test for dev/release/ASan/UBSan. Native source is unchanged
+from `57a64ef`.
+Dev/ASan/UBSan each run 3,131 tests (3,129 pass, two known skips); release runs
+3,132 (3,130 pass, the same skips). Release flags, banned features, SPDX,
+suite files, global state, per-commit expectation protection, README counts,
+clang-format and clang-tidy also pass. Unit/suite/tool/generator counts are
+299/2,640/133/127. Existing suite bodies, suite expectations and performance
+counts are unchanged; the older aggregate CLI correction remains a separate
+review baseline. All 29 existing SIR dumps pass. Four wide-mask mutations fail
+new stdout expectations and another fails the real delayed rejection check;
+anchor/judging self-checks are excluded as evidence.
+
+The same **79 original probes** now run against both installed references:
 
 - Icarus `13.0 (stable) (v13_0)`: 20 Icarus-passing gaps, four reference
   result mismatches.
@@ -41,11 +54,23 @@ verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
 unconfirmed. Dated entries below retain their historical probe cohorts.
 
-Three detailed semantic amendments remain pending:
+Six detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
 - [Array minimum/maximum execution](array-extrema-proposal.md).
+- [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
+- [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
+- [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).
+
+The MOS proposal covers thirteen switch probes and one partial-port probe in
+the existing 13.0 gap list. Its new 18-source matrix records 2,304 scalar
+samples per reference across three loading conditions, plus ten original
+boundary programs. Loaded results agree with the truth/reduction/resolution
+model; isolated resistive strength tokens expose a context-dependent reference
+difference. The proposal explicitly requests review of startup, network
+ownership, local wired resolution, force and strength-only timing. No MOS
+implementation or change to the 79-item inventory is claimed.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep
@@ -59,6 +84,71 @@ python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim
 This uses PATH; the [13.0 command](icarus-13-comparison.md#reproduce) selects
 matching binaries explicitly. Both measured references still give exit 1
 for remaining passing gaps. A zero result would not establish full parity.
+
+## Wide L/H side masks and the delayed boundary (2026-10-24)
+
+`37a2726` implements the already approved two-state side-mask representation
+without the old 32-bit front restriction. The VM preserves both halves at the
+full net width and parses mixed driver tuples; the front tracks their actual
+control-flow block. The [73-source matrix](wide-gate-strength.md) covers four
+three-state gates, six widths through 257 bits, both net directions and
+module/generate/interface signals, plus short-circuit function controls.
+All 73 pass the current native binary and both measured Icarus versions;
+all 73 stop as unsupported on the retained old binary.
+
+An independent SIR test covers eight widths, both weak background values and
+both driver orders. Four compiled corruptions fail new source stdout, with
+three also detected by the independent SIR assertions. Existing expectations
+and all 29 SIR dumps remain unchanged.
+
+`57a64ef` preserves the unreviewed delayed-side boundary in all blocks. Six
+positioned rejections and six undelayed unresolved-net acceptances cover
+widths 1/65/257 and function controls; reverting the guard to the entry block
+is detected by this real CLI test. All five compiled controls exclude
+anchor/judging self-check failures as evidence, and restore/rebuild source.
+
+On the same 79-item inventory, 13.0 gaps change 21 to 20 and development gaps
+27 to 26. The other 78 statuses and four/seven reference mismatches stay
+unchanged. [Versioned portable records](icarus-13-comparison.md) include the
+old native results; historical 75/78-item files are preserved. This does not
+establish complete 13.0 coverage or remeasure performance.
+
+The [delayed-side proposal](delayed-gate-side-proposal.md) records six
+exploratory observations, distinguishes ordinary value transitions from
+side-only timing and specifies complete-state cancellation/atomic updates.
+Its experimental implementation was removed pending approval. MOS/switches
+and arbitrary resolved-interval propagation remain unfinished.
+
+## Blocking aggregate timing and positional copies (2026-10-24)
+
+Implementation `6195846` adds blocking intra-assignment delay/event/repeat for
+whole fixed arrays, unpacked structures and structure arrays, using the
+existing approved rules and private typed frames. It also corrects structure
+array copies to match each side's own declared bounds. The
+[74-source matrix](blocking-aggregate-timing.md) adds eight contexts, wide
+two/four-state payloads, concurrent automatic ref calls, container roots,
+guarded events, large counts and invalid targets. The retained old binary
+rejects 72 and miscomputes two; all new cases pass. Five compiled mutations
+are detected by their new stdout expectations, excluding self-check failures.
+
+The historical CLI input with six delayed array statements stays byte-identical.
+Its obsolete unsupported expectations are retired separately in `36aa2ae`,
+without implementation changes. The implementation review uses that branch
+as its base and passes the expectation-protection check. The combined tested
+stack is `396131e`; no old suite or performance oracle is weakened there.
+
+The same 78-probe inventory is measured on both references: 20/four gaps/
+reference mismatches for 13.0, 26/seven for development. The earlier 75 retain
+all statuses; the three additions pass kirimasim and fail reference compilation.
+Their [portable records](icarus-13-comparison.md) are separate from the earlier
+75-probe artifacts. These are new execution forms, not a measured reduction
+of Icarus-passing gaps.
+
+An [event-NBA amendment](event-nba-proposal.md) now specifies registration,
+count coalescing, origin/RNG lifetime, pending queue order and a shared SIR/kernel
+contract. Fifteen original programs have 30 versioned reference observations.
+The proposal remains pending; its observed overlapping-item and NBA-order
+differences are not adopted as oracles. Full P1 coverage remains unproven.
 
 ## Aggregate capture and exact-13.0 baseline (2026-10-24)
 

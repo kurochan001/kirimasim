@@ -10,7 +10,7 @@ The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
 This inventory describes tier 1 as of 2026-10-24, including dynamic arrays
-and queues, aggregate value capture before target effects, repeated blocking
+and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
@@ -46,7 +46,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits; blocking and nonblocking assignments, including delayed streaming NBAs | No `with` clause, string target or nested streaming target; automatic targets cannot receive an NBA |
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
-| Assignment and delay | Blocking and nonblocking assignment, supported intra-assignment delays, blocking `repeat(count) @(...)`, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Blocking whole-fixed-array intra-assignment timing, event-controlled NBAs and delayed writes through refs/string characters are not implemented; automatic NBA targets remain illegal |
+| Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Event-controlled NBAs and delayed NBAs through refs/string characters are not implemented; automatic NBA targets remain illegal |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered` | Existing variable-write restrictions on event/wait conditions remain; no runtime-indexed named event, event-controlled `->>`, or `always_ff` trigger on a computed expression |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, disable of supported named blocks and tasks | Fork-local declarations, escaping automatic variables captured by fork branches and disable of a named fork block have unsupported forms |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
@@ -70,8 +70,9 @@ stores for ordinary assignment, NBA and delayed NBA. Automatic/static
 functions can return structures with fixed-array members. Explicit automatic
 structure variables with array members retain their existing limitation.
 The [72 original source cases and verification](notes/aggregate-value-capture.md)
-cover these forms. Event-controlled NBAs and blocking whole-aggregate
-intra-assignment timing remain unsupported.
+cover these forms. Another [74 original cases](notes/blocking-aggregate-timing.md) cover
+whole-aggregate blocking delay/event/repeat, per-activation typed snapshots
+and differing-bound structure copies. Event-controlled NBAs remain unsupported.
 
 ### Repeated blocking event controls
 
@@ -80,10 +81,18 @@ then chooses its target after waiting. Nonpositive/X/Z counts skip all event
 waits, preserving count width and signedness. Named, mixed, watched and guarded
 events use the existing wait machinery. The [75 original source cases](notes/repeated-event-controls.md)
 include automatic targets, real/string values, packed concatenations and
-container snapshots. Event-controlled NBAs and whole fixed-array/structure
-blocking intra-assignment timing remain unsupported.
+container snapshots. Whole fixed arrays and unpacked structures now use the
+same blocking timing rules. Event-controlled NBAs remain unsupported.
 
 ### Strength-resolution kernel
+
+Three-state gates now carry their L/H side masks through wide vectors, including
+unaligned 64-bit boundaries. Another [73 original cases](notes/wide-gate-strength.md)
+match both measured Icarus versions. Masked and unmasked drivers share the
+existing kernel resolver; this is not arbitrary MOS interval transport.
+Delayed three-state outputs on resolved nets remain unsupported, including
+short-circuit controls; their [side-timing proposal](notes/delayed-gate-side-proposal.md)
+awaits approval.
 
 The shared kernel now exposes complete strength intervals before four-state
 projection, following the approved VALUE_SEMANTICS 5.2–5.4 rule. Five added
@@ -92,6 +101,11 @@ unit tests compare full endpoints, including 158,400 interval pairs under
 fail the new range assertions. See the [API and evidence](notes/strength-range-foundation.md).
 This is the kernel foundation for propagation; MOS/bidirectional primitives,
 strength-aware formatting and resolved-interval metadata through SIR/VM remain unsupported.
+The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
+28 exploratory reference programs and the remaining semantic questions;
+these observations are not additional implemented features or approved oracles.
+The [complete execution contract proposal](notes/mos-switch-proposal.md) is
+pending review, including startup and full-strength timing decisions.
 
 ### Program completion
 

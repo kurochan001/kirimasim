@@ -834,6 +834,7 @@ private:
         std::size_t first = 0;
         std::size_t count = 0;
         bool known = true;
+        sir::BlockId block{0};
     };
     std::map<sir::ProcessId, GateSide> sides_;
     /// The type-table rows of the UDP tables made so far.

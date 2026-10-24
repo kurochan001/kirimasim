@@ -1,0 +1,66 @@
+{
+  "measured": "2026-10-24",
+  "purpose": "Design observations only; no approved oracle. Unapproved delayed execution path removed from working implementation.",
+  "versions": {
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "experiment": {
+    "base_revision": "2d500c095affe4ce2aa5556fca54eae567ab8ecf",
+    "uncommitted_diff_sha256": "56af8364546bf129e64d5681aaa205c4717d78307c505b8359bf9563783f5fb3"
+  },
+  "probes": [
+    {
+      "name": "probe",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic data=0,control='x;\nwire q;\nbufif1 #(2,3,4) g(q,data,control);\nassign (weak1,weak0) q=1'b1;\ninitial begin\n  #1;$display(\"first %b\",q);\n  #2;$display(\"L %b\",q);data=1;\n  #1;$display(\"H_pending %b\",q);\n  #2;$display(\"H %b\",q);data=0;\n  #1;data=1;\n  #2;$display(\"pulse %b\",q);control=1;data=0;\n  #1;$display(\"on_pending %b\",q);\n  #3;$display(\"on %b\",q);control=0;\n  #1;$display(\"off_pending %b\",q);\n  #4;$display(\"off %b\",q);control='z;\n  #1;$display(\"z_pending %b\",q);\n  #2;$display(\"z %b\",q);\nend\nendmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "first x\nL x\nH_pending 1\nH 1\npulse 1\non_pending 1\non 0\noff_pending 0\noff 1\nz_pending 1\nz x\n"
+    },
+    {
+      "name": "transition",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic data=0,control=1;wire q;\nbufif1 #(2,3,4) g(q,data,control);\nassign (weak1,weak0) q=1'b1;\ninitial begin #5;$display(\"settled %b\",q);data=1;control='x;#1;$display(\"before %b\",q);#2;$display(\"after %b\",q);end\nendmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "settled 0\nbefore 0\nafter 1\n"
+    },
+    {
+      "name": "probe",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic data=0,control='x;\nwire q;\nbufif1 #(2,3,4) g(q,data,control);\nassign (weak1,weak0) q=1'b1;\ninitial begin\n  #1;$display(\"first %b\",q);\n  #2;$display(\"L %b\",q);data=1;\n  #1;$display(\"H_pending %b\",q);\n  #2;$display(\"H %b\",q);data=0;\n  #1;data=1;\n  #2;$display(\"pulse %b\",q);control=1;data=0;\n  #1;$display(\"on_pending %b\",q);\n  #3;$display(\"on %b\",q);control=0;\n  #1;$display(\"off_pending %b\",q);\n  #4;$display(\"off %b\",q);control='z;\n  #1;$display(\"z_pending %b\",q);\n  #2;$display(\"z %b\",q);\nend\nendmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "first x\nL x\nH_pending 1\nH 1\npulse 1\non_pending 1\non 0\noff_pending 0\noff 1\nz_pending 1\nz x\n"
+    },
+    {
+      "name": "transition",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic data=0,control=1;wire q;\nbufif1 #(2,3,4) g(q,data,control);\nassign (weak1,weak0) q=1'b1;\ninitial begin #5;$display(\"settled %b\",q);data=1;control='x;#1;$display(\"before %b\",q);#2;$display(\"after %b\",q);end\nendmodule\n",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "settled 0\nbefore 0\nafter 1\n"
+    },
+    {
+      "name": "probe",
+      "engine": "unapproved_experiment",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic data=0,control='x;\nwire q;\nbufif1 #(2,3,4) g(q,data,control);\nassign (weak1,weak0) q=1'b1;\ninitial begin\n  #1;$display(\"first %b\",q);\n  #2;$display(\"L %b\",q);data=1;\n  #1;$display(\"H_pending %b\",q);\n  #2;$display(\"H %b\",q);data=0;\n  #1;data=1;\n  #2;$display(\"pulse %b\",q);control=1;data=0;\n  #1;$display(\"on_pending %b\",q);\n  #3;$display(\"on %b\",q);control=0;\n  #1;$display(\"off_pending %b\",q);\n  #4;$display(\"off %b\",q);control='z;\n  #1;$display(\"z_pending %b\",q);\n  #2;$display(\"z %b\",q);\nend\nendmodule\n",
+      "run_exit": 0,
+      "stdout": "first 1\nL x\nH_pending x\nH 1\npulse 1\non_pending 1\non 0\noff_pending 0\noff 1\nz_pending 1\nz x\n"
+    },
+    {
+      "name": "transition",
+      "engine": "unapproved_experiment",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic data=0,control=1;wire q;\nbufif1 #(2,3,4) g(q,data,control);\nassign (weak1,weak0) q=1'b1;\ninitial begin #5;$display(\"settled %b\",q);data=1;control='x;#1;$display(\"before %b\",q);#2;$display(\"after %b\",q);end\nendmodule\n",
+      "run_exit": 0,
+      "stdout": "settled 0\nbefore 0\nafter 1\n"
+    }
+  ]
+}
