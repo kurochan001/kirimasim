@@ -311,6 +311,12 @@ including the file-output forms and `$swrite`.
 
 ### Formatting and input limits
 
+[Bit queries on fixed aggregates](notes/aggregate-bit-queries.md) use the
+existing streaming conversion for integral-leaf fixed arrays, records and
+arrays of records (136 new source cases). Supported automatic values,
+array refs and aggregate-returning functions use that same lowering. This
+does not enable unsupported aggregate storage or dynamic/string bit streams.
+
 The [assignment-pattern renderer](notes/pattern-format-foundation.md) is a
 shared-kernel API foundation. [Typed SIR/execution](notes/pattern-sir-execution.md)
 is connected, while front format-argument integration remains, so source

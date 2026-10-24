@@ -40,6 +40,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("front: aggregate bit query bypasses streaming conversion", "src/front/lower_expr.cpp",
+     'const Val v = bitstreamOf(*args[0], sl);\n                if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");',
+     'const Val v = lowerExpr(*args[0]);\n                if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");'),
     ("kernel: killed display callback retains its heap subscriptions", "src/kernel/sim.cpp",
      "    detachDisplayMonitor(p);\n    freeMonitor(p);",
      "    freeMonitor(p);"),

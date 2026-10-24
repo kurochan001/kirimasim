@@ -267,6 +267,11 @@ frontから共通ヒープへ接続し、SystemVerilogから実行できるよ�
 [SIR・実行処理](notes/pattern-sir-execution.ja.md)は接続済みです。frontの書式引数の
 接続は残り、ソース`%p`は未対応です。クラス識別や連想配列の順序を有効にする変更でもありません。
 
+[固定集約値へのビット問い合わせ](notes/aggregate-bit-queries.ja.md)は、整数の末端要素を持つ
+固定配列・構造体・構造体配列を既存のストリーミング処理へ通します（新規ソース136件）。
+対応済みのautomatic、配列ref、集約値を返す関数も同じ変換処理を使います。
+未対応の集約値の格納形式や、動的コンテナ・文字列のビットストリームを有効にする変更ではありません。
+
 既存queueの要素値を変えたときの`$monitor`再表示は、[実ソースと独自SIRで確認](notes/pattern-sir-execution.ja.md)しています。
 [20件の実ソースとschedulerの失敗・生存期間テスト](notes/heap-file-monitor-lifetime.ja.md)で、
 heapを使うfile monitor、配列の置き換え、ファイルを閉じる処理、記述子の再利用、コールバックの

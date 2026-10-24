@@ -1219,7 +1219,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 // have one of the values of the control bits (the LSB of
                 // each); the others are defined by it (SYSTEM_TASKS.md 8).
                 if (args.empty()) unsupported(sl, "system function " + name);
-                const Val v = lowerExpr(*args[0]);
+                const Val v = bitstreamOf(*args[0], sl);
                 if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");
                 std::vector<Operand> ops{Operand::str("$countbits"), v.op};
                 const auto control = [&](std::uint64_t a, std::uint64_t b) {
