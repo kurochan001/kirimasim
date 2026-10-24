@@ -4,6 +4,14 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
+**SIR v1 direction amendment (approved 2026-10-24):**
+[The approved P2 direction](../notes/sir-v1-proposal.md) moves the final text
+and kernel-boundary freeze to P2 after P1 completion. P2 preparation may run
+alongside P1. A complete record format, generated common Op metadata and
+separate analysis tables are selected; exact EBNF/schema, API prototypes/count
+and reference layout remain under review. Current execution coverage stays in
+P1, formatVersion remains 0, and tier 2 C++ generation remains P3.
+
 **Program execution amendment (approved 2026-10-23):**
 [The approved program rules](../notes/program-execution-proposal.md) apply
 to instance identity, reactive scheduling, inherited execution origin and
@@ -14,7 +22,7 @@ advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
 Phase labels below describe the original plan, subject to this amendment.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Items marked "draft" are fixed after they are checked while implementing in P1. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved). The same day, delay operands of any width were allowed (1, 7.2; approved). On 2026-10-19, the instruction `cond.x` for `--cond-x` was added to 5.2 (approved). The same day, 8 was made to point to how kirimasim applies 13.4.4 (approved). On 2026-10-20, what a `cont` process drives was set apart from what it writes (3.4, 5.6, 9, 10; approved). The same day, the write ranges were made to leave out what the tasks a process calls write (3.4; approved). The same day, they were made to leave out what the action of a deferred assertion writes too (3.4; approved). The same day, the slot that puts out the initial value of a delayed sequential UDP, and the names of the elements of arrays of UDPs, were added to 5.5 (approved). The same day, the descriptor of `$fstrobe` and `$fmonitor` was added to `strobe` and `monitor` (5.2, 7.1, 7.2; approved). On 2026-10-21, how `$readmemb`, `$readmemh`, `$writememb` and `$writememh` take their memory was added to 8 (approved). The same day, the dump table was added to 2 (WAVEFORM.md; approved). The same day, the operands of `$dumpfile` and `$dumpvars` were added to 8 (approved). The same day, the row of an enumerated type that `$readmem` takes was added to 8 (approved).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. P1 implementation checks draft language semantics; final SIR v1 interchange details are settled under the approved P2 amendment above. On 2026-10-18, what of 7.5 is not implemented yet was noted (approved). The same day, delay operands of any width were allowed (1, 7.2; approved). On 2026-10-19, the instruction `cond.x` for `--cond-x` was added to 5.2 (approved). The same day, 8 was made to point to how kirimasim applies 13.4.4 (approved). On 2026-10-20, what a `cont` process drives was set apart from what it writes (3.4, 5.6, 9, 10; approved). The same day, the write ranges were made to leave out what the tasks a process calls write (3.4; approved). The same day, they were made to leave out what the action of a deferred assertion writes too (3.4; approved). The same day, the slot that puts out the initial value of a delayed sequential UDP, and the names of the elements of arrays of UDPs, were added to 5.5 (approved). The same day, the descriptor of `$fstrobe` and `$fmonitor` was added to `strobe` and `monitor` (5.2, 7.1, 7.2; approved). On 2026-10-21, how `$readmemb`, `$readmemh`, `$writememb` and `$writememh` take their memory was added to 8 (approved). The same day, the dump table was added to 2 (WAVEFORM.md; approved). The same day, the operands of `$dumpfile` and `$dumpvars` were added to 8 (approved). The same day, the row of an enumerated type that `$readmem` takes was added to 8 (approved).
 
 **Amendment of M3b (approved 2026-10-15):** in stage M3b of the P1 plan, instructions for merging values, values across waits, unpacked arrays, the type table, subroutines and process control were added, and the text form was changed to refer to things by number. The sections changed say "amendment of M3b".
 
@@ -44,7 +52,7 @@ Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points o
 
 SIR (slot-indexed IR) is kirimasim's intermediate representation, made from the result of slang's elaboration. It is a form in which everything needed for execution is decided statically, and both tier 1 (the VM) and tier 2 (C++ generation) are made from the same SIR. The meaning of values follows VALUE_SEMANTICS.md, and events and time follow SCHEDULER_SPEC.md. The text of the standard (IEEE 1800-2023) is not copied; grounds are given by clause number.
 
-Items marked "draft" are checked while implementing in P1, and this document is corrected if needed (a correction needs a human's approval).
+Draft language semantics are checked during P1; P2 finalizes the SIR v1 interchange contract after P1 completes. Corrections and outstanding detailed contracts need human approval.
 
 ## 1. Design principles
 
@@ -56,7 +64,7 @@ Items marked "draft" are checked while implementing in P1, and this document is 
 - System tasks, system functions and built-in methods (methods of strings and enumerated types and so on) are written by name in SIR. Each tier resolves names to numbers when it loads SIR, and does not compare names during execution (amendment of M3b).
 - Results of analysis (that X never arrives, static islands and so on) are not written in SIR. `analysis` keeps them as separate tables indexed by SIR's numbers (amendment of M3b). This keeps SIR a form decided uniquely by slang's result, so that fixing an analysis does not change the text of SIR.
 - Delay values are held in steps of the whole design's time precision. `front` converts from the module's time unit (7.2; amendment of M3b). **A delay operand (of `wait.delay`, `nba.delay`, `trigger.nb` and `drive.delay`) is an integral value of any width (approved 2026-10-18):** `front` counts the steps in as many bits as they need, and a value of 2^64 steps or more takes the time past the largest time, a run-time error of the design when it runs (SCHEDULER_SPEC.md 8). A constant delay that does not fit in 64 bits is such a value, not an unsupported construct.
-- When the form of SIR changes, the value of `sir::formatVersion()` is raised. It stays 0 during P1, and becomes 1 when the text form is first fixed.
+- `sir::formatVersion()` stays 0 during P1 and P2 preparation. It becomes 1 only after P1 completes and the P2 grammar, parser, verifier/roundtrip and consistency gates pass. Later-version rules are part of the detailed contract still awaiting review.
 
 ## 2. Overall structure
 
@@ -73,7 +81,7 @@ The SIR of one design consists of the following.
 | Subroutine table | Arguments of functions and tasks, return type, table of frame variables, sequence of basic blocks (8) |
 | Constant table | Values of large constants, reals and strings (4-state included; 6) |
 | Source table | File number → file path |
-| Dump table (added 2026-10-21, approved) | For WAVEFORM.md only: the scopes a dump can name, each with its hierarchical name, its kind (module, begin, fork, task, function) and the scope around it; and the variables, each with its scope, its name, its VCD type, width and reference range, and the slot (and the leaf of an unpacked structure) that holds it. front makes it from slang's model (WAVEFORM.md 2). It is read when dumping starts, to choose what to dump; nothing is looked up by name while the design runs (1). The arguments of `$dumpvars` that name scopes or variables are given to `syscall` as numbers of its rows. The text form (9) leaves it out |
+| Dump table (added 2026-10-21, approved) | For WAVEFORM.md only: the scopes a dump can name, each with its hierarchical name, its kind (module, begin, fork, task, function) and the scope around it; and the variables, each with its scope, its name, its VCD type, width and reference range, and the slot (and the leaf of an unpacked structure) that holds it. front makes it from slang's model (WAVEFORM.md 2). It is read when dumping starts, to choose what to dump; nothing is looked up by name while the design runs (1). The arguments of `$dumpvars` that name scopes or variables are given to `syscall` as numbers of its rows. The current format-0 dump (9) leaves it out; the selected complete format 1 must preserve it |
 
 ## 3. Storage and slots
 
@@ -610,9 +618,10 @@ the returned error or count-mismatch warning. The result type is that of
 retain raw zero bytes; string results remove them (VALUE_SEMANTICS.md 7.6).
 This needs no new SIR opcode.
 
-## 9. Text form (draft)
+## 9. Text form (current format 0; format 1 direction approved)
 
-- Written by `--dump-sir`, in a form that can be read back. Tests of the lowering use this text as their expected values (added to what TEST_SUITE.md's rules protecting expected values cover).
+- `--dump-sir` currently prints format 0; no SIR readback parser is implemented. Lowering tests use this output as their protected expected values. The notation and example below describe format 0.
+- P2 selects a complete canonical record format 1 preserving semantic tables, dump metadata, constant identity and declared counts. Its exact EBNF/schema and public CLI mode remain under review in the [P2 design note](../notes/sir-v1-proposal.md). Existing format-0 goldens remain protected during migration; the new format must pass print → parse → print equality and immediate verifier checks for every dump_sir and frozen P1-population design before version 1 freezes.
 - It is written in a fixed order (number order), and the same SIR gives the same text.
 - **Referring by number (amendment of M3b):** slots are referred to as `%s<number>`, temporaries `%t<number>`, frame variables `%f<number>`, processes and subroutines `@<number>`, the type table `!<number>`, and basic blocks `bb<number>`. Names are written only on declaration lines, in quotes. This is because SystemVerilog names include ones that, as they are, would be confused with separators, such as escaped identifiers (`\a+b `).
 - **Block arguments:** declared like `bb3(%t5: i4<8>):` and passed like `br bb3(%t9)`.
@@ -708,8 +717,8 @@ The SIR verifier always runs in debug builds and CI. It checks the following.
 
 - Instructions for streaming and assignment patterns (P1; together with VALUE_SEMANTICS.md 8).
 - Layout of unpacked unions (4.2).
-- The rules of size and alignment that decide positions within frames (RUNTIME_ABI.md).
+- Frame size/alignment and reference/activation layout: P2, before P3 (RUNTIME_ABI.md). Evaluate 16-byte cells aligned to 8 bytes; measured layout and reference-token details require later review.
 - Instructions for classes, dynamic data, constrained random, assertions and coverage (P4).
 - How hierarchical references (upward, downward, `$root`, generate scopes) are resolved to slots at elaboration, and what happens when they cannot be (P1).
-- Fixing the grammar of the text form (by the end of P1; once fixed, `formatVersion` becomes 1).
+- Finalize format-1 grammar/schema, parser and roundtrip gates in P2 after P1 completion; then set `formatVersion` to 1 (approved direction, 2026-10-24; 9).
 - The table of correspondence for making each element from slang's API (written in P1 together with the implementation of `front`).

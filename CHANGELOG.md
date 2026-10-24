@@ -13,6 +13,15 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Documentation
 
+- Add planned phase P2 for SIR v1 and move C++ generation to P3, broader
+  testbench work to P4, and later switch/parallel/embedding work to P5;
+  execution tier numbers and the required P1 coverage stay unchanged.
+  Record the approved parallel-preparation/post-P1-freeze direction, complete
+  record format, common Op schema, service-based C boundary and analysis side
+  tables. Align specifications and roadmap guides with that decision. Exact
+  grammar, API entries/count and reference layout still need review; the
+  current formatVersion is 0 and C ABI is 0.3. No P2 runtime feature is added.
+
 - Align both READMEs, feature/support guides, architecture and pattern notes
   with the typed SIR/execution checkpoint. Add a verified queue-monitor example
   and distinguish current validation from historical renderer-stage results.

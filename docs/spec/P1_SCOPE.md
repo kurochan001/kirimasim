@@ -18,7 +18,10 @@ modeling, specify paths and timing facilities. This supersedes P4/P5 or
 out-of-scope labels for the required subset in SIR_SPEC, SCHEDULER_SPEC,
 SYSTEM_TASKS, VPI_SPEC, WAVEFORM and TEST_SUITE and the project summaries.
 Those labels retain their original meaning for work beyond this subset.
-P3 remains C++ generation. Other later-phase work, including constrained
+P3 remains C++ generation. The [P2 direction approved on 2026-10-24](../notes/sir-v1-proposal.md)
+permits parallel preparation and moves the final SIR v1 grammar/boundary freeze
+to P2 after P1 completion. P1 functional coverage, pass gates and existing
+expectations stay in place. Other later-phase work, including constrained
 randomization and UVM beyond the comparison scope, retains its existing plan.
 
 Preserve IEEE 1800 value and scheduling semantics, four-state defaults,

@@ -117,6 +117,12 @@ include all join kinds; automatic variables captured by children remain unsuppor
 | P4 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks, VPI, DPI-C | Planned; required subset advanced to P1 |
 | P5 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned; required subset advanced to P1 |
 
+P2's [approved direction](docs/notes/sir-v1-proposal.md) allows preparation
+alongside P1, with SIR v1 frozen only after P1 completes. It selects a complete
+record format, a shared Op schema and a service-based C boundary; exact grammar,
+API prototypes/count and reference layout remain under review. P2 is planned,
+formatVersion remains 0, ABI remains 0.3, and tier 2 implementation is P3.
+
 ### P1 exit criteria
 
 **P1 is not complete.** The approved [P1 scope](docs/spec/P1_SCOPE.md)
@@ -743,6 +749,8 @@ holds.
 | [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
 | [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model |
+| [docs/notes/phase-renumbering.md](docs/notes/phase-renumbering.md) | Phase mapping and preserved history/identifiers |
+| [docs/notes/sir-v1-proposal.md](docs/notes/sir-v1-proposal.md) | P2 approved direction, inventories and details awaiting review |
 | [docs/spec/VALUE_SEMANTICS.md](docs/spec/VALUE_SEMANTICS.md) | Values, operators, nets, strengths, gates and UDPs |
 | [docs/spec/SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) | The time slot, regions, waits, processes, disable, pending reports |
 | [docs/spec/UNSPECIFIED_BEHAVIOR.md](docs/spec/UNSPECIFIED_BEHAVIOR.md) | What kirimasim does where the standard leaves the result open |

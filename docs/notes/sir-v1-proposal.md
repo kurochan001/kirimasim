@@ -42,6 +42,13 @@ later review step. This record changes documentation only; it does not mark P2
 started or complete, approve the entire draft verbatim, or approve the pending
 P1 semantic proposals.
 
+**Documentation synchronization (2026-10-24):** the approved direction and
+post-P1/P2 freeze deadline are now reflected in SIR_SPEC 1/9/11, RUNTIME_ABI
+4.2/8 and P1_SCOPE, together with README, ARCHITECTURE and P1_SUPPORT. This
+updates the direction only; the detailed grammar, service API and reference
+layout in section 6 remain under review. The inventory in section 2 retains its
+original snapshot: the old P1 grammar deadline it records has since been amended.
+
 ## 1. Purpose and scope
 
 Make tier 2 (C++ AOT generation in **phase P3**) and a possible tier 3

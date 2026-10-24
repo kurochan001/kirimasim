@@ -14,6 +14,17 @@ On 2026-10-24, old P2→P3, old P3→P4 and old P4→P5; a new P2 is inserted. P
 
 tier 1 = VM; tier 2 = generated C++; tier 3 = possible JIT. Phase P3 implements tier 2. The decision whether to adopt tier 3 follows P3.
 
+## Subsequent approval and main integration (2026-10-24)
+
+After the phase mapping, the user approved the [P2 direction](sir-v1-proposal.md):
+parallel preparation with post-P1 freeze, complete records, shared Op schema,
+service-based C boundary and separate analysis tables. Exact grammar, API
+prototypes/count and reference layout remain under review. The renumbering,
+proposal and direction-approval commits (`d915150`, `dfd5f7c`, `cdbb4f6`) are
+integrated into main at `cdbb4f6`; no P2 runtime implementation was added.
+The original classification and changed-file counts below describe the
+renumbering commit, not this later documentation synchronization.
+
 ## Inventory and preserved occurrences
 
 Baseline: `c0388da`. Searching all tracked text with ASCII identifier boundaries (including phase tokens adjacent to Japanese) found 439 lines / 571 tokens: a=519 current plans, b=29 history, c=22 identifiers/protected entries, d=1 unrelated use. Line numbers below refer to that baseline. Mixed lines are classified by token, not by line.

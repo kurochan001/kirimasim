@@ -4,9 +4,19 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). The same day, 9.3.9 was brought up to date after the table of exit codes moved to the driver, and the colour flags that slang's `Driver` writes, with `front_parallel`, were added to 9.7 and 9.8 (approved). On 2026-10-21, where STDIN reads was added to item 10 of 9.3 (approved). The same day, slang's threads and the stack left were added to 5 (approved). On 2026-10-22, 9.7 was brought up to date: slang's colour flags are atomic, so front runs on several threads (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P3.
+**P2 boundary direction amendment (approved 2026-10-24):**
+[The selected P2 direction](../notes/sir-v1-proposal.md) prepares the shared
+SIR/kernel boundary alongside P1 and freezes it after P1 completion, before
+P3's C++ generator. Services cover all completed-P1 runtime operations, with
+reviewed host/inline exceptions. Tier 1 keeps direct C++ calls; public headers
+remain C++20. ABI 0.3 is current, 0.x continues during preparation, and ABI 1.0
+is the P2 exit target. Exact service entries/prototypes/count, reference-token
+layout and exceptions remain under review; the 181 candidate rows are not an
+approved public-function list.
 
-This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P3 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). The same day, 9.3.9 was brought up to date after the table of exit codes moved to the driver, and the colour flags that slang's `Driver` writes, with `front_parallel`, were added to 9.7 and 9.8 (approved). On 2026-10-21, where STDIN reads was added to item 10 of 9.3 (approved). The same day, slang's threads and the stack left were added to 5 (approved). On 2026-10-22, 9.7 was brought up to date: slang's colour flags are atomic, so front runs on several threads (approved). P1 checks draft execution semantics; P2 finalizes the shared boundary before P3 under the approved amendment above.
+
+This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. P1 checks tier 1 execution, P2 fixes the common boundary after P1 completion, and P3 validates tier 2 against it. Outstanding detailed contracts and corrections require human approval.
 
 ## 1. Purpose and principles
 
@@ -58,7 +68,7 @@ const kirima_module_table* kirima_get_module_table(uint32_t kernel_abi_major,
 
 ### 4.2 The kernel's function table
 
-The kernel gives generated code and the interpreter a table of function pointers (`kirima_kernel_api`). Generated code calls kernel functions only through this table (it does not link to them by symbol). What goes in the table (draft):
+The kernel gives separately built generated code (tiers 2 and 3) a table of function pointers (`kirima_kernel_api`). Tier 1 calls the C++ API directly, as specified below. Generated code calls kernel functions only through this table (it does not link to them by symbol). What goes in the table (draft):
 
 | Group | Content |
 | --- | --- |
@@ -74,6 +84,11 @@ The kernel gives generated code and the interpreter a table of function pointers
 - Tier 1 (`vm`) is built together with `kernel`, so it calls `kernel`'s C++ API directly, not through this table (rule of this document; `vm` may depend on `kernel`; ARCHITECTURE.md). Only generated code built separately and loaded (tiers 2 and 3) goes through the table. The table's functions and the C++ API call the same implementation, though; there are not two meanings.
 - Reading values, and computing inside static islands, do not go through the table; they read the slot storage directly (for speed). The Context gives the pointer to the start of the storage and the table of slot offsets.
 - Writes inside a static island to the island's outputs go through the table's functions when they are committed together (the design specification's rule of switching between two versions).
+
+The approved P2 direction groups missing operations into typed services and
+checks each VM API reference against that boundary. The [coverage inventory](../notes/sir-v1-proposal.md)
+is the starting point; service names/prototypes/count and host/inline exceptions
+remain subject to detailed review. This direction does not change ABI 0.3 today.
 
 ### 4.3 Resume functions and frames
 
@@ -237,9 +252,9 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 ## 8. Not confirmed, to be written later
 
-- Fixing the fields of the function table and the layout of the C structures (checked in the implementations of tier 1 in P1 and tier 2 in P3).
+- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2 after P1 completion, before P3. Current ABI 0.3 stays draft; ABI 1.0 is an exit target, not current implementation.
 - The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
-- How temporaries are allocated when the frame layout is shared between tiers.
+- Finalize shared frame layout and temporary/root lifetime in P2. Evaluate 16-byte cells aligned to 8 bytes; reference-token representation and measured layout require detailed review.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).
 - Class/mailbox/weak-reference GC extensions, fibers and DPI-C tasks;
   the dynamic-container heap and collection contract is specified in section 6.

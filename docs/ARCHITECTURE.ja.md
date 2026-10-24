@@ -35,6 +35,16 @@ flowchart TD
 
 slang は改変せず、1 つのコミットに固定したライブラリとして使います。修正は上流に送ります。
 
+## フェーズP2：tier 2の前にSIR v1を確定
+
+[2026-10-24承認の方針](notes/sir-v1-proposal.ja.md)に従い、P3のtier 2 C++生成器の前に、
+P2でSIRとカーネルの契約を確定します。P1と並行準備でき、凍結はP1完了後です。
+完全なrecord形式とパーサ、共通Op metadata、frame/寿命のdescriptor、型付きkernelサービスは
+既存のSIRを対象にします。解析結果はIDで引く別表に置き、アルゴリズムはP3で作ります。
+16byte cell・8byte整列は測定する基準案で、ref token・文法・API prototype/関数数の
+詳細はレビュー待ちです。tier 1はkernel C++ APIを直接呼び、公開ヘッダはC++20を保ちます。
+現行formatVersionは0、C ABIは0.3です。ABI 1.0はP2完了時の目標で、実装済みの版ではありません。
+
 ## 3 つの実行の層と、1 つのカーネル
 
 2026-10-24時点では、第1層と共有カーネルが[P1の対応一覧](P1_SUPPORT.ja.md)の
