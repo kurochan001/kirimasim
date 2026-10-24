@@ -315,6 +315,9 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 ### シミュレーションの速さ
 
+最新の比較は、[nvc と Lyra を含む 2026-10-24 の Linux（WSL2）の測定](#linux-でnvc-と-lyra-も含めて)です。
+最初の表は、別に行った 2026-10-23 の macOS の測定記録です。
+
 2026-10-23 に、[bench/](bench/) の 4 設計を、3 つのシミュレータすべてで
 各 5 回測り直しました。kirimasim `dec94ff`（release）、Icarus Verilog
 14.0 devel `b25510638`、Verilator 5.053 devel `2cb54975a` を使用しました。
@@ -362,7 +365,8 @@ Icarus Verilog 13.0 stable、Verilator 5.050、nvc 1.23.0、Lyra `a2313fd`（`ba
 - Lyra の既定の backend は C++ backend で、LLVM backend は別の列にしました。どちらも Lyra の既定の
   `-O 0` で、設計ごとに空のキャッシュへビルドしました。
 - ここでは `proc_wait` で kirimasim が Icarus Verilog 13.0 より遅くなりました。ビルドの時間、起動、
-  最大 RSS は[測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2での-5-つのシミュレータ2026-10-24)にあります。
+  サンプリングした Linux の RSS と再実行コマンドは
+  [測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2での-5-つのシミュレータ2026-10-24)にあります。
 
 ### できること
 

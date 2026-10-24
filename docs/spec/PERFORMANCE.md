@@ -100,6 +100,14 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 
 Implemented on 2026-10-20: the `bench` job of the nightly workflow times the release build of kirimasim, runs `tools/bench.py`, and compares with `tools/bench_report.py`, which also writes the night's record. It measures on Linux only; whether to measure on macOS too is not decided yet.
 
+**Implementation note (2026-10-25):** the merged benchmark tool samples Linux
+`/proc/<pid>/status` `VmHWM` every 10 ms and uses per-child `wait4` `ru_maxrss`
+on macOS. This differs from the `getrusage` acquisition method specified below;
+that approved requirement is left unchanged pending an explicit specification
+amendment. The [measurement record](../BENCHMARKS.md#five-simulators-on-linux-wsl2-2026-10-24)
+documents sampling limits and the break in Linux RSS history. This note
+records implementation status; it changes no acceptance criteria or thresholds.
+
 - A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. Whether it also measures on GitHub's macOS runner, which this public repository can use (checked 2026-10-18), is decided when this is implemented; until then macOS values are measured on the developer's Mac and attached to reports.
 - What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken with Python's `resource.getrusage(RUSAGE_CHILDREN)`; no new tool is installed.
 - Each benchmark runs 5 times and the median is used. The results are kept as JSON among the workflow's artifacts.

@@ -100,6 +100,14 @@
 
 2026-10-20 に実装した。夜間のワークフローの `bench` の job が、kirimasim の release のビルドの時間を測り、`tools/bench.py` を走らせ、`tools/bench_report.py` で比べる。その晩の記録も `tools/bench_report.py` が書く。測るのは Linux だけで、macOS でも測るかはまだ決めていない。
 
+**実装状況の注記（2026-10-25）：** 取り込んだ計測ツールは、Linux では
+`/proc/<pid>/status` の `VmHWM` を 10 ms 間隔で読み、macOS では子プロセスごとの
+`wait4` の `ru_maxrss` を使います。以下に規定した `getrusage` による取得方法とは異なります。
+承認済みの規定は、明示的な仕様修正まで変更しません。
+[測定記録](../BENCHMARKS.ja.md#linuxwsl2での-5-つのシミュレータ2026-10-24)に、
+サンプリングの制限と Linux の RSS 履歴が連続しなくなる点を記載しています。
+この注記は実装状況の記録であり、合否基準やしきい値を変更しません。
+
 - GitHub Actions の定時のワークフローで、Linux（x86-64）のランナーで毎晩 1 回測る。この公開のリポジトリで使える GitHub の macOS のランナー（2026-10-18 に確認）でも測るかは、実装するときに決める。それまでは、macOS の値は開発の Mac で測ったものを報告に添える。
 - 測るもの：ベンチマークごとの実行の実時間、最大 RSS、kirimasim 自身のビルドの時間（release）。最大 RSS は Python の `resource.getrusage(RUSAGE_CHILDREN)` で取り、新しいツールは入れない。
 - 各ベンチマークを 5 回走らせて中央値を使う。結果は JSON にしてワークフローの成果物として残す。

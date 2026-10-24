@@ -395,6 +395,9 @@ kirimasim stops; it fails no test.
 
 ### Simulation speed
 
+The latest comparison is the [2026-10-24 Linux (WSL2) run with nvc and Lyra](#on-linux-with-nvc-and-lyra).
+The first table preserves the separate 2026-10-23 macOS measurement.
+
 All three simulators were remeasured on 2026-10-23, five runs each, on the
 four designs under [bench/](bench/): kirimasim `dec94ff` (release), Icarus
 Verilog 14.0 devel `b25510638`, and Verilator 5.053 devel `2cb54975a`.
@@ -453,7 +456,7 @@ compared column by column.
   its own. Both run at Lyra's default `-O 0`, each design built into an empty
   cache.
 - Here kirimasim was slower than Icarus Verilog 13.0 on `proc_wait`. Build
-  times, startup and peak RSS are in the
+  times, startup, sampled Linux RSS and reproduction commands are in the
   [measurement details](docs/BENCHMARKS.md#five-simulators-on-linux-wsl2-2026-10-24).
 
 ### What works

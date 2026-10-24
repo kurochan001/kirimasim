@@ -2,18 +2,20 @@
 
 [日本語](BENCHMARKS.ja.md) · This English text is the main version.
 
-Remeasured on 2026-10-23 with tier 1 at `dec94ff21979` and the comparison
-simulators below. This supports the [README summary](../README.md); it does
-not change performance acceptance criteria.
+This record contains two separate tier 1 measurements: macOS on 2026-10-23
+at `dec94ff21979`, and [Linux (WSL2) on 2026-10-24](#five-simulators-on-linux-wsl2-2026-10-24)
+at `31160083c77d`, adding nvc and Lyra. It supports the
+[README summary](../README.md) without changing performance acceptance criteria.
 
 The execution-control options in [P1 features](P1_FEATURES.md), container
 integration, repeated event controls, aggregate capture/timing and wide gate-mask changes were added
-after these runs. Their performance has not been remeasured here. The latest
+after the macOS runs. The Linux run uses a later simulator revision;
+the macOS and short test-suite times below have not been refreshed. The latest
 [functional validation](notes/p1-icarus-progress.md) and
 [Icarus 13.0 feature comparison](notes/icarus-13-comparison.md) use newer
-sources; neither updates the timing or memory results below.
+sources; neither is itself a timing or memory measurement.
 
-## Conditions
+## macOS conditions (2026-10-23)
 
 - kirimasim 0.0.0, commit `dec94ff21979`, release build, `-O3 -DNDEBUG`,
   `-ffp-contract=off`, AppleClang 21.0.0.21000334. Default runtime options,
@@ -109,8 +111,8 @@ machine, and Icarus Verilog and Verilator at other versions.
   design built once into an empty cache; designs are compiled with clang 20.1.8.
 - AMD Ryzen 9 7950X (32 logical CPUs under WSL2), 110 GiB, Ubuntu 24.04.4 LTS
   on WSL2, kernel 6.18.33.1, glibc 2.39. Load average before the runs
-  0.17/0.53/1.68, and 0.17–1.24 during them; the runs were the only work on
-  the machine.
+  0.17/0.53/1.68, and 0.17–1.24 during them. The benchmark runs were sequential;
+  these load observations do not establish the absence of background work.
 
 Seconds (large-run median less the `+n=1` median). All 100 large runs of the
 five measured columns had exit status 0 and the expected line, and every
@@ -149,6 +151,42 @@ five measured columns had exit status 0 and the expected line, and every
   run's environment. The sampling change breaks direct comparison with that
   earlier Linux RSS history; macOS still uses `ru_maxrss`.
 - Raw data: [bench.json](measurements/2026-10-24-wsl2/bench.json).
+
+### Reproducing the Linux comparison
+
+Use the executable versions and build settings listed above. Set `KIRIMASIM`,
+`IVERILOG`, `VERILATOR`, `NVC` and `LYRA` to their executable paths; `vvp` must
+be next to `iverilog`. `LYRA_COMMIT` is the full commit of the Lyra build
+(`a2313fdc870702acf8e382adae0883036f54e3c3` for this record). Run this separately
+from other measurements:
+
+```sh
+python3 tools/bench.py --kirimasim "$KIRIMASIM" \
+  --iverilog "$IVERILOG" --verilator "$VERILATOR" --nvc "$NVC" \
+  --lyra "$LYRA" --lyra-llvm "$LYRA" --lyra-version "$LYRA_COMMIT" \
+  --runs 5 --out build/bench-five-simulators
+```
+
+`--lyra` uses the executable's default backend; `--lyra-llvm` explicitly
+selects LLVM. `--lyra-version` records the supplied commit because this Lyra
+executable has no `--version`. Building Lyra itself with `-c opt` does not
+change the design's default `-O 0` used by these commands.
+
+The tool writes `results.json` and `summary.md` even when a design fails and
+exits 1 if any result fails. With the recorded nvc version, that exit status
+is expected: inspect the per-design `stage` and `diagnostics` rather than
+treating an unsupported design as a zero-second run. Successful records keep
+the warmup, five small and five large samples, output lines, exit status and
+timeout flags. On Linux, `max_rss_mib` is a sampled `VmHWM` value; an
+unobserved value is `null`, not zero. `bench_report.py` still reads this same
+key and does not separate historical RSS acquisition methods automatically;
+interpret nightly RSS comparisons across the method change accordingly.
+
+The published JSON preserves the original samples; rerunning creates new
+measurements. Use the pinned simulator revision to reproduce this record;
+using a newer revision measures that revision instead. Do not use `--n` for
+the published comparison: it overrides the work counts and disables the
+full expected-checksum check.
 
 ## Short test-suite times
 
@@ -193,6 +231,9 @@ build plus run may differ from the total by 0.01 s.
 
 ## Raw data and reproduction
 
+- [Linux bench.json](measurements/2026-10-24-wsl2/bench.json): the six tool/backend
+  columns, including nvc's analysis failures, every successful run and build
+  commands. Reproduction is described in the Linux section above.
 - [bench.json](measurements/2026-10-23/bench.json): all five timing samples,
   medians, RSS, versions, load, options and SHA-256 hashes of the designs,
   script and kirimasim binary.
@@ -200,7 +241,8 @@ build plus run may differ from the total by 0.01 s.
 - [population.json](measurements/2026-10-23/population.json): per-test verdicts,
   times and SHA-256 hashes of the four runner files.
 
-Set the variables below to the executable/checkouts at the versions above.
+The commands below reproduce the older macOS and short test-suite measurements.
+Set the variables to the executable/checkouts at those recorded versions.
 `TESTS_REPO` is a kirimasim-tests clone containing `179c55de9c83`;
 `RUNNERS_REPO` is kirimasim-tests at `bc1609dc0055`. `SV_TESTS` is the pinned
 sv-tests checkout including its UVM submodule. Run the measurements
