@@ -1,0 +1,9 @@
+full 8 8 100110000 101111010 111000100 100001110
+range 4 4 xxxxxxxxx 100110000 101111010 xxxxxxxxx
+partial 5 5 100110000 101111010 1xxxxxxxx xxxxxxxxx
+before 0 0 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
+zero 0 0 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
+negative 0 0 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
+last 2 2 xxxxxxxxx xxxxxxxxx xxxxxxxxx 100110000
+omitted 4 4 100110000 101111010 xxxxxxxxx xxxxxxxxx
+after 0 0 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx

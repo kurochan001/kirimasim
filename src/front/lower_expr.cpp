@@ -2117,8 +2117,8 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
         m = &m->as<ast::AssignmentExpression>().left();
     const ast::Type& mt = m->type->getCanonicalType();
     const bool structs = structElement(mt) != nullptr;
-    std::optional<ArrayTarget> a;
     std::optional<Storage> base;
+    std::vector<sir::ArrayDim> remaining;
     sir::ArrayDim d;
     if (structs) {
         // One dimension of structures, whose leaves are slots or frame
@@ -2132,12 +2132,29 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
         if (!base || !base->elem.empty()) unsupported(sl, "$fread into a memory of this kind");
         d = {at->range.left, at->range.right};
     } else {
-        a = arrayTarget(*m);
-        if (!a || dimsOf(baseOf(*a)).size() != a->indices.size() + 1)
-            unsupported(sl, "$fread into a memory of this kind");
-        if (!sir::isIntegral(elemTypeOf(baseOf(*a))))
+        // storageOf captures a selected prefix before descriptor/start/count,
+        // including runtime indices, using the ordinary slot/frame/ref path.
+        base = storageOf(*m, sl);
+        if (!base) unsupported(sl, "$fread into a memory of this kind");
+        const auto memory = storageBase(*base);
+        const auto dims = dimsOf(memory);
+        if (dims.size() <= base->elem.size()) unsupported(sl, "$fread into a memory of this kind");
+        if (!sir::isIntegral(elemTypeOf(memory)))
             unsupported(sl, "$fread into a memory of this element type");
-        d = dimsOf(baseOf(*a)).back();
+        remaining.assign(dims.begin() + static_cast<std::ptrdiff_t>(base->elem.size()), dims.end());
+        d = remaining.back();
+        if (remaining.size() > 1) {
+            std::uint64_t elements = 1;
+            for (const auto dim : remaining) {
+                const auto size = static_cast<std::uint64_t>(std::max(dim.left, dim.right) -
+                                                             std::min(dim.left, dim.right)) +
+                                  1;
+                if (size > std::uint64_t{INT64_MAX} / elements)
+                    unsupported(sl, "$fread memory exceeds the storage size limit");
+                elements *= size;
+            }
+            d = {0, static_cast<std::int64_t>(elements - 1)};
+        }
     }
     const std::int64_t lo = std::min(d.left, d.right);
     const std::int64_t hi = std::max(d.left, d.right);
@@ -2187,10 +2204,33 @@ Val Lowerer::lowerFreadMemory(const ast::CallExpression& call, Type rt, slang::S
         e.dynamic = true;
         freadPlaces(e, mt.as<ast::FixedSizeUnpackedArrayType>().elementType, places, sl);
     } else {
-        std::vector<std::int64_t> idx = a->indices;
-        idx.push_back(lo);
-        Place p = elementPlace(baseOf(*a), idx);
-        p.indices.back() = at2.op;
+        const auto memory = storageBase(*base);
+        Place p;
+        p.kind = Place::Kind::Element;
+        p.home = memory.home;
+        p.slot = memory.slot;
+        p.frame = memory.frame;
+        p.type = elemTypeOf(memory);
+        p.indices = base->elem;
+        if (remaining.size() == 1) {
+            p.indices.push_back(at2.op);
+        } else {
+            std::vector<Operand> indices(remaining.size());
+            Val address = at2;
+            for (std::size_t i = remaining.size(); i-- > 0;) {
+                const auto dim = remaining[i];
+                const auto low = std::min(dim.left, dim.right);
+                const auto width = constant(
+                    i64, static_cast<std::uint64_t>(std::max(dim.left, dim.right) - low + 1));
+                const auto offset = emit(Op::Mod, i64, {address.op, width.op}, sl);
+                indices[i] =
+                    emit(Op::Add, i64,
+                         {offset.op, constant(i64, static_cast<std::uint64_t>(low)).op}, sl)
+                        .op;
+                address = emit(Op::Div, i64, {address.op, width.op}, sl);
+            }
+            p.indices.insert(p.indices.end(), indices.begin(), indices.end());
+        }
         p.elem.reset();
         places.push_back(std::move(p));
     }

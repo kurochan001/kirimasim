@@ -1,0 +1,9 @@
+full 6 6 1 0 1 0 1 0
+range 2 2 x 1 0 x x x
+partial 2 2 1 0 x x x x
+before 0 0 x x x x x x
+zero 0 0 x x x x x x
+negative 0 0 x x x x x x
+last 1 1 x x x x x 1
+omitted 2 2 1 0 x x x x
+after 0 0 x x x x x x

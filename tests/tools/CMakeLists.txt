@@ -236,6 +236,10 @@ add_test(NAME tools/gen_aggregate_bit_query_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_aggregate_bit_query_matrix.py --check)
 set_tests_properties(tools/gen_aggregate_bit_query_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_multidim_fread_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_multidim_fread_matrix.py --check)
+set_tests_properties(tools/gen_multidim_fread_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_file_not_open_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_file_not_open_matrix.py --check)
 set_tests_properties(tools/gen_file_not_open_matrix PROPERTIES LABELS Tools)

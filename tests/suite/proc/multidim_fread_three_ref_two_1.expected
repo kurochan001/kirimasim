@@ -1,0 +1,9 @@
+full 8 8 1 0 1 0 1 0 1 0
+range 2 2 1 1 0 1 1 1 1 1
+partial 2 2 1 0 1 1 1 1 1 1
+before 0 0 1 1 1 1 1 1 1 1
+zero 0 0 1 1 1 1 1 1 1 1
+negative 0 0 1 1 1 1 1 1 1 1
+last 1 1 1 1 1 1 1 1 1 1
+omitted 2 2 1 0 1 1 1 1 1 1
+after 0 0 1 1 1 1 1 1 1 1

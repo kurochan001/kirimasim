@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("multidimensional fread: does not advance the outer coordinate", "src/front/lower_expr.cpp",
+     "address = emit(Op::Div, i64, {address.op, width.op}, sl);",
+     "address = offset;"),
+    ("multidimensional fread: follows declared descending lower index", "src/front/lower_expr.cpp",
+     "const auto low = std::min(dim.left, dim.right);\n                const auto width",
+     "const auto low = dim.left;\n                const auto width"),
+    ("multidimensional fread: reads one leaf after count is exhausted", "src/front/lower_expr.cpp",
+     "emit(Op::Gt, sir::u2(1),\n                   {emit(Op::Fload, i64, {Operand::frame(left)}, sl).op, constant(i64, 0).op}, sl)",
+     "emit(Op::Ge, sir::u2(1),\n                   {emit(Op::Fload, i64, {Operand::frame(left)}, sl).op, constant(i64, 0).op}, sl)"),
     ("front: aggregate bit query bypasses streaming conversion", "src/front/lower_expr.cpp",
      'const Val v = bitstreamOf(*args[0], sl);\n                if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");',
      'const Val v = lowerExpr(*args[0]);\n                if (!sir::isIntegral(v.type)) unsupported(sl, name + " of this type");'),
