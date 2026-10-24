@@ -43,6 +43,13 @@ Release flags, banned features, SPDX, suite files, global state, expectation
 protection, README counts, clang-format and clang-tidy pass. Existing suite
 bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
 
+The [class investigation](class-execution-investigation.md) records 46 original
+programs separately: native has one model match, 42 unsupported forms, one
+output mismatch and two legality rejections. A known omission of unused class
+static-initializer side effects corrects the earlier blanket diagnostic claim.
+Reference failures/differences are not adopted as oracles. This neither changes
+the 87-item inventory nor adds class implementation or approved contracts.
+
 The same **87 original probes** now run against both installed references:
 
 - Icarus `13.0 (stable) (v13_0)`: 25 Icarus-passing gaps, four reference
@@ -1131,7 +1138,6 @@ mechanism addressed by the nested-bound extension above. At that
 stage, dev passed 2,120 tests: 2,118 pass and the same two known skips
 remain. Existing suite bodies and expected outputs were preserved.
 
-
 ## Published baseline before this extension (2026-10-23)
 
 The published baseline `6a1830a` includes the five delayed-NBA/packed-target/
@@ -1555,7 +1561,6 @@ not connected to these heap operations yet; SystemVerilog dynamic-array/queue
 support and automatic safe-point root publication remain unfinished. The
 44-probe inventory and its 23 Icarus-passing gaps therefore remain unchanged.
 This foundation does not complete the approved amendment or the P1 target.
-
 
 The final source validation at `3d7b1a4` passes `tools/local_ci.py`:
 dev/release/ASan/UBSan configure, build and tests; release flags; banned

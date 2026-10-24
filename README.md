@@ -31,9 +31,10 @@ for the specification, the tests, and review.** See
 > (compiling SIR to bytecode comes later). Classes,
 > constrained randomization, concurrent assertions, VPI and DPI-C
 > are not there yet. Tier 1 has had performance and memory fixes; C++
-> generation is planned for P2. Anything kirimasim does not
-> support yet stops the run with an "unsupported" error at its source
-> position; it is never skipped silently.
+> generation is planned for P2. Unsupported forms generally stop with a
+> positioned diagnostic. A known class static-initialization omission is
+> recorded in the [class investigation](docs/notes/class-execution-investigation.md);
+> successful execution alone does not establish support.
 
 UDP evaluation now accepts input counts beyond 32 through the shared kernel.
 [106 original sources and independent value checks](docs/notes/wide-udp-inputs.md)
@@ -143,6 +144,9 @@ The [shared automatic-storage and event proposal](docs/notes/automatic-capture-p
 records 32 original programs and remains pending review.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
 adds 59 original design observations, with legality boundaries kept separate.
+
+A separate [46-program class investigation](docs/notes/class-execution-investigation.md)
+records a known static-initialization mismatch. Class execution remains required P1 work.
 
 The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
 records 28 original programs and 56 reference observations separately from

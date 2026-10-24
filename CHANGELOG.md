@@ -11,6 +11,13 @@ No release yet. The Added section below sums up what works as of
 2026-10-18; from then on, each change a user can see has an entry of its
 own. CONTRIBUTING.md says what goes in this file.
 
+### Documentation
+
+- Record 46 original class observations and a known omission of unused class
+  static-initializer side effects. Correct the blanket unsupported-diagnostic
+  claim in both READMEs and document remaining class runtime work separately
+  from the 87-probe comparison. No class implementation is added.
+
 ### Fixed
 
 - Aggregate blocking and nonblocking assignments capture all RHS values

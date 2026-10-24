@@ -60,6 +60,15 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 `randcase` weights wider than 32 bits are not implemented.
 
+### Known class and static-initialization boundary
+
+The [46-program investigation](notes/class-execution-investigation.md) runs one
+property-free static function, while class object execution remains unsupported.
+An unused class static-property initializer can lose its side effects and exit
+0 without a diagnostic. This is a known defect; successful execution alone
+does not establish class support. These observations are separate from the
+87-probe comparison and the approved test suite.
+
 ### UDP input counts and compilation limits
 
 The fixed 32-input evaluator/transport limit is removed. [106 original sources](notes/wide-udp-inputs.md)
