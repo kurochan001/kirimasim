@@ -40,6 +40,21 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("kernel: pattern enum lookup ignores unknown bits", "src/kernel/pattern.cpp",
+     "if (lb != rb) return false;",
+     "if (lb != rb && false) return false;"),
+    ("kernel: positional pattern retains record names", "src/kernel/pattern.cpp",
+     "if (!positional && (current.kind == Kind::Record || current.kind == Kind::Union)) {",
+     "if ((!positional || positional) && (current.kind == Kind::Record || current.kind == Kind::Union)) {"),
+    ("kernel: pattern union prints all members", "src/kernel/pattern.cpp",
+     "current.kind == Kind::Union ? 1 : current.children.size()",
+     "current.children.size()"),
+    ("kernel: pattern keeps completed paths active", "src/kernel/pattern.cpp",
+     "active.erase(&current);",
+     "static_cast<void>(active.count(&current));"),
+    ("kernel: pattern string uses a C backspace escape", "src/kernel/pattern.cpp",
+     "switch (ch) {\n            case '\\n':",
+     "switch (ch) {\n            case '\\b': out += \"\\\\b\"; break;\n            case '\\n':"),
     ('fork declaration: declaration becomes a child process',
      'src/front/lower_stmt.cpp',
      '        if (stmts[i]->kind == ast::StatementKind::VariableDeclaration) continue;',
