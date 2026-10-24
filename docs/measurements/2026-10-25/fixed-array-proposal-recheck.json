@@ -1,0 +1,494 @@
+{
+  "date": "2026-10-25",
+  "scope": "Same 59 original proposal programs; historical records and expectations unchanged",
+  "results": [
+    {
+      "name": "input_net_1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "47175f2a94ef06224b1f48bb4b532665c705aab312324f5e0ddddaa758dca705",
+      "diagnostic": []
+    },
+    {
+      "name": "input_var_actual_1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "8d80b44d8b98375599af1a601bedf7e546c4c337cd9f8dbe8cbdfbfde864a1d8",
+      "diagnostic": []
+    },
+    {
+      "name": "output_net_1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "409f0a61419430c13610490f2f7bcfab95fa3ea653ad8076e90858ee45686a89",
+      "diagnostic": []
+    },
+    {
+      "name": "output_var_1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "dcbe6e46624887263421ddf55bfdddd705216a39119be2ee0be44a11d356584f",
+      "diagnostic": []
+    },
+    {
+      "name": "inout_1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "source_sha256": "43bfe6ff312caa59bbf5a2da31f4b07a66bdb66e558114d63f84bc1d1e02fce6",
+      "diagnostic": []
+    },
+    {
+      "name": "input_net_32",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "584011af2f576fc16755ff66482911ef9b1aa2ed26ff1ef730d6c13e03bb1feb",
+      "diagnostic": []
+    },
+    {
+      "name": "input_var_actual_32",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "707ad1891cc40895186cf1ad4d377e4715fd362d20900106833f5e2e97938958",
+      "diagnostic": []
+    },
+    {
+      "name": "output_net_32",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "3a5b4e3fbc38379f07aca36c5360ce961da9e2335251fe7726753d19917d997e",
+      "diagnostic": []
+    },
+    {
+      "name": "output_var_32",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "d483ebdf3291ef4c0a05e1a4494b2aa770896797675f709bf3c6138c5e85f7ee",
+      "diagnostic": []
+    },
+    {
+      "name": "inout_32",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "source_sha256": "1e696c8d64d7b99f84bcfd3c6eb76d821daf6bb7c416cf28e88a93f4f0f2bee8",
+      "diagnostic": []
+    },
+    {
+      "name": "input_net_65",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "6a78202b7e9d32c603cd6d699d959a6750fdaa60e6e0289c9bfa9685043e999a",
+      "diagnostic": []
+    },
+    {
+      "name": "input_var_actual_65",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "c8c6cd339ac095f399da1d1f1703365b4655b7d455f6c69dac38a6f26d52cb86",
+      "diagnostic": []
+    },
+    {
+      "name": "output_net_65",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "e180bc519d623c35d35d43f6adb339c628bf43a836e01a8617193a4462d76b0c",
+      "diagnostic": []
+    },
+    {
+      "name": "output_var_65",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "9f32594ecfd58006406a67f0ba4eadcb270c2c3ea110e35626d9cfebf1ff6039",
+      "diagnostic": []
+    },
+    {
+      "name": "inout_65",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "source_sha256": "45409013bf71dd9ea64c1457bf76e5ddc5f169cf0b9fdf00934db8e27f3d0f04",
+      "diagnostic": []
+    },
+    {
+      "name": "input_net_129",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "bcff6ea2f15ccc8a0242793ce85fb1c43cd0a08646a273122e55b59a0fedcaa6",
+      "diagnostic": []
+    },
+    {
+      "name": "input_var_actual_129",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "42f3cde9fec089b2a63b6948bb33f80c0ca5c3581b652b125fcd6f711e4d5b5e",
+      "diagnostic": []
+    },
+    {
+      "name": "output_net_129",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "fe07c5d5085d62dd3ab7367cd4d651c759d486e3ba8497eb57514322ba01b83b",
+      "diagnostic": []
+    },
+    {
+      "name": "output_var_129",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\n",
+      "source_sha256": "f427779d2007ecd8f9b64cbde503a5711725821b768a184169c0eee23f6adbd2",
+      "diagnostic": []
+    },
+    {
+      "name": "inout_129",
+      "status": "match",
+      "exit": 0,
+      "stdout": "start 1 1\nchange 1 1\nresolve 1 1\n",
+      "source_sha256": "01d4b711a361170d90c8a28685686f52793a691d7598745e2d8c7b6575929180",
+      "diagnostic": []
+    },
+    {
+      "name": "scalar_port_control",
+      "status": "match",
+      "exit": 0,
+      "stdout": "69\n",
+      "source_sha256": "b7924fcd0ce6a7ac972c43f192d6dbd5ad3f9ba5f98e52ff6eeeb76e8bd071e5",
+      "diagnostic": []
+    },
+    {
+      "name": "multidimensional",
+      "status": "match",
+      "exit": 0,
+      "stdout": "0 1 2 10 11 12 \n",
+      "source_sha256": "f23a85442d485e20e309077791da127baccf0ccd203f35db272052038a5dddb3",
+      "diagnostic": []
+    },
+    {
+      "name": "array_slice_connection",
+      "status": "different",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "6a6165dbf85d95ae9382377c37729c9a82e8e246abab56dd4820eb137e840910",
+      "diagnostic": [
+        "build/fixed-array-observations/array_slice_connection.sv:2:126: error: unsupported: assignment of this unpacked array value (not implemented yet)"
+      ]
+    },
+    {
+      "name": "instance_array_distribute",
+      "status": "match",
+      "exit": 0,
+      "stdout": "3 30\n",
+      "source_sha256": "e5a3cf8fbc19793cef4f2912ece6e3cca060d209c507d369325fe1355ee654ec",
+      "diagnostic": []
+    },
+    {
+      "name": "instance_array_replicate",
+      "status": "match",
+      "exit": 0,
+      "stdout": "16 16\n",
+      "source_sha256": "48d9cdb85acc4b7b5e5d42d3e7018636797bd3eeb5529858d77dbb1522c146ce",
+      "diagnostic": []
+    },
+    {
+      "name": "input_expression",
+      "status": "match",
+      "exit": 0,
+      "stdout": "7 9\n1 2\n",
+      "source_sha256": "dcfaa496dd973fc4c5c676bad525d16d0022bc6dd48bb878d4ce44e3c33c807b",
+      "diagnostic": []
+    },
+    {
+      "name": "two_state_output",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "12678a56822c69f74e6253c4e73cb8acb2c3b353fc3893fd5e179a395659f420",
+      "diagnostic": [
+        "build/fixed-array-observations/two_state_output.sv:2:122: error: value of type 'bit[64:0]$[3:2]' cannot be assigned to type 'logic[64:0]$[-2:-1]'"
+      ]
+    },
+    {
+      "name": "packed_struct_element",
+      "status": "match",
+      "exit": 0,
+      "stdout": "1 59 1 a6\n",
+      "source_sha256": "84702651b310ea11bb0d9e8b3c0e16521e20a1f4d0d1a3cffc26a8a7616a8660",
+      "diagnostic": []
+    },
+    {
+      "name": "real_variable_port",
+      "status": "match",
+      "exit": 0,
+      "stdout": "1.5 2.5\n",
+      "source_sha256": "919c0b5ab7c98457c267c4d40b9a30cf8f084c66d0c769ab9fd98701391ea202",
+      "diagnostic": []
+    },
+    {
+      "name": "string_variable_port",
+      "status": "match",
+      "exit": 0,
+      "stdout": "left right\n",
+      "source_sha256": "99e7ac7343d92ef35190015be610a1b54ed53531fa9b03c016251421be06c46b",
+      "diagnostic": []
+    },
+    {
+      "name": "program_input",
+      "status": "match",
+      "exit": 0,
+      "stdout": "7 9\n",
+      "source_sha256": "e6bbb136d912698d501508da29008510b29ecfb0e1e8cb7134972c02e690f55a",
+      "diagnostic": []
+    },
+    {
+      "name": "interface_input",
+      "status": "match",
+      "exit": 0,
+      "stdout": "7 9\n",
+      "source_sha256": "1b2dc8b22a17ebd4d46fd12308d98e27b6085269dfb20af6cb429b7c25adcd22",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_pull0",
+      "status": "match",
+      "exit": 0,
+      "stdout": "00 00\n",
+      "source_sha256": "9af5780e951c71258a5e2210e7b6f66cd887861d2a17994492821a31a65c6bdc",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_pull1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "ff ff\n",
+      "source_sha256": "c05ff89fb96de1f9058e4bf2f1275ad9a8006df205194173d4e16cba685789e0",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_z",
+      "status": "match",
+      "exit": 0,
+      "stdout": "zz zz\n",
+      "source_sha256": "94842d22e70c791dcfcf73eac3d1b8f09e0632d622c1af60dc0568e3dc9daada",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_output_inout",
+      "status": "match",
+      "exit": 0,
+      "stdout": "zz zz zz zz\n",
+      "source_sha256": "54d18fc49a0e3e8e2fce7413dd0420aab73a47309e945ac0abdb568beed587e6",
+      "diagnostic": []
+    },
+    {
+      "name": "multiple_driver",
+      "status": "match",
+      "exit": 0,
+      "stdout": "xx 5a\n",
+      "source_sha256": "df50b2755a61d948a231fe02f3dd7fdc1e3b33de4f257921c8e3e5e6488840b3",
+      "diagnostic": []
+    },
+    {
+      "name": "strength_resolution",
+      "status": "match",
+      "exit": 0,
+      "stdout": "00 ff\n",
+      "source_sha256": "4c13480084b8c2f142982734b163e8a9cebd58f1f8a385df3c7d1cfcb2234980",
+      "diagnostic": []
+    },
+    {
+      "name": "force_collapsed_element",
+      "status": "match",
+      "exit": 0,
+      "stdout": "ff ff 34\n12 12\n",
+      "source_sha256": "42c8bd0998462cd825de6020724d5a9c508ca28cc3ea09cb27bfa41a7361f2f3",
+      "diagnostic": []
+    },
+    {
+      "name": "invalid_dimension_count",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "925e1312d12143fce3c5dd996fb983c99b7324b4077c7268c34d501486fa41d9",
+      "diagnostic": [
+        "build/fixed-array-observations/invalid_dimension_count.sv:2:83: error: no implicit conversion from 'logic[7:0]$[4]' to 'logic[7:0]$[2][2]'; explicit conversion exists, are you missing a cast?"
+      ]
+    },
+    {
+      "name": "invalid_dimension_size",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "bd2f974effc1fc9646e1db5f72fd9b6ef0d8fba5f73ab4c7e379467521f16a3a",
+      "diagnostic": [
+        "build/fixed-array-observations/invalid_dimension_size.sv:2:80: error: value of type 'logic[7:0]$[2]' cannot be assigned to type 'logic[7:0]$[3]'"
+      ]
+    },
+    {
+      "name": "input_variable_explicit",
+      "status": "match",
+      "exit": 0,
+      "stdout": "7 9\n",
+      "source_sha256": "492656c29906c716537b97bd54e26d15218ee50eeb767bc3acc1216b345deedd",
+      "diagnostic": []
+    },
+    {
+      "name": "inout_variable_illegal",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "bdb4a05c25586c5231f6971fc3406c8988ca1c8b84a6cf09da6f52563147eafe",
+      "diagnostic": [
+        "build/fixed-array-observations/inout_variable_illegal.sv:2:81: error: 'a' cannot be connected to 'inout' port (only nets are allowed)"
+      ]
+    },
+    {
+      "name": "matching_bounds",
+      "status": "match",
+      "exit": 0,
+      "stdout": "27 81\n",
+      "source_sha256": "1ca1824bfe2f12fa609e9c1ad5f3af8c19f73e220043af67beb856e89b05dc6f",
+      "diagnostic": []
+    },
+    {
+      "name": "two_level_hierarchy",
+      "status": "match",
+      "exit": 0,
+      "stdout": "27 81\n",
+      "source_sha256": "e909934526585b1e2d53b3f7a48d2dd363c144b5613696d845e04b63654b505e",
+      "diagnostic": []
+    },
+    {
+      "name": "output_to_variable",
+      "status": "match",
+      "exit": 0,
+      "stdout": "7 9\n10 20\n",
+      "source_sha256": "0ad6c38c5a64a14773f9421c66b22fcda7b3f0e308e14edd637223444a964ae0",
+      "diagnostic": []
+    },
+    {
+      "name": "signed_element_conversion",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "af769818e5cf2e65eb0534ab167bf4d192c3ea2c5d208f75ce5f0a11e8c25334",
+      "diagnostic": [
+        "build/fixed-array-observations/signed_element_conversion.sv:2:92: error: value of type 'logic[7:0]$[2]' cannot be assigned to type 'logic signed[31:0]$[3:2]'"
+      ]
+    },
+    {
+      "name": "default_input_value",
+      "status": "match",
+      "exit": 0,
+      "stdout": "7 9\n",
+      "source_sha256": "f08186c1cc87b2f5018db4d062c1cd458c61cd0bf844a2dde64b17184113d2e7",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_weak_pull0",
+      "status": "match",
+      "exit": 0,
+      "stdout": "00 00\n",
+      "source_sha256": "e965779bcd8489f553551a1119528bc3ba446a51006d257c7524505893de4cd1",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_weak_pull1",
+      "status": "match",
+      "exit": 0,
+      "stdout": "ff ff\n",
+      "source_sha256": "32b6a47bcf1e70180ca068991ee20b9e65e2c29bfcdef6a701b9e0b51a9952be",
+      "diagnostic": []
+    },
+    {
+      "name": "unconnected_variable_pull",
+      "status": "match",
+      "exit": 0,
+      "stdout": "xx xx\n",
+      "source_sha256": "300c548b7e5082effb4f9d72b724f38f988b51369836187591eddacb5645de6a",
+      "diagnostic": []
+    },
+    {
+      "name": "input_variable_write_illegal",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "6113be7730d0cbac30db7aa14c977d27c6c7519a18eaf4f0e39bf4114514b9ff",
+      "diagnostic": [
+        "build/fixed-array-observations/input_variable_write_illegal.sv:2:49: error: cannot assign to input port 'p'"
+      ]
+    },
+    {
+      "name": "output_variable_writer_illegal",
+      "status": "legality_rejected",
+      "exit": 2,
+      "stdout": "",
+      "source_sha256": "483588eaaff72b3b577928c19c6dfba1597e87567b3358a827589440fb33214f",
+      "diagnostic": [
+        "build/fixed-array-observations/output_variable_writer_illegal.sv:2:111: error: cannot mix continuous and procedural assignments to variable 'a[0]' [-Wmixed-var-assigns]"
+      ]
+    },
+    {
+      "name": "one_element_change",
+      "status": "match",
+      "exit": 0,
+      "stdout": "1 2\n1 9\n",
+      "source_sha256": "f2eef4dfa8b82d579d72cc36332565292c2941c3ca8ba464fbd8a0290f18af81",
+      "diagnostic": []
+    },
+    {
+      "name": "output_bit_change",
+      "status": "match",
+      "exit": 0,
+      "stdout": "55 aa\n54 aa\n",
+      "source_sha256": "f397f3ab684cf05c895ee9605cb20c6b56a54fb0e80b0919bf690bdf3e247f45",
+      "diagnostic": []
+    },
+    {
+      "name": "two_state_compatible_output",
+      "status": "match",
+      "exit": 0,
+      "stdout": "1 1\n",
+      "source_sha256": "3e9c0bc855b60706e73c6ea265d635fd75f326496756a0658bb7114045fdd324",
+      "diagnostic": []
+    },
+    {
+      "name": "resolved_array_without_ports",
+      "status": "match",
+      "exit": 0,
+      "stdout": "xx 5a\n",
+      "source_sha256": "ce3a9ab71aa933505bad0c40de91d35098d106bc670511a9e19550bc88cc2baf",
+      "diagnostic": []
+    },
+    {
+      "name": "resolved_output_array",
+      "status": "match",
+      "exit": 0,
+      "stdout": "xx 5a\n",
+      "source_sha256": "a93a01cd323f748f8c0148fc1e6dee6f8b20b750682ae10681c01de45f5cf242",
+      "diagnostic": []
+    },
+    {
+      "name": "resolved_strength_array_without_ports",
+      "status": "match",
+      "exit": 0,
+      "stdout": "00 ff\n",
+      "source_sha256": "485d95503cbd20a35ec48945a4785635ac1c22d82860a92c0c43745144d4a8ea",
+      "diagnostic": []
+    }
+  ]
+}

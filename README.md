@@ -106,6 +106,13 @@ storage without becoming child processes. Declaration-only forks do not wait.
 [Scope and 72 original source cases](docs/notes/fork-local-declarations.md)
 include all join kinds; automatic variables captured by children remain unsupported.
 
+Fixed-array ports now share or copy corresponding elements while preserving
+each declaration's bounds. Net arrays resolve strengths per element with
+sparse private drivers. Constant-element force/release, delay and unconnected
+defaults/pulls are covered by [358 original cases](docs/notes/fixed-array-port-execution.md).
+On the unchanged 87 probes, Icarus-passing gaps fall 24 → 22 per reference;
+P1 remains incomplete.
+
 ### Phases
 
 | Phase | Content | Status |
@@ -144,20 +151,20 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory has 87 original probes. At the verified array/input checkpoint,
-Icarus `13.0 (stable) (v13_0)` has 24 passing gaps and four reference result
+inventory has 87 original probes. At the fixed-array-port checkpoint,
+Icarus `13.0 (stable) (v13_0)` has 22 passing gaps and four reference result
 mismatches. With `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are
-24 and seven.
+22 and seven.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
 would not by itself establish complete coverage; the inventory must expand
 as mechanisms and interfaces are checked.
-The earlier 84 statuses are unchanged. The two newly inventoried wide UDP
+At the earlier wide-UDP checkpoint, the prior 84 statuses were unchanged. The two newly inventoried wide UDP
 examples now pass both references and native execution. A new dense-coverage
 source still reaches the native subprocess bound. On the same expanded list,
 the retained baseline had 27/33 gaps and the wide-UDP checkpoint 25/31; the
-later array/input checkpoint has 24/24.
+later array/input checkpoint had 24/24; fixed-array ports now reduce this to 22/22.
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
 records 32 original programs and was approved on 2026-10-25; implementation remains work.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
@@ -212,11 +219,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-22 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 4,179 | 4,177, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 4,543 | 4,541, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 338, `tests/suite/` 3,640 (made by 134 generators under `tools/`), tools 142, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 342, `tests/suite/` 3,998 (made by 135 generators under `tools/`), tools 144, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

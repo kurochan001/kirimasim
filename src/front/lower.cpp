@@ -687,6 +687,9 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
     s.type = typeOf(*t, sl);
     s.kind = kind;
     s.dims = std::move(dims);
+    if (sir::elementCount(s) == 0 ||
+        sir::elementCount(s) > std::numeric_limits<std::uint32_t>::max())
+        unsupported(sl, "a fixed array beyond the SIR element-address range");
     s.instance = row.value_or(instance_);
     // A variable or argument of the subroutine being lowered belongs to it.
     if (b_.isSub) {
@@ -750,7 +753,8 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
     return id;
 }
 
-void Lowerer::noteWrite(const sir::SlotRange& r) {
+void Lowerer::noteWrite(const sir::SlotRange& logical) {
+    const sir::SlotRange r = sir::physicalRange(design_, logical);
     const sir::Slot& s = design_.slot(r.slot);
     if (b_.isSub) subWriteSites_[b_.sub].push_back({r, b_.at});
     std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.sub] : proc().writes;
@@ -760,7 +764,7 @@ void Lowerer::noteWrite(const sir::SlotRange& r) {
 }
 
 void Lowerer::noteRead(const sir::SlotRange& r) {
-    if (b_.actions == 0) b_.reads.push_back(r);
+    if (b_.actions == 0) b_.reads.push_back(sir::physicalRange(design_, r));
 }
 
 // --- Modules and procedures --------------------------------------------------
@@ -1099,9 +1103,7 @@ void Lowerer::resolveNets() {
         }
         const sir::SourceLoc where = design_.process(ps.front()).loc;
         if (!design_.slot(net).dims.empty()) {
-            ++numErrors_;
-            diags_ += whereOf(where) + ": error: unsupported: an array of nets with " +
-                      "several drivers (not implemented yet)\n";
+            resolveArrayNet(net, ps, where);
             continue;
         }
         const auto unknownSide = std::find_if(ps.begin(), ps.end(), [&](sir::ProcessId p) {
@@ -1376,16 +1378,37 @@ void Lowerer::mergePorts(const ast::InstanceSymbol& child) {
         const slang::SourceLocation sl = outer->sourceRange.start();
         try {
             const sir::SlotId s = slotOf(os->as<ast::ValueSymbol>(), sl);
-            sir::Slot& slot = design_.slot(s);
-            if (!slot.dims.empty() || inner.getType().getCanonicalType().isUnpackedArray() ||
-                slot.type != typeOf(inner.getType(), sl))
-                continue;
+            const sir::SlotId root = sir::physicalSlot(design_, s);
+            std::vector<sir::ArrayDim> dims;
+            const ast::Type& leaf = arrayElement(inner.getType(), dims);
+            const auto& actual = design_.slot(s);
+            if (actual.type != typeOf(leaf, sl) || actual.dims.size() != dims.size()) continue;
+            bool sameBounds = true;
+            bool sameShape = true;
+            for (std::size_t k = 0; k < dims.size(); ++k) {
+                const auto& a = actual.dims[k];
+                const auto& b = dims[k];
+                sameBounds = sameBounds && a.left == b.left && a.right == b.right;
+                const auto extent = [](sir::ArrayDim d) {
+                    return static_cast<std::uint64_t>(std::max(d.left, d.right)) -
+                           static_cast<std::uint64_t>(std::min(d.left, d.right));
+                };
+                sameShape = sameShape && extent(a) == extent(b);
+            }
+            if (!sameShape) continue;
             // slang gives the warnings of table 23-1 (-Wnet-inconsistent).
-            slot.kind = mergedKind(*innerKind, slot.kind);
-            slots_.emplace(&inner, s);
-            design_.names.push_back({inner.getHierarchicalPath(), s});
+            design_.slot(root).kind = mergedKind(*innerKind, design_.slot(root).kind);
+            sir::SlotId view = s;
+            if (!sameBounds) {
+                view = newSlot(inner, "", inner.getType(), {}, sl);
+                design_.slot(view).viewOf = root;
+                design_.slot(view).instance = instanceIds_.at(&child);
+            } else {
+                design_.names.push_back({inner.getHierarchicalPath(), s});
+            }
+            slots_.emplace(&inner, view);
             mergedPorts_.insert(conn);
-            mergedSlots_.insert(s);
+            mergedSlots_.insert(root);
         } catch (const Unsupported&) {
             continue;  // already reported
         }
@@ -1632,11 +1655,11 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         if (ext == nullptr) {
             // Unconnected: the port's net or variable keeps its initial
             // value, unless the port has a default (23.2.2.4) or is pulled.
-            if (ps.getInitializer() != nullptr)
-                report(ps.location, "default value of an unconnected port");
-            else
+            ext = ps.getInitializer();
+            if (ext == nullptr) {
                 pullUnconnected(child, ps);
-            continue;
+                continue;
+            }
         }
         const ast::Symbol* internal = ps.internalSymbol;
         if (internal == nullptr || !inSlot(*internal)) {
@@ -1657,7 +1680,15 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         switch (ps.direction) {
             case ast::ArgumentDirection::In:
                 lowerCont(name, sl, child, [&] {
-                    if (!design_.slot(s).dims.empty()) unsupported(sl, "unpacked array port");
+                    if (!design_.slot(s).dims.empty()) {
+                        Storage dst;
+                        dst.slot = s;
+                        Stores stores;
+                        assignAggregate(dst, internal->as<ast::ValueSymbol>().getType(), *ext,
+                                        stores, sl);
+                        flushStores(stores, false, sl);
+                        return;
+                    }
                     const sir::Type t = design_.slot(s).type;  // before lowering adds slots
                     const Val v = coerce(lowerExpr(*ext), t, sl);
                     emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, sl);
@@ -1666,7 +1697,16 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
                 break;
             case ast::ArgumentDirection::Out:
                 lowerCont(name, sl, child, [&] {
-                    if (!design_.slot(s).dims.empty()) unsupported(sl, "unpacked array port");
+                    if (!design_.slot(s).dims.empty()) {
+                        const auto dst = storageOf(*outputPlace(ext), sl);
+                        if (!dst) unsupported(sl, "this unpacked array output connection");
+                        Storage src;
+                        src.slot = s;
+                        Stores stores;
+                        copyArrayStorage(*dst, src, stores, sl);
+                        flushStores(stores, false, sl);
+                        return;
+                    }
                     const ast::Expression& place = *outputPlace(ext);
                     const Val v =
                         emit(sir::Op::Load, design_.slot(s).type, {sir::Operand::slot(s)}, sl);
@@ -1709,7 +1749,7 @@ void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortS
     if (it == slots_.end()) return;  // its declaration was reported
     const sir::SlotId s = it->second;
     const sir::Type t = design_.slot(s).type;
-    if (!design_.slot(s).dims.empty() || !sir::isIntegral(t)) {
+    if (!sir::isIntegral(t)) {
         report(ps.location, "unpacked array port left unconnected under `unconnected_drive");
         return;
     }
@@ -1721,7 +1761,16 @@ void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortS
               [&] {
                   const Val v = constantWords(t, std::vector<std::uint64_t>(words, word),
                                               std::vector<std::uint64_t>(words, 0));
-                  emitVoid(sir::Op::Store, {sir::Operand::slot(s), v.op}, ps.location);
+                  const bool array = !design_.slot(s).dims.empty();
+                  const auto count = sir::elementCount(design_.slot(s));
+                  for (std::uint32_t e = 0; e < count; ++e) {
+                      auto target = sir::Operand::slot(s);
+                      if (array) {
+                          target.firstElem = e;
+                          target.numElems = 1;
+                      }
+                      emitVoid(sir::Op::Store, {target, v.op}, ps.location);
+                  }
                   noteWrite({s, 0, 0, 0, 0});
               },
               {5, 5});
@@ -1837,7 +1886,8 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
             // The sides it drives, for the net's side slot when the net
             // resolves (SIR_SPEC.md 3.5): no 1 side for L, no 0 side for H.
             // resolveNets keeps these instructions or removes them.
-            const bool net = p.kind == Place::Kind::Slot || p.kind == Place::Kind::Bits;
+            const bool net = p.kind == Place::Kind::Slot || p.kind == Place::Kind::Bits ||
+                             (p.kind == Place::Kind::Element && p.home == Place::Home::Slot);
             if (!net || design_.slot(p.slot).kind == sir::SlotKind::Var) return;
             const std::uint32_t w = design_.slot(p.slot).type.width;
             const bool fixed = p.kind == Place::Kind::Slot

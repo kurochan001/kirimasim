@@ -346,6 +346,15 @@ std::string toText(const Design& d) {
         if (s.driverOf != kNone)
             out += " driver-of=%s" + std::to_string(s.driverOf.index()) + " strength=(" +
                    std::to_string(s.strength1) + "," + std::to_string(s.strength0) + ")";
+        if (s.viewOf != kNone) out += " view-of=%s" + std::to_string(s.viewOf.index());
+        if (!s.driverElements.empty()) {
+            out += " driver-elements=[";
+            for (std::size_t k = 0; k < s.driverElements.size(); ++k) {
+                if (k != 0) out += ",";
+                out += std::to_string(s.driverElements[k]);
+            }
+            out += "]";
+        }
         out += slotFlags(s.flags) + "\n";
     }
     for (const NameEntry& n : d.names) {

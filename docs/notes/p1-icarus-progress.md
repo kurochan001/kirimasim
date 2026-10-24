@@ -13,6 +13,14 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Fixed-array port implementation (2026-10-25):** the [execution record](fixed-array-port-execution.md)
+covers 358 sources, four SIR tests, fourteen boundary checks and eight compiled
+negative controls. The same 87 probes now have 22 passing gaps per reference
+and unchanged four/seven reference mismatches. The proposal's 59 designs now
+have 51 matches, seven legality rejections and one unsupported partial-array
+port. Sv-tests remains 244/344; population remains 1,451/1,466, zero failures
+and 15 unsupported. Pre-implementation statements below retain their checkpoint dates.
+
 **Further approval (2026-10-25):** the user approved all six remaining detailed
 [execution contracts](p1-execution-contracts-2026-10-25.md). They are normative
 amendments now; implementation proceeds separately, starting with complete-state

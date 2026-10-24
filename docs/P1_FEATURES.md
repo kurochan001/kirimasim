@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1 as of 2026-10-24. P1 is still in progress;
+These examples describe tier 1 as of 2026-10-25. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), save one example at a time as
@@ -16,6 +16,16 @@ build/dev/src/driver/kirimasim demo.sv
 
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
+
+## Fixed-array ports
+
+Fixed-array input/output and compatible net inout ports match elements in
+declaration order. Connecting parent `wire [7:0] a[4:5]` to child
+`input wire [7:0] p[7:6]` shares `a[4]` with `p[7]` and `a[5]` with `p[6]`;
+`$left(p)` remains 7. Variable connections use the aggregate snapshot/copy
+path and react to individual element changes. See the
+[verification and limits](notes/fixed-array-port-execution.md), including
+strengths, force/release, pulls/defaults and program origin.
 
 ## UDP inputs beyond 32
 

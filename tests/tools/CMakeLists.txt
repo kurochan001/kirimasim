@@ -564,3 +564,12 @@ set_tests_properties(tools/array_ordering_keys PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_delayed_gate_state_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_delayed_gate_state_matrix.py --check)
 set_tests_properties(tools/gen_delayed_gate_state_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_fixed_array_port_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_fixed_array_port_matrix.py --check)
+set_tests_properties(tools/gen_fixed_array_port_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/fixed_array_port_boundary
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_fixed_array_port_boundary.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/fixed_array_port_boundary PROPERTIES LABELS Tools)

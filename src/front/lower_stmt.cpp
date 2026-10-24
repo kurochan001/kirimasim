@@ -828,7 +828,7 @@ std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs
             unsupported(sl, "assign or force of a value that is not integral");
         // A net merged with another through a port would be held on both
         // sides (SCHEDULER_SPEC.md 14.4).
-        if (mergedSlots_.contains(p.slot))
+        if (slot.dims.empty() && mergedSlots_.contains(sir::physicalSlot(design_, p.slot)))
             unsupported(sl, "assign or force of a net connected through a port");
         Operand o = Operand::slot(p.slot);
         std::uint32_t w = slot.type.width;

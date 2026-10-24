@@ -11,7 +11,7 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-25, including runtime array reduction/ordering/min/max, multidimensional integral
+This inventory describes tier 1 as of 2026-10-25, including fixed-array ports and element-wise net resolution, runtime array reduction/ordering/min/max, multidimensional integral
 binary input, fixed-aggregate bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
 and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
@@ -57,7 +57,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
 | Primitives | Built-in logic gates and pulls; combinational and sequential UDPs | No MOS/bidirectional switches or UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
-| Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a net connected through a port |
+| Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a scalar net connected through a port; constant array elements are supported |
 | Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
 | Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
 
@@ -144,12 +144,17 @@ remain unsupported and are explicitly measured in the expanded comparison.
 The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
 was approved on 2026-10-25; automatic event variables are still unsupported.
 
-### Fixed-array port boundary
+### Fixed-array ports and net arrays
 
-Whole fixed unpacked array ports and arrays of nets requiring resolution
-remain unsupported. Unconnected arrays without pulls have existing defaults.
-The [array-port and resolution contract proposal](notes/fixed-array-ports-proposal.md)
-records original observations and was approved on 2026-10-25; implementation remains work.
+Whole fixed-unpacked input/output ports and compatible net inout connections
+execute in declaration order, including differing bounds/directions and rank
+two. Copies capture the complete RHS first. Typed alias views, element-wise
+strength resolution, sparse private drivers, constant-element force/release
+and inertial delay, unconnected defaults and pulls share the existing kernel.
+Supported integral/real/shortreal/string values and program origin are retained.
+See [implementation and 358-source validation](notes/fixed-array-port-execution.md).
+Partial-array/ref ports, resolved array three-state sides and explicit array
+aliases remain work. Strict two-state-net/chandle-port diagnostics stay enabled.
 
 ### Program completion
 

@@ -103,6 +103,12 @@ struct Slot {
     SlotId driverOf = kNone;
     std::uint8_t strength1 = 6;
     std::uint8_t strength0 = 6;
+    /// A whole-net alias view: own declared bounds, same physical elements
+    /// in declaration order. The target is an earlier non-view net slot.
+    SlotId viewOf = kNone;
+    /// Compact array driver: private ordinal -> physical net ordinal.
+    /// Empty for scalar drivers and ordinary slots.
+    std::vector<std::uint32_t> driverElements;
 };
 
 /// A row of the name table: a hierarchical name and the slot it denotes.
@@ -731,8 +737,12 @@ InitValue initialValue(SlotKind k);
 /// first write (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5). Every tier
 /// starts them so.
 std::vector<SlotRange> unknownAtStart(const Design& d);
-/// Number of elements of a slot (1 for a slot that is not an array).
+/// Number of elements (1 for a scalar); 0 when the product overflows.
 std::uint64_t elementCount(const Slot& s);
+/// Physical storage of a verified slot; views point directly to a root.
+SlotId physicalSlot(const Design& d, SlotId s);
+/// Canonicalize a range without changing declaration-order ordinals.
+SlotRange physicalRange(const Design& d, SlotRange r);
 /// Number of elements of a frame variable (1 if it is not an array).
 std::uint64_t elementCount(const FrameVar& f);
 /// Whether range `outer` holds every bit of range `inner`, both of slot s

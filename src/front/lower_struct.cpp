@@ -229,6 +229,59 @@ void Lowerer::assignStruct(Storage dst, const ast::Type& t, const ast::Expressio
 
 void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expression& rhs,
                               Stores& out, slang::SourceLocation sl) {
+    const ast::Expression& expression = unwrapAggregate(rhs);
+    if (t.getCanonicalType().kind == ast::SymbolKind::FixedSizeUnpackedArrayType &&
+        expression.kind == ast::ExpressionKind::ConditionalOp) {
+        const auto& conditional = expression.as<ast::ConditionalExpression>();
+        if (conditional.conditions.size() != 1 || conditional.conditions[0].pattern != nullptr)
+            unsupported(sl, "aggregate conditional with a pattern");
+        Val condition = lowerExpr(*conditional.conditions[0].expr);
+        if (condition.type.width != 1 || sir::isSigned(condition.type))
+            condition =
+                emit(sir::Op::Truth, sir::isFourState(condition.type) ? sir::u4(1) : sir::u2(1),
+                     {condition.op}, sl);
+        const auto first = newBlock(), notOne = newBlock(), second = newBlock(), both = newBlock(),
+                   join = newBlock();
+        const auto one =
+            emit(sir::Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 1).op}, sl);
+        terminate(sir::Op::BrIf, {one.op, sir::Operand::block(first), sir::Operand::block(notOne)},
+                  sl);
+        setBlock(notOne);
+        const auto zero =
+            emit(sir::Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 0).op}, sl);
+        terminate(sir::Op::BrIf, {zero.op, sir::Operand::block(second), sir::Operand::block(both)},
+                  sl);
+        setBlock(first);
+        Stores left;
+        assignAggregate(dst, t, conditional.left(), left, sl);
+        const auto branch = [&](const Stores& values) {
+            std::vector<sir::Operand> args{
+                sir::Operand::block(join, static_cast<std::uint32_t>(values.size()))};
+            for (const auto& [place, value] : values)
+                args.push_back(value.op);
+            terminate(sir::Op::Br, std::move(args), sl);
+        };
+        for (const auto& [place, value] : left)
+            out.emplace_back(place, blockParam(join, value.type));
+        branch(left);
+        setBlock(second);
+        Stores right;
+        assignAggregate(dst, t, conditional.right(), right, sl);
+        branch(right);
+        setBlock(both);
+        left.clear();
+        right.clear();
+        assignAggregate(dst, t, conditional.left(), left, sl);
+        assignAggregate(dst, t, conditional.right(), right, sl);
+        for (std::size_t k = 0; k < left.size(); ++k)
+            left[k].second =
+                snapshotValue(emit(sir::Op::Select, left[k].second.type,
+                                   {condition.op, left[k].second.op, right[k].second.op}, sl),
+                              sl);
+        branch(left);
+        setBlock(join);
+        return;
+    }
     if (unpackedStruct(t) != nullptr) {
         assignStruct(std::move(dst), t, rhs, out, sl);
         return;

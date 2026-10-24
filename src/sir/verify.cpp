@@ -408,27 +408,51 @@ private:
                 error(where, "a container slot must be a variable");
             if (s.type.kind == TypeKind::Void) error(where, "slot has type void");
             if (isIntegral(s.type) && s.type.width == 0) error(where, "integral slot has width 0");
-            if (s.driverOf != kNone) {
-                // A driver slot (SIR_SPEC.md 3.5): the shape of its net.
-                if (s.driverOf.index() >= d_.slots.size() ||
-                    d_.slot(s.driverOf).kind == SlotKind::Var ||
-                    d_.slot(s.driverOf).type != s.type || !d_.slot(s.driverOf).dims.empty() ||
-                    !s.dims.empty())
-                    error(where, "a driver slot drives a net of its own type");
-                if (s.strength1 > 7 || s.strength0 > 7) error(where, "strength out of range");
-            }
-            if (!s.dims.empty()) {
-                std::uint64_t n = 1;
-                for (const ArrayDim& dim : s.dims) {
-                    const std::int64_t span =
-                        dim.left < dim.right ? dim.right - dim.left : dim.left - dim.right;
-                    n *= static_cast<std::uint64_t>(span) + 1;
-                    if (span < 0 || n > 0xffffffffULL) {
-                        error(where, "array is too large");
-                        break;
+            if (s.viewOf != kNone) {
+                bool ok = s.viewOf.index() < i && s.kind != SlotKind::Var && s.driverOf == kNone &&
+                          !s.dims.empty() &&
+                          (isIntegral(s.type) || s.type.kind == TypeKind::Real ||
+                           s.type.kind == TypeKind::ShortReal || s.type.kind == TypeKind::String ||
+                           s.type.kind == TypeKind::Chandle);
+                if (ok) {
+                    const Slot& root = d_.slot(s.viewOf);
+                    ok = root.viewOf == kNone && root.driverOf == kNone &&
+                         root.kind != SlotKind::Var && root.type == s.type &&
+                         root.dims.size() == s.dims.size();
+                    for (std::size_t k = 0; ok && k < s.dims.size(); ++k) {
+                        Slot a, b;
+                        a.dims = {s.dims[k]};
+                        b.dims = {root.dims[k]};
+                        ok = elementCount(a) == elementCount(b);
                     }
                 }
+                if (!ok) error(where, "a net view must match an earlier physical net's shape");
             }
+            if (s.driverOf != kNone) {
+                bool ok = s.driverOf.index() < d_.slots.size() && s.viewOf == kNone;
+                if (ok) {
+                    const Slot& net = d_.slot(s.driverOf);
+                    const bool scalar = s.dims.empty() && net.dims.empty() &&
+                                        s.driverElements.empty() && s.type == net.type;
+                    bool array =
+                        !net.dims.empty() && s.dims.size() == 1 && s.dims[0].left == 0 &&
+                        elementCount(s) == s.driverElements.size() && !s.driverElements.empty() &&
+                        isIntegral(net.type) &&
+                        s.type == (isFourState(net.type) ? net.type : otherDomain(net.type));
+                    for (std::size_t k = 0; array && k < s.driverElements.size(); ++k)
+                        array = s.driverElements[k] < elementCount(net) &&
+                                (k == 0 || s.driverElements[k - 1] < s.driverElements[k]);
+                    ok = net.kind != SlotKind::Var && net.viewOf == kNone &&
+                         net.driverOf == kNone && (scalar || array);
+                }
+                if (!ok)
+                    error(where, "a driver slot drives a net of its own type and valid coverage");
+                if (s.strength1 > 7 || s.strength0 > 7) error(where, "strength out of range");
+            } else if (!s.driverElements.empty()) {
+                error(where, "driver elements require a driver net");
+            }
+            if (elementCount(s) == 0 || elementCount(s) > 0xffffffffULL)
+                error(where, "array is too large");
         }
     }
 
@@ -1047,7 +1071,7 @@ private:
                 target = elementTarget(body, in, tempType);
             bool covered = false;
             for (const SlotRange& w : body.process->writes)
-                covered = covered || covers(d_.slots[o.id], w, target);
+                covered = covered || rangeCovered(d_.slots[o.id], w, target);
             if (!covered) bad("writes %s" + std::to_string(o.id) + " outside the write set");
         }
 
@@ -1341,7 +1365,7 @@ private:
                     bool covered = false;
                     if (body.process)
                         for (const SlotRange& w : body.process->writes)
-                            covered = covered || covers(slot, w, side);
+                            covered = covered || rangeCovered(slot, w, side);
                     if (!covered) bad("side target writes outside the write set");
                 }
                 break;
@@ -1851,7 +1875,7 @@ private:
                 const SlotRange target{o.asSlot(), o.firstElem, o.numElems, o.lsb, o.width};
                 bool covered = false;
                 for (const SlotRange& w : body.process->writes)
-                    covered = covered || covers(d_.slots[o.id], w, target);
+                    covered = covered || rangeCovered(d_.slots[o.id], w, target);
                 if (!covered) bad("writes %s" + std::to_string(o.id) + " outside the write set");
                 break;
             }
@@ -2070,6 +2094,17 @@ private:
             bad(std::string(kindName(kind)) + " @" + std::to_string(o.id) + " reads another frame");
     }
 
+    bool rangeCovered(const Slot& shape, SlotRange outer, SlotRange inner) const {
+        const auto canonical = [&](SlotId id) {
+            if (id.index() >= d_.slots.size()) return id;
+            const SlotId view = d_.slot(id).viewOf;
+            return view != kNone && view.index() < d_.slots.size() ? view : id;
+        };
+        outer.slot = canonical(outer.slot);
+        inner.slot = canonical(inner.slot);
+        return covers(shape, outer, inner);
+    }
+
     // Rule 6, second half: what an always_comb, always_latch or always_ff
     // writes, no other process writes; a uwire has one driver; a variable
     // has at most one continuous assignment. The writes of each slot are
@@ -2094,7 +2129,10 @@ private:
                     continue;
                 const auto [elemLo, elemHi] = extent(r.firstElem, r.numElems);
                 const auto [bitLo, bitHi] = extent(r.lsb, r.width);
-                writes.push_back({r.slot, elemLo, elemHi, bitLo, bitHi, static_cast<ProcessId>(i),
+                const SlotId view = d_.slot(r.slot).viewOf;
+                const SlotId physical =
+                    view != kNone && view.index() < d_.slots.size() ? view : r.slot;
+                writes.push_back({physical, elemLo, elemHi, bitLo, bitHi, static_cast<ProcessId>(i),
                                   static_cast<std::uint32_t>(k), writerOf(ps[i], r)});
             }
         }

@@ -3,6 +3,7 @@
 
 #include "kirimasim/sir/types.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 
@@ -77,24 +78,29 @@ std::vector<SlotRange> unknownAtStart(const Design& d) {
     return out;
 }
 
-std::uint64_t elementCount(const Slot& s) {
+namespace {
+std::uint64_t checkedElements(const std::vector<ArrayDim>& dims) {
     std::uint64_t n = 1;
-    for (const ArrayDim& d : s.dims) {
-        const std::int64_t lo = d.left < d.right ? d.left : d.right;
-        const std::int64_t hi = d.left < d.right ? d.right : d.left;
-        n *= static_cast<std::uint64_t>(hi - lo) + 1;
+    for (const ArrayDim& d : dims) {
+        const auto lo = static_cast<std::uint64_t>(std::min(d.left, d.right));
+        const auto hi = static_cast<std::uint64_t>(std::max(d.left, d.right));
+        const std::uint64_t span = hi - lo;
+        if (span == UINT64_MAX || n > UINT64_MAX / (span + 1)) return 0;
+        n *= span + 1;
     }
     return n;
 }
+}  // namespace
 
-std::uint64_t elementCount(const FrameVar& f) {
-    std::uint64_t n = 1;
-    for (const ArrayDim& d : f.dims) {
-        const std::int64_t lo = d.left < d.right ? d.left : d.right;
-        const std::int64_t hi = d.left < d.right ? d.right : d.left;
-        n *= static_cast<std::uint64_t>(hi - lo) + 1;
-    }
-    return n;
+std::uint64_t elementCount(const Slot& s) { return checkedElements(s.dims); }
+std::uint64_t elementCount(const FrameVar& f) { return checkedElements(f.dims); }
+
+SlotId physicalSlot(const Design& d, SlotId s) {
+    return d.slot(s).viewOf == kNone ? s : d.slot(s).viewOf;
+}
+SlotRange physicalRange(const Design& d, SlotRange r) {
+    r.slot = physicalSlot(d, r.slot);
+    return r;
 }
 
 const char* opName(Op op) {

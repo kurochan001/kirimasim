@@ -733,6 +733,10 @@ public:
         } hook{*this, sched_, sched_.setSafePointHook({})};
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
+            if (s.viewOf != sir::kNone) {
+                kernelSlots_.push_back(kernelSlots_[s.viewOf.index()]);
+                continue;
+            }
             const sir::Domain dom = sir::domainOf(s.type);
             kernelSlots_.push_back(store_.add(
                 kernelDomain(dom), s.type.width, static_cast<std::uint32_t>(sir::elementCount(s)),
@@ -779,11 +783,11 @@ public:
         std::vector<bool> driven(d_.slots.size(), false);
         for (const sir::Process& proc : d_.processes)
             for (const sir::SlotRange& w : proc.drives)
-                driven[w.slot.index()] = true;
+                driven[sir::physicalSlot(d_, w.slot).index()] = true;
         for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
             if ((d_.slots[i].flags & sir::kForceTarget) != 0)
                 sched_.markHeld(kernelSlot(sir::SlotId{i}), d_.slots[i].kind != sir::SlotKind::Var,
-                                driven[i]);
+                                driven[sir::physicalSlot(d_, sir::SlotId{i}).index()]);
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
         // Each is a process of the kernel, with a pending queue whose

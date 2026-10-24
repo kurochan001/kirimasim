@@ -4,6 +4,14 @@
 array/input checkpoint `b9906081`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
+## Fixed-array port follow-up (2026-10-25)
+
+The [implementation and boundaries](fixed-array-port-execution.md) make
+`fixed_array_ports` and `resolved_net_array` pass in the unchanged 87 probes.
+Icarus-passing gaps fall 24 → 22 per reference; every reference status and
+the four/seven reference mismatches remain unchanged, as do older native
+passing judged bytes. Complete P1 coverage remains unconfirmed.
+
 ## Complete-state delayed-gate follow-up (2026-10-25)
 
 Source `20274407` preserves every engine status and passing judged byte in the
@@ -14,7 +22,7 @@ Eight separate [known-state gate observations](../measurements/2026-10-25/delaye
 pass both references and the new native and are rejected by the older native.
 Two nonzero-delay side-only cases retain the explicitly approved project-policy
 difference; a zero-delay case agrees with both references. See the
-[implementation, validation and pending oracle review](delayed-gate-state-execution.md).
+[implementation and approved oracle integration](delayed-gate-state-execution.md).
 These additions do not establish complete P1 parity. Earlier checkpoints below
 retain their original revisions and results.
 

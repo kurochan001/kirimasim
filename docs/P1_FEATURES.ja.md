@@ -4,7 +4,7 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-24 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
+2026-10-25 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
 [開発用のビルド](../README.ja.md)の後、例を 1 つずつ `demo.sv` に保存し、
@@ -16,6 +16,14 @@ build/dev/src/driver/kirimasim demo.sv
 
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
+
+## 固定配列ポート
+
+固定配列のinput/outputと互換netのinoutが、宣言順に要素を対応させて実行できます。
+たとえば親の`wire [7:0] a[4:5]`と子の`input wire [7:0] p[7:6]`を接続すると、
+`a[4]`と`p[7]`、`a[5]`と`p[6]`が同じ実体になります。`$left(p)`は7のままです。
+変数を接続するコピー経路も全RHSを先に捕捉し、要素の更新に応答します。
+強さ、force/release、pull・既定値、programを含む[検証と制限](notes/fixed-array-port-execution.ja.md)を参照してください。
 
 ## 32入力を超えるUDP
 

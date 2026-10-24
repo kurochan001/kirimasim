@@ -1202,6 +1202,42 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 if (name == "$bits" && c.arguments().size() == 1 &&
                     c.arguments()[0]->type->isFixedSize())
                     return constant(rt, c.arguments()[0]->type->getBitstreamWidth());
+                if ((args[0]->type->isFixedSize() ||
+                     args[0]->type->getCanonicalType().kind ==
+                         ast::SymbolKind::FixedSizeUnpackedArrayType) &&
+                    name != "$bits" && name != "$isunbounded") {
+                    // Type queries never evaluate the value expression, including
+                    // hierarchical net views. Keep the declaration's own ranges.
+                    std::vector<slang::ConstantRange> ranges;
+                    const ast::Type* type = &args[0]->type->getCanonicalType();
+                    std::uint32_t unpacked = 0;
+                    while (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType ||
+                           type->kind == ast::SymbolKind::PackedArrayType) {
+                        if (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) ++unpacked;
+                        ranges.push_back(type->getFixedRange());
+                        type = &type->getArrayElementType()->getCanonicalType();
+                    }
+                    if (type->isIntegral() && !type->isScalar())
+                        ranges.push_back(type->getFixedRange());
+                    if (type->isArray()) unsupported(sl, "nested dynamic array query dimension");
+                    if (name == "$dimensions")
+                        return constant(rt, ranges.size() + (type->isString() ? 1 : 0));
+                    if (name == "$unpacked_dimensions") return constant(rt, unpacked);
+                    const auto dimension =
+                        args.size() == 1 ? std::optional<std::int64_t>{1} : constInt(*args[1]);
+                    if (!dimension) unsupported(sl, "runtime fixed-array query dimension");
+                    if (*dimension < 1 || static_cast<std::uint64_t>(*dimension) > ranges.size())
+                        return allXConstant(rt);
+                    const auto range = ranges[static_cast<std::size_t>(*dimension - 1)];
+                    const std::int64_t result = name == "$left"             ? range.left
+                                                : name == "$right"          ? range.right
+                                                : name == "$low"            ? range.lower()
+                                                : name == "$high"           ? range.upper()
+                                                : name == "$size"           ? range.width()
+                                                : range.left >= range.right ? 1
+                                                                            : -1;
+                    return constant(rt, static_cast<std::uint64_t>(result));
+                }
                 if (isDynamicContainer(*args[0]->type) &&
                     (name == "$size" || name == "$left" || name == "$low" || name == "$right" ||
                      name == "$high" || name == "$increment")) {
@@ -3145,15 +3181,20 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         // slot to look up.
         const bool whole = p.kind == Place::Kind::Slot;
         const bool bits = p.kind == Place::Kind::Bits && p.home == Place::Home::Slot && !p.pos &&
-                          p.indices.empty();
-        if (!whole && !bits) unsupported(sl, "a delayed write of this target");
+                          (p.indices.empty() || p.elem.has_value());
+        const bool element =
+            p.kind == Place::Kind::Element && p.home == Place::Home::Slot && p.elem.has_value();
+        if (!whole && !bits && !element) unsupported(sl, "a delayed write of this target");
         const sir::Slot& slot = design().slot(p.slot);
         const bool part = bits && p.lsb >= 0 && p.lsb + p.width <= slot.type.width;
-        if (!whole && !part) unsupported(sl, "a delayed write of this target");
+        if (!whole && !part && !element) unsupported(sl, "a delayed write of this target");
         const Val dv = coerce(v, p.type, sl);
-        const Operand target =
-            whole ? Operand::slot(p.slot)
-                  : Operand::slot(p.slot, static_cast<std::uint32_t>(p.lsb), p.width);
+        Operand target = part ? Operand::slot(p.slot, static_cast<std::uint32_t>(p.lsb), p.width)
+                              : Operand::slot(p.slot);
+        if (p.elem) {
+            target.firstElem = *p.elem;
+            target.numElems = 1;
+        }
         emitVoid(Op::DriveDelay,
                  {target, dv.op, (*b_.delays)[0].op, (*b_.delays)[1].op, (*b_.delays)[2].op}, sl);
         noteWrite(rangeOf(p));

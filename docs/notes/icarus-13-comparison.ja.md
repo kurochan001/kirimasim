@@ -4,6 +4,13 @@
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
+## 固定配列ポートの追試（2026-10-25）
+
+[実装と境界](fixed-array-port-execution.ja.md)により、同じ87プローブの
+`fixed_array_ports`と`resolved_net_array`が通るようになりました。
+Icarus成功・native未成功は各参照版で24→22件になり、参照側の状態と4件／7件の相違は不変です。
+既存native成功例の判定バイトも維持しています。完全なP1対応とは扱いません。
+
 ## 遅延ゲートの完全な状態の再確認（2026-10-25）
 
 `20274407`でも[13.0](../measurements/2026-10-25/icarus13-delayed-side-probes.json)と

@@ -1006,6 +1006,8 @@ private:
     /// The nets that need resolution (VALUE_SEMANTICS.md 5.5) get a driver
     /// slot per driver and a process that resolves them (SIR_SPEC.md 3.5).
     void resolveNets();
+    void resolveArrayNet(sir::SlotId net, const std::vector<sir::ProcessId>& drivers,
+                         sir::SourceLoc where);
     /// After every body is lowered: the write sets and the always_comb
     /// sensitivity, including what called subroutines read and write.
     void finishDesign();

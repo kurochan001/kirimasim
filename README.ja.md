@@ -77,6 +77,12 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 宣言だけなら待機も出しません。[対応範囲と独自72ソース](docs/notes/fork-local-declarations.ja.md)で
 全join種類を検査します。子が捕捉するautomatic変数は未対応です。
 
+固定配列ポートは宣言ごとの範囲を保って要素を共有・コピーし、ネット配列の強さを
+要素ごとに解決します。定数要素のforce/release、遅延、未接続の既定値・pullも含め、
+[独自358ケースと対応範囲](docs/notes/fixed-array-port-execution.ja.md)を記録しました。
+既存87プローブのIcarus成功・native未成功は各参照版で24→22件になりました。
+P1全体は引き続き未完了です。
+
 ### 段階
 
 | 段階 | 内容 | 状態 |
@@ -111,14 +117,14 @@ P1の完了にはなりません。
 
 進捗は[実装済み一覧](docs/P1_SUPPORT.ja.md)と
 [比較記録](docs/notes/p1-icarus-progress.ja.md)で管理します。
-一覧は独自87プローブです。検証済みの配列・入力の区切りでは、Icarus `13.0 (stable) (v13_0)`に
-対する未対応が24本、参照結果の不一致が4本です。`14.0 (devel) (s20260301-411-gca6b8d376)`では
-24本と7本です。比較対象の版を分け、[結果と条件](docs/notes/icarus-13-comparison.ja.md)を記録しました。
+一覧は独自87プローブです。固定配列ポートの区切りでは、Icarus `13.0 (stable) (v13_0)`に
+対する未対応が22本、参照結果の不一致が4本です。`14.0 (devel) (s20260301-411-gca6b8d376)`では
+22本と7本です。比較対象の版を分け、[結果と条件](docs/notes/icarus-13-comparison.ja.md)を記録しました。
 全面的な同等性は未確認です。プローブがすべて通っても全機能の対応を証明できず、
 仕組みやインターフェースを確認するごとに棚卸しを広げます。
-以前の84件の状態は変わらず、新たに棚卸しした広いUDPの2本が両参照とnativeで通りました。
+広いUDPの区切りでは以前の84件の状態を維持し、新たに棚卸しした広いUDPの2本が両参照とnativeで通りました。
 追加した密な表の網羅性検査はnativeのsubprocess上限に達します。同じ拡張後の一覧では、
-保持した旧baselineが27/33件、広いUDPの区切りが25/31件で、後の配列・入力の区切りでは24/24件です。
+保持した旧baselineが27/33件、広いUDPの区切りが25/31件で、後の配列・入力の区切りでは24/24件、固定配列ポート対応後は22/22件です。
 [automatic記憶域の共有・eventの修正案](docs/notes/automatic-capture-proposal.ja.md)に
 独自32プログラムを記録し、2026-10-25承認済みで、実装は残作業です。
 [配列ポート・解決の修正案](docs/notes/fixed-array-ports-proposal.ja.md)にも独自59本を記録し、
@@ -165,11 +171,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-22、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 4,179 | 4,177、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 4,543 | 4,541、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 213（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）338、`tests/suite/` 3,640（`tools/` の 134 個の生成器が作る）、道具 142、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）342、`tests/suite/` 3,998（`tools/` の 135 個の生成器が作る）、道具 144、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
