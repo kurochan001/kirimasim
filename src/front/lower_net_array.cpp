@@ -164,7 +164,12 @@ void Lowerer::resolveArrayNet(sir::SlotId net, const std::vector<sir::ProcessId>
             std::vector<sir::Instr> rewritten;
             for (auto& in : block.instrs) {
                 if (writesNet(in)) {
-                    const auto t = *targetOf(driver, in);
+                    const auto decoded = targetOf(driver, in);
+                    if (!decoded) {
+                        reject("an unavailable fixed net-array driver target");
+                        return;
+                    }
+                    const auto t = *decoded;
                     auto value = in.operands[t.value];
                     auto type = valueType(driver, value);
                     if (!sir::isFourState(type)) {

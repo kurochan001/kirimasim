@@ -104,6 +104,7 @@ TEST(ArrayPortSir, RejectsMalformedViewsAndOverflowWithoutFollowingChains) {
                               std::numeric_limits<std::int64_t>::max()}};
                 break;
             case 11: view.dims = {{0, 0xffffffffLL}, {0, 0xffffffffLL}}; break;
+            default: FAIL() << "unexpected malformed view case " << bad;
         }
         EXPECT_FALSE(s::verify(d).empty());
     }
@@ -129,6 +130,7 @@ TEST(ArrayPortSir, CompactDriverCoverageIsCheckedAgainstPhysicalElements) {
             case 4: slot.driverOf = s::SlotId{1}; break;
             case 5: slot.dims = {{2, 3}}; break;
             case 6: slot.type = s::u2(65); break;
+            default: FAIL() << "unexpected malformed driver case " << bad;
         }
         EXPECT_FALSE(s::verify(d).empty());
     }
