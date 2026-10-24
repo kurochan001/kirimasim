@@ -340,3 +340,17 @@ A table that interns strings belongs to the Context (now `kernel::Strings`).
 ### 9.8 Tests
 
 The tests that keep these rules are required tests (TEST_SUITE.md, "List of required tests"): running designs one after another in one process, at the same time on separate threads under ThreadSanitizer, and made and destroyed many times under AddressSanitizer, and the unit tests in a shuffled order in one process. `front_parallel` runs front on several threads at once under ThreadSanitizer (9.7); it is in the list but not a P1 condition (decided 2026-10-20). In P4 a test is added that resumes a suspended import task on another thread and checks the "current Context".
+
+## Approved P1 execution amendments (2026-10-25)
+
+The following operative contracts are normative amendments to the sections
+identified in each contract. They supersede earlier incomplete or excluded
+forms only as explicitly specified. Evidence sections retain their original
+provenance and do not claim implementation. The
+[approval record](../notes/p1-execution-contracts-2026-10-25.md) fixes scope and
+preserves existing expectations and external ABI versions.
+
+- [Shared automatic activations, captures and automatic events, sections 1–8](../notes/automatic-capture-proposal.md).
+- [Event-controlled NBA: scheduler, lifetime and SIR/kernel boundary contracts](../notes/event-nba-proposal.md).
+- [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
+- [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).

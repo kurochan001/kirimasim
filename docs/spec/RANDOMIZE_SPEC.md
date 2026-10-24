@@ -21,3 +21,14 @@ Not written yet (to be written in the phase the priority table gives).
 ## Tests of the distributions
 
 Not written yet (to be written in the phase the priority table gives).
+
+## Approved P1 execution amendments (2026-10-25)
+
+The following operative contracts are normative amendments to the sections
+identified in each contract. They supersede earlier incomplete or excluded
+forms only as explicitly specified. Evidence sections retain their original
+provenance and do not claim implementation. The
+[approval record](../notes/p1-execution-contracts-2026-10-25.md) fixes scope and
+preserves existing expectations and external ABI versions.
+
+- [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).

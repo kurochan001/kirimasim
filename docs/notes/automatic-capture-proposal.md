@@ -1,8 +1,12 @@
 # Shared automatic storage, fork capture and automatic events
 
-[日本語](automatic-capture-proposal.ja.md). Status: **pending review**,
-2026-10-24. The English text is the proposed contract. No production
-implementation is authorized by this document alone.
+[日本語](automatic-capture-proposal.ja.md). Status: **approved (2026-10-25);
+implementation in progress**. The original 2026-10-24 proposal body is retained
+as the decision record; approval requests, future tense and unapproved-status
+statements below describe that original proposal state. The user approved all
+six contracts together on 2026-10-25. See the [specification mapping](p1-execution-contracts-2026-10-25.md).
+Approval does not claim implemented support, authorize changes to existing
+expectations, or introduce dependencies.
 
 ## Why the existing contract needs amendment
 

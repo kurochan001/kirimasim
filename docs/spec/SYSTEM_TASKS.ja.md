@@ -563,3 +563,13 @@ programのinitialを起源に持たなければ警告せず無視し、全progra
 - `%v` と強さのモデル（3.10。P5）。
 - `$fmonitor`、`$fstrobe`、`$fgetc`、`$ungetc`（P4）の、同じ時刻での順序の細部。
 - 波形のタスク（`$dumpfile` など）は、WAVEFORM.md で書いた（2026-10-21）。
+
+## 承認済みのP1実行契約（2026-10-25）
+
+下記の実行契約を、各契約が列挙する節への規範的な修正とします。明示した範囲に限り、
+古い未確定・除外の記述より優先します。根拠の節は過去の記録として残し、実装済みとは
+扱いません。[承認記録](../notes/p1-execution-contracts-2026-10-25.ja.md)で範囲を固定し、
+既存期待値と外部ABIの版を保ちます。
+
+- [完全な強さのMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
+- [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).

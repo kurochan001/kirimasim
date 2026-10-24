@@ -650,3 +650,19 @@ The following points were applied to the design specification (v0.6) with a huma
 - Tests of the steps of 6.1 (approved 2026-10-19): each step, and each pair of kinds of procedure written in either order, with expected values from this document's rule. They also run on Icarus 13.0 and Verilator 5.052 for reference; where those differ, the difference is written in the test's comments with clause numbers.
 - How far slang checks the write restrictions of 6.4.
 - How the exclusion of "expressions written" in 6.3 works when only part of a bit range is written (its relation to the longest static prefix of 11.5.3).
+
+## Approved P1 execution amendments (2026-10-25)
+
+The following operative contracts are normative amendments to the sections
+identified in each contract. They supersede earlier incomplete or excluded
+forms only as explicitly specified. Evidence sections retain their original
+provenance and do not claim implementation. The
+[approval record](../notes/p1-execution-contracts-2026-10-25.md) fixes scope and
+preserves existing expectations and external ABI versions.
+
+- [Fixed array ports and element-wise resolution, sections 1–6](../notes/fixed-array-ports-proposal.md).
+- [Shared automatic activations, captures and automatic events, sections 1–8](../notes/automatic-capture-proposal.md).
+- [Event-controlled NBA: scheduler, lifetime and SIR/kernel boundary contracts](../notes/event-nba-proposal.md).
+- [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
+- [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
+- [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).

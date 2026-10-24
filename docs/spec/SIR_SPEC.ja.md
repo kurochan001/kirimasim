@@ -699,3 +699,17 @@ SIR の検証器は、デバッグビルドと CI で常に動かす。次のこ
 - 階層参照（上方・下方、`$root`、generate のスコープ）を、エラボレーションの時点でスロットに解決する方法と、解決できない場合（P1）。
 - format 1の文法/schema・パーサ・往復gateはP1完了後のP2で確定し、その後`formatVersion`を1にします（2026-10-24方針承認、9節）。
 - slang の API から各要素を作る対応表（`front` の実装と一緒に P1 で書く）。
+
+## 承認済みのP1実行契約（2026-10-25）
+
+下記の実行契約を、各契約が列挙する節への規範的な修正とします。明示した範囲に限り、
+古い未確定・除外の記述より優先します。根拠の節は過去の記録として残し、実装済みとは
+扱いません。[承認記録](../notes/p1-execution-contracts-2026-10-25.ja.md)で範囲を固定し、
+既存期待値と外部ABIの版を保ちます。
+
+- [固定配列ポート・要素ごとの解決、1–6節](../notes/fixed-array-ports-proposal.ja.md).
+- [automatic活動の共有・捕捉・自動イベント、1–8節](../notes/automatic-capture-proposal.ja.md).
+- [イベント制御付きNBA：スケジューラ・寿命・SIR/カーネル境界の契約](../notes/event-nba-proposal.ja.md).
+- [遅延付き三状態ゲート：修正案の節](../notes/delayed-gate-side-proposal.ja.md).
+- [完全な強さのMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
+- [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).

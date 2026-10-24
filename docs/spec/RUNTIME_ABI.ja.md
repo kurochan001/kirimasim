@@ -312,3 +312,15 @@ commit前に両添字・型・ハンドルを検証し、不正・同一添字�
 ### 9.8 テスト
 
 この決まりを守らせるテストは、必ず通すテストとする（TEST_SUITE.md の「必須テストの一覧」）。1 つのプロセスで設計を順に動かすもの、別々のスレッドで ThreadSanitizer の下で同時に動かすもの、AddressSanitizer の下で作って壊すことを何度も繰り返すもの、そして単体テストを 1 つのプロセスで順番を入れ替えて流すものである。`front_parallel` は、front を複数のスレッドで同時に ThreadSanitizer の下で動かす（9.7 節）。一覧には載せるが、P1 の条件にはしない（2026-10-20 に決めた）。P4 では、中断した import task を別のスレッドで再開して「今の Context」を確かめるテストを足す。
+
+## 承認済みのP1実行契約（2026-10-25）
+
+下記の実行契約を、各契約が列挙する節への規範的な修正とします。明示した範囲に限り、
+古い未確定・除外の記述より優先します。根拠の節は過去の記録として残し、実装済みとは
+扱いません。[承認記録](../notes/p1-execution-contracts-2026-10-25.ja.md)で範囲を固定し、
+既存期待値と外部ABIの版を保ちます。
+
+- [automatic活動の共有・捕捉・自動イベント、1–8節](../notes/automatic-capture-proposal.ja.md).
+- [イベント制御付きNBA：スケジューラ・寿命・SIR/カーネル境界の契約](../notes/event-nba-proposal.ja.md).
+- [遅延付き三状態ゲート：修正案の節](../notes/delayed-gate-side-proposal.ja.md).
+- [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).

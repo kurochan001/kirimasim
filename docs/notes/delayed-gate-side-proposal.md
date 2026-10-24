@@ -1,7 +1,12 @@
 # Delayed three-state gate side propagation
 
-[日本語](delayed-gate-side-proposal.ja.md). **Proposed; not approved or enabled.**
-Prepared 2026-10-24. This selects no dependency or installation.
+[日本語](delayed-gate-side-proposal.ja.md). Status: **approved (2026-10-25);
+implementation in progress**. The original 2026-10-24 proposal body is retained
+as the decision record; approval requests, future tense and unapproved-status
+statements below describe that original proposal state. The user approved all
+six contracts together on 2026-10-25. See the [specification mapping](p1-execution-contracts-2026-10-25.md).
+Approval does not claim implemented support, authorize changes to existing
+expectations, or introduce dependencies.
 
 ## Why review is needed
 

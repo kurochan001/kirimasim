@@ -39,3 +39,19 @@ still require separate approval; this amendment selects none.
 This document states a target, not implemented support. Consult
 [P1_SUPPORT](../P1_SUPPORT.md) for implemented forms and the
 [progress record](../notes/p1-icarus-progress.md) for measured gaps.
+
+## Approved P1 execution amendments (2026-10-25)
+
+The following operative contracts are normative amendments to the sections
+identified in each contract. They supersede earlier incomplete or excluded
+forms only as explicitly specified. Evidence sections retain their original
+provenance and do not claim implementation. The
+[approval record](../notes/p1-execution-contracts-2026-10-25.md) fixes scope and
+preserves existing expectations and external ABI versions.
+
+- [Fixed array ports and element-wise resolution, sections 1–6](../notes/fixed-array-ports-proposal.md).
+- [Shared automatic activations, captures and automatic events, sections 1–8](../notes/automatic-capture-proposal.md).
+- [Event-controlled NBA: scheduler, lifetime and SIR/kernel boundary contracts](../notes/event-nba-proposal.md).
+- [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
+- [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
+- [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).

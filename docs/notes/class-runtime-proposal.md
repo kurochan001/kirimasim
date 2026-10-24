@@ -1,7 +1,12 @@
 # Class identity, initialization and execution
 
-[日本語](class-runtime-proposal.ja.md). Status: **pending review**, 2026-10-24.
-This is a proposed contract, not implemented support or approval to implement.
+[日本語](class-runtime-proposal.ja.md). Status: **approved (2026-10-25);
+implementation in progress**. The original 2026-10-24 proposal body is retained
+as the decision record; approval requests, future tense and unapproved-status
+statements below describe that original proposal state. The user approved all
+six contracts together on 2026-10-25. See the [specification mapping](p1-execution-contracts-2026-10-25.md).
+Approval does not claim implemented support, authorize changes to existing
+expectations, or introduce dependencies.
 
 ## Why a detailed amendment is needed
 

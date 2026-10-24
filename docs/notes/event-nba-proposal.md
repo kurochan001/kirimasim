@@ -1,7 +1,12 @@
 # Event-controlled NBA execution proposal
 
-[日本語](event-nba-proposal.ja.md). **Proposed; not approved or implemented.**
-Prepared 2026-10-24 against source `d3e1338`.
+[日本語](event-nba-proposal.ja.md). Status: **approved (2026-10-25);
+implementation in progress**. The original 2026-10-24 proposal body is retained
+as the decision record; approval requests, future tense and unapproved-status
+statements below describe that original proposal state. The user approved all
+six contracts together on 2026-10-25. See the [specification mapping](p1-execution-contracts-2026-10-25.md).
+Approval does not claim implemented support, authorize changes to existing
+expectations, or introduce dependencies.
 
 ## Reason for review and primary basis
 

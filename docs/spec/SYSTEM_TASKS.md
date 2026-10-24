@@ -586,3 +586,15 @@ The standard leaves the generator of `$urandom` and the default seed to the impl
 - `%v` and the strength model (3.10; P5).
 - Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc` (P4).
 - The waveform tasks (`$dumpfile` and so on) are written in WAVEFORM.md (2026-10-21).
+
+## Approved P1 execution amendments (2026-10-25)
+
+The following operative contracts are normative amendments to the sections
+identified in each contract. They supersede earlier incomplete or excluded
+forms only as explicitly specified. Evidence sections retain their original
+provenance and do not claim implementation. The
+[approval record](../notes/p1-execution-contracts-2026-10-25.md) fixes scope and
+preserves existing expectations and external ABI versions.
+
+- [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
+- [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).

@@ -528,3 +528,17 @@ transports them. Unsupported source representations remain P1 work.
 - How the values of assignment patterns (10.9) are decided is expressed in SIR by unfolding them into assignments element by element. Assignment patterns of unpacked arrays and structures are written together with how arrays and structures are laid out in SIR_SPEC.md.
 - Operations on class handles (P4).
 - Compare the "not confirmed" items of 7.3, 7.4 and 7.6 with Icarus 13.0's results.
+
+## Approved P1 execution amendments (2026-10-25)
+
+The following operative contracts are normative amendments to the sections
+identified in each contract. They supersede earlier incomplete or excluded
+forms only as explicitly specified. Evidence sections retain their original
+provenance and do not claim implementation. The
+[approval record](../notes/p1-execution-contracts-2026-10-25.md) fixes scope and
+preserves existing expectations and external ABI versions.
+
+- [Fixed array ports and element-wise resolution, sections 1–6](../notes/fixed-array-ports-proposal.md).
+- [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
+- [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
+- [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).
