@@ -40,6 +40,30 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('fork declaration: declaration becomes a child process',
+     'src/front/lower_stmt.cpp',
+     '        if (stmts[i]->kind == ast::StatementKind::VariableDeclaration) continue;',
+     '        // Deliberately include declarations in the child list.'),
+    ('fork declaration: automatic parent initializers disappear',
+     'src/front/lower_stmt.cpp',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration) lowerStatement(*stmt);',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration &&\n'
+     '            stmt->as<ast::VariableDeclStatement>().symbol.lifetime == ast::VariableLifetime::Static)\n'
+     '            lowerStatement(*stmt);'),
+    ('fork declaration: repeats static initializer side effects',
+     'src/front/lower_stmt.cpp',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration) lowerStatement(*stmt);',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration) {\n'
+     '            lowerStatement(*stmt);\n'
+     '            const auto& variable = stmt->as<ast::VariableDeclStatement>().symbol;\n'
+     '            if (variable.lifetime == ast::VariableLifetime::Static && variable.getInitializer())\n'
+     '                static_cast<void>(lowerExpr(*variable.getInitializer()));\n'
+     '        }'),
+    ('fork declaration: empty fork reaches the SIR verifier',
+     'src/front/lower_stmt.cpp',
+     '    // A declaration-only parallel block has no children and cannot wait.\n'
+     '    if (ops.empty()) return;',
+     '    // Deliberately emit an empty child list.'),
     ('wide gate strength: delayed guard ignores later blocks',
      'src/front/lower.cpp',
      '            for (const sir::BasicBlock& block : design_.process(p).blocks)\n'

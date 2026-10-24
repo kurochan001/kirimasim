@@ -207,6 +207,9 @@ EXTENDED.extend([
     ("wide_tristate_masks", "28.6, 28.12",
      'module top;logic[64:0] data=\'0;logic control=\'x;wire[64:0]q;bufif1 g[64:0](q,data,control);assign(weak1,weak0)q=\'1;initial begin #1;$display("%b",q);data=\'1;#1;$display("%b",q);end endmodule',
      "x" * 65 + "\n" + "1" * 65 + "\n", []),
+    ("fork_local_declarations", "6.21, 9.3.2",
+     '`timescale 1ns/1ns\nmodule top;int calls;function int seed_value();calls++;return 7;endfunction initial begin repeat(2)fork int local_value=seed_value();begin #1;$display("%0d %0d",local_value,calls);local_value++;end join fork int unused;begin #2;end begin #5;end join_any $display("%0t",$time);wait fork;end endmodule',
+     "7 1\n8 1\n4\n", []),
 ])
 
 

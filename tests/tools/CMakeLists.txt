@@ -41,6 +41,15 @@ add_test(NAME tools/gen_wide_gate_side_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_wide_gate_side_matrix.py --check)
 set_tests_properties(tools/gen_wide_gate_side_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_fork_declaration_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_fork_declaration_matrix.py --check)
+set_tests_properties(tools/gen_fork_declaration_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/fork_declaration_boundary
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_fork_declaration_boundary.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/fork_declaration_boundary PROPERTIES LABELS Tools)
+
 add_test(NAME tools/delayed_gate_boundary
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_delayed_gate_boundary.py
         --kirimasim $<TARGET_FILE:kirimasim>)

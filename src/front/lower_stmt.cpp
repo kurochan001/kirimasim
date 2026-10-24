@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "lowerer.h"
@@ -540,14 +541,20 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     std::string scope = b_.scope;  // a named fork is a scope (9.3.5)
     if (b.blockSymbol != nullptr && !b.blockSymbol->name.empty())
         scope += "." + std::string(b.blockSymbol->name);
+    // Declarations belong to the parallel scope, not to its child processes.
+    // Static initializers use the existing pre-time-zero path; automatic
+    // initializers run in the parent before any child is made (9.3.2).
+    const std::string outerScope = std::exchange(b_.scope, scope);
+    for (const ast::Statement* stmt : stmts)
+        if (stmt->kind == ast::StatementKind::VariableDeclaration) lowerStatement(*stmt);
+    b_.scope = outerScope;
     // The parent is the process, or the task, whose body holds the fork.
     const std::string owner = b_.isSub ? design().subroutine(b_.sub).name : proc().name;
     const sir::InstanceId instance =
         b_.isSub ? design().subroutine(b_.sub).instance : proc().instance;
     std::vector<Operand> ops;
     for (std::size_t i = 0; i < stmts.size(); ++i) {
-        if (stmts[i]->kind == ast::StatementKind::VariableDeclaration)
-            unsupported(stmts[i]->sourceRange.start(), "declarations in a fork block");
+        if (stmts[i]->kind == ast::StatementKind::VariableDeclaration) continue;
         if (stmts[i]->kind == ast::StatementKind::Empty) continue;
         sir::Process child;
         child.name = owner + ".fork" + std::to_string(forkNumber) + "." + std::to_string(i);
@@ -569,6 +576,8 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         b_ = std::move(saved);
         ops.push_back(Operand::process(id));
     }
+    // A declaration-only parallel block has no children and cannot wait.
+    if (ops.empty()) return;
     const char* join = b.blockKind == ast::StatementBlockKind::JoinAll   ? "join"
                        : b.blockKind == ast::StatementBlockKind::JoinAny ? "join_any"
                                                                          : "join_none";

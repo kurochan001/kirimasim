@@ -1,0 +1,11 @@
+all first 2 3 1
+all shared 3 1
+all first 4 3 1
+all shared 5 1
+any first 7 1
+any resumed 7 3
+any shared 10 1
+none parent 10 3 0
+none first 11 1
+none shared 13 1
+done 13 2
