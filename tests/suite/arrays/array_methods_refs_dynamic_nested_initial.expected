@@ -1,0 +1,5 @@
+sort 8
+write 3
+reverse 99
+values 99 3
+copy 99 77

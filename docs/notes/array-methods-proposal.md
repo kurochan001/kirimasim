@@ -1,7 +1,7 @@
 # Runtime array reduction and ordering amendment
 
 [日本語](array-methods-proposal.ja.md). Status: **approved (2026-10-25)**;
-implementation in progress. The proposal below is retained as the decision
+tested implementation subset: [execution checkpoint](runtime-array-methods.md). The proposal below is retained as the decision
 record; approval requests and future tense describe its original proposal state.
 
 ## Purpose and authority

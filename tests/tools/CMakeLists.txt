@@ -551,3 +551,12 @@ set_tests_properties(tools/gen_assertion_wait_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_deferred_write_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_deferred_write_matrix.py --check)
 set_tests_properties(tools/gen_deferred_write_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_array_methods_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_array_methods_matrix.py --check)
+set_tests_properties(tools/gen_array_methods_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/array_ordering_keys
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tests/cli/run_array_ordering_key_tests.py
+            --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/array_ordering_keys PROPERTIES LABELS Tools)

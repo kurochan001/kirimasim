@@ -293,6 +293,7 @@ Val Lowerer::lowerContainerValue(const ast::Expression& e) {
 
 std::optional<Val> Lowerer::lowerContainerMethod(const ast::CallExpression& call,
                                                  slang::SourceLocation sl) {
+    if (const auto array = lowerArrayMethod(call, sl)) return array;
     if (!call.isSystemCall() || call.arguments().empty()) return std::nullopt;
     const auto args = call.arguments();
     const auto& self = *methodReceiver(args[0]);

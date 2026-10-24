@@ -73,6 +73,18 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Runtime array reduction, stable ordering and min/max for fixed arrays,
+  dynamic arrays and queues, including typed `with`, nested-container keys,
+  retained element refs and snapshotting before effectful extrema keys.
+  Four direct unit tests and 264 original source cases cover the approved
+  contract. Effectful/unverified-pure ordering keys and unsupported aggregate
+  representations remain explicit limitations.
+- Binary input into multidimensional fixed integral memories, using numerical
+  low-to-high traversal with the rightmost dimension varying fastest and
+  linear start/count positions. Selected prefix expressions are captured
+  once before later arguments; one-dimensional indexing stays unchanged.
+  Add 156 original byte-model cases.
+
 - `$countbits`, `$countones`, `$onehot`, `$onehot0` and `$isunknown` accept
   supported fixed unpacked arrays, records and arrays of records with integral
   leaves. They reuse the existing streaming conversion and kernel counter;

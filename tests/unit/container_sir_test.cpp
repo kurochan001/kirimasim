@@ -650,4 +650,41 @@ TEST(ContainerSir, MutationClassificationNamesOnlyActualHeapChanges) {
     }
 }
 
+TEST(ContainerSir, SwapRequiresCapturedTypedReceiverAndTwoIntegralIndices) {
+    auto design = playground();
+    auto& process = design.processes[0];
+    auto& instructions = process.blocks[0].instrs;
+    const Type queue = queueType(TypeId{1});
+    const TempId ref{process.numTemps++};
+    instructions.insert(instructions.begin(), make(Op::RefMake, refType(queue.detail), ref,
+                                                   {Operand::frame(FrameVarId{1})}));
+    const auto position = instructions.begin() + 1;
+    instructions.insert(position,
+                        none(Op::ContainerSwapValues,
+                             {Operand::typeRow(queue.detail), Operand::temp(ref),
+                              Operand::constant(ConstId{0}), Operand::constant(ConstId{0})}));
+    ASSERT_EQ(errorsOf(design), "");
+    EXPECT_TRUE(isContainerMutation(Op::ContainerSwapValues));
+    EXPECT_TRUE(isContainerOp(Op::ContainerSwapValues));
+    EXPECT_FALSE(isTerminator(Op::ContainerSwapValues));
+    EXPECT_FALSE(isWait(none(Op::ContainerSwapValues)));
+    EXPECT_NE(toText(design).find("container.swap.values"), std::string::npos);
+    for (unsigned broken = 0; broken < 6; ++broken) {
+        auto d = design;
+        auto& swap = instruction(d, Op::ContainerSwapValues);
+        switch (broken) {
+            case 0: swap.operands.pop_back(); break;
+            case 1: swap.operands.push_back(Operand::constant(ConstId{0})); break;
+            case 2: swap.operands[2] = Operand::constant(ConstId{1}); break;
+            case 3: swap.operands[3] = Operand::constant(ConstId{2}); break;
+            case 4: swap.operands[0] = Operand::typeRow(TypeId{0}); break;
+            case 5:
+                swap.type = s4(32);
+                swap.result = TempId{d.processes[0].numTemps++};
+                break;
+        }
+        EXPECT_FALSE(errorsOf(d).empty()) << broken;
+    }
+}
+
 }  // namespace

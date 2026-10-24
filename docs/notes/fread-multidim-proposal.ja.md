@@ -1,6 +1,6 @@
 # 多次元メモリへのバイナリ入力：契約の修正案
 
-[English](fread-multidim-proposal.md)。2026-10-24提案。**2026-10-25承認、実装中**です。
+[English](fread-multidim-proposal.md)。2026-10-24提案。**2026-10-25承認**。実装済みの範囲は[実行の記録](multidim-fread-execution.ja.md)を参照してください。
 以下の提案本文は決定の記録として残し、承認を求める文は提案当時の記録です。
 SYSTEM_TASKS 6.3はメモリへの入力を定めていますが、多次元メモリとスカラーの
 start・countの対応は定めていません。[P1_SCOPE](../spec/P1_SCOPE.ja.md)は、

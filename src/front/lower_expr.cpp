@@ -192,7 +192,16 @@ bool untrustedConstant(const ast::Expression& e) {
     switch (e.kind) {
         case ast::ExpressionKind::MinTypMax:
             return untrustedConstant(e.as<ast::MinTypMaxExpression>().selected());
-        case ast::ExpressionKind::Call: return any(e.as<ast::CallExpression>().arguments());
+        case ast::ExpressionKind::Call: {
+            const auto& call = e.as<ast::CallExpression>();
+            const auto name = call.getSubroutineName();
+            if (call.isSystemCall() && !call.arguments().empty() &&
+                call.arguments()[0]->type->isUnpackedArray() &&
+                (name == "sum" || name == "product" || name == "and" || name == "or" ||
+                 name == "xor" || name == "min" || name == "max"))
+                return true;  // The approved runtime rules also govern constant call expressions.
+            return any(call.arguments());
+        }
         case ast::ExpressionKind::UnaryOp: {
             // slang folds +v as v; x or z makes every bit x
             // (VALUE_SEMANTICS.md 3.2).
@@ -434,6 +443,8 @@ std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
 bool isVariable(const ast::Symbol& s) {
     return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
 }
+
+bool expressionHasSideEffects(const ast::Expression& e) { return sideEffects(e); }
 
 // --- Constants and conversions -----------------------------------------------
 
@@ -1244,10 +1255,6 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val k = constant(sir::s2(32), name == "$isunknown" ? 0 : 1);
                 return coerce(emit(cmp, sir::u2(1), {n.op, k.op}, sl), rt, sl);
             }
-            if ((name == "sum" || name == "product" || name == "and" || name == "or" ||
-                 name == "xor") &&
-                !args.empty() && args[0]->type->getCanonicalType().isUnpackedArray())
-                return lowerArrayReduction(call, name, rt, sl);
             if (name == "$sscanf" || name == "$fscanf" || name == "$value$plusargs")
                 return lowerScanCall(call, rt, sl);
             if (name == "$fopen" && !args.empty() && args.size() <= 2) {
@@ -1843,45 +1850,6 @@ Lowerer::Place Lowerer::concatPlace(std::vector<Place> parts, Type like, slang::
     if (all.width == 0) unsupported(sl, "a value of no bits");
     all.type = integral(sir::isFourState(like), false, all.width);
     return all;
-}
-
-Val Lowerer::lowerArrayReduction(const ast::CallExpression& call, const std::string& name, Type rt,
-                                 slang::SourceLocation sl) {
-    // sum, product, and, or and xor of the elements, or of the with
-    // clause's value for each element, in the result's type (7.12.3); the
-    // elements in the order foreach visits them.
-    const std::optional<ArrayTarget> a = arrayTarget(*call.arguments()[0]);
-    if (!a) unsupported(sl, "array method " + name + " on this array");
-    if (!sir::isIntegral(rt) && !(isReal(rt) && (name == "sum" || name == "product")))
-        unsupported(sl, "array method " + name + " of this type");
-    // Each item is an element of the first remaining dimension; with more
-    // than one left, an item would be an array.
-    if (dimsOf(baseOf(*a)).size() != a->indices.size() + 1)
-        unsupported(sl, "array method " + name + " on this array");
-    const auto [with, item] = std::get<1>(call.subroutine).getIteratorInfo();
-    const Op op = name == "sum"       ? Op::Add
-                  : name == "product" ? Op::Mul
-                  : name == "and"     ? Op::And
-                  : name == "or"      ? Op::Or
-                                      : Op::Xor;
-    std::optional<Val> acc;
-    std::vector<std::int64_t> idx = a->indices;
-    const sir::ArrayDim d = dimsOf(baseOf(*a)).back();
-    const std::int64_t step = d.left <= d.right ? 1 : -1;
-    for (std::int64_t i = d.left;; i += step) {
-        idx.push_back(i);
-        Val v = loadPlace(elementPlace(baseOf(*a), idx), sl);
-        idx.pop_back();
-        if (with != nullptr) {
-            iterators_[item] = v;
-            v = lowerExpr(*with);
-            iterators_.erase(item);
-        }
-        v = coerce(v, rt, sl);
-        acc = acc ? emit(op, rt, {acc->op, v.op}, sl) : v;
-        if (i == d.right) break;
-    }
-    return *acc;
 }
 
 bool Lowerer::isAggregate(const ast::Type& t) {

@@ -85,6 +85,7 @@ bool inSlot(const ast::Symbol& s);
 /// A variable, or a formal argument of a subroutine (also a variable).
 bool isVariable(const ast::Symbol& s);
 bool isDynamicContainer(const ast::Type& type);
+bool expressionHasSideEffects(const ast::Expression& expression);
 /// The elements of an assignment pattern of any of its three forms, in
 /// order: slang expands the defaults and the names of a structured one;
 /// a replicated one repeats its elements its constant count of times
@@ -199,6 +200,7 @@ public:
                               const Val& first, const Val& limit, slang::SourceLocation sl);
     std::optional<Val> lowerContainerMethod(const ast::CallExpression& call,
                                             slang::SourceLocation sl);
+    std::optional<Val> lowerArrayMethod(const ast::CallExpression& call, slang::SourceLocation sl);
     Val containerReference(const ast::Expression& e, bool isConst, slang::SourceLocation sl);
     Val containerIndex(const ast::Expression& e, const Val& receiver, sir::Type type,
                        slang::SourceLocation sl);
@@ -634,9 +636,6 @@ public:
     void lowerUnpack(const ast::StreamingConcatenationExpression& s, const ast::Expression& rhs,
                      bool nonblocking, slang::SourceLocation sl,
                      const ast::Expression* delay = nullptr);
-    /// An array reduction method: sum, product, and, or, xor (7.12.3).
-    Val lowerArrayReduction(const ast::CallExpression& call, const std::string& name, sir::Type rt,
-                            slang::SourceLocation sl);
     /// Whether a type is an unpacked array or structure (11.2.2).
     static bool isAggregate(const ast::Type& t);
     /// The single values of an aggregate expression of type t, in order.

@@ -136,12 +136,11 @@ static初期化の既知の不一致を含み、クラス実行は引き続きP1
 選択したinoutの代入先は、承認済み規則どおりコピー入力時と、正のバイト数の書き戻し時に
 評価します。先の1回捕捉の実装は[期待値・実装を分離した訂正](docs/notes/fread-copyback-correction.ja.md)で
 修正しています。従来の同じ61プローブで差分が23本から22本へ減りました。
-整数の多次元メモリ全体への入力は残る差分として一覧へ追加し、
-[番地の修正案](docs/notes/fread-multidim-proposal.ja.md)は承認待ちです。
-[比較記録](docs/notes/p1-icarus-progress.ja.md)を参照してください。
-配列の`min()`・`max()`は未対応で、[実行契約案](docs/notes/array-extrema-proposal.ja.md)は
-レビュー待ちです。規格ではキーが同値でも結果は最大1要素なので、実測したIcarusの
-重複結果を期待値には使いません。
+承認済みの[多次元メモリ入力](docs/notes/multidim-fread-execution.ja.md)を実装し、独自156件で
+検査しています。配列の実行時の縮約・安定な整列・min/maxも[共通の型付き変換](docs/notes/runtime-array-methods.ja.md)
+で動き、独自264件と直接テスト4件を追加しました。同値でもmin/maxは元の要素を最大1個返し、
+Icarusが重複して返す観測は参照側の不一致として保ちます。副作用のある整列キー・純粋性未確認の
+ユーザー関数キーと、未対応の複合型の入力表現には制限が残ります。
 
 #### 既存の数値条件と測定結果
 
@@ -159,11 +158,11 @@ kirimasim の外部 sv-tests・母集団の数は 2026-10-22 に測ったもの�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 3,659 | 3,657、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 3,929 | 3,927、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 213 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）331、`tests/suite/` 3,130（`tools/` の 132 個の生成器が作る）、道具 139、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）335、`tests/suite/` 3,394（`tools/` の 133 個の生成器が作る）、道具 141、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

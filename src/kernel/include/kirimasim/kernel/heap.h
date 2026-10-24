@@ -153,6 +153,11 @@ public:
                      std::optional<std::int64_t> index) noexcept;
     HeapStatus clear(HeapTypeId type, ContainerToken& value) noexcept;
 
+    /// Exchange values without changing element-cell identities or size.
+    /// Nested owned values move intact. Invalid/equal indices do nothing.
+    HeapStatus swapValues(HeapTypeId type, ContainerToken value, std::optional<std::int64_t> first,
+                          std::optional<std::int64_t> second) noexcept;
+
     /// Caller supplies ALL roots at a permitted safe point, outside DPI.
     /// Marking failure leaves all objects alive. Tokens include generations;
     /// reclaimed entries can be reused without making old tokens valid again.

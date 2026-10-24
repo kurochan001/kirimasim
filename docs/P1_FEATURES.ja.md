@@ -469,8 +469,10 @@ endmodule
 2 8112
 ```
 
-メモリの代入先では、引き続きstart・countが対象の要素を選びます。多次元メモリ全体は
-未対応で、番地の規則は[修正案の承認待ち](notes/fread-multidim-proposal.ja.md)です。
+メモリの代入先ではstart・countが対象の要素を選びます。残り1次元ならstartは実際の添字、
+2次元以上なら0からの線形位置です。数値の小さい添字から大きい添字へ、右端の次元を最速で
+進めます。[承認済みの実装](notes/multidim-fread-execution.ja.md)では、選択済みの接頭添字も
+後の引数の副作用より前に保持します。動的メモリと多次元の構造体メモリは未対応です。
 
 ## 無書式のバイナリの語を読み込む
 
@@ -875,3 +877,34 @@ endmodule
 それぞれ `delay 2`、`delay 5`、`delay 9` を出します。既定は `typ` です。
 [CLI の仕様書](spec/CLI.ja.md)と[スケジューラの仕様書](spec/SCHEDULER_SPEC.ja.md)
 を参照してください。
+
+## 実行時の配列メソッド
+
+固定配列・動的配列・キューで`sum`・`product`・`and`・`or`・`xor`・`sort`・`rsort`・
+`reverse`・`min`・`max`を共通の処理で実行します。
+
+```systemverilog
+module top;
+  int a[];
+  int smallest[$];
+  initial begin
+    a = '{8, 3, 6, 3};
+    $display("sum %0d", a.sum());
+    smallest = a.min() with (-item);
+    $display("chosen %0d %0d", smallest.size(), smallest[0]);
+    a.sort();
+    $display("sorted %0d %0d %0d %0d", a[0], a[1], a[2], a[3]);
+  end
+endmodule
+```
+
+```text
+sum 20
+chosen 1 8
+sorted 3 3 6 8
+```
+
+min/maxはキーではなく元の要素を返し、同値でも1個です。キーに副作用があっても、
+受信配列は先に値を保持します。整列は純粋なキーを必要とし、要素のセルを指すrefを保って
+値を移動します。空の縮約、不明な比較、parameterの畳込みを含む
+[検査済みの契約と制限](notes/runtime-array-methods.ja.md)を参照してください。

@@ -1,0 +1,80 @@
+s0_sum 000010000
+s0_product 010001100
+s0_and 000000000
+s0_or 000000111
+s0_xor 000000010
+s0_wide_int 00000000000000000000000000010000
+s0_wide_integer 00000000000000000000000000010000
+s0_min 1 000000010
+s0_min_key 1 000000111
+s0_max 1 000000111
+s0_max_key 1 000000010
+s0_sort 000000010 000000010 000000101 000000111
+s0_rsort 000000111 000000101 000000010 000000010
+s0_reverse 000000010 000000101 000000010 000000111
+s0_sort_key 000000010 000000010 000000111 000000101
+s0_rsort_key 000000111 000000101 000000010 000000010
+s1_sum xxxxxxxxx
+s1_product xxxxxxxxx
+s1_and 000000000
+s1_or xxxxxxx11
+s1_xor xxxxxxxxx
+s1_wide_int 00000000000000000000000000000011
+s1_wide_integer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+s1_min 1 xxxxxxxxx
+s1_min_key 1 xxxxxxxxx
+s1_max 1 xxxxxxxxx
+s1_max_key 1 xxxxxxxxx
+s1_sort xxxxxxxxx 000000001 000000010 zzzzzzzzz
+s1_rsort xxxxxxxxx 000000010 000000001 zzzzzzzzz
+s1_reverse zzzzzzzzz 000000001 000000010 xxxxxxxxx
+s1_sort_key xxxxxxxxx 000000010 000000001 zzzzzzzzz
+s1_rsort_key xxxxxxxxx 000000001 000000010 zzzzzzzzz
+s2_sum xxxxxxxxx
+s2_product xxxxxxxxx
+s2_and 000000000
+s2_or xxxxxxx11
+s2_xor xxxxxxxxx
+s2_wide_int 00000000000000000000000000000110
+s2_wide_integer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+s2_min 1 000000001
+s2_min_key 1 000000011
+s2_max 1 000000011
+s2_max_key 1 000000001
+s2_sort 000000011 zzzzzzzzz 000000001 000000010
+s2_rsort 000000011 zzzzzzzzz 000000010 000000001
+s2_reverse 000000001 000000010 zzzzzzzzz 000000011
+s2_sort_key 000000011 zzzzzzzzz 000000010 000000001
+s2_rsort_key 000000011 zzzzzzzzz 000000001 000000010
+s3_sum 000000000
+s3_product 000000001
+s3_and 111111111
+s3_or 000000000
+s3_xor 000000000
+s3_wide_int 00000000000000000000000000000000
+s3_wide_integer 00000000000000000000000000000000
+s3_min 0
+s3_min_key 0
+s3_max 0
+s3_max_key 0
+s3_sort
+s3_rsort
+s3_reverse
+s3_sort_key
+s3_rsort_key
+s4_sum zzzzzzzzz
+s4_product zzzzzzzzz
+s4_and zzzzzzzzz
+s4_or zzzzzzzzz
+s4_xor zzzzzzzzz
+s4_wide_int 00000000000000000000000000000000
+s4_wide_integer 00000000000000000000000zzzzzzzzz
+s4_min 1 zzzzzzzzz
+s4_min_key 1 zzzzzzzzz
+s4_max 1 zzzzzzzzz
+s4_max_key 1 zzzzzzzzz
+s4_sort zzzzzzzzz
+s4_rsort zzzzzzzzz
+s4_reverse zzzzzzzzz
+s4_sort_key zzzzzzzzz
+s4_rsort_key zzzzzzzzz

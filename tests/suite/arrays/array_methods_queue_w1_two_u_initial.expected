@@ -1,0 +1,48 @@
+s0_sum 0
+s0_product 0
+s0_and 0
+s0_or 1
+s0_xor 0
+s0_wide_int 00000000000000000000000000000010
+s0_wide_integer 00000000000000000000000000000010
+s0_min 1 0
+s0_min_key 1 0
+s0_max 1 1
+s0_max_key 1 1
+s0_sort 0 0 1 1
+s0_rsort 1 1 0 0
+s0_reverse 0 1 0 1
+s0_sort_key 0 0 1 1
+s0_rsort_key 1 1 0 0
+s1_sum 0
+s1_product 1
+s1_and 1
+s1_or 0
+s1_xor 0
+s1_wide_int 00000000000000000000000000000000
+s1_wide_integer 00000000000000000000000000000000
+s1_min 0
+s1_min_key 0
+s1_max 0
+s1_max_key 0
+s1_sort
+s1_rsort
+s1_reverse
+s1_sort_key
+s1_rsort_key
+s2_sum 1
+s2_product 1
+s2_and 1
+s2_or 1
+s2_xor 1
+s2_wide_int 00000000000000000000000000000001
+s2_wide_integer 00000000000000000000000000000001
+s2_min 1 1
+s2_min_key 1 1
+s2_max 1 1
+s2_max_key 1 1
+s2_sort 1
+s2_rsort 1
+s2_reverse 1
+s2_sort_key 1
+s2_rsort_key 1

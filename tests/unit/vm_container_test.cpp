@@ -1754,4 +1754,50 @@ TEST(VmContainer, HeapWaitsExcludeCalledPrivateContainersButKeepHierarchicalAndG
                 }
 }
 
+TEST(VmContainer, SwapTransportsWideIndicesAndPreservesCapturedElementReferences) {
+    for (const bool queue : {false, true})
+        for (const bool frame : {false, true})
+            for (unsigned indexKind = 0; indexKind < 5; ++indexKind) {
+                SCOPED_TRACE(::testing::Message() << queue << '/' << frame << '/' << indexKind);
+                Program p;
+                const auto element = u4(65);
+                const auto type = p.container(element, queue, queue ? 3 : 0);
+                const auto home = frame ? p.frame(type) : p.slot(type);
+                const auto a = p.constant(element, 17), b = p.constant(element, 29);
+                p.store(home, p.emit(Op::ContainerPack, type, {a, b}));
+                const auto receiver = p.emit(Op::RefMake, refType(type.detail), {home});
+                const auto zero = p.constant(u2(64), 0);
+                const auto cell = p.emit(Op::ContainerCell, refType(),
+                                         {Operand::typeRow(type.detail), receiver, zero});
+                Constant index;
+                index.type = u4(129);
+                index.aWords = {1, 0, indexKind == 1 ? 1U : 0U};
+                index.bWords = {indexKind == 2 ? 1U : 0U, 0, 0};
+                if (indexKind == 3) {
+                    index.type = s4(129);
+                    index.aWords = {~std::uint64_t{0}, ~std::uint64_t{0}, 1};
+                }
+                if (indexKind == 4) index.aWords = {2, 0, 0};
+                p.emit(Op::ContainerSwapValues, voidType(),
+                       {Operand::typeRow(type.detail), receiver, zero, p.constant(index)});
+                const auto observed = p.slot(element);
+                p.store(observed, p.emit(Op::LoadRef, element, {cell}));
+                p.end();
+                ASSERT_TRUE(verifies(p.d));
+                Capture capture;
+                ASSERT_NE(capture.file, nullptr);
+                k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+                const auto result = kirimasim::vm::run(p.d, ctx);
+                ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+                const auto got = stored(ctx, observed, element);
+                ASSERT_EQ(got.size(), 2U);
+                const auto& expected = p.d.constants[(indexKind == 0 ? b : a).id];
+                for (unsigned w = 0; w < 2; ++w) {
+                    EXPECT_EQ(got[w].a, expected.aWords[w]);
+                    EXPECT_EQ(got[w].b, 0U);
+                }
+                EXPECT_TRUE(capture.text().empty());
+            }
+}
+
 }  // namespace

@@ -1,0 +1,80 @@
+s0_sum 0
+s0_product 0
+s0_and 0
+s0_or 1
+s0_xor 0
+s0_wide_int 11111111111111111111111111111110
+s0_wide_integer 11111111111111111111111111111110
+s0_min 1 1
+s0_min_key 1 1
+s0_max 1 0
+s0_max_key 1 0
+s0_sort 1 1 0 0
+s0_rsort 0 0 1 1
+s0_reverse 0 1 0 1
+s0_sort_key 1 1 0 0
+s0_rsort_key 0 0 1 1
+s1_sum x
+s1_product x
+s1_and 0
+s1_or 1
+s1_xor x
+s1_wide_int 11111111111111111111111111111111
+s1_wide_integer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+s1_min 1 x
+s1_min_key 1 x
+s1_max 1 x
+s1_max_key 1 x
+s1_sort x 1 0 z
+s1_rsort x 0 1 z
+s1_reverse z 1 0 x
+s1_sort_key x 1 0 z
+s1_rsort_key x 0 1 z
+s2_sum x
+s2_product x
+s2_and 0
+s2_or 1
+s2_xor x
+s2_wide_int 11111111111111111111111111111110
+s2_wide_integer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+s2_min 1 1
+s2_min_key 1 1
+s2_max 1 0
+s2_max_key 1 0
+s2_sort 1 z 1 0
+s2_rsort 1 z 0 1
+s2_reverse 1 0 z 1
+s2_sort_key 1 z 1 0
+s2_rsort_key 1 z 0 1
+s3_sum 0
+s3_product 1
+s3_and 1
+s3_or 0
+s3_xor 0
+s3_wide_int 00000000000000000000000000000000
+s3_wide_integer 00000000000000000000000000000000
+s3_min 0
+s3_min_key 0
+s3_max 0
+s3_max_key 0
+s3_sort
+s3_rsort
+s3_reverse
+s3_sort_key
+s3_rsort_key
+s4_sum z
+s4_product z
+s4_and z
+s4_or z
+s4_xor z
+s4_wide_int 00000000000000000000000000000000
+s4_wide_integer zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+s4_min 1 z
+s4_min_key 1 z
+s4_max 1 z
+s4_max_key 1 z
+s4_sort z
+s4_rsort z
+s4_reverse z
+s4_sort_key z
+s4_rsort_key z

@@ -1,0 +1,16 @@
+s0_sum 0
+s0_product 0
+s0_and 0
+s0_or 1
+s0_xor 0
+s0_wide_int 11111111111111111111111111111110
+s0_wide_integer 11111111111111111111111111111110
+s0_min 1 1
+s0_min_key 1 1
+s0_max 1 0
+s0_max_key 1 0
+s0_sort 1 1 0 0
+s0_rsort 0 0 1 1
+s0_reverse 0 1 0 1
+s0_sort_key 1 1 0 0
+s0_rsort_key 0 0 1 1

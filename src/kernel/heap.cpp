@@ -485,6 +485,28 @@ HeapStatus Heap::writeCell(HeapLayoutId layout, CellToken cell, std::span<const 
     if (status && different) recordChange(HeapRoot::cell(cell));
     return status;
 }
+HeapStatus Heap::swapValues(HeapTypeId type, ContainerToken value,
+                            std::optional<std::int64_t> first,
+                            std::optional<std::int64_t> second) noexcept {
+    if (const auto error = check(type, value); error != HeapError::None) return failure(error);
+    if (value.bits == 0) return {};
+    const auto& container = *containers_.get(value.bits);
+    const auto a = element(first, container.cells.size());
+    const auto b = element(second, container.cells.size());
+    if (!a || !b || *a == *b) return {};
+    const auto firstCell = container.cells[*a], secondCell = container.cells[*b];
+    auto& lhs = cells_.get(firstCell.bits)->words;
+    auto& rhs = cells_.get(secondCell.bits)->words;
+    const bool different = !std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+                                       [](W4 x, W4 y) { return x.a == y.a && x.b == y.b; });
+    if (!different) return {};
+    lhs.swap(rhs);
+    changed_ = true;
+    recordChange(HeapRoot::cell(firstCell));
+    recordChange(HeapRoot::cell(secondCell));
+    return {};
+}
+
 HeapStatus Heap::storeNested(HeapLayoutId layout, CellToken cell, ContainerToken value) noexcept {
     const Layout* l = layoutOf(layout);
     if (!l || l->words.size() != 1 || l->words[0].nested == kNone)

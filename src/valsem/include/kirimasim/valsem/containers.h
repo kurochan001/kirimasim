@@ -33,6 +33,7 @@ public:
     bool erase(std::optional<std::int64_t> index);
     Value pop(bool front);
     void clear() { order_.clear(); }
+    void swapValues(std::optional<std::int64_t> first, std::optional<std::int64_t> second);
     [[nodiscard]] std::vector<Value> values() const;
 
 private:

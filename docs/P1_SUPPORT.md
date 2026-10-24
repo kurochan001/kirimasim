@@ -11,8 +11,8 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-25, including fixed-aggregate
-bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
+This inventory describes tier 1 as of 2026-10-25, including runtime array reduction/ordering/min/max, multidimensional integral
+binary input, fixed-aggregate bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
 and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
@@ -265,7 +265,7 @@ errors. Existing source bodies and expectations are unchanged.
   `$high` and `$increment` queries.
 
 Remaining forms include queue slices as assignment targets,
-container conditional values, dynamic-container reduction/ordering/locator methods, mixed
+container conditional values, other locator methods and shuffle, mixed
 or omitted dynamic foreach dimensions, runtime/nested query dimensions and
 fixed-aggregate/class/event elements. Implicit sensitivity (`always_comb`,
 `always_latch`, `always @*`, continuous assignments) to container values gives
@@ -275,14 +275,33 @@ SIR_SPEC 7.5 limitation. Class/DPI/VPI roots and complete Icarus parity remain
 unfinished. These are incremental language features, not complete container
 support.
 
-Ordering methods on fixed arrays also remain unimplemented.
-The [array-method amendment](notes/array-methods-proposal.md) for reductions
-and ordering is awaiting approval under P1_SCOPE.
-`min()` and `max()` also remain unsupported. Their separate
-[execution proposal](notes/array-extrema-proposal.md) is awaiting review of
-traversal, equal/unknown keys and key side effects. The checked standard
-returns at most one element, including tied extreme keys; the installed
-Icarus's duplicate-result observations are recorded as reference mismatches.
+### Runtime array methods
+
+Fixed arrays, dynamic arrays and queues support `sum`, `product`, `and`, `or`,
+`xor`, `reverse`, `sort`, `rsort`, `min` and `max` through one typed lowering
+path. Integral reductions retain width/signedness from the element or `with`
+expression; nonempty folds start at the first value, preserving singleton Z.
+Empty product returns one, empty and all ones, and the other empty reductions
+zero, under the approved project contract. Runtime call expressions follow
+these rules; parameter forms folded earlier by slang remain a limitation.
+
+Ordering supports integral, real/shortreal and string keys and stable ties.
+Only definitely true comparisons move a value; X/Z/NaN comparisons retain
+order. Existing element refs remain at their indices; refs inside nested owned
+values move with those values. Pure ordering keys are evaluated once per
+element before any movement. Effectful keys and calls to user functions whose
+purity is unverified receive an explicit unsupported diagnostic.
+
+Min/max return an independent unbounded queue: empty for empty input, exactly
+one original element otherwise. They snapshot the receiver before evaluating
+keys, including effectful keys, exactly once each. Declared traversal order
+and the first tied/unknown candidate are retained. Named/nested `with` and
+nested dynamic-container elements with scalar keys are tested. Fixed aggregate,
+class and event elements and unsupported source representations remain work.
+The [264 original cases and four direct unit tests](notes/runtime-array-methods.md)
+cover contexts, wide values, real/string/NaN keys, references and key effects.
+The approved [reduction/ordering](notes/array-methods-proposal.md) and
+[extrema](notes/array-extrema-proposal.md) decisions record reference differences.
 
 ## System tasks, functions and methods
 
@@ -357,7 +376,7 @@ and full source-context coverage remain unconfirmed.
   and `%0` forms. The first matching argument wins. No match leaves the
   output unchanged. Multiple conversions, a leading `%%` prefix and X/Z
   packed formats are not supported.
-- `$fread` supports scalar integral destinations and one-dimensional fixed
+- `$fread` supports scalar integral destinations and multidimensional fixed
   integral memories. On integral destinations, optional start/count values
   do not limit input; supplied expressions still run once left to right.
   Under SIR_SPEC 8, an integral actual is evaluated for copy-in and its
@@ -369,12 +388,15 @@ and full source-context coverage remain unconfirmed.
   The
   [153-case matrix](../tools/gen_scalar_fread_matrix.py) covers eight widths,
   two/four states and nine execution contexts, plus argument/storage checks.
-  One-dimensional memories of unpacked structures may
-  contain nested structures with integral leaves. Whole multidimensional
-  integral memories, dynamic memories, array/real structure members,
-  multidimensional structure memories and unpacked unions are not supported.
-  An original two-dimensional byte-memory probe passes the installed Icarus
-  but is rejected here; see the [comparison record](notes/p1-icarus-progress.md).
+  Integral memories with two or more remaining dimensions use linear
+  start/count positions, numerical low-to-high traversal and the rightmost
+  dimension varying fastest. A selected prefix is captured before later
+  arguments; one remaining dimension retains actual-index addressing.
+  The [156-case matrix](notes/multidim-fread-execution.md) covers direction,
+  partial input, counts and initial/automatic/ref storage. One-dimensional
+  memories of unpacked structures may contain nested structures with integral
+  leaves. Dynamic memories, array/real structure members, multidimensional
+  structure memories and unpacked unions remain unsupported.
 - Memory-file operations accept fixed memories passed through `ref`,
   including forwarding, waiting calls, automatic storage and references
   to array rows. Writemem also accepts `const ref`. See

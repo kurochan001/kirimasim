@@ -261,22 +261,23 @@ enum class Op : std::uint8_t {
     // Typed containers (SIR_SPEC.md 4.2.1, 5.8). Container-changing
     // instructions take a type row and a captured reference to the receiver
     // variable; they read its current value after all argument operands.
-    ContainerNew,       ///< %r = container.new <s4<64> size>, <initializer>
-    ContainerCopy,      ///< %r = container.copy <container value>
-    ContainerSnapshot,  ///< %r = container.snapshot <value>; preserves actual source bounds
-    ContainerAssign,    ///< container.assign !T, <receiver ref>, <source container>
-    ContainerPack,      ///< %r = container.pack <element value>...
-    ContainerSize,      ///< %r:u2<64> = container.size <container value>
-    ContainerRead,      ///< %r = container.read <container value>, <index>
-    ContainerCell,      ///< %r:ref = container.cell !T, <receiver ref>, <index>
-    ContainerWrite,     ///< container.write !T, <receiver ref>, <index>, <element>
-    ContainerClear,     ///< container.clear !T, <receiver ref>
-    QueueInsert,        ///< queue.insert !T, <receiver ref>, <index>, <element>
-    QueuePushFront,     ///< queue.push.front !T, <receiver ref>, <element>
-    QueuePushBack,      ///< queue.push.back !T, <receiver ref>, <element>
-    QueuePopFront,      ///< %r = queue.pop.front !T, <receiver ref>
-    QueuePopBack,       ///< %r = queue.pop.back !T, <receiver ref>
-    QueueErase,         ///< queue.erase !T, <receiver ref>, <index>
+    ContainerNew,         ///< %r = container.new <s4<64> size>, <initializer>
+    ContainerCopy,        ///< %r = container.copy <container value>
+    ContainerSnapshot,    ///< %r = container.snapshot <value>; preserves actual source bounds
+    ContainerAssign,      ///< container.assign !T, <receiver ref>, <source container>
+    ContainerPack,        ///< %r = container.pack <element value>...
+    ContainerSize,        ///< %r:u2<64> = container.size <container value>
+    ContainerRead,        ///< %r = container.read <container value>, <index>
+    ContainerCell,        ///< %r:ref = container.cell !T, <receiver ref>, <index>
+    ContainerWrite,       ///< container.write !T, <receiver ref>, <index>, <element>
+    ContainerClear,       ///< container.clear !T, <receiver ref>
+    ContainerSwapValues,  ///< container.swap.values !T, <receiver ref>, <first>, <second>
+    QueueInsert,          ///< queue.insert !T, <receiver ref>, <index>, <element>
+    QueuePushFront,       ///< queue.push.front !T, <receiver ref>, <element>
+    QueuePushBack,        ///< queue.push.back !T, <receiver ref>, <element>
+    QueuePopFront,        ///< %r = queue.pop.front !T, <receiver ref>
+    QueuePopBack,         ///< %r = queue.pop.back !T, <receiver ref>
+    QueueErase,           ///< queue.erase !T, <receiver ref>, <index>
     // Arithmetic (integral, real and shortreal).
     Add,
     Sub,

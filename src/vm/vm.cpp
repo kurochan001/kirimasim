@@ -2435,6 +2435,8 @@ private:
             HeapStatus status;
             if (in.op == Op::ContainerClear)
                 status = heap_.clear(t.value, current);
+            else if (in.op == Op::ContainerSwapValues)
+                status = heap_.swapValues(t.value, current, indexOf(ops[2]), indexOf(ops[3]));
             else if (in.op == Op::QueueErase)
                 status = heap_.erase(t.value, current, indexOf(ops[2]));
             else if (in.op == Op::QueuePopFront || in.op == Op::QueuePopBack)

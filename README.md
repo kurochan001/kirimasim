@@ -178,13 +178,13 @@ value and again when a positive-byte result is copied back. The earlier
 capture-once implementation is corrected in the separate
 [expectation/source review stack](docs/notes/fread-copyback-correction.md). On the
 earlier 61-probe inventory, this reduced the measured gaps from 23 to 22.
-Whole multidimensional integral memory input is included as a remaining
-gap; its [addressing proposal](docs/notes/fread-multidim-proposal.md) awaits
-approval. See the [comparison record](docs/notes/p1-icarus-progress.md).
-Array `min()`/`max()` remain unsupported; their
-[execution proposal](docs/notes/array-extrema-proposal.md) awaits review.
-The standard requires at most one result, including tied keys; the measured
-Icarus duplicate results are not the expected output.
+The approved [multidimensional memory input](docs/notes/multidim-fread-execution.md)
+now runs, with 156 original source cases. Runtime array reductions, stable
+ordering and min/max also run through [one typed lowering path](docs/notes/runtime-array-methods.md),
+with 264 original cases and four direct unit tests. Min/max return at most one
+source element, including tied keys; measured Icarus duplicate results remain
+reference mismatches. Effectful/unverified-pure ordering keys and unsupported
+aggregate representations remain explicit limitations.
 
 #### Existing quantitative gates and measured results
 
@@ -202,11 +202,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 3,659 | 3,657, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 3,929 | 3,927, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 331, `tests/suite/` 3,130 (made by 132 generators under `tools/`), tools 139, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 335, `tests/suite/` 3,394 (made by 133 generators under `tools/`), tools 141, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

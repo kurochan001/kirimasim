@@ -1,6 +1,6 @@
 # 実行時の配列の縮約・並べ替えの仕様修正案
 
-[English](array-methods-proposal.md)。状態：**承認済み（2026-10-25）、実装中**。
+[English](array-methods-proposal.md)。状態：**承認済み（2026-10-25）**。実装済みの範囲は[実行の記録](runtime-array-methods.ja.md)を参照。
 以下の提案本文は決定の記録として残し、承認を求める文や未来形は提案当時の記録です。
 
 ## 目的と承認が必要な理由

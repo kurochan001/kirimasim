@@ -32,6 +32,7 @@ bool hasNoResult(Op op) {
         case Op::ContainerAssign:
         case Op::ContainerWrite:
         case Op::ContainerClear:
+        case Op::ContainerSwapValues:
         case Op::QueueInsert:
         case Op::QueuePushFront:
         case Op::QueuePushBack:
@@ -1230,6 +1231,7 @@ private:
             case Op::ContainerAssign:
             case Op::ContainerWrite:
             case Op::ContainerClear:
+            case Op::ContainerSwapValues:
             case Op::QueueInsert:
             case Op::QueuePushFront:
             case Op::QueuePushBack:
@@ -1241,7 +1243,8 @@ private:
                 const bool writes = in.op == Op::ContainerWrite || in.op == Op::QueueInsert ||
                                     in.op == Op::QueuePushFront || in.op == Op::QueuePushBack;
                 const bool assign = in.op == Op::ContainerAssign;
-                const std::size_t n = 2 + (indexed ? 1 : 0) + (writes || assign ? 1 : 0);
+                const bool swap = in.op == Op::ContainerSwapValues;
+                const std::size_t n = swap ? 4 : 2 + (indexed ? 1 : 0) + (writes || assign ? 1 : 0);
                 if (!nOps(n)) break;
                 if (ops[0].kind != Operand::Kind::Type) {
                     bad("needs a container type row");
@@ -1256,10 +1259,14 @@ private:
                 if (!isValue(1) || ty(1) != refType(receiver.detail))
                     bad("receiver must be a captured ref to this container type");
                 const bool queue = in.op != Op::ContainerCell && in.op != Op::ContainerWrite &&
-                                   in.op != Op::ContainerClear && !assign;
+                                   in.op != Op::ContainerClear && !assign && !swap;
                 if (queue && receiver.kind != TypeKind::Queue) bad("method needs a queue receiver");
                 if (indexed && (!isValue(2) || !isIntegral(ty(2)) || ty(2).width == 0))
                     bad("element index must be integral");
+                if (swap)
+                    for (std::size_t i = 2; i < 4; ++i)
+                        if (!isValue(i) || !isIntegral(ty(i)) || ty(i).width == 0)
+                            bad("swap index must be integral");
                 if (assign) {
                     const Type* source = containerElement(ty(2));
                     if (!isValue(2) || !source || !equivalentValueTypes(d_, *source, *element))

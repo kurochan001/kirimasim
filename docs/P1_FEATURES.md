@@ -494,9 +494,12 @@ endmodule
 2 8112
 ```
 
-For a memory destination, start/count still select elements. Whole
-multidimensional memories remain unsupported; their proposed address rule
-[awaits approval](notes/fread-multidim-proposal.md).
+For a memory destination, start/count select elements. With one remaining
+fixed dimension, start is its actual index. With two or more, start is a
+zero-based linear position: enumerate numerical indices low to high, with
+the rightmost dimension varying fastest. The [approved implementation](notes/multidim-fread-execution.md)
+also captures selected prefix indices before descriptor/start/count effects.
+Dynamic memories and multidimensional structure memories remain unsupported.
 
 ## Reading unformatted binary words
 
@@ -915,3 +918,35 @@ Run this example with `--mintypmax=min`, `--mintypmax=typ` or
 `--mintypmax=max` to print `delay 2`, `delay 5` or `delay 9`, respectively.
 The default is `typ`. See the [CLI specification](spec/CLI.md) and
 [scheduler specification](spec/SCHEDULER_SPEC.md).
+
+## Runtime array methods
+
+Fixed arrays, dynamic arrays and queues share `sum`, `product`, `and`, `or`,
+`xor`, `sort`, `rsort`, `reverse`, `min` and `max`:
+
+```systemverilog
+module top;
+  int a[];
+  int smallest[$];
+  initial begin
+    a = '{8, 3, 6, 3};
+    $display("sum %0d", a.sum());
+    smallest = a.min() with (-item);
+    $display("chosen %0d %0d", smallest.size(), smallest[0]);
+    a.sort();
+    $display("sorted %0d %0d %0d %0d", a[0], a[1], a[2], a[3]);
+  end
+endmodule
+```
+
+```text
+sum 20
+chosen 1 8
+sorted 3 3 6 8
+```
+
+Min/max return source elements, not keys, and return just one on ties.
+Their keys can have effects; the receiver is snapshotted first. Ordering
+requires pure keys and retains cell references while moving values.
+See the [tested contract and limitations](notes/runtime-array-methods.md),
+including empty reductions, unknown comparisons and parameter folding.

@@ -69,6 +69,15 @@ bool ContainerValue::erase(std::optional<std::int64_t> index) {
     order_.erase(order_.begin() + static_cast<std::ptrdiff_t>(*index));
     return true;
 }
+void ContainerValue::swapValues(std::optional<std::int64_t> first,
+                                std::optional<std::int64_t> second) {
+    const auto a = reference(first), b = reference(second);
+    if (a == 0 || b == 0 || a == b) return;
+    const auto before = readReference(a);
+    writeReference(a, readReference(b));
+    writeReference(b, before);
+}
+
 Value ContainerValue::pop(bool front) {
     if (order_.empty()) return initial_;
     const Value result = readReference(front ? order_.front() : order_.back());

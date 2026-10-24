@@ -1,7 +1,7 @@
 # Array minimum/maximum: proposed execution contract
 
 [日本語](array-extrema-proposal.ja.md). Proposed 2026-10-24; **approved
-2026-10-25; implementation in progress**. The proposal below is retained as
+2026-10-25**; tested implementation subset: [execution checkpoint](runtime-array-methods.md). The proposal below is retained as
 the decision record; approval requests and future tense describe its original
 proposal state. This is separate from the reduction/
 ordering and multidimensional binary-input proposals. It adds no dependency.

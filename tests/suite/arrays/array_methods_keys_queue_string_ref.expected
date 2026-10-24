@@ -1,0 +1,5 @@
+min 1 a
+max 1 bb
+sort a a ba bb
+rsort bb ba a a
+reverse a ba a bb

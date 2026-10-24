@@ -1,0 +1,109 @@
+/*
+:name: array_methods_nan_queue_automatic
+:description: Array-method references, nonintegral keys and snapshot rules
+:tags: arrays
+:type: simulation
+:lrm: 1800-2023 7.12.1 7.12.2 7.12.3 13.5.2
+:oracle: spec
+:spec_check: ai
+:fourstate: yes
+:nondeterministic: no
+:generator: gen_array_methods_matrix.py@1
+:top_module: top
+:expected_stdout: @array_methods_nan_queue_automatic.expected
+*/
+module top;
+typedef real E;
+task automatic run();
+E a[$];
+E r[$];
+a.delete();
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+r = a.min(); $display("n0_min %0d %016h", r.size(), $realtobits(r[0]));
+r = a.max(); $display("n0_max %0d %016h", r.size(), $realtobits(r[0]));
+a.delete();
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.sort(); $write("n0_sort");
+$write(" %016h", $realtobits(a[0]));
+$write(" %016h", $realtobits(a[1]));
+$write(" %016h", $realtobits(a[2]));
+$write(" %016h", $realtobits(a[3]));
+$write("\n");
+a.delete();
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.rsort(); $write("n0_rsort");
+$write(" %016h", $realtobits(a[0]));
+$write(" %016h", $realtobits(a[1]));
+$write(" %016h", $realtobits(a[2]));
+$write(" %016h", $realtobits(a[3]));
+$write("\n");
+a.delete();
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+r = a.min(); $display("n1_min %0d %016h", r.size(), $realtobits(r[0]));
+r = a.max(); $display("n1_max %0d %016h", r.size(), $realtobits(r[0]));
+a.delete();
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.sort(); $write("n1_sort");
+$write(" %016h", $realtobits(a[0]));
+$write(" %016h", $realtobits(a[1]));
+$write(" %016h", $realtobits(a[2]));
+$write(" %016h", $realtobits(a[3]));
+$write("\n");
+a.delete();
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.rsort(); $write("n1_rsort");
+$write(" %016h", $realtobits(a[0]));
+$write(" %016h", $realtobits(a[1]));
+$write(" %016h", $realtobits(a[2]));
+$write(" %016h", $realtobits(a[3]));
+$write("\n");
+a.delete();
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.push_back($bitstoreal(64'h7ff8000000000001));
+r = a.min(); $display("n2_min %0d %016h", r.size(), $realtobits(r[0]));
+r = a.max(); $display("n2_max %0d %016h", r.size(), $realtobits(r[0]));
+a.delete();
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.sort(); $write("n2_sort");
+$write(" %016h", $realtobits(a[0]));
+$write(" %016h", $realtobits(a[1]));
+$write(" %016h", $realtobits(a[2]));
+$write(" %016h", $realtobits(a[3]));
+$write("\n");
+a.delete();
+a.push_back($bitstoreal(64'h4008000000000000));
+a.push_back($bitstoreal(64'hc000000000000000));
+a.push_back($bitstoreal(64'h3ff0000000000000));
+a.push_back($bitstoreal(64'h7ff8000000000001));
+a.rsort(); $write("n2_rsort");
+$write(" %016h", $realtobits(a[0]));
+$write(" %016h", $realtobits(a[1]));
+$write(" %016h", $realtobits(a[2]));
+$write(" %016h", $realtobits(a[3]));
+$write("\n");
+endtask
+initial run();
+endmodule

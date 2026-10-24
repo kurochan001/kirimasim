@@ -715,4 +715,131 @@ TEST(Heap, ContextsOwnIndependentStorageAndCollectors) {
     EXPECT_EQ(at(two.heap(), a2, v2, 0), 20U);
 }
 
+TEST(Heap, SwappingValuesPreservesCellsAndMatchesIndependentReferenceModel) {
+    for (const unsigned width : {1U, 5U, 32U, 64U, 65U, 129U})
+        for (const bool four : {false, true})
+            for (const bool queue : {false, true}) {
+                SCOPED_TRACE(::testing::Message() << width << '/' << four << '/' << queue);
+                FailingMemory memory;
+                Heap heap(&memory);
+                const auto layout = heap.addLayout(integralLayout(width, four));
+                ASSERT_TRUE(layout);
+                const auto type =
+                    queue ? queueType(heap, layout.value, 5) : arrayType(heap, layout.value);
+                vs::ContainerValue model(vs::filled(vs::Logic::Zero, width, false));
+                std::vector<vs::Value> initial;
+                std::vector<W4> input;
+                std::mt19937_64 random(32499 + width);
+                for (unsigned i = 0; i < 5; ++i) {
+                    std::vector<std::uint64_t> a((width + 63) / 64), b(a.size());
+                    for (std::size_t w = 0; w < a.size(); ++w) {
+                        a[w] = random();
+                        b[w] = four ? random() : 0;
+                    }
+                    initial.push_back(vs::fromWords(a, b, width, false));
+                    const auto words = encoded(initial.back());
+                    input.insert(input.end(), words.begin(), words.end());
+                }
+                model.replace(initial);
+                const auto made = heap.fromValues(type, input);
+                ASSERT_TRUE(made);
+                const auto value = made.value;
+                std::array<CellToken, 5> cells;
+                std::array<std::uint64_t, 5> refs;
+                for (unsigned i = 0; i < 5; ++i) {
+                    cells[i] = heap.cell(type, value, i).value;
+                    refs[i] = model.reference(i);
+                }
+                struct Notices {
+                    std::array<HeapRoot, 2> roots;
+                    unsigned count = 0;
+                    static void notify(void* frame, HeapRoot root) noexcept {
+                        auto& self = *static_cast<Notices*>(frame);
+                        if (self.count < 2) self.roots[self.count] = root;
+                        ++self.count;
+                    }
+                } notices;
+                heap.setChangeHook({Notices::notify, &notices});
+                const auto stats = heap.stats();
+                std::vector<W4> out((width + 63) / 64);
+                for (unsigned round = 0; round < 150; ++round) {
+                    const auto index = [&]() -> std::optional<std::int64_t> {
+                        if (random() % 8 == 0) return {};
+                        return static_cast<std::int64_t>(random() % 9) - 2;
+                    };
+                    const auto a = index(), b = index();
+                    const bool valid = a && b && *a >= 0 && *b >= 0 && *a < 5 && *b < 5;
+                    const bool different =
+                        valid && !sameWords(encoded(model.read(a)), encoded(model.read(b)));
+                    notices.count = 0;
+                    memory.arm(0);
+                    const auto result = heap.swapValues(type, value, a, b);
+                    memory.disarm();
+                    ASSERT_TRUE(result);
+                    model.swapValues(a, b);
+                    ASSERT_EQ(notices.count, different ? 2U : 0U);
+                    if (different) {
+                        EXPECT_EQ(notices.roots[0], HeapRoot::cell(cells[*a]));
+                        EXPECT_EQ(notices.roots[1], HeapRoot::cell(cells[*b]));
+                    }
+                    for (unsigned i = 0; i < 5; ++i) {
+                        EXPECT_EQ(heap.cell(type, value, i).value, cells[i]);
+                        EXPECT_EQ(model.reference(i), refs[i]);
+                        ASSERT_TRUE(heap.readCell(layout.value, cells[i], out));
+                        EXPECT_TRUE(sameWords(out, encoded(model.readReference(refs[i]))));
+                        ASSERT_TRUE(heap.read(type, value, i, out));
+                        EXPECT_TRUE(sameWords(out, encoded(model.read(i))));
+                    }
+                    EXPECT_EQ(heap.stats().containers, stats.containers);
+                    EXPECT_EQ(heap.stats().cells, stats.cells);
+                    EXPECT_EQ(heap.size(type, value).value, 5U);
+                }
+                heap.setChangeHook({});
+                EXPECT_EQ(heap.swapValues(HeapTypeId{9999}, value, 0, 1).error,
+                          HeapError::InvalidType);
+                EXPECT_EQ(heap.swapValues(type, ContainerToken{1}, 0, 1).error,
+                          HeapError::InvalidHandle);
+                EXPECT_TRUE(heap.swapValues(type, {}, 0, 1));
+            }
+}
+
+TEST(Heap, NestedSwapMovesOwnedValuesWithoutCloningOrInvalidatingInnerReferences) {
+    FailingMemory memory;
+    Heap heap(&memory);
+    const auto leaf = scalar(heap);
+    const auto inner = queueType(heap, leaf);
+    const auto first = values(heap, inner, {11, 12});
+    const auto second = values(heap, inner, {21, 22});
+    const std::array<HeapWord, 1> nested{{{~std::uint64_t{0}, false, {0, 0}, inner}}};
+    const auto layout = heap.addLayout(nested);
+    ASSERT_TRUE(layout);
+    const auto outer = queueType(heap, layout.value);
+    const std::array<W4, 2> words{{{first.bits, 0}, {second.bits, 0}}};
+    const auto made = heap.fromValues(outer, words);
+    ASSERT_TRUE(made);
+    const auto value = made.value;
+    const auto a = ContainerToken{at(heap, outer, value, 0)};
+    const auto b = ContainerToken{at(heap, outer, value, 1)};
+    const auto ref = heap.cell(inner, a, 0);
+    ASSERT_TRUE(ref);
+    const auto cell = heap.cell(outer, value, 0).value;
+    const auto stats = heap.stats();
+    memory.arm(0);
+    const auto result = heap.swapValues(outer, value, 0, 1);
+    memory.disarm();
+    ASSERT_TRUE(result);
+    EXPECT_EQ(at(heap, outer, value, 0), b.bits);
+    EXPECT_EQ(at(heap, outer, value, 1), a.bits);
+    EXPECT_EQ(heap.cell(outer, value, 0).value, cell);
+    EXPECT_EQ(heap.stats().cells, stats.cells);
+    EXPECT_EQ(heap.stats().containers, stats.containers);
+    const std::array<W4, 1> replacement{{{99, 0}}};
+    ASSERT_TRUE(heap.writeCell(leaf, ref.value, replacement));
+    EXPECT_EQ(at(heap, inner, a, 0), 99U);
+    const std::array<HeapRoot, 1> roots{{HeapRoot::container(value)}};
+    ASSERT_TRUE(heap.collect(roots));
+    EXPECT_EQ(at(heap, inner, ContainerToken{at(heap, outer, value, 1)}, 0), 99U);
+    EXPECT_EQ(at(heap, inner, ContainerToken{at(heap, outer, value, 0)}, 1), 22U);
+}
+
 }  // namespace

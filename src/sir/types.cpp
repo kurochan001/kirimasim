@@ -109,6 +109,7 @@ const char* opName(Op op) {
         case Op::ContainerCell: return "container.cell";
         case Op::ContainerWrite: return "container.write";
         case Op::ContainerClear: return "container.clear";
+        case Op::ContainerSwapValues: return "container.swap.values";
         case Op::QueueInsert: return "queue.insert";
         case Op::QueuePushFront: return "queue.push.front";
         case Op::QueuePushBack: return "queue.push.back";
@@ -259,6 +260,7 @@ bool isContainerMutation(Op op) {
         case Op::ContainerAssign:
         case Op::ContainerWrite:
         case Op::ContainerClear:
+        case Op::ContainerSwapValues:
         case Op::QueueInsert:
         case Op::QueuePushFront:
         case Op::QueuePushBack:
