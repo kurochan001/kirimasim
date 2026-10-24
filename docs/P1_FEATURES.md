@@ -149,6 +149,31 @@ endmodule
 7 3
 ```
 
+## Monitoring an existing queue cell
+
+`$monitor` also displays a change to an existing queue element. This example
+keeps the container handle and changes its first cell:
+
+```systemverilog
+module top;
+  int values[$];
+  initial begin
+    values.push_back(0);
+    $monitor("%0d", values[0]);
+    #2 values[0] = 9;
+  end
+endmodule
+```
+
+```text
+0
+9
+```
+
+See the [verification record and limits](notes/pattern-sir-execution.md).
+Source `%p` remains unsupported; heap-backed file-monitor combinations still
+need dedicated verification.
+
 ## Dynamic arrays and queues
 
 The tested language subset now uses the shared typed heap for construction,

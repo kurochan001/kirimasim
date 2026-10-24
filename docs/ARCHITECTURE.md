@@ -129,6 +129,21 @@ unsigned indices and rejects unknown ranges through the ordinary branch rules.
 Unimplemented language forms and implicit heap sensitivity are diagnosed;
 full container and Icarus coverage remain work.
 
+## Typed pattern rendering and monitor dependencies
+
+At `4c69843`, SIR has distinct PatternIds and immutable presentation layouts,
+with verification, text and VM execution. The VM marshals typed payloads into
+borrowed views; the shared kernel renderer applies the output rules. Packed
+windows, enum metadata, fixed shapes and nested containers are explicit, with
+no new runtime name lookup or source-type inference. Front's literal/runtime
+argument bridge remains unfinished, so source `%p` stays unsupported.
+
+The scheduler captures heap dependencies during the actual Postponed monitor
+body and observes cell changes. Dependencies are weak and detach with the
+registration's lifetime. Kernel/VM file-monitor wiring is present, while new
+heap-backed file-monitor combinations still need dedicated verification.
+See the [implementation and verification scope](notes/pattern-sir-execution.md).
+
 ## Assignment capture and suspension
 
 The front end captures all RHS leaves of an aggregate assignment before

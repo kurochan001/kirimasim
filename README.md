@@ -36,6 +36,13 @@ for the specification, the tests, and review.** See
 > recorded in the [class investigation](docs/notes/class-execution-investigation.md);
 > successful execution alone does not establish support.
 
+At `4c69843`, typed pattern layouts, verification, text and execution are
+connected to the shared renderer. Front's literal/runtime argument bridge
+remains unfinished, so source `%p` is still unsupported. A display monitor
+now observes a change in an existing queue cell. See the
+[current implementation and verification scope](docs/notes/pattern-sir-execution.md)
+and [runnable example](docs/P1_FEATURES.md#monitoring-an-existing-queue-cell).
+
 UDP evaluation now accepts input counts beyond 32 through the shared kernel.
 [106 original sources and independent value checks](docs/notes/wide-udp-inputs.md)
 cover late terminals, state, X/Z, delays and strength. A dense-table compilation

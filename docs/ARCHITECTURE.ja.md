@@ -97,6 +97,19 @@ frontは[検証済みの言語範囲](P1_SUPPORT.ja.md#動的コンテナの共�
 スライスの正規化は広い符号なし添字を保ち、X/Zの範囲は通常の分岐規則で空になります。
 コンテナ全体とIcarusの範囲への対応は未完了です。
 
+## 型付きpattern表示とmonitorの依存
+
+`4c69843`では、SIRの独立したPatternIdと不変の表示レイアウトを、検証器・text・VMへ
+接続しています。VMは型付きpayloadから借用viewを作り、共有カーネルのrendererが
+表示規則を適用します。packed範囲・enum・入れ子の固定形状・動的コンテナを明示し、
+実行中の名前検索やソース型の推測を増やしません。frontの定数・runtime引数の接続が
+残るため、ソース`%p`は未対応です。
+
+schedulerは実際のPostponedのmonitor本体を実行する間にheap依存を捕捉し、要素値の変更を
+再表示へ伝えます。依存は弱い参照で、登録の生存期間とともに外します。kernel APIとVMは
+file monitorにも接続していますが、新しいheap file-monitorの組み合わせの検証は残ります。
+[実装と検証範囲](notes/pattern-sir-execution.ja.md)を参照してください。
+
 ## 代入値の保持と待機
 
 frontは集約代入の右辺の全leafを保持してから、対象の実行時の添字を評価します。

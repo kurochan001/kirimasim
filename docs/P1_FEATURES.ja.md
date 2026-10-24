@@ -145,6 +145,30 @@ endmodule
 7 3
 ```
 
+## キュー要素の変更をmonitorで表示する
+
+`$monitor`は、既存queueの要素値を変更したときにも再表示します。
+次の例は同じコンテナのハンドルを保ったまま、先頭要素を変更します。
+
+```systemverilog
+module top;
+  int values[$];
+  initial begin
+    values.push_back(0);
+    $monitor("%0d", values[0]);
+    #2 values[0] = 9;
+  end
+endmodule
+```
+
+```text
+0
+9
+```
+
+[検証記録と制限](notes/pattern-sir-execution.ja.md)を参照してください。
+ソース`%p`は引き続き未対応で、heapを使うfile monitorの組み合わせにも検証が残ります。
+
 ## 動的配列とキュー
 
 構築、値のコピー、要素アクセス、キューのメソッドを、共通の型付きヒープで実行します。

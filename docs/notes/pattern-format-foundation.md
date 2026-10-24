@@ -1,8 +1,9 @@
 # Assignment-pattern renderer in the shared kernel
 
 [日本語](pattern-format-foundation.ja.md). Native implementation `156e65c`,
-2026-10-24. This is a kernel API foundation; source-language `%p` is still
-unsupported and no comparison gap is claimed closed.
+2026-10-24. This is the kernel API foundation. The subsequent `4c69843` connects
+[typed SIR/execution](pattern-sir-execution.md). Front integration remains,
+so source `%p` is still unsupported and no comparison gap is claimed closed.
 
 SYSTEM_TASKS 3.9 already fixes the output forms for `%p`/`%0p` (IEEE
 1800-2023 21.2.1.6). The new public C++20 `pattern.h` API renders borrowed,
@@ -39,9 +40,10 @@ values and creates no heap roots or mutable global state.
 This API does not establish a layout for an unimplemented source type. In
 particular, associative ordering is a caller precondition, tagged values need
 a supplied payload view, and handle ordinals are supplied metadata. Actual
-class/event identities, typed SIR formatting metadata, front lowering, deferred
-capture and runtime-format argument transport still need integration before
-source support is enabled. The pending class and event contracts remain pending.
+class/event identities still depend on their pending contracts. Typed SIR
+formatting metadata and execution are present at `4c69843`; front lowering,
+source argument capture and runtime-format transport remain before source
+support is enabled. The pending class and event contracts remain pending.
 
 ## Independent checks
 
@@ -66,15 +68,16 @@ evidence. Restored sources rebuild and pass all 36 selected tests.
 
 ## Remaining work
 
-Integrate immutable type/field/enum metadata with typed SIR, verifier/text and
-front selection, then wire both constant and runtime formatting through this
-shared API. Preserve evaluation order, snapshots, container roots, postponed
+Typed SIR layouts, verification, text and VM execution were implemented in
+the subsequent `4c69843`. Next, connect front-selected type/field/enum metadata
+and argument snapshots, then wire both constant and runtime formatting through
+this shared API. Preserve evaluation order, snapshots, container roots, postponed
 reports and copyback; support must work in all existing source contexts.
 Retire obsolete `%p` rejection expectations in a separate review branch when
 that source support is implemented. Keep their original source bodies intact.
 Full P1 coverage, source `%p` execution and new Linux results remain unconfirmed.
 
-## Full local validation
+## Renderer-stage local validation (historical)
 
 On 2026-10-24 all 21 local-CI checks pass with native implementation
 `156e65c` plus the strengthened enum, control-registry and count follow-up.

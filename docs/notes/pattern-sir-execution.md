@@ -1,6 +1,6 @@
 # Typed assignment-pattern execution checkpoint
 
-[日本語](pattern-sir-execution.ja.md). 2026-10-24. This extends the
+[日本語](pattern-sir-execution.ja.md). 2026-10-24. Implementation: `4c69843`. This extends the
 [kernel renderer](pattern-format-foundation.md) with typed SIR and execution.
 Source-language `%p` is still unsupported: front and both literal/runtime
 format-argument bridges remain unfinished. P1/Icarus parity is not established.

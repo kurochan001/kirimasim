@@ -315,6 +315,11 @@ is connected, while front format-argument integration remains, so source
 `%p` stays unsupported; this does not enable class identities or associative
 array ordering.
 
+A display monitor follows a value change in an existing queue cell, checked
+with [original source and SIR](notes/pattern-sir-execution.md). Dedicated
+heap-backed file-monitor closure/replacement/allocation combinations remain
+unconfirmed.
+
 - `$strobe` and `$monitor` arguments cannot read automatic variables.
 - Output conversions: `%b`, `%o`, `%h` / `%x`, `%d`, `%c`, `%s`, `%e`,
   `%f`, `%g`, `%t`, `%m`, `%l`, `%%`, with widths and supported flags.

@@ -1,6 +1,6 @@
 # 型付き代入パターン実行の区切り
 
-[English](pattern-sir-execution.md)。2026-10-24。
+[English](pattern-sir-execution.md)。2026-10-24。 実装コミット：`4c69843`。
 [共有表示API](pattern-format-foundation.ja.md)へSIRと実行処理を接続しました。
 ソースの`%p`は引き続き未対応で、frontと定数・runtime書式引数の接続が残っています。
 P1の完了やIcarusとの全面的な同等性を示すものではありません。

@@ -13,6 +13,11 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Documentation
 
+- Align both READMEs, feature/support guides, architecture and pattern notes
+  with the typed SIR/execution checkpoint. Add a verified queue-monitor example
+  and distinguish current validation from historical renderer-stage results.
+  Source `%p` remains unfinished at the front argument bridge.
+
 - Record 46 original class observations and a known omission of unused class
   static-initializer side effects. Correct the blanket unsupported-diagnostic
   claim in both READMEs and document remaining class runtime work separately

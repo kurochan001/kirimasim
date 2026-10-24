@@ -31,12 +31,12 @@ are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
 `156e65c` adds a [shared-kernel assignment-pattern renderer](pattern-format-foundation.md).
-Fourteen new unit tests and all 22 older Format tests pass. Typed SIR/front
-integration remains; source `%p` is still unsupported and no 87-probe gap is
-claimed closed by this API foundation.
+Fourteen new unit tests and all 22 older Format tests pass. Typed SIR/execution
+followed at `4c69843`; front integration remains. Source `%p` is still
+unsupported and no 87-probe gap is claimed closed by this API foundation.
 The strengthened 112 enum combinations and six compiled controls pass their
-checks. Latest full CI has 3,329 passes/two known skips out of 3,331 in each
-of dev/ASan/UBSan; release has 3,330/two out of 3,332. All 136 Tools and
+checks. At that renderer stage, full CI had 3,329 passes/two known skips out
+of 3,331 in each of dev/ASan/UBSan; release had 3,330/two out of 3,332. All 136 Tools and
 required LLVM-22 checks pass, and all 513 control entries apply. See the
 [hashed validation record](../measurements/2026-10-24/pattern-format-negative-controls.json).
 
