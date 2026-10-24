@@ -53,7 +53,7 @@ future faster implementation must preserve these comparison and ref rules.
 
 ## Independent verification
 
-[The generator](../../tools/gen_array_methods_matrix.py) produces 264 source
+[The generator](../../tools/gen_array_methods_matrix.py) produces 270 source
 programs and expected outputs using Python integer folds, explicit four-state
 truth tables and stable sorting of runs separated by unknown keys. Simulator
 output is not used as the oracle. The matrix covers:
@@ -68,9 +68,9 @@ output is not used as the oracle. The matrix covers:
 - 24 held-reference cases, scalar and nested, across fixed/dynamic/unbounded/
   bounded receivers and all three storage contexts. Nested selected results
   are mutated to test independent copies.
-- Six effectful-key cases: min/max across fixed/dynamic/queue, verifying
+- Twelve effectful-key cases: min/max across fixed/dynamic/queue, verifying
   call count, traversal trace, receiver evaluation, source mutation during
-  keys, and no key calls on empty input.
+  keys, in-place writes to the original elements, and no key calls on empty input.
 - Nine NaN cases with payload-bit output, testing first/middle/last unordered
   keys, and nine named/nested `with` cases with independent result copying.
 
@@ -80,7 +80,8 @@ SIR operands/types, and hand-built SIR execution. The kernel matrix uses
 150 valid/invalid random index pairs per width/state/container configuration,
 retains every element reference, checks notifications and forbids heap
 allocation during exchange. The VM matrix includes 129-bit positive, negative,
-unknown and out-of-range indices. All 264 source cases and four unit tests
+unknown and out-of-range indices. The 36 additional CLI cases check explicit rejection of effectful and unverified-pure
+ordering keys across receiver/storage contexts. All 270 source cases and four unit tests
 pass in dev; full configuration and compiled negative-control results will
 be recorded in the validation checkpoint.
 

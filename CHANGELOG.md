@@ -76,7 +76,7 @@ own. CONTRIBUTING.md says what goes in this file.
 - Runtime array reduction, stable ordering and min/max for fixed arrays,
   dynamic arrays and queues, including typed `with`, nested-container keys,
   retained element refs and snapshotting before effectful extrema keys.
-  Four direct unit tests and 264 original source cases cover the approved
+  Four direct unit tests and 270 original source cases cover the approved
   contract. Effectful/unverified-pure ordering keys and unsupported aggregate
   representations remain explicit limitations.
 - Binary input into multidimensional fixed integral memories, using numerical

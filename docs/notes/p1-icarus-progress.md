@@ -13,6 +13,21 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+The approved [multidimensional binary input](multidim-fread-execution.md) and
+[runtime array methods](runtime-array-methods.md) now execute. The latter has
+270 original source cases, four direct unit tests and 36 explicit key-diagnostic
+cases. This includes six in-place-write key cases added after a compiled
+snapshot-omission control exposed that deletion-only tests were insufficient.
+
+The unchanged 87 original probes now have **24 passing gaps against each
+Icarus version**, down from 25 (13.0) and 31 (14.0 development), with the same
+four/seven reference mismatches. Ten native observations change from failure
+to passing; older passing observations and all reference statuses/expected
+outputs are retained. These finite probes do not establish complete P1.
+Full configuration and negative-control evidence follow in the validation
+checkpoint; historical results below retain their recorded revisions.
+
+
 `2ad73ae` adds [bit queries on fixed unpacked aggregates](aggregate-bit-queries.md)
 through the existing shared streaming/value path. All 136 new source cases
 pass, including wide two/four-state leaves and single receiver/control
@@ -115,11 +130,10 @@ preserved 84-item records and three fresh probes on the same retained source.
 The earlier 84-item cohort retains 24/30 gaps. This closes two newly inventoried
 mechanisms and exposes a compiler limit, without changing older cohort results.
 
-Nine detailed semantic amendments remain pending:
+The reduction/ordering, multidimensional input and extrema amendments were
+approved on 2026-10-25 and now have the tested subsets linked above.
+Six other detailed semantic amendments remain pending:
 
-- [Array reductions and ordering](array-methods-proposal.md).
-- [Multidimensional binary memory addressing](fread-multidim-proposal.md).
-- [Array minimum/maximum execution](array-extrema-proposal.md).
 - [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
 - [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
 - [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).

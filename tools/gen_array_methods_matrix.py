@@ -374,6 +374,32 @@ $display("copy %0d", r[0][0]);
 '''
             yield name, wrapped(name, declarations, body, context, dims, 'typedef int Row[$];\ntypedef Row E;'), 'nested 1 3 3\ncopy 3\n'
 
+
+def snapshot_write_cases():
+    # Whole-array delete rebinds the variable, leaving the previously loaded
+    # handle intact. In-place writes are required to distinguish a snapshot.
+    for shape in ('fixed', 'dynamic', 'queue'):
+        for method in ('min', 'max'):
+            name = f'array_methods_snapshot_write_{shape}_{method}'
+            dims = '[4:1]' if shape == 'fixed' else '[]' if shape == 'dynamic' else '[$]'
+            globals_ = f'''
+typedef int E;
+E original{dims};
+int calls, trace;
+function int key(input int value);
+  calls++;
+  trace = trace * 10 + value;
+  foreach (original[i]) original[i] = 99;
+  return -value;
+endfunction
+'''
+            body = 'original = new[4];\n' if shape == 'dynamic' else ''
+            for i, value in enumerate((8, 3, 6, 3)):
+                body += f'original.push_back({value});\n' if shape == 'queue' else f'original[{4-i if shape == "fixed" else i}] = {value};\n'
+            body += f'r = original.{method}() with (key(item));\n'
+            body += f'$display("snapshot %0d %0d %0d %0d %0d", calls, trace, r.size(), r[0], original[{4 if shape == "fixed" else 0}]);\n'
+            yield name, wrapped(name, 'int r[$];', body, 'initial', dims, globals_), f'snapshot 4 8363 1 {8 if method == "min" else 3} 99\n'
+
 def files():
     for shape in ('fixed', 'dynamic', 'queue'):
         for width in (1, 9, 32, 65, 129):
@@ -387,6 +413,9 @@ def files():
         yield name + '.sv', source
         yield name + '.expected', expected
     for name, source, expected in boundary_cases():
+        yield name + '.sv', source
+        yield name + '.expected', expected
+    for name, source, expected in snapshot_write_cases():
         yield name + '.sv', source
         yield name + '.expected', expected
 

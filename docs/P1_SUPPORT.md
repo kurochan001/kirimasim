@@ -298,7 +298,7 @@ keys, including effectful keys, exactly once each. Declared traversal order
 and the first tied/unknown candidate are retained. Named/nested `with` and
 nested dynamic-container elements with scalar keys are tested. Fixed aggregate,
 class and event elements and unsupported source representations remain work.
-The [264 original cases and four direct unit tests](notes/runtime-array-methods.md)
+The [270 original cases and four direct unit tests](notes/runtime-array-methods.md)
 cover contexts, wide values, real/string/NaN keys, references and key effects.
 The approved [reduction/ordering](notes/array-methods-proposal.md) and
 [extrema](notes/array-extrema-proposal.md) decisions record reference differences.
