@@ -40,6 +40,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('wide gate strength: delayed guard ignores later blocks',
+     'src/front/lower.cpp',
+     '            for (const sir::BasicBlock& block : design_.process(p).blocks)\n'
+     '                for (const sir::Instr& in : block.instrs)\n'
+     '                    if (in.op == sir::Op::DriveDelay) return true;',
+     '            for (const sir::Instr& in : design_.process(p).blocks[0].instrs)\n'
+     '                if (in.op == sir::Op::DriveDelay) return true;'),
     ('wide gate strength: zero half uses a fixed word offset',
      'src/vm/vm.cpp', 'sideWord(sides[d], w + 64 * k)',
      'sideWord(sides[d], 64 + 64 * k)'),

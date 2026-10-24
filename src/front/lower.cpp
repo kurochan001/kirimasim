@@ -1111,8 +1111,9 @@ void Lowerer::resolveNets() {
         // delayed would show its sides before its value.
         const auto delayedSide = std::find_if(ps.begin(), ps.end(), [&](sir::ProcessId p) {
             if (!sides_.contains(p)) return false;
-            for (const sir::Instr& in : design_.process(p).blocks[0].instrs)
-                if (in.op == sir::Op::DriveDelay) return true;
+            for (const sir::BasicBlock& block : design_.process(p).blocks)
+                for (const sir::Instr& in : block.instrs)
+                    if (in.op == sir::Op::DriveDelay) return true;
             return false;
         });
         if (delayedSide != ps.end()) {
