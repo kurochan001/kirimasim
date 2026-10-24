@@ -13,6 +13,23 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Further approval (2026-10-25):** the user approved all six remaining detailed
+[execution contracts](p1-execution-contracts-2026-10-25.md). They are normative
+amendments now; implementation proceeds separately, starting with complete-state
+delayed three-state gates. Earlier pending-status statements below retain their
+checkpoint provenance. Existing expectation changes still require separate review.
+
+
+Source `20274407` now implements [complete delayed three-state propagation](delayed-gate-state-execution.md).
+All 240 original source cases and three direct tests pass; eight compiled
+controls are caught and restored sources pass 345 selected tests. Nine quality
+checks and the four-configuration execution checks pass. The full observed
+CTest sets retain **one failure**, an obsolete existing rejection oracle;
+its expectation-only migration is separately awaiting approval. The stronger
+12-case draft passes in every configuration. Eight new ordinary gate cases
+pass both references and native, and all eight fail the retained native baseline.
+This does not claim P1 completion or completion of the other five contracts.
+
 The approved [multidimensional binary input](multidim-fread-execution.md) and
 [runtime array methods](runtime-array-methods.md) now execute. The latter has
 270 original source cases, four direct unit tests and 36 explicit key-diagnostic
@@ -137,7 +154,8 @@ mechanisms and exposes a compiler limit, without changing older cohort results.
 
 The reduction/ordering, multidimensional input and extrema amendments were
 approved on 2026-10-25 and now have the tested subsets linked above.
-Six other detailed semantic amendments remain pending:
+The following six detailed contracts were approved on 2026-10-25; their complete
+implementation remains work:
 
 - [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
 - [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).

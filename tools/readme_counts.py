@@ -62,6 +62,9 @@ def render(c, lang):
     s, p, f, o, k = c["svtests"], c["population"], c["fuzz"], c["others"], c["kinds"]
     lin, mac = s["linux"], s["macos"]
     dates = s.get("measured", {"linux": c["measured"], "macos": c["measured"]})
+    failed = c["ctest"]["total"] - c["ctest"]["passed"] - c["ctest"]["skipped"]
+    failures_en = f", {failed} failed" if failed else ""
+    failures_ja = f"、{failed} 本は失敗" if failed else ""
     pct = 100.0 * p["passed"] / p["total"]
     sv_met = all(x["kirimasim"] >= x["icarus"] for x in (lin, mac))
     # kirimasim's count, one number when the two OSes agree
@@ -103,7 +106,7 @@ def render(c, lang):
             "| Test set | Tests | kirimasim | Icarus Verilog | Verilator |",
             "| --- | --- | --- | --- | --- |",
             f"| This repository's tests (CTest, dev configuration) | {n(c['ctest']['total'])} | "
-            f"{n(c['ctest']['passed'])}, {c['ctest']['skipped']} skipped | — | — |",
+            f"{n(c['ctest']['passed'])}, {c['ctest']['skipped']} skipped{failures_en} | — | — |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | "
             f"{s['total']} | {ours} | {o['svtests']['icarus']} | "
             f"{o['svtests']['verilator']} |",
@@ -147,7 +150,7 @@ def render(c, lang):
             "| テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |",
             "| --- | --- | --- | --- | --- |",
             f"| このリポジトリのテスト（CTest、dev の構成） | {n(c['ctest']['total'])} | "
-            f"{n(c['ctest']['passed'])}、{c['ctest']['skipped']} 本は飛ばす | — | — |",
+            f"{n(c['ctest']['passed'])}、{c['ctest']['skipped']} 本は飛ばす{failures_ja} | — | — |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | "
             f"{s['total']} | {ours.replace(' (Linux), ', '（Linux）、').replace(' (macOS)', '（macOS）')} | "
             f"{o['svtests']['icarus']} | {o['svtests']['verilator']} |",

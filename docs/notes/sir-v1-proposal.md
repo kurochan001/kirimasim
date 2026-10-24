@@ -15,6 +15,11 @@ adds `ContainerSwapValues` / `container.swap.values` and `Heap::swapValues`
 full Op/API inventory before the P2 schema or ABI freeze; formatVersion remains
 0 and C ABI remains 0.3. This follow-up does not approve the detailed v1 draft.
 
+The approved [complete delayed-side implementation](delayed-gate-state-execution.md)
+also extends `drive.delay` with optional typed side pairs and the C++
+`Scheduler::driveDelayed` API with copied side updates. Refresh these operand
+and API signatures before freezing; this adds no opcode or external C ABI entry.
+
 ## Approved direction (2026-10-24)
 
 The user's approval covers the following recommendations, including the

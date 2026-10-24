@@ -4,6 +4,20 @@
 array/input checkpoint `b9906081`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
+## Complete-state delayed-gate follow-up (2026-10-25)
+
+Source `20274407` preserves every engine status and passing judged byte in the
+[13.0](../measurements/2026-10-25/icarus13-delayed-side-probes.json) and
+[development](../measurements/2026-10-25/icarus14-delayed-side-probes.json)
+87-probe cohorts: 24 passing gaps per reference, four/seven reference mismatches.
+Eight separate [known-state gate observations](../measurements/2026-10-25/delayed-side-known-observations.json)
+pass both references and the new native and are rejected by the older native.
+Two nonzero-delay side-only cases retain the explicitly approved project-policy
+difference; a zero-delay case agrees with both references. See the
+[implementation, validation and pending oracle review](delayed-gate-state-execution.md).
+These additions do not establish complete P1 parity. Earlier checkpoints below
+retain their original revisions and results.
+
 ## Approved array/input recheck (2026-10-25)
 
 [The new 13.0 record](../measurements/2026-10-25/icarus13-approved-array-probes.json)

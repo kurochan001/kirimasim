@@ -82,7 +82,7 @@ still require integration; this kernel API does not close those gaps.
 Wide three-state gates now retain both L/H side-mask halves across word
 boundaries. All 73 new source cases match Icarus 13.0 and development builds.
 See [scope and validation](docs/notes/wide-gate-strength.md). Delayed side-only
-timing remains a [pending semantic amendment](docs/notes/delayed-gate-side-proposal.md).
+timing follows the [approved complete-state amendment](docs/notes/delayed-gate-side-proposal.md).
 
 Aggregate blocking/NBA assignments now capture all RHS values before target
 effects, including container snapshots before later field expressions.
@@ -144,9 +144,10 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory now has 87 original probes. With Icarus `13.0 (stable) (v13_0)`,
-25 Icarus-passing gaps and four reference result mismatches remain. With
-`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 31 and seven.
+inventory has 87 original probes. At the verified array/input checkpoint,
+Icarus `13.0 (stable) (v13_0)` has 24 passing gaps and four reference result
+mismatches. With `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are
+24 and seven.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
@@ -155,21 +156,22 @@ as mechanisms and interfaces are checked.
 The earlier 84 statuses are unchanged. The two newly inventoried wide UDP
 examples now pass both references and native execution. A new dense-coverage
 source still reaches the native subprocess bound. On the same expanded list,
-the retained baseline has 27/33 gaps and the current native 25/31.
+the retained baseline had 27/33 gaps and the wide-UDP checkpoint 25/31; the
+later array/input checkpoint has 24/24.
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
-records 32 original programs and remains pending review.
+records 32 original programs and was approved on 2026-10-25; implementation remains work.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
 adds 59 original design observations, with legality boundaries kept separate.
 
 A separate [46-program class investigation](docs/notes/class-execution-investigation.md)
 records a known static-initialization mismatch. Class execution remains required P1 work.
 A [detailed class runtime amendment](docs/notes/class-runtime-proposal.md)
-adds fourteen original boundary observations and remains pending review.
+adds fourteen original boundary observations and was approved on 2026-10-25.
 
 The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
 records 28 original programs and 56 reference observations separately from
 that inventory. Switch execution remains unsupported; strength-only changes,
-cycles, force and startup expose detailed contracts still requiring review.
+cycles, force and startup have approved detailed contracts; their implementation remains work.
 
 Integral `$fread` now accepts optional start/count arguments, evaluates
 supplied value arguments once and follows the approved copy-in/copyback
@@ -185,6 +187,14 @@ with 270 original cases and four direct unit tests. Min/max return at most one
 source element, including tied keys; measured Icarus duplicate results remain
 reference mismatches. Effectful/unverified-pure ordering keys and unsupported
 aggregate representations remain explicit limitations.
+
+All six remaining detailed [execution contracts](docs/notes/p1-execution-contracts-2026-10-25.md)
+were approved on 2026-10-25. The first implementation adds complete-state
+[delayed three-state propagation](docs/notes/delayed-gate-state-execution.md),
+with 240 original source cases and three direct tests. One existing rejection
+oracle now fails because execution succeeds; its stronger expectation-only
+migration is awaiting separate approval. The current CTest table includes that
+one failure, and this is not an all-green integration checkpoint.
 
 #### Existing quantitative gates and measured results
 
@@ -202,11 +212,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-22 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 3,935 | 3,933, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 4,179 | 4,176, 2 skipped, 1 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 335, `tests/suite/` 3,400 (made by 133 generators under `tools/`), tools 141, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 338, `tests/suite/` 3,640 (made by 134 generators under `tools/`), tools 142, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

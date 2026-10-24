@@ -71,7 +71,7 @@ An unused class static-property initializer can lose its side effects and exit
 0 without a diagnostic. This is a known defect; successful execution alone
 does not establish class support. These observations are separate from the
 87-probe comparison and the approved test suite.
-The pending [class runtime contract](notes/class-runtime-proposal.md) specifies
+The approved [class runtime contract](notes/class-runtime-proposal.md) specifies
 initialization, dispatch, GC and scheduled access; it is not implemented support.
 
 ### UDP input counts and compilation limits
@@ -113,9 +113,12 @@ Three-state gates now carry their L/H side masks through wide vectors, including
 unaligned 64-bit boundaries. Another [73 original cases](notes/wide-gate-strength.md)
 match both measured Icarus versions. Masked and unmasked drivers share the
 existing kernel resolver; this is not arbitrary MOS interval transport.
-Delayed three-state outputs on resolved nets remain unsupported, including
-short-circuit controls; their [side-timing proposal](notes/delayed-gate-side-proposal.md)
-awaits approval.
+Delayed three-state outputs on resolved packed nets now propagate value and
+both side fields as one owned state. Same-projection changes, cancellation,
+equal pending deadlines, zero delay and short-circuit control blocks are covered
+by [240 original sources and three direct tests](notes/delayed-gate-state-execution.md).
+The old rejection oracle has a separate pending expectation migration; current
+integration is not an all-green CI checkpoint.
 
 The shared kernel now exposes complete strength intervals before four-state
 projection, following the approved VALUE_SEMANTICS 5.2–5.4 rule. Five added
@@ -128,7 +131,8 @@ The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
 28 exploratory reference programs and the remaining semantic questions;
 these observations are not additional implemented features or approved oracles.
 The [complete execution contract proposal](notes/mos-switch-proposal.md) is
-pending review, including startup and full-strength timing decisions.
+approved on 2026-10-25, including startup and full-strength timing decisions;
+its full implementation remains work.
 
 ### Fork-local declarations
 
@@ -138,14 +142,14 @@ per entry, including declaration-only forks. [Seventy-two source cases and limit
 cover eight contexts and typed storage. Automatic variables captured by children
 remain unsupported and are explicitly measured in the expanded comparison.
 The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
-is pending review; automatic event variables are also still unsupported.
+was approved on 2026-10-25; automatic event variables are still unsupported.
 
 ### Fixed-array port boundary
 
 Whole fixed unpacked array ports and arrays of nets requiring resolution
 remain unsupported. Unconnected arrays without pulls have existing defaults.
 The [array-port and resolution contract proposal](notes/fixed-array-ports-proposal.md)
-records original observations and remains pending review.
+records original observations and was approved on 2026-10-25; implementation remains work.
 
 ### Program completion
 

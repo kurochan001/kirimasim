@@ -4,6 +4,16 @@
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
+## 遅延ゲートの完全な状態の再確認（2026-10-25）
+
+`20274407`でも[13.0](../measurements/2026-10-25/icarus13-delayed-side-probes.json)と
+[開発版](../measurements/2026-10-25/icarus14-delayed-side-probes.json)の固定87件の全状態・
+成功の判定用出力を保ち、未対応24件ずつ・参照不一致4/7件です。別の[既知の値の遷移8例](../measurements/2026-10-25/delayed-side-known-observations.json)は
+両参照・新nativeで成功し、旧nativeは全8例を拒否します。非0遅延のsideのみの2例は
+承認済み解釈との差を保ち、0遅延の1例は両参照と一致します。
+[実装・検証・既存期待値のレビュー](delayed-gate-state-execution.ja.md)を参照してください。
+これだけでP1全体の同等性を証明せず、下の過去の区切りは元の版と結果を保ちます。
+
 ## 承認済みの配列・入力の再確認（2026-10-25）
 
 [新しい13.0の記録](../measurements/2026-10-25/icarus13-approved-array-probes.json)と

@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-25",
+  "source_revision": "20274407a06a6eb0728f43aa0a33579aa5008ffc",
+  "source_sha256": {
+    "src/front/lower.cpp": "369936963c7ce7bb6eaf110d579011496e2a834371a9b41755ff545a2645f233",
+    "src/kernel/include/kirimasim/kernel/sim.h": "640f50e7e51c7fec2991331ef86864da44ea6721c8dfa0e4e7c58fdd58046dc7",
+    "src/kernel/sim.cpp": "58b280c092a3d2b6b33f02697e8775d388a36168444ec3290a51856609f9e489",
+    "src/sir/include/kirimasim/sir/design.h": "651d79a2ac6998727567e9cad853d22a04ddfd601d6855bbefeafadb81bf26b9",
+    "src/sir/verify.cpp": "4e1ce976cab0212cb52a2f3e33a8ae36a2b92e91c608ad3a55aa6e91a05313bf",
+    "src/vm/vm.cpp": "63225341efb55fe8fb557d5e4864fa80e9d81af7c2b959af7031e34d4bdfb44a",
+    "tests/unit/delayed_side_test.cpp": "9ceef27e303ba20b08764d181ed8da13aa94b061facb32dc18f73eafaf8f265a",
+    "tools/gen_delayed_gate_state_matrix.py": "0b7d335c024e79fd298eb750b440c06490ad40331a632c6d05ba87086cb62f66",
+    "tools/mutants.py": "b1c03ab37ef7dea1e6747bbc760f26ee18fda52eff0d808e861ddb20faf2aea9",
+    "tools/readme_counts.py": "313e27f14c43d71e723dbdd3cd3ceafb0b7d197bc6b5ddeba29168de63e4c872",
+    "tests/tools/check_delayed_gate_boundary.py": "cde4dbd253acffd8d906559346b6e6b8d49837a9a5fdd3fdd565d72181ed6bb7"
+  },
+  "platform": "macOS arm64",
+  "compiler": "AppleClang 21.0.0.21000334",
+  "clang_tools": "LLVM 22.1.8",
+  "tree_note": "Source, new tests and the gate generator match the revision; README failure reporting and documentation/evidence updates are additional changes. The existing boundary oracle is unchanged.",
+  "result": "implementation checks pass; one existing rejection-oracle migration awaits approval; full local CI is not green",
+  "ctest": {
+    "dev": {
+      "selected_total": 4178,
+      "passed": 4176,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "excluded_existing_test": "tools/delayed_gate_boundary",
+      "registered_total": 4179,
+      "full_suite_known_failures": 1,
+      "proposed_replacement_12_cases_passed": true,
+      "preserved_oracle_failure_observed_separately": true,
+      "full_observed_counts": {
+        "total": 4179,
+        "passed": 4176,
+        "failed": 1,
+        "skipped": 2
+      }
+    },
+    "release": {
+      "selected_total": 4179,
+      "passed": 4177,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "excluded_existing_test": "tools/delayed_gate_boundary",
+      "registered_total": 4180,
+      "full_suite_known_failures": 1,
+      "proposed_replacement_12_cases_passed": true,
+      "preserved_oracle_failure_observed_separately": true,
+      "full_observed_counts": {
+        "total": 4180,
+        "passed": 4177,
+        "failed": 1,
+        "skipped": 2
+      }
+    },
+    "asan": {
+      "selected_total": 4178,
+      "passed": 4176,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "excluded_existing_test": "tools/delayed_gate_boundary",
+      "registered_total": 4179,
+      "full_suite_known_failures": 1,
+      "proposed_replacement_12_cases_passed": true,
+      "preserved_oracle_failure_observed_separately": true,
+      "full_observed_counts": {
+        "total": 4179,
+        "passed": 4176,
+        "failed": 1,
+        "skipped": 2
+      }
+    },
+    "ubsan": {
+      "selected_total": 4178,
+      "passed": 4176,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "excluded_existing_test": "tools/delayed_gate_boundary",
+      "registered_total": 4179,
+      "full_suite_known_failures": 1,
+      "proposed_replacement_12_cases_passed": true,
+      "preserved_oracle_failure_observed_separately": true,
+      "full_observed_counts": {
+        "total": 4179,
+        "passed": 4176,
+        "failed": 1,
+        "skipped": 2
+      }
+    }
+  },
+  "quality_checks": [
+    {
+      "check": "check_release_flags",
+      "exit": 0,
+      "seconds": 0.05
+    },
+    {
+      "check": "check_banned",
+      "exit": 0,
+      "seconds": 0.35
+    },
+    {
+      "check": "check_spdx",
+      "exit": 0,
+      "seconds": 0.07
+    },
+    {
+      "check": "check_suite_files",
+      "exit": 0,
+      "seconds": 0.09
+    },
+    {
+      "check": "check_global_state",
+      "exit": 0,
+      "seconds": 0.26
+    },
+    {
+      "check": "check_expected_change",
+      "exit": 0,
+      "seconds": 0.08
+    },
+    {
+      "check": "readme_counts",
+      "exit": 0,
+      "seconds": 0.22
+    },
+    {
+      "check": "clang-format",
+      "exit": 0,
+      "seconds": 0.47
+    },
+    {
+      "check": "clang-tidy",
+      "exit": 0,
+      "seconds": 80.88
+    }
+  ],
+  "suite_source_matrix": 240,
+  "direct_unit_tests": 3,
+  "negative_controls": {
+    "compiled": 8,
+    "caught": 8,
+    "restored_selected_tests": 345,
+    "registered_controls": 528,
+    "record": "delayed-side-negative-controls.json"
+  },
+  "expectation_review": {
+    "branch": "codex/delayed-side-expectations",
+    "commit": "96a17a156ac6ac53c079bee2f653b12ba79bbd37",
+    "base": "39cacb37",
+    "status": "proposal; not approved",
+    "changed_production_expectations": false,
+    "file": "tests/tools/check_delayed_gate_boundary.py",
+    "preserved_existing_rejection_cases": 6,
+    "proposed_exact_delayed_cases": 6,
+    "preserved_undelayed_cases": 6,
+    "full_suite_known_failure": "tools/delayed_gate_boundary",
+    "actual_simulator_exit": 0,
+    "old_required_simulator_exit": 2,
+    "ctest_exit": 8,
+    "dev_total_note": "The union of the final dev run and the separately executed preserved oracle contains every registered test exactly once: 4,179 total, 4,176 passed, two skipped and one failed. Each other configuration also executes the preserved oracle separately and observes its failure.",
+    "local_ci_py_run": false
+  },
+  "reference_observations": {
+    "known_states_record": "delayed-side-known-observations.json",
+    "new_and_both_references_passing_cases": 8,
+    "old_native_unsupported_cases": 8,
+    "project_policy_record": "delayed-side-reference-observations.json",
+    "nonzero_side_only_reference_mismatches": 2,
+    "zero_delay_reference_matches": 1
+  },
+  "external_checks": {
+    "icarus13": {
+      "cohort": 87,
+      "passing_gaps": 24,
+      "reference_mismatches": 4
+    },
+    "icarus14": {
+      "cohort": 87,
+      "passing_gaps": 24,
+      "reference_mismatches": 7
+    },
+    "svtests": {
+      "total": 344,
+      "passed": 244,
+      "all_native_statuses_retained": true,
+      "pinned_revision": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78",
+      "platform": "macOS arm64"
+    },
+    "population": {
+      "passed": 1451,
+      "failed": 0,
+      "unsupported": 15,
+      "total": 1466,
+      "pinned_revision": "179c55de9c83",
+      "raw_summary": "# P1 gate population (TEST_SUITE.md): kirimasim-tests 179c55de9c83, 1466 of 1853 simulation tests chosen at c983cf799b4d; made by tools/p1_population.py select\npassed 1451, failed 0, unsupported 15 (counted as failed): 99.0% (gate 90%, 1320 of 1466)\n",
+      "platform": "macOS arm64"
+    },
+    "linux_remeasured": false
+  },
+  "existing_dump_sir_expectations": "unchanged; all 29 pass",
+  "existing_perfcount_budgets": "unchanged; pass in each configuration",
+  "scope_note": "P1 remains incomplete. All six semantic contracts are approved; the other mechanisms remain implementation work. This record requests approval only for the separate existing-oracle migration."
+}

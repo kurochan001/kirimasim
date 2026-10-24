@@ -12,6 +12,10 @@ detailed contract pending review**。英語版が正本です。2026-10-24の提
 現在のenumは125項目です。P2のschema・ABIを凍結する前に、Op/API全件の棚卸しを更新します。
 formatVersionは0、C ABIは0.3のままで、この追記でv1の詳細案を承認した扱いにはしません。
 
+承認済みの[遅延sideの実装](delayed-gate-state-execution.ja.md)では、`drive.delay`に任意の
+型付きside組、C++の`Scheduler::driveDelayed`にコピーするside更新を追加しました。
+凍結前に被演算子とAPIの署名も棚卸しし直します。opcodeや外部C ABIの項目は増やしません。
+
 ## 承認された方針（2026-10-24）
 
 推奨時に説明した留保を含め、次の方針が承認されました。
