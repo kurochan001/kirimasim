@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -1869,9 +1870,10 @@ sir::TypeId Lowerer::udpTable(const ast::PrimitiveSymbol& prim, slang::SourceLoc
     sir::TypeEntry t;
     t.kind = sir::TypeEntryKind::Udp;
     t.name = std::string(prim.name);
+    if (prim.ports.size() <= 1 || prim.ports.size() - 1 > std::numeric_limits<std::uint32_t>::max())
+        unsupported(sl, "a UDP input count outside the SIR range");
     t.inputs = static_cast<std::uint32_t>(prim.ports.size() - 1);
     t.sequential = prim.isSequential;
-    if (t.inputs == 0 || t.inputs > 32) unsupported(sl, "a UDP with this many inputs");
     for (const ast::PrimitiveSymbol::TableEntry& e : prim.table)
         t.rows.push_back({std::string(e.inputs), e.state, e.output});
     if (prim.initVal != nullptr && prim.initVal->isInteger()) {

@@ -4333,10 +4333,17 @@ private:
                 };
                 const kernel::UdpTable& table = udpTables_[ops[0].id];
                 const unsigned n = table.inputs;
-                std::uint8_t prev[kernel::kUdpMaxInputs];
-                std::uint8_t cur[kernel::kUdpMaxInputs];
+                constexpr unsigned inlineInputs = 32;
+                std::uint8_t prev[inlineInputs];
+                std::uint8_t cur[inlineInputs];
                 std::uint8_t r = kernel::kUdpX;
-                if (in.op == Op::Udp) {
+                if (n > inlineInputs && in.op == Op::Udp) {
+                    r = kernel::udpOutputRead(table, [&](unsigned i) { return code(v(1ULL + i)); });
+                } else if (n > inlineInputs) {
+                    r = kernel::udpStepRead(
+                        table, code(v(1)), [&](unsigned i) { return code(v(2ULL + i)); },
+                        [&](unsigned i) { return code(v(2ULL + n + i)); });
+                } else if (in.op == Op::Udp) {
                     for (unsigned i = 0; i < n; ++i)
                         cur[i] = code(v(1 + i));
                     r = kernel::udpOutput(table, cur);

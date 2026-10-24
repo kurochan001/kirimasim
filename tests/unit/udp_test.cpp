@@ -117,8 +117,8 @@ TEST(Udp, KernelMatchesReference) {
         const k::UdpTable t = compile(rows, n);
         std::vector<Logic> prev;
         std::vector<Logic> cur;
-        std::uint8_t pc[k::kUdpMaxInputs];
-        std::uint8_t cc[k::kUdpMaxInputs];
+        std::vector<std::uint8_t> pc(n);
+        std::vector<std::uint8_t> cc(n);
         for (unsigned i = 0; i < n; ++i) {
             prev.push_back(kValues[rng() % 4]);
             cur.push_back(kValues[rng() % 4]);
@@ -126,12 +126,122 @@ TEST(Udp, KernelMatchesReference) {
             cc[i] = code(cur[i]);
         }
         if (!sequential) {
-            ASSERT_EQ(logic(k::udpOutput(t, cc)), v::udpOutput(rows, cur)) << "round " << round;
+            ASSERT_EQ(logic(k::udpOutput(t, cc.data())), v::udpOutput(rows, cur))
+                << "round " << round;
             continue;
         }
         const Logic state = kValues[rng() % 3];
-        ASSERT_EQ(logic(k::udpStep(t, code(state), pc, cc)), v::udpStep(rows, state, prev, cur))
+        ASSERT_EQ(logic(k::udpStep(t, code(state), pc.data(), cc.data())),
+                  v::udpStep(rows, state, prev, cur))
             << "round " << round;
+    }
+}
+
+TEST(Udp, WideInputsMatchIndependentReference) {
+    std::mt19937_64 rng{kirimasim::test::fuzzSeed(0x75647077696465ULL)};
+    constexpr Logic values[] = {L0, L1, LX, LZ};
+    for (const unsigned n : {31U, 32U, 33U, 63U, 64U, 65U, 127U, 128U, 129U, 257U}) {
+        for (std::uint64_t round = 0; round < 64 * kirimasim::test::fuzzScale(); ++round) {
+            const bool sequential = round % 2 != 0;
+            const auto rows = randomTable(rng, n, sequential);
+            const auto table = compile(rows, n);
+            std::vector<Logic> previous(n), current(n);
+            std::vector<std::uint8_t> pc(n), cc(n);
+            for (unsigned i = 0; i < n; ++i) {
+                previous[i] = values[rng() % 4];
+                current[i] = previous[i];
+                pc[i] = code(previous[i]);
+                cc[i] = code(current[i]);
+            }
+            for (const unsigned i : {0U, n / 2, n - 1}) {
+                current[i] = values[rng() % 4];
+                cc[i] = code(current[i]);
+            }
+            const auto readPrev = [&](unsigned i) { return pc[i]; };
+            const auto readCur = [&](unsigned i) { return cc[i]; };
+            SCOPED_TRACE(n);
+            SCOPED_TRACE(round);
+            if (!sequential) {
+                const auto expected = v::udpOutput(rows, current);
+                EXPECT_EQ(logic(k::udpOutput(table, cc.data())), expected);
+                EXPECT_EQ(logic(k::udpOutputRead(table, readCur)), expected);
+            } else {
+                const auto state = values[rng() % 3];
+                const auto expected = v::udpStep(rows, state, previous, current);
+                EXPECT_EQ(logic(k::udpStep(table, code(state), pc.data(), cc.data())), expected);
+                EXPECT_EQ(logic(k::udpStepRead(table, code(state), readPrev, readCur)), expected);
+            }
+        }
+    }
+}
+
+TEST(Udp, WidePrefixOrderAndLastTerminal) {
+    for (const unsigned n : {33U, 65U, 129U, 257U, 65537U}) {
+        std::string earlier(n, '?'), later(n, '?');
+        earlier[0] = 'r';
+        earlier[n - 1] = '1';
+        later[0] = '1';
+        later[n - 1] = 'r';
+        const std::vector<UdpRow> rows{{earlier, '?', '0'}, {later, 'x', '1'}};
+        const auto table = compile(rows, n);
+        std::vector<Logic> previous(n, L0), current(n, L0);
+        current[0] = L1;
+        current[n - 1] = L1;
+        std::vector<std::uint8_t> pc(n), cc(n);
+        cc[0] = cc[n - 1] = 1;
+        // The early edge must not see the future last-terminal value.
+        // The last edge does see the already committed first-terminal value.
+        const auto expected = v::udpStep(rows, L0, previous, current);
+        ASSERT_EQ(expected, L1);
+        EXPECT_EQ(logic(k::udpStep(table, 0, pc.data(), cc.data())), expected) << n;
+        EXPECT_EQ(
+            logic(k::udpStepRead(
+                table, 0, [&](unsigned i) { return pc[i]; }, [&](unsigned i) { return cc[i]; })),
+            expected)
+            << n;
+        // Z and X are one UDP input value, so changing between them is no edge.
+        pc[0] = 3;
+        cc[0] = 2;
+        pc[n - 1] = cc[n - 1] = 2;
+        EXPECT_EQ(k::udpStep(table, 1, pc.data(), cc.data()), 1) << n;
+    }
+}
+
+TEST(Udp, WideRowsReadBoundaryColumnsAndLevelPriority) {
+    for (const unsigned n : {33U, 65U, 129U, 257U}) {
+        for (const unsigned column : {0U, 31U, 32U, n - 1}) {
+            std::vector<UdpRow> rows;
+            for (const char symbol : {'0', '1', 'x'}) {
+                std::string fields(n, '?');
+                fields[column] = symbol;
+                rows.push_back({fields, 0, symbol == '1' ? '1' : '0'});
+            }
+            const auto table = compile(rows, n);
+            for (const auto value : {L0, L1, LX, LZ}) {
+                std::vector<Logic> input(n, LZ);
+                input[column] = value;
+                std::vector<std::uint8_t> codes(n, 3);
+                codes[column] = code(value);
+                const auto expected = v::udpOutput(rows, input);
+                ASSERT_EQ(expected, value == L1 ? L1 : L0);
+                EXPECT_EQ(logic(k::udpOutput(table, codes.data())), expected) << n << ':' << column;
+                EXPECT_EQ(logic(k::udpOutputRead(table, [&](unsigned i) { return codes[i]; })),
+                          expected)
+                    << n << ':' << column;
+            }
+        }
+        std::string edge(n, '?'), level(n, '?');
+        edge[n - 1] = 'r';
+        level[n - 2] = '1';
+        const std::vector<UdpRow> rows{{edge, '?', '1'}, {level, '?', '0'}};
+        const auto table = compile(rows, n);
+        std::vector<Logic> previous(n, L0), current(n, L0);
+        previous[n - 2] = current[n - 2] = L1;
+        current[n - 1] = L1;
+        std::vector<std::uint8_t> pc(n), cc(n);
+        pc[n - 2] = cc[n - 2] = cc[n - 1] = 1;
+        ASSERT_EQ(v::udpStep(rows, L1, previous, current), L0);
+        EXPECT_EQ(k::udpStep(table, 1, pc.data(), cc.data()), 0) << n;
     }
 }
 

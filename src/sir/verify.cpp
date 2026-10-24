@@ -356,7 +356,7 @@ private:
     /// A UDP table (SIR_SPEC.md 4.3): rows of one symbol of table 29-1 per
     /// input, at most one edge, a state symbol exactly when sequential.
     void checkUdp(const TypeEntry& t, const std::string& where) {
-        if (t.inputs == 0 || t.inputs > 32) error(where, "a UDP has 1 to 32 inputs");
+        if (t.inputs == 0) error(where, "a UDP needs at least one input");
         if (t.initial != '0' && t.initial != '1' && t.initial != 'x')
             error(where, "initial state must be 0, 1 or x");
         const auto level = [](char c) {
@@ -1747,7 +1747,7 @@ private:
                         " UDP table");
                     break;
                 }
-                const std::uint32_t n = d_.types[ops[0].id].inputs;
+                const std::uint64_t n = d_.types[ops[0].id].inputs;
                 if (ops.size() != 1 + (seq ? 1 + 2 * n : n)) {
                     bad("needs one value per input" +
                         std::string(seq ? ", twice, and the state" : ""));

@@ -45,6 +45,10 @@ add_test(NAME tools/gen_fork_declaration_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_fork_declaration_matrix.py --check)
 set_tests_properties(tools/gen_fork_declaration_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_wide_udp_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_wide_udp_matrix.py --check)
+set_tests_properties(tools/gen_wide_udp_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/fork_declaration_boundary
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_fork_declaration_boundary.py
         --kirimasim $<TARGET_FILE:kirimasim>)
