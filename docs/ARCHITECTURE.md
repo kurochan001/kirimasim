@@ -151,6 +151,13 @@ See [aggregate blocking timing](notes/blocking-aggregate-timing.md).
 Event-controlled NBAs remain unsupported. In particular, blocking repeated waits do not implement
 the independently pending control required by an event-controlled NBA.
 
+[Fork declarations](notes/fork-local-declarations.md) use the parent's existing
+lifetime path before executable children are created. Static storage is shared;
+uncaptured automatic declarations initialize in the parent frame. Declarations
+are not processes, and a declaration-only fork emits no wait. This adds no
+kernel API or SIR instruction. Automatic storage captured by children still
+needs the shared activation/lifetime contract.
+
 ## Strength intervals before value projection
 
 The shared kernel exposes the complete strength hull defined by

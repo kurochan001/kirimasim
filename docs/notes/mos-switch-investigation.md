@@ -20,7 +20,9 @@ All 28 stdout pairs agree. The data records source hashes, versions, commands,
 exit codes and exact stdout. No other simulator source or tests were read.
 Kirimasim execution is not measured in this exploratory dataset. These programs
 are separate from the [79-item feature inventory](icarus-13-comparison.md),
-whose measured gaps remain 20 against 13.0 and 26 against development.
+whose measured gaps at the original `57a64ef` baseline were 20 against 13.0
+and 26 against development. The later [fork comparison](fork-local-declarations.md)
+expands the current inventory to 81 probes with 21/27 gaps.
 Reference agreement alone does not establish IEEE conformance or an approved
 test oracle. Performance and Linux behavior were not remeasured.
 

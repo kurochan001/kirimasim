@@ -40,6 +40,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Fork-local declarations execute through the parent's existing lifetime and
+  initialization rules; static storage is shared, declarations are not child
+  processes, and declaration-only forks need no wait. Seventy-two original
+  cases cover eight contexts, wide values, all join kinds and typed storage.
+  Automatic capture still requires its shared-lifetime contract. The old
+  rejection expectations are reviewed separately (6.21, 9.3.2).
+
 - Three-state gates retain full-width L/H side masks across word boundaries,
   including 33–64-bit nets whose side operands occupy multiple words and
   short-circuit control expressions. Another 73 original cases match both

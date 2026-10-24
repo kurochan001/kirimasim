@@ -48,7 +48,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Event-controlled NBAs and delayed NBAs through refs/string characters are not implemented; automatic NBA targets remain illegal |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered` | Existing variable-write restrictions on event/wait conditions remain; no runtime-indexed named event, event-controlled `->>`, or `always_ff` trigger on a computed expression |
-| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, disable of supported named blocks and tasks | Fork-local declarations, escaping automatic variables captured by fork branches and disable of a named fork block have unsupported forms |
+| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, disable of supported named blocks and tasks | Automatic variables captured by fork branches and disable of a named fork block have unsupported forms; automatic declarations retain their usual type limitations |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
@@ -106,6 +106,14 @@ The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
 these observations are not additional implemented features or approved oracles.
 The [complete execution contract proposal](notes/mos-switch-proposal.md) is
 pending review, including startup and full-strength timing decisions.
+
+### Fork-local declarations
+
+Declarations use the parent's lifetime/initialization path rather than becoming
+children. Static storage is shared; uncaptured automatic initialization runs
+per entry, including declaration-only forks. [Seventy-two source cases and limits](notes/fork-local-declarations.md)
+cover eight contexts and typed storage. Automatic variables captured by children
+remain unsupported and are explicitly measured in the expanded comparison.
 
 ### Program completion
 

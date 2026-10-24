@@ -1,7 +1,7 @@
 # Icarus 13.0 and development-version comparison
 
 [日本語](icarus-13-comparison.ja.md). Measured 2026-10-24 at kirimasim
-source `57a64ef` (wide-mask implementation `37a2726` plus its boundary correction), dev build on macOS/arm64. No installation was added and
+source `c6d9c3d` (fork declaration lowering), dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
 ## Verified versions and results
@@ -9,13 +9,13 @@ no other simulator source or tests were read.
 Existing binaries report `13.0 (stable) (v13_0)` for the compiler driver,
 preprocessor, parser/elaborator and runtime. The additional baseline's
 compiler/runtime report `14.0 (devel) (s20260301-411-gca6b8d376)`.
-Both ran the same 79 original probes from
+Both ran the same 81 original probes from
 [`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py):
 
-- **13.0 stable:** 20 Icarus-passing gaps and four reference result
-  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus13-wide-gate-probes.json).
-- **14.0 devel:** 26 Icarus-passing gaps and seven reference result
-  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus14-wide-gate-probes.json).
+- **13.0 stable:** 21 Icarus-passing gaps and four reference result
+  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus13-fork-declaration-probes.json).
+- **14.0 devel:** 27 Icarus-passing gaps and seven reference result
+  mismatches. [Portable per-probe results](../measurements/2026-10-24/icarus14-fork-declaration-probes.json).
 
 The six additional development-version gaps are array sum, queue sorting
 and the unique/empty min/max probes. Version 13.0 does not compile those
@@ -31,16 +31,34 @@ A reference mismatch can coexist with missing kirimasim support: class
 virtual dispatch is still unsupported. The JSON records each engine's
 status independently; these mechanisms must not disappear from P1 work.
 
-The inventory has 76 standard-mechanism probes, two `project_policy`
+The inventory has 78 standard-mechanism probes, two `project_policy`
 RHS-order probes and one `icarus_extension` (`wire real`). IEEE permits
 either side's evaluation first in the policy probes; their oracle tests
 the existing approved kirimasim order. Extensions and project choices are
 identified rather than presented as universal IEEE requirements.
 
+## Fork declarations and the newly measured capture gap
+
+The same 81 probes give 22/28 gaps on the retained previous native binary and
+21/27 on the current one. `fork_local_declarations` now passes both references
+and native execution. `automatic_fork_capture` verifies shared mutation of an
+automatic fork variable; it passes both references and remains unsupported
+natively. Its required shared-frame/lifetime contract remains unfinished.
+
+All previous 79 statuses and passing judged outputs are unchanged. Their
+20/26 gap counts remain valid for that smaller cohort; the additional capture
+case increases the expanded list's remaining count by one. The four/seven
+reference-mismatch lists are unchanged. [Seventy-two source cases and compiled controls](fork-local-declarations.md)
+provide broader mechanism evidence, without establishing complete fork support.
+The portable records include the previous native results and the current
+probe-tool hash. Historical 79-item records at `57a64ef` remain available for
+[13.0](../measurements/2026-10-24/icarus13-wide-gate-probes.json) and
+[development](../measurements/2026-10-24/icarus14-wide-gate-probes.json).
+
 ## Wide-mask result on the same inventory
 
-On the same 79 probes and reference versions, the retained old native binary
-has 21 gaps against 13.0 and 27 against development. The current source has
+At the earlier wide-mask step (`57a64ef`), on 79 probes and the same reference versions, the retained old native binary
+had 21 gaps against 13.0 and 27 against development. That step had
 20 and 26: `wide_tristate_masks` now passes both engines. All other 78 engine
 statuses and reference-mismatch lists are unchanged. The portable records
 include each previous native result and its version; the
@@ -84,9 +102,9 @@ their `-V` output. `iverilog -V` reports its helper components too.
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
   --iverilog "$IVERILOG_13" --vvp "$VVP_13" --extended \
-  --output build/icarus13-wide-gate-probes.json --require-parity
+  --output build/icarus13-fork-declaration-probes.json --require-parity
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/icarus14-wide-gate-probes.json --require-parity
+  --extended --output build/icarus14-fork-declaration-probes.json --require-parity
 ```
 
 The second command uses PATH, so verify its compiler/runtime versions rather

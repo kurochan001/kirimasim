@@ -1,6 +1,6 @@
 # Icarus 13.0と開発版による比較
 
-[English](icarus-13-comparison.md)。2026-10-24、`57a64ef`（広いマスクの実装`37a2726`と境界の訂正）のdevビルド、
+[English](icarus-13-comparison.md)。2026-10-24、`c6d9c3d`（fork宣言の変換）のdevビルド、
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
@@ -9,12 +9,12 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 既存のバイナリで、コンパイラdriver・プリプロセッサ・parser/elaborator・runtimeが
 すべて`13.0 (stable) (v13_0)`と表示することを確認しました。追加の比較対象は、
 コンパイラ・runtimeともに`14.0 (devel) (s20260301-411-gca6b8d376)`です。
-両方で[`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py)の独自79プローブを実行しました。
+両方で[`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py)の独自81プローブを実行しました。
 
-- **13.0 stable：** Icarusだけが通る差分20件、参照結果の不一致4件。
-  [個別の可搬的な記録](../measurements/2026-10-24/icarus13-wide-gate-probes.json)。
-- **14.0 devel：** Icarusだけが通る差分26件、参照結果の不一致7件。
-  [個別の可搬的な記録](../measurements/2026-10-24/icarus14-wide-gate-probes.json)。
+- **13.0 stable：** Icarusだけが通る差分21件、参照結果の不一致4件。
+  [個別の可搬的な記録](../measurements/2026-10-24/icarus13-fork-declaration-probes.json)。
+- **14.0 devel：** Icarusだけが通る差分27件、参照結果の不一致7件。
+  [個別の可搬的な記録](../measurements/2026-10-24/icarus14-fork-declaration-probes.json)。
 
 開発版だけの追加6差分は、配列の和、キューの並べ替え、最小・最大の重複なし・空の
 プローブです。13.0はこれらをコンパイルできません。重複・withキーの最小最大の3件も
@@ -27,15 +27,30 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 参照が不一致でもkirimasimの未対応がなくなるわけではなく、クラスのvirtual dispatchは
 依然未対応です。JSONは両エンジンの状態を独立に記録し、P1の作業から消しません。
 
-一覧は規格の仕組み76本、右辺順序を検査する`project_policy` 2本、
+一覧は規格の仕組み78本、右辺順序を検査する`project_policy` 2本、
 `icarus_extension` 1本（`wire real`）です。順序の2本ではIEEEは左右のどちらを先に
 評価してもよく、期待値は既存の承認済みkirimasimの順序です。
 拡張とプロジェクトの方針は、規格共通の要件とは区別して記載します。
 
+## fork宣言と新しく測定した捕捉の差分
+
+同じ81件で旧nativeの差分は22/28件、現行は21/27件です。`fork_local_declarations`は
+nativeと両参照で通過しました。automaticのfork変数を共有して更新する
+`automatic_fork_capture`は両参照で通り、nativeでは未対応です。共有するフレーム/寿命の
+詳細な契約は残作業です。
+
+以前の79件の状態と通過した比較出力は維持し、小さい一覧の差分20/26件も保っています。
+拡張した一覧では、捕捉の追加によって残る差分が1件増えました。参照不一致4/7件は同じです。
+[独自72ソースとコンパイル済みの対照](fork-local-declarations.ja.md)で仕組みを広く検査しますが、
+fork全範囲の対応とは扱いません。可搬的なデータは旧nativeの結果と現在の比較ツールの
+ハッシュも保存します。以前の79件の[13.0](../measurements/2026-10-24/icarus13-wide-gate-probes.json)と
+[開発版](../measurements/2026-10-24/icarus14-wide-gate-probes.json)の記録も上書きしません。
+
 ## 同じ一覧での広いマスクの比較
 
-同じ79件・同じ参照版で、保持した旧nativeは13.0に対して差分21件、開発版に27件です。
-現在は20・26件で、`wide_tristate_masks`が両エンジンで通ります。他の共通78件の状態と
+以前の広いマスクの段階（`57a64ef`）では、同じ79件・同じ参照版で旧nativeの差分が
+13.0に対して21件、開発版に27件でした。その段階で20・26件となり、`wide_tristate_masks`が
+両エンジンで通りました。他の共通78件の状態と
 参照不一致一覧は変わりません。可搬的な記録には変更前nativeの版と各結果も残し、
 [独自73ソース](wide-gate-strength.ja.md)も両参照と一致します。新しく棚卸しした
 仕組みの解消であり、以前に数えた差分やP1全体が完了したとは扱いません。
@@ -70,9 +85,9 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
   --iverilog "$IVERILOG_13" --vvp "$VVP_13" --extended \
-  --output build/icarus13-wide-gate-probes.json --require-parity
+  --output build/icarus13-fork-declaration-probes.json --require-parity
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/icarus14-wide-gate-probes.json --require-parity
+  --extended --output build/icarus14-fork-declaration-probes.json --require-parity
 ```
 
 2本目はPATHを使うため、開発版と決めつけずにコンパイラ・runtimeの版を確認してください。

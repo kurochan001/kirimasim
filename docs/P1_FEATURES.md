@@ -15,6 +15,14 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Fork declarations and parent initialization
+
+Fork declarations initialize according to their lifetime in the parent; they
+do not create children or satisfy `join_any`. Static storage is shared, and
+uncaptured automatic declarations initialize per entry. Declaration-only
+forks proceed without a wait. [Seventy-two original source cases and limits](notes/fork-local-declarations.md)
+cover the behavior; automatic variables captured by children remain unsupported.
+
 ## Wide L/H gate resolution
 
 Three-state gates retain their one-sided L/H strength masks on wide resolved

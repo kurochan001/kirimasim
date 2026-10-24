@@ -11,7 +11,8 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [wide L/H strength masks](wide-gate-strength.md),
+The current implementation includes [fork-local declarations](fork-local-declarations.md),
+[wide L/H strength masks](wide-gate-strength.md),
 [aggregate blocking timing](blocking-aggregate-timing.md),
 [aggregate value capture](aggregate-value-capture.md),
 [blocking repeated event controls](repeated-event-controls.md), corrected
@@ -28,31 +29,34 @@ and unresolved interval/force/startup questions. These exploratory observations
 are separate from the feature inventory below and do not approve new semantics
 or add implemented support.
 
-Full local CI rerun for this documentation update on base `e4376f1` passes
-configure/build/test for dev/release/ASan/UBSan. Native source is unchanged
-from `57a64ef`.
-Dev/ASan/UBSan each run 3,131 tests (3,129 pass, two known skips); release runs
-3,132 (3,130 pass, the same skips). Release flags, banned features, SPDX,
+Full local CI at `c6d9c3d` passes configure/build/test for dev/release/ASan/UBSan.
+Dev/ASan/UBSan each run 3,205 tests (3,203 pass, two known skips); release runs
+3,206 (3,204 pass, the same skips). Release flags, banned features, SPDX,
 suite files, global state, per-commit expectation protection, README counts,
 clang-format and clang-tidy also pass. Unit/suite/tool/generator counts are
-299/2,640/133/127. Existing suite bodies, suite expectations and performance
-counts are unchanged; the older aggregate CLI correction remains a separate
-review baseline. All 29 existing SIR dumps pass. Four wide-mask mutations fail
-new stdout expectations and another fails the real delayed rejection check;
-anchor/judging self-checks are excluded as evidence.
+299/2,712/135/128. Existing suite bodies, suite expectations and performance
+counts are unchanged; aggregate and fork CLI corrections remain separate
+review baselines. All 29 existing SIR dumps pass. Three fork-declaration
+mutations fail actual new stdout and another fails real source SIR verification;
+anchor/judging self-checks are excluded as evidence. All 72 new sources pass
+natively; both measured references match 58, reject nine and differ on five.
 
-The same **79 original probes** now run against both installed references:
+The same **81 original probes** now run against both installed references:
 
-- Icarus `13.0 (stable) (v13_0)`: 20 Icarus-passing gaps, four reference
+- Icarus `13.0 (stable) (v13_0)`: 21 Icarus-passing gaps, four reference
   result mismatches.
-- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 26 Icarus-passing gaps,
+- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 27 Icarus-passing gaps,
   seven reference result mismatches.
 
 See the [versioned comparison and portable data](icarus-13-comparison.md).
 The compiler driver, preprocessor, parser/elaborator and runtime were all
 verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
-unconfirmed. Dated entries below retain their historical probe cohorts.
+unconfirmed. All earlier 79 statuses and passing judged outputs are unchanged.
+The new static-declaration case passes; the new automatic shared-capture case
+passes both references and remains a native gap. On the same expanded list,
+the previous native has 22/28 gaps and the current native 21/27. Dated entries
+below retain their historical probe cohorts.
 
 Six detailed semantic amendments remain pending:
 
@@ -70,7 +74,8 @@ boundary programs. Loaded results agree with the truth/reduction/resolution
 model; isolated resistive strength tokens expose a context-dependent reference
 difference. The proposal explicitly requests review of startup, network
 ownership, local wired resolution, force and strength-only timing. No MOS
-implementation or change to the 79-item inventory is claimed.
+implementation is claimed by that proposal; the independent fork work extends
+the feature inventory as described above.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep

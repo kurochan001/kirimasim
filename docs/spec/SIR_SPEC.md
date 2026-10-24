@@ -524,10 +524,10 @@ event-controlled NBAs remain unimplemented.
 
 Amendment of M3b.
 
-- Each statement of a fork is a separate row of the process table (kind `general`), holding the number of its parent process (or subroutine). The `fork` instruction holds the sequence of the child processes' numbers.
+- Each executable statement of a fork is a separate row of the process table (kind `general`), holding the number of its parent process (or subroutine). The `fork` instruction holds the sequence of the child processes' numbers. Declarations are handled by the parent, not included in that sequence.
 - Block item initializations of a fork are done by the parent before the `fork` instruction (checked: 9.3.2). Automatic variables of the fork block that children refer to are frame variables of the children, initialized by the `fork` instruction with the parent's values.
 - A child inherits its parent's thread set (active or reactive).
-- **Not implemented yet (noted 2026-10-18, approved):** declarations in a fork block, and the automatic variables of the enclosing scope (an automatic task or block) read or written from fork branches, are reported as unsupported (CLI.md 5). The second is not set by this section yet: the parent's frame has to live past its return while the children run (6.21), which comes with the frames of P3.
+- **Implementation status (2026-10-24):** fork declarations now use the existing parent/lifetime rules: shared static slots initialize before time zero and uncaptured automatic declarations initialize in the parent on entry. A declaration-only fork emits no wait or child. [Original execution evidence](../notes/fork-local-declarations.md) covers the source path. Automatic variables of the fork block or enclosing activation read/written by children remain unsupported (CLI.md 5); the planned capture form above is not enabled. Shared identity and retention beyond the parent's return still need the detailed frame contract (6.21). P1_SCOPE advances that required work without defining its missing details.
 
 ### 7.6 Program execution (approved 2026-10-23)
 

@@ -15,6 +15,13 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## fork内の宣言と親での初期化
+
+fork内の宣言は、親で寿命どおり初期化し、子に数えたり`join_any`を満たしたりしません。
+static記憶域は共有し、捕捉のないautomatic宣言は入るたびに初期化します。
+宣言だけのforkは待機せず進みます。[独自72ソースと制限](notes/fork-local-declarations.ja.md)を
+参照してください。子が捕捉するautomatic変数は未対応です。
+
 ## 広いネットでL/Hを解決する
 
 広い解決対象ネットでも、三状態ゲートの片側のL/H強さマスクを保持します。

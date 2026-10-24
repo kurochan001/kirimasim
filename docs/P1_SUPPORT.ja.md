@@ -46,7 +46,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA | イベント制御付きNBA、ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
 | イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered` | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。実行時の添字で選ぶ名前付きイベント、イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応 |
-| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、対応する名前付きブロックとタスクの disable | fork 内の変数宣言、fork の枝が捕捉してスコープ外まで使う automatic 変数、名前付き fork ブロックの disable などに未対応の形がある |
+| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、対応する名前付きブロックとタスクのdisable | forkの枝が捕捉するautomatic変数、名前付きforkブロックのdisableに未対応の形がある。automatic宣言には通常の型の制限もある |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動の強さ | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
@@ -96,6 +96,13 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 ではありません。
 [実行契約の全体案](notes/mos-switch-proposal.ja.md)は、初期化と完全な強さの時間規則も含め
 承認待ちです。
+
+### fork内の宣言
+
+宣言は子にせず、親で既存の寿命/初期化を使います。static記憶域は共有し、捕捉のない
+automatic初期化は入るたびに行います。宣言だけのforkにも対応します。
+[独自72ソースと制限](notes/fork-local-declarations.ja.md)で8種類の実行場所と型を検査します。
+子が捕捉するautomatic変数は未対応で、拡張した比較にも明示的に含めています。
 
 ### programの終了
 

@@ -12,7 +12,8 @@ Implement all six directed MOS forms (`nmos`, `pmos`, `rnmos`, `rpmos`, `cmos`,
 full resolved intervals, strength-only propagation, force/release, delays,
 strength-preserving partial net ports and real strength formatting. These
 mechanisms account for thirteen switch probes and one partial-port probe in
-the current 20 Icarus-13.0-passing gaps; the probe count includes duplicates
+the 20 Icarus-13.0-passing gaps in the 79-item inventory at proposal base
+`b5491de`; the probe count includes duplicates
 of basic mechanisms and is not a feature-coverage percentage.
 
 [P1_SCOPE](../spec/P1_SCOPE.md) advances their scope but explicitly requires
@@ -374,3 +375,6 @@ reclassified by this proposal. Neither the new data nor approval of this
 contract would establish full P1 or full Icarus coverage. Classes, event NBAs,
 specify/timing, binary memory addressing, external interfaces and the other
 remaining requirements continue to be part of the goal.
+Independent [fork work](fork-local-declarations.md) subsequently expands the
+current comparison to 81 probes with 21/27 gaps; the proposal's observations
+and semantic choices remain pending.

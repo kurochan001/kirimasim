@@ -210,6 +210,9 @@ EXTENDED.extend([
     ("fork_local_declarations", "6.21, 9.3.2",
      '`timescale 1ns/1ns\nmodule top;int calls;function int seed_value();calls++;return 7;endfunction initial begin repeat(2)fork int local_value=seed_value();begin #1;$display("%0d %0d",local_value,calls);local_value++;end join fork int unused;begin #2;end begin #5;end join_any $display("%0t",$time);wait fork;end endmodule',
      "7 1\n8 1\n4\n", []),
+    ("automatic_fork_capture", "6.21, 9.3.2",
+     'module top;task automatic run(input int value);fork int saved=value;begin #1;saved+=2;end begin #2;$display("%0d",saved);end join endtask initial run(7);endmodule',
+     "9\n", []),
 ])
 
 
