@@ -31,9 +31,23 @@ for the specification, the tests, and review.** See
 > (compiling SIR to bytecode comes later). Classes,
 > constrained randomization, concurrent assertions, VPI and DPI-C
 > are not there yet. Tier 1 has had performance and memory fixes; C++
-> generation is planned for P2. Anything kirimasim does not
-> support yet stops the run with an "unsupported" error at its source
-> position; it is never skipped silently.
+> generation is planned for P2. Unsupported forms generally stop with a
+> positioned diagnostic. A known class static-initialization omission is
+> recorded in the [class investigation](docs/notes/class-execution-investigation.md);
+> successful execution alone does not establish support.
+
+At `4c69843`, typed pattern layouts, verification, text and execution are
+connected to the shared renderer. Front's literal/runtime argument bridge
+remains unfinished, so source `%p` is still unsupported. A display monitor
+now observes a change in an existing queue cell. See the
+[current implementation and verification scope](docs/notes/pattern-sir-execution.md)
+and [runnable example](docs/P1_FEATURES.md#monitoring-an-existing-queue-cell).
+
+UDP evaluation now accepts input counts beyond 32 through the shared kernel.
+[106 original sources and independent value checks](docs/notes/wide-udp-inputs.md)
+cover late terminals, state, X/Z, delays and strength. A dense-table compilation
+scaling problem remains in pinned slang; complete wide UDP source coverage
+is unconfirmed and strict diagnostics remain unchanged.
 
 The dynamic-array/queue execution amendment was approved on 2026-10-23.
 The shared kernel now has a typed heap with deep copying, stable element
@@ -85,6 +99,11 @@ skip the wait. Seventy-five original source cases cover eight execution
 contexts and scalar/container snapshots. Event-controlled NBAs remain
 unsupported. See the [execution and verification note](docs/notes/repeated-event-controls.md).
 
+Fork-local declarations now use parent initialization and shared static
+storage without becoming child processes. Declaration-only forks do not wait.
+[Scope and 72 original source cases](docs/notes/fork-local-declarations.md)
+include all join kinds; automatic variables captured by children remain unsupported.
+
 ### Phases
 
 | Phase | Content | Status |
@@ -116,14 +135,27 @@ not complete P1.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory now has 79 original probes. With Icarus `13.0 (stable) (v13_0)`,
-20 Icarus-passing gaps and four reference result mismatches remain. With
-`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 26 and seven.
+inventory now has 87 original probes. With Icarus `13.0 (stable) (v13_0)`,
+25 Icarus-passing gaps and four reference result mismatches remain. With
+`14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are 31 and seven.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
 would not by itself establish complete coverage; the inventory must expand
 as mechanisms and interfaces are checked.
+The earlier 84 statuses are unchanged. The two newly inventoried wide UDP
+examples now pass both references and native execution. A new dense-coverage
+source still reaches the native subprocess bound. On the same expanded list,
+the retained baseline has 27/33 gaps and the current native 25/31.
+The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
+records 32 original programs and remains pending review.
+The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
+adds 59 original design observations, with legality boundaries kept separate.
+
+A separate [46-program class investigation](docs/notes/class-execution-investigation.md)
+records a known static-initialization mismatch. Class execution remains required P1 work.
+A [detailed class runtime amendment](docs/notes/class-runtime-proposal.md)
+adds fourteen original boundary observations and remains pending review.
 
 The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
 records 28 original programs and 56 reference observations separately from
@@ -161,11 +193,11 @@ The external sv-tests and population counts for kirimasim were measured on 2026-
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 3,131 | 3,129, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 3,342 | 3,340, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 299, `tests/suite/` 2,640 (made by 127 generators under `tools/`), tools 133, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 329, `tests/suite/` 2,818 (made by 129 generators under `tools/`), tools 136, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -180,19 +212,17 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI rerun for this documentation update on base `e4376f1` passes
-all four configurations (2026-10-24); native source is unchanged from `57a64ef`.
-Dev/ASan/UBSan each have 3,131 tests: 3,129 pass and the same two known skips
-remain. Release has 3,132 tests: 3,130 pass and the same skips. All 133 Tools
-tests and 73 new wide-gate sources pass. Static checks, README counts,
-clang-format and clang-tidy also pass. All 29 existing SIR dump expectations
-remain unchanged. Four compiled mutations fail actual new stdout; a fifth
-fails the independent delayed-gate rejection check. The earlier aggregate
-expectation correction remains isolated in its separate review baseline.
+Full local CI passes with native source `52652eb` and the registry/count
+follow-up (2026-10-24). Dev/ASan/UBSan each run 3,317 tests: 3,315 pass and
+two known skips remain. Release runs 3,318: 3,316 pass and the same skips.
+All 136 Tools tests, 106 new source cases and five new unit tests pass.
+Release flags, banned features, SPDX, suite files, global state, expectation
+protection, README counts, clang-format and clang-tidy pass. Existing suite
+bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
 
-The same 79-probe inventory now has separate 13.0-stable and 14.0-development
-results: 13.0 has 20 Icarus-passing gaps and four reference mismatches;
-14.0 has 26 and seven.
+The same 87-probe inventory has separate 13.0-stable and 14.0-development
+results: 13.0 has 25 Icarus-passing gaps and four reference mismatches;
+14.0 has 31 and seven.
 See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below

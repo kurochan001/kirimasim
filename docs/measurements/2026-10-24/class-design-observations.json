@@ -1,0 +1,1764 @@
+{
+  "measured": "2026-10-24",
+  "repository_context": "3b2560f6eee54d7164c4a3a3040600ee1a8ccbef",
+  "native_source_revision": "52652eb3f085f380fddf8a48043eeb77f69651be",
+  "platform": "macOS/arm64",
+  "purpose": "Original class execution observations for detailed semantic review; proposed outputs are not approved test oracles.",
+  "versions": {
+    "native": "kirimasim 0.0.0 (commit 52652eb3f085), built with AppleClang 21.0.0.21000334",
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "cases": [
+    {
+      "name": "static_method",
+      "source": "`timescale 1ns/1ns\nclass Helper;static function int value(input int n);return n+2;endfunction endclass module top;initial $display(\"%0d\",Helper::value(5));endmodule\n",
+      "proposed_stdout": "7\n",
+      "clause": "8.10",
+      "role": "proposal_model",
+      "source_sha256": "584f2227e875392b3b7d1541b15f25281600295364fa77c3da1c922e501ab976",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        }
+      }
+    },
+    {
+      "name": "static_property",
+      "source": "`timescale 1ns/1ns\nclass Count;static int value=7;endclass module top;initial $display(\"%0d\",Count::value);endmodule\n",
+      "proposed_stdout": "7\n",
+      "clause": "8.9",
+      "role": "proposal_model",
+      "source_sha256": "cc60537c0e536d93e743b53c7255f2c84525b032786027e86548cd8622297536",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:75: error: unsupported: reference to a ClassProperty (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "static_property_method",
+      "source": "`timescale 1ns/1ns\nclass Count;static int value=7;static function int next_value();return ++value;endfunction endclass module top;initial $display(\"%0d %0d\",Count::next_value(),Count::next_value());endmodule\n",
+      "proposed_stdout": "8 9\n",
+      "clause": "8.9, 8.10",
+      "role": "proposal_model",
+      "source_sha256": "d08f1df655ddf3cca813073864a83770b0086a7946af67b33ea8d699364314de",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:72: error: unsupported: assignment to a ClassProperty (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "static_unused_initializer",
+      "source": "`timescale 1ns/1ns\npackage history;int calls;function int mark();calls++;return 7;endfunction endpackage class Count;static int value=history::mark();endclass module top;initial $display(\"%0d\",history::calls);endmodule\n",
+      "proposed_stdout": "1\n",
+      "clause": "6.21, 8.9",
+      "role": "proposal_model",
+      "source_sha256": "144959c3522eae8945134dfd9a4e56d94606b5198bfa2c162fb4c74e069b6a94",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        }
+      }
+    },
+    {
+      "name": "static_inherited",
+      "source": "`timescale 1ns/1ns\nclass Parent;static int count=2;endclass class Child extends Parent;endclass module top;initial begin Child::count=7;$display(\"%0d %0d\",Parent::count,Child::count);end endmodule\n",
+      "proposed_stdout": "7 7\n",
+      "clause": "8.9, 8.13",
+      "role": "proposal_model",
+      "source_sha256": "a44886e75e9ebaa3e3703445958da0af1272f907a5c6e40305346e614fe52e53",
+      "results": {
+        "13": {
+          "compile_exit": 4,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:1: error: Syntax error in variable list."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 4,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:103: error: unsupported: assignment to a ClassProperty (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "static_specializations",
+      "source": "`timescale 1ns/1ns\nclass Count #(int N=1);static int value=N;static function int next_value();return ++value;endfunction endclass module top;initial $display(\"%0d %0d %0d\",Count#(3)::next_value(),Count#(8)::next_value(),Count#(3)::next_value());endmodule\n",
+      "proposed_stdout": "4 9 5\n",
+      "clause": "8.9, 8.25",
+      "role": "proposal_model",
+      "source_sha256": "b73cd224a17a46d317e4fc1ead70eec71b59dadc1c8608f65b3edce9aedbb3ab",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:83: error: unsupported: assignment to a ClassProperty (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "defaults",
+      "source": "`timescale 1ns/1ns\nclass Item;int count;logic [64:0] bits;bit[128:0] flags;real r;string s;chandle h;endclass module top;Item a;initial begin a=new;$display(\"%0d %0d %0d %0d %0d %0d\",a.count,a.bits==='x,a.flags==='0,a.r==0.0,a.s==\"\",a.h==null);end endmodule\n",
+      "proposed_stdout": "0 1 1 1 1 1\n",
+      "clause": "6.8, 8.4, 8.7",
+      "role": "proposal_model",
+      "source_sha256": "9335e47f93345c744c2586f6aee0b105d2af76dee836c902b8fc6d1bcdea2592",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid class item."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid class item."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:108: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:126: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "alias_and_identity",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a,b;initial begin a=new;b=a;a.value=9;$display(\"%0d %0d\",a==b,b.value);b=new;$display(\"%0d %0d\",a!=b,b.value);end endmodule\n",
+      "proposed_stdout": "1 9\n1 0\n",
+      "clause": "8.4, 8.12",
+      "role": "proposal_model",
+      "source_sha256": "b2410dda4c06bfbb840bc7a22614c92d8e7eeb22739b8858e3e3e5f85cddd78b",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "SORRY: Compare class handles not implemented"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "SORRY: Compare class handles not implemented"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:49: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "constructor_arguments",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;function new(input int n=7);value=n;endfunction endclass module top;Item a,b;initial begin a=new;b=new(9);$display(\"%0d %0d\",a.value,b.value);end endmodule\n",
+      "proposed_stdout": "7 9\n",
+      "clause": "8.7",
+      "role": "proposal_model",
+      "source_sha256": "881ac62d516ec629afd233e4bd3ec83114713777d978a8cc9d5ed147c768f2ca",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:95: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:97: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "constructor_named",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;function new(input int first=2,second=3);value=first*10+second;endfunction endclass module top;Item a;initial begin a=new(.second(7),.first(9));$display(\"%0d\",a.value);end endmodule\n",
+      "proposed_stdout": "97\n",
+      "clause": "8.7, 13.5",
+      "role": "proposal_model",
+      "source_sha256": "2b36cf182b1975fdeb2934b304bf6185518abcc25e6fe8c79cb623d4311d983f",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "97\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "97\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:122: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:140: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "typed_constructor",
+      "source": "`timescale 1ns/1ns\nclass Parent;int value;endclass class Child extends Parent;function new();value=9;endfunction endclass module top;Parent a;initial begin a=Child::new();$display(\"%0d\",a.value);end endmodule\n",
+      "proposed_stdout": "9\n",
+      "clause": "8.8",
+      "role": "proposal_model",
+      "source_sha256": "2b1dfd93210125fbc7992d94e021c6f3a55dfd1ba34a1ef8f6e616932385fb98",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:122: error: unsupported: type 'Parent' (not implemented yet)",
+            "<probe.sv>:2:140: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "this_return",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;function Item put(input int n);this.value=n;return this;endfunction endclass module top;Item a,b;initial begin a=new;b=a.put(9);$display(\"%0d %0d\",a==b,a.value);end endmodule\n",
+      "proposed_stdout": "1 9\n",
+      "clause": "8.11",
+      "role": "proposal_model",
+      "source_sha256": "91261515726c4a12dcdced6df8c09622d740089c21be2f022bcfa9bb87324884",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:115: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:117: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "method_scope",
+      "source": "`timescale 1ns/1ns\nclass Item;static function string static_name();return $sformatf(\"%m\");endfunction function string member_name();return $sformatf(\"%m\");endfunction endclass module top;Item a;initial begin a=new;$display(\"%s %s\",Item::static_name(),a.member_name());end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.11, 21.2.1.5",
+      "role": "scope_boundary",
+      "source_sha256": "66c8c0304134626545ece91a59b787712c1799db8ae09084982c63c7901469b0",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:174: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:192: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "constructor_order",
+      "source": "`timescale 1ns/1ns\npackage journal;int trace;function int mark(input int n);trace=trace*10+n;return n;endfunction endpackage class Parent;int p=journal::mark(1);function new(input int n);p=n;void'(journal::mark(2));endfunction endclass class Child extends Parent;int c=journal::mark(3);function new();super.new(9);void'(journal::mark(4));endfunction endclass module top;Child a;initial begin a=new;$display(\"%0d %0d %0d\",journal::trace,a.p,a.c);end endmodule\n",
+      "proposed_stdout": "1234 9 3\n",
+      "clause": "8.7, 8.17",
+      "role": "proposal_model",
+      "source_sha256": "9effb5f598dbee1536112f4c7d3610a0ab797dcb664040e43c91323f30cbc750",
+      "results": {
+        "13": {
+          "compile_exit": 4,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1234 9 3\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:358: error: unsupported: type 'Child' (not implemented yet)",
+            "<probe.sv>:2:376: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "constructor_argument_order",
+      "source": "`timescale 1ns/1ns\npackage journal;int trace;function int mark(input int n);trace=trace*10+n;return n;endfunction endpackage class Parent;int p=journal::mark(3);function new(input int n);void'(journal::mark(4));endfunction endclass class Child extends Parent;int c=journal::mark(5);function new(input int n);super.new(journal::mark(2));void'(journal::mark(6));endfunction endclass module top;Child a;initial begin a=new(journal::mark(1));$display(\"%0d\",journal::trace);end endmodule\n",
+      "proposed_stdout": "123456\n",
+      "clause": "8.7, 8.17, 13.5",
+      "role": "proposal_model",
+      "source_sha256": "46a8341548e9b2a8ed953dbdb035a960fb2816d618551e651a316eaf7686fdea",
+      "results": {
+        "13": {
+          "compile_exit": 4,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "123456\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:380: error: unsupported: type 'Child' (not implemented yet)",
+            "<probe.sv>:2:398: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "field_hiding",
+      "source": "`timescale 1ns/1ns\nclass Parent;int value=3;function int base_value();return value;endfunction endclass class Child extends Parent;int value=9;endclass module top;Child d;Parent b;initial begin d=new;b=d;$display(\"%0d %0d %0d\",b.value,d.value,d.base_value());end endmodule\n",
+      "proposed_stdout": "3 9 3\n",
+      "clause": "8.13, 8.14",
+      "role": "proposal_model",
+      "source_sha256": "52a3a4061eb31a3d7d586d6fe78d8e20e26acbdd1d32d29ca89ba29633652b0e",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9 3\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9 3\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:151: error: unsupported: type 'Child' (not implemented yet)",
+            "<probe.sv>:2:160: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "virtual_dispatch",
+      "source": "`timescale 1ns/1ns\nclass Parent;virtual function int value();return 3;endfunction endclass class Child extends Parent;function int value();return 9;endfunction endclass module top;Child d;Parent b;initial begin d=new;b=d;$display(\"%0d %0d\",b.value(),d.value());end endmodule\n",
+      "proposed_stdout": "9 9\n",
+      "clause": "8.20, 8.22",
+      "role": "proposal_model",
+      "source_sha256": "912ebb7cf0fc1159ccbc681583626bde2a0709691448c9bc38d199c2931e82f2",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:168: error: unsupported: type 'Child' (not implemented yet)",
+            "<probe.sv>:2:177: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "nonvirtual_dispatch",
+      "source": "`timescale 1ns/1ns\nclass Parent;function int value();return 3;endfunction endclass class Child extends Parent;function int value();return 9;endfunction endclass module top;Child d;Parent b;initial begin d=new;b=d;$display(\"%0d %0d\",b.value(),d.value());end endmodule\n",
+      "proposed_stdout": "3 9\n",
+      "clause": "8.14",
+      "role": "proposal_model",
+      "source_sha256": "9350a7773feb6e913f81ff3569500b94c2ce5e39b35a12112ea2ea104d0b5c77",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:160: error: unsupported: type 'Child' (not implemented yet)",
+            "<probe.sv>:2:169: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "super_dispatch",
+      "source": "`timescale 1ns/1ns\nclass Parent;virtual function int value();return 3;endfunction endclass class Child extends Parent;function int value();return super.value()+6;endfunction endclass module top;Child d;Parent b;initial begin d=new;b=d;$display(\"%0d %0d\",b.value(),d.value());end endmodule\n",
+      "proposed_stdout": "9 9\n",
+      "clause": "8.15, 8.20",
+      "role": "proposal_model",
+      "source_sha256": "4663b8081c77e4ddb46f86f5c0e3f93e9a5222cd5104fe2ceeaec2645d826573",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "3 9\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:182: error: unsupported: type 'Child' (not implemented yet)",
+            "<probe.sv>:2:191: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "shallow_copy",
+      "source": "`timescale 1ns/1ns\nclass Child;int value;endclass class Item;int value;string label;Child child;function new();child=new;endfunction endclass module top;Item a,b;initial begin a=new;a.value=7;a.label=\"before\";a.child.value=9;b=new a;b.value=3;b.label=\"after\";b.child.value=11;$display(\"%0d %0d %s %s %0d %0d\",a==b,a.value,a.label,b.label,a.child==b.child,a.child.value);end endmodule\n",
+      "proposed_stdout": "0 7 before after 1 11\n",
+      "clause": "8.12",
+      "role": "proposal_model",
+      "source_sha256": "a0ad65f68f222fc5183eee919f7a23f160a4740191949ed62a438df6b9aa0ab5",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: sorry: Nested member path not yet supported for class properties.",
+            "SORRY: Compare class handles not implemented"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: sorry: Nested member path not yet supported for class properties.",
+            "SORRY: Compare class handles not implemented"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:140: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:142: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "shallow_no_initializer",
+      "source": "`timescale 1ns/1ns\npackage journal;int fields,ctors;function int mark();fields++;return 7;endfunction endpackage class Item;int value=journal::mark();function new();journal::ctors++;endfunction endclass module top;Item a,b;initial begin a=new;b=new a;$display(\"%0d %0d %0d\",journal::fields,journal::ctors,b.value);end endmodule\n",
+      "proposed_stdout": "1 1 7\n",
+      "clause": "8.12",
+      "role": "proposal_model",
+      "source_sha256": "e1b5c3e31b4f72409c4a69ccfef48a715ce767ade57d506fe22716bd502119cc",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:1: error: I give up on this class constructor declaration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:201: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:203: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "fixed_array_property",
+      "source": "`timescale 1ns/1ns\nclass Item;int values[3:2];endclass module top;Item a;initial begin a=new;a.values[3]=7;a.values[2]=9;$display(\"%0d %0d\",a.values[3],a.values[2]);end endmodule\n",
+      "proposed_stdout": "7 9\n",
+      "clause": "8.5",
+      "role": "proposal_model",
+      "source_sha256": "dd240e3e0d26b15db40841a6529a158463663d4453e5ee5e2cfabe7ad93b82f5",
+      "results": {
+        "13": {
+          "compile_exit": 134,
+          "diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9 9\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:53: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:71: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "container_property",
+      "source": "`timescale 1ns/1ns\nclass Item;int values[];endclass module top;Item a,b;initial begin a=new;a.values=new[2];a.values[0]=7;a.values[1]=9;b=new a;b.values[0]=3;$display(\"%0d %0d %0d\",a.values[0],b.values[0],b.values[1]);end endmodule\n",
+      "proposed_stdout": "7 3 9\n",
+      "clause": "7.5, 8.5, 8.12",
+      "role": "proposal_model",
+      "source_sha256": "d80fc23fcd47f72ebe5ae0e37412b6cf174a9d9f9d00ba95a09bd78bcb7aafab",
+      "results": {
+        "13": {
+          "compile_exit": 9,
+          "diagnostic": [
+            "<probe.sv>:2: sorry: Array index of array properties not supported.",
+            "<probe.sv>:2: error: Index expressions don't apply to this type of property."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 9,
+          "diagnostic": [
+            "<probe.sv>:2: sorry: Array index of array properties not supported.",
+            "<probe.sv>:2: error: Index expressions don't apply to this type of property."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:50: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:52: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "handle_array",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a[2],b[2];initial begin a[0]=new;a[0].value=7;a[1]=new;a[1].value=9;b=a;b[0].value=11;$display(\"%0d %0d %0d\",a[0]==b[0],a[0].value,b[1].value);end endmodule\n",
+      "proposed_stdout": "1 11 9\n",
+      "clause": "7.6, 8.12",
+      "role": "proposal_model",
+      "source_sha256": "966b96009d7724c1999ede46dfde4ee9773688e271d8719fe69d0af589d607f5",
+      "results": {
+        "13": {
+          "compile_exit": 4,
+          "diagnostic": [
+            "<probe.sv>:2: error: The expression ''sd7' cannot be implicitly cast to the target type.",
+            "<probe.sv>:2: error: The expression ''sd9' cannot be implicitly cast to the target type."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 4,
+          "diagnostic": [
+            "<probe.sv>:2: error: The expression ''sd7' cannot be implicitly cast to the target type.",
+            "<probe.sv>:2: error: The expression ''sd9' cannot be implicitly cast to the target type."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:52: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "handle_queue",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item q[$],a;initial begin a=new;a.value=7;q.push_back(a);a=null;$display(\"%0d\",q[0].value);end endmodule\n",
+      "proposed_stdout": "7\n",
+      "clause": "7.10, 8.12",
+      "role": "proposal_model",
+      "source_sha256": "315b5a993728a9fe89bff0590a0fbd73d6f3360f46a6ce4b6078f674f69ffb5a",
+      "results": {
+        "13": {
+          "compile_exit": 3,
+          "diagnostic": [
+            "<probe.sv>:2: Sorry: Queue of type `class Item{netvector_t:bool signed[31:0] value}` is not yet supported.",
+            "<probe.sv>:2: Error: Class/null r-value not allowed in this context."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 3,
+          "diagnostic": [
+            "<probe.sv>:2: Sorry: Queue of type `class Item{netvector_t:bool signed[31:0] value}` is not yet supported.",
+            "<probe.sv>:2: Error: Class/null r-value not allowed in this context."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:52: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "constant_handle_mutable_object",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;const Item a=new;initial begin a.value=7;$display(\"%0d\",a.value);end endmodule\n",
+      "proposed_stdout": "7\n",
+      "clause": "6.20.6, 8.19",
+      "role": "proposal_model",
+      "source_sha256": "adeb2c4ca2b453d6fd833aca42e062c2599ec21e2f1c4172850431146c584579",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: error: Assignment to const signal `a` is not allowed.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: error: Assignment to const signal `a` is not allowed.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:53: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:73: error: unsupported: assignment to a member of this type (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "instance_const_property",
+      "source": "`timescale 1ns/1ns\nclass Item;const int value;function new(input int n);value=n;endfunction endclass module top;Item a;initial begin a=new(9);$display(\"%0d\",a.value);end endmodule\n",
+      "proposed_stdout": "9\n",
+      "clause": "8.19",
+      "role": "proposal_model",
+      "source_sha256": "d124471c2e5917aebb068afa7d0108d5696759a9445ecde90b03a23a15a6aa09",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:99: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:117: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "illegal_const_write",
+      "source": "`timescale 1ns/1ns\nclass Item;const int value=1;endclass module top;Item a;initial begin a=new;a.value=9;end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.19",
+      "role": "legality_boundary",
+      "source_sha256": "2c001665e38e0e4292b1c9167b0c9b0c87884446f45ab2b68fb00e0b650d1c38",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: error: Property value is constant in this method. (scope=top)",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: error: Property value is constant in this method. (scope=top)",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe.sv>:2:84: error: cannot assign to read-only variable 'value'"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:84: error: cannot assign to read-only variable 'value'"
+          ],
+          "status": "rejected"
+        }
+      }
+    },
+    {
+      "name": "null_static_call",
+      "source": "`timescale 1ns/1ns\nclass Item;static function int value();return 9;endfunction endclass module top;Item a;initial $display(\"%0d\",a.value());endmodule\n",
+      "proposed_stdout": "9\n",
+      "clause": "8.4, 8.10",
+      "role": "proposal_model",
+      "source_sha256": "51b91ba5b7ed3e7cdb33fbc91c2f763117f46a443cfe8848b82292d8ff398763",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:86: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "null_instance_call",
+      "source": "`timescale 1ns/1ns\nclass Item;function int value();return 9;endfunction endclass module top;Item a;initial $display(\"%0d\",a.value());endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.4",
+      "role": "null_runtime_choice",
+      "source_sha256": "e8ed6c028f036c69ac5d941f2d84960ca157f6ecaace0913da06be479b83562f",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "boundary_observation"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9\n",
+          "run_diagnostic": [],
+          "status": "boundary_observation"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:79: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "null_property_read",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a;initial $display(\"%0d\",a.value);endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.4",
+      "role": "null_runtime_choice",
+      "source_sha256": "9f86325df1c5014bdd6e98c02c837c34d7c16ab4eeefe0834b1f875d75e565ff",
+      "results": {
+        "13": {
+          "compile_exit": 139,
+          "diagnostic": [],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 139,
+          "diagnostic": [],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:72: error: unsupported: expression 'MemberAccess' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "null_shallow_copy",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a,b;initial begin b=new a;$display(\"%0d\",b==null);end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.4, 8.12",
+      "role": "null_runtime_choice",
+      "source_sha256": "71a3f48622d7a1187d754acbf22d96f1da69e2451502ec3a32462447720bab6c",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0\n",
+          "run_diagnostic": [],
+          "status": "boundary_observation"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0\n",
+          "run_diagnostic": [],
+          "status": "boundary_observation"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:49: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "cast_success_failure",
+      "source": "`timescale 1ns/1ns\nclass Parent;int value;endclass class Child extends Parent;int other;endclass class Other extends Parent;endclass module top;Parent b;Child d,saved;Other o;initial begin d=new;d.other=9;saved=d;b=d;$display(\"%0d\",$cast(d,b));o=new;b=o;$display(\"%0d %0d\",$cast(d,b),d==saved);end endmodule\n",
+      "proposed_stdout": "1\n0 1\n",
+      "clause": "6.24.2, 8.16",
+      "role": "proposal_model",
+      "source_sha256": "1caf261adddc46c1df318ce21ca09cba1307488e16f026ac367a5ec6ffd54f4d",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [
+            "<probe.sv>:2:266: warning: 'd' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:266: warning: 'd' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]",
+            "<probe.sv>:2:133: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "cast_null",
+      "source": "`timescale 1ns/1ns\nclass Parent;endclass class Child extends Parent;endclass module top;Parent b;Child d;initial begin d=new;$display(\"%0d\",$cast(d,b));$display(\"%0d\",d==null);end endmodule\n",
+      "proposed_stdout": "1\n1\n",
+      "clause": "6.24.2, 8.16",
+      "role": "proposal_model",
+      "source_sha256": "41d22d7c71afd92d83890d82ceee552cb4b449e29b1a28c0d2cf443781324f80",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:77: error: unsupported: type 'Parent' (not implemented yet)",
+            "<probe.sv>:2:85: error: unsupported: type 'Child' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "copy_dynamic_type",
+      "source": "`timescale 1ns/1ns\nclass Parent;int a;endclass class Child extends Parent;int b;endclass module top;Parent view,clone;Child original,down;initial begin original=new;original.a=7;original.b=9;view=original;clone=new view;$display(\"%0d\",$cast(down,clone));if(down!=null)$display(\"%0d %0d\",down.a,down.b);end endmodule\n",
+      "proposed_stdout": "1\n7 9\n",
+      "clause": "8.12, 8.16",
+      "role": "proposal_model",
+      "source_sha256": "33312dce1468b0fd2c3f1948447da6e41e68792a05357ae80e6c76400f2eaeb3",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:89: error: unsupported: type 'Parent' (not implemented yet)",
+            "<probe.sv>:2:94: error: unsupported: type 'Parent' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "method_receiver_pin",
+      "source": "`timescale 1ns/1ns\npackage journal;int seen;endpackage class Item;int value;task run();#2;journal::seen=value;endtask endclass module top;Item a;initial begin a=new;a.value=9;fork a.run();begin #1;a=null;end join $display(\"%0d %0d\",a==null,journal::seen);end endmodule\n",
+      "proposed_stdout": "1 9\n",
+      "clause": "8.6, 8.29, 13.5",
+      "role": "proposal_model",
+      "source_sha256": "5fbb40a634bfa640d85a79c78ac7e53d54ec103522eeb97a03d8fe00dd362ac9",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:125: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:143: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "property_ref_pin",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a,saved;task automatic update(ref int value);#2;value=9;endtask initial begin a=new;saved=a;fork update(a.value);begin #1;a=new;end join $display(\"%0d %0d\",a.value,saved.value);end endmodule\n",
+      "proposed_stdout": "0 9\n",
+      "clause": "8.5, 13.5.2",
+      "role": "proposal_model",
+      "source_sha256": "1e53765dbc86739a351878c93baedfdd46bfbccb02d569dc57278e7dceb6eeb0",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:49: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "property_output_copyback",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a,saved;task automatic update(output int value);#2;value=9;endtask initial begin a=new;saved=a;fork update(a.value);begin #1;a=new;end join $display(\"%0d %0d\",a.value,saved.value);end endmodule\n",
+      "proposed_stdout": "9 0\n",
+      "clause": "4.9.7, 8.5, 13.5",
+      "role": "proposal_model",
+      "source_sha256": "40925a3d495b243be6bc0ce0591068cdd9044e22f782aa57ca4d1479376a8ed1",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9 0\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "9 0\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:49: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "property_nba_capture",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a,saved;initial begin a=new;saved=a;a.value<=#2 9;a=new;#3;$display(\"%0d %0d\",a.value,saved.value);end endmodule\n",
+      "proposed_stdout": "0 9\n",
+      "clause": "6.21, 10.4.2",
+      "role": "proposal_model",
+      "source_sha256": "0e3af7c597fdbe39afca5ee0af27f48c8410b7ca823690fd8dccf9bf9b846175",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": -6,
+          "stdout": "",
+          "run_diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "runtime_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": -6,
+          "stdout": "",
+          "run_diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "runtime_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:49: error: unsupported: type 'Item' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "property_event_watch",
+      "source": "`timescale 1ns/1ns\nclass Item;int value;endclass module top;Item a;initial begin a=new;fork begin @(a.value);$display(\"%0t %0d\",$time,a.value);end begin #2;a.value=9;end join end endmodule\n",
+      "proposed_stdout": "2 9\n",
+      "clause": "8.5, 9.4.2",
+      "role": "proposal_model",
+      "source_sha256": "89db9cf5e0dbf9f6b232960d8352b794752a463a5b28764229ff55637eabf3a7",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: internal error: cannot synthesize expression: a.<0>",
+            "2 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: internal error: cannot synthesize expression: a.<0>",
+            "2 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:47: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:65: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "object_rng_seed",
+      "source": "`timescale 1ns/1ns\nclass Item;endclass module top;Item a;int seed;int unsigned first,after_new,control,expected;initial begin seed=11;void'($urandom(seed));first=$urandom;a=new;after_new=$urandom;seed=11;void'($urandom(seed));control=$urandom;void'($urandom);expected=$urandom;$display(\"%0d %0d\",first==control,after_new==expected);end endmodule\n",
+      "proposed_stdout": "1 1\n",
+      "clause": "18.14.1, 18.14.3",
+      "role": "proposal_model",
+      "source_sha256": "c03b2a060b8e5170fba7e49b43377a55262758d75bf4774d240c51a3a3814a35",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 0\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 0\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:37: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:155: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "class_srandom",
+      "source": "`timescale 1ns/1ns\nclass Item;endclass module top;Item a;initial begin a=new;a.srandom(7);$display(\"done\");end endmodule\n",
+      "proposed_stdout": "done\n",
+      "clause": "18.14.3",
+      "role": "proposal_model",
+      "source_sha256": "f34f1733941af4ed9ac1f1c339a607e931a96b5b5d6b8a3ab66ec8b19081dc50",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: error: Can't find task srandom in class Item",
+            "<probe.sv>:2: error: Enable of unknown task ``a.srandom''."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: error: Can't find task srandom in class Item",
+            "<probe.sv>:2: error: Enable of unknown task ``a.srandom''."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:37: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:55: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "interface_dispatch",
+      "source": "`timescale 1ns/1ns\ninterface class Access;pure virtual function int value();endclass class Item implements Access;virtual function int value();return 9;endfunction endclass module top;Item a;Access view;initial begin a=new;view=a;$display(\"%0d\",view.value());end endmodule\n",
+      "proposed_stdout": "9\n",
+      "clause": "8.26",
+      "role": "proposal_model",
+      "source_sha256": "7b9e487f7c9ddf528eadfb41551cfad8c3ddfe22f83c222eabb969845b569f6b",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:171: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:180: error: unsupported: type 'Access' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "virtual_class",
+      "source": "`timescale 1ns/1ns\nvirtual class Parent;pure virtual function int value();endclass class Child extends Parent;virtual function int value();return 9;endfunction endclass module top;Parent b;Child d;initial begin d=new;b=d;$display(\"%0d\",b.value());end endmodule\n",
+      "proposed_stdout": "9\n",
+      "clause": "8.21",
+      "role": "proposal_model",
+      "source_sha256": "f74580e389046491d13b682580b2a6b4463f9c49db809f8c4e14246c692198b0",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid class item."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid class item."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:169: error: unsupported: type 'Parent' (not implemented yet)",
+            "<probe.sv>:2:177: error: unsupported: type 'Child' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "illegal_abstract_new",
+      "source": "`timescale 1ns/1ns\nvirtual class Parent;pure virtual function int value();endclass module top;Parent a;initial a=new;endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.21",
+      "role": "legality_boundary",
+      "source_sha256": "19c1c3919f5a4efe50c64526fe87d39e32e8e73c63f371001c9ae3af85b91b9e",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid class item."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid class item."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe.sv>:2:95: error: cannot create instance of virtual class 'Parent'"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:95: error: cannot create instance of virtual class 'Parent'"
+          ],
+          "status": "rejected"
+        }
+      }
+    },
+    {
+      "name": "implicit_comb_class_exclusion",
+      "source": "`timescale 1ns/1ns\nclass Item;int value=7;endclass module top;Item a;int output_value,calls;bit arg;function int method_arg(input bit unused);return 0;endfunction always_comb begin calls++;if(arg)output_value=a.value;else output_value=1;end initial begin a=new;#1;arg=1;#1;$display(\"%0d\",output_value);a.value=9;#1;$display(\"%0d\",output_value);end endmodule\n",
+      "proposed_stdout": "7\n7\n",
+      "clause": "9.2.2.2.1",
+      "role": "proposal_model",
+      "source_sha256": "f292defd4d9a30abc0e5159f388188268e8bf64633f22da005aa08b3b9e58a09",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7\n7\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "7\n7\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:49: error: unsupported: type 'Item' (not implemented yet)",
+            "<probe.sv>:2:191: error: unsupported: expression 'MemberAccess' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    }
+  ],
+  "source_origin": "46 original programs; no other simulator source/tests read.",
+  "commands": {
+    "reference_compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "probe.vvp",
+      "probe.sv"
+    ],
+    "reference_run": [
+      "vvp",
+      "probe.vvp"
+    ],
+    "native_parse": [
+      "kirimasim",
+      "parse",
+      "--top=top",
+      "probe.sv"
+    ],
+    "native_run": [
+      "kirimasim",
+      "--top=top",
+      "probe.sv"
+    ]
+  },
+  "normalization": "Temporary runtime artifact paths are replaced by <probe.vvp>; diagnostics use <probe.sv>. Backend assertion expressions are omitted. Model-matched stdout is unchanged.",
+  "scope": "Separate exploratory class cohort; not merged into the 87-probe parity inventory or the passing test suite. No class runtime implementation or semantic amendment is approved by these observations.",
+  "summary": {
+    "13": {
+      "compile_failed": 28,
+      "model_match": 10,
+      "result_mismatch": 3,
+      "boundary_observation": 2,
+      "runtime_failed": 3
+    },
+    "14": {
+      "compile_failed": 25,
+      "model_match": 12,
+      "result_mismatch": 4,
+      "boundary_observation": 2,
+      "runtime_failed": 3
+    },
+    "native": {
+      "model_match": 1,
+      "unsupported": 42,
+      "result_mismatch": 1,
+      "rejected": 2
+    }
+  }
+}

@@ -11,7 +11,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
-The current implementation includes [wide L/H strength masks](wide-gate-strength.md),
+The [typed-pattern SIR/execution checkpoint](pattern-sir-execution.md) also fixes
+display-monitor dependencies on existing queue cells. All 122 selected tests,
+including eleven new SIR tests, and all 21 CI checks pass. Latest dev/ASan/UBSan
+have 3,340 passes out of 3,342; release has 3,341 out of 3,343, with the same
+two skips. Source `%p` front integration and dedicated heap file-monitor
+matrices remain. Comparison counts below retain their earlier provenance.
+
+The current implementation includes [wide UDP input evaluation](wide-udp-inputs.md),
+[fork-local declarations](fork-local-declarations.md),
+[wide L/H strength masks](wide-gate-strength.md),
 [aggregate blocking timing](blocking-aggregate-timing.md),
 [aggregate value capture](aggregate-value-capture.md),
 [blocking repeated event controls](repeated-event-controls.md), corrected
@@ -21,6 +30,16 @@ The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
+`156e65c` adds a [shared-kernel assignment-pattern renderer](pattern-format-foundation.md).
+Fourteen new unit tests and all 22 older Format tests pass. Typed SIR/execution
+followed at `4c69843`; front integration remains. Source `%p` is still
+unsupported and no 87-probe gap is claimed closed by this API foundation.
+The strengthened 112 enum combinations and six compiled controls pass their
+checks. At that renderer stage, full CI had 3,329 passes/two known skips out
+of 3,331 in each of dev/ASan/UBSan; release had 3,330/two out of 3,332. All 136 Tools and
+required LLVM-22 checks pass, and all 513 control entries apply. See the
+[hashed validation record](../measurements/2026-10-24/pattern-format-negative-controls.json).
+
 The latest [MOS/switch investigation](mos-switch-investigation.md) records
 28 original programs and 56 observations across both reference versions.
 It identifies strength-only dependencies, passive cycles, port attenuation
@@ -28,33 +47,46 @@ and unresolved interval/force/startup questions. These exploratory observations
 are separate from the feature inventory below and do not approve new semantics
 or add implemented support.
 
-Full local CI rerun for this documentation update on base `e4376f1` passes
-configure/build/test for dev/release/ASan/UBSan. Native source is unchanged
-from `57a64ef`.
-Dev/ASan/UBSan each run 3,131 tests (3,129 pass, two known skips); release runs
-3,132 (3,130 pass, the same skips). Release flags, banned features, SPDX,
-suite files, global state, per-commit expectation protection, README counts,
-clang-format and clang-tidy also pass. Unit/suite/tool/generator counts are
-299/2,640/133/127. Existing suite bodies, suite expectations and performance
-counts are unchanged; the older aggregate CLI correction remains a separate
-review baseline. All 29 existing SIR dumps pass. Four wide-mask mutations fail
-new stdout expectations and another fails the real delayed rejection check;
-anchor/judging self-checks are excluded as evidence.
+The UDP implementation at `52652eb` passes 106 new source cases and five
+new unit tests. Four compiled controls pass the older four UDP tests and fail
+new source stdout or wide value assertions. The old level-row mutant follows
+the new helper; all 507 registered controls apply.
 
-The same **79 original probes** now run against both installed references:
+The earlier UDP local CI passes with native source `52652eb` and the registry/count
+follow-up (2026-10-24). Dev/ASan/UBSan each run 3,317 tests: 3,315 pass and
+two known skips remain. Release runs 3,318: 3,316 pass and the same skips.
+All 136 Tools tests, 106 new source cases and five new unit tests pass.
+Release flags, banned features, SPDX, suite files, global state, expectation
+protection, README counts, clang-format and clang-tidy pass. Existing suite
+bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
 
-- Icarus `13.0 (stable) (v13_0)`: 20 Icarus-passing gaps, four reference
+The [class investigation](class-execution-investigation.md) records 46 original
+programs separately: native has one model match, 42 unsupported forms, one
+output mismatch and two legality rejections. A known omission of unused class
+static-initializer side effects corrects the earlier blanket diagnostic claim.
+Reference failures/differences are not adopted as oracles. This neither changes
+the 87-item inventory nor adds class implementation or approved contracts.
+
+The same **87 original probes** now run against both installed references:
+
+- Icarus `13.0 (stable) (v13_0)`: 25 Icarus-passing gaps, four reference
   result mismatches.
-- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 26 Icarus-passing gaps,
+- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 31 Icarus-passing gaps,
   seven reference result mismatches.
 
 See the [versioned comparison and portable data](icarus-13-comparison.md).
 The compiler driver, preprocessor, parser/elaborator and runtime were all
 verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
-unconfirmed. Dated entries below retain their historical probe cohorts.
+unconfirmed. All earlier 84 statuses and passing judged outputs are unchanged.
+The new combinational/sequential wide UDP probes pass both references and native
+execution. A new dense table still reaches the native 15-second subprocess bound.
+The expanded baseline has 27/33 gaps and the current native 25/31; it combines
+preserved 84-item records and three fresh probes on the same retained source.
+The earlier 84-item cohort retains 24/30 gaps. This closes two newly inventoried
+mechanisms and exposes a compiler limit, without changing older cohort results.
 
-Six detailed semantic amendments remain pending:
+Nine detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
@@ -62,6 +94,9 @@ Six detailed semantic amendments remain pending:
 - [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
 - [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
 - [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).
+- [Shared automatic storage, fork capture and automatic event ownership](automatic-capture-proposal.md).
+- [Whole fixed-array ports, alias views, element-wise resolution and pulls](fixed-array-ports-proposal.md).
+- [Class identity, initialization, dispatch, typed ownership and object state](class-runtime-proposal.md).
 
 The MOS proposal covers thirteen switch probes and one partial-port probe in
 the existing 13.0 gap list. Its new 18-source matrix records 2,304 scalar
@@ -70,7 +105,38 @@ boundary programs. Loaded results agree with the truth/reduction/resolution
 model; isolated resistive strength tokens expose a context-dependent reference
 difference. The proposal explicitly requests review of startup, network
 ownership, local wired resolution, force and strength-only timing. No MOS
-implementation or change to the 79-item inventory is claimed.
+implementation is claimed by that proposal; the independent fork work extends
+the feature inventory as described above.
+
+The automatic-storage proposal replaces planned per-child copies with shared
+activation bindings and specifies lexical lifetime, typed roots, synchronization,
+copyback, ref restrictions, automatic event construction and cleanup in the
+shared kernel. Its [32 original source observations](../measurements/2026-10-24/automatic-capture-design-observations.json)
+include native parse/run results and both references. They are design evidence,
+not approved oracles. Event rebinding and event output/inout copyback remain
+outside that proposal; no production implementation has been added.
+
+The [array-port proposal](fixed-array-ports-proposal.md) records
+[59 original design programs](../measurements/2026-10-24/fixed-array-port-design-observations.json).
+Strict slang accepts 52 and rejects seven legality controls. Each reference
+matches 36 legal model outputs, rejects 15 legal sources and differs on one;
+34 model-matched sources remain native gaps. Native passes four controls and
+rejects the other 48 legal examples. Explicit input-var reevaluation differs
+in the references; their acceptance of two illegal writer programs does not
+justify weakening slang. No array-port or resolved-array implementation is added.
+The earlier array-port documentation/probe follow-up passed all 135 Tools tests, source-hash
+checks, passing-output comparisons and changed-document file-link checks.
+At that step, production source and expectations were at `c6d9c3d`, with
+full four-configuration CI at `392687e`. The subsequent UDP source is described above.
+
+The [UDP record](wide-udp-inputs.md) separates 106 passing native source cases
+from 54 dense source variants blocked by pinned slang coverage checking.
+Both references match 25 of the runnable cases; their remaining compilation,
+execution and value differences are preserved. Direct kernel/reference checks
+also cover 65,537 inputs, without claiming source compilation at that size.
+The [bounded compilation data](../measurements/2026-10-24/udp-edge-coverage-observations.json)
+and [upstream issue draft](slang-udp-coverage-issue-draft.md) preserve the unresolved
+frontend behavior. No upstream issue/comment has been sent.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep
@@ -84,6 +150,13 @@ python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim
 This uses PATH; the [13.0 command](icarus-13-comparison.md#reproduce) selects
 matching binaries explicitly. Both measured references still give exit 1
 for remaining passing gaps. A zero result would not establish full parity.
+
+
+The [class runtime proposal](class-runtime-proposal.md) adds a detailed contract
+and fourteen original boundaries beyond the preserved 46. Each reference has
+four model matches, six compile failures, three runtime failures and one
+unjudged observation; native has twelve unsupported forms and two mismatches.
+No class implementation, contract approval or 87-item inventory expansion is claimed.
 
 ## Wide L/H side masks and the delayed boundary (2026-10-24)
 
@@ -1090,7 +1163,6 @@ mechanism addressed by the nested-bound extension above. At that
 stage, dev passed 2,120 tests: 2,118 pass and the same two known skips
 remain. Existing suite bodies and expected outputs were preserved.
 
-
 ## Published baseline before this extension (2026-10-23)
 
 The published baseline `6a1830a` includes the five delayed-NBA/packed-target/
@@ -1514,7 +1586,6 @@ not connected to these heap operations yet; SystemVerilog dynamic-array/queue
 support and automatic safe-point root publication remain unfinished. The
 44-probe inventory and its 23 Icarus-passing gaps therefore remain unchanged.
 This foundation does not complete the approved amendment or the P1 target.
-
 
 The final source validation at `3d7b1a4` passes `tools/local_ci.py`:
 dev/release/ASan/UBSan configure, build and tests; release flags; banned

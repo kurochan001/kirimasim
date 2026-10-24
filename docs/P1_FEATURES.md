@@ -15,6 +15,38 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## UDP inputs beyond 32
+
+The evaluator accepts more than 32 inputs under the existing UDP rules.
+For an original 33-input combinational example, run:
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/nets/wide_udp_module_comb_33.sv
+```
+
+```text
+zero 0
+one_input 0
+both 1
+unknown x
+dominate 0
+other_zero 0
+high_z x
+z_zero 0
+```
+
+The [106-source evidence and limits](notes/wide-udp-inputs.md) include sequential
+values and wide input transport. Dense edge-coverage tables still expose a
+slang compilation-scaling limit; this is not complete UDP source support.
+
+## Fork declarations and parent initialization
+
+Fork declarations initialize according to their lifetime in the parent; they
+do not create children or satisfy `join_any`. Static storage is shared, and
+uncaptured automatic declarations initialize per entry. Declaration-only
+forks proceed without a wait. [Seventy-two original source cases and limits](notes/fork-local-declarations.md)
+cover the behavior; automatic variables captured by children remain unsupported.
+
 ## Wide L/H gate resolution
 
 Three-state gates retain their one-sided L/H strength masks on wide resolved
@@ -116,6 +148,31 @@ endmodule
 ```text
 7 3
 ```
+
+## Monitoring an existing queue cell
+
+`$monitor` also displays a change to an existing queue element. This example
+keeps the container handle and changes its first cell:
+
+```systemverilog
+module top;
+  int values[$];
+  initial begin
+    values.push_back(0);
+    $monitor("%0d", values[0]);
+    #2 values[0] = 9;
+  end
+endmodule
+```
+
+```text
+0
+9
+```
+
+See the [verification record and limits](notes/pattern-sir-execution.md).
+Source `%p` remains unsupported; heap-backed file-monitor combinations still
+need dedicated verification.
 
 ## Dynamic arrays and queues
 

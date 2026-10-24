@@ -95,6 +95,33 @@ template <typename F> bool before(const F& x, const F& y) {
     return x.seq < y.seq;
 }
 
+struct HeapReads {
+    std::pmr::vector<HeapRoot> roots;
+    HeapResult<bool> (*filter)(const void*, HeapRoot) noexcept;
+    const void* filterFrame;
+    HeapError error = HeapError::None;
+    static void record(void* frame, HeapRoot root) noexcept {
+        auto& r = *static_cast<HeapReads*>(frame);
+        if (r.error != HeapError::None) return;
+        try {
+            if (r.filter != nullptr) {
+                const auto keep = r.filter(r.filterFrame, root);
+                if (!keep) {
+                    r.error = keep.status.error;
+                    return;
+                }
+                if (!keep.value) return;
+            }
+            if (std::find(r.roots.begin(), r.roots.end(), root) == r.roots.end())
+                r.roots.push_back(root);
+        } catch (const std::bad_alloc&) {
+            r.error = HeapError::ResourceLimit;
+        } catch (const std::length_error&) {
+            r.error = HeapError::ResourceLimit;
+        }
+    }
+};
+
 }  // namespace
 
 const char* endReasonName(EndReason r) {
@@ -140,7 +167,8 @@ const char* regionName(Region r) {
 // --- Setup -------------------------------------------------------------------
 
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
-    : ctx_(ctx), store_(store), counters_(counters), lateChanges_(ctx.heap().memoryResource()) {}
+    : ctx_(ctx), store_(store), counters_(counters), lateChanges_(ctx.heap().memoryResource()),
+      monitor_(ctx.heap().memoryResource()) {}
 
 void Scheduler::begin() {
     if (begun_) return;
@@ -250,6 +278,7 @@ bool Scheduler::takeEndedProgramProcess(ProcessId& process) {
 }
 
 void Scheduler::releaseProcess(ProcessId p) {
+    detachDisplayMonitor(p);
     Process& proc = processes_[p.index()];
     proc.fn = nullptr;
     proc.frame = nullptr;
@@ -334,20 +363,38 @@ void Scheduler::countMonitorParts(const DisplayMonitor& m, bool add) {
 }
 
 void Scheduler::setMonitor(ProcessId p, std::span<const SlotPart> parts) {
+    setMonitor(p, parts, {});
+}
+void Scheduler::setMonitor(ProcessId p, std::span<const SlotPart> parts, DisplayReadSpec reads) {
     begin();
     ensureSlotTables();
     countMonitorParts(monitor_, false);
+    clearDisplayReads(monitor_);
     monitor_.process = p;
     monitor_.parts.assign(parts.begin(), parts.end());
+    monitor_.reads = reads;
+    monitor_.serial = ++monitorSerial_;
+    if (reads.heap) retainHeapHook();
     countMonitorParts(monitor_, true);
     monitor_.due = true;
 }
-
 void Scheduler::addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to) {
+    addFileMonitor(p, parts, std::move(to), {});
+}
+void Scheduler::addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to,
+                               DisplayReadSpec reads) {
     begin();
     ensureSlotTables();
-    fileMonitors_.push_back({p, {parts.begin(), parts.end()}, true, std::move(to)});
-    countMonitorParts(fileMonitors_.back(), true);
+    fileMonitors_.emplace_back(ctx_.heap().memoryResource());
+    auto& monitor = fileMonitors_.back();
+    monitor.process = p;
+    monitor.parts.assign(parts.begin(), parts.end());
+    monitor.to = std::move(to);
+    monitor.due = true;
+    monitor.reads = reads;
+    monitor.serial = ++monitorSerial_;
+    if (reads.heap) retainHeapHook();
+    countMonitorParts(monitor, true);
 }
 
 bool Scheduler::takeEndedFileMonitor(ProcessId& ended) {
@@ -374,6 +421,91 @@ void Scheduler::runPostponed(ProcessId p, const FileTargets* to) {
     }
 }
 
+void Scheduler::retainHeapHook() {
+    if (heapMonitorCount_++ == 0)
+        previousHeapHook_ = ctx_.heap().setChangeHook({&changedHeap, this});
+}
+
+void Scheduler::releaseHeapHook() noexcept {
+    if (--heapMonitorCount_ == 0) {
+        ctx_.heap().setChangeHook(previousHeapHook_);
+        heapMonitors_.clear();
+        heapMonitorLimit_ = 0;
+    }
+}
+
+void Scheduler::clearDisplayReads(DisplayMonitor& monitor) noexcept {
+    for (const auto root : monitor.heapReads)
+        ctx_.heap().watch(root, false);
+    monitor.heapReads.clear();
+    if (monitor.reads.heap) releaseHeapHook();
+    monitor.reads = {};
+}
+
+void Scheduler::detachDisplayMonitor(ProcessId p) noexcept {
+    if (monitor_.process == p) {
+        countMonitorParts(monitor_, false);
+        clearDisplayReads(monitor_);
+        monitor_.process = kNoHolder;
+        monitor_.parts.clear();
+        monitor_.due = false;
+        monitor_.serial = ++monitorSerial_;
+    }
+    for (std::size_t i = 0; i < fileMonitors_.size();) {
+        if (fileMonitors_[i].process != p) {
+            ++i;
+            continue;
+        }
+        countMonitorParts(fileMonitors_[i], false);
+        clearDisplayReads(fileMonitors_[i]);
+        fileMonitors_.erase(fileMonitors_.begin() + static_cast<std::ptrdiff_t>(i));
+    }
+}
+
+void Scheduler::runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileTargets* to,
+                                  DisplayReadSpec spec) {
+    if (!spec.heap) {
+        runPostponed(p, to);
+        return;
+    }
+    // Retain the hook while a callback replaces/removes its own registration.
+    retainHeapHook();
+    struct Release {
+        Scheduler& scheduler;
+        ~Release() { scheduler.releaseHeapHook(); }
+    } release{*this};
+    HeapReads reads{std::pmr::vector<HeapRoot>(ctx_.heap().memoryResource()), spec.filter,
+                    spec.frame};
+    {
+        struct Restore {
+            Heap& heap;
+            HeapHook previous;
+            ~Restore() { heap.setReadHook(previous); }
+        } restore{ctx_.heap(), ctx_.heap().setReadHook({&HeapReads::record, &reads})};
+        runPostponed(p, to);
+    }
+    if (reads.error != HeapError::None) {
+        if (reads.error == HeapError::ResourceLimit)
+            heapLimit(p);
+        else
+            requestEnd(EndReason::Internal, 1);
+        return;
+    }
+    DisplayMonitor* target = monitor_.serial == serial ? &monitor_ : nullptr;
+    if (target == nullptr)
+        for (auto& monitor : fileMonitors_)
+            if (monitor.serial == serial) {
+                target = &monitor;
+                break;
+            }
+    if (target == nullptr || ending_) return;
+    for (const auto root : target->heapReads)
+        ctx_.heap().watch(root, false);
+    for (const auto root : reads.roots)
+        ctx_.heap().watch(root, true);
+    target->heapReads.swap(reads.roots);
+}
+
 // --- Scheduling --------------------------------------------------------------
 
 void Scheduler::freeMonitor(ProcessId p) {
@@ -382,11 +514,7 @@ void Scheduler::freeMonitor(ProcessId p) {
         Monitor& m = monitors_[id];
         for (const auto root : m.heapReads)
             ctx_.heap().watch(root, false);
-        if (m.spec.heap && --heapMonitorCount_ == 0) {
-            ctx_.heap().setChangeHook(previousHeapHook_);
-            heapMonitors_.clear();
-            heapMonitorLimit_ = 0;
-        }
+        if (m.spec.heap) releaseHeapHook();
         m.heapReads.clear();
         m.serial = ++monitorSerial_;  // references from slots and events go stale
         m.spec = {};
@@ -641,6 +769,7 @@ void Scheduler::runSlot() {
         for (std::size_t i = 0; i < fileMonitors_.size();) {
             if (!ctx_.files().live(fileMonitors_[i].to)) {
                 countMonitorParts(fileMonitors_[i], false);
+                clearDisplayReads(fileMonitors_[i]);
                 const ProcessId p = fileMonitors_[i].process;
                 fileMonitors_.erase(fileMonitors_.begin() + static_cast<std::ptrdiff_t>(i));
                 // The monitor ends with its last file; its process ends
@@ -652,13 +781,15 @@ void Scheduler::runSlot() {
             if (fileMonitors_[i].due) {
                 fileMonitors_[i].due = false;
                 const FileTargets to = fileMonitors_[i].to;  // the run may add monitors
-                runPostponed(fileMonitors_[i].process, &to);
+                const auto serial = fileMonitors_[i].serial;
+                runDisplayMonitor(serial, fileMonitors_[i].process, &to, fileMonitors_[i].reads);
+                if (i >= fileMonitors_.size() || fileMonitors_[i].serial != serial) continue;
             }
             ++i;
         }
         const bool due = monitor_.due && monitorOn_ && monitor_.process != kNoHolder;
         monitor_.due = false;
-        if (due) runPostponed(monitor_.process);
+        if (due) runDisplayMonitor(monitor_.serial, monitor_.process, nullptr, monitor_.reads);
         runRegion(Region::Postponed);
         strobeTargets_.clear();
         postponed_ = false;
@@ -843,8 +974,7 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
     mon.spec = m;
     mon.heapReads.clear();
     if (m.heap) {
-        if (heapMonitorCount_++ == 0)
-            previousHeapHook_ = ctx_.heap().setChangeHook({&changedHeap, this});
+        retainHeapHook();
         pushSwept(heapMonitors_, heapMonitorLimit_, MonitorRef{id, mon.serial},
                   [&](const MonitorRef& r) { return !live(r); });
     }
@@ -1157,7 +1287,8 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     endWalk();
 }
 
-void Scheduler::heapLimit() noexcept {
+void Scheduler::heapLimit(ProcessId p) noexcept {
+    if (!heapMonitorLimited_) heapMonitorProcess_ = p;
     heapMonitorLimited_ = true;
     resourceLimit();
 }
@@ -1166,6 +1297,14 @@ void Scheduler::changedHeap(void* frame, HeapRoot root) noexcept {
     auto& s = *static_cast<Scheduler*>(frame);
     if (s.ending_ || !s.ctx_.heap().watched(root)) return;
     try {
+        const auto mark = [&](DisplayMonitor& monitor) {
+            if (std::find(monitor.heapReads.begin(), monitor.heapReads.end(), root) !=
+                monitor.heapReads.end())
+                monitor.due = true;
+        };
+        mark(s.monitor_);
+        for (auto& monitor : s.fileMonitors_)
+            mark(monitor);
         for (const MonitorRef ref : s.heapMonitors_) {
             if (!s.live(ref)) continue;
             const auto& reads = s.monitors_[ref.id].heapReads;
@@ -1206,38 +1345,13 @@ bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out)
         eval(toC(ctx_), frame, out.data());
         return monitors_[id].serial == serial;
     }
-    struct Reads {
-        std::pmr::vector<HeapRoot> roots;
-        HeapResult<bool> (*filter)(const void*, HeapRoot) noexcept;
-        const void* filterFrame;
-        HeapError error = HeapError::None;
-        static void record(void* frame, HeapRoot root) noexcept {
-            auto& r = *static_cast<Reads*>(frame);
-            if (r.error != HeapError::None) return;
-            try {
-                if (r.filter != nullptr) {
-                    const auto keep = r.filter(r.filterFrame, root);
-                    if (!keep) {
-                        r.error = keep.status.error;
-                        return;
-                    }
-                    if (!keep.value) return;
-                }
-                if (std::find(r.roots.begin(), r.roots.end(), root) == r.roots.end())
-                    r.roots.push_back(root);
-            } catch (const std::bad_alloc&) {
-                r.error = HeapError::ResourceLimit;
-            } catch (const std::length_error&) {
-                r.error = HeapError::ResourceLimit;
-            }
-        }
-    } reads{std::pmr::vector<HeapRoot>(ctx_.heap().memoryResource()),
-            monitors_[id].spec.heapReadFilter, monitors_[id].spec.heapReadFrame};
+    HeapReads reads{std::pmr::vector<HeapRoot>(ctx_.heap().memoryResource()),
+                    monitors_[id].spec.heapReadFilter, monitors_[id].spec.heapReadFrame};
     struct Restore {
         Heap& heap;
         HeapHook previous;
         ~Restore() { heap.setReadHook(previous); }
-    } restore{ctx_.heap(), ctx_.heap().setReadHook({&Reads::record, &reads})};
+    } restore{ctx_.heap(), ctx_.heap().setReadHook({&HeapReads::record, &reads})};
     eval(toC(ctx_), frame, out.data());
     if (reads.error != HeapError::None) {
         if (reads.error == HeapError::ResourceLimit)

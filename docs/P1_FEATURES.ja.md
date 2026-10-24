@@ -15,6 +15,37 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## 32入力を超えるUDP
+
+既存のUDP規則のまま、32入力を超える評価に対応しました。独自の33入力の組合せ例を
+次のように実行できます。
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/nets/wide_udp_module_comb_33.sv
+```
+
+```text
+zero 0
+one_input 0
+both 1
+unknown x
+dominate 0
+other_zero 0
+high_z x
+z_zero 0
+```
+
+[106ソースの証拠と制限](notes/wide-udp-inputs.ja.md)に順序UDPと広い入力の転送も含めます。
+密な辺の網羅性表ではslangのコンパイル時間が増える問題が残り、UDPソース全体の対応完了
+とは扱いません。
+
+## fork内の宣言と親での初期化
+
+fork内の宣言は、親で寿命どおり初期化し、子に数えたり`join_any`を満たしたりしません。
+static記憶域は共有し、捕捉のないautomatic宣言は入るたびに初期化します。
+宣言だけのforkは待機せず進みます。[独自72ソースと制限](notes/fork-local-declarations.ja.md)を
+参照してください。子が捕捉するautomatic変数は未対応です。
+
 ## 広いネットでL/Hを解決する
 
 広い解決対象ネットでも、三状態ゲートの片側のL/H強さマスクを保持します。
@@ -113,6 +144,30 @@ endmodule
 ```text
 7 3
 ```
+
+## キュー要素の変更をmonitorで表示する
+
+`$monitor`は、既存queueの要素値を変更したときにも再表示します。
+次の例は同じコンテナのハンドルを保ったまま、先頭要素を変更します。
+
+```systemverilog
+module top;
+  int values[$];
+  initial begin
+    values.push_back(0);
+    $monitor("%0d", values[0]);
+    #2 values[0] = 9;
+  end
+endmodule
+```
+
+```text
+0
+9
+```
+
+[検証記録と制限](notes/pattern-sir-execution.ja.md)を参照してください。
+ソース`%p`は引き続き未対応で、heapを使うfile monitorの組み合わせにも検証が残ります。
 
 ## 動的配列とキュー
 

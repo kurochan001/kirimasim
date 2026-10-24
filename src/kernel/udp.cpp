@@ -56,7 +56,7 @@ UdpRow compileUdpRow(std::string_view inputs, char state, char output) {
                     break;
             }
         }
-        if (edge) r.edge = r.edge == -1 ? static_cast<std::int32_t>(r.masks.size()) : -2;
+        if (edge) r.edge = r.edge == -1 ? static_cast<std::int64_t>(r.masks.size()) : -2;
         r.masks.push_back(m);
     }
     r.states = state == 0 ? 7 : static_cast<std::uint8_t>(levelMask(state));

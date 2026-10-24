@@ -46,7 +46,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA | イベント制御付きNBA、ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
 | イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered` | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。実行時の添字で選ぶ名前付きイベント、イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応 |
-| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、対応する名前付きブロックとタスクの disable | fork 内の変数宣言、fork の枝が捕捉してスコープ外まで使う automatic 変数、名前付き fork ブロックの disable などに未対応の形がある |
+| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、対応する名前付きブロックとタスクのdisable | forkの枝が捕捉するautomatic変数、名前付きforkブロックのdisableに未対応の形がある。automatic宣言には通常の型の制限もある |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動の強さ | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
@@ -57,6 +57,24 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | スケジューラ | 時刻スロットの全領域と参照アルゴリズム。Observed で保留の報告を確定。Postponed で strobe/monitor を出力 | programの呼び出しとforkは領域と起源を継承。クロッキングブロック・並行アサーションは未対応 |
 
 32 ビットを超える重みの `randcase` は未対応です。
+
+### クラスとstatic初期化の既知の境界
+
+[独自46プログラムの調査](notes/class-execution-investigation.ja.md)では、プロパティを使わない
+static関数の1例が動きますが、クラスオブジェクトの実行は未対応です。未使用クラスの
+staticプロパティ初期化の副作用を落とす例は、診断なしに終了コード0で終わります。
+既知の不具合として扱い、実行できたことをクラス対応の根拠にはしません。
+この調査は既存87プローブの比較・承認済みのテストとは別です。
+[詳細なクラス契約案](notes/class-runtime-proposal.ja.md)は初期化・dispatch・GC・時間処理を
+規定する承認待ちの案で、実装済み機能ではありません。
+
+### UDPの入力数とコンパイルの制限
+
+評価器/転送の固定32入力の上限を外しました。[独自106ソース](notes/wide-udp-inputs.ja.md)は
+257入力までを検査し、独立したkernel/SIRで端子、状態順、引数の検証も行います。
+直接のkernel/参照検査には65,537入力も使いますが、その入力数のソースコンパイルは未確認です。
+密な保持行の表では固定したslangの検査がコンパイル時間上限を超えます。未解決点として追跡し、
+診断や依存を緩めていません。
 
 ### 集約代入での値の保持
 
@@ -96,6 +114,21 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 ではありません。
 [実行契約の全体案](notes/mos-switch-proposal.ja.md)は、初期化と完全な強さの時間規則も含め
 承認待ちです。
+
+### fork内の宣言
+
+宣言は子にせず、親で既存の寿命/初期化を使います。static記憶域は共有し、捕捉のない
+automatic初期化は入るたびに行います。宣言だけのforkにも対応します。
+[独自72ソースと制限](notes/fork-local-declarations.ja.md)で8種類の実行場所と型を検査します。
+子が捕捉するautomatic変数は未対応で、拡張した比較にも明示的に含めています。
+[記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は承認待ちで、
+automatic event変数も未対応です。
+
+### 固定長配列ポートの境界
+
+固定長unpacked配列全体のポートと、解決が必要なネット配列は未対応です。pullのない未接続
+配列には既存の既定値が適用されます。[接続・解決の契約案](notes/fixed-array-ports-proposal.ja.md)に
+独自の観測を記録し、承認待ちとしています。
 
 ### programの終了
 
@@ -227,6 +260,13 @@ frontから共通ヒープへ接続し、SystemVerilogから実行できるよ�
 | VCD 制御 | `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush` |
 
 ### 書式と入力の制限
+
+共有カーネルの[代入パターン表示API](notes/pattern-format-foundation.ja.md)と
+[SIR・実行処理](notes/pattern-sir-execution.ja.md)は接続済みです。frontの書式引数の
+接続は残り、ソース`%p`は未対応です。クラス識別や連想配列の順序を有効にする変更でもありません。
+
+既存queueの要素値を変えたときの`$monitor`再表示は、[実ソースと独自SIRで確認](notes/pattern-sir-execution.ja.md)しています。
+heapを使うfile monitorのclose・差し替え・確保失敗の組み合わせは、専用行列による確認が残ります。
 
 - `$strobe` と `$monitor` の引数から automatic 変数は読めません。
 - 出力の変換指定は `%b`、`%o`、`%h` / `%x`、`%d`、`%c`、`%s`、`%e`、`%f`、

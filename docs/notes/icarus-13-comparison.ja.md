@@ -1,6 +1,6 @@
 # Icarus 13.0と開発版による比較
 
-[English](icarus-13-comparison.md)。2026-10-24、`57a64ef`（広いマスクの実装`37a2726`と境界の訂正）のdevビルド、
+[English](icarus-13-comparison.md)。2026-10-24、`52652eb`（広いUDPの評価）のdevビルド、
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
@@ -9,12 +9,12 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 既存のバイナリで、コンパイラdriver・プリプロセッサ・parser/elaborator・runtimeが
 すべて`13.0 (stable) (v13_0)`と表示することを確認しました。追加の比較対象は、
 コンパイラ・runtimeともに`14.0 (devel) (s20260301-411-gca6b8d376)`です。
-両方で[`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py)の独自79プローブを実行しました。
+両方で[`icarus_feature_probe.py`](../../tools/icarus_feature_probe.py)の独自87プローブを実行しました。
 
-- **13.0 stable：** Icarusだけが通る差分20件、参照結果の不一致4件。
-  [個別の可搬的な記録](../measurements/2026-10-24/icarus13-wide-gate-probes.json)。
-- **14.0 devel：** Icarusだけが通る差分26件、参照結果の不一致7件。
-  [個別の可搬的な記録](../measurements/2026-10-24/icarus14-wide-gate-probes.json)。
+- **13.0 stable：** Icarusだけが通る差分25件、参照結果の不一致4件。
+  [個別の可搬的な記録](../measurements/2026-10-24/icarus13-wide-udp-probes.json)。
+- **14.0 devel：** Icarusだけが通る差分31件、参照結果の不一致7件。
+  [個別の可搬的な記録](../measurements/2026-10-24/icarus14-wide-udp-probes.json)。
 
 開発版だけの追加6差分は、配列の和、キューの並べ替え、最小・最大の重複なし・空の
 プローブです。13.0はこれらをコンパイルできません。重複・withキーの最小最大の3件も
@@ -27,15 +27,69 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 参照が不一致でもkirimasimの未対応がなくなるわけではなく、クラスのvirtual dispatchは
 依然未対応です。JSONは両エンジンの状態を独立に記録し、P1の作業から消しません。
 
-一覧は規格の仕組み76本、右辺順序を検査する`project_policy` 2本、
+一覧は規格の仕組み84本、右辺順序を検査する`project_policy` 2本、
 `icarus_extension` 1本（`wire real`）です。順序の2本ではIEEEは左右のどちらを先に
 評価してもよく、期待値は既存の承認済みkirimasimの順序です。
 拡張とプロジェクトの方針は、規格共通の要件とは区別して記載します。
 
+## 広いUDPと密な表のコンパイル境界
+
+追加した`wide_udp_comb`・`wide_udp_seq`は両参照と現nativeで通り、`dense_udp_coverage`は
+両参照で通ってnativeの15秒subprocess上限に達します。拡張後の旧baselineは差分27/33件、
+現nativeは25/31件です。旧baselineは保持した84件と、同じ旧nativeソースでの追加3件を
+組み合わせています。以前の84件の状態と通過した比較出力は同じで、当時の24/30件も保ちます。
+参照不一致4/7件も変わらず、新しいコンパイル境界を件数で隠しません。
+
+[106ソース・kernel/SIR・誤実装の検査](wide-udp-inputs.ja.md)で仕組みを広く確認します。
+密な54ソースは別の未解決のフロントエンド境界として[時間上限付き観測](../measurements/2026-10-24/udp-edge-coverage-observations.json)を保ちます。
+以前の84件の[13.0](../measurements/2026-10-24/icarus13-array-port-probes.json)と
+[開発版](../measurements/2026-10-24/icarus14-array-port-probes.json)は上書きしません。
+UDP/P1ソース全体の対応は引き続き未確認です。
+
+## 固定長配列ポートと解決対象のネット配列を一覧へ追加
+
+`fixed_array_ports`と`resolved_net_array`は両参照で通り、nativeでは位置付きの未対応診断です。
+以前の82件の状態と通過した比較出力は同じです。本体のソースは変えず、一覧の拡張で
+差分は22/28件から24/30件へ増え、参照不一致4/7件の一覧は変わりません。
+以前の82件の[13.0](../measurements/2026-10-24/icarus13-automatic-capture-probes.json)と
+[開発版](../measurements/2026-10-24/icarus14-automatic-capture-probes.json)は、当時の件数と由来を保ちます。
+
+[配列ポート・解決の修正案](fixed-array-ports-proposal.ja.md)には、違法入力7本を含む
+独自59本を別に記録しました。モデルと参照の差はレビュー用の証拠で、実装や期待値の
+承認ではありません。宣言順の別名対応、連続的な型付きコピー、要素ごとの解決、
+未接続inputのpullを扱い、さらに広い部分ポートの強さ伝搬は別契約を必要とします。
+
+## automatic eventを一覧へ追加
+
+automatic eventの段階では、`automatic_event_capture`は両参照で通り、nativeではautomatic eventの位置付き未対応診断です。
+以前の81件の状態と通過した比較出力は同じで、この測定に伴う本体コードの変更はありません。
+新しい仕組みを加えたため差分は21/27件から22/28件へ増え、参照不一致4/7件の一覧は同じです。
+
+[automatic記憶域の共有・eventの修正案](automatic-capture-proposal.ja.md)には、独自32本の
+設計用プログラムを別に記録しました。承認待ちで、提案出力を新しい期待値や実装済みの
+根拠にはしません。以前の81件の[13.0](../measurements/2026-10-24/icarus13-fork-declaration-probes.json)と
+[開発版](../measurements/2026-10-24/icarus14-fork-declaration-probes.json)は、旧nativeとの比較も含め
+そのまま残します。
+
+## fork宣言と新しく測定した捕捉の差分
+
+fork宣言の段階では、同じ81件で旧nativeの差分は22/28件、現行は21/27件です。`fork_local_declarations`は
+nativeと両参照で通過しました。automaticのfork変数を共有して更新する
+`automatic_fork_capture`は両参照で通り、nativeでは未対応です。共有するフレーム/寿命の
+詳細な契約は修正案としてレビュー待ちです。
+
+以前の79件の状態と通過した比較出力は維持し、小さい一覧の差分20/26件も保っています。
+拡張した一覧では、捕捉の追加によって残る差分が1件増えました。参照不一致4/7件は同じです。
+[独自72ソースとコンパイル済みの対照](fork-local-declarations.ja.md)で仕組みを広く検査しますが、
+fork全範囲の対応とは扱いません。可搬的なデータは旧nativeの結果と現在の比較ツールの
+ハッシュも保存します。以前の79件の[13.0](../measurements/2026-10-24/icarus13-wide-gate-probes.json)と
+[開発版](../measurements/2026-10-24/icarus14-wide-gate-probes.json)の記録も上書きしません。
+
 ## 同じ一覧での広いマスクの比較
 
-同じ79件・同じ参照版で、保持した旧nativeは13.0に対して差分21件、開発版に27件です。
-現在は20・26件で、`wide_tristate_masks`が両エンジンで通ります。他の共通78件の状態と
+以前の広いマスクの段階（`57a64ef`）では、同じ79件・同じ参照版で旧nativeの差分が
+13.0に対して21件、開発版に27件でした。その段階で20・26件となり、`wide_tristate_masks`が
+両エンジンで通りました。他の共通78件の状態と
 参照不一致一覧は変わりません。可搬的な記録には変更前nativeの版と各結果も残し、
 [独自73ソース](wide-gate-strength.ja.md)も両参照と一致します。新しく棚卸しした
 仕組みの解消であり、以前に数えた差分やP1全体が完了したとは扱いません。
@@ -70,9 +124,9 @@ macOS/arm64で計測しました。追加インストールはせず、他のシ
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
   --iverilog "$IVERILOG_13" --vvp "$VVP_13" --extended \
-  --output build/icarus13-wide-gate-probes.json --require-parity
+  --output build/icarus13-wide-udp-probes.json --require-parity
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
-  --extended --output build/icarus14-wide-gate-probes.json --require-parity
+  --extended --output build/icarus14-wide-udp-probes.json --require-parity
 ```
 
 2本目はPATHを使うため、開発版と決めつけずにコンパイラ・runtimeの版を確認してください。

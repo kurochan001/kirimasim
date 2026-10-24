@@ -11,7 +11,24 @@ No release yet. The Added section below sums up what works as of
 2026-10-18; from then on, each change a user can see has an entry of its
 own. CONTRIBUTING.md says what goes in this file.
 
+### Documentation
+
+- Align both READMEs, feature/support guides, architecture and pattern notes
+  with the typed SIR/execution checkpoint. Add a verified queue-monitor example
+  and distinguish current validation from historical renderer-stage results.
+  Source `%p` remains unfinished at the front argument bridge.
+
+- Record 46 original class observations and a known omission of unused class
+  static-initializer side effects. Correct the blanket unsupported-diagnostic
+  claim in both READMEs and document remaining class runtime work separately
+  from the 87-probe comparison. No class implementation is added.
+
 ### Fixed
+
+- A display monitor can observe a change in an existing queue cell without
+  replacing its container handle. Heap reads are captured during the actual
+  Postponed callback and detached with the registration's lifetime. The new
+  heap-backed file-monitor combinations still need a dedicated matrix.
 
 - Aggregate blocking and nonblocking assignments capture all RHS values
   before runtime target selectors under the approved evaluation policy.
@@ -39,6 +56,30 @@ own. CONTRIBUTING.md says what goes in this file.
   eligible static container variables remain separate.
 
 ### Added
+
+- Typed pattern layouts, verification, text and `pattern.format` execution
+  connect to the shared renderer. Eleven independent SIR tests cover nested
+  values, packed fields, containers, guards, monitors and resource limits.
+  Source `%p` still requires front's literal/runtime format bridge.
+
+- A shared-kernel assignment-pattern renderer handles borrowed typed values,
+  nested aggregates, enums, quoted SV strings and supplied handle identities.
+  Iterative traversal, explicit shape/cycle/resource errors and C++20 header
+  checks are covered by new tests. Source `%p` remains unsupported pending
+  typed SIR/front integration.
+
+- UDP lowering, verification and shared-kernel/VM transport accept more than
+  32 inputs. Original sources through 257 inputs and independent value/SIR
+  checks cover matching, state order, X/Z, delay and strength. Dense edge
+  tables retain a pinned-slang compilation-scaling limitation, recorded with
+  bounded original reproducers; no warning or dependency was relaxed.
+
+- Fork-local declarations execute through the parent's existing lifetime and
+  initialization rules; static storage is shared, declarations are not child
+  processes, and declaration-only forks need no wait. Seventy-two original
+  cases cover eight contexts, wide values, all join kinds and typed storage.
+  Automatic capture still requires its shared-lifetime contract. The old
+  rejection expectations are reviewed separately (6.21, 9.3.2).
 
 - Three-state gates retain full-width L/H side masks across word boundaries,
   including 33–64-bit nets whose side operands occupy multiple words and

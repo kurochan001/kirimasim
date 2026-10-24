@@ -40,6 +40,47 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("kernel: pattern enum lookup drops upper words", "src/kernel/pattern.cpp",
+     "const std::uint64_t count = (std::uint64_t{lhs.width} + 63) / 64;", "const std::uint64_t count = 1;"),
+    ("kernel: pattern enum lookup ignores unknown bits", "src/kernel/pattern.cpp",
+     "if (lb != rb) return false;",
+     "if (lb != rb && false) return false;"),
+    ("kernel: positional pattern retains record names", "src/kernel/pattern.cpp",
+     "if (!positional && (current.kind == Kind::Record || current.kind == Kind::Union)) {",
+     "if ((static_cast<void>(positional), true) && (current.kind == Kind::Record || current.kind == Kind::Union)) {"),
+    ("kernel: pattern union prints all members", "src/kernel/pattern.cpp",
+     "current.kind == Kind::Union ? 1 : current.children.size()",
+     "current.children.size()"),
+    ("kernel: pattern keeps completed paths active", "src/kernel/pattern.cpp",
+     "active.erase(&current);",
+     "static_cast<void>(active.count(&current));"),
+    ("kernel: pattern string uses a C backspace escape", "src/kernel/pattern.cpp",
+     "switch (ch) {\n            case '\\n':",
+     "switch (ch) {\n            case '\\b': out += \"\\\\b\"; break;\n            case '\\n':"),
+    ('fork declaration: declaration becomes a child process',
+     'src/front/lower_stmt.cpp',
+     '        if (stmts[i]->kind == ast::StatementKind::VariableDeclaration) continue;',
+     '        // Deliberately include declarations in the child list.'),
+    ('fork declaration: automatic parent initializers disappear',
+     'src/front/lower_stmt.cpp',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration) lowerStatement(*stmt);',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration &&\n'
+     '            stmt->as<ast::VariableDeclStatement>().symbol.lifetime == ast::VariableLifetime::Static)\n'
+     '            lowerStatement(*stmt);'),
+    ('fork declaration: repeats static initializer side effects',
+     'src/front/lower_stmt.cpp',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration) lowerStatement(*stmt);',
+     '        if (stmt->kind == ast::StatementKind::VariableDeclaration) {\n'
+     '            lowerStatement(*stmt);\n'
+     '            const auto& variable = stmt->as<ast::VariableDeclStatement>().symbol;\n'
+     '            if (variable.lifetime == ast::VariableLifetime::Static && variable.getInitializer())\n'
+     '                static_cast<void>(lowerExpr(*variable.getInitializer()));\n'
+     '        }'),
+    ('fork declaration: empty fork reaches the SIR verifier',
+     'src/front/lower_stmt.cpp',
+     '    // A declaration-only parallel block has no children and cannot wait.\n'
+     '    if (ops.empty()) return;',
+     '    // Deliberately emit an empty child list.'),
     ('wide gate strength: delayed guard ignores later blocks',
      'src/front/lower.cpp',
      '            for (const sir::BasicBlock& block : design_.process(p).blocks)\n'
@@ -188,13 +229,13 @@ MUTANTS = [
      'src/vm/vm.cpp', 'in.op == Op::LoadRefElem || forwardedRef)',
      'in.op == Op::LoadRefElem || (forwardedRef && false))'),
     ('heap monitor: loses exact changed-object filtering', 'src/kernel/sim.cpp', 'if (std::find(reads.begin(), reads.end(), root) == reads.end()) continue;', 'if (std::find(reads.begin(), reads.end(), root) != reads.end()) continue;'),
-    ('heap monitor: forgets object watch markers', 'src/kernel/sim.cpp', 'ctx_.heap().watch(root, true);', 'ctx_.heap().watch(root, false);'),
+    ('heap monitor: forgets object watch markers', 'src/kernel/sim.cpp', 'for (const auto root : reads.roots)\n        ctx_.heap().watch(root, true);\n    monitors_[id].heapReads.swap(reads.roots);', 'for (const auto root : reads.roots)\n        ctx_.heap().watch(root, false);\n    monitors_[id].heapReads.swap(reads.roots);'),
     ('heap monitor: keeps only its first dependency set', 'src/kernel/sim.cpp', 'monitors_[id].heapReads.swap(reads.roots);', 'if (monitors_[id].heapReads.empty()) monitors_[id].heapReads.swap(reads.roots);'),
     ('heap monitor: evaluates stale queued records', 'src/kernel/sim.cpp', 'if (live(c.monitor)) {', 'if (true) {'),
     ('heap monitor: never restores the previous change hook', 'src/kernel/sim.cpp', 'ctx_.heap().setChangeHook(previousHeapHook_);', 'static_cast<void>(previousHeapHook_);'),
     ('heap monitor: captures called function private values', 'src/vm/vm.cpp', 'if (!deps.privateContainers.empty()) {', 'if (false && !deps.privateContainers.empty()) {'),
     ('heap monitor: misses heap refs read inside callees', 'src/vm/vm.cpp', 'if (sir::isContainerOp(in.op) || in.op == Op::LoadRef || in.op == Op::LoadRefElem)', 'if (sir::isContainerOp(in.op))'),
-    ('heap monitor: silently accepts incomplete read capture', 'src/kernel/sim.cpp', 'if (reads.error != HeapError::None) {', 'if (false && reads.error != HeapError::None) {'),
+    ('heap monitor: silently accepts incomplete read capture', 'src/kernel/sim.cpp', 'eval(toC(ctx_), frame, out.data());\n    if (reads.error != HeapError::None) {', 'eval(toC(ctx_), frame, out.data());\n    if (false && reads.error != HeapError::None) {'),
     ('heap observation: size reads lose structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    return {c ? c->cells.size() : 0, {}};', '    return {c ? c->cells.size() : 0, {}};'),
     ('heap observation: element selection loses structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    if (!c) return {};', '    if (!c) return {};'),
     ('heap observation: cell reads lose value dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::cell(cell));', '    static_cast<void>(cell);'),
@@ -599,9 +640,19 @@ MUTANTS = [
      "        if (delay != nullptr) b_.delays = delaysOf(*delay, sl);",
      "        if (false) b_.delays = delaysOf(*delay, sl);"),
     ("kernel: a UDP's level rows do not decide", "src/kernel/include/kirimasim/kernel/udp.h",
-     "            if (detail::udpLevel(r, v, t.inputs, t.inputs))\n"
+     "            if (udpLevel(r, read, t.inputs, t.inputs))\n"
      "                return r.output == kUdpKeep ? state : r.output;",
      "            if (false)\n                return r.output == kUdpKeep ? state : r.output;"),
+    ("front: a UDP restores the obsolete 32-input limit", "src/front/lower.cpp",
+     "    t.inputs = static_cast<std::uint32_t>(prim.ports.size() - 1);",
+     "    t.inputs = static_cast<std::uint32_t>(prim.ports.size() - 1);\n"
+     "    if (t.inputs > 32) unsupported(sl, \"wide UDP mutation\");"),
+    ("vm: wide UDP inputs wrap at the old buffer size", "src/vm/vm.cpp",
+     "return code(v(1ULL + i));", "return code(v(1ULL + (i % 32)));"),
+    ("kernel: a wide UDP sees future input changes", "src/kernel/include/kirimasim/kernel/udp.h",
+     "i <= k ? cur(i) : prev(i)", "(t.inputs > 32 || i <= k) ? cur(i) : prev(i)"),
+    ("kernel: a wide UDP reads z without normalization", "src/kernel/include/kirimasim/kernel/udp.h",
+     "detail::udpKnown(read(i))", "t.inputs > 32 ? read(i) : detail::udpKnown(read(i))"),
     ("kernel: an unlisted UDP change keeps the state", "src/kernel/include/kirimasim/kernel/udp.h",
      "    return edge >= 0 ? static_cast<std::uint8_t>(edge) : kUdpX;",
      "    return edge >= 0 ? static_cast<std::uint8_t>(edge) : state;"),

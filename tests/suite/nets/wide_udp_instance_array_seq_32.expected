@@ -1,0 +1,11 @@
+initial x x
+data x x
+rise 1 1
+fall 1 1
+hold 1 1
+zero 0 0
+unknown_data 0 0
+unknown_clocked x x
+recover 1 1
+unused x x
+unused_z x x

@@ -48,7 +48,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Event-controlled NBAs and delayed NBAs through refs/string characters are not implemented; automatic NBA targets remain illegal |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered` | Existing variable-write restrictions on event/wait conditions remain; no runtime-indexed named event, event-controlled `->>`, or `always_ff` trigger on a computed expression |
-| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, disable of supported named blocks and tasks | Fork-local declarations, escaping automatic variables captured by fork branches and disable of a named fork block have unsupported forms |
+| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, disable of supported named blocks and tasks | Automatic variables captured by fork branches and disable of a named fork block have unsupported forms; automatic declarations retain their usual type limitations |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
@@ -59,6 +59,26 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.
+
+### Known class and static-initialization boundary
+
+The [46-program investigation](notes/class-execution-investigation.md) runs one
+property-free static function, while class object execution remains unsupported.
+An unused class static-property initializer can lose its side effects and exit
+0 without a diagnostic. This is a known defect; successful execution alone
+does not establish class support. These observations are separate from the
+87-probe comparison and the approved test suite.
+The pending [class runtime contract](notes/class-runtime-proposal.md) specifies
+initialization, dispatch, GC and scheduled access; it is not implemented support.
+
+### UDP input counts and compilation limits
+
+The fixed 32-input evaluator/transport limit is removed. [106 original sources](notes/wide-udp-inputs.md)
+cover counts through 257, and independent kernel/SIR tests cover wide terminal
+matching, state order and operand validation. Direct kernel/reference checks
+also use 65,537 inputs; source compilation at that count is unconfirmed.
+Dense hold-row tables can exceed bounded compilation probes in pinned slang.
+They remain a tracked frontend limitation; no diagnostic or dependency is relaxed.
 
 ### Aggregate assignment capture
 
@@ -106,6 +126,23 @@ The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
 these observations are not additional implemented features or approved oracles.
 The [complete execution contract proposal](notes/mos-switch-proposal.md) is
 pending review, including startup and full-strength timing decisions.
+
+### Fork-local declarations
+
+Declarations use the parent's lifetime/initialization path rather than becoming
+children. Static storage is shared; uncaptured automatic initialization runs
+per entry, including declaration-only forks. [Seventy-two source cases and limits](notes/fork-local-declarations.md)
+cover eight contexts and typed storage. Automatic variables captured by children
+remain unsupported and are explicitly measured in the expanded comparison.
+The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
+is pending review; automatic event variables are also still unsupported.
+
+### Fixed-array port boundary
+
+Whole fixed unpacked array ports and arrays of nets requiring resolution
+remain unsupported. Unconnected arrays without pulls have existing defaults.
+The [array-port and resolution contract proposal](notes/fixed-array-ports-proposal.md)
+records original observations and remains pending review.
 
 ### Program completion
 
@@ -271,6 +308,17 @@ including the file-output forms and `$swrite`.
 | VCD control | `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit`, `$dumpflush` |
 
 ### Formatting and input limits
+
+The [assignment-pattern renderer](notes/pattern-format-foundation.md) is a
+shared-kernel API foundation. [Typed SIR/execution](notes/pattern-sir-execution.md)
+is connected, while front format-argument integration remains, so source
+`%p` stays unsupported; this does not enable class identities or associative
+array ordering.
+
+A display monitor follows a value change in an existing queue cell, checked
+with [original source and SIR](notes/pattern-sir-execution.md). Dedicated
+heap-backed file-monitor closure/replacement/allocation combinations remain
+unconfirmed.
 
 - `$strobe` and `$monitor` arguments cannot read automatic variables.
 - Output conversions: `%b`, `%o`, `%h` / `%x`, `%d`, `%c`, `%s`, `%e`,

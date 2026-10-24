@@ -1,0 +1,288 @@
+{
+  "measured": "2026-10-24",
+  "source_revision": "156e65c19c85ecd8557252e6e6033064059dad84",
+  "source_sha256": "ff9a965d6fa1b3776add906804264f0fef93e913c517c706f49ff6cbf022fb49",
+  "test_source_sha256": "02ca424f69dad7be94b929b85f284860ff29f8f7ec3517ae7802f89277d9c968",
+  "registry_sha256": "03581dd555db59c56e89b385aef603066255ccc33002cd0aa11a8be82cd954f3",
+  "controls": [
+    {
+      "name": "kernel: pattern enum lookup drops upper words",
+      "build_exit": 0,
+      "old_format_tests": {
+        "exit": 0,
+        "failed_tests": []
+      },
+      "pattern_tests": {
+        "exit": 1,
+        "failed_tests": [
+          "Pattern.WideEnumLookupMatchesReferenceCaseEquality"
+        ]
+      },
+      "caught_by_pattern_assertions": true
+    },
+    {
+      "name": "kernel: pattern enum lookup ignores unknown bits",
+      "build_exit": 0,
+      "old_format_tests": {
+        "exit": 0,
+        "failed_tests": []
+      },
+      "pattern_tests": {
+        "exit": 1,
+        "failed_tests": [
+          "Pattern.WideEnumLookupMatchesReferenceCaseEquality"
+        ]
+      },
+      "caught_by_pattern_assertions": true
+    },
+    {
+      "name": "kernel: positional pattern retains record names",
+      "build_exit": 0,
+      "old_format_tests": {
+        "exit": 0,
+        "failed_tests": []
+      },
+      "pattern_tests": {
+        "exit": 1,
+        "failed_tests": [
+          "Pattern.NestedRecordsAndPositionalMembers",
+          "Pattern.UnionOnlyFirstDeclaredMemberAndTaggedPayload"
+        ]
+      },
+      "caught_by_pattern_assertions": true
+    },
+    {
+      "name": "kernel: pattern union prints all members",
+      "build_exit": 0,
+      "old_format_tests": {
+        "exit": 0,
+        "failed_tests": []
+      },
+      "pattern_tests": {
+        "exit": 1,
+        "failed_tests": [
+          "Pattern.UnionOnlyFirstDeclaredMemberAndTaggedPayload"
+        ]
+      },
+      "caught_by_pattern_assertions": true
+    },
+    {
+      "name": "kernel: pattern keeps completed paths active",
+      "build_exit": 0,
+      "old_format_tests": {
+        "exit": 0,
+        "failed_tests": []
+      },
+      "pattern_tests": {
+        "exit": 1,
+        "failed_tests": [
+          "Pattern.CyclesFailWithoutOutputButRepeatedSubvaluesAreLegal"
+        ]
+      },
+      "caught_by_pattern_assertions": true
+    },
+    {
+      "name": "kernel: pattern string uses a C backspace escape",
+      "build_exit": 0,
+      "old_format_tests": {
+        "exit": 0,
+        "failed_tests": []
+      },
+      "pattern_tests": {
+        "exit": 1,
+        "failed_tests": [
+          "Pattern.StringBytesRoundTripThroughSvLiteralRules"
+        ]
+      },
+      "caught_by_pattern_assertions": true
+    }
+  ],
+  "restored_source_sha256": "ff9a965d6fa1b3776add906804264f0fef93e913c517c706f49ff6cbf022fb49",
+  "restored_build_exit": 0,
+  "restored_tests": {
+    "exit": 0,
+    "failed_tests": []
+  },
+  "purpose": "Compiled controls must pass all 22 older Format tests and fail new Pattern assertions. Anchor/judging self-checks are not counted.",
+  "test_cohort": {
+    "new_pattern_tests": 14,
+    "older_format_tests": 22,
+    "enum_reference_combinations": 112,
+    "enum_widths": [
+      1,
+      7,
+      32,
+      64,
+      65,
+      129,
+      257
+    ]
+  },
+  "provenance": "Native implementation is 156e65c; strengthened tests, registry and documentation are an uncommitted follow-up at measurement time. Their exact content hashes are recorded. No old source-suite or expected output changed.",
+  "local_ci": {
+    "date": "2026-10-24",
+    "native_implementation_revision": "156e65c19c85ecd8557252e6e6033064059dad84",
+    "worktree_followup": "Strengthened upper-word enum checks, final six control entries, test counts and documentation; content hashes above identify the exact unit/registry state.",
+    "result": "all checks passed",
+    "checks": [
+      {
+        "check": "dev: configure",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "check": "dev: build",
+        "status": "ok",
+        "seconds": 0.0
+      },
+      {
+        "check": "dev: test",
+        "status": "ok",
+        "seconds": 47.0
+      },
+      {
+        "check": "release: configure",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "check": "release: build",
+        "status": "ok",
+        "seconds": 1.1
+      },
+      {
+        "check": "release: test",
+        "status": "ok",
+        "seconds": 39.6
+      },
+      {
+        "check": "asan: configure",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "check": "asan: build",
+        "status": "ok",
+        "seconds": 1.4
+      },
+      {
+        "check": "asan: test",
+        "status": "ok",
+        "seconds": 63.2
+      },
+      {
+        "check": "ubsan: configure",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "check": "ubsan: build",
+        "status": "ok",
+        "seconds": 1.3
+      },
+      {
+        "check": "ubsan: test",
+        "status": "ok",
+        "seconds": 53.3
+      },
+      {
+        "check": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.0
+      },
+      {
+        "check": "check_banned",
+        "status": "ok",
+        "seconds": 0.3
+      },
+      {
+        "check": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "check": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "check": "check_global_state",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "check": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "check": "readme_counts",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "check": "clang-format",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "check": "clang-tidy",
+        "status": "ok",
+        "seconds": 58.3
+      }
+    ],
+    "tests": {
+      "dev": {
+        "total": 3331,
+        "passed": 3329,
+        "skipped": 2,
+        "skip_names": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "release": {
+        "total": 3332,
+        "passed": 3330,
+        "skipped": 2,
+        "skip_names": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "asan": {
+        "total": 3331,
+        "passed": 3329,
+        "skipped": 2,
+        "skip_names": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "ubsan": {
+        "total": 3331,
+        "passed": 3329,
+        "skipped": 2,
+        "skip_names": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      }
+    },
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "4.4.4",
+    "clang_format": "22.1.8",
+    "clang_tidy": "22.1.8",
+    "platform": "macOS/arm64",
+    "command": [
+      "python3",
+      "-u",
+      "tools/local_ci.py",
+      "--llvm-bin",
+      "<installed-LLVM-22-bin>"
+    ],
+    "test_parallelism": 6,
+    "tool_loading": "Existing matching Z3 library selected for this process only; no installation or system setting changes.",
+    "native_banner": "kirimasim 0.0.0 (commit 156e65c19c85), built with AppleClang 21.0.0.21000334"
+  }
+}

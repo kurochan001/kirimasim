@@ -29,6 +29,7 @@
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/memfile.h"
+#include "kirimasim/kernel/pattern.h"
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/stack.h"
@@ -37,8 +38,10 @@
 #include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"
+#include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
+#include <memory_resource>
 
 namespace kirimasim::vm {
 
@@ -619,6 +622,9 @@ public:
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
           strings_(ctx.strings()), heap_(ctx.heap()), counters_(ctx.counters()),
           stack_(ctx.stack()), options_(options) {
+        auto patterns = sir::validatePatterns(d);
+        if (!patterns.errors.empty()) loadError_ = "invalid pattern layout metadata";
+        patternShapes_ = std::move(patterns.shapes);
         timeFormat_.unit = d.timePrecision;
         consts_.reserve(d.constants.size());
         constOff_.reserve(d.constants.size());
@@ -972,6 +978,7 @@ private:
     std::int32_t& randomSeed_;  ///< $random with no argument (SYSTEM_TASKS.md 12.3).
     kernel::Strings& strings_;
     kernel::Heap& heap_;
+    std::vector<sir::PatternShape> patternShapes_;
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
     bool heapWaits_ = false;
@@ -2778,9 +2785,11 @@ private:
                             kernel::FileTargets to = fileTargets(in, value(ops[1]), "$fmonitor");
                             Frame& m = newFrame(ops[0].asProcess());
                             m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);
-                            sched_.addFileMonitor(m.kernelId,
-                                                  depsOf(bodyOfProcess(ops[0].asProcess())).slots,
-                                                  std::move(to));
+                            const auto& deps = depsOf(bodyOfProcess(ops[0].asProcess()));
+                            sched_.addFileMonitor(
+                                m.kernelId, deps.slots, std::move(to),
+                                {deps.heap,
+                                 deps.privateContainers.empty() ? nullptr : &keepHeapRead, &deps});
                             // It lives until its files close; sweep frees
                             // the frame when the kernel says it ended.
                             fileMonitorFrames_.push_back(&m);
@@ -2791,8 +2800,11 @@ private:
                         Frame& m = *overrides_[ops[0].id];
                         freshVars(m);
                         monitor_ = &m;
-                        sched_.setMonitor(m.kernelId,
-                                          depsOf(bodyOfProcess(ops[0].asProcess())).slots);
+                        const auto& deps = depsOf(bodyOfProcess(ops[0].asProcess()));
+                        sched_.setMonitor(m.kernelId, deps.slots,
+                                          {deps.heap,
+                                           deps.privateContainers.empty() ? nullptr : &keepHeapRead,
+                                           &deps});
                         break;
                     }
                     case Op::OverrideStop: {
@@ -2923,6 +2935,10 @@ private:
         seen[body.index()] = true;
         for (const sir::BasicBlock& bb : bodyBlocks(body)) {
             for (const sir::Instr& in : bb.instrs) {
+                if (in.op == Op::FormatPattern && !in.operands.empty() &&
+                    in.operands[0].id < patternShapes_.size() &&
+                    patternShapes_[in.operands[0].id].heap)
+                    deps.heap = true;
                 if (sir::isContainerOp(in.op) || in.op == Op::LoadRef || in.op == Op::LoadRefElem)
                     deps.heap = true;
                 if (in.op == Op::Call)
@@ -3025,14 +3041,24 @@ private:
     }
 
     void dropHeapWaits() noexcept {
-        if (!heapWaits_) return;
-        for (const auto& f : frames_)
-            if (!f.released && f.kernelId != kernel::kNone) sched_.cancelWait(f.kernelId);
+        for (const auto& f : frames_) {
+            if (f.released || f.kernelId == kernel::kNone) continue;
+            sched_.detachDisplayMonitor(f.kernelId);
+            if (heapWaits_) sched_.cancelWait(f.kernelId);
+        }
     }
 
     bool reportHeapMonitorLimit(sir::InstanceId instance, sir::SourceLoc loc) {
         if (!sched_.heapMonitorLimited()) return false;
         if (!heapMonitorReported_) {
+            const auto failed = sched_.failedHeapMonitorProcess();
+            for (const auto& frame : frames_)
+                if (!frame.released && frame.kernelId == failed) {
+                    const auto& process = d_.process(frame.process);
+                    instance = instanceOf(process);
+                    loc = process.loc;
+                    break;
+                }
             heapMonitorReported_ = true;
             limitAt(instance, loc, "container monitor resource limit");
         }
@@ -4062,6 +4088,7 @@ private:
             reportHeapMonitorLimit(instanceOf(p), in.loc);
             return ok && !sched_.ending();
         };
+        if (in.op == Op::FormatPattern) return publishHeap(executePattern(f, p, in));
         if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));
         if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
              in.op == Op::LoadRefElem || in.op == Op::StoreRefElem || in.op == Op::StoreRefBits) &&
@@ -4333,10 +4360,17 @@ private:
                 };
                 const kernel::UdpTable& table = udpTables_[ops[0].id];
                 const unsigned n = table.inputs;
-                std::uint8_t prev[kernel::kUdpMaxInputs];
-                std::uint8_t cur[kernel::kUdpMaxInputs];
+                constexpr unsigned inlineInputs = 32;
+                std::uint8_t prev[inlineInputs];
+                std::uint8_t cur[inlineInputs];
                 std::uint8_t r = kernel::kUdpX;
-                if (in.op == Op::Udp) {
+                if (n > inlineInputs && in.op == Op::Udp) {
+                    r = kernel::udpOutputRead(table, [&](unsigned i) { return code(v(1ULL + i)); });
+                } else if (n > inlineInputs) {
+                    r = kernel::udpStepRead(
+                        table, code(v(1)), [&](unsigned i) { return code(v(2ULL + i)); },
+                        [&](unsigned i) { return code(v(2ULL + n + i)); });
+                } else if (in.op == Op::Udp) {
                     for (unsigned i = 0; i < n; ++i)
                         cur[i] = code(v(1 + i));
                     r = kernel::udpOutput(table, cur);
@@ -4823,6 +4857,185 @@ private:
             case Method::None:
             case Method::Triggered: return;  // handled above
         }
+    }
+
+    /// Translate explicit SIR presentation layouts into borrowed kernel views.
+    /// Values are captured by the instruction's typed operands, not AST names.
+    bool executePattern(Frame& f, const sir::Process& p, const sir::Instr& in) {
+        using Kind = sir::PatternLayout::Kind;
+        using View = kernel::PatternValue;
+        struct Node {
+            explicit Node(std::pmr::memory_resource* memory)
+                : children(memory), names(memory), enumerators(memory), enumWords(memory),
+                  words(memory), raw(memory) {}
+            View view;
+            std::pmr::vector<View> children;
+            std::pmr::vector<kernel::PatternName> names;
+            std::pmr::vector<kernel::PatternEnumName> enumerators;
+            std::pmr::vector<std::pmr::vector<std::uint64_t>> enumWords;
+            std::pmr::vector<std::uint64_t> words;
+            std::pmr::vector<W4> raw;
+        };
+        struct Work {
+            Node* node;
+            sir::PatternId layout;
+            std::size_t next = 0;
+            bool opened = false;
+            kernel::HeapTypeId heapType = kernel::kNone;
+            kernel::ContainerToken token;
+        };
+        try {
+            auto* memory = heap_.memoryResource();
+            std::pmr::deque<Node> nodes(memory);
+            std::pmr::vector<Work> work(memory);
+            nodes.emplace_back(memory);
+            work.push_back({&nodes.back(), sir::PatternId{in.operands[0].id}});
+            std::size_t input = 2;
+            while (!work.empty()) {
+                auto& at = work.back();
+                Node& node = *at.node;
+                const auto& layout = d_.patterns[at.layout.index()];
+                const bool packed =
+                    layout.kind == Kind::PackedRecord || layout.kind == Kind::PackedUnion;
+                const bool aggregate = layout.kind == Kind::Record || layout.kind == Kind::Union ||
+                                       layout.kind == Kind::Array ||
+                                       layout.kind == Kind::TaggedUnion;
+                if (!at.opened) {
+                    at.opened = true;
+                    if (!aggregate && node.raw.empty()) {
+                        const auto data = chunks(in.operands[input++]);
+                        node.raw.assign(data.begin(), data.end());
+                    }
+                    std::size_t count = 0;
+                    switch (layout.kind) {
+                        case Kind::Integral: node.view.kind = View::Kind::Integral; break;
+                        case Kind::Real:
+                            node.view.kind = View::Kind::Real;
+                            node.view.real = toReal(node.raw.front(), layout.value);
+                            break;
+                        case Kind::String:
+                            node.view.kind = View::Kind::String;
+                            node.view.text = strings_.get(node.raw.front().a);
+                            break;
+                        case Kind::Enumeration: node.view.kind = View::Kind::Enumeration; break;
+                        case Kind::PackedRecord:
+                        case Kind::Record:
+                            node.view.kind = View::Kind::Record;
+                            count = layout.members.size();
+                            break;
+                        case Kind::PackedUnion:
+                        case Kind::Union:
+                            node.view.kind = View::Kind::Union;
+                            count = 1;
+                            break;
+                        case Kind::Array:
+                            node.view.kind = View::Kind::Array;
+                            if (layout.count > node.children.max_size()) throw std::bad_alloc{};
+                            count = static_cast<std::size_t>(layout.count);
+                            break;
+                        case Kind::TaggedUnion:
+                            node.view.kind = View::Kind::TaggedUnion;
+                            node.view.tag = {layout.tag, layout.tagEscaped};
+                            count = 1;
+                            break;
+                        case Kind::Container: {
+                            node.view.kind = View::Kind::Array;
+                            if (!prepareHeap(f, in)) return false;
+                            at.token = kernel::ContainerToken{node.raw.front().a};
+                            const auto actual = valueHeapType(layout.value, at.token);
+                            if (!heapStatus(f, in, actual.status)) return false;
+                            at.heapType = actual.value;
+                            const auto size = heap_.size(at.heapType, at.token);
+                            if (!heapStatus(f, in, size.status)) return false;
+                            if (size.value > node.children.max_size() ||
+                                size.value > static_cast<std::uint64_t>(
+                                                 std::numeric_limits<std::int64_t>::max()))
+                                throw std::bad_alloc{};
+                            count = static_cast<std::size_t>(size.value);
+                            break;
+                        }
+                    }
+                    if (layout.kind == Kind::Integral || layout.kind == Kind::Enumeration) {
+                        for (const auto& word : node.raw) {
+                            node.words.push_back(sir::isFourState(layout.value) ? word.a
+                                                                                : word.a & ~word.b);
+                            if (sir::isFourState(layout.value)) node.words.push_back(word.b);
+                        }
+                        node.view.integral = {node.words.data(), layout.value.width,
+                                              sir::isFourState(layout.value),
+                                              sir::isSigned(layout.value)};
+                    }
+                    if (layout.kind == Kind::Enumeration) {
+                        node.enumWords.resize(layout.enumerators.size());
+                        node.enumerators.resize(layout.enumerators.size());
+                        for (std::size_t i = 0; i < layout.enumerators.size(); ++i) {
+                            const auto& item = layout.enumerators[i];
+                            const auto& constant = d_.constant(item.value);
+                            for (std::size_t j = 0; j < constant.aWords.size(); ++j) {
+                                node.enumWords[i].push_back(constant.aWords[j]);
+                                if (sir::isFourState(layout.value))
+                                    node.enumWords[i].push_back(constant.bWords[j]);
+                            }
+                            node.enumerators[i] = {{node.enumWords[i].data(), layout.value.width,
+                                                    sir::isFourState(layout.value),
+                                                    sir::isSigned(layout.value)},
+                                                   {item.name, item.escaped}};
+                        }
+                        node.view.enumerators = node.enumerators;
+                    }
+                    node.children.resize(count);
+                    node.view.children = node.children;
+                    if (layout.kind == Kind::Record || layout.kind == Kind::Union || packed) {
+                        for (std::size_t i = 0; i < count; ++i)
+                            node.names.push_back(
+                                {layout.members[i].name, layout.members[i].escaped});
+                        node.view.names = node.names;
+                    }
+                }
+                if (at.next == node.children.size()) {
+                    const View completed = node.view;
+                    work.pop_back();
+                    if (!work.empty()) work.back().node->children[work.back().next - 1] = completed;
+                    continue;
+                }
+                const auto index = at.next++;
+                const bool member =
+                    layout.kind == Kind::Record || layout.kind == Kind::Union || packed;
+                const auto childLayout = member ? layout.members[index].layout : layout.element;
+                nodes.emplace_back(memory);
+                Node& child = nodes.back();
+                if (packed) {
+                    const auto type = d_.patterns[childLayout.index()].value;
+                    child.raw.resize(chunksOf(type));
+                    kernel::wide::bits(child.raw.data(), type.width, node.raw.data(),
+                                       layout.value.width, layout.members[index].lsb);
+                    if (!sir::isFourState(type))
+                        kernel::wide::to2(child.raw.data(), child.raw.data(), type.width);
+                } else if (layout.kind == Kind::Container) {
+                    const auto type = d_.patterns[childLayout.index()].value;
+                    child.raw.resize(chunksOf(type));
+                    if (!heapStatus(f, in,
+                                    heap_.read(at.heapType, at.token,
+                                               static_cast<std::int64_t>(index), child.raw)))
+                        return false;
+                }
+                work.push_back({&child, childLayout});
+            }
+            const auto result = kernel::formatPattern(nodes.front().view,
+                                                      in.operands[1].text == "positional", memory);
+            if (result.error == kernel::PatternError::ResourceLimit) throw std::bad_alloc{};
+            if (!result || input != in.operands.size()) {
+                fail(p, "invalid pattern formatting value");
+                return false;
+            }
+            formattedResult(in, result.text);
+            return true;
+        } catch (const std::bad_alloc&) {
+            limitAt(instanceOf(p), in.loc, "pattern formatting allocation limit reached");
+        } catch (const std::length_error&) {
+            limitAt(instanceOf(p), in.loc, "pattern formatting size limit reached");
+        }
+        return false;
     }
 
     /// An integral operand's words laid out like a slot element, as

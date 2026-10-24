@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/pattern.h"
 
 #include <array>
 #include <bit>
@@ -90,6 +91,7 @@ std::string operandText(const Design& d, const Operand& o) {
             return (o.edge == Edge::Any ? "" : std::string(edgeName(o.edge)) + " ") + "@" +
                    std::to_string(o.id);
         case Operand::Kind::Process: return "@" + std::to_string(o.id);
+        case Operand::Kind::Pattern: return "!p" + std::to_string(o.id);
         case Operand::Kind::Type: return "!" + std::to_string(o.id);
         case Operand::Kind::Scope: return "#" + std::to_string(o.id);
     }
@@ -283,6 +285,37 @@ std::string constantText(const Constant& c) {
     return std::to_string(w) + "'b" + digits;
 }
 
+std::string patternLayoutText(const Design& d, const PatternLayout& p) {
+    using Kind = PatternLayout::Kind;
+    std::string out;
+    switch (p.kind) {
+        case Kind::Integral: out = "integral"; break;
+        case Kind::Real: out = "real"; break;
+        case Kind::String: out = "string"; break;
+        case Kind::Enumeration: out = "enum"; break;
+        case Kind::Record: out = "record"; break;
+        case Kind::PackedRecord: out = "packed-record"; break;
+        case Kind::Array: out = "array"; break;
+        case Kind::Union: out = "union"; break;
+        case Kind::PackedUnion: out = "packed-union"; break;
+        case Kind::TaggedUnion: out = "tagged-union"; break;
+        case Kind::Container: out = "container"; break;
+    }
+    if (p.value != voidType()) out += " " + toString(p.value);
+    if (p.element != kNone) out += " !p" + std::to_string(p.element.index());
+    if (p.kind == Kind::Array) out += " count=" + std::to_string(p.count);
+    if (!p.tag.empty()) out += " tag=" + quoted(p.tag) + (p.tagEscaped ? " escaped" : "");
+    for (const auto& e : p.enumerators) {
+        out += " enum " + quoted(e.name) + (e.escaped ? " escaped=" : "=");
+        out +=
+            e.value.index() < d.constants.size() ? constantText(d.constants[e.value.index()]) : "?";
+    }
+    for (const auto& m : p.members)
+        out += " member " + quoted(m.name) + (m.escaped ? " escaped:" : ":") + "!p" +
+               std::to_string(m.layout.index()) + "@" + std::to_string(m.lsb);
+    return out;
+}
+
 std::string toText(const Design& d) {
     std::string out = "; sir format 0\n";
     out += "precision " + timeExponentText(d.timePrecision) + "\n";
@@ -301,6 +334,8 @@ std::string toText(const Design& d) {
     }
     for (std::size_t i = 0; i < d.types.size(); ++i)
         out += "type !" + std::to_string(i) + " " + typeEntryText(d, d.types[i]) + "\n";
+    for (std::size_t i = 0; i < d.patterns.size(); ++i)
+        out += "pattern !p" + std::to_string(i) + " " + patternLayoutText(d, d.patterns[i]) + "\n";
     for (std::size_t i = 0; i < d.slots.size(); ++i) {
         const Slot& s = d.slots[i];
         out += "slot %s" + std::to_string(i) + " " + quoted(s.name) + " : " + toString(s.type) +

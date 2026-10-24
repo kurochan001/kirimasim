@@ -193,6 +193,14 @@ struct MonitorSpec {
     const void* heapReadFrame = nullptr;
 };
 
+/// Typed heap reads of a display monitor are captured only while its body
+/// actually runs in Postponed, without an extra expression evaluation.
+struct DisplayReadSpec {
+    bool heap = false;
+    HeapResult<bool> (*filter)(const void*, HeapRoot) noexcept = nullptr;
+    const void* frame = nullptr;
+};
+
 /// The levels of a procedural continuous assignment; force is above
 /// assign (SCHEDULER_SPEC.md 14).
 enum class Hold : std::uint8_t { Assign, Force };
@@ -219,6 +227,9 @@ public:
     /// During a monitor/guard walk, notices wait in the shared change queue.
     void flushHeapChanges() noexcept;
     [[nodiscard]] bool heapMonitorLimited() const noexcept { return heapMonitorLimited_; }
+    [[nodiscard]] ProcessId failedHeapMonitorProcess() const noexcept {
+        return heapMonitorProcess_;
+    }
     /// Starts the optional wall-clock budget, excluding front-end work.
     void setWallTimeLimit(std::uint64_t seconds, std::chrono::steady_clock::time_point start) {
         wallTimeLimit_ = seconds;
@@ -396,10 +407,15 @@ public:
     /// Postponed region of this time slot, and of every later time slot in
     /// which a bit of `parts` changes, while monitoring is on.
     void setMonitor(ProcessId p, std::span<const SlotPart> parts);
+    void setMonitor(ProcessId p, std::span<const SlotPart> parts, DisplayReadSpec reads);
     /// monitor @P, d: adds a file monitor printing to `to`, which runs as
     /// the monitor does; any number run at once, $monitoroff stops none,
     /// and one ends when none of `to` is open any more (SYSTEM_TASKS.md 6.2).
     void addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to);
+    void addFileMonitor(ProcessId p, std::span<const SlotPart> parts, FileTargets to,
+                        DisplayReadSpec reads);
+    /// Detach only registrations belonging to this callback process.
+    void detachDisplayMonitor(ProcessId p) noexcept;
     /// A file monitor that ended because none of its files was open any
     /// more (SYSTEM_TASKS.md 6.2), for the tier to release its frame. False
     /// when no such monitor is waiting. The process is already ended.
@@ -661,10 +677,28 @@ private:
     // A process that shows parts when they change: the $monitor, or a
     // file monitor, with the files it prints to.
     struct DisplayMonitor {
+        explicit DisplayMonitor(std::pmr::memory_resource* memory) : heapReads(memory) {}
+        DisplayMonitor(const DisplayMonitor&) = delete;
+        DisplayMonitor& operator=(const DisplayMonitor&) = delete;
+        DisplayMonitor(DisplayMonitor&&) noexcept = default;
+        DisplayMonitor& operator=(DisplayMonitor&& other) noexcept {
+            process = other.process;
+            parts = std::move(other.parts);
+            due = other.due;
+            to = std::move(other.to);
+            reads = other.reads;
+            // Every record uses this Scheduler's one heap resource.
+            heapReads.swap(other.heapReads);
+            serial = other.serial;
+            return *this;
+        }
         ProcessId process = kNoHolder;
         std::vector<SlotPart> parts;
         bool due = false;  ///< To run at the end of this time slot.
         FileTargets to;
+        DisplayReadSpec reads;
+        std::pmr::vector<HeapRoot> heapReads;
+        std::uint64_t serial = 0;
     };
     // The $monitor and the file monitors in the order made; by slot, how
     // many of their parts are in it; whether monitoring is on.
@@ -727,6 +761,11 @@ private:
     bool moveFirst(Region first, Region last, Region to);
     void execute(const Event& e);
     void runPostponed(ProcessId p, const FileTargets* to = nullptr);
+    void runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileTargets* to,
+                           DisplayReadSpec reads);
+    void clearDisplayReads(DisplayMonitor& monitor) noexcept;
+    void retainHeapHook();
+    void releaseHeapHook() noexcept;
     void countMonitorParts(const DisplayMonitor& m, bool add);
     void markDue(DisplayMonitor& m, SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, const std::uint64_t* old, const std::uint64_t* now);
@@ -748,12 +787,13 @@ private:
     void evaluateMonitor(std::uint32_t id);
     bool evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out);
     static void changedHeap(void* frame, HeapRoot root) noexcept;
-    void heapLimit() noexcept;
+    void heapLimit(ProcessId p = kNoHolder) noexcept;
     std::vector<MonitorRef> heapMonitors_;
     std::uint32_t heapMonitorLimit_ = 0;
     std::size_t heapMonitorCount_ = 0;
     HeapHook previousHeapHook_;
     bool heapMonitorLimited_ = false;
+    ProcessId heapMonitorProcess_ = kNoHolder;
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
     /// Adds a monitor record to p's current wait.
     void addMonitor(ProcessId p, const MonitorSpec& m);

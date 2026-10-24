@@ -337,6 +337,13 @@ Approved 2026-10-17.
 - `%r = udp.seq !table, state, previous input..., present input...`: a sequential UDP. Returns the state after applying, one at a time, the changes from the previous inputs to the present inputs by the rules of VALUE_SEMANTICS.md 5.9.
 - `!table` is the UDP row of the type table (4.3; the number `!N` of a row of the type table in the text form; changed from `@table` on 2026-10-17, since `@N` is used for numbers of processes and subroutines). An instance of a sequential UDP keeps its state and previous inputs in slots per instance (`<instance>.$state`, `<instance>.$prev`). The initial value of the state slot is put in by static-init (the initial value of VALUE_SEMANTICS.md 5.9). An instance with an initial value and a delay has a third slot, `<instance>.$started` (two-state, 0 at the start): the first time its process runs, it writes the state to the output with `store`, without the delay, and sets the slot, so that only the later changes take the delay (VALUE_SEMANTICS.md 5.9; added 2026-10-20, approved). `<instance>` of an element of an array of instances is the array's name with the element's indices, `<array>[i]` (added 2026-10-20, approved).
 
+Implementation status (2026-10-24): the former 32-input lowering/verifier and
+transport limits are removed. `udp.seq` operand counts are checked in 64-bit
+arithmetic; the kernel evaluates wide input/state views without allocating a
+fixed input array. The [source and independent SIR evidence](../notes/wide-udp-inputs.md)
+retains the existing UDP meaning. Dense edge-coverage source compilation still
+has a pinned-slang scaling boundary; strict diagnostics are unchanged.
+
 ### 5.6 Instructions of procedural continuous assignments
 
 Approved 2026-10-17.
@@ -421,6 +428,25 @@ nonblocking assignment to a dynamic-array/queue element is illegal (6.21,
 Slang rejects direct source forms; the VM diagnoses a hand-built cell-ref NBA
 as an illegal operation. This does not prohibit whole-value NBAs to eligible
 static container variables.
+
+### 5.9 Typed assignment-pattern execution encoding (2026-10-24)
+
+This encodes the existing value/output rules of SYSTEM_TASKS 3.9; it selects
+no new formatting policy. `Design::patterns` has PatternIds distinct from
+TypeIds. Layouts describe integral/real/string/enum values, records, packed
+records, fixed arrays, first-member unions, selected tags and typed dynamic
+arrays/queues. Names, escaping, packed offsets, enum constants, child layouts,
+counts and value types are explicit. The graph must be acyclic, with checked
+references, types and size arithmetic; tiers do not infer source types.
+
+`%r = pattern.format !pN, "named" | "positional", <value>...` returns string.
+Unpacked records/fixed arrays consume scalar payloads in declaration order;
+packed shapes consume one vector, and containers one typed handle. The
+verifier checks mode, count and types. The VM builds borrowed views for the
+shared renderer, using Context resources and existing failure rules. This
+neither provides display identities nor enables an unimplemented source type.
+Front's literal/runtime argument bridge remains unfinished, so source `%p`
+is still unsupported. See the [implementation/checkpoint](../notes/pattern-sir-execution.md).
 
 ## 6. Constants
 
@@ -524,10 +550,10 @@ event-controlled NBAs remain unimplemented.
 
 Amendment of M3b.
 
-- Each statement of a fork is a separate row of the process table (kind `general`), holding the number of its parent process (or subroutine). The `fork` instruction holds the sequence of the child processes' numbers.
+- Each executable statement of a fork is a separate row of the process table (kind `general`), holding the number of its parent process (or subroutine). The `fork` instruction holds the sequence of the child processes' numbers. Declarations are handled by the parent, not included in that sequence.
 - Block item initializations of a fork are done by the parent before the `fork` instruction (checked: 9.3.2). Automatic variables of the fork block that children refer to are frame variables of the children, initialized by the `fork` instruction with the parent's values.
 - A child inherits its parent's thread set (active or reactive).
-- **Not implemented yet (noted 2026-10-18, approved):** declarations in a fork block, and the automatic variables of the enclosing scope (an automatic task or block) read or written from fork branches, are reported as unsupported (CLI.md 5). The second is not set by this section yet: the parent's frame has to live past its return while the children run (6.21), which comes with the frames of P3.
+- **Implementation status (2026-10-24):** fork declarations now use the existing parent/lifetime rules: shared static slots initialize before time zero and uncaptured automatic declarations initialize in the parent on entry. A declaration-only fork emits no wait or child. [Original execution evidence](../notes/fork-local-declarations.md) covers the source path. Automatic variables of the fork block or enclosing activation read/written by children remain unsupported (CLI.md 5); the planned capture form above is not enabled. Shared identity and retention beyond the parent's return still need the detailed frame contract (6.21). P1_SCOPE advances that required work without defining its missing details.
 
 ### 7.6 Program execution (approved 2026-10-23)
 

@@ -62,6 +62,28 @@ EXTENDED = [
 ]
 # Original container mechanisms include both implemented and remaining forms.
 # Keep the original seed and earlier extended probes for revision comparisons.
+def wide_udp_source(sequential=False,dense=False):
+ n=33;names=[f'i{i}' for i in range(n)];rows=[]
+ def row(tokens,state,out):return ' '.join(tokens)+(' : '+state if sequential else '')+' : '+out+';'
+ if dense:
+  for edge in ['p','n']:
+   for data in ['0','1']:
+    a=['?']*n;a[0]=edge;a[1]=data;rows.append(row(a,'?',data))
+  a=['?']*n;a[0]='*';a[1]='x';rows.append(row(a,'?','x'))
+  for i in range(1,n):
+   a=['?']*n;a[i]='*';rows.append(row(a,'?','-'))
+  body="d='0;d[1]=1;#1;d[0]=1;#1;$display(\"%b\",q);"
+ elif sequential:
+  for edge,out in [('r','1'),('f','0')]:
+   a=['?']*n;a[0]=edge;rows.append(row(a,'?',out))
+  body="d='0;#1;d[0]=1;#1;$display(\"%b\",q);d[0]=0;#1;$display(\"%b\",q);"
+ else:
+  for bit in ['0','1']:
+   a=['?']*n;a[-1]=bit;rows.append(row(a,'',bit))
+  body="d='0;#1;$display(\"%b\",q);d[32]=1;#1;$display(\"%b\",q);"
+ text='primitive wide(q,'+','.join(names)+');output q;'+('reg q;' if sequential else '')+'input '+','.join(names)+';table '+ '\n'.join(rows)+' endtable endprimitive module top;reg [32:0] d;wire q;wide u(q,'+','.join(f'd[{i}]' for i in range(n))+');initial begin '+body+'end endmodule'
+ return text
+
 EXTENDED.extend([
     ("dynamic_value_copy", "7.5, 7.6",
      "module top; int a[],b[]; initial begin a=new[2]; a[0]=7; b=a; b[0]=9; $display(\"%0d %0d\",a[0],b[0]); end endmodule",
@@ -207,6 +229,27 @@ EXTENDED.extend([
     ("wide_tristate_masks", "28.6, 28.12",
      'module top;logic[64:0] data=\'0;logic control=\'x;wire[64:0]q;bufif1 g[64:0](q,data,control);assign(weak1,weak0)q=\'1;initial begin #1;$display("%b",q);data=\'1;#1;$display("%b",q);end endmodule',
      "x" * 65 + "\n" + "1" * 65 + "\n", []),
+    ("fork_local_declarations", "6.21, 9.3.2",
+     '`timescale 1ns/1ns\nmodule top;int calls;function int seed_value();calls++;return 7;endfunction initial begin repeat(2)fork int local_value=seed_value();begin #1;$display("%0d %0d",local_value,calls);local_value++;end join fork int unused;begin #2;end begin #5;end join_any $display("%0t",$time);wait fork;end endmodule',
+     "7 1\n8 1\n4\n", []),
+    ("automatic_fork_capture", "6.21, 9.3.2",
+     'module top;task automatic run(input int value);fork int saved=value;begin #1;saved+=2;end begin #2;$display("%0d",saved);end join endtask initial run(7);endmodule',
+     "9\n", []),
+    ("automatic_event_capture", "6.8, 6.21, 9.3.2, 15.5",
+     'module top;int seen;task automatic run();event ready;fork begin @ready;seen=7;end begin #1;->ready;end join endtask initial begin run();$display("%0d",seen);end endmodule',
+     "7\n", []),
+    ("fixed_array_ports", "4.9.6, 7.6, 23.3.3.5",
+     'module leaf(input wire [7:0] p[2:1],output wire [7:0] q[3:2]);assign q[3]=p[2];assign q[2]=p[1];endmodule module top;wire [7:0] a[4:5],b[8:7];assign a[4]=8\'h12;assign a[5]=8\'h34;leaf u(a,b);initial #1 $display("%h %h",b[8],b[7]);endmodule',
+     "12 34\n", []),
+    ("resolved_net_array", "6.6, 28.12",
+     'module top;wire [7:0] a[2];assign a[0]=8\'h0f;assign a[0]=8\'hf0;assign a[1]=8\'hzz;assign a[1]=8\'h5a;initial #1 $display("%h %h",a[0],a[1]);endmodule',
+     "xx 5a\n", []),
+    ("wide_udp_comb", "29.3.2, 29.4",
+     wide_udp_source(), "0\n1\n", []),
+    ("wide_udp_seq", "29.3.2, 29.5, 29.6",
+     wide_udp_source(sequential=True), "1\n0\n", []),
+    ("dense_udp_coverage", "29.3.2, 29.6",
+     wide_udp_source(sequential=True, dense=True), "1\n", []),
 ])
 
 
@@ -286,7 +329,7 @@ def main():
                                       "compared_stdout_hex": actual.hex(),
                                       "diagnostic": normalized(ran.stderr, directory)}
                 except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
-                    record[engine] = {"status": "limit", "diagnostic": str(error).replace(tmp, "<probe>")}
+                    record[engine] = {"status": "limit", "diagnostic": type(error).__name__ + ": per-probe subprocess limit"}
         results.append(record)
     gaps = [r["name"] for r in results
             if r["icarus"]["status"] == "passed" and r["kirimasim"]["status"] != "passed"]

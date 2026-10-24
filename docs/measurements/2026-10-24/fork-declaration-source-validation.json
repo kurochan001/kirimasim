@@ -1,0 +1,3310 @@
+{
+  "measured": "2026-10-24",
+  "platform": "macOS/arm64",
+  "repository_revision": "c6d9c3d49459f3a554b6b12635eb78861b51f5a2",
+  "native_source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source_origin": "72 original programs from gen_fork_declaration_matrix.py version 1; no other simulator source/tests read.",
+  "versions": {
+    "previous_kirimasim": "kirimasim 0.0.0 (commit e4376f1d029d), built with AppleClang 21.0.0.21000334",
+    "kirimasim": "kirimasim 0.0.0 (commit c6d9c3d49459), built with AppleClang 21.0.0.21000334",
+    "icarus13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "icarus14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "cases": [
+    {
+      "name": "fork_declaration_always_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_always_bit_1.sv",
+      "source_sha256": "008397798d0d09d2d31be1add2968a5c84856c450a051b558fc5dfee9c01494a",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "087f9cb306a1fe52008d8cde29248a29ada85c9aa14b344c03930586a2976217",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_bit_1.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_always_bit_129.sv",
+      "source_sha256": "ecfc21ab9c03494ee9f08748556103274a44c5dcf42de22c15617c3b0a6ecc3a",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "4b90b2d70e009558c643bd9bd15f299f7a9f016732f889407ef8348f9eafb9c8",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_bit_129.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_always_bit_32.sv",
+      "source_sha256": "ad6121b00276407edc2cc04c5a49a95c1123485c2c159ee4b9068c2b8c9cbcad",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "55db3b021931f0513a8ab2ff0a86e14992b597693adf77c17b22aff953c82c77",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_bit_32.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_always_bit_65.sv",
+      "source_sha256": "d367c68d6dd4d2115bcc86c8cbd0e08dd0995287c7b01b80f06abec5a6955e3d",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "05a528da8999c02aa968e35721687eb2ec9df8c11e2919f4084351d9bd993452",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_bit_65.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_always_logic_1.sv",
+      "source_sha256": "7490efb125cbd48a5c959fcfef00e0fa2143583fbf31995eeeef69612d7a231e",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "759f88328e2c5516d10004496f6d4086b62142b799cca6460ec5f8dd537d3512",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_logic_1.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_always_logic_129.sv",
+      "source_sha256": "14dca9f1e8d822a7eb8ef4861a39caf9694ee6a6096745dbd6f36a70c83fdaf4",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "9aa814c2672f60c3ed01fba494f5bb047c0aa010df8e3fad7a5e1d7c5e687791",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_logic_129.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_always_logic_32.sv",
+      "source_sha256": "253a21405d6f97a9eb0efe3e995b6153841ad21384083d274fb96ebd6100b24b",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "256bae80e89410aa41d1703cf7f4d6843d69f21982f1de41794cc5bb862d1b53",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_logic_32.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_always_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_always_logic_65.sv",
+      "source_sha256": "62be9fe923f836feebbfb9e3415a126c9235958fc4ebb7614df2520e62f08a90",
+      "expected_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+      "expected_stderr_sha256": "90d8658e16971742096c2145e4b26e2f1faaf4f02f6d1c61fff20cd39fd09ff5",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_always_logic_65.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 2 3 1\nall shared 3 1\nall first 4 3 1\nall shared 5 1\nany first 7 1\nany resumed 7 3\nany shared 10 1\nnone parent 10 3 0\nnone first 11 1\nnone shared 13 1\ndone 13 2\n",
+          "stdout_sha256": "f4a13c772ab09a16ee2f70c30c8535a8b14a3d63eeee058c3448ecd76918f03d",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_bit_1.sv",
+      "source_sha256": "4ce48c38cbbe07524f99c10c74719fb96bddb36ff924695a7a7501abf567ffd8",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_1.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_1.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_1.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_bit_129.sv",
+      "source_sha256": "7c6eb5b085e503e119c43e49d8bcaa8a501819ee8a63f62ed665879917c22b11",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_129.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_129.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_129.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_bit_32.sv",
+      "source_sha256": "9bd37b8b932cc5000a4a3b258afc7a6a456f6776eb2647843d412903baf43057",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_32.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_32.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_32.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_bit_65.sv",
+      "source_sha256": "0b348e58492e7f50cbe6cce63161ebaa5ddf3c6281115fcfd32a930bee80b76d",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_65.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_65.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_bit_65.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_initializers",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_initializers.sv",
+      "source_sha256": "b7eb27abdccc422dc26c4c7e4c2b16269804e830f8071206bc03e1b3753d4cd9",
+      "expected_sha256": "9e1de9fb1345dfee5d5e9bbb99218ca40a39a81c4ba87413d62a3da6dc0a1ca4",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_initializers.sv:23:9: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "child 2 2 23\nparent 2 2 23\nchild 7 4 2345\nparent 7 4 2345\n",
+          "stdout_sha256": "9e1de9fb1345dfee5d5e9bbb99218ca40a39a81c4ba87413d62a3da6dc0a1ca4",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": -6,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": -6,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_logic_1.sv",
+      "source_sha256": "dfe189eaf2bb4ff5eb2bc9bfac760974bb4d8aea676170d44e96adb392af56e1",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_1.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_1.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_1.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_logic_129.sv",
+      "source_sha256": "bacf7422c84eae105c8ebf7f85beadf66ccfaefe762a38d61dac5f72720734b3",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_129.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_129.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_129.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_logic_32.sv",
+      "source_sha256": "73c89e318ca060af4734df460b6154739d42e07c76ece8f6f7b589adc787f4b4",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_32.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_32.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_32.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_automatic_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_automatic_logic_65.sv",
+      "source_sha256": "8bb828df7360e1c9fbabfc2e589549ec750b33926b5a310785df4aefa9b07995",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_65.sv:25:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_65.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 3,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_automatic_logic_65.sv:25: sorry: Overriding the default variable lifetime is not yet supported."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_concurrent_initializers",
+      "source_file": "tests/suite/sched/fork_declaration_concurrent_initializers.sv",
+      "source_sha256": "17acd98f592c69d5eef79893b8a6aa84ae0193e273968efc0194c3d3976b83b4",
+      "expected_sha256": "643832643fb4d18b323f7f11ab10a4d217fb28c3352124e29eb352c6828a1fc6",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_concurrent_initializers.sv:23:9: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "2 4 1 1 1 1\n",
+          "stdout_sha256": "643832643fb4d18b323f7f11ab10a4d217fb28c3352124e29eb352c6828a1fc6",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "2 4 3 0 1 0\n",
+          "stdout_sha256": "f229f3e34eee98f2cbd21504e03e4ca8e956c4cfdcb50d3261bf0122c1bb41d6",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "2 4 3 0 1 0\n",
+          "stdout_sha256": "f229f3e34eee98f2cbd21504e03e4ca8e956c4cfdcb50d3261bf0122c1bb41d6",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_container_event",
+      "source_file": "tests/suite/sched/fork_declaration_container_event.sv",
+      "source_sha256": "14ba202dd4283997ac9ca5e8a593e89fcd8fce2d5df6c3db829a07f86f570b02",
+      "expected_sha256": "683a53f3bf36342d32eeb9e0c7da804b5f9e756be5a24a2eee4a01fbafa601f5",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_container_event.sv:21:9: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "1 7\n",
+          "stdout_sha256": "683a53f3bf36342d32eeb9e0c7da804b5f9e756be5a24a2eee4a01fbafa601f5",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "1 7\n",
+          "stdout_sha256": "683a53f3bf36342d32eeb9e0c7da804b5f9e756be5a24a2eee4a01fbafa601f5",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "1 7\n",
+          "stdout_sha256": "683a53f3bf36342d32eeb9e0c7da804b5f9e756be5a24a2eee4a01fbafa601f5",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_fork_bit_1.sv",
+      "source_sha256": "2a9c6d1f42c75691b4cfb08fe57ef0fd861d9c23436623b6de89665aa47ff621",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "42ee68b2cd694bd87a04e24ece468df95d25e10be6face1be6fef452ee8f06ea",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_bit_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_fork_bit_129.sv",
+      "source_sha256": "b6771977f5828fc978484bff364bdbdbf5119c477ca0b9ef852b1e5153dd47b4",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "0fe5c94ddc4ef1393bb6e95665589e62752597916c43ec3663cd3d1b54455c9b",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_bit_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_fork_bit_32.sv",
+      "source_sha256": "552dbc34e993a951ec3a4f1a8ad47a309e6440e3c04f9176fe62a25c81dd2721",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "c094447ec90d89a89273ccbeabdb075d01bf3184db0fd0a8c3dd94cf0c816fd5",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_bit_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_fork_bit_65.sv",
+      "source_sha256": "25e069c813ccd8e7b468767b2deab270d2130ed9d1fc7756784b412b139d2b9f",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "2117e8f0abb3f1a4ec4a115ea216f7958b8b367a2347e32f55c43b528467d7d7",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_bit_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_fork_logic_1.sv",
+      "source_sha256": "08a9e796ba88e4a586041b9c47a59695b1c2493e26329b06cf3d8d45867acdaf",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "590f1a5e0abe3635d556616dc5013138543cd849feef2f9270b929b48fe68af2",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_logic_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_fork_logic_129.sv",
+      "source_sha256": "c6c7358b60478db5e40256993b9ed62f8c4df21a5311bc8f292df60271fbeb15",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "61142a66b2c01122fd17e2336b7c177e66c391b2a38a143e4241c0f5578714a4",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_logic_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_fork_logic_32.sv",
+      "source_sha256": "da4ac2e192ae865fbd5628b88d9dbda725b466471496e724968ac49e41e5ea56",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "0961b9d079006eada7ddd6e420ea5c5f94f0c5ada05c1badceb14c11d98776f3",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_logic_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_fork_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_fork_logic_65.sv",
+      "source_sha256": "9858562363f9dcd750cfbde0ad333c3be31376e5775235011aa2a1d5e19d4bc6",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "9dff0d9ab91c884957f6c3a7b98cf17e1e3de7e161a64c20388600e7743184b0",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_fork_logic_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_generate_bit_1.sv",
+      "source_sha256": "4c458a9b18481f1ca89489c64778cf5f32586ff7c84531273d42b3aff20083f5",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "c96d3496bc267dd27b73ada46e92a06122be0a0e79201a4a2ff8b6277af23287",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_bit_1.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_generate_bit_129.sv",
+      "source_sha256": "d91409dec335b6cdc66c21d66eb9e8a695e8ec28b9280ca414d90d8b1477496f",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "119e276f57cb783c7a93be5ab1f119e20975c703945e35b278239077e574bcbe",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_bit_129.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_generate_bit_32.sv",
+      "source_sha256": "73c4ea9f8d9b722ce15eb9ae625f1bfefb60fade522be711e4b476c6e1054c37",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "87c766ae875e389098293db3727a6f17a842e01c2b4673669de8af5ba29727d8",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_bit_32.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_generate_bit_65.sv",
+      "source_sha256": "05e688fea80256509aba3721cb0b9657ff875f09c181c7412fac7ebf67f6cad5",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "f228d622b8e23ee623571303b8ce19788d48ffb310d208ce9d6b02e8cfa4bb89",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_bit_65.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_generate_logic_1.sv",
+      "source_sha256": "1d735d8f0d154d672538413032fcc4e52412a4e3187840f1e344b861157f57b9",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "7c6f92e1174929c607accc6742f2cb7754e6f1da6d0094a77a43bcc4d79f9ace",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_logic_1.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_generate_logic_129.sv",
+      "source_sha256": "1ea076e40c05d600f28692a3182f1533399b51731ca8b675c6108fc418c80180",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "f155b4248ab716bd22f7f7d5bb3f00797c2c3493d45ddc68d8c35ffa3547d039",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_logic_129.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_generate_logic_32.sv",
+      "source_sha256": "89b305b370fce6e2b9e48270461e92becdda9f5e924a2df238078b0923ddd177",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "24f5b1ff78e85f2a9216e8b00a6f16e0b459c2d8c6a9ae04734c16dcddf8417e",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_logic_32.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_generate_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_generate_logic_65.sv",
+      "source_sha256": "b0d1e26c0d8be3ec14493edd78f517cbf0ae234d68963b4e8a2527b6f91dff02",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "82d7e7545709c184e84e7b6a973842db8744e139756bb60fd77ec72473d91124",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_generate_logic_65.sv:26:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_initial_bit_1.sv",
+      "source_sha256": "d026b9f1d23eaa668f83c4a57f5423d4b026066cc951ba19fa51b81e56321e0f",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "2a815c8622fc2111bb4cddc68867158c4cf537a35713e57c6d266dd120f2495a",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_bit_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_initial_bit_129.sv",
+      "source_sha256": "141efef8fec5f40853dd646ac57421718a77ac487fc01f786c0fe69cc4c3110b",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "25fa5a18503b95c9999d22acdabf1a70a8b435701cb9b060883891e68f46f3d8",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_bit_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_initial_bit_32.sv",
+      "source_sha256": "fc8e25e2b6a918c082a0d9836ef19fac7db4b5111d5f634becb152020fa69689",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "be54ceecc8d2305940dd399502a6e05c8c539c34d977272c7956037f3993ffe2",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_bit_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_initial_bit_65.sv",
+      "source_sha256": "c158487fe4f02de4644aea8982c8fab1a94f0f58ec8ffa7116fb6175481ef2e1",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "ef25609d307ce506da3e6bd270eaa36b1906630ba9aee29deae332ede4637e8e",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_bit_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_initial_logic_1.sv",
+      "source_sha256": "9dda05d665160f357903bc88747ca280843c2dee45f5358cc62dedeffc96e5e9",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "21468d3f80ce9fc4e8120a6a032c8a56bff01272f78b6008f0cd1a3b103d8577",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_logic_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_initial_logic_129.sv",
+      "source_sha256": "76d9b4bf5bfb9679daf08f6a82460fb9de6dfefbd6b90ee36f93be2ba0e0b464",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "13fa1795f16c3f27ff6e868e5ff8481ec329d65e4167038f4de45bd891741d81",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_logic_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_initial_logic_32.sv",
+      "source_sha256": "4a6f640a44cb657a135f5c81f1ec48a3568eebbe59807f79c4650f001bd01553",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "5fbe9fad70f1f85759e9420011f33abe6011f914e133bc27d461ab85a4b91975",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_logic_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initial_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_initial_logic_65.sv",
+      "source_sha256": "e26a149005e31b2e3fbf0a3eca931694d43959e2ca3014940c172dae7062463c",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "8283dfeb30221593a5a4e5a8800fdfd0ee86925d5a35eb985f3de387a087fe95",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initial_logic_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initializer_control_flow",
+      "source_file": "tests/suite/sched/fork_declaration_initializer_control_flow.sv",
+      "source_sha256": "47ce18fe29c54a946e16a9d562e99f7c82367129007a2e1debc2822c4d7ef708",
+      "expected_sha256": "1b3654f32b85f73decb12867b8054d3d8a66762cc1a104fdef5e622660c60967",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initializer_control_flow.sv:24:9: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "1 23\n",
+          "stdout_sha256": "1b3654f32b85f73decb12867b8054d3d8a66762cc1a104fdef5e622660c60967",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "1 12\n",
+          "stdout_sha256": "8f4f6b55e3c480251f7579fdb93faa642d7ba89292181e94fdd82fc879f29123",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "1 12\n",
+          "stdout_sha256": "8f4f6b55e3c480251f7579fdb93faa642d7ba89292181e94fdd82fc879f29123",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initializer_scope",
+      "source_file": "tests/suite/sched/fork_declaration_initializer_scope.sv",
+      "source_sha256": "971c2a1cfe99f1e2bcaca0d48de42ec6992a800e343f05d3a2f44258ee6628b8",
+      "expected_sha256": "9d9505678f4f468dd64fd07480631cf6b6f6137a81ce48ecccccc99063cd7b41",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initializer_scope.sv:23:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "top.run.phase\n",
+          "stdout_sha256": "9d9505678f4f468dd64fd07480631cf6b6f6137a81ce48ecccccc99063cd7b41",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "\n",
+          "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "\n",
+          "stdout_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_initializer_starts_work",
+      "source_file": "tests/suite/sched/fork_declaration_initializer_starts_work.sv",
+      "source_sha256": "20afac6a9d81bacb8c1177bd9d251ba1e242dd61006b237ec32a46dfc2f862bd",
+      "expected_sha256": "c9e7dc758c96ca7d9a9935cede1c93c1856494eb42a91ef28c56643afc802bf7",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initializer_starts_work.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "parent 0 0\ndone 2 1\n",
+          "stdout_sha256": "c9e7dc758c96ca7d9a9935cede1c93c1856494eb42a91ef28c56643afc802bf7",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "compile_failed",
+          "compile_exit": 1,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initializer_starts_work.sv:21: error: functions cannot have delay statements."
+          ]
+        },
+        "icarus14": {
+          "status": "compile_failed",
+          "compile_exit": 1,
+          "run_exit": null,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_initializer_starts_work.sv:21: error: functions cannot have delay statements."
+          ]
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_interface_bit_1.sv",
+      "source_sha256": "812a6281b78c0abc9d69d640586034342425f202a89f618feaa4ce7838a571ee",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "785ad9f6621df0538532f474d49a2b168bcc297f85c9ad3918feb91fd492c43f",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_bit_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_interface_bit_129.sv",
+      "source_sha256": "38a41dff87fa4ef91ee43d6c2043eb678e39441e8829bbfca0a7c1fc18095bd5",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "5f16021f321849bd226942ce2f760210ce0815e79961d8749a4e335899f704e3",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_bit_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_interface_bit_32.sv",
+      "source_sha256": "e18c2c260d3a95ff82a732c11dc84f78bb0f9a7a9b2853c5d2f2389895ff7b01",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "022c45a61b7611b433567408ff03352a0977449163da188098f2e52dacff3ffa",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_bit_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_interface_bit_65.sv",
+      "source_sha256": "a3d91fdc5ebb01a815893cf77ba1b068b704f9759fe056f5e2a13aaa1e05b8f5",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "1158017a795b6f1e57ee940a52e79600996d818cf1914793af5c11ff1f67f3e4",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_bit_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_interface_logic_1.sv",
+      "source_sha256": "651d80991d9c488d195ce6eec3ee5321619bd75925f183bb0d3361c0400d1456",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "3d0336d68fd2f418202fc9e856a96e6043c38c017562b73bcec6dc3a3d84c4c1",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_logic_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_interface_logic_129.sv",
+      "source_sha256": "7d5faf1344f5f899c480ea7b6303175a8ab3bdd96d6fb56003bfba47c8644759",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "5a579862a90caae6aecbcda1b3f6b1d7fa837164a1c0e04c278d7fee39a9f94a",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_logic_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_interface_logic_32.sv",
+      "source_sha256": "5cf25d6edcc88eeb45d9c9e030e2608048473723e36f1c36439a561429bbe806",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "b2b9d4645d6f9729d3310d138b060f98303df75e5cbbf5cd31588753717ec2ca",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_logic_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_interface_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_interface_logic_65.sv",
+      "source_sha256": "ac320d7da05db670449a3e4d5e2a1e777d640e094a34c823169f10fbfd3bb67b",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "99101040027437551381ecdcc9c256f66bba597ceaf85f550d1b970cf2f0efcf",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_interface_logic_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_no_children",
+      "source_file": "tests/suite/sched/fork_declaration_no_children.sv",
+      "source_sha256": "5803e5d67bead18bfc7be4e1cae910ca2b6bf6c26b7971a74071d6c7c6e6d1b1",
+      "expected_sha256": "3ebc9ae44e7b9433c0295f9dd94aed6e6261535beef1376f72882c6b328cbea1",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_no_children.sv:22:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all 0 1\nany 0 2\nnone 0 3\n",
+          "stdout_sha256": "3ebc9ae44e7b9433c0295f9dd94aed6e6261535beef1376f72882c6b328cbea1",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": -6,
+          "stdout": "all 0 1\nany 0 2\n",
+          "stdout_sha256": "f0c9412acc2f99a365b9992c62a4f7c89851af4cde5d751b819bfb7e490d08ee",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "failed",
+          "compile_exit": 0,
+          "run_exit": -6,
+          "stdout": "all 0 1\nany 0 2\n",
+          "stdout_sha256": "f0c9412acc2f99a365b9992c62a4f7c89851af4cde5d751b819bfb7e490d08ee",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_program_bit_1.sv",
+      "source_sha256": "59739c25059edefeca0e3899514ae7e766d953646c28c030529c0f79501a7f15",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "cd88a3f01a96aa409831741a845a52eb522cedc68098bc17f86ee36c583d0725",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_bit_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_program_bit_129.sv",
+      "source_sha256": "f03fc60692c1e181e5f3ecabac5fd4dbd3a66cc44e055a88fa88178d594d7b1c",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "0af13a2d8993b6bf291c1df6a034cf3c19981a327b3d7a3289ba28fc61456915",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_bit_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_program_bit_32.sv",
+      "source_sha256": "e2d4d1733e28f3997fa86bd8a6e2eab300909b3611bbeaeb9effd9f85f7c2837",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "b146950867f466556daee6040a97c4ae0bc496718b83a14ec0d87a35ff11310f",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_bit_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_program_bit_65.sv",
+      "source_sha256": "86747c5c2de37ce5eec4f8b80567d7c09208f01ed46a583f875ac8f8eaf68dbb",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "6ef5400cdfc6cce9cedb8023807ba4a0b8f46208c617c58e212e6a7d47219569",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_bit_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_program_logic_1.sv",
+      "source_sha256": "c29ee9b3f684a29a8b3d7ef4ebb191553b8dc914530f659f5c232698d78087f5",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "7409cbb463ce4c733bcae9128b86f0e1941722d62e56a002dc6f32625b88d725",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_logic_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_program_logic_129.sv",
+      "source_sha256": "d06f2f5d5dee504d3759300631be18d17c2ef085eee39c67d5d6ebf12fc774c0",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "7dce0a84a4e898bfc70897bea32d04d8a7c65951c56243e9781626dedc104e7b",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_logic_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_program_logic_32.sv",
+      "source_sha256": "10cc787f7d7cd897d64cc85a3a727b5b32adca18a7be454764f541ac7b6cfe21",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "1c12dc8c3a9df1b7926e3ce8e4e29d3cd083cf1c85d7f61061432b681f811b5e",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_logic_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_program_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_program_logic_65.sv",
+      "source_sha256": "835ed8e35dfcf4631da69d26ab56af8d5d585aefe451ad317789b93ed84882b5",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "3766f38676d389d1758c21f095fb6b04074df7112d6d97263ee088bca4688832",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_program_logic_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_bit_1",
+      "source_file": "tests/suite/sched/fork_declaration_task_bit_1.sv",
+      "source_sha256": "aa5f251b4e3b43728817dcd046d9b6ba1c7034d05d18818bcbd377a78f5c9e0f",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "c3d668898204b2e0fce75ca4e619b19e953ae17a40ef9e0921fd48792e36b598",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_bit_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_bit_129",
+      "source_file": "tests/suite/sched/fork_declaration_task_bit_129.sv",
+      "source_sha256": "a0dd3a61abfe017a5bc71f3b2518722085fed784c418f35f49c04a01d986a35b",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "91f1d8c9d13e749b5f3ca6e1f8b02e09d7b10f1bc3f80210f862cfc4c79cc44f",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_bit_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_bit_32",
+      "source_file": "tests/suite/sched/fork_declaration_task_bit_32.sv",
+      "source_sha256": "cdd7d10acd156d2e87c65b5ab6b7010c070d445879062fae08a9a9b4cc94ba7a",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "5d93904b4d792067323d344a8a9240802ae56ba6a9baeeb8606b21bab617c7dc",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_bit_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_bit_65",
+      "source_file": "tests/suite/sched/fork_declaration_task_bit_65.sv",
+      "source_sha256": "b32abba7ea9f9c9b0d6a4e4fc7fcd33d2d156a0f12ff0989c1289fa120ac5a30",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "9115f30ad39e30d69975667a38cfc235234156b0b7f5177ba5b0191325a111ba",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_bit_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_logic_1",
+      "source_file": "tests/suite/sched/fork_declaration_task_logic_1.sv",
+      "source_sha256": "3c7eaf33e38126486b0f933c8a8e860fecfacfc037b5469084d203c67bd0dbfa",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "2fc4a375b392b150d56b90bbde7b65435b7fbced274740b3cfd37266691df3ea",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_logic_1.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_logic_129",
+      "source_file": "tests/suite/sched/fork_declaration_task_logic_129.sv",
+      "source_sha256": "e9f8f63a246fdd6576b7edd84e0f005f8cf906a45609bd018149248ed5ddc2b7",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "8eccca54842005d7e4b2baac1e4f35bff5524492ad6a0afd10ed993a87949e0a",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_logic_129.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_logic_32",
+      "source_file": "tests/suite/sched/fork_declaration_task_logic_32.sv",
+      "source_sha256": "4e3fd706ae198efe491c351e0a94fc6ad1c3ca298c7dba02ffda7e7add41f370",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "7b45cc71009f4e13daa9c608b6440565cf68b4ede88087f8228de50cb5799a99",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_logic_32.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_task_logic_65",
+      "source_file": "tests/suite/sched/fork_declaration_task_logic_65.sv",
+      "source_sha256": "056ca7c5e9cab665985141b90f6eaaa3fd80530c1dd4635513e1197b2d911991",
+      "expected_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+      "expected_stderr_sha256": "1c037ac1f90bbff572ffd3fcbaf2520bfd5722f1156908dd57c44d2622ad2614",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_task_logic_65.sv:25:12: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "all first 1 3 1\nall shared 2 1\nall first 3 3 1\nall shared 4 1\nany first 6 1\nany resumed 6 3\nany shared 9 1\nnone parent 9 3 0\nnone first 10 1\nnone shared 12 1\ndone 12 2\n",
+          "stdout_sha256": "c8dcf08898588af97449da90821973560ad030fce384cf57e0911a7684c81d06",
+          "diagnostic": []
+        }
+      }
+    },
+    {
+      "name": "fork_declaration_typed_storage",
+      "source_file": "tests/suite/sched/fork_declaration_typed_storage.sv",
+      "source_sha256": "e07a5eb84b110cb4a1c113460a4fd0a1422805ae2a0194c037e52fdfc32879cb",
+      "expected_sha256": "45308f4d4166e4c692f7de0f51b0193da79e40aa6c706d5fe89baa66440655d2",
+      "expected_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engines": {
+        "previous_kirimasim": {
+          "status": "unsupported",
+          "compile_exit": null,
+          "run_exit": 2,
+          "stdout": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "diagnostic": [
+            "tests/suite/sched/fork_declaration_typed_storage.sv:21:19: error: unsupported: declarations in a fork block (not implemented yet)"
+          ]
+        },
+        "kirimasim": {
+          "status": "passed",
+          "compile_exit": null,
+          "run_exit": 0,
+          "stdout": "defaults 1 1 1 1 1\nshared 1 1 shared 2.5\n",
+          "stdout_sha256": "45308f4d4166e4c692f7de0f51b0193da79e40aa6c706d5fe89baa66440655d2",
+          "diagnostic": []
+        },
+        "icarus13": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "defaults 1 1 1 1 1\nshared 1 1 shared 2.5\n",
+          "stdout_sha256": "45308f4d4166e4c692f7de0f51b0193da79e40aa6c706d5fe89baa66440655d2",
+          "diagnostic": []
+        },
+        "icarus14": {
+          "status": "passed",
+          "compile_exit": 0,
+          "run_exit": 0,
+          "stdout": "defaults 1 1 1 1 1\nshared 1 1 shared 2.5\n",
+          "stdout_sha256": "45308f4d4166e4c692f7de0f51b0193da79e40aa6c706d5fe89baa66440655d2",
+          "diagnostic": []
+        }
+      }
+    }
+  ],
+  "summary": {
+    "previous_kirimasim": {
+      "unsupported": 72
+    },
+    "kirimasim": {
+      "passed": 72
+    },
+    "icarus13": {
+      "passed": 58,
+      "compile_failed": 9,
+      "failed": 5
+    },
+    "icarus14": {
+      "passed": 58,
+      "compile_failed": 9,
+      "failed": 5
+    }
+  },
+  "source_revision": "c6d9c3d49459f3a554b6b12635eb78861b51f5a2",
+  "comparison_source_revision": "57a64efa3765e21afc3fecd3e7b485f9b05e673c",
+  "portability": "Repository-relative source paths and hashes; only first error diagnostics. Runtime signal exits are retained without copying assertion text.",
+  "evidence_scope": "Native stdout/exit and source hashes; strict native warnings are separately checked by the suite. No full parity claim.",
+  "local_ci": {
+    "source_revision": "c6d9c3d49459f3a554b6b12635eb78861b51f5a2",
+    "command": "CTEST_PARALLEL_LEVEL=6 python3 -u tools/local_ci.py",
+    "configurations": {
+      "dev": {
+        "total": 3205,
+        "passed": 3203,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "release": {
+        "total": 3206,
+        "passed": 3204,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "asan": {
+        "total": 3205,
+        "passed": 3203,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "ubsan": {
+        "total": 3205,
+        "passed": 3203,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      }
+    },
+    "checks": [
+      {
+        "name": "dev: configure",
+        "status": "ok"
+      },
+      {
+        "name": "dev: build",
+        "status": "ok"
+      },
+      {
+        "name": "dev: test",
+        "status": "ok"
+      },
+      {
+        "name": "release: configure",
+        "status": "ok"
+      },
+      {
+        "name": "release: build",
+        "status": "ok"
+      },
+      {
+        "name": "release: test",
+        "status": "ok"
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok"
+      },
+      {
+        "name": "asan: build",
+        "status": "ok"
+      },
+      {
+        "name": "asan: test",
+        "status": "ok"
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok"
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok"
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok"
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok"
+      },
+      {
+        "name": "check_banned",
+        "status": "ok"
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok"
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok"
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok"
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok"
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok"
+      },
+      {
+        "name": "clang-format",
+        "status": "ok"
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok"
+      }
+    ],
+    "lint_version": "Homebrew LLVM 22.1.8",
+    "counts": {
+      "unit": 299,
+      "suite": 2712,
+      "tools": 135,
+      "generators": 128
+    }
+  }
+}

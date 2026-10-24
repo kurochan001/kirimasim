@@ -129,6 +129,21 @@ unsigned indices and rejects unknown ranges through the ordinary branch rules.
 Unimplemented language forms and implicit heap sensitivity are diagnosed;
 full container and Icarus coverage remain work.
 
+## Typed pattern rendering and monitor dependencies
+
+At `4c69843`, SIR has distinct PatternIds and immutable presentation layouts,
+with verification, text and VM execution. The VM marshals typed payloads into
+borrowed views; the shared kernel renderer applies the output rules. Packed
+windows, enum metadata, fixed shapes and nested containers are explicit, with
+no new runtime name lookup or source-type inference. Front's literal/runtime
+argument bridge remains unfinished, so source `%p` stays unsupported.
+
+The scheduler captures heap dependencies during the actual Postponed monitor
+body and observes cell changes. Dependencies are weak and detach with the
+registration's lifetime. Kernel/VM file-monitor wiring is present, while new
+heap-backed file-monitor combinations still need dedicated verification.
+See the [implementation and verification scope](notes/pattern-sir-execution.md).
+
 ## Assignment capture and suspension
 
 The front end captures all RHS leaves of an aggregate assignment before
@@ -150,6 +165,19 @@ intra-assignment controls; the actual selectors are evaluated after the wait.
 See [aggregate blocking timing](notes/blocking-aggregate-timing.md).
 Event-controlled NBAs remain unsupported. In particular, blocking repeated waits do not implement
 the independently pending control required by an event-controlled NBA.
+
+[Wide UDP execution](notes/wide-udp-inputs.md) uses shared-kernel matching
+with stable input getters for large operand lists. A prefix state view keeps
+terminal-order semantics without variable-size evaluator scratch. The VM
+transports typed operands; dense source coverage checking remains a separate
+slang compilation boundary.
+
+[Fork declarations](notes/fork-local-declarations.md) use the parent's existing
+lifetime path before executable children are created. Static storage is shared;
+uncaptured automatic declarations initialize in the parent frame. Declarations
+are not processes, and a declaration-only fork emits no wait. This adds no
+kernel API or SIR instruction. Automatic storage captured by children still
+needs the shared activation/lifetime contract.
 
 ## Strength intervals before value projection
 

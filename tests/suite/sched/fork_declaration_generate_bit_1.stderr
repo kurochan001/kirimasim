@@ -1,0 +1,3 @@
+fork_declaration_generate_bit_1.sv:26:12: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]
+fork_declaration_generate_bit_1.sv:35:10: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]
+fork_declaration_generate_bit_1.sv:45:10: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]
