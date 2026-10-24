@@ -47,6 +47,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- A shared-kernel assignment-pattern renderer handles borrowed typed values,
+  nested aggregates, enums, quoted SV strings and supplied handle identities.
+  Iterative traversal, explicit shape/cycle/resource errors and C++20 header
+  checks are covered by new tests. Source `%p` remains unsupported pending
+  typed SIR/front integration.
+
 - UDP lowering, verification and shared-kernel/VM transport accept more than
   32 inputs. Original sources through 257 inputs and independent value/SIR
   checks cover matching, state order, X/Z, delay and strength. Dense edge

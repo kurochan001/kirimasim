@@ -117,7 +117,7 @@ TEST(Pattern, ScalarWidthsSignednessAndUnknowns) {
 TEST(Pattern, WideEnumLookupMatchesReferenceCaseEquality) {
     for (const unsigned width : {1U, 7U, 32U, 64U, 65U, 129U, 257U}) {
         const auto count = (std::size_t{width} + 63U) / 64U;
-        for (unsigned mode = 0; mode < 12; ++mode) {
+        for (unsigned mode = 0; mode < 16; ++mode) {
             SCOPED_TRACE(width);
             SCOPED_TRACE(mode);
             const bool four = mode % 2U != 0;
@@ -133,7 +133,8 @@ TEST(Pattern, WideEnumLookupMatchesReferenceCaseEquality) {
             ca = a;
             cb = b;
             if (!candidateFour) cb.assign(count, 0);
-            if (mode % 4U == 3) ca[0] ^= 1U;
+            if (mode < 12 && mode % 4U == 3) ca[0] ^= 1U;
+            if (mode >= 12) ca.back() ^= 1U;
             std::vector<std::uint64_t> storage(count * (four ? 2U : 1U));
             std::vector<std::uint64_t> candidate(count * (candidateFour ? 2U : 1U));
             for (std::size_t i = 0; i < count; ++i) {

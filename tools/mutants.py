@@ -40,12 +40,14 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("kernel: pattern enum lookup drops upper words", "src/kernel/pattern.cpp",
+     "const std::uint64_t count = (std::uint64_t{lhs.width} + 63) / 64;", "const std::uint64_t count = 1;"),
     ("kernel: pattern enum lookup ignores unknown bits", "src/kernel/pattern.cpp",
      "if (lb != rb) return false;",
      "if (lb != rb && false) return false;"),
     ("kernel: positional pattern retains record names", "src/kernel/pattern.cpp",
      "if (!positional && (current.kind == Kind::Record || current.kind == Kind::Union)) {",
-     "if ((!positional || positional) && (current.kind == Kind::Record || current.kind == Kind::Union)) {"),
+     "if ((static_cast<void>(positional), true) && (current.kind == Kind::Record || current.kind == Kind::Union)) {"),
     ("kernel: pattern union prints all members", "src/kernel/pattern.cpp",
      "current.kind == Kind::Union ? 1 : current.children.size()",
      "current.children.size()"),

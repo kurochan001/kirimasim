@@ -23,6 +23,16 @@ The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
+`156e65c` adds a [shared-kernel assignment-pattern renderer](pattern-format-foundation.md).
+Fourteen new unit tests and all 22 older Format tests pass. Typed SIR/front
+integration remains; source `%p` is still unsupported and no 87-probe gap is
+claimed closed by this API foundation.
+The strengthened 112 enum combinations and six compiled controls pass their
+checks. Latest full CI has 3,329 passes/two known skips out of 3,331 in each
+of dev/ASan/UBSan; release has 3,330/two out of 3,332. All 136 Tools and
+required LLVM-22 checks pass, and all 513 control entries apply. See the
+[hashed validation record](../measurements/2026-10-24/pattern-format-negative-controls.json).
+
 The latest [MOS/switch investigation](mos-switch-investigation.md) records
 28 original programs and 56 observations across both reference versions.
 It identifies strength-only dependencies, passive cycles, port attenuation
@@ -35,7 +45,7 @@ new unit tests. Four compiled controls pass the older four UDP tests and fail
 new source stdout or wide value assertions. The old level-row mutant follows
 the new helper; all 507 registered controls apply.
 
-Full local CI passes with native source `52652eb` and the registry/count
+The earlier UDP local CI passes with native source `52652eb` and the registry/count
 follow-up (2026-10-24). Dev/ASan/UBSan each run 3,317 tests: 3,315 pass and
 two known skips remain. Release runs 3,318: 3,316 pass and the same skips.
 All 136 Tools tests, 106 new source cases and five new unit tests pass.
