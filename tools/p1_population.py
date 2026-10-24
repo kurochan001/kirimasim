@@ -8,7 +8,7 @@
   tools/p1_population.py run --tests-repo DIR --kirimasim BIN [--list FILE]
 
 select prints the population: the simulation tests of the test-suite
-repository that use no P3 feature and no feature outside the scope of the
+repository that use no P4 feature and no feature outside the scope of the
 design. A test is out when its source, without comments and string
 literals, contains one of the words of TEST_SUITE.md ("90% of our own
 tests"), or a specify block with a path or a timing check. The first line
@@ -31,7 +31,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_LIST = HERE.parent / "tests" / "gates" / "p1_population.txt"
 GATE = 0.90
 
-# P3 features (TEST_SUITE.md); a match takes the test out of the population.
+# P4 features (TEST_SUITE.md); a match takes the test out of the population.
 P3_FEATURES = {
     "class": r"\bclass\b",
     "constrained random": r"\brand\b|\brandc\b|\brandomize\b|\bconstraint\b",
@@ -71,7 +71,7 @@ def header(text: str) -> dict[str, str]:
 
 
 def left_out(text: str) -> list[str]:
-    """The P3 features and the features outside the design's scope that a
+    """The P4 features and the features outside the design's scope that a
     test uses."""
     body = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
     body = re.sub(r"//[^\n]*", "", body)

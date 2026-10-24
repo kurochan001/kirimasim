@@ -2,6 +2,8 @@
 
 [日本語](SCHEDULER_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 **Program execution amendment (approved 2026-10-23):**
 [The approved program rules](../notes/program-execution-proposal.md) apply
 to instance identity, reactive scheduling, inherited execution origin and
@@ -12,7 +14,7 @@ advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
 Phase labels below describe the original plan, subject to this amendment.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. The same day, the order of evaluating initial values of static variables (3) was added (approved). The same day, not writing the reason for ending to standard error for `$finish(0)` and `$stop(0)` was added to 16.2 (approved). On 2026-10-16, the default timescale and the design's precision were added to 1 (approved). The same day, `$finish` inside `final` was added to 16.2 (approved). The same day, leaving the checks of writes and drivers in 6.4 and 12 to slang's analysis stage was added (approved). The same day, the descriptions of drive strength in 12 and 19 were changed to references to VALUE_SEMANTICS.md 5 (approved). On 2026-10-17, reclaiming the records of ended processes was added to 10.8 (approved). The same day, the third condition of 10.8 was changed to include the calls of settled reports (approved). On 2026-10-18, 15.4 was aligned with the flush points of 15.3 (approved). The same day, run-time errors of the design were given the reason error and code 2 (16.2, 8; approved). On 2026-10-18, diagrams of the steps of 3 and of waking in 9.5 were added (approved). The same day, what the Postponed region may write was added to 2.2 (interpretation; approved). The same day, the pending queue of static initialization (15.3) and its run-time errors (16.2) were written down (approved). On 2026-10-19, the limit on the events of one time slot was added to 16.2 (approved), and the check points of SIGINT and the limit on nested calls, approved on 2026-10-18, were written in 16.2. On 2026-10-19, the order at time 0 (6.1) was replaced by the steps of kirimasim's choice (approved). The same day, the reason resource_limit and its code 6, with the limits on live processes and on the depth of calls, were added to 16.2 (approved). The same day, the reason wall_time_limit, with the limit on wall-clock time, was added to 16.2 (approved). The same day, `--stop` was added to the paragraph on how `$stop` ends (16.2; approved). The same day, what race exploration mode perturbs was listed in 11, and 4.3, 6.1 and 13 were aligned with it (approved). The same day, the order of waking the waiters of a change (4.3) and the place of a delayed NBA when its time comes (13) were added (approved). The same day, `--mintypmax` and `--report-pulses` were referred to from 12 (approved). The same day, the points UNSPECIFIED_BEHAVIOR.md leaves not decided were marked in 2.2, 6.1 and 6.2 (approved). The same day, declaration order of static initializers was kept (6.1; approved). The same day, a lint warning for an `always` that never waits was added to 6.2 (approved). The same day, the interpretation of 2.2 was kept (approved). The same day, which reads the warning of 3 (step 1) covers was set (approved). The same day, how kirimasim applies 13.4.4 was added as 6.5, and 15.3 was made to point to it (approved). On 2026-10-20, the right side of a procedural `assign` or `force` was added to the callers 6.5 does not allow, and the callers in the Postponed region were left to 2.2 (approved). The same day, one rounding of real delays, constant or known at run time, was set in 1 (approved). The same day, 14.3 was made to say that the writes of a function a continuous assignment calls do not make a continuous assignment in effect (approved). The same day, front was made to check, for 6.4, the writes another process makes through a task (approved). The same day, the actions of deferred assertions were left out of the restrictions of 6.4, and front was made to check the writes another process makes through them (approved). On 2026-10-21, the stack of the thread running out was added to resource_limit in 16.2 (approved). The second half of part 4 (P3 features) is not written yet.
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. The same day, the order of evaluating initial values of static variables (3) was added (approved). The same day, not writing the reason for ending to standard error for `$finish(0)` and `$stop(0)` was added to 16.2 (approved). On 2026-10-16, the default timescale and the design's precision were added to 1 (approved). The same day, `$finish` inside `final` was added to 16.2 (approved). The same day, leaving the checks of writes and drivers in 6.4 and 12 to slang's analysis stage was added (approved). The same day, the descriptions of drive strength in 12 and 19 were changed to references to VALUE_SEMANTICS.md 5 (approved). On 2026-10-17, reclaiming the records of ended processes was added to 10.8 (approved). The same day, the third condition of 10.8 was changed to include the calls of settled reports (approved). On 2026-10-18, 15.4 was aligned with the flush points of 15.3 (approved). The same day, run-time errors of the design were given the reason error and code 2 (16.2, 8; approved). On 2026-10-18, diagrams of the steps of 3 and of waking in 9.5 were added (approved). The same day, what the Postponed region may write was added to 2.2 (interpretation; approved). The same day, the pending queue of static initialization (15.3) and its run-time errors (16.2) were written down (approved). On 2026-10-19, the limit on the events of one time slot was added to 16.2 (approved), and the check points of SIGINT and the limit on nested calls, approved on 2026-10-18, were written in 16.2. On 2026-10-19, the order at time 0 (6.1) was replaced by the steps of kirimasim's choice (approved). The same day, the reason resource_limit and its code 6, with the limits on live processes and on the depth of calls, were added to 16.2 (approved). The same day, the reason wall_time_limit, with the limit on wall-clock time, was added to 16.2 (approved). The same day, `--stop` was added to the paragraph on how `$stop` ends (16.2; approved). The same day, what race exploration mode perturbs was listed in 11, and 4.3, 6.1 and 13 were aligned with it (approved). The same day, the order of waking the waiters of a change (4.3) and the place of a delayed NBA when its time comes (13) were added (approved). The same day, `--mintypmax` and `--report-pulses` were referred to from 12 (approved). The same day, the points UNSPECIFIED_BEHAVIOR.md leaves not decided were marked in 2.2, 6.1 and 6.2 (approved). The same day, declaration order of static initializers was kept (6.1; approved). The same day, a lint warning for an `always` that never waits was added to 6.2 (approved). The same day, the interpretation of 2.2 was kept (approved). The same day, which reads the warning of 3 (step 1) covers was set (approved). The same day, how kirimasim applies 13.4.4 was added as 6.5, and 15.3 was made to point to it (approved). On 2026-10-20, the right side of a procedural `assign` or `force` was added to the callers 6.5 does not allow, and the callers in the Postponed region were left to 2.2 (approved). The same day, one rounding of real delays, constant or known at run time, was set in 1 (approved). The same day, 14.3 was made to say that the writes of a function a continuous assignment calls do not make a continuous assignment in effect (approved). The same day, front was made to check, for 6.4, the writes another process makes through a task (approved). The same day, the actions of deferred assertions were left out of the restrictions of 6.4, and front was made to check the writes another process makes through them (approved). On 2026-10-21, the stack of the thread running out was added to resource_limit in 16.2 (approved). The second half of part 4 (P4 features) is not written yet.
 
 This document sets how kirimasim's execution kernel advances time and events. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "rule of this document" are points the standard leaves to the implementation, decided for kirimasim.
 
@@ -23,7 +25,7 @@ It is long, so it is written in these parts.
 | Part 1 | Time slots and regions, the reference algorithm, orders that are set, assignments and events, starting procedures, the regions of PLI callbacks (1 to 7) | Approved |
 | Part 2 | Waits and notification (delays, event controls, `wait`, named events, monitor records), process control (fork, disable, the process class) (8 to 11) | Approved |
 | Part 3 | Continuous assignments and their delays, details of NBA, procedural continuous assignments (assign, force and so on) (12 to 14; procedural delays and intra-assignment delays are in 8) | Approved |
-| Part 4 | Violations of unique and priority, and deferred immediate assertions (15; approved). The regions of concurrent assertions, clocking blocks, program (written in P3; not written yet) | First half approved |
+| Part 4 | Violations of unique and priority, and deferred immediate assertions (15; approved). The regions of concurrent assertions, clocking blocks, program (written in P4; not written yet) | First half approved |
 | Part 5 | Conditions and limits of ending, VPI time callbacks (16 to 17) | Approved |
 
 ## 1. Time and time slots
@@ -33,7 +35,7 @@ It is long, so it is written in these parts.
 - A delay value is rounded to the time precision of the design element (module, program, interface and so on) where the delay is written before it is used. If the precision equals the time unit it is rounded to an integer; if one digit finer, to one decimal place (checked: 3.14.1; for example, with unit 1ns and precision 100ps, 2.75ns becomes 2.8ns). The time unit and precision are decided by `` `timescale `` or `timeunit` and `timeprecision`; without them the defaults are used (checked: 3.14.2; which specification takes effect is taken from slang's result).
 - The rounded value is converted to steps of the smallest precision of the whole design. This conversion goes toward a finer precision, so it divides exactly and no rounding happens.
 - A real delay, constant or known only at run time, is converted from its value as a double (a real literal is a double: 5.7.2): the value is multiplied by 10^(unit − precision) in double arithmetic, and the product is rounded half away from zero, as in conversion from real to integer (VALUE_SEMANTICS.md 1.5) (rule of this document, added 2026-10-20, approved; the direction of a value exactly halfway is not settled by the wording of the standard). The product can differ from the exact value of the double: 2.675 at 1ns/10ps gives 268 steps, although the double is just below 2.675. The rule follows the double arithmetic, which a delay known only at run time has to use. Icarus Verilog 13.0, 14.0 (devel) and Verilator 5.052 give the same results for constants and variables (checked 2026-10-20 with 0.5, 1.5 and 2.5 at 1ns/1ns, and 0.145, 0.285, 1.005, 1.15, 1.255 and 2.675 at 1ns/10ps).
-- `#1step` is one step of the smallest precision of the whole design. The meaning of sampling is written in part 4 (P3).
+- `#1step` is one step of the smallest precision of the whole design. The meaning of sampling is written in part 4 (P4).
 - **Default timescale (approved 2026-10-16):** the time unit and precision of a design element on which neither `` `timescale `` nor `timeunit` and `timeprecision` take effect are 1ns / 1ns unless `--timescale` gives them (rule of this document). The standard leaves the default to the implementation (checked: 3.14.2.3). Running them showed Icarus 13.0 uses 1s / 1s and Verilator 5.052 1ps / 1ps, so matching either differs from the other. The test suite's rule is that tests whose output changes with the unit of time write a timescale (TEST_SUITE.md), so this default does not affect the tests' expected values.
 - **Mixing:** mixing design elements with a timescale and design elements without one is an error (checked: 3.14.2.3). slang makes this an error, and kirimasim ends with code 2 (checked 2026-10-16). With `--timescale`, design elements with no specification get that value, so it is not an error (slang's behaviour; checked the same day).
 - **Precision of the whole design (approved 2026-10-16):** the smallest precision of all design elements is the precision of the whole design (one step of time) (checked: 3.14.3). When no design element specifies one, it is the precision of the default (`--timescale` or 1ns / 1ns). `front` computes it and puts it in SIR.
@@ -150,7 +152,7 @@ Notes:
 - Each region takes events out in the order they were added (sequence-number order). For the same input, the order is the same however many times it runs (rule of this document; NFR-2).
 - A change of a value wakes the processes waiting on it in the order they started to wait (rule of this document; approved 2026-10-19). Their resumptions go into the region in that order.
 - A process runs without being stopped until it enters a time wait (`#`, `@`, `wait` and so on) or ends (rule of this document).
-- Race exploration mode (`--race-check`, P2) perturbs, according to a seed, some of the orders chosen here. What it perturbs and what it keeps are listed in 11 (approved 2026-10-19).
+- Race exploration mode (`--race-check`, P3) perturbs, according to a seed, some of the orders chosen here. What it perturbs and what it keeps are listed in 11 (approved 2026-10-19).
 
 ## 5. Assignments and events
 
@@ -160,7 +162,7 @@ Notes:
 | Procedural continuous assignments (`assign`, `force`) | Treated as a process sensitive to the elements of the right side. Stopped by `deassign` and `release` | Checked: 4.9.2 |
 | Blocking assignments with an intra-assignment delay (`a = #d b`) | The right side is computed with the present values, then the process is stopped and a future event scheduled. With a delay of 0, it is scheduled in Inactive from the active set and in Re-Inactive from the reactive set. **The target is decided by the values at the time it resumes** | Checked: 4.9.3 |
 | Nonblocking assignments (`a <= b`, `a <= #d b`) | The update value is computed and, with a delay of 0, scheduled in the NBA region of the present time slot (Re-NBA from the reactive set), otherwise as a future event. **Both the value of the right side and the target are decided by the values when the statement runs** (the i of `a[i] <= #d v` too is the value when it runs) | Checked: 4.9.4, 4.4.2.4, 4.4.2.8 |
-| Bidirectional switches | The value is decided after considering all connected switches. May be processed at any time | Checked: 4.9.5 (P4) |
+| Bidirectional switches | The value is decided after considering all connected switches. May be processed at any time | Checked: 4.9.5 (P5) |
 | Port connections | input and output are taken as implicit continuous assignments, and inout as a bidirectional connection that does not weaken strength | Checked: 4.9.6 |
 | Subroutine arguments | By value. Copied at the call and copied back on return. Copying back is the same as a blocking assignment | Checked: 4.9.7 |
 
@@ -178,7 +180,7 @@ Approved 2026-10-19 (it replaces the order approved on 2026-10-14). The standard
 3. Every `always` procedure whose first statement is an event control, `always_ff` and `always @*` included, starts to wait on that event control. None of its statements runs at time 0 before it wakes.
 4. Continuous assignments, net declaration assignments, the implicit continuous assignments of ports, gates and UDP instances (the process kind `cont` of SIR_SPEC.md 7.1) are put in Active, to be evaluated once (checked: 4.9.1).
 5. The other `always` procedures (those whose first statement is not an event control) are put in Active.
-6. `initial` procedures are put in Active. An `initial` of a program goes into Reactive from time 0 (checked: 24.3.1; handled in P3).
+6. `initial` procedures are put in Active. An `initial` of a program goes into Reactive from time 0 (checked: 24.3.1; handled in P4).
 7. `always_comb` and `always_latch` are put in Active, to run once (checked: 9.2.2.2, 9.2.2.3). `always @*` does not run at time 0 (6.2).
 
 - Within each step, processes go in the order of SIR's process numbers (depth-first over the instance tree, and within each instance the order of appearance in the source; SIR_SPEC.md 1). How processes are numbered does not change.
@@ -231,8 +233,8 @@ Variables on the left side of `always_comb`, `always_latch` and `always_ff` must
 A function may schedule an event that can become active only after it returns only when the thread that calls it was made by an `initial` or `always` procedure, or by a `fork` within one. Otherwise the standard asks for an error, at compile time or at run time (checked: 13.4.4). kirimasim gives the error at compile time, with exit code 2, as front sees both the caller and the body of the function. slang has no such check (checked on 2026-10-19; its `nonblocking-final` warning covers only a nonblocking assignment written directly in `final`).
 
 - **Callers that are not allowed:** the initial value of a static variable (of a module, a package or the compilation unit, or a static variable of a subroutine or a block), a continuous assignment (`assign`, a net declaration assignment, a port connection), a `final` procedure, and the right side of a procedural `assign` or `force` (added 2026-10-20, approved). That right side is evaluated again whenever what it reads changes, by the statement's own `override` process (SIR_SPEC.md 7.1), not by the thread that ran the statement (interpretation: 10.6.1, 10.6.2 and 13.4.4 do not name this caller). `always_comb`, `always_latch` and `always_ff` are `always` procedures (checked: 9.2.2) and are allowed.
-- **Statements that count:** a nonblocking assignment, a nonblocking trigger `->>`, `fork ... join_none`, and a clocking drive (P3). A blocking trigger `->` does not count: it only wakes the processes waiting on the event, as any write to a variable wakes those waiting on it. `$strobe`, `$monitor` and the action of a deferred assertion do not count either.
-- **Calls are followed:** a function that calls a function containing such a statement counts too. A call front cannot resolve, through a class handle or a virtual method, is checked at run time in P3, as a run-time error of the design (16.2).
+- **Statements that count:** a nonblocking assignment, a nonblocking trigger `->>`, `fork ... join_none`, and a clocking drive (P4). A blocking trigger `->` does not count: it only wakes the processes waiting on the event, as any write to a variable wakes those waiting on it. `$strobe`, `$monitor` and the action of a deferred assertion do not count either.
+- **Calls are followed:** a function that calls a function containing such a statement counts too. A call front cannot resolve, through a class handle or a virtual method, is checked at run time in P4, as a run-time error of the design (16.2).
 - **Callers in the Postponed region (added 2026-10-20, approved):** the arguments of `$strobe` and `$monitor` and the action of a `final` deferred assertion run in the Postponed region, where each of these statements is already a run-time error (2.2), so front does not check them again. A task called from `final` is an error of slang (`TaskFromFinal`). The action of a `#0` deferred assertion runs in the Reactive region (16.4) and is not checked: whether 13.4.4 counts it as part of the thread that ran the assertion is not confirmed.
 - **The message:** the error is at the call, and a note gives the position of the statement in the function.
 
@@ -293,7 +295,7 @@ Unlike `always_comb` (6.3), a variable written within the block is in the sensit
 - `ev.triggered` is true if the event was triggered in the present time slot, and stays true until time advances. It is false for a null event (checked: 15.5.3). `wait (ev.triggered)` wakes **within the same time slot** whether the `wait` or the trigger ran first. A trigger of an earlier time slot does not wake it.
 - When `triggered` goes back from 1 to 0 at the end of the time, that change does not cause waits to be evaluated again (checked: 15.5.3).
 - Changing the index into an array of events does not trigger anything (checked: 15.5.1).
-- `wait_order`, merging of events and comparison are written in P3 (15.5.4 to 15.5.5 of the standard).
+- `wait_order`, merging of events and comparison are written in P4 (15.5.4 to 15.5.5 of the standard).
 
 ### 9.5 Representation in kirimasim (rule of this document)
 
@@ -303,7 +305,7 @@ The design specification's "two levels of waits" are carried over.
 | --- | --- | --- |
 | Changes and edges of fixed signals (`iff` included) | Slot subscriptions (process number, bit range, kind of edge, `iff` expression) | The value of the subscribed bit range of the slot changes. Edges are decided on the least significant bit of the value of the event expression (bit 3 of v for `@(posedge v[3])`) |
 | Compound expressions (`@(a == b)`, `@(posedge (clk & en))`) and `wait` | Monitor records (slots depended on, expression, previous value, edge, `iff`) | When a slot depended on changes, the expression is evaluated again, and it wakes when the expression's value changed (for `wait`, when it became true) |
-| Fields of objects, sizes of queues, elements of dynamic arrays (P3) | Monitor records, with "being watched" bits on objects and containers | When content or size changes. When a handle is replaced or an index changes, the dependencies are re-attached and evaluated again |
+| Fields of objects, sizes of queues, elements of dynamic arrays (P4) | Monitor records, with "being watched" bits on objects and containers | When content or size changes. When a handle is replaced or an index changes, the dependencies are re-attached and evaluated again |
 | Named events | Wait queues of event objects | On `->`, only the processes in the wait queue at that moment are woken |
 | Expressions containing `ev.triggered` (`wait (ev.triggered)` and so on) | Monitor records whose dependencies include the event object | Triggers by `->` and `->>` also notify the monitor records depending on the event, and the expressions are evaluated again. The `triggered` state goes back to 0 when time advances, but that does not cause evaluation (checked: 15.5.3) |
 | Time | Future events | When the time is reached |
@@ -347,7 +349,7 @@ flowchart TD
 
 - The region a woken process is put in is decided by **which set the woken process's thread belongs to**, not by the region running the event that woke it (checked: 24.3.1).
   - Design threads (`initial`, `always` and continuous assignments of modules and interfaces, and those forked from them) go into Active.
-  - Threads started from an `initial` of a program (and those forked from them) go into Reactive (P3).
+  - Threads started from an `initial` of a program (and those forked from them) go into Reactive (P4).
   - Subroutines take over the set of the calling thread. Even a task declared in a module or package runs in the reactive set when called from a program thread (checked: 24.3.1).
   - Example: when a write by program code running in Reactive wakes an `always` of a module, that `always` does not run in Reactive but in Active of the next iteration (checked: 24.3.1).
 - A thread's set is decided when the thread is made and kept in its frame. Where `#0` resumes (Inactive or Re-Inactive) and where NBAs go (NBA or Re-NBA) are decided by this set too.
@@ -407,19 +409,19 @@ When a process ends by kill, disable or disable fork, all of the following are r
 
 - Slot subscriptions and monitor records.
 - Registrations in wait queues of named events.
-- Registrations in wait queues of semaphores and mailboxes (P3). Otherwise it would receive keys or values later.
+- Registrations in wait queues of semaphores and mailboxes (P4). Otherwise it would receive keys or values later.
 - Events of time waits not yet reached.
 
 NBAs the process scheduled are run as they are, by the rule of 10.4.
 
 ### 10.8 Reclaiming records of ended processes (rule of this document; approved 2026-10-17)
 
-- **Records of a process:** the kernel's record (state, wait number, pending report queues) and tier 1's frame (frame variables, activities of task calls and named blocks, the list of children, events used for waits of join). Tier 2 (P2) follows the same rules.
+- **Records of a process:** the kernel's record (state, wait number, pending report queues) and tier 1's frame (frame variables, activities of task calls and named blocks, the list of children, events used for waits of join). Tier 2 (P3) follows the same rules.
 - **Conditions for freeing:** a process's records are freed when all of the following hold.
   1. The process has ended (normally, or by kill, disable or disable fork).
   2. The records of every child it made have been freed. So that disable fork (10.5) and `kill()` (10.6) reach the descendants of ended children too, intermediate records stay linked while descendants remain.
   3. Its pending report queue (15.4) is empty, and the calls of settled reports have also finished running. A settled call runs, after leaving the queue, in Reactive (Postponed for final reports), and uses the frame then.
-  4. (P3) No process handle points to it. While a handle remains, only the state and the link to descendants are kept, and frame variables may be freed.
+  4. (P4) No process handle points to it. While a handle remains, only the state and the link to descendants are kept, and frame variables may be freed.
 - **When freed:** as soon as the conditions hold. They are checked when the process ends, when a child's records are freed, and when the pending queue becomes empty. If the parent's conditions hold too, the parent is freed next.
 - **Telling children apart:** a freed child is removed from its parent's list of children. Children carry numbers in the order the parent made them. To tell, at a disable, which children were made within an activity of a task call or named block, these numbers are used (10.4), not positions in the list.
 - **Reusing positions:**
@@ -437,8 +439,8 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
   - the order of taking events out within the same region;
   - the order in which a change wakes the processes waiting on it;
   - the order of steps 4 to 7 of 6.1 at time 0.
-- These are not perturbed: the orders the standard guarantees (4.1: the statements of one process, and its NBAs in the order they ran); the way the regions proceed (3); processes made by fork starting after the parent stops (10.2); the order inside a static island, which is one process seen from outside (P2).
-- The NBAs of different processes keep the order they were issued in (13). Only with `--race-nba` (P2; CLI.md 2.3) is that order perturbed too (approved 2026-10-19).
+- These are not perturbed: the orders the standard guarantees (4.1: the statements of one process, and its NBAs in the order they ran); the way the regions proceed (3); processes made by fork starting after the parent stops (10.2); the order inside a static island, which is one process seen from outside (P3).
+- The NBAs of different processes keep the order they were issued in (13). Only with `--race-nba` (P3; CLI.md 2.3) is that order perturbed too (approved 2026-10-19).
 - The output and sequence of observed events of each run are compared, and the first time a difference appeared, with the processes and source positions involved, is reported. No difference after any number of runs is not a proof that there is no race (a rule of the design specification).
 - The random seed (`--seed`) and the seed of race exploration are separate (a rule of the design specification).
 
@@ -546,7 +548,7 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 - Where they go after being settled depends on the kind. Violations of unique and priority are reported when settled. Deferred assertions of `#0` schedule the subroutine (or `$error`) in Reactive. Deferred assertions of `final` run in the same Postponed (checked: 12.4.2.1, 16.4.1).
 - **Static initialization (approved 2026-10-18):** a static-init process (step 1 of 6.1) has a pending queue like any process. It runs to its end without waiting and so reaches no flush point: a unique or priority violation that its initializers' functions find is settled in the Observed region of time 0 and reported with the hierarchical name of the statement's scope and time 0 (rule of this document; the standard does not say where a violation found while static variables are initialized is reported). Whether such a function may schedule what runs after it returns falls under 13.4.4, applied as 6.5 says (approved 2026-10-19): a nonblocking assignment, a `->>` or a `fork ... join_none` reached from an initial value is an error at compile time, while a deferred assertion's action and `$strobe` do not count.
 - Even after settling, if writes from Reactive make the active side run once more, the same statement can run again and produce new reports. `#0` deferred assertions do not prevent glitches of this kind (checked: 16.4.1).
-- Reports of unique and priority violations can be stopped by the assertion-control system tasks (checked: 12.4.2.1; details of 20.11 in P3).
+- Reports of unique and priority violations can be stopped by the assertion-control system tasks (checked: 12.4.2.1; details of 20.11 in P4).
 
 ### 15.4 Representation in kirimasim (rule of this document)
 
@@ -564,7 +566,7 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 - `$fatal` gives a fatal run-time error and implicitly calls `$finish`. Its first argument means the same as `$finish`'s (checked: 20.10).
 - The messages of `$fatal`, `$error`, `$warning` and `$info` include the file name and line number of the call, the hierarchical name of the calling scope, and the simulation time (checked: 20.10).
 - When there are no events at all, the simulation ends automatically (checked: 9.6.1).
-- When there are one or more program blocks and all their `initial`s have ended, each program ends its descendant threads and the simulation ends by an implicit `$finish` (checked: 24.3; details of 24.7 in P3).
+- When there are one or more program blocks and all their `initial`s have ended, each program ends its descendant threads and the simulation ends by an implicit `$finish` (checked: 24.3; details of 24.7 in P4).
 - `cbEndOfSimulation` is called when events run out and on `$finish` (checked: 38.36.3).
 - `final` runs when ending by an explicit or implicit `$finish`. After every `final` has run, remaining events are not run (checked: 9.2.3).
 
@@ -623,7 +625,7 @@ The meaning of the time-related callbacks (checked: 38.36.2), and the regions in
 - **`cbReadWriteSynch` is called in Post-NBA** (rule of this document). It can read and write values having seen the NBA updates, and writes cause another iteration of the active side. This is checked with cocotb's tests (a passing condition of the design specification), and reviewed if there is a problem.
 - When several callbacks are in the same region, they are called in the order registered (rule of this document; NFR-2).
 - VPI and DPI calls are made synchronously from the execution kernel's thread (a rule of the design specification).
-- Value-change callbacks such as `cbValueChange` (38.36.1), and the details of the 17 functions cocotb uses, are written in VPI_SPEC.md (P3).
+- Value-change callbacks such as `cbValueChange` (38.36.1), and the details of the 17 functions cocotb uses, are written in VPI_SPEC.md (P4).
 
 ## 18. Points where checking the standard showed the design specification was different
 
@@ -641,7 +643,7 @@ The following points were applied to the design specification (v0.6) with a huma
 
 ## 19. Not confirmed, to be written later
 
-- The second half of part 4 (the regions of concurrent assertions, clocking blocks, program; written in P3).
+- The second half of part 4 (the regions of concurrent assertions, clocking blocks, program; written in P4).
 - Check when `cbReadWriteSynch` of 17.2 is called, with cocotb's tests.
 - unique and priority with `case ... inside`.
 - Compare this document's rules of 10.4 and 10.7 (NBAs and arguments on disable) with Icarus 13.0's results.

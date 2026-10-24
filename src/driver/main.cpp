@@ -103,7 +103,7 @@ struct Options {
     std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxWallTime = 0;
-    std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P2)
+    std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P3)
     std::uint64_t maxCallDepth = kirimasim::vm::kDefaultCallDepth;  // CLI.md 2.7
     std::uint64_t seed = 0;                                         // --seed (SYSTEM_TASKS.md 13.2)
     std::string waveFile;                                           // --wave

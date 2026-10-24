@@ -812,7 +812,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     checkStack(sl);
     if (!substitutions_.empty())
         if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
-    // Assigning, comparing and printing events come with their handles (P3).
+    // Assigning, comparing and printing events come with their handles (P4).
     if (e.type->isEvent()) unsupported(sl, "event used as a value");
     // slang's constant, unless something in the expression is not pure.
     // The walks over the whole expression come last, only for a constant:
@@ -846,7 +846,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 typeOf(*e.type, sl), sl);
         case ast::ExpressionKind::NullLiteral: {
             // null: the handle 0 (VALUE_SEMANTICS.md 7.8; class handles
-            // are P3).
+            // are P4).
             if (!e.type->isNull() && !e.type->isCHandle()) unsupported(sl, "null of this type");
             sir::Constant c;
             c.type = Type{sir::TypeKind::Chandle, 0};

@@ -2,9 +2,11 @@
 
 [日本語](RUNTIME_ABI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). The same day, 9.3.9 was brought up to date after the table of exit codes moved to the driver, and the colour flags that slang's `Driver` writes, with `front_parallel`, were added to 9.7 and 9.8 (approved). On 2026-10-21, where STDIN reads was added to item 10 of 9.3 (approved). The same day, slang's threads and the stack left were added to 5 (approved). On 2026-10-22, 9.7 was brought up to date: slang's colour flags are atomic, so front runs on several threads (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P2.
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P2 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
+Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). The same day, 9.3.9 was brought up to date after the table of exit codes moved to the driver, and the colour flags that slang's `Driver` writes, with `front_parallel`, were added to 9.7 and 9.8 (approved). On 2026-10-21, where STDIN reads was added to item 10 of 9.3 (approved). The same day, slang's threads and the stack left were added to 5 (approved). On 2026-10-22, 9.7 was brought up to date: slang's colour flags are atomic, so front runs on several threads (approved). Items marked "draft" are fixed after they are checked while implementing in P1 and P3.
+
+This document sets the boundary between the execution kernel (`kernel`) and tier 1 (the VM), tier 2 (generated C++) and a future tier 3 (a JIT), and how its version is managed. Items marked "draft" are checked while implementing in P1 (tier 1) and P3 (tier 2), and this document is corrected if needed (a correction needs a human's approval).
 
 ## 1. Purpose and principles
 
@@ -52,7 +54,7 @@ const kirima_module_table* kirima_get_module_table(uint32_t kernel_abi_major,
 - The returned `kirima_module_table` holds the ABI version, the table of resume functions of processes and subroutines, the sizes and layouts of frames, and an identifier of the slot layout the generated code assumes (a hash of the content of the SIR).
 - If the ABI version does not match, it returns NULL.
 - All other symbols are hidden (`-fvisibility=hidden`), so that several libraries loaded into one process do not collide.
-- DPI-C exports (P3) need symbols of functions called from C to be visible, which does not fit "one symbol". In P3 this is reviewed so that only the symbols of exports are made visible in addition.
+- DPI-C exports (P4) need symbols of functions called from C to be visible, which does not fit "one symbol". In P4 this is reviewed so that only the symbols of exports are made visible in addition.
 
 ### 4.2 The kernel's function table
 
@@ -64,7 +66,7 @@ The kernel gives generated code and the interpreter a table of function pointers
 | Writing values | Writing a slot and announcing its change (including the check of slots marked by force) |
 | Time and ending | The current time, requests of `$finish`, `$stop` and `$fatal`, the check points for stopping |
 | System tasks | Display and files, `$readmem` and so on (heavy ones live in the kernel; generated code only calls them) |
-| Objects | Allocation, GC safepoints (P3) |
+| Objects | Allocation, GC safepoints (P4) |
 | Reports | Adding to the pending queues of unique, priority and deferred assertions (SCHEDULER_SPEC.md 15) |
 
 - **Mixed waits (added 2026-10-18, approved):** the wait of one event control asks, in one call, for slot-subscription items and monitor-record items mixed (`wait_any`). A monitor-record item can have an `iff` function, as a subscription item can. The layout of existing structures does not change, and the function is added at the end of the table, so the ABI minor is raised (2).
@@ -98,7 +100,7 @@ flowchart LR
     ta -.->|"caller"| pf
 ```
 
-- A call of a function with no wait is an ordinary C call (not pushed on the chain). The layout is decided from the SIR and is the same whatever the tier. So a process that ran on tier 1 up to some wait can run on tier 2 from then on (whether to use this is decided in P2).
+- A call of a function with no wait is an ordinary C call (not pushed on the chain). The layout is decided from the SIR and is the same whatever the tier. So a process that ran on tier 1 up to some wait can run on tier 2 from then on (whether to use this is decided in P3).
 - A resume function runs until it enters the next wait or ends, and returns. Its return value (`kirima_status`) tells apart: it entered a wait; it ended normally; **it ended by kill or disable** (when it `kill()`ed itself, or `disable`d a block containing itself); an error; a request to stop was received.
 - C++20 coroutines are not used (the design specification's rules for tier 2).
 
@@ -116,7 +118,7 @@ flowchart LR
 - **slang's threads (added 2026-10-21, approved):** front has slang do all its work on the calling thread (slang's `--threads=1`). Otherwise slang does part of the compilation on a thread pool whose threads have the system's default stack, 512 KiB on macOS, and statements or expressions nested about 1000 deep, which slang accepts, run out of stack there (#35). Measured on 2026-10-21 on a generated design of 2000 modules (1.3 MB), compiling and running took the same time either way (0.73 to 0.79 s, dev). On Linux, glibc gives a new thread the stack of `ulimit -s` (8 MiB on the machine checked), and those designs pass there with the pool too.
 - **The stack left (added 2026-10-21, approved):** the count of nested calls (10000, SCHEDULER_SPEC.md 16.2) is the limit of the design; besides it, kirimasim stops before the stack of the thread it runs on runs out, on whatever thread that is and in every build (#38). When a Context starts running a design, and when front starts, the range of the current thread's stack is read once (on macOS with `pthread_get_stackaddr_np` and `pthread_get_stacksize_np`, on Linux with `pthread_getattr_np`) and kept in the Context or in front's state, not in a global. Each call of the design (the VM's synchronous calls, the calls the kernel makes for waits, and deferred calls) and each step of front's recursion over the syntax first checks that more than 1 MiB is left. If not, the VM ends the run with resource_limit (code 6), with the line of SCHEDULER_SPEC.md 16.2 saying `the stack of this thread is nearly used up`, and front stops with the diagnostic `<file>:<line>:<column>: error: nested too deeply for the stack of this thread` (code 2). Where the stack cannot be read, only the count applies.
 - Generated code is built (the C++ compiled) in a process separate from the simulation.
-- Future multithreaded execution (P4) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
+- Future multithreaded execution (P5) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
 - **Functions the kernel calls for waits (added 2026-10-18, approved):** the eval and guard functions of waits (the expressions of monitor records, and `iff`) may write the variables of the subroutines they call and trigger events, as the SystemVerilog they come from may; front rejects other writes (SCHEDULER_SPEC.md 9.5). The kernel calls them while it walks its lists of waiters and monitor records, so it keeps such a change or trigger and announces it, in the order made, when the outermost walk ends, in the same time slot. These functions do not wait, and do not call the table's functions that run processes.
 
 ## 6. Typed heap, GC and safepoints (P1 amendment approved 2026-10-23)
@@ -229,21 +231,21 @@ Class, mailbox and weak-reference semantics extend the root descriptors when
 those mechanisms are implemented. Weak references are not marking edges;
 unreachable referents become null. Their remaining details are separate work.
 
-## 7. Libraries embedded in other simulators (P4)
+## 7. Libraries embedded in other simulators (P5)
 
-A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P2).
+A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P3).
 
 ## 8. Not confirmed, to be written later
 
-- Fixing the fields of the function table and the layout of the C structures (checked in the implementations of tier 1 in P1 and tier 2 in P2).
+- Fixing the fields of the function table and the layout of the C structures (checked in the implementations of tier 1 in P1 and tier 2 in P3).
 - The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
 - How temporaries are allocated when the frame layout is shared between tiers.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).
 - Class/mailbox/weak-reference GC extensions, fibers and DPI-C tasks;
   the dynamic-container heap and collection contract is specified in section 6.
-- (Approved 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P3; 6).
-- (Approved 2026-10-19.) `$finish` called inside a DPI-C export is marked and returned to C, and the run starts to end at the end of the SystemVerilog statement; `svLogicVecVal` arguments and the storage of open arrays are valid only during the call (P3).
-- (Approved 2026-10-19.) Only static islands with no side effects run in parallel; processes with `$display`, DPI-C, random numbers or `$finish` run on the main thread in the default order, so that results do not change with the number of threads (P4).
+- (Approved 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P4; 6).
+- (Approved 2026-10-19.) `$finish` called inside a DPI-C export is marked and returned to C, and the run starts to end at the end of the SystemVerilog statement; `svLogicVecVal` arguments and the storage of open arrays are valid only during the call (P4).
+- (Approved 2026-10-19.) Only static islands with no side effects run in parallel; processes with `$display`, DPI-C, random numbers or `$finish` run on the main thread in the default order, so that results do not change with the number of threads (P5).
 
 ## 9. State and Contexts (approved 2026-10-20)
 
@@ -251,7 +253,7 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 - Separate Contexts can run in one process, one after another, or at the same time on separate threads.
 - The same input gives the same output, whatever the order of the runs, whatever ran before in the same process, and whatever other Contexts run at the same time.
-- Running one simulation on several threads is decided in P4 (5, 8) and is outside this section; nothing here constrains it.
+- Running one simulation on several threads is decided in P5 (5, 8) and is outside this section; nothing here constrains it.
 
 ### 9.2 Terms
 
@@ -282,7 +284,7 @@ Only the following are allowed. The two mutable ones are each listed in `tools/g
 1. `constexpr` tables (and `constinit` const ones).
 2. String literals.
 3. The one `volatile std::sig_atomic_t` flag of SIGINT, which only the driver holds (CLAUDE.md).
-4. The "current Context" at the entries of VPI and DPI-C: one `thread_local` pointer (9.6; P3).
+4. The "current Context" at the entries of VPI and DPI-C: one `thread_local` pointer (9.6; P4).
 
 A table that interns strings belongs to the Context (now `kernel::Strings`).
 
@@ -292,13 +294,13 @@ A table that interns strings belongs to the Context (now `kernel::Strings`).
 - The limits (`--max-*`) are given with each run (now `vm::RunOptions` and the scheduler), not held globally.
 - No initial seed is made from the time of day or the process ID.
 
-### 9.6 VPI and DPI-C (the policy for P3)
+### 9.6 VPI and DPI-C (the policy for P4)
 
 - Handles, callbacks, the registrations of `systf` and `svScope` belong to the Context.
 - The "current Context" (9.4) is set just before the kernel enters C code, and just before it resumes a suspended import task; it is put back when the C code returns, and when the task is suspended. It must be right even if a task is resumed on another thread (a fiber resumed there, for example).
 - There is no global default Context.
 - `vlog_startup_routines` are called once for each Context.
-- In P3, Contexts that use VPI or DPI-C are guaranteed to run one after another in a process, not at the same time.
+- In P4, Contexts that use VPI or DPI-C are guaranteed to run one after another in a process, not at the same time.
 - Global state in the user's C code is outside what kirimasim guarantees.
 
 ### 9.7 slang
@@ -309,4 +311,4 @@ A table that interns strings belongs to the Context (now `kernel::Strings`).
 
 ### 9.8 Tests
 
-The tests that keep these rules are required tests (TEST_SUITE.md, "List of required tests"): running designs one after another in one process, at the same time on separate threads under ThreadSanitizer, and made and destroyed many times under AddressSanitizer, and the unit tests in a shuffled order in one process. `front_parallel` runs front on several threads at once under ThreadSanitizer (9.7); it is in the list but not a P1 condition (decided 2026-10-20). In P3 a test is added that resumes a suspended import task on another thread and checks the "current Context".
+The tests that keep these rules are required tests (TEST_SUITE.md, "List of required tests"): running designs one after another in one process, at the same time on separate threads under ThreadSanitizer, and made and destroyed many times under AddressSanitizer, and the unit tests in a shuffled order in one process. `front_parallel` runs front on several threads at once under ThreadSanitizer (9.7); it is in the list but not a P1 condition (decided 2026-10-20). In P4 a test is added that resumes a suspended import task on another thread and checks the "current Context".

@@ -2,6 +2,8 @@
 
 [日本語](ARCHITECTURE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
+
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/).
 
@@ -18,7 +20,7 @@ flowchart TD
     analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
     subgraph tiers["Execution tiers"]
         t1["tier 1: VM<br/>interprets SIR (P1)"]
-        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(later)"]
     end
     kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
@@ -39,7 +41,7 @@ upstream.
 
 As of 2026-10-24, tier 1 and the shared kernel implement the subset listed
 in [P1_SUPPORT](P1_SUPPORT.md). The full P1 coverage target is unfinished.
-Tier 2 is planned for P2; tier 3 comes later. The table and shared execution
+Tier 2 is planned for P3; tier 3 comes later. The table and shared execution
 contract below describe the full design, including those future tiers.
 
 | Tier | What it is | Role |
@@ -219,8 +221,8 @@ Dependencies run only in the directions listed here.
 | `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
 | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Empty |
 | `kernel` | The execution kernel | libfstapi (later); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD output, typed container heap API, event counters, context |
-| `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P3 |
-| `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P3 |
+| `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P4 |
+| `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P4 |
 | `valsem` | Reference implementations of value semantics | nothing | Value instructions, edges, net resolution with strengths, UDP tables, integral-container cell model |
 | `driver` | The `kirimasim` command line | everything | Compile and run, `parse`, `--version`, the input options, `--dump-sir`, `--stats=json`, the run limits, stopping on SIGINT |
 
@@ -238,8 +240,8 @@ flowchart TD
     valsem["valsem"]
     sir["sir"]
     slang["slang<br/>(external, pinned)"]
-    solver["solver_adapter (P3)"]
-    fiber["fiber_backend (P3)"]
+    solver["solver_adapter (P4)"]
+    fiber["fiber_backend (P4)"]
     driver --> front
     driver --> vm
     driver --> codegen
@@ -262,7 +264,7 @@ Rules that follow from this layout:
 - `kernel` is linked together with users' designs, so it never depends on
   slang or LLVM. Its public headers are C++20 because generated code reads
   them.
-- `solver_adapter` and `fiber_backend` are not built yet (they come in P3);
+- `solver_adapter` and `fiber_backend` are not built yet (they come in P4);
   they appear here so that the dependency rules are complete.
 
 ## Checking correctness and performance

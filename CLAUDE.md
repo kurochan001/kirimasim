@@ -2,6 +2,8 @@
 
 [日本語](CLAUDE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](docs/notes/phase-renumbering.md)).
+
 ## Purpose of the project
 
 kirimasim is an open-source SystemVerilog simulator. It takes 4 states (0, 1, X, Z) as the default and, while keeping scheduling exactly as IEEE 1800-2023 says (every region of the time slot and the reference algorithm), aims at practical speed. The front end uses slang unmodified at a pinned version; through the intermediate representation SIR, an interpreter (tier 1) and C++ generation (tier 2) run sharing one execution kernel. It is now in stage P1 (the first execution tier): `front` lowers a broad subset of SystemVerilog to SIR, the kernel holds a scheduler with every region, and tier 1 runs designs by interpreting SIR directly. The README gives the status.
@@ -18,8 +20,8 @@ Dependencies go only in the directions of the table below. Do not add to `target
 | `vm` | Tier 1 (making and running bytecode) | `sir`, `kernel` | Interprets SIR directly (bytecode comes later) |
 | `codegen` | Tier 2 (generating and building C++) | `sir`, `analysis` | Empty |
 | `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (later). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | Scheduler with every region, slot storage, 4-state word operations, net resolution, UDP tables, formatting and scanning, strings, VCD, typed container heap API, event counters, Context |
-| `solver_adapter` | The replaceable port for constraint solvers | `sir`, the external solver adopted | Made in P3 |
-| `fiber_backend` | Fibers that stop and resume time-consuming DPI-C tasks | Only the library adopted | Made in P3 |
+| `solver_adapter` | The replaceable port for constraint solvers | `sir`, the external solver adopted | Made in P4 |
+| `fiber_backend` | Fibers that stop and resume time-consuming DPI-C tasks | Only the library adopted | Made in P4 |
 | `valsem` | Reference implementation of value semantics (slow but plainly correct) | Nothing | Value instructions, edges, net resolution with strengths, UDP tables, integral-container cell model |
 | `driver` | The executable `kirimasim` | Everything | Compile and run, `parse`, `--version`, and the options of CLI.md 2 implemented so far (`--dump-sir`, `--stats=json`, the run limits and others) |
 

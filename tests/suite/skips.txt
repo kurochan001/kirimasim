@@ -4,5 +4,7 @@
 # construct fails, and a listed test that runs fails until it is taken off.
 # Adding a test here loosens what it expects (the rules protecting expected
 # values).
+# Phase renumbering 2026-10-24: the protected entry below uses the old
+# P3 label; its current phase is P4. Keep the entry verbatim.
 cb/input_sample_1step  # a clocking block (P3)
 nets/net_port_drivers_part  # drivers of a net that meet through a port joining parts of nets (not implemented yet)

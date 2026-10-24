@@ -2,6 +2,8 @@
 
 [English](ARCHITECTURE.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+**改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
+
 これは短い概要です。詳細な仕様は [docs/spec/](spec/) にあります。
 
 ## 処理の流れ
@@ -17,7 +19,7 @@ flowchart TD
     analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
     subgraph tiers["Execution tiers"]
         t1["tier 1: VM<br/>interprets SIR (P1)"]
-        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(later)"]
     end
     kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
@@ -37,7 +39,7 @@ slang は改変せず、1 つのコミットに固定したライブラリとし
 
 2026-10-24時点では、第1層と共有カーネルが[P1の対応一覧](P1_SUPPORT.ja.md)の
 範囲を実装しています。P1全体の機能範囲の目標は未達です。
-第 2 層は P2 の予定で、第 3 層はその後です。以下の表と共通の実行の取り決めは、
+第 2 層は P3 の予定で、第 3 層はその後です。以下の表と共通の実行の取り決めは、
 将来の層を含めた設計全体を示します。
 
 | 層 | 何か | 役割 |
@@ -174,8 +176,8 @@ frontは集約代入の右辺の全leafを保持してから、対象の実行�
 | `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | SIR を直接解釈する。バイトコードは後で |
 | `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 空 |
 | `kernel` | 実行カーネル | libfstapi（後で）。任意の依存は `solver_adapter` と `fiber_backend` を通してだけ、C++ のインターフェースとして見る | すべての領域を持つスケジューラ、スロットの格納、4 値の語の演算、ネットの解決、UDP の表、ファイル入出力、書式と読み取り、文字列、VCDの出力、型付きコンテナのヒープAPI、事象の回数、コンテキスト |
-| `solver_adapter` | 差し替えられる制約ソルバ | `sir`、選んだ外部のソルバ | P3 の予定 |
-| `fiber_backend` | 時間を使う DPI-C のタスクのためのファイバー | 選んだファイバーのライブラリだけ | P3 の予定 |
+| `solver_adapter` | 差し替えられる制約ソルバ | `sir`、選んだ外部のソルバ | P4 の予定 |
+| `fiber_backend` | 時間を使う DPI-C のタスクのためのファイバー | 選んだファイバーのライブラリだけ | P4 の予定 |
 | `valsem` | 値の意味の参照実装 | なし | 値の命令、辺、強さのあるネットの解決、UDPの表、整数コンテナのセルのモデル |
 | `driver` | `kirimasim` のコマンドライン | すべて | コンパイルと実行、`parse`、`--version`、入力のオプション、`--dump-sir`、`--stats=json`、実行の上限、SIGINT での停止 |
 
@@ -192,8 +194,8 @@ flowchart TD
     valsem["valsem"]
     sir["sir"]
     slang["slang<br/>(external, pinned)"]
-    solver["solver_adapter (P3)"]
-    fiber["fiber_backend (P3)"]
+    solver["solver_adapter (P4)"]
+    fiber["fiber_backend (P4)"]
     driver --> front
     driver --> vm
     driver --> codegen
@@ -214,7 +216,7 @@ flowchart TD
 この配置から従う決まり：
 
 - `kernel` は利用者の設計と一緒にリンクされるので、slang にも LLVM にも依存しません。公開ヘッダは、生成コードが読むので C++20 です。
-- `solver_adapter` と `fiber_backend` はまだビルドしません（P3 で作ります）。依存の決まりをそろえるために、ここに載せています。
+- `solver_adapter` と `fiber_backend` はまだビルドしません（P4 で作ります）。依存の決まりをそろえるために、ここに載せています。
 
 ## 正しさと性能の確かめ方
 

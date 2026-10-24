@@ -2,6 +2,8 @@
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
+
 The [approved P1 scope](spec/P1_SCOPE.md) now targets Icarus Verilog
 13.0-or-broader execution support, advancing the necessary later-phase
 mechanisms. This is a target; unsupported forms below remain unimplemented.
@@ -385,7 +387,7 @@ unconfirmed.
 | Bounds diagnostics (from `dec94ff`) | `--bounds-check=off\|warn` (default `off`): warn once per source position for invalid packed selections/fixed-array indices and print final access counts; normal read/write/NBA values are preserved |
 | VCD output | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches`; 4-state waveforms, also controlled by the dump tasks above |
 
-`--max-scc-iter` is accepted but has no effect until P2's static islands.
+`--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
 automatically implemented: for example, `--cond-x`, `--init-values` and
 `--max-procs` are not current driver options. Use `--help` to inspect a build.
@@ -399,8 +401,8 @@ a blocking host operation. Final procedures finish without that deadline.
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
-| P2 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
-| Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P3/P4 labels cannot defer a required P1 mechanism |
+| P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
+| Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P4/P5 labels cannot defer a required P1 mechanism |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
 | Outside the current language targets | VHDL/mixed-language and analog/mixed-signal designs |
 

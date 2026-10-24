@@ -84,7 +84,7 @@ def render(c, lang):
             f"| kirimasim's own RTL test population ({n(p['total'])} tests, fixed list): "
             f"{p['gate']}% pass | {n(p['passed'])} pass ({pct:.1f}%), {p['failed']} fail; "
             f"{p['unsupported']} stop at constructs of later work | {yes(pop_met)} |",
-            "| The mandatory test list (except the one that needs P3) | "
+            "| The mandatory test list (except the one that needs P4) | "
             f"{'All pass' if c['mandatory']['met'] else 'Not all pass'} | "
             f"{yes(c['mandatory']['met'])} |",
             "| No disagreement between the fast value operations and the reference "
@@ -129,7 +129,7 @@ def render(c, lang):
             f"| 自前の RTL のテストの母集団（{n(p['total'])} 本、一覧を固定）の {p['gate']}% が通る | "
             f"{n(p['passed'])} 本が通る（{pct:.1f}%）。失敗は {p['failed']} 本で、"
             f"{p['unsupported']} 本は後で作る構文で止まる | {yes(pop_met)} |",
-            "| 必須のテストの一覧（P3 が要る 1 本を除く） | "
+            "| 必須のテストの一覧（P4 が要る 1 本を除く） | "
             f"{'すべて通る' if c['mandatory']['met'] else 'まだすべては通らない'} | "
             f"{yes(c['mandatory']['met'])} |",
             "| 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間の"

@@ -2,6 +2,8 @@
 
 [日本語](P1_SCOPE.ja.md) · This English text is the main version.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 Status: **approved (2026-10-23)**. Records the approved
 [scope amendment](../notes/p1-icarus-scope-proposal.md).
 
@@ -12,11 +14,11 @@ probes; exact-13.0 coverage and complete parity remain unconfirmed.
 
 Standard simulation mechanisms supported by Icarus move into P1 as needed,
 including dynamic containers, classes, program execution, VPI, switch-level
-modeling, specify paths and timing facilities. This supersedes P3/P4 or
+modeling, specify paths and timing facilities. This supersedes P4/P5 or
 out-of-scope labels for the required subset in SIR_SPEC, SCHEDULER_SPEC,
 SYSTEM_TASKS, VPI_SPEC, WAVEFORM and TEST_SUITE and the project summaries.
 Those labels retain their original meaning for work beyond this subset.
-P2 remains C++ generation. Other later-phase work, including constrained
+P3 remains C++ generation. Other later-phase work, including constrained
 randomization and UVM beyond the comparison scope, retains its existing plan.
 
 Preserve IEEE 1800 value and scheduling semantics, four-state defaults,

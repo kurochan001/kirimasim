@@ -2,6 +2,8 @@
 
 [日本語](VALUE_SEMANTICS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. Section 7 (concatenation, conversion, reals, strings, enumerated types) was written in P1 and approved on 2026-10-15. On 2026-10-16, section 5 (net resolution and drive strength) was rewritten and 3.12 (assignment operators, and increment and decrement operators) added (approved). The same day, the conditional operator on values that are not integral was written in 3.9 (approved). On 2026-10-17, 3.13 (aggregate assignment) and 3.14 (aggregate comparison) were added and the item on streaming operators in 8 rewritten (approved). The same day, the conversion from real to integer in 7.4 was changed to truncation regardless of size, with the handling of NaN and infinities (approved). On 2026-10-18, the conversion of integers with x and z to strings was added to 7.6 (approved). The same day, the section 7.4 cites for `$rtoi` was corrected from SYSTEM_TASKS.md 9 to 8 (approved). The same day, a table of the strength line was added to 5.2, and a diagram and examples of the rule to 5.4 (approved). The same day, the reference results for Verilator in 7.6 were corrected (approved). The same day, the rounding of integers that a real cannot hold exactly (1.5), the value of an assignment operator and of `++` and `--` used in an expression (3.12), and the signedness of `s[i]` (7.6) were written down (approved). The same day, how a `case` on reals or strings compares (4.2) was written down (approved). On 2026-10-19, `--init-values`, `--cond-x` and `--bounds-check` were referred to from 1.4, 3.9, 3.11, 4.1 and 4.2 (approved). The same day, the left-to-right order of evaluating operands and arguments was added to 3.1 (approved). The same day, the order of the two sides of a blocking assignment was added to 3.1 (approved). The same day, unconnected input ports under `` `unconnected_drive `` were added to 5.3 (approved).
 
 This document sets how kirimasim represents values and computes operations. The text of the standard (IEEE 1800-2023) is not copied; it is summarized in this document's own words, with the clause numbers it rests on. Items marked "checked" were checked by reading the relevant clause of the standard. Items marked "interpretation" are not settled by the wording of the standard alone, and this document decides them.
@@ -135,7 +137,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - If the condition is true, only the first expression is evaluated and returned; if false, only the second (checked: 11.4.11).
 - If the condition is unknown (x or z), both expressions are evaluated. If the two are equal by `==` (the result is 1), that value is returned. Otherwise, for integral types, both are widened to the same width and combined bit by bit: 0 if both are 0, 1 if both are 1, x otherwise. **A bit that is z on both sides becomes x too** (checked: 11.4.11, Table 11-20).
 - Types that are not integral (checked: 11.4.11). Approved 2026-10-16:
-  - The result type: real if both are real. If one is real and the other shortreal or integral, the other is converted to real. If one is shortreal and the other integral, the integral one is converted to shortreal. If one is integral and the other can be implicitly converted to an integral type, it is treated as integral. Classes and interface classes follow a to e of 11.4.11 (P3). Otherwise the two types must be equivalent (6.22.2) (slang checks).
+  - The result type: real if both are real. If one is real and the other shortreal or integral, the other is converted to real. If one is shortreal and the other integral, the integral one is converted to shortreal. If one is integral and the other can be implicitly converted to an integral type, it is treated as integral. Classes and interface classes follow a to e of 11.4.11 (P4). Otherwise the two types must be equivalent (6.22.2) (slang checks).
   - When the condition is unknown and the two values are not equal by `==` (11.4.5): arrays with the same number of elements (associative arrays excepted) are combined element by element, equal elements keeping their value and differing ones taking the value of Table 7-1. Other types take the value of Table 7-1 for the result type: 0.0 for reals, the empty string for strings, null for class handles and the like.
   - Reals and strings are implemented in P1. Arrays and handles are implemented in the stages that implement them.
   - Icarus 13.0 hits an internal error on `?:` of strings with an x condition (checked). Expected values follow the standard.
@@ -148,7 +150,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - If nothing matches and any of the comparisons is x, the result is x. The whole is the same as the OR of the results of all comparisons (checked: 11.4.13).
 - A range `[lo:hi]` is compared with `>=` and `<=`. `$` is the smallest or largest value of the left expression's type. A range with lo greater than hi is empty (checked: 11.4.13). The rules of 3.3 apply to comparisons with ranges, so if the left expression has x or z, the comparison with the range is x (interpretation).
 - There are tolerance forms `[A +/- B]` (an absolute tolerance) and `[A +%- B]` (a tolerance as a percentage of A). Whatever the signs of A and B, the two bounds are swapped if needed to make [low:high]. The type of the range is A's type. For an integral A, the tolerance is truncated, not rounded (checked: 11.4.13; whether this was in 1800-2017 is not confirmed).
-- If an element of the list is an unpacked array, its elements are followed down to single values and compared (checked: 11.4.13; dynamic arrays in P3).
+- If an element of the list is an unpacked array, its elements are followed down to single values and compared (checked: 11.4.13; dynamic arrays in P4).
 - The order of evaluating elements is not set by the standard (checked: 11.4.13). kirimasim evaluates them in the order written (rule of this document).
 - Icarus 13.0 does not support `inside` (checked by running it).
 
@@ -239,7 +241,7 @@ Rewritten and approved 2026-10-16.
 
 - Covered: drive strengths of continuous assignments and net declaration assignments (10.3.4), output strengths of built-in gates and user-defined primitives (28.3.2, chapter 29; 5.8, 5.9), `pullup` and `pulldown` (28.10), strengths of `tri0`, `tri1`, `supply0` and `supply1` (28.15), resolution of `wand`, `triand`, `wor` and `trior` (6.6.3, 28.12.4).
 - Not covered (reported as unsupported if used): MOS switches and bidirectional switches, and the reduction of strength through them (28.7 to 28.9, 28.13, 28.14; phase 4 by the design specification's rules), `trireg` (5.7), user-defined nettypes (6.6.7).
-- Display with `%v` follows SYSTEM_TASKS.md 3.10 (P4; a provisional display until then).
+- Display with `%v` follows SYSTEM_TASKS.md 3.10 (P5; a provisional display until then).
 
 ### 5.2 The strength scale and signals
 
@@ -438,7 +440,7 @@ This section was written in P1 (approved 2026-10-15).
 - **Real to integer (changed and approved 2026-10-17):** round to the nearest integer, exactly 0.5 away from zero (1.5). That integer is put in as two's complement in the width of the destination, dropping the top bits. The size of the integer has no limit, and values over 64 bits are treated the same (interpretation; the truncation of 10.7 applied to the rounded integer; for reference, on 2026-10-17 Icarus 14.0 devel and Verilator 5.053 devel were checked to give this result both for constants and at run time; slang's constant evaluation does the same). The result for NaN and infinities is not settled by the wording of the standard. kirimasim makes every bit x for a 4-state destination, and 0 for a 2-state destination (rule of this document; for reference, Icarus gave x, and Verilator, a 2-state simulator, gave 0). `$rtoi` is treated separately in SYSTEM_TASKS.md 8.
 - **Between `real` and `shortreal`:** the same as conversion between C's `double` and `float` (6.12).
 - **Casts to enumerated types:** the value is kept as it is even if it is not a member of the enumeration (checked: 6.19.4).
-- **Bit-stream casts (6.24.3):** P1 covers only casts between packed types of equal width (the bit pattern stays as it is). Those involving unpacked types are P3.
+- **Bit-stream casts (6.24.3):** P1 covers only casts between packed types of equal width (the bit pattern stays as it is). Those involving unpacked types are P4.
 
 ### 7.5 Real operations
 
@@ -476,7 +478,7 @@ left to right. See the [usage example](../P1_FEATURES.md) and
 
 Approved 2026-10-17.
 
-- Until DPI (P3) puts a value in, it holds only null (checked: 6.14 makes the initial value null and limits its use to assignment and comparison).
+- Until DPI (P4) puts a value in, it holds only null (checked: 6.14 makes the initial value null and limits its use to assignment and comparison).
 - Assignment is from another chandle or null.
 - Comparison is with `==`, `!=`, `===` and `!==` (all with the same meaning), against another chandle or null.
 - As a truth value, null is 0 and anything else 1.
@@ -489,8 +491,8 @@ Approved 2026-10-17.
   - Operands of packed types are as in 11.4.14 (left alignment and zero filling on the right were checked in a review of the test repository).
   - Operands that are fixed-size unpacked arrays and unpacked structures are covered in P1 too. Elements and members are placed in foreach order for arrays (from the left bound, the rightmost dimension changing fastest) and in declaration order for structures (checked: 11.4.14.1). As targets, they are taken out in the same order.
   - `<<` as a target (unpacking) is the inverse of packing: after `{<< k {t}} = v`, the value of `{<< k {t}}` equals the top bits of `v` of the same width. When the last block is short (the width is not a multiple of k), v is cut from its left end into k bits each, and that sequence reversed is put in t (rule of this document; the standard says only "the reverse operation": 11.4.14.3). For reference (checked 2026-10-17): Verilator 5.052 applies the same cutting as packing when unpacking a short block, and packing again does not give back the original value. Icarus 13.0 and its development version do not accept streaming.
-  - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P3.
+  - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P4.
   - Implementation status (2026-10-23): streaming assignment targets wider than 64 bits are supported, including fixed unpacked arrays and structures, blocking assignments and nonblocking assignments to static targets. The [wide unpacking matrix](../../tools/gen_wide_unpack_matrix.py) covers widths around word boundaries, short slices, X/Z, automatic/ref targets and nonblocking value capture. See the [usage example](../P1_FEATURES.md) for current limits.
 - How the values of assignment patterns (10.9) are decided is expressed in SIR by unfolding them into assignments element by element. Assignment patterns of unpacked arrays and structures are written together with how arrays and structures are laid out in SIR_SPEC.md.
-- Operations on class handles (P3).
+- Operations on class handles (P4).
 - Compare the "not confirmed" items of 7.3, 7.4 and 7.6 with Icarus 13.0's results.

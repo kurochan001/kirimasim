@@ -2,6 +2,8 @@
 
 [日本語](TEST_SUITE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
@@ -59,7 +61,7 @@ Items this suite adds (sv-tests' tools warn "Unsupported test param" and ignore 
 | `:expected_stderr:` (approved 2026-10-16; fatal and info lines added the same day) | Optional | In the form `@<name>.stderr`, the complete sequence of these lines kirimasim writes to standard error: lines containing `: warning: ` or `: error: `, and lines starting with a source position (`<file>:<line>`) and containing `: fatal: ` or `: info: ` (`$fatal` and `$info`; SYSTEM_TASKS.md 10.1). kirimasim's own `kirimasim: info:` lines (the version line, the line of the reason for ending) are not compared (the version line changes with each commit). Of a file's path, only the part from the test's file name on is compared. It depends on kirimasim's form, so it is not used to judge other simulators. `.stderr` files too fall under the rules protecting expected values |
 | `:expected_stderr_regex:` (added 2026-10-21) | Optional; with `:should_fail_because:`, required unless `:expected_error:` is written | A Python regular expression for the simulator's messages, as the test suite repository defines it; kirimasim's messages are its standard error. With `:should_fail_because:`, a line of them that contains "error" (in any case) has to match it, and the tests give the file and line of the error, such as `test_x\.sv:12:`. Otherwise the messages of the run have to match it somewhere (`re.search` with `re.MULTILINE`). Unlike `:expected_error:`, it does not depend on the wording of kirimasim's diagnostics |
 | `:args:` (added 2026-10-21) | Optional | Arguments of the run, separated by spaces, given after the test's file: plusargs such as `+count=3` (CLI.md 1) |
-| `:dpi_c:`, `:vpi_c:` (added 2026-10-21) | Optional | `@<file>`: C code next to the test, which implements its DPI imports (35) or is a VPI application (36 to 40). kirimasim cannot load C code until P3, so a test with one is skipped as unsupported |
+| `:dpi_c:`, `:vpi_c:` (added 2026-10-21) | Optional | `@<file>`: C code next to the test, which implements its DPI imports (35) or is a VPI application (36 to 40). kirimasim cannot load C code until P4, so a test with one is skipped as unsupported |
 | `:files:` as this suite reads it (added 2026-10-21) | Optional | Other files next to the test, separated by spaces, as the test suite repository defines it: sources (`.sv`, `.v`), given before the test's file in the order written, and files that the design includes with `` `include ``, whose directories are given as `+incdir+<dir>` |
 
 Rules:
@@ -89,7 +91,7 @@ sv-tests judges a `simulation` test by the `:assert: <Python expression>` lines 
 - A test expected to fail passes on exit code 2 together with the diagnostic at the intended position (the rule above).
 - **Headers that cannot be read as written (added 2026-10-18, approved):** a test fails when the file does not start with its header comment, when an item is not in the tables of "Metadata header" (a misspelled item would otherwise be dropped without a word), when a word of `:type:` is not a kind of test (`preprocessing`, `parsing`, `elaboration`, `simulation`), when a required item is missing, or when `:fourstate:` or `:nondeterministic:` is not `yes` or `no`. An empty candidate among the allowed results of a `:nondeterministic: yes` test (a stray `---`) fails too, since it would pass a run that prints nothing (`tools/suite_header.py`, `tools/run_suite_test.py`).
 - **Header items passed to kirimasim (added 2026-10-19, approved):** `:top_module:` is passed to both `kirimasim parse` and the run as `--top=<name>`, one for each name. `:files:` gives its sources before the test's file and the directories of its other files as `+incdir+<dir>`, to both (amended 2026-10-21). `:args:` is given after the test's file, to the run only: plusargs belong to the run (CLI.md 1). `:incdirs:` and `:defines:` are not passed yet, so a test with one of them fails rather than run in a form other than written (`tools/run_suite_test.py`).
-- **C code (added 2026-10-21, approved):** a test with `:dpi_c:` or `:vpi_c:` is not run, and is a skip as unsupported under the rule of allowed skips, until kirimasim loads C code (P3).
+- **C code (added 2026-10-21, approved):** a test with `:dpi_c:` or `:vpi_c:` is not run, and is a skip as unsupported under the rule of allowed skips, until kirimasim loads C code (P4).
 - **Which files are tests (added 2026-10-21, approved):** in the test suite repository, its tests are the files named `test_*.sv`; its other `.sv` files are sources that tests name in `:files:`. The nightly run of every test of its latest commit takes only `test_*.sv`. In `tests/suite/` every `.sv` is a test, as before.
 - **Allowed skips (added 2026-10-18, approved):** the tests that may be skipped as unsupported are listed in `tests/suite/skips.txt`, one per line with its reason. A test not on the list that stops at an unsupported construct fails, and a listed test that runs and passes fails until it is taken off the list, so that a test that passed cannot turn into a skip unseen. Each line must name a test that exists (`tools/check_suite_files.py`).
 - **A bound on what a run writes (added 2026-10-20, approved):** kirimasim's standard output and standard error are each kept up to 16 MiB, in `kirimasim parse` and in the run. A run that writes more is stopped, and the test fails. The bound is far above every expected output (the largest in `tests/suite/` is about 120 KB). Without it, a design caught in a loop that prints, as a mistake put in by the negative controls can make, used up the memory of the machine and stopped the tests running beside it (#27; `tools/bounded_run.py`).
@@ -135,7 +137,7 @@ Rules:
 - **Negative controls:** check that the judging tools and the tests really fail on a wrong implementation. A nightly job makes builds with chosen errors put, one at a time, into `valsem`, the kernel's word operations and the scheduler, and checks that each makes some test fail. An error that makes no test fail is recorded as a hole in the tests. The judging tools are tested to fail on a copy with one expected value changed.
 - **No tests that do not run:** every `.sv` under `tests/suite/` is registered with CTest by glob. A `.expected` or `.stderr` with no matching `.sv` fails CI, and so does a `.choice` (approved 2026-10-19; `tools/check_suite_files.py`). The number of tests skipped as unsupported is always given next to the number passed.
 - **Judging rules live in one tool:** only `tools/run_suite_test.py` decides pass or fail for this suite. The sv-tests comparison (`tools/svtests.py`) is a separate tool that judges by sv-tests' rules, and is not used to judge this suite.
-- **Agreement of the two tiers (from P2):** once tier 2 exists, every test of this suite runs on both tier 1 and tier 2, and equal output is a required condition of CI. The number of tests that run on only one tier is given.
+- **Agreement of the two tiers (from P3):** once tier 2 exists, every test of this suite runs on both tier 1 and tier 2, and equal output is a required condition of CI. The number of tests that run on only one tier is given.
 
 ## Gaps in the tests and the plan to fill them (approved 2026-10-16)
 
@@ -183,7 +185,7 @@ Each is added in the stage that implements the feature, in the same PR as the im
 7. **The choices where the standard leaves the result open (approved 2026-10-19):** their test groups are made as mechanism matrices by generators.
    - New: `gen_time0_order_matrix.py` (the order at time 0, SCHEDULER_SPEC.md 6.1: each kind of procedure written in either order), `gen_region_order_matrix.py` (orders within a region and of NBAs, SCHEDULER_SPEC.md 4.3 and 13, and the forms of `#0`), `gen_eval_order_matrix.py` (left-to-right evaluation, VALUE_SEMANTICS.md 3.1), `gen_resource_limit_matrix.py` (the limits of CLI.md 2.7) and `gen_check_option_matrix.py` (`--init-values`, `--cond-x`, `--bounds-check` and `--stop`).
    - Existing ones that cover groups already: `gen_zero_time_loop_matrix.py` and `gen_call_depth_matrix.py` (runs that do not advance time), `gen_delay_matrix.py` and `gen_delay_value_matrix.py` (delays), `gen_logic_matrix.py`, `gen_select_matrix.py` and `gen_cond_op_matrix.py` (x), `gen_disable_matrix.py`, `gen_fork_matrix.py` and `gen_process_lifetime_matrix.py` (lifetimes), `gen_format_flag_matrix.py` and `gen_format_source_matrix.py` (output).
-   - Limits and diagnostics are checked with `:expected_exit:` and `:expected_stderr:`; no item such as `:expected_diag:` is added. Groups of P2 and later are made in their phase.
+   - Limits and diagnostics are checked with `:expected_exit:` and `:expected_stderr:`; no item such as `:expected_diag:` is added. Groups of P3 and later are made in their phase.
 
 Recent implementation coverage (2026-10-23):
 
@@ -205,10 +207,10 @@ Where they go and how their expected values are treated:
 - Generators go in `tools/` of the main repository, and the tests they make are committed too. When changing a generator changes the expected values of existing tests, it goes, by the rules protecting expected values, in a PR separate from implementation.
 - The header of a generated test writes the generator's name and the version of its table of rules in `:generator:` (the table of "Metadata header" above (approved 2026-10-16)). A generator can check with `--check` that the committed tests equal its output, and that check is registered with CTest.
 
-### What is left for P2 and later
+### What is left for P3 and later
 
 - Third-party RTL (category C): run Ibex, CVA6 and OpenTitan, referred to by scripts that fetch them, after checking their licences. This is the "real designs" layer (weekly) of the design specification.
-- Differential fuzzing: compare small randomly generated designs between Icarus, tier 1 and tier 2. Whether to adopt a generator is decided in P2, as the design specification says.
+- Differential fuzzing: compare small randomly generated designs between Icarus, tier 1 and tier 2. Whether to adopt a generator is decided in P3, as the design specification says.
 
 ### Relation to the passing conditions
 
@@ -261,7 +263,7 @@ A test's `:oracle: iverilog@<version>` and `verilator@<version>` use release ver
 
 ## List of required tests
 
-Apart from pass rates, tests that must not fail are included in the passing conditions. The list below was made from the items named in the design and fixed on 2026-10-15 (approved). The P1 passing condition includes "every test in this list passes, except those that run in P3 (`cb/input_sample_1step`)" (approved 2026-10-15). The P3 passing condition includes that every test in the list passes. Adding or removing items or replacing tests is done by a PR that changes this section, and a person approves it.
+Apart from pass rates, tests that must not fail are included in the passing conditions. The list below was made from the items named in the design and fixed on 2026-10-15 (approved). The P1 passing condition includes "every test in this list passes, except those that run in P3 (`cb/input_sample_1step`)" (approved 2026-10-15). The P4 passing condition includes that every test in the list passes. Adding or removing items or replacing tests is done by a PR that changes this section, and a person approves it.
 
 | Group | Test | What it checks | Clause | State |
 | --- | --- | --- | --- | --- |
@@ -278,14 +280,14 @@ Apart from pass rates, tests that must not fail are included in the passing cond
 | 4-state | `values/edge_table` | The decision of posedge and negedge (between x and z is not an edge) | 9.4.2 (checked) | Exists |
 | case | `values/unique_case_violation` | When a violation of unique case is reported | 12.5.3, 12.5.3.1, 12.4.2.1 (checked) | Exists (the report on standard error checked in P1) |
 | Process control | `proc/fork_join_any`, `proc/disable_fork` | The three kinds of fork, and disable fork | 9.3.2, 9.6.3 (checked) | Exists |
-| Clocking blocks | `cb/input_sample_1step` | Sampling of inputs with `#1step` | 14.4, 14.10, 14.13 (checked) | Exists (runs in P3) |
+| Clocking blocks | `cb/input_sample_1step` | Sampling of inputs with `#1step` | 14.4, 14.10, 14.13 (checked) | Exists (runs in P4) |
 | Syntax | `syntax/missing_semicolon` | A syntax error is reported at the intended position | 6.8 | Exists |
 | Contexts | `context_sequential` | Designs A, B and A run one after another in one process give the output, the end reason (which gives the exit code) and the PerfCount of each run alone | — (RUNTIME_ABI.md 9.1, 9.3) | Exists; a P1 condition (approved 2026-10-20) |
 | Contexts | `context_parallel` | 2 to 8 Contexts run at the same time on separate threads, their designs compiled before, give the results of each run alone, with no report of ThreadSanitizer | — (RUNTIME_ABI.md 9.1, 9.3) | Exists; a P1 condition (approved 2026-10-20) |
 | Contexts | `context_churn` | Making, running and destroying a Context 100 times leaks nothing under AddressSanitizer | — (RUNTIME_ABI.md 9.3) | Exists; a P1 condition (approved 2026-10-20) |
 | Contexts | the unit tests, shuffled | The unit tests run in one process in shuffled orders, three times over, every night | — (RUNTIME_ABI.md 9.3) | Exists (the nightly sanitizer jobs); a P1 condition (approved 2026-10-20) |
 | Contexts | `front_parallel` | front and 2 to 8 Contexts run at the same time on separate threads give the results of each run alone, with no report of ThreadSanitizer | — (RUNTIME_ABI.md 9.7) | Exists; runs in CI's ThreadSanitizer job and the nightly, with no report since slang's colour flags became atomic (#32); not a P1 condition (approved 2026-10-20) |
-| Contexts | `context_resume_thread` | An import task suspended and resumed on another thread sees the right "current Context" | — (RUNTIME_ABI.md 9.6) | To be written in P3 (approved 2026-10-20) |
+| Contexts | `context_resume_thread` | An import task suspended and resumed on another thread sees the right "current Context" | — (RUNTIME_ABI.md 9.6) | To be written in P4 (approved 2026-10-20) |
 
 The clauses marked "checked" were checked in the standard while writing VALUE_SEMANTICS.md or the tests.
 
@@ -306,8 +308,8 @@ The design specification sets the P1 passing conditions as "as many as Icarus or
 
 ### 90% of our own tests
 
-- **Population:** the `simulation` tests at the fixed commit of the test suite repository (kirimasim-tests) that use no feature of P3 and no feature outside the design's scope. "RTL tests" is read as tests written only with features within P1 of the design specification (the direction approved 2026-10-15).
-- **Deciding P3 features:** `tools/p1_population.py` searches the source, with comments and strings removed, for these words, and leaves out of the population any test with one of them: classes (`class`), constrained random (`rand`, `randc`, `randomize`, `constraint`), coverage (`covergroup`, `coverpoint`), concurrent assertions (`property`, `sequence`, `expect`), clocking blocks and cycle delays (`clocking`, `##`), `program`, `mailbox`, `semaphore`, the `process` class, dynamic data (`[$]`, `[]`, `new[`, index types of associative arrays), DPI-C export, `checker`, `let`.
+- **Population:** the `simulation` tests at the fixed commit of the test suite repository (kirimasim-tests) that use no feature of P4 and no feature outside the design's scope. "RTL tests" is read as tests written only with features within P1 of the design specification (the direction approved 2026-10-15).
+- **Deciding P4 features:** `tools/p1_population.py` searches the source, with comments and strings removed, for these words, and leaves out of the population any test with one of them: classes (`class`), constrained random (`rand`, `randc`, `randomize`, `constraint`), coverage (`covergroup`, `coverpoint`), concurrent assertions (`property`, `sequence`, `expect`), clocking blocks and cycle delays (`clocking`, `##`), `program`, `mailbox`, `semaphore`, the `process` class, dynamic data (`[$]`, `[]`, `new[`, index types of associative arrays), DPI-C export, `checker`, `let`.
 - **Features outside the design's scope (added 2026-10-19, approved):** a test is left out too when it uses a feature that the design specification leaves out of its scope for now: SDF annotation (`$sdf_annotate`), `randsequence`, or a specify block with a module path (`=>`, `*>`), a timing check (`$setup`, `$hold` and the others of 31) or a pulse-style or `showcancelled` declaration. A specify block with only specparams stays in (SIR_SPEC.md 6), and so do configs in the sources (CLI.md 2.1). The list kept now was made before this rule: at `c983cf7` the rule leaves out one more test, `ch18/test_randsequence`, which stops at an unsupported construct. The rule takes effect when the list next moves, together with the counts below.
 - As of 2026-10-16 (kirimasim-tests at `823ef30`; `c983cf7` after the history was rewritten), 1466 of 1853 tests are in the population. The expected values come from `179c55d` (approved 2026-10-22): there `ch20/test_atan2_corner_cases` stopped printing a difference whose sign the C library decides (20.8.2), and `ch10/test_assignment_forms` was renamed `test_assignment_kinds`.
 - **Fixed:** the list of the population (the sequence of test names) and the test suite commit it came from are kept in `tests/gates/p1_population.txt`. Changing the list is done by a PR that changes this section, and a person approves it. When the expected values of tests are corrected, the list stays as it is; the commit then moves to the correction, which is also a PR that changes this section, and a person approves it.
@@ -335,5 +337,5 @@ Each `.sv` is one CTest test (`suite/<category>/<name>`). `tools/run_suite_test.
 ## Not confirmed, to be decided later
 
 - When to split the test suite into a separate repository.
-- How to provide Verilator's development version in CI (decided before the P3 passing condition "as many as Verilator or more").
+- How to provide Verilator's development version in CI (decided before the P4 passing condition "as many as Verilator or more").
 - The format of expected values for waveform summaries and sequences of observed events (added in P1; once added, they fall under the rules protecting expected values).

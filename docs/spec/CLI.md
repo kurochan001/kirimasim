@@ -2,6 +2,8 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 Priority: P1. Status: **approved (2026-10-15)**. On 2026-10-16 the form of `--max-time` and how it stops a run (2.5) and how times are written in the line of the reason for ending (4) were added (approved). The same day, the defaults of the limits on runs that do not advance time (2.6) and slang's language version (2.1) were added (approved). On 2026-10-18, code 2 was made to cover run-time errors of the design (5; approved). The same day, the example of the version line in 4 was made the present form, without the seed (approved). On 2026-10-19, `--max-slot-events` was added to the limits of 2.6 (approved). The same day, the limits on resources (2.2, 2.7) and exit code 6 (5) were added (approved). The same day, the limit on wall-clock time was added to 2.2, 2.7 and 5 (approved). The same day, `--stop` was added to 2.2 and 5 (approved). The same day, `--race-nba` was added to the options of P2 and later (2.3; approved). The same day, `--init-values`, `--cond-x` and `--bounds-check` were added to 2.2, and the line `--init-values` writes to 4 (approved). The same day, `--autoflush` was added to 2.2 (approved). The same day, `--mintypmax`, `--report-pulses` and `--wave-glitches` were added to 2.2 (approved). The same day, `--randomize-fail` and `--assert-incomplete` were added to the options of P2 and later (2.3; approved). The same day, the last process and the latest events in the report of a limit (2.6), and a scheme of names for diagnostics (6), were added (approved). The same day, 6 was made to point to the list of names in UNSPECIFIED_BEHAVIOR.md 7.3 (approved). The same day, slang's limits on elaboration were added to 2.1 (approved). The same day, the top taken from a config in the sources was added to 2.1 (approved). On 2026-10-21, `--seed` was set by SYSTEM_TASKS.md 13, and the seed was added to the version line (2.2, 4; approved). The same day, the stop before the stack runs out was added to 2.7 (approved). The design specification's draft of the "external interface" was arranged by implementation stage, and the points it left open (where output goes, `--dump-sir`, plusargs) were added.
 
 This document sets the form of kirimasim's command line, its options, its exit codes, and the form of the messages kirimasim itself gives. The reasons for ending and the meaning of the codes follow SCHEDULER_SPEC.md 16, and the output of system tasks follows SYSTEM_TASKS.md.
@@ -16,7 +18,7 @@ kirimasim --version | --help
 
 - Without a subcommand, kirimasim compiles and runs.
 - `parse` stays as it has been since P0 (the test suite's P0 checks use it).
-- `build` and `run <model>`, which reuse a compiled model, come in P2, and `lib-create`, which makes a DPI library, in P4 (the design specification's "external interface").
+- `build` and `run <model>`, which reuse a compiled model, come in P3, and `lib-create`, which makes a DPI library, in P5 (the design specification's "external interface").
 
 ## 2. Options
 
@@ -81,7 +83,7 @@ initialization, and does not interrupt final procedures. See the
 | `--log=<file>` | Also write a copy of standard output to a file | M7 |
 | `--diag-format=json` | Write errors and warnings to standard error as JSON with an ID and the clause of the standard | M7 |
 
-The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P3) are added to this document in their stage.
+The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P4) are added to this document in their stage.
 
 ### 2.4 Plusargs
 
@@ -101,7 +103,7 @@ The options of P2 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 | `--max-zero-delay=<n>` | Moves of events into the Active or the Reactive region within one time slot (the "moves" of SCHEDULER_SPEC.md 3; they grow with resumptions after `#0`, evaluations after NBA updates and the like) | 1000000 |
 | `--max-slot-events=<n>` | Events run in one time slot, in any region (the events that `--stats=json` counts as `sched.events.*`). They grow with every resumption, update and evaluation, also when processes wake each other inside one region, which `--max-zero-delay` does not count (added 2026-10-19, approved) | 100000000 |
 | `--max-steps=<n>` | Tier 1 instructions one process runs in a row without waiting (they grow in a loop with no wait, such as `forever begin end`) | 1000000000 |
-| `--max-scc-iter=<n>` | Iterations of a static island of tier 2 (P2) | Decided in P2 |
+| `--max-scc-iter=<n>` | Iterations of a static island of tier 2 (P3) | Decided in P3 |
 
 - `0` means no limit.
 - Grounds for the defaults (measured 2026-10-16):

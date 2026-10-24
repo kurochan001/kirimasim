@@ -2,6 +2,8 @@
 
 [English](SYSTEM_TASKS.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+**改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](../notes/phase-renumbering.ja.md)。
+
 **program実行の修正（2026-10-23承認）：**
 [承認済みのprogramの規則](../notes/program-execution-proposal.ja.md)を、インスタンスの
 識別、reactive側の実行、実行スレッドの起源の継承、終了条件へ適用します。実装状況は別途記録します。
@@ -23,28 +25,28 @@
 
 ## 1. 対象と対応の時期
 
-設計書の一覧の案を規格と照らし、次の表にまとめた。フェーズは設計書の段階（1：P1〜P2、3：P3、4：P4）。
+下表のフェーズは現在の番号（P1・P3・P4・P5）です。新しいP2はSIRとカーネル境界を確定する段階で、システムタスクを増やす段階ではありません。
 
 | 分類 | 名前 | 規格 | フェーズ |
 | --- | --- | --- | --- |
-| 表示 | `$display`、`$write`（b・o・h の付いた形も） | 21.2.1 | 1 |
-| 遅れた表示と監視 | `$strobe`、`$monitor`、`$monitoron`、`$monitoroff`（b・o・h の付いた形も） | 21.2.2、21.2.3 | 1 |
-| 文字列への書式 | `$swrite`（b・o・h の付いた形も）、`$sformat`、`$sformatf` | 21.3.3 | 1 |
-| ファイルの開閉 | `$fopen`、`$fclose` | 21.3.1 | 1 |
-| ファイルへの出力 | `$fdisplay`、`$fwrite`（b・o・h の付いた形も）、`$fflush` | 21.3.2、21.3.6 | 1 |
-| ファイルへの監視 | `$fstrobe`、`$fmonitor` | 21.3.2 | 3 |
-| ファイルからの読み込み | `$fgets`、`$fscanf`、`$sscanf`、`$fread`、`$fgetc`、`$ungetc` | 21.3.4 | 1（`$fgetc`、`$ungetc` は 3） |
-| 位置と状態 | `$ftell`、`$fseek`、`$rewind`、`$ferror`、`$feof` | 21.3.5〜21.3.8 | 1 |
-| メモリ | `$readmemb`、`$readmemh`、`$writememb`、`$writememh` | 21.4、21.5 | 1 |
-| 時刻 | `$time`、`$stime`、`$realtime`、`$timeunit`、`$timeprecision`、`$printtimescale`、`$timeformat` | 20.3、20.4 | 1 |
-| 変換 | `$rtoi`、`$itor`、`$realtobits`、`$bitstoreal`、`$shortrealtobits`、`$bitstoshortreal`、`$signed`、`$unsigned` | 20.5 | 1 |
-| 問い合わせ | `$bits`、`$isunbounded`、`$typename` | 20.6 | 1（`$typename` は 2026-10-17 に 3 から前倒し） |
-| 配列の問い合わせ | `$left`、`$right`、`$low`、`$high`、`$increment`、`$size`、`$dimensions`、`$unpacked_dimensions` | 20.7 | 1 |
-| 数学 | `$clog2` と、実数の 20 の関数（`$ln` から `$atanh`） | 20.8 | 1 |
-| ビットベクタ | `$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown` | 20.9 | 1 |
-| 重大度 | `$fatal`、`$error`、`$warning`、`$info`（実行時とエラボレーション時） | 20.10、20.10.1 | 1 |
-| プラスアーグ | `$test$plusargs`、`$value$plusargs` | 21.6 | 1 |
-| その他 | `$stacktrace` | 20.17.2 | 1 |
+| 表示 | `$display`、`$write`（b・o・h の付いた形も） | 21.2.1 | P1 |
+| 遅れた表示と監視 | `$strobe`、`$monitor`、`$monitoron`、`$monitoroff`（b・o・h の付いた形も） | 21.2.2、21.2.3 | P1 |
+| 文字列への書式 | `$swrite`（b・o・h の付いた形も）、`$sformat`、`$sformatf` | 21.3.3 | P1 |
+| ファイルの開閉 | `$fopen`、`$fclose` | 21.3.1 | P1 |
+| ファイルへの出力 | `$fdisplay`、`$fwrite`（b・o・h の付いた形も）、`$fflush` | 21.3.2、21.3.6 | P1 |
+| ファイルへの監視 | `$fstrobe`、`$fmonitor` | 21.3.2 | P4 |
+| ファイルからの読み込み | `$fgets`、`$fscanf`、`$sscanf`、`$fread`、`$fgetc`、`$ungetc` | 21.3.4 | P1（`$fgetc`、`$ungetc` は P4） |
+| 位置と状態 | `$ftell`、`$fseek`、`$rewind`、`$ferror`、`$feof` | 21.3.5〜21.3.8 | P1 |
+| メモリ | `$readmemb`、`$readmemh`、`$writememb`、`$writememh` | 21.4、21.5 | P1 |
+| 時刻 | `$time`、`$stime`、`$realtime`、`$timeunit`、`$timeprecision`、`$printtimescale`、`$timeformat` | 20.3、20.4 | P1 |
+| 変換 | `$rtoi`、`$itor`、`$realtobits`、`$bitstoreal`、`$shortrealtobits`、`$bitstoshortreal`、`$signed`、`$unsigned` | 20.5 | P1 |
+| 問い合わせ | `$bits`、`$isunbounded`、`$typename` | 20.6 | P1（`$typename` は 2026-10-17 に 3 から前倒し） |
+| 配列の問い合わせ | `$left`、`$right`、`$low`、`$high`、`$increment`、`$size`、`$dimensions`、`$unpacked_dimensions` | 20.7 | P1 |
+| 数学 | `$clog2` と、実数の 20 の関数（`$ln` から `$atanh`） | 20.8 | P1 |
+| ビットベクタ | `$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown` | 20.9 | P1 |
+| 重大度 | `$fatal`、`$error`、`$warning`、`$info`（実行時とエラボレーション時） | 20.10、20.10.1 | P1 |
+| プラスアーグ | `$test$plusargs`、`$value$plusargs` | 21.6 | P1 |
+| その他 | `$stacktrace` | 20.17.2 | P1 |
 
 設計書の一覧に無く、規格にあるものの扱い（2026-10-15 に人が承認）：
 
@@ -156,7 +158,7 @@ kirimasim の形（本書の決まり）：
 
 ### 3.10 `%v`
 
-ネットの強さを 3 文字で出す（規格で確認：21.2.1.4）。強さのモデル（28.11〜28.12）と一緒に P4 で書く。それまでは、駆動の強さを Strong とみなして `St0`、`St1`、`StX`、`HiZ` を出す（本書の決まり。暫定）。
+ネットの強さを 3 文字で出す（規格で確認：21.2.1.4）。強さのモデル（28.11〜28.12）と一緒に P5 で書く。それまでは、駆動の強さを Strong とみなして `St0`、`St1`、`StX`、`HiZ` を出す（本書の決まり。暫定）。
 
 ### 3.11 `%u` と `%z`
 
@@ -516,7 +518,7 @@ programのinitialを起源に持たなければ警告せず無視し、全progra
 
 ## 13. `$urandom`、`$urandom_range`、`randcase` と種（2026-10-21 に追加、承認済み）
 
-規格は、`$urandom` の生成器と既定の種を処理系に任せている（規格で確認：18.13.1、18.14.1）。この節は、それらを本書の決まりで決め（2026-10-21 に承認）、版をまたいで保つ（UNSPECIFIED_BEHAVIOR.md の K1、K3）。オブジェクトの乱数の状態と、乱数の状態に種を与えたり読んだりするメソッドは P3 で入れる（RANDOMIZE_SPEC.md）。
+規格は、`$urandom` の生成器と既定の種を処理系に任せている（規格で確認：18.13.1、18.14.1）。この節は、それらを本書の決まりで決め（2026-10-21 に承認）、版をまたいで保つ（UNSPECIFIED_BEHAVIOR.md の K1、K3）。オブジェクトの乱数の状態と、乱数の状態に種を与えたり読んだりするメソッドは P4 で入れる（RANDOMIZE_SPEC.md）。
 
 ### 13.1 生成器
 
@@ -536,13 +538,13 @@ programのinitialを起源に持たなければ警告せず無視し、全progra
 - **`$urandom`** は、RNG の次の 32 ビットの乱数を返す。**`$urandom(seed)`** は、まずその RNG に、seed の下位 32 ビットを符号なしの数とした状態を与え、それから次の乱数を返す（規格で確認：18.13.1 は seed が並びを決めるとしている。与える状態は本書の決まり）。
 - **`$urandom_range(maxval, minval = 0)`：** maxval が minval より小さければ、2 つを入れ替える（規格で確認：18.13.2）。r を次の 32 ビットの乱数、n = maxval - minval + 1（1 から 2^32）として、結果は minval + floor(r × n / 2^32) である（本書の決まり）。
 - **`randcase`**（18.16）：重みは枝の順に評価し、最も広い重みの幅で、符号なしの値として足す（規格で確認：18.16。順は本書の決まり）。和 s が 0 なら、どの枝も選ばず、警告も出さない（18.16 は警告を任意としている）。そうでなければ、r をプロセスの RNG の `$urandom_range(s - 1)` とし、その重みに前の枝の重みを足したものが r より大きい最初の枝を選ぶ（規格で確認：18.16 は小さい数を前の枝に当てる）。32 ビットより広い和は、まだ対応しない。
-- P1 に入れないもの：プロセスとオブジェクトの `srandom`、`get_randstate`、`set_randstate`、`std::randomize`、`shuffle`、`randsequence`（P3）。
+- P1 に入れないもの：プロセスとオブジェクトの `srandom`、`get_randstate`、`set_randstate`、`std::randomize`、`shuffle`、`randsequence`（P4）。
 
 ## 14. 未確認・後で書くこと
 
 - 実数を整数の書式で出す（とその逆の）ときの変換（3.6）。
 - 引数を省いた `$timeformat` の意味（5.4）を、Icarus 13.0 と照合する。
 - `$monitor` の最初の表示の時点と `$monitoron` の表示の時点（4 節）を、P1 で Icarus 13.0 と照合する。
-- `%v` と強さのモデル（3.10。P4）。
-- `$fmonitor`、`$fstrobe`、`$fgetc`、`$ungetc`（P3）の、同じ時刻での順序の細部。
+- `%v` と強さのモデル（3.10。P5）。
+- `$fmonitor`、`$fstrobe`、`$fgetc`、`$ungetc`（P4）の、同じ時刻での順序の細部。
 - 波形のタスク（`$dumpfile` など）は、WAVEFORM.md で書いた（2026-10-21）。

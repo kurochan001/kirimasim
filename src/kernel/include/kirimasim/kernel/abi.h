@@ -13,7 +13,7 @@
  *
  * This header is part of the kernel's public interface and must stay
  * compilable as C++20. Stage M4 of P1 declares the table; its fields are
- * settled with the tier-2 work of P2 (RUNTIME_ABI.md 8). */
+ * settled with the tier-2 work of P3 (RUNTIME_ABI.md 8). */
 
 #pragma once
 

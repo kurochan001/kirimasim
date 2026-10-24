@@ -7,7 +7,7 @@
 // every other handle names one interned string. Equal strings get equal
 // handles, so comparing handles compares strings, and a write that changes
 // nothing keeps the handle (value-change events stay right). Strings are
-// not freed in P1; garbage collection comes in P3.
+// not freed in P1; garbage collection comes in P4.
 //
 // This header is part of the kernel's public interface and must stay
 // compilable as C++20.

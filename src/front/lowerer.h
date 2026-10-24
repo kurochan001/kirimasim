@@ -933,9 +933,9 @@ private:
     void declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent);
     /// Reports a program instance or an anonymous program as unsupported.
     /// Program code runs in the reactive region set (24.3.1), which comes
-    /// with programs in P3 (SCHEDULER_SPEC.md, part 4); until then a program
+    /// with programs in P4 (SCHEDULER_SPEC.md, part 4); until then a program
     /// is not run like a module.
-    /// Whether s is a DPI-C import, which is not implemented yet (P3,
+    /// Whether s is a DPI-C import, which is not implemented yet (P4,
     /// 35.5): one is reported at its declaration, once, whether it is
     /// called or not (CLI.md 5), and never lowered to a body.
     bool reportDpiImport(const ast::Symbol& s);

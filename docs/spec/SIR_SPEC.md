@@ -2,6 +2,8 @@
 
 [日本語](SIR_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 **Program execution amendment (approved 2026-10-23):**
 [The approved program rules](../notes/program-execution-proposal.md) apply
 to instance identity, reactive scheduling, inherited execution origin and
@@ -102,11 +104,11 @@ The SIR of one design consists of the following.
 | Real | `real`, `realtime`, `shortreal` | `double` (`float` for `shortreal`) |
 | Handle | Classes, strings, dynamic arrays, queues, associative arrays, events, chandles, virtual interfaces | An execution-kernel handle; dynamic containers use Context-local generation-checked tokens (RUNTIME_ABI 6). null is 0. Defaults in 3.2.1 |
 
-- The area is decided by the declared type alone (amendment of M3b). Holding slots that analysis showed never receive X in 2-state form is something tier 2 does as its own layout (P2).
+- The area is decided by the declared type alone (amendment of M3b). Holding slots that analysis showed never receive X in 2-state form is something tier 2 does as its own layout (P3).
 
 ### 3.2.1 Defaults of the handle area
 
-- Slots of type `event` each get one event object of the kernel, made at elaboration. The default is not null (checked: 6.8, Table 6-7). They become null only when reading an element of an array that does not exist (Table 7-1) and when null is assigned (15.5.5; P3).
+- Slots of type `event` each get one event object of the kernel, made at elaboration. The default is not null (checked: 6.8, Table 6-7). They become null only when reading an element of an array that does not exist (Table 7-1) and when null is assigned (15.5.5; P4).
 - The default of type `string` is the empty string. A handle of 0 is taken as the empty string (rule of this document), so that no object is allocated each time a string of length 0 is made. `len()`, concatenation and comparison treat 0 as a string of length 0.
 - The default of classes, interface classes, chandles and virtual interfaces is null (0).
 - The default of dynamic arrays, queues and associative arrays is empty (0 elements). A handle of 0 is taken as empty (rule of this document; dynamic arrays and queues are P1 under the amendment approved 2026-10-23).
@@ -153,7 +155,7 @@ The standard takes a connection between a parent's and a child's ports as an imp
 - **Connections collapsed (approved 2026-10-16):** a connection where both sides are whole nets with the same width, signedness and 4-stateness shares the same slot between parent and child, whatever the direction (input, output, inout). The drivers of both sides are resolved in that slot (VALUE_SEMANTICS.md 5.3, 5.5). input and output with drivers on both sides may be changed to inout by the standard (23.3.3.1; slang warns), and by this rule they are treated the same as inout.
 - **Kind of a collapsed net:** the outer (parent's) or inner (child's) kind of net, by the rules of Table 23-1 (checked: 23.3.3.7). For combinations where the table asks for a warning, slang warns (`-Wnet-inconsistent`; the 56 cases of 8 kinds of net were checked on input and output ports; slang v12). Connecting a `uwire` to an inout port is an error in slang. The standard only asks for a warning when a port connected to a uwire is not collapsed (23.3.3.6), and does not call it an error. slang's diagnostics are not loosened (CLAUDE.md), so it is an error in kirimasim too (correction approved 2026-10-16).
 - Collapsing input and output is optional in the standard (23.3.3.7). With implementations that do not collapse (Icarus 13.0 does not collapse input ports), values of nets of different kinds can differ. In that case the test suite allows both results (`:nondeterministic: yes`).
-- **When not to collapse (used in P3):** when an observable flag is set (made visible to VPI by `--public`, or a target of force, release or deposit by `uvm_hdl_*`), and when collapsing would change how force and release are seen (SCHEDULER_SPEC.md 14.4).
+- **When not to collapse (used in P4):** when an observable flag is set (made visible to VPI by `--public`, or a target of force, release or deposit by `uvm_hdl_*`), and when collapsing would change how force and release are seen (SCHEDULER_SPEC.md 14.4).
 - **Connections not collapsed:** input and output connections not covered above (those connected to variables or expressions, to parts of nets or concatenations, or to nets of different width or signedness) are placed in SIR as processes of continuous assignment. Their strength is (strong1, strong0) (VALUE_SEMANTICS.md 5.3). However, when such a net is resolved with other drivers and the other side of the port is a net, the strength cannot be carried, so for now it is reported as unsupported. inout connections not covered above are also reported as unsupported for now.
 - Collapsing removes the process of the port's continuous assignment, and the child's net changes in the same evaluation as the parent's net. Only the order within the Active region of the same time changes, and the standard does not set that order (4.7).
 
@@ -209,7 +211,7 @@ Amendment of M3b:
   - What treats a whole structure as a value (subroutine arguments and return values, ports, nets of unpacked structures, `%p`, unpacked unions) is decided in the stage that implements each. Until then they are reported as unsupported.
 - **Fixed-size arrays whose elements are unpacked structures (approved 2026-10-17):** one slot with the array's dimensions for each innermost member (held as an array per member). `a[i].x` is element `i` of member `x`'s slot, and the index computation is the same as for arrays whose elements are not structures. If a member is an unpacked array, the slot is multidimensional, with the member's dimensions after the array's (`a[i].b[j]` is element `(i, j)`). Assignments of whole elements and whole arrays are unfolded into assignments per member and per element (VALUE_SEMANTICS.md 3.13). An assignment of a whole element with an index decided at run time (`a[i] = s`) evaluates the index expression once and does `store.elem` per member with that value. The slot's name is `<array name>.<member name>`.
 - **Unpacked unions:** their layout is decided later (11). In P1 they are reported as unsupported constructs.
-- **Classes:** the layout of fields and the table of virtual methods (indexed by number) are held in the type table. A parameterized class becomes a separate class for each specialization slang made (P3).
+- **Classes:** the layout of fields and the table of virtual methods (indexed by number) are held in the type table. A parameterized class becomes a separate class for each specialization slang made (P4).
 
 ### 4.2.1 Dynamic containers (approved 2026-10-23)
 
@@ -238,7 +240,7 @@ Amendment of M3b. Each row of the type table is referred to by its number (TypeI
 | Unpacked array | Type number of the element, range of each dimension |
 | Dynamic array or queue | Element value type; queue capacity (0 means unbounded); nested descriptors precede parents (5.8) |
 | UDP (approved 2026-10-17) | Name, number of inputs, whether sequential, sequence of table rows (each row: the symbol for each input, the symbol of the present state if sequential, the symbol of the output), initial value (sequential UDPs) |
-| Class | P3 |
+| Class | P4 |
 
 - The slot table and the tables of frame variables hold the type number of the declaration (not for those where the value type suffices).
 - The values of members of an enumerated type are held as constants matching the width and signedness of the base type.
@@ -482,7 +484,7 @@ typed instructions of 5.8 rather than embedded heap objects.
 | `general` | Other `always`, statements in fork | General processes |
 | `postponed` (approved 2026-10-17) | One per `$strobe`, `$monitor`, `$fstrobe` or `$fmonitor` statement. Its body evaluates the arguments and prints (the same syscall as `$display`). Contains no wait | Runs only in the Postponed region (SCHEDULER_SPEC.md 2.1). `strobe @P` schedules P to run once in the Postponed region of the present time slot. However many times it runs at one time, it prints that many times (checked: 21.2.2). `monitor @P` replaces the active monitor with P (checked: 21.2.3); P runs once in the Postponed region of the time it was called, then once in the Postponed region of each time slot in which a slot read by its arguments changed. **With a descriptor (`$fstrobe`, `$fmonitor`; added 2026-10-20, approved):** `strobe @P, d` and `monitor @P, d` take the value of d when they run, and what P prints goes to the files d names then, not to standard output. `monitor @P, d` adds a file monitor and replaces none; `$fclose` takes the files it closes out of the pending runs and the file monitors (SYSTEM_TASKS.md 6.2) |
 | `override` (approved 2026-10-17) | One per procedural `assign` or `force` statement. Computes the right side and writes the left side with `store.override` | Starts with `override.start` and stops with `override.stop`. In between, like cont, it starts on changes of what the right side reads (SCHEDULER_SPEC.md 14; 5.6) |
-| `static-init` (approved 2026-10-16) | Initial values in declarations of static variables (module variables, static variables inside procedural blocks and subroutines; static members of classes are P3) | Runs exactly once at time 0, before any other process starts (step 1 of SCHEDULER_SPEC.md 6.1) |
+| `static-init` (approved 2026-10-16) | Initial values in declarations of static variables (module variables, static variables inside procedural blocks and subroutines; static members of classes are P4) | Runs exactly once at time 0, before any other process starts (step 1 of SCHEDULER_SPEC.md 6.1) |
 
 - **Form of `static-init` (approved 2026-10-16):** one per instance, named `<hierarchical name of the instance>.$static`. Its body is a sequence of instructions that evaluate initial-value expressions and write slots, covering the static variables with initial values in declaration order within the scope (SCHEDULER_SPEC.md 3). It contains no wait instruction. Tiers run every `static-init` in the order of SIR's process numbers, on the spot without scheduling them as events, and start the other processes after they finish. Nothing is waiting yet, so no process is woken by these writes. static variables with no initial value keep the default value of their area (VALUE_SEMANTICS.md 1.4).
 - **`static-init` of packages and compilation units (approved 2026-10-16):** packages and compilation units also get one `static-init` each if they have variables with initial values, named `<package name>::$static` and `$unit::$static`. They are placed in source order, before the `static-init` of instances (rule of this document). The standard only says that initial values of static variables are set "before any initial or always starts" (checked: 6.8, 10.5), and does not set the order between variables. A package must be compiled before the scopes that import it (checked: 26.3), so in source order, variables of another package read by a package's initial-value expressions already have their initial values.
@@ -589,7 +591,7 @@ rules across scopes, placements, entries and widths.
   - Reads and writes through a reference are `load.ref %r, +k`, `store.ref %r, +k, value`, `nba.ref %r, +k, value` (k is the number of the leaf within the structure; omitted if 0), and `load.ref.elem`, `store.ref.elem`, `store.ref.bits` for array elements and bits. A write is the same as a write to the source, and wakes waiting processes (checked: 13.5.2 says a write through a reference is seen by the caller at once).
   - A reference is valid until the call that received it returns. A reference to a frame variable of the caller is valid too, since the caller's frame lives for the whole call (the same for tasks that wait; 7.4). Inside fork-join_any and fork-join_none, ref formal arguments can be referred to only in block item initializers (checked: 9.3.2), so no child process uses a reference longer than the call.
   - Write ranges (for computing sensitivity, and the check of writers of always_comb; 3.4): a call that may write a ref argument is treated as the caller writing the range of the actual argument (except for const ref).
-  - In the standard, ref can be used only for automatic subroutines, and what can be passed is variables, class properties, members of unpacked structures and elements of unpacked arrays, not nets or selects (checked: 13.5.2). `ref static` (13.5.2) and references to class properties are P3.
+  - In the standard, ref can be used only for automatic subroutines, and what can be passed is variables, class properties, members of unpacked structures and elements of unpacked arrays, not nets or selects (checked: 13.5.2). `ref static` (13.5.2) and references to class properties are P4.
 - **Fixed-size unpacked array arguments (approved 2026-10-17):** a by-value array argument is written as an operand of `call` and `call.task` as the whole array (a slot or frame variable with dimensions). At the call it is copied element by element, and on return output and inout are copied back element by element (as 4.9.7). If the actual argument is an expression such as an assignment pattern, front computes it into an array in the caller's frame before passing it.
 - **Structure arguments, and aggregate return values (approved 2026-10-17):**
   - An unpacked structure argument is split into an argument per leaf (named `<argument>.<member>`, in the leaf order of 4.2).
@@ -707,7 +709,7 @@ The SIR verifier always runs in debug builds and CI. It checks the following.
 - Instructions for streaming and assignment patterns (P1; together with VALUE_SEMANTICS.md 8).
 - Layout of unpacked unions (4.2).
 - The rules of size and alignment that decide positions within frames (RUNTIME_ABI.md).
-- Instructions for classes, dynamic data, constrained random, assertions and coverage (P3).
+- Instructions for classes, dynamic data, constrained random, assertions and coverage (P4).
 - How hierarchical references (upward, downward, `$root`, generate scopes) are resolved to slots at elaboration, and what happens when they cannot be (P1).
 - Fixing the grammar of the text form (by the end of P1; once fixed, `formatVersion` becomes 1).
 - The table of correspondence for making each element from slang's API (written in P1 together with the implementation of `front`).

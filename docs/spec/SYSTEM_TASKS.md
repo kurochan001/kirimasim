@@ -2,6 +2,8 @@
 
 [日本語](SYSTEM_TASKS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 **Program execution amendment (approved 2026-10-23):**
 [The approved program rules](../notes/program-execution-proposal.md) apply
 to instance identity, reactive scheduling, inherited execution origin and
@@ -25,28 +27,28 @@ The meaning and exit codes of execution control (`$finish`, `$stop`, `$exit`, `$
 
 ## 1. Scope and timing
 
-The draft list of the design specification was checked against the standard and put in the table below. The phases are the design specification's stages (1: P1 to P2, 3: P3, 4: P4).
+The draft list of the design specification was checked against the standard and put in the table below. The phase cells use the current phase numbers (P1, P3, P4, P5); the new P2 fixes SIR and the kernel boundary, rather than adding system tasks.
 
 | Group | Names | Standard | Phase |
 | --- | --- | --- | --- |
-| Display | `$display`, `$write` (and the forms with b, o, h) | 21.2.1 | 1 |
-| Delayed display and monitoring | `$strobe`, `$monitor`, `$monitoron`, `$monitoroff` (and the forms with b, o, h) | 21.2.2, 21.2.3 | 1 |
-| Formatting to strings | `$swrite` (and the forms with b, o, h), `$sformat`, `$sformatf` | 21.3.3 | 1 |
-| Opening and closing files | `$fopen`, `$fclose` | 21.3.1 | 1 |
-| Output to files | `$fdisplay`, `$fwrite` (and the forms with b, o, h), `$fflush` | 21.3.2, 21.3.6 | 1 |
-| Monitoring to files | `$fstrobe`, `$fmonitor` | 21.3.2 | 3 |
-| Reading from files | `$fgets`, `$fscanf`, `$sscanf`, `$fread`, `$fgetc`, `$ungetc` | 21.3.4 | 1 (`$fgetc`, `$ungetc` in 3) |
-| Position and status | `$ftell`, `$fseek`, `$rewind`, `$ferror`, `$feof` | 21.3.5 to 21.3.8 | 1 |
-| Memories | `$readmemb`, `$readmemh`, `$writememb`, `$writememh` | 21.4, 21.5 | 1 |
-| Time | `$time`, `$stime`, `$realtime`, `$timeunit`, `$timeprecision`, `$printtimescale`, `$timeformat` | 20.3, 20.4 | 1 |
-| Conversion | `$rtoi`, `$itor`, `$realtobits`, `$bitstoreal`, `$shortrealtobits`, `$bitstoshortreal`, `$signed`, `$unsigned` | 20.5 | 1 |
-| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | 1 (`$typename` brought forward from 3 on 2026-10-17) |
-| Array queries | `$left`, `$right`, `$low`, `$high`, `$increment`, `$size`, `$dimensions`, `$unpacked_dimensions` | 20.7 | 1 |
-| Math | `$clog2` and the 20 real functions (`$ln` to `$atanh`) | 20.8 | 1 |
-| Bit vectors | `$countbits`, `$countones`, `$onehot`, `$onehot0`, `$isunknown` | 20.9 | 1 |
-| Severity | `$fatal`, `$error`, `$warning`, `$info` (at run time and at elaboration) | 20.10, 20.10.1 | 1 |
-| Plusargs | `$test$plusargs`, `$value$plusargs` | 21.6 | 1 |
-| Other | `$stacktrace` | 20.17.2 | 1 |
+| Display | `$display`, `$write` (and the forms with b, o, h) | 21.2.1 | P1 |
+| Delayed display and monitoring | `$strobe`, `$monitor`, `$monitoron`, `$monitoroff` (and the forms with b, o, h) | 21.2.2, 21.2.3 | P1 |
+| Formatting to strings | `$swrite` (and the forms with b, o, h), `$sformat`, `$sformatf` | 21.3.3 | P1 |
+| Opening and closing files | `$fopen`, `$fclose` | 21.3.1 | P1 |
+| Output to files | `$fdisplay`, `$fwrite` (and the forms with b, o, h), `$fflush` | 21.3.2, 21.3.6 | P1 |
+| Monitoring to files | `$fstrobe`, `$fmonitor` | 21.3.2 | P4 |
+| Reading from files | `$fgets`, `$fscanf`, `$sscanf`, `$fread`, `$fgetc`, `$ungetc` | 21.3.4 | 1 (`$fgetc`, `$ungetc` in P4) |
+| Position and status | `$ftell`, `$fseek`, `$rewind`, `$ferror`, `$feof` | 21.3.5 to 21.3.8 | P1 |
+| Memories | `$readmemb`, `$readmemh`, `$writememb`, `$writememh` | 21.4, 21.5 | P1 |
+| Time | `$time`, `$stime`, `$realtime`, `$timeunit`, `$timeprecision`, `$printtimescale`, `$timeformat` | 20.3, 20.4 | P1 |
+| Conversion | `$rtoi`, `$itor`, `$realtobits`, `$bitstoreal`, `$shortrealtobits`, `$bitstoshortreal`, `$signed`, `$unsigned` | 20.5 | P1 |
+| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | P1 (`$typename` brought forward from 3 on 2026-10-17) |
+| Array queries | `$left`, `$right`, `$low`, `$high`, `$increment`, `$size`, `$dimensions`, `$unpacked_dimensions` | 20.7 | P1 |
+| Math | `$clog2` and the 20 real functions (`$ln` to `$atanh`) | 20.8 | P1 |
+| Bit vectors | `$countbits`, `$countones`, `$onehot`, `$onehot0`, `$isunknown` | 20.9 | P1 |
+| Severity | `$fatal`, `$error`, `$warning`, `$info` (at run time and at elaboration) | 20.10, 20.10.1 | P1 |
+| Plusargs | `$test$plusargs`, `$value$plusargs` | 21.6 | P1 |
+| Other | `$stacktrace` | 20.17.2 | P1 |
 
 Those in the standard but not in the design specification's list (approved by a human 2026-10-15):
 
@@ -158,7 +160,7 @@ In the test suite, the spaces of `%p` depend on the implementation, so `%p` outp
 
 ### 3.10 `%v`
 
-Prints the net's strength in 3 characters (checked: 21.2.1.4). Written in P4 together with the strength model (28.11 to 28.12). Until then, the drive strength is taken as Strong, and `St0`, `St1`, `StX`, `HiZ` are printed (rule of this document; provisional).
+Prints the net's strength in 3 characters (checked: 21.2.1.4). Written in P5 together with the strength model (28.11 to 28.12). Until then, the drive strength is taken as Strong, and `St0`, `St1`, `StX`, `HiZ` are printed (rule of this document; provisional).
 
 ### 3.11 `%u` and `%z`
 
@@ -533,7 +535,7 @@ Each step takes its draws from the same S, in the order stated.
 
 ## 13. `$urandom`, `$urandom_range`, `randcase` and the seed (added 2026-10-21, approved)
 
-The standard leaves the generator of `$urandom` and the default seed to the implementation (checked: 18.13.1, 18.14.1). This section fixes them by rules of this document (approved 2026-10-21), which are kept across versions (UNSPECIFIED_BEHAVIOR.md K1, K3). The random state of objects, and the methods that seed or read a random state, come in P3 (RANDOMIZE_SPEC.md).
+The standard leaves the generator of `$urandom` and the default seed to the implementation (checked: 18.13.1, 18.14.1). This section fixes them by rules of this document (approved 2026-10-21), which are kept across versions (UNSPECIFIED_BEHAVIOR.md K1, K3). The random state of objects, and the methods that seed or read a random state, come in P4 (RANDOMIZE_SPEC.md).
 
 ### 13.1 The generator
 
@@ -553,13 +555,13 @@ The standard leaves the generator of `$urandom` and the default seed to the impl
 - **`$urandom`** returns the next random number of 32 bits of the RNG. **`$urandom(seed)`** first gives that RNG the state of the seed's low 32 bits, as an unsigned number, then returns the next one (checked: 18.13.1 makes the seed set the sequence; the state it gives is a rule of this document).
 - **`$urandom_range(maxval, minval = 0)`:** when maxval is less than minval, the two are swapped (checked: 18.13.2). With r the next random number of 32 bits and n = maxval - minval + 1 (from 1 to 2^32), the result is minval + floor(r × n / 2^32) (rule of this document).
 - **`randcase`** (18.16): the weights are evaluated in the order of their branches, and added as unsigned values at the width of the widest weight (checked: 18.16; the order is a rule of this document). With a sum s of 0, no branch is taken, with no warning (18.16 makes the warning optional). Otherwise r is `$urandom_range(s - 1)` of the process's RNG, and the first branch whose weight, added to those of the branches before it, is greater than r is taken (checked: 18.16 gives the smaller numbers to the earlier branches). A sum wider than 32 bits is not supported yet.
-- Not in P1: `srandom`, `get_randstate` and `set_randstate` of processes and objects, `std::randomize`, `shuffle` and `randsequence` (P3).
+- Not in P1: `srandom`, `get_randstate` and `set_randstate` of processes and objects, `std::randomize`, `shuffle` and `randsequence` (P4).
 
 ## 14. Not confirmed, to be written later
 
 - The conversion when a real is printed with an integer format (and the reverse) (3.6).
 - The meaning of `$timeformat` with its arguments omitted (5.4), to be checked against Icarus 13.0.
 - When `$monitor` first prints and when `$monitoron` prints (4), to be checked against Icarus 13.0 in P1.
-- `%v` and the strength model (3.10; P4).
-- Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc` (P3).
+- `%v` and the strength model (3.10; P5).
+- Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc` (P4).
 - The waveform tasks (`$dumpfile` and so on) are written in WAVEFORM.md (2026-10-21).

@@ -1596,7 +1596,7 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
 void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
     // Each connection is an implicit continuous assignment (4.9.6): an
     // input from the parent's expression to the port's net or variable,
-    // an output the other way (SIR_SPEC.md 3.5; folding is P2).
+    // an output the other way (SIR_SPEC.md 3.5; folding is P3).
     const std::string scope = design_.instance(instanceIds_.at(&child)).scopeName;
     for (const ast::PortConnection* conn : child.getPortConnections()) {
         const ast::Symbol& port = conn->port;

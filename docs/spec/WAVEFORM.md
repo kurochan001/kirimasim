@@ -2,6 +2,8 @@
 
 [日本語](WAVEFORM.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
@@ -54,5 +56,5 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 ## 7. Not confirmed, to be written later
 
 - FST (P1, with the decision on libfstapi).
-- The extended VCD of 21.7.3 (P4, with strengths).
-- What a dump of the variables of a program, an interface or a class gives (P3).
+- The extended VCD of 21.7.3 (P5, with strengths).
+- What a dump of the variables of a program, an interface or a class gives (P4).

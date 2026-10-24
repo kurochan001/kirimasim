@@ -2,8 +2,10 @@
 
 [English](README.md)
 
+**改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](docs/notes/phase-renumbering.ja.md)。
+
 2026-10-23承認の[P1の範囲変更](docs/spec/P1_SCOPE.ja.md)により、
-Icarus Verilog 13.0以上の実行機能を目標とし、必要なP3・P4・対象外の仕組みを
+Icarus Verilog 13.0以上の実行機能を目標とし、必要なP4・P5・対象外の仕組みを
 P1へ前倒しします。目標はまだ未達成です。[実装済み一覧](docs/P1_SUPPORT.ja.md)と
 [比較で残る差](docs/notes/p1-icarus-progress.ja.md)を参照してください。
 
@@ -17,7 +19,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-24）
 
-> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P2 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。
+> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。
 
 `4c69843`で型付きpatternのSIR・検証器・text・実行処理を共有表示APIへ接続しました。
 frontの定数・runtime書式引数への接続は残っているため、ソース`%p`は引き続き未対応です。
@@ -81,9 +83,10 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 | --- | --- | --- |
 | P0 | 土台：ビルド、CI、詳細仕様書、テストスイート | 完了 |
 | P1 | 中間表現（SIR）への変換、IEEE 1800-2023 のスケジューラを持つ実行カーネル、Icarus Verilog 13.0以上の実行機能を目指す第 1 層（SIR のインタプリタ） | **進行中** |
-| P2 | 第 2 層：速さのため、SIR を前もって C++ に変換する | 予定 |
-| P3 | テストベンチの機能：クラス、動的なデータ、制約付き乱数、並行アサーションとカバレッジ、クロッキングブロック、VPI、DPI-C | 予定。必要な部分はP1へ前倒し |
-| P4 | スイッチのレベルの素子、マルチスレッドでの実行、他のシミュレータに組み込むライブラリ | 予定。必要な部分はP1へ前倒し |
+| P2 | SIR v1：SIRとカーネル境界をtier 2に渡せる形に確定する（[詳細は提案中](docs/notes/sir-v1-proposal.ja.md)） | Planned |
+| P3 | 第 2 層：速さのため、SIR を前もって C++ に変換する | 予定 |
+| P4 | テストベンチの機能：クラス、動的なデータ、制約付き乱数、並行アサーションとカバレッジ、クロッキングブロック、VPI、DPI-C | 予定。必要な部分はP1へ前倒し |
+| P5 | スイッチのレベルの素子、マルチスレッドでの実行、他のシミュレータに組み込むライブラリ | 予定。必要な部分はP1へ前倒し |
 
 ### P1 の合格条件
 
@@ -94,7 +97,7 @@ P1の完了にはなりません。
 
 - Icarusが対応する規格上の仕組みを実行できること。動的コンテナ、クラス、program、
   VPI、スイッチレベルのモデル、specifyパス、タイミング機能の必要な部分を含みます。
-  従来のP3・P4や対象外という分類を理由に、その部分をP1より後へ回しません。
+  従来のP4・P5や対象外という分類を理由に、その部分をP1より後へ回しません。
 - コンパイラとランタイムの版を記録し、独自のプローブで仕組みとその組み合わせを確認すること。
   拡張と外部インターフェースは別に棚卸しし、厳格な受理と衝突する拡張にはレビュー済みの
   互換方針を設けます。IEEEの値とスケジューリングの意味、4値の既定、共有カーネル、
@@ -144,7 +147,7 @@ static初期化の既知の不一致を含み、クラス実行は引き続きP1
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で、Linux と macOS のそれぞれで Icarus Verilog 以上 | Linux：kirimasim 213 本、Icarus Verilog 211 本。macOS：kirimasim 213 本、Icarus Verilog 210 本（14.0 devel、04cc493。合格条件で使う版を、それぞれでビルドしたもの） | 達成 |
 | 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,451 本が通る（99.0%）。失敗は 0 本で、15 本は後で作る構文で止まる | 達成 |
-| 必須のテストの一覧（P3 が要る 1 本を除く） | すべて通る | 達成 |
+| 必須のテストの一覧（P4 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
 
 kirimasim の外部 sv-tests・母集団の数は 2026-10-22 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
@@ -327,7 +330,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
   5.33〜5.86 MiB、Verilator が 2.00〜2.16 MiB でした。
 - この 4 設計では kirimasim は Icarus より約 1.31〜1.66 倍速く、Verilator は
   kirimasim より約 2.2〜93.9 倍速い結果でした。kirimasim と Icarus は 4 値の
-  インタプリタ、Verilator は C++ 生成による 2 値の実行です。P2 で kirimasim の
+  インタプリタ、Verilator は C++ 生成による 2 値の実行です。P3 で kirimasim の
   C++ 生成を実装する予定です。この小さい設計群だけで一般的な速度は判断できません。
 - CPU・OS・負荷、各試行の値、設計別のビルド・起動・RSS と再現手順は
   [測定の詳細](docs/BENCHMARKS.ja.md)にあります。前の版との性能差をこの測定だけで
@@ -372,7 +375,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 | 動的配列・キュー | P1で言語の一部を実行。構築・コピー・要素・メソッド・ref・遅延・明示的待機・動的foreach・第1次元クエリを検査済み。残作業はP1_SUPPORTを参照 |
 | Icarusが対応するクラス・VPI・スイッチ・specify・タイミングなどの必要な部分と、比較で残る差分 | 承認済みの範囲によりP1。実測した一覧を参照 |
 | より広いUVM、乱数化・制約、カバーグループ、並行アサーションとサンプル値の関数、クロッキング、virtual interface、`let`、DPI-C | 未実装。Icarus対応に必要な部分を超える範囲は従来の後続段階の予定 |
-| 第2層のC++生成と、RTLのさらなる速度最適化 | P2 |
+| 第2層のC++生成と、RTLのさらなる速度最適化 | P3 |
 
 ### その他の未対応と比較作業
 
@@ -471,7 +474,7 @@ kirimasim: info: finish at 52 ns
 | `-f <ファイル>`、`+incdir+<ディレクトリ>`、`+define+<名前>[=<値>]`、`--top=<名前>` | ソース、インクルードのディレクトリ、マクロ、最上位のモジュール |
 | `--timescale=<単位>/<精度>` | timescale を書いていない設計要素の時間の単位と精度（既定は `1ns/1ns`） |
 | `--max-time=<時刻>`、`--max-time-ok` | シミュレーションの時刻で止める。終了コードを 4 でなく 0 にする |
-| `--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P2 の第 2 層まで効果は無い） |
+| `--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P3 の第 2 層まで効果は無い） |
 | `--max-wall-time=<秒数>` | 実行の実時間の上限（整数秒、0 で無効）。`--max-time-ok` があっても終了コード 4 |
 | `--stop=finish\|ignore\|error` | `$stop` で通常終了・継続・終了コード 1 を選ぶ（既定 `finish`） |
 | `--autoflush` | display・write・monitor 系の出力ごとに標準出力をフラッシュする。既定は無効 |
@@ -497,7 +500,7 @@ flowchart TD
     analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
     subgraph tiers["Execution tiers"]
         t1["tier 1: VM<br/>interprets SIR (P1)"]
-        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(later)"]
     end
     kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(remaining container forms, classes, VPI, DPI-C: pending)"]
@@ -547,7 +550,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | [docs/spec/RUNTIME_ABI.ja.md](docs/spec/RUNTIME_ABI.ja.md) | カーネルと実行層の境界 |
 | [docs/spec/PERFORMANCE.ja.md](docs/spec/PERFORMANCE.ja.md) | 性能の目標と回数のカウンタ |
 | [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) | このプロジェクトでの AI の使い方 |
-| [docs/spec/CODEGEN_SPEC.ja.md](docs/spec/CODEGEN_SPEC.ja.md) | 第 2 層、C++ の生成（P2）。今は浮動小数点と最初の決まりだけ |
+| [docs/spec/CODEGEN_SPEC.ja.md](docs/spec/CODEGEN_SPEC.ja.md) | 第 2 層、C++ の生成（P3）。今は浮動小数点と最初の決まりだけ |
 | [docs/spec/RANDOMIZE_SPEC.ja.md](docs/spec/RANDOMIZE_SPEC.ja.md)、[ASSERTION_COVERAGE_SPEC.ja.md](docs/spec/ASSERTION_COVERAGE_SPEC.ja.md)、[LIB_EXPORT_SPEC.ja.md](docs/spec/LIB_EXPORT_SPEC.ja.md)、[VPI_SPEC.ja.md](docs/spec/VPI_SPEC.ja.md) | 制約付き乱数、アサーションとカバレッジ、DPI ライブラリの出力、VPI。今は見出しだけ |
 | [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) | 貢献の方法 |
 | [CHANGELOG.md](CHANGELOG.md) | 変更の記録（英語） |
@@ -568,15 +571,15 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | `valsem` | 値の意味の参照実装。整数のビットごとの演算と、独立したコンテナのセルのモデル。演算子、辺、case の一致の意味はここで決め、速い実装はすべてこれと突き合わせて確かめる |
 | カーネル（kernel） | すべての層が共有する実行カーネル。スケジューラ、値の演算、VCD出力、型付きヒープAPI。型付きSIR・VMでのヒープ実行、自動回収、ヒープ依存の待機は実装済み。SystemVerilogのコンテナには未対応の形が残り、VPI、DPI-Cは未実装。利用者の設計と一緒にリンクするので、slang にも LLVM にも依存しない |
 | 第 1 層、VM | 第 1 層のインタプリタ（P1）。今は SIR を直接解釈する。SIR をレジスタ方式のバイトコードに変換して実行するのは後で |
-| 第 2 層 | SIR から C++ を生成して前もってビルドし、速く実行する層（P2） |
+| 第 2 層 | SIR から C++ を生成して前もってビルドし、速く実行する層（P3） |
 | Context | 1 つのシミュレーションの実行時の状態を持つオブジェクト。独立した Context を同時に動かせる |
-| `analysis` | 第 2 層のための解析（P2）。X 到達解析（x が来ないところを見つけ、2 値のまま持てるようにする）、静的な島、レベル化（組合せ回路を依存の順に並べる）、可観測性（VPI や force から見えるので畳み込んではいけないもの） |
-| 静的な島 | 第 2 層が、速さのために 1 つのまとまりとしてコンパイルする予定の、設計の一部（P2。CODEGEN_SPEC.md に最初の規則を書いている） |
+| `analysis` | 第 2 層のための解析（P3）。X 到達解析（x が来ないところを見つけ、2 値のまま持てるようにする）、静的な島、レベル化（組合せ回路を依存の順に並べる）、可観測性（VPI や force から見えるので畳み込んではいけないもの） |
+| 静的な島 | 第 2 層が、速さのために 1 つのまとまりとしてコンパイルする予定の、設計の一部（P3。CODEGEN_SPEC.md に最初の規則を書いている） |
 | スロット | 静的な変数、ネット、その配列のための、カーネルの格納領域の場所 |
 | フレーム、フレームの変数 | プロセスやサブルーチンの呼び出しの、automatic な変数の格納領域 |
 | W4 | カーネルの 4 値の 64 ビットの語。a と b の 2 面で、0 は a=0 b=0、1 は a=1 b=0、z は a=0 b=1、x は a=1 b=1 |
 | チャンク | 64 ビットを超える値を分けた、1 つずつの W4。下位から並べる |
-| P0〜P4 | プロジェクトの段階（上の「段階」の節） |
+| P0〜P5 | プロジェクトの段階（上の「段階」の節） |
 
 **値**
 
@@ -622,7 +625,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | オラクル（oracle） | テストの期待する出力の出どころ（ヘッダの `:oracle:`。規格、または証拠として使ったシミュレータの名前） |
 | `:spec_check:` | テストを規格と照らし合わせたのが誰か。`ai`（Claude Code）か `human`（人） |
 | P1 の母集団 | P1 の合格条件で数える、自前のテストスイートの 1466 本の固定した一覧 |
-| 必須テスト | 通過率とは別に、落としてはいけないテストの決まった一覧（TEST_SUITE.md）。P1 では、P3 が要る 1 本を除いてすべて通ることが合格条件 |
+| 必須テスト | 通過率とは別に、落としてはいけないテストの決まった一覧（TEST_SUITE.md）。P1 では、P4 が要る 1 本を除いてすべて通ることが合格条件 |
 | sv-tests | CHIPS Alliance が公開している SystemVerilog のテスト集 |
 | Icarus Verilog、Verilator | 比べるためと証拠として動かす、ほかのオープンソースのシミュレータ。正解としては扱わない |
 | DPI-C、VPI | Cコード・ツールにつなぐ規格のインターフェース。未実装で、Icarus対応に必要な部分はP1へ前倒し |
@@ -641,7 +644,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ### Icarus Verilog や Verilator と何が違いますか？
 
-重点が 2 つ違います。4 値を既定とし、その意味を変える最適化をしないこと。IEEE 1800-2023 の時刻スロットのすべての領域でスケジューリングすることです。両方のシミュレータはテストの裏付けとして走らせますが、期待値は規格から決めます（「テストのやり方」の節）。Verilator は設計を C++ に変換する 2 値のシミュレータで、今は kirimasim よりずっと速いです（「シミュレーションの速さ」の節）。kirimasim も、第 2 層（P2）で C++ を生成します。
+重点が 2 つ違います。4 値を既定とし、その意味を変える最適化をしないこと。IEEE 1800-2023 の時刻スロットのすべての領域でスケジューリングすることです。両方のシミュレータはテストの裏付けとして走らせますが、期待値は規格から決めます（「テストのやり方」の節）。Verilator は設計を C++ に変換する 2 値のシミュレータで、今は kirimasim よりずっと速いです（「シミュレーションの速さ」の節）。kirimasim も、第 2 層（P3）で C++ を生成します。
 
 ### UVM は動きますか？
 

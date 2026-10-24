@@ -2,9 +2,11 @@
 
 [日本語](README.ja.md)
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](docs/notes/phase-renumbering.md)).
+
 The [P1 scope amendment](docs/spec/P1_SCOPE.md), approved 2026-10-23,
 sets Icarus Verilog 13.0-or-broader execution support as the target and
-advances the necessary P3/P4 and previously out-of-scope mechanisms into P1.
+advances the necessary P4/P5 and previously out-of-scope mechanisms into P1.
 This target is not achieved yet. See the [implemented inventory](docs/P1_SUPPORT.md)
 and [comparison gaps](docs/notes/p1-icarus-progress.md).
 
@@ -31,7 +33,7 @@ for the specification, the tests, and review.** See
 > (compiling SIR to bytecode comes later). Classes,
 > constrained randomization, concurrent assertions, VPI and DPI-C
 > are not there yet. Tier 1 has had performance and memory fixes; C++
-> generation is planned for P2. Unsupported forms generally stop with a
+> generation is planned for P3. Unsupported forms generally stop with a
 > positioned diagnostic. A known class static-initialization omission is
 > recorded in the [class investigation](docs/notes/class-execution-investigation.md);
 > successful execution alone does not establish support.
@@ -110,9 +112,10 @@ include all join kinds; automatic variables captured by children remain unsuppor
 | --- | --- | --- |
 | P0 | Groundwork: build, CI, detailed specifications, test suite | Done |
 | P1 | Front end to the intermediate representation (SIR), the execution kernel with the full IEEE 1800-2023 scheduler, and tier 1 (an interpreter of SIR) targeting Icarus Verilog 13.0-or-broader execution coverage | **In progress** |
-| P2 | Tier 2: SIR compiled ahead of time to C++, for speed | Planned |
-| P3 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks, VPI, DPI-C | Planned; required subset advanced to P1 |
-| P4 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned; required subset advanced to P1 |
+| P2 | SIR v1: finalize SIR and the kernel boundary for tier 2 ([details proposed](docs/notes/sir-v1-proposal.md)) | Planned |
+| P3 | Tier 2: SIR compiled ahead of time to C++, for speed | Planned |
+| P4 | Testbench features: classes, dynamic data, constrained randomization, concurrent assertions and coverage, clocking blocks, VPI, DPI-C | Planned; required subset advanced to P1 |
+| P5 | Switch-level primitives, multithreaded execution, a library to embed kirimasim in other simulators | Planned; required subset advanced to P1 |
 
 ### P1 exit criteria
 
@@ -124,7 +127,7 @@ not complete P1.
 
 - Cover the standard mechanisms supported by Icarus, including the required
   subset of dynamic containers, classes, programs, VPI, switch-level
-  modeling, specify paths and timing facilities. Earlier P3/P4 labels and
+  modeling, specify paths and timing facilities. Earlier P4/P5 labels and
   exclusions do not defer that subset beyond P1.
 - Record compiler/runtime versions and test mechanisms and their
   interactions with original probes. Inventory extensions and external
@@ -186,7 +189,7 @@ Icarus duplicate results are not the expected output.
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 213, Icarus Verilog 211; macOS: kirimasim 213, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
-| The mandatory test list (except the one that needs P3) | All pass | Yes |
+| The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 
 The external sv-tests and population counts for kirimasim were measured on 2026-10-22; Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
@@ -410,7 +413,7 @@ produced the expected result.
 - On these four designs kirimasim was about 1.31–1.66 times faster than
   Icarus; Verilator was about 2.2–93.9 times faster than kirimasim.
   kirimasim and Icarus interpret four-state values; Verilator generates
-  C++ and runs with two-state values. kirimasim's C++ generation is P2
+  C++ and runs with two-state values. kirimasim's C++ generation is P3
   work. These small designs do not establish general performance.
 - [Measurement details](docs/BENCHMARKS.md) include CPU, OS, load, every
   sample, design-specific build/startup/RSS values and reproduction steps.
@@ -520,7 +523,7 @@ their limits, system tasks/functions and implemented command-line options.
 | Dynamic arrays and queues | P1, partial language execution; constructors, copies, elements, methods, refs, delays, explicit waits, dynamic foreach and first-dimension queries tested; remaining forms in P1_SUPPORT |
 | Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
 | Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
-| Tier 2 C++ generation and further RTL speed optimizations | P2 |
+| Tier 2 C++ generation and further RTL speed optimizations | P3 |
 
 ### Other unsupported forms and comparison work
 
@@ -631,7 +634,7 @@ Options available now:
 | `-f <file>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `--top=<name>` | Sources, include directories, macros, the top module |
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
-| `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P2) |
+| `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P3) |
 | `--max-wall-time=<seconds>` | Limit simulation wall-clock time (whole seconds, 0 disables); exit code 4 even with `--max-time-ok` |
 | `--stop=finish\|ignore\|error` | End normally, continue after `$stop`, or end with code 1 (default `finish`) |
 | `--autoflush` | Flush stdout after every display/write/monitor task; off by default |
@@ -664,7 +667,7 @@ flowchart TD
     analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
     subgraph tiers["Execution tiers"]
         t1["tier 1: VM<br/>interprets SIR (P1)"]
-        t2["tier 2: generated C++<br/>built ahead of time (P2)"]
+        t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(later)"]
     end
     kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(remaining container forms, classes, VPI, DPI-C: pending)"]
@@ -751,7 +754,7 @@ holds.
 | [docs/spec/RUNTIME_ABI.md](docs/spec/RUNTIME_ABI.md) | The boundary between the kernel and the tiers |
 | [docs/spec/PERFORMANCE.md](docs/spec/PERFORMANCE.md) | Performance goals and counters |
 | [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) | How AI is used in this project |
-| [docs/spec/CODEGEN_SPEC.md](docs/spec/CODEGEN_SPEC.md) | Tier 2, C++ generation (P2): floating point and the first rules so far |
+| [docs/spec/CODEGEN_SPEC.md](docs/spec/CODEGEN_SPEC.md) | Tier 2, C++ generation (P3): floating point and the first rules so far |
 | [docs/spec/RANDOMIZE_SPEC.md](docs/spec/RANDOMIZE_SPEC.md), [ASSERTION_COVERAGE_SPEC.md](docs/spec/ASSERTION_COVERAGE_SPEC.md), [LIB_EXPORT_SPEC.md](docs/spec/LIB_EXPORT_SPEC.md), [VPI_SPEC.md](docs/spec/VPI_SPEC.md) | Constrained randomization, assertions and coverage, DPI library output, VPI: headings only so far |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
 | [CHANGELOG.md](CHANGELOG.md) | Changes |
@@ -773,15 +776,15 @@ the same table with the Japanese terms.
 | `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
 | kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; additional SystemVerilog container forms, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
-| tier 2 | C++ generated from SIR and built ahead of time, for speed (P2) |
+| tier 2 | C++ generated from SIR and built ahead of time, for speed (P3) |
 | Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
-| `analysis` | Analyses for tier 2 (P2): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
-| static island | A part of the design that tier 2 is to compile as one block for speed (P2; the first rules are in CODEGEN_SPEC.md) |
+| `analysis` | Analyses for tier 2 (P3): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
+| static island | A part of the design that tier 2 is to compile as one block for speed (P3; the first rules are in CODEGEN_SPEC.md) |
 | slot | A place in the kernel's store for a static variable, a net or an array of them |
 | frame / frame variable | The storage of a process's or a subroutine call's automatic variables |
 | W4 | The kernel's four-state 64-bit word: two planes a and b; 0 is a=0 b=0, 1 is a=1 b=0, z is a=0 b=1, x is a=1 b=1 |
 | chunk | One W4 of a value wider than 64 bits, least significant first |
-| P0 to P4 | The project's phases (see Phases above) |
+| P0 to P5 | The project's phases (see Phases above) |
 
 **Values**
 
@@ -827,7 +830,7 @@ the same table with the Japanese terms.
 | oracle | Where a test's expected output comes from (`:oracle:` in its header: the standard, or a named simulator as evidence) |
 | `:spec_check:` | Who checked a test against the standard: `ai` (Claude Code) or `human` |
 | P1 population | The fixed list of 1,466 tests of the own test suite that the P1 criterion counts |
-| mandatory tests | A fixed list of tests that must not fail, apart from any pass rate (TEST_SUITE.md); for P1, all but the one that needs P3 must pass |
+| mandatory tests | A fixed list of tests that must not fail, apart from any pass rate (TEST_SUITE.md); for P1, all but the one that needs P4 must pass |
 | sv-tests | The CHIPS Alliance's public SystemVerilog test collection |
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
 | DPI-C / VPI | The standard interfaces to C code and tools; unimplemented, with the required Icarus-supported subset advanced into P1 |
@@ -859,7 +862,7 @@ region of the time slot. Both simulators are run on kirimasim's tests as
 evidence, but the expected results come from the standard
 ([How it is tested](#how-it-is-tested)). Verilator compiles the design to
 C++ with two-state values and is far faster today
-([Simulation speed](#simulation-speed)); kirimasim's tier 2 (P2) will
+([Simulation speed](#simulation-speed)); kirimasim's tier 2 (P3) will
 compile to C++ too.
 
 ### Does it run UVM?

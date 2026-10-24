@@ -2,6 +2,8 @@
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-24.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](phase-renumbering.md)).
+
 The goal is broader P1 functional support than Icarus Verilog 13.0.
 Complete parity is **not confirmed**. The previous pass-rate gates and the
 small probes below cannot establish it. The
@@ -28,7 +30,7 @@ The current implementation includes [wide UDP input evaluation](wide-udp-inputs.
 and the [complete strength-interval kernel API](strength-range-foundation.md).
 The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
-and limits. P1 remains incomplete; C++ generation remains P2.
+and limits. P1 remains incomplete; C++ generation remains P3.
 
 `156e65c` adds a [shared-kernel assignment-pattern renderer](pattern-format-foundation.md).
 Fourteen new unit tests and all 22 older Format tests pass. Typed SIR/execution

@@ -2,6 +2,8 @@
 
 [日本語](P1_FEATURES.ja.md) · This English text is the main version.
 
+**Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
+
 These examples describe tier 1 as of 2026-10-24. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
@@ -711,7 +713,7 @@ The nonblocking assignment captures the right-hand value before `payload`
 changes. Four-state destinations retain X and Z; two-state destinations convert
 them to zero. Arrays follow foreach order and structures follow member
 declaration order. Slice sizes must be constant. Automatic variables cannot be
-nonblocking assignment targets. Dynamic containers and `with` remain P3 work;
+nonblocking assignment targets. Dynamic containers and `with` remain P4 work;
 nested streaming targets are not supported yet. See
 [value semantics, section 8](spec/VALUE_SEMANTICS.md#8-not-confirmed-to-be-written-later)
 for the handling of a final short slice.

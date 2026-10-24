@@ -2,6 +2,8 @@
 
 [English](p1-icarus-progress.md)。状態：進行中、2026-10-24。
 
+**改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](phase-renumbering.ja.md)。
+
 到達点は、Icarus Verilog 13.0以上の機能をP1で支えることです。
 全面的な同等性は**未確認**です。従来の合格率や、下の小さなプローブだけでは
 判定できません。P3・P4や対象外の機能を前倒しする
@@ -26,7 +28,7 @@ front接続とheap file-monitorの専用行列は残っています。以下の�
 [完全な強さ区間のカーネルAPI](strength-range-foundation.ja.md)が含まれます。
 強さのAPIは基盤で、MOS・スイッチのソース実行と`%v`は残作業です。
 [対応機能一覧](../P1_SUPPORT.ja.md)に検査した形と制限を記載しています。
-P1は未完了で、C++生成はP2の予定です。
+P1は未完了で、C++生成はP3の予定です。
 
 `156e65c`で[共有カーネルの代入パターン表示API](pattern-format-foundation.ja.md)を
 追加しました。新規ユニット14件と既存Format 22件が通ります。SIR・実行処理は後続の`4c69843`で接続し、frontが残作業です。
