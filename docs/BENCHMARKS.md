@@ -139,11 +139,15 @@ five measured columns had exit status 0 and the expected line, and every
   0.005–0.024 s; Verilator 0.33–0.34 s with a warm ccache, and 2.53–2.63 s
   once each with ccache turned off; Lyra 5.3–6.4 s (default) and 0.42–0.47 s
   (LLVM backend) into an empty cache.
-- Peak RSS (median of the five large runs, MiB): kirimasim 21.5–25.3, Icarus
+- Sampled RSS high-water values (median of the five large runs, MiB): kirimasim 21.5–25.3, Icarus
   7.7–8.2, Verilator 3.7–3.9, Lyra 4.5–4.8 (default) and 5.3–5.8 (LLVM). On
-  Linux, tools/bench.py now reads each program's `VmHWM`: `ru_maxrss` of a
+  Linux, tools/bench.py now samples each program's `VmHWM` every 10 ms.
+  A peak near process exit can fall after the last sample, so these are
+  observed high-water values, not guaranteed final peak RSS. `ru_maxrss` of a
   child also counts the Python process it was started from, so earlier Linux
-  numbers, including the nightly job's, cannot be below about 19 MiB.
+  numbers, including the nightly job's, cannot be below about 19 MiB in this
+  run's environment. The sampling change breaks direct comparison with that
+  earlier Linux RSS history; macOS still uses `ru_maxrss`.
 - Raw data: [bench.json](measurements/2026-10-24-wsl2/bench.json).
 
 ## Short test-suite times
