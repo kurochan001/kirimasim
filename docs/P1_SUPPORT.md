@@ -68,6 +68,8 @@ An unused class static-property initializer can lose its side effects and exit
 0 without a diagnostic. This is a known defect; successful execution alone
 does not establish class support. These observations are separate from the
 87-probe comparison and the approved test suite.
+The pending [class runtime contract](notes/class-runtime-proposal.md) specifies
+initialization, dispatch, GC and scheduled access; it is not implemented support.
 
 ### UDP input counts and compilation limits
 

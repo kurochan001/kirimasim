@@ -147,6 +147,8 @@ adds 59 original design observations, with legality boundaries kept separate.
 
 A separate [46-program class investigation](docs/notes/class-execution-investigation.md)
 records a known static-initialization mismatch. Class execution remains required P1 work.
+A [detailed class runtime amendment](docs/notes/class-runtime-proposal.md)
+adds fourteen original boundary observations and remains pending review.
 
 The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
 records 28 original programs and 56 reference observations separately from

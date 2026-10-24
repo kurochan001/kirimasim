@@ -92,3 +92,5 @@ and clang-tidy all pass. This was a lint-only rerun (`--presets ''` with
 `--llvm-bin`), not a second four-configuration test run. Its existing matching
 Z3 library was selected for that process; no installation or system setting
 changed. LLVM 23 cleanliness remains unresolved.
+
+A subsequent [detailed runtime proposal](class-runtime-proposal.md) is pending review and records fourteen additional original boundary observations.

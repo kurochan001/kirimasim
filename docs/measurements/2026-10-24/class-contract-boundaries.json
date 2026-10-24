@@ -1,0 +1,580 @@
+{
+  "measured": "2026-10-24",
+  "versions": {
+    "native": "kirimasim 0.0.0 (commit 3b2560f6eee5), built with AppleClang 21.0.0.21000334",
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "platform": "macOS/arm64",
+  "commands": {
+    "reference_compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "probe.vvp",
+      "probe.sv"
+    ],
+    "reference_run": [
+      "vvp",
+      "probe.vvp"
+    ],
+    "native_parse": [
+      "kirimasim",
+      "parse",
+      "--top=top",
+      "probe.sv"
+    ],
+    "native_run": [
+      "kirimasim",
+      "--top=top",
+      "probe.sv"
+    ]
+  },
+  "repository_context": "babec6c7d5d0912962c77a0d754d6cef1d42ef58",
+  "native_source_revision": "52652eb3f085f380fddf8a48043eeb77f69651be",
+  "purpose": "Fourteen original class boundary programs for review, separate from the earlier 46 and 87-probe inventory. Proposed outputs are not approved oracles.",
+  "normalization": "Temporary artifact paths normalized; backend assertion expressions omitted.",
+  "source_origin": "Original programs; no other simulator source/tests read.",
+  "cases": [
+    {
+      "name": "cast_literal_null",
+      "source": "`timescale 1ns/1ns\nclass A;endclass module top;A a;initial begin a=new;$display(\"%0d\",$cast(a,null));$display(\"%0d\",a==null);end endmodule\n",
+      "proposed_stdout": "1\n1\n",
+      "clause": "6.24.2, 8.16",
+      "source_sha256": "493166266a9cc25e7b60d0213352365358da5b214fe937d80db76d35c9a47ce5",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:31: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:49: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "cast_unrelated_typed_null",
+      "source": "`timescale 1ns/1ns\nclass A;endclass class B;endclass module top;A a,old;B b;initial begin a=new;old=a;$display(\"%0d\",$cast(a,b));$display(\"%0d\",a==old);end endmodule\n",
+      "proposed_stdout": "0\n1\n",
+      "clause": "6.24.2, 8.16",
+      "source_sha256": "3b5a44bf8b93999f076a98456c6cffa3c45ff4ff6a273013409d8e9b639f9917",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:48: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:50: error: unsupported: type 'A' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "cast_downcast_typed_null",
+      "source": "`timescale 1ns/1ns\nclass A;endclass class B extends A;endclass module top;A a;B b,old;initial begin b=new;old=b;$display(\"%0d\",$cast(b,a));$display(\"%0d\",b==old);end endmodule\n",
+      "proposed_stdout": "0\n1\n",
+      "clause": "6.24.2, 8.16",
+      "source_sha256": "ab2c494b7ff0eec3696ba255cf4111a2e652bbc3c47caddb2360c0d51779378a",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "SORRY: Compare class handles not implemented",
+            "error: Code generation had 1 error(s)."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:58: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:62: error: unsupported: type 'B' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "cast_upcast_typed_null",
+      "source": "`timescale 1ns/1ns\nclass A;endclass class B extends A;endclass module top;A a;B b;initial begin a=new;$display(\"%0d\",$cast(a,b));$display(\"%0d\",a==null);end endmodule\n",
+      "proposed_stdout": "1\n1\n",
+      "clause": "6.24.2, 8.16",
+      "source_sha256": "cd9c994bb4bc086703b1196f5519d15d2836e99a372719a53280bb02c3128bee",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 1,
+          "stdout": "<probe.vvp>: Program not runnable, 1 errors.\n",
+          "run_diagnostic": [
+            "<probe.sv>:2: Error: System task/function $cast() is not defined by any module."
+          ],
+          "status": "runtime_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:58: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:62: error: unsupported: type 'B' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "const_property_twice",
+      "source": "`timescale 1ns/1ns\nclass A;const int n;function new();n=7;n=9;endfunction endclass module top;A a;initial begin a=new;$display(\"%0d\",a.n);end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.19",
+      "source_sha256": "0499a73c9d5d5bbfe4cf537195f2125a7ef3cca58214596dcd7c7df38d84ee6d",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: error: Property n is constant in this method. (scope=$unit.A.new)",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 1,
+          "diagnostic": [
+            "<probe.sv>:2: error: Property n is constant in this method. (scope=$unit.A.new)",
+            "1 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:78: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:96: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "property_nba_owned",
+      "source": "`timescale 1ns/1ns\nclass A;int n;endclass module top;A a,b;initial begin a=new;b=a;a.n<=#2 9;a=null;#3;$display(\"%0d\",b.n);end endmodule\n",
+      "proposed_stdout": "9\n",
+      "clause": "6.21, 8.29, 10.4.2",
+      "source_sha256": "61883c70ffc6515fe3729ff3d6367e44f0564cd91410b2a7d0f71e8cc924551c",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": -6,
+          "stdout": "",
+          "run_diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "runtime_failed"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": -6,
+          "stdout": "",
+          "run_diagnostic": [
+            "reference backend assertion (expression omitted)"
+          ],
+          "status": "runtime_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:37: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:39: error: unsupported: type 'A' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "implicit_at_star_member",
+      "source": "`timescale 1ns/1ns\nclass A;int n=7;endclass module top;A a;int result=-1;always @* result=a.n;initial begin a=new;#1;$display(\"%0d\",result);a.n=9;#1;$display(\"%0d\",result);a=new;#1;$display(\"%0d\",result);end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "9.4.2.2",
+      "source_sha256": "356d4245062856e614b99b8f79b0ea7d509334216535b13cf39b27d5c01f5851",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [
+            "<probe.sv>:2: warning: @* found no sensitivities so it will never trigger."
+          ],
+          "run_exit": 0,
+          "stdout": "-1\n-1\n-1\n",
+          "run_diagnostic": [],
+          "status": "boundary_observation"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [
+            "<probe.sv>:2: warning: @* found no sensitivities so it will never trigger."
+          ],
+          "run_exit": 0,
+          "stdout": "-1\n-1\n-1\n",
+          "run_diagnostic": [],
+          "status": "boundary_observation"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:39: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:72: error: unsupported: expression 'MemberAccess' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "explicit_property_event",
+      "source": "`timescale 1ns/1ns\nclass A;int n;endclass module top;A a;initial begin a=new;fork begin @(a.n);$display(\"%0t %0d\",$time,a.n);end begin #2;a.n=9;end join end endmodule\n",
+      "proposed_stdout": "2 9\n",
+      "clause": "9.4.2",
+      "source_sha256": "62a279aefa27c5fe48070f4e9df15812db607f51b9d1dd6090b2d578b23df5a5",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: internal error: cannot synthesize expression: a.<0>",
+            "2 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: internal error: cannot synthesize expression: a.<0>",
+            "2 error(s) during elaboration."
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:37: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:55: error: unsupported: expression 'NewClass' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "static_unused_module",
+      "source": "`timescale 1ns/1ns\nmodule top;int calls;function int mark();calls++;return 7;endfunction class A;static int n=mark();endclass initial $display(\"%0d\",calls);endmodule\n",
+      "proposed_stdout": "1\n",
+      "clause": "6.21, 8.9",
+      "source_sha256": "167ead761ae8e011f6ef33c09cceb86bd0372615d69d313c405a8c12329d014f",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:77: error: unsupported: module member 'ClassType' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "static_unused_package",
+      "source": "`timescale 1ns/1ns\npackage p;int calls;function int mark();calls++;return 7;endfunction class A;static int n=mark();endclass endpackage module top;initial $display(\"%0d\",p::calls);endmodule\n",
+      "proposed_stdout": "1\n",
+      "clause": "6.21, 8.9",
+      "source_sha256": "50514af1e931e9a5ba026d2a0eecddb4e4e905bc0b922a34c789632065efbb36",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        }
+      }
+    },
+    {
+      "name": "static_declaration_order",
+      "source": "`timescale 1ns/1ns\npackage p;int trace;function int mark(int n);trace=trace*10+n;return n;endfunction endpackage class A;static int a=p::mark(1);static int b=p::mark(2);endclass module top;initial $display(\"%0d\",p::trace);endmodule\n",
+      "proposed_stdout": "12\n",
+      "clause": "6.21, 8.9; existing project declaration-order policy",
+      "source_sha256": "3f97dd5f9814c4aa50c3ca1f9333043e52c18a0117aa204d3a678ab873e13059",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "12\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "12\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 0,
+          "stdout": "0\n",
+          "run_diagnostic": [],
+          "status": "result_mismatch"
+        }
+      }
+    },
+    {
+      "name": "static_shared_instances",
+      "source": "`timescale 1ns/1ns\nmodule child(output int result);class A;static int count;function new();count++;endfunction endclass A a;initial begin a=new;#1;result=A::count;end endmodule module top;wire signed [31:0] a,b;child u(a),v(b);initial begin #2;$display(\"%0d %0d\",a,b);end endmodule\n",
+      "proposed_stdout": null,
+      "clause": "8.9, 6.22",
+      "source_sha256": "c005f252b9ad2ef5ec524023584b5e77c55bbd29b88bc49c42b86fe05a2634f4",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Malformed statement"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:104: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:104: error: unsupported: type 'A' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "shallow_rng_copy_parent_draw",
+      "source": "`timescale 1ns/1ns\nclass A;endclass module top;A a,b;int x,y,z,dummy,seed;initial begin seed=11;dummy=$urandom(seed);a=new;x=$urandom;b=new a;y=$urandom;seed=11;dummy=$urandom(seed);a=new;z=$urandom;dummy=$urandom;$display(\"%0d %0d\",x==z,y==dummy);end endmodule\n",
+      "proposed_stdout": "1 1\n",
+      "clause": "8.12, 18.14.1; proposed shallow-allocation seed policy",
+      "source_sha256": "72c55e86287edfd47d15d482f3fccbfbcbeb0ffa0ee8d2f4bb7f3998035ed234",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "14": {
+          "compile_exit": 0,
+          "diagnostic": [],
+          "run_exit": 0,
+          "stdout": "1 1\n",
+          "run_diagnostic": [],
+          "status": "model_match"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:31: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:33: error: unsupported: type 'A' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    },
+    {
+      "name": "weak_reference_new",
+      "source": "`timescale 1ns/1ns\nclass A;int n=7;endclass module top;A a,b;weak_reference#(A) w;initial begin a=new;w=new(a);b=w.get();$display(\"%0d %0d\",a==b,b.n);end endmodule\n",
+      "proposed_stdout": "1 7\n",
+      "clause": "8.30",
+      "source_sha256": "553b9c72d95f6cf352550ef09be40bb0bab479fba6fc8dec8e28a74c24522be8",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid module instantiation"
+          ],
+          "status": "compile_failed"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": [
+            "<probe.sv>:2: syntax error",
+            "<probe.sv>:2: error: Invalid module instantiation"
+          ],
+          "status": "compile_failed"
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:39: error: unsupported: type 'A' (not implemented yet)",
+            "<probe.sv>:2:41: error: unsupported: type 'A' (not implemented yet)"
+          ],
+          "status": "unsupported"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "13": {
+      "runtime_failed": 3,
+      "compile_failed": 6,
+      "boundary_observation": 1,
+      "model_match": 4
+    },
+    "14": {
+      "runtime_failed": 3,
+      "compile_failed": 6,
+      "boundary_observation": 1,
+      "model_match": 4
+    },
+    "native": {
+      "unsupported": 12,
+      "result_mismatch": 2
+    }
+  },
+  "provenance": "Native banner reports 3b2560f; native C++ implementation is unchanged since 52652eb. The prior 46-program binary reported 52652eb. Reference compiler/runtime banners rechecked for this record."
+}

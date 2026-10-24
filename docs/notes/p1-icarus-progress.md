@@ -69,7 +69,7 @@ preserved 84-item records and three fresh probes on the same retained source.
 The earlier 84-item cohort retains 24/30 gaps. This closes two newly inventoried
 mechanisms and exposes a compiler limit, without changing older cohort results.
 
-Eight detailed semantic amendments remain pending:
+Nine detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
@@ -79,6 +79,7 @@ Eight detailed semantic amendments remain pending:
 - [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).
 - [Shared automatic storage, fork capture and automatic event ownership](automatic-capture-proposal.md).
 - [Whole fixed-array ports, alias views, element-wise resolution and pulls](fixed-array-ports-proposal.md).
+- [Class identity, initialization, dispatch, typed ownership and object state](class-runtime-proposal.md).
 
 The MOS proposal covers thirteen switch probes and one partial-port probe in
 the existing 13.0 gap list. Its new 18-source matrix records 2,304 scalar
@@ -132,6 +133,13 @@ python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim
 This uses PATH; the [13.0 command](icarus-13-comparison.md#reproduce) selects
 matching binaries explicitly. Both measured references still give exit 1
 for remaining passing gaps. A zero result would not establish full parity.
+
+
+The [class runtime proposal](class-runtime-proposal.md) adds a detailed contract
+and fourteen original boundaries beyond the preserved 46. Each reference has
+four model matches, six compile failures, three runtime failures and one
+unjudged observation; native has twelve unsupported forms and two mismatches.
+No class implementation, contract approval or 87-item inventory expansion is claimed.
 
 ## Wide L/H side masks and the delayed boundary (2026-10-24)
 

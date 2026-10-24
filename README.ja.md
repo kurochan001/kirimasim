@@ -112,6 +112,7 @@ P1の完了にはなりません。
 
 [クラスの独自46プログラムによる調査](docs/notes/class-execution-investigation.ja.md)も別に記録しました。
 static初期化の既知の不一致を含み、クラス実行は引き続きP1の残作業です。
+[クラス実行の詳細契約案](docs/notes/class-runtime-proposal.ja.md)は独自14本の追加観測を含み、承認待ちです。
 
 直近の[MOS・スイッチの調査](docs/notes/mos-switch-investigation.ja.md)は、
 独自28プログラム・参照での56観測をこの一覧と別に記録しました。スイッチ実行は未対応で、

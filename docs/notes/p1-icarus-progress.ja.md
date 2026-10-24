@@ -58,7 +58,7 @@ nativeはモデル一致1本、未対応42本、出力不一致1本、違法入�
 追加3件を組み合わせています。以前の84件の24/30件も維持し、新たな2件の解消とコンパイル
 境界の追加を区別します。
 
-細部の意味について、以下の8案が承認待ちです。
+細部の意味について、以下の9案が承認待ちです。
 
 - [配列の縮約・並べ替え](array-methods-proposal.ja.md)。
 - [多次元バイナリメモリの番地](fread-multidim-proposal.ja.md)。
@@ -68,6 +68,7 @@ nativeはモデル一致1本、未対応42本、出力不一致1本、違法入�
 - [完全な強さのMOS・受動網・ポート・force・書式](mos-switch-proposal.ja.md)。
 - [automatic記憶域の共有・fork捕捉・automatic eventの所有](automatic-capture-proposal.ja.md)。
 - [固定長配列全体のポート・別名ビュー・要素ごとの解決・pull](fixed-array-ports-proposal.ja.md)。
+- [クラスの識別・初期化・実行](class-runtime-proposal.ja.md)。
 
 MOSの案は、既存の13.0差分のスイッチ13本と部分ポート1本に関係します。
 新しい18ソースの行列で、3つの負荷条件で各参照合計2,304スカラー組を記録しました。
@@ -109,6 +110,12 @@ python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim
 これはPATHを使います。[13.0用のコマンド](icarus-13-comparison.ja.md#再実行)では対応する
 バイナリを明示します。どちらの実測も差分が残るため終了コード1です。
 0になっても全機能の同等性を示すものではありません。
+
+
+[クラスの詳細契約案](class-runtime-proposal.ja.md)を追加しました。既存46本に加え、
+独自14本でstatic初期化・cast・プロパティNBA・event・RNG・weakの境界を確認しました。
+両参照は各モデル一致4本・コンパイル失敗6本・実行失敗3本・期待値なし1本、
+nativeは未対応12本・不一致2本です。契約の承認・クラス実装・既存87件への追加は含みません。
 
 ## 広いL/Hマスクと遅延の境界（2026-10-24）
 
