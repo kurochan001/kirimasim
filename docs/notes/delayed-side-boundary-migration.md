@@ -1,9 +1,10 @@
 # Delayed-side boundary expectation migration
 
-[日本語](delayed-side-boundary-migration.ja.md). Status: **proposal; not approved**.
+[日本語](delayed-side-boundary-migration.ja.md). Status: **approved (2026-10-25); integrated**. The user separately approved
+this exact expectation-only migration after the implementation checks.
 
 The six execution contracts were approved on 2026-10-25. Existing expectation
-changes remain separately reviewed under CLAUDE.md and AI_POLICY. This draft
+changes remain separately reviewed under CLAUDE.md and AI_POLICY. This migration
 has no production source change; its isolated branch is
 `codex/delayed-side-expectations`, based on `39cacb37`.
 

@@ -2,11 +2,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""Unreviewed delayed-side timing stays unsupported in every control-flow block."""
+"""Approved complete delayed state across entry and non-entry control-flow blocks."""
 
 import argparse
 from pathlib import Path
-import re
 import subprocess
 import tempfile
 
@@ -26,14 +25,19 @@ assign (weak1,weak0)q='1;
 initial begin #5; $display("unexpected execution");end
 endmodule
 '''
+            delayed = source.replace('initial begin #5; $display("unexpected execution");end',
+                                     'initial begin #5; $display("settled %0d", q === \'0); '
+                                     'data=\'1; control=\'x; #1; $display("pending %0d", q === \'0); '
+                                     '#2; $display("H %0d", q === \'1); '
+                                     'data=\'0; #1; $display("L_pending %0d", q === \'1); '
+                                     '#2; $display("L %0d", q === \'x); end')
             with tempfile.TemporaryDirectory() as folder:
-                Path(folder, 'probe.sv').write_text(source)
+                Path(folder, 'probe.sv').write_text(delayed)
                 result = subprocess.run([binary, 'probe.sv'], cwd=folder, capture_output=True,
                                         text=True, timeout=15, check=False)
-            errors = [line for line in result.stderr.splitlines() if ': error:' in line]
-            pattern = r"(?:.*[/\\])?probe\.sv:4:[0-9]+: error: unsupported: a three-state gate with a delay that drives the net 'top\.q' with other drivers \(not implemented yet\)"
-            if result.returncode != 2 or result.stdout or len(errors) != 1 or not re.fullmatch(pattern, errors[0]):
-                print(f'FAIL: delayed gate boundary width={width}, control={expression}: exit={result.returncode}')
+            expected = 'settled 1\npending 1\nH 1\nL_pending 1\nL 1\n'
+            if result.returncode != 0 or result.stdout != expected or ': error:' in result.stderr:
+                print(f'FAIL: delayed gate state width={width}, control={expression}: exit={result.returncode}')
                 print(result.stdout + result.stderr)
                 return 1
             accepted = source.replace('#(2,3,4) ', '').replace("assign (weak1,weak0)q='1;\n", '')
@@ -46,7 +50,7 @@ endmodule
                 print(f'FAIL: undelayed unresolved gate width={width}, control={expression}')
                 print(result.stdout + result.stderr)
                 return 1
-    print('checked six delayed-gate rejections and six undelayed acceptances, including non-entry blocks')
+    print('checked six complete delayed states and six unchanged undelayed acceptances, including non-entry blocks')
     return 0
 
 

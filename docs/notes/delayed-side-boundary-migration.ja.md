@@ -1,6 +1,7 @@
 # 遅延付きsideの境界テストの期待値移行
 
-[English](delayed-side-boundary-migration.md)が正です。状態：**提案中・未承認**。
+[English](delayed-side-boundary-migration.md)が正です。状態：**承認済み（2026-10-25）、取り込み済み**。
+実装検査の後、人がこの具体的な期待値移行を別に承認しました。
 
 6案の実行契約は2026-10-25承認済みですが、CLAUDE.mdとAI_POLICYにより既存期待値の変更は
 別にレビューします。分離した`codex/delayed-side-expectations`（基点`39cacb37`）には
