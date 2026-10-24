@@ -1,10 +1,32 @@
 # Icarus 13.0 and development-version comparison
 
-[日本語](icarus-13-comparison.ja.md). Rechecked 2026-10-25 at kirimasim
-source `2ad73ae`, dev build on macOS/arm64. No installation was added and
+[日本語](icarus-13-comparison.ja.md). Rechecked 2026-10-25 at the
+array/input checkpoint `b9906081`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
-## Latest recheck (2026-10-25)
+## Approved array/input recheck (2026-10-25)
+
+[The new 13.0 record](../measurements/2026-10-25/icarus13-approved-array-probes.json)
+and [development record](../measurements/2026-10-25/icarus14-approved-array-probes.json)
+use the same 87 original inputs and oracles. The comparison binary reports
+`b9906081`, including the strengthened tests and iterator-guard cleanup.
+[All 426 new source designs](../measurements/2026-10-25/approved-array-sir-equivalence.json)
+have byte-identical SIR before/after that cleanup. Ten native observations change to passing: dynamic sum, queue sort,
+multidimensional fread, and seven unique/tied/keyed/empty min/max forms. All
+older passing judged bytes and every reference status remain unchanged.
+Passing gaps fall **25 → 24 for 13.0** and **31 → 24 for development**;
+reference mismatches remain four/seven. The references retain the versions
+listed below; this is not full P1 completion.
+
+The separately pinned [344-case sv-tests recheck](../measurements/2026-10-25/approved-array-svtests.json)
+on macOS has 244 native passes, up from 234 on the retained pre-array binary,
+with no older pass lost. Icarus 13.0 passes 204; the quantitative gate's cached
+14.0 build `04cc493` passes 210. The pinned [P1 population](../measurements/2026-10-25/approved-array-population.json)
+retains 1,451/1,466 passes, zero failures and 15 unsupported forms. These external
+checks do not replace the broader functional inventory. Linux was not rerun;
+README generation now preserves separate per-platform sv-tests measurement dates.
+
+## Earlier query and monitor recheck (2026-10-25)
 
 The same 87 probes have unchanged engine statuses and unchanged passing
 judged outputs relative to the wide-UDP checkpoint at `52652eb`. The

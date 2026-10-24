@@ -8,6 +8,13 @@ layout remain drafts. The [phase mapping](phase-renumbering.md) is a separate
 approved decision. This approval adds no dependency or installation and changes
 no existing test expectation.
 
+**Inventory follow-up (2026-10-25):** the tables below retain their original
+2026-10-24 snapshot. The approved [runtime array-method implementation](runtime-array-methods.md)
+adds `ContainerSwapValues` / `container.swap.values` and `Heap::swapValues`
+(SIR_SPEC 5.8, RUNTIME_ABI 6). The current enum has 125 entries. Refresh the
+full Op/API inventory before the P2 schema or ABI freeze; formatVersion remains
+0 and C ABI remains 0.3. This follow-up does not approve the detailed v1 draft.
+
 ## Approved direction (2026-10-24)
 
 The user's approval covers the following recommendations, including the

@@ -80,10 +80,17 @@ SIR operands/types, and hand-built SIR execution. The kernel matrix uses
 150 valid/invalid random index pairs per width/state/container configuration,
 retains every element reference, checks notifications and forbids heap
 allocation during exchange. The VM matrix includes 129-bit positive, negative,
-unknown and out-of-range indices. The 36 additional CLI cases check explicit rejection of effectful and unverified-pure
-ordering keys across receiver/storage contexts. All 270 source cases and four unit tests
-pass in dev; full configuration and compiled negative-control results will
-be recorded in the validation checkpoint.
+unknown and out-of-range indices. The 36 additional CLI cases check explicit
+rejection of effectful and unverified-pure ordering keys across receiver/storage
+contexts. All 270 source cases and four unit tests pass. The [full validation record](../measurements/2026-10-25/approved-array-validation.json)
+passes all 21 local-CI checks after fixing the first trial's clang-tidy
+findings. Dev/ASan/UBSan pass 3,933/3,935 and release 3,934/3,936, with the
+same two known skips. Existing expectations, 29 SIR dumps and PerfCount
+budgets are unchanged. All nine [compiled controls](../measurements/2026-10-25/approved-array-negative-controls.json)
+fail real tests; restored sources pass all 431 selected tests. One initial
+snapshot-omission control survived deletion-only inputs; the six new in-place
+write cases expose it. Final iterator-guard cleanup preserves the complete
+[SIR text of all 426 new source designs](../measurements/2026-10-25/approved-array-sir-equivalence.json).
 
 ## Remaining work
 

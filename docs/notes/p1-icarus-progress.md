@@ -24,8 +24,13 @@ Icarus version**, down from 25 (13.0) and 31 (14.0 development), with the same
 four/seven reference mismatches. Ten native observations change from failure
 to passing; older passing observations and all reference statuses/expected
 outputs are retained. These finite probes do not establish complete P1.
-Full configuration and negative-control evidence follow in the validation
-checkpoint; historical results below retain their recorded revisions.
+The [final validation](../measurements/2026-10-25/approved-array-validation.json)
+passes all 21 local-CI checks. Dev/ASan/UBSan pass 3,933/3,935 and release
+3,934/3,936 with the same two skips. All nine compiled controls are caught.
+The pinned macOS sv-tests result grows 234 → 244/344 with no pass regression;
+the quantitative gate's Icarus 14.0 `04cc493` passes 210. P1 population remains
+1,451/1,466, zero failures and 15 unsupported. Linux was not rerun. Historical
+results below retain their recorded revisions.
 
 
 `2ad73ae` adds [bit queries on fixed unpacked aggregates](aggregate-bit-queries.md)
@@ -35,7 +40,7 @@ evaluation. Dev now has 3,500 passes out of 3,502, with the same two known
 skips. Automatic arrays of records and record refs remain storage gaps;
 dynamic/string bit streams and source `%p` remain unfinished.
 
-The [2026-10-25 comparison recheck](icarus-13-comparison.md#latest-recheck-2026-10-25)
+The [2026-10-25 comparison recheck](icarus-13-comparison.md#earlier-query-and-monitor-recheck-2026-10-25)
 retains all 87 previous engine statuses and passing outputs: there are still
 25/31 Icarus-passing gaps and four/seven reference mismatches. Two compiled
 [omission controls](../measurements/2026-10-25/p1-coverage-negative-controls.json)

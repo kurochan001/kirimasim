@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-25",
+  "source_revision": "b9906081b4356cf807b37ff583341e8568129f57",
+  "tree_note": "Production source, unit tests and feature generators match this revision. Per-platform README measurement dates and documentation/evidence updates were present during the final local-CI run. The README generator hash below identifies that additional tooling update.",
+  "source_sha256": {
+    "src/front/lower_array.cpp": "19961fb8eb8ea36fa769c53212f9f1b20554d1c1f3516265588d1863ca013442",
+    "src/front/lower_container.cpp": "24bf076eb0236ac7fbad7b22fc4090fdd6e69b95075ea45e61b95c2465c4a820",
+    "src/front/lower_expr.cpp": "a3aa052d6ee9fa81ed62f389db5b237938b8ff74d276bde9173382b0f7272502",
+    "src/front/lowerer.h": "7f86ce5a58959c948ec069ac723595b2422cd64003bf92d7e3d52d7289efa7a1",
+    "src/kernel/heap.cpp": "212cbd01a3095168b02cde3a91a1678376810421a102a6d21a1c6560278d2adb",
+    "src/kernel/include/kirimasim/kernel/heap.h": "0e5b0e5642e71cb0a4bfd46f1ca72b1a2c1b5c595a4d25a52990aae3e3281d58",
+    "src/sir/include/kirimasim/sir/design.h": "a3ec59a6bc8eb47c9a56e12ad226e33c0fc7d6a67c20cf781ba67c8e6d3bf97d",
+    "src/sir/types.cpp": "162f44f9f5b93e790bf60a6d3bb72502eb166972dd557f294c6420cbd70a5f44",
+    "src/sir/verify.cpp": "c97da1e0dfa14335f57d658e403be731f28920e8db57edf6257555949e933e22",
+    "src/valsem/containers.cpp": "6e380e5a82f0d8ec70abb82a32bb9da511e34e76e4667834555810c6ff5b9dea",
+    "src/valsem/include/kirimasim/valsem/containers.h": "69e5102c94626af8954bc2059eb20c63061c55230723e09b893a7e062f7650ae",
+    "src/vm/vm.cpp": "2ee747ffd76a2d8d515f6d1ee1a6d67915f1c15408c3489d7af3459d4b407856",
+    "tests/unit/heap_test.cpp": "c80eebde51cb48707174647903e84ffad7b659edc641e30cf9401b29a8d93af2",
+    "tests/unit/container_sir_test.cpp": "c0e1ff570ff93e051d44e62c8b6b64e050513bcdb72ec0912c4d9cafdab8c507",
+    "tests/unit/vm_container_test.cpp": "2f699f4b5ba0e6c6f2cd90fd363734ce202fffe93f7af1050ee04d3dea951e19",
+    "tests/cli/run_array_ordering_key_tests.py": "213e1e3da2db2ad114bdc7a9927ca188eb577ea4cfaa13a8f3a82fb8762f6674",
+    "tools/gen_array_methods_matrix.py": "f794a7d27abd081d4a2e16758c29b3a97b666fcc0d8a4f051dd752ead20797bd",
+    "tools/gen_multidim_fread_matrix.py": "7972bff2de6447622dc6b527eb5e624042868025342f5b49cd4a018c2360a3a9",
+    "tools/mutants.py": "9c46cf61439b650465e0b9f7903964f19735bb797d56f58e8231364d1301a600",
+    "tools/readme_counts.py": "8da8a225c80b8884f5a10ddf0d541c0f6aa0f8aa04795537878f672b6abc5d23"
+  },
+  "platform": "macOS arm64",
+  "compiler": "AppleClang 21.0.0.21000334",
+  "clang_tools": "LLVM 22.1.8",
+  "command": "DYLD_LIBRARY_PATH=<existing Z3 library directory> CTEST_PARALLEL_LEVEL=6 python3 -u tools/local_ci.py --llvm-bin <existing LLVM 22.1.8 bin>",
+  "ctest": {
+    "dev": {
+      "total": 3935,
+      "passed": 3933,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 3936,
+      "passed": 3934,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 3935,
+      "passed": 3933,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 3935,
+      "passed": 3933,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 54.5
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 4.8
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 46.9
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 0.8
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 6.2
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 72.1
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.8
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 5.2
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 60.0
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.3
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 68.6
+    }
+  ],
+  "result": "all checks passed",
+  "first_local_ci_trial": {
+    "source_revision": "a2e776d52adf",
+    "passed_checks": 20,
+    "failed_check": "clang-tidy",
+    "correction": "Avoid unnecessary Val copies, restore existing iterator bindings by nonallocating move during unwinding, and provide malformed-case test dispatch coverage. All 21 checks were repeated successfully."
+  },
+  "source_matrix": {
+    "array_methods": 270,
+    "multidimensional_fread": 156,
+    "direct_new_unit_tests": 4,
+    "ordering_key_diagnostic_cases": 36
+  },
+  "negative_controls": {
+    "record": "approved-array-negative-controls.json",
+    "compiled": 9,
+    "caught": 9,
+    "restored_selected_tests": 431,
+    "registered_controls": 523,
+    "all_registered_anchors_apply": true
+  },
+  "sir_equivalence": {
+    "record": "approved-array-sir-equivalence.json",
+    "identical_complete_dumps": 426
+  },
+  "external_checks": {
+    "svtests_record": "approved-array-svtests.json",
+    "native_before": 234,
+    "native_after": 244,
+    "total": 344,
+    "native_pass_regressions": 0,
+    "icarus13": 204,
+    "icarus_quantitative_gate14": 210,
+    "population_record": "approved-array-population.json",
+    "population_passed": 1451,
+    "population_total": 1466,
+    "population_failed": 0,
+    "population_unsupported": 15,
+    "linux_remeasured": false
+  },
+  "expectation_policy": {
+    "existing_suite_bodies_and_expectations": "unchanged",
+    "dump_sir_expected_files": 29,
+    "dump_sir_existing_expectations": "unchanged",
+    "perfcount_existing_budgets": "unchanged",
+    "unpushed_commit_expectation_check": "passed"
+  },
+  "scope_note": "P1 is incomplete. The unchanged finite 87-probe inventory retains 24 Icarus-passing gaps against each reference version and four/seven reference mismatches. Six detailed semantic proposals still require human approval."
+}

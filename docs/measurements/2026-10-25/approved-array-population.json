@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-25",
+  "platform": "macOS arm64",
+  "implementation_revision": "b9906081b4356cf807b37ff583341e8568129f57",
+  "test_revision": "b9906081b4356cf807b37ff583341e8568129f57",
+  "tests_revision": "179c55de9c83",
+  "population_file_sha256": "e4b43492414247ee535f9969c62f94f5643c82cc2a7b2f3ccf48ec54332614a5",
+  "total": 1466,
+  "passed": 1451,
+  "failed": 0,
+  "unsupported": 15,
+  "gate_percent": 90,
+  "linux_remeasured": false,
+  "runner_output": "# P1 gate population (TEST_SUITE.md): kirimasim-tests 179c55de9c83, 1466 of 1853 simulation tests chosen at c983cf799b4d; made by tools/p1_population.py select\npassed 1451, failed 0, unsupported 15 (counted as failed): 99.0% (gate 90%, 1320 of 1466)\n"
+}

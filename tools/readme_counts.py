@@ -61,6 +61,7 @@ def render(c, lang):
     """The text between the markers."""
     s, p, f, o, k = c["svtests"], c["population"], c["fuzz"], c["others"], c["kinds"]
     lin, mac = s["linux"], s["macos"]
+    dates = s.get("measured", {"linux": c["measured"], "macos": c["measured"]})
     pct = 100.0 * p["passed"] / p["total"]
     sv_met = all(x["kirimasim"] >= x["icarus"] for x in (lin, mac))
     # kirimasim's count, one number when the two OSes agree
@@ -92,8 +93,9 @@ def render(c, lang):
             f"rounds | The nightly fuzz runs passed on {f['nights']} nights in a row, through "
             f"{f['through']} | {yes(fuzz_met)} |",
             "",
-            "The external sv-tests and population counts for kirimasim were measured on "
-            f"{c['measured']}; Icarus Verilog's and "
+            "The external sv-tests counts for kirimasim were measured on "
+            f"{dates['linux']} (Linux) and {dates['macos']} (macOS); the population on "
+            f"{c['measured']}. Icarus Verilog's and "
             f"Verilator's in the last two columns on {o['measured']}, from their main branches "
             "that day. The nightly run measures sv-tests and the population again, and fails "
             "when they differ from these.",
@@ -136,7 +138,8 @@ def render(c, lang):
             f"ファジングを 7 回続けて | 夜間のファジングは {f['nights']} 晩続けて通った"
             f"（{f['through']} まで） | {yes(fuzz_met)} |",
             "",
-            f"kirimasim の外部 sv-tests・母集団の数は {c['measured']} に測ったもので、"
+            f"kirimasim の外部 sv-tests は Linux が {dates['linux']}、macOS が {dates['macos']}、"
+            f"母集団は {c['measured']} に測ったもので、"
             "右の 2 列の Icarus Verilog と "
             f"Verilator の数は {o['measured']} に、その日の main からビルドして測ったものです。"
             "nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。",
@@ -252,8 +255,13 @@ def main():
             problems.append(f"{'.'.join(keys)} is {node[keys[-1]]} in docs/counts.json, "
                             f"{value} by {where}")
             node[keys[-1]] = value
-    if args.command == "update" and (args.svtests or args.population):
-        c["measured"] = args.date
+    if args.command == "update":
+        if args.svtests:
+            dates = c["svtests"].setdefault("measured", {"linux": c["measured"],
+                                                       "macos": c["measured"]})
+            dates[args.os] = args.date
+        if args.population:
+            c["measured"] = args.date
     texts = {}
     for lang, path in READMES.items():
         text = path.read_text(encoding="utf-8")

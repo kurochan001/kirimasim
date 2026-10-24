@@ -1,5 +1,5 @@
 {
-  "measured": "2026-10-22",
+  "measured": "2026-10-25",
   "ctest": {
     "total": 3935,
     "passed": 3933,
@@ -23,8 +23,12 @@
       "icarus": 211
     },
     "macos": {
-      "kirimasim": 213,
+      "kirimasim": 244,
       "icarus": 210
+    },
+    "measured": {
+      "linux": "2026-10-22",
+      "macos": "2026-10-25"
     }
   },
   "population": {

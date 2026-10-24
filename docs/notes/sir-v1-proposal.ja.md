@@ -6,6 +6,12 @@ detailed contract pending review**。英語版が正本です。2026-10-24の提
 [フェーズ番号の対応](phase-renumbering.ja.md)は別の承認済み事項です。
 この承認で依存・道具を導入せず、既存の期待値も変更しません。
 
+**棚卸しの追記（2026-10-25）：**下の表は2026-10-24の時点の記録として保ちます。
+承認済みの[配列メソッドの実装](runtime-array-methods.ja.md)で、`ContainerSwapValues` /
+`container.swap.values`と`Heap::swapValues`を追加しました（SIR_SPEC 5.8、RUNTIME_ABI 6）。
+現在のenumは125項目です。P2のschema・ABIを凍結する前に、Op/API全件の棚卸しを更新します。
+formatVersionは0、C ABIは0.3のままで、この追記でv1の詳細案を承認した扱いにはしません。
+
 ## 承認された方針（2026-10-24）
 
 推奨時に説明した留保を含め、次の方針が承認されました。
