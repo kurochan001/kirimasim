@@ -30,6 +30,12 @@ its expectation-only migration is separately awaiting approval. The stronger
 pass both references and native, and all eight fail the retained native baseline.
 This does not claim P1 completion or completion of the other five contracts.
 
+**Oracle integration (2026-10-25):** the user separately approved the exact
+migration and `2b38b984` integrates it. The [full integration record](../measurements/2026-10-25/delayed-side-integration-validation.json)
+passes all 21 local-CI checks: zero failures, 4,177/4,179 dev/ASan/UBSan and
+4,178/4,180 release, with the same two known skips. The earlier one-failure
+paragraph above is the pre-approval checkpoint, not the current state.
+
 The approved [multidimensional binary input](multidim-fread-execution.md) and
 [runtime array methods](runtime-array-methods.md) now execute. The latter has
 270 original source cases, four direct unit tests and 36 explicit key-diagnostic

@@ -191,10 +191,10 @@ aggregate representations remain explicit limitations.
 All six remaining detailed [execution contracts](docs/notes/p1-execution-contracts-2026-10-25.md)
 were approved on 2026-10-25. The first implementation adds complete-state
 [delayed three-state propagation](docs/notes/delayed-gate-state-execution.md),
-with 240 original source cases and three direct tests. One existing rejection
-oracle now fails because execution succeeds; its stronger expectation-only
-migration is awaiting separate approval. The current CTest table includes that
-one failure, and this is not an all-green integration checkpoint.
+with 240 original source cases and three direct tests. The exact expectation-only migration was separately approved and integrated.
+[All 21 local-CI checks pass](docs/measurements/2026-10-25/delayed-side-integration-validation.json):
+dev/ASan/UBSan pass 4,177/4,179 and release 4,178/4,180, with zero failures and
+the same two known skips. Other approved P1 mechanisms remain work.
 
 #### Existing quantitative gates and measured results
 
@@ -212,7 +212,7 @@ The external sv-tests counts for kirimasim were measured on 2026-10-22 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 4,179 | 4,176, 2 skipped, 1 failed | — | — |
+| This repository's tests (CTest, dev configuration) | 4,179 | 4,177, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 

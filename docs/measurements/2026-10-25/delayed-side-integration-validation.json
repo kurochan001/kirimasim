@@ -1,0 +1,174 @@
+{
+  "date": "2026-10-25",
+  "checkpoint_revision": "2b38b9842f3bca9401bd4f1d08477d2073fbf49b",
+  "production_source_revision": "20274407a06a",
+  "expectation_approval_revision": "2b38b9842f3bca9401bd4f1d08477d2073fbf49b",
+  "platform": "macOS arm64",
+  "source_sha256": {
+    "src/front/lower.cpp": "369936963c7ce7bb6eaf110d579011496e2a834371a9b41755ff545a2645f233",
+    "src/kernel/sim.cpp": "58b280c092a3d2b6b33f02697e8775d388a36168444ec3290a51856609f9e489",
+    "src/kernel/include/kirimasim/kernel/sim.h": "640f50e7e51c7fec2991331ef86864da44ea6721c8dfa0e4e7c58fdd58046dc7",
+    "src/sir/verify.cpp": "4e1ce976cab0212cb52a2f3e33a8ae36a2b92e91c608ad3a55aa6e91a05313bf",
+    "src/vm/vm.cpp": "63225341efb55fe8fb557d5e4864fa80e9d81af7c2b959af7031e34d4bdfb44a",
+    "tests/tools/check_delayed_gate_boundary.py": "84effce83aa4eaaf1f4cb16f842c2f54c5ceed8928c7a688cdf8f9f70db94055",
+    "tests/unit/delayed_side_test.cpp": "9ceef27e303ba20b08764d181ed8da13aa94b061facb32dc18f73eafaf8f265a",
+    "tools/gen_delayed_gate_state_matrix.py": "0b7d335c024e79fd298eb750b440c06490ad40331a632c6d05ba87086cb62f66",
+    "tools/mutants.py": "b1c03ab37ef7dea1e6747bbc760f26ee18fda52eff0d808e861ddb20faf2aea9",
+    "tools/readme_counts.py": "313e27f14c43d71e723dbdd3cd3ceafb0b7d197bc6b5ddeba29168de63e4c872"
+  },
+  "ctest": {
+    "dev": {
+      "total": 4179,
+      "passed": 4177,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4180,
+      "passed": 4178,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4179,
+      "passed": 4177,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4179,
+      "passed": 4177,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 60.9
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 1.2
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 1.3
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 67.3
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 1.3
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 1.7
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 85.3
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 1.5
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 64.8
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.3
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.6
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 77.6
+    }
+  ],
+  "result": "all 21 checks passed; zero failures",
+  "preserved_skips": [
+    "suite/cb/input_sample_1step",
+    "suite/nets/net_port_drivers_part"
+  ],
+  "approved_expectation_change": "Six obsolete delayed rejection cases replaced by exact five-line traces; all six undelayed checks retained. Approved-by trailer recorded separately, with no source changes in that commit.",
+  "previous_checkpoint": "delayed-side-validation.json",
+  "previous_failure_resolved": true,
+  "existing_dump_sir_and_perfcount_expectations": "unchanged",
+  "p1_complete": false
+}

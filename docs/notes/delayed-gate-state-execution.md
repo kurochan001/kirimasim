@@ -1,7 +1,8 @@
 # Complete-state delayed three-state execution
 
-[日本語](delayed-gate-state-execution.ja.md). Status: implemented mechanism;
-expectation-only integration review pending, 2026-10-25.
+[日本語](delayed-gate-state-execution.ja.md). Status: implemented; expectation-only migration approved and integrated,
+2026-10-25. The [integration checkpoint](../measurements/2026-10-25/delayed-side-integration-validation.json)
+passes all 21 local-CI checks, with zero failures and the same two known skips.
 
 The user approved the [complete delayed-side contract](delayed-gate-side-proposal.md)
 and the five other [P1 contracts](p1-execution-contracts-2026-10-25.md). The
@@ -66,21 +67,19 @@ side-only timing cases and agree on the zero-delay case. This is the approved
 project interpretation, not evidence of an IEEE defect in either reference.
 It does not change the frozen 87-probe oracles or establish MOS/P1 completion.
 
-## Separate existing-oracle migration
+## Separate existing-oracle migration (approved and integrated)
 
-`tools/delayed_gate_boundary` still expects six now-obsolete rejections. It
-fails because execution succeeds. The separate branch
-`codex/delayed-side-expectations` proposes exact five-line propagation checks
-for those six delayed cases and preserves all six existing undelayed checks.
-Its [reasoned expectation-only review](delayed-side-boundary-migration.md) is
-pending human approval; no existing production expectation is changed here.
-The proposal runs successfully on the new implementation. Until that migration
-is approved and integrated, the full CTest set has one known failure; a green
-full-local-CI result is not claimed. Cross-configuration validation explicitly
-excludes only that preserved rejection oracle and checks its proposed stronger
-replacement independently.
+The user separately approved the exact expectation-only migration on
+2026-10-25. Commit `2b38b984` replaces the six obsolete rejection cases with
+exact five-line propagation checks and retains all six undelayed checks.
+No production source, existing suite expected file or PerfCount budget is
+changed by that commit. The [reasoned review](delayed-side-boundary-migration.md)
+and [successful full local-CI record](../measurements/2026-10-25/delayed-side-integration-validation.json)
+record this integration. Dev/ASan/UBSan pass 4,177/4,179 and release 4,178/4,180;
+all retain the two known skips, with no failures. The earlier record below
+preserves the deliberately reported pre-approval failure for audit.
 
-## Validation checkpoint
+## Earlier validation before the oracle approval
 
 [The complete record](../measurements/2026-10-25/delayed-side-validation.json)
 identifies source `20274407`, hashes, four configurations, nine successful
@@ -97,6 +96,6 @@ seven reference mismatches; every previous status and passing judged byte is
 retained. Pinned macOS sv-tests remains 244/344 and the P1 population remains
 1,451/1,466, with zero failures and 15 unsupported. Linux is not remeasured.
 All existing 29 SIR dumps, PerfCount budgets and expectation-protection checks
-pass. This is not a successful full `local_ci.py` run: the remaining oracle
-review is an explicit integration requirement. Other approved P1 contracts
+pass. That earlier checkpoint was not a successful full `local_ci.py` run; the
+separate approval and full green integration are now recorded above. Other approved P1 contracts
 remain implementation work.

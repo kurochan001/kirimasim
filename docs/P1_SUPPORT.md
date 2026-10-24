@@ -117,8 +117,8 @@ Delayed three-state outputs on resolved packed nets now propagate value and
 both side fields as one owned state. Same-projection changes, cancellation,
 equal pending deadlines, zero delay and short-circuit control blocks are covered
 by [240 original sources and three direct tests](notes/delayed-gate-state-execution.md).
-The old rejection oracle has a separate pending expectation migration; current
-integration is not an all-green CI checkpoint.
+The exact expectation-only migration was separately approved and integrated;
+all 21 local-CI checks now pass with zero failures and the same two known skips.
 
 The shared kernel now exposes complete strength intervals before four-state
 projection, following the approved VALUE_SEMANTICS 5.2–5.4 rule. Five added
