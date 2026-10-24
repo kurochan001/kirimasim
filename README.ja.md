@@ -180,7 +180,7 @@ README件数、clang-format・clang-tidyも成功しました。既存suiteの�
 SIR出力29件は変えていません。
 
 同じ独自87プローブで、13.0 stableは差分25本・参照不一致4本、14.0 develは31本・7本でした。
-[最新の検証と承認待ちの項目](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-24)と
+[最新の検証と承認待ちの項目](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-25)と
 [版ごとの個別記録](docs/notes/icarus-13-comparison.ja.md)を参照してください。
 以下の外部sv-tests・母集団の件数と性能測定は、記載した
 コミット・測定日の値を保っています。

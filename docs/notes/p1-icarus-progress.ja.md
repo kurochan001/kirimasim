@@ -1,6 +1,6 @@
 # Icarusの機能範囲を目指すP1の拡張
 
-[English](p1-icarus-progress.md)。状態：進行中、2026-10-24。
+[English](p1-icarus-progress.md)。状態：進行中、2026-10-25。
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](phase-renumbering.ja.md)。
 
@@ -10,18 +10,34 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
-## 現在の実装とレビュー状況（2026-10-24）
+## 現在の実装とレビュー状況（2026-10-25）
+
+`2ad73ae`で、既存のストリーミング・値の共通処理を使う
+[固定unpacked集約値へのビット問い合わせ](aggregate-bit-queries.ja.md)を追加しました。
+幅の広い2値／4値と対象・制御引数の評価回数を含む新規ソース136件が通り、
+devは3,502件中3,500件成功、同じ既知2件をスキップします。automaticな構造体配列と
+構造体refの格納形式、動的コンテナ・文字列のビットストリーム、ソースの`%p`は残作業です。
+
+[2026-10-25の再比較](icarus-13-comparison.ja.md#最新の再確認2026-10-25)では、以前の87項目の
+全状態と通過出力を維持し、Icarusが通る差分25／31件、参照結果の不一致4／7件が残っています。
+コンパイルした2件の[解除・変換の欠落](../measurements/2026-10-25/p1-coverage-negative-controls.json)は、
+実際の新しいソース・カーネルのテストで失敗し、復元したソースの再ビルドも通りました。
+
+ソース`2ad73ae`の[全ローカルCI記録](../measurements/2026-10-25/p1-coverage-validation.json)では、
+21項目すべてが成功しました。dev・ASan・UBSanは3,502件中3,500件、releaseは3,503件中3,501件
+成功し、各構成で同じ既知2件をスキップします。既存期待値、SIRダンプ29件、PerfCountの予算は
+変更していません。この結果によって、承認待ちの詳細仕様が承認されたとは扱いません。
 
 [2026-10-25のヒープを使うファイルモニターの続き](heap-file-monitor-lifetime.ja.md)で、
 独自ソース20件とschedulerの2テストを追加し、終了済みコールバックの登録・ヒープの依存が
-残る不具合を修正しました。devは3,365件中3,363件成功し、同じ既知2件をスキップします。
+残る不具合を修正しました。その時点のdevは3,365件中3,363件成功し、同じ既知2件をスキップしました。
 以下の版を固定したIcarusとの差分件数は維持し、全面的なP1対応と承認待ちの詳細仕様は残作業です。
 
 [型付きpatternのSIR・実行処理](pattern-sir-execution.ja.md)を追加し、既存queue要素の
 変更をdisplay monitorへ伝える経路も修正しました。新規SIR 11件を含む対象122件、
-全CI 21項目が成功しています。最新はdev・ASan・UBSanが各3,342件中3,340件、
-releaseが3,343件中3,341件成功で、既知の同じ2件をスキップします。source `%p`の
-front接続とheap file-monitorの専用行列は残っています。以下の比較値は以前の測定の来歴を保ちます。
+全CI 21項目が当時成功しました。その区切りではdev・ASan・UBSanが各3,342件中3,340件、
+releaseが3,343件中3,341件成功し、既知の同じ2件をスキップしました。source `%p`の
+front接続は残っています。以下の比較値は以前の測定の来歴を保ちます。
 
 最新の実装には、[広いUDP入力の評価](wide-udp-inputs.ja.md)、
 [fork内の宣言](fork-local-declarations.ja.md)、
@@ -120,8 +136,9 @@ nativeは4本成功、残る合法48本を拒否します。明示input varの�
 その入力数のソースコンパイルは主張しません。[時間上限付きデータ](../measurements/2026-10-24/udp-edge-coverage-observations.json)と
 [上流Issue案](slang-udp-coverage-issue-draft.md)へ未解決点をまとめ、Issue/コメントの送信はしていません。
 
-開発版で観測した広い範囲も引き続き追跡します。外部の通過率は2026-10-22、性能は
-2026-10-23の測定記録を維持します。[測定条件](../BENCHMARKS.ja.md)を参照してください。
+開発版で観測した広い範囲も引き続き追跡します。外部の通過率は2026-10-22の記録を維持します。
+性能は2026-10-23のmacOSと2026-10-24のWSL2の別の記録で、今回のソース変更はそこで
+再計測していません。[測定条件](../BENCHMARKS.ja.md)を参照してください。
 
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \

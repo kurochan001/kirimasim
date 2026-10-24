@@ -232,7 +232,7 @@ bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
 The same 87-probe inventory has separate 13.0-stable and 14.0-development
 results: 13.0 has 25 Icarus-passing gaps and four reference mismatches;
 14.0 has 31 and seven.
-See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
+See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-25)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.

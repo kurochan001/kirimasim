@@ -1,6 +1,6 @@
 # P1 expansion toward Icarus coverage
 
-[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-24.
+[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-25.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](phase-renumbering.md)).
 
@@ -11,21 +11,41 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-## Current implementation and review status (2026-10-24)
+## Current implementation and review status (2026-10-25)
+
+`2ad73ae` adds [bit queries on fixed unpacked aggregates](aggregate-bit-queries.md)
+through the existing shared streaming/value path. All 136 new source cases
+pass, including wide two/four-state leaves and single receiver/control
+evaluation. Dev now has 3,500 passes out of 3,502, with the same two known
+skips. Automatic arrays of records and record refs remain storage gaps;
+dynamic/string bit streams and source `%p` remain unfinished.
+
+The [2026-10-25 comparison recheck](icarus-13-comparison.md#latest-recheck-2026-10-25)
+retains all 87 previous engine statuses and passing outputs: there are still
+25/31 Icarus-passing gaps and four/seven reference mismatches. Two compiled
+[omission controls](../measurements/2026-10-25/p1-coverage-negative-controls.json)
+fail actual new source/kernel tests; restored sources rebuild successfully.
+
+The [full local-CI record](../measurements/2026-10-25/p1-coverage-validation.json)
+for source `2ad73ae` passes all 21 checks. Dev/ASan/UBSan have 3,500 passes
+out of 3,502; release has 3,501 out of 3,503. Each retains the two known
+skips. Existing expectations, all 29 SIR dumps and PerfCount budgets are
+unchanged. These results do not approve the pending semantic proposals.
 
 The [2026-10-25 heap file-monitor follow-up](heap-file-monitor-lifetime.md)
 adds 20 original source cases and two scheduler tests, and fixes killed
 display callbacks retaining their registration and heap dependencies.
-The dev suite has 3,363 passes out of 3,365, with the same two known skips.
+At that monitor checkpoint, the dev suite had 3,363 passes out of 3,365,
+with the same two known skips.
 The versioned Icarus gap counts below are unchanged; full P1 coverage and
 the pending semantic amendments remain work.
 
 The [typed-pattern SIR/execution checkpoint](pattern-sir-execution.md) also fixes
 display-monitor dependencies on existing queue cells. All 122 selected tests,
-including eleven new SIR tests, and all 21 CI checks pass. Latest dev/ASan/UBSan
-have 3,340 passes out of 3,342; release has 3,341 out of 3,343, with the same
-two skips. Source `%p` front integration and dedicated heap file-monitor
-matrices remain. Comparison counts below retain their earlier provenance.
+including eleven new SIR tests, and all 21 CI checks passed at that earlier
+checkpoint. It had 3,340 passes out of 3,342 in dev/ASan/UBSan and 3,341 out
+of 3,343 in release, with the same two skips. Source `%p` front integration
+remains. Comparison counts below retain their earlier provenance.
 
 The current implementation includes [wide UDP input evaluation](wide-udp-inputs.md),
 [fork-local declarations](fork-local-declarations.md),
@@ -148,8 +168,9 @@ and [upstream issue draft](slang-udp-coverage-issue-draft.md) preserve the unres
 frontend behavior. No upstream issue/comment has been sent.
 
 The broader development-version cases remain tracked. External pass-rate
-measurements keep their 2026-10-22 provenance; performance measurements keep
-their 2026-10-23 provenance. See [benchmark conditions](../BENCHMARKS.md).
+measurements keep their 2026-10-22 provenance. Performance measurements are
+separate records from 2026-10-23 (macOS) and 2026-10-24 (WSL2); these source
+changes have not been timed there. See [benchmark conditions](../BENCHMARKS.md).
 
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \

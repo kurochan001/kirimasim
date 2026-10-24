@@ -27,6 +27,13 @@ functions run once, repeated controls do not count twice, and high control
 bits are ignored. Receiver-call cases check exactly 27 receiver evaluations
 for 27 queries. All 136 pass locally.
 
+The [representative comparison record](../measurements/2026-10-25/aggregate-bit-query-observations.json)
+contains three original array/record/record-array sources, their hashes and
+exact expected output. All pass the new native source and fail its retained
+baseline. Icarus 13.0 stable and 14.0 development both reject the array
+queries at runtime and the record source forms at compilation. Their
+rejections are not treated as passing results or as new coverage totals.
+
 This query adapter does not add a new storage representation. Automatic
 arrays of records, ref records and ref arrays of records remain unsupported
 P1 work. Dynamic-container/string bit streams and other unimplemented stream
@@ -38,3 +45,8 @@ An omission control restores the old scalar-only argument lowering. It is
 registered separately from the monitor callback control. Full functional
 coverage and the Icarus-passing gaps still require the remaining mechanisms;
 these additional standard forms do not establish P1 completion.
+
+The [two compiled controls](../measurements/2026-10-25/p1-coverage-negative-controls.json)
+fail new source/kernel tests, excluding mutation-tool self-checks. Restored
+sources pass [all 21 local-CI checks](../measurements/2026-10-25/p1-coverage-validation.json):
+3,500 passes/two skips in dev, ASan and UBSan, and 3,501/two in release.

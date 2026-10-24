@@ -34,10 +34,17 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- Killing a display/file monitor callback now detaches its registration and
+  heap dependencies before its frame can be released. Ended callbacks are
+  not invoked again on later cell changes; other file monitors remain live.
+  Twenty new source cases and scheduler lifetime/resource-failure tests cover
+  queue/dynamic values, file closure, descriptor reuse and hook restoration.
+
 - A display monitor can observe a change in an existing queue cell without
   replacing its container handle. Heap reads are captured during the actual
   Postponed callback and detached with the registration's lifetime. The new
-  heap-backed file-monitor combinations still need a dedicated matrix.
+  heap-backed file-monitor combinations are now covered by the follow-up
+  matrix and callback lifetime checks described above.
 
 - Aggregate blocking and nonblocking assignments capture all RHS values
   before runtime target selectors under the approved evaluation policy.
@@ -65,6 +72,12 @@ own. CONTRIBUTING.md says what goes in this file.
   eligible static container variables remain separate.
 
 ### Added
+
+- `$countbits`, `$countones`, `$onehot`, `$onehot0` and `$isunknown` accept
+  supported fixed unpacked arrays, records and arrays of records with integral
+  leaves. They reuse the existing streaming conversion and kernel counter;
+  136 original cases check wide/two-/four-state values and argument evaluation.
+  Unsupported storage forms and dynamic/string bit streams remain separate.
 
 - Typed pattern layouts, verification, text and `pattern.format` execution
   connect to the shared renderer. Eleven independent SIR tests cover nested

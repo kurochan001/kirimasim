@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-25",
+  "source_revision": "2ad73ae66fc6eb63aa40a5ff8287e9365280af89",
+  "versions": {
+    "native": "kirimasim 0.0.0 (commit 2ad73ae66fc6), built with AppleClang 21.0.0.21000334",
+    "before_native": "kirimasim 0.0.0 (commit c507631d2529), built with AppleClang 21.0.0.21000334",
+    "icarus13_compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+    "icarus13_runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)",
+    "icarus14_compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+    "icarus14_runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+  },
+  "cases": [
+    {
+      "source": "tests/suite/values/aggregate_bit_query_array_initial_four_5.sv",
+      "sha256": "919f2701067d091b83757a5fb12a1bc049d162b3fe77e4309878f09eee7ba0d4",
+      "expected_stdout": "one 14 1 0 0 15 1 1 1 0\nmany 0 15 0 0 15 15 0 0 0\nmixed 3 3 3 6 6 3 0 0 1\ncontrols 3\n",
+      "engines": {
+        "native": {
+          "exit": 0,
+          "status": "passed",
+          "stdout": "one 14 1 0 0 15 1 1 1 0\nmany 0 15 0 0 15 15 0 0 0\nmixed 3 3 3 6 6 3 0 0 1\ncontrols 3\n",
+          "diagnostic": ""
+        },
+        "before_native": {
+          "exit": 2,
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "probe.sv:31:18: error: unsupported: an unpacked array as a value (not implemented yet)"
+        },
+        "icarus13": {
+          "exit": 1,
+          "stage": "run",
+          "status": "failed",
+          "stdout": "ERROR: <probe>/probe.sv:31: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:31: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:32: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:32: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:33: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:33: $countones's argument must be numeric.\nERROR: <probe>/probe.sv:34: $onehot's argument must be numeric.\nERROR: <probe>/probe.sv:34: $onehot0's argument must be numeric.\nERROR: <probe>/probe.sv:34: $isunknown's argument must be numeric.\nERROR: <probe>/probe.sv:39: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:39: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:40: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:40: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:41: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:41: $countones's argument must be numeric.\nERROR: <probe>/probe.sv:42: $onehot's argument must be numeric.\nERROR: <probe>/probe.sv:42: $onehot0's argument must be numeric.\nERROR: <probe>/probe.sv:42: $isunknown's argument must be numeric.\nERROR: <probe>/probe.sv:47: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:47: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:48: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:48: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:49: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:49: $countones's argument must be numeric.\nERROR: <probe>/probe.sv:50: $onehot's argument must be numeric.\nERROR: <probe>/probe.sv:50: $onehot0's argument must be numeric.\nERROR: <probe>/probe.sv:50: $isunknown's argument must be numeric.\n",
+          "diagnostic": ""
+        },
+        "icarus14": {
+          "exit": 1,
+          "stage": "run",
+          "status": "failed",
+          "stdout": "ERROR: <probe>/probe.sv:31: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:31: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:32: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:32: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:33: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:33: $countones's argument must be numeric.\nERROR: <probe>/probe.sv:34: $onehot's argument must be numeric.\nERROR: <probe>/probe.sv:34: $onehot0's argument must be numeric.\nERROR: <probe>/probe.sv:34: $isunknown's argument must be numeric.\nERROR: <probe>/probe.sv:39: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:39: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:40: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:40: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:41: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:41: $countones's argument must be numeric.\nERROR: <probe>/probe.sv:42: $onehot's argument must be numeric.\nERROR: <probe>/probe.sv:42: $onehot0's argument must be numeric.\nERROR: <probe>/probe.sv:42: $isunknown's argument must be numeric.\nERROR: <probe>/probe.sv:47: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:47: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:48: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:48: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:49: The first argument to $countbits() must be numeric.\nERROR: <probe>/probe.sv:49: $countones's argument must be numeric.\nERROR: <probe>/probe.sv:50: $onehot's argument must be numeric.\nERROR: <probe>/probe.sv:50: $onehot0's argument must be numeric.\nERROR: <probe>/probe.sv:50: $isunknown's argument must be numeric.\n",
+          "diagnostic": ""
+        }
+      }
+    },
+    {
+      "source": "tests/suite/values/aggregate_bit_query_record_initial_four_5.sv",
+      "sha256": "18976d3fca446e03c763f21eefade5415ffedbc68746fb29805052dd546ea59d",
+      "expected_stdout": "one 14 1 0 0 15 1 1 1 0\nmany 0 15 0 0 15 15 0 0 0\nmixed 3 3 3 6 6 3 0 0 1\ncontrols 3\n",
+      "engines": {
+        "native": {
+          "exit": 0,
+          "status": "passed",
+          "stdout": "one 14 1 0 0 15 1 1 1 0\nmany 0 15 0 0 15 15 0 0 0\nmixed 3 3 3 6 6 3 0 0 1\ncontrols 3\n",
+          "diagnostic": ""
+        },
+        "before_native": {
+          "exit": 2,
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "probe.sv:31:18: error: unsupported: unpacked structure used as a whole here (not implemented yet)"
+        },
+        "icarus13": {
+          "exit": 1,
+          "stage": "compile",
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "<probe>/probe.sv:18: sorry: Unpacked structs not supported."
+        },
+        "icarus14": {
+          "exit": 1,
+          "stage": "compile",
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "<probe>/probe.sv:18: sorry: Unpacked structs not supported."
+        }
+      }
+    },
+    {
+      "source": "tests/suite/values/aggregate_bit_query_record_array_initial_four_5.sv",
+      "sha256": "9ac7469e74bd4f16a80c99f5c0020a53549ad57cf40cf251a37d1afdbd1adbd5",
+      "expected_stdout": "one 19 1 0 0 20 1 1 1 0\nmany 0 20 0 0 20 20 0 0 0\nmixed 4 4 4 8 8 4 0 0 1\ncontrols 3\n",
+      "engines": {
+        "native": {
+          "exit": 0,
+          "status": "passed",
+          "stdout": "one 19 1 0 0 20 1 1 1 0\nmany 0 20 0 0 20 20 0 0 0\nmixed 4 4 4 8 8 4 0 0 1\ncontrols 3\n",
+          "diagnostic": ""
+        },
+        "before_native": {
+          "exit": 2,
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "probe.sv:33:18: error: unsupported: unpacked structure used as a whole here (not implemented yet)"
+        },
+        "icarus13": {
+          "exit": 1,
+          "stage": "compile",
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "<probe>/probe.sv:18: sorry: Unpacked structs not supported."
+        },
+        "icarus14": {
+          "exit": 1,
+          "stage": "compile",
+          "status": "failed",
+          "stdout": "",
+          "diagnostic": "<probe>/probe.sv:18: sorry: Unpacked structs not supported."
+        }
+      }
+    }
+  ],
+  "scope": "Original representative bit-query sources; not a parity proof."
+}

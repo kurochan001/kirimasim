@@ -1,8 +1,27 @@
 # Icarus 13.0 and development-version comparison
 
-[日本語](icarus-13-comparison.ja.md). Measured 2026-10-24 at kirimasim
-source `52652eb` (wide UDP evaluation), dev build on macOS/arm64. No installation was added and
+[日本語](icarus-13-comparison.ja.md). Rechecked 2026-10-25 at kirimasim
+source `2ad73ae`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
+
+## Latest recheck (2026-10-25)
+
+The same 87 probes have unchanged engine statuses and unchanged passing
+judged outputs relative to the wide-UDP checkpoint at `52652eb`. The
+compiler/runtime versions remain 13.0 stable and 14.0 development as listed
+below. The fresh portable [13.0](../measurements/2026-10-25/icarus13-coverage-probes.json)
+and [development](../measurements/2026-10-25/icarus14-coverage-probes.json)
+records include source revision and hashes. There are still 25/31 passing
+gaps and four/seven reference mismatches. Neither passing aggregate bit
+queries nor the callback lifetime fix closes one of these 87 passing gaps.
+
+Three original representative [fixed-aggregate bit-query cases](../measurements/2026-10-25/aggregate-bit-query-observations.json)
+pass the new native source and fail the retained native baseline. Both
+references reject the array bit queries at runtime and the record source
+forms at compilation. These additional standard forms and their
+[136-case matrix](aggregate-bit-queries.md) remain separate from the 87-case
+inventory; they do not establish complete P1 coverage. The historical steps
+below retain their original scope and measurements.
 
 ## Verified versions and results
 

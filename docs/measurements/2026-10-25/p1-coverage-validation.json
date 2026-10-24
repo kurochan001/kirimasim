@@ -1,0 +1,172 @@
+{
+  "date": "2026-10-25",
+  "source_revision": "2ad73ae66fc6eb63aa40a5ff8287e9365280af89",
+  "tree_note": "Source, tests and tools match the revision; documentation and measurement updates were present during local CI.",
+  "source_sha256": {
+    "src/kernel/sim.cpp": "a39b524566b1b9a9a633b0f4e1e4b5ab6031562e86f2db377cb5a552ca1a3ee4",
+    "src/front/lower_expr.cpp": "e1d97739c5227b5a63dab57161c1aeea951ad328e28909cbfa43dcd07e6909ff",
+    "tests/unit/scheduler_test.cpp": "07d3c6c91319048c9f0d6579d34026b8c3ad0fb89173c4cd0d58ec04f765d55d",
+    "tools/gen_file_heap_monitor_matrix.py": "577990a046392702f5c74a94ccef164959961324b268c4c9d043b25ee757d870",
+    "tools/gen_aggregate_bit_query_matrix.py": "e81ec4728046459b50c6dbf91ea70b3158a986e58699c5165abf8f564363d5b1",
+    "tools/mutants.py": "c142f64406bfefbbee7f8bbf52f65555bbb197902d78f06f50f4ecd8ffd911bc"
+  },
+  "platform": "macOS arm64",
+  "clang_tools": "LLVM 22.1.8",
+  "ctest": {
+    "dev": {
+      "total": 3502,
+      "passed": 3500,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 3503,
+      "passed": 3501,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 3502,
+      "passed": 3500,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 3502,
+      "passed": 3500,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "passed",
+      "seconds": 0.9
+    },
+    {
+      "name": "dev: build",
+      "status": "passed",
+      "seconds": 0.1
+    },
+    {
+      "name": "dev: test",
+      "status": "passed",
+      "seconds": 49.7
+    },
+    {
+      "name": "release: configure",
+      "status": "passed",
+      "seconds": 1.0
+    },
+    {
+      "name": "release: build",
+      "status": "passed",
+      "seconds": 4.0
+    },
+    {
+      "name": "release: test",
+      "status": "passed",
+      "seconds": 43.0
+    },
+    {
+      "name": "asan: configure",
+      "status": "passed",
+      "seconds": 0.9
+    },
+    {
+      "name": "asan: build",
+      "status": "passed",
+      "seconds": 6.6
+    },
+    {
+      "name": "asan: test",
+      "status": "passed",
+      "seconds": 67.6
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "passed",
+      "seconds": 0.9
+    },
+    {
+      "name": "ubsan: build",
+      "status": "passed",
+      "seconds": 5.5
+    },
+    {
+      "name": "ubsan: test",
+      "status": "passed",
+      "seconds": 55.6
+    },
+    {
+      "name": "check_release_flags",
+      "status": "passed",
+      "seconds": 0.0
+    },
+    {
+      "name": "check_banned",
+      "status": "passed",
+      "seconds": 0.4
+    },
+    {
+      "name": "check_spdx",
+      "status": "passed",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "passed",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_global_state",
+      "status": "passed",
+      "seconds": 0.3
+    },
+    {
+      "name": "check_expected_change",
+      "status": "passed",
+      "seconds": 0.1
+    },
+    {
+      "name": "readme_counts",
+      "status": "passed",
+      "seconds": 0.2
+    },
+    {
+      "name": "clang-format",
+      "status": "passed",
+      "seconds": 0.5
+    },
+    {
+      "name": "clang-tidy",
+      "status": "passed",
+      "seconds": 65.9
+    }
+  ],
+  "negative_controls": "p1-coverage-negative-controls.json",
+  "icarus_13": {
+    "probes": 87,
+    "passing_gaps": 25,
+    "reference_mismatches": 4
+  },
+  "icarus_development": {
+    "probes": 87,
+    "passing_gaps": 31,
+    "reference_mismatches": 7
+  },
+  "scope": "P1 remains incomplete. Existing expectations and performance budgets unchanged."
+}

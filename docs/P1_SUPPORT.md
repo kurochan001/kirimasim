@@ -11,14 +11,15 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-24, including dynamic arrays
+This inventory describes tier 1 as of 2026-10-25, including fixed-aggregate
+bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
 and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API is documented separately as a kernel foundation; it does not enable
 MOS/switch execution. Check `kirimasim --help` for a build's options and
-`--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-24)
+`--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-25)
 separate the latest comparison from historical measurements.
 
 P1 is in progress. “Supported” below means that the listed forms can be

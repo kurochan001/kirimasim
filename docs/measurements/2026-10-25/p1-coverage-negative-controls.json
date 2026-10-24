@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-25",
+  "source_revision": "2ad73ae66fc6eb63aa40a5ff8287e9365280af89",
+  "controls": [
+    {
+      "name": "aggregate bit query",
+      "compiled": true,
+      "baseline_passed": true,
+      "caught": true,
+      "failing_tests": [
+        "suite/values/aggregate_bit_query_array_initial_four_65"
+      ],
+      "restored_build_passed": true
+    },
+    {
+      "name": "killed display callback",
+      "compiled": true,
+      "baseline_passed": true,
+      "caught": true,
+      "failing_tests": [
+        "Scheduler.HeapFileAndDisplayCaptureFailuresKeepTheCallbackOriginAndRestoreReadHooks"
+      ],
+      "restored_build_passed": true
+    }
+  ]
+}
