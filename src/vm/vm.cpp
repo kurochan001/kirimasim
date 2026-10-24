@@ -2741,12 +2741,18 @@ private:
                             designError(f, in, "the delay takes the time past the largest time");
                             return Exit::Error;
                         }
+                        std::vector<kernel::DelayedSideUpdate> sides;
+                        sides.reserve((ops.size() - 5) / 2);
+                        for (std::size_t i = 5; i + 1 < ops.size(); i += 2)
+                            sides.push_back(
+                                {{kernelSlot(ops[i].asSlot()), ops[i].firstElem, ops[i].lsb, 1},
+                                 (value(ops[i + 1]).a & 1) != 0});
                         sched_.driveDelayed(info_[body.index()][b.index()][k].driver,
                                             {.slot = kernelSlot(ops[0].asSlot()),
                                              .elem = ops[0].firstElem,
                                              .lsb = ops[0].lsb,
                                              .width = ops[0].width},
-                                            buf.data(), *rise, *fall, *off);
+                                            buf.data(), *rise, *fall, *off, sides);
                         break;
                     }
                     case Op::Resolve: resolve(in, info_[body.index()][b.index()][k]); break;
@@ -2969,7 +2975,9 @@ private:
                 const bool target = isWriteTarget(in.op);
                 for (std::size_t i = 0; i < in.operands.size(); ++i) {
                     const Operand& o = in.operands[i];
-                    if (o.kind != Operand::Kind::Slot || (target && i == 0)) continue;
+                    if (o.kind != Operand::Kind::Slot || (target && i == 0) ||
+                        (in.op == Op::DriveDelay && i >= 5 && (i - 5) % 2 == 0))
+                        continue;
                     const sir::Slot& slot = d_.slot(o.asSlot());
                     const bool whole = in.op != Op::Load;
                     deps.reads.push_back({o.asSlot(), whole ? 0 : o.firstElem,

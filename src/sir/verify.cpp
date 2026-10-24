@@ -1307,17 +1307,45 @@ private:
                         bad("the delay must be integral");
                 }
                 break;
-            case Op::DriveDelay:
-                // A cont process writes a slot range after one of three
-                // delays (SIR_SPEC.md 5.4).
+            case Op::DriveDelay: {
                 if (body.process == nullptr || body.process->kind != ProcessKind::Cont)
                     bad("only a cont process writes with it");
-                if (nOps(5) &&
-                    (ops[0].kind != Operand::Kind::Slot || !isValue(1) || !fits(ty(0), ty(1)) ||
-                     !isIntegral(ty(0)) || !delayOk(2) || !delayOk(3) || !delayOk(4)))
+                if (ops.size() < 5 || (ops.size() - 5) % 2 != 0) {
+                    bad("expects five operands followed by complete side target/value pairs");
+                    break;
+                }
+                if (ops[0].kind != Operand::Kind::Slot || !isValue(1) || !fits(ty(0), ty(1)) ||
+                    !isIntegral(ty(0)) || !delayOk(2) || !delayOk(3) || !delayOk(4))
                     bad("needs an integral slot range, a value of its type and three integral "
                         "delays");
+                for (std::size_t i = 5; i + 1 < ops.size(); i += 2) {
+                    const auto& o = ops[i];
+                    if (o.kind != Operand::Kind::Slot || o.id >= d_.slots.size()) {
+                        bad("side target must be a scalar two-state slot bit");
+                        continue;
+                    }
+                    const Slot& slot = d_.slots[o.id];
+                    if (!slot.dims.empty() || !isIntegral(slot.type) || isFourState(slot.type) ||
+                        o.width != 1 || o.firstElem != 0 || o.numElems > 1 || !isValue(i + 1) ||
+                        !fits(ty(i), ty(i + 1)))
+                        bad("side target/value must be a fitting scalar two-state bit");
+                    const SlotRange side{o.asSlot(), o.firstElem, o.numElems, o.lsb, o.width};
+                    for (std::size_t j = 0; j < i; j = j == 0 ? 5 : j + 2) {
+                        const auto& other = ops[j];
+                        if (other.kind != Operand::Kind::Slot || other.id != o.id) continue;
+                        if (overlaps(slot, side,
+                                     {other.asSlot(), other.firstElem, other.numElems, other.lsb,
+                                      other.width}))
+                            bad("side target overlaps the primary or another side target");
+                    }
+                    bool covered = false;
+                    if (body.process)
+                        for (const SlotRange& w : body.process->writes)
+                            covered = covered || covers(slot, w, side);
+                    if (!covered) bad("side target writes outside the write set");
+                }
                 break;
+            }
             case Op::LoadElem:
             case Op::StoreElem:
             case Op::NbaElem:

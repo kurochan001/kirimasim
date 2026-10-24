@@ -213,6 +213,13 @@ struct Limits {
 };
 
 /// The scheduler of one Context.
+/// One owned-by-copy bit of a delayed driver's complete output state.
+/// The target is a scalar two-state bit, separate from the primary value.
+struct DelayedSideUpdate {
+    SlotBits at;
+    bool value = false;
+};
+
 class Scheduler {
 public:
     Scheduler(Context& ctx, Store& store, Counters& counters);
@@ -367,8 +374,12 @@ public:
     /// to 0, `off` to all z, else `rise`. A pending update of another value
     /// is dropped first; none is scheduled when the value is the one there
     /// now. Updates after 0 ticks go to the Inactive region.
+    /// Optional side fields are copied into the same pending state. Equality
+    /// includes every field, preserves an identical pending deadline, and
+    /// commits all fields before any callbacks (approved 2026-10-25).
     void driveDelayed(std::uint32_t driver, SlotBits at, const std::uint64_t* value,
-                      std::uint64_t rise, std::uint64_t fall, std::uint64_t off);
+                      std::uint64_t rise, std::uint64_t fall, std::uint64_t off,
+                      std::span<const DelayedSideUpdate> sides = {});
 
     /// Schedules a nonblocking update, `delay` ticks from now, in the NBA
     /// region of the scheduling process's group (SCHEDULER_SPEC.md 13).
@@ -605,6 +616,7 @@ private:
         bool pending = false;
         std::uint64_t gen = 0;
         std::vector<std::uint64_t> value;
+        std::vector<DelayedSideUpdate> sides;
     };
     static_assert(sizeof(DelayedDriver::gen) == sizeof(Event::gen));
     std::vector<DelayedDriver> drivers_;

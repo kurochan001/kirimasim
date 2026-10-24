@@ -40,6 +40,20 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('delayed side: current-state equality ignores side values', 'src/kernel/sim.cpp',
+     'std::equal(value, value + words, now.begin()) && sidesCommitted',
+     'std::equal(value, value + words, now.begin()) && (static_cast<void>(sidesCommitted), true)'),
+    ('delayed side: pending-state equality ignores side values', 'src/kernel/sim.cpp',
+     'sameSides &&\n                             std::equal(value, value + words, d.value.begin(), d.value.end())',
+     '(static_cast<void>(sameSides), true) &&\n                             std::equal(value, value + words, d.value.begin(), d.value.end())'),
+    ('delayed side: identical reevaluation resets the deadline', 'src/kernel/sim.cpp',
+     '|| d.pending) return;', '|| (d.pending && false)) return;'),
+    ('delayed side: primary callbacks observe old side fields', 'src/kernel/sim.cpp',
+     '            beginWalk();\n            write(target, value.data());',
+     '            write(target, value.data());\n            beginWalk();'),
+    ('delayed side: transport drops the second field', 'src/vm/vm.cpp',
+     'for (std::size_t i = 5; i + 1 < ops.size(); i += 2)',
+     'for (std::size_t i = 5; i + 3 < ops.size(); i += 2)'),
     ("array methods: empty product loses its multiplicative identity", "src/front/lower_array.cpp",
      'constant(result, name == "product" ? 1 : 0)', 'constant(result, 0)'),
     ("array methods: prepend identity to a nonempty reduction", "src/front/lower_array.cpp",
@@ -109,13 +123,10 @@ MUTANTS = [
      '    // A declaration-only parallel block has no children and cannot wait.\n'
      '    if (ops.empty()) return;',
      '    // Deliberately emit an empty child list.'),
-    ('wide gate strength: delayed guard ignores later blocks',
+    ('delayed side: capture searches only the entry block',
      'src/front/lower.cpp',
-     '            for (const sir::BasicBlock& block : design_.process(p).blocks)\n'
-     '                for (const sir::Instr& in : block.instrs)\n'
-     '                    if (in.op == sir::Op::DriveDelay) return true;',
-     '            for (const sir::Instr& in : design_.process(p).blocks[0].instrs)\n'
-     '                if (in.op == sir::Op::DriveDelay) return true;'),
+     'blockIndex < p.blocks.size() && !delayed',
+     'blockIndex < std::min<std::size_t>(1, p.blocks.size()) && !delayed'),
     ('wide gate strength: zero half uses a fixed word offset',
      'src/vm/vm.cpp', 'sideWord(sides[d], w + 64 * k)',
      'sideWord(sides[d], 64 + 64 * k)'),
@@ -126,7 +137,7 @@ MUTANTS = [
      'src/vm/vm.cpp', 'const auto word = bit / 64;',
      'const auto word = 0U;'),
     ('wide gate strength: side writes use the entry block',
-     'src/front/lower.cpp', 'p.blocks[side->second.block.index()].instrs',
+     'src/front/lower.cpp', 'p.blocks[fields.block.index()].instrs',
      'p.blocks[0].instrs'),
     ('blocking aggregate timing: capture runs after the control',
      'src/front/lower_expr.cpp',
@@ -654,9 +665,9 @@ MUTANTS = [
      "        if (member.kind == ast::SymbolKind::NetAlias) aliasNets(member.as<ast::NetAliasSymbol>());",
      "        if (member.kind == ast::SymbolKind::NetAlias) (void)member;"),
     ("kernel: a delayed driver keeps an update of another value", "src/kernel/sim.cpp",
-     "    if (d.pending && !std::equal(value, value + words, d.value.begin())) {\n"
+     "    if (d.pending && !samePending) {\n"
      "        d.pending = false;",
-     "    if (d.pending && !std::equal(value, value + words, d.value.begin())) {\n"
+     "    if (d.pending && !samePending) {\n"
      "        d.pending = true;"),
     ("kernel: a change to x takes the rise delay", "src/kernel/sim.cpp",
      "delay = !b ? (a ? rise : fall) : (a ? std::min({rise, fall, off}) : off);",

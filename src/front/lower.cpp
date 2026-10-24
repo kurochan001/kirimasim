@@ -1108,23 +1108,6 @@ void Lowerer::resolveNets() {
             const auto it = sides_.find(p);
             return it != sides_.end() && !it->second.known;
         });
-        // The side slot is written at once, so a gate whose value is
-        // delayed would show its sides before its value.
-        const auto delayedSide = std::find_if(ps.begin(), ps.end(), [&](sir::ProcessId p) {
-            if (!sides_.contains(p)) return false;
-            for (const sir::BasicBlock& block : design_.process(p).blocks)
-                for (const sir::Instr& in : block.instrs)
-                    if (in.op == sir::Op::DriveDelay) return true;
-            return false;
-        });
-        if (delayedSide != ps.end()) {
-            ++numErrors_;
-            diags_ +=
-                whereOf(design_.process(*delayedSide).loc) +
-                ": error: unsupported: a three-state gate with a delay that drives the net '" +
-                design_.slot(net).name + "' with other drivers (not implemented yet)\n";
-            continue;
-        }
         if (unknownSide != ps.end()) {
             ++numErrors_;
             diags_ +=
@@ -1176,13 +1159,49 @@ void Lowerer::resolveNets() {
             const auto sid = static_cast<sir::SlotId>(design_.slots.size());
             design_.slots.push_back(std::move(ss));
             sideSlots.push_back(sid);
-            std::vector<sir::Instr>& instrs = p.blocks[side->second.block.index()].instrs;
-            for (std::size_t i = side->second.first; i < side->second.first + side->second.count;
-                 ++i) {
-                if (instrs[i].op != sir::Op::Store) continue;
-                sir::Operand& o = instrs[i].operands[0];
-                o.id = sid.index();
-                p.writes.push_back({sid, 0, 0, o.lsb, o.width});
+            auto fields = side->second;
+            std::optional<sir::Instr> delayed;
+            // Inputs can end in a non-entry block after short-circuit calls.
+            for (std::size_t blockIndex = 0; blockIndex < p.blocks.size() && !delayed;
+                 ++blockIndex) {
+                auto& candidates = p.blocks[blockIndex].instrs;
+                for (std::size_t i = 0; i < candidates.size(); ++i) {
+                    const auto& in = candidates[i];
+                    if (in.op != sir::Op::DriveDelay || in.operands[0].asSlot() != id) continue;
+                    delayed = std::move(candidates[i]);
+                    candidates.erase(candidates.begin() + static_cast<std::ptrdiff_t>(i));
+                    if (blockIndex == fields.block.index() && i < fields.first) --fields.first;
+                    break;
+                }
+            }
+            auto& instrs = p.blocks[fields.block.index()].instrs;
+            if (delayed) {
+                std::vector<sir::Instr> complete;
+                complete.reserve(instrs.size());
+                for (std::size_t i = 0; i < instrs.size(); ++i) {
+                    auto& in = instrs[i];
+                    if (i >= fields.first && i < fields.first + fields.count &&
+                        in.op == sir::Op::Store) {
+                        in.operands[0].id = sid.index();
+                        const auto& o = in.operands[0];
+                        p.writes.push_back({sid, 0, 0, o.lsb, o.width});
+                        delayed->operands.push_back(o);
+                        delayed->operands.push_back(in.operands[1]);
+                    } else {
+                        complete.push_back(std::move(in));
+                    }
+                    // Every field is defined before the single registration.
+                    if (i + 1 == fields.first + fields.count)
+                        complete.push_back(std::move(*delayed));
+                }
+                instrs = std::move(complete);
+            } else {
+                for (std::size_t i = fields.first; i < fields.first + fields.count; ++i) {
+                    if (instrs[i].op != sir::Op::Store) continue;
+                    auto& o = instrs[i].operands[0];
+                    o.id = sid.index();
+                    p.writes.push_back({sid, 0, 0, o.lsb, o.width});
+                }
             }
             sides_.erase(side);
         }

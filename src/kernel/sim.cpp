@@ -904,8 +904,22 @@ void Scheduler::execute(const Event& e) {
             DelayedDriver& d = drivers_[e.id];
             if (!d.pending || d.gen != e.gen) return;  // dropped
             d.pending = false;
+            // Copy all targets before callbacks can grow the driver table.
+            const SlotBits target{d.slot, d.elem, d.lsb, d.width};
             const std::vector<std::uint64_t> value = d.value;
-            write({.slot = d.slot, .elem = d.elem, .lsb = d.lsb, .width = d.width}, value.data());
+            const std::vector<DelayedSideUpdate> sides = d.sides;
+            if (sides.empty()) {
+                write(target, value.data());
+                return;
+            }
+            // Defer notifications until the complete state has committed.
+            beginWalk();
+            write(target, value.data());
+            for (const auto& side : sides) {
+                const std::uint64_t bit = side.value ? 1 : 0;
+                write(side.at, &bit);
+            }
+            endWalk();
             return;
         }
     }
@@ -1439,7 +1453,8 @@ std::uint32_t Scheduler::addDelayedDriver() {
 }
 
 void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint64_t* value,
-                             std::uint64_t rise, std::uint64_t fall, std::uint64_t off) {
+                             std::uint64_t rise, std::uint64_t fall, std::uint64_t off,
+                             std::span<const DelayedSideUpdate> sides) {
     auto [s, elem, lsb, width] = at;
     begin();
     const SlotLayout& l = store_.layout(s);
@@ -1451,8 +1466,21 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     const unsigned stride = four ? 2 : 1;
     const std::uint32_t words = stride * wordsFor(width);
     DelayedDriver& d = drivers_[driver];
-    // A pending update of another value is dropped (10.3.3).
-    if (d.pending && !std::equal(value, value + words, d.value.begin())) {
+    const auto sameTarget = [](SlotBits a, SlotBits b) {
+        return a.slot == b.slot && a.elem == b.elem && a.lsb == b.lsb && a.width == b.width;
+    };
+    const bool sameSides =
+        sides.size() == d.sides.size() &&
+        std::all_of(sides.begin(), sides.end(), [&](const DelayedSideUpdate& side) {
+            return std::any_of(d.sides.begin(), d.sides.end(), [&](const DelayedSideUpdate& old) {
+                return sameTarget(side.at, old.at) && side.value == old.value;
+            });
+        });
+    // A side-only change is a changed complete output (SCHEDULER_SPEC 12).
+    const bool samePending = sameTarget({s, elem, lsb, width}, {d.slot, d.elem, d.lsb, d.width}) &&
+                             sameSides &&
+                             std::equal(value, value + words, d.value.begin(), d.value.end());
+    if (d.pending && !samePending) {
         d.pending = false;
         ++d.gen;
     }
@@ -1461,7 +1489,10 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     const std::uint64_t* p = store_.element(s, elem);
     for (unsigned k = 0; k < stride; ++k)
         copyBits(now.data() + k, stride, 0, p + k, stride, lsb, width);
-    if (std::equal(value, value + words, now.begin()) || d.pending) return;
+    const bool sidesCommitted = std::all_of(sides.begin(), sides.end(), [&](const auto& side) {
+        return bitAt(store_.element(side.at.slot, side.at.elem), 1, side.at.lsb) == side.value;
+    });
+    if ((std::equal(value, value + words, now.begin()) && sidesCommitted) || d.pending) return;
     // The delay for the change (10.3.3, 28.16, table 28-9).
     const auto all = [&](const std::uint64_t* v, bool a, bool b) {
         for (std::uint32_t i = 0; i < width; ++i) {
@@ -1486,6 +1517,7 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     d.lsb = lsb;
     d.width = width;
     d.value.assign(value, value + words);
+    d.sides.assign(sides.begin(), sides.end());
     d.pending = true;
     ++d.gen;
     schedule(delay == 0 ? Region::Inactive : Region::Active,

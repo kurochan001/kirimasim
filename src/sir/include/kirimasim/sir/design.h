@@ -237,7 +237,8 @@ enum class Op : std::uint8_t {
     Store,     ///< store <slot range>, <value>  (blocking assignment)
     Nba,       ///< nba <slot range>, <value>
     NbaDelay,  ///< nba.delay <slot range>, <value>, <delay>
-    /// drive.delay <slot range>, <value>, <rise>, <fall>, <off>: a delayed
+    /// drive.delay <slot range>, <value>, <rise>, <fall>, <off>,
+    /// optionally followed by owned side target/value pairs: a delayed
     /// write of a continuous assignment, gate or UDP (SIR_SPEC.md 5.4).
     DriveDelay,
     LoadElem,      ///< %r = load.elem <slot>, <index>...
