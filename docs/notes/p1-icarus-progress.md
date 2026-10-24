@@ -41,24 +41,25 @@ mutations fail actual new stdout and another fails real source SIR verification;
 anchor/judging self-checks are excluded as evidence. All 72 new sources pass
 natively; both measured references match 58, reject nine and differ on five.
 
-The same **81 original probes** now run against both installed references:
+The same **82 original probes** now run against both installed references:
 
-- Icarus `13.0 (stable) (v13_0)`: 21 Icarus-passing gaps, four reference
+- Icarus `13.0 (stable) (v13_0)`: 22 Icarus-passing gaps, four reference
   result mismatches.
-- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 27 Icarus-passing gaps,
+- Icarus `14.0 (devel) (s20260301-411-gca6b8d376)`: 28 Icarus-passing gaps,
   seven reference result mismatches.
 
 See the [versioned comparison and portable data](icarus-13-comparison.md).
 The compiler driver, preprocessor, parser/elaborator and runtime were all
 verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
-unconfirmed. All earlier 79 statuses and passing judged outputs are unchanged.
-The new static-declaration case passes; the new automatic shared-capture case
-passes both references and remains a native gap. On the same expanded list,
-the previous native has 22/28 gaps and the current native 21/27. Dated entries
-below retain their historical probe cohorts.
+unconfirmed. All earlier 81 statuses and passing judged outputs are unchanged.
+The added automatic-event case passes both references and remains a native gap.
+Production code is unchanged; the count increases because the inventory now
+includes another unsupported mechanism. The previous 81-item comparison retains
+its measured 21/27 current-native and 22/28 previous-native gap counts. Dated
+entries below retain their historical probe cohorts.
 
-Six detailed semantic amendments remain pending:
+Seven detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
@@ -66,6 +67,7 @@ Six detailed semantic amendments remain pending:
 - [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
 - [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
 - [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).
+- [Shared automatic storage, fork capture and automatic event ownership](automatic-capture-proposal.md).
 
 The MOS proposal covers thirteen switch probes and one partial-port probe in
 the existing 13.0 gap list. Its new 18-source matrix records 2,304 scalar
@@ -76,6 +78,14 @@ difference. The proposal explicitly requests review of startup, network
 ownership, local wired resolution, force and strength-only timing. No MOS
 implementation is claimed by that proposal; the independent fork work extends
 the feature inventory as described above.
+
+The automatic-storage proposal replaces planned per-child copies with shared
+activation bindings and specifies lexical lifetime, typed roots, synchronization,
+copyback, ref restrictions, automatic event construction and cleanup in the
+shared kernel. Its [32 original source observations](../measurements/2026-10-24/automatic-capture-design-observations.json)
+include native parse/run results and both references. They are design evidence,
+not approved oracles. Event rebinding and event output/inout copyback remain
+outside that proposal; no production implementation has been added.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep

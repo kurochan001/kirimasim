@@ -114,6 +114,8 @@ children. Static storage is shared; uncaptured automatic initialization runs
 per entry, including declaration-only forks. [Seventy-two source cases and limits](notes/fork-local-declarations.md)
 cover eight contexts and typed storage. Automatic variables captured by children
 remain unsupported and are explicitly measured in the expanded comparison.
+The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
+is pending review; automatic event variables are also still unsupported.
 
 ### Program completion
 

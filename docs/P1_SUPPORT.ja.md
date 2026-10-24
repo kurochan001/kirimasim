@@ -103,6 +103,8 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 automatic初期化は入るたびに行います。宣言だけのforkにも対応します。
 [独自72ソースと制限](notes/fork-local-declarations.ja.md)で8種類の実行場所と型を検査します。
 子が捕捉するautomatic変数は未対応で、拡張した比較にも明示的に含めています。
+[記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は承認待ちで、
+automatic event変数も未対応です。
 
 ### programの終了
 

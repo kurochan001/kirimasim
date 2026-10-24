@@ -213,6 +213,9 @@ EXTENDED.extend([
     ("automatic_fork_capture", "6.21, 9.3.2",
      'module top;task automatic run(input int value);fork int saved=value;begin #1;saved+=2;end begin #2;$display("%0d",saved);end join endtask initial run(7);endmodule',
      "9\n", []),
+    ("automatic_event_capture", "6.8, 6.21, 9.3.2, 15.5",
+     'module top;int seen;task automatic run();event ready;fork begin @ready;seen=7;end begin #1;->ready;end join endtask initial begin run();$display("%0d",seen);end endmodule',
+     "7\n", []),
 ])
 
 

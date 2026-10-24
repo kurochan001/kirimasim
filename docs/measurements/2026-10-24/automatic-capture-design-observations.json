@@ -1,0 +1,1281 @@
+{
+  "measured": "2026-10-24",
+  "repository_context": "0fc0628e39bcdb1e27272e5a8c0f7d8b2fa29ad0",
+  "native_source_revision": "c6d9c3d49459f3a554b6b12635eb78861b51f5a2",
+  "purpose": "Original automatic-storage/capture observations for specification review; model outputs are not approved oracles. No implementation added.",
+  "versions": {
+    "native": "kirimasim 0.0.0 (commit c6d9c3d49459), built with AppleClang 21.0.0.21000334",
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "cases": [
+    {
+      "name": "joined_shared",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic run(input int value);\n fork int saved=value; begin #1;saved+=2;end begin #2;$display(\"%0d\",saved);end join\nendtask\ninitial begin run(7); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "9\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "f27f23d70cac3de12698156ce11c1e7b8abeb72bb4a769765e52d97b0023ecb6",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "9\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "9\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:5:33: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "joined_copy_control",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic run(input int value);\n fork begin int private_value=value;#1;private_value+=2;end begin int private_value=value;#2;$display(\"%0d\",private_value);end join\nendtask\ninitial begin run(7); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "7\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "b841e2709914322d1127b72e762049de46504852d1eaaa59978bacf14eed3c49",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "7\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "7\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:5:31: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "join_any_after_return",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run(input int value);\n fork int saved=value;begin #1;saved+=2;end begin #3;seen=saved;end join_any\nendtask\ninitial begin run(7);$display(\"returned %0t %0d\",$time,seen);#4;$display(\"later %0t %0d\",$time,seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "returned 1 0\nlater 5 9\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "e9f02927cc7867daafc4db3d231bda398d760fd8caef8d2c41f7c1012ffd17c5",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:32: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "join_none_distinct_calls",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic spawn(input int value);\n fork int saved=value;begin #2;seen+=saved;end join_none\nendtask\ninitial begin spawn(7);spawn(11);#3;$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "18\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "eb6a7a918861052420d35fd882fd59e3ef4e269452473cd237a8de560c6d7d68",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:38: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "static_storage_control",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask spawn(input int value);\n int saved;saved=value;fork begin #2;seen+=saved;end join_none\nendtask\ninitial begin spawn(7);spawn(11);#3;$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "22\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "2ec2ceb3290f27786db75f4cbb3a22678bc09adb57d1234e4bf9d4e53176c147",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "22\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "22\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 0,
+          "stdout": "22\n",
+          "run_diagnostic": []
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "block_reentry",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n for(int index=0;index<3;index++)begin\n  int saved=index;fork begin #1;seen+=saved;end join_none\n end\n #2;$display(\"%0d\",seen);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "3\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "4a8233bc4e978f89995825abfcaca96f4f6d7945433532bbe0b720bc4fa9a0c2",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:7:39: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "fork_reentry",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n for(int index=0;index<3;index++)fork int saved=index;begin #1;seen+=saved;end join_none\n #2;$display(\"%0d\",seen);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "3\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "0d2039ea0efcfec550da6a9136e827f77d1b3de7c7d07337757544d83060e0fe",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:70: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "loop_index_control",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n for(int index=0;index<3;index++)fork begin #1;seen+=index;end join_none\n #2;$display(\"%0d\",seen);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "9\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "0c5487d4044bd68aec2b09378db7178ac6d6e803a8b2a2def8f8ca9feaba4642",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:54: error: unsupported: automatic variable 'index' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "parent_write_before_wait",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n int saved=7;fork begin #1;seen=saved;end join_none\n saved=9;#2;$display(\"%0d\",seen);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "9\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "f6056375a4f12293cd79c47101cd2c7049d77e40af6de87ba2255c0452daa17a",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:33: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "nested_forwarding",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic spawn();\n fork int saved=7;begin fork begin #2;seen=saved;end join_none end join_none\nendtask\ninitial begin spawn();#3;$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "7\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "cc8baceccd7e44a6decf313bf77c3de25723c8bc9453229e4edc5e6177e23141",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:44: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "recursive_calls",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic spawn(input int depth);\n int saved=depth;if(depth>0)spawn(depth-1);\n fork begin #1;seen+=saved;end join_none\nendtask\ninitial begin spawn(3);#2;$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "6\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "4f1056d7c0070a13ea2cb6a3e9a8db03608b4211aebf099dce6e3e71d04ddec8",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:7:22: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "wide_event_notifications",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic run();\n logic[128:0] value='x;\n fork\n  begin #1;value='z;#1;value='1;end\n  begin @(value);$display(\"any %0t %0d\",$time,value === 'z);@(posedge value[64]);$display(\"edge %0t %0d\",$time,value === '1);end\n join\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "any 1 1\nedge 2 1\n",
+      "clause": "6.21, 9.3.2, 9.4.2",
+      "source_sha256": "6de4ce8f4048528ddde26a153c04cff26d62caebc6e530c97aabce85b0015ed8",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "any 1 1\nedge 2 1\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "any 1 1\nedge 2 1\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:7:12: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "condition_notifications",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n int value=0;fork begin wait(value==7);seen=value;end begin #1;value=7;end join\nendtask\ninitial begin run();$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "7\n",
+      "clause": "6.21, 9.3.2, 9.4.3",
+      "source_sha256": "f319a8360914aaa96a82af591485475474e82a566f096452bcc08bf22d3b46cd",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "7\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "7\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:30: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "output_to_capture",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic put(output logic[128:0] destination);#1;destination='1;endtask\ntask automatic run();\n logic[128:0] value='0;fork put(value);begin #2;seen=(value === '1);end join\nendtask\ninitial begin run();$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "1\n",
+      "clause": "6.21, 9.3.2, 13.5.1",
+      "source_sha256": "cb3cb58e34938aabe41b8a81a5c9db049fddf25f3c2513df20573ac4b06797f5",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:7:29: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "copyback_once",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint observed,actual;\ntask automatic spawn(output int formal_value);\n formal_value=7;fork begin #2;formal_value=9;observed=formal_value;end join_none\nendtask\ninitial begin spawn(actual);$display(\"returned %0d\",actual);#3;$display(\"later %0d %0d\",actual,observed); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "returned 7\nlater 7 9\n",
+      "clause": "6.21, 9.3.2, 13.5.1",
+      "source_sha256": "8e43b94b65f0d3abbec09f0825adbacecf002553d474bb78de58107b63e97c81",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:31: error: unsupported: automatic variable 'formal_value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "kill_descendants",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n int value=7;fork begin #2;value=9;seen=1;end join_none\n #1;disable fork;#3;$display(\"%0d %0d\",value,seen);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "7 0\n",
+      "clause": "6.21, 9.3.2, 9.6.3",
+      "source_sha256": "fc25b93054108fca32532337e2ce815fd31771417ab3a4f6bf4b5b7cf4a3da05",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:28: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "disable_named_scope",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n begin:phase\n  int value=7;\n  fork begin #1;disable phase;end begin #2;value=9;seen=value;end join\n end\n $display(\"left %0t %0d\",$time,seen);#3;$display(\"later %0t %0d\",$time,seen);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "left 1 0\nlater 4 0\n",
+      "clause": "6.21, 9.3.2, 9.6.2",
+      "source_sha256": "f76afef4f9f1a20452352ca690c3e6d7ef287ffced7c5c4094823ee374c2eca9",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "left 1 0\nlater 4 0\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "left 1 0\nlater 4 0\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:8:44: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "container_root_after_return",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic spawn();\n int queue_value[$];queue_value.push_back(7);\n fork begin #2;queue_value[0]+=2;seen=queue_value[0];end join_none\nendtask\ninitial begin spawn();#3;$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "9\n",
+      "clause": "6.21, 7.10, 9.3.2",
+      "source_sha256": "8c893f59ec660cec80db566fabed8451a0812975993746eb8d3e977220c05d73",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:7:16: error: unsupported: automatic variable 'queue_value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "container_binding_replaced",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen,size;\ntask automatic run();\n int queue_value[$];queue_value.push_back(7);\n fork\n  begin #1;queue_value.delete();queue_value.push_back(9);end\n  begin #2;size=queue_value.size();seen=queue_value[0];end\n join\nendtask\ninitial begin run();$display(\"%0d %0d\",size,seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "1 9\n",
+      "clause": "6.21, 7.10, 9.3.2",
+      "source_sha256": "c062833f464f5512078fb82535eb016ebf59a119282ba0bd4556749a4859399e",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1 9\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:8:12: error: unsupported: automatic variable 'queue_value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "fixed_array_capture",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic run();\n logic[128:0] value[2];value[0]='x;value[1]='z;\n fork begin #1;value[1]='1;end begin #2;$display(\"%0d %0d\",value[0] === 'x,value[1] === '1);end join\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "1 1\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "4d3bab1a114caa4ac78d85b8b0b7017c096ff6418bd9b7f9ae1aa0d4b55e5be0",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1 1\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1 1\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:16: error: unsupported: selecting from this array (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "real_string_capture",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic run();\n real value=1.25;string text=\"before\";\n fork begin #1;value=2.5;text=\"after\";end begin #2;$display(\"%0.2f %s\",value,text);end join\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "2.50 after\n",
+      "clause": "6.21, 9.3.2",
+      "source_sha256": "4149cff4820cbcc477d3513e04833b93430528bd1f0b3bbe4c3b9e56c62daedf",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "2.50 after\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "2.50 after\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:16: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "ref_join_all",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint actual=1,seen;\ntask automatic run(ref int value);\n fork begin #1;value+=2;end begin #2;seen=value;end join\nendtask\ninitial begin run(actual);$display(\"%0d %0d\",actual,seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "3 3\n",
+      "clause": "6.21, 9.3.2, 13.5.2",
+      "source_sha256": "96beec61be31743fbab75595544d93991b50c6fded4b1dd5f38b49e13d3f61f8",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:16: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "ref_initializer_snapshot",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint actual=7,seen;\ntask automatic spawn(ref int value);\n fork int saved=value;begin #2;seen=saved;end join_none\nendtask\ninitial begin spawn(actual);actual=99;#3;$display(\"%0d %0d\",actual,seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "99 7\n",
+      "clause": "6.21, 9.3.2, 13.5.2",
+      "source_sha256": "f9b10641daf210b1a11ca6cc211963654c93c66136d13e31005cd703858d0198",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:37: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "ref_join_none_illegal",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint actual;\ntask automatic spawn(ref int value);\n fork begin #1;value=9;end join_none\nendtask\ninitial begin spawn(actual);#2; done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "compile_error",
+      "clause": "9.3.2, 13.5.2",
+      "source_sha256": "bd4706812d705d08ba71f7b570bb6eb349b852a590db3b7a494b96b70abeecde",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: sorry: Reference ports not supported yet.",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe.sv>:6:16: error: cannot refer to 'ref' argument 'value' inside fork-join_any or fork-join_none block [-Wref-arg-in-fork-join]"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:16: error: cannot refer to 'ref' argument 'value' inside fork-join_any or fork-join_none block [-Wref-arg-in-fork-join]"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "ref_static_capture",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint actual;\ntask automatic spawn(ref static int value);\n fork begin #1;value=9;end join_none\nendtask\ninitial begin spawn(actual);#2;$display(\"%0d\",actual); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "9\n",
+      "clause": "9.3.2, 13.5.2",
+      "source_sha256": "6c481315bf2ecff8db95929b0fa86f9928ddbf320125c24771a686ad5ce60c8e",
+      "results": {
+        "13": {
+          "compile_exit": 4,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: syntax error",
+            "<probe.sv>:8: error: Syntax error in task/function port declaration."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 6,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: syntax error",
+            "<probe.sv>:8: error: Syntax error in task/function port declaration."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:16: error: unsupported: automatic variable 'value' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "ref_static_auto_illegal",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic put(ref static int value);value=9;endtask\ntask automatic run();int value;put(value);endtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "compile_error",
+      "clause": "13.5.2",
+      "source_sha256": "c46d2d11555af793a5bed71290efc46d5c1b7c191eb8f2b52db986b30c83adc6",
+      "results": {
+        "13": {
+          "compile_exit": 2,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:4: syntax error"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 2,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:4: syntax error"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 2,
+          "parse_diagnostic": [
+            "<probe.sv>:5:36: error: cannot pass automatic variables or elements of dynamically sized arrays to 'ref static' argument"
+          ],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:5:36: error: cannot pass automatic variables or elements of dynamically sized arrays to 'ref static' argument"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "automatic_event_boundary",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen;\ntask automatic run();\n event ready;\n fork begin @ready;seen=7;end begin #1;->ready;end join\nendtask\ninitial begin run();$display(\"%0d\",seen); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "7\n",
+      "clause": "6.8, 6.21, 9.3.2, 15.5",
+      "source_sha256": "ac1071f2f9dd3ce16a4c7931de3553c060351973136da79d2b54119f9c7ccfc2",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "7\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "7\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:6:8: error: unsupported: automatic event variable (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "program_completion",
+      "source": "`timescale 1ns/1ns\nprogram automatic worker;\ntask automatic spawn();fork int saved=7;begin #5;$display(\"late %0d\",saved);end join_none endtask\ninitial spawn();\ninitial begin #2;$display(\"program done\");top.done=1;end\nendprogram\nmodule top;bit done;worker u();initial begin #20;if(!done)begin $display(\"watchdog\");$finish(0);end end endmodule\n",
+      "expected_model_stdout": "program done\n",
+      "clause": "6.21, 9.3.2, 24.3.1",
+      "source_sha256": "5df639a2e33ed0bb1e7b78596ee029ae33bcc58419212f83df94421cb0768f96",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": -6,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "runtime terminated by signal 6"
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:3:70: error: unsupported: automatic variable 'saved' here (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "automatic_event_distinct_calls",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nint seen[4];\ntask automatic run(input int delay_value);event ready;\n fork begin @ready;seen[delay_value]=$time;end begin #(delay_value);->ready;end join\nendtask\ninitial begin fork run(1);run(3);join $display(\"%0d %0d\",seen[1],seen[3]); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "1 3\n",
+      "clause": "6.8, 6.21, 9.3.2, 15.5",
+      "source_sha256": "d42d8538540a3dd011c765812269e797b5941b17501b28d75fef032f98b11ac3",
+      "results": {
+        "13": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1 3\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "run_exit": 0,
+          "timeout": false,
+          "stdout": "1 3\n",
+          "diagnostic": [],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:5:49: error: unsupported: automatic event variable (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "automatic_event_nonblocking",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\ntask automatic run();event ready;\n ->> ready;@ready;$display(\"%0t %0d\",$time,ready.triggered);\nendtask\ninitial begin run(); done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": "0 1\n",
+      "clause": "6.8, 6.21, 15.5.1, 15.5.3",
+      "source_sha256": "c3ca2f828cf28f05beecce1aa0df1dbad7c9a335d0a8e5d7b45fbc603eaa7454",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: error: Event name ready can't have member names (triggered)",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: error: Event name ready can't have member names (triggered)",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:4:28: error: unsupported: automatic event variable (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "proposal_only"
+    },
+    {
+      "name": "event_alias_boundary",
+      "source": "`timescale 1ns/1ns\nmodule top;\nbit done;\nevent a,b;\ninitial begin a=b;fork begin @a;$display(\"7\");end begin #1;->b;end join done=1; end\ninitial begin #20; if(!done)begin $display(\"watchdog\");$finish(0);end end\nendmodule\n",
+      "expected_model_stdout": null,
+      "clause": "15.5.5",
+      "role": "separate_event_rebinding_boundary",
+      "source_sha256": "88a397ed6e8095c3a00c5a9852f15493f22c399219e7e44a05588b50258c8550",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: error: Could not find variable ``a'' in ``top''",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:5: error: Could not find variable ``a'' in ``top''",
+            "1 error(s) during elaboration."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:5:17: error: unsupported: event used as a value (not implemented yet)"
+          ]
+        }
+      },
+      "model_status": "boundary_only"
+    },
+    {
+      "name": "automatic_event_nonblocking_plain",
+      "source": "`timescale 1ns/1ns\nmodule top;bit done;task automatic run();event ready;->> ready;@ready;$display(\"7\");endtask initial begin run();done=1;end initial begin #20;if(!done)begin $display(\"watchdog\");$finish(0);end end endmodule\n",
+      "source_sha256": "18595c1dd82018a658822041fc5c5d778114315d9ee482919179ac8899ec2bc4",
+      "expected_model_stdout": "7\n",
+      "clause": "6.8, 6.21, 15.5.1",
+      "model_status": "proposal_only",
+      "results": {
+        "13": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:2: vvp.tgt sorry: ->> is not currently supported.",
+            "error: Code generation had 1 error(s)."
+          ],
+          "watchdog": false
+        },
+        "14": {
+          "compile_exit": 1,
+          "run_exit": null,
+          "timeout": false,
+          "stdout": "",
+          "diagnostic": [
+            "<probe.sv>:2: vvp.tgt sorry: ->> is not currently supported.",
+            "error: Code generation had 1 error(s)."
+          ],
+          "watchdog": false
+        },
+        "native": {
+          "parse_exit": 0,
+          "parse_diagnostic": [],
+          "run_exit": 2,
+          "stdout": "",
+          "run_diagnostic": [
+            "<probe.sv>:2:48: error: unsupported: automatic event variable (not implemented yet)"
+          ]
+        }
+      }
+    }
+  ],
+  "platform": "Darwin/arm64",
+  "source_origin": "32 original programs; no other simulator source or tests read.",
+  "commands": {
+    "reference_compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "probe.vvp",
+      "probe.sv"
+    ],
+    "reference_run": [
+      "vvp",
+      "probe.vvp"
+    ],
+    "native_parse": [
+      "kirimasim",
+      "parse",
+      "probe.sv"
+    ],
+    "native_run": [
+      "kirimasim",
+      "probe.sv"
+    ]
+  },
+  "portability": "Probe paths normalized to <probe.sv>; runtime signal exits preserved without assertion text. Model outputs are not approved oracles.",
+  "summary": {
+    "13": {
+      "model_match": 11,
+      "runtime_error": 13,
+      "compile_error": 7
+    },
+    "14": {
+      "model_match": 12,
+      "runtime_error": 12,
+      "compile_error": 7
+    },
+    "native_parse": {
+      "0": 30,
+      "2": 2
+    }
+  }
+}
