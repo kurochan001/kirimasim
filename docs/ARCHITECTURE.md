@@ -172,6 +172,13 @@ L/H, including unaligned halves across 64-bit words. The
 [wide-mask front/VM path](notes/wide-gate-strength.md) reaches the same kernel
 resolver, without adding a strength policy or storing resolved intervals.
 
+The [MOS/switch investigation](notes/mos-switch-investigation.md) records why
+the remaining network model needs full strength transport, internal strength-only
+dependencies and physical driver ownership across cycles. Directed MOS feedback
+and passive bidirectional paths have distinct observations; port identity also
+differs from a strength-reducing channel. Force, wired-net combinations and
+delayed startup still require reviewed contracts before implementation.
+
 ## Libraries
 
 Dependencies run only in the directions listed here.

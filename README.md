@@ -125,6 +125,11 @@ Complete functional parity remains unconfirmed. A passing probe inventory
 would not by itself establish complete coverage; the inventory must expand
 as mechanisms and interfaces are checked.
 
+The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
+records 28 original programs and 56 reference observations separately from
+that inventory. Switch execution remains unsupported; strength-only changes,
+cycles, force and startup expose detailed contracts still requiring review.
+
 Integral `$fread` now accepts optional start/count arguments, evaluates
 supplied value arguments once and follows the approved copy-in/copyback
 rules for selected destinations. An inout target is evaluated for its input
@@ -175,7 +180,8 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI at `57a64ef` passes all four configurations (2026-10-24).
+Full local CI rerun for this documentation update on base `e4376f1` passes
+all four configurations (2026-10-24); native source is unchanged from `57a64ef`.
 Dev/ASan/UBSan each have 3,131 tests: 3,129 pass and the same two known skips
 remain. Release has 3,132 tests: 3,130 pass and the same skips. All 133 Tools
 tests and 73 new wide-gate sources pass. Static checks, README counts,

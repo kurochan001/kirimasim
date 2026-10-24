@@ -101,6 +101,9 @@ unit tests compare full endpoints, including 158,400 interval pairs under
 fail the new range assertions. See the [API and evidence](notes/strength-range-foundation.md).
 This is the kernel foundation for propagation; MOS/bidirectional primitives,
 strength-aware formatting and resolved-interval metadata through SIR/VM remain unsupported.
+The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
+28 exploratory reference programs and the remaining semantic questions;
+these observations are not additional implemented features or approved oracles.
 
 ### Program completion
 

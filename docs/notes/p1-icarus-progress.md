@@ -21,7 +21,16 @@ The strength API remains a foundation: MOS/switch source execution and `%v`
 are unfinished. The [supported inventory](../P1_SUPPORT.md) lists tested forms
 and limits. P1 remains incomplete; C++ generation remains P2.
 
-Full local CI at `57a64ef` passes configure/build/test for dev/release/ASan/UBSan.
+The latest [MOS/switch investigation](mos-switch-investigation.md) records
+28 original programs and 56 observations across both reference versions.
+It identifies strength-only dependencies, passive cycles, port attenuation
+and unresolved interval/force/startup questions. These exploratory observations
+are separate from the feature inventory below and do not approve new semantics
+or add implemented support.
+
+Full local CI rerun for this documentation update on base `e4376f1` passes
+configure/build/test for dev/release/ASan/UBSan. Native source is unchanged
+from `57a64ef`.
 Dev/ASan/UBSan each run 3,131 tests (3,129 pass, two known skips); release runs
 3,132 (3,130 pass, the same skips). Release flags, banned features, SPDX,
 suite files, global state, per-commit expectation protection, README counts,
