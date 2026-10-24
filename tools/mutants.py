@@ -40,6 +40,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("kernel: killed display callback retains its heap subscriptions", "src/kernel/sim.cpp",
+     "    detachDisplayMonitor(p);\n    freeMonitor(p);",
+     "    freeMonitor(p);"),
     ("kernel: pattern enum lookup drops upper words", "src/kernel/pattern.cpp",
      "const std::uint64_t count = (std::uint64_t{lhs.width} + 63) / 64;", "const std::uint64_t count = 1;"),
     ("kernel: pattern enum lookup ignores unknown bits", "src/kernel/pattern.cpp",

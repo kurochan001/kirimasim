@@ -10,6 +10,7 @@
 // and scans them. Random scripts must give the same log on both.
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -2182,6 +2183,120 @@ TEST(Scheduler, HeapMonitorNoticesCannotWakeAReusedRecord) {
     EXPECT_EQ(first.resumes, 0U);
     EXPECT_EQ(next.resumes, 1U);
     EXPECT_TRUE(first.valid && next.valid);
+}
+
+struct HeapDisplay {
+    k::HeapTypeId type;
+    k::ContainerToken value;
+    std::int64_t index = 0;
+    std::vector<std::uint64_t> observed;
+    bool valid = true;
+    static kirima_status resume(kirima_context* handle, void* frame) {
+        auto& self = *static_cast<HeapDisplay*>(frame);
+        auto& ctx = k::fromC(handle);
+        k::W4 word;
+        self.valid =
+            self.valid && static_cast<bool>(ctx.heap().read(self.type, self.value, self.index,
+                                                            std::span<k::W4>{&word, 1}));
+        self.observed.push_back(word.a);
+        return KIRIMA_DONE;
+    }
+    static kirima_status tick(kirima_context*, void*) { return KIRIMA_DONE; }
+};
+
+TEST(Scheduler, HeapFileAndDisplayMonitorsReleaseOnlyTheirOwnReadsAndRestoreHooks) {
+    for (const bool file : {false, true}) {
+        SCOPED_TRACE(file);
+        k::Context ctx;
+        auto& heap = ctx.heap();
+        auto& scheduler = ctx.scheduler();
+        const auto layout = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+        ASSERT_TRUE(layout);
+        const auto type = heap.addType({k::ContainerKind::Queue, layout.value});
+        ASSERT_TRUE(type);
+        const auto value = heap.fromValues(type.value, std::vector<k::W4>{{1, 0}, {2, 0}});
+        ASSERT_TRUE(value);
+        const auto firstCell = heap.cell(type.value, value.value, 0);
+        const auto secondCell = heap.cell(type.value, value.value, 1);
+        ASSERT_TRUE(firstCell);
+        ASSERT_TRUE(secondCell);
+        HeapNoticeCount previous;
+        heap.setChangeHook({&HeapNoticeCount::record, &previous});
+        HeapDisplay first{type.value, value.value}, second{type.value, value.value, 1};
+        const auto a = scheduler.addProcess(&HeapDisplay::resume, &first, Group::Active);
+        const auto b = scheduler.addProcess(&HeapDisplay::resume, &second, Group::Active);
+        const auto clock = scheduler.addProcess(&HeapDisplay::tick, nullptr, Group::Active);
+        const auto to = ctx.files().targets({1, 0});
+        if (file)
+            scheduler.addFileMonitor(a, {}, to, {.heap = true});
+        else
+            scheduler.setMonitor(a, {}, {.heap = true});
+        scheduler.addFileMonitor(b, {}, to, {.heap = true});
+        scheduler.start(clock);
+        ASSERT_EQ(scheduler.run(), EndReason::Quiescent);
+        EXPECT_EQ(first.observed, (std::vector<std::uint64_t>{1}));
+        EXPECT_EQ(second.observed, (std::vector<std::uint64_t>{2}));
+        // Kill releases a callback's reads before its frame can be destroyed.
+        scheduler.kill(a);
+        EXPECT_TRUE(scheduler.finished(a));
+        EXPECT_FALSE(scheduler.finished(b));
+        ASSERT_TRUE(heap.writeCell(layout.value, firstCell.value, std::array<k::W4, 1>{{{9, 0}}}));
+        ASSERT_TRUE(heap.writeCell(layout.value, secondCell.value, std::array<k::W4, 1>{{{8, 0}}}));
+        scheduler.start(clock);
+        ASSERT_EQ(scheduler.run(), EndReason::Quiescent);
+        EXPECT_EQ(first.observed, (std::vector<std::uint64_t>{1}));
+        EXPECT_EQ(second.observed, (std::vector<std::uint64_t>{2, 8}));
+        scheduler.kill(b);
+        EXPECT_TRUE(scheduler.finished(b));
+        const auto restored = heap.setChangeHook({});
+        EXPECT_EQ(restored.fn, &HeapNoticeCount::record);
+        EXPECT_EQ(restored.frame, &previous);
+        EXPECT_TRUE(first.valid && second.valid);
+        ASSERT_TRUE(heap.collect({}));
+        EXPECT_EQ(heap.stats().containers, 0U);
+        EXPECT_EQ(heap.stats().cells, 0U);
+    }
+}
+
+TEST(Scheduler, HeapFileAndDisplayCaptureFailuresKeepTheCallbackOriginAndRestoreReadHooks) {
+    for (const bool file : {false, true}) {
+        SCOPED_TRACE(file);
+        HeapMonitorMemory memory;
+        k::Context ctx(k::OutputDestinations{}, nullptr, &memory);
+        auto& heap = ctx.heap();
+        auto& scheduler = ctx.scheduler();
+        const auto layout = heap.addLayout(std::vector<k::HeapWord>{{0xff, true}});
+        ASSERT_TRUE(layout);
+        const auto type = heap.addType({k::ContainerKind::Queue, layout.value});
+        ASSERT_TRUE(type);
+        const auto value = heap.fromValues(type.value, std::vector<k::W4>{{7, 0}});
+        ASSERT_TRUE(value);
+        HeapDisplay display{type.value, value.value};
+        const auto callback = scheduler.addProcess(&HeapDisplay::resume, &display, Group::Active);
+        const auto clock = scheduler.addProcess(&HeapDisplay::tick, nullptr, Group::Active);
+        HeapNoticeCount reads, changes;
+        heap.setReadHook({&HeapNoticeCount::record, &reads});
+        heap.setChangeHook({&HeapNoticeCount::record, &changes});
+        if (file)
+            scheduler.addFileMonitor(callback, {}, ctx.files().targets({1, 0}), {.heap = true});
+        else
+            scheduler.setMonitor(callback, {}, {.heap = true});
+        scheduler.start(clock);
+        memory.fail = true;
+        EXPECT_EQ(scheduler.run(), EndReason::ResourceLimit);
+        memory.fail = false;
+        EXPECT_TRUE(scheduler.heapMonitorLimited());
+        EXPECT_EQ(scheduler.failedHeapMonitorProcess(), callback);
+        EXPECT_EQ(display.observed, (std::vector<std::uint64_t>{7}));
+        EXPECT_TRUE(display.valid);
+        const auto restoredRead = heap.setReadHook({});
+        EXPECT_EQ(restoredRead.fn, &HeapNoticeCount::record);
+        EXPECT_EQ(restoredRead.frame, &reads);
+        scheduler.kill(callback);
+        const auto restoredChange = heap.setChangeHook({});
+        EXPECT_EQ(restoredChange.fn, &HeapNoticeCount::record);
+        EXPECT_EQ(restoredChange.frame, &changes);
+    }
 }
 
 }  // namespace

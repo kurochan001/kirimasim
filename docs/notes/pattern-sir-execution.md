@@ -5,6 +5,11 @@
 Source-language `%p` is still unsupported: front and both literal/runtime
 format-argument bridges remain unfinished. P1/Icarus parity is not established.
 
+The [2026-10-25 monitor follow-up](heap-file-monitor-lifetime.md) adds a
+dedicated 20-source matrix and kernel capture-failure/lifetime checks, and
+fixes callbacks remaining registered after `Scheduler::kill`. The evidence
+and remaining-work statements below describe the original checkpoint.
+
 ## Implemented representation
 
 `Design::patterns` stores immutable presentation layouts with distinct

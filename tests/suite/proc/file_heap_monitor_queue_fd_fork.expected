@@ -1,0 +1,14 @@
+reused 1
+first.txt: A 7 2
+first.txt: A 11 2
+first.txt: A 9 2
+first.txt: A 21 3
+first.txt: A 23 3
+first.txt: end
+second.txt: B 8 2
+second.txt: B 9 2
+second.txt: B 21 3
+second.txt: B 23 3
+second.txt: B 25 3
+second.txt: end
+reopened.txt: end

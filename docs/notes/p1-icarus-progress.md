@@ -13,6 +13,13 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-24)
 
+The [2026-10-25 heap file-monitor follow-up](heap-file-monitor-lifetime.md)
+adds 20 original source cases and two scheduler tests, and fixes killed
+display callbacks retaining their registration and heap dependencies.
+The dev suite has 3,363 passes out of 3,365, with the same two known skips.
+The versioned Icarus gap counts below are unchanged; full P1 coverage and
+the pending semantic amendments remain work.
+
 The [typed-pattern SIR/execution checkpoint](pattern-sir-execution.md) also fixes
 display-monitor dependencies on existing queue cells. All 122 selected tests,
 including eleven new SIR tests, and all 21 CI checks pass. Latest dev/ASan/UBSan

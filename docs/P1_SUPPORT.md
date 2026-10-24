@@ -318,9 +318,11 @@ is connected, while front format-argument integration remains, so source
 array ordering.
 
 A display monitor follows a value change in an existing queue cell, checked
-with [original source and SIR](notes/pattern-sir-execution.md). Dedicated
-heap-backed file-monitor closure/replacement/allocation combinations remain
-unconfirmed.
+with [original source and SIR](notes/pattern-sir-execution.md).
+[Twenty source cases and scheduler failure/lifetime tests](notes/heap-file-monitor-lifetime.md)
+also check heap-backed file monitors, container replacement, file closure,
+descriptor reuse and callback termination. Reentrant callback registration
+and full source-context coverage remain unconfirmed.
 
 - `$strobe` and `$monitor` arguments cannot read automatic variables.
 - Output conversions: `%b`, `%o`, `%h` / `%x`, `%d`, `%c`, `%s`, `%e`,

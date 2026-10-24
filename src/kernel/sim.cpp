@@ -293,6 +293,9 @@ void Scheduler::kill(ProcessId p) {
     // A new wait number makes every pending wake-up of the process stale:
     // its delay events, subscriptions and named-event waits are dropped
     // when they come up (SCHEDULER_SPEC.md 10.7). NBAs it scheduled stay.
+    // A display callback owns its registration independently of its issuer.
+    // Killing that callback must detach it before its frame can be released.
+    detachDisplayMonitor(p);
     freeMonitor(p);
     proc.done = true;
     ++proc.gen;
