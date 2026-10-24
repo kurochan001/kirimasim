@@ -73,7 +73,7 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         if (!fixed) unsupported(sl, "array method on this source representation");
         count = constant(indexType, range->width());
     }
-    const auto fixedPlace = [&](Val index) {
+    const auto fixedPlace = [&](const Val& index) {
         auto p = storagePlace(*fixed);
         const auto home = storageBase(*fixed);
         p.kind = Place::Kind::Element;
@@ -90,11 +90,11 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         p.elem.reset();
         return p;
     };
-    const auto read = [&](Val index) {
+    const auto read = [&](const Val& index) {
         return heapSource ? emit(sir::Op::ContainerRead, element, {source.op, index.op}, sl)
                           : loadPlace(fixedPlace(index), sl);
     };
-    const auto forRange = [&](Val first, Val limit, const auto& action) {
+    const auto forRange = [&](const Val& first, const Val& limit, const auto& action) {
         const auto counter = newFrameVar(indexType);
         emitVoid(sir::Op::Fstore, {sir::Operand::frame(counter), first.op}, sl);
         const auto head = newBlock(), body = newBlock(), done = newBlock();
@@ -117,30 +117,30 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         emitVoid(sir::Op::Fstore, {sir::Operand::frame(frame), constant(type, 0).op}, sl);
         return emit(sir::Op::RefMake, sir::refType(type.detail), {sir::Operand::frame(frame)}, sl);
     };
-    const auto bufferType = [&](Val ref) { return sir::queueType(ref.type.detail); };
-    const auto bufferValue = [&](Val ref) {
+    const auto bufferType = [&](const Val& ref) { return sir::queueType(ref.type.detail); };
+    const auto bufferValue = [&](const Val& ref) {
         return emit(sir::Op::LoadRef, bufferType(ref), {ref.op}, sl);
     };
-    const auto push = [&](Val ref, Val value) {
+    const auto push = [&](const Val& ref, const Val& value) {
         emitVoid(sir::Op::QueuePushBack, {sir::Operand::typeRow(ref.type.detail), ref.op, value.op},
                  sl);
     };
-    const auto keyOf = [&](Val value) {
+    const auto keyOf = [&](const Val& value) {
         if (!with) return value;
-        const auto old = iterators_.find(item);
-        const auto saved = old == iterators_.end() ? std::optional<Val>{} : old->second;
+        const auto [binding, inserted] = iterators_.try_emplace(item, value);
         struct Restore {
             decltype(iterators_)& values;
-            const ast::Symbol* symbol;
+            decltype(iterators_)::iterator binding;
             std::optional<Val> old;
             ~Restore() {
                 if (old)
-                    values[symbol] = *old;
+                    binding->second = std::move(*old);
                 else
-                    values.erase(symbol);
+                    values.erase(binding);
             }
-        } restore{iterators_, item, saved};
-        iterators_[item] = value;
+        } restore{iterators_, binding,
+                  inserted ? std::nullopt : std::optional<Val>{std::move(binding->second)}};
+        if (!inserted) binding->second = value;
         return lowerExpr(*with);
     };
 
@@ -155,7 +155,7 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
                         : name == "and"     ? sir::Op::And
                         : name == "or"      ? sir::Op::Or
                                             : sir::Op::Xor;
-        forRange(zero, count, [&](Val index) {
+        forRange(zero, count, [&](const Val& index) {
             const auto value = coerce(keyOf(read(index)), result, sl);
             const auto first = newBlock(), next = newBlock(), join = newBlock();
             const auto isFirst = emit(sir::Op::Eq, sir::u2(1), {index.op, zero.op}, sl);
@@ -177,12 +177,12 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
     if (extrema) {
         if (!dynamic) {
             const auto captured = buffer(element);
-            forRange(zero, count, [&](Val index) { push(captured, read(index)); });
+            forRange(zero, count, [&](const Val& index) { push(captured, read(index)); });
             source = bufferValue(captured);
             heapSource = true;
         }
         const auto chosen = newFrameVar(element), best = newFrameVar(keyType);
-        forRange(zero, count, [&](Val index) {
+        forRange(zero, count, [&](const Val& index) {
             const auto value = read(index), key = keyOf(value);
             const auto first = emit(sir::Op::Eq, sir::u2(1), {index.op, zero.op}, sl);
             const auto take = newBlock(), compare = newBlock(), next = newBlock();
@@ -212,7 +212,7 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         return coerce(bufferValue(output), result, sl);
     }
 
-    const auto swap = [&](Val first, Val second) {
+    const auto swap = [&](const Val& first, const Val& second) {
         if (dynamic) {
             emitVoid(sir::Op::ContainerSwapValues,
                      {sir::Operand::typeRow(source.type.detail), receiver.op, first.op, second.op},
@@ -220,7 +220,7 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         } else {
             const auto a = fixedPlace(first), b = fixedPlace(second);
             const auto av = loadPlace(a, sl), bv = loadPlace(b, sl);
-            const auto move = [&](const Place& place, Val value) {
+            const auto move = [&](const Place& place, const Val& value) {
                 // Move owned handles as values, without language assignment's deep copy.
                 std::vector<sir::Operand> args{place.home == Place::Home::Slot
                                                    ? sir::Operand::slot(place.slot)
@@ -238,15 +238,15 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
     };
     if (name == "reverse") {
         const auto half = emit(sir::Op::Div, indexType, {count.op, constant(indexType, 2).op}, sl);
-        forRange(zero, half, [&](Val index) {
+        forRange(zero, half, [&](const Val& index) {
             const auto last = emit(sir::Op::Sub, indexType, {count.op, one.op}, sl);
             swap(index, emit(sir::Op::Sub, indexType, {last.op, index.op}, sl));
         });
     } else {
         const auto keys = buffer(keyType);
-        forRange(zero, count, [&](Val index) { push(keys, keyOf(read(index))); });
+        forRange(zero, count, [&](const Val& index) { push(keys, keyOf(read(index))); });
         const auto keyValues = bufferValue(keys);
-        forRange(one, count, [&](Val index) {
+        forRange(one, count, [&](const Val& index) {
             const auto position = newFrameVar(indexType);
             emitVoid(sir::Op::Fstore, {sir::Operand::frame(position), index.op}, sl);
             const auto head = newBlock(), compare = newBlock(), move = newBlock(),

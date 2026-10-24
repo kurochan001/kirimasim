@@ -682,6 +682,7 @@ TEST(ContainerSir, SwapRequiresCapturedTypedReceiverAndTwoIntegralIndices) {
                 swap.type = s4(32);
                 swap.result = TempId{d.processes[0].numTemps++};
                 break;
+            default: ADD_FAILURE() << broken; break;
         }
         EXPECT_FALSE(errorsOf(d).empty()) << broken;
     }
