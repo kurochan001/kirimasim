@@ -1,0 +1,254 @@
+{
+  "measured": "2026-10-24",
+  "purpose": "Original boundary observations for MOS/network contract review; not approved oracles.",
+  "versions": {
+    "13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "observations": [
+    {
+      "name": "format_vector",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top; wire[2:0] a; assign(weak1,weak0)a=3'b10x; initial begin #1;$display(\"%v\",a);$display(\"[%v][%0v][%8v]\",a[2],a[2],a[2]);end endmodule\n",
+      "source_sha256": "1aeb048df6f960d52f8abacced519702949fcbf84b645f4ddd6dfd31d0e11109",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "We1_We0_WeX\n[We1][We1][     We1]\n",
+      "diagnostic": []
+    },
+    {
+      "name": "format_vector",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top; wire[2:0] a; assign(weak1,weak0)a=3'b10x; initial begin #1;$display(\"%v\",a);$display(\"[%v][%0v][%8v]\",a[2],a[2],a[2]);end endmodule\n",
+      "source_sha256": "1aeb048df6f960d52f8abacced519702949fcbf84b645f4ddd6dfd31d0e11109",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "We1_We0_WeX\n[We1][We1][     We1]\n",
+      "diagnostic": []
+    },
+    {
+      "name": "format_actuals",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top; wire a;assign(weak1,weak0)a=1'b1;logic b=1;initial begin #1;$display(\"%v %v %v %v %v %v\",a,b,1'b1,a&1'b1,1'bx,1'bz);end endmodule\n",
+      "source_sha256": "9df3fa8b36709be2e62ef00a1ada8b905a69bd4c3d157813f13eb0b9658e06a1",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "WARNING: <probe.sv>:2: incompatible value for $display<%v>.\nWARNING: <probe.sv>:2: incompatible value for $display<%v>.\nWARNING: <probe.sv>:2: incompatible value for $display<%v>.\nWe1 St1 <%v> St1 <%v> <%v>\n",
+      "diagnostic": [
+        "vvp error: format 10 not supported by vpiBinaryConst"
+      ],
+      "stdout_path_normalized": true
+    },
+    {
+      "name": "format_actuals",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top; wire a;assign(weak1,weak0)a=1'b1;logic b=1;initial begin #1;$display(\"%v %v %v %v %v %v\",a,b,1'b1,a&1'b1,1'bx,1'bz);end endmodule\n",
+      "source_sha256": "9df3fa8b36709be2e62ef00a1ada8b905a69bd4c3d157813f13eb0b9658e06a1",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "WARNING: <probe.sv>:2: incompatible value for $display<%v>.\nWARNING: <probe.sv>:2: incompatible value for $display<%v>.\nWARNING: <probe.sv>:2: incompatible value for $display<%v>.\nWe1 St1 <%v> St1 <%v> <%v>\n",
+      "diagnostic": [
+        "vvp error: format 10 not supported by vpiBinaryConst"
+      ],
+      "stdout_path_normalized": true
+    },
+    {
+      "name": "dynamic_tran_terminal",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;int idx=0;wire[1:0]a;wire b;assign a=2'b10;tran t(a[idx],b);initial begin #1;$display(\"%b\",b);idx=1;#1;$display(\"%b\",b);end endmodule\n",
+      "source_sha256": "4e3f3ff006f2ffd852306d1070cb13b8d2531994636a3ec5b00d670870ed5d3b",
+      "compile_exit": 2,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:2: error: A reference to a net or variable (`idx') is not allowed in a constant expression."
+      ]
+    },
+    {
+      "name": "dynamic_tran_terminal",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;int idx=0;wire[1:0]a;wire b;assign a=2'b10;tran t(a[idx],b);initial begin #1;$display(\"%b\",b);idx=1;#1;$display(\"%b\",b);end endmodule\n",
+      "source_sha256": "4e3f3ff006f2ffd852306d1070cb13b8d2531994636a3ec5b00d670870ed5d3b",
+      "compile_exit": 2,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:2: error: A reference to a net or variable (`idx') is not allowed in a constant expression."
+      ]
+    },
+    {
+      "name": "charge_net",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;trireg a;logic d=1;assign a=d;initial begin #1;$display(\"%b\",a);d=1'bz;#1;$display(\"%b\",a);end endmodule\n",
+      "source_sha256": "df431a1a89fd94b981bfc715370209a27c771cce2ecc6bcc789aa2a8e5813524",
+      "compile_exit": 1,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:2: sorry: trireg nets not supported."
+      ]
+    },
+    {
+      "name": "charge_net",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;trireg a;logic d=1;assign a=d;initial begin #1;$display(\"%b\",a);d=1'bz;#1;$display(\"%b\",a);end endmodule\n",
+      "source_sha256": "df431a1a89fd94b981bfc715370209a27c771cce2ecc6bcc789aa2a8e5813524",
+      "compile_exit": 1,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:2: sorry: trireg nets not supported."
+      ]
+    },
+    {
+      "name": "forced_input_port",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire a,output wire b);assign b=a;initial begin #2;force a=0;#1;release a;end endmodule module top;wire a,b;assign a=1'b1;leaf u(a,b);initial begin #1;$display(\"before %b%b\",a,b);#1;$strobe(\"forced %b%b\",a,b);#2;$display(\"released %b%b\",a,b);end endmodule\n",
+      "source_sha256": "e931b136d0621f49d1ab804f8fe2c9aee4a2f15e507c2f06db6d2936c3891c43",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 11\nforced 00\nreleased 11\n",
+      "diagnostic": []
+    },
+    {
+      "name": "forced_input_port",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire a,output wire b);assign b=a;initial begin #2;force a=0;#1;release a;end endmodule module top;wire a,b;assign a=1'b1;leaf u(a,b);initial begin #1;$display(\"before %b%b\",a,b);#1;$strobe(\"forced %b%b\",a,b);#2;$display(\"released %b%b\",a,b);end endmodule\n",
+      "source_sha256": "e931b136d0621f49d1ab804f8fe2c9aee4a2f15e507c2f06db6d2936c3891c43",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 11\nforced 00\nreleased 11\n",
+      "diagnostic": []
+    },
+    {
+      "name": "forced_output_port",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire a);assign a=1'b1;initial begin #2;force a=0;#1;release a;end endmodule module top;wire[1:0]a;leaf u(a[1]);initial begin #1;$display(\"before %b%b\",a[1],u.a);#1;$strobe(\"forced %b%b\",a[1],u.a);#2;$display(\"released %b%b\",a[1],u.a);end endmodule\n",
+      "source_sha256": "b9b559924706cbc8d30996edd9356c191b0a91c7c6e254bee2adbf643a126f30",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 11\nforced 00\nreleased 11\n",
+      "diagnostic": []
+    },
+    {
+      "name": "forced_output_port",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire a);assign a=1'b1;initial begin #2;force a=0;#1;release a;end endmodule module top;wire[1:0]a;leaf u(a[1]);initial begin #1;$display(\"before %b%b\",a[1],u.a);#1;$strobe(\"forced %b%b\",a[1],u.a);#2;$display(\"released %b%b\",a[1],u.a);end endmodule\n",
+      "source_sha256": "b9b559924706cbc8d30996edd9356c191b0a91c7c6e254bee2adbf643a126f30",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 11\nforced 00\nreleased 11\n",
+      "diagnostic": []
+    },
+    {
+      "name": "user_nettype_switch",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;nettype logic usernet;usernet a,b;tran t(a,b);initial begin #1;$display(\"%b%b\",a,b);end endmodule\n",
+      "source_sha256": "ed6b7da6160222b304eeb0fa4fdc9f104908688753517316625794ac55a8f5c0",
+      "compile_exit": 4,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:2: syntax error"
+      ]
+    },
+    {
+      "name": "user_nettype_switch",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;nettype logic usernet;usernet a,b;tran t(a,b);initial begin #1;$display(\"%b%b\",a,b);end endmodule\n",
+      "source_sha256": "ed6b7da6160222b304eeb0fa4fdc9f104908688753517316625794ac55a8f5c0",
+      "compile_exit": 4,
+      "run_exit": null,
+      "stdout": "",
+      "diagnostic": [
+        "<probe.sv>:2: syntax error"
+      ]
+    },
+    {
+      "name": "force_parent_bit_port",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire a);assign a=1'b1;endmodule module top;wire[1:0]a;leaf u(a[1]);initial begin #1;$display(\"before %b%b\",a[1],u.a);force a[1]=0;#1;$display(\"forced %b%b\",a[1],u.a);release a[1];#1;$display(\"released %b%b\",a[1],u.a);end endmodule\n",
+      "source_sha256": "7a3e96ad11ff91c3b940a2f7004d481b78354349d3df0b60e0a2f7f5578f7c41",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 11\nforced 01\nreleased 11\n",
+      "diagnostic": []
+    },
+    {
+      "name": "force_parent_bit_port",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule leaf(output wire a);assign a=1'b1;endmodule module top;wire[1:0]a;leaf u(a[1]);initial begin #1;$display(\"before %b%b\",a[1],u.a);force a[1]=0;#1;$display(\"forced %b%b\",a[1],u.a);release a[1];#1;$display(\"released %b%b\",a[1],u.a);end endmodule\n",
+      "source_sha256": "7a3e96ad11ff91c3b940a2f7004d481b78354349d3df0b60e0a2f7f5578f7c41",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "before 11\nforced 01\nreleased 11\n",
+      "diagnostic": []
+    },
+    {
+      "name": "format_selected_net",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;wire[1:0]a;int idx=0;assign(weak1,weak0)a=2'b10;initial begin #1;$display(\"%v %v %v\",a[0],a[idx],(a[1]));idx=1;#1;$display(\"%v\",a[idx]);idx=3;#1;$display(\"%v\",a[idx]);idx='x;#1;$display(\"%v\",a[idx]);end endmodule\n",
+      "source_sha256": "9721e97c6ec36f0aa21e8937383dc3b58ca296861a828ebd80cbb30c82c32ab7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "We0 We0 We1\nWe1\nStX\nWe0\n",
+      "diagnostic": []
+    },
+    {
+      "name": "format_selected_net",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;wire[1:0]a;int idx=0;assign(weak1,weak0)a=2'b10;initial begin #1;$display(\"%v %v %v\",a[0],a[idx],(a[1]));idx=1;#1;$display(\"%v\",a[idx]);idx=3;#1;$display(\"%v\",a[idx]);idx='x;#1;$display(\"%v\",a[idx]);end endmodule\n",
+      "source_sha256": "9721e97c6ec36f0aa21e8937383dc3b58ca296861a828ebd80cbb30c82c32ab7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "We0 We0 We1\nWe1\nStX\nWe0\n",
+      "diagnostic": []
+    },
+    {
+      "name": "shared_uncertain_edge",
+      "engine": "13",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b;assign(pull1,pull0)a=1'b1;assign(strong1,strong0)a=1'b0;assign(weak1,weak0)b=1'b0;tranif1 t(a,b,1'bx);initial begin #1;$display(\"%b %b %v %v\",a,b,a,b);end endmodule\n",
+      "source_sha256": "12557bd448734d4413dff0e386207e3fabd201b32ee6fadc7288345040d6ed9f",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "0 0 St0 630\n",
+      "diagnostic": []
+    },
+    {
+      "name": "shared_uncertain_edge",
+      "engine": "14",
+      "source": "`timescale 1ns/1ns\nmodule top;wire a,b;assign(pull1,pull0)a=1'b1;assign(strong1,strong0)a=1'b0;assign(weak1,weak0)b=1'b0;tranif1 t(a,b,1'bx);initial begin #1;$display(\"%b %b %v %v\",a,b,a,b);end endmodule\n",
+      "source_sha256": "12557bd448734d4413dff0e386207e3fabd201b32ee6fadc7288345040d6ed9f",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "stdout": "0 0 St0 630\n",
+      "diagnostic": []
+    }
+  ],
+  "repository_context": "b5491de",
+  "platform": "macOS/arm64",
+  "kirimasim_execution": "Not measured; no production implementation added.",
+  "source_origin": "Ten original programs; no other simulator source or tests read.",
+  "commands": {
+    "compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "probe.vvp",
+      "probe.sv"
+    ],
+    "run": [
+      "vvp",
+      "probe.vvp"
+    ]
+  },
+  "portability": "Local paths in diagnostic/stdout warnings replaced by <probe.sv>; value/strength tokens unchanged."
+}

@@ -104,6 +104,8 @@ strength-aware formatting and resolved-interval metadata through SIR/VM remain u
 The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
 28 exploratory reference programs and the remaining semantic questions;
 these observations are not additional implemented features or approved oracles.
+The [complete execution contract proposal](notes/mos-switch-proposal.md) is
+pending review, including startup and full-strength timing decisions.
 
 ### Program completion
 

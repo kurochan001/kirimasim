@@ -54,13 +54,23 @@ verified as 13.0 for that baseline. This measures the finite 13.0 inventory;
 complete coverage, full parity and Linux results for these probes remain
 unconfirmed. Dated entries below retain their historical probe cohorts.
 
-Five detailed semantic amendments remain pending:
+Six detailed semantic amendments remain pending:
 
 - [Array reductions and ordering](array-methods-proposal.md).
 - [Multidimensional binary memory addressing](fread-multidim-proposal.md).
 - [Array minimum/maximum execution](array-extrema-proposal.md).
 - [Event-controlled NBA registration, lifetime and ordering](event-nba-proposal.md).
 - [Delayed three-state side-only transitions](delayed-gate-side-proposal.md).
+- [Full-strength MOS, passive networks, ports, force and formatting](mos-switch-proposal.md).
+
+The MOS proposal covers thirteen switch probes and one partial-port probe in
+the existing 13.0 gap list. Its new 18-source matrix records 2,304 scalar
+samples per reference across three loading conditions, plus ten original
+boundary programs. Loaded results agree with the truth/reduction/resolution
+model; isolated resistive strength tokens expose a context-dependent reference
+difference. The proposal explicitly requests review of startup, network
+ownership, local wired resolution, force and strength-only timing. No MOS
+implementation or change to the 79-item inventory is claimed.
 
 The broader development-version cases remain tracked. External pass-rate
 measurements keep their 2026-10-22 provenance; performance measurements keep

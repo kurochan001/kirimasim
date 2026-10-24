@@ -87,6 +87,22 @@ state into the shared kernel; source lowering and VM transport alone cannot
 provide the missing execution semantics. No new semantic amendment is approved
 by this investigation, and the five existing pending proposals remain pending.
 
+## Follow-up contract and loaded observations
+
+The [full execution proposal](mos-switch-proposal.md) now specifies the
+network, MOS, port, force, timing, SIR/kernel and formatting decisions for
+review. It adds no implemented support and leaves the earlier five proposals
+pending.
+
+An [18-source follow-up matrix](../measurements/2026-10-24/mos-strength-matrix-observations.json)
+tests each MOS form with isolated outputs and weak/pull opposing drivers.
+Each reference has 2,304 scalar samples. All projected values agree with the
+truth/reduction/local-resolution calculation. With competing drivers every
+strength token agrees too; isolated resistive outputs have 252 strength-token
+differences per engine. Thus the earlier single-driver `St1` observation does
+not establish that the device fails to attenuate during resolution. The
+implementation cause remains unconfirmed. No simulator source was read.
+
 ## Reproduce one observation
 
 Extract any named original program from the portable data, then use a matching
