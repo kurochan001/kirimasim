@@ -149,12 +149,6 @@ unsupported_matrix/force_unpacked_array.sv:28:7: error: unsupported: assignment 
 unsupported_matrix/force_unpacked_array.sv:33:7: error: unsupported: assignment to a whole unpacked array (not implemented yet)
 unsupported_matrix/force_unpacked_array.sv:6:5: error: unsupported: assignment to a whole unpacked array (not implemented yet)
 unsupported_matrix/force_unpacked_array.sv:9:5: error: unsupported: assignment to a whole unpacked array (not implemented yet)
-unsupported_matrix/fork_declaration.sv:11:14: error: unsupported: declarations in a fork block (not implemented yet)
-unsupported_matrix/fork_declaration.sv:15:14: error: unsupported: declarations in a fork block (not implemented yet)
-unsupported_matrix/fork_declaration.sv:20:16: error: unsupported: declarations in a fork block (not implemented yet)
-unsupported_matrix/fork_declaration.sv:25:16: error: unsupported: declarations in a fork block (not implemented yet)
-unsupported_matrix/fork_declaration.sv:5:14: error: unsupported: declarations in a fork block (not implemented yet)
-unsupported_matrix/fork_declaration.sv:8:14: error: unsupported: declarations in a fork block (not implemented yet)
 unsupported_matrix/format_percent_end.sv:11:14: error: format has a % without a conversion
 unsupported_matrix/format_percent_end.sv:14:14: error: format has a % without a conversion
 unsupported_matrix/format_percent_end.sv:18:14: error: format has a % without a conversion
