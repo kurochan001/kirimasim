@@ -64,6 +64,12 @@ public:
     [[nodiscard]] std::uint32_t liveWatches() const noexcept { return liveWatches_; }
     StrengthError read(SlotBits at, std::span<StrengthRange> out) const noexcept;
     StrengthError readPacked(SlotBits at, std::span<W4> out) const noexcept;
+    /// Captured runtime selection within a static parent bit window. An
+    /// invalid element/position reads strong X; partially outside selections
+    /// retain in-range metadata and use strong X only for missing bits.
+    StrengthError readSelectedPacked(SlotBits window, std::optional<std::uint32_t> element,
+                                     std::optional<std::int64_t> position, std::uint32_t width,
+                                     std::span<W4> out) const noexcept;
     StrengthWatchResult subscribe(SlotBits at, StrengthNoticeFn fn, void* frame) noexcept;
     bool cancel(StrengthWatchToken token) noexcept;
     void clearWatches() noexcept;
@@ -80,6 +86,9 @@ private:
         SlotBits at;
         StrengthNoticeFn fn = nullptr;
         void* frame = nullptr;
+        Scheduler* scheduler = nullptr;
+        std::uint32_t process = kNone;
+        std::uint64_t waitGeneration = 0;
         std::uint64_t generation = 1, serial = 0;
         std::uint32_t next = kNone;
         bool active = false;
@@ -116,6 +125,9 @@ private:
     std::uint64_t nextSerial_ = 0;
     bool publishing_ = false;
 
+    StrengthWatchResult subscribeImpl(SlotBits at, StrengthNoticeFn fn, void* frame,
+                                      Scheduler* scheduler, std::uint32_t process,
+                                      std::uint64_t generation) noexcept;
     bool normalize(SlotBits& at) const noexcept;
     StrengthError enable(SlotId slot, std::span<const StrengthRange> initial) noexcept;
     StrengthError prepare(std::span<const StrengthUpdate> updates, Plan& plan);

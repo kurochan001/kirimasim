@@ -581,6 +581,9 @@ void Scheduler::runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileT
 
 void Scheduler::freeMonitor(ProcessId p) {
     Process& proc = processes_[p.index()];
+    for (const auto token : proc.strengthWaits)
+        ctx_.strengths().cancel(token);
+    proc.strengthWaits.clear();
     for (const std::uint32_t id : proc.monitors) {
         Monitor& m = monitors_[id];
         for (const auto root : m.heapReads)

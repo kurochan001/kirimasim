@@ -346,6 +346,10 @@ public:
     // wait at a time.
     void waitDelay(ProcessId p, std::uint64_t ticks);
     void waitEvent(ProcessId p, std::span<const WaitItem> items);
+    /// One wait combines ordinary value events with internal range changes.
+    /// Any match cancels all alternatives through the same process generation.
+    StrengthError waitEventStrength(ProcessId p, std::span<const WaitItem> items,
+                                    std::span<const SlotPart> strengths) noexcept;
     void waitMonitor(ProcessId p, const MonitorSpec& m);
     /// An event control whose items are subscriptions and monitor records:
     /// the first item whose event occurs wakes the process and ends the
@@ -565,6 +569,8 @@ public:
     [[nodiscard]] const std::string& error() const { return error_; }
 
 private:
+    friend class StrengthStorage;
+    void strengthChanged(std::uint32_t process, std::uint64_t generation) noexcept;
     bool takeWallTimeLimit();
     void deliverStrengthDrive(std::uint32_t origin, std::uint64_t generation) noexcept;
     void resolveStrengthComponent(std::uint32_t component) noexcept;
@@ -618,7 +624,8 @@ private:
         ManagedEventError error = ManagedEventError::None;
     };
     struct Process {
-        explicit Process(std::pmr::memory_resource* memory) noexcept : eventPins(memory) {}
+        explicit Process(std::pmr::memory_resource* memory) noexcept
+            : eventPins(memory), strengthWaits(memory) {}
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
@@ -628,6 +635,7 @@ private:
         std::uint64_t gen = 0;                ///< Number of the current wait.
         std::vector<std::uint32_t> monitors;  ///< Monitor records of the current wait.
         std::pmr::vector<ManagedEventPin> eventPins;
+        std::pmr::vector<StrengthWatchToken> strengthWaits;
         bool done = false;
         bool flushOnResume = false;          ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).

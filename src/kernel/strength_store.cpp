@@ -9,6 +9,8 @@
 #include <tuple>
 
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/sim.h"
+#include "kirimasim/kernel/w4ops.h"
 
 namespace kirimasim::kernel {
 namespace {
@@ -82,9 +84,37 @@ StrengthError StrengthStorage::readPacked(SlotBits at, std::span<W4> out) const 
     return StrengthError::None;
 }
 
+StrengthError StrengthStorage::readSelectedPacked(SlotBits window,
+                                                  std::optional<std::uint32_t> element,
+                                                  std::optional<std::int64_t> position,
+                                                  std::uint32_t width,
+                                                  std::span<W4> out) const noexcept {
+    window.elem = 0;  // Validate the static window independently of runtime indices.
+    if (!normalize(window)) return StrengthError::InvalidTarget;
+    if (width == 0 || out.size() < strengthWordCount(width)) return StrengthError::InvalidShape;
+    std::fill_n(out.begin(), strengthWordCount(width), W4{});
+    for (std::uint32_t bit = 0; bit < width; ++bit)
+        writeStrengthRange(out, bit, {-6, 6});
+    const auto& layout = store_.layout(window.slot);
+    if (!element || *element >= layout.elements || !position) return StrengthError::None;
+    const auto part = inside(*position, width, layout.width, window.lsb, window.width);
+    if (!part) return StrengthError::None;
+    const auto first = std::uint64_t{*element} * layout.width + part->lo;
+    const auto& values = slots_[bySlot_[window.slot.index()]].values;
+    for (std::uint32_t bit = 0; bit < part->n; ++bit)
+        writeStrengthRange(out, part->skip + bit, values[first + bit]);
+    return StrengthError::None;
+}
+
 StrengthWatchResult StrengthStorage::subscribe(SlotBits at, StrengthNoticeFn fn,
                                                void* frame) noexcept {
-    if (!normalize(at) || fn == nullptr) return {StrengthError::InvalidTarget};
+    return subscribeImpl(at, fn, frame, nullptr, kNone, 0);
+}
+StrengthWatchResult StrengthStorage::subscribeImpl(SlotBits at, StrengthNoticeFn fn, void* frame,
+                                                   Scheduler* scheduler, std::uint32_t process,
+                                                   std::uint64_t generation) noexcept {
+    if (!normalize(at) || (fn == nullptr && scheduler == nullptr))
+        return {StrengthError::InvalidTarget};
     if (nextSerial_ == UINT64_MAX) return {StrengthError::ResourceLimit};
     try {
         std::uint32_t id = freeWatch_;
@@ -98,6 +128,9 @@ StrengthWatchResult StrengthStorage::subscribe(SlotBits at, StrengthNoticeFn fn,
         watch.at = at;
         watch.fn = fn;
         watch.frame = frame;
+        watch.scheduler = scheduler;
+        watch.process = process;
+        watch.waitGeneration = generation;
         watch.serial = nextSerial_++;
         watch.next = kNone;
         watch.active = true;
@@ -117,6 +150,7 @@ bool StrengthStorage::cancel(StrengthWatchToken token) noexcept {
     watch.active = false;
     watch.fn = nullptr;
     watch.frame = nullptr;
+    watch.scheduler = nullptr;
     --liveWatches_;
     if (watch.generation != UINT64_MAX) {
         ++watch.generation;
@@ -224,9 +258,13 @@ void StrengthStorage::announce(const Plan& plan, const bool& stop) noexcept {
                                     .subspan(first - part.at.lsb, end - first);
             const auto after = std::span<const StrengthRange>(part.after)
                                    .subspan(first - part.at.lsb, end - first);
-            if (!std::equal(before.begin(), before.end(), after.begin()))
-                watch.fn(watch.frame, {part.at.slot, part.at.elem, first, end - first}, before,
-                         after);
+            if (!std::equal(before.begin(), before.end(), after.begin())) {
+                if (watch.scheduler != nullptr)
+                    watch.scheduler->strengthChanged(watch.process, watch.waitGeneration);
+                else
+                    watch.fn(watch.frame, {part.at.slot, part.at.elem, first, end - first}, before,
+                             after);
+            }
         }
     }
 }
