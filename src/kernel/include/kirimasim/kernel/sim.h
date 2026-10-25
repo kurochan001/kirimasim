@@ -173,9 +173,7 @@ struct NamedWaitItem {
     void* guardFrame = nullptr;
 };
 
-/// An event control on an expression, or a `wait (expr)`: a monitor
-/// record (SCHEDULER_SPEC.md 9.5). The expression is evaluated again when
-/// one of its slots changes or one of its events is triggered.
+/// Automatic storage owned and observed by one expression monitor.
 struct ActivationReadSpec {
     /// Capture executed reads only from these owned lexical extents.
     /// Supplying a binding pins its entire scope, not just that field.
@@ -186,6 +184,8 @@ struct ActivationReadSpec {
     [[nodiscard]] bool enabled() const { return capture || !bindings.empty() || !parts.empty(); }
 };
 
+/// An event control on an expression, or a `wait (expr)`: a monitor
+/// record (SCHEDULER_SPEC.md 9.5). Its dependencies schedule reevaluation.
 struct MonitorSpec {
     std::vector<SlotPart> slots;
     std::vector<EventId> events;

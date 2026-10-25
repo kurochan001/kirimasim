@@ -47,7 +47,7 @@ struct Watch {
         watch.valid = watch.valid && store.read(watch.array, static_cast<std::uint32_t>(selected.a),
                                                 {value.data(), count}, watch.lsb,
                                                 watch.width) == k::ActivationError::None;
-        for (std::uint32_t i = 0; i < count; ++i) {
+        for (std::size_t i = 0; i < count; ++i) {
             out[2 * i] = value[i].a;
             out[2 * i + 1] = value[i].b;
         }
@@ -493,17 +493,20 @@ TEST(ActivationScheduler, ContainerReplacementAndCellMutationShareOneWaitAndType
     context.scheduler().flushHeapChanges();
     EXPECT_EQ(watch.evals, 4U);
     EXPECT_TRUE(watch.valid);
-    std::vector<k::HeapRoot> roots;
-    roots.reserve(1);
+    struct RootBuffer {
+        std::array<k::HeapRoot, 1> roots{};
+        std::size_t count = 0;
+    } roots;
     context.activations().visitRoots(
         [](void* frame, k::HeapRoot root) noexcept {
-            // Preallocated below: the root visitor itself does not allocate.
-            static_cast<std::vector<k::HeapRoot>*>(frame)->push_back(root);
+            auto& out = *static_cast<RootBuffer*>(frame);
+            if (out.count < out.roots.size()) out.roots[out.count] = root;
+            ++out.count;
         },
         &roots);
-    ASSERT_EQ(roots.size(), 1U);
-    EXPECT_EQ(roots[0].bits, second.value.bits);
-    ASSERT_TRUE(context.heap().collect(roots));
+    ASSERT_EQ(roots.count, 1U);
+    EXPECT_EQ(roots.roots[0].bits, second.value.bits);
+    ASSERT_TRUE(context.heap().collect(roots.roots));
     EXPECT_EQ(context.heap().stats().containers, 1U);
     context.scheduler().kill(process);
     EXPECT_EQ(context.activations().stats().live, 0U);
