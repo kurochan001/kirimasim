@@ -229,6 +229,21 @@ void ActivationStore::reclaim(std::uint32_t index) noexcept {
     }
 }
 
+ActivationResult<ActivationRegion>
+ActivationStore::region(const ActivationPart& part) const noexcept {
+    const auto* field = fieldOf(part.binding);
+    if (field == nullptr) return {{}, ActivationError::InvalidBinding};
+    const auto width = part.width == 0 ? field->width : part.width;
+    if (part.numElems == 0 || part.firstElem >= field->elements ||
+        part.numElems > field->elements - part.firstElem || part.lsb > field->width ||
+        width > field->width - part.lsb ||
+        (!integral(field->kind) && (part.lsb != 0 || width != field->width)))
+        return {{}, ActivationError::OutOfRange};
+    return {
+        {part.binding.token_, part.binding.field_, part.firstElem, part.numElems, part.lsb, width},
+        ActivationError::None};
+}
+
 ActivationError ActivationStore::read(const ActivationBinding& binding, std::uint32_t element,
                                       std::span<W4> value, std::uint32_t lsb,
                                       std::uint32_t width) const noexcept {

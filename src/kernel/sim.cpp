@@ -122,6 +122,38 @@ struct HeapReads {
     }
 };
 
+struct ActivationReads {
+    std::pmr::vector<ActivationRegion> regions;
+    std::span<const ActivationLease> leases;
+    bool limited = false;
+    static void record(void* frame, const ActivationAccess& access) noexcept {
+        auto& reads = *static_cast<ActivationReads*>(frame);
+        if (reads.limited) return;
+        // Calls with private automatic locals do not expand the waiter's
+        // lexical environment. Its explicit extents own all captured reads.
+        if (std::none_of(reads.leases.begin(), reads.leases.end(),
+                         [&](const auto& lease) { return lease.token() == access.token; }))
+            return;
+        const ActivationRegion region{access.token, access.field, access.element, 1,
+                                      access.lsb,   access.width};
+        try {
+            if (std::find(reads.regions.begin(), reads.regions.end(), region) ==
+                reads.regions.end())
+                reads.regions.push_back(region);
+        } catch (const std::bad_alloc&) {
+            reads.limited = true;
+        } catch (const std::length_error&) {
+            reads.limited = true;
+        }
+    }
+};
+
+bool dependsOn(const ActivationRegion& region, const ActivationAccess& access) {
+    return region.token == access.token && region.field == access.field &&
+           overlaps(region.firstElem, region.numElems, access.element, 1) &&
+           overlaps(region.lsb, region.width, access.lsb, access.width);
+}
+
 }  // namespace
 
 const char* endReasonName(EndReason r) {
@@ -425,13 +457,16 @@ void Scheduler::runPostponed(ProcessId p, const FileTargets* to) {
 }
 
 void Scheduler::retainHeapHook() {
-    if (heapMonitorCount_++ == 0)
+    if (heapMonitorCount_++ == 0) {
         previousHeapHook_ = ctx_.heap().setChangeHook({&changedHeap, this});
+        previousActivationHook_ = ctx_.activations().setChangeHook({&changedActivation, this});
+    }
 }
 
 void Scheduler::releaseHeapHook() noexcept {
     if (--heapMonitorCount_ == 0) {
         ctx_.heap().setChangeHook(previousHeapHook_);
+        ctx_.activations().setChangeHook(previousActivationHook_);
         heapMonitors_.clear();
         heapMonitorLimit_ = 0;
     }
@@ -517,8 +552,11 @@ void Scheduler::freeMonitor(ProcessId p) {
         Monitor& m = monitors_[id];
         for (const auto root : m.heapReads)
             ctx_.heap().watch(root, false);
-        if (m.spec.heap) releaseHeapHook();
+        if (m.spec.heap || m.spec.activation.enabled()) releaseHeapHook();
         m.heapReads.clear();
+        m.activationReads.clear();
+        m.activationParts.clear();
+        m.activationLeases.clear();
         m.serial = ++monitorSerial_;  // references from slots and events go stale
         m.spec = {};
         freeMonitors_.push_back(id);
@@ -990,11 +1028,12 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
     mon.serial = ++monitorSerial_;
     mon.spec = m;
     mon.heapReads.clear();
-    if (m.heap) {
+    if (m.heap || m.activation.enabled()) {
         retainHeapHook();
         pushSwept(heapMonitors_, heapMonitorLimit_, MonitorRef{id, mon.serial},
                   [&](const MonitorRef& r) { return !live(r); });
     }
+    if (!prepareActivationReads(id)) return;
     mon.last.assign(elementWords(m.domain, m.width), 0);
     if (!evalMonitorValue(id, mon.last)) return;
     counters_.increment(cMonitorEvals_);
@@ -1338,6 +1377,80 @@ void Scheduler::changedHeap(void* frame, HeapRoot root) noexcept {
     }
 }
 
+bool Scheduler::prepareActivationReads(std::uint32_t id) {
+    auto& monitor = monitors_[id];
+    std::pmr::vector<ActivationLease> leases(ctx_.heap().memoryResource());
+    std::pmr::vector<ActivationRegion> parts(ctx_.heap().memoryResource());
+    const auto retain = [&](const ActivationBinding& binding) {
+        auto held = ctx_.activations().retain(binding);
+        if (!held) {
+            if (held.error == ActivationError::ResourceLimit)
+                heapLimit(monitor.process);
+            else
+                fail("invalid automatic monitor binding");
+            return false;
+        }
+        if (std::none_of(leases.begin(), leases.end(),
+                         [&](const auto& lease) { return lease.token() == held.value.token(); }))
+            leases.push_back(std::move(held.value));
+        return true;
+    };
+    try {
+        for (const auto& binding : monitor.spec.activation.bindings)
+            if (!retain(binding)) return false;
+        for (const auto& part : monitor.spec.activation.parts) {
+            const auto region = ctx_.activations().region(part);
+            if (!region) {
+                fail("invalid automatic monitor range");
+                return false;
+            }
+            if (!retain(part.binding)) return false;
+            parts.push_back(region.value);
+        }
+        monitor.activationLeases.swap(leases);
+        monitor.activationParts.swap(parts);
+        return true;
+    } catch (const std::bad_alloc&) {
+        heapLimit(monitor.process);
+    } catch (const std::length_error&) {
+        heapLimit(monitor.process);
+    }
+    return false;
+}
+
+void Scheduler::changedActivation(void* frame, const ActivationAccess& access) noexcept {
+    auto& scheduler = *static_cast<Scheduler*>(frame);
+    if (scheduler.ending_) return;
+    try {
+        for (const auto ref : scheduler.heapMonitors_) {
+            if (!scheduler.live(ref)) continue;
+            const auto& monitor = scheduler.monitors_[ref.id];
+            const auto matches = [&](const auto& region) { return dependsOn(region, access); };
+            if (!std::any_of(monitor.activationParts.begin(), monitor.activationParts.end(),
+                             matches) &&
+                !std::any_of(monitor.activationReads.begin(), monitor.activationReads.end(),
+                             matches))
+                continue;
+            LateChange notice;
+            notice.heap = true;
+            notice.monitor = ref;
+            scheduler.lateChanges_.push_back(std::move(notice));
+        }
+    } catch (const std::bad_alloc&) {
+        scheduler.heapLimit();
+    } catch (const std::length_error&) {
+        scheduler.heapLimit();
+    }
+}
+
+ActivationError Scheduler::writeActivation(const ActivationBinding& binding, std::uint32_t element,
+                                           std::span<const W4> value, std::uint32_t lsb,
+                                           std::uint32_t width) noexcept {
+    const auto result = ctx_.activations().write(binding, element, value, lsb, width);
+    flushHeapChanges();
+    return result;
+}
+
 void Scheduler::flushHeapChanges() noexcept {
     if (walking_ != 0 || draining_ || lateChanges_.empty() || ending_) return;
     try {
@@ -1358,18 +1471,55 @@ bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out)
     const auto serial = monitors_[id].serial;
     const EvalFn eval = monitors_[id].spec.eval;
     void* const frame = monitors_[id].spec.frame;
-    if (!monitors_[id].spec.heap) {
+    if (!monitors_[id].spec.heap && !monitors_[id].spec.activation.enabled()) {
         eval(toC(ctx_), frame, out.data());
         return monitors_[id].serial == serial;
     }
     HeapReads reads{std::pmr::vector<HeapRoot>(ctx_.heap().memoryResource()),
                     monitors_[id].spec.heapReadFilter, monitors_[id].spec.heapReadFrame};
+    ActivationReads activation{std::pmr::vector<ActivationRegion>(ctx_.heap().memoryResource()),
+                               {}};
+    // Evaluating source code may cancel this very wait or grow the monitor
+    // table. Keep the environment alive until the callback has returned.
+    std::pmr::vector<ActivationLease> leases(ctx_.heap().memoryResource());
+    try {
+        for (const auto& lease : monitors_[id].activationLeases) {
+            auto held = ctx_.activations().retain(lease);
+            if (!held) {
+                fail("invalid automatic monitor extent");
+                return false;
+            }
+            leases.push_back(std::move(held.value));
+        }
+    } catch (const std::bad_alloc&) {
+        heapLimit();
+        return false;
+    } catch (const std::length_error&) {
+        heapLimit();
+        return false;
+    }
+    activation.leases = leases;
     struct Restore {
         Heap& heap;
         HeapHook previous;
-        ~Restore() { heap.setReadHook(previous); }
-    } restore{ctx_.heap(), ctx_.heap().setReadHook({&HeapReads::record, &reads})};
+        ActivationStore& store;
+        ActivationHook activation;
+        ~Restore() {
+            heap.setReadHook(previous);
+            store.setReadHook(activation);
+        }
+    } restore{ctx_.heap(), {}, ctx_.activations(), {}};
+    restore.previous = ctx_.heap().setReadHook(
+        monitors_[id].spec.heap ? HeapHook{&HeapReads::record, &reads} : HeapHook{});
+    restore.activation =
+        ctx_.activations().setReadHook(monitors_[id].spec.activation.capture
+                                           ? ActivationHook{&ActivationReads::record, &activation}
+                                           : ActivationHook{});
     eval(toC(ctx_), frame, out.data());
+    if (activation.limited) {
+        heapLimit();
+        return false;
+    }
     if (reads.error != HeapError::None) {
         if (reads.error == HeapError::ResourceLimit)
             heapLimit();
@@ -1384,6 +1534,7 @@ bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out)
     for (const auto root : reads.roots)
         ctx_.heap().watch(root, true);
     monitors_[id].heapReads.swap(reads.roots);
+    monitors_[id].activationReads.swap(activation.regions);
     return true;
 }
 

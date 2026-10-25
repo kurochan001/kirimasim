@@ -3,7 +3,7 @@
 
 include(GoogleTest)
 
-add_executable(kirimasim_unit_tests activation_test.cpp and4_test.cpp array_port_sir_test.cpp context_test.cpp delayed_side_test.cpp container_sir_test.cpp counters_test.cpp dump_test.cpp format_test.cpp heap_test.cpp heap_conversion_test.cpp pattern_test.cpp pattern_sir_test.cpp scan_test.cpp scheduler_test.cpp sir_test.cpp verify_matrix_test.cpp strength_test.cpp timescale_test.cpp
+add_executable(kirimasim_unit_tests activation_test.cpp activation_scheduler_test.cpp and4_test.cpp array_port_sir_test.cpp context_test.cpp delayed_side_test.cpp container_sir_test.cpp counters_test.cpp dump_test.cpp format_test.cpp heap_test.cpp heap_conversion_test.cpp pattern_test.cpp pattern_sir_test.cpp scan_test.cpp scheduler_test.cpp sir_test.cpp verify_matrix_test.cpp strength_test.cpp timescale_test.cpp
     wide_strength_sir_test.cpp wide_udp_sir_test.cpp udp_test.cpp urandom_test.cpp valsem_test.cpp vm_block_argument_test.cpp vm_container_test.cpp w4ops_test.cpp wide_test.cpp)
 target_link_libraries(kirimasim_unit_tests PRIVATE
     kirimasim_vm kirimasim_kernel kirimasim_sir kirimasim_valsem GTest::gtest_main)

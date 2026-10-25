@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/abi.h"
+#include "kirimasim/kernel/activation.h"
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
@@ -175,6 +176,16 @@ struct NamedWaitItem {
 /// An event control on an expression, or a `wait (expr)`: a monitor
 /// record (SCHEDULER_SPEC.md 9.5). The expression is evaluated again when
 /// one of its slots changes or one of its events is triggered.
+struct ActivationReadSpec {
+    /// Capture executed reads only from these owned lexical extents.
+    /// Supplying a binding pins its entire scope, not just that field.
+    std::vector<ActivationBinding> bindings;
+    /// Static implicit sensitivity; never replaced by executed reads.
+    std::vector<ActivationPart> parts;
+    bool capture = false;
+    [[nodiscard]] bool enabled() const { return capture || !bindings.empty() || !parts.empty(); }
+};
+
 struct MonitorSpec {
     std::vector<SlotPart> slots;
     std::vector<EventId> events;
@@ -191,6 +202,7 @@ struct MonitorSpec {
     bool heap = false;  ///< Capture the expression's typed heap reads on each evaluation.
     HeapResult<bool> (*heapReadFilter)(const void*, HeapRoot) noexcept = nullptr;
     const void* heapReadFrame = nullptr;
+    ActivationReadSpec activation;
 };
 
 /// Typed heap reads of a display monitor are captured only while its body
@@ -233,6 +245,11 @@ public:
     /// instruction. Native callbacks also drain at their return/wait boundary.
     /// During a monitor/guard walk, notices wait in the shared change queue.
     void flushHeapChanges() noexcept;
+    /// Observable automatic writes flush notices at the same instruction
+    /// boundary as heap writes. No callback runs inside the store's hook.
+    ActivationError writeActivation(const ActivationBinding& binding, std::uint32_t element,
+                                    std::span<const W4> value, std::uint32_t lsb = 0,
+                                    std::uint32_t width = 0) noexcept;
     [[nodiscard]] bool heapMonitorLimited() const noexcept { return heapMonitorLimited_; }
     [[nodiscard]] ProcessId failedHeapMonitorProcess() const noexcept {
         return heapMonitorProcess_;
@@ -553,13 +570,17 @@ private:
         WaitItem item;
     };
     struct Monitor {
-        explicit Monitor(std::pmr::memory_resource* memory) : heapReads(memory) {}
+        explicit Monitor(std::pmr::memory_resource* memory)
+            : heapReads(memory), activationLeases(memory), activationParts(memory),
+              activationReads(memory) {}
         ProcessId process{0};
         std::uint64_t gen = 0;     ///< The process's wait it belongs to.
         std::uint64_t serial = 0;  ///< Changes when the record is reused.
         MonitorSpec spec;
         std::vector<std::uint64_t> last;
         std::pmr::vector<HeapRoot> heapReads;
+        std::pmr::vector<ActivationLease> activationLeases;
+        std::pmr::vector<ActivationRegion> activationParts, activationReads;
     };
     /// A reference to a monitor record from a slot or an event; stale when
     /// the record's serial has changed.
@@ -799,11 +820,14 @@ private:
     void evaluateMonitor(std::uint32_t id);
     bool evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out);
     static void changedHeap(void* frame, HeapRoot root) noexcept;
+    static void changedActivation(void* frame, const ActivationAccess& access) noexcept;
+    bool prepareActivationReads(std::uint32_t id);
     void heapLimit(ProcessId p = kNoHolder) noexcept;
     std::vector<MonitorRef> heapMonitors_;
     std::uint32_t heapMonitorLimit_ = 0;
     std::size_t heapMonitorCount_ = 0;
     HeapHook previousHeapHook_;
+    ActivationHook previousActivationHook_;
     bool heapMonitorLimited_ = false;
     ProcessId heapMonitorProcess_ = kNoHolder;
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }

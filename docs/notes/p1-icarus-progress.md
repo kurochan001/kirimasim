@@ -13,6 +13,12 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Automatic-storage wait dependencies:** the [kernel connection](automatic-storage-observation.md)
+adds thirteen original tests for owned extents, dynamic/static ranges, edges,
+heap replacement, cancellation and resource failures. Initial dev validation
+passes 4,568/4,570 with zero failures and two known skips. Source capture stays
+disabled; this does not close the 22 remaining passing gaps or complete P1.
+
 **Final automatic-storage foundation check:** `f7c45c43` passes [all 21 checks](../measurements/2026-10-25/activation-foundation-final-validation.json):
 4,555/4,557 dev/ASan/UBSan and 4,556/4,558 release, zero failures and two known skips.
 

@@ -101,8 +101,19 @@ struct ActivationAccess {
     ActivationToken token;
     std::uint32_t field = 0, element = 0, lsb = 0, width = 0;
 };
+/// A statically resolved sensitivity range, including unexecuted branches.
+struct ActivationPart {
+    ActivationBinding binding;
+    std::uint32_t firstElem = 0, numElems = 1, lsb = 0, width = 0;
+};
+struct ActivationRegion {
+    ActivationToken token;
+    std::uint32_t field = 0, firstElem = 0, numElems = 1, lsb = 0, width = 0;
+    friend bool operator==(const ActivationRegion&, const ActivationRegion&) = default;
+};
 /// Observers may inspect but must not mutate or reset this store. They
-/// must not allocate or throw. Changes arrive after complete normalization.
+/// must contain their own allocation failures and let no exception escape.
+/// Changes arrive after complete normalization; source callbacks run later.
 struct ActivationHook {
     void (*fn)(void*, const ActivationAccess&) noexcept = nullptr;
     void* frame = nullptr;
@@ -126,6 +137,8 @@ public:
     ActivationResult<ActivationBinding> bind(const ActivationLease& lease, std::uint32_t field,
                                              bool readonly = false) const noexcept;
     ActivationResult<ActivationBinding> readOnly(const ActivationBinding& binding) const noexcept;
+    /// Validate identity and bounds without reading values or firing hooks.
+    ActivationResult<ActivationRegion> region(const ActivationPart& part) const noexcept;
     /// Caller-owned W4 chunks, low word first. Width 0 means the whole
     /// field element. Invalid operations change neither values nor buffers.
     ActivationError read(const ActivationBinding& binding, std::uint32_t element,

@@ -40,6 +40,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('activation waits: committed changes are not announced', 'src/kernel/sim.cpp', '    if (scheduler.ending_) return;', '    if (true) return;'),
+    ('activation waits: packed read ranges cover unrelated bits', 'src/kernel/sim.cpp', 'overlaps(region.lsb, region.width, access.lsb, access.width)', '(static_cast<void>(region.width), true)'),
+    ('activation waits: old dynamic read footprints accumulate', 'src/kernel/sim.cpp', 'monitors_[id].activationReads.swap(activation.regions);', 'monitors_[id].activationReads.insert(monitors_[id].activationReads.end(), activation.regions.begin(), activation.regions.end());'),
+    ('activation waits: registrations borrow their lexical extents', 'src/kernel/sim.cpp', 'monitor.activationLeases.swap(leases);', 'static_cast<void>(leases);'),
+    ('activation waits: static sensitivity ranges are discarded', 'src/kernel/sim.cpp', 'monitor.activationParts.swap(parts);', 'static_cast<void>(parts);'),
+    ('activation waits: self-cancellation releases callback storage early', 'src/kernel/sim.cpp', 'for (const auto& lease : monitors_[id].activationLeases)', 'for (const auto& lease : std::span<const ActivationLease>{})'),
     ('activation store: child retention does not extend the extent', 'src/kernel/activation.cpp', '    ++record->leases;', '    static_cast<void>(record->leases);'),
     ('activation store: stale generations resolve to reused records', 'src/kernel/activation.cpp', 'record.leases != 0 && record.generation == (token.bits >> 32)', 'record.leases != 0'),
     ('activation store: retained readonly bindings regain write access', 'src/kernel/activation.cpp', 'binding.readonly_ = readonly || lease.readonly_;', 'binding.readonly_ = readonly;'),
@@ -293,7 +299,7 @@ MUTANTS = [
     ('heap monitor: never restores the previous change hook', 'src/kernel/sim.cpp', 'ctx_.heap().setChangeHook(previousHeapHook_);', 'static_cast<void>(previousHeapHook_);'),
     ('heap monitor: captures called function private values', 'src/vm/vm.cpp', 'if (!deps.privateContainers.empty()) {', 'if (false && !deps.privateContainers.empty()) {'),
     ('heap monitor: misses heap refs read inside callees', 'src/vm/vm.cpp', 'if (sir::isContainerOp(in.op) || in.op == Op::LoadRef || in.op == Op::LoadRefElem)', 'if (sir::isContainerOp(in.op))'),
-    ('heap monitor: silently accepts incomplete read capture', 'src/kernel/sim.cpp', 'eval(toC(ctx_), frame, out.data());\n    if (reads.error != HeapError::None) {', 'eval(toC(ctx_), frame, out.data());\n    if (false && reads.error != HeapError::None) {'),
+    ('heap monitor: silently accepts incomplete read capture', 'src/kernel/sim.cpp', 'if (reads.error != HeapError::None) {\n        if (reads.error == HeapError::ResourceLimit)\n            heapLimit();', 'if (false && reads.error != HeapError::None) {\n        if (reads.error == HeapError::ResourceLimit)\n            heapLimit();'),
     ('heap observation: size reads lose structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    return {c ? c->cells.size() : 0, {}};', '    return {c ? c->cells.size() : 0, {}};'),
     ('heap observation: element selection loses structural dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::container(value));\n    if (!c) return {};', '    if (!c) return {};'),
     ('heap observation: cell reads lose value dependencies', 'src/kernel/heap.cpp', '    recordRead(HeapRoot::cell(cell));', '    static_cast<void>(cell);'),

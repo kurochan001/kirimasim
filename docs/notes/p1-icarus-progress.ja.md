@@ -12,6 +12,11 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**automatic記憶域の待機依存：** [カーネル接続](automatic-storage-observation.ja.md)に
+extent保持・実行時/静的範囲・辺・heap置き換え・キャンセル・確保失敗の独自13テストを
+追加しました。初回dev検証は4,568/4,570成功、失敗0・既知2スキップです。
+ソースの捕捉はまだ有効にせず、未対応22件の解消やP1完了とは扱いません。
+
 **記憶域基盤の全体検証：** `f7c45c43`の[全21項目](../measurements/2026-10-25/activation-foundation-final-validation.json)が成功し、
 dev/ASan/UBSanは4,555/4,557、releaseは4,556/4,558成功、失敗0・既知2スキップです。
 

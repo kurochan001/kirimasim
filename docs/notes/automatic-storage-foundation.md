@@ -58,8 +58,9 @@ Typed reads/writes validate generation, field, element, bit range and buffer
 size. Writes normalize every chunk before observation; two-state conversion
 uses existing kernel/valsem semantics. Failed, invalid, readonly and unchanged
 writes publish no change. Read/change hooks describe numeric field/element/bit
-ranges and cannot allocate, throw, mutate or reset the store. The scheduler
-subscription integration is still pending; these are its storage hook boundary.
+ranges and cannot let exceptions escape, mutate or reset the store. The
+[scheduler follow-up](automatic-storage-observation.md) contains observer
+scratch allocation failures and connects these hooks to wait dependencies.
 Allocation failures return status without publishing partial records or altering
 existing bindings. Lease release does not allocate or execute source callbacks.
 
