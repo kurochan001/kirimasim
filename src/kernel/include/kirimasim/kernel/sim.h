@@ -33,6 +33,7 @@
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/store.h"
+#include "kirimasim/kernel/strength_drivers.h"
 #include "kirimasim/kernel/strength_store.h"
 
 namespace kirimasim::kernel {
@@ -379,6 +380,26 @@ public:
     /// never retry it after commitment. No partial snapshot is published.
     StrengthPublication publishStrengths(std::span<const StrengthUpdate> updates) noexcept;
 
+    /// Copies a static independent-node/physical-origin bank once. No writes,
+    /// resolution, notifications or processes on registration. Implicit roots
+    /// must be explicit origins: node kinds are wire/tri, wand/triand, wor/trior
+    /// or uwire, not tri0/tri1/supply0/supply1. Passive edges/force are separate.
+    StrengthError configureStrengthDrivers(std::span<const StrengthNodeSpec> nodes,
+                                           std::span<const StrengthOriginSpec> origins) noexcept;
+    /// Queue initial resolution in Active before starting device evaluations.
+    StrengthError startStrengthDrivers() noexcept;
+    /// Stable origin ID is its ordinal in the copied origin table. No borrowed
+    /// values, process ownership or synthetic fork children. All changes queue
+    /// the owning component once in Active, even when issued in Reactive.
+    StrengthError driveStrength(std::uint32_t origin, StrengthRange value) noexcept;
+    /// Scalar full-range inertial state. Same pending range retains its due
+    /// time; a different result cancels it; committed reversion schedules none.
+    /// A new result uses its projected destination delay, including same-value
+    /// strength changes. Explicit zero commits in Inactive, then queues Active.
+    StrengthError driveStrengthDelayed(std::uint32_t origin, StrengthRange value,
+                                       std::uint64_t rise, std::uint64_t fall,
+                                       std::uint64_t off) noexcept;
+
     // Procedural continuous assignments (SCHEDULER_SPEC.md 14, SIR_SPEC.md
     // 5.6). A marked slot keeps, bit by bit, who holds it at each level and
     // the value that level gives, and the value its ordinary writes give.
@@ -545,6 +566,9 @@ public:
 
 private:
     bool takeWallTimeLimit();
+    void deliverStrengthDrive(std::uint32_t origin, std::uint64_t generation) noexcept;
+    void resolveStrengthComponent(std::uint32_t component) noexcept;
+    StrengthError queueStrengthComponent(std::uint32_t component) noexcept;
     /// Show: a released held variable shows its value (id: the slot, gen:
     /// the element). Drive: a delayed driver's update (id: the driver).
     /// Postponed: a strobe's run (id: the process). Deferred: a deferred
@@ -557,6 +581,8 @@ private:
         TriggerValue,
         Show,
         Drive,
+        StrengthDrive,
+        StrengthResolve,
         Postponed,
         Deferred
     };

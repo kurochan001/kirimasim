@@ -975,6 +975,8 @@ void Scheduler::execute(const Event& e) {
             showHeld(SlotId{e.id}, static_cast<std::uint32_t>(e.gen), 0,
                      store_.layout(SlotId{e.id}).width);
             return;
+        case Kind::StrengthDrive: deliverStrengthDrive(e.id, e.gen); return;
+        case Kind::StrengthResolve: resolveStrengthComponent(e.id); return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
             if (!d.pending || d.gen != e.gen) return;  // dropped
