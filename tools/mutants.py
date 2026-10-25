@@ -797,8 +797,8 @@ MUTANTS = [
      "                    m.events.push_back(kernel::eventOfHandle(h));",
      "                    (void)h;"),
     ("vm: a guard in a task reads the process's frame", "src/vm/vm.cpp",
-     "        std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;",
-     "        std::vector<W4>& vars = f.vars;"),
+     "        const VarsId varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;",
+     "        const VarsId varsId = f.varsId;"),
     ("vm: wait (expr) waits when it is true", "src/vm/vm.cpp",
      "        if (!now || *now) return now ? std::optional<bool>(false) : std::nullopt;",
      "        if (!now) return std::nullopt;"),
@@ -1293,14 +1293,12 @@ MUTANTS = [
     ("vm: override.start waits on its triggers only after the first run", "src/vm/vm.cpp",
      "        waitTriggers(o, d_.process(ops[1].asProcess()));\n"
      "        const Act caller = act_;\n"
-     "        enter({bodyOfProcess(ops[1].asProcess()), &o.vars, caller.base + bodyTemps(caller.body),\n"
-     "               o.varsId});\n"
+     "        enter({bodyOfProcess(ops[1].asProcess()), caller.base + bodyTemps(caller.body), o.varsId});\n"
      "        W4 ret{0, 0};\n"
      "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n",
      "        const Act caller = act_;\n"
-     "        enter({bodyOfProcess(ops[1].asProcess()), &o.vars, caller.base + bodyTemps(caller.body),\n"
-     "               o.varsId});\n"
+     "        enter({bodyOfProcess(ops[1].asProcess()), caller.base + bodyTemps(caller.body), o.varsId});\n"
      "        W4 ret{0, 0};\n"
      "        const Exit e = runBody(o, sir::kEntryBlock, steps, ret);\n"
      "        act_ = caller;\n"
