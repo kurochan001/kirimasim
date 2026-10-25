@@ -620,8 +620,8 @@ public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
-          strings_(ctx.strings()), heap_(ctx.heap()), counters_(ctx.counters()),
-          stack_(ctx.stack()), options_(options) {
+          strings_(ctx.strings()), heap_(ctx.heap()), activations_(ctx.activations()),
+          counters_(ctx.counters()), stack_(ctx.stack()), options_(options) {
         auto patterns = sir::validatePatterns(d);
         if (!patterns.errors.empty()) loadError_ = "invalid pattern layout metadata";
         patternShapes_ = std::move(patterns.shapes);
@@ -982,6 +982,7 @@ private:
     std::int32_t& randomSeed_;  ///< $random with no argument (SYSTEM_TASKS.md 12.3).
     kernel::Strings& strings_;
     kernel::Heap& heap_;
+    kernel::ActivationStore& activations_;
     std::vector<sir::PatternShape> patternShapes_;
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
@@ -2175,6 +2176,26 @@ private:
             for (std::uint64_t e = 0; e < count; ++e)
                 rootContainer(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
         }
+        // Retained lexical extents are independent of live tier frames.
+        // Reserve before the nonallocating typed-root visitor runs.
+        std::size_t automaticRoots = 0;
+        activations_.visitRoots(
+            [](void* count, kernel::HeapRoot) noexcept { ++*static_cast<std::size_t*>(count); },
+            &automaticRoots);
+        if (automaticRoots > roots_.max_size() - roots_.size())
+            throw std::length_error("automatic storage root capacity");
+        const auto firstAutomaticRoot = roots_.size();
+        roots_.resize(firstAutomaticRoot + automaticRoots);
+        struct RootBuffer {
+            std::span<kernel::HeapRoot> values;
+            std::size_t next = 0;
+        } automaticBuffer{std::span(roots_).subspan(firstAutomaticRoot)};
+        activations_.visitRoots(
+            [](void* frame, kernel::HeapRoot root) noexcept {
+                auto& output = *static_cast<RootBuffer*>(frame);
+                output.values[output.next++] = root;
+            },
+            &automaticBuffer);
         for (const Frame& f : frames_) {
             if (f.released || f.finished || sched_.finished(f.kernelId)) continue;
             if (!rootActivation(f.varsId)) {

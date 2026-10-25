@@ -144,6 +144,13 @@ remain unsupported and are explicitly measured in the expanded comparison.
 The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
 was approved on 2026-10-25; automatic event variables are still unsupported.
 
+### Automatic-storage kernel foundation
+
+Context-local generational scopes, shared bindings, leases, readonly rights
+and typed roots have [14 original tests and a full generation-exhaustion probe](notes/automatic-storage-foundation.md).
+Source fork capture, activation instructions and automatic event/ref/object
+integration are not enabled; the existing source boundaries above remain.
+
 ### Fixed-array ports and net arrays
 
 Whole fixed-unpacked input/output ports and compatible net inout connections

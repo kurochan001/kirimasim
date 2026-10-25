@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <memory_resource>
 
+#include "kirimasim/kernel/activation.h"
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
@@ -36,8 +37,8 @@ public:
     /// The optional heap allocation source must outlive the Context.
     explicit Context(OutputDestinations to, std::FILE* in = nullptr,
                      std::pmr::memory_resource* heapMemory = std::pmr::new_delete_resource())
-        : output_(to), files_(output_, in), heap_(heapMemory), dump_(output_, store_),
-          scheduler_(*this, store_, counters_) {}
+        : output_(to), files_(output_, in), heap_(heapMemory), activations_(heapMemory),
+          dump_(output_, store_), scheduler_(*this, store_, counters_) {}
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
 
@@ -51,6 +52,8 @@ public:
     Store& store() { return store_; }
     Heap& heap() { return heap_; }
     [[nodiscard]] const Heap& heap() const { return heap_; }
+    ActivationStore& activations() { return activations_; }
+    [[nodiscard]] const ActivationStore& activations() const { return activations_; }
     Strings& strings() { return strings_; }
     [[nodiscard]] const Strings& strings() const { return strings_; }
     [[nodiscard]] const Store& store() const { return store_; }
@@ -69,6 +72,7 @@ private:
     Store store_;
     Strings strings_;
     Heap heap_;
+    ActivationStore activations_;
     Dump dump_;  ///< After output_ and store_, which it reads and writes.
     Scheduler scheduler_;
     std::int32_t randomSeed_ = 0;

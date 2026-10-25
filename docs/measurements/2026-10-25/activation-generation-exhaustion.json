@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-25",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "generations_checked": 4294967295,
+  "generation_bits": 32,
+  "retired_records": 1,
+  "total_record_entries": 2,
+  "stale_binding_rejected": true,
+  "elapsed_seconds": 35.684,
+  "kernel_source_sha256": "30c94d0acb19f73533d8af7ca7a35071d823faef6b031bcf780294dd93db225c",
+  "public_header_sha256": "62c2fac303e58dd252d16c56aa5efd95ebd72795751da43c045a343503287626",
+  "probe_sha256": "45975df2c1de90a8091d75c9a95ddcbcd7a6cd2d9609cf616eda4685e31bba01",
+  "result": "pass; production generation limit unchanged"
+}

@@ -13,6 +13,11 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Automatic-storage foundation:** the [kernel layer](automatic-storage-foundation.md)
+adds 14 original tests, eleven compiled controls and a full 32-bit-generation
+exhaustion probe. Source capture remains disabled; this foundation does not
+claim to close any of the remaining 22 passing gaps.
+
 **Final fixed-array validation:** `d89a60c6` passes [all 21 checks](../measurements/2026-10-25/fixed-array-final-validation.json):
 4,541/4,543 dev/ASan/UBSan and 4,542/4,544 release, zero failures and two known skips.
 

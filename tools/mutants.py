@@ -40,6 +40,17 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('activation store: child retention does not extend the extent', 'src/kernel/activation.cpp', '    ++record->leases;', '    static_cast<void>(record->leases);'),
+    ('activation store: stale generations resolve to reused records', 'src/kernel/activation.cpp', 'record.leases != 0 && record.generation == (token.bits >> 32)', 'record.leases != 0'),
+    ('activation store: retained readonly bindings regain write access', 'src/kernel/activation.cpp', 'binding.readonly_ = readonly || lease.readonly_;', 'binding.readonly_ = readonly;'),
+    ('activation store: foreign bindings use the local Context', 'src/kernel/activation.cpp', 'if (binding.store_ != this) return nullptr;', 'if (binding.store_ != this && false) return nullptr;'),
+    ('activation store: X and Z survive two-state normalization', 'src/kernel/activation.cpp', 'field->kind == ActivationKind::Two ? to2(value[i]) : value[i]', 'value[i]'),
+    ('activation store: four-state writes drop their b half', 'src/kernel/activation.cpp', 'if (stride == 2) writeField(words + 1, 2, position, bits, b);', 'if (stride == 2 && false) writeField(words + 1, 2, position, bits, b);'),
+    ('activation store: element writes all target the first element', 'src/kernel/activation.cpp', '    auto* words = find(binding.token_)->values.data() + field->offset +\n                  std::uint64_t{element} * field->chunks * stride;', '    auto* words = find(binding.token_)->values.data() + field->offset +\n                  std::uint64_t{element} * 0;'),
+    ('activation store: ordinary integer patterns become heap roots', 'src/kernel/activation.cpp', 'field.kind != ActivationKind::Container && field.kind != ActivationKind::Cell', 'field.kind != ActivationKind::Container && field.kind != ActivationKind::Cell && field.kind != ActivationKind::Two'),
+    ('activation store: VM safe points omit retained extent roots', 'src/vm/vm.cpp', 'output.values[output.next++] = root;', 'static_cast<void>(root); ++output.next;'),
+    ('activation store: released entries are never reused', 'src/kernel/activation.cpp', '        free_ = index;', '        static_cast<void>(index);'),
+    ('activation store: observers run before value commit', 'src/kernel/activation.cpp', '    bool changed = false;', '    if (changeHook_.fn != nullptr) changeHook_.fn(changeHook_.frame, {binding.token_, binding.field_, element, lsb, width});\n    bool changed = false;'),
     ('array ports: views allocate independent storage', 'src/vm/vm.cpp', 'if (s.viewOf != sir::kNone) {', 'if (s.viewOf != sir::kNone && false) {'),
     ('array ports: transitive views retain an intermediate root', 'src/front/lower.cpp', 'const sir::SlotId root = sir::physicalSlot(design_, s);', 'const sir::SlotId root = s;'),
     ('array ports: compact driver element ordinals collapse', 'src/front/lower_net_array.cpp', 't.element = static_cast<std::uint32_t>(element);', 't.element = 0 * static_cast<std::uint32_t>(element);'),

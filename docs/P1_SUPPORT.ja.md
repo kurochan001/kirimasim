@@ -130,6 +130,13 @@ automatic初期化は入るたびに行います。宣言だけのforkにも対�
 [記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は2026-10-25承認済みで、
 automatic event変数も未対応です。
 
+### automatic記憶域のカーネル基盤
+
+Context内の世代付きスコープ・共有binding・lease・readonly・型付きルートを実装しました。
+[独自14テストと全32ビット世代の検査](notes/automatic-storage-foundation.ja.md)で確認しています。
+ソースのfork捕捉、activation命令、automatic event・ref・objectの接続はまだ有効にせず、
+上記の未対応診断は維持しています。
+
 ### 固定長配列ポートとネット配列
 
 固定unpacked配列全体のinput/outputと、互換net同士のinoutを実行します。

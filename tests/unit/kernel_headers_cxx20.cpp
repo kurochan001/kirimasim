@@ -5,6 +5,7 @@
 // Keep this list in sync with src/kernel/include/kirimasim/kernel/.
 
 #include "kirimasim/kernel/abi.h"
+#include "kirimasim/kernel/activation.h"
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/counters.h"
