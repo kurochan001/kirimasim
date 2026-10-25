@@ -13,6 +13,9 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Final fixed-array validation:** `d89a60c6` passes [all 21 checks](../measurements/2026-10-25/fixed-array-final-validation.json):
+4,541/4,543 dev/ASan/UBSan and 4,542/4,544 release, zero failures and two known skips.
+
 **Fixed-array port implementation (2026-10-25):** the [execution record](fixed-array-port-execution.md)
 covers 358 sources, four SIR tests, fourteen boundary checks and eight compiled
 negative controls. The same 87 probes now have 22 passing gaps per reference

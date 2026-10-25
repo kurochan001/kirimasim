@@ -1,0 +1,229 @@
+{
+  "date": "2026-10-25",
+  "platform": "macOS arm64",
+  "implementation_revision": "d89a60c61b75d9f400a76b280e333f2e40b5b9cf",
+  "mechanism_revision": "ef3ce44e",
+  "source_sha256": {
+    "src/front/CMakeLists.txt": "f786df64dccab8bc21544e35fdf6182fcdc1108c4836f10d586bf96a92355ef7",
+    "src/front/lower.cpp": "16164fdd0200b7de2c94c816bdd925c61334fec3848d21081c62825af069f3db",
+    "src/front/lower_expr.cpp": "d7191b56e82b611b75542aa6c051b9f1f484dddd593de6035b3e9883901fb944",
+    "src/front/lower_stmt.cpp": "672fdde8e50e8abe3ba881655bd64743aa24db85fc7f7d2278eb3522bc9b9a56",
+    "src/front/lower_struct.cpp": "614bc493032c41e842999f7d01edbf1ebe20dc1697072f91a11b55b46f765662",
+    "src/front/lowerer.h": "fe1821d74e740de74985f6dd30d467f23747aa693c882ead1cf52694eda57ae6",
+    "src/sir/include/kirimasim/sir/design.h": "9aa8478390c9ff9bff7c90e9a8ed3eeea71dc1c7e7cf83484fe3adb8cbc01a92",
+    "src/sir/text.cpp": "aa3b31443c2c30fb2683742bac643de56593162685a04d6a558bfdc410aa9394",
+    "src/sir/types.cpp": "573ce1d6702e6036588aae0fd53b84e87e7504d6338914802a459d685979115a",
+    "src/sir/verify.cpp": "5fdbad85270eff3421bb8ea865a9a9094a20be5c72b3d68dfadf6fc3cde256d7",
+    "src/vm/vm.cpp": "6e676b2230464748dea3e3826823fd335ca2005718fb69f95f59c04a6ad8ec2d",
+    "src/front/lower_net_array.cpp": "95156e4a99375ce3845850e26dc5c5f4b9c9f1345b0a9af3767076da4618b074",
+    "tests/unit/array_port_sir_test.cpp": "df30e97e6924b684ad4590de099b4a74552964a0154b00ab19f23ccf7390dbda",
+    "tests/tools/check_fixed_array_port_boundary.py": "94b41c3604517b84412ac18d85ff2f59b116e571b84983ad68cfbf88b29e8cf7",
+    "tools/gen_fixed_array_port_matrix.py": "11c080aefcef07ab2d3acef0cf745ae4404ba969372e4d667520ef94ff8bcf7a",
+    "tools/mutants.py": "ccc3a255e31050a670dcafce432303587e1fc233b0e23c226c7d272ebf088824"
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 58.3
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 1.8
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 54.2
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 0.8
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 2.4
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 80.0
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 2.6
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 67.6
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.3
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.8
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 76.4
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 4543,
+      "passed": 4541,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4544,
+      "passed": 4542,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4543,
+      "passed": 4541,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4543,
+      "passed": 4541,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "source_designs": 358,
+  "new_sir_tests": 4,
+  "boundary_checks": 14,
+  "negative_controls": [
+    {
+      "name": "array ports: views allocate independent storage",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 84
+    },
+    {
+      "name": "array ports: transitive views retain an intermediate root",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 3
+    },
+    {
+      "name": "array ports: compact driver element ordinals collapse",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 125
+    },
+    {
+      "name": "array ports: explicit driver strengths are discarded",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 108
+    },
+    {
+      "name": "array ports: resolver reads the first private cell only",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 48
+    },
+    {
+      "name": "array ports: packed coverage writes the whole element",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 9
+    },
+    {
+      "name": "array ports: unknown conditional selects the right branch",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 4
+    },
+    {
+      "name": "array ports: malformed views pass slot verification",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 1
+    }
+  ],
+  "negative_controls_checkpoint": "ef3ce44e before the defensive target check; all 358 SIR outputs identical after the check",
+  "mutation_anchors": 536,
+  "existing_expectations_changed": false,
+  "existing_dump_sir_expectations_unchanged": 29,
+  "perfcount_expectations": "unchanged; pass in all configurations",
+  "linux_remeasured": false,
+  "p1_complete": false
+}

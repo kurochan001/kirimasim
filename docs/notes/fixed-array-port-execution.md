@@ -3,6 +3,19 @@
 [日本語](fixed-array-port-execution.ja.md). Status: implemented subset,
 2026-10-25; P1 remains incomplete.
 
+## Integrated validation
+
+The [final record](../measurements/2026-10-25/fixed-array-final-validation.json)
+at `d89a60c6` passes all 21 local-CI checks. Dev/ASan/UBSan pass 4,541/4,543
+and release 4,542/4,544, with zero failures and the same two known skips.
+The clang-tidy correction preserves [identical SIR for all 358 designs](../measurements/2026-10-25/fixed-array-lint-sir-equivalence.json).
+Separate records retain the [13.0](../measurements/2026-10-25/icarus13-fixed-array-probes.json)
+and [development](../measurements/2026-10-25/icarus14-fixed-array-probes.json)
+cohorts, [358 reference observations](../measurements/2026-10-25/fixed-array-reference-matrix.json),
+[59 proposal rechecks](../measurements/2026-10-25/fixed-array-proposal-recheck.json),
+[sv-tests](../measurements/2026-10-25/fixed-array-svtests.json) and
+[P1 population](../measurements/2026-10-25/fixed-array-population.json).
+
 ## Contract and implementation
 
 The user approved [fixed-array-ports-proposal sections 1–6](fixed-array-ports-proposal.md)

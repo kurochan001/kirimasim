@@ -1,7 +1,7 @@
 {
   "scope": "original finite probes; complete feature parity not confirmed",
   "versions": {
-    "kirimasim": "kirimasim 0.0.0 (commit dc934faba3b7), built with AppleClang 21.0.0.21000334",
+    "kirimasim": "kirimasim 0.0.0 (commit d89a60c61b75), built with AppleClang 21.0.0.21000334",
     "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
     "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
   },
@@ -1784,24 +1784,10 @@
   ],
   "provenance": {
     "date": "2026-10-25",
-    "platform": "macOS arm64",
-    "source_base_revision": "dc934faba3b7",
-    "source_files_sha256": {
-      "src/front/CMakeLists.txt": "f786df64dccab8bc21544e35fdf6182fcdc1108c4836f10d586bf96a92355ef7",
-      "src/front/lower.cpp": "16164fdd0200b7de2c94c816bdd925c61334fec3848d21081c62825af069f3db",
-      "src/front/lower_expr.cpp": "d7191b56e82b611b75542aa6c051b9f1f484dddd593de6035b3e9883901fb944",
-      "src/front/lower_stmt.cpp": "672fdde8e50e8abe3ba881655bd64743aa24db85fc7f7d2278eb3522bc9b9a56",
-      "src/front/lower_struct.cpp": "614bc493032c41e842999f7d01edbf1ebe20dc1697072f91a11b55b46f765662",
-      "src/front/lowerer.h": "fe1821d74e740de74985f6dd30d467f23747aa693c882ead1cf52694eda57ae6",
-      "src/sir/include/kirimasim/sir/design.h": "9aa8478390c9ff9bff7c90e9a8ed3eeea71dc1c7e7cf83484fe3adb8cbc01a92",
-      "src/sir/text.cpp": "aa3b31443c2c30fb2683742bac643de56593162685a04d6a558bfdc410aa9394",
-      "src/sir/types.cpp": "573ce1d6702e6036588aae0fd53b84e87e7504d6338914802a459d685979115a",
-      "src/sir/verify.cpp": "5fdbad85270eff3421bb8ea865a9a9094a20be5c72b3d68dfadf6fc3cde256d7",
-      "src/vm/vm.cpp": "6e676b2230464748dea3e3826823fd335ca2005718fb69f95f59c04a6ad8ec2d",
-      "src/front/lower_net_array.cpp": "db0522e5d9ff0a0bb47abf431fe96d1cb5b7e4a6cd494b155b3993684f1d36d3"
-    },
-    "scope": "Same 87 original inputs and oracles; two native statuses become passing; older passing judged bytes and reference statuses unchanged",
-    "portability": "Retained judged passing bytes; nonpassing byte streams and diagnostics omitted because they can contain host paths",
+    "implementation_revision": "d89a60c61b75d9f400a76b280e333f2e40b5b9cf",
+    "scope": "Same 87 original inputs/oracles; only fixed_array_ports and resolved_net_array become passing",
+    "unchanged": "All reference statuses, older native passing statuses and all older passing judged bytes",
+    "portability": "Retained judged passing bytes; nonpassing byte streams and diagnostics omitted because they may contain host paths",
     "linux_remeasured": false
   }
 }

@@ -3,6 +3,19 @@
 [English](fixed-array-port-execution.md)。状態：一部を実装、2026-10-25。
 P1全体は未完了です。
 
+## 統合後の検証
+
+`d89a60c6`の[最終記録](../measurements/2026-10-25/fixed-array-final-validation.json)で
+local CI全21項目が成功しました。dev/ASan/UBSanは4,543件中4,541件、releaseは4,544件中4,542件成功し、
+失敗0・既知の同じ2件のみスキップです。clang-tidyの指摘を直した前後の358ソースは
+[同一のSIR](../measurements/2026-10-25/fixed-array-lint-sir-equivalence.json)になります。
+参照版の[13.0](../measurements/2026-10-25/icarus13-fixed-array-probes.json)・
+[開発版](../measurements/2026-10-25/icarus14-fixed-array-probes.json)、
+[358件の参照観測](../measurements/2026-10-25/fixed-array-reference-matrix.json)、
+[59例の再確認](../measurements/2026-10-25/fixed-array-proposal-recheck.json)、
+[sv-tests](../measurements/2026-10-25/fixed-array-svtests.json)・
+[P1母集団](../measurements/2026-10-25/fixed-array-population.json)を別々に保存しています。
+
 ## 契約と実装
 
 2026-10-25に[固定配列ポートの契約1–6節](fixed-array-ports-proposal.ja.md)が承認され、
