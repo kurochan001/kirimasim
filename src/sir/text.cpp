@@ -94,6 +94,7 @@ std::string operandText(const Design& d, const Operand& o) {
         case Operand::Kind::Pattern: return "!p" + std::to_string(o.id);
         case Operand::Kind::Type: return "!" + std::to_string(o.id);
         case Operand::Kind::Scope: return "#" + std::to_string(o.id);
+        case Operand::Kind::StrengthOrigin: return "!d" + std::to_string(o.id);
     }
     return "?";
 }
@@ -387,6 +388,24 @@ std::string toText(const Design& d) {
         }
         out += slotFlags(s.flags) + "\n";
     }
+    for (std::size_t i = 0; i < d.strengthNodes.size(); ++i) {
+        const auto& node = d.strengthNodes[i];
+        out += "strength-node !n" + std::to_string(i) + " " + slotRef(node.target) +
+               " kind=" + kindName(node.kind) + " component=" + std::to_string(node.component) +
+               " initial=(" + std::to_string(node.initial.lo) + "," +
+               std::to_string(node.initial.hi) + ")" + locText(node.loc) + "\n";
+    }
+    for (std::size_t i = 0; i < d.strengthOrigins.size(); ++i) {
+        const auto& origin = d.strengthOrigins[i];
+        const char* kind = origin.kind == StrengthOriginKind::Process ? "process"
+                           : origin.kind == StrengthOriginKind::Pull  ? "pull"
+                                                                      : "supply";
+        out += "strength-origin !d" + std::to_string(i) + " node=!n" + std::to_string(origin.node) +
+               " kind=" + kind + " owner=" +
+               (origin.owner == kNone ? "-" : "@" + std::to_string(origin.owner.index())) +
+               " initial=(" + std::to_string(origin.initial.lo) + "," +
+               std::to_string(origin.initial.hi) + ")" + locText(origin.loc) + "\n";
+    }
     for (const NameEntry& n : d.names) {
         if (n.slot.index() < d.slots.size() && n.path == d.slot(n.slot).name) continue;
         out += "alias " + quoted(n.path) + " -> %s" + std::to_string(n.slot.index()) + "\n";
@@ -422,6 +441,16 @@ std::string toText(const Design& d) {
                 out += std::string(edgeName(t.edge)) + "(" + slotRef(t.range) + ")";
                 if (t.guard != kNone) out += " iff @" + std::to_string(t.guard.index());
             }
+        }
+        if (!p.strengthTriggers.empty()) {
+            out += " strength-trigger=";
+            for (std::size_t k = 0; k < p.strengthTriggers.size(); ++k)
+                out += (k == 0 ? "" : ",") + slotRef(p.strengthTriggers[k]);
+        }
+        if (!p.strengthWrites.empty()) {
+            out += " strength-writes=";
+            for (std::size_t k = 0; k < p.strengthWrites.size(); ++k)
+                out += (k == 0 ? "!d" : ",!d") + std::to_string(p.strengthWrites[k].index());
         }
         if (!p.writes.empty()) {
             out += " writes=";

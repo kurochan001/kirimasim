@@ -40,6 +40,8 @@ struct SubroutineTag;
 using SubroutineId = Id<SubroutineTag>;
 struct ProcessTag;
 using ProcessId = Id<ProcessTag>;
+struct StrengthOriginTag;
+using StrengthOriginId = Id<StrengthOriginTag>;
 
 /// Every body starts at its block 0, as the text form numbers them (bb0).
 inline constexpr BlockId kEntryBlock{0};
@@ -378,9 +380,12 @@ enum class Op : std::uint8_t {
     /// 3.5, VALUE_SEMANTICS.md 5.4).
     Resolve,
     // Complete strength SSA values (approved MOS/switch contract 7).
-    StrengthMake,   ///< strength.make <i4/s4 value>, <s1>, <s0>[, <i2/s2 side>]
-    StrengthValue,  ///< strength.value <strength<w>> -> i4<w>
-    StrengthMos,    ///< strength.mos "kind", <strength<w>>, <scalar control>...
+    StrengthLoad,        ///< strength.load <net window>[, <indices>...][, <position>]
+    StrengthDrive,       ///< strength.drive !dN, <strength<1>>
+    StrengthDriveDelay,  ///< strength.drive.delay !dN, <strength<1>>, <rise>, <fall>, <off>
+    StrengthMake,        ///< strength.make <i4/s4 value>, <s1>, <s0>[, <i2/s2 side>]
+    StrengthValue,       ///< strength.value <strength<w>> -> i4<w>
+    StrengthMos,         ///< strength.mos "kind", <strength<w>>, <scalar control>...
     // User-defined primitives (SIR_SPEC.md 5.5).
     Udp,     ///< %r = udp !T, <input>...
     UdpSeq,  ///< %r = udp.seq !T, <state>, <previous input>..., <input>...
@@ -446,9 +451,10 @@ struct Operand {
         Frame,
         Subroutine,
         Process,
-        Pattern,  ///< A formatting layout (!pN).
-        Type,     ///< A row of the type table (!N).
-        Scope,    ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
+        Pattern,         ///< A formatting layout (!pN).
+        Type,            ///< A row of the type table (!N).
+        Scope,           ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
+        StrengthOrigin,  ///< A static physical output (!dN); never a language value.
     };
     Kind kind = Kind::Temp;
     std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
@@ -502,6 +508,9 @@ struct Operand {
     static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
     static Operand activation(ActivationScopeId s) { return of(Kind::Scope, s.index()); }
+    static Operand strengthOrigin(StrengthOriginId id) {
+        return of(Kind::StrengthOrigin, id.index());
+    }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
         o.text = std::move(s);
@@ -595,6 +604,29 @@ struct SlotRange {
     bool operator==(const SlotRange&) const = default;
 };
 
+/// Complete published/physical-origin intervals, not a language storage type.
+struct StrengthRange {
+    std::int8_t lo = 0, hi = 0;
+    bool operator==(const StrengthRange&) const = default;
+};
+/// Normalized physical scalar node (approved MOS/switch contract 1/6/7).
+/// Every bit/element of a registered physical slot has exactly one row.
+struct StrengthNode {
+    SlotRange target;                ///< Exactly one element and one bit; no alias target.
+    SlotKind kind = SlotKind::Wire;  ///< Effective tie kind, with implicit roots explicit.
+    std::uint32_t component = 0;     ///< Dense component IDs, determined by the front end.
+    StrengthRange initial;           ///< Published state before initial Active resolution.
+    SourceLoc loc;
+};
+enum class StrengthOriginKind : std::uint8_t { Process, Pull, Supply };
+struct StrengthOrigin {
+    std::uint32_t node = 0;
+    ProcessId owner = kNone;  ///< Static cont process; none for an implicit root.
+    StrengthRange initial;
+    StrengthOriginKind kind = StrengthOriginKind::Process;
+    SourceLoc loc;
+};
+
 /// One item of a process's sensitivity: a slot range, the edge, and the
 /// iff guard, which reads the process's frame (SIR_SPEC.md 7.1, 7.2).
 struct Trigger {
@@ -633,6 +665,9 @@ struct Process {
     Owner parent;  ///< The process or task that forks this one, if any.
     SourceLoc loc;
     ActivationInfo activation;
+    std::vector<SlotRange> strengthTriggers;  ///< Internal full-range sensitivity, separate from @.
+    std::vector<StrengthOriginId>
+        strengthWrites;  ///< Owned physical contributions, not net writes.
 };
 
 /// Kinds of subroutines (SIR_SPEC.md 8). A guard is the iff condition of a
@@ -741,6 +776,8 @@ struct Design {
     /// starts, never while the design runs. The text form leaves it out.
     std::vector<DumpScope> dumpScopes;
     std::vector<DumpVar> dumpVars;
+    std::vector<StrengthNode> strengthNodes;
+    std::vector<StrengthOrigin> strengthOrigins;
 
     /// The rows the typed numbers name.
     Slot& slot(SlotId s) { return slots[s.index()]; }

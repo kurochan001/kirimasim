@@ -224,6 +224,9 @@ const char* opName(Op op) {
         case Op::DisableScope: return "disable.scope";
         case Op::DisableTask: return "disable.task";
         case Op::Resolve: return "resolve";
+        case Op::StrengthLoad: return "strength.load";
+        case Op::StrengthDrive: return "strength.drive";
+        case Op::StrengthDriveDelay: return "strength.drive.delay";
         case Op::StrengthMake: return "strength.make";
         case Op::StrengthValue: return "strength.value";
         case Op::StrengthMos: return "strength.mos";

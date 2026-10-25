@@ -172,7 +172,7 @@ TEST(StrengthSir, EveryOrdinaryConsumerAndUndeclaredProducerRejectMetadata) {
         Model m;
         m.emit(0, op, s::strengthType(17), {});
         m.emit(0, Op::Ret, s::voidType());
-        rejects(m, "only strength.make/mos produce strength metadata");
+        rejects(m, "only strength.make/mos/load produce strength metadata");
     }
 }
 

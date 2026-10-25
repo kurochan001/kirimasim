@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "kirimasim/sir/pattern.h"
+#include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
@@ -41,6 +42,8 @@ bool hasNoResult(Op op) {
         case Op::Nba:
         case Op::NbaDelay:
         case Op::DriveDelay:
+        case Op::StrengthDrive:
+        case Op::StrengthDriveDelay:
         case Op::StoreElem:
         case Op::NbaElem:
         case Op::NbaElemDelay:
@@ -232,6 +235,7 @@ public:
         checkInstances();
         checkTypes();
         checkSlots();
+        checkStrengthNetwork();
         checkNames();
         checkConstants();
         patterns_ = validatePatterns(d_);
@@ -462,6 +466,102 @@ private:
             }
             if (elementCount(s) == 0 || elementCount(s) > 0xffffffffULL)
                 error(where, "array is too large");
+        }
+    }
+
+    void checkStrengthNetwork() {
+        const auto range = [](StrengthRange value) {
+            return value.lo >= -7 && value.hi <= 7 && value.lo <= value.hi;
+        };
+        const auto coreKind = [](SlotKind kind) {
+            return kind == SlotKind::Wire || kind == SlotKind::Tri || kind == SlotKind::Wand ||
+                   kind == SlotKind::Triand || kind == SlotKind::Wor || kind == SlotKind::Trior ||
+                   kind == SlotKind::Uwire;
+        };
+        std::set<std::tuple<SlotId, std::uint32_t, std::uint32_t>> targets;
+        std::vector<std::uint64_t> covered(d_.slots.size());
+        std::vector<std::uint32_t> roots(d_.strengthNodes.size());
+        std::vector<bool> components(d_.strengthNodes.size());
+        std::uint32_t maxComponent = 0;
+        for (std::size_t i = 0; i < d_.strengthNodes.size(); ++i) {
+            const auto& node = d_.strengthNodes[i];
+            const auto& at = node.target;
+            const auto where = "strength node !n" + std::to_string(i);
+            if (node.loc.line == 0 || node.loc.column == 0 || node.loc.file >= d_.sources.size())
+                error(where, "invalid source location", node.loc);
+            if (!range(node.initial)) error(where, "invalid initial strength range", node.loc);
+            if (!coreKind(node.kind))
+                error(where, "implicit roots must be explicit origins", node.loc);
+            if (node.component >= components.size())
+                error(where, "component ID out of range", node.loc);
+            else {
+                components[node.component] = true;
+                maxComponent = std::max(maxComponent, node.component);
+            }
+            if (at.slot.index() >= d_.slots.size()) {
+                error(where, "net slot out of range", node.loc);
+                continue;
+            }
+            const auto& slot = d_.slot(at.slot);
+            if (at.firstElem >= elementCount(slot) || at.lsb >= slot.type.width ||
+                at.numElems != 1 || at.width != 1 || slot.viewOf != kNone ||
+                slot.driverOf != kNone || slot.kind == SlotKind::Var ||
+                static_cast<unsigned>(slot.kind) > static_cast<unsigned>(SlotKind::Uwire) ||
+                !isFourState(slot.type) || !isIntegral(slot.type) ||
+                (slot.flags & kNeedsStrength) == 0 || (slot.flags & kForceTarget) != 0)
+                error(where, "needs an eligible normalized physical net bit", node.loc);
+            if (!targets.emplace(at.slot, at.firstElem, at.lsb).second)
+                error(where, "duplicate physical node target", node.loc);
+            ++covered[at.slot.index()];
+        }
+        if (!d_.strengthNodes.empty())
+            for (std::uint32_t c = 0; c <= maxComponent; ++c)
+                if (!components[c]) error("strength network", "component IDs must be dense");
+        for (std::size_t i = 0; i < d_.slots.size(); ++i) {
+            const auto& slot = d_.slots[i];
+            if ((slot.flags & kForceTarget) != 0 &&
+                isStrengthNet(d_, SlotId{static_cast<std::uint32_t>(i)}))
+                error("slot %s" + std::to_string(i), "strength net holds are not connected yet");
+            if ((slot.flags & kNeedsStrength) == 0) continue;
+            const auto expected = std::uint64_t{slot.type.width} * elementCount(slot);
+            if (slot.viewOf != kNone || slot.driverOf != kNone || slot.kind == SlotKind::Var ||
+                !isFourState(slot.type) || !isIntegral(slot.type) || expected == 0 ||
+                covered[i] != expected || (slot.flags & kForceTarget) != 0)
+                error("slot %s" + std::to_string(i),
+                      "strength nodes must cover the eligible physical net completely");
+        }
+        for (std::size_t i = 0; i < d_.strengthOrigins.size(); ++i) {
+            const auto& origin = d_.strengthOrigins[i];
+            const auto where = "strength origin !d" + std::to_string(i);
+            if (origin.loc.line == 0 || origin.loc.column == 0 ||
+                origin.loc.file >= d_.sources.size())
+                error(where, "invalid source location", origin.loc);
+            if (!range(origin.initial)) error(where, "invalid initial strength range", origin.loc);
+            if (origin.node >= d_.strengthNodes.size())
+                error(where, "node out of range", origin.loc);
+            else if (++roots[origin.node] > 1 &&
+                     d_.strengthNodes[origin.node].kind == SlotKind::Uwire)
+                error(where, "uwire has multiple physical origins", origin.loc);
+            if (origin.kind == StrengthOriginKind::Process) {
+                if (origin.owner.index() >= d_.processes.size()) {
+                    error(where, "process owner out of range", origin.loc);
+                    continue;
+                }
+                const auto& owner = d_.process(origin.owner);
+                if (owner.kind != ProcessKind::Cont || owner.parent.kind != Owner::Kind::None ||
+                    std::ranges::find(owner.strengthWrites,
+                                      StrengthOriginId{static_cast<std::uint32_t>(i)}) ==
+                        owner.strengthWrites.end())
+                    error(where, "origin needs its static cont owner's declared write", origin.loc);
+            } else {
+                const int rank = origin.kind == StrengthOriginKind::Pull     ? 5
+                                 : origin.kind == StrengthOriginKind::Supply ? 7
+                                                                             : 0;
+                if (rank == 0 || origin.owner != kNone || origin.initial.lo != origin.initial.hi ||
+                    (origin.initial.lo != rank && origin.initial.lo != -rank))
+                    error(where, "implicit origin needs no owner and a fixed pull/supply point",
+                          origin.loc);
+            }
         }
     }
 
@@ -727,8 +827,24 @@ private:
                      o.kind != Owner::Kind::Process || o.asProcess() != id)
                 error(where, g + " reads another frame", p.loc);
         }
-        for (const SlotRange& w : p.writes)
+        for (const SlotRange& w : p.writes) {
             if (!rangeOk(w)) error(where, "write range is invalid");
+            if (isStrengthNet(d_, w.slot))
+                error(where, "only the component publisher writes a strength net", p.loc);
+        }
+        for (const auto& trigger : p.strengthTriggers)
+            if (p.kind != ProcessKind::Cont || !rangeOk(trigger) ||
+                !isStrengthNet(d_, trigger.slot))
+                error(where, "strength sensitivity needs a cont process and registered net range",
+                      p.loc);
+        std::set<StrengthOriginId> origins;
+        for (const auto origin : p.strengthWrites) {
+            if (!origins.insert(origin).second) error(where, "duplicate strength write", p.loc);
+            if (origin.index() >= d_.strengthOrigins.size() ||
+                d_.strengthOrigins[origin.index()].kind != StrengthOriginKind::Process ||
+                d_.strengthOrigins[origin.index()].owner != id)
+                error(where, "strength write does not name an owned process origin", p.loc);
+        }
         // Only a cont process drives, and only what it writes (SIR_SPEC.md
         // 3.4, 10).
         for (const SlotRange& w : p.drives)
@@ -1039,6 +1155,11 @@ private:
             const auto k = ops[i].kind;
             return k == Operand::Kind::Temp || k == Operand::Kind::Const;
         };
+        const auto rawValue = [&](std::size_t i) {
+            const auto& o = ops[i];
+            return isValue(i) && o.edge == Edge::Any && o.firstElem == 0 && o.numElems == 0 &&
+                   o.lsb == 0 && o.width == 0 && o.count == 0 && o.text.empty();
+        };
         const auto nOps = [&](std::size_t n) {
             if (ops.size() != n) bad("expects " + std::to_string(n) + " operands");
             return ops.size() == n;
@@ -1086,17 +1207,47 @@ private:
 
         // Complete strength values are owned SSA metadata, not ordinary
         // operands, storage, handles or a new arithmetic state domain.
-        if (rt.kind == TypeKind::Strength && in.op != Op::StrengthMake && in.op != Op::StrengthMos)
-            bad("only strength.make/mos produce strength metadata");
+        if (rt.kind == TypeKind::Strength && in.op != Op::StrengthMake &&
+            in.op != Op::StrengthMos && in.op != Op::StrengthLoad)
+            bad("only strength.make/mos/load produce strength metadata");
         for (std::size_t i = 0; i < ops.size(); ++i) {
             if (ty(i).kind != TypeKind::Strength) continue;
             const auto& o = ops[i];
             if (o.kind != Operand::Kind::Temp || o.edge != Edge::Any || o.firstElem != 0 ||
                 o.numElems != 0 || o.lsb != 0 || o.width != 0 || o.count != 0)
                 bad("strength operands must be whole SSA values");
-            if (in.op != Op::StrengthValue && in.op != Op::StrengthMos && in.op != Op::Br &&
+            if (in.op != Op::StrengthValue && in.op != Op::StrengthMos &&
+                in.op != Op::StrengthDrive && in.op != Op::StrengthDriveDelay && in.op != Op::Br &&
                 in.op != Op::BrIf)
                 bad("strength metadata is not an ordinary operand");
+        }
+
+        for (std::size_t i = 0; i < ops.size(); ++i) {
+            const auto& operand = ops[i];
+            if (operand.kind == Operand::Kind::StrengthOrigin &&
+                ((in.op != Op::StrengthDrive && in.op != Op::StrengthDriveDelay) || i != 0))
+                bad("physical origin IDs are not ordinary operands");
+            if (operand.kind != Operand::Kind::Slot || !isStrengthNet(d_, operand.asSlot()))
+                continue;
+            bool readOnly = in.op == Op::Load || in.op == Op::LoadElem ||
+                            in.op == Op::StrengthLoad || in.op == Op::WaitEvent;
+            if ((in.op == Op::Call || in.op == Op::CallTask) && !ops.empty() &&
+                ops[0].kind == Operand::Kind::Subroutine && ops[0].id < d_.subroutines.size() &&
+                i > 0 && i <= d_.subroutines[ops[0].id].params.size()) {
+                const auto dir = d_.subroutines[ops[0].id].params[i - 1].dir;
+                readOnly = dir == Direction::Input || dir == Direction::ConstRef;
+            }
+            if (in.op == Op::Syscall && !ops.empty() && ops[0].kind == Operand::Kind::Text) {
+                const auto& name = ops[0].text;
+                static constexpr std::string_view calls[]{
+                    "$display",   "$displayb",  "$displayo", "$displayh", "$write",
+                    "$writeb",    "$writeo",    "$writeh",   "$fdisplay", "$fdisplayb",
+                    "$fdisplayo", "$fdisplayh", "$fwrite",   "$fwriteb",  "$fwriteo",
+                    "$fwriteh",   "$sformatf",  "$dumpvars", "$dumpports"};
+                readOnly = std::ranges::find(calls, name) != std::end(calls);
+            }
+            if (!readOnly)
+                bad("a strength net operand must be read-only; only its component publishes it");
         }
 
         // Rule 6, first half: a process declares every slot it writes.
@@ -1658,6 +1809,44 @@ private:
                 if (nOps(2) && (!isIntegral(rt) || ty(0) != rt || !isIntegral(ty(1))))
                     bad("value must have the result type; the amount must be integral");
                 break;
+            case Op::StrengthLoad: {
+                const auto shape = strengthLoadShape(d_, in);
+                if (!shape) {
+                    bad("needs a registered net window, strength result and captured selectors");
+                    break;
+                }
+                for (std::size_t i = 1; i < ops.size(); ++i)
+                    if (!rawValue(i) || !isIntegral(ty(i)) || ty(i).width == 0)
+                        bad("strength selectors must be captured integral values");
+                break;
+            }
+            case Op::StrengthDrive:
+            case Op::StrengthDriveDelay: {
+                const auto count = in.op == Op::StrengthDrive ? 2U : 5U;
+                if (!nOps(count)) break;
+                const auto& target = ops[0];
+                bool valid = target.kind == Operand::Kind::StrengthOrigin &&
+                             target.id < d_.strengthOrigins.size() && target.edge == Edge::Any &&
+                             target.firstElem == 0 && target.numElems == 0 && target.lsb == 0 &&
+                             target.width == 0 && target.count == 0 && target.text.empty() &&
+                             body.process != nullptr && body.process->kind == ProcessKind::Cont &&
+                             body.owner.kind == Owner::Kind::Process && rawValue(1) &&
+                             ty(1) == strengthType(1);
+                if (valid) {
+                    const auto& origin = d_.strengthOrigins[target.id];
+                    valid = origin.kind == StrengthOriginKind::Process &&
+                            origin.owner == body.owner.asProcess() &&
+                            std::ranges::find(body.process->strengthWrites,
+                                              StrengthOriginId{target.id}) !=
+                                body.process->strengthWrites.end();
+                }
+                for (std::size_t i = 2; i < ops.size(); ++i)
+                    valid = valid && rawValue(i) && delayOk(i);
+                if (!valid)
+                    bad("needs an owned declared physical origin, captured strength<1> and "
+                        "normalized delays");
+                break;
+            }
             case Op::StrengthMake: {
                 bool ok = (ops.size() == 3 || ops.size() == 4) && rt.kind == TypeKind::Strength;
                 if (ok) ok = isValue(0) && isFourState(ty(0)) && ty(0).width == rt.width;

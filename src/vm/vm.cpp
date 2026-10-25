@@ -45,6 +45,7 @@
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"
 #include "kirimasim/sir/pattern.h"
+#include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
 #include "kirimasim/sir/verify.h"
@@ -442,6 +443,7 @@ struct InstrInfo {
     std::vector<std::vector<kernel::FormatPiece>> formats;
     kernel::NetKind netKind = kernel::NetKind::Wire;  ///< For resolve.
     kernel::MosKind mosKind = kernel::MosKind::Nmos;  ///< Decoded strength.mos kind.
+    sir::StrengthLoadShape strengthLoad;              ///< Static shape, decoded before execution.
     /// How values without a specifier print: 'd', or the radix of a b, o
     /// or h form (SYSTEM_TASKS.md 3.1).
     char radix = 'd';
@@ -637,7 +639,12 @@ public:
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
           strings_(ctx.strings()), heap_(ctx.heap()), events_(ctx.managedEvents()),
           activations_(ctx.activations()), references_(ctx.activations()),
-          counters_(ctx.counters()), stack_(ctx.stack()), options_(options) {
+          counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
+          options_(options) {
+        if (sir::hasStrengthNetwork(d) && !sir::verify(d).empty()) {
+            loadError_ = "invalid strength network SIR";
+            return;
+        }
         if (!sir::verifyActivationScopes(d).empty()) {
             loadError_ = "invalid automatic scope metadata";
             return;
@@ -802,6 +809,8 @@ public:
                 }
             }
         }
+        if (!initializeStrengthNetwork())
+            return {sched_.reason(), "strength network registration failed"};
         // Every element of an event slot holds its own event from the
         // start; the handle is the event's number plus 1, 0 being null
         // (SIR_SPEC.md 3.2.1).
@@ -1085,6 +1094,7 @@ private:
     /// or the leaves of a structure). Bounds warnings name that access.
     std::map<std::array<std::uint32_t, 3>, std::uint64_t> boundsCounts_;
     kernel::Counters& counters_;
+    kernel::StrengthStorage& strengths_;
     kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
     kernel::CounterId cInstrs_{0};
     RunOptions options_;
@@ -1293,6 +1303,22 @@ private:
             const std::optional<kernel::NetKind> k = netKindOf(in.operands[0].text);
             if (!k && loadError_.empty()) loadError_ = "resolve of net kind " + in.operands[0].text;
             info.netKind = k.value_or(kernel::NetKind::Wire);
+            return info;
+        }
+        if (in.op == Op::StrengthLoad) {
+            const auto shape = sir::strengthLoadShape(d_, in);
+            if (!shape)
+                loadError_ = "invalid strength.load shape";
+            else
+                info.strengthLoad = *shape;
+            return info;
+        }
+        if (in.op == Op::StrengthDrive || in.op == Op::StrengthDriveDelay) {
+            const auto count = in.op == Op::StrengthDrive ? 2U : 5U;
+            if (in.operands.size() != count ||
+                in.operands[0].kind != Operand::Kind::StrengthOrigin ||
+                in.operands[0].id >= d_.strengthOrigins.size())
+                loadError_ = "invalid strength.drive target";
             return info;
         }
         if (in.op == Op::StrengthMos && !in.operands.empty()) {
@@ -1691,6 +1717,8 @@ private:
             case Op::Nba:
             case Op::NbaDelay:
             case Op::DriveDelay:
+            case Op::StrengthDrive:
+            case Op::StrengthDriveDelay:
             case Op::NbaElem:
             case Op::NbaElemDelay:
             case Op::NbaBits:
@@ -1947,7 +1975,7 @@ private:
                (p.kind == sir::ProcessKind::Override && f.holding);
     }
 
-    void waitTriggers(Frame& f, const sir::Process& proc) {
+    bool waitTriggers(Frame& f, const sir::Process& proc) {
         items_.clear();
         f.iffs.clear();
         f.iffs.reserve(proc.triggers.size());  // the kernel keeps pointers into it
@@ -1959,7 +1987,21 @@ private:
             if (t.guard != sir::kNone) withIff(f, item, t.guard);
             items_.push_back(item);
         }
-        sched_.waitEvent(f.kernelId, items_);
+        if (proc.strengthTriggers.empty()) {
+            sched_.waitEvent(f.kernelId, items_);
+            return true;
+        }
+        std::vector<kernel::SlotPart> strengths;
+        strengths.reserve(proc.strengthTriggers.size());
+        for (const auto& r : proc.strengthTriggers)
+            strengths.push_back({kernelSlot(r.slot), r.firstElem, r.numElems, r.lsb, r.width});
+        const auto error = sched_.waitEventStrength(f.kernelId, items_, strengths);
+        if (error == kernel::StrengthError::None) return true;
+        if (error == kernel::StrengthError::ResourceLimit)
+            sched_.resourceLimit();
+        else
+            sched_.fail("invalid strength sensitivity");
+        return false;
     }
 
     /// Gives an item, a subscription or a monitor record, its iff guard,
@@ -2001,7 +2043,7 @@ private:
         // Woken at a join or wait fork: wait again until it is satisfied.
         if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
         const bool early = sensitiveWhileRunning(p, f);
-        if (early) waitTriggers(f, p);
+        if (early && !waitTriggers(f, p)) return kernel::Status::Stop;
         W4 ret{0, 0};
         for (;;) {
             Exit e = Exit::Ret;
@@ -2037,12 +2079,12 @@ private:
             case sir::ProcessKind::FfPlain:
             case sir::ProcessKind::CombAt:
                 f.block = sir::kEntryBlock;
-                if (!early) waitTriggers(f, p);
+                if (!early && !waitTriggers(f, p)) return kernel::Status::Stop;
                 return kernel::Status::Waiting;
             case sir::ProcessKind::Override:
                 // Idle once it holds nothing, until override.start again.
                 f.block = sir::kEntryBlock;
-                if (f.holding && !early) waitTriggers(f, p);
+                if (f.holding && !early && !waitTriggers(f, p)) return kernel::Status::Stop;
                 return kernel::Status::Waiting;
             case sir::ProcessKind::Postponed:
                 // Runs again from its start, each time the kernel runs it.
@@ -3268,6 +3310,41 @@ private:
                                             buf.data(), *rise, *fall, *off, sides);
                         break;
                     }
+                    case Op::StrengthDrive:
+                    case Op::StrengthDriveDelay: {
+                        const auto captured = chunks(ops[1]);
+                        const auto range = kernel::strengthRangeAt(captured, 0);
+                        if (!range) {
+                            sched_.fail("invalid complete strength drive");
+                            return Exit::Error;
+                        }
+                        kernel::StrengthError error;
+                        if (in.op == Op::StrengthDrive)
+                            error = sched_.driveStrength(ops[0].id, *range);
+                        else {
+                            const auto rise = ticksOf(ops[2]), fall = ticksOf(ops[3]),
+                                       off = ticksOf(ops[4]);
+                            if (!rise || !fall || !off) {
+                                designError(f, in,
+                                            "the delay takes the time past the largest time");
+                                return Exit::Error;
+                            }
+                            error =
+                                sched_.driveStrengthDelayed(ops[0].id, *range, *rise, *fall, *off);
+                        }
+                        if (error != kernel::StrengthError::None) {
+                            if (sched_.takeOverflow())
+                                designError(f, in,
+                                            "the delay takes the time past the largest time");
+                            else if (error == kernel::StrengthError::ResourceLimit)
+                                sched_.resourceLimit();
+                            else
+                                sched_.fail("invalid physical strength origin");
+                            return Exit::Error;
+                        }
+                        break;
+                    }
+                    case Op::StrengthLoad:
                     case Op::StrengthMake:
                     case Op::StrengthValue:
                     case Op::StrengthMos:
@@ -3961,12 +4038,75 @@ private:
         return target.asBlock();
     }
 
+    bool initializeStrengthNetwork() {
+        if (d_.strengthNodes.empty()) return true;
+        std::vector<std::vector<kernel::StrengthRange>> initial(d_.slots.size());
+        std::vector<kernel::StrengthNodeSpec> nodes;
+        nodes.reserve(d_.strengthNodes.size());
+        for (const auto& node : d_.strengthNodes) {
+            const auto& at = node.target;
+            auto& values = initial[at.slot.index()];
+            const auto& slot = d_.slot(at.slot);
+            if (values.empty())
+                values.resize(std::size_t{slot.type.width} * sir::elementCount(slot));
+            const kernel::StrengthRange range{node.initial.lo, node.initial.hi};
+            values[std::size_t{at.firstElem} * slot.type.width + at.lsb] = range;
+            // This is initial storage construction, before any process runs or
+            // metadata registration: no observable write or notification.
+            const auto value = kernel::strengthValue(range);
+            auto* words = store_.element(kernelSlot(at.slot), at.firstElem);
+            kernel::writeField(words, 2, at.lsb, 1, value.a);
+            kernel::writeField(words + 1, 2, at.lsb, 1, value.b);
+            const auto kind = netKindOf(sir::kindName(node.kind));
+            if (!kind) {
+                sched_.fail("invalid strength net kind");
+                return false;
+            }
+            nodes.push_back(
+                {{kernelSlot(at.slot), at.firstElem, at.lsb, 1}, *kind, node.component});
+        }
+        for (std::uint32_t i = 0; i < initial.size(); ++i) {
+            if (initial[i].empty()) continue;
+            const auto error = sched_.enableStrengths(kernelSlot(sir::SlotId{i}), initial[i]);
+            if (error != kernel::StrengthError::None) {
+                if (error == kernel::StrengthError::ResourceLimit)
+                    sched_.resourceLimit();
+                else
+                    sched_.fail("invalid initial net strengths");
+                return false;
+            }
+        }
+        std::vector<kernel::StrengthOriginSpec> origins;
+        origins.reserve(d_.strengthOrigins.size());
+        for (const auto& origin : d_.strengthOrigins)
+            origins.push_back({origin.node, {origin.initial.lo, origin.initial.hi}});
+        auto error = sched_.configureStrengthDrivers(nodes, origins);
+        if (error == kernel::StrengthError::None) error = sched_.startStrengthDrivers();
+        if (error == kernel::StrengthError::None) return true;
+        if (error == kernel::StrengthError::ResourceLimit)
+            sched_.resourceLimit();
+        else
+            sched_.fail("invalid physical strength network");
+        return false;
+    }
+
     bool strengthInstruction(const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const auto width = in.type.width;
         std::span<W4> out{&temp(in.result), chunksOf(in.type)};
         bool ok = false;
-        if (in.op == Op::StrengthMake) {
+        if (in.op == Op::StrengthLoad) {
+            const auto& shape = info.strengthLoad;
+            const auto& target = ops[0];
+            const auto element = shape.indices != 0
+                                     ? elementOf(d_.slot(target.asSlot()).dims, ops, 1)
+                                     : std::optional<std::uint32_t>{target.firstElem};
+            const auto position =
+                shape.position ? indexOf(ops[1 + shape.indices]) : std::optional<std::int64_t>{0};
+            ok = strengths_.readSelectedPacked(
+                     {kernelSlot(target.asSlot()), 0, target.lsb, target.width}, element, position,
+                     width, out) == kernel::StrengthError::None;
+        } else if (in.op == Op::StrengthMake) {
             const auto input = chunks(ops[0]);
             const auto side = ops.size() == 4 ? chunks(ops[3]) : std::vector<W4>{};
             ok =
