@@ -104,7 +104,7 @@ Implemented on 2026-10-20: the `bench` job of the nightly workflow times the rel
 `/proc/<pid>/status` `VmHWM` every 10 ms and uses per-child `wait4` `ru_maxrss`
 on macOS. This differs from the `getrusage` acquisition method specified below;
 that approved requirement is left unchanged pending an explicit specification
-amendment. The [measurement record](../BENCHMARKS.md#five-simulators-on-linux-wsl2-2026-10-24)
+amendment. The [measurement record](../BENCHMARKS.md#four-simulators-on-linux-wsl2-2026-10-24)
 documents sampling limits and the break in Linux RSS history. This note
 records implementation status; it changes no acceptance criteria or thresholds.
 

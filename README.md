@@ -412,7 +412,7 @@ kirimasim stops; it fails no test.
 
 ### Simulation speed
 
-The latest comparison is the [2026-10-24 Linux (WSL2) run with nvc and Lyra](#on-linux-with-nvc-and-lyra).
+The latest comparison is the [2026-10-24 Linux (WSL2) run with Lyra](#on-linux-with-lyra).
 The first table preserves the separate 2026-10-23 macOS measurement.
 
 All three simulators were remeasured on 2026-10-23, five runs each, on the
@@ -449,33 +449,30 @@ produced the expected result.
   15% worse, or build time 25% worse, than the preceding seven nights'
   median (PERFORMANCE.md 5.1).
 
-#### On Linux, with nvc and Lyra
+#### On Linux, with Lyra
 
 Measured separately on 2026-10-24 under WSL2 (AMD Ryzen 9 7950X), kirimasim
 `31160083c77d` with Icarus Verilog 13.0 stable (`v13_0-25-g07dd50d37`),
-Verilator 5.050 (`v5.050-60-g3d2421f3b`), nvc 1.23.0
+Verilator 5.050 (`v5.050-60-g3d2421f3b`)
 and Lyra `a2313fd` (`bazel build -c opt`). The machine and the Icarus and
 Verilator versions differ from the table above, so the two tables are not
 compared column by column.
 
-| Design | `+n=` | kirimasim | Icarus Verilog 13.0 | Verilator 5.050 | nvc 1.23.0 | Lyra (C++ backend, default) | Lyra (LLVM backend) |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | analysis fails | 30.139 s | 2.749 s |
-| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | analysis fails | 143.256 s | 6.059 s |
-| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | analysis fails | 70.412 s | 5.933 s |
-| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | analysis fails | 15.240 s | 4.689 s |
+| Design | `+n=` | kirimasim | Icarus Verilog 13.0 | Verilator 5.050 | Lyra (C++ backend, default) | Lyra (LLVM backend) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | 30.139 s | 2.749 s |
+| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | 143.256 s | 6.059 s |
+| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | 70.412 s | 5.933 s |
+| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | 15.240 s | 4.689 s |
 
 - Same method, designs, counts and expected results as above; every
   measured large run produced the expected result.
-- nvc 1.23.0 rejects all four designs at `nvc -a`, and its Verilog does not
-  register `$value$plusargs`, which the designs read their count with; it is
-  not measured.
 - Lyra's default backend is its C++ backend; its LLVM backend is a column of
   its own. Both run at Lyra's default `-O 0`, each design built into an empty
   cache.
 - Here kirimasim was slower than Icarus Verilog 13.0 on `proc_wait`. Build
   times, startup, sampled Linux RSS and reproduction commands are in the
-  [measurement details](docs/BENCHMARKS.md#five-simulators-on-linux-wsl2-2026-10-24).
+  [measurement details](docs/BENCHMARKS.md#four-simulators-on-linux-wsl2-2026-10-24).
 
 ### What works
 

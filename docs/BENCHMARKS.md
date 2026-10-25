@@ -3,8 +3,8 @@
 [日本語](BENCHMARKS.ja.md) · This English text is the main version.
 
 This record contains two separate tier 1 measurements: macOS on 2026-10-23
-at `dec94ff21979`, and [Linux (WSL2) on 2026-10-24](#five-simulators-on-linux-wsl2-2026-10-24)
-at `31160083c77d`, adding nvc and Lyra. It supports the
+at `dec94ff21979`, and [Linux (WSL2) on 2026-10-24](#four-simulators-on-linux-wsl2-2026-10-24)
+at `31160083c77d`, adding Lyra. It supports the
 [README summary](../README.md) without changing performance acceptance criteria.
 
 The execution-control options in [P1 features](P1_FEATURES.md), container
@@ -29,7 +29,7 @@ sources; neither is itself a timing or memory measurement.
   background processes were not stopped.
 - These are locally available comparison builds; whether they are the
   projects' newest versions is not confirmed. The tables below up to
-  [Five simulators on Linux](#five-simulators-on-linux-wsl2-2026-10-24) are
+  [Four simulators on Linux](#four-simulators-on-linux-wsl2-2026-10-24) are
   these macOS runs only; that section is a separate measurement on another
   machine with other tool versions, and its numbers are not mixed with these.
 
@@ -91,11 +91,11 @@ maximum over all samples.
 | `proc_wait` | 10.09 | 5.86 | 2.16 |
 | `fork_join` | 9.19 | 5.33 | 2.06 |
 
-## Five simulators on Linux (WSL2), 2026-10-24
+## Four simulators on Linux (WSL2), 2026-10-24
 
 Measured on 2026-10-24, 13:49–14:22 UTC, with the same four designs, counts
-and expected results, by [tools/bench.py](../tools/bench.py) extended for nvc
-and Lyra. It is a separate measurement from the macOS one above: another
+and expected results, by [tools/bench.py](../tools/bench.py) extended for
+Lyra. It is a separate measurement from the macOS one above: another
 machine, and Icarus Verilog and Verilator at other versions.
 
 - kirimasim 0.0.0, commit `31160083c77d`, release build (`-O3 -DNDEBUG`),
@@ -103,7 +103,6 @@ machine, and Icarus Verilog and Verilator at other versions.
 - Icarus Verilog 13.0 stable, `v13_0-25-g07dd50d37`.
 - Verilator 5.050, `v5.050-60-g3d2421f3b`; the generated C++ is compiled with
   `ccache g++ -Os` (g++ 15.2.0) and linked with mold.
-- nvc 1.23.0 (LLVM 22.1.8), built from the r1.23.0 release.
 - Lyra at `a2313fdc8707`, built with `bazel build -c opt`. Its default backend
   is the C++ backend (a program built without `--backend` is the same file as
   one built with `--backend cpp`); the LLVM backend, which Lyra's README calls
@@ -118,18 +117,13 @@ Seconds (large-run median less the `+n=1` median). All 100 large runs of the
 five measured columns had exit status 0 and the expected line, and every
 `+n=1` run printed `n=1`.
 
-| Design | `+n=` | kirimasim | Icarus Verilog | Verilator | nvc | Lyra (C++ backend, default) | Lyra (LLVM backend) |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | analysis fails | 30.139 s | 2.749 s |
-| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | analysis fails | 143.256 s | 6.059 s |
-| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | analysis fails | 70.412 s | 5.933 s |
-| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | analysis fails | 15.240 s | 4.689 s |
+| Design | `+n=` | kirimasim | Icarus Verilog | Verilator | Lyra (C++ backend, default) | Lyra (LLVM backend) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | 30.139 s | 2.749 s |
+| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | 143.256 s | 6.059 s |
+| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | 70.412 s | 5.933 s |
+| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | 15.240 s | 4.689 s |
 
-- nvc 1.23.0 rejects all four designs at `nvc -a`, with the same diagnostics
-  as on macOS, also with `--keywords=1800-2017` and `--keywords=1800-2023`.
-  Its Verilog does not register `$value$plusargs` either, which the designs
-  read `+n=` with, so nothing of nvc is measured. A VHDL version of the
-  designs, which would be another comparison, is not made.
 - Here kirimasim was about 1.20–1.62 times faster than Icarus Verilog 13.0 on
   three designs and about 1.14 times slower on `proc_wait`, unlike the macOS
   run against a newer Icarus. Verilator was about 2.8–134 times faster than
@@ -155,16 +149,16 @@ five measured columns had exit status 0 and the expected line, and every
 ### Reproducing the Linux comparison
 
 Use the executable versions and build settings listed above. Set `KIRIMASIM`,
-`IVERILOG`, `VERILATOR`, `NVC` and `LYRA` to their executable paths; `vvp` must
+`IVERILOG`, `VERILATOR` and `LYRA` to their executable paths; `vvp` must
 be next to `iverilog`. `LYRA_COMMIT` is the full commit of the Lyra build
 (`a2313fdc870702acf8e382adae0883036f54e3c3` for this record). Run this separately
 from other measurements:
 
 ```sh
 python3 tools/bench.py --kirimasim "$KIRIMASIM" \
-  --iverilog "$IVERILOG" --verilator "$VERILATOR" --nvc "$NVC" \
+  --iverilog "$IVERILOG" --verilator "$VERILATOR" \
   --lyra "$LYRA" --lyra-llvm "$LYRA" --lyra-version "$LYRA_COMMIT" \
-  --runs 5 --out build/bench-five-simulators
+  --runs 5 --out build/bench-four-simulators
 ```
 
 `--lyra` uses the executable's default backend; `--lyra-llvm` explicitly
@@ -173,9 +167,8 @@ executable has no `--version`. Building Lyra itself with `-c opt` does not
 change the design's default `-O 0` used by these commands.
 
 The tool writes `results.json` and `summary.md` even when a design fails and
-exits 1 if any result fails. With the recorded nvc version, that exit status
-is expected: inspect the per-design `stage` and `diagnostics` rather than
-treating an unsupported design as a zero-second run. Successful records keep
+exits 1 if any result fails; inspect the per-design `stage` and
+`diagnostics` rather than treating an unsupported design as a zero-second run. Successful records keep
 the warmup, five small and five large samples, output lines, exit status and
 timeout flags. On Linux, `max_rss_mib` is a sampled `VmHWM` value; an
 unobserved value is `null`, not zero. `bench_report.py` still reads this same
@@ -231,9 +224,8 @@ build plus run may differ from the total by 0.01 s.
 
 ## Raw data and reproduction
 
-- [Linux bench.json](measurements/2026-10-24-wsl2/bench.json): the six tool/backend
-  columns, including nvc's analysis failures, every successful run and build
-  commands. Reproduction is described in the Linux section above.
+- [Linux bench.json](measurements/2026-10-24-wsl2/bench.json): every successful run of
+  the columns above and the build commands. Reproduction is described in the Linux section above.
 - [bench.json](measurements/2026-10-23/bench.json): all five timing samples,
   medians, RSS, versions, load, options and SHA-256 hashes of the designs,
   script and kirimasim binary.

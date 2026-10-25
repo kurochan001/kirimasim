@@ -2,8 +2,8 @@
 
 [English](BENCHMARKS.md) · 英語版が主で、日本語版はそれに従います。
 
-第 1 層について、2026-10-23 の macOS（`dec94ff21979`）と、nvc・Lyra を追加した
-[2026-10-24 の Linux（WSL2）](#linuxwsl2での-5-つのシミュレータ2026-10-24)
+第 1 層について、2026-10-23 の macOS（`dec94ff21979`）と、Lyra を追加した
+[2026-10-24 の Linux（WSL2）](#linuxwsl2での-4-つのシミュレータ2026-10-24)
 （`31160083c77d`）という、別々の測定を記録しています。
 [README の要約](../README.ja.md)に対応します。性能の合否基準を変更する文書ではありません。
 
@@ -25,7 +25,7 @@ Linux の測定には後の版を使っていますが、以下の macOS と短�
   1・5・15 分の負荷平均は 2.37・2.54・3.26。この測定ではベンチマーク、sv-tests、
   自前スイートを順番に実行し、互いを重ねていません。OS の背景処理は止めていません。
 - 使用した比較用ツールはローカルにある上記の版です。各プロジェクトの最新版かは未確認です。
-  [Linux での 5 つのシミュレータ](#linuxwsl2での-5-つのシミュレータ2026-10-24)の節より前の表は、
+  [Linux での 4 つのシミュレータ](#linuxwsl2での-4-つのシミュレータ2026-10-24)の節より前の表は、
   この macOS の測定だけです。その節は別の機械、別の版での別の測定で、数値を混ぜません。
 
 ## シミュレーション時間
@@ -84,9 +84,9 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
 | `proc_wait` | 10.09 | 5.86 | 2.16 |
 | `fork_join` | 9.19 | 5.33 | 2.06 |
 
-## Linux（WSL2）での 5 つのシミュレータ（2026-10-24）
+## Linux（WSL2）での 4 つのシミュレータ（2026-10-24）
 
-2026-10-24 の 13:49〜14:22 UTC に、同じ 4 つの設計・回数・期待する結果で、nvc と Lyra に
+2026-10-24 の 13:49〜14:22 UTC に、同じ 4 つの設計・回数・期待する結果で、Lyra に
 対応させた [tools/bench.py](../tools/bench.py) で測りました。上の macOS の測定とは別の測定で、
 機械も、Icarus Verilog と Verilator の版も違います。
 
@@ -94,7 +94,6 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
 - Icarus Verilog 13.0 stable、`v13_0-25-g07dd50d37`。
 - Verilator 5.050、`v5.050-60-g3d2421f3b`。生成した C++ は `ccache g++ -Os`（g++ 15.2.0）で
   コンパイルし、mold でリンクしています。
-- nvc 1.23.0（LLVM 22.1.8）。r1.23.0 のリリースからビルドしました。
 - Lyra は `a2313fdc8707` を `bazel build -c opt` でビルドしました。既定の backend は C++ backend です
   （`--backend` なしで作ったプログラムは、`--backend cpp` で作ったものと同じファイルになります）。
   Lyra の README が主としている LLVM backend は、別の列にしました。どちらも Lyra の既定の `-O 0` で、
@@ -106,17 +105,13 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
 秒数（本来の回数の中央値から `+n=1` の中央値を引いたもの）。測った 5 列の本来の回数の実行
 100 回はすべて終了コード 0 で期待する行を出し、`+n=1` の実行はすべて `n=1` を出しました。
 
-| 設計 | `+n=` | kirimasim | Icarus Verilog | Verilator | nvc | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | 解析で失敗 | 30.139 s | 2.749 s |
-| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | 解析で失敗 | 143.256 s | 6.059 s |
-| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | 解析で失敗 | 70.412 s | 5.933 s |
-| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | 解析で失敗 | 15.240 s | 4.689 s |
+| 設計 | `+n=` | kirimasim | Icarus Verilog | Verilator | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
+| --- | --- | --- | --- | --- | --- | --- |
+| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | 30.139 s | 2.749 s |
+| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | 143.256 s | 6.059 s |
+| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | 70.412 s | 5.933 s |
+| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | 15.240 s | 4.689 s |
 
-- nvc 1.23.0 は、4 つの設計すべてを `nvc -a` で受け付けません。診断は macOS と同じで、
-  `--keywords=1800-2017` と `--keywords=1800-2023` でも同じです。nvc の Verilog では、設計が `+n=` を
-  読むのに使う `$value$plusargs` も登録されていないので、nvc は何も測っていません。
-  設計の VHDL 版は別の比較になるので、作っていません。
 - ここでは kirimasim は、Icarus Verilog 13.0 より 3 つの設計で約 1.20〜1.62 倍速く、`proc_wait` では
   約 1.14 倍遅くなりました（より新しい Icarus と比べた macOS の測定とは違います）。Verilator は
   kirimasim より約 2.8〜134 倍速く、Lyra の既定の backend は kirimasim より約 3.6〜11.5 倍遅く
@@ -137,15 +132,15 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
 ### Linux の比較を再実行する方法
 
 上記の版とビルド設定の実行ファイルを使います。`KIRIMASIM`、`IVERILOG`、`VERILATOR`、
-`NVC`、`LYRA` にそれぞれの実行ファイルのパスを設定してください。`vvp` は `iverilog` と
+`LYRA` にそれぞれの実行ファイルのパスを設定してください。`vvp` は `iverilog` と
 同じディレクトリに必要です。`LYRA_COMMIT` には Lyra をビルドしたコミットの全桁を指定します
 （今回の記録は `a2313fdc870702acf8e382adae0883036f54e3c3`）。ほかの計測と重ねずに実行します。
 
 ```sh
 python3 tools/bench.py --kirimasim "$KIRIMASIM" \
-  --iverilog "$IVERILOG" --verilator "$VERILATOR" --nvc "$NVC" \
+  --iverilog "$IVERILOG" --verilator "$VERILATOR" \
   --lyra "$LYRA" --lyra-llvm "$LYRA" --lyra-version "$LYRA_COMMIT" \
-  --runs 5 --out build/bench-five-simulators
+  --runs 5 --out build/bench-four-simulators
 ```
 
 `--lyra` は実行ファイルの既定の backend、`--lyra-llvm` は明示的に LLVM を選びます。
@@ -153,7 +148,7 @@ python3 tools/bench.py --kirimasim "$KIRIMASIM" \
 Lyra 本体を `-c opt` でビルドしても、このコマンドで使う設計の既定値 `-O 0` は変わりません。
 
 設計が失敗しても `results.json` と `summary.md` を出力し、1 件でも失敗すれば終了コードは 1 です。
-記録した nvc の版では、この終了コードが予想されます。非対応の設計を 0 秒と扱わず、
+非対応の設計を 0 秒と扱わず、
 設計ごとの `stage` と `diagnostics` を確認してください。成功した記録には、ウォームアップ、
 小さい回数と本来の回数の各 5 回、出力行、終了コード、タイムアウトの有無を残します。
 Linux の `max_rss_mib` はサンプリングした `VmHWM` で、観測できなければ 0 ではなく `null` です。
@@ -202,8 +197,8 @@ Linux の `max_rss_mib` はサンプリングした `VmHWM` で、観測でき�
 
 ## 生データと再現
 
-- [Linux の bench.json](measurements/2026-10-24-wsl2/bench.json)：nvc の解析失敗を含む
-  6 つのツール・backend の列、成功した全実行とビルドのコマンド。再実行方法は上の Linux の節にあります。
+- [Linux の bench.json](measurements/2026-10-24-wsl2/bench.json)：上の列の成功した全実行と
+  ビルドのコマンド。再実行方法は上の Linux の節にあります。
 - [bench.json](measurements/2026-10-23/bench.json)：各 5 回の経過時間、中央値、RSS、
   版、負荷、実行条件、設計・スクリプト・kirimasim バイナリの SHA-256。
 - [svtests.json](measurements/2026-10-23/svtests.json)：各テストの判定と時間。
