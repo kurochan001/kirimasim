@@ -3,6 +3,12 @@
 [日本語](automatic-vm-environment.ja.md). Status: environment construction
 implemented and directly tested, 2026-10-25; Interpreter integration remains work.
 
+
+Current integration: the [Interpreter execution adapter](automatic-vm-execution.md)
+is now connected. This note records the earlier component checkpoint; its load
+gate and remaining-work statements describe that checkpoint. Valid represented
+SIR homes now execute, while front source capture remains disabled.
+
 ## Contract and ownership
 
 This implements environment construction from sections 1–4/6–8 of the approved
@@ -99,9 +105,9 @@ gap closure or P1 completion is claimed by this checkpoint.
 
 Next attach environments to logical `VarsId` registrations and resolve
 `FrameHome` through the [value-access boundary](automatic-vm-frame-access.md).
-Guard/watch helpers borrow the actual waiter's environment. Scoped references
-need an immutable actual binding and selection, generation checks and rights;
-they must not follow a parent's current row on reentry. Construct the root before
+Guard/watch helpers borrow the actual waiter's environment. The [scoped-reference address component](automatic-vm-scoped-refs.md) now preserves
+immutable actual origins/selections with generation/rights checks; connect that
+registry here without following a parent's current row on reentry. Construct the root before
 copy-in, preserve output initialization and copyback once, and release executing
 owners at return/kill rather than `tryRelease`. Prepare every fork environment
 before starting children or advancing RNG. Complete callback/monitor ownership,

@@ -1,0 +1,210 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "b17234e420b6d9f59986c3a534ea190182557a92",
+  "platform": "macOS arm64",
+  "scope": "Interpreter execution of currently represented lexical homes; front source capture remains disabled",
+  "code_worktree_clean": true,
+  "uncommitted_changes_during_ci": "Generated README counts and documentation only",
+  "source_sha256": {
+    "src/vm/vm.cpp": "43fda023afdd48b0cc33e2b00ff2e04aae628d2e06f2439404735ac34f2a4b26",
+    "tests/unit/vm_activation_test.cpp": "698dcb4d48093c063de09cdc99ab83a58d216d8d4df8bd82d2c9d8cf3ef10f10",
+    "tests/unit/CMakeLists.txt": "b09a2636443fcce5817791d81f0c5027d625ae4dbd8177829289c16c1920e713",
+    "tools/mutants.py": "860ebe091a2041ea7dc565b6feb86f2095c858541804b24b3479f3a0402c27de"
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 70.4
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 1.9
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 7.4
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 79.9
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 8.1
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 117.0
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 7.7
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 79.6
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.3
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.6
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 93.4
+    }
+  ],
+  "tests": {
+    "dev": {
+      "total": 4682,
+      "passed": 4680,
+      "failed": 0,
+      "skipped": 2,
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4683,
+      "passed": 4681,
+      "failed": 0,
+      "skipped": 2,
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4682,
+      "passed": 4680,
+      "failed": 0,
+      "skipped": 2,
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4682,
+      "passed": 4680,
+      "failed": 0,
+      "skipped": 2,
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "direct_tests": {
+    "new_execution_tests": 19,
+    "wide_array_domain_reference_combinations": 24,
+    "kernel_allocation_budgets": 80,
+    "scope": "Current SIR homes, joins, both call paths, output defaults/copyback, reentry, descendants, rights, lifetime, static sensitivity, heap roots, disable, program cleanup and detached iff callbacks"
+  },
+  "compiled_controls": {
+    "total": 14,
+    "new": 10,
+    "existing": 2,
+    "relocated": 2,
+    "all_built": true,
+    "all_detected_in_actual_execution_or_cli_tests": true,
+    "initial_birth_serial_control_survived_old_disable_matrix": true,
+    "coverage_gap_closed_by_new_reclamation_test": true,
+    "record": "activation-interpreter-negative-controls.json"
+  },
+  "comparisons": {
+    "finite_probes": 87,
+    "native_and_14_statuses_and_passing_bytes_unchanged": true,
+    "historical_13_passing_gaps": 22,
+    "population": {
+      "total": 1466,
+      "passed": 1451,
+      "failed": 0,
+      "unsupported": 15
+    },
+    "svtests": {
+      "total": 344,
+      "passed": 244,
+      "all_native_statuses_unchanged": true
+    },
+    "linux_remeasured": false,
+    "fresh_13_build": false
+  },
+  "unchanged_expectations": {
+    "sir_dumps": 29,
+    "existing_perfcount_budgets": true,
+    "existing_suite_bodies_and_outputs": true
+  },
+  "limitations": [
+    "Front emits no capture homes; no source automatic-capture gap is closed.",
+    "Owned automatic event/ref/object providers remain unsupported.",
+    "Kernel allocation budgets and previous component PMR budgets do not exhaust every ordinary C++ Interpreter allocation point.",
+    "Full descriptor-generation exhaustion and complete SSA reference provenance remain not confirmed.",
+    "Finite comparisons are not complete Icarus feature coverage."
+  ]
+}

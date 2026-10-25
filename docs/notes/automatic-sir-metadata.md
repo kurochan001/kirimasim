@@ -7,6 +7,12 @@ Subsequent checkpoint: the [VM value-access migration](automatic-vm-frame-access
 is implemented and validated. Resolving the new homes and constructing their
 owned environments and immutable references remain work before execution is enabled.
 
+
+Current integration: the [Interpreter execution adapter](automatic-vm-execution.md)
+is now connected. This note records the earlier component checkpoint; its load
+gate and remaining-work statements describe that checkpoint. Valid represented
+SIR homes now execute, while front source capture remains disabled.
+
 ## Approved contract and boundaries
 
 This implements the representation/verification part of sections 1–3/7/8 of

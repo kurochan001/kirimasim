@@ -7,6 +7,12 @@ Subsequent checkpoint: the [lexical environment component](automatic-vm-environm
 constructs and directly verifies scoped owners and complete child environments.
 Attaching it to `Interpreter` and constructing immutable scoped refs remain work.
 
+
+Current integration: the [Interpreter execution adapter](automatic-vm-execution.md)
+is now connected. This note records the earlier component checkpoint; its load
+gate and remaining-work statements describe that checkpoint. Valid represented
+SIR homes now execute, while front source capture remains disabled.
+
 ## Contract and change
 
 This implements the access transport required by sections 2–4/6–8 of the

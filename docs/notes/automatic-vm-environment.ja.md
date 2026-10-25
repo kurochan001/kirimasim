@@ -3,6 +3,11 @@
 [English](automatic-vm-environment.md)。Status: 環境構築を実装・直接検証、2026-10-25。
 Interpreterへの接続は残作業です。
 
+
+現在の接続状況：[Interpreterでの実行](automatic-vm-execution.ja.md)を追加しました。
+以下は各部品の段階の記録であり、その時点のVM拒否・残作業は当時の状態です。
+現在は妥当な表現済みSIR homeを実行できますが、frontによるソースの捕捉はまだ有効にしていません。
+
 ## 契約と所有権
 
 承認済み[automatic捕捉の契約](automatic-capture-proposal.ja.md)の1–4/6–8節から、
@@ -72,8 +77,9 @@ PerfCount基準は変えず成功しました。Interpreterのソースは`65848
 ソースの捕捉・automatic eventの対応やIcarus差分の解消、P1全体の完成は主張しません。
 
 次は論理`VarsId`の登録に環境を付け、[値アクセスの境界](automatic-vm-frame-access.ja.md)で
-`FrameHome`を解決します。guard/watchは待機元の実際の環境を使います。scoped refは実体と
-選択範囲への不変binding・世代・権限を持ち、再入した親の現在行へ追従させません。rootを
+`FrameHome`を解決します。guard/watchは待機元の実際の環境を使います。
+[scoped refの参照先解決の部品](automatic-vm-scoped-refs.ja.md)は不変の由来・選択範囲・世代・権限を
+保つようになり、次にその表を接続して再入した親の現在行へ追従させないようにします。rootを
 コピー入力前に構築し、outputの初期化と一度だけのコピー戻しを保ち、return/killで実行所有権を
 解放して`tryRelease`まで保持しません。全fork環境の準備後に子とRNGを進めます。
 callback/monitorの保持、型付きrefルート、named制御の巻き戻し、program終了、resource errorの

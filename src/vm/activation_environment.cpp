@@ -200,7 +200,7 @@ ActivationEnvironment::enterOwner(sir::ActivationScopeId scope) noexcept {
                 entries_[id.index()] = {};
             return binding.error;
         }
-        entries_[field.index()].value = binding.value;
+        entries_[field.index()].origin = ActivationOrigin(binding.value, plan_, field);
     }
     owners_[scope.index()] = std::move(owner.value);
     active_[activeDepth_++] = scope;  // Sized for every local scope at construction.
@@ -239,11 +239,18 @@ void ActivationEnvironment::finish() noexcept {
 
 ActivationEnvironment::Result<kernel::ActivationBinding>
 ActivationEnvironment::binding(sir::FrameVarId field) const noexcept {
+    const auto value = origin(field);
+    return value ? Result<kernel::ActivationBinding>{value.value.binding(), Error::None}
+                 : Result<kernel::ActivationBinding>{{}, value.error};
+}
+ActivationEnvironment::Result<ActivationOrigin>
+ActivationEnvironment::origin(sir::FrameVarId field) const noexcept {
     if (finished_ || field.index() >= entries_.size()) return {{}, Error::InvalidBinding};
-    const auto value = entries_[field.index()].value;
-    const auto region = store_.region({value});
-    return region ? Result<kernel::ActivationBinding>{value, Error::None}
-                  : Result<kernel::ActivationBinding>{{}, region.error};
+    const auto value = entries_[field.index()].origin;
+    if (!value.valid()) return {{}, Error::InvalidBinding};
+    const auto region = store_.region({value.binding()});
+    return region ? Result<ActivationOrigin>{value, Error::None}
+                  : Result<ActivationOrigin>{{}, region.error};
 }
 ActivationEnvironment::Result<BorrowedReference>
 ActivationEnvironment::reference(sir::FrameVarId field) const noexcept {
@@ -321,12 +328,16 @@ ActivationEnvironment::Error ActivationEnvironment::import(const ActivationPlan&
         } else {
             if (source.home == sir::FrameHome::Ordinary || parent == nullptr)
                 return Error::InvalidBinding;
-            auto value = parent->binding(row.captureSource);
+            auto sourceOrigin = parent->origin(row.captureSource);
+            if (!sourceOrigin) return sourceOrigin.error;
+            auto value =
+                Result<kernel::ActivationBinding>{sourceOrigin.value.binding(), Error::None};
             if (!value) return value.error;
             if (value.value.readonly() && !row.readonly) return Error::InvalidBinding;
             if (row.readonly) value = store_.readOnly(value.value);
             if (!value) return value.error;
-            entries_[i].value = value.value;
+            entries_[i].origin = sourceOrigin.value;
+            entries_[i].origin.binding_ = value.value;
         }
     }
     return Error::None;

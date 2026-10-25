@@ -130,21 +130,23 @@ automatic初期化は入るたびに行います。宣言だけのforkにも対�
 [記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は2026-10-25承認済みで、
 automatic event変数も未対応です。
 
-### automatic記憶域のカーネル基盤
+### automatic記憶域の実行境界
 
-Context内の世代付きスコープ・共有binding・lease・readonly・型付きルートを実装しました。
-[独自14テストと全32ビット世代の検査](notes/automatic-storage-foundation.ja.md)で確認しています。
-[待機の依存への接続](notes/automatic-storage-observation.ja.md)では捕捉/静的範囲・extent保持・
-キャンセルに対する独自14テストを追加しました。
-[SIRの表現/検証](notes/automatic-sir-metadata.ja.md)には独自16テストを追加し、
-VM接続が揃うまで新しいhomeの実行は拒否します。
-[VMのアクセス経路の移行](notes/automatic-vm-frame-access.ja.md)ではframe・ref・
-ファイル/走査・引数を値のビューへ通し、7テストで選択270通りとSIR実行24通りを調べます。
-環境構築とソースの捕捉は残作業です。
-[VM環境の部品](notes/automatic-vm-environment.ja.md)ではscopeの所有・字句的な全体の取り込み・
-不変の捕捉・失敗の巻き戻しを21テストで直接検証しました。Interpreterへの登録とscoped refの表現は残作業です。
-ソースのfork捕捉、activation命令、automatic event・ref・objectの接続はまだ有効にせず、
-上記の未対応診断は維持しています。
+Context単位の世代付きscope・共有binding・lease・readonly・typed rootは
+[独自14テストとkernel記憶域の全世代検査](notes/automatic-storage-foundation.ja.md)で確認します。
+[待機への接続](notes/automatic-storage-observation.ja.md)14、
+[SIR表現/検証](notes/automatic-sir-metadata.ja.md)16、
+[値の転送](notes/automatic-vm-frame-access.ja.md)7、
+[環境構築](notes/automatic-vm-environment.ja.md)21、
+[scoped ref](notes/automatic-vm-scoped-refs.ja.md)11テストに加え、
+[Interpreterへの接続](notes/automatic-vm-execution.ja.md)で妥当な表現済みhome・scope入退場・
+共有fork環境・実際の待機taskのcallback・不変refを実行するようになりました。
+独自19実行テストはcall/コピー戻し・再進入・全join・typed root・キャンセル・program終了・
+resource失敗を含み、コンパイルした14故障を検出しました。通常フレームとレイアウト/値の境界を
+共用し、scopeの値の複製を残しません。
+frontは捕捉homeをまだ生成せず、ソースのautomatic fork捕捉は引き続き拒否します。
+automatic event構築と所有ref/objectの実提供も未対応です。手組みSIRのactivation命令の実行だけで
+これらのソース機能の差分を解消したとは扱いません。
 
 ### 固定長配列ポートとネット配列
 
