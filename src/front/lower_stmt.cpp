@@ -71,13 +71,6 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
     if (b_.dead) return;  // unreachable code is dropped
     const slang::SourceLocation sl = startOf(s);
     checkStack(sl);
-    // The writes of the statement are its own, until it ends.
-    struct RestoreAt {
-        Body& b;
-        slang::SourceLocation outer;
-        ~RestoreAt() { b.at = outer; }
-    } restoreAt{b_, b_.at};
-    b_.at = sl;
     switch (s.kind) {
         case ast::StatementKind::Empty: return;
         case ast::StatementKind::List:
@@ -1193,8 +1186,6 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
     b_.sub = id;
     b_.scale = saved.scale;
     b_.scope = saved.scope;
-    // A write the call makes itself, through a ref argument, is at the action.
-    b_.at = action != nullptr ? startOf(*action) : sl;
     try {
         for (std::size_t i = 0; i < passed.size(); ++i)
             substitutions_[passed[i]] = emit(Op::Fload, values[i].type,

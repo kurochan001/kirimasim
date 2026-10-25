@@ -757,7 +757,6 @@ sir::FrameVarId Lowerer::newFrameVar(sir::Type t) {
 void Lowerer::noteWrite(const sir::SlotRange& logical) {
     const sir::SlotRange r = sir::physicalRange(design_, logical);
     const sir::Slot& s = design_.slot(r.slot);
-    if (b_.isSub) subWriteSites_[b_.sub].push_back({r, b_.at});
     std::vector<sir::SlotRange>& writes = b_.isSub ? subWrites_[b_.sub] : proc().writes;
     for (const sir::SlotRange& w : writes)
         if (sir::covers(s, w, r)) return;
@@ -807,7 +806,6 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     buildDumpTable();
     if (numErrors_ != 0) return;
     finishDesign();
-    checkTaskAndActionWrites();
     prepareStrengthNets();
     if (numErrors_ != 0) return;
     resolveNets();
@@ -958,93 +956,6 @@ void Lowerer::finishDesign() {
         if (std::ranges::any_of(called,
                                 [&](const auto sub) { return triggeredReaders_.contains(sub); }))
             report(at, "implicit sensitivity to named-event triggered values");
-    }
-}
-
-void Lowerer::checkTaskAndActionWrites() {
-    // What each always_comb, always_latch and always_ff writes, itself and
-    // through its functions, by slot.
-    std::map<sir::SlotId, std::vector<sir::ProcessId>> owners;
-    for (std::uint32_t i = 0; i < design_.processes.size(); ++i) {
-        const sir::ProcessId p{i};
-        const sir::ProcessKind k = design_.process(p).kind;
-        if (k != sir::ProcessKind::Comb && k != sir::ProcessKind::Latch &&
-            k != sir::ProcessKind::Ff)
-            continue;
-        for (const sir::SlotRange& w : design_.process(p).writes)
-            if (design_.slot(w.slot).subroutine == sir::kNone) owners[w.slot].push_back(p);
-    }
-    if (owners.empty()) return;
-    // Where a process writes what is not its block's: each task it calls,
-    // and each deferred assertion's action that it or a function it calls
-    // runs (finishDesign).
-    struct Start {
-        sir::SubroutineId sub;
-        slang::SourceLocation at;
-    };
-    std::map<sir::ProcessId, std::vector<Start>> starts;
-    for (const auto& [q, calls] : taskCalls_)
-        for (const auto& [task, callAt] : calls)
-            starts[q].push_back({task, callAt});
-    for (const auto& [p, called] : callees_.byProcess) {
-        std::set<sir::SubroutineId> seen;
-        const auto visit = [&](const auto& self, sir::SubroutineId x) -> void {
-            if (!seen.insert(x).second) return;
-            if (const auto a = actions_.find(x); a != actions_.end())
-                starts[p].push_back({x, a->second});
-            else if (design_.subroutine(x).kind != sir::SubroutineKind::Task)
-                if (const auto c = callees_.bySubroutine.find(x); c != callees_.bySubroutine.end())
-                    for (const sir::SubroutineId y : c->second)
-                        self(self, y);
-        };
-        for (const sir::SubroutineId c : called)
-            visit(visit, c);
-    }
-    // Each of them, and what it calls in turn, may write one of them; the
-    // error is at the write, the note at the call or the assertion, once
-    // for each pair of places, whatever the instance.
-    std::set<std::pair<slang::SourceLocation, slang::SourceLocation>> reported;
-    for (const auto& [q, list] : starts) {
-        for (const auto& [start, callAt] : list) {
-            std::vector<sir::SubroutineId> todo{start};
-            std::set<sir::SubroutineId> seen{start};
-            while (!todo.empty()) {
-                const sir::SubroutineId x = todo.back();
-                todo.pop_back();
-                for (const auto& [r, at] : subWriteSites_[x]) {
-                    const sir::Slot& s = design_.slot(r.slot);
-                    const auto it = owners.find(r.slot);
-                    if (it == owners.end()) continue;
-                    for (const sir::ProcessId p : it->second) {
-                        if (p == q) continue;
-                        const sir::Process& owner = design_.process(p);
-                        const bool overlaps =
-                            std::ranges::any_of(owner.writes, [&](const sir::SlotRange& w) {
-                                return w.slot == r.slot && sir::overlaps(s, w, r);
-                            });
-                        if (!overlaps || !reported.insert({at, callAt}).second) continue;
-                        const char* kind = owner.kind == sir::ProcessKind::Comb    ? "always_comb"
-                                           : owner.kind == sir::ProcessKind::Latch ? "always_latch"
-                                                                                   : "always_ff";
-                        const bool action = actions_.contains(start);
-                        reportError(at,
-                                    "'" + s.name + "', which the " + kind + " procedure at " +
-                                        whereOf(owner.loc) +
-                                        " writes, may not be written by another process, here "
-                                        "through " +
-                                        (action ? "the action of a deferred assertion it runs"
-                                                : "a task it calls"),
-                                    callAt,
-                                    action ? "the deferred assertion is here"
-                                           : "'" + design_.subroutine(start).name +
-                                                 "' is called here");
-                    }
-                }
-                if (const auto c = callees_.bySubroutine.find(x); c != callees_.bySubroutine.end())
-                    for (const sir::SubroutineId y : c->second)
-                        if (seen.insert(y).second) todo.push_back(y);
-            }
-        }
     }
 }
 

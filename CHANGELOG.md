@@ -422,6 +422,14 @@ own. CONTRIBUTING.md says what goes in this file.
   features to P4, and switch-level work, multithreading and embedding to
   P5. Tier numbers and the coverage P1 must reach are unchanged
   (docs/notes/phase-renumbering.md).
+- A write that another process makes, through a task it calls or through
+  the action of a deferred assertion it runs, to a variable that
+  `always_comb`, `always_latch` or `always_ff` writes is no longer an
+  error: kirimasim follows slang, which keeps such writes legal on purpose
+  because the standard is not clear on them (slang issue #2040). The design
+  runs, and each write is an ordinary write of the variable
+  (SCHEDULER_SPEC.md 6.4, SIR_SPEC.md 3.4). Before, front reported them
+  with exit code 2.
 
 ### Fixed
 
