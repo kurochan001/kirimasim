@@ -20,6 +20,7 @@
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/memfile.h"
+#include "kirimasim/kernel/mos.h"
 #include "kirimasim/kernel/pattern.h"
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"
@@ -68,3 +69,13 @@ static_assert(std::is_nothrow_copy_assignable_v<PatternValue>);
 static_assert(std::is_nothrow_move_assignable_v<PatternValue>);
 static_assert(std::is_trivially_destructible_v<PatternValue>);
 }  // namespace
+
+// Probe public C++20 types/noexcept; MosStrength checks numeric semantics.
+static_assert(std::is_same_v<decltype(kirimasim::kernel::mosStrength(
+                                 kirimasim::kernel::MosKind::Rcmos, {7, 7}, {1, 0}, {0, 0})),
+                             std::optional<kirimasim::kernel::StrengthRange>>);
+static_assert(std::is_same_v<decltype(kirimasim::kernel::transferStrength(
+                                 kirimasim::kernel::StrengthTransfer::Identity, {0, 0})),
+                             std::optional<kirimasim::kernel::StrengthRange>>);
+static_assert(noexcept(kirimasim::kernel::mosStrength(kirimasim::kernel::MosKind::Cmos, {0, 0},
+                                                      {1, 1}, {0, 1})));
