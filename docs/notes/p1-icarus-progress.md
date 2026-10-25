@@ -13,6 +13,17 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Pure full-strength MOS operations:** `59522c50` adds
+[all six MOS kinds and identity/nonresistive/resistive transfer maps](mos-strength-operations.md)
+with independent point/control enumeration. Ten new tests cover all 120 intervals
+and 11,520 device/control combinations; nine compiled full-build faults are caught,
+and all 24 focused MOS/strength tests pass. Public interfaces compile as C++20
+with exceptions/RTTI disabled. Full CI has 17 successful checks and four test
+steps failing only the unchanged historical `cli/options` oracle: dev/ASan/UBSan
+5,138/5,141, release 5,139/5,142, two skips each. Net/driver storage, SIR,
+scheduling, passive solving and source enabling remain required work. No
+new source comparison or Icarus gap reduction is claimed; P1 remains incomplete.
+
 **Loaded event selections from source:** `2108dd72` connects
 [runtime fixed-array targets and getters](indexed-event-execution.md) through the
 shared typed place decoder. All 160 original designs and 16 policy boundaries

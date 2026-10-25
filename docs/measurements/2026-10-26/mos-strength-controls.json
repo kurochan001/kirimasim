@@ -1,0 +1,155 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "59522c5046868b749835b757cfa436578af24b21",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/include/kirimasim/kernel/mos.h": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+    "src/valsem/include/kirimasim/valsem/mos.h": "e8bae5d9be6c004659754f6fd51a65eb6f35562bb5f93f48e622520a72e8658c",
+    "src/valsem/mos.cpp": "5307670b19799c0e7a3870c30cb1e3e9e14ac6a72a155cf7157a37eb68b5b5ee",
+    "src/valsem/CMakeLists.txt": "6a58e89386bd2f2042f47392bd006809ed976f50488d641a76597cc0ffccca1a",
+    "tests/unit/mos_test.cpp": "20d1fb83a2540408b69c5855a8fbd446f6d45bde2f083d633339b35049d7194e",
+    "tests/unit/kernel_headers_cxx20.cpp": "16d8cd6ed387a25a3838099ca9e8d291b3084fed0941c0f68cc83e6fe4c322c4",
+    "tests/unit/CMakeLists.txt": "4205655d4b6fe892cce0dbbf955a97d88f2e5f91dfde889fb8e9ba7ee1b6c0e2",
+    "tools/mutants.py": "58d7298cf8e9b4ff3c1fd36bf145b58b1315759c0adbd188429b32a90f186395"
+  },
+  "controls": [
+    {
+      "name": "mos strength: nonresistive devices retain supply",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.PointReductionsMatchTheApprovedTablesIncludingZeroAndSigns",
+        "MosStrength.EveryIntervalMatchesTheIndependentPointTransferEnumerator",
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.CmosParallelLegsApplyOneReductionAndADefiniteLegDominates",
+        "MosStrength.NAndPLegsHaveOppositeKnownEnablePolarities",
+        "MosStrength.UnknownControlsPreserveHiZAndBothEndsOfAmbiguousData",
+        "MosStrength.ChainedTransferPreservesSignedRanksAndIdentityPortEdges"
+      ]
+    },
+    {
+      "name": "mos strength: resistive high ranks lose their selected map",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.PointReductionsMatchTheApprovedTablesIncludingZeroAndSigns",
+        "MosStrength.EveryIntervalMatchesTheIndependentPointTransferEnumerator",
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.CmosParallelLegsApplyOneReductionAndADefiniteLegDominates",
+        "MosStrength.NAndPLegsHaveOppositeKnownEnablePolarities",
+        "MosStrength.UnknownControlsPreserveHiZAndBothEndsOfAmbiguousData",
+        "MosStrength.ChainedTransferPreservesSignedRanksAndIdentityPortEdges"
+      ]
+    },
+    {
+      "name": "mos strength: full intervals collapse to one endpoint",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.EveryIntervalMatchesTheIndependentPointTransferEnumerator",
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.UnknownControlsPreserveHiZAndBothEndsOfAmbiguousData",
+        "MosStrength.FullIntervalsRetainOppositionAndStrengthOnlyDifferences"
+      ]
+    },
+    {
+      "name": "mos strength: uncertain controls become disabled",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.CmosParallelLegsApplyOneReductionAndADefiniteLegDominates",
+        "MosStrength.UnknownControlsPreserveHiZAndBothEndsOfAmbiguousData"
+      ]
+    },
+    {
+      "name": "mos strength: parallel legs require both controls",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.CmosParallelLegsApplyOneReductionAndADefiniteLegDominates"
+      ]
+    },
+    {
+      "name": "mos strength: parallel legs attenuate twice",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.CmosParallelLegsApplyOneReductionAndADefiniteLegDominates",
+        "MosStrength.UnknownControlsPreserveHiZAndBothEndsOfAmbiguousData"
+      ]
+    },
+    {
+      "name": "mos strength: disabled malformed data becomes a valid drive",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.InvalidKindsAndRangesAreRejectedEvenWithDisabledControls"
+      ]
+    },
+    {
+      "name": "mos strength: identity ports attenuate supply",
+      "path": "src/kernel/include/kirimasim/kernel/mos.h",
+      "source_sha256": "d77e93aad6d8a17f38e5d0f2559b6abf9f59247d36c253f1e7a4d78abf7cc357",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.PointReductionsMatchTheApprovedTablesIncludingZeroAndSigns",
+        "MosStrength.EveryIntervalMatchesTheIndependentPointTransferEnumerator",
+        "MosStrength.ChainedTransferPreservesSignedRanksAndIdentityPortEdges"
+      ]
+    },
+    {
+      "name": "mos strength: reference p control has the wrong polarity",
+      "path": "src/valsem/mos.cpp",
+      "source_sha256": "5307670b19799c0e7a3870c30cb1e3e9e14ac6a72a155cf7157a37eb68b5b5ee",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "MosStrength.EveryDeviceIntervalAndControlPairMatchesEnumeratedReference",
+        "MosStrength.NAndPLegsHaveOppositeKnownEnablePolarities"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "baseline_tests_passed": 24,
+  "restored_focused_tests_passed": 24,
+  "source_restored": true,
+  "cxx20_public_header_probe_in_mutated_full_builds": true,
+  "compile_failures_counted_as_detections": false
+}
