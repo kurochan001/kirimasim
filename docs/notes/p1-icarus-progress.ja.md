@@ -12,6 +12,9 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**記憶域基盤の全体検証：** `f7c45c43`の[全21項目](../measurements/2026-10-25/activation-foundation-final-validation.json)が成功し、
+dev/ASan/UBSanは4,555/4,557、releaseは4,556/4,558成功、失敗0・既知2スキップです。
+
 **automatic記憶域の基盤：** [カーネル実装](automatic-storage-foundation.ja.md)に
 14独自テスト・11個のコンパイルした負の対照・全32ビット世代の検査を追加しました。
 ソースの捕捉はまだ有効にしておらず、この基盤で未対応22件を解消したとは扱いません。

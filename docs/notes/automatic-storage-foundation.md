@@ -3,6 +3,14 @@
 [日本語](automatic-storage-foundation.ja.md). Status: kernel foundation
 implemented, 2026-10-25; source capture integration remains work.
 
+## Integrated validation
+
+The [final record](../measurements/2026-10-25/activation-foundation-final-validation.json)
+at `f7c45c43` passes all 21 local-CI checks. Dev/ASan/UBSan pass 4,555/4,557
+and release 4,556/4,558, with zero failures and the same two known skips.
+All 29 existing SIR dumps, PerfCount expectations and C ABI 0.3 are unchanged.
+This validates the storage foundation; it does not enable source automatic capture.
+
 ## Approved contract and scope
 
 The user approved [automatic-capture-proposal 1–8](automatic-capture-proposal.md)

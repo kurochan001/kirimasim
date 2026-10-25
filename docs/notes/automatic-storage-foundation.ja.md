@@ -3,6 +3,13 @@
 [English](automatic-storage-foundation.md)。状態：カーネル基盤を実装、2026-10-25。
 ソースの捕捉との接続は残作業です。
 
+## 統合後の検証
+
+`f7c45c43`の[最終記録](../measurements/2026-10-25/activation-foundation-final-validation.json)は
+local CI全21項目が成功しました。dev/ASan/UBSanは4,557件中4,555件、releaseは4,558件中4,556件成功し、
+失敗0・既知の同じ2件のみスキップです。既存のSIRダンプ29件、PerfCount期待値、C ABI 0.3は変えていません。
+この区切りは記憶域基盤の検証であり、ソースのautomatic捕捉が実行可能になったとは扱いません。
+
 ## 承認された契約と範囲
 
 2026-10-25に[automatic捕捉の契約1–8節](automatic-capture-proposal.ja.md)が承認され、

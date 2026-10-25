@@ -1,0 +1,238 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "f7c45c43441c60405eabc0399b81d0ab9fe0e9f6",
+  "platform": "macOS arm64",
+  "scope": "Context-owned automatic storage and typed-root foundation only; source capture and managed events not enabled",
+  "source_sha256": {
+    "src/kernel/activation.cpp": "30c94d0acb19f73533d8af7ca7a35071d823faef6b031bcf780294dd93db225c",
+    "src/kernel/include/kirimasim/kernel/activation.h": "62c2fac303e58dd252d16c56aa5efd95ebd72795751da43c045a343503287626",
+    "src/kernel/include/kirimasim/kernel/context.h": "c54f6a71f61b0de9a7ce4b760ab2c95a58d216f2d3c0ce4c5ebdece21380713a",
+    "src/vm/vm.cpp": "869371b6f3700e4609fb71104dfaf032005ede1ed5e281c89820e389ab4e2965",
+    "tests/unit/activation_test.cpp": "a57f164e95172e39cf9e5accac035b5af5eb12318838accfbd05ef0336af6044",
+    "tools/check_activation_generations.py": "e42005cea3ee03dd4adb0d595c47dc1220be546c554309d71a6f47563d1a9ba4"
+  },
+  "ctest": {
+    "dev": {
+      "total": 4557,
+      "passed": 4555,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4558,
+      "passed": 4556,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4557,
+      "passed": 4555,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4557,
+      "passed": 4555,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 60.5
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 8.3
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 53.1
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 8.0
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 84.0
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 8.3
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 72.6
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 80.1
+    }
+  ],
+  "new_unit_tests": 14,
+  "typed_layouts": 80,
+  "negative_controls": [
+    {
+      "name": "activation store: child retention does not extend the extent",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 4
+    },
+    {
+      "name": "activation store: stale generations resolve to reused records",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 2
+    },
+    {
+      "name": "activation store: retained readonly bindings regain write access",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 1
+    },
+    {
+      "name": "activation store: foreign bindings use the local Context",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 1
+    },
+    {
+      "name": "activation store: X and Z survive two-state normalization",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 2
+    },
+    {
+      "name": "activation store: four-state writes drop their b half",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 1
+    },
+    {
+      "name": "activation store: element writes all target the first element",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 1
+    },
+    {
+      "name": "activation store: ordinary integer patterns become heap roots",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 1
+    },
+    {
+      "name": "activation store: VM safe points omit retained extent roots",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 2
+    },
+    {
+      "name": "activation store: released entries are never reused",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 2
+    },
+    {
+      "name": "activation store: observers run before value commit",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": 2
+    }
+  ],
+  "mutation_anchors": 547,
+  "generation_exhaustion": "activation-generation-exhaustion.json",
+  "existing_expectations_changed": false,
+  "sir_dump_expectations": "all 29 unchanged; pass",
+  "perfcount_expectations": "unchanged; pass in all configurations",
+  "public_headers": "C++20 target passes",
+  "new_dependencies": false,
+  "external_c_abi": "0.3 unchanged",
+  "p1_complete": false
+}
