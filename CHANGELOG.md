@@ -11,66 +11,6 @@ No release yet. The Added section below sums up what works as of
 2026-10-18; from then on, each change a user can see has an entry of its
 own. CONTRIBUTING.md says what goes in this file.
 
-### Documentation
-
-- Add planned phase P2 for SIR v1 and move C++ generation to P3, broader
-  testbench work to P4, and later switch/parallel/embedding work to P5;
-  execution tier numbers and the required P1 coverage stay unchanged.
-  Record the approved parallel-preparation/post-P1-freeze direction, complete
-  record format, common Op schema, service-based C boundary and analysis side
-  tables. Align specifications and roadmap guides with that decision. Exact
-  grammar, API entries/count and reference layout still need review; the
-  current formatVersion is 0 and C ABI is 0.3. No P2 runtime feature is added.
-
-- Align both READMEs, feature/support guides, architecture and pattern notes
-  with the typed SIR/execution checkpoint. Add a verified queue-monitor example
-  and distinguish current validation from historical renderer-stage results.
-  Source `%p` remains unfinished at the front argument bridge.
-
-- Record 46 original class observations and a known omission of unused class
-  static-initializer side effects. Correct the blanket unsupported-diagnostic
-  claim in both READMEs and document remaining class runtime work separately
-  from the 87-probe comparison. No class implementation is added.
-
-### Fixed
-
-- Killing a display/file monitor callback now detaches its registration and
-  heap dependencies before its frame can be released. Ended callbacks are
-  not invoked again on later cell changes; other file monitors remain live.
-  Twenty new source cases and scheduler lifetime/resource-failure tests cover
-  queue/dynamic values, file closure, descriptor reuse and hook restoration.
-
-- A display monitor can observe a change in an existing queue cell without
-  replacing its container handle. Heap reads are captured during the actual
-  Postponed callback and detached with the registration's lifetime. The new
-  heap-backed file-monitor combinations are now covered by the follow-up
-  matrix and callback lifetime checks described above.
-
-- Aggregate blocking and nonblocking assignments capture all RHS values
-  before runtime target selectors under the approved evaluation policy.
-  Container leaves snapshot before later field effects. Seventy-two original
-  source cases cover eight contexts, wide/two-/four-state payloads,
-  real/string members, runtime prefixes and deep values (VALUE_SEMANTICS
-  3.1/3.13, SIR_SPEC 7.3; IEEE leaves relative side order unspecified).
-
-- Integral `$fread` again follows the approved SIR_SPEC 8 copy-in/copyback
-  interpretation of 4.9.7. A written result finds its target at copyback;
-  a zero-byte result has no copyback. The earlier capture-once target rule
-  and nine mechanism oracles were incorrect. Expectation correction and
-  implementation are isolated in separate review branches.
-
-- Integral `$fread` destinations accept optional start/count arguments without
-  using their values to limit input (21.3.4.4). Supplied expressions run once
-  in the approved left-to-right order. Copy-in and copyback follow SIR_SPEC 8
-  as corrected above. An original matrix adds 153 source cases across nine
-  contexts, eight widths and both state domains; existing expectations remain.
-
-- Diagnose a container-cell NBA as illegal under 6.21/10.4.2, with its source
-  position, and correct the integration inventory: this is a standard
-  restriction, not a missing P1 feature. New source tests cover dynamic arrays
-  and queues with whole-element, bit and part targets; whole-value NBAs to
-  eligible static container variables remain separate.
-
 ### Added
 
 - Runtime array reduction, stable ordering and min/max for fixed arrays,
@@ -118,9 +58,9 @@ own. CONTRIBUTING.md says what goes in this file.
 - Three-state gates retain full-width L/H side masks across word boundaries,
   including 33–64-bit nets whose side operands occupy multiple words and
   short-circuit control expressions. Another 73 original cases match both
-  measured Icarus versions. A separate CLI check preserves the unsupported
-  delayed-side boundary across all blocks while its timing amendment awaits
-  review (28.6, 28.12; existing VALUE_SEMANTICS 5.8 and SIR_SPEC 3.5).
+  measured Icarus versions. Delayed three-state outputs on resolved
+  nets, unsupported at this step, are under the entry on their propagation
+  below (28.6, 28.12; VALUE_SEMANTICS 5.8 and SIR_SPEC 3.5).
 
 - Whole fixed-array, unpacked-structure and structure-array blocking
   intra-assignment delay/event/repeat controls retain typed private snapshots
@@ -425,6 +365,17 @@ own. CONTRIBUTING.md says what goes in this file.
 - `--max-call-depth=<n>`: how deep the calls of one process may nest,
   10000 by default; above the default, the stack of the simulation thread
   grows in proportion (CLI.md 2.7, RUNTIME_ABI.md 5).
+- Whole fixed-array ports: a net-array connection shares its elements with
+  the port, each declaration keeping its own bounds, and a value connection
+  copies them; net arrays resolve the strengths of their drivers element by
+  element. Constant element force and release, delays, and unconnected
+  defaults and pulls work through them (7.6, 23.3.3; SIR_SPEC.md 3.5,
+  VALUE_SEMANTICS.md 5). Before, these ports were reported as unsupported.
+- Delayed three-state gates that drive resolved nets propagate their whole
+  state: a delayed change of the L/H side is a change even when the
+  four-state value stays x, and an equal pending state keeps its deadline
+  (28.6, 28.16; SCHEDULER_SPEC.md 12, VALUE_SEMANTICS.md 5.8). Before, they
+  were reported as unsupported.
 
 ### Changed
 
@@ -464,7 +415,13 @@ own. CONTRIBUTING.md says what goes in this file.
 - A checker instantiated under a module's default clocking no longer
   stops with "no inferred clock in this context": `kirimasim parse`
   accepts the design, and running it reports the clocking block and the
-  checker as unsupported for P3 (16.14.7, 17.4; #24).
+  checker as unsupported (P4, P3 before the 2026-10-24 renumbering;
+  16.14.7, 17.4; #24).
+- The phases are renumbered: a new P2 makes SIR v1 and the kernel boundary
+  ready for tier 2, and C++ generation moves to P3, broader testbench
+  features to P4, and switch-level work, multithreading and embedding to
+  P5. Tier numbers and the coverage P1 must reach are unchanged
+  (docs/notes/phase-renumbering.md).
 
 ### Fixed
 
@@ -560,8 +517,8 @@ own. CONTRIBUTING.md says what goes in this file.
   each slot instead of comparing every pair of processes. 40000 `always`
   blocks that each write one bit of a vector took 1.8 s to compile and now
   take 0.12 s; the errors are the same, in the same order (#14).
-- Calls nested more than 10000 deep in one process are a run-time error of
-  the design at the call, with exit code 2 and `final`; they were an
+- Calls nested more than 10000 deep in one process stop the run at the
+  call, with `final` (exit code 6, as under Changed); they were an
   internal error (code 3), the calls of tasks that wait had no limit, and
   builds whose stack ran out first, such as asan, crashed. The simulation
   runs on a thread with a stack of 512 MiB (RUNTIME_ABI.md 5; #6).
@@ -620,8 +577,8 @@ own. CONTRIBUTING.md says what goes in this file.
 - `$sformat` and `$sformatf` printed a format that is not a string
   literal, such as a string parameter, as a value to show. A constant
   format is now read as a format, and a wrong number of arguments for it
-  is an error; a format known only at run time is reported as not
-  supported yet (SYSTEM_TASKS.md 3.13).
+  is an error; formats known only at run time are under Added
+  (SYSTEM_TASKS.md 3.13).
 - A function or task called by a hierarchical name from another instance
   (`m1.f()`) was a second copy of it, whose static variables were
   initialized once more. It is now the declaring instance's subroutine,
@@ -648,3 +605,39 @@ own. CONTRIBUTING.md says what goes in this file.
   this thread` (RUNTIME_ABI.md 5; #38). slang's own recursion, while it
   binds a deeply nested expression before front lowers it, is not
   checked.
+- Killing a display/file monitor callback now detaches its registration and
+  heap dependencies before its frame can be released. Ended callbacks are
+  not invoked again on later cell changes; other file monitors remain live.
+  Twenty new source cases and scheduler lifetime/resource-failure tests cover
+  queue/dynamic values, file closure, descriptor reuse and hook restoration.
+
+- A display monitor can observe a change in an existing queue cell without
+  replacing its container handle. Heap reads are captured during the actual
+  Postponed callback and detached with the registration's lifetime. The new
+  heap-backed file-monitor combinations are now covered by the follow-up
+  matrix and callback lifetime checks described above.
+
+- Aggregate blocking and nonblocking assignments capture all RHS values
+  before runtime target selectors under the approved evaluation policy.
+  Container leaves snapshot before later field effects. Seventy-two original
+  source cases cover eight contexts, wide/two-/four-state payloads,
+  real/string members, runtime prefixes and deep values (VALUE_SEMANTICS
+  3.1/3.13, SIR_SPEC 7.3; IEEE leaves relative side order unspecified).
+
+- Integral `$fread` again follows the approved SIR_SPEC 8 copy-in/copyback
+  interpretation of 4.9.7. A written result finds its target at copyback;
+  a zero-byte result has no copyback. The earlier capture-once target rule
+  and nine mechanism oracles were incorrect. Expectation correction and
+  implementation are isolated in separate review branches.
+
+- Integral `$fread` destinations accept optional start/count arguments without
+  using their values to limit input (21.3.4.4). Supplied expressions run once
+  in the approved left-to-right order. Copy-in and copyback follow SIR_SPEC 8
+  as corrected above. An original matrix adds 153 source cases across nine
+  contexts, eight widths and both state domains; existing expectations remain.
+
+- Diagnose a container-cell NBA as illegal under 6.21/10.4.2, with its source
+  position, and correct the integration inventory: this is a standard
+  restriction, not a missing P1 feature. New source tests cover dynamic arrays
+  and queues with whole-element, bit and part targets; whole-value NBAs to
+  eligible static container variables remain separate.
