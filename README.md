@@ -236,7 +236,7 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,383 | 5,380, 2 skipped, 1 failed | — | — |
+| This repository's tests (CTest, dev configuration) | 5,383 | 5,381, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
