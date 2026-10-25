@@ -15,6 +15,7 @@
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
+#include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/pattern.h"
 #include "kirimasim/kernel/random.h"

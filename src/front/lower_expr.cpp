@@ -715,11 +715,11 @@ Val Lowerer::lowerTriggered(const ast::Expression& ev, Type rt, slang::SourceLoc
     // always_latch, always @*, a continuous assignment, and the functions
     // they may call) would not see it.
     const bool implicit =
-        b_.isSub
-            ? design().subroutine(b_.sub).kind == sir::SubroutineKind::Function
-            : proc().kind == sir::ProcessKind::Comb || proc().kind == sir::ProcessKind::Latch ||
-                  proc().kind == sir::ProcessKind::CombAt || proc().kind == sir::ProcessKind::Cont;
+        !b_.isSub &&
+        (proc().kind == sir::ProcessKind::Comb || proc().kind == sir::ProcessKind::Latch ||
+         proc().kind == sir::ProcessKind::CombAt || proc().kind == sir::ProcessKind::Cont);
     if (implicit) unsupported(sl, "triggered in a function or under an implicit sensitivity");
+    if (b_.isSub) triggeredReaders_.insert(b_.sub);
     const Operand o = eventOperand(ev, sl);
     const Val h = emit(Op::Load, Type{sir::TypeKind::Event, 0}, {o}, sl);
     return coerce(emit(Op::Builtin, sir::u2(1), {Operand::str("triggered"), h.op}, sl), rt, sl);

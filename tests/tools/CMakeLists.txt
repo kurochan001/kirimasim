@@ -586,3 +586,12 @@ add_test(NAME tools/automatic_capture_metadata
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_automatic_capture_metadata.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/automatic_capture_metadata PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_event_triggered_epoch_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_event_triggered_epoch_matrix.py --check)
+set_tests_properties(tools/gen_event_triggered_epoch_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/event_triggered_function_boundary
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_event_triggered_function_boundary.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/event_triggered_function_boundary PROPERTIES LABELS Tools)

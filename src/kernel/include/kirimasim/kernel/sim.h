@@ -30,6 +30,7 @@
 #include "kirimasim/kernel/counters.h"
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
+#include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/store.h"
 
 namespace kirimasim::kernel {
@@ -107,8 +108,6 @@ enum class Status : std::uint8_t {
 
 struct ProcessTag;
 using ProcessId = Id<ProcessTag>;
-struct EventTag;
-using EventId = Id<EventTag>;
 struct ProgramTag;
 using ProgramId = Id<ProgramTag>;
 
@@ -310,6 +309,9 @@ public:
     void start(ProcessId p);
     /// Creates a named event object.
     EventId addEvent();
+    /// Object allocator/resetter for the Context's managed-event registry.
+    /// Its runtime users must pin objects until subscriptions/updates detach.
+    ManagedEventBackend managedEventBackend() noexcept;
     /// Ends a process that is not running now (kill, disable, disable
     /// fork): it is never resumed again. Ending a finished process does
     /// nothing.
@@ -606,6 +608,7 @@ private:
         std::uint32_t waiterLimit = 0;  ///< Sizes that start a sweep (pushSwept).
         std::uint32_t monitorLimit = 0;
         std::uint64_t triggeredAt = UINT64_MAX;
+        bool wasTriggered = false;
     };
     /// An NBA update. Without a delay, the value lives in the time slot's
     /// arena, freed all at once when the slot ends; with a delay, in the

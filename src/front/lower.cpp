@@ -952,6 +952,9 @@ void Lowerer::finishDesign() {
                     heapRead = true;
             }
         if (heapRead) report(at, "implicit sensitivity to dynamic container values");
+        if (std::ranges::any_of(called,
+                                [&](const auto sub) { return triggeredReaders_.contains(sub); }))
+            report(at, "implicit sensitivity to named-event triggered values");
     }
 }
 

@@ -900,6 +900,8 @@ private:
     /// ($return) come after them (SIR_SPEC.md 8).
     std::map<sir::SubroutineId, std::vector<std::pair<std::uint32_t, std::uint32_t>>> argParams_;
     std::map<sir::SubroutineId, std::vector<sir::SlotRange>> subReads_;
+    /// Event-object reads need named-event sensitivity, not slot changes.
+    std::set<sir::SubroutineId> triggeredReaders_;
     /// The subroutines each body calls, by process and by subroutine.
     struct Calls {
         std::map<sir::ProcessId, std::vector<sir::SubroutineId>> byProcess;

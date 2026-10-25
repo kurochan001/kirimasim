@@ -3460,7 +3460,9 @@ private:
             return g != sir::kNone && seen[bodyOf(g).index()];
         };
         std::erase_if(deps.reads, [&](const sir::SlotRange& r) { return called(r.slot); });
-        std::erase_if(deps.events, called);
+        // Event objects keep their identity across calls. A function-local
+        // static event can trigger an explicit guard even though its value
+        // slot is excluded from ordinary called-frame sensitivity.
         for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
             if (sir::isContainer(d_.slots[i].type) && called(sir::SlotId{i}))
                 deps.privateContainers.push_back(sir::SlotId{i});
