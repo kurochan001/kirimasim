@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
@@ -199,7 +200,8 @@ const char* regionName(Region r) {
 // --- Setup -------------------------------------------------------------------
 
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
-    : ctx_(ctx), store_(store), counters_(counters), lateChanges_(ctx.heap().memoryResource()),
+    : ctx_(ctx), store_(store), counters_(counters),
+      pendingEventValues_(ctx.heap().memoryResource()), lateChanges_(ctx.heap().memoryResource()),
       monitor_(ctx.heap().memoryResource()) {}
 
 void Scheduler::begin() {
@@ -229,22 +231,27 @@ void Scheduler::begin() {
 ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     begin();
     ProcessId id{0};
-    Process proc;
     if (freeProcesses_.empty()) {
         id = static_cast<ProcessId>(processes_.size());
-        processes_.emplace_back();
+        processes_.emplace_back(ctx_.heap().memoryResource());
     } else {
         // The wait numbers go on from the released process's, so that its
         // stale wake-ups never match (SCHEDULER_SPEC.md 10.8).
         id = freeProcesses_.back();
         freeProcesses_.pop_back();
-        proc.gen = processes_[id.index()].gen + 1;
+        auto& old = processes_[id.index()];
+        const auto generation = old.gen + 1;
+        // Reconstruct with the Context allocator instead of moving a PMR
+        // vector through allocator-dependent assignment.
+        std::destroy_at(&old);
+        std::construct_at(&old, ctx_.heap().memoryResource());
+        old.gen = generation;
     }
+    auto& proc = processes_[id.index()];
     proc.fn = fn;
     proc.frame = frame;
     proc.group = group;
     proc.serial = nextSerial_++;
-    processes_[id.index()] = std::move(proc);
     counters_.increment(cCreated_);
     if (++kept_ > counters_.value(cKeptPeak_)) counters_.set(cKeptPeak_, kept_);
     return id;
@@ -363,7 +370,9 @@ ManagedEventBackend Scheduler::managedEventBackend() noexcept {
                 if (scheduler.events_.size() >= kNone)
                     return {kNone, ManagedEventError::ResourceLimit};
                 try {
-                    return {scheduler.addEvent()};
+                    const auto event = scheduler.addEvent();
+                    scheduler.events_[event.index()].managed = true;
+                    return {event};
                 } catch (const std::bad_alloc&) {
                     return {kNone, ManagedEventError::ResourceLimit};
                 } catch (const std::length_error&) {
@@ -582,10 +591,12 @@ void Scheduler::freeMonitor(ProcessId p) {
         m.activationParts.clear();
         m.activationLeases.clear();
         m.serial = ++monitorSerial_;  // references from slots and events go stale
+        m.eventBindings.clear();
         m.spec = {};
         freeMonitors_.push_back(id);
     }
     proc.monitors.clear();
+    proc.eventPins.clear();
 }
 
 void Scheduler::wake(ProcessId p, bool flushPoint) {
@@ -689,6 +700,7 @@ EndReason Scheduler::run() {
         if (!anyEvents(Region::Preponed, Region::Postponed) && !advance()) break;
         runSlot();
     }
+    if (ending_) cancelManagedEventOperations();
     counters_.set(cEndTime_, time_);
     counters_.setText(cEndReason_, endReasonName(reason()));
     return reason();
@@ -943,6 +955,7 @@ void Scheduler::execute(const Event& e) {
             return;
         }
         case Kind::TriggerNb: trigger(EventId{e.id}); return;
+        case Kind::TriggerValue: deliverEventValue(e); return;
         case Kind::Postponed: {
             if (e.gen == 0) {
                 runPostponed(ProcessId{e.id});
@@ -1011,10 +1024,17 @@ void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) { waitAny(p, {}, 
 void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
                         std::span<const MonitorSpec> monitors,
                         std::span<const NamedWaitItem> named) {
+    registerWait(p, items, monitors, named, nullptr);
+}
+
+void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
+                             std::span<const MonitorSpec> monitors,
+                             std::span<const NamedWaitItem> named, std::uint64_t* registered) {
     flushHeapChanges();
     ensureSlotTables();
     freeMonitor(p);
     const std::uint64_t gen = ++processes_[p.index()].gen;
+    if (registered != nullptr) *registered = gen;
     for (const WaitItem& item : items) {
         const SlotId s = item.part.slot;
         pushSwept(
@@ -1024,7 +1044,7 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
     }
     for (const NamedWaitItem& item : named)
         pushSwept(events_[item.event.index()].waiters, events_[item.event.index()].waiterLimit,
-                  Waiter{p, gen, true, item.guard, item.guardFrame},
+                  Waiter{p, gen, item.flushPoint, item.guard, item.guardFrame},
                   [&](const Waiter& w) { return processes_[w.process.index()].gen != w.gen; });
     // The monitors' first evaluation may write or trigger: announced once
     // the whole wait is registered.
@@ -1035,6 +1055,7 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
 }
 
 void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
+    usedEventValues_ = usedEventValues_ || m.captureEvents || !m.eventValues.empty();
     std::uint32_t id = 0;
     if (!freeMonitors_.empty()) {
         id = freeMonitors_.back();
@@ -1068,9 +1089,13 @@ void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
             pushSwept(list, slotMonitorLimit_[part.slot.index()], ref,
                       [&](const MonitorRef& r) { return !live(r); });
     }
-    for (const EventId e : m.events)
-        pushSwept(events_[e.index()].monitors, events_[e.index()].monitorLimit, ref,
-                  [&](const MonitorRef& r) { return !live(r); });
+    for (const EventId e : m.events) {
+        if (m.captureEvents || !m.eventValues.empty())
+            attachEventMonitor(e, ref);
+        else
+            pushSwept(events_[e.index()].monitors, events_[e.index()].monitorLimit, ref,
+                      [&](const MonitorRef& r) { return !live(r); });
+    }
 }
 
 void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
@@ -1277,6 +1302,11 @@ void Scheduler::endWalk() {
     draining_ = true;
     for (std::size_t i = 0; i < lateChanges_.size() && !ending_; ++i) {  // grows while announcing
         LateChange c = std::move(lateChanges_[i]);
+        if (c.canceled) continue;
+        if (c.eventPin.token().bits != 0 && !c.eventPin) {
+            fail("invalid managed event in a deferred notification");
+            break;
+        }
         if (c.heap) {
             if (live(c.monitor)) {
                 beginWalk();
@@ -1500,7 +1530,7 @@ void Scheduler::flushHeapChanges() noexcept {
     }
 }
 
-bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out) {
+bool Scheduler::evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out) {
     const auto serial = monitors_[id].serial;
     const EvalFn eval = monitors_[id].spec.eval;
     void* const frame = monitors_[id].spec.frame;
@@ -1741,14 +1771,15 @@ void Scheduler::trigger(EventId e) {
     const auto mons = events_[e.index()].monitors;
     std::vector<MonitorRef> keep;
     for (const MonitorRef ref : mons) {
-        if (!live(ref)) continue;
+        if (!observesEvent(ref, e)) continue;
         keep.push_back(ref);
         evaluateMonitor(ref.id);
     }
     for (const MonitorRef ref : events_[e.index()].monitors)  // added while evaluating
-        if (live(ref) && std::find_if(keep.begin(), keep.end(), [&](const MonitorRef& k) {
-                             return k.id == ref.id && k.serial == ref.serial;
-                         }) == keep.end())
+        if (observesEvent(ref, e) &&
+            std::find_if(keep.begin(), keep.end(), [&](const MonitorRef& k) {
+                return k.id == ref.id && k.serial == ref.serial;
+            }) == keep.end())
             keep.push_back(ref);
     events_[e.index()].monitors = std::move(keep);
     endWalk();
