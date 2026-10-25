@@ -5,6 +5,7 @@
 #include "kirimasim/kernel/sim.h"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <new>
 #include <stdexcept>
@@ -47,12 +48,22 @@ ManagedEventError Scheduler::waitAnyValues(ProcessId p, std::span<const WaitItem
                                            std::span<const NamedValueWaitItem> named) noexcept {
     if (p.index() >= processes_.size() || processes_[p.index()].done)
         return ManagedEventError::InvalidToken;
-    std::pmr::vector<NamedWaitItem> resolved(ctx_.heap().memoryResource());
+    std::array<NamedWaitItem, 4> local;
+    std::span<NamedWaitItem> resolved;
+    std::pmr::vector<NamedWaitItem> overflow(ctx_.heap().memoryResource());
     std::pmr::vector<ManagedEventPin> pins(ctx_.heap().memoryResource());
     std::pmr::vector<ManagedEventPin> monitorPins(ctx_.heap().memoryResource());
     try {
-        resolved.reserve(named.size());
-        pins.reserve(named.size());
+        if (named.size() <= local.size()) {
+            resolved = std::span(local).first(named.size());
+        } else {
+            overflow.resize(named.size());
+            resolved = overflow;
+        }
+        const auto managed = std::count_if(named.begin(), named.end(), [](const auto& item) {
+            return (item.value.bits >> 32) != 0;
+        });
+        pins.reserve(static_cast<std::size_t>(managed));
         for (const auto& monitor : monitors)
             for (const auto value : monitor.eventValues) {
                 if (value.bits == 0) continue;
@@ -61,10 +72,11 @@ ManagedEventError Scheduler::waitAnyValues(ProcessId p, std::span<const WaitItem
                 if (bound.value.pin.token().bits != 0)
                     monitorPins.push_back(std::move(bound.value.pin));
             }
-        for (const auto& item : named) {
+        for (std::size_t i = 0; i < named.size(); ++i) {
+            const auto& item = named[i];
             auto bound = bindEventValue(item.value);
             if (!bound) return bound.error;
-            resolved.push_back({bound.value.event, item.guard, item.guardFrame, item.flushPoint});
+            resolved[i] = {bound.value.event, item.guard, item.guardFrame, item.flushPoint};
             const auto token = bound.value.pin.token();
             if (token.bits != 0 && std::none_of(pins.begin(), pins.end(), [&](const auto& pin) {
                     return pin.token() == token;

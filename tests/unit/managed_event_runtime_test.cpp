@@ -1002,4 +1002,31 @@ TEST(ManagedEventRuntime, UnrepresentableDelaysDoNotScheduleNullOrRetainTargets)
     EXPECT_EQ(count(context.counters(), "sched.events.nba"), 0U);
     EXPECT_EQ(count(context.counters(), "sched.events.re_nba"), 0U);
 }
+TEST(ManagedEventRuntime, InlineNamedWaitStagingPreservesValidationAndOldWaitsOnFailure) {
+    for (const unsigned size : {1U, 4U, 5U}) {
+        Memory memory;
+        k::Context context({nullptr, nullptr}, nullptr, &memory);
+        auto& scheduler = context.scheduler();
+        Receiver receiver;
+        receiver.add(context);
+        std::vector<k::NamedValueWaitItem> items;
+        items.reserve(size);
+        for (unsigned i = 0; i < size; ++i)
+            items.push_back({Value::legacy(scheduler.addEvent())});
+        ASSERT_EQ(scheduler.waitAnyValues(receiver.process, {}, {}, items), Error::None);
+        memory.remaining = 0;
+        EXPECT_EQ(scheduler.waitAnyValues(receiver.process, {}, {}, items),
+                  size <= 4 ? Error::None : Error::ResourceLimit);
+        memory.remaining = -1;
+        auto invalid = items;
+        invalid.back().value = {};
+        EXPECT_EQ(scheduler.waitAnyValues(receiver.process, {}, {}, invalid), Error::Null);
+        invalid.back().value = {UINT64_MAX};
+        EXPECT_EQ(scheduler.waitAnyValues(receiver.process, {}, {}, invalid), Error::InvalidToken);
+        ASSERT_EQ(scheduler.triggerValue(items.back().value), Error::None);
+        ASSERT_EQ(scheduler.run(), k::EndReason::Quiescent);
+        EXPECT_EQ(receiver.wakes, 1U);
+    }
+}
+
 }  // namespace
