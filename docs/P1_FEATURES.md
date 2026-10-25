@@ -64,8 +64,10 @@ cover the behavior; automatic variables captured by children remain unsupported.
 Three-state gates retain their one-sided L/H strength masks on wide resolved
 nets. Both mask halves can cross word boundaries. See the
 [73-case reference comparison and limits](notes/wide-gate-strength.md).
-Delayed three-state outputs on resolved nets still require the pending
-[side-timing amendment](notes/delayed-gate-side-proposal.md).
+Delayed three-state outputs on resolved nets now propagate value and both side
+fields as one complete state under the approved
+[side-timing amendment](notes/delayed-gate-side-proposal.md); see the
+[implementation](notes/delayed-gate-state-execution.md).
 
 ```systemverilog
 module top;
@@ -183,8 +185,10 @@ endmodule
 ```
 
 See the [verification record and limits](notes/pattern-sir-execution.md).
-Source `%p` remains unsupported; heap-backed file-monitor combinations still
-need dedicated verification.
+Source `%p` remains unsupported. Heap-backed file-monitor combinations are
+checked by [20 original source cases](notes/heap-file-monitor-lifetime.md)
+(2026-10-25); callback-driven reentrant registration/reallocation and other
+source contexts still need broader evidence.
 
 ## Dynamic arrays and queues
 
@@ -369,9 +373,8 @@ positions, and concatenations of those targets. The right value, target
 and delay are captured when issued; later changes do not redirect the
 update. Only valid bits of a partial selection are scheduled. Updates use
 the issuing thread's NBA/Re-NBA set and survive its task/fork returning.
-Automatic targets remain illegal; event-controlled NBAs, blocking whole-array
-timing and delayed targets through refs or string characters remain
-unsupported.
+Automatic targets remain illegal; event-controlled NBAs and delayed targets
+through refs or string characters remain unsupported.
 
 ```systemverilog
 `timescale 1ns/1ns

@@ -23,8 +23,9 @@ additional conversion mutation checks have been caught by actual tests.
 
 Typed SIR descriptors, receiver references, instructions, verification and
 text are also implemented (SIR_SPEC 5.8). The approved SystemVerilog contract
-below is only partly implemented. The VM now executes its 16 instructions in
-24 original SIR tests, preserving actual-bound variable refs and detached cell
+below is only partly implemented. The VM now executes its 17 instructions (16 at
+the 2026-10-23 foundation, plus `container.swap.values` since 2026-10-25) in
+25 original SIR tests, preserving actual-bound variable refs and detached cell
 refs across calls/waits. Typed slots, live activations, cell refs, deferred
 arguments and owned scheduler values are roots for automatic region/slot-boundary
 collection (RUNTIME_ABI 6). Class/DPI/VPI roots are not implemented.

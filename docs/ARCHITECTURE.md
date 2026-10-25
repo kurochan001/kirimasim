@@ -52,7 +52,7 @@ ABI 1.0 is the P2 exit target, not an implemented version.
 
 ## Three execution tiers, one kernel
 
-As of 2026-10-24, tier 1 and the shared kernel implement the subset listed
+As of 2026-10-25, tier 1 and the shared kernel implement the subset listed
 in [P1_SUPPORT](P1_SUPPORT.md). The full P1 coverage target is unfinished.
 Tier 2 is planned for P3; tier 3 comes later. The table and shared execution
 contract below describe the full design, including those future tiers.
@@ -155,8 +155,11 @@ argument bridge remains unfinished, so source `%p` stays unsupported.
 
 The scheduler captures heap dependencies during the actual Postponed monitor
 body and observes cell changes. Dependencies are weak and detach with the
-registration's lifetime. Kernel/VM file-monitor wiring is present, while new
-heap-backed file-monitor combinations still need dedicated verification.
+registration's lifetime. Kernel/VM file-monitor wiring is present, and
+heap-backed file-monitor combinations are checked by the
+[20 original source cases](notes/heap-file-monitor-lifetime.md) of 2026-10-25.
+Callback-driven reentrant registration/reallocation and other source contexts
+still need broader evidence.
 See the [implementation and verification scope](notes/pattern-sir-execution.md).
 
 ## Assignment capture and suspension
@@ -191,8 +194,9 @@ slang compilation boundary.
 lifetime path before executable children are created. Static storage is shared;
 uncaptured automatic declarations initialize in the parent frame. Declarations
 are not processes, and a declaration-only fork emits no wait. This adds no
-kernel API or SIR instruction. Automatic storage captured by children still
-needs the shared activation/lifetime contract.
+kernel API or SIR instruction. Automatic storage captured by children follows
+the approved [activation contract](notes/automatic-capture-proposal.md)
+(2026-10-25); source lowering does not yet enable such capture.
 
 ## Strength intervals before value projection
 
@@ -220,7 +224,9 @@ the remaining network model needs full strength transport, internal strength-onl
 dependencies and physical driver ownership across cycles. Directed MOS feedback
 and passive bidirectional paths have distinct observations; port identity also
 differs from a strength-reducing channel. Force, wired-net combinations and
-delayed startup still require reviewed contracts before implementation.
+delayed startup now have the approved
+[MOS/switch contract](notes/mos-switch-proposal.md) (2026-10-25); their
+implementation remains work.
 
 ## Libraries
 

@@ -11,7 +11,9 @@ no existing test expectation.
 **Inventory follow-up (2026-10-25):** the tables below retain their original
 2026-10-24 snapshot. The approved [runtime array-method implementation](runtime-array-methods.md)
 adds `ContainerSwapValues` / `container.swap.values` and `Heap::swapValues`
-(SIR_SPEC 5.8, RUNTIME_ABI 6). The current enum has 125 entries. Refresh the
+(SIR_SPEC 5.8, RUNTIME_ABI 6). The current enum has 127 entries:
+`container.swap.values`, `activation.enter` and `activation.leave` were added
+after the 124-entry snapshot. Refresh the
 full Op/API inventory before the P2 schema or ABI freeze; formatVersion remains
 0 and C ABI remains 0.3. This follow-up does not approve the detailed v1 draft.
 
@@ -74,9 +76,10 @@ of analysis side tables. Do not implement C++ generation, JIT, X analysis,
 static-island discovery or new language features in P2 merely to complete
 this contract. P1's Icarus-required scope remains P1, including its pending
 classes, dynamic data, program and VPI work; the boundary must cover the
-**completed** P1, not only today's 124 opcodes. No P1 gate or existing expected
-result is relaxed. Tier 1 continues to call the kernel's C++ API directly;
-public headers and generated code remain C++20, without exceptions or RTTI.
+**completed** P1, not only the 124 opcodes of the Appendix A snapshot. No P1
+gate or existing expected result is relaxed. Tier 1 continues to call the
+kernel's C++ API directly; public headers and generated code remain C++20,
+without exceptions or RTTI.
 
 Basis: [SIR_SPEC 1, 5.1, 7.2, 7.4, 9–11](../spec/SIR_SPEC.md),
 [RUNTIME_ABI 2–4, 6, 8](../spec/RUNTIME_ABI.md),
@@ -305,7 +308,7 @@ Every bullet of SIR_SPEC 11 and RUNTIME_ABI 8 is accounted for below. A
 | ABI 8 temporaries/shared frames | Required: no SSA across waits; explicit captured frame variables, local scratch | Tier migration can wait for P3 decision |
 | ABI 8 Windows boundary | Decide exact C widths/calling convention/loader ownership, run minimal MSVC C++20 fixture before enabling Windows AOT | Full Windows AOT toolchain/performance validation in P3; ability to load is **not confirmed** until tested |
 | ABI 8 class/mailbox/weak GC, fibers/DPI tasks | P1-required class roots/lifetimes and parent-frame retention; hooks extensible | Broader weak references/mailboxes/fibers/DPI task extension in P4 |
-| ABI 8 parent frames retained by children | Decide activation ownership/layout/root interface now, even while P1's capture proposal awaits approval | No postponement if P1 needs captures |
+| ABI 8 parent frames retained by children | Decide activation ownership/layout/root interface now; P1's capture proposal was approved on 2026-10-25, and its implementation is not complete | No postponement if P1 needs captures |
 | ABI 8 finish in DPI export / argument lifetime | Encode generic end/status and borrowed-buffer lifetime rules now | DPI-specific exports, svLogicVecVal/open arrays in P4 unless required by P1 |
 | ABI 8 parallel static islands | Record side-effect summaries and serial reference semantics | Scheduling/thread partition algorithms and parallel execution in P5 |
 
@@ -487,7 +490,8 @@ compatible descriptor/version checks, but is not a P2 execution requirement.
 but the former needs target-specific packing and more proof; the latter makes a
 VM storage choice an enduring interface. Benchmark the conservative layout
 before approval/freeze, with PERFORMANCE criteria. **Affected:** SIR 3/4/5.1/7.4/8/11,
-ABI 3/4.3/6/8, automatic-capture and class-runtime proposals (still unapproved).
+ABI 3/4.3/6/8, automatic-capture and class-runtime proposals (approved on
+2026-10-25; implementation not complete).
 
 ### D4. Complete C boundary; preserve tier 1's direct C++ path
 
@@ -607,7 +611,8 @@ every baseline and never call a partial current inventory “P2 complete”.
 Option B was selected by the user on 2026-10-24. The approval covers this
 sequence and the P2 freeze deadline; the detailed contracts still identified
 as pending require review before their implementation.
-**Affected:** SIR 1/9/11 (current P1 grammar deadline), ABI 8, P1_SCOPE, README.
+**Affected:** SIR 1/9/11 (former P1 grammar deadline, moved to P2 on 2026-10-24),
+ABI 8, P1_SCOPE, README.
 
 ## 4. Milestones and exit criteria
 
@@ -667,8 +672,8 @@ for hiding startup costs; compact-frame alternatives require measured evidence.
   insufficient. A textual fixed point alone does not prove semantic equality;
   verify metadata and execution/VCD as well.
 - Current VM ref tags cannot be made public by accident. Activation capture and
-  class runtime proposals are still pending; their final semantic/layout choices
-  are **not confirmed**. Check human approval and completed P1 implementations
+  class runtime proposals were approved on 2026-10-25, but their implementation
+  is not complete; their final semantic/layout choices are **not confirmed**. Check human approval and completed P1 implementations
   before sizing tokens or listing them as supported.
 - Moving diagnostics/GC/cancellation can change event order, report lifetime,
   seeds, out/ref copy-out or PerfCount. Preserve scheduling matrices and inspect

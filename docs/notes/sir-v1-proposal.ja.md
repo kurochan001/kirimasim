@@ -9,7 +9,8 @@ detailed contract pending review**。英語版が正本です。2026-10-24の提
 **棚卸しの追記（2026-10-25）：**下の表は2026-10-24の時点の記録として保ちます。
 承認済みの[配列メソッドの実装](runtime-array-methods.ja.md)で、`ContainerSwapValues` /
 `container.swap.values`と`Heap::swapValues`を追加しました（SIR_SPEC 5.8、RUNTIME_ABI 6）。
-現在のenumは125項目です。P2のschema・ABIを凍結する前に、Op/API全件の棚卸しを更新します。
+現在のenumは127項目です。124項目の記録の後に`container.swap.values`・`activation.enter`・
+`activation.leave`を追加しました。P2のschema・ABIを凍結する前に、Op/API全件の棚卸しを更新します。
 formatVersionは0、C ABIは0.3のままで、この追記でv1の詳細案を承認した扱いにはしません。
 
 承認済みの[遅延sideの実装](delayed-gate-state-execution.ja.md)では、`drive.delay`に任意の
@@ -55,8 +56,8 @@ tier 3（JIT）を、tier 1と同じSIRとカーネルから作れる状態に�
 ヘルパー、解析結果の別表の形式を対象にします。C++生成・JIT・X解析・static islandの
 発見アルゴリズムは作りません。契約を完成させる名目で新しい言語機能をP2へ移しません。
 Icarus対応に必要なクラス・動的データ・program・VPIなどは、引き続きP1の仕事です。
-境界は**完了時のP1全体**を対象にし、現在の124命令だけで凍結しません。既存のP1条件と
-期待値は緩めません。tier 1はカーネルのC++ APIを直接呼び続けます。公開ヘッダと
+境界は**完了時のP1全体**を対象にし、付録Aの記録時点の124命令だけで凍結しません。
+既存のP1条件と期待値は緩めません。tier 1はカーネルのC++ APIを直接呼び続けます。公開ヘッダと
 生成コードのC++20、生成コードの例外・RTTI不使用も保ちます。
 
 根拠：[SIR_SPEC 1・5.1・7.2・7.4・9〜11](../spec/SIR_SPEC.ja.md)、
@@ -258,7 +259,7 @@ P4以降にできるのはP1で必要な範囲の外だけです。
 | ABI 8 一時値/共有frame | SSAは待ちをまたがず、捕捉FrameVarとscratchを分離 | tier切替の実行採否はP3 |
 | ABI 8 Windows | C幅・calling convention・loader所有を決め、Windows AOT有効化前にMSVC C++20 fixture | 完全なWindows AOT toolchain/性能検査はP3。load実行は検査まで **not confirmed** |
 | ABI 8 class/mailbox/weak GC/fiber/DPI task | P1に必要なclass root/寿命・親frame保持、拡張可能なhook | P1外のweak/mailbox/fiber/DPI taskはP4 |
-| ABI 8 子が使う親frame保持 | capture案の承認待ちでも、activation所有/layout/rootの口を決める | P1に必要なら延期しない |
+| ABI 8 子が使う親frame保持 | activation所有/layout/rootの口を今決める。capture案は2026-10-25に承認済みで、実装は未完了 | P1に必要なら延期しない |
 | ABI 8 DPI exportのfinish/引数寿命 | 一般の終了/status/借用buffer寿命は今決める | DPI特有のexport/svLogicVecVal/open arrayは、P1に不要な部分はP4 |
 | ABI 8 並列static island | 副作用要約と逐次参照意味を記録 | thread分割/並列実行はP5 |
 
@@ -396,7 +397,7 @@ frontが明示FrameVarにします。NBAや遅延呼び出しは自分の捕捉�
 **代案：** ドメイン別に詰める、または現VMの「scalarを先、配列を後」のW4 vector配置
 （660〜680行）を採用します。前者は対象別packingの検証が増え、後者はVMの都合が永続的な
 境界になります。PERFORMANCEに沿って保守案を測ってから凍結します。
-**影響：** SIR 3・4・5.1・7.4・8・11、ABI 3・4.3・6・8、未承認のautomatic-capture/class-runtime案。
+**影響：** SIR 3・4・5.1・7.4・8・11、ABI 3・4.3・6・8、automatic-capture/class-runtime案（2026-10-25に承認済み、実装は未完了）。
 
 ### D4. C境界を揃え、tier 1のC++直接呼び出しは保つ
 
@@ -483,7 +484,7 @@ P1完了・残る意味修正の人の承認・全gate達成後にだけ凍結�
 
 2026-10-24に人がB案を選びました。進め方とP2での凍結期限は承認済みです。
 未確定と記した詳細契約は、実装前に後続レビューを行います。
-**影響：** SIR 1・9・11のP1中の文法期限、ABI 8、P1_SCOPE、README。
+**影響：** SIR 1・9・11の旧P1中の文法期限（2026-10-24にP2へ移動）、ABI 8、P1_SCOPE、README。
 
 ## 4. マイルストーンと完了条件
 
@@ -524,8 +525,8 @@ PerfCount期待値と10%の回帰検査を保ち、期待値変更は別の承�
 - P1未完了のためOp・object/ABI・layoutが増えます。P1完了時に更新し、最終gateまで0を保ちます。
 - dump表省略・定数inlineのため、今のdumpだけを読む実装では不十分です。文字列の固定点だけで
   意味の一致を証明せず、metadata・実行・VCDも検査します。
-- VMのref tagを偶然公開しません。automatic captureとclass runtimeの案は承認待ちで、
-  最終の意味・layoutは **not confirmed** です。承認とP1実装を確認してからtokenを凍結します。
+- VMのref tagを偶然公開しません。automatic captureとclass runtimeの案は2026-10-25に承認済みですが、
+  実装は未完了で、最終の意味・layoutは **not confirmed** です。承認とP1実装を確認してからtokenを凍結します。
 - 診断・GC・cancelの移動で順序、報告の寿命、seed、out/ref、PerfCountが変わりえます。
   既存の行列を保ち、食い違いは期待値変更より先に調べます。
 - 全real bitとWindows ABIの実行は **not confirmed** で、bit-pattern/MSVC fixtureで確認します。

@@ -210,12 +210,13 @@ branching aggregates, 2,500 nested levels and allocation failure at every
 stage of ten copy/mutation/snapshot paths. Six additional conversion mutations
 were caught by actual heap assertions, and the restored baseline passes.
 
-Typed container descriptors, receiver refs, 16 SIR operations, verifier and
-text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container-encoding-approved-contract-of-2026-10-23)).
+Typed container descriptors, receiver refs, 17 SIR operations (16 at the
+2026-10-23 foundation, plus `container.swap.values` since 2026-10-25), verifier
+and text support are implemented ([SIR_SPEC 5.8](spec/SIR_SPEC.md#58-typed-container-encoding-approved-contract-of-2026-10-23)).
 Ten new SIR tests cover 96 positive type/bound combinations, 49 malformed
 cases, argument bindings and fixed arrays of container receivers.
-The VM now dispatches all 16 instructions to the shared heap. Its
-[24 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
+The VM now dispatches all 17 instructions to the shared heap. Its
+[25 independent SIR tests](../tests/unit/vm_container_test.cpp) cover 216
 element/bound/storage combinations, 72 ref-call combinations, selected fixed
 arrays, detached cells across task waits, packed writes against `valsem`,
 argument side effects, invalid indices, method warning positions and errors.

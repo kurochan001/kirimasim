@@ -60,8 +60,9 @@ static記憶域は共有し、捕捉のないautomatic宣言は入るたびに�
 
 広い解決対象ネットでも、三状態ゲートの片側のL/H強さマスクを保持します。
 両半分が語の途中に来る場合にも対応します。[独自73件の参照比較と制限](notes/wide-gate-strength.ja.md)を
-参照してください。解決対象ネットの遅延付き三状態出力は、承認待ちの
-[sideの遅延案](notes/delayed-gate-side-proposal.ja.md)が必要です。
+参照してください。解決対象ネットの遅延付き三状態出力は、承認済みの
+[sideの遅延案](notes/delayed-gate-side-proposal.ja.md)に従い、値と両方のside欄を一つの状態として伝えます。
+[実装](notes/delayed-gate-state-execution.ja.md)を参照してください。
 
 ```systemverilog
 module top;
@@ -177,7 +178,9 @@ endmodule
 ```
 
 [検証記録と制限](notes/pattern-sir-execution.ja.md)を参照してください。
-ソース`%p`は引き続き未対応で、heapを使うfile monitorの組み合わせにも検証が残ります。
+ソース`%p`は引き続き未対応です。heapを使うfile monitorの組み合わせは、
+[独自ソース20件](notes/heap-file-monitor-lifetime.ja.md)（2026-10-25）で検査しました。
+コールバックからの再登録・再確保と、その他のソースの文脈には、より広い証拠が必要です。
 
 ## 動的配列とキュー
 
@@ -352,7 +355,7 @@ after 12 34
 対応しました。右辺・対象・遅延は発行時に確定し、その後に値や添字を変えても更新先は
 変わりません。部分的に有効な範囲は有効なビットだけ更新します。発行元のNBA・Re-NBAを
 使い、発行したtask・forkが戻っても更新を保持します。automaticな対象は禁止のままで、
-イベント制御付きNBA、配列全体のブロッキング代入内時間制御、refや文字列文字を通じた遅延付き更新は未対応です。
+イベント制御付きNBA、refや文字列文字を通じた遅延付き更新は未対応です。
 
 ```systemverilog
 `timescale 1ns/1ns
