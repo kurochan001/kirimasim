@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "09c10a5b38b4a5464ef7546bcd366e2c8ec22a02",
+  "controls": [
+    {
+      "name": "frame access: scoped writes bypass scheduler notification",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmFrameValue.WideCommitNotifiesWithTheCompleteValueBeforeReturning"
+      ],
+      "caught": true
+    },
+    {
+      "name": "frame access: ordinary wide writes keep only the low chunk",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmFrameValue.ExecutionUsesLogicalRowsForWideArraysReferencesAndScalarCopies",
+        "VmFrameValue.OrdinaryAndScopedSelectionsMatchAnIndependentBitModel"
+      ],
+      "caught": true
+    },
+    {
+      "name": "frame access: scoped writes use the first array element",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmFrameValue.OrdinaryAndScopedSelectionsMatchAnIndependentBitModel"
+      ],
+      "caught": true
+    },
+    {
+      "name": "frame access: readonly ordinary storage becomes writable",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmFrameValue.InvalidRangesBuffersAndReadonlyAccessAreNonmutating"
+      ],
+      "caught": true
+    },
+    {
+      "name": "frame access: ordinary selected reads start at bit zero",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmFrameValue.OrdinaryAndScopedSelectionsMatchAnIndependentBitModel"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: a ref a wait reads is looked up by its variable's number",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/ref_wait_layout_matrix"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: $fread puts the first byte least significant",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/proc/multidim_fread_down_automatic_four_129"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: a guard in a task reads the process's frame",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/ref_wait_layout_matrix"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: override.start waits on its triggers only after the first run",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/override_initial_generate_assign_var_four_call"
+      ],
+      "caught": true
+    }
+  ],
+  "baseline_build_exit": 0,
+  "baseline_tests_exit": 0,
+  "restored_build_exit": 0,
+  "restored_unit_exit": 0,
+  "all_caught": true,
+  "source_restored": true,
+  "initial_observations": [
+    {
+      "name": "frame access: scoped writes bypass scheduler notification",
+      "build_exit": 1,
+      "counted_as_runtime_detection": false,
+      "reason": "Unused scheduler private member triggered the warnings-as-errors build; corrected fault definition references the member without restoring notification."
+    },
+    {
+      "name": "vm: override.start waits on its triggers only after the first run",
+      "test_exit": 0,
+      "caught": false,
+      "scope": "Existing assign/force/override tests; exposed missing first-evaluation coverage. Added 36 independent generated source tests before retesting."
+    }
+  ],
+  "control_revisions": {
+    "initial_six_caught": "09c10a5b",
+    "notification_fault_correction": "b7b3b1cb",
+    "guard_lookup": "a826eaf8",
+    "override_first_evaluation": "9b30d6d2"
+  },
+  "new_controls": 5,
+  "relocated_existing_controls": 4,
+  "scope": "Compiled behavioral fault injection for VM access transport and preserved controls; no judging-tool self-check failures counted"
+}

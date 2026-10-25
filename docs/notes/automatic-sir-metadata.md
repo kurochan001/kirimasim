@@ -3,6 +3,10 @@
 [日本語](automatic-sir-metadata.ja.md). Status: representation/verifier
 checkpoint, 2026-10-25. VM and source integration remain work.
 
+Subsequent checkpoint: the [VM value-access migration](automatic-vm-frame-access.md)
+is implemented and validated. Resolving the new homes and constructing their
+owned environments and immutable references remain work before execution is enabled.
+
 ## Approved contract and boundaries
 
 This implements the representation/verification part of sections 1–3/7/8 of

@@ -3,6 +3,9 @@
 [English](automatic-sir-metadata.md)。Status: 表現と検証器の実装段階、2026-10-25。
 VM・ソースへの接続は残作業です。
 
+後続の[VM値アクセスの移行](automatic-vm-frame-access.ja.md)は実装・検証しました。
+新しいhomeの解決と、所有する環境・不変のrefの構築は、実行を有効にする前の残作業です。
+
 ## 承認済み契約と境界
 
 承認済み[automatic捕捉の契約](automatic-capture-proposal.ja.md)の1–3/7/8節のうち

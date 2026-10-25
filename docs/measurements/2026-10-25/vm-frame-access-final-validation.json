@@ -1,0 +1,403 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "9b30d6d22c8455e9c3a754f4cc22cd99906a2ecd",
+  "platform": "macOS arm64",
+  "scope": "VM frame/reference/file/scan/argument access transport; new SIR homes and source capture remain gated",
+  "code_worktree_clean": true,
+  "source_sha256": {
+    "src/vm/vm.cpp": "1f9dbbf84cabcbbf883a90192b5b3a91bd3e1c005ef614dfe7626e34ba93fcac",
+    "src/vm/frame_value.h": "aa3c2b596773d633bacb81573c3282275b9d3125d7cc9bf35766a89783145663",
+    "tests/unit/vm_frame_value_test.cpp": "b724176af5c8f877ac9f3ccfb4a072c4135ce5e84f14748af3a97b1782c68353",
+    "tools/mutants.py": "eb3c6149c99cf4474bec11f3d28e6f89d9eecac3f34ad8828fa1cc73ffb19c7d",
+    "tools/gen_override_initial_matrix.py": "fb13426aacffd360b462a796a9a74fe2033fdaf40c8a7a355e0c67e1a3a2d363"
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 0.8,
+      "validation_run": 2
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 0.1,
+      "validation_run": 2
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 57.4,
+      "validation_run": 2
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 0.9,
+      "validation_run": 2
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 0.1,
+      "validation_run": 2
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 51.4,
+      "validation_run": 2
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 0.9,
+      "validation_run": 1
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 17.2,
+      "validation_run": 1
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 90.5,
+      "validation_run": 1
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.8,
+      "validation_run": 1
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 16.8,
+      "validation_run": 1
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 75.1,
+      "validation_run": 1
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0,
+      "validation_run": 1
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.4,
+      "validation_run": 1
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1,
+      "validation_run": 1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1,
+      "validation_run": 1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2,
+      "validation_run": 1
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.2,
+      "detail": "(4 commit(s) not pushed)",
+      "validation_run": 1
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2,
+      "validation_run": 2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5,
+      "validation_run": 1
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 84.8,
+      "validation_run": 1
+    }
+  ],
+  "local_ci_runs": [
+    {
+      "presets": [
+        "dev",
+        "release",
+        "asan",
+        "ubsan"
+      ],
+      "lint": true,
+      "checks": [
+        {
+          "check": "dev: configure",
+          "status": "ok",
+          "seconds": 0.8
+        },
+        {
+          "check": "dev: build",
+          "status": "ok",
+          "seconds": 1.0
+        },
+        {
+          "check": "dev: test",
+          "status": "FAILED",
+          "seconds": 58.7,
+          "detail": "(see build/local-ci/dev-test.log)"
+        },
+        {
+          "check": "release: configure",
+          "status": "ok",
+          "seconds": 0.9
+        },
+        {
+          "check": "release: build",
+          "status": "ok",
+          "seconds": 12.3
+        },
+        {
+          "check": "release: test",
+          "status": "FAILED",
+          "seconds": 53.7,
+          "detail": "(see build/local-ci/release-test.log)"
+        },
+        {
+          "check": "asan: configure",
+          "status": "ok",
+          "seconds": 0.9
+        },
+        {
+          "check": "asan: build",
+          "status": "ok",
+          "seconds": 17.2
+        },
+        {
+          "check": "asan: test",
+          "status": "ok",
+          "seconds": 90.5
+        },
+        {
+          "check": "ubsan: configure",
+          "status": "ok",
+          "seconds": 0.8
+        },
+        {
+          "check": "ubsan: build",
+          "status": "ok",
+          "seconds": 16.8
+        },
+        {
+          "check": "ubsan: test",
+          "status": "ok",
+          "seconds": 75.1
+        },
+        {
+          "check": "check_release_flags",
+          "status": "ok",
+          "seconds": 0.0
+        },
+        {
+          "check": "check_banned",
+          "status": "ok",
+          "seconds": 0.4
+        },
+        {
+          "check": "check_spdx",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "check_suite_files",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "check_global_state",
+          "status": "ok",
+          "seconds": 0.2
+        },
+        {
+          "check": "check_expected_change",
+          "status": "ok",
+          "seconds": 0.2,
+          "detail": "(4 commit(s) not pushed)"
+        },
+        {
+          "check": "readme_counts",
+          "status": "ok",
+          "seconds": 0.2
+        },
+        {
+          "check": "clang-format",
+          "status": "ok",
+          "seconds": 0.5
+        },
+        {
+          "check": "clang-tidy",
+          "status": "ok",
+          "seconds": 84.8
+        }
+      ],
+      "result": "dev/release tests failed solely at tools/readme_counts; 36 sources and one generator had not yet been counted. ASan/UBSan and all static checks passed after generated counts were updated."
+    },
+    {
+      "presets": [
+        "dev",
+        "release"
+      ],
+      "lint": false,
+      "checks": [
+        {
+          "check": "dev: configure",
+          "status": "ok",
+          "seconds": 0.8
+        },
+        {
+          "check": "dev: build",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "dev: test",
+          "status": "ok",
+          "seconds": 57.4
+        },
+        {
+          "check": "release: configure",
+          "status": "ok",
+          "seconds": 0.9
+        },
+        {
+          "check": "release: build",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "release: test",
+          "status": "ok",
+          "seconds": 51.4
+        },
+        {
+          "check": "check_release_flags",
+          "status": "ok",
+          "seconds": 0.0
+        },
+        {
+          "check": "check_banned",
+          "status": "ok",
+          "seconds": 0.4
+        },
+        {
+          "check": "check_spdx",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "check_suite_files",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "check_global_state",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "check": "check_expected_change",
+          "status": "ok",
+          "seconds": 0.2,
+          "detail": "(4 commit(s) not pushed)"
+        },
+        {
+          "check": "readme_counts",
+          "status": "ok",
+          "seconds": 0.2
+        }
+      ],
+      "result": "all checks passed; generated pass counts updated from successful dev JUnit. Runtime source unchanged; full lint already passed in the first run."
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 4631,
+      "passed": 4629,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4632,
+      "passed": 4630,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4631,
+      "passed": 4629,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4631,
+      "passed": 4629,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_unit_tests": 7,
+  "independent_selection_cases": 270,
+  "complete_sir_cases": 24,
+  "new_generated_source_tests": 36,
+  "new_source_generator_tests": 1,
+  "compiled_behavioral_controls": 9,
+  "new_controls": 5,
+  "relocated_existing_controls": 4,
+  "negative_controls_record": "vm-frame-access-negative-controls.json",
+  "mutation_anchors": 568,
+  "population_record": "vm-frame-access-population.json",
+  "svtests_record": "vm-frame-access-svtests.json",
+  "probe_record": "icarus14-vm-frame-access-probes.json",
+  "focused_source_observations": "override-initial-observations.json",
+  "speed_record": "vm-frame-access-speed.json",
+  "existing_expectations_changed": false,
+  "sir_dumps": "all 29 unchanged and passing",
+  "perfcount_expectations": "unchanged and passing in all four configurations",
+  "format_version": 0,
+  "new_dependencies": false,
+  "source_capture_enabled": false,
+  "p1_complete": false,
+  "linux_remeasured": false,
+  "standard_four_speed_benchmarks_remeasured": false
+}

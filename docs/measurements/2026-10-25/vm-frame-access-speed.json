@@ -1,0 +1,304 @@
+{
+  "date": "2026-10-25",
+  "scope": "Focused automatic function, fixed wide-array and ref transport microbenchmark; not a replacement for standard simulation-speed comparisons",
+  "machine": {
+    "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "cores": 18,
+    "load_average": [
+      2.92,
+      6.14,
+      6.93
+    ],
+    "cpu": "Apple M5 Max",
+    "memory_gib": 128
+  },
+  "runs": 5,
+  "count": 200000,
+  "source": "// Original focused transport probe; SIR_SPEC 7/8, RUNTIME_ABI 4/6.\nmodule frame_access;\n  longint n;\n  longint sum;\n  function automatic void update(ref logic [128:0] value, input longint bits);\n    value[65 +: 64] = bits;\n  endfunction\n  function automatic longint step(input longint x);\n    logic [128:0] cells [1:0];\n    cells[0] = 129'(x);\n    cells[1] = 129'(x + 1);\n    update(cells[0], x ^ 32'h13579bdf);\n    return longint'(cells[0][65 +: 64]) + longint'(cells[1]);\n  endfunction\n  initial begin\n    if (!$value$plusargs(\"n=%d\", n)) n = 200000;\n    sum = 0;\n    for (longint i = 0; i < n; i++) sum += step(i);\n    $display(\"frame_access n=%0d sum=%0d\", n, sum);\n  end\nendmodule\n",
+  "versions": {
+    "before": "kirimasim 0.0.0 (commit 48b8c315c52d), built with AppleClang 21.0.0.21000334",
+    "after": "kirimasim 0.0.0 (commit 9b30d6d22c84), built with AppleClang 21.0.0.21000334"
+  },
+  "options": [
+    "--top",
+    "frame_access",
+    "--max-steps=0"
+  ],
+  "observations": {
+    "before": {
+      "small": [
+        {
+          "seconds": 0.006239708047360182,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.006999125005677342,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.006861750036478043,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.006846583914011717,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.007468875031918287,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        }
+      ],
+      "large": [
+        {
+          "seconds": 0.2285738750360906,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.2302575419889763,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.2299934170441702,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.23679074994288385,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.23449041601270437,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        }
+      ]
+    },
+    "after": {
+      "small": [
+        {
+          "seconds": 0.00694087496958673,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.0071616669883951545,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.007246417109854519,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.007545957923866808,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        },
+        {
+          "seconds": 0.007503792061470449,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=1 sum=324508640"
+        }
+      ],
+      "large": [
+        {
+          "seconds": 0.24012070905882865,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.24014604196418077,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.2504316669655964,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.24819004093296826,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        },
+        {
+          "seconds": 0.24491937505081296,
+          "max_rss_mib": 9.1875,
+          "rss_source": "ru_maxrss",
+          "exit_code": 0,
+          "timed_out": false,
+          "result_line": "frame_access n=200000 sum=64906770317312"
+        }
+      ]
+    }
+  },
+  "counters": {
+    "before": {
+      "sir.slots": 2,
+      "sir.processes": 1,
+      "sir.subroutines": 2,
+      "sir.blocks": 12,
+      "sir.instrs": 65,
+      "sched.time_slots": 1,
+      "sched.time_advances": 0,
+      "sched.active_loops": 1,
+      "sched.reactive_loops": 0,
+      "sched.events.preponed": 0,
+      "sched.events.pre_active": 0,
+      "sched.events.active": 1,
+      "sched.events.inactive": 0,
+      "sched.events.pre_nba": 0,
+      "sched.events.nba": 0,
+      "sched.events.post_nba": 0,
+      "sched.events.pre_observed": 0,
+      "sched.events.observed": 0,
+      "sched.events.post_observed": 0,
+      "sched.events.reactive": 0,
+      "sched.events.re_inactive": 0,
+      "sched.events.pre_re_nba": 0,
+      "sched.events.re_nba": 0,
+      "sched.events.post_re_nba": 0,
+      "sched.events.pre_postponed": 0,
+      "sched.events.postponed": 0,
+      "proc.wakeups": 1,
+      "proc.created": 1,
+      "proc.finished": 1,
+      "proc.kept_peak": 1,
+      "slot.writes": 200002,
+      "slot.changes": 200001,
+      "nba.scheduled": 0,
+      "wait.subscriptions": 0,
+      "wait.monitor_evals": 0,
+      "sim.end_time": 0,
+      "sim.end_reason": "quiescent",
+      "vm.instrs": 9400020
+    },
+    "after": {
+      "sir.slots": 2,
+      "sir.processes": 1,
+      "sir.subroutines": 2,
+      "sir.blocks": 12,
+      "sir.instrs": 65,
+      "sched.time_slots": 1,
+      "sched.time_advances": 0,
+      "sched.active_loops": 1,
+      "sched.reactive_loops": 0,
+      "sched.events.preponed": 0,
+      "sched.events.pre_active": 0,
+      "sched.events.active": 1,
+      "sched.events.inactive": 0,
+      "sched.events.pre_nba": 0,
+      "sched.events.nba": 0,
+      "sched.events.post_nba": 0,
+      "sched.events.pre_observed": 0,
+      "sched.events.observed": 0,
+      "sched.events.post_observed": 0,
+      "sched.events.reactive": 0,
+      "sched.events.re_inactive": 0,
+      "sched.events.pre_re_nba": 0,
+      "sched.events.re_nba": 0,
+      "sched.events.post_re_nba": 0,
+      "sched.events.pre_postponed": 0,
+      "sched.events.postponed": 0,
+      "proc.wakeups": 1,
+      "proc.created": 1,
+      "proc.finished": 1,
+      "proc.kept_peak": 1,
+      "slot.writes": 200002,
+      "slot.changes": 200001,
+      "nba.scheduled": 0,
+      "wait.subscriptions": 0,
+      "wait.monitor_evals": 0,
+      "sim.end_time": 0,
+      "sim.end_reason": "quiescent",
+      "vm.instrs": 9400020
+    }
+  },
+  "all_counters_equal": true,
+  "summary": {
+    "before": {
+      "small_median_seconds": 0.006861750036478043,
+      "large_median_seconds": 0.2302575419889763,
+      "simulation_seconds": 0.22339579195249826,
+      "large_peak_rss_median_mib": 9.1875
+    },
+    "after": {
+      "small_median_seconds": 0.007246417109854519,
+      "large_median_seconds": 0.24491937505081296,
+      "simulation_seconds": 0.23767295794095844,
+      "large_peak_rss_median_mib": 9.1875
+    }
+  },
+  "time_ratio_after_before": 1.063909735558027,
+  "limitations": [
+    "Five alternating paired runs on one macOS arm64 machine, not seven nightly baselines or a confidence interval.",
+    "Standard four benchmarks, other simulators, Linux, source capture and other frame operations are not timed here.",
+    "Wall-clock measurements do not determine pass/fail; PERFORMANCE 1/3/4 apply. No count budget or warning threshold is changed."
+  ]
+}

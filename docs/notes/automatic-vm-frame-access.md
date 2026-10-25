@@ -52,8 +52,64 @@ Five new compiled-control definitions target notifications, wide chunks,
 element identity, readonly rights and selected reads. The two existing controls
 for wait-ref lookup and `$fread` byte ordering are relocated to the same faults
 in the new access paths; no expected output or existing suite body is changed.
-Final validation and actual compiled-control outcomes are recorded separately
-after they run.
+The [nine compiled behavioral controls](../measurements/2026-10-25/vm-frame-access-negative-controls.json)
+are detected by actual unit or source-test failures after successful builds.
+An initial notification-omission fault stopped at an unused-member build warning;
+that attempt is recorded and is not counted as runtime detection. Its corrected
+form reaches and fails the notification test.
+
+Removing the redundant word-vector pointer from `Act` also required relocating
+the existing task-guard selection and first-override-sensitivity controls. The
+former is detected by the existing ref-wait layout matrix. The latter survived
+the existing assign/force/override cases: those checked later evaluations, whose
+sensitivity was already registered. Add 36 new generated source cases across
+module/generate/interface, variable force/net force/procedural assign, two/four-state
+function values and direct/nested RHS calls. The net declaration remains four-state.
+After the destination settles to zero, the override's first evaluation sets one,
+which requires another evaluation. All 36 pass, and moving registration after
+the first evaluation fails the actual new source test. Existing oracles stay intact.
+
+The [separate source observations](../measurements/2026-10-25/override-initial-observations.json)
+record all 36 native runs with `seen=0`, `seen=1`, `value=1`. Both measured reference
+builds emit only `seen=0`, `value=1`; their compiler messages report one-time RHS
+evaluation. The cached 13.0 build identifies itself as `v13_0-dirty`: the nature
+of those build-tree modifications is **not confirmed**. Repeat with a confirmed
+clean v13_0 build before using this observation for the pinned P1 criterion.
+These probes are separate from the frozen 87-probe comparison and do not replace
+its version or coverage evidence.
+
+The [final validation record](../measurements/2026-10-25/vm-frame-access-final-validation.json)
+combines all 21 local-CI checks at `9b30d6d2`. Dev/ASan/UBSan pass 4,629/4,631;
+release passes 4,630/4,632, with zero failures and the same two skips. The first
+dev/release run failed only because the generated README counts predated the
+36 sources and one generator. Regenerating the counts and rerunning both
+configurations passes; runtime source did not change between these checks.
+The full first run's clang-format, clang-tidy and other static checks passed.
+All 29 existing SIR dumps and PerfCount budgets remain unchanged and pass.
+
+Fresh [native sv-tests](../measurements/2026-10-25/vm-frame-access-svtests.json)
+retains all 344 judgments and 244 passes. An archive of its exact pinned public
+revision is used, independent of another working tree. The
+[exact archived P1 population](../measurements/2026-10-25/vm-frame-access-population.json)
+retains 1,451/1,466 passes, zero failures and 15 unsupported forms. The
+[87-probe rerun](../measurements/2026-10-25/icarus14-vm-frame-access-probes.json)
+retains every native/14.0 status and passing judged output. The gap count is
+22 against fresh 14.0 and the earlier recorded 13.0 counterpart; 14.0
+still has seven oracle mismatches. The 13.0 counterpart and reference sv-tests
+engines are not rerun for that inventory. Nonpassing output was absent from
+the older portable records, so no equality of those bytes is asserted.
+
+A [focused release measurement](../measurements/2026-10-25/vm-frame-access-speed.json)
+uses an original automatic-function/wide-array/ref probe, with five alternating
+paired samples on macOS arm64 and the same independent checksum. After
+subtracting the n=1 startup median, the n=200,000 median changes from 0.2234 s
+at `48b8c315` to 0.2377 s at `9b30d6d2` (about +6.4%); median peak RSS is
+9.1875 MiB for both. Every reported counter is identical, including 9,400,020
+VM instructions. This does not count internal value copies. As PERFORMANCE
+1/3/4 requires, timing is reported, not used to pass/fail or alter count budgets.
+This single-machine probe has no confidence interval, does not supply seven
+nightly baselines, and does not remeasure the standard four speed benchmarks,
+other simulators or Linux.
 
 The VM's SIR-to-place resolver currently selects ordinary word views only.
 The [new SIR homes](automatic-sir-metadata.md) remain explicitly rejected;

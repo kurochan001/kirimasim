@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**VM transport validation:** [all 21 checks, including the documented count-only retry](../measurements/2026-10-25/vm-frame-access-final-validation.json)
+pass at `9b30d6d2`. Dev/ASan/UBSan pass 4,629/4,631; release 4,630/4,632,
+with zero failures and two known skips. Nine compiled faults are detected;
+36 new initial-override cases close the surviving control's coverage hole.
+Native sv-tests stays 244/344; the exact P1 population stays 1,451/1,466,
+zero failures and 15 unsupported. All 87 judged statuses/passing outputs stay
+unchanged against fresh 14.0; the earlier 13.0 counterpart still leaves 22 gaps.
+The [focused cost](automatic-vm-frame-access.md) is about +6.4% wall time with
+identical counters, not a new budget or a full speed comparison. P1 remains incomplete.
+
 **VM frame transport:** the [access-path migration](automatic-vm-frame-access.md)
 removes mutable word references from instruction, ref, file/scan and argument
 operations. Seven original tests include 270 selection cases and 24 complete

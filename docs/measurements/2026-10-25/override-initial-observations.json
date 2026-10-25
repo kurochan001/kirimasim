@@ -1,0 +1,1084 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "9b30d6d22c8455e9c3a754f4cc22cd99906a2ecd",
+  "scope": "36 original override-initial evaluation cases, separate from the frozen 87-probe inventory",
+  "oracle_basis": "SCHEDULER_SPEC 5/12 and IEEE 1800-2023 4.9.2/10.6; no reference-derived expectation",
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 9b30d6d22c84), built with AppleClang 21.0.0.21000334",
+    "icarus13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+    },
+    "icarus14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "limitations": [
+    "The cached 13.0 compiler reports v13_0-dirty; the meaning of its build-tree modifications is not confirmed. Do not use these observations alone to establish the pinned clean-13.0 P1 exit criterion. Verify by repeating with a confirmed clean v13_0 build.",
+    "No simulator implementation or external tests were read. These results do not prove complete P1 coverage."
+  ],
+  "results": [
+    {
+      "file": "tests/suite/sched/override_initial_generate_assign_var_four_call.sv",
+      "source_sha256": "fdfd1048efafbacee663dfad62776272ab74bb3ad8930b8841576f223b73ea4b",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_assign_var_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_assign_var_four_expression.sv",
+      "source_sha256": "f90f8fd32aacaddb97d54abd8304d8794bbd170de950a7c0b0be3f186d5cdc71",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_assign_var_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_assign_var_two_call.sv",
+      "source_sha256": "5d820d0b6915e176dc50fefba4c6950a58b1ea35e1e44ddc1ee47978ea197324",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_assign_var_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_assign_var_two_expression.sv",
+      "source_sha256": "cea2f695c4d3e413a93ae6ef4bce4b8df5f9ba026786c215006df68637edfce6",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_assign_var_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_assign_var_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_net_four_call.sv",
+      "source_sha256": "4deca5535e0261857b40854e9432a758f2a752a46bad8723b1acc9b742357977",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_net_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_four_call.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_four_call.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_net_four_expression.sv",
+      "source_sha256": "fead3dee9adf0abf973569b3629d3bc480ea443f4d4fd3b23b3c12d101f475c2",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_net_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_four_expression.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_four_expression.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_net_two_call.sv",
+      "source_sha256": "c324ba4cad896c13b5a39a4259755b2166492f268c9ef1bec99491ad7c506b2b",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_net_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_two_call.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_two_call.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_net_two_expression.sv",
+      "source_sha256": "daa8335a49239c211b111d6217df0f087c024106e21ee6853c5a1d94ec702bc8",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_net_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_two_expression.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_net_two_expression.sv:27: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_var_four_call.sv",
+      "source_sha256": "72679eb353a3dd09ed3f5603112c95baa68e2163ab4b9614cb2af24940da289f",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_var_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_var_four_expression.sv",
+      "source_sha256": "f664f20dc0cb61e9be59e581f91945ab6431369365bd4356667d2613245d78c7",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_var_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_var_two_call.sv",
+      "source_sha256": "bfd19b84a703c515acaf08f99757ead93c1845276717a5da135d9959f93d98c9",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_var_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_generate_force_var_two_expression.sv",
+      "source_sha256": "fabf264d01cda4e54a42eda5f0f0928732508b35c4ada197f0ca5cd9fa8c5a2d",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_generate_force_var_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_generate_force_var_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_assign_var_four_call.sv",
+      "source_sha256": "82389d84c8413ba4276b3614a6dc7f2f240ec7c6cf6caaefdb982c48b16b3ca7",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_assign_var_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_assign_var_four_expression.sv",
+      "source_sha256": "cbf9f66966cd75e6a24c726859843bb94adddfc97b07d331c36f77bc72caea94",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_assign_var_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_assign_var_two_call.sv",
+      "source_sha256": "125169456b086851ad046a03866ae59d26c693d70ea52aa4bc76dd2dbbab8d02",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_assign_var_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_assign_var_two_expression.sv",
+      "source_sha256": "a2eb0800c80db2f47d9b55641e0ccb196ad8ecd122e56b8b135eb4b3938bcc8f",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_assign_var_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_assign_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_net_four_call.sv",
+      "source_sha256": "78e50c9f5e59164f44df0b9b84483ad4193a65d7d5dd457bbdf4b454d325bb2c",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_net_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_net_four_expression.sv",
+      "source_sha256": "f7d5bb7cd4b2c316d28482cd233a018c139dfca2a32d3fca5e3390011f88effe",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_net_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_net_two_call.sv",
+      "source_sha256": "32c77b5a6118d28e51d0f8b7b24bbf1e7c8f685cfad3386d4f11874d971c1d8c",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_net_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_net_two_expression.sv",
+      "source_sha256": "d3416d2640ddfdb57215bfc2bb30fc6e283747d6241a1cbef91ddcb9205fb47e",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_net_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_net_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_var_four_call.sv",
+      "source_sha256": "93237062464f0e62fe3ce998a1d1e533b70accc602877c6c70d2563f16b94acb",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_var_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_var_four_expression.sv",
+      "source_sha256": "6641481d86e8141f9c413941fb6668845273401c70c5da6123ebbd31ef294863",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_var_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_var_two_call.sv",
+      "source_sha256": "879797b7cd9fe69c70e9ce1645e1306b47a9c7e12cd0ac433fe5d58d10fd09e8",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_var_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_interface_force_var_two_expression.sv",
+      "source_sha256": "722132f84a576e71176cc22ba1571588e8637a6aa939ebbbd681ad621b7be164",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_interface_force_var_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_interface_force_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_assign_var_four_call.sv",
+      "source_sha256": "eda51f8d79f481126bd1317e4e0dbb361b45dce27e4a1e695455882d993bd383",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_assign_var_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_assign_var_four_expression.sv",
+      "source_sha256": "0b73656967165f97e46965480d80c7e444a9c4d27a0e1cf520d3d775c1f46618",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_assign_var_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_assign_var_two_call.sv",
+      "source_sha256": "e166f4fb9df6dc7814a133c01b21984baa2cacc6b75d9b5fd921d42f1f545d1a",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_assign_var_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_assign_var_two_expression.sv",
+      "source_sha256": "66549b9c55e16b4d690638cd55bd90d8d3c674e64142aeeea7ace1fe0072eb1f",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_assign_var_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_assign_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_net_four_call.sv",
+      "source_sha256": "6f8a1a4db92d2c82443c052394c8d61810da3dfc3f478c5152654b414af72a93",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_net_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_four_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_net_four_expression.sv",
+      "source_sha256": "6f8c969a8c783dca42b45aef900aecae679c8e23738e02a3a56fe6b3e9d5a6d7",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_net_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_four_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_net_two_call.sv",
+      "source_sha256": "65e2e2ffac6d855c142940660b13092e6507d070472e67107acb6848d0e1ee44",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_net_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_two_call.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_net_two_expression.sv",
+      "source_sha256": "0c34652b201969f1a394c066d7497ec5f94db30d91c8009567091cc2a1ed785d",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_net_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_net_two_expression.sv:26: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_var_four_call.sv",
+      "source_sha256": "56f3d2723dfbd13ad75251c4c013dc7a4a559df612532819ba2aa27901fa0967",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_var_four_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_four_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_var_four_expression.sv",
+      "source_sha256": "1e55afea718a50e9e20b723e44261774f4c60544c4cc9bdb058b36932638dad8",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_var_four_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_four_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_var_two_call.sv",
+      "source_sha256": "546fa22bde6878942aba711944e1e9631bdf331beb00584664dec3cd8bee39f1",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_var_two_call.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_two_call.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    },
+    {
+      "file": "tests/suite/sched/override_initial_module_force_var_two_expression.sv",
+      "source_sha256": "475ad988d34971afb138de28f2ea41a78d2fa7cdbacdc44d9561a73f7a526827",
+      "expected_stdout": "seen=0\nseen=1\nvalue=1\n",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "seen=0\nseen=1\nvalue=1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 9b30d6d22c84) seed=0 args: --top top override_initial_module_force_var_two_expression.sv\n",
+          "matches_expected": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "compile_stderr": "override_initial_module_force_var_two_expression.sv:25: vvp.tgt sorry: procedural continuous assignments are not yet fully supported. The RHS of this assignment will only be evaluated once, at the time the assignment statement is executed.\n",
+          "exit": 0,
+          "stdout": "seen=0\nvalue=1\n",
+          "stderr": "",
+          "matches_expected": false
+        }
+      }
+    }
+  ],
+  "summary": {
+    "kirimasim": {
+      "matches_expected": 36,
+      "compile_rejected": 0,
+      "total": 36
+    },
+    "icarus13": {
+      "matches_expected": 0,
+      "compile_rejected": 0,
+      "total": 36
+    },
+    "icarus14": {
+      "matches_expected": 0,
+      "compile_rejected": 0,
+      "total": 36
+    }
+  }
+}
