@@ -55,7 +55,21 @@ struct PatternValue {
     std::span<const PatternValue> children;
     /// Associative keys correspond to children, already in language key order.
     std::span<const PatternValue> keys;
+
+    constexpr PatternValue() = default;
+    constexpr PatternValue(const PatternValue&) noexcept;
+    constexpr PatternValue(PatternValue&&) noexcept;
+    constexpr PatternValue& operator=(const PatternValue&) noexcept;
+    constexpr PatternValue& operator=(PatternValue&&) noexcept;
 };
+
+// libc++ 18 checks span's range constructor while generating these operations.
+// Define them only after PatternValue is complete, so that check can form a
+// span iterator without doing arithmetic on a pointer to an incomplete type.
+inline constexpr PatternValue::PatternValue(const PatternValue&) noexcept = default;
+inline constexpr PatternValue::PatternValue(PatternValue&&) noexcept = default;
+inline constexpr PatternValue& PatternValue::operator=(const PatternValue&) noexcept = default;
+inline constexpr PatternValue& PatternValue::operator=(PatternValue&&) noexcept = default;
 
 enum class PatternError { None, InvalidValue, Cycle, ResourceLimit };
 struct PatternFormatResult {

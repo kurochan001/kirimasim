@@ -4,6 +4,9 @@
 // Includes every public kernel header so that they are compiled as C++20.
 // Keep this list in sync with src/kernel/include/kirimasim/kernel/.
 
+#include <type_traits>
+#include <utility>
+
 #include "kirimasim/kernel/abi.h"
 #include "kirimasim/kernel/activation.h"
 #include "kirimasim/kernel/bits.h"
@@ -32,3 +35,36 @@
 #include "kirimasim/kernel/wide.h"
 
 static_assert(__cplusplus == 202002L, "this file must be compiled as C++20");
+
+namespace {
+using kirimasim::kernel::PatternValue;
+
+// Recursive borrowed ranges must support every value-transfer operation in
+// C++20, without allocating or copying the pointees.
+constexpr bool patternValueTransfersBorrowedRanges() {
+    const PatternValue children[1]{};
+    const PatternValue keys[1]{};
+    PatternValue original;
+    original.kind = PatternValue::Kind::Associative;
+    original.children = {children, 1};
+    original.keys = {keys, 1};
+    const PatternValue copied(original);
+    PatternValue assigned;
+    assigned = copied;
+    PatternValue moved(std::move(original));
+    PatternValue moveAssigned;
+    moveAssigned = std::move(assigned);
+    const PatternValue* views[]{&copied, &moved, &moveAssigned};
+    for (const auto* view : views)
+        if (view->kind != PatternValue::Kind::Associative || view->children.data() != children ||
+            view->children.size() != 1 || view->keys.data() != keys || view->keys.size() != 1)
+            return false;
+    return true;
+}
+static_assert(patternValueTransfersBorrowedRanges());
+static_assert(std::is_nothrow_copy_constructible_v<PatternValue>);
+static_assert(std::is_nothrow_move_constructible_v<PatternValue>);
+static_assert(std::is_nothrow_copy_assignable_v<PatternValue>);
+static_assert(std::is_nothrow_move_assignable_v<PatternValue>);
+static_assert(std::is_trivially_destructible_v<PatternValue>);
+}  // namespace
