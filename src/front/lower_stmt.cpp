@@ -93,9 +93,16 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             // A named block is a scope of the hierarchy (9.3.5).
             const std::string outer = b_.scope;
             const bool named = b.blockSymbol != nullptr && !b.blockSymbol->name.empty();
+            ensureLexical();
+            const bool automatic =
+                b.blockSymbol != nullptr
+                    ? b.blockSymbol->defaultLifetime == ast::VariableLifetime::Automatic
+                    : !b_.lexicalStack.empty() &&
+                          b_.lexical[b_.lexicalStack.back()].defaultAutomatic;
             if (named) {
                 b_.scope += "." + std::string(b.blockSymbol->name);
-                Body::Named n{b.blockSymbol, std::nullopt, false, std::nullopt};
+                Body::Named n{b.blockSymbol, std::nullopt, false, std::nullopt,
+                              b_.lexicalStack.size()};
                 // A block that disable reaches from another activation, or
                 // that starts processes, is a scope: disable ends all its
                 // activations at once (SIR_SPEC.md 7.2). One in a task or a
@@ -113,7 +120,9 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 }
                 b_.named.push_back(n);
             }
+            pushLexical(automatic, named ? b_.named.back().scope : std::nullopt, sl);
             lowerStatement(b.body);
+            popLexical(sl);
             b_.scope = outer;
             if (named) {
                 const Body::Named n = b_.named.back();
@@ -257,7 +266,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back(Loop{.named = b_.named.size()});
+            b_.loops.push_back(
+                Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
             const std::optional<Val> c =
                 f.stopExpr != nullptr ? std::optional{lowerCondition(*f.stopExpr)} : std::nullopt;
             const sir::BlockId body = newBlock();
@@ -311,7 +321,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back(Loop{.named = b_.named.size()});
+            b_.loops.push_back(
+                Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
             // A negative, x or z count runs the body no times: gt gives 0
             // or x, and br.if takes x as false.
             const Val left = emit(Op::Fload, n.type, {Operand::frame(fv)}, sl);
@@ -339,7 +350,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(cond, sl);
             setBlock(cond);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back(Loop{.named = b_.named.size()});
+            b_.loops.push_back(
+                Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
             b_.loops[loop].continueTo = cond;
             const Val c = lowerCondition(w.cond);
             const sir::BlockId body = newBlock();
@@ -357,7 +369,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(body, sl);
             setBlock(body);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back(Loop{.named = b_.named.size()});
+            b_.loops.push_back(
+                Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
             lowerStatement(w.body);
             if (!b_.dead) jump(continueTarget(loop), sl);
             if (b_.loops[loop].continueTo != sir::kNone) {
@@ -376,7 +389,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             jump(body, sl);
             setBlock(body);
             const std::size_t loop = b_.loops.size();
-            b_.loops.push_back(Loop{.named = b_.named.size()});
+            b_.loops.push_back(
+                Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
             b_.loops[loop].continueTo = body;
             lowerStatement(s.as<ast::ForeverLoopStatement>().body);
             jump(body, sl);
@@ -425,12 +439,12 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::Break:
             if (b_.loops.empty()) unsupported(sl, "break outside a loop");
-            leaveScopes(b_.loops.back().named, sl);
+            unwindLexical(b_.loops.back().lexicalDepth, sl);
             terminate(Op::Br, {Operand::block(breakTarget(b_.loops.size() - 1))}, sl);
             return;
         case ast::StatementKind::Continue:
             if (b_.loops.empty()) unsupported(sl, "continue outside a loop");
-            leaveScopes(b_.loops.back().named, sl);
+            unwindLexical(b_.loops.back().lexicalDepth, sl);
             terminate(Op::Br, {Operand::block(continueTarget(b_.loops.size() - 1))}, sl);
             return;
         default: unsupported(sl, "statement '" + std::string(ast::toString(s.kind)) + "'");
@@ -464,7 +478,7 @@ void Lowerer::lowerDynamicForeach(const ast::ForeachLoopStatement& f, std::size_
     jump(cond, sl);
     setBlock(cond);
     const auto loop = b_.loops.size();
-    b_.loops.push_back(Loop{.named = b_.named.size()});
+    b_.loops.push_back(Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
     const auto i = coerce(emit(Op::Fload, type, {Operand::frame(index)}, sl), sir::u2(64), sl);
     const auto n = emit(Op::Fload, sir::u2(64), {Operand::frame(limit)}, sl);
     const auto test = emit(Op::Lt, sir::u2(1), {i.op, n.op}, sl);
@@ -502,7 +516,7 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
     jump(cond, sl);
     setBlock(cond);
     const std::size_t loop = b_.loops.size();
-    b_.loops.push_back(Loop{.named = b_.named.size()});
+    b_.loops.push_back(Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
     const Val i = emit(Op::Fload, t, {Operand::frame(fv)}, sl);
     const Type bt = sir::isFourState(t) ? sir::u4(1) : sir::u2(1);
     const Val c = emit(left <= right ? Op::Le : Op::Ge, bt,
@@ -532,6 +546,12 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     } else {
         stmts.push_back(&b.body);
     }
+    ensureLexical();
+    const bool automatic =
+        b.blockSymbol != nullptr
+            ? b.blockSymbol->defaultLifetime == ast::VariableLifetime::Automatic
+            : !b_.lexicalStack.empty() && b_.lexical[b_.lexicalStack.back()].defaultAutomatic;
+    pushLexical(automatic, std::nullopt, sl);
     const sir::Owner parent = bodyOwner();
     const std::uint32_t forkNumber = b_.forks++;
     // Children not waited for may outlive the named blocks around the fork.
@@ -552,6 +572,11 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     const std::string owner = b_.isSub ? design().subroutine(b_.sub).name : proc().name;
     const sir::InstanceId instance =
         b_.isSub ? design().subroutine(b_.sub).instance : proc().instance;
+    const bool hasChildren = std::any_of(stmts.begin(), stmts.end(), [](const auto* stmt) {
+        return stmt->kind != ast::StatementKind::VariableDeclaration &&
+               stmt->kind != ast::StatementKind::Empty;
+    });
+    if (hasChildren) promoteLexical();
     std::vector<Operand> ops;
     for (std::size_t i = 0; i < stmts.size(); ++i) {
         if (stmts[i]->kind == ast::StatementKind::VariableDeclaration) continue;
@@ -564,20 +589,27 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         child.loc = loc(startOf(*stmts[i]));
         child.blocks.resize(1);
         const auto id = static_cast<sir::ProcessId>(design().processes.size());
+        Body next;
+        next.proc = id;
+        captureForkEnvironment(*stmts[i], child, next);
         design().processes.push_back(std::move(child));
         Body saved = std::move(b_);
-        b_ = Body{};
-        b_.proc = id;
+        b_ = std::move(next);
+        initLexical(automatic);
         b_.scale = saved.scale;
         b_.scope = scope;
         b_.outermostDisabled = disabledBlock(*stmts[i]);
         lowerStatement(*stmts[i]);
         if (!b_.dead) terminate(Op::Ret, {}, sl);
+        finishLexical();
         b_ = std::move(saved);
         ops.push_back(Operand::process(id));
     }
     // A declaration-only parallel block has no children and cannot wait.
-    if (ops.empty()) return;
+    if (ops.empty()) {
+        popLexical(sl);
+        return;
+    }
     const char* join = b.blockKind == ast::StatementBlockKind::JoinAll   ? "join"
                        : b.blockKind == ast::StatementBlockKind::JoinAny ? "join_any"
                                                                          : "join_none";
@@ -586,6 +618,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     ops.push_back(Operand::block(cont));
     terminate(Op::Fork, std::move(ops), sl);
     setBlock(cont);
+    popLexical(sl);
 }
 
 void Lowerer::lowerDisable(const ast::DisableStatement& d) {
@@ -611,7 +644,7 @@ void Lowerer::lowerDisable(const ast::DisableStatement& d) {
         // A block around it in this body that nothing else reaches: go to
         // its end, leaving the scopes in between (SIR_SPEC.md 7.2).
         Body::Named& n = b_.named[at];
-        leaveScopes(at + 1, sl);
+        unwindLexical(n.lexicalDepth, sl);
         if (!n.exit) n.exit = newBlock();
         terminate(Op::Br, {Operand::block(*n.exit)}, sl);
         return;
@@ -631,6 +664,13 @@ std::uint32_t Lowerer::scopeOf(const ast::Symbol& block) {
 }
 
 void Lowerer::leaveScopes(std::size_t from, slang::SourceLocation sl) {
+    if (!b_.lexicalStack.empty()) {
+        const auto depth = from == 0                ? 1
+                           : from < b_.named.size() ? b_.named[from].lexicalDepth
+                                                    : b_.lexicalStack.size();
+        unwindLexical(depth, sl);
+        return;
+    }
     for (std::size_t i = b_.named.size(); i-- > from;)
         if (const std::optional<std::uint32_t> scope = b_.named[i].scope)
             emitVoid(Op::ScopeLeave, {Operand::scope(*scope)}, sl);

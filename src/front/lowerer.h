@@ -736,6 +736,7 @@ public:
         sir::BlockId continueTo = sir::kNone;
         std::size_t named =
             0;  ///< Named blocks around the loop: break and continue leave the others.
+        std::size_t lexicalDepth = 0;
     };
 
     /// The state of the procedure being lowered.
@@ -746,6 +747,22 @@ public:
         bool dead = false;  ///< The current point is unreachable.
         std::map<const ast::Symbol*, sir::FrameVarId> frameVars;
         std::map<const ast::Symbol*, sir::FrameVarId> structFrames;  ///< The first leaf's.
+        struct Lexical {
+            std::size_t parent = 0;
+            bool defaultAutomatic = false, automatic = false;
+            sir::ActivationScopeId scope = sir::kNone;
+            std::optional<std::uint32_t> control;
+            std::vector<sir::FrameVarId> fields;
+        };
+        struct LexicalEdit {
+            sir::BlockId block;
+            std::size_t position, lexical;
+            bool enter;
+            sir::SourceLoc loc;
+        };
+        std::vector<Lexical> lexical;
+        std::vector<std::size_t> lexicalStack;
+        std::vector<LexicalEdit> lexicalEdits;
         std::vector<Loop> loops;
         /// The named blocks around the current point, innermost last, for
         /// disable (9.6.2): the block, its end once a disable jumps there,
@@ -757,6 +774,7 @@ public:
             /// Its scope number, when disable reaches it with
             /// disable.scope (SIR_SPEC.md 7.2).
             std::optional<std::uint32_t> scope;
+            std::size_t lexicalDepth = 0;
         };
         std::vector<Named> named;
         sir::TimeScale scale;
@@ -790,6 +808,22 @@ public:
         std::optional<std::array<Val, 3>> delays;
     };
     Body& body() { return b_; }
+
+    // Compiler-only lexical bookkeeping. Edits are materialized only when a
+    // real fork extends an automatic scope; unchanged bodies keep their text.
+    void ensureLexical();
+    void initLexical(bool automatic);
+    void pushLexical(bool automatic, std::optional<std::uint32_t> control,
+                     slang::SourceLocation sl);
+    void popLexical(slang::SourceLocation sl);
+    void ownFrame(const ast::VariableSymbol& symbol, sir::FrameVarId first,
+                  std::uint32_t count = 1);
+    void promoteLexical();
+    void qualifyReferenceBindings();
+    void unwindLexical(std::size_t depth, slang::SourceLocation sl);
+    void finishLexical();
+    void captureForkEnvironment(const ast::Statement& stmt, sir::Process& child, Body& next);
+    sir::ActivationInfo& activationInfo();
 
 private:
     const slang::SourceManager& sm_;

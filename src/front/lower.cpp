@@ -729,6 +729,7 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
     frameVars().push_back({std::string(v.name), t, sir::kNone, std::move(dims), {}});
     b_.frameVars.emplace(&v, id);
+    ownFrame(v, id);
     return id;
 }
 
@@ -2396,6 +2397,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
                 break;
         }
+        finishLexical();
     } catch (const Unsupported&) {
         dropProcesses(first);
     }

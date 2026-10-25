@@ -104,6 +104,7 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
         frameVars().push_back({std::string(v.name) + l.path, t, sir::kNone, std::move(dims), {}});
     }
     b_.structFrames.emplace(&v, first);
+    ownFrame(v, first, static_cast<std::uint32_t>(leaves.size()));
     return first;
 }
 
