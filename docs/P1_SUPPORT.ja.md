@@ -19,7 +19,7 @@
 遅延付きNBAの値の捕捉、packed範囲内の選択、名前付きイベントの混合待ちを含めてまとめます。
 強さ区間のAPIはカーネルの基盤として別に記載し、MOS・スイッチ実行に対応したとは扱いません。
 各ビルドのオプションは`kirimasim --help`、コミットは`--version`で確認してください。
-[最新の検証と承認待ちの項目](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-25)で、
+[最新の検証と承認待ちの項目](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-26)で、
 現在の比較と過去の測定を区別しています。
 
 P1 は進行中です。この一覧の「対応」は、記載した形を SIR に変換してインタプリタで
@@ -49,8 +49,8 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA | イベント制御付きNBA、ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
-| イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered` | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。実行時の添字で選ぶ名前付きイベント、イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応 |
-| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、対応する名前付きブロックとタスクのdisable | forkの枝が捕捉するautomatic変数、名前付きforkブロックのdisableに未対応の形がある。automatic宣言には通常の型の制限もある |
+| イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択 | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。automatic event生成は残作業 |
+| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。automatic event/objectフィールドと名前付きforkのdisableは残作業 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動の強さ | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
@@ -158,6 +158,12 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 通常/捕捉配列と入力/戻り値の受け渡しを手組みSIRで検査しています。
 ソースからのautomatic生成、命令間safepointに必要なSSA全体の公開、所有ref/objectの提供は
 残作業です。eventだけのsafepoint修正案は未承認で、待機なしソースの有界性は主張しません。
+
+ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
+独自160設計と厳格な方針境界16件が通り、コンパイルした4故障も検出しました。
+load済みの名前付き/混合待機・遅延対象・明示的な`.triggered`を含み、妥当な定数対象は
+既存dumpを保ちます。旧CLI入力が未対応診断6行を期待するため、その別途移行は承認待ちで、
+CLI全体はまだ通っていません。
 
 ### 固定長配列ポートとネット配列
 

@@ -81,6 +81,11 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 接続しました。ソースのautomatic event生成と命令間のevent safepointは残作業で、
 [safepoint修正案](docs/notes/managed-event-safepoints-proposal.ja.md)は未承認です。
 
+[実行時indexでの固定配列event選択](docs/notes/indexed-event-execution.ja.md)を型付き値へ接続し、
+名前付き/混合待機・遅延対象・`.triggered`を独自160ソースで検査しました。
+旧CLI入力の未対応診断6行は[別途移行の承認待ち](docs/notes/indexed-event-expectation-migration.ja.md)で、
+この段階のCLI全体は未成功です。
+
 固定配列ポートは宣言ごとの範囲を保って要素を共有・コピーし、ネット配列の強さを
 要素ごとに解決します。定数要素のforce/release、遅延、未接続の既定値・pullも含め、
 [独自358ケースと対応範囲](docs/notes/fixed-array-port-execution.ja.md)を記録しました。
@@ -178,11 +183,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 4,969 | 4,967、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,131 | 5,128、2 本は飛ばす、1 本は失敗 | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）514、`tests/suite/` 4,247（`tools/` の 138 個の生成器が作る）、道具 149、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）514、`tests/suite/` 4,407（`tools/` の 139 個の生成器が作る）、道具 151、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

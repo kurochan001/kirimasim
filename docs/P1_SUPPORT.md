@@ -19,7 +19,7 @@ copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API is documented separately as a kernel foundation; it does not enable
 MOS/switch execution. Check `kirimasim --help` for a build's options and
-`--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-25)
+`--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-26)
 separate the latest comparison from historical measurements.
 
 P1 is in progress. “Supported” below means that the listed forms can be
@@ -50,8 +50,8 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Event-controlled NBAs and delayed NBAs through refs/string characters are not implemented; automatic NBA targets remain illegal |
-| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered` | Existing variable-write restrictions on event/wait conditions remain; no runtime-indexed named event, event-controlled `->>`, or `always_ff` trigger on a computed expression |
-| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, disable of supported named blocks and tasks | Automatic variables captured by fork branches and disable of a named fork block have unsupported forms; automatic declarations retain their usual type limitations |
+| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Automatic event construction remains work |
+| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of supported named blocks and tasks | Capture follows the typed subset below; automatic event/object fields and named-fork disable remain incomplete |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
@@ -176,6 +176,13 @@ boundaries. Ordinary/captured arrays and input/return transport are tested in
 hand-built SIR. Source automatic construction, complete SSA publication for
 instruction safepoints and owned ref/object providers remain work. The event-only
 safepoint amendment is not approved; no bounded no-wait source claim is made.
+
+Source [runtime fixed-array event selections](notes/indexed-event-execution.md)
+now pass 160 original designs and 16 strict policy boundaries, with four compiled
+faults caught. This covers loaded named/mixed waits, delayed targets and explicit
+`.triggered`; constant valid operands retain existing dumps. The historical CLI
+input still expects six unsupported diagnostics, so its separate migration awaits
+approval and the complete CLI suite is not yet green.
 
 ### Fixed-array ports and net arrays
 

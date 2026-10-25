@@ -1,0 +1,2405 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "2108dd72b1f5749a3cbf1fd9cad2113c24ba11d7",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/front/lower_expr.cpp": "0a4a5f681b650f864adaa14c4ce2a0d0f6f3ad0a97ca0593b26ede6225e577d8",
+    "src/front/lowerer.h": "3e8dfa9c3f988baaf4affa8c9d25f2154360291550e26d6eeb338da49d7fc94a",
+    "src/front/lower_stmt.cpp": "ebf64f1025061d2f023800cbfe7ed84458616a239b1aadefb9fff051b85af07c",
+    "tools/gen_indexed_event_matrix.py": "4517b6100ea3c6376fbdff013c1df6e1e9c0af5c5d601d2acc2de3331bb257c7",
+    "tests/tools/check_indexed_event_boundaries.py": "49447e3ceebc34b911d2d20dec8a10fe32bb6d6de244a1b9988f0efb9b700ec9",
+    "tests/tools/CMakeLists.txt": "a6634a9c5f636b195d415a97049ebe50e3a5e2aaadf0f4d72bc2623e6d94ae89",
+    "tools/mutants.py": "59abbe41d92a2b3d0bcba05bfe9c4f6fb59a96e3e544cc0dc67642a31c7c5b1a"
+  },
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 2108dd72b1f5), built with AppleClang 21.0.0.21000334",
+    "icarus14": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+    "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+  },
+  "native_binary_sha256": "650c148cbbbcd9bc63f502c56f7f35a461f8ec1c2343076ccb4d36aa58329aee",
+  "scope": "160 original indexed-event source designs; finite observations, not whole-language parity; null waits have a project-defined result",
+  "reference_source_read": false,
+  "fresh_icarus13_run": false,
+  "failed_output_retained": false,
+  "native_summary": {
+    "passed": 160
+  },
+  "reference_summary": {
+    "compile_failed": 160
+  },
+  "cases": [
+    {
+      "name": "indexed_event_automatic_local_ascending_mixed",
+      "source_sha256": "76b4593e5d8efdf35cfac505607da0ff19ec71742bfaed2fcb5435414319a39a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_automatic_local_descending_nba",
+      "source_sha256": "a1b279b60c6fd6566a1cddb0640a924523869fc33995fc6c40b665553e525c07",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_automatic_local_rank2_named",
+      "source_sha256": "3422f75c63b67dee9157ead581114364aa4f662053d3f48b25ab17a06abb18da",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_automatic_local_rank2_triggered",
+      "source_sha256": "39a57cd164e5dbaa6e30ff41acab91f2f1fa360c096be3656e18058de8aaa91b",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_automatic_qualified_ascending_named",
+      "source_sha256": "021c090b6ed9e4baf513e272455a60565760e058900c8f8498bc0c6b9cd53da1",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_automatic_qualified_ascending_triggered",
+      "source_sha256": "b67d22ea81c972a42a5e99ed03863667aef838aec184a2729a459a8b3ee45561",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_automatic_qualified_descending_mixed",
+      "source_sha256": "f9484fd22b5b259a517f5015c1275235196f45503ccd05df84fd2d8921a0fac7",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_automatic_qualified_rank2_nba",
+      "source_sha256": "4c7433ae0ef96c4a145016b1954ec4c40a3b7f88fa327705840b5a5939edf8a8",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c73203120312031203133320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_fork_local_ascending_named",
+      "source_sha256": "a6a229bbd65a36294cb2d3d8154e4c2e0e51ef722e520bec4b50e3da2b2dc60e",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "indexed_event_fork_local_ascending_triggered",
+      "source_sha256": "a4b73cc89f9d9b4151cfc05f447e6539c70623c36e7cefdae26e4806ac956819",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "indexed_event_fork_local_descending_mixed",
+      "source_sha256": "f047b9e9875f52b69b613e0a70f38609cfc5e4a0d7441ff6f99207e7d09cadc0",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 5
+      }
+    },
+    {
+      "name": "indexed_event_fork_local_rank2_nba",
+      "source_sha256": "09352cc03d88f254899377fc8294cad5ce95aadf13ea33979edcf36037aacbe3",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c73203120312031203133320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "indexed_event_fork_qualified_ascending_nba",
+      "source_sha256": "eec6e08de8675406d7681b7e5c32f6352b6210f663c6e7d9a2eb6d9205d383ba",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "indexed_event_fork_qualified_descending_named",
+      "source_sha256": "f2a37d28afbce03d35c6deaa967ed02c76bb93a0bbacf04de0c53be00badcc50",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "indexed_event_fork_qualified_descending_triggered",
+      "source_sha256": "7e6185257d037c1140c559cb09bfd4bc4c4cd3deb67f0b8bb5654550dd083fbb",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "indexed_event_fork_qualified_rank2_mixed",
+      "source_sha256": "3c37544f843f259c6c11a003589ecc9677b9205168c828df6b40f05806d92f9f",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 5
+      }
+    },
+    {
+      "name": "indexed_event_generate_local_ascending_named",
+      "source_sha256": "2416e965bf5592c3eebcddaf5056e09406cc32d7e13744f22b470d23adc4bc04",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_generate_local_ascending_triggered",
+      "source_sha256": "348c84134e04908cf71316707f86906acacbee658faeed756697d46421959651",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_generate_local_descending_mixed",
+      "source_sha256": "d6b131a811abb48cee5def284de9e04e1db15ec867122b59bd23d39129f935b4",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_generate_local_rank2_nba",
+      "source_sha256": "7067795f3eaaf74ba34fa68b9a178ccf25ed12d46c2207a6ec14277af8eaa005",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c73203120312031203133320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_generate_qualified_ascending_nba",
+      "source_sha256": "631f3028a6dd832b2d8fd5026762fbeee60a1e72e83242151211ca38f052d4bb",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_generate_qualified_descending_named",
+      "source_sha256": "0bc108a1c99cde3b5be4e2cb622ac6cd0cf691798e54d2b3dab38620fd37de5f",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_generate_qualified_descending_triggered",
+      "source_sha256": "b23578419f09cbb99369345fe9ef242dd7fab8afbd81901de240fdbb4131966a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_generate_qualified_rank2_mixed",
+      "source_sha256": "bc2d92a3e750362c7659e8af983b0c3447e8fbc5c774e6d5e67b78aa7c39a95c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_initial_local_ascending_named",
+      "source_sha256": "4aa6ea5cda44ed23079f04c44d9817ec40545160760ed8b69ece06c7760e6365",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_initial_local_ascending_triggered",
+      "source_sha256": "8786473defb2df8eb2d147c2ac69eaf96d89bc4765ec6b2f063a6d4ee05c5554",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_initial_local_descending_mixed",
+      "source_sha256": "5e47c9ef73ddf849a477e8a9f443c0a2c087420cca6b0de38019ffee97d4314c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_initial_local_rank2_nba",
+      "source_sha256": "b6c9fca14a3dd756bf2182722647040987a6807cc3a4d0d6efb54591fcd3c3b2",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c73203120312031203133320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_initial_qualified_ascending_nba",
+      "source_sha256": "4e667c86a9abe6cd6fc62a69d79a5a301202363f5da827299974acac7c26b406",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_initial_qualified_descending_named",
+      "source_sha256": "558270718a4598f1fcc82fab1536d66ec4709500a18a5275dec0837462fd8a23",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_initial_qualified_descending_triggered",
+      "source_sha256": "2adc8b72c7b952d61d6c593dc4c0295172b28bce19b0dc0c4efe93d81052442a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_initial_qualified_rank2_mixed",
+      "source_sha256": "986140d04005f8d2f3b795cabff16e4b79ab65474c979815636b23c1be37b26b",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_interface_local_ascending_nba",
+      "source_sha256": "346059c253b02bcaef06f68238703a6033eed4c9fcd850155f41ea2e9a08615f",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_interface_local_descending_named",
+      "source_sha256": "c6635fbfaed1600b72b780ac9392e71b65a92036b4ecfb45056750f4ad72e7b5",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_interface_local_descending_triggered",
+      "source_sha256": "e23d5ec5d22e5832431722b2d404d51f83449aab445ef00ff7b208ca977ba501",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_interface_local_rank2_mixed",
+      "source_sha256": "4d0005f27cfce538a61dd5945f35d1855bf370dff4632763310635013da498c9",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_interface_qualified_ascending_mixed",
+      "source_sha256": "1cb816c3612189de43f57bd3b1348e1b8fd2c45e617a7b63d9de9f955fc9f2c7",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_interface_qualified_descending_nba",
+      "source_sha256": "49c9716f521f3c81f5edb0ae4f830c6d4168c60a78e5ef317a79c690902ebdb7",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_interface_qualified_rank2_named",
+      "source_sha256": "bf46d6fc176655e802f13695184efdf3fa011610f4c3a9cd92dfe98f71c22cdd",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_interface_qualified_rank2_triggered",
+      "source_sha256": "b7808693d4a2c3bb4962937e108d510faab12ea4234d8afaf276fadf22d9cf75",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_below_trigger",
+      "source_sha256": "10756d15f9f8566428ffd54d740ca3d3d94654d757c84c4be99ca0345b187ca0",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_below_wait",
+      "source_sha256": "7c2daa12fc7abbaafd3295064f460acd90a0b1cbec010ffef8d2b5a5b62c57e0",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_highz_trigger",
+      "source_sha256": "de59911594625579c3295c72585a45a4c9a539da740d7d4d61e37f624dcd78ae",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_highz_wait",
+      "source_sha256": "6c48c993380dba971d1f467ae7a545292bfdbbd0153a5c3ca5caeb7313b144b7",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_unknown_trigger",
+      "source_sha256": "83b7faacda03a51958c131c165cebe4483d845d71b3b5d3fd477b2f3ebbf0bfd",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_unknown_wait",
+      "source_sha256": "e930cf83f90629b5084e5c4ea1bf6a211272a391829219ace5289f659b3cb039",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_wide_trigger",
+      "source_sha256": "b4e4bcf9057b7106969ffe7a6f6bf600468f18924adcf379143b52149548ab3f",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_ascending_wide_wait",
+      "source_sha256": "6c472b7d90e2aca873c32d549d2bbaed2c1e0723ab2bd16790ca181ea5292c99",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_below_trigger",
+      "source_sha256": "359e8cb4517cd9b15894f615f69b1291fd7e23c9e8adf7fbdb3837cf021eabbb",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_below_wait",
+      "source_sha256": "3a70dae89db46953ffb580f02d6cc852271ad3444c1ab73091f9f4b45cd70c9b",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_highz_trigger",
+      "source_sha256": "39d727e50cee6ddb927b0c0b587d96d2e7302918e041e4277bcfb88d89fb6a18",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_highz_wait",
+      "source_sha256": "a2535205c840a00e5ed7437dfeb4f7f69dd5e49f267982484c7b39da4b183e39",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_unknown_trigger",
+      "source_sha256": "eebd343097c452af3ad071b311b567b953814454b95217c4d6629fdae7477c0c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_unknown_wait",
+      "source_sha256": "883717440a612732efc37fc76e28559d3afb179d76a066cea3a2ea80482eb39f",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_wide_trigger",
+      "source_sha256": "8a64d27406a276a7ffcc4a0e04b3fcf597d137a43ad7534bdb5f761db0e33266",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_descending_wide_wait",
+      "source_sha256": "0fb7f4f89f9caac71d006d51b6ba4251b4e9305147b4f1393563314de9a52375",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_below_trigger",
+      "source_sha256": "ab495169076b8b88df87cdd045a54487e88858fdec17aa4cdc1de786f8a17c25",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_below_wait",
+      "source_sha256": "bd18e97f2e2b0faa79669390bc819e6aa5fb8ba154595880cc285145035fc62a",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_highz_trigger",
+      "source_sha256": "4e20821d107bf88cb6a059999f9e345465553b73b9fe434c8ecbf2f8d4871257",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_highz_wait",
+      "source_sha256": "a6d16d75cbbe90c508160dfc59d710629dbdfddb4c95677b0d0b4e7b9bf84429",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_unknown_trigger",
+      "source_sha256": "c23a7950c98a5abdb5a4dc4f8c74fb3913372ced5282344a0f26a9b722a69bf7",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_unknown_wait",
+      "source_sha256": "62a00e894f9d5378cfe0d8686b70b241e07d8162ce7c1fa959508dcf939b92e6",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_wide_trigger",
+      "source_sha256": "ca098cc62d7e4f2cf558a86730a753f5d437795c5b8f9752f0e812f4e9f01127",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_automatic_rank2_wide_wait",
+      "source_sha256": "41b7bff197334cf90d5843182bc600aab80410fe8d320c2bd8018d167d2e7bfd",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_below_trigger",
+      "source_sha256": "2c57a12238c73bb22b79cdd517de56f486bf44954286d94584467dc3b06e66be",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_below_wait",
+      "source_sha256": "e49feb261c55efc9637976770bd39caa33a0615455d530e053f4a672b81cab0b",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_highz_trigger",
+      "source_sha256": "e8f38a167688c1891bd4671a45617f8998a3672fcdf21419f94782f645efebcc",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_highz_wait",
+      "source_sha256": "a369bc0f78f104374d6ae44a022c9e3a76f746202341f175672d0ced48db8b5d",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_unknown_trigger",
+      "source_sha256": "a579c13ed5b97eda8097190e6f2df83939783276fe27af238542119c440e0346",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_unknown_wait",
+      "source_sha256": "b8df00c5d1e970796ed60c0585a338570d610a24e19956a598b6eb8782e802f8",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_wide_trigger",
+      "source_sha256": "67152d53bc8994373fc3323469426c7a3adf9c822b0dbd1e3d7d60adc9e4fe52",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_ascending_wide_wait",
+      "source_sha256": "d08e540ccb4db4fb205a76e575f2684148a818c3bbca4a3672b45c5f2925b30f",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_below_trigger",
+      "source_sha256": "3c4f389303c0b5bb2e5e5786b2ba6a6bfc5aae84d403101e9ed986a84bf036f2",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_below_wait",
+      "source_sha256": "35093725ccac11ef11ac1990fab367aef0ef2f4ef71c8f9c377e1bfd7d4fe362",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_highz_trigger",
+      "source_sha256": "f6bf21eef84b2a281e910c20e02dd0bc016d99619056a4e6e8c830d6dbdded32",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_highz_wait",
+      "source_sha256": "7b4289a6085527360518651b88dc1c3418107a3770e2c7b21b79aa2c72f8f99e",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_unknown_trigger",
+      "source_sha256": "aed8f408b6cc69d6ef4344df5a2a273f8c217e249abc343252d2105ba1336b55",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_unknown_wait",
+      "source_sha256": "d80db3f9e9767d6ae40f4b85dadd3fb4fef64448ad92cb81cd2d62ea545a5f31",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_wide_trigger",
+      "source_sha256": "9a475ad49d36cf2d0a6a8103290addfa18ea62343a80ab5b1ba5670351e02699",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_descending_wide_wait",
+      "source_sha256": "d081fa749e2ade268002a717199b870824cef4863cd4b7fa94c0c7495a4f75e0",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_below_trigger",
+      "source_sha256": "03ddf44143526d01ebda8392d248625971b2d82c014062bc06c6678a078bf1f6",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_below_wait",
+      "source_sha256": "d8da0d5520fae88d102ad43c4d606c5028b682bfb01ca78453d1f9bb9c1b7fd1",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_highz_trigger",
+      "source_sha256": "a8e9b4ef1b3c5d6e4780b067beed3584610761988e1a8e3a681d2d1e7e020a61",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_highz_wait",
+      "source_sha256": "def9aca7f74bc6fcc5bc294c0734e898508602024c14c48e0d45f86e75f2497b",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_unknown_trigger",
+      "source_sha256": "f0350382ca4411e50d78eb4da0670159a3dfced041bdda0f16bc65dc14b7d236",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_unknown_wait",
+      "source_sha256": "26b38fe3229e1456cc94ceda96ea52e3dd3551a53b25f2e18a776463a8519515",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_wide_trigger",
+      "source_sha256": "ab85e05ce4195ed4f8801592c14cfd57713dc18bd1415264ec0ae8fc656b7c3d",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_initial_rank2_wide_wait",
+      "source_sha256": "bf901f3d74b196576d3637066da9edc1bb55006b6c2e28229bfd8ded61d03918",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_below_trigger",
+      "source_sha256": "756dd27830571f3dc83216f28433d1a1af5003f48c9be897f7102b5179b1c4d6",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_below_wait",
+      "source_sha256": "0b38667f91bbaabb841ab3e3b0ecf95b5eb72723d416df71d2d47a5506f63164",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_highz_trigger",
+      "source_sha256": "367461f755594ad672b77e3495e0d5fa82b6551466391cab8feabaa081a08f9c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_highz_wait",
+      "source_sha256": "d9ad3fca5ceb674c2b1efb215319a8c9a2384c9dec06dce2367de179e9df255d",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_unknown_trigger",
+      "source_sha256": "539f43d58e17ae6ef0ff27f4cf66940572d7ef19eb5bf26fa49dfac4f050bf40",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_unknown_wait",
+      "source_sha256": "27d20cad367e11cc2c7967f47f225b707336a2a339dc635829e1e94228a380eb",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_wide_trigger",
+      "source_sha256": "e00ca9d71c3dc03f0cd2b95aafafabfcc48e8edb6f07012146858798ccaf5587",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_ascending_wide_wait",
+      "source_sha256": "ccd02934eafbf89dcf1ac417a827d39290f6e359d236c85e8b84535bd4afc18b",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_below_trigger",
+      "source_sha256": "fdeab46a75c365c0ae953878817953cee1c9a16596ae2408e6e4d7be803cbc97",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_below_wait",
+      "source_sha256": "e7c0c4c2aa6abe862bc7e758f906c6b3af9b6d1c1f50a7b092104ee24ae732e2",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_highz_trigger",
+      "source_sha256": "205cbf29ae2b2b6c880b17b1e173411cce9cc1f80343ac0fb6e2e20bdc9cec6d",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_highz_wait",
+      "source_sha256": "54ed17d1c3974a48c1ab540e610512666832c306f86ea953029c869a0bf8229b",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_unknown_trigger",
+      "source_sha256": "228abd57976e9a98bb6db972b3b93f3274edfb651888c4ac947d68194504526c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_unknown_wait",
+      "source_sha256": "ce583af3634bb429097657b8670e57f4cd461a2a779350733006e8e4237a980a",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_wide_trigger",
+      "source_sha256": "5de5c077bac7f2f65fb8a1ab74b277b38762d189caf95fa1ed0e3e1d66e844dc",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_descending_wide_wait",
+      "source_sha256": "51a107ca49f2c8f69281333a9127d86ecd01482ce6521e68fb05a9bcaf7beccc",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_below_trigger",
+      "source_sha256": "b7cea9732bd0830c09ea8e7651c7f7afe5ee631dcac824e86c2c6d2d3078b000",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_below_wait",
+      "source_sha256": "4ae8b7761a98a4b53e2c91097d7001d72ea26b59fc2cd269f039b744b64020f8",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_highz_trigger",
+      "source_sha256": "304bd552bc50ed1a9ab6a6b5e5da1cc38af88099b9f59d41464f49ad92aac24d",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_highz_wait",
+      "source_sha256": "740257d12ef1bedd30ad13b8063119de59ac431736d851c9cbff9c137f155707",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_unknown_trigger",
+      "source_sha256": "49a273fad27761d4a457196bd4232aa93b184114d9b36e0d5ff72912cfce4e5a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_unknown_wait",
+      "source_sha256": "7e5bdf210392b6a4fc1938399c09ba553569b48948dd96bd83953da86fe2d8c6",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_wide_trigger",
+      "source_sha256": "92e595b16ae79e32eea18c3678243a2e844003c0c4a01fc8f01afc1fd5d74ca5",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_package_rank2_wide_wait",
+      "source_sha256": "4fb8cff3cd9f6e141f78e3254db6716adb5b2a5fb3781b6ae659e7f2bfc648e2",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_below_trigger",
+      "source_sha256": "4784162a7bdecf8320dabd64ac85de2a97faf09b5dd29c11630e40dfa7bc5c54",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_below_wait",
+      "source_sha256": "66cdbeee1190bf37983ea75190c3ff41f2e7b924b1444ceaba5c8a3ce8438191",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_highz_trigger",
+      "source_sha256": "2d66d82fa2992966ce2df10d901863239b734a4789057dbb9592a4361c2d47ab",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_highz_wait",
+      "source_sha256": "c821cb3e989c84d2d11c2aed17b91ee34e317109126c258044bca27dcbcb768d",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_unknown_trigger",
+      "source_sha256": "baca8b73241f5999ae8dd64ed8c9c9528590ab20c9e9b226c410d4450a197abc",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_unknown_wait",
+      "source_sha256": "a2063b360305fb248178c55e85b29315adfbc29e9261b75935573834ce36a9f7",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_wide_trigger",
+      "source_sha256": "307c2a733dd8817e3a90fccd6d373c5eb1098286e51b746f7cdaa7910514a83b",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_ascending_wide_wait",
+      "source_sha256": "6d09576490a2cc614a39c7df1ed3d4164bc95888710518cc7655f265c4384159",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_below_trigger",
+      "source_sha256": "7dd81008a60fdb19123a87a4c927bdae5e59b80bde57c688da6890ad34d16a07",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_below_wait",
+      "source_sha256": "e4d866e0bf641a319c7a95abc4d85da5a5a2bb60d0b55ccc7f5d719ae0e5ccd7",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_highz_trigger",
+      "source_sha256": "3b9ca87ec97e385f18d611045ca5406ea9b9ca086453998a6c5481799e72c45d",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_highz_wait",
+      "source_sha256": "18a944ca0a6a48939c0ad8be762037fed4bf1fd6f62476ee7ee1a35774e7d7ed",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_unknown_trigger",
+      "source_sha256": "05558d97869cd966a87a291c32a3f8cc7141845482ece6fea5d83570df1acbed",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_unknown_wait",
+      "source_sha256": "1452393631e925db2d17d1a4adf961565f3c27ba55a04897089b57183e456418",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_wide_trigger",
+      "source_sha256": "34700acdd9675bfebc2c0c77cc67516955d755a019977eb06c13eef8044e69e3",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_descending_wide_wait",
+      "source_sha256": "939c914f94a61c5817f654b7003f887f0e438545f08dc2f85bd042e020d63e84",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_below_trigger",
+      "source_sha256": "9e7b2d64004b2002d7dc23d8dff07fe865f72a439660b56d21e08dbec6f678e4",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_below_wait",
+      "source_sha256": "b219c1b7ac32b4812821210d12dfce7467ad07704914a5912bd821d6230b03a3",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_highz_trigger",
+      "source_sha256": "3112926fdf728f3fbef88f7f01c26584c0bdf02006e604a52f32a91ceb14ed0d",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_highz_wait",
+      "source_sha256": "359292c65e6682f892d80460d393b350fe6df32651e069338d72677584d2b38e",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_unknown_trigger",
+      "source_sha256": "0d179155e358436498271222145cf0b72eb24699691c7264391a3d49a549e86b",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_unknown_wait",
+      "source_sha256": "ac92107363fb1e12a6fe7c39a8e7900984d4980cfe29f69bfb0ce40ad29d9acd",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_wide_trigger",
+      "source_sha256": "f62212e352b415e9cb89b043633ff7356852f3d073666785b8fb8174ccbfa7ab",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "6e756c6c20300a646f6e6520310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_null_program_rank2_wide_wait",
+      "source_sha256": "b5cc08c6414ca46c87f290ed0a4cf46c6001349edda787aa6b6f40e9c9d3cb11",
+      "expected_exit": 2,
+      "policy": "project-defined null wait error; no reference equality requirement",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 2
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_package_local_ascending_mixed",
+      "source_sha256": "3ee264c533abc7404ff7fe486fda2328de42d5554d01d9b5de929ac1a28ece41",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_package_local_descending_nba",
+      "source_sha256": "dd65c32a65c17d80b29d14e73fb910bc3060aef46dc269192a8699759038af6f",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_package_local_rank2_named",
+      "source_sha256": "8b8e749f453643e677172ddae21920343631ca0b6f296ff778c879d83f32bda0",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_package_local_rank2_triggered",
+      "source_sha256": "6e2e2b20f80613bdf5cd6e7a9c5e3d61a2eecb63420280680355cbeb2cfc2152",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_package_qualified_ascending_named",
+      "source_sha256": "3efc015714df026d0b05f62f6e07145643450c596c392c053cd88a7e401aa52c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 9
+      }
+    },
+    {
+      "name": "indexed_event_package_qualified_ascending_triggered",
+      "source_sha256": "db444845ada1b7ab600681c31a3fd38cecf577e69c09244e8996d45755f586ba",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 9
+      }
+    },
+    {
+      "name": "indexed_event_package_qualified_descending_mixed",
+      "source_sha256": "456b98ae7a9d8f7677871414bf612584b1a6f1adbce599875f301e5d9263cc7f",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 11
+      }
+    },
+    {
+      "name": "indexed_event_package_qualified_rank2_nba",
+      "source_sha256": "de01406c44b42a456dc09a7817380a1ef19d19dbef775f82a41abfff20aceda0",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c73203120312031203133320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 11
+      }
+    },
+    {
+      "name": "indexed_event_program_local_ascending_nba",
+      "source_sha256": "e0f2e33868fc790f30a47b5d00b31779bf9a8c53865fdcbb99aed4b15e48253e",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_program_local_descending_named",
+      "source_sha256": "bf83a765ebaba49959e99b5b0f75a5dbe3289f1b6a1bc8aeb171d1224cfa4b2b",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_program_local_descending_triggered",
+      "source_sha256": "8179d10e650f6b4cba3fe86e260427ce49148e059160ed64ac78adb2bfe34280",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_program_local_rank2_mixed",
+      "source_sha256": "db6baf5bc5567cd4878cf16293c4b60d36712f42fba2b5022ca9066db4f27a5a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_program_qualified_ascending_mixed",
+      "source_sha256": "89818aa8bc043854ddbfc545c729330d1a35c7f0a17986df0192496e483f014a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_program_qualified_descending_nba",
+      "source_sha256": "f43a949628293746a704fbc019a2f151c7e9e9c0b2312f6336b92b4fda42c913",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_program_qualified_rank2_named",
+      "source_sha256": "198a31745992076150804c770b6d38bf5fb20d12eb724b4c10f9e6de489c57b7",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_program_qualified_rank2_triggered",
+      "source_sha256": "b78f758fa32bfa080df5292bacb16f7a491d8f9f769d163ed49ed26dcc27cb42",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_task_local_ascending_nba",
+      "source_sha256": "6ad24b391035b200e6c08c68765733bf1a421b85268921041286448dc6cf60ba",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_task_local_descending_named",
+      "source_sha256": "7062634960134f826f77a1633908ee6151fa168036f74933d0b28a5c8eb5faec",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_task_local_descending_triggered",
+      "source_sha256": "ac4947951261746b6701d0a428554e170ddd61741bf52e5d184769cb1ffd7eef",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_task_local_rank2_mixed",
+      "source_sha256": "58f355500a26305b97e9551cfe5ad2e00f0921386c0ff2fb9bbdfc5f4898b513",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_task_qualified_ascending_mixed",
+      "source_sha256": "107e4b194789dc4ab04e43fed34706a50bae7f9e9cf7e543c726609c6a39a62a",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c732031203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 4
+      }
+    },
+    {
+      "name": "indexed_event_task_qualified_descending_nba",
+      "source_sha256": "e9adc0181d0c9b98584496f22fb513033a6ab4015635c729048ff24587be85d6",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420330a7365636f6e6420340a63616c6c732031203020312031320a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_task_qualified_rank2_named",
+      "source_sha256": "96b43974a9fb04aa8f604bf7682b56c425ab2ea03ab6fef9946447f41c3b698c",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a63616c6c73203120312031330a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    },
+    {
+      "name": "indexed_event_task_qualified_rank2_triggered",
+      "source_sha256": "1e816f02423d01af99918b6b5551015cd78f86f182355f200d70937c70a66861",
+      "expected_exit": 0,
+      "policy": "specified selection and trigger behavior",
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "77616b6520320a7374617465203020310a"
+      },
+      "icarus14": {
+        "status": "compile_failed",
+        "exit": 1
+      }
+    }
+  ],
+  "representative_compile_diagnostics": [
+    {
+      "name": "indexed_event_initial_local_ascending_named",
+      "source_sha256": "4aa6ea5cda44ed23079f04c44d9817ec40545160760ed8b69ece06c7760e6365",
+      "observed_exit": 1,
+      "observed_compiler_diagnostic": "sorry: event arrays are not supported."
+    },
+    {
+      "name": "indexed_event_null_initial_descending_below_trigger",
+      "source_sha256": "3c4f389303c0b5bb2e5e5786b2ba6a6bfc5aae84d403101e9ed986a84bf036f2",
+      "observed_exit": 1,
+      "observed_compiler_diagnostic": "sorry: event arrays are not supported."
+    }
+  ],
+  "limitations": [
+    "All 160 Icarus-14 attempts failed at compile time, so these attempts do not validate the native expected results.",
+    "Two independently recompiled original representatives explicitly report event arrays unsupported; other diagnostic causes were not retained.",
+    "The matrix is a prerequisite for loaded/captured event source execution, not evidence of complete Icarus-13 coverage.",
+    "No fresh Icarus-13, population, sv-tests or Linux measurement."
+  ]
+}

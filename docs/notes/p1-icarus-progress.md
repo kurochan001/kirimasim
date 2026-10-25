@@ -13,6 +13,20 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Loaded event selections from source:** `2108dd72` connects
+[runtime fixed-array targets and getters](indexed-event-execution.md) through the
+shared typed place decoder. All 160 original designs and 16 policy boundaries
+pass; four compiled faults are caught and the 192-case restored check passes.
+Full CI has 17 successful checks and four failed test steps: after refreshing
+generated counts, dev/ASan/UBSan pass 5,128/5,131 and release 5,129/5,132, with
+only `cli/options` failing and two skips each. Its six historical unsupported
+index diagnostics await [separate migration approval](indexed-event-expectation-migration.md).
+The historical input and every existing expectation are unchanged. All 87
+statuses/passing bytes remain unchanged; the 21 historical Icarus-13-passing gaps
+remain. Installed Icarus-14 cannot compile the new event-array matrix, which
+therefore cannot serve as a reference-value oracle. Automatic event construction
+and the instruction-safepoint amendment remain work/unapproved. P1 is incomplete.
+
 **Typed event execution in the VM:** `7e188c56` connects
 [construction, holders, waits/triggers and actual object reads](event-vm-boundaries.md)
 at existing region/slot collection boundaries. Eleven new execution tests and two

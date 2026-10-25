@@ -111,6 +111,12 @@ and collection at existing region/slot boundaries are connected. Automatic event
 source construction and instruction-level event safepoints remain work; the
 [safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) is not approved.
 
+[Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
+now support named/mixed waits, delayed targets and `.triggered` through typed
+values, with 160 original source designs. The historical CLI input's six old
+unsupported diagnostics await [separate migration approval](docs/notes/indexed-event-expectation-migration.md);
+the CLI suite is not yet all-green at this checkpoint.
+
 Fixed-array ports now share or copy corresponding elements while preserving
 each declaration's bounds. Net arrays resolve strengths per element with
 sparse private drivers. Constant-element force/release, delay and unconnected
@@ -227,11 +233,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 4,969 | 4,967, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,131 | 5,128, 2 skipped, 1 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 514, `tests/suite/` 4,247 (made by 138 generators under `tools/`), tools 149, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 514, `tests/suite/` 4,407 (made by 139 generators under `tools/`), tools 151, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

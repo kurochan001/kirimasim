@@ -25,6 +25,11 @@ source is not a claim of complete P1 or automatic-event support.
 AI_POLICY's expected-value rule says: "A change of an expected value states its
 reason and the clause of the standard, and a human approves it."
 
+**Validation update (2026-10-26):** the [source matrix](indexed-event-execution.md)
+now passes all 160 designs and 16 policy boundaries. Four compiled faults are
+caught. Full CI preserves the expected historical CLI failure; the migration
+below is still unapproved and unapplied.
+
 ## Exact requested migration
 
 In a separate commit with no `src/` changes:

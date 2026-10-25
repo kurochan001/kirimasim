@@ -12,6 +12,16 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
+**ソースからloadするevent選択：** `2108dd72`で[実行時の固定配列対象とgetter](indexed-event-execution.ja.md)を
+共有の型付きplace変換へ接続しました。独自160設計と方針境界16件が通り、コンパイルした4故障を
+検出し、復元後の対象192件も成功しました。全CIは17確認成功・テスト4段階失敗です。
+生成件数の更新後、dev/ASan/UBSanは5,128/5,131、releaseは5,129/5,132成功で、
+各失敗は`cli/options`だけ、各既知スキップ2件です。旧未対応index診断6行は
+[別途移行の承認待ち](indexed-event-expectation-migration.ja.md)で、元入力と全既存期待値は保っています。
+87項目の判定/成功出力は変わらず、過去のIcarus 13合格との差分21件も残ります。
+導入済みIcarus 14は新規event配列行列をコンパイルできず、参照期待値の裏付けにはできません。
+automatic event生成と命令間safepoint案は残作業/未承認で、P1は未完了です。
+
 **型付きeventのVM実行：** `7e188c56`で[生成・保持・待機・trigger・対象の読み取り](event-vm-boundaries.ja.md)を
 既存のregion/slot回収境界へ接続しました。独自11実行テストとカーネル2テストを追加し、
 通常/共有配列、引数/戻り値、未読領域、Active/Reactiveの保留対象、callback解除を検査します。

@@ -1,0 +1,215 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "2108dd72b1f5749a3cbf1fd9cad2113c24ba11d7",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/front/lower_expr.cpp": "0a4a5f681b650f864adaa14c4ce2a0d0f6f3ad0a97ca0593b26ede6225e577d8",
+    "src/front/lowerer.h": "3e8dfa9c3f988baaf4affa8c9d25f2154360291550e26d6eeb338da49d7fc94a",
+    "src/front/lower_stmt.cpp": "ebf64f1025061d2f023800cbfe7ed84458616a239b1aadefb9fff051b85af07c",
+    "tools/gen_indexed_event_matrix.py": "4517b6100ea3c6376fbdff013c1df6e1e9c0af5c5d601d2acc2de3331bb257c7",
+    "tests/tools/check_indexed_event_boundaries.py": "49447e3ceebc34b911d2d20dec8a10fe32bb6d6de244a1b9988f0efb9b700ec9",
+    "tests/tools/CMakeLists.txt": "a6634a9c5f636b195d415a97049ebe50e3a5e2aaadf0f4d72bc2623e6d94ae89",
+    "tools/mutants.py": "59abbe41d92a2b3d0bcba05bfe9c4f6fb59a96e3e544cc0dc67642a31c7c5b1a"
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 1.0
+    },
+    {
+      "status": "FAILED",
+      "name": "dev: test",
+      "seconds": 63.0
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 4.7
+    },
+    {
+      "status": "FAILED",
+      "name": "release: test",
+      "seconds": 56.1
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 6.9
+    },
+    {
+      "status": "FAILED",
+      "name": "asan: test",
+      "seconds": 88.8
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 7.3
+    },
+    {
+      "status": "FAILED",
+      "name": "ubsan: test",
+      "seconds": 73.8
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.2
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.6
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 99.7
+    }
+  ],
+  "exit": 1,
+  "all_checks_passed": false,
+  "successful_checks": 17,
+  "failed_checks": 4,
+  "initial_presets": {
+    "dev": {
+      "total": 5131,
+      "passed": 5127,
+      "failed": 2,
+      "failed_tests": [
+        "cli/options",
+        "tools/readme_counts"
+      ],
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5132,
+      "passed": 5129,
+      "failed": 1,
+      "failed_tests": [
+        "cli/options"
+      ],
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5131,
+      "passed": 5128,
+      "failed": 1,
+      "failed_tests": [
+        "cli/options"
+      ],
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5131,
+      "passed": 5128,
+      "failed": 1,
+      "failed_tests": [
+        "cli/options"
+      ],
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "dev_after_generated_counts_refresh": {
+    "total": 5131,
+    "passed": 5128,
+    "failed": 1,
+    "failed_tests": [
+      "cli/options"
+    ],
+    "skipped": 2,
+    "skips": [
+      "suite/cb/input_sample_1step",
+      "suite/nets/net_port_drivers_part"
+    ]
+  },
+  "counts_refresh_explanation": "The first dev run found the old suite/generator counts before readme_counts.py updated them. After regeneration, a complete second dev run has only the unchanged historical CLI failure. No source, existing oracle or test exclusion changed.",
+  "source_matrix_tests": 160,
+  "positioned_policy_boundaries": 16,
+  "focused_ctest_passed": 192,
+  "existing_dump_sir_tests": 29,
+  "historical_cli_fixture_sha256": "1362bf823fbd40c158a7282e449dfb4dabaecf64be9658711e9a663d3b03e52a",
+  "historical_cli_fixture_bytes_kept": true,
+  "historical_cli_migration_approved": false,
+  "historical_cli_migration_applied": false,
+  "historical_cli_diagnostic_lines_awaiting_migration": 6,
+  "manual_expected_change_check": {
+    "base": "e2918c32",
+    "head": "2108dd72b1f5749a3cbf1fd9cad2113c24ba11d7",
+    "exit": 0,
+    "existing_expectations_kept": true
+  },
+  "automatic_event_source_enabled": false,
+  "instruction_safepoint_enabled": false,
+  "external_datasets_remeasured": false,
+  "standard_speed_comparison_remeasured": false,
+  "performance_budget_changes": false
+}
