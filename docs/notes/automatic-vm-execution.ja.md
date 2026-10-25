@@ -1,7 +1,8 @@
 # tier 1で字句的なautomatic環境を実行する
 
 [English](automatic-vm-execution.md)が正。状態：現在表現できる値のhomeについてInterpreterへ
-接続、2026-10-25。frontによるソースの捕捉は未有効です。
+接続、2026-10-25。この文書はInterpreter段階の記録です。後続の
+[ソース捕捉](automatic-front-capture.ja.md)も実装し、過去の期待値移行はレビュー待ちです。
 
 ## 契約と実行
 
@@ -82,7 +83,9 @@ peak RSS中央値は9.1875から9.203125 MiB（+16 KiB）でした。小標本�
 
 ## 残作業
 
-frontはソースのautomatic fork捕捉を引き続き拒否し、新しいhomeをまだ生成しません。
+このInterpreter段階ではfrontはautomatic fork捕捉を拒否していました。後続の
+[ソース変換の記録](automatic-front-capture.ja.md)で186設計と全取り込み・故障の検査を記録し、
+過去の期待値移行を別途レビュー待ちとしています。当時の次の作業計画は以下でした。
 次に字句的なpromote/captureのloweringを実装し、宣言順、loop/block寿命、ref修飾、コピー戻し、
 キャンセル、monitor、typed rootを含む承認済みソース行列全体を検証します。
 手組みSIRの実行だけでソース機能の差分を解消したとは数えません。

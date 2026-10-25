@@ -54,7 +54,9 @@ z_zero 0
 fork内の宣言は、親で寿命どおり初期化し、子に数えたり`join_any`を満たしたりしません。
 static記憶域は共有し、捕捉のないautomatic宣言は入るたびに初期化します。
 宣言だけのforkは待機せず進みます。[独自72ソースと制限](notes/fork-local-declarations.ja.md)を
-参照してください。子が捕捉するautomatic変数は未対応です。
+参照してください。[automaticの共有捕捉](notes/automatic-front-capture.ja.md)は寿命・型・joinを
+またぐ新規186ソースで通りました。旧未対応3テストの期待値は別途承認待ちです。
+automatic eventは引き続き未対応です。
 
 ## 広いネットでL/Hを解決する
 

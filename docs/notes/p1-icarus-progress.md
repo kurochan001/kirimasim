@@ -13,6 +13,18 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Source automatic capture:** [front now emits complete lexical environments](automatic-front-capture.md)
+in the working implementation. All 186 original source designs plus generator/metadata
+checks pass, including retained unread typed fields and empty scopes; five compiled
+faults are caught. Only `automatic_fork_capture` changes in the fresh 87-probe
+comparison, to passed. Historical Icarus-13-passing gaps fall from 22 to 21;
+population stays 1,451/1,466 and pinned sv-tests 244/344. Three historical
+rejection checks need [separate expectation approval](automatic-capture-expectation-migration.md)
+and remain failing until then. The [full local CI](../measurements/2026-10-25/front-capture-validation.json)
+passes 17 checks and fails four test steps only on those three expectations:
+dev/ASan/UBSan 4,865/4,870, release 4,866/4,871, two skips each.
+All-green status and complete automatic event/P1 coverage are not claimed.
+
 **Interpreter automatic environments:** `b17234e4` now executes valid represented
 SIR homes through [the shared ownership/reference adapter](automatic-vm-execution.md).
 Nineteen new execution tests cover joins, call/copyback, reentry, descendants,

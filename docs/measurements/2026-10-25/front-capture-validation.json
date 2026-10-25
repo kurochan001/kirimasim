@@ -1,0 +1,213 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "ebb0e14dded7f7e5e8ef92ac58f098ddaad52e4c",
+  "run_base_revision": "95b2525099938cea54597605183b3b1090504418",
+  "run_worktree_uncommitted": true,
+  "platform": "macOS arm64",
+  "source_sha256": {
+    "src/front/CMakeLists.txt": "caa5627ee7040fbbd401c76b7f32b6fdb1372cd30a8647a348163ce3acbb23a2",
+    "src/front/lower.cpp": "4c0ab4bc80e188f5cd6c2978e40add477d0774cd830d7f53630308b81a0cea93",
+    "src/front/lower_array.cpp": "19961fb8eb8ea36fa769c53212f9f1b20554d1c1f3516265588d1863ca013442",
+    "src/front/lower_capture.cpp": "69c8d706b625537566c1e433908467d953e9784506407a6e5bf360d55b4e6d17",
+    "src/front/lower_container.cpp": "24bf076eb0236ac7fbad7b22fc4090fdd6e69b95075ea45e61b95c2465c4a820",
+    "src/front/lower_dump.cpp": "54c64d0c94e6b70256ab893bee813dfc6ebd54c686b1a4b8c824733a86dde762",
+    "src/front/lower_expr.cpp": "d7191b56e82b611b75542aa6c051b9f1f484dddd593de6035b3e9883901fb944",
+    "src/front/lower_net_array.cpp": "95156e4a99375ce3845850e26dc5c5f4b9c9f1345b0a9af3767076da4618b074",
+    "src/front/lower_stmt.cpp": "ebf64f1025061d2f023800cbfe7ed84458616a239b1aadefb9fff051b85af07c",
+    "src/front/lower_struct.cpp": "8d070e23d754aa5e85e18a245fcc17132f35849d2b9832167b04c9e1718e2bf9",
+    "src/front/lower_sub.cpp": "dc1f9798e9534e8bdabd984cdbfc85184edf73d8b4fac11ab6ba51d2ebb3a393",
+    "src/front/lowerer.h": "87ca891a96f84917505b23cc7828ab652d6a3e0408e72ce92f2ce451e39f7853",
+    "tests/tools/check_automatic_capture_metadata.py": "491d5c9af3cbcab298797aa74f3a1535b5bc2fff3ef19f1d0b030cdf31e5168b",
+    "tools/gen_automatic_capture_matrix.py": "e62f3c61f02d55e59a6f568427ece72293ff0c760f74b3d8205f40a90fb52c3f"
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 0.8
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 0.1
+    },
+    {
+      "status": "FAILED",
+      "name": "dev: test",
+      "seconds": 61.6
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 4.9
+    },
+    {
+      "status": "FAILED",
+      "name": "release: test",
+      "seconds": 56.1
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 7.8
+    },
+    {
+      "status": "FAILED",
+      "name": "asan: test",
+      "seconds": 98.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 8.3
+    },
+    {
+      "status": "FAILED",
+      "name": "ubsan: test",
+      "seconds": 80.4
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.2
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.5
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 99.1
+    }
+  ],
+  "exit": 1,
+  "presets": {
+    "dev": {
+      "total": 4870,
+      "passed": 4865,
+      "failed": 3,
+      "skipped": 2,
+      "failures": [
+        "cli/dynamic_containers",
+        "cli/options",
+        "tools/fork_declaration_boundary"
+      ],
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4871,
+      "passed": 4866,
+      "failed": 3,
+      "skipped": 2,
+      "failures": [
+        "cli/dynamic_containers",
+        "cli/options",
+        "tools/fork_declaration_boundary"
+      ],
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4870,
+      "passed": 4865,
+      "failed": 3,
+      "skipped": 2,
+      "failures": [
+        "cli/dynamic_containers",
+        "cli/options",
+        "tools/fork_declaration_boundary"
+      ],
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4870,
+      "passed": 4865,
+      "failed": 3,
+      "skipped": 2,
+      "failures": [
+        "cli/dynamic_containers",
+        "cli/options",
+        "tools/fork_declaration_boundary"
+      ],
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "all_checks_passed": false,
+  "reason": "All test failures are three historical unsupported-capture expectations; migration awaits human approval.",
+  "focused_tests": {
+    "source_designs": 186,
+    "tools": 2,
+    "passed": 188
+  },
+  "manual_committed_expected_change_check": {
+    "base": "ebb0e14d^",
+    "head": "ebb0e14d",
+    "exit": 0,
+    "result": "implementation changed, existing expectations kept"
+  },
+  "existing_dump_sir_tests": {
+    "total": 29,
+    "failed": 0
+  },
+  "performance_budget_changes": false,
+  "standard_speed_comparison_remeasured": false,
+  "linux_remeasured": false
+}

@@ -144,9 +144,11 @@ Context単位の世代付きscope・共有binding・lease・readonly・typed roo
 独自19実行テストはcall/コピー戻し・再進入・全join・typed root・キャンセル・program終了・
 resource失敗を含み、コンパイルした14故障を検出しました。通常フレームとレイアウト/値の境界を
 共用し、scopeの値の複製を残しません。
-frontは捕捉homeをまだ生成せず、ソースのautomatic fork捕捉は引き続き拒否します。
-automatic event構築と所有ref/objectの実提供も未対応です。手組みSIRのactivation命令の実行だけで
-これらのソース機能の差分を解消したとは扱いません。
+frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を生成し、新規186設計と
+全フィールド・寿命の確認器が通り、実際にコンパイルした5故障も検出しました。
+有限のautomatic forkプローブは通り、過去のIcarus 13.0合格・native未成功差分は21件です。
+旧未対応3テストの期待値は別途承認待ちで、全local CI合格とは扱いません。
+automatic event構築と所有event/ref/objectの提供は未対応です。
 
 ### 固定長配列ポートとネット配列
 

@@ -12,6 +12,16 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**ソースのautomatic捕捉：** 作業中の実装で[frontが字句環境全体を生成](automatic-front-capture.ja.md)します。
+独自186設計と生成器・メタデータ確認が通り、読まない型付き変数と空のスコープも保持し、
+コンパイルした5故障を検出しました。新しい87プローブ比較ではautomatic_fork_captureだけが
+合格へ変わり、過去のIcarus 13.0合格・native未成功は22件から21件です。
+母集団1,451/1,466と固定sv-tests 244/344は維持しました。旧未対応3テストは
+[別の期待値承認](automatic-capture-expectation-migration.ja.md)待ちで失敗を残しています。
+[全local CI](../measurements/2026-10-25/front-capture-validation.json)は17確認が通り、
+テストの4段階がこの同じ3件だけで失敗しました。dev/ASan/UBSanは4,865/4,870、
+releaseは4,866/4,871で、各2件スキップです。全合格やautomatic event・P1の完成とは扱いません。
+
 **Interpreterのautomatic環境：** `b17234e4`で妥当な表現済みSIR homeを
 [共有の所有権/参照の経路](automatic-vm-execution.ja.md)で実行します。独自19実行テストはjoin・
 call/コピー戻し・再進入・子孫・ref/static/readonly・guard・typed root・キャンセル・確保失敗を含みます。

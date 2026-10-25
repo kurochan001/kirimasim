@@ -57,7 +57,9 @@ Fork declarations initialize according to their lifetime in the parent; they
 do not create children or satisfy `join_any`. Static storage is shared, and
 uncaptured automatic declarations initialize per entry. Declaration-only
 forks proceed without a wait. [Seventy-two original source cases and limits](notes/fork-local-declarations.md)
-cover the behavior; automatic variables captured by children remain unsupported.
+cover the behavior. [Automatic shared capture](notes/automatic-front-capture.md) now
+runs 186 new source designs across lifetimes, types and joins; three historical
+rejection checks await separate expectation approval. Automatic events remain unsupported.
 
 ## Wide L/H gate resolution
 
