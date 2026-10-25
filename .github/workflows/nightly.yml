@@ -51,10 +51,9 @@ jobs:
           build/${{ matrix.preset }}/tests/unit/kirimasim_unit_tests
           --gtest_shuffle --gtest_repeat=3 --gtest_random_seed="$(date -u +%j)"
 
-  # The Context tests under ThreadSanitizer (RUNTIME_ABI.md 9.8), all of
-  # them: ci.yml leaves out front_parallel, which fails while slang's
-  # Driver writes its process-wide colour flags when it is made
-  # (RUNTIME_ABI.md 9.7, #32). Linux uses clang 22, as ci.yml does.
+  # The tests of the tsan preset under ThreadSanitizer (RUNTIME_ABI.md 9.8),
+  # front_parallel among them, as ci.yml's tsan job runs them on Linux; this
+  # job runs them on macOS too. Linux uses clang 22, as ci.yml does.
   tsan:
     name: tsan (${{ matrix.os }})
     strategy:
