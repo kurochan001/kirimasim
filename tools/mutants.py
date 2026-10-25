@@ -42,7 +42,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MUTANTS = [
     ('frame access: scoped writes bypass scheduler notification', 'src/vm/frame_value.h',
      'return scheduler_->writeActivation(binding_, element_, value, lsb, width);',
-     'return store_->write(binding_, element_, value, lsb, width);'),
+     'return (static_cast<void>(scheduler_), store_->write(binding_, element_, value, lsb, width));'),
     ('frame access: ordinary wide writes keep only the low chunk', 'src/vm/frame_value.h',
      'std::copy_n(value.begin(), chunks(width_), words_.begin());',
      'std::copy_n(value.begin(), 1, words_.begin());'),
