@@ -13,6 +13,20 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Scoped-reference component:** `589bd26b` preserves immutable declaring origins,
+checks generation/rights and resolves actual field/array selections without
+owning borrowed targets. The [implementation record](automatic-vm-scoped-refs.md)
+adds 11 original tests and detects 13 compiled controls (nine new, four relocated).
+The shared ordinary layout decoder now runs in the Interpreter; complete
+ownership/reference attachment and source capture remain gated. The
+[full local CI](../measurements/2026-10-25/scoped-reference-final-validation.json)
+passes all 21 steps: dev/ASan/UBSan 4,661/4,663, release 4,662/4,664, zero failures
+and two known skips. Fresh native/14.0 results preserve all 87 statuses/passing
+outputs; historical 13.0 still leaves 22 gaps. Exact population stays 1,451/1,466
+and pinned sv-tests 244/344. Focused ordinary transport cost is about +1.3% in
+five pairs, with equal counters/RSS; this is not a full speed comparison.
+Descriptor generation exhaustion remains not confirmed. P1 remains incomplete.
+
 **Environment-component final check:** `615afa0d` passes
 [all 21 local-CI checks](../measurements/2026-10-25/activation-environment-final-validation.json).
 Dev/ASan/UBSan pass 4,650/4,652 and release 4,651/4,653, with zero failures

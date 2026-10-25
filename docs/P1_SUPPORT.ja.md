@@ -140,9 +140,12 @@ Context内の世代付きスコープ・共有binding・lease・readonly・型�
 VM接続が揃うまで新しいhomeの実行は拒否します。
 [VMのアクセス経路の移行](notes/automatic-vm-frame-access.ja.md)ではframe・ref・
 ファイル/走査・引数を値のビューへ通し、7テストで選択270通りとSIR実行24通りを調べます。
-環境構築とソースの捕捉は残作業です。
+環境と参照のInterpreterへの接続とソースの捕捉は残作業です。
 [VM環境の部品](notes/automatic-vm-environment.ja.md)ではscopeの所有・字句的な全体の取り込み・
-不変の捕捉・失敗の巻き戻しを21テストで直接検証しました。Interpreterへの登録とscoped refの表現は残作業です。
+不変の捕捉・失敗の巻き戻しを21テストで直接検証しました。
+[scoped refの部品](notes/automatic-vm-scoped-refs.ja.md)は不変の由来・世代/権限・選択範囲・
+scope ticket・失敗の巻き戻しを11テストで検証し、通常レイアウトの計算をInterpreterと共用します。
+環境と参照のInterpreterへの全体の接続は残作業です。
 ソースのfork捕捉、activation命令、automatic event・ref・objectの接続はまだ有効にせず、
 上記の未対応診断は維持しています。
 

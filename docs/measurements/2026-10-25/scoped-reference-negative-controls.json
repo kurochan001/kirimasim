@@ -1,0 +1,172 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "589bd26b64f9",
+  "scope": "Actual compiled scoped-reference controls; complete Interpreter/source capture remains gated",
+  "controls": [
+    {
+      "name": "scoped refs: stale descriptor generations are accepted",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.ScopeTicketsAreReusedAndStaleGenerationsNeverResolve"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: array selections address the first element",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.ShortrealSelectionsAndSubviewWritesUseTheirActualWidthAndOrigin",
+        "ScopedReferences.WideArraysResolveActualFieldAndElementWithNoMirrorOrOwnership"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: word selections ignore the physical chunk",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.ShortrealSelectionsAndSubviewWritesUseTheirActualWidthAndOrigin",
+        "ScopedReferences.WideArraysResolveActualFieldAndElementWithNoMirrorOrOwnership"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: narrow word reads request 64 bits",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.LeafStepsUseLogicalFrameRowsAndCannotCrossOrdinaryOrLexicalHoles",
+        "ScopedReferences.ReadonlyCapturesCannotRecoverWriteAccessByStepping",
+        "ScopedReferences.ShortrealSelectionsAndSubviewWritesUseTheirActualWidthAndOrigin",
+        "ScopedReferences.WideArraysResolveActualFieldAndElementWithNoMirrorOrOwnership"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: logical steps cross lexical extents",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.LeafStepsUseLogicalFrameRowsAndCannotCrossOrdinaryOrLexicalHoles"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: readonly and writable descriptors are interned together",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.ReadonlyCapturesCannotRecoverWriteAccessByStepping"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: equal actual references are never interned",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.LeafStepsUseLogicalFrameRowsAndCannotCrossOrdinaryOrLexicalHoles",
+        "ScopedReferences.ScopeTicketsAreReusedAndStaleGenerationsNeverResolve"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: unwinding retains the leaving scope tickets",
+      "file": "src/vm/scoped_reference.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.ScopeTicketsAreReusedAndStaleGenerationsNeverResolve"
+      ],
+      "caught": true
+    },
+    {
+      "name": "scoped refs: forwarded origins are redirected to the child plan",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.CapturesKeepOriginalPlanAfterOwnerReturnAndReentry",
+        "ScopedReferences.ForwardedCaptureOriginsNeverBecomeIntermediateRows",
+        "ScopedReferences.ReadonlyCapturesCannotRecoverWriteAccessByStepping"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: captures bind to the parent root field",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": -5,
+      "failed_tests": [
+        "ActivationEnvironment.CallsAndReenteredBlocksKeepDistinctImmutableBindings",
+        "ActivationEnvironment.DescendantsForwardOriginalExtentsAfterBothOwnersFinish",
+        "ActivationEnvironment.ReadonlyViewsKeepIdentityWithoutRegainingWriteRights",
+        "ActivationEnvironment.SiblingsSharePhysicalFieldsAndKeepFullUnreadAndEmptyExtents",
+        "ScopedReferences.CapturesKeepOriginalPlanAfterOwnerReturnAndReentry",
+        "ScopedReferences.ReadonlyCapturesCannotRecoverWriteAccessByStepping"
+      ],
+      "caught": true
+    },
+    {
+      "name": "frame access: scoped writes bypass scheduler notification",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmFrameValue.WideCommitNotifiesWithTheCompleteValueBeforeReturning"
+      ],
+      "caught": true
+    },
+    {
+      "name": "frame access: scoped writes use the first array element",
+      "file": "src/vm/frame_value.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.ShortrealSelectionsAndSubviewWritesUseTheirActualWidthAndOrigin",
+        "ScopedReferences.WideArraysResolveActualFieldAndElementWithNoMirrorOrOwnership",
+        "VmFrameValue.OrdinaryAndScopedSelectionsMatchAnIndependentBitModel"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: automatic arrays share their elements",
+      "file": "src/vm/frame_layout.h",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ScopedReferences.FrameLayoutSeparatesLogicalAddressesFromPhysicalOrdinaryWords"
+      ],
+      "caught": true
+    }
+  ],
+  "baseline_build_exit": 0,
+  "baseline_test_exit": 0,
+  "restored_build_exit": 0,
+  "restored_test_exit": 0,
+  "all_caught": true,
+  "source_restored": true,
+  "new_unit_tests": 11,
+  "source_sha256": {
+    "src/vm/activation_environment.cpp": "08cdcfdc768dec87eaa34d7e6fbabbdc56c4658e12e535dd49e05a54de488a74",
+    "src/vm/activation_environment.h": "c463871db54ed11a6b9c21c729ae85b38d6381d16e2dfd43c759702859c18c67",
+    "src/vm/scoped_reference.cpp": "3d5cbf2ca5be58aebee1e3c0806e684ae7d21fa811bf2326d1f79c1131ac26a1",
+    "src/vm/scoped_reference.h": "41d1937755ae3707dafe6b141e7ff2bef4ff1893e102ce9da202e744ebb02828",
+    "src/vm/frame_layout.h": "755686a1595d136f5d2acfdcfd3f4410236ca739689eba8d7421837ec9b60e0c",
+    "src/vm/frame_value.h": "178156efca93ee5b1e053c22581709bf3b69f2744e88b5f23c930dad2d60bf83",
+    "tests/unit/scoped_reference_test.cpp": "a7e1dd319ead10b1ff158efe5e21ed312f399edf29a60f3bcd50ecbdf963f6e2",
+    "src/vm/vm.cpp": "83e697e8ae3cc2af37b7106e6ce530ceea6184318a426a850330ab2b2c4df4ad"
+  },
+  "run_base_revision": "652159b92f47f175966a068f37d0ba741797e3bf",
+  "run_worktree_uncommitted": true,
+  "revision_note": "Controls ran on the uncommitted code subsequently committed as 589bd26b; hashes below match that committed implementation."
+}

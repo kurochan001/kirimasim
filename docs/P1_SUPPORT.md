@@ -154,11 +154,14 @@ The [SIR metadata/verifier checkpoint](notes/automatic-sir-metadata.md) adds
 16 tests; execution of those new homes is gated until the VM adapter is complete.
 The [VM access-path migration](notes/automatic-vm-frame-access.md) routes frame,
 ref, file/scan and argument operations through value views; seven tests cover
-270 selected transports and 24 complete SIR executions. Environment construction
-and source capture remain work.
+270 selected transports and 24 complete SIR executions. Full Interpreter
+ownership/reference attachment and source capture remain work.
 The [VM environment component](notes/automatic-vm-environment.md) directly tests
 scope owners, whole lexical imports, immutable captures and rollback in 21 tests;
-Interpreter attachment and scoped-reference encoding remain work.
+The [scoped-reference component](notes/automatic-vm-scoped-refs.md) adds 11 tests
+for immutable origins, generation/rights checks, selections, scope tickets and
+rollback; its ordinary layout decoder is shared with the Interpreter. Full
+Interpreter environment/reference attachment remains work.
 Source fork capture, activation instructions and automatic event/ref/object
 integration are not enabled; the existing source boundaries above remain.
 
