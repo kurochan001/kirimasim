@@ -1,7 +1,7 @@
 # automatic 変数の fork 捕捉：過去の未対応期待値の移行
 
-[English](automatic-capture-expectation-migration.md) が正。Status:
-**proposal (not approved), 2026-10-25**。
+[English](automatic-capture-expectation-migration.md) が正。状態：2026-10-25 に提案。
+**同日に承認され、下のとおり、それだけのコミットで適用した**。
 
 ## 承認を求めること
 

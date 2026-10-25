@@ -27,7 +27,8 @@ arguments and the rest come once, as they are.
 «» marks the position that an error line reports. tests/cli/run_cli_tests.py
 runs each file and checks the exit code 2, an empty stdout and exactly
 these lines (unsupported_matrix.stderr), in any order. Historical inputs in
-unsupported_matrix.accepted instead require successful, silent execution.
+unsupported_matrix.accepted instead require successful execution: silent,
+or printing exactly an adjacent .expected file when there is one.
 """
 
 from __future__ import annotations
@@ -43,7 +44,10 @@ NAME = "unsupported_matrix"
 VERSION = 19
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
-ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration"}
+ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
+            "automatic_in_fork"}
+# The standard output of accepted inputs that print (unsupported_matrix/<name>.expected).
+EXPECTED = {"automatic_in_fork": "5\n"}
 
 # The procedural containers: (name, text with {s}, takes a timing control).
 PROC = [
@@ -335,6 +339,8 @@ def files():
         add(name, item_file(item), unsupported(what))
     for name, text, what in OTHERS:
         add(name, text, unsupported(what))
+    for name, text in EXPECTED.items():
+        out[f"{NAME}/{name}.expected"] = text
     out[f"{NAME}.accepted"] = "\n".join(sorted(ACCEPTED)) + "\n"
     out[f"{NAME}.stderr"] = "\n".join(sorted(errors)) + "\n"
     return out

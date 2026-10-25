@@ -57,11 +57,15 @@ def main():
                       'initial begin #1; top.holder.q.push_back(1); end endmodule\n')
             check(source, 'unsupported: implicit sensitivity to dynamic container values', r'4:\d+')
 
-        # An enclosing automatic variable in a fork is still the explicit
-        # SIR_SPEC 7.5 limit; do not silently alias or copy its storage.
-        check('module top; task automatic run(); int q[$];\n'
-              'fork q.push_back(1); join endtask initial run(); endmodule\n',
-              "unsupported: automatic variable 'q' here", r'2:\d+')
+        # A fork child shares the enclosing automatic queue (the approved
+        # capture contract, SIR_SPEC 7 and 8), and runs silently.
+        path = work / 'captured_queue.sv'
+        path.write_text('module top; task automatic run(); int q[$];\n'
+                        'fork q.push_back(1); join endtask initial run(); endmodule\n')
+        result = bounded_run.run([str(binary), str(path)], cwd=work, timeout=10)
+        assert result.returncode == 0, (result.returncode, result.stderr)
+        assert result.stdout == '', result.stdout
+        assert ': error:' not in result.stderr, result.stderr
 
     print(f'dynamic-container diagnostics: {checked} positioned errors checked')
     return 0

@@ -1,7 +1,7 @@
 # Automatic fork capture: migration of historical rejection expectations
 
-[日本語](automatic-capture-expectation-migration.ja.md). Status: **proposal
-(not approved), 2026-10-25**.
+[日本語](automatic-capture-expectation-migration.ja.md). Status: proposed 2026-10-25;
+**approved and applied on 2026-10-25**, as written below, in a commit of its own.
 
 ## Decision requested
 

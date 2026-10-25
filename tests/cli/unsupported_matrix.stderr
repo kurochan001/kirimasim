@@ -23,7 +23,6 @@ unsupported_matrix/array_slice.sv:28:7: error: unsupported: assignment of this u
 unsupported_matrix/array_slice.sv:33:7: error: unsupported: assignment of this unpacked array value (not implemented yet)
 unsupported_matrix/array_slice.sv:6:5: error: unsupported: assignment of this unpacked array value (not implemented yet)
 unsupported_matrix/array_slice.sv:9:5: error: unsupported: assignment of this unpacked array value (not implemented yet)
-unsupported_matrix/automatic_in_fork.sv:6:23: error: unsupported: automatic variable 'x' here (not implemented yet)
 unsupported_matrix/automatic_struct_array.sv:5:9: error: unsupported: automatic unpacked array in a structure or of structures (not implemented yet)
 unsupported_matrix/cond_matches.sv:12:9: error: unsupported: conditional operator with a pattern (not implemented yet)
 unsupported_matrix/cond_matches.sv:15:9: error: unsupported: conditional operator with a pattern (not implemented yet)
