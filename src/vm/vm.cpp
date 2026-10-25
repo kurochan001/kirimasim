@@ -5,6 +5,7 @@
 
 #include "frame_layout.h"
 #include "frame_value.h"
+#include "scoped_reference.h"
 
 #include <algorithm>
 #include <array>
@@ -54,6 +55,10 @@ namespace {
 using kernel::W4;
 using sir::Op;
 using sir::Operand;
+using Environment = detail::ActivationEnvironment;
+struct StorageFailure {
+    kernel::ActivationError error;
+};
 
 /// System tasks and functions the VM knows. Names are resolved to these
 /// when the design is loaded, so nothing compares names while the design
@@ -529,7 +534,7 @@ struct Frame {
     kernel::ProcessId kernelId = kernel::kNone;  ///< Id in the kernel, once registered.
     sir::BlockId block{0};                       ///< Block to resume at.
     std::vector<W4> vars;                        ///< Frame variables (SIR_SPEC.md 7.4).
-    VarsId varsId{0};                            ///< Their number for refs (Interpreter::enroll).
+    VarsId varsId{sir::kNone};                   ///< Their number for refs (Interpreter::enroll).
 
     // Process control (SCHEDULER_SPEC.md 10).
     enum class Join : std::uint8_t { None, All, Any, WaitFork };
@@ -577,7 +582,7 @@ struct Frame {
     struct TaskCall {
         BodyId body{0};
         std::vector<W4> vars;
-        VarsId varsId{0};
+        VarsId varsId{sir::kNone};
         sir::BlockId block{0};
         const sir::Instr* site = nullptr;  ///< The call.task in the caller.
         std::uint64_t children = 0;        ///< The frame's births when it was called.
@@ -591,6 +596,7 @@ struct Frame {
         BodyId body{0};
         std::uint64_t children = 0;
         const sir::Instr* site = nullptr;  ///< The call in the caller; none for a deferred one.
+        VarsId varsId{sir::kNone};
     };
     std::vector<SyncCall> syncCalls;
     /// The activations of scoped named blocks, innermost last: the block,
@@ -601,6 +607,8 @@ struct Frame {
         std::uint32_t calls = 0;
         std::uint32_t sync = 0;
         std::uint64_t children = 0;
+        VarsId varsId{sir::kNone};
+        std::size_t activationDepth = 0;
     };
     std::vector<ScopeAct> scopes;
     /// Where a disable sends the running frame: the task calls and
@@ -625,15 +633,10 @@ public:
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
           strings_(ctx.strings()), heap_(ctx.heap()), activations_(ctx.activations()),
-          counters_(ctx.counters()), stack_(ctx.stack()), options_(options) {
+          references_(ctx.activations()), counters_(ctx.counters()), stack_(ctx.stack()),
+          options_(options) {
         if (!sir::verifyActivationScopes(d).empty()) {
             loadError_ = "invalid automatic scope metadata";
-            return;
-        }
-        // Scoped homes must not fall through to independent frame words
-        // while the typed access and ownership adapter is being connected.
-        if (sir::hasActivationMetadata(d)) {
-            loadError_ = "automatic frame homes are not supported by the VM yet";
             return;
         }
         auto patterns = sir::validatePatterns(d);
@@ -672,6 +675,32 @@ public:
         layouts_.reserve(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p)
             layouts_.emplace_back(bodyFrame(BodyId{p}));
+        // Plans remain at stable addresses until every descendant is gone.
+        plans_.reserve(bodies);
+        referenceShapes_.resize(bodies, sir::kNone);
+        environmentNeeded_.resize(bodies, false);
+        for (std::uint32_t p = 0; p < bodies; ++p) {
+            const BodyId body{p};
+            if (isSubBody(body) && sir::readsWaiterFrame(subOf(body).kind)) {
+                plans_.emplace_back();
+                continue;
+            }
+            const auto& info =
+                isSubBody(body) ? subOf(body).activation : processOf(body).activation;
+            auto plan = detail::ActivationPlan::compile(activations_, bodyFrame(body), info);
+            if (!plan) throw StorageFailure{plan.error};
+            plans_.push_back(std::move(plan.value));
+            environmentNeeded_[p] = !info.scopes.empty() || !info.extents.empty() ||
+                                    info.inheritCaptures ||
+                                    std::ranges::any_of(bodyFrame(body), [](const auto& row) {
+                                        return row.home != sir::FrameHome::Ordinary;
+                                    });
+            if (environmentNeeded_[p]) {
+                const auto shape = references_.addShape(plans_.back());
+                if (!shape) throw StorageFailure{shape.error};
+                referenceShapes_[p] = shape.value;
+            }
+        }
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const auto& blocks = bodyBlocks(BodyId{p});
             const std::uint32_t n = numTemps(BodyId{p});
@@ -725,6 +754,8 @@ public:
             kernel::SafePointHook old;
             ~RestoreHook() {
                 vm.dropHeapWaits();
+                for (std::uint32_t i = 0; i < vm.varSets_.size(); ++i)
+                    if (vm.varSets_[i].live) vm.finishValues(VarsId{i});
                 scheduler.setSafePointHook(old);
             }
         } hook{*this, sched_, sched_.setSafePointHook({})};
@@ -910,7 +941,15 @@ public:
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
         std::uint64_t steps = 0;
-        out[0] = vm.guard(*f, f->cond, steps).value_or(false) ? 1U : 0U;
+        try {
+            out[0] = vm.guard(*f, f->cond, steps).value_or(false) ? 1U : 0U;
+        } catch (const std::bad_alloc&) {
+            out[0] = 0;
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            out[0] = 0;
+            vm.sched_.resourceLimit();
+        }
         vm.counters_.increment(vm.cInstrs_, steps);
     }
 
@@ -919,7 +958,14 @@ public:
         const auto* g = static_cast<const Frame::Callback*>(iff);
         Interpreter& vm = *g->frame->vm;
         std::uint64_t steps = 0;
-        const bool on = vm.guard(*g->frame, g->body, steps).value_or(false);
+        bool on = false;
+        try {
+            on = vm.guard(*g->frame, g->body, steps).value_or(false);
+        } catch (const std::bad_alloc&) {
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            vm.sched_.resourceLimit();
+        }
         vm.counters_.increment(vm.cInstrs_, steps);
         return on ? 1 : 0;
     }
@@ -929,13 +975,19 @@ public:
         const auto* w = static_cast<const Frame::Callback*>(watch);
         Interpreter& vm = *w->frame->vm;
         std::uint64_t steps = 0;
-        W4 ret{0, 0};
-        if (vm.runWaiter(*w->frame, w->body, steps, ret)) {
-            const sir::Type t = vm.d_.subroutine(w->body).returnType;
-            const std::uint32_t c = chunksOf(t);
-            const W4* v = c > 1 ? vm.retWide_.data() : &ret;
-            const std::vector<std::uint64_t> words = packed(v, c, sir::isFourState(t));
-            std::copy(words.begin(), words.end(), out);
+        try {
+            W4 ret{0, 0};
+            if (vm.runWaiter(*w->frame, w->body, steps, ret)) {
+                const sir::Type t = vm.d_.subroutine(w->body).returnType;
+                const std::uint32_t c = chunksOf(t);
+                const W4* v = c > 1 ? vm.retWide_.data() : &ret;
+                const std::vector<std::uint64_t> words = packed(v, c, sir::isFourState(t));
+                std::copy(words.begin(), words.end(), out);
+            }
+        } catch (const std::bad_alloc&) {
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            vm.sched_.resourceLimit();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
     }
@@ -944,29 +996,46 @@ public:
     static void deferredCall(kirima_context* /*ctx*/, void* frame, std::uint32_t token, int run) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
-        Deferred d = std::move(vm.deferred_[token]);
-        vm.deferred_[token] = {};
-        vm.freeDeferred_.push_back(token);
-        if (run != 0) {
-            std::uint64_t steps = 0;
-            vm.callWith(*f, d.subroutine, d.args, steps);
-            vm.counters_.increment(vm.cInstrs_, steps);
+        try {
+            Deferred d = std::move(vm.deferred_[token]);
+            vm.deferred_[token] = {};
+            vm.freeDeferred_.push_back(token);
+            if (run != 0) {
+                std::uint64_t steps = 0;
+                vm.callWith(*f, d.subroutine, d.args, steps);
+                vm.counters_.increment(vm.cInstrs_, steps);
+            }
+            --f->reports;
+            vm.tryRelease(*f);
+        } catch (const StorageFailure& failure) {
+            vm.frameStatus(failure.error);
+        } catch (const std::bad_alloc&) {
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            vm.sched_.resourceLimit();
         }
-        --f->reports;
-        vm.tryRelease(*f);
     }
 
     static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
-        vm.sweep();
         std::uint64_t steps = 0;
         vm.running_ = f;
-        const kernel::Status st = vm.runProcess(*f, steps);
+        kernel::Status status = kernel::Status::Stop;
+        try {
+            vm.sweep();
+            status = vm.runProcess(*f, steps);
+            if (status == kernel::Status::Done || status == kernel::Status::Killed) vm.ended(*f);
+        } catch (const StorageFailure& failure) {
+            vm.frameStatus(failure.error);
+        } catch (const std::bad_alloc&) {
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            vm.sched_.resourceLimit();
+        }
         vm.counters_.increment(vm.cInstrs_, steps);
-        if (st == kernel::Status::Done || st == kernel::Status::Killed) vm.ended(*f);
         vm.running_ = nullptr;
-        return static_cast<kirima_status>(st);
+        return static_cast<kirima_status>(status);
     }
 
 private:
@@ -980,10 +1049,13 @@ private:
     kernel::Strings& strings_;
     kernel::Heap& heap_;
     kernel::ActivationStore& activations_;
+    std::vector<detail::ActivationPlan> plans_;
+    detail::ScopedReferences references_;
+    std::vector<std::uint32_t> referenceShapes_;
+    std::vector<bool> environmentNeeded_;
     std::vector<sir::PatternShape> patternShapes_;
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
-    bool heapWaits_ = false;
     bool heapMonitorReported_ = false;
     std::set<std::array<std::uint32_t, 3>> heapWarned_;
     std::vector<bool> heapSlots_;
@@ -1021,7 +1093,32 @@ private:
     struct Act {
         BodyId body{0};
         std::size_t base = 0;
-        VarsId varsId{0};
+        VarsId varsId{sir::kNone};
+    };
+    /// Restores execution state even if copy-in, callbacks or a nested call
+    /// exhaust resources. Data owners end without depending on the C++ stack.
+    struct CallCleanup {
+        Interpreter& vm;
+        Frame& frame;
+        Act caller;
+        VarsId callee;
+        std::uint32_t depth;
+        std::size_t sync;
+        ~CallCleanup() {
+            if (frame.syncCalls.size() > sync)
+                frame.syncCalls.erase(frame.syncCalls.begin() + static_cast<std::ptrdiff_t>(sync),
+                                      frame.syncCalls.end());
+            while (!frame.scopes.empty() && frame.scopes.back().calls == frame.calls.size() &&
+                   frame.scopes.back().sync > frame.syncCalls.size())
+                frame.scopes.pop_back();
+            vm.callDepth_ = depth;
+            vm.act_ = caller;
+            try {
+                vm.retire(callee);
+            } catch (...) {
+                vm.sched_.resourceLimit();
+            }
+        }
     };
     /// Where the frame variables of a body lie (RUNTIME_ABI.md 4.3): a word
     /// pair for each, by number, then the elements of each array in order.
@@ -1040,6 +1137,7 @@ private:
         std::size_t size = 0;
         BodyId body{0};
         bool live = false;
+        Environment::Pointer environment;
     };
     std::vector<VarSet> varSets_;
     std::vector<VarsId> freeVarSets_;
@@ -1167,6 +1265,11 @@ private:
             bool anyElement = false;
         };
         std::vector<RefRead> refs;
+        struct FrameRead {
+            sir::FrameVarId var;
+            std::uint32_t lsb = 0, width = 0;
+        };
+        std::vector<FrameRead> frames;
     };
     std::vector<std::optional<GuardDeps>> guardDeps_;  ///< By body.
 
@@ -1227,7 +1330,7 @@ private:
         return info;
     }
 
-    Frame& newFrame(sir::ProcessId process) {
+    Frame& newFrame(sir::ProcessId process, Environment::Pointer environment = {}) {
         sweep();
         Frame* place = nullptr;
         if (freeFrames_.empty()) {
@@ -1240,9 +1343,15 @@ private:
         Frame& f = *place;
         f.vm = this;
         f.process = process;
-        f.vars = newVars(bodyOfProcess(process));
-        f.varsId = enroll(f.vars, bodyOfProcess(process));
-        return f;
+        try {
+            f.vars = newVars(bodyOfProcess(process));
+            f.varsId = enroll(f.vars, bodyOfProcess(process), std::move(environment));
+            return f;
+        } catch (...) {
+            f.finished = f.released = true;
+            f.vars = {};
+            throw;
+        }
     }
 
     // --- Process control (SCHEDULER_SPEC.md 10) ---
@@ -1252,6 +1361,16 @@ private:
     void ended(Frame& c) {
         if (c.finished) return;
         c.finished = true;
+        if (c.kernelId != kernel::kNone) {
+            sched_.cancelWait(c.kernelId);
+            sched_.detachDisplayMonitor(c.kernelId);
+        }
+        // Retained data never retains a returned PC, call or executing owner.
+        for (const auto& call : c.syncCalls)
+            finishValues(call.varsId);
+        for (const auto& call : c.calls)
+            finishValues(call.varsId);
+        finishValues(c.varsId);
         if (Frame* parent = c.parent; parent != nullptr) {
             --parent->liveChildren;
             if (c.group != 0 && c.group == parent->forkGroup) ++parent->groupDone;
@@ -1374,28 +1493,106 @@ private:
     /// fork: makes a frame and a kernel process for each child, in order.
     /// They run after the parent waits or ends (9.3.2): start() queues
     /// them behind the running parent.
+    struct BorrowFrame {
+        Interpreter* vm;
+        BodyId body;
+        VarsId vars;
+    };
+    static kernel::ActivationResult<detail::BorrowedReference>
+    borrowedReference(void* frame, sir::FrameVarId row) noexcept {
+        try {
+            auto& source = *static_cast<BorrowFrame*>(frame);
+            auto& vm = *source.vm;
+            W4 token{};
+            const auto error = vm.framePlace(source.body, source.vars, row).read({&token, 1});
+            if (error != kernel::ActivationError::None) return {{}, error};
+            if (isScopedRef(token)) {
+                const auto valid = vm.references_.resolveWord(token.a, 0);
+                if (!valid) return {{}, valid.error};
+            } else if (isFrameRef(token)) {
+                const auto index = token.a >> 32;
+                if (index >= vm.varSets_.size() || !vm.varSets_[index].live ||
+                    (token.a & UINT32_MAX) >= vm.varSets_[index].size)
+                    return {{}, kernel::ActivationError::InvalidBinding};
+            } else if (!isHeapRef(token) && refSlot(token).index() >= vm.d_.slots.size()) {
+                return {{}, kernel::ActivationError::InvalidBinding};
+            }
+            return {{token, readonlyRef(token), !isFrameRef(token) && !isHeapRef(token)}};
+        } catch (const std::bad_alloc&) {
+            return {{}, kernel::ActivationError::ResourceLimit};
+        } catch (const std::length_error&) {
+            return {{}, kernel::ActivationError::ResourceLimit};
+        }
+    }
     void fork(Frame& f, const std::vector<Operand>& ops) {
         const std::string& join = ops[ops.size() - 2].text;
         const bool none = join == "join_none";
+        const std::size_t count = ops.size() - 2;
+        std::vector<const detail::ActivationPlan*> plans;
+        plans.reserve(count);
+        bool environments = environmentOf(act_.varsId) != nullptr;
+        for (std::size_t i = 0; i < count; ++i) {
+            const auto body = bodyOfProcess(ops[i].asProcess()).index();
+            plans.push_back(&plans_[body]);
+            environments = environments || environmentNeeded_[body];
+        }
+        Environment::Children prepared;
+        if (environments) {
+            BorrowFrame source{this, act_.body, act_.varsId};
+            auto result = Environment::children(activations_, plans_[act_.body.index()],
+                                                environmentOf(act_.varsId), plans,
+                                                none             ? detail::CaptureJoin::None
+                                                : join == "join" ? detail::CaptureJoin::All
+                                                                 : detail::CaptureJoin::Any,
+                                                &borrowedReference, &source);
+            if (!result) throw StorageFailure{result.error};
+            prepared = std::move(result.value);
+        }
+        std::vector<Frame*> children;
+        children.reserve(count);
+        f.children.reserve(f.children.size() + count);
+        auto rng = rngOf(f);
+        try {
+            for (std::size_t i = 0; i < count; ++i) {
+                Frame& c = newFrame(ops[i].asProcess(),
+                                    environments ? std::move(prepared[i]) : Environment::Pointer{});
+                children.push_back(
+                    &c);  // Reserved, so even process-registration failure is tracked.
+                c.rng = rng.child();
+                c.ownRng = true;
+                c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
+            }
+            for (Frame* child : children)
+                sched_.start(child->kernelId);
+        } catch (...) {
+            for (Frame* child : children) {
+                if (child->kernelId != kernel::kNone) {
+                    sched_.kill(child->kernelId);
+                    // Queued stale wakes retain their process/frame until sweep.
+                    child->finished = true;
+                }
+                finishValues(child->varsId);
+                if (child->kernelId == kernel::kNone) {
+                    retire(child->varsId);
+                    child->released = true;
+                }
+            }
+            throw;
+        }
+        rngOf(f) = rng;
         if (!none) {
             ++f.forkGroup;
             f.groupDone = 0;
-            f.groupSize = static_cast<std::uint32_t>(ops.size() - 2);
+            f.groupSize = static_cast<std::uint32_t>(count);
             f.pending = join == "join" ? Frame::Join::All : Frame::Join::Any;
         }
-        for (std::size_t i = 0; i + 2 < ops.size(); ++i) {
-            Frame& c = newFrame(ops[i].asProcess());
-            // Each branch, in order, is seeded from the parent (18.14.2).
-            c.rng = rngOf(f).child();
-            c.ownRng = true;
-            c.parent = &f;
-            c.group = none ? 0 : f.forkGroup;
-            c.birth = f.births++;
-            c.place = static_cast<std::uint32_t>(f.children.size());
-            c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
-            f.children.push_back(&c);
+        for (Frame* child : children) {
+            child->parent = &f;
+            child->group = none ? 0 : f.forkGroup;
+            child->birth = f.births++;
+            child->place = static_cast<std::uint32_t>(f.children.size());
+            f.children.push_back(child);
             ++f.liveChildren;
-            sched_.start(c.kernelId);
         }
     }
 
@@ -1867,6 +2064,7 @@ private:
         if (tooDeep(f, in)) return false;
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutines[ops[0].id];
+        f.calls.reserve(f.calls.size() + 1);
         Frame::TaskCall c;
         c.body = bodyOf(ops[0].asSubroutine());
         c.site = &in;
@@ -1874,7 +2072,12 @@ private:
         c.vars = newVars(c.body);
         const auto args = readArgs(s, ops);
         c.varsId = enroll(c.vars, c.body);
-        bindArgs(c.body, s, args, c.varsId);
+        try {
+            bindArgs(c.body, s, args, c.varsId);
+        } catch (...) {
+            retire(c.varsId);
+            throw;
+        }
         resumeAt(f) = ops.back().asBlock();
         f.calls.push_back(std::move(c));
         return true;
@@ -1890,6 +2093,7 @@ private:
         const Layout& l = layouts_[body.index()];
         std::vector<W4> vars(l.size, W4{0, 0});
         for (std::size_t i = 0; i < frame.size(); ++i) {
+            if (frame[i].home != sir::FrameHome::Ordinary) continue;
             const bool array = !frame[i].dims.empty() && frame[i].type.kind != sir::TypeKind::Ref;
             if (!array) {
                 if (isSubBody(body)) fillDefault(&vars[l.offset[i]], frame[i].type);
@@ -1903,33 +2107,99 @@ private:
     }
 
     /// Gives an activation's frame variables a number for refs.
-    VarsId enroll(std::vector<W4>& vars, BodyId body) {
-        const VarSet entry{vars.data(), vars.size(), body, true};
-        if (freeVarSets_.empty()) {
-            varSets_.push_back(entry);
-            return VarsId{static_cast<std::uint32_t>(varSets_.size() - 1)};
+    VarsId enroll(std::vector<W4>& vars, BodyId body, Environment::Pointer environment = {}) {
+        if (!environment && environmentNeeded_[body.index()]) {
+            auto created = Environment::root(activations_, plans_[body.index()]);
+            if (!created) throw StorageFailure{created.error};
+            environment = std::move(created.value);
         }
-        const VarsId id = freeVarSets_.back();
-        freeVarSets_.pop_back();
-        varSets_[id.index()] = entry;
+        VarSet entry{vars.data(), vars.size(), body, true, std::move(environment)};
+        VarsId id{0};
+        if (freeVarSets_.empty()) {
+            if (varSets_.size() >= sir::kNone)
+                throw StorageFailure{kernel::ActivationError::ResourceLimit};
+            id = VarsId{static_cast<std::uint32_t>(varSets_.size())};
+            freeVarSets_.reserve(varSets_.size() + 1);
+            varSets_.push_back(std::move(entry));
+        } else {
+            id = freeVarSets_.back();
+            freeVarSets_.pop_back();
+            varSets_[id.index()] = std::move(entry);
+        }
+        // Source declarations initialize themselves. Only output formals need
+        // the call's language default before copy-in/body execution.
+        try {
+            if (isSubBody(body)) {
+                for (const auto& param : subOf(body).params) {
+                    if (param.dir != sir::Direction::Output || param.frameVar == sir::kNone)
+                        continue;
+                    const auto& row = bodyFrame(body)[param.frameVar.index()];
+                    if (row.home != sir::FrameHome::Scoped) continue;
+                    std::vector<W4> value(chunksOf(row.type));
+                    fillDefault(value.data(), row.type);
+                    for (std::uint64_t e = 0; e < sir::elementCount(row); ++e)
+                        frameStatus(framePlace(body, id, param.frameVar, e).write(value));
+                }
+            }
+        } catch (...) {
+            retire(id);
+            throw;
+        }
         return id;
     }
+    Environment* environmentOf(VarsId id) const {
+        return id.index() < varSets_.size() && varSets_[id.index()].live
+                   ? varSets_[id.index()].environment.get()
+                   : nullptr;
+    }
+    std::size_t activationDepth(VarsId id) const {
+        const auto* environment = environmentOf(id);
+        return environment != nullptr ? environment->active().size() : 0;
+    }
+    void finishValues(VarsId id) {
+        references_.release(id.index());
+        if (auto* environment = environmentOf(id)) environment->finish();
+    }
     void retire(VarsId id) {
+        if (id.index() >= varSets_.size() || !varSets_[id.index()].live) return;
+        finishValues(id);
         varSets_[id.index()] = {};
         freeVarSets_.push_back(id);
     }
 
-    /// All frame operations transport values through this short-lived view.
-    /// Binding resolution connects here; new homes are still gated at load.
+    /// One value transport boundary for ordinary, owned and captured homes.
     detail::FrameValue framePlace(BodyId body, VarsId vars, sir::FrameVarId fv,
-                                  std::uint64_t element = 0) const {
+                                  std::uint64_t element = 0, bool initializeBinding = false) const {
         const Layout& l = layouts_[body.index()];
         const auto& row = bodyFrame(body)[fv.index()];
-        const std::uint32_t width = sir::isIntegral(row.type) ? row.type.width : 64;
-        return {{varSets_[vars.index()].words + l.wordOf(fv) + element * l.chunksOfVar(fv),
-                 l.chunksOfVar(fv)},
-                width,
-                row.readonly};
+        const std::uint32_t width = sir::isIntegral(row.type)                   ? row.type.width
+                                    : row.type.kind == sir::TypeKind::ShortReal ? 32
+                                                                                : 64;
+        if (row.home != sir::FrameHome::Ordinary) {
+            auto* environment = environmentOf(vars);
+            if (environment == nullptr || element > UINT32_MAX) return {{}, 0};
+            if (row.type.kind == sir::TypeKind::Ref) {
+                auto ref = environment->reference(fv);
+                if (!ref) {
+                    frameStatus(ref.error);
+                    return {{}, 0};
+                }
+                if (ref.value.readonly) ref.value.token.b |= readonlyRefFlag;
+                return detail::FrameValue::reference(ref.value.token);
+            }
+            const auto binding = environment->binding(fv);
+            if (!binding) {
+                frameStatus(binding.error);
+                return {{}, 0};
+            }
+            return {activations_, sched_, binding.value, static_cast<std::uint32_t>(element),
+                    width};
+        }
+        const auto& set = varSets_[vars.index()];
+        const auto offset = l.wordOf(fv) + element * l.chunksOfVar(fv);
+        if (!set.live || offset > set.size || l.chunksOfVar(fv) > set.size - offset) return {{}, 0};
+        if (initializeBinding && row.type.kind != sir::TypeKind::Ref) return {{}, 0};
+        return {{set.words + offset, l.chunksOfVar(fv)}, width, row.readonly && !initializeBinding};
     }
     detail::FrameValue framePlace(sir::FrameVarId fv, std::uint64_t element = 0) const {
         return framePlace(act_.body, act_.varsId, fv, element);
@@ -1949,7 +2219,9 @@ private:
     W4 frameElem(sir::FrameVarId fv, std::uint64_t element) const {
         W4 out{};
         const auto& row = bodyFrame(act_.body)[fv.index()];
-        const auto width = sir::isIntegral(row.type) ? std::min(64U, row.type.width) : 64;
+        const auto width = sir::isIntegral(row.type) ? std::min(64U, row.type.width)
+                           : row.type.kind == sir::TypeKind::ShortReal ? 32
+                                                                       : 64;
         frameStatus(framePlace(fv, element).read({&out, 1}, 0, width));
         return out;
     }
@@ -2017,7 +2289,9 @@ private:
             const sir::Param& prm = s.params[i];
             const Operand& o = ops[1 + i];
             if (isRefParam(prm)) {
-                args[i].push_back(value(o));
+                auto reference = value(o);
+                if (prm.dir == sir::Direction::ConstRef) reference.b |= readonlyRefFlag;
+                args[i].push_back(reference);
             } else if (prm.dir == sir::Direction::Output) {
                 continue;
             } else if (isArrayParam(s, prm, d_)) {
@@ -2045,8 +2319,8 @@ private:
             } else {
                 const auto c = l.chunksOfVar(prm.frameVar);
                 for (std::size_t e = 0; e * c < args[i].size(); ++e)
-                    frameStatus(
-                        framePlace(body, vars, prm.frameVar, e).write({args[i].data() + e * c, c}));
+                    frameStatus(framePlace(body, vars, prm.frameVar, e, isRefParam(prm))
+                                    .write({args[i].data() + e * c, c}));
             }
         }
     }
@@ -2116,12 +2390,27 @@ private:
     /// A ref to word `at` of activation `vars`; nothing when the word's
     /// place does not fit the low half, which it would overrun into the
     /// activation's number.
+    static constexpr std::uint64_t scopedRefFlag = std::uint64_t{1} << 61;
+    static constexpr std::uint64_t readonlyRefFlag = std::uint64_t{1} << 62;
+    static bool isScopedRef(W4 r) { return !isHeapRef(r) && (r.b & scopedRefFlag) != 0; }
+    static bool readonlyRef(W4 r) { return (r.b & readonlyRefFlag) != 0; }
     static std::optional<W4> frameRef(VarsId vars, std::uint64_t at) {
         if (at > 0xffffffffU) return std::nullopt;
         return W4{(std::uint64_t{vars.index()} << 32) | at, 1};
     }
     /// The frame ref `words` words further on, on the same terms.
-    static std::optional<W4> refStep(W4 r, std::uint64_t words) {
+    std::optional<W4> refStep(W4 r, std::uint64_t words) {
+        if (isScopedRef(r)) {
+            const auto moved =
+                references_.step(r.a, words, act_.varsId.index(), activationDepth(act_.varsId));
+            if (!moved) {
+                frameStatus(moved.error);
+                return std::nullopt;
+            }
+            r.a = moved.value;
+            return r;
+        }
+        if (words > UINT32_MAX - (r.a & UINT32_MAX)) return std::nullopt;
         auto moved =
             frameRef(VarsId{static_cast<std::uint32_t>(r.a >> 32)}, (r.a & 0xffffffffU) + words);
         if (moved) moved->b = r.b;  // Preserve the actual container type, if present.
@@ -2130,17 +2419,47 @@ private:
     static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s.index(), std::uint64_t{e} << 1}; }
     static bool isHeapRef(W4 r) { return (r.b >> 63) != 0; }
     static bool isFrameRef(W4 r) { return !isHeapRef(r) && (r.b & 1U) != 0; }
+    detail::FrameValue
+    scopedPlace(detail::ScopedReferences::Result<detail::ScopedReferences::Selection> selected,
+                bool readonly) const {
+        if (!selected) {
+            frameStatus(selected.error);
+            return {{}, 0};
+        }
+        auto& at = selected.value;
+        if (readonly) {
+            const auto narrowed = activations_.readOnly(at.binding);
+            if (!narrowed) {
+                frameStatus(narrowed.error);
+                return {{}, 0};
+            }
+            at.binding = narrowed.value;
+        }
+        return {activations_, sched_, at.binding, at.element, at.width, at.lsb};
+    }
     detail::FrameValue refPlace(W4 r, std::uint64_t off, std::uint32_t width) const {
-        const auto& vars = varSets_[r.a >> 32];
-        return {{vars.words + (r.a & 0xffffffffU) + off, kernel::wide::chunks(width)}, width};
+        if (isScopedRef(r))
+            return scopedPlace(references_.resolve(r.a, off, width), readonlyRef(r));
+        const auto index = r.a >> 32;
+        if (index >= varSets_.size()) return {{}, 0};
+        const auto& vars = varSets_[index];
+        const auto start = r.a & UINT32_MAX;
+        if (!vars.live || off > vars.size || start > vars.size - off ||
+            kernel::wide::chunks(width) > vars.size - off - start)
+            return {{}, 0};
+        return {{vars.words + start + off, kernel::wide::chunks(width)}, width, readonlyRef(r)};
+    }
+    detail::FrameValue refWordPlace(W4 r, std::uint64_t off) const {
+        return isScopedRef(r) ? scopedPlace(references_.resolveWord(r.a, off), readonlyRef(r))
+                              : refPlace(r, off, 64);
     }
     W4 refWord(W4 r, std::uint64_t off) const {
         W4 value{};
-        frameStatus(refPlace(r, off, 64).read({&value, 1}));
+        frameStatus(refWordPlace(r, off).read({&value, 1}));
         return value;
     }
     void writeRefWord(W4 r, std::uint64_t off, W4 value) {
-        frameStatus(refPlace(r, off, 64).write({&value, 1}));
+        frameStatus(refWordPlace(r, off).write({&value, 1}));
     }
     static sir::SlotId refSlot(W4 r) { return sir::SlotId{static_cast<std::uint32_t>(r.a)}; }
     static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
@@ -2163,6 +2482,7 @@ private:
             if (ref.a != 0) roots_.push_back(kernel::HeapRoot::cell({ref.a}));
             return true;
         }
+        if (isScopedRef(ref)) return static_cast<bool>(references_.resolveWord(ref.a, 0));
         if (!isFrameRef(ref)) return true;  // The typed slots are already roots.
         const VarsId vars{static_cast<std::uint32_t>(ref.a >> 32)};
         if (vars.index() >= varSets_.size() || (ref.a & 0xffffffffU) >= varSets_[vars.index()].size)
@@ -2263,9 +2583,32 @@ private:
         // References may keep an otherwise finished activation alive.
         // Follow those edges iteratively, including cycles of refs.
         for (std::size_t i = 0; i < rootActivations_.size(); ++i) {
-            const VarSet vars = varSets_[rootActivations_[i].index()];
+            const VarSet& vars = varSets_[rootActivations_[i].index()];
             const auto& fields = bodyFrame(vars.body);
             const auto& layout = layouts_[vars.body.index()];
+            if (vars.environment) {
+                struct ReferenceRoots {
+                    Interpreter* vm;
+                    bool valid = true, resource = false;
+                } state{this};
+                vars.environment->visitReferences(
+                    [](void* raw, detail::BorrowedReference reference) noexcept {
+                        auto& state = *static_cast<ReferenceRoots*>(raw);
+                        try {
+                            state.valid = state.vm->rootReference(reference.token) && state.valid;
+                        } catch (const std::bad_alloc&) {
+                            state.resource = true;
+                        } catch (const std::length_error&) {
+                            state.resource = true;
+                        }
+                    },
+                    &state);
+                if (state.resource) throw std::bad_alloc();
+                if (!state.valid) {
+                    sched_.fail("invalid captured reference at a heap safe point");
+                    return;
+                }
+            }
             for (const auto field : layout.roots) {
                 const auto& fv = fields[field];
                 const auto at = layout.offset[field];
@@ -2600,12 +2943,14 @@ private:
         // A confirmed report can run after its originating process ended.
         // Stop only when this execution is newly canceled by the kernel.
         const bool wasStopped = sched_.programStopped(f.kernelId);
+        const bool wasFinished = f.finished;
         const sir::Process& p = d_.process(f.process);
         const BodyId body = act_.body;
         for (;;) {
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
             bool jumped = false;
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
+                if (!wasFinished && f.finished) return Exit::Killed;
                 const sir::Instr& in = instrs[k];
                 if (++steps > options_.maxSteps && options_.maxSteps != 0) {
                     const std::string n = std::to_string(options_.maxSteps);
@@ -2664,11 +3009,31 @@ private:
                         if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
                     }
+                    case Op::ActivationEnter:
+                    case Op::ActivationLeave: {
+                        auto* environment = environmentOf(act_.varsId);
+                        if (environment == nullptr) {
+                            frameStatus(kernel::ActivationError::InvalidBinding);
+                            return Exit::Error;
+                        }
+                        if (in.op == Op::ActivationEnter)
+                            frameStatus(environment->enter(sir::ActivationScopeId{ops[0].id}));
+                        else {
+                            const auto depth = environment->active().size();
+                            const auto error =
+                                environment->leave(sir::ActivationScopeId{ops[0].id});
+                            frameStatus(error);
+                            if (error == kernel::ActivationError::None)
+                                references_.release(act_.varsId.index(), depth);
+                        }
+                        if (sched_.ending()) return Exit::Stop;
+                        break;
+                    }
                     case Op::ScopeEnter:
                         f.scopes.push_back({ops[0].id, ops[1].asBlock(),
                                             static_cast<std::uint32_t>(f.calls.size()),
                                             static_cast<std::uint32_t>(f.syncCalls.size()),
-                                            f.births});
+                                            f.births, act_.varsId, activationDepth(act_.varsId)});
                         break;
                     case Op::ScopeLeave: leaveScope(f, ops[0].id); break;
                     case Op::DisableScope:
@@ -2970,10 +3335,26 @@ private:
         }
         const Act caller = act_;
         const VarsId varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
-        enter({bodyOf(g), caller.base + bodyTemps(caller.body), varsId});
-        const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
+        try {
+            Environment::Pins pins;
+            if (const auto* environment = environmentOf(varsId)) {
+                auto retained = environment->pin();
+                if (!retained) throw StorageFailure{retained.error};
+                pins = std::move(retained.value);
+            }
+            enter({bodyOf(g), caller.base + bodyTemps(caller.body), varsId});
+            const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
+            act_ = caller;
+            return e == Exit::Ret;
+        } catch (const StorageFailure& failure) {
+            frameStatus(failure.error);
+        } catch (const std::bad_alloc&) {
+            sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            sched_.resourceLimit();
+        }
         act_ = caller;
-        return e == Exit::Ret;
+        return false;
     }
 
     /// The instructions whose first operand is the slot they write or the
@@ -3036,6 +3417,16 @@ private:
                 const bool target = isWriteTarget(in.op);
                 for (std::size_t i = 0; i < in.operands.size(); ++i) {
                     const Operand& o = in.operands[i];
+                    const bool frameWrite = (target || in.op == Op::Fstore) && i == 0;
+                    const bool outputArgument =
+                        in.op == Op::Call && i > 0 &&
+                        i <= d_.subroutine(in.operands[0].asSubroutine()).params.size() &&
+                        d_.subroutine(in.operands[0].asSubroutine()).params[i - 1].dir ==
+                            sir::Direction::Output;
+                    if (own && o.kind == Operand::Kind::Frame && !frameWrite && !outputArgument &&
+                        bodyFrame(body)[o.id].type.kind != sir::TypeKind::Ref)
+                        deps.frames.push_back({o.asFrame(), in.op == Op::Fload ? o.lsb : 0,
+                                               in.op == Op::Fload ? o.width : 0});
                     if (o.kind != Operand::Kind::Slot || (target && i == 0) ||
                         (in.op == Op::DriveDelay && i >= 5 && (i - 5) % 2 == 0))
                         continue;
@@ -3115,7 +3506,7 @@ private:
         for (const auto& f : frames_) {
             if (f.released || f.kernelId == kernel::kNone) continue;
             sched_.detachDisplayMonitor(f.kernelId);
-            if (heapWaits_) sched_.cancelWait(f.kernelId);
+            sched_.cancelWait(f.kernelId);
         }
     }
 
@@ -3145,11 +3536,51 @@ private:
         }
         m.slots = deps.slots;
         const VarsId vars = f.calls.empty() ? f.varsId : f.calls.back().varsId;
+        if (const auto* environment = environmentOf(vars)) {
+            m.activation.capture = true;
+            for (std::uint32_t row = 0; row < bodyFrame(body).size(); ++row) {
+                const auto binding = environment->binding(sir::FrameVarId{row});
+                if (binding) m.activation.bindings.push_back(binding.value);
+            }
+            for (const auto& read : deps.frames) {
+                const auto& row = bodyFrame(body)[read.var.index()];
+                if (row.home == sir::FrameHome::Ordinary) continue;
+                const auto binding = environment->binding(read.var);
+                if (!binding) {
+                    frameStatus(binding.error);
+                    return false;
+                }
+                m.activation.parts.push_back({binding.value, 0,
+                                              static_cast<std::uint32_t>(sir::elementCount(row)),
+                                              read.lsb, read.width});
+            }
+        }
         for (const GuardDeps::RefRead& rr : deps.refs) {
             W4 r{};
             frameStatus(framePlace(body, vars, rr.var).read({&r, 1}));
             if (isHeapRef(r)) {
                 m.heap = true;
+                continue;
+            }
+            if (isScopedRef(r)) {
+                const auto& formal = bodyFrame(body)[rr.var.index()];
+                const auto width = sir::isIntegral(formal.target) ? formal.target.width
+                                   : formal.target.kind == sir::TypeKind::ShortReal ? 32U
+                                   : formal.target.kind == sir::TypeKind::Void      ? 0U
+                                                                                    : 64U;
+                const auto selected = width == 0 ? references_.resolveWord(r.a, rr.leaf)
+                                                 : references_.resolve(r.a, rr.leaf, width);
+                if (!selected) {
+                    frameStatus(selected.error);
+                    return false;
+                }
+                const auto& at = selected.value;
+                m.activation.capture = true;
+                m.activation.bindings.push_back(at.binding);
+                m.activation.parts.push_back(
+                    {at.binding, at.element,
+                     rr.anyElement ? static_cast<std::uint32_t>(sir::elementCount(formal)) : 1,
+                     at.lsb, at.width});
                 continue;
             }
             if (isFrameRef(r)) continue;
@@ -3162,7 +3593,6 @@ private:
                 if (const std::uint64_t h = *store_.element(kernelSlot(s), e); h != 0)
                     m.events.push_back(kernel::eventOfHandle(h));
         }
-        heapWaits_ = heapWaits_ || m.heap;
         return true;
     }
 
@@ -3206,10 +3636,17 @@ private:
 
     /// scope.leave: the innermost activation of the block at this level
     /// ends, with any left inside it.
-    static void leaveScope(Frame& f, std::uint32_t scope) {
+    void unwindValues(VarsId vars, std::size_t depth) {
+        if (auto* environment = environmentOf(vars)) {
+            references_.release(vars.index(), depth + 1);
+            frameStatus(environment->unwind(depth));
+        }
+    }
+    void leaveScope(Frame& f, std::uint32_t scope) {
         for (std::size_t i = f.scopes.size(); i-- > 0;) {
             const Frame::ScopeAct& a = f.scopes[i];
             if (a.scope == scope && a.calls == f.calls.size() && a.sync == f.syncCalls.size()) {
+                unwindValues(a.varsId, a.activationDepth);
                 f.scopes.resize(i);
                 return;
             }
@@ -3248,6 +3685,7 @@ private:
         for (Frame& g : frames_) {
             if (g.finished) continue;
             std::optional<Frame::Unwind> to;
+            std::optional<std::pair<VarsId, std::size_t>> storage;
             std::uint64_t children = 0;
             std::size_t keep = g.scopes.size();  ///< The activations that stay.
             if (!task) {
@@ -3257,6 +3695,7 @@ private:
                     to = Frame::Unwind{a.calls, a.sync, a.exit};
                     children = a.children;
                     keep = i;
+                    storage = std::pair{a.varsId, a.activationDepth};
                 }
             } else {
                 for (std::size_t i = 0; i < g.calls.size() && !to; ++i)
@@ -3284,8 +3723,10 @@ private:
                 designError(f, in, "disable in a function of a block or task outside the function");
                 return Exit::Error;
             }
+            sched_.cancelWait(g.kernelId);
             g.scopes.resize(keep);
             killChildren(g, children);
+            if (storage) unwindValues(storage->first, storage->second);
             if (&g == &f) {
                 f.unwind = to;
                 self = true;
@@ -3344,24 +3785,20 @@ private:
         std::vector<W4> vars = newVars(body);
         // The arguments are read in the caller before anything is written.
         const std::vector<std::vector<W4>> args = readArgs(s, ops);
-        enter({body, caller.base + bodyTemps(caller.body), enroll(vars, body)});
+        const VarsId callee = enroll(vars, body);
+        CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
+        enter({body, caller.base + bodyTemps(caller.body), callee});
         bindArgs(body, s, args, act_.varsId);
         W4 ret{0, 0};
         ++callDepth_;
-        f.syncCalls.push_back({body, f.births, &in});
+        f.syncCalls.push_back({body, f.births, &in, act_.varsId});
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         std::vector<W4> wide;
         if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
-        f.syncCalls.pop_back();
-        while (!f.scopes.empty() && f.scopes.back().calls == f.calls.size() &&
-               f.scopes.back().sync > f.syncCalls.size())
-            f.scopes.pop_back();
-        --callDepth_;
-        const std::vector<std::vector<W4>> outs = readOuts(body, s, act_.varsId);
-        const VarsId callee = act_.varsId;
+        const std::vector<std::vector<W4>> outs =
+            e == Exit::Ret ? readOuts(body, s, act_.varsId) : std::vector<std::vector<W4>>{};
         act_ = caller;
         if (e == Exit::Ret) writeOuts(s, ops, outs, caller.varsId, caller.body);
-        retire(callee);
         if (e == Exit::Waiting) {
             fail(d_.process(f.process),
                  "task " + s.name + " waited; tasks that wait are not supported by the VM yet");
@@ -3392,16 +3829,14 @@ private:
         const Act caller = act_;
         const BodyId body = bodyOf(s);
         std::vector<W4> vars = newVars(body);
-        enter({body, caller.base + bodyTemps(caller.body), enroll(vars, body)});
+        const VarsId callee = enroll(vars, body);
+        CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
+        enter({body, caller.base + bodyTemps(caller.body), callee});
         bindArgs(body, sub, args, act_.varsId);
         W4 ret{0, 0};
         ++callDepth_;
-        f.syncCalls.push_back({body, f.births});
+        f.syncCalls.push_back({body, f.births, nullptr, act_.varsId});
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
-        f.syncCalls.pop_back();
-        --callDepth_;
-        retire(act_.varsId);
-        act_ = caller;
         return e;
     }
 
@@ -4148,6 +4583,13 @@ private:
             reportHeapMonitorLimit(instanceOf(p), in.loc);
             return ok && !sched_.ending();
         };
+        const bool referenceWrite = in.op == Op::StoreRef || in.op == Op::NbaRef ||
+                                    in.op == Op::StoreRefElem || in.op == Op::StoreRefBits;
+        if ((referenceWrite && readonlyRef(value(ops[0]))) ||
+            (sir::isContainerMutation(in.op) && readonlyRef(value(ops[1])))) {
+            frameStatus(kernel::ActivationError::ReadOnly);
+            return false;
+        }
         if (in.op == Op::FormatPattern) return publishHeap(executePattern(f, p, in));
         if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));
         if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
@@ -4492,6 +4934,40 @@ private:
                 // A ref steps through the words of a value's chunks; from
                 // one leaf of a structure to the next one word at a time
                 // (front keeps wider members out of those).
+                if (fv.home != sir::FrameHome::Ordinary) {
+                    auto* environment = environmentOf(act_.varsId);
+                    if (environment == nullptr) {
+                        frameStatus(kernel::ActivationError::InvalidBinding);
+                        return false;
+                    }
+                    const auto origin = environment->origin(o.asFrame());
+                    if (!origin) {
+                        frameStatus(origin.error);
+                        return false;
+                    }
+                    std::uint32_t element = 0;
+                    if (!fv.dims.empty() && ops.size() > 1) {
+                        const auto selected = elementOf(fv.dims, ops, 1);
+                        if (!selected) {
+                            fail(p, "ref to an element outside its array");
+                            return false;
+                        }
+                        element = *selected;
+                    }
+                    const auto declaringBody =
+                        static_cast<std::size_t>(&origin.value.plan() - plans_.data());
+                    const auto ref =
+                        references_.make(referenceShapes_[declaringBody], origin.value, element,
+                                         act_.varsId.index(), activationDepth(act_.varsId));
+                    if (!ref) {
+                        frameStatus(ref.error);
+                        return false;
+                    }
+                    W4 result{ref.value, scopedRefFlag | 1};
+                    if (origin.value.binding().readonly()) result.b |= readonlyRefFlag;
+                    set(typedRef(result, target));
+                    return true;
+                }
                 std::size_t at = layouts_[act_.body.index()].wordOf(o.asFrame());
                 if (!fv.dims.empty()) {
                     if (ops.size() > 1) {
@@ -5380,6 +5856,10 @@ private:
         const sir::FrameVar* frame = slot ? nullptr : &bodyFrame(act_.body)[m.asFrame().index()];
         const bool ref = frame != nullptr && frame->type.kind == sir::TypeKind::Ref;
         const W4 reference = ref ? frameVar(m.asFrame()) : W4{};
+        if (load && ref && readonlyRef(reference)) {
+            frameStatus(kernel::ActivationError::ReadOnly);
+            return false;
+        }
         const std::vector<sir::ArrayDim>& adims = slot ? d_.slot(m.asSlot()).dims : frame->dims;
         const sir::Type et = slot ? d_.slot(m.asSlot()).type : ref ? frame->target : frame->type;
         std::vector<kernel::MemDim> dims;
@@ -6038,7 +6518,18 @@ private:
 }  // namespace
 
 RunResult run(const sir::Design& design, kernel::Context& context, const RunOptions& options) {
-    return Interpreter(design, context, options).run();
+    try {
+        return Interpreter(design, context, options).run();
+    } catch (const StorageFailure& failure) {
+        return {failure.error == kernel::ActivationError::ResourceLimit
+                    ? kernel::EndReason::ResourceLimit
+                    : kernel::EndReason::Internal,
+                "automatic storage construction failed"};
+    } catch (const std::bad_alloc&) {
+        return {kernel::EndReason::ResourceLimit, {}};
+    } catch (const std::length_error&) {
+        return {kernel::EndReason::ResourceLimit, {}};
+    }
 }
 
 }  // namespace kirimasim::vm

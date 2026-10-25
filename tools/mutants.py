@@ -40,6 +40,16 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('activation VM: scoped arrays resolve the first element', 'src/vm/vm.cpp', 'return {activations_, sched_, binding.value, static_cast<std::uint32_t>(element),\n                    width};', 'return {activations_, sched_, binding.value, 0, width};'),
+    ('activation VM: returned owners retain executing leases', 'src/vm/vm.cpp', 'if (auto* environment = environmentOf(id)) environment->finish();', 'if (auto* environment = environmentOf(id); environment != nullptr && false) environment->finish();'),
+    ('activation VM: fork captures the process instead of the current call', 'src/vm/vm.cpp', 'environmentOf(act_.varsId), plans,', 'environmentOf(f.varsId), plans,'),
+    ('activation VM: scoped output defaults are zero instead of X', 'src/vm/vm.cpp', 'fillDefault(value.data(), row.type);', 'std::fill(value.begin(), value.end(), W4{0, 0});'),
+    ('activation VM: static frame sensitivity is omitted', 'src/vm/vm.cpp', 'for (const auto& read : deps.frames) {', 'for (const auto& read : deps.frames) if (false) {'),
+    ('activation VM: captured refs use the current body shape', 'src/vm/vm.cpp', 'referenceShapes_[declaringBody]', '(static_cast<void>(declaringBody), referenceShapes_[varSets_[act_.varsId.index()].body.index()])'),
+    ('activation VM: scope leave keeps borrowed tickets', 'src/vm/vm.cpp', 'references_.release(act_.varsId.index(), depth);', 'static_cast<void>(depth);'),
+    ('activation VM: readonly slot references become writable', 'src/vm/vm.cpp', '(referenceWrite && readonlyRef(value(ops[0])))', '(referenceWrite && readonlyRef(value(ops[0])) && false)'),
+    ('activation VM: fork acquisition errors are ignored', 'src/vm/vm.cpp', 'if (!result) throw StorageFailure{result.error};', 'if (!result) return;'),
+    ('activation VM: call owners end before outputs are read', 'src/vm/vm.cpp', 'const std::vector<std::vector<W4>> outs =\n            e == Exit::Ret ? readOuts(body, s, act_.varsId)', 'finishValues(act_.varsId);\n        const std::vector<std::vector<W4>> outs =\n            e == Exit::Ret ? readOuts(body, s, act_.varsId)'),
     ('scoped refs: stale descriptor generations are accepted', 'src/vm/scoped_reference.cpp', 'entry.live && entry.generation == token >> 32', 'entry.live'),
     ('scoped refs: array selections address the first element', 'src/vm/scoped_reference.cpp', 'static_cast<std::uint32_t>(target.word / chunks), lsb, count', '0, lsb, count'),
     ('scoped refs: word selections ignore the physical chunk', 'src/vm/scoped_reference.cpp', 'static_cast<std::uint32_t>(target.word % chunks) * 64', '0U * static_cast<std::uint32_t>(target.word % chunks)'),
@@ -957,9 +967,9 @@ MUTANTS = [
      "        c.children = static_cast<std::uint32_t>(f.children.size());\n"),
     ("vm: a block tells its children by their place", "src/vm/vm.cpp",
      "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
-     "                                            f.births});",
+     "                                            f.births, act_.varsId, activationDepth(act_.varsId)});",
      "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
-     "                                            f.children.size()});"),
+     "                                            f.children.size(), act_.varsId, activationDepth(act_.varsId)});"),
     ("vm: a process is released while the kernel holds its reports", "src/vm/vm.cpp",
      "if (&f == running_ || sched_.hasPending(f.kernelId)) {", "if (&f == running_) {"),
     ("vm: a function's result wider than 64 bits keeps its low chunk", "src/vm/vm.cpp",
@@ -1690,8 +1700,8 @@ MUTANTS = [
      "for (std::size_t k = chain.size() - 1; k-- > 0;) {",
      "for (std::size_t k = 0; k + 1 < chain.size(); ++k) {"),
     ("vm: a function call keeps no place for $stacktrace", "src/vm/vm.cpp",
-     "f.syncCalls.push_back({body, f.births, &in});",
-     "f.syncCalls.push_back({body, f.births, nullptr});"),
+     "f.syncCalls.push_back({body, f.births, &in, act_.varsId});",
+     "f.syncCalls.push_back({body, f.births, nullptr, act_.varsId});"),
     ("front: $stacktrace as a task names no scope", "src/front/lower_expr.cpp",
      "emitVoid(Op::Syscall, {Operand::str(name), Operand::str(b_.scope)}, sl);",
      "emitVoid(Op::Syscall, {Operand::str(name), Operand::str(std::string())}, sl);"),
