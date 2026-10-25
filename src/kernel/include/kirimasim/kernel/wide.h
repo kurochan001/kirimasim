@@ -18,12 +18,13 @@
 #include <string>
 #include <string_view>
 
+#include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/w4.h"
 
 namespace kirimasim::kernel::wide {
 
 /// The chunks of a w-bit value.
-inline unsigned chunks(unsigned w) { return (w + 63) / 64; }
+inline unsigned chunks(unsigned w) { return wordsFor(w); }
 
 // --- Conversions (VALUE_SEMANTICS.md 2, 1.2). ------------------------------
 

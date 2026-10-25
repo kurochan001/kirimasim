@@ -20,7 +20,10 @@
 namespace kirimasim::kernel {
 
 /// Words needed for w bits.
-inline constexpr std::uint32_t wordsFor(std::uint32_t w) { return (w + 63) / 64; }
+inline constexpr std::uint32_t wordsFor(std::uint32_t w) { return w == 0 ? 0 : (w - 1) / 64 + 1; }
+
+/// Bytes needed for w bits, without overflowing the width's type.
+inline constexpr std::uint32_t bytesFor(std::uint32_t w) { return w == 0 ? 0 : (w - 1) / 8 + 1; }
 
 /// Bit i of a word array with the given stride.
 inline bool bitAt(const std::uint64_t* words, unsigned stride, std::uint64_t i) {

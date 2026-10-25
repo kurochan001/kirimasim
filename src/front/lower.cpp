@@ -489,7 +489,7 @@ void Lowerer::terminate(sir::Op op, std::vector<sir::Operand> ops, slang::Source
 
 Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
     // A wider type gets a and b as its low word, zero above.
-    const std::size_t words = sir::isIntegral(t) ? (t.width + 63) / 64 : 1;
+    const std::size_t words = sir::isIntegral(t) ? sir::integralWords(t.width) : 1;
     std::vector<std::uint64_t> aw(words, 0);
     std::vector<std::uint64_t> bw(words, 0);
     aw[0] = a;
@@ -498,7 +498,7 @@ Val Lowerer::constant(sir::Type t, std::uint64_t a, std::uint64_t b) {
 }
 
 Val Lowerer::allXConstant(sir::Type t) {
-    const std::size_t words = (t.width + 63) / 64;
+    const std::size_t words = sir::integralWords(t.width);
     return constantWords(t, std::vector<std::uint64_t>(words, ~std::uint64_t{0}),
                          std::vector<std::uint64_t>(words, ~std::uint64_t{0}));
 }
@@ -1759,7 +1759,7 @@ void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortS
     }
     // A pullup or pulldown on every bit: 1 or 0 at pull strength (28.10).
     const std::uint64_t word = drive == ast::UnconnectedDrive::Pull1 ? ~std::uint64_t{0} : 0;
-    const std::size_t words = (t.width + 63) / 64;
+    const std::size_t words = sir::integralWords(t.width);
     const std::string scope = design_.instance(instanceIds_.at(&child)).scopeName;
     lowerCont(scope + ".$pull." + std::string(ps.name), ps.location, child,
               [&] {

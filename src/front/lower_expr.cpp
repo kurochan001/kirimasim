@@ -117,7 +117,7 @@ bool isString(Type t) { return t.kind == sir::TypeKind::String; }
 /// without the zero bytes, as a string (6.16); nothing if it has x or z.
 std::optional<std::string> stringBytes(const slang::SVInt& v) {
     if (v.hasUnknown()) return std::nullopt;
-    const std::uint32_t n = (v.getBitWidth() + 7) / 8;
+    const std::uint32_t n = sir::integralBytes(v.getBitWidth());
     const slang::SVInt x = v.getBitWidth() < n * 8 ? v.zext(n * 8) : v;
     std::string out;
     for (std::uint32_t k = n; k-- > 0;) {
@@ -134,7 +134,7 @@ std::optional<std::string> stringBytes(const slang::SVInt& v) {
 std::string integerToString(const std::vector<std::uint64_t>& a,
                             const std::vector<std::uint64_t>& b, std::uint32_t width) {
     std::string s;
-    for (std::uint32_t k = (width + 7) / 8; k-- > 0;) {
+    for (std::uint32_t k = sir::integralBytes(width); k-- > 0;) {
         const std::size_t word = k / 8;
         const std::uint64_t known =
             (word < a.size() ? a[word] : 0) & ~(word < b.size() ? b[word] : 0);
@@ -519,7 +519,7 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
         return coerce(constantFrom(cv, it, sl), t, sl);
     }
     const slang::SVInt& v = cv.integer();
-    std::vector<std::uint64_t> a((t.width + 63) / 64, 0);
+    std::vector<std::uint64_t> a(sir::integralWords(t.width), 0);
     std::vector<std::uint64_t> b(a.size(), 0);
     const std::uint32_t have = v.getBitWidth();
     for (std::uint32_t i = 0; i < t.width; ++i) {
@@ -1452,7 +1452,7 @@ Type Lowerer::positionType(Type index) {
 }
 
 Val Lowerer::positionConstant(Type t, std::int64_t k) {
-    const std::size_t words = (t.width + 63) / 64;
+    const std::size_t words = sir::integralWords(t.width);
     std::vector<std::uint64_t> a(words, k < 0 ? ~std::uint64_t{0} : 0);
     a[0] = static_cast<std::uint64_t>(k);
     return constantWords(t, std::move(a), std::vector<std::uint64_t>(words, 0));
@@ -2295,7 +2295,8 @@ void Lowerer::freadLeaves(const std::vector<Place>& places, const Val& desc, sir
         setBlock(store);
         storePlace(p, emit(Op::Fload, p.type, {Operand::frame(f)}, sl), false, sl);
         const Val whole =
-            emit(Op::Eq, sir::u2(1), {n.op, constant(sir::s2(32), (p.type.width + 7) / 8).op}, sl);
+            emit(Op::Eq, sir::u2(1),
+                 {n.op, constant(sir::s2(32), sir::integralBytes(p.type.width)).op}, sl);
         terminate(Op::BrIf, {whole.op, Operand::block(next), Operand::block(stop)}, sl);
         setBlock(next);
     }

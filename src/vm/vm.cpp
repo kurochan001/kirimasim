@@ -1823,7 +1823,7 @@ private:
             writeSlot(s, elem, lsb, width, v[0]);
             return;
         }
-        const std::uint32_t c = (w + 63) / 64;
+        const std::uint32_t c = kernel::wordsFor(w);
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
         sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf.data());
     }
@@ -1837,7 +1837,7 @@ private:
             return {x.a, x.b};
         }
         const std::uint32_t w = target.width == 0 ? l.width : target.width;
-        std::vector<W4> v((w + 63) / 64);
+        std::vector<W4> v(kernel::wordsFor(w));
         readOperand(value, v.data(), static_cast<std::uint32_t>(v.size()));
         return packed(v.data(), static_cast<std::uint32_t>(v.size()),
                       l.domain == kernel::Domain::Four);
@@ -1852,7 +1852,7 @@ private:
             return;
         }
         const std::vector<std::uint64_t> buf =
-            packed(v, (w + 63) / 64, l.domain == kernel::Domain::Four);
+            packed(v, kernel::wordsFor(w), l.domain == kernel::Domain::Four);
         sched_.scheduleNba(f.kernelId,
                            {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width},
                            buf.data(), delay);
@@ -6331,7 +6331,7 @@ private:
                 // most significant byte of ceil(width / 8) on, as 2-state
                 // values, and the rest keep theirs (SYSTEM_TASKS.md 6.3).
                 const sir::Type t = typeOf(ops[1]);
-                const unsigned nbytes = (t.width + 7) / 8;
+                const unsigned nbytes = kernel::bytesFor(t.width);
                 std::string bytes;
                 bool notOpen = false;
                 files_.readBytes(value(ops[2]), nbytes, bytes, notOpen);
@@ -6509,7 +6509,7 @@ private:
                     input = strings_.get(iv[0].a);
                 } else if (!kernel::wide::hasUnknown(iv.data(), it.width)) {
                     // The bytes from the most significant one, NULs kept.
-                    for (unsigned k = (it.width + 7) / 8; k-- > 0;)
+                    for (unsigned k = kernel::bytesFor(it.width); k-- > 0;)
                         input.push_back(static_cast<char>((iv[k / 8].a >> (k % 8 * 8)) & 0xffU));
                 } else {
                     temp(in.result) = {0xffffffffU, 0};

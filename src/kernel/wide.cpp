@@ -488,7 +488,7 @@ void writeBits(W4* x, unsigned xw, std::int64_t pos, const W4* v, unsigned vw) {
 
 std::string toText(const W4* x, unsigned w) {
     std::string s;
-    for (unsigned k = (w + 7) / 8; k-- > 0;) {
+    for (unsigned k = bytesFor(w); k-- > 0;) {
         const W4& c = x[k / 8];
         const auto ch = static_cast<char>(((c.a & ~c.b) >> (k % 8 * 8)) & 0xffU);
         if (ch != 0) s.push_back(ch);

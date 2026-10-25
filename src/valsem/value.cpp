@@ -243,7 +243,7 @@ Value fromReal(double d, std::uint32_t width, bool isSigned, bool truncate) {
 }
 
 void toWords(const Value& v, std::vector<std::uint64_t>& a, std::vector<std::uint64_t>& b) {
-    const std::size_t words = (v.bits.size() + 63) / 64;
+    const std::size_t words = v.bits.size() / 64 + (v.bits.size() % 64 != 0);
     a.assign(words, 0);
     b.assign(words, 0);
     for (std::size_t i = 0; i < v.bits.size(); ++i) {
@@ -509,7 +509,8 @@ Value writeBits(const Value& x, const Value& pos, const Value& v) {
 
 std::string toText(const Value& x) {
     std::string s;
-    for (std::uint32_t k = (x.width() + 7) / 8; k-- > 0;) {
+    for (std::uint32_t k = static_cast<std::uint32_t>((std::uint64_t{x.width()} + 7) / 8);
+         k-- > 0;) {
         unsigned c = 0;
         for (std::uint32_t i = 0; i < 8 && 8 * k + i < x.width(); ++i)
             if (x.bits[8 * k + i] == Logic::One) c |= 1U << i;

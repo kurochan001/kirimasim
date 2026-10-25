@@ -45,6 +45,15 @@ struct Type {
     friend bool operator==(const Type&, const Type&) = default;
 };
 
+/// Integral constant storage units (SIR_SPEC 3.2/4.1). The front and
+/// verifier share these; SIR remains independent of the execution kernel.
+inline constexpr std::uint32_t integralWords(std::uint32_t width) {
+    return width / 64 + (width % 64 != 0);
+}
+inline constexpr std::uint32_t integralBytes(std::uint32_t width) {
+    return width / 8 + (width % 8 != 0);
+}
+
 inline Type voidType() { return {TypeKind::Void, 0}; }
 inline Type refType(TypeId target = kNone) { return {TypeKind::Ref, 0, target}; }
 inline Type dynarrayType(TypeId row) { return {TypeKind::DynArray, 0, row}; }

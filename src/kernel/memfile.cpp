@@ -16,6 +16,8 @@
 #include <string_view>
 #include <vector>
 
+#include "kirimasim/kernel/bits.h"
+
 namespace kirimasim::kernel {
 
 namespace {
@@ -124,7 +126,7 @@ MemLoad loadMemory(std::string_view text, bool hex, const std::vector<MemDim>& d
     const std::int64_t lo = std::min(dims[0].left, dims[0].right);
     const std::int64_t hi = std::max(dims[0].left, dims[0].right);
     const std::uint64_t inner = innerSize(dims);
-    const std::uint32_t chunks = (width + 63) / 64;
+    const std::uint32_t chunks = wordsFor(width);
     std::int64_t at = range.from;
     std::uint64_t below = 0;  // the place under address `at`
     std::uint64_t numbers = 0;

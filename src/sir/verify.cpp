@@ -546,7 +546,7 @@ private:
                 error(where, "constant has no value type");
                 continue;
             }
-            const std::size_t words = (c.type.width + 63) / 64;
+            const std::size_t words = integralWords(c.type.width);
             if (c.aWords.size() != words) error(where, "wrong number of words");
             if (isFourState(c.type) ? c.bWords.size() != words : !c.bWords.empty())
                 error(where, "wrong number of b words");

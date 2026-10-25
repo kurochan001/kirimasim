@@ -18,6 +18,8 @@
 
 #include "kirimasim/kernel/wide.h"
 
+#include "kirimasim/kernel/bits.h"
+
 namespace kirimasim::kernel {
 
 namespace {
@@ -43,7 +45,7 @@ bool hasUnknown(const IntValue& v) {
 
 /// The a bits as words, least significant first.
 std::vector<std::uint64_t> aWords(const IntValue& v) {
-    std::vector<std::uint64_t> w((v.width + 63) / 64, 0);
+    std::vector<std::uint64_t> w(wordsFor(v.width), 0);
     for (std::uint32_t i = 0; i < v.width; ++i)
         if (bitOf(v, i).a) w[i / 64] |= std::uint64_t{1} << (i % 64);
     return w;
@@ -185,7 +187,7 @@ std::string formatChars(const IntValue& v, int width, bool left) {
     // printed, and a zero byte after the first nonzero one prints as a
     // space (3.5).
     std::string bytes;
-    const std::uint32_t n = (v.width + 7) / 8;
+    const std::uint32_t n = bytesFor(v.width);
     for (std::uint32_t k = n; k-- > 0;) {
         unsigned c = 0;
         for (std::uint32_t i = 0; i < 8 && k * 8 + i < v.width; ++i)
