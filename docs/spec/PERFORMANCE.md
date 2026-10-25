@@ -112,6 +112,7 @@ Implemented on 2026-10-20: the `bench` job of the nightly workflow times the rel
   - Shift registers and counters with many NBAs (`always_ff`)
   - Many small processes, with waits for events and for time (`initial` with `#` and `@`)
   - fork and join, named events
+  - Since 2026-10-25 (approved), seven more, each for a mechanism the four do not stress: wide arithmetic (256-bit addition, 128-bit multiplication, shifts and comparison; `wide_arith`), a 1024-word memory read and written at a changing address every clock (`mem_rw`), tasks with `inout` and `output` arguments and a recursive function (`func_call`), string formatting and methods (`$sformatf`, `substr`, concatenation; `string_fmt`), a queue and a dynamic array changed in a loop (`dyn_queue`), gates and combinational UDPs (`gate_udp`), and `casez` decoding into packed structures (`casez_struct`)
 - P3 and later: Ibex (CoreMark), CVA6, OpenTitan IPs, UVM AVIPs, and small synthetic tests with races and combinational loops. Third-party designs are not bundled; scripts that fetch them refer to them (category C of the design specification).
 
 ### 5.3 What is recorded
