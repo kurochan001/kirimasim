@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "efebd540fa47a3084a8f8b24ce754363d4f5576f",
+  "run_worktree_uncommitted_documentation": true,
+  "platform": "macOS arm64",
+  "source_sha256": {
+    "src/sir/include/kirimasim/sir/design.h": "4c81e830dc5046ab3623589bc95613f4ffb54b5a96aecb83dcf11eb0772b584f",
+    "src/sir/verify.cpp": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+    "src/sir/types.cpp": "61b98f96e9509f9036e0d9c386c7f3629d2d05b8b2f7f77a7bbadf15c62723a0",
+    "src/sir/text.cpp": "bb61ced421bd4613a29a36608a146fb43821303543c2661f2a9166d98f51e1b2",
+    "tests/unit/CMakeLists.txt": "cb22a1b04d1c240170dccfa923eb7eb96295fdf327dd26394caa785b92b0325b",
+    "tests/unit/event_sir_test.cpp": "8f3553ca51272d1758b99472431477517a00a3ee6436c312dc0167318349f3ea",
+    "tools/mutants.py": "aa11cd6d7ba7a5005ae335765e15a4798854b0487b8b8e0c6188be21f407b585"
+  },
+  "configuration": "dev",
+  "controls": [
+    {
+      "name": "sir: event value construction ignores arity",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.CreationRejectsOperandsMissingResultsAndOtherResultTypes"
+      ]
+    },
+    {
+      "name": "sir: event value construction accepts other result types",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.CreationRejectsOperandsMissingResultsAndOtherResultTypes"
+      ]
+    },
+    {
+      "name": "sir: event value constants can forge live handles",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.EventConstantsCannotForgeLiveHandlesOrCarryUnknownBits"
+      ]
+    },
+    {
+      "name": "sir: event value targets accept another domain",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.ValueTargetsRejectOtherDomainsAndHiddenSelections"
+      ]
+    },
+    {
+      "name": "sir: event value targets keep hidden selections",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.ValueTargetsRejectOtherDomainsAndHiddenSelections"
+      ]
+    },
+    {
+      "name": "sir: event value mixed waits lose loaded events",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "4559e748380d8549ad2717cdc72b6b83e894c06b1d4db265b6b90da994568ec6",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.LoadedNullAndLegacyTargetsShareTriggerAndWaitForms",
+        "EventSir.LoadedEventItemsPreserveMixedSignalAndIffOrder"
+      ]
+    },
+    {
+      "name": "sir: event value creation has another text name",
+      "path": "src/sir/types.cpp",
+      "source_sha256": "61b98f96e9509f9036e0d9c386c7f3629d2d05b8b2f7f77a7bbadf15c62723a0",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.CreationIsTypedNonterminatingAndDeterministicInDraftText",
+        "EventSir.CreationRejectsOperandsMissingResultsAndOtherResultTypes"
+      ]
+    },
+    {
+      "name": "sir: event value null constants print no value",
+      "path": "src/sir/text.cpp",
+      "source_sha256": "bb61ced421bd4613a29a36608a146fb43821303543c2661f2a9166d98f51e1b2",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "EventSir.CreationIsTypedNonterminatingAndDeterministicInDraftText",
+        "EventSir.LoadedEventItemsPreserveMixedSignalAndIffOrder"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "baseline_tests_passed": 8,
+  "restored_focused_tests_passed": 75,
+  "source_restored": true,
+  "compile_failures_counted_as_detections": false
+}

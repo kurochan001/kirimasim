@@ -12,6 +12,15 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**型付きSIR event値：** `efebd540`で[event生成とload済みの待機・trigger対象](event-sir-contract.ja.md)を
+追加しました。8テストで正常17・不正40設計を検査し、対象75テストが通り、コンパイルした8故障を
+検出しました。形式版は0のままです。VM/root/front接続と承認済み3期待値の適用は残作業で、
+ソース対応の差分が減ったとは扱いません。
+
+[SIR段階の全CI](../measurements/2026-10-25/event-sir-validation.json)は全21確認成功で、
+dev/ASan/UBSanは4,948/4,950、releaseは
+4,949/4,951、失敗0・各構成の既知スキップ2件です。
+
 **実行時event所有：** [型付きカーネル操作](managed-event-runtime.ja.md)で、待機・NBA/Re-NBA配送・
 monitor・遅延callbackの間、具体的対象を保持します。新規23テストが通り、allocator初期化修正前の
 コンパイルした16故障を検出し、実行時のhashと当初の検査漏れも記録しました。

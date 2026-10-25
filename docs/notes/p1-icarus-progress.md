@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Typed SIR event values:** `efebd540` adds [event construction and loaded
+wait/trigger operands](event-sir-contract.md). Eight tests cover 17 valid and
+40 malformed designs; all 75 focused tests pass, and eight compiled faults are
+caught. Format version stays 0. VM/root/front connections and the approved
+three-oracle migration remain pending; no source-level gap reduction is claimed.
+
+The [SIR checkpoint's full CI](../measurements/2026-10-25/event-sir-validation.json)
+passes all 21 checks: dev/ASan/UBSan 4,948/4,950, release
+4,949/4,951, zero failures and two known skips each.
+
 **Runtime event ownership:** [typed kernel operations](managed-event-runtime.md)
 now retain concrete targets through waits, NBA/Re-NBA delivery, monitors and late
 callbacks. All 23 new tests pass; 16 compiled runtime faults were caught before
