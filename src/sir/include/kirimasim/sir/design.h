@@ -34,6 +34,8 @@ struct BlockTag;
 using BlockId = Id<BlockTag>;
 struct FrameVarTag;
 using FrameVarId = Id<FrameVarTag>;
+struct ActivationScopeTag;
+using ActivationScopeId = Id<ActivationScopeTag>;
 struct SubroutineTag;
 using SubroutineId = Id<SubroutineTag>;
 struct ProcessTag;
@@ -391,10 +393,12 @@ enum class Op : std::uint8_t {
     Strobe,   ///< strobe @P: runs postponed process P once at the end of this time slot.
     Monitor,  ///< monitor @P: P becomes the monitor.
     // The named blocks and tasks disable reaches (SIR_SPEC.md 7.2).
-    ScopeEnter,    ///< scope.enter #N, bbExit: an activation of block N starts.
-    ScopeLeave,    ///< scope.leave #N: it ends.
-    DisableScope,  ///< disable.scope #N: every activation of block N ends at its exit.
-    DisableTask,   ///< disable.task @T: every call of task T ends.
+    ScopeEnter,       ///< scope.enter #N, bbExit: an activation of block N starts.
+    ScopeLeave,       ///< scope.leave #N: it ends.
+    DisableScope,     ///< disable.scope #N: every activation of block N ends at its exit.
+    DisableTask,      ///< disable.task @T: every call of task T ends.
+    ActivationEnter,  ///< activation.enter #N: enter local lexical scope N.
+    ActivationLeave,  ///< activation.leave #N: release its executing owner.
     // Calls.
     Call,           ///< [%r =] call @N, <argument>...
     Syscall,        ///< [%r =] syscall "$name", <operand>...
@@ -492,6 +496,7 @@ struct Operand {
     static Operand pattern(PatternId p) { return of(Kind::Pattern, p.index()); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
+    static Operand activation(ActivationScopeId s) { return of(Kind::Scope, s.index()); }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
         o.text = std::move(s);
@@ -521,6 +526,9 @@ struct BasicBlock {
     std::vector<Instr> instrs;
 };
 
+/// The logical home of a frame row, independent of a physical frame ABI.
+enum class FrameHome : std::uint8_t { Ordinary, Scoped, Capture };
+
 /// A row of a frame-variable table (SIR_SPEC.md 7.4). A fixed-size
 /// unpacked array has the dimensions and `type` is its element's. A ref
 /// argument has type ref, and the value type (`target`) and dimensions of
@@ -531,6 +539,25 @@ struct FrameVar {
     TypeId declType = kNone;
     std::vector<ArrayDim> dims;
     Type target;
+    FrameHome home = FrameHome::Ordinary;
+    ActivationScopeId activationScope = kNone;
+    FrameVarId captureSource = kNone;  ///< Row in the immediate fork parent's frame.
+    bool readonly = false;             ///< Binding access rights, not value snapshots.
+    bool refStatic = false;            ///< Qualified borrowed ref to static storage.
+};
+
+/// Body-local lexical scope IDs are distinct from design-wide disable IDs.
+/// Field order defines the immutable kernel layout, with no physical offsets.
+struct ActivationScope {
+    ActivationScopeId parent = kNone;
+    std::vector<FrameVarId> fields;
+};
+struct ActivationInfo {
+    std::vector<ActivationScope> scopes;
+    ActivationScopeId root = kNone;  ///< Entered before parameter copy-in.
+    /// Scopes of the immediate fork parent, resolved when it forks.
+    std::vector<ActivationScopeId> extents;
+    bool inheritCaptures = false;  ///< Forward the parent's inherited lexical extents.
 };
 
 /// Process kinds (SIR_SPEC.md 7.1).
@@ -600,6 +627,7 @@ struct Process {
     std::uint32_t numTemps = 0;
     Owner parent;  ///< The process or task that forks this one, if any.
     SourceLoc loc;
+    ActivationInfo activation;
 };
 
 /// Kinds of subroutines (SIR_SPEC.md 8). A guard is the iff condition of a
@@ -625,6 +653,7 @@ struct Param {
     Type type;
     SlotId slot = kNone;
     FrameVarId frameVar = kNone;
+    bool refStatic = false;
 };
 
 /// A row of the subroutine table. Block 0 is the entry block.
@@ -641,6 +670,7 @@ struct Subroutine {
     std::uint32_t numTemps = 0;
     Owner frameOf;  ///< Guard: whose frame it reads.
     SourceLoc loc;
+    ActivationInfo activation;
 };
 
 /// The kind of a scope of the dump table (WAVEFORM.md 2).

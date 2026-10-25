@@ -12,6 +12,11 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**automaticのSIRメタデータ：** [表現/検証の段階](automatic-sir-metadata.ja.md)でhome・捕捉・
+権限・寿命メタデータ・所有権グラフの独自16テストを追加しました。初回devは4,585/4,587成功、
+失敗0・既知2スキップです。VMの全binding/アクセス経路が揃うまで新しいhomeは明示的に拒否し、
+ソースの捕捉やIcarus差分が解消したとは扱いません。
+
 **automatic待機の最終検証：** `efb3f3d1`の[全21項目](../measurements/2026-10-25/activation-wait-final-validation.json)が成功しました。
 dev/ASan/UBSanは4,569/4,571、releaseは4,570/4,572成功、失敗0・既知2スキップです。
 コンパイルした7故障を検出しました。nativeのsv-testsは244/344、版を固定した母集団は

@@ -136,6 +136,8 @@ Context内の世代付きスコープ・共有binding・lease・readonly・型�
 [独自14テストと全32ビット世代の検査](notes/automatic-storage-foundation.ja.md)で確認しています。
 [待機の依存への接続](notes/automatic-storage-observation.ja.md)では捕捉/静的範囲・extent保持・
 キャンセルに対する独自14テストを追加しました。
+[SIRの表現/検証](notes/automatic-sir-metadata.ja.md)には独自16テストを追加し、
+VM接続が揃うまで新しいhomeの実行は拒否します。
 ソースのfork捕捉、activation命令、automatic event・ref・objectの接続はまだ有効にせず、
 上記の未対応診断は維持しています。
 

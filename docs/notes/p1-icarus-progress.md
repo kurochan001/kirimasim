@@ -13,6 +13,12 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Automatic SIR metadata:** the [representation/verifier checkpoint](automatic-sir-metadata.md)
+adds sixteen original tests for scope homes, captures, rights, lifetime metadata
+and ownership graphs. Initial dev passes 4,585/4,587, zero failures and two known
+skips. New homes remain explicitly gated in VM until its full binding/access
+adapter is ready; no source capture or Icarus gap is claimed closed.
+
 **Final automatic-wait validation:** `efb3f3d1` passes [all 21 checks](../measurements/2026-10-25/activation-wait-final-validation.json).
 Dev/ASan/UBSan pass 4,569/4,571 and release 4,570/4,572, zero failures and two
 known skips. Seven compiled controls are detected. Fresh native sv-tests is

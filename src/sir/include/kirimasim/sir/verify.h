@@ -29,5 +29,9 @@ struct VerifyError {
 
 /// Checks the design and returns every violation found (empty if none).
 std::vector<VerifyError> verify(const Design& design);
+/// The shared metadata/ownership checks also protect execution adapters
+/// loading hand-built SIR. They do not select a physical frame ABI.
+std::vector<VerifyError> verifyActivationScopes(const Design& design);
+bool hasActivationMetadata(const Design& design);
 
 }  // namespace kirimasim::sir

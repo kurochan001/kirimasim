@@ -150,6 +150,8 @@ Context-local generational scopes, shared bindings, leases, readonly rights
 and typed roots have [14 original tests and a full generation-exhaustion probe](notes/automatic-storage-foundation.md).
 The [wait-dependency connection](notes/automatic-storage-observation.md) adds
 14 tests for captured/static ranges, retained extents and cancellation.
+The [SIR metadata/verifier checkpoint](notes/automatic-sir-metadata.md) adds
+16 tests; execution of those new homes is gated until the VM adapter is complete.
 Source fork capture, activation instructions and automatic event/ref/object
 integration are not enabled; the existing source boundaries above remain.
 

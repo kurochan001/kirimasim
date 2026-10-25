@@ -41,6 +41,7 @@
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
+#include "kirimasim/sir/verify.h"
 #include <memory_resource>
 
 namespace kirimasim::vm {
@@ -622,6 +623,16 @@ public:
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
           strings_(ctx.strings()), heap_(ctx.heap()), activations_(ctx.activations()),
           counters_(ctx.counters()), stack_(ctx.stack()), options_(options) {
+        if (!sir::verifyActivationScopes(d).empty()) {
+            loadError_ = "invalid automatic scope metadata";
+            return;
+        }
+        // Scoped homes must not fall through to independent frame words
+        // while the typed access and ownership adapter is being connected.
+        if (sir::hasActivationMetadata(d)) {
+            loadError_ = "automatic frame homes are not supported by the VM yet";
+            return;
+        }
         auto patterns = sir::validatePatterns(d);
         if (!patterns.errors.empty()) loadError_ = "invalid pattern layout metadata";
         patternShapes_ = std::move(patterns.shapes);

@@ -61,6 +61,8 @@ bool hasNoResult(Op op) {
         case Op::Monitor:
         case Op::ScopeEnter:
         case Op::ScopeLeave:
+        case Op::ActivationEnter:
+        case Op::ActivationLeave:
         case Op::DisableScope:
         case Op::DisableTask:
         case Op::StoreRef:
@@ -1792,6 +1794,11 @@ private:
                                 ops[1].kind != Operand::Kind::Block || ops[1].count != 0))
                     bad("needs a scope and its exit block");
                 break;
+            case Op::ActivationEnter:
+            case Op::ActivationLeave:
+                if (nOps(1) && ops[0].kind != Operand::Kind::Scope)
+                    bad("needs a body-local automatic scope");
+                break;
             case Op::ScopeLeave:
             case Op::DisableScope:
                 if (nOps(1) && (ops[0].kind != Operand::Kind::Scope || ops[0].id >= d_.numScopes))
@@ -2196,6 +2203,12 @@ private:
 
 }  // namespace
 
-std::vector<VerifyError> verify(const Design& design) { return Verifier(design).run(); }
+std::vector<VerifyError> verify(const Design& design) {
+    auto errors = Verifier(design).run();
+    auto activation = verifyActivationScopes(design);
+    errors.insert(errors.end(), std::make_move_iterator(activation.begin()),
+                  std::make_move_iterator(activation.end()));
+    return errors;
+}
 
 }  // namespace kirimasim::sir

@@ -170,6 +170,36 @@ std::string frameText(const std::vector<FrameVar>& frame) {
             out += "<" + toString(f.target) + ">";
         out += dimsText(f.dims);
         if (f.declType != kNone) out += " type=" + typeRef(f.declType);
+        if (f.home == FrameHome::Scoped)
+            out += " home=activation#" + std::to_string(f.activationScope.index());
+        if (f.home == FrameHome::Capture)
+            out += " home=capture%f" + std::to_string(f.captureSource.index());
+        if (f.readonly) out += " readonly";
+        if (f.refStatic) out += " ref-static";
+        out += "\n";
+    }
+    return out;
+}
+
+std::string activationText(const ActivationInfo& info) {
+    std::string out;
+    for (std::size_t i = 0; i < info.scopes.size(); ++i) {
+        const auto& scope = info.scopes[i];
+        out += "  activation #" + std::to_string(i);
+        if (info.root.index() == i) out += " root";
+        if (scope.parent != kNone) out += " parent=#" + std::to_string(scope.parent.index());
+        out += " fields=(";
+        for (std::size_t f = 0; f < scope.fields.size(); ++f) {
+            if (f != 0) out += ", ";
+            out += "%f" + std::to_string(scope.fields[f].index());
+        }
+        out += ")\n";
+    }
+    if (!info.extents.empty() || info.inheritCaptures) {
+        out += "  capture.extents";
+        for (auto scope : info.extents)
+            out += " #" + std::to_string(scope.index());
+        if (info.inheritCaptures) out += " inherited";
         out += "\n";
     }
     return out;
@@ -374,9 +404,10 @@ std::string toText(const Design& d) {
                    " : " + toString(prm.type) + " -> " +
                    (prm.slot != kNone ? "%s" + std::to_string(prm.slot.index())
                                       : "%f" + std::to_string(prm.frameVar.index())) +
-                   "\n";
+                   (prm.refStatic ? " ref-static" : "") + "\n";
         }
-        out += frameText(sub.frame) + blocksText(d, sub.blocks) + "}\n";
+        out += activationText(sub.activation) + frameText(sub.frame) + blocksText(d, sub.blocks) +
+               "}\n";
     }
     for (std::size_t i = 0; i < d.processes.size(); ++i) {
         const Process& p = d.processes[i];
@@ -404,7 +435,8 @@ std::string toText(const Design& d) {
             for (std::size_t k = 0; k < p.drives.size(); ++k)
                 out += (k == 0 ? "" : ",") + slotRef(p.drives[k]);
         }
-        out += " {" + locText(p.loc) + "\n" + frameText(p.frame) + blocksText(d, p.blocks) + "}\n";
+        out += " {" + locText(p.loc) + "\n" + activationText(p.activation) + frameText(p.frame) +
+               blocksText(d, p.blocks) + "}\n";
     }
     return out;
 }

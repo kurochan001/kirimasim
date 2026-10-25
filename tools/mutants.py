@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('activation SIR: waiter helpers can write readonly captures', 'src/sir/activation.cpp', 'if (waiter.frame != nullptr) readonlyWrites(body, *waiter.frame);', 'if (waiter.frame != nullptr && false) readonlyWrites(body, *waiter.frame);'),
+    ('activation SIR: parameter copy-in precedes its storage', 'src/sir/activation.cpp', 'f.home == FrameHome::Scoped && f.activationScope != info.root', 'false && f.home == FrameHome::Scoped && f.activationScope != info.root'),
+    ('activation SIR: repeated physical field membership is accepted', 'src/sir/activation.cpp', 'membership[i] != 1', 'false'),
+    ('activation SIR: capture shapes are not checked', 'src/sir/activation.cpp', '!sameShape(f, source)', '(static_cast<void>(sameShape(f, source)), false)'),
+    ('activation SIR: fork drops unread enclosing lexical extents', 'src/sir/activation.cpp', 'child.activation.extents != state.scopes', 'false && child.activation.extents != state.scopes'),
+    ('activation SIR: different ownership stacks merge silently', 'src/sir/activation.cpp', '*incoming[operand.id] != state', 'false && *incoming[operand.id] != state'),
+    ('activation SIR: writable views of readonly captures are accepted', 'src/sir/activation.cpp', 'source.readonly && !f.readonly', 'false && source.readonly && !f.readonly'),
+    ('activation SIR: normal ref bindings escape nonjoining forks', 'src/sir/activation.cpp', 'source.type.kind == TypeKind::Ref && !source.refStatic && !joined', 'false && source.type.kind == TypeKind::Ref && !source.refStatic && !joined'),
+    ('activation SIR: helpers read scopes before lexical entry', 'src/sir/activation.cpp', 'if (frame.home == FrameHome::Scoped &&', 'if (false && frame.home == FrameHome::Scoped &&'),
     ('activation waits: initial evaluation writes lose their read dependencies', 'src/kernel/sim.cpp', 'for (auto* capture = scheduler.activationCapture_; capture != nullptr;', 'for (auto* capture = static_cast<ActivationCapture*>(nullptr); capture != nullptr;'),
     ('activation waits: committed changes are not announced', 'src/kernel/sim.cpp', '    if (scheduler.ending_) return;', '    if (true) return;'),
     ('activation waits: packed read ranges cover unrelated bits', 'src/kernel/sim.cpp', 'overlaps(region.lsb, region.width, access.lsb, access.width)', '(static_cast<void>(region.width), true)'),

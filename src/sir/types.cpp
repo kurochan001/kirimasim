@@ -217,6 +217,8 @@ const char* opName(Op op) {
         case Op::Monitor: return "monitor";
         case Op::ScopeEnter: return "scope.enter";
         case Op::ScopeLeave: return "scope.leave";
+        case Op::ActivationEnter: return "activation.enter";
+        case Op::ActivationLeave: return "activation.leave";
         case Op::DisableScope: return "disable.scope";
         case Op::DisableTask: return "disable.task";
         case Op::Resolve: return "resolve";
