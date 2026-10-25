@@ -46,7 +46,8 @@ FLAG_MATRIX = HERE / "format_flag_matrix.sv"
 FLAG_UNSUPPORTED = HERE / "format_flag_unsupported.sv"
 BUILTIN_CALLS = HERE / "builtin_call_matrix.sv"
 ERROR_DESIGNS = [HERE / "later_work_matrix.sv", HERE / "later_work_override.sv",
-                 HERE / "task_write_matrix.sv", HERE / "deferred_write_matrix.sv"]
+                 HERE / "deferred_write_matrix.sv"]
+TASK_WRITES = HERE / "task_write_matrix.sv"
 BLOCK_POSITIONS = HERE / "block_position_matrix.sv"
 LIFETIME = HERE.parent / "suite" / "sched" / "process_lifetime.sv"
 END_TASKS = str(HERE / "end_tasks.sv")
@@ -469,13 +470,14 @@ def main() -> int:
         print(f"FAIL: builtin call matrix: exit code {proc.returncode}\n{proc.stdout}"
               f"{proc.stderr}", file=sys.stderr)
 
-    # Errors that front finds, each with a note, and exit code 2: a function
-    # that schedules work after it returns, called where 13.4.4 does not
-    # allow it (SCHEDULER_SPEC.md 6.5; tools/gen_later_work_matrix.py and
-    # tools/gen_later_work_override_matrix.py), and a write through a task,
-    # or through the action of a deferred assertion, to what an
-    # always_comb, always_latch or always_ff writes (SCHEDULER_SPEC.md 6.4;
-    # tools/gen_task_write_matrix.py, tools/gen_deferred_write_matrix.py).
+    # Errors with exit code 2: those front finds, each with a note, for a
+    # function that schedules work after it returns, called where 13.4.4
+    # does not allow it (SCHEDULER_SPEC.md 6.5; tools/gen_later_work_matrix.py
+    # and tools/gen_later_work_override_matrix.py); and the run-time error
+    # of the Postponed region that stops the design in which other processes
+    # write, through the actions of deferred assertions, what an always_comb,
+    # always_latch or always_ff writes, legal in itself (SCHEDULER_SPEC.md
+    # 2.2, 6.4; tools/gen_deferred_write_matrix.py).
     for design in ERROR_DESIGNS:
         proc = bounded_run.run([args.kirimasim, design.name], cwd=HERE)
         want = design.with_suffix(".stderr").read_text(encoding="utf-8").splitlines()
@@ -485,6 +487,15 @@ def main() -> int:
             failures += 1
             print(f"FAIL: {design.stem}: exit code {proc.returncode}\n{proc.stdout}"
                   f"{proc.stderr}", file=sys.stderr)
+
+    # Other processes write through tasks what an always_comb, always_latch
+    # or always_ff writes: legal, as slang keeps it (SCHEDULER_SPEC.md 6.4;
+    # tools/gen_task_write_matrix.py). The design runs with no output.
+    proc = bounded_run.run([args.kirimasim, TASK_WRITES.name], cwd=HERE)
+    if proc.returncode != 0 or proc.stdout != "" or ": error: " in proc.stderr:
+        failures += 1
+        print(f"FAIL: {TASK_WRITES.stem}: exit code {proc.returncode}\n{proc.stdout}"
+              f"{proc.stderr}", file=sys.stderr)
 
     # A block statement is placed at its first token, whatever its body:
     # the fork instruction, the process of each statement of a fork, and
