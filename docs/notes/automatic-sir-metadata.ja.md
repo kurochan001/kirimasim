@@ -6,6 +6,11 @@ VM・ソースへの接続は残作業です。
 後続の[VM値アクセスの移行](automatic-vm-frame-access.ja.md)は実装・検証しました。
 新しいhomeの解決と、所有する環境・不変のrefの構築は、実行を有効にする前の残作業です。
 
+
+現在の接続状況：[Interpreterでの実行](automatic-vm-execution.ja.md)を追加しました。
+以下は各部品の段階の記録であり、その時点のVM拒否・残作業は当時の状態です。
+現在は妥当な表現済みSIR homeを実行できますが、frontによるソースの捕捉はまだ有効にしていません。
+
 ## 承認済み契約と境界
 
 承認済み[automatic捕捉の契約](automatic-capture-proposal.ja.md)の1–3/7/8節のうち

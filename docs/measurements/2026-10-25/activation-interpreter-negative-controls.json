@@ -1,0 +1,189 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "b17234e420b6",
+  "scope": "Actual compiled Interpreter activation integration controls; front source capture remains gated",
+  "controls": [
+    {
+      "name": "activation VM: scoped arrays resolve the first element",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.ScopedWideArraysUseTheSameSelectedTransportAndRefs"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: returned owners retain executing leases",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.ExecutingOwnershipEndsBeforeTheRetainedControlRecordIsReclaimed",
+        "VmActivation.ExtendedScopesKeepUnreadTypedHeapFieldsAlive"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: fork captures the process instead of the current call",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.GuardOfSharedScopeWakesFromCapturedChildWrite",
+        "VmActivation.OutputCopybackOccursOnceBeforeTaskOrSynchronousOwnerReturns",
+        "VmActivation.QualifiedReferenceCapturesKeepBindingsAcrossFormalReuse"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: scoped output defaults are zero instead of X",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.OutputFormalDefaultsAreInitializedInRootBeforeCopyback"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: static frame sensitivity is omitted",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.StaticSensitivityKeepsReadsFromUnexecutedGuardBranches"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: captured refs use the current body shape",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.DescendantsKeepActualOriginsAfterBothEnclosingBodiesReturn"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: scope leave keeps borrowed tickets",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.BorrowedDescriptorsExpireAtScopeLeaveEvenWhenChildrenRetainData"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: readonly slot references become writable",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.RuntimeRightsFollowReadonlyAliasesThroughReferenceResults"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: fork acquisition errors are ignored",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.KernelAllocationFailuresReturnResourceLimitAndReleaseWholeForkGroups"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation VM: call owners end before outputs are read",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.OutputCopybackOccursOnceBeforeTaskOrSynchronousOwnerReturns",
+        "VmActivation.OutputFormalDefaultsAreInitializedInRootBeforeCopyback"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: the outermost full extent is omitted",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.DescendantsKeepActualOriginsAfterBothEnclosingBodiesReturn",
+        "VmActivation.ExecutingOwnershipEndsBeforeTheRetainedControlRecordIsReclaimed",
+        "VmActivation.ExtendedScopesKeepUnreadTypedHeapFieldsAlive",
+        "VmActivation.OutputCopybackOccursOnceBeforeTaskOrSynchronousOwnerReturns",
+        "VmActivation.QualifiedReferenceCapturesKeepBindingsAcrossFormalReuse"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: a guard in a task reads the process's frame",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.GuardOfSharedScopeWakesFromCapturedChildWrite"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: a block tells its children by their place",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "VmActivation.NamedDisableUsesBirthSerialAfterEarlierChildRecordsAreReclaimed",
+        "VmActivation.NamedDisableUsesBirthSerialAfterEarlierChildRecordsAreReclaimed"
+      ],
+      "caught": true
+    },
+    {
+      "name": "vm: a function call keeps no place for $stacktrace",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "cli/options"
+      ],
+      "caught": true
+    }
+  ],
+  "baseline_build_exit": 0,
+  "baseline_test_exit": 0,
+  "restored_build_exit": 0,
+  "restored_test_exit": 0,
+  "all_caught": true,
+  "source_restored": true,
+  "new_unit_tests": 19,
+  "source_sha256": {
+    "src/vm/vm.cpp": "43fda023afdd48b0cc33e2b00ff2e04aae628d2e06f2439404735ac34f2a4b26",
+    "tests/unit/vm_activation_test.cpp": "698dcb4d48093c063de09cdc99ab83a58d216d8d4df8bd82d2c9d8cf3ef10f10",
+    "tools/mutants.py": "860ebe091a2041ea7dc565b6feb86f2095c858541804b24b3479f3a0402c27de"
+  },
+  "initial_control_source_sha256": {
+    "src/vm/vm.cpp": "43fda023afdd48b0cc33e2b00ff2e04aae628d2e06f2439404735ac34f2a4b26",
+    "tests/unit/vm_activation_test.cpp": "79ecee8835834f4c03b2ce70710f171a6876f341cb39b87b733afbe48a82eb72",
+    "tools/mutants.py": "860ebe091a2041ea7dc565b6feb86f2095c858541804b24b3479f3a0402c27de"
+  },
+  "coverage_gap": {
+    "initial_attempt": {
+      "name": "vm: a block tells its children by their place",
+      "file": "src/vm/vm.cpp",
+      "build_exit": 0,
+      "test_exit": 0,
+      "failed_tests": [],
+      "caught": false
+    },
+    "added_test": "VmActivation.NamedDisableUsesBirthSerialAfterEarlierChildRecordsAreReclaimed",
+    "note": "The original disable matrix did not distinguish birth serial from live child count; the 19th new execution test catches the compiled fault."
+  },
+  "initial_new_unit_tests": 18,
+  "run_base_revision": "a0709b8c2f1ca80e4f38dd576c6002f2947c0a25",
+  "run_worktree_uncommitted": true,
+  "revision_note": "Controls ran on the uncommitted code subsequently committed as b17234e4. The first 12 used the 18-test version; a 19th test closed the surviving birth-serial control, and restored/final tests used all 19. Production source is unchanged across those runs; both test hashes are recorded."
+}

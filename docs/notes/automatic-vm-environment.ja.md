@@ -3,6 +3,11 @@
 [English](automatic-vm-environment.md)。Status: 環境構築を実装・直接検証、2026-10-25。
 Interpreterへの接続は残作業です。
 
+
+現在の接続状況：[Interpreterでの実行](automatic-vm-execution.ja.md)を追加しました。
+以下は各部品の段階の記録であり、その時点のVM拒否・残作業は当時の状態です。
+現在は妥当な表現済みSIR homeを実行できますが、frontによるソースの捕捉はまだ有効にしていません。
+
 ## 契約と所有権
 
 承認済み[automatic捕捉の契約](automatic-capture-proposal.ja.md)の1–4/6–8節から、

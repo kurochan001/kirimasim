@@ -13,6 +13,20 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Interpreter automatic environments:** `b17234e4` now executes valid represented
+SIR homes through [the shared ownership/reference adapter](automatic-vm-execution.md).
+Nineteen new execution tests cover joins, call/copyback, reentry, descendants,
+ref/static/readonly bindings, guards, typed roots, cancellation and allocation
+failure. Fourteen compiled faults are detected; the relocated birth-serial
+control exposed an old coverage hole closed by a reclamation test. The
+[full local CI](../measurements/2026-10-25/activation-interpreter-final-validation.json)
+passes all 21 steps: dev/ASan/UBSan 4,680/4,682, release 4,681/4,683, zero failures
+and two known skips. All 87 native/14.0 statuses/passing bytes are unchanged;
+exact population stays 1,451/1,466 and pinned sv-tests 244/344. Five focused
+ordinary-transport pairs show about +4.0% wall time with equal counters and
++16 KiB peak RSS. Front source capture, owned event/ref/object providers and
+full Icarus coverage remain work; the historical 13.0 record still leaves 22 gaps.
+
 **Scoped-reference component:** `589bd26b` preserves immutable declaring origins,
 checks generation/rights and resolves actual field/array selections without
 owning borrowed targets. The [implementation record](automatic-vm-scoped-refs.md)

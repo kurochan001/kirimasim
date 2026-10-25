@@ -3,6 +3,12 @@
 [日本語](automatic-vm-environment.ja.md). Status: environment construction
 implemented and directly tested, 2026-10-25; Interpreter integration remains work.
 
+
+Current integration: the [Interpreter execution adapter](automatic-vm-execution.md)
+is now connected. This note records the earlier component checkpoint; its load
+gate and remaining-work statements describe that checkpoint. Valid represented
+SIR homes now execute, while front source capture remains disabled.
+
 ## Contract and ownership
 
 This implements environment construction from sections 1–4/6–8 of the approved

@@ -3,6 +3,12 @@
 [日本語](automatic-vm-scoped-refs.ja.md). Status: reference component implemented
 and directly tested, 2026-10-25; complete Interpreter attachment remains work.
 
+
+Current integration: the [Interpreter execution adapter](automatic-vm-execution.md)
+is now connected. This note records the earlier component checkpoint; its load
+gate and remaining-work statements describe that checkpoint. Valid represented
+SIR homes now execute, while front source capture remains disabled.
+
 ## Contract and representation
 
 This implements the reference-address component needed by sections 1–4/6–8 of

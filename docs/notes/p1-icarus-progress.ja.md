@@ -12,6 +12,16 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**Interpreterのautomatic環境：** `b17234e4`で妥当な表現済みSIR homeを
+[共有の所有権/参照の経路](automatic-vm-execution.ja.md)で実行します。独自19実行テストはjoin・
+call/コピー戻し・再進入・子孫・ref/static/readonly・guard・typed root・キャンセル・確保失敗を含みます。
+コンパイルした14故障を検出し、移動した出生番号の故障で見つかった従来の検査不足を回収後のケースで埋めました。
+[local CI全体](../measurements/2026-10-25/activation-interpreter-final-validation.json)は全21項目成功、
+dev/ASan/UBSanが4,680/4,682、releaseが4,681/4,683成功で、失敗0・既知2スキップです。
+87項目のnative/14.0全判定と成功時出力、正確な母集団1,451/1,466、固定sv-tests244/344を維持します。
+通常の輸送経路の交互5組はwall time約+4.0%、カウンタ同一、peak RSS +16 KiBでした。
+frontのソース捕捉・所有event/ref/object・Icarus全範囲への対応は残作業で、過去の13.0記録に対する差分22件は残ります。
+
 **scoped refの部品：** `589bd26b`は宣言元の不変な由来・世代/権限・実際のfield/配列選択を保持し、
 借用した参照先を所有しません。[実装記録](automatic-vm-scoped-refs.ja.md)に独自11テストを加え、
 新規9・移動4のコンパイルした13故障を検出しました。通常レイアウトの共通計算はInterpreterで使いますが、

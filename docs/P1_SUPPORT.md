@@ -144,26 +144,24 @@ remain unsupported and are explicitly measured in the expanded comparison.
 The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
 was approved on 2026-10-25; automatic event variables are still unsupported.
 
-### Automatic-storage kernel foundation
+### Automatic-storage execution boundary
 
 Context-local generational scopes, shared bindings, leases, readonly rights
-and typed roots have [14 original tests and a full generation-exhaustion probe](notes/automatic-storage-foundation.md).
+and typed roots have [14 original tests and a full kernel-storage generation probe](notes/automatic-storage-foundation.md).
 The [wait-dependency connection](notes/automatic-storage-observation.md) adds
-14 tests for captured/static ranges, retained extents and cancellation.
-The [SIR metadata/verifier checkpoint](notes/automatic-sir-metadata.md) adds
-16 tests; execution of those new homes is gated until the VM adapter is complete.
-The [VM access-path migration](notes/automatic-vm-frame-access.md) routes frame,
-ref, file/scan and argument operations through value views; seven tests cover
-270 selected transports and 24 complete SIR executions. Full Interpreter
-ownership/reference attachment and source capture remain work.
-The [VM environment component](notes/automatic-vm-environment.md) directly tests
-scope owners, whole lexical imports, immutable captures and rollback in 21 tests;
-The [scoped-reference component](notes/automatic-vm-scoped-refs.md) adds 11 tests
-for immutable origins, generation/rights checks, selections, scope tickets and
-rollback; its ordinary layout decoder is shared with the Interpreter. Full
-Interpreter environment/reference attachment remains work.
-Source fork capture, activation instructions and automatic event/ref/object
-integration are not enabled; the existing source boundaries above remain.
+14 tests, [SIR metadata/verifier](notes/automatic-sir-metadata.md) 16,
+[value transport](notes/automatic-vm-frame-access.md) seven,
+[environment construction](notes/automatic-vm-environment.md) 21 and
+[scoped references](notes/automatic-vm-scoped-refs.md) 11.
+The [Interpreter adapter](notes/automatic-vm-execution.md) now executes valid
+represented homes, scope entry/exit, shared fork environments, current-task
+callbacks and immutable refs. Nineteen execution tests cover calls/copyback,
+reentry, all joins, typed roots, cancellation, program completion and resource
+failure; 14 compiled controls are detected. Ordinary frames share the layout
+and value boundary without a mirrored scoped value.
+Front still emits no capture homes and rejects source automatic fork capture.
+Automatic event construction and owned ref/object providers remain unsupported;
+activation instructions executing in hand-built SIR do not close those source gaps.
 
 ### Fixed-array ports and net arrays
 

@@ -6,6 +6,11 @@ automatic環境の構築は実装途中です。
 後続の[字句的環境の部品](automatic-vm-environment.ja.md)でscopeの所有と子の環境全体を構築し、
 直接検証しました。Interpreterへの登録と不変のscoped refの構築は残作業です。
 
+
+現在の接続状況：[Interpreterでの実行](automatic-vm-execution.ja.md)を追加しました。
+以下は各部品の段階の記録であり、その時点のVM拒否・残作業は当時の状態です。
+現在は妥当な表現済みSIR homeを実行できますが、frontによるソースの捕捉はまだ有効にしていません。
+
 ## 契約と変更
 
 承認済み[automatic捕捉の契約](automatic-capture-proposal.ja.md)の2–4/6–8節に
