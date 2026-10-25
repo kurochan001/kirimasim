@@ -40,10 +40,11 @@ values and creates no heap roots or mutable global state.
 This API does not establish a layout for an unimplemented source type. In
 particular, associative ordering is a caller precondition, tagged values need
 a supplied payload view, and handle ordinals are supplied metadata. Actual
-class/event identities still depend on their pending contracts. Typed SIR
-formatting metadata and execution are present at `4c69843`; front lowering,
-source argument capture and runtime-format transport remain before source
-support is enabled. The pending class and event contracts remain pending.
+class/event identities depend on the class and event contracts approved on
+2026-10-25. Typed SIR formatting metadata and execution are present at
+`4c69843`; front lowering, source argument capture and runtime-format transport
+remain before source support is enabled. Implementation of the class and event
+contracts remains work.
 
 ## Independent checks
 

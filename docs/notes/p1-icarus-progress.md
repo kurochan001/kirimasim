@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](phase-renumbering.md)).
 
-The goal is broader P1 functional support than Icarus Verilog 13.0.
+The goal is P1 functional support at least as broad as Icarus Verilog 13.0.
 Complete parity is **not confirmed**. The previous pass-rate gates and the
 small probes below cannot establish it. The
 [scope amendment](p1-icarus-scope-proposal.md) was approved on 2026-10-23
@@ -31,7 +31,7 @@ this component alone closes no Icarus inventory gap.
 pass at `9b30d6d2`. Dev/ASan/UBSan pass 4,629/4,631; release 4,630/4,632,
 with zero failures and two known skips. Nine compiled faults are detected;
 36 new initial-override cases close the surviving control's coverage hole.
-Native sv-tests stays 244/344; the exact P1 population stays 1,451/1,466,
+Native macOS sv-tests stays 244/344; the exact P1 population stays 1,451/1,466,
 zero failures and 15 unsupported. All 87 judged statuses/passing outputs stay
 unchanged against fresh 14.0; the earlier 13.0 counterpart still leaves 22 gaps.
 The [focused cost](automatic-vm-frame-access.md) is about +6.4% wall time with
@@ -56,8 +56,8 @@ adapter is ready; no source capture or Icarus gap is claimed closed.
 
 **Final automatic-wait validation:** `efb3f3d1` passes [all 21 checks](../measurements/2026-10-25/activation-wait-final-validation.json).
 Dev/ASan/UBSan pass 4,569/4,571 and release 4,570/4,572, zero failures and two
-known skips. Seven compiled controls are detected. Fresh native sv-tests is
-244/344; the exact pinned population is 1,451/1,466, zero failures and 15 unsupported.
+known skips. Seven compiled controls are detected. Fresh native macOS sv-tests
+is 244/344; the exact pinned population is 1,451/1,466, zero failures and 15 unsupported.
 All 87 engine statuses and passing judged bytes remain unchanged against both
 references. Source capture and full P1 completion remain work.
 
@@ -83,7 +83,7 @@ covers 358 sources, four SIR tests, fourteen boundary checks and eight compiled
 negative controls. The same 87 probes now have 22 passing gaps per reference
 and unchanged four/seven reference mismatches. The proposal's 59 designs now
 have 51 matches, seven legality rejections and one unsupported partial-array
-port. Sv-tests remains 244/344; population remains 1,451/1,466, zero failures
+port. macOS sv-tests remains 244/344; population remains 1,451/1,466, zero failures
 and 15 unsupported. Pre-implementation statements below retain their checkpoint dates.
 
 **Further approval (2026-10-25):** the user approved all six remaining detailed
@@ -212,7 +212,9 @@ static-initializer side effects corrects the earlier blanket diagnostic claim.
 Reference failures/differences are not adopted as oracles. This neither changes
 the 87-item inventory nor adds class implementation or approved contracts.
 
-The same **87 original probes** now run against both installed references:
+At the wide-UDP checkpoint (`52652eb`, 2026-10-24), the same **87 original
+probes** ran against both installed references; the current counts are 22/22
+(see above):
 
 - Icarus `13.0 (stable) (v13_0)`: 25 Icarus-passing gaps, four reference
   result mismatches.
@@ -226,10 +228,11 @@ complete coverage, full parity and Linux results for these probes remain
 unconfirmed. All earlier 84 statuses and passing judged outputs are unchanged.
 The new combinational/sequential wide UDP probes pass both references and native
 execution. A new dense table still reaches the native 15-second subprocess bound.
-The expanded baseline has 27/33 gaps and the current native 25/31; it combines
-preserved 84-item records and three fresh probes on the same retained source.
-The earlier 84-item cohort retains 24/30 gaps. This closes two newly inventoried
-mechanisms and exposes a compiler limit, without changing older cohort results.
+The expanded baseline has 27/33 gaps and the native at that checkpoint
+25/31; it combines preserved 84-item records and three fresh probes on the
+same retained source. The earlier 84-item cohort retains 24/30 gaps. This
+closes two newly inventoried mechanisms and exposes a compiler limit, without
+changing older cohort results.
 
 The reduction/ordering, multidimensional input and extrema amendments were
 approved on 2026-10-25 and now have the tested subsets linked above.
@@ -259,7 +262,9 @@ copyback, ref restrictions, automatic event construction and cleanup in the
 shared kernel. Its [32 original source observations](../measurements/2026-10-24/automatic-capture-design-observations.json)
 include native parse/run results and both references. They are design evidence,
 not approved oracles. Event rebinding and event output/inout copyback remain
-outside that proposal; no production implementation has been added.
+outside that proposal; at that checkpoint (2026-10-24), no production
+implementation had been added. Later checkpoints implemented automatic-storage
+layers.
 
 The [array-port proposal](fixed-array-ports-proposal.md) records
 [59 original design programs](../measurements/2026-10-24/fixed-array-port-design-observations.json).
@@ -268,7 +273,9 @@ matches 36 legal model outputs, rejects 15 legal sources and differs on one;
 34 model-matched sources remain native gaps. Native passes four controls and
 rejects the other 48 legal examples. Explicit input-var reevaluation differs
 in the references; their acceptance of two illegal writer programs does not
-justify weakening slang. No array-port or resolved-array implementation is added.
+justify weakening slang. At that checkpoint (2026-10-24), no array-port or
+resolved-array implementation had been added; later work implemented
+[fixed-array ports](fixed-array-port-execution.md).
 The earlier array-port documentation/probe follow-up passed all 135 Tools tests, source-hash
 checks, passing-output comparisons and changed-document file-link checks.
 At that step, production source and expectations were at `c6d9c3d`, with
@@ -283,10 +290,12 @@ The [bounded compilation data](../measurements/2026-10-24/udp-edge-coverage-obse
 and [upstream issue draft](slang-udp-coverage-issue-draft.md) preserve the unresolved
 frontend behavior. No upstream issue/comment has been sent.
 
-The broader development-version cases remain tracked. External pass-rate
-measurements keep their 2026-10-22 provenance. Performance measurements are
-separate records from 2026-10-23 (macOS) and 2026-10-24 (WSL2); these source
-changes have not been timed there. See [benchmark conditions](../BENCHMARKS.md).
+The broader development-version cases remain tracked. For external pass
+rates, macOS sv-tests and the population were remeasured on 2026-10-25; the
+nightly run measured Linux sv-tests at 234 on 2026-10-24. Performance
+measurements are separate records from 2026-10-23 (macOS) and 2026-10-24
+(WSL2); these source changes have not been timed there. See
+[benchmark conditions](../BENCHMARKS.md).
 
 ```sh
 python3 tools/icarus_feature_probe.py --kirimasim build/dev/src/driver/kirimasim \
@@ -302,7 +311,8 @@ The [class runtime proposal](class-runtime-proposal.md) adds a detailed contract
 and fourteen original boundaries beyond the preserved 46. Each reference has
 four model matches, six compile failures, three runtime failures and one
 unjudged observation; native has twelve unsupported forms and two mismatches.
-No class implementation, contract approval or 87-item inventory expansion is claimed.
+At that checkpoint (2026-10-24), no class implementation, contract approval or
+87-item inventory expansion was claimed. The contract was approved on 2026-10-25.
 
 ## Wide L/H side masks and the delayed boundary (2026-10-24)
 

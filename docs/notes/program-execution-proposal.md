@@ -6,11 +6,12 @@ Incorporated into SIR_SPEC, SCHEDULER_SPEC and SYSTEM_TASKS. The shared kernel n
 mechanisms; complete language coverage and full Icarus parity remain unconfirmed.
 
 P1_SCOPE advances programs into P1 but requires review of missing or
-conflicting details before implementation. SCHEDULER_SPEC 16.1 currently
-describes `$exit` as waiting for every program, whereas IEEE 1800-2023
-24.7 makes it terminate the originating program. The proposal below fills
-that detail and the SIR representation. The clauses were checked locally;
-this text paraphrases them without reproducing standard text or examples.
+conflicting details before implementation. Before this amendment,
+SCHEDULER_SPEC 16.1 described `$exit` as waiting for every program, whereas
+IEEE 1800-2023 24.7 makes it terminate the originating program. The proposal
+below fills that detail and the SIR representation. The clauses were checked
+locally; this text paraphrases them without reproducing standard text or
+examples.
 
 ## Approved semantic amendment
 

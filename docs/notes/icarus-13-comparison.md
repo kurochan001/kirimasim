@@ -80,7 +80,7 @@ forms at compilation. These additional standard forms and their
 inventory; they do not establish complete P1 coverage. The historical steps
 below retain their original scope and measurements.
 
-## Verified versions and results
+## Verified versions and results (wide-UDP checkpoint `52652eb`, 2026-10-24)
 
 Existing binaries report `13.0 (stable) (v13_0)` for the compiler driver,
 preprocessor, parser/elaborator and runtime. The additional baseline's
@@ -144,7 +144,8 @@ records retain their earlier counts and provenance.
 The [whole-array port and resolution proposal](fixed-array-ports-proposal.md)
 records 59 separate design programs, including seven illegal controls. Its
 models and reference disagreements remain review evidence; no implementation
-or approved oracle is implied. It covers declaration-order alias mapping,
+or approved oracle is implied. At that step the proposal was pending review
+(approved on 2026-10-25). It covers declaration-order alias mapping,
 continuous typed copies, element-wise resolution and unconnected input pulls.
 Broader partial-port strength transport still requires its separate contract.
 
@@ -157,8 +158,9 @@ for this measurement. Adding this mechanism increases gaps from 21/27 to
 22/28 while leaving the four/seven reference-mismatch lists unchanged.
 
 The [shared automatic-storage and event proposal](automatic-capture-proposal.md)
-records 32 original design programs separately. It remains pending review;
-its proposed outputs do not authorize new oracles or implemented support.
+records 32 original design programs separately. At that step it was pending
+review (approved on 2026-10-25); its proposed outputs do not authorize new
+oracles or implemented support.
 The earlier 81-item [13.0](../measurements/2026-10-24/icarus13-fork-declaration-probes.json)
 and [development](../measurements/2026-10-24/icarus14-fork-declaration-probes.json)
 records remain unchanged, including their previous-native comparisons.
@@ -169,7 +171,8 @@ At the fork-declaration step, the same 81 probes give 22/28 gaps on the retained
 21/27 on the current one. `fork_local_declarations` now passes both references
 and native execution. `automatic_fork_capture` verifies shared mutation of an
 automatic fork variable; it passes both references and remains unsupported
-natively. Its required shared-frame/lifetime contract is now proposed for review.
+natively. At that step its required shared-frame/lifetime contract was pending
+review (approved on 2026-10-25).
 
 All previous 79 statuses and passing judged outputs are unchanged. Their
 20/26 gap counts remain valid for that smaller cohort; the additional capture

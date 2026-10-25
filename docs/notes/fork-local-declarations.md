@@ -35,7 +35,9 @@ not an extra process that can complete before the two timed statements.
 **Automatic capture is still unsupported.** A fork child cannot yet read or
 write an automatic variable of its parallel block or enclosing activation.
 Shared identity, parent-frame retention and escaping lifetimes need the
-detailed contract still missing from SIR_SPEC 7.5. This change does not copy
+detailed contract still missing from SIR_SPEC 7.5 at this revision; the
+[capture contract](automatic-capture-proposal.md) was approved on 2026-10-25,
+and its implementation remains work. This change does not copy
 such variables into separate children and call that equivalent. Existing
 automatic event/aggregate declaration restrictions also remain where those
 types' frame representations are unimplemented.

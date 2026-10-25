@@ -2,7 +2,7 @@
 
 [日本語](slang-issue-2023-rtoi-x86_64.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Date checked: 2026-10-17. Subject: slang v12.0 (`545f88b2e`, the version `cmake/Dependencies.cmake` pinned on that date; since 2026-10-18 it pins main `b7f11c1`, which has the fix: see the addendum at the end).
+Date checked: 2026-10-17. Subject: slang v12.0 (`545f88b2e`, the version `cmake/Dependencies.cmake` pinned on that date; on 2026-10-18 it moved to main `b7f11c1`, which has the fix, and it now pins main `3b351a5` (2026-10-21): see the addendum at the end).
 
 ## Background
 

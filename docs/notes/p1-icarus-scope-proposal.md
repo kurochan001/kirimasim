@@ -38,10 +38,11 @@ Unformatted `%u` and `%z` output is implemented (SYSTEM_TASKS.md 3.11).
 The separate [binary-input amendment](binary-scan-proposal.md) was also
 approved on 2026-10-23 and is now implemented by the shared scanner.
 
-The installed comparison executable currently reports
+At the approval (2026-10-23), the installed comparison executable reported
 `Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)`.
-This is a newer-development comparison, not evidence from the exact 13.0
-release. Exact-13.0 parity and complete feature parity are not confirmed.
+That was a newer-development comparison, not evidence from the exact 13.0
+release. Later comparisons also use 13.0 stable
+([versioned comparison](icarus-13-comparison.md)). Exact-13.0 parity and complete feature parity are not confirmed.
 Run original, mechanism-based probes with recorded compiler/runtime
 versions to establish each item. Do not read or import Icarus source or
 tests. The official [13.0 release notes](https://steveicarus.github.io/iverilog/releases/v13-0-release-note.html)

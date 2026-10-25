@@ -1,6 +1,9 @@
 # MOS and bidirectional-switch investigation
 
 [日本語](mos-switch-investigation.ja.md). Investigated 2026-10-24.
+Status: historical investigation (2026-10-24); the follow-up contract and the
+five pending proposals were approved on 2026-10-25 (see the
+[P1 execution contracts](p1-execution-contracts-2026-10-25.md)).
 
 MOS and bidirectional-switch source execution remains **unsupported**. The
 existing strength-range kernel API and wide three-state side masks do not
@@ -22,7 +25,8 @@ Kirimasim execution is not measured in this exploratory dataset. These programs
 are separate from the [79-item feature inventory](icarus-13-comparison.md),
 whose measured gaps at the original `57a64ef` baseline were 20 against 13.0
 and 26 against development. The later [fork comparison](fork-local-declarations.md)
-expands the current inventory to 81 probes with 21/27 gaps.
+expanded the inventory of that time to 81 probes with 21/27 gaps; current
+87-probe results are in [the P1 progress record](p1-icarus-progress.md).
 Reference agreement alone does not establish IEEE conformance or an approved
 test oracle. Performance and Linux behavior were not remeasured.
 
@@ -54,9 +58,9 @@ test oracle. Performance and Linux behavior were not remeasured.
 ## Questions still requiring a reviewed contract
 
 The [approved interval model](../spec/VALUE_SEMANTICS.md#5-net-resolution)
-already retains both endpoints. End-to-end propagation, network ownership,
-force behavior and delayed full-state updates still need detailed contracts
-under [P1_SCOPE](../spec/P1_SCOPE.md).
+already retains both endpoints. At that time, end-to-end propagation, network
+ownership, force behavior and delayed full-state updates still needed detailed
+contracts under [P1_SCOPE](../spec/P1_SCOPE.md).
 
 `positive_range` combines an uncertain strong-1 gate contribution with weak 1.
 The existing interval model gives a positive input range from weak to strong;
@@ -78,8 +82,8 @@ driver, `mos_delayed_start` initially prints `WeH`, whereas
 `rmos_delayed_start` initially prints `StX` and later `St1`. The latter does
 not show the weak-to-medium reduction expected from 28.14. Its cause is
 unconfirmed; it is not an approved startup oracle. The existing
-[delayed three-state side proposal](delayed-gate-side-proposal.md) also remains
-pending and does not itself define all MOS/switch timing.
+[delayed three-state side proposal](delayed-gate-side-proposal.md) also remained
+pending at that time and does not itself define all MOS/switch timing.
 
 Before implementation, the specification work must settle complete interval
 transport, physical driver ownership across multiple paths, uncertain controls,
@@ -87,14 +91,15 @@ wired-net combinations, force/release, startup and cancellation, strength-only
 notifications, port connections and resource failure. SIR must carry the needed
 state into the shared kernel; source lowering and VM transport alone cannot
 provide the missing execution semantics. No new semantic amendment is approved
-by this investigation, and the five existing pending proposals remain pending.
+by this investigation, and the five existing pending proposals remained pending
+at that time.
 
 ## Follow-up contract and loaded observations
 
 The [full execution proposal](mos-switch-proposal.md) now specifies the
 network, MOS, port, force, timing, SIR/kernel and formatting decisions for
-review. It adds no implemented support and leaves the earlier five proposals
-pending.
+review. At that time it added no implemented support and left the earlier five
+proposals pending.
 
 An [18-source follow-up matrix](../measurements/2026-10-24/mos-strength-matrix-observations.json)
 tests each MOS form with isolated outputs and weak/pull opposing drivers.

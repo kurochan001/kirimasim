@@ -19,10 +19,12 @@ at its absolute bit position for each result chunk. The front removes its
 32-bit restriction and retains the actual block containing side computations;
 short-circuit gate controls can finish in a block other than the entry block.
 
-This does not enable delayed three-state gates on resolved nets. The
-[delayed-side amendment](delayed-gate-side-proposal.md) is pending because
-same-projection L/H timing needs an explicit contract. Its exploratory path
-was removed, and the native source retains the existing unsupported diagnostic.
+At this revision (2026-10-24), this does not enable delayed three-state gates
+on resolved nets. The [delayed-side amendment](delayed-gate-side-proposal.md)
+is pending because same-projection L/H timing needs an explicit contract. Its
+exploratory path was removed, and the native source retains the existing
+unsupported diagnostic. The amendment was approved on 2026-10-25 and is now
+[implemented](delayed-gate-state-execution.md).
 MOS/switch execution, strength-preserving partial port connections and `%v`
 also remain unfinished. Arbitrary resolved strength intervals are not yet
 transported through MOS/switch networks by these static-strength side masks.
@@ -74,12 +76,16 @@ Anchor/judging self-checks are excluded as evidence. Sources are restored and
 rebuilt after the controls.
 
 The boundary correction checks every control-flow block for delayed writes.
-An independent CLI test checks six positioned delayed rejections and six
-undelayed acceptances without resolution, including function controls and
-widths 1/65/257. This also exercises removal of unused side computations in
-their actual blocks. One more compiled mutation restores the entry-block-only
-check and fails that real CLI boundary test. The pending timing interpretation
-therefore cannot be enabled by a short-circuit control accidentally.
+At this revision, an independent CLI test, the Tools test
+[`check_delayed_gate_boundary.py`](../../tests/tools/check_delayed_gate_boundary.py),
+checked six positioned delayed rejections and six undelayed acceptances
+without resolution, including function controls and widths 1/65/257. This
+also exercises removal of unused side computations in their actual blocks.
+One more compiled mutation restores the entry-block-only check and fails that
+real CLI boundary test. The pending timing interpretation
+therefore cannot be enabled by a short-circuit control accidentally. On
+2026-10-25, `2b38b984` replaced the six rejections with complete-state
+propagation checks and kept the six undelayed checks.
 
 The [current progress](p1-icarus-progress.md) records full local CI and the
 versioned finite inventory. The new comparison item measures this mechanism;

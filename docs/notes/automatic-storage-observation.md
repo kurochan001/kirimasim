@@ -101,4 +101,7 @@ metadata, full-scope promotion and per-entry ownership before that rejection
 can be removed. SIR must verify homes, capture compatibility and ownership
 unwind, and root-call storage must precede parameter initialization. These
 are remaining implementation steps under the approved contract, not completed
-source support or a new amendment.
+source support or a new amendment. Later checkpoints took the SIR and VM-access
+steps: the [SIR metadata/verifier checkpoint](automatic-sir-metadata.md) and the
+[VM value-access migration](automatic-vm-frame-access.md). Source capture
+remains work.

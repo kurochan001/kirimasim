@@ -85,7 +85,7 @@ Five tests (`test_math_advanced`, `test_math_hyperbolic_special_values`, `test_m
 
 ### 4.4 Exclusions
 
-None. No expected output records a bug of Icarus Verilog or Verilator, and the two unspecified tests stay (4.1), so no list of exclusions was made, no issue was opened against kirimasim, and the README counts do not change. Should an exclusion be needed later: the gate runs the tests of kirimasim-tests c983cf799b4d, the commit named in the header of the population list, so a correction in kirimasim-tests main does not reach the gate until the list moves, which TEST_SUITE.md makes a change approved by a person; a list of exclusions in this repository (tests/gates/) would take effect at once.
+None. No expected output records a bug of Icarus Verilog or Verilator, and the two unspecified tests stay (4.1), so no list of exclusions was made, no issue was opened against kirimasim, and the README counts do not change. Should an exclusion be needed later: the gate runs kirimasim-tests 179c55de9c83, the commit named in the header of the population list (list chosen at c983cf799b4d), so a correction in kirimasim-tests main does not reach the gate until the list moves, which TEST_SUITE.md makes a change approved by a person; a list of exclusions in this repository (tests/gates/) would take effect at once.
 
 ## 5. Comment errors that do not change the expected output
 

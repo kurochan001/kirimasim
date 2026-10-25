@@ -6,7 +6,7 @@
 言語機能全体の対応とIcarusとの全面的な同等性は未確認です。
 
 P1_SCOPEはprogramをP1へ前倒ししますが、不足・矛盾する詳細は実装前のレビューが
-必要です。SCHEDULER_SPEC 16.1の `$exit` は全programの終了を待つ説明ですが、
+必要です。この修正の前は、SCHEDULER_SPEC 16.1の `$exit` は全programの終了を待つ説明でしたが、
 IEEE 1800-2023 24.7では実行スレッドが起源を持つprogramを終了します。
 この差とSIRの表現を具体化します。規格の節を手元で確認し、本文や例は転載していません。
 
@@ -18,7 +18,7 @@ IEEE 1800-2023 24.7では実行スレッドが起源を持つprogramを終了し
 - programのinitialと連続代入はreactive側です。イベントと正の遅延からはReactive、
   #0からはRe-Inactiveへ再開し、NBAはRe-NBAへ入れます。呼び出し・再帰・forkの子も
   呼び出した側の領域を継承し、サブルーチンの宣言場所では変えません（24.3.1）。
-- programのネットと接続先の駆動・解決はreactive更新に続いて行い、感度を持つ
+- programのネットと接続先の駆動・解決はreactive更新の一部として直ちに行い、感度を持つ
   各プロセスは自分の側で起きます。moduleならActiveです。既存のポートと解決の
   規則を使います（24.3.2・SIR_SPEC 3.5）。
 - 各program直下のinitialを数え、全initialが終わると、そのprogramのinitialから

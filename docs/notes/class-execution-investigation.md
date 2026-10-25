@@ -93,4 +93,4 @@ and clang-tidy all pass. This was a lint-only rerun (`--presets ''` with
 Z3 library was selected for that process; no installation or system setting
 changed. LLVM 23 cleanliness remains unresolved.
 
-A subsequent [detailed runtime proposal](class-runtime-proposal.md) is pending review and records fourteen additional original boundary observations.
+A subsequent [detailed runtime proposal](class-runtime-proposal.md) was approved on 2026-10-25, with implementation remaining work, and records fourteen additional original boundary observations.

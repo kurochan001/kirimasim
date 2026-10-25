@@ -61,8 +61,9 @@ check pass. This confirms that the corrected oracle detects the mistake.
 
 ## Separate review boundaries
 
-AGENTS.md separates corrections to existing expectations from source PRs,
-and explicitly permits new tests alongside implementation. A publication
+CLAUDE.md ("Changes of expected values go in separate PRs") separates
+corrections to existing expectations from source PRs, and explicitly permits
+new tests alongside implementation. AGENTS.md is not part of the repository. A publication
 audit found zero scalar-fread matrix files at `origin/main` (`aae29de`);
 all 459 local matrix files (153 cases) are new to that published base.
 Thus the unpublished feature's corrected new tests can be included with

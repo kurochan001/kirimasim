@@ -1,6 +1,7 @@
 # Draft: wide UDP edge-coverage checking exceeds compilation bounds
 
-Status: **draft, not posted**, 2026-10-24. This report concerns slang's
+Status: **draft, not posted**, 2026-10-24. English only, as a draft of a report
+to slang. This report concerns slang's
 compilation diagnostics. It requests preserving coverage diagnostics while
 making the check scale; it does not request suppressing a warning or changing
 UDP runtime semantics.

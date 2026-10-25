@@ -86,6 +86,7 @@ python3 tools/mutants.py --only 'strength ranges:'
 The current VM `resolve` path still consumes a four-state value. Per-net
 interval storage/transport, strength-only propagation, MOS attenuation/control,
 bidirectional network resolution and strength-aware formatting remain work.
-Their SIR/runtime contracts need review where details are missing. This API
-does not enable any of those source forms or close an Icarus execution gap.
-The full P1 target and the existing pending semantic reviews remain intact.
+Their SIR/runtime contracts need review where details are missing (as of
+2026-10-24; the MOS/switch and delayed-side contracts were approved on
+2026-10-25). This API does not enable any of those source forms or close an
+Icarus execution gap. The full P1 target and the existing pending semantic reviews remain intact.
