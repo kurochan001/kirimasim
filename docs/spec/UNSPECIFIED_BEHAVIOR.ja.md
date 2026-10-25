@@ -415,9 +415,9 @@ B2 の協調的な実行は、第 2 層と将来の並列化の前提でもあ�
 | lifetime | H1〜H6、I1〜I4 | spec | static の task の同時の呼び出し、`fork` のループ変数、disable、kill の後始末、`wait fork` | P1、P4 |
 | random | K1〜K5 | spec、choice | 同じシードで同じ列、乱数の安定性、附属書 N と照らした `$random`、矛盾した制約 | P1、P4 |
 | assertion | L1〜L6 | spec | 標本の時点、`disable iff`、未完了の試行、vacuous な成功 | P4 |
-| vpi_dpi | M1〜M6、J7 | cocotb のテスト、spec | コールバックの時点、遅延のモード、再入、`context` | P1、P5 |
-| output | P1〜P5 | iverilog、spec | 書式、`$monitor`、出力の順、`$readmemh` | P1 |
-| determinism | Q1〜Q3 | CI の検査 | スレッド数を変えた実行、2 回の生成の比較、浮動小数点のフラグ | P0、P5 |
+| vpi_dpi | M1〜M6、J7 | cocotb のテスト、spec | コールバックの時点、遅延のモード、再入、`context` | P1、P4、P5 |
+| output | P1〜P6 | iverilog、spec | 書式、`$monitor`、出力の順、`$readmemh` | P1 |
+| determinism | Q1〜Q3 | CI の検査 | スレッド数を変えた実行、2 回の生成の比較、浮動小数点のフラグ | P1、P3、P5 |
 
 ## 9. 最初の提案との違い
 

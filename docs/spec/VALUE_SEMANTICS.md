@@ -240,7 +240,7 @@ Rewritten and approved 2026-10-16.
 ### 5.1 Scope in P1
 
 - Covered: drive strengths of continuous assignments and net declaration assignments (10.3.4), output strengths of built-in gates and user-defined primitives (28.3.2, chapter 29; 5.8, 5.9), `pullup` and `pulldown` (28.10), strengths of `tri0`, `tri1`, `supply0` and `supply1` (28.15), resolution of `wand`, `triand`, `wor` and `trior` (6.6.3, 28.12.4).
-- Not covered (reported as unsupported if used): MOS switches and bidirectional switches, and the reduction of strength through them (28.7 to 28.9, 28.13, 28.14; phase 4 by the design specification's rules), `trireg` (5.7), user-defined nettypes (6.6.7).
+- Not covered (reported as unsupported if used): MOS switches and bidirectional switches, and the reduction of strength through them (28.7 to 28.9, 28.13, 28.14; P5, phase 4 of the design specification before the 2026-10-24 renumbering), `trireg` (5.7), user-defined nettypes (6.6.7).
 - Display with `%v` follows SYSTEM_TASKS.md 3.10 (P5; a provisional display until then).
 
 ### 5.2 The strength scale and signals
@@ -362,7 +362,7 @@ Connecting two or more drivers to a `uwire` is an error (reported by slang's ana
 
 ### 5.6 When resolution happens
 
-When a driver's value changes, the net's value is computed again and updated in the Active region of the same time (as continuous assignments in SCHEDULER_SPEC.md 6.4). Only when the net's value changes are the processes waiting on the net woken.
+When a driver's value changes, the net's value is computed again and updated in the Active region of the same time (as continuous assignments, SCHEDULER_SPEC.md 5 and 12). Only when the net's value changes are the processes waiting on the net woken.
 
 ### 5.7 `trireg`
 
@@ -372,7 +372,7 @@ Holding and decay of charge are a mechanism separate from 4-state resolution, so
 
 Approved 2026-10-17.
 
-- P1 covers `and`, `nand`, `or`, `nor`, `xor`, `xnor`, `buf`, `not`, `bufif0`, `bufif1`, `notif0`, `notif1`, `pullup` and `pulldown`. MOS and switches are phase 4 (5.1).
+- P1 covers `and`, `nand`, `or`, `nor`, `xor`, `xnor`, `buf`, `not`, `bufif0`, `bufif1`, `notif0`, `notif1`, `pullup` and `pulldown`. MOS and switches are P5 (5.1).
 - The output of a logic gate is the same as combining its inputs in order with the bitwise operations of 3.6 (`&`, `|`, `^` and their negations). A z input is treated like x (checked: 28.4). `buf` and `not` take their last terminal as the input and drive the same value on every other terminal (checked: 28.5).
 - Outputs of three-state gates (checked: 28.6): when the control enables the output, the data (its negation for `notif`; x and z of the data give x); when it disables, z. When the control is x or z: L if the data is 0, H if 1 (the reverse for `notif`), x if x or z.
 - L and H are represented as an x with one side of the driver's strength made highz: L is an x with (s1, s0) made (highz, s0), and H an x with (s1, highz) (by 5.3, x is [−s0, +s1]). When resolved with other drivers, they are resolved with this range (5.4); when read as a 4-state value, they are x (5.2).
@@ -518,7 +518,7 @@ transports them. Unsupported source representations remain P1 work.
 
 ## 8. Not confirmed, to be written later
 
-- Reduction of strength through switches (MOS and bidirectional), and bidirectional resolution (28.7 to 28.9, 28.13, 28.14; phase 4; 5.1).
+- Reduction of strength through switches (MOS and bidirectional), and bidirectional resolution (28.7 to 28.9, 28.13, 28.14; P5; 5.1).
 - Streaming operators (11.4.14; approved 2026-10-17):
   - Operands of packed types are as in 11.4.14 (left alignment and zero filling on the right were checked in a review of the test repository).
   - Operands that are fixed-size unpacked arrays and unpacked structures are covered in P1 too. Elements and members are placed in foreach order for arrays (from the left bound, the rightmost dimension changing fastest) and in declaration order for structures (checked: 11.4.14.1). As targets, they are taken out in the same order.

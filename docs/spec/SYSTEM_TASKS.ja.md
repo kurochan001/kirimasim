@@ -34,13 +34,13 @@
 | 文字列への書式 | `$swrite`（b・o・h の付いた形も）、`$sformat`、`$sformatf` | 21.3.3 | P1 |
 | ファイルの開閉 | `$fopen`、`$fclose` | 21.3.1 | P1 |
 | ファイルへの出力 | `$fdisplay`、`$fwrite`（b・o・h の付いた形も）、`$fflush` | 21.3.2、21.3.6 | P1 |
-| ファイルへの監視 | `$fstrobe`、`$fmonitor` | 21.3.2 | P4 |
-| ファイルからの読み込み | `$fgets`、`$fscanf`、`$sscanf`、`$fread`、`$fgetc`、`$ungetc` | 21.3.4 | P1（`$fgetc`、`$ungetc` は P4） |
+| ファイルへの監視 | `$fstrobe`、`$fmonitor` | 21.3.2 | P1 |
+| ファイルからの読み込み | `$fgets`、`$fscanf`、`$sscanf`、`$fread`、`$fgetc`、`$ungetc` | 21.3.4 | P1 |
 | 位置と状態 | `$ftell`、`$fseek`、`$rewind`、`$ferror`、`$feof` | 21.3.5〜21.3.8 | P1 |
 | メモリ | `$readmemb`、`$readmemh`、`$writememb`、`$writememh` | 21.4、21.5 | P1 |
 | 時刻 | `$time`、`$stime`、`$realtime`、`$timeunit`、`$timeprecision`、`$printtimescale`、`$timeformat` | 20.3、20.4 | P1 |
 | 変換 | `$rtoi`、`$itor`、`$realtobits`、`$bitstoreal`、`$shortrealtobits`、`$bitstoshortreal`、`$signed`、`$unsigned` | 20.5 | P1 |
-| 問い合わせ | `$bits`、`$isunbounded`、`$typename` | 20.6 | P1（`$typename` は 2026-10-17 に 3 から前倒し） |
+| 問い合わせ | `$bits`、`$isunbounded`、`$typename` | 20.6 | P1（`$typename` は 2026-10-17 に段階 3、今の P4 から前倒し） |
 | 配列の問い合わせ | `$left`、`$right`、`$low`、`$high`、`$increment`、`$size`、`$dimensions`、`$unpacked_dimensions` | 20.7 | P1 |
 | 数学 | `$clog2` と、実数の 20 の関数（`$ln` から `$atanh`） | 20.8 | P1 |
 | ビットベクタ | `$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown` | 20.9 | P1 |
@@ -557,11 +557,10 @@ programのinitialを起源に持たなければ警告せず無視し、全progra
 
 ## 14. 未確認・後で書くこと
 
-- 実数を整数の書式で出す（とその逆の）ときの変換（3.6）。
 - 引数を省いた `$timeformat` の意味（5.4）を、Icarus 13.0 と照合する。
 - `$monitor` の最初の表示の時点と `$monitoron` の表示の時点（4 節）を、P1 で Icarus 13.0 と照合する。
 - `%v` と強さのモデル（3.10。P5）。
-- `$fmonitor`、`$fstrobe`、`$fgetc`、`$ungetc`（P4）の、同じ時刻での順序の細部。
+- `$fmonitor`、`$fstrobe`、`$fgetc`、`$ungetc` の、同じ時刻での順序の細部。
 - 波形のタスク（`$dumpfile` など）は、WAVEFORM.md で書いた（2026-10-21）。
 
 ## 承認済みのP1実行契約（2026-10-25）

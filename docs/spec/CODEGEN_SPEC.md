@@ -42,4 +42,4 @@ Approved 2026-10-19.
 | GCC 16 (Homebrew) | arm64-apple-darwin | FMA | No FMA |
 
 - So with the present presets, which give neither `-ffp-contract` nor `-march`, a build for arm64 (macOS, or Linux on arm64) fuses where a build for x86-64 does not, and a result on `real` can differ between the two. Apple clang fuses by default (it defines `__FP_FAST_FMA`).
-- **Not confirmed:** GCC on x86-64 Linux, the compiler of the Linux CI jobs, with and without `-march` (to check: the same compile in a CI job); whether the macOS runner of CI (`macos-26`) is arm64 (to check: `uname -m` in a CI job); which tests of reals change once the flag is given (to check: run the suite before and after).
+- **Not confirmed:** GCC and clang on x86-64 Linux, the compilers of the Linux CI jobs, with and without `-march` (to check: the same compile in a CI job); whether the macOS runner of CI (`macos-26`) is arm64 (to check: `uname -m` in a CI job); which tests of reals change once the flag is given (to check: run the suite before and after).

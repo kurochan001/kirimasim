@@ -208,8 +208,9 @@ partial root set is passed to collection and failed marking sweeps nothing.
 Tests distinguish assignment failure (the old destination remains) from
 collection failure after assignment committed (both complete values remain).
 This implements roots for the current container SIR, not future class/DPI/VPI
-providers. Front lowering remains
-unfinished; SystemVerilog dynamic containers are not enabled yet.
+providers. Front lowering executes the tested subset of dynamic containers
+(P1_SUPPORT.md, "Dynamic-container foundation"); the other forms are not
+lowered yet.
 
 The heap observation foundation is implemented with `Heap::setReadHook` and
 `setChangeHook`. Hooks exchange their previous owner and stay within one
@@ -240,7 +241,7 @@ and create no GC roots. Monitor metadata uses the heap's Context-local allocatio
 source, allowing deterministic capture/notice failure tests. The VM diagnoses
 these limits at the responsible instruction and detaches waits before its
 callback frames expire. Public C++ metadata is extended; C ABI 0.3 is unchanged.
-Front source-language container lowering is still unfinished.
+Front lowering of source-language containers covers the tested subset only (P1_SUPPORT.md).
 
 Class, mailbox and weak-reference semantics extend the root descriptors when
 those mechanisms are implemented. Weak references are not marking edges;
@@ -285,7 +286,7 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 ### 9.2 Terms
 
-- **Context:** `kernel::Context`, the owner of the run-time state of one simulation (1). Today it holds the scheduler, the slot store, the strings, the counters (PerfCount) and the output.
+- **Context:** `kernel::Context`, the owner of the run-time state of one simulation (1). Today it holds the scheduler, the slot store, the strings, the counters (PerfCount), the output, the files, the waveform dump, the heap, the activations and the range of the stack.
 - **Global state:** a non-const variable at namespace scope, a non-const static data member, a non-const static variable in a function, a `thread_local` variable, and a function (`instance()`, `get()` and the like) that returns one of them.
 - **Immutable global data:** `constexpr` (and `constinit` const) tables and string literals. They are set before `main` and never change.
 

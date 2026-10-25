@@ -93,7 +93,7 @@ The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 ### 2.5 The form of `--max-time` and how it stops a run (approved 2026-10-16)
 
 - Form: a decimal number of 0 or more (a fraction is allowed) followed by one of the units `s`, `ms`, `us`, `ns`, `ps`, `fs`, with no space between (for example `10us`, `1.5ns`). Anything else is an error with code 2.
-- The value is converted to steps of the design's precision (SCHEDULER_SPEC.md 1). If it is not a whole number of steps, it is rounded away from zero, as delays are (SCHEDULER_SPEC.md 1; code 2 if it does not fit in 64 bits).
+- The value is converted to steps of the design's precision (SCHEDULER_SPEC.md 1). If it is not a whole number of steps, it is rounded to the nearest step, half away from zero, as delays are (SCHEDULER_SPEC.md 1; code 2 if it does not fit in 64 bits).
 - How it stops: every event at that time **or before** runs. When the next event is after that time, the time is set to the value of `--max-time` and the run ends with reason time_limit. `final` runs (SCHEDULER_SPEC.md 16.2).
 
 ### 2.6 Limits on runs that do not advance time (approved 2026-10-16)
@@ -153,7 +153,7 @@ The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 
 ## 4. Messages of kirimasim itself
 
-- The form is `kirimasim: <kind>: <text>`, the kind one of `error`, `warning`, `note`, `info`. A message with a source position has the form of slang's diagnostics, `<file>:<line>:<column>: <kind>: <text>`.
+- The form is `kirimasim: <kind>: <text>`, the kind one of `error`, `warning`, `note`, `info`, and `internal error` for a fault of kirimasim itself (code 3; RUNTIME_ABI.md 9.3). A message with a source position has the form of slang's diagnostics, `<file>:<line>:<column>: <kind>: <text>`.
 - **Version line:** at the start of a run, one line on standard error gives the version, the commit, the options and the seed (so that the same conditions can be reproduced later). Example: `kirimasim: info: kirimasim 0.1.0 (commit 0123456789ab) seed=0 args: --top=tb a.sv`. `seed=<n>` comes before `args:`, 0 when `--seed` is not given (corrected 2026-10-18, approved: the example had the seed before the option existed; the seed added 2026-10-21 with `--seed`, approved). It is not written to standard output, so the test suite has no need to remove it.
 - **Initial values that are not the standard's (approved 2026-10-19):** when `--init-values` is not `x`, one more line follows the version line: `kirimasim: note: --init-values=<value>: 4-state variables with no initial value start as <value>, not x (VALUE_SEMANTICS.md 1.4)`. It is a line of its own, not part of the version line, so that it stands out. Like the version line, it goes to standard error and the test suite does not compare it.
 - **Line of the reason for ending:** at the end, one line on standard error gives the reason and the time. Example: `kirimasim: info: finish at 120 ns`. It is not written for `$finish(0)` and `$stop(0)` (SCHEDULER_SPEC.md 16.2).

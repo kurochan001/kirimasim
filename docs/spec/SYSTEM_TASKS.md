@@ -36,13 +36,13 @@ The draft list of the design specification was checked against the standard and 
 | Formatting to strings | `$swrite` (and the forms with b, o, h), `$sformat`, `$sformatf` | 21.3.3 | P1 |
 | Opening and closing files | `$fopen`, `$fclose` | 21.3.1 | P1 |
 | Output to files | `$fdisplay`, `$fwrite` (and the forms with b, o, h), `$fflush` | 21.3.2, 21.3.6 | P1 |
-| Monitoring to files | `$fstrobe`, `$fmonitor` | 21.3.2 | P4 |
-| Reading from files | `$fgets`, `$fscanf`, `$sscanf`, `$fread`, `$fgetc`, `$ungetc` | 21.3.4 | 1 (`$fgetc`, `$ungetc` in P4) |
+| Monitoring to files | `$fstrobe`, `$fmonitor` | 21.3.2 | P1 |
+| Reading from files | `$fgets`, `$fscanf`, `$sscanf`, `$fread`, `$fgetc`, `$ungetc` | 21.3.4 | P1 |
 | Position and status | `$ftell`, `$fseek`, `$rewind`, `$ferror`, `$feof` | 21.3.5 to 21.3.8 | P1 |
 | Memories | `$readmemb`, `$readmemh`, `$writememb`, `$writememh` | 21.4, 21.5 | P1 |
 | Time | `$time`, `$stime`, `$realtime`, `$timeunit`, `$timeprecision`, `$printtimescale`, `$timeformat` | 20.3, 20.4 | P1 |
 | Conversion | `$rtoi`, `$itor`, `$realtobits`, `$bitstoreal`, `$shortrealtobits`, `$bitstoshortreal`, `$signed`, `$unsigned` | 20.5 | P1 |
-| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | P1 (`$typename` brought forward from 3 on 2026-10-17) |
+| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | P1 (`$typename` brought forward on 2026-10-17 from stage 3, now P4) |
 | Array queries | `$left`, `$right`, `$low`, `$high`, `$increment`, `$size`, `$dimensions`, `$unpacked_dimensions` | 20.7 | P1 |
 | Math | `$clog2` and the 20 real functions (`$ln` to `$atanh`) | 20.8 | P1 |
 | Bit vectors | `$countbits`, `$countones`, `$onehot`, `$onehot0`, `$isunknown` | 20.9 | P1 |
@@ -580,11 +580,10 @@ The standard leaves the generator of `$urandom` and the default seed to the impl
 
 ## 14. Not confirmed, to be written later
 
-- The conversion when a real is printed with an integer format (and the reverse) (3.6).
 - The meaning of `$timeformat` with its arguments omitted (5.4), to be checked against Icarus 13.0.
 - When `$monitor` first prints and when `$monitoron` prints (4), to be checked against Icarus 13.0 in P1.
 - `%v` and the strength model (3.10; P5).
-- Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc` (P4).
+- Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc`.
 - The waveform tasks (`$dumpfile` and so on) are written in WAVEFORM.md (2026-10-21).
 
 ## Approved P1 execution amendments (2026-10-25)

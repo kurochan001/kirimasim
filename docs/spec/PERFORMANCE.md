@@ -108,7 +108,7 @@ amendment. The [measurement record](../BENCHMARKS.md#five-simulators-on-linux-ws
 documents sampling limits and the break in Linux RSS history. This note
 records implementation status; it changes no acceptance criteria or thresholds.
 
-- A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. Whether it also measures on GitHub's macOS runner, which this public repository can use (checked 2026-10-18), is decided when this is implemented; until then macOS values are measured on the developer's Mac and attached to reports.
+- A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. Whether it also measures on GitHub's macOS runner, which this public repository can use (checked 2026-10-18), is not decided yet (5.1); until then macOS values are measured on the developer's Mac and attached to reports.
 - What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken with Python's `resource.getrusage(RUSAGE_CHILDREN)`; no new tool is installed.
 - Each benchmark runs 5 times and the median is used. The results are kept as JSON among the workflow's artifacts.
 - **When to report (draft):** taking the median of the last 7 nightly results as the baseline, a warning is put in the workflow's summary when wall-clock time or the peak RSS worsens by 15% or more, or the build time by 25% or more. It does not pass or fail anything (the workflow does not fail). Shared runners swing widely, so the width of the swings is checked with the values during P1, and the thresholds reviewed.
@@ -133,5 +133,4 @@ records implementation status; it changes no acceptance criteria or thresholds.
 - Fixing the numbers of the goals in 2 (reviewed after the baseline is measured in M6, fixed at the end of P3).
 - The definition of the "simulation tags" of sv-tests (put forward as an amendment to TEST_SUITE.md before M6).
 - Reviewing the reporting conditions of 5.1 (after seeing the width of the swings during P1).
-- Whether a scheduled workflow can run every night on GitHub's Linux runner (not confirmed; tried in M6; if it cannot, a proposal to measure locally instead).
 - How much of the counters the generated code of tier 2 counts (P3; decided after measuring whether counting slows it too much).

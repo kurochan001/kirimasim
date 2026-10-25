@@ -415,9 +415,9 @@ Every choice of this document is fixed by tests of the suite. Where the standard
 | lifetime | H1 to H6, I1 to I4 | spec | Calls of a static task at once, loop variables in `fork`, disable, cleaning up after kill, `wait fork` | P1, P4 |
 | random | K1 to K5 | spec, choice | The same sequence for the same seed, random stability, `$random` against Annex N, contradictory constraints | P1, P4 |
 | assertion | L1 to L6 | spec | When samples are taken, `disable iff`, unfinished attempts, vacuous successes | P4 |
-| vpi_dpi | M1 to M6, J7 | cocotb's tests, spec | When callbacks are called, delay modes, re-entry, `context` | P1, P5 |
-| output | P1 to P5 | iverilog, spec | Formats, `$monitor`, the order of output, `$readmemh` | P1 |
-| determinism | Q1 to Q3 | checks in CI | Runs with different thread counts, two generations compared, floating-point flags | P0, P5 |
+| vpi_dpi | M1 to M6, J7 | cocotb's tests, spec | When callbacks are called, delay modes, re-entry, `context` | P1, P4, P5 |
+| output | P1 to P6 | iverilog, spec | Formats, `$monitor`, the order of output, `$readmemh` | P1 |
+| determinism | Q1 to Q3 | checks in CI | Runs with different thread counts, two generations compared, floating-point flags | P1, P3, P5 |
 
 ## 9. Differences from the first proposal
 
