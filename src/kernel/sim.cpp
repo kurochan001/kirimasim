@@ -1110,6 +1110,10 @@ void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
 // --- Effects -----------------------------------------------------------------
 
 bool Scheduler::write(SlotBits at, const std::uint64_t* value) {
+    if (ctx_.strengths().registered(at.slot)) {
+        fail("a strength-owned slot needs complete publication");
+        return false;
+    }
     auto [s, elem, lsb, width] = at;
     if (heldOf_.empty() || heldOf_[s.index()] == kNotHeld)
         return writeRaw(s, elem, lsb, width, value);
@@ -1128,6 +1132,10 @@ bool Scheduler::write(SlotBits at, const std::uint64_t* value) {
 }
 
 void Scheduler::markHeld(SlotId s, bool net, bool driven) {
+    if (ctx_.strengths().registered(s)) {
+        fail("strength-owned overrides are not connected yet");
+        return;
+    }
     if (heldOf_.size() < store_.size()) heldOf_.resize(store_.size(), kNotHeld);
     if (heldOf_[s.index()] != kNotHeld) return;
     const SlotLayout& l = store_.layout(s);

@@ -23,6 +23,7 @@
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
+#include "kirimasim/kernel/strength_store.h"
 #include "kirimasim/kernel/strings.h"
 
 namespace kirimasim::kernel {
@@ -38,8 +39,9 @@ public:
     /// The optional heap allocation source must outlive the Context.
     explicit Context(OutputDestinations to, std::FILE* in = nullptr,
                      std::pmr::memory_resource* heapMemory = std::pmr::new_delete_resource())
-        : output_(to), files_(output_, in), heap_(heapMemory), managedEvents_(heapMemory),
-          activations_(heapMemory), dump_(output_, store_), scheduler_(*this, store_, counters_) {
+        : output_(to), files_(output_, in), strengths_(store_, heapMemory), heap_(heapMemory),
+          managedEvents_(heapMemory), activations_(heapMemory), dump_(output_, store_),
+          scheduler_(*this, store_, counters_) {
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }
     Context(const Context&) = delete;
@@ -53,6 +55,8 @@ public:
     Files& files() { return files_; }
     Dump& dump() { return dump_; }
     Store& store() { return store_; }
+    StrengthStorage& strengths() { return strengths_; }
+    [[nodiscard]] const StrengthStorage& strengths() const { return strengths_; }
     Heap& heap() { return heap_; }
     [[nodiscard]] const Heap& heap() const { return heap_; }
     ManagedEvents& managedEvents() { return managedEvents_; }
@@ -75,6 +79,7 @@ private:
     Output output_;
     Files files_;  ///< After output_, which it writes to.
     Store store_;
+    StrengthStorage strengths_;
     Strings strings_;
     Heap heap_;
     ManagedEvents managedEvents_;

@@ -33,6 +33,7 @@
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/store.h"
+#include "kirimasim/kernel/strength_store.h"
 
 namespace kirimasim::kernel {
 
@@ -367,6 +368,17 @@ public:
     /// from bit 0, and wakes the processes whose subscriptions and monitors
     /// see a change. Returns whether the value changed.
     bool write(SlotBits at, const std::uint64_t* value);
+    /// Registers complete initial intervals without writing or resolving the
+    /// slot. Their projection must match every current four-state bit.
+    /// Held slots are not connected to this publisher yet.
+    StrengthError enableStrengths(SlotId slot, std::span<const StrengthRange> initial) noexcept;
+    /// One committed component snapshot: copy/validate all inputs, publish
+    /// all intervals and values, then announce changes. No overlapping parts.
+    /// Range-only changes have internal notices but no ordinary value notices.
+    /// A resource failure reports whether the whole snapshot had committed;
+    /// never retry it after commitment. No partial snapshot is published.
+    StrengthPublication publishStrengths(std::span<const StrengthUpdate> updates) noexcept;
+
     // Procedural continuous assignments (SCHEDULER_SPEC.md 14, SIR_SPEC.md
     // 5.6). A marked slot keeps, bit by bit, who holds it at each level and
     // the value that level gives, and the value its ordinary writes give.
