@@ -870,6 +870,20 @@ private:
         sir::BlockId block{0};
     };
     std::map<sir::ProcessId, GateSide> sides_;
+    struct MosOutput {
+        sir::SlotRange target;
+        sir::SourceLoc loc;
+    };
+    std::map<sir::ProcessId, MosOutput> mosOutputs_;
+    std::map<sir::SlotId, sir::SourceLoc> strengthNets_;
+    std::map<sir::SlotId, sir::ProcessId> netResolvers_;
+    std::set<sir::SlotId> newlyResolvedStrengthNets_;
+    std::map<sir::SlotId, sir::SlotId> initialSideValidity_;
+    std::map<sir::SlotId, std::vector<sir::StrengthRange>> strengthInitial_;
+    void lowerMos(const ast::PrimitiveInstanceSymbol&, const std::string& prefix);
+    void prepareStrengthNets();
+    void finishStrengthNets();
+    void addStrengthSideValidity(sir::ProcessId process, sir::SlotId driver);
     /// The type-table rows of the UDP tables made so far.
     std::map<const ast::PrimitiveSymbol*, sir::TypeId> udpTables_;
     /// The type-table rows of the enumerated types made so far.

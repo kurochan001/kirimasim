@@ -243,6 +243,7 @@ void Lowerer::resolveArrayNet(sir::SlotId net, const std::vector<sir::ProcessId>
         resolver.writes.push_back({net, element, 1, 0, 0});
     }
     code.push_back({sir::Op::Ret, sir::voidType(), sir::kNone, {}, where});
+    netResolvers_[net] = sir::ProcessId{static_cast<std::uint32_t>(design_.processes.size())};
     design_.processes.push_back(std::move(resolver));
 }
 

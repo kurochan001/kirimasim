@@ -808,7 +808,10 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     if (numErrors_ != 0) return;
     finishDesign();
     checkTaskAndActionWrites();
+    prepareStrengthNets();
+    if (numErrors_ != 0) return;
     resolveNets();
+    finishStrengthNets();
     finishDrives();
 }
 
@@ -1089,7 +1092,9 @@ void Lowerer::resolveNets() {
             for (std::size_t j = i + 1; j < writes.size() && !shared; ++j)
                 shared = writes[i].first != writes[j].first &&
                          sir::overlaps(design_.slot(net), writes[i].second, writes[j].second);
-        if (!shared && !own) continue;
+        const bool metadata = strengthNets_.contains(net);
+        if (!shared && !own && !metadata) continue;
+        if (!shared && !own && metadata) newlyResolvedStrengthNets_.insert(net);
         std::vector<sir::ProcessId> ps;
         for (const auto& w : writes)
             if (std::find(ps.begin(), ps.end(), w.first) == ps.end()) ps.push_back(w.first);
@@ -1098,7 +1103,7 @@ void Lowerer::resolveNets() {
         // the nets merged, not done yet.
         const auto through = std::find_if(ps.begin(), ps.end(),
                                           [&](sir::ProcessId p) { return netPorts_.contains(p); });
-        if (through != ps.end()) {
+        if (through != ps.end() && (!metadata || shared || own)) {
             ++numErrors_;
             diags_ += whereOf(design_.process(*through).loc) +
                       ": error: unsupported: " + "drivers of the net '" + design_.slot(net).name +
@@ -1147,7 +1152,8 @@ void Lowerer::resolveNets() {
                 for (sir::Instr& in : bb.instrs)
                     if (sir::writesSlot(in.op) && !in.operands.empty() &&
                         in.operands[0].kind == sir::Operand::Kind::Slot &&
-                        in.operands[0].asSlot() == net)
+                        in.operands[0].asSlot() != sir::kNone &&
+                        sir::physicalSlot(design_, in.operands[0].asSlot()) == net)
                         in.operands[0].id = id.index();
             for (sir::SlotRange& w : p.writes)
                 if (w.slot == net) w.slot = id;
@@ -1210,6 +1216,7 @@ void Lowerer::resolveNets() {
                 }
             }
             sides_.erase(side);
+            if (metadata && !shared && !own) addStrengthSideValidity(ps[k], id);
         }
 
         // The net's value is resolved again whenever a driver changes
@@ -1248,6 +1255,7 @@ void Lowerer::resolveNets() {
                                       where});
         r.blocks[0].instrs.push_back({sir::Op::Ret, sir::voidType(), sir::kNone, {}, where});
         r.writes.push_back({net, 0, 0, 0, 0});
+        netResolvers_[net] = sir::ProcessId{static_cast<std::uint32_t>(design_.processes.size())};
         design_.processes.push_back(std::move(r));
     }
     // A three-state gate on a net that does not resolve writes L and H as
@@ -1810,9 +1818,13 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
     const bool pull = kind == "pullup" || kind == "pulldown";
     const bool logic = std::find(std::begin(kLogic), std::end(kLogic), kind) != std::end(kLogic);
     const bool tri = std::find(std::begin(kTri), std::end(kTri), kind) != std::end(kTri);
+    if (kind == "nmos" || kind == "pmos" || kind == "rnmos" || kind == "rpmos" || kind == "cmos" ||
+        kind == "rcmos") {
+        lowerMos(g, prefix);
+        return;
+    }
     if (!logic && !tri && !pull && kind != "buf" && kind != "not") {
-        // MOS switches and bidirectional switches are phase 4
-        // (VALUE_SEMANTICS.md 5.1).
+        // Passive switching still needs the approved world-preserving solver.
         report(g.location, "switch '" + kind + "'");
         return;
     }
@@ -1917,6 +1929,157 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
         },
         strength, g.getDelay());
     if (side && design_.processes.size() > first.index()) sides_[first] = *side;
+}
+
+void Lowerer::lowerMos(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {
+    const auto conns = g.getPortConnections();
+    const auto sl = g.location;
+    const std::string kind(g.primitiveType.name);
+    const bool parallel = kind == "cmos" || kind == "rcmos";
+    if (conns.size() != (parallel ? 4U : 3U)) return;  // slang diagnoses terminal counts.
+    const auto name = primitiveName(g, prefix, "mos");
+    const auto first = sir::ProcessId{static_cast<std::uint32_t>(design_.processes.size())};
+    Place output, data;
+    bool structural = false;
+    std::vector<sir::SlotId> controlSlots, indexSlots;
+    std::optional<sir::SlotId> dataSlot, positionSlot;
+    std::optional<std::array<Val, 3>> delays;
+    std::vector<sir::SlotId> delaySlots;
+    const auto hidden = [&](sir::Type type, const std::string& suffix) {
+        const auto id = sir::SlotId{static_cast<std::uint32_t>(design_.slots.size())};
+        design_.slots.push_back({name + ".$" + suffix, type});
+        design_.slot(id).instance = instance_;
+        return id;
+    };
+    lowerCont(name + ".$capture", sl, g, [&] {
+        output = placeOf(*outputPlace(conns[0]), sl);
+        while (output.kind == Place::Kind::Concat && output.base.size() == 1) {
+            Place next = output.base[0];
+            output = std::move(next);
+        }
+        const bool fixed =
+            output.home == Place::Home::Slot && output.type.width == 1 &&
+            (output.kind == Place::Kind::Slot || output.kind == Place::Kind::Element ||
+             output.kind == Place::Kind::Bits) &&
+            !output.pos && (output.indices.empty() || output.elem.has_value());
+        if (!fixed || design_.slot(output.slot).kind == sir::SlotKind::Var ||
+            !sir::isFourState(output.type))
+            unsupported(sl, "a non-static or non-four-state MOS output");
+        const auto outRange = rangeOf(output);
+        if (outRange.lsb >= design_.slot(output.slot).type.width ||
+            (output.kind == Place::Kind::Bits &&
+             (output.lsb < 0 || output.lsb + output.width >
+                                    (output.windowWidth == 0 ? design_.slot(output.slot).type.width
+                                                             : output.windowWidth))))
+            unsupported(sl, "an out-of-range MOS output");
+        const ast::Expression* input = conns[1];
+        while (input->kind == ast::ExpressionKind::Conversion &&
+               input->as<ast::ConversionExpression>().isImplicit())
+            input = &input->as<ast::ConversionExpression>().operand();
+        const ast::Expression* root = input;
+        for (;;) {
+            if (root->kind == ast::ExpressionKind::ElementSelect)
+                root = &root->as<ast::ElementSelectExpression>().value();
+            else if (root->kind == ast::ExpressionKind::RangeSelect)
+                root = &root->as<ast::RangeSelectExpression>().value();
+            else if (root->kind == ast::ExpressionKind::MemberAccess)
+                root = &root->as<ast::MemberAccessExpression>().value();
+            else
+                break;
+        }
+        const auto* symbol = namedSymbol(*root);
+        structural = symbol != nullptr && symbol->kind == ast::SymbolKind::Net;
+        const auto capture = [&](const Val& value, const std::string& suffix) {
+            const auto id = hidden(value.type, suffix);
+            storePlace(placeOfSlot(id), value, false, sl);
+            return id;
+        };
+        if (structural) {
+            data = placeOf(*input, sl);
+            if (data.home != Place::Home::Slot || !sir::isFourState(data.type))
+                unsupported(sl, "MOS strength from this net domain");
+            const auto operandType = [&](const sir::Operand& operand) {
+                if (operand.kind == sir::Operand::Kind::Const)
+                    return design_.constant(operand.asConst()).type;
+                for (const auto& bb : proc().blocks) {
+                    for (const auto& param : bb.params)
+                        if (param.temp.index() == operand.id) return param.type;
+                    for (const auto& in : bb.instrs)
+                        if (in.result.index() == operand.id) return in.type;
+                }
+                throw std::logic_error("missing captured selector type");
+            };
+            for (std::size_t i = 0; i < data.indices.size(); ++i)
+                indexSlots.push_back(capture({data.indices[i], operandType(data.indices[i])},
+                                             "index" + std::to_string(i)));
+            const auto position =
+                data.kind == Place::Kind::Bits
+                    ? (data.pos ? *data.pos
+                                : constant(sir::s2(64), static_cast<std::uint64_t>(data.lsb)))
+                    : constant(sir::s2(64), 0);
+            positionSlot = capture(position, "position");
+        } else
+            dataSlot = capture(coerce(lowerExpr(*conns[1]), sir::u4(1), sl), "data");
+        for (std::size_t i = 2; i < conns.size(); ++i)
+            controlSlots.push_back(capture(coerce(lowerExpr(*conns[i]), sir::u4(1), sl),
+                                           "control" + std::to_string(i - 2)));
+        if (g.getDelay() != nullptr) {
+            delays = delaysOf(*g.getDelay(), sl);
+            for (unsigned i = 0; i < 3; ++i)
+                delaySlots.push_back(capture((*delays)[i], "delay" + std::to_string(i)));
+        }
+    });
+    if (design_.processes.size() <= first.index()) return;
+    sir::Process device;
+    device.name = name;
+    device.kind = sir::ProcessKind::Cont;
+    device.instance = instance_;
+    device.loc = loc(sl);
+    device.blocks.resize(1);
+    const auto emit = [&](sir::Op op, sir::Type type, std::vector<sir::Operand> ops) {
+        const auto temp = sir::TempId{device.numTemps++};
+        device.blocks[0].instrs.push_back({op, type, temp, std::move(ops), device.loc});
+        return sir::Operand::temp(temp);
+    };
+    const auto load = [&](sir::SlotId slot) {
+        device.triggers.push_back({{slot}, sir::Edge::Any});
+        return emit(sir::Op::Load, design_.slot(slot).type, {sir::Operand::slot(slot)});
+    };
+    sir::Operand signal;
+    if (structural) {
+        auto target = sir::Operand::slot(data.slot, data.windowLsb, data.windowWidth);
+        std::vector<sir::Operand> ops{target};
+        for (const auto slot : indexSlots)
+            ops.push_back(load(slot));
+        ops.push_back(load(*positionSlot));
+        signal = emit(sir::Op::StrengthLoad, sir::strengthType(1), std::move(ops));
+        const auto physical = sir::physicalSlot(design_, data.slot);
+        strengthNets_.try_emplace(physical, device.loc);
+        device.strengthTriggers.push_back(sir::physicalRange(design_, rangeOf(data)));
+    } else {
+        if (!dataSlot) throw std::logic_error("missing MOS expression carrier");
+        signal = emit(sir::Op::StrengthMake, sir::strengthType(1),
+                      {load(*dataSlot), constant(sir::u2(3), 6).op, constant(sir::u2(3), 6).op});
+    }
+    std::vector<sir::Operand> args{sir::Operand::str(kind), signal};
+    for (const auto slot : controlSlots)
+        args.push_back(load(slot));
+    const auto result = emit(sir::Op::StrengthMos, sir::strengthType(1), std::move(args));
+    std::vector<sir::Operand> propagation{sir::Operand::strengthOrigin(sir::kNone), result};
+    for (const auto slot : delaySlots)
+        propagation.push_back(load(slot));
+    device.blocks[0].instrs.push_back(
+        {delaySlots.empty() ? sir::Op::StrengthDrive : sir::Op::StrengthDriveDelay, sir::voidType(),
+         sir::kNone, std::move(propagation), device.loc});
+    device.blocks[0].instrs.push_back({sir::Op::Ret, sir::voidType(), sir::kNone, {}, device.loc});
+    auto target = sir::physicalRange(design_, rangeOf(output));
+    target.firstElem = output.elem.value_or(0);
+    target.numElems = 1;
+    target.width = 1;
+    const auto id = sir::ProcessId{static_cast<std::uint32_t>(design_.processes.size())};
+    strengthNets_.try_emplace(target.slot, device.loc);
+    mosOutputs_[id] = {target, device.loc};
+    design_.processes.push_back(std::move(device));
 }
 
 sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) {

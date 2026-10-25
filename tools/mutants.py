@@ -40,6 +40,17 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('source MOS: net data loses provenance', 'src/front/lower.cpp', 'structural = symbol != nullptr && symbol->kind == ast::SymbolKind::Net;', 'structural = symbol != nullptr && symbol->kind == ast::SymbolKind::Net && false;'),
+    ('source MOS: strength sensitivity omitted', 'src/front/lower.cpp', 'device.strengthTriggers.push_back(sir::physicalRange(design_, rangeOf(data)));', 'static_cast<void>(data);'),
+    ('source MOS: device kind always nmos', 'src/front/lower.cpp', 'std::vector<sir::Operand> args{sir::Operand::str(kind), signal};', 'std::vector<sir::Operand> args{sir::Operand::str("nmos"), signal};'),
+    ('source MOS: selected position zero', 'src/front/lower.cpp', 'ops.push_back(load(*positionSlot));', 'ops.push_back(constant(sir::s2(64), 0).op);'),
+    ('source MOS: selected array index zero', 'src/front/lower.cpp', 'ops.push_back(load(slot));', 'ops.push_back((static_cast<void>(slot), constant(sir::s2(64), 0).op));'),
+    ('source MOS: imported ranks always strong', 'src/front/lower_strength.cpp', 'std::vector<sir::Operand> make{value, rankOne, rankZero};', 'std::vector<sir::Operand> make{value, constant(sir::u2(3), 6).op, constant(sir::u2(3), 6).op};'),
+    ('source MOS: imported sides omitted', 'src/front/lower_strength.cpp', 'make.push_back(mask);', 'static_cast<void>(mask);'),
+    ('source MOS: unused side suppresses initial X', 'src/front/lower_strength.cpp', '{initialized, mask, constant(sir::u2(2), 3).op}', '{initialized, mask, constant(sir::u2(2), 0).op}'),
+    ('source MOS: side validity commits at registration', 'src/front/lower_strength.cpp', '    if (!delayed)\n', '    delayed = false;\n    if (!delayed)\n'),
+    ('source MOS: new device starts X', 'src/front/lower_strength.cpp', 'origin(id, output.target, {}, output.loc)', 'origin(id, output.target, {-6, 6}, output.loc)'),
+    ('source MOS: captured delays zero', 'src/front/lower.cpp', 'propagation.push_back(load(slot));', 'propagation.push_back((static_cast<void>(slot), constant(sir::u2(64), 0).op));'),
     ('activation VM: scoped arrays resolve the first element', 'src/vm/vm.cpp', 'return {activations_, sched_, binding.value, static_cast<std::uint32_t>(element),\n                    width};', 'return {activations_, sched_, binding.value, 0, width};'),
     ('activation VM: returned owners retain executing leases', 'src/vm/vm.cpp', 'if (auto* environment = environmentOf(id)) environment->finish();', 'if (auto* environment = environmentOf(id); environment != nullptr && false) environment->finish();'),
     ('activation VM: fork captures the process instead of the current call', 'src/vm/vm.cpp', 'environmentOf(act_.varsId), plans,', 'environmentOf(f.varsId), plans,'),
@@ -591,7 +602,7 @@ MUTANTS = [
     ("front: a weak drive strength counts as strong", "src/front/lower.cpp",
      "case ast::DriveStrength::Weak: return 3;", "case ast::DriveStrength::Weak: return 6;"),
     ("front: drivers that meet through a port between nets resolve with a strong port",
-     "src/front/lower.cpp", "if (through != ps.end()) {", "if (false) {"),
+     "src/front/lower.cpp", "if (through != ps.end() && (!metadata || shared || own)) {", "if (false) {"),
     ("vm: an unknown condition picks the first string", "src/vm/vm.cpp",
      "temp(in.result) = str(1) == str(2) ? v(1) : W4{0, 0};  // 0 is \"\"",
      "temp(in.result) = v(1);"),
