@@ -3183,11 +3183,10 @@ private:
                                 last = LastItem::Slot;
                             }
                         }
-                        if (!eventStatus(
-                                f, in,
-                                sched_.waitAnyValues(f.kernelId, items_, monitors_, namedItems_)))
-                            return Exit::Error;
+                        const auto status =
+                            sched_.waitAnyValues(f.kernelId, items_, monitors_, namedItems_);
                         if (reportHeapMonitorLimit(instanceOf(p), in.loc)) return Exit::Stop;
+                        if (!eventStatus(f, in, status)) return Exit::Error;
                         resumeAt(f) = ops.back().asBlock();
                         return Exit::Waiting;
                     }
