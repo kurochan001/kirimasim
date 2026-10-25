@@ -100,16 +100,8 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 
 Implemented on 2026-10-20: the `bench` job of the nightly workflow times the release build of kirimasim, runs `tools/bench.py`, and compares with `tools/bench_report.py`, which also writes the night's record. It measures on Linux only; whether to measure on macOS too is not decided yet.
 
-**Implementation note (2026-10-25):** the merged benchmark tool samples Linux
-`/proc/<pid>/status` `VmHWM` every 10 ms and uses per-child `wait4` `ru_maxrss`
-on macOS. This differs from the `getrusage` acquisition method specified below;
-that approved requirement is left unchanged pending an explicit specification
-amendment. The [measurement record](../BENCHMARKS.md#development-versions-on-linux-wsl2-2026-10-25)
-documents sampling limits and the break in Linux RSS history. This note
-records implementation status; it changes no acceptance criteria or thresholds.
-
 - A scheduled GitHub Actions workflow measures once every night on a Linux (x86-64) runner. Whether it also measures on GitHub's macOS runner, which this public repository can use (checked 2026-10-18), is not decided yet (5.1); until then macOS values are measured on the developer's Mac and attached to reports.
-- What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken with Python's `resource.getrusage(RUSAGE_CHILDREN)`; no new tool is installed.
+- What is measured: the wall-clock run time of each benchmark, the peak RSS, and the build time of kirimasim itself (release). The peak RSS is taken for each run of a program, with no new tool (changed 2026-10-25, approved): on Linux, `tools/bench.py` reads `VmHWM` in `/proc/<pid>/status` of the program every 10 ms, and on macOS it takes `ru_maxrss` from `wait4` of that program. A peak just before the program exits can come after the last sample, so the Linux value is the highest seen, not a guaranteed peak. `getrusage(RUSAGE_CHILDREN)`, the method before, is not used: on Linux it also counts the Python process the program was started from (about 19 MiB), so a smaller program could not be measured. Linux RSS values taken by `getrusage`, among them the nightly records up to 2026-10-24, are not comparable with the newer ones ([measurement record](../BENCHMARKS.md#development-versions-on-linux-wsl2-2026-10-25)).
 - Each benchmark runs 5 times and the median is used. The results are kept as JSON among the workflow's artifacts.
 - **When to report (draft):** taking the median of the last 7 nightly results as the baseline, a warning is put in the workflow's summary when wall-clock time or the peak RSS worsens by 15% or more, or the build time by 25% or more. It does not pass or fail anything (the workflow does not fail). Shared runners swing widely, so the width of the swings is checked with the values during P1, and the thresholds reviewed.
 
