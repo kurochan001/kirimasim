@@ -980,6 +980,7 @@ void Scheduler::execute(const Event& e) {
             return;
         case Kind::StrengthDrive: deliverStrengthDrive(e.id, e.gen); return;
         case Kind::StrengthResolve: resolveStrengthComponent(e.id); return;
+        case Kind::StrengthEdge: deliverStrengthEdge(e.id, e.gen); return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
             if (!d.pending || d.gen != e.gen) return;  // dropped

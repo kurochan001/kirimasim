@@ -40,6 +40,21 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('passive network: graph resolution bypassed', 'src/kernel/strength_drivers.cpp', 'if (part.edgeCount != 0) {', 'if (part.edgeCount != 0 && false) {'),
+    ('passive network: local identity origins lose supply rank', 'src/kernel/strength_network.cpp', 'bank.routes_[std::size_t{source} * 8 + rank] = rank;', 'bank.routes_[std::size_t{source} * 8 + rank] = static_cast<std::uint8_t>(std::min<unsigned>(rank, 6));'),
+    ('passive network: edges omit strength reduction', 'src/kernel/strength_network.cpp', 'transferStrengthPoint(edge.spec.transfer, carried)', 'transferStrengthPoint(StrengthTransfer::Identity, carried)'),
+    ('passive network: reverse transport omitted', 'src/kernel/strength_network.cpp', 'edge.spec.first == from ? edge.spec.second : edge.spec.first', 'edge.spec.first == from ? edge.spec.second : edge.spec.second'),
+    ('passive network: uncertain edges always conduct', 'src/kernel/strength_network.cpp', 'bank.choices_[e] == 0', '(bank.choices_[e] == 0 && false)'),
+    ('passive network: only first conducting world retained', 'src/kernel/strength_network.cpp', 'if (bank.choices_[e] != 0) {\n                more = true;', 'if (bank.choices_[e] != 0) {\n                more = false;'),
+    ('passive network: last world replaces hull endpoint', 'src/kernel/strength_network.cpp', 'bank.values_[n].lo = std::min(bank.values_[n].lo, value.lo);', 'bank.values_[n].lo = value.lo;'),
+    ('passive network: colocated origins reuse first range', 'src/kernel/strength_network.cpp', 'bank.order_[originNode.first + r]', 'bank.order_[originNode.first]'),
+    ('passive network: uwire ignores remote physical roots', 'src/kernel/strength_network.cpp', '++roots[find(origin.node)];', '++roots[origin.node];'),
+    ('passive network: cross-component edge accepted', 'src/kernel/strength_network.cpp', 'if (nodes_[edge.first].spec.component != nodes_[edge.second].spec.component)', 'if (nodes_[edge.first].spec.component != nodes_[edge.second].spec.component && false)'),
+    ('passive network: rootless rings preserve cached readout', 'src/kernel/strength_network.cpp', 'bank.values_[bank.componentNodes_[part.first + j]] = {};', '{ const auto n = bank.componentNodes_[part.first + j]; static_cast<void>(ctx_.strengths().read(bank.nodes_[n].spec.at, {&bank.values_[n], 1})); }'),
+    ('passive network: first path prevents stronger later route', 'src/kernel/strength_network.cpp', 'if (value > best) {', 'if (value > best && best == 0) {'),
+    ('passive network: uncertain root points collapse to last point', 'src/kernel/strength_network.cpp', 'if (point < range.lo || point > range.hi) continue;', 'if (point != range.hi) continue;'),
+    ('passive network: uncertain conduction uses on delay', 'src/kernel/strength_drivers.cpp', 'std::min(on, off);', 'on;'),
+    ('passive network: delayed edge timers are discarded', 'src/kernel/sim.cpp', 'case Kind::StrengthEdge: deliverStrengthEdge(e.id, e.gen); return;', 'case Kind::StrengthEdge: return;'),
     ('source MOS: net data loses provenance', 'src/front/lower.cpp', 'structural = symbol != nullptr && symbol->kind == ast::SymbolKind::Net;', 'structural = symbol != nullptr && symbol->kind == ast::SymbolKind::Net && false;'),
     ('source MOS: strength sensitivity omitted', 'src/front/lower.cpp', 'device.strengthTriggers.push_back(sir::physicalRange(design_, rangeOf(data)));', 'static_cast<void>(data);'),
     ('source MOS: device kind always nmos', 'src/front/lower.cpp', 'std::vector<sir::Operand> args{sir::Operand::str(kind), signal};', 'std::vector<sir::Operand> args{sir::Operand::str("nmos"), signal};'),

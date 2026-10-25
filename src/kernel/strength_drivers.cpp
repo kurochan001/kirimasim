@@ -37,7 +37,8 @@ std::optional<StrengthOriginState> StrengthDrivers::origin(std::uint32_t id) con
 
 StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
                                          std::span<const StrengthNodeSpec> nodes,
-                                         std::span<const StrengthOriginSpec> origins) noexcept {
+                                         std::span<const StrengthOriginSpec> origins,
+                                         std::span<const StrengthEdgeSpec> edges) noexcept {
     if (configured_) return StrengthError::InvalidTarget;
     if (nodes.empty() || nodes.size() >= UINT32_MAX || origins.size() >= UINT32_MAX)
         return StrengthError::InvalidShape;
@@ -105,6 +106,8 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
             auto& node = staged.nodes_[origins[i].node];
             staged.order_[node.first + node.count++] = i;
         }
+        const auto edgeError = staged.configureEdges(edges);
+        if (edgeError != StrengthError::None) return edgeError;
         nodes_.swap(staged.nodes_);
         origins_.swap(staged.origins_);
         order_.swap(staged.order_);
@@ -112,6 +115,15 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         componentNodes_.swap(staged.componentNodes_);
         values_.swap(staged.values_);
         updates_.swap(staged.updates_);
+        edges_.swap(staged.edges_);
+        componentEdges_.swap(staged.componentEdges_);
+        adjacencyOffsets_.swap(staged.adjacencyOffsets_);
+        adjacency_.swap(staged.adjacency_);
+        routes_.swap(staged.routes_);
+        inQueue_.swap(staged.inQueue_);
+        queue_.swap(staged.queue_);
+        choices_.swap(staged.choices_);
+        states_.swap(staged.states_);
         configured_ = true;
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
@@ -123,8 +135,9 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
 
 StrengthError
 Scheduler::configureStrengthDrivers(std::span<const StrengthNodeSpec> nodes,
-                                    std::span<const StrengthOriginSpec> origins) noexcept {
-    return ctx_.strengthDrivers().configure(ctx_.strengths(), nodes, origins);
+                                    std::span<const StrengthOriginSpec> origins,
+                                    std::span<const StrengthEdgeSpec> edges) noexcept {
+    return ctx_.strengthDrivers().configure(ctx_.strengths(), nodes, origins, edges);
 }
 
 StrengthError Scheduler::queueStrengthComponent(std::uint32_t component) noexcept {
@@ -155,18 +168,15 @@ StrengthError Scheduler::startStrengthDrivers() noexcept {
     return StrengthError::None;
 }
 
-StrengthError Scheduler::driveStrength(std::uint32_t origin, StrengthRange value) noexcept {
-    auto& bank = ctx_.strengthDrivers();
-    if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
-    if (!validRange(value)) return StrengthError::InvalidValue;
-    auto& row = bank.origins_[origin];
-    auto& state = row.state;
+template <typename State, typename Value>
+StrengthError Scheduler::setStrengthState(State& state, Value value,
+                                          std::uint32_t component) noexcept {
     if (state.hasPending && state.generation == UINT64_MAX) {
         resourceLimit();
         return StrengthError::ResourceLimit;
     }
     if (state.committed != value) {
-        const auto error = queueStrengthComponent(bank.nodes_[row.node].spec.component);
+        const auto error = queueStrengthComponent(component);
         if (error != StrengthError::None) return error;
     }
     if (state.hasPending) ++state.generation;
@@ -175,13 +185,9 @@ StrengthError Scheduler::driveStrength(std::uint32_t origin, StrengthRange value
     return StrengthError::None;
 }
 
-StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRange value,
-                                              std::uint64_t rise, std::uint64_t fall,
-                                              std::uint64_t off) noexcept {
-    auto& bank = ctx_.strengthDrivers();
-    if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
-    if (!validRange(value)) return StrengthError::InvalidValue;
-    auto& state = bank.origins_[origin].state;
+template <typename State, typename Value>
+StrengthError Scheduler::delayStrengthState(State& state, Value value, std::uint64_t delay,
+                                            Kind kind, std::uint32_t id) noexcept {
     if (state.hasPending && state.pending == value) return StrengthError::None;
     if (!state.hasPending && state.committed == value) return StrengthError::None;
     if (state.generation == UINT64_MAX) {
@@ -193,20 +199,16 @@ StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRang
         ++state.generation;
         return StrengthError::None;
     }
-    const auto projected = strengthValue(value);
-    const auto delay = projected.b ? (projected.a ? std::min({rise, fall, off}) : off)
-                                   : (projected.a ? rise : fall);
     try {
         begin();
-        // schedule detects time overflow before inserting an event. Do not
-        // replace the pending interval when no future event could be queued.
+        // Reject overflow before replacing any owned pending state.
         if (delay > std::numeric_limits<std::uint64_t>::max() - time_) {
             overflow_ = true;
             return StrengthError::InvalidValue;
         }
         const auto generation = state.generation + 1;
         schedule(delay == 0 ? Region::Inactive : Region::Active,
-                 {Kind::StrengthDrive, Region::Active, origin, generation}, delay);
+                 {kind, Region::Active, id, generation}, delay);
         state.pending = value;
         state.generation = generation;
         state.hasPending = true;
@@ -220,15 +222,78 @@ StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRang
     }
 }
 
-void Scheduler::deliverStrengthDrive(std::uint32_t origin, std::uint64_t generation) noexcept {
-    auto& bank = ctx_.strengthDrivers();
-    auto& row = bank.origins_[origin];
-    auto& state = row.state;
+template <typename State>
+void Scheduler::commitStrengthState(State& state, std::uint32_t component,
+                                    std::uint64_t generation) noexcept {
     if (!state.hasPending || state.generation != generation) return;
-    const auto error = queueStrengthComponent(bank.nodes_[row.node].spec.component);
+    const auto error = queueStrengthComponent(component);
     if (error != StrengthError::None) return;
     state.committed = state.pending;
     state.hasPending = false;
+}
+
+StrengthError Scheduler::driveStrength(std::uint32_t origin, StrengthRange value) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
+    if (!validRange(value)) return StrengthError::InvalidValue;
+    auto& row = bank.origins_[origin];
+    return setStrengthState(row.state, value, bank.nodes_[row.node].spec.component);
+}
+StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRange value,
+                                              std::uint64_t rise, std::uint64_t fall,
+                                              std::uint64_t off) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
+    if (!validRange(value)) return StrengthError::InvalidValue;
+    const auto projected = strengthValue(value);
+    const auto delay = projected.b ? (projected.a ? std::min({rise, fall, off}) : off)
+                                   : (projected.a ? rise : fall);
+    return delayStrengthState(bank.origins_[origin].state, value, delay, Kind::StrengthDrive,
+                              origin);
+}
+void Scheduler::deliverStrengthDrive(std::uint32_t origin, std::uint64_t generation) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    auto& row = bank.origins_[origin];
+    commitStrengthState(row.state, bank.nodes_[row.node].spec.component, generation);
+}
+
+StrengthError Scheduler::setStrengthEdge(std::uint32_t edge, StrengthConduction value) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    if (!bank.started_ || edge >= bank.edges_.size()) return StrengthError::InvalidTarget;
+    if (value != StrengthConduction::Off && value != StrengthConduction::On &&
+        value != StrengthConduction::Uncertain)
+        return StrengthError::InvalidValue;
+    auto& row = bank.edges_[edge];
+    return setStrengthState(row.state, value, bank.nodes_[row.spec.first].spec.component);
+}
+StrengthError Scheduler::setStrengthEdgeDelayed(std::uint32_t edge, StrengthConduction value,
+                                                std::uint64_t on, std::uint64_t off) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    if (!bank.started_ || edge >= bank.edges_.size()) return StrengthError::InvalidTarget;
+    if (value != StrengthConduction::Off && value != StrengthConduction::On &&
+        value != StrengthConduction::Uncertain)
+        return StrengthError::InvalidValue;
+    const auto delay = value == StrengthConduction::On    ? on
+                       : value == StrengthConduction::Off ? off
+                                                          : std::min(on, off);
+    return delayStrengthState(bank.edges_[edge].state, value, delay, Kind::StrengthEdge, edge);
+}
+void Scheduler::deliverStrengthEdge(std::uint32_t edge, std::uint64_t generation) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    auto& row = bank.edges_[edge];
+    commitStrengthState(row.state, bank.nodes_[row.spec.first].spec.component, generation);
+}
+
+bool Scheduler::takeStrengthInterrupt() noexcept {
+    try {
+        return takeInterrupt();
+    } catch (const std::bad_alloc&) {
+        resourceLimit();
+        return true;
+    } catch (const std::length_error&) {
+        resourceLimit();
+        return true;
+    }
 }
 
 void Scheduler::resolveStrengthComponent(std::uint32_t component) noexcept {
@@ -238,19 +303,26 @@ void Scheduler::resolveStrengthComponent(std::uint32_t component) noexcept {
     // No callbacks until the whole input snapshot has been solved. The
     // preallocated output buffer is not an origin and never feeds resolution.
     const auto& part = bank.components_[component];
-    for (std::uint32_t j = 0; j < part.count; ++j) {
-        if (takeInterrupt()) return;
-        const auto n = bank.componentNodes_[part.first + j];
-        const auto& node = bank.nodes_[n];
-        auto states = detail::stateBit(0, 1);
-        for (std::uint32_t i = 0; i < node.count; ++i) {
-            if (takeInterrupt()) return;
-            const auto& range = bank.origins_[bank.order_[node.first + i]].state.committed;
-            states = detail::addRange(states, range.lo, range.hi);
+    if (part.edgeCount != 0) {
+        if (!solvePassiveStrengthComponent(component)) return;
+        for (std::uint32_t j = 0; j < part.count; ++j) {
+            const auto n = bank.componentNodes_[part.first + j];
+            bank.updates_[used++] = {bank.nodes_[n].spec.at, {&bank.values_[n], 1}};
         }
-        bank.values_[n] = detail::finishRange(node.spec.kind, states);
-        bank.updates_[used++] = {node.spec.at, {&bank.values_[n], 1}};
-    }
+    } else
+        for (std::uint32_t j = 0; j < part.count; ++j) {
+            if (takeStrengthInterrupt()) return;
+            const auto n = bank.componentNodes_[part.first + j];
+            const auto& node = bank.nodes_[n];
+            auto states = detail::stateBit(0, 1);
+            for (std::uint32_t i = 0; i < node.count; ++i) {
+                if (takeStrengthInterrupt()) return;
+                const auto& range = bank.origins_[bank.order_[node.first + i]].state.committed;
+                states = detail::addRange(states, range.lo, range.hi);
+            }
+            bank.values_[n] = detail::finishRange(node.spec.kind, states);
+            bank.updates_[used++] = {node.spec.at, {&bank.values_[n], 1}};
+        }
     // Publication copies all intervals before callbacks may drive origins
     // and queue a subsequent Active solve. There is no recursive solve.
     const auto result = publishStrengths(std::span(bank.updates_).first(used));

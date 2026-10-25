@@ -384,12 +384,13 @@ public:
     /// never retry it after commitment. No partial snapshot is published.
     StrengthPublication publishStrengths(std::span<const StrengthUpdate> updates) noexcept;
 
-    /// Copies a static independent-node/physical-origin bank once. No writes,
+    /// Copies a static node/origin/passive-edge bank once. No writes,
     /// resolution, notifications or processes on registration. Implicit roots
     /// must be explicit origins: node kinds are wire/tri, wand/triand, wor/trior
-    /// or uwire, not tri0/tri1/supply0/supply1. Passive edges/force are separate.
+    /// or uwire, not tri0/tri1/supply0/supply1. Force remains separate.
     StrengthError configureStrengthDrivers(std::span<const StrengthNodeSpec> nodes,
-                                           std::span<const StrengthOriginSpec> origins) noexcept;
+                                           std::span<const StrengthOriginSpec> origins,
+                                           std::span<const StrengthEdgeSpec> edges = {}) noexcept;
     /// Queue initial resolution in Active before starting device evaluations.
     StrengthError startStrengthDrivers() noexcept;
     /// Stable origin ID is its ordinal in the copied origin table. No borrowed
@@ -403,6 +404,14 @@ public:
     StrengthError driveStrengthDelayed(std::uint32_t origin, StrengthRange value,
                                        std::uint64_t rise, std::uint64_t fall,
                                        std::uint64_t off) noexcept;
+
+    /// Stable edge ID is its copied table ordinal. Conduction changes queue
+    /// its component in Active. Transport through a committed edge is immediate.
+    StrengthError setStrengthEdge(std::uint32_t edge, StrengthConduction value) noexcept;
+    /// Delay on/off conduction, not data; uncertainty uses min(on, off).
+    /// Own the complete three-way state with the same inertial rules as roots.
+    StrengthError setStrengthEdgeDelayed(std::uint32_t edge, StrengthConduction value,
+                                         std::uint64_t on, std::uint64_t off) noexcept;
 
     // Procedural continuous assignments (SCHEDULER_SPEC.md 14, SIR_SPEC.md
     // 5.6). A marked slot keeps, bit by bit, who holds it at each level and
@@ -573,6 +582,9 @@ private:
     void strengthChanged(std::uint32_t process, std::uint64_t generation) noexcept;
     bool takeWallTimeLimit();
     void deliverStrengthDrive(std::uint32_t origin, std::uint64_t generation) noexcept;
+    void deliverStrengthEdge(std::uint32_t edge, std::uint64_t generation) noexcept;
+    bool takeStrengthInterrupt() noexcept;
+    bool solvePassiveStrengthComponent(std::uint32_t component) noexcept;
     void resolveStrengthComponent(std::uint32_t component) noexcept;
     StrengthError queueStrengthComponent(std::uint32_t component) noexcept;
     /// Show: a released held variable shows its value (id: the slot, gen:
@@ -589,9 +601,18 @@ private:
         Drive,
         StrengthDrive,
         StrengthResolve,
+        StrengthEdge,
         Postponed,
         Deferred
     };
+    template <typename State, typename Value>
+    StrengthError setStrengthState(State& state, Value value, std::uint32_t component) noexcept;
+    template <typename State, typename Value>
+    StrengthError delayStrengthState(State& state, Value value, std::uint64_t delay, Kind kind,
+                                     std::uint32_t id) noexcept;
+    template <typename State>
+    void commitStrengthState(State& state, std::uint32_t component,
+                             std::uint64_t generation) noexcept;
     /// An entry of a process's pending queue: a unique or priority
     /// violation's line, or a deferred assertion's call.
     struct PendingReport {
