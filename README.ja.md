@@ -327,7 +327,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 
 ### シミュレーションの速さ
 
-最新の比較は、[Lyra を含む 2026-10-24 の Linux（WSL2）の測定](#linux-でlyra-も含めて)です。
+最新の比較は、[開発版の最新と Lyra で測った 2026-10-25 の Linux（WSL2）の測定](#linux-で開発版の最新と-lyra)です。
 最初の表は、別に行った 2026-10-23 の macOS の測定記録です。
 
 2026-10-23 に、[bench/](bench/) の 4 設計を、3 つのシミュレータすべてで
@@ -358,25 +358,26 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 - 夜間の Linux の測定は別に行います。直前 7 晩の中央値より実行時間か RSS が
   15%、ビルド時間が 25% 以上悪化すると警告します（PERFORMANCE.md の 5.1 節）。
 
-#### Linux で、Lyra も含めて
+#### Linux で、開発版の最新と Lyra
 
-2026-10-24 に WSL2（AMD Ryzen 9 7950X）で別に測りました。kirimasim `31160083c77d` と、
-Icarus Verilog 13.0 stable（`v13_0-25-g07dd50d37`）、Verilator 5.050（`v5.050-60-g3d2421f3b`）、Lyra `a2313fd`（`bazel build -c opt`）です。
-機械も Icarus と Verilator の版も上の表と違うので、2 つの表を列どうしで比べません。
+2026-10-25 に WSL2（AMD Ryzen 9 7950X）で、各ツールを開発中の最新のコミットにして別に測りました。
+kirimasim `8a8607690aa6`、Icarus Verilog 14.0 devel `2b8d42dc088f`、Verilator 5.053 devel `1838b6ed035c`、
+Lyra `63922502ff0a`（`bazel build -c opt`）です。機械もツールの版も上の表と違うので、2 つの表を列どうしで
+比べません。
 
-| 設計 | `+n=` | kirimasim | Icarus Verilog 13.0 | Verilator 5.050 | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
+| 設計 | `+n=` | kirimasim | Icarus Verilog 14.0 devel | Verilator 5.053 devel | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
 | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.167 s | 13.266 s | 0.172 s | 30.139 s | 2.749 s |
-| `nba_shift` | 1,000,000 | 20.190 s | 24.315 s | 0.151 s | 143.256 s | 6.059 s |
-| `proc_wait` | 1,000,000 | 6.135 s | 5.399 s | 2.182 s | 70.412 s | 5.933 s |
-| `fork_join` | 4,000,000 | 4.226 s | 6.129 s | 0.998 s | 15.240 s | 4.689 s |
+| `comb_chain` | 3,000,000 | 8.288 s | 9.838 s | 0.218 s | 31.399 s | 2.821 s |
+| `nba_shift` | 1,000,000 | 22.459 s | 25.899 s | 0.195 s | 139.227 s | 5.706 s |
+| `proc_wait` | 1,000,000 | 6.313 s | 5.571 s | 2.190 s | 72.489 s | 5.990 s |
+| `fork_join` | 4,000,000 | 4.162 s | 4.973 s | 1.177 s | 15.492 s | 4.776 s |
 
 - 方法、設計、回数、期待する結果は上と同じで、測った本来の回数の実行はすべて期待する結果を出しました。
 - Lyra の既定の backend は C++ backend で、LLVM backend は別の列にしました。どちらも Lyra の既定の
   `-O 0` で、設計ごとに空のキャッシュへビルドしました。
-- ここでは `proc_wait` で kirimasim が Icarus Verilog 13.0 より遅くなりました。ビルドの時間、起動、
-  サンプリングした Linux の RSS と再実行コマンドは
-  [測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2での-4-つのシミュレータ2026-10-24)にあります。
+- ここでは kirimasim は、Icarus Verilog より 3 つの設計で約 1.15〜1.19 倍速く、`proc_wait` では約 1.13 倍
+  遅くなりました。ビルドの時間、起動、サンプリングした Linux の RSS と再実行コマンドは
+  [測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2で開発版の最新2026-10-25)にあります。
 
 ### できること
 
