@@ -1,0 +1,190 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "56a10e05a10b718b865bff0146450979abe9e824",
+  "platform": "macOS arm64",
+  "scope": "Automatic SIR representation and ownership verification; execution of new homes is explicitly gated",
+  "code_worktree_clean": true,
+  "uncommitted_changes_during_ci": "New measurement records only",
+  "source_sha256": {
+    "src/sir/activation.cpp": "68945f5ed015535abcba6e5c2410c9d74f7abc6713dfdf4690bd865e8912c71b",
+    "src/sir/include/kirimasim/sir/design.h": "ea9939244bdb1dba1d0fe79cc0c0fc77f1ccb8f04c84dccf4229ef04a2b50ce2",
+    "src/sir/include/kirimasim/sir/verify.h": "b4902082d0e4b1f971c7f19d1a00c0fbcff8f93c361b7a71d04dae5ad4b5e769",
+    "src/sir/text.cpp": "664d7b163039d7d8fd9efe8bf50f7edf981d5578e024ba0f24f83a9349d12e88",
+    "src/sir/types.cpp": "3f194f6e06e3fcdbca0699022b0d6b141b6c366155a5e43fe995870f9abc9cd4",
+    "src/sir/verify.cpp": "af22b229f2506d7e9b5fba411dc2f4498334b27fb3c4bd427911792873daf0d8",
+    "src/vm/vm.cpp": "7f6e9896e38e899dcc233f11ea3518fedbb7ceeb601de1260293a9b803c08b57",
+    "tests/unit/activation_sir_test.cpp": "71621637a772e56677dc44a56a2695283760d822e8ebbd082663d5295cad3054",
+    "tools/mutants.py": "6f4b4e1b7e0e8f70efb6e1a0c276737d39f4a013da50f824a88ec448668520d4"
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 65.1
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 12.4
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 55.3
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 0.8
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 13.7
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 93.8
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 13.9
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 79.9
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.3,
+      "detail": "5 commit(s) not pushed"
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 87.5
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 4587,
+      "passed": 4585,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4588,
+      "passed": 4586,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4587,
+      "passed": 4585,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4587,
+      "passed": 4585,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_unit_tests": 16,
+  "typed_shapes": 66,
+  "malformed_table_cases": 25,
+  "ownership_cases": 8,
+  "ref_qualification_join_combinations": 12,
+  "deep_layout_scopes": 10000,
+  "compiled_negative_controls": 9,
+  "negative_controls_record": "activation-sir-negative-controls.json",
+  "mutation_anchors": 563,
+  "existing_expectations_changed": false,
+  "sir_dump_expectations": "all 29 unchanged; pass",
+  "perfcount_expectations": "unchanged; pass in all four configurations",
+  "format_version": 0,
+  "parser_added": false,
+  "physical_frame_abi_selected": false,
+  "external_c_abi": "0.3 unchanged",
+  "new_dependencies": false,
+  "source_capture_enabled": false,
+  "reference_inventory_remeasured": false,
+  "population_remeasured": false,
+  "svtests_remeasured": false,
+  "focused_source_observations": "automatic-entry-initialization-observations.json",
+  "linux_remeasured": false,
+  "simulation_speed_remeasured": false,
+  "p1_complete": false
+}

@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-25",
+  "platform": "macOS arm64",
+  "implementation_revision": "56a10e05a10b718b865bff0146450979abe9e824",
+  "scope": "Three original initialization probes, separate from the 87-probe inventory; source capture not enabled",
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 56a10e05a10b), built with AppleClang 21.0.0.21000334",
+    "icarus13": {
+      "compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+      "runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    },
+    "icarus14": {
+      "compiler": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+      "runtime": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+    }
+  },
+  "oracle_status": "Observations checked against the existing approved per-entry/static contract; no reference-dependent output adopted as an oracle",
+  "results": [
+    {
+      "name": "automatic_array_reentry",
+      "source": "module top;\n  task automatic sample;\n    for (int round_no=0; round_no<3; round_no++) begin\n      int words[2];\n      $display(\"%0d %0d\", words[0], words[1]);\n      words[0]=7; words[1]=9;\n    end\n  endtask\n  initial sample();\nendmodule\n",
+      "model_stdout": "0 0\n0 0\n0 0\n",
+      "model_basis": "Approved automatic-capture contract section 1 and VALUE_SEMANTICS 2: defaults on each automatic lexical entry; static initialization once",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "0 0\n0 0\n0 0\n",
+          "matches_model": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "0 0\n7 9\n7 9\n",
+          "matches_model": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "0 0\n7 9\n7 9\n",
+          "matches_model": false
+        }
+      }
+    },
+    {
+      "name": "automatic_scalar_reentry",
+      "source": "module top;\n  task automatic sample;\n    for (int round_no=0; round_no<3; round_no++) begin\n      int word;\n      $display(\"%0d\", word);\n      word=7;\n    end\n  endtask\n  initial sample();\nendmodule\n",
+      "model_stdout": "0\n0\n0\n",
+      "model_basis": "Approved automatic-capture contract section 1 and VALUE_SEMANTICS 2: defaults on each automatic lexical entry; static initialization once",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "0\n0\n0\n",
+          "matches_model": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "0\n7\n7\n",
+          "matches_model": false
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "0\n7\n7\n",
+          "matches_model": false
+        }
+      }
+    },
+    {
+      "name": "static_array_reentry",
+      "source": "module top;\n  task static sample;\n    for (int round_no=0; round_no<3; round_no++) begin\n      static int words[2];\n      $display(\"%0d %0d\", words[0], words[1]);\n      words[0]=7; words[1]=9;\n    end\n  endtask\n  initial sample();\nendmodule\n",
+      "model_stdout": "0 0\n7 9\n7 9\n",
+      "model_basis": "Approved automatic-capture contract section 1 and VALUE_SEMANTICS 2: defaults on each automatic lexical entry; static initialization once",
+      "observations": {
+        "kirimasim": {
+          "exit": 0,
+          "stdout": "0 0\n7 9\n7 9\n",
+          "matches_model": true
+        },
+        "icarus13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "0 0\n7 9\n7 9\n",
+          "matches_model": true
+        },
+        "icarus14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "0 0\n7 9\n7 9\n",
+          "matches_model": true
+        }
+      }
+    }
+  ]
+}

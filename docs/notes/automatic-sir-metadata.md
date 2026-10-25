@@ -78,11 +78,22 @@ Sixteen original ActivationSir tests cover 66 typed shapes, 25 malformed
 tables, eight ownership failures, twelve ref qualification/join combinations,
 waits, repeated block entry, named disable, readonly helpers, root parameter
 copy-in and a 10,000-scope acyclic/cyclic graph. A malformed execution input
-is rejected before slot/storage allocation. Compiled controls and complete
-local CI are checked separately before publication. Existing suite bodies,
-expectations, SIR dump fixtures and PerfCount budgets remain protected.
-Initial dev validation passes 4,585/4,587 with zero failures and the same two
-known skips; changed-file LLVM 22 clang-tidy passes.
+is rejected before slot/storage allocation. All nine
+[compiled controls](../measurements/2026-10-25/activation-sir-negative-controls.json)
+at `56a10e05` build and fail actual new verifier tests; the restored build
+passes. No judging self-check failure is counted as evidence.
+The [final validation](../measurements/2026-10-25/activation-sir-final-validation.json)
+passes all 21 local-CI checks: dev/ASan/UBSan pass 4,585/4,587 and release
+4,586/4,588, zero failures and the same two known skips. All 29 existing SIR
+dumps and PerfCount budgets remain unchanged, as do existing suite oracles.
+
+Three [original initialization probes](../measurements/2026-10-25/automatic-entry-initialization-observations.json)
+check existing ordinary-frame/static-slot behavior separately. Native resets
+automatic scalar/array defaults on all three block entries and retains static
+array writes; both references retain the automatic writes too. These are
+differences against the existing approved per-entry contract, not adopted
+reference oracles or proof of new capture support. The frozen 87-probe cohort,
+population and sv-tests were not rerun for this representation-only checkpoint.
 
 Next connect VM logical frame/ref access to typed kernel bindings and attach
 call/block ownership and fork environments. Every wide/packed/array, file/scan,
@@ -91,3 +102,11 @@ waits before dropping leases, keep retained storage independent of returned
 call control, and preserve one-time copyback. Then front can promote complete
 lexical scopes and enable source matrices. The VM gate can be removed only
 after those execution paths have semantic evidence. Full P1 remains incomplete.
+
+Fork capture must resolve `act_.varsId` (the active SIR body), which can be a
+synchronous function or a waiting task, rather than the process root's frame.
+Storage-owner release cannot wait for `tryRelease` to reclaim a finished
+control frame with descendants/reports. Scoped refs need immutable bindings
+to the actual scope token, including permissions, instead of following a
+parent's replaceable binding-table entry. Acquire the complete fork environment
+before making children runnable or changing its random-seed progression.

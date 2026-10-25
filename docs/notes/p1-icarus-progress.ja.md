@@ -12,6 +12,10 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**automatic SIRの最終検証：** `56a10e05`の[全21項目](../measurements/2026-10-25/activation-sir-final-validation.json)が成功しました。
+dev/ASan/UBSanは4,585/4,587、releaseは4,586/4,588成功、失敗0・既知2スキップです。
+コンパイルした9故障を検出しました。SIRの表現/検証の段階であり、VM・ソースのbinding接続は残作業です。
+
 **automaticのSIRメタデータ：** [表現/検証の段階](automatic-sir-metadata.ja.md)でhome・捕捉・
 権限・寿命メタデータ・所有権グラフの独自16テストを追加しました。初回devは4,585/4,587成功、
 失敗0・既知2スキップです。VMの全binding/アクセス経路が揃うまで新しいhomeは明示的に拒否し、

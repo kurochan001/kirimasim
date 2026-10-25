@@ -13,6 +13,11 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Final automatic-SIR check:** `56a10e05` passes [all 21 checks](../measurements/2026-10-25/activation-sir-final-validation.json).
+Dev/ASan/UBSan pass 4,585/4,587 and release 4,586/4,588, zero failures and two
+known skips. All nine compiled verifier controls are detected. This is SIR
+representation/verification only; the VM/source binding adapter remains work.
+
 **Automatic SIR metadata:** the [representation/verifier checkpoint](automatic-sir-metadata.md)
 adds sixteen original tests for scope homes, captures, rights, lifetime metadata
 and ownership graphs. Initial dev passes 4,585/4,587, zero failures and two known

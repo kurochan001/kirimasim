@@ -62,12 +62,26 @@ print/parse/printや文法の安定を確認したとは扱いません。
 独自のActivationSir 16テストで66種類の型/配列形状、不正な表25種、所有権の失敗8種、
 ref修飾とjoinの12組、待機、再入、named disable、readonly helper、引数のroot配置、
 1万スコープの非循環/循環グラフを調べます。不正な実行入力はslot/記憶域の確保前に拒否します。
-コンパイルした故障対照と全local CIは公開前に別途確認します。既存のスイート本体・期待値・
-SIRダンプ・PerfCount基準は維持します。
-初回dev検証は4,585/4,587成功、失敗0・既知2スキップで、変更ファイルのLLVM 22 clang-tidyも成功しました。
+`56a10e05`の[コンパイルした9故障](../measurements/2026-10-25/activation-sir-negative-controls.json)は
+すべて追加した実際の検証器テストで失敗し、元に戻したビルドも成功しました。判定ツール自身の失敗は数えません。
+[最終検証](../measurements/2026-10-25/activation-sir-final-validation.json)はlocal CI全21項目成功で、
+dev/ASan/UBSanが4,585/4,587、releaseが4,586/4,588成功、失敗0・既知2スキップです。
+既存のスイート期待値・SIRダンプ29件・PerfCount基準は維持しています。
+
+別の[独自の初期化3プローブ](../measurements/2026-10-25/automatic-entry-initialization-observations.json)は
+既存の通常フレーム/static slotを調べます。nativeはautomaticなスカラー/配列をブロックの3回の
+入場で初期化し、static配列は前回の書き込みを保持します。両参照ではautomaticも保持されました。
+既存の承認済み再入契約に対する差であり、参照出力を期待値に採用したり、新しい捕捉を実行した
+証拠にはしません。表現だけの今回の段階で固定87項目・母集団・sv-testsは再計測していません。
 
 次はVMの論理フレーム/refアクセスを型付きkernel bindingへ接続し、call/block所有権と
 fork環境を付けます。幅広/packed/配列、ファイル/走査、コンテナ、乱数seed、コピー戻しを
 すべて同じ経路へ通し、leaseを落とす前に待機を外します。戻ったcallの制御と保持した記憶域を
 分け、コピー戻しは一度だけ行います。その後frontが字句スコープ全体を昇格し、ソース行列を
 有効にします。実行の根拠が揃ってからVMの拒否を外します。P1全体は未完了です。
+
+forkの元はprocess rootのフレームではなく、同期関数や待つtaskを含む現在のSIR本体の
+`act_.varsId`から解決します。子やreportが残る制御フレームを`tryRelease`で回収するまで
+記憶域の実行所有権を保持してはいけません。scoped refは親の置き換え可能なbinding表ではなく、
+権限を含む実際のスコープtokenへの不変bindingを持ちます。fork環境全体の取得後に子を
+実行可能にし、乱数seedの進みもそれより前には変えません。

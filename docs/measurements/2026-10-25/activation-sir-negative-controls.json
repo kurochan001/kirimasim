@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "56a10e05a10b718b865bff0146450979abe9e824",
+  "baseline": {
+    "name": "unchanged baseline",
+    "test_exit": 0,
+    "failed_tests": [],
+    "skipped": [
+      "suite/cb/input_sample_1step",
+      "suite/nets/net_port_drivers_part"
+    ]
+  },
+  "controls": [
+    {
+      "name": "activation SIR: waiter helpers can write readonly captures",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.WaiterHelpersCannotWriteReadonlyCaptureViews"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: parameter copy-in precedes its storage",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.ScopedParametersAreAvailableInTheRootBeforeCopyIn"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: repeated physical field membership is accepted",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.MalformedScopeAndCaptureTablesAreRejectedByTheSharedVerifier"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: capture shapes are not checked",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.MalformedScopeAndCaptureTablesAreRejectedByTheSharedVerifier"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: fork drops unread enclosing lexical extents",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.LexicalOwnershipIsRequiredAtReadsLeavesForksAndMerges"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: different ownership stacks merge silently",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.LexicalOwnershipIsRequiredAtReadsLeavesForksAndMerges"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: writable views of readonly captures are accepted",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.NestedCapturesForwardOriginalBindingsAndReadonlyRights"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: normal ref bindings escape nonjoining forks",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.BorrowedRefCapturesRequireJoinAndStaticQualifiersSurviveForwarding"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation SIR: helpers read scopes before lexical entry",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationSir.WaiterHelpersRequireTheirLexicalScopeAtTheWaitSite"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    }
+  ],
+  "tool_exit": 0,
+  "restored_build_exit": 0,
+  "judging_self_checks_excluded": true,
+  "scope": "SIR representation/ownership verifier only; no source capture execution enabled"
+}
