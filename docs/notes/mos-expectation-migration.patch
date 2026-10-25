@@ -1,0 +1,25 @@
+--- a/tools/gen_unsupported_matrix.py
++++ b/tools/gen_unsupported_matrix.py
+@@ -46,5 +46,5 @@
+ # Acceptance, stdout and diagnostics are checked by the CLI runner.
+ ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
+-            "automatic_in_fork", "event_var_index"}
++            "automatic_in_fork", "event_var_index", "switch_mos"}
+ # The standard output of accepted inputs that print (unsupported_matrix/<name>.expected).
+ EXPECTED = {"automatic_in_fork": "5\n"}
+--- a/tests/cli/unsupported_matrix.accepted
++++ b/tests/cli/unsupported_matrix.accepted
+@@ -6,2 +6,3 @@
+ member_run_time_bit
+ nonblocking_delay_index
++switch_mos
+--- a/tests/cli/unsupported_matrix.stderr
++++ b/tests/cli/unsupported_matrix.stderr
+@@ -273,7 +273,4 @@
+ unsupported_matrix/switch_bidirectional.sv:4:8: error: unsupported: switch 'tran' (not implemented yet)
+ unsupported_matrix/switch_bidirectional.sv:9:8: error: unsupported: switch 'tran' (not implemented yet)
+-unsupported_matrix/switch_mos.sv:12:10: error: unsupported: switch 'nmos' (not implemented yet)
+-unsupported_matrix/switch_mos.sv:4:8: error: unsupported: switch 'nmos' (not implemented yet)
+-unsupported_matrix/switch_mos.sv:9:8: error: unsupported: switch 'nmos' (not implemented yet)
+ unsupported_matrix/system_function.sv:12:9: error: unsupported: system function $system (not implemented yet)
+ unsupported_matrix/system_function.sv:15:9: error: unsupported: system function $system (not implemented yet)

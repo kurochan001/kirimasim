@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-26",
+  "source": "`timescale 1ns/1ns\nmodule top;\nlogic data,control;wire a,q0,q1;\nnotif0 g(a,data,control);nmos m0(q0,a,1'b1);nmos m1(q1,a,1'b1);\nassign (weak1,weak0) q0=1'b0;assign (weak1,weak0) q1=1'b1;\ninitial begin data=1;control=1;#1;$display(\"%b %b %b\",a,q0,q1);\ncontrol=1'bx;#1;$display(\"%b %b %b\",a,q0,q1);\ndata=1'bx;control=0;#1;$display(\"%b %b %b\",a,q0,q1);end\nendmodule\n",
+  "expected": "z 0 1\nx 0 x\nx x x\n",
+  "kirimasim_stdout": "z 0 1\nx 0 x\nx x x\n",
+  "icarus13_stdout": "z 0 1\nx 0 x\nx 0 x\n",
+  "interpretation": "After a disabled-to-L transition, changing input data/control makes the full X interval without changing its X projection. The approved contract requires strength sensitivity. The observed reference q0 remains 0; implementation cause is not confirmed.",
+  "check_method": "Compile this original source with the recorded Icarus 13.0 pair and run it; compare sample 3, then vary the preceding disabled/L phases and fanout. No reference implementation was read."
+}

@@ -76,8 +76,9 @@ and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
 The [shared strength resolver](docs/notes/strength-range-foundation.md) now
 retains complete intervals before value projection, with exhaustive interval
-pair checks. Source-level MOS/switch execution and strength-aware formatting
-still require integration; this kernel API does not close those gaps.
+pair checks. [Directed MOS source execution](docs/notes/source-mos-execution.md)
+now imports ordinary drivers and captures controls separately. This remains partial:
+passive switching, registered-net force and full strength formatting still need work.
 
 Wide three-state gates now retain both L/H side-mask halves across word
 boundaries. All 73 new source cases match Icarus 13.0 and development builds.
@@ -233,11 +234,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,208 | 5,206, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,364 | 5,361, 2 skipped, 1 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 591, `tests/suite/` 4,407 (made by 139 generators under `tools/`), tools 151, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 591, `tests/suite/` 4,561 (made by 140 generators under `tools/`), tools 153, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

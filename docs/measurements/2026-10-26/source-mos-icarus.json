@@ -1,0 +1,1522 @@
+{
+  "date": "2026-10-26",
+  "scope": "Original source MOS matrix only; not whole Icarus feature parity",
+  "reference_versions": {
+    "iverilog": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+  },
+  "reference_binary_sha256": {
+    "iverilog": "a3c72702e0826bb7b12860c0d4d9dded384efa8e7b30bbb4d782c495becc365a",
+    "vvp": "8c3bb33305a6570222f6e721e8d0fb5b0fc86919a12c99a8d43733f1d9d73bc9"
+  },
+  "cases": [
+    {
+      "source": "tests/suite/nets/source_mos_array_cmos_1.sv",
+      "source_sha256": "62a4954ec03a2017fff83a13fd5c716cf5d775a05c98f09aeb9101fef09fc5f7",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_cmos_129.sv",
+      "source_sha256": "a0ea10e193252b9de853c8ccddaf8eac610420438b78952d058bc707181cbdc4",
+      "expected_sha256": "7e4ab2ebf10046aa1db2f37702830069eb960a940dbd1d9f391b54a686e04226",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_cmos_65.sv",
+      "source_sha256": "2f52c3adb990b8bad9791196a1477eedfb223d4ce2f1c3fade1b6a53ebdb543b",
+      "expected_sha256": "938017adf974c8b4d78f785d7240e2b95891854e2afeb7192b2ca72d9bf58a18",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_cmos_9.sv",
+      "source_sha256": "4c766057f1f98903be756cbd3c380721165dff5d8517886f0cf54326cde6962a",
+      "expected_sha256": "ac36adce236981d4a4b2dc9a9fda0a58b1ee100f392bd3e6524d43a732be1465",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_nmos_1.sv",
+      "source_sha256": "3babb6876ba324a45b0ea15b1b30f9d99e5daa2df5d689b5622a563c10fb6291",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_nmos_129.sv",
+      "source_sha256": "a4fe56675346504ce402c0eaa735bb0356d68767f9c4ef561aaa47961ac1f455",
+      "expected_sha256": "7e4ab2ebf10046aa1db2f37702830069eb960a940dbd1d9f391b54a686e04226",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_nmos_65.sv",
+      "source_sha256": "06fe6a33b4f5fc67329be675733edef346e47ec9a3a4aa2af9346d329938a370",
+      "expected_sha256": "938017adf974c8b4d78f785d7240e2b95891854e2afeb7192b2ca72d9bf58a18",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_nmos_9.sv",
+      "source_sha256": "1d748a2f64567a116b7fee7ff082681152374b20d7ce4cb06cdda14c2c87f7fa",
+      "expected_sha256": "ac36adce236981d4a4b2dc9a9fda0a58b1ee100f392bd3e6524d43a732be1465",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_pmos_1.sv",
+      "source_sha256": "744071d7985482a8e021d0d9a38dae58c366376adbe7f7350260ecbf5e668dbe",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_pmos_129.sv",
+      "source_sha256": "1b5ad899622ee29bbe4c3e272f70405a4d8befa7ee89e8a5b700c9c12539a4ab",
+      "expected_sha256": "7e4ab2ebf10046aa1db2f37702830069eb960a940dbd1d9f391b54a686e04226",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_pmos_65.sv",
+      "source_sha256": "6db6b01116384ccb05e0d9d0114943688c354129a7643cbc2fe05e2a5a9c4672",
+      "expected_sha256": "938017adf974c8b4d78f785d7240e2b95891854e2afeb7192b2ca72d9bf58a18",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_pmos_9.sv",
+      "source_sha256": "5d3a4e8753fb7b3f293e92a26a29b480b660095cb4e3c6e4483ceb47b3e0ddec",
+      "expected_sha256": "ac36adce236981d4a4b2dc9a9fda0a58b1ee100f392bd3e6524d43a732be1465",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rcmos_1.sv",
+      "source_sha256": "8d54b3810d579e81f0cf7496fd598486802e797dfb3d34647f5fa73d475cb0d2",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rcmos_129.sv",
+      "source_sha256": "6e8cae8454b12c20332de9b45ac426a458e33083eafb82d37747b6a06d1d2832",
+      "expected_sha256": "7e4ab2ebf10046aa1db2f37702830069eb960a940dbd1d9f391b54a686e04226",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rcmos_65.sv",
+      "source_sha256": "1588c43c0035f2d581ffec6d464f47efe0374e129b4d70e7eef510c909907f05",
+      "expected_sha256": "938017adf974c8b4d78f785d7240e2b95891854e2afeb7192b2ca72d9bf58a18",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rcmos_9.sv",
+      "source_sha256": "3d53ea36e02677ac5368bf7430bbbc57274fdfb8f5a0c949cdbf5ad7c64b70ff",
+      "expected_sha256": "ac36adce236981d4a4b2dc9a9fda0a58b1ee100f392bd3e6524d43a732be1465",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rnmos_1.sv",
+      "source_sha256": "1241bef906b7922637cd5192379af612f7b32cd4672d9d55ffda5bf11cfe4513",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rnmos_129.sv",
+      "source_sha256": "cdd89e46f00a939c49abc49b4236f797161b1d0f416b705021f776e3759fec78",
+      "expected_sha256": "7e4ab2ebf10046aa1db2f37702830069eb960a940dbd1d9f391b54a686e04226",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rnmos_65.sv",
+      "source_sha256": "10f2c9cfdbe7a6278022a9d9a428acba609731367f89ebfcc2aeb3b07813bb87",
+      "expected_sha256": "938017adf974c8b4d78f785d7240e2b95891854e2afeb7192b2ca72d9bf58a18",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rnmos_9.sv",
+      "source_sha256": "58174e00495c969d9a735954fa4733ab10cd00bfa093f9a3acf1e32cc63cb393",
+      "expected_sha256": "ac36adce236981d4a4b2dc9a9fda0a58b1ee100f392bd3e6524d43a732be1465",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rpmos_1.sv",
+      "source_sha256": "da720374626146436240ef5f5e753d15072ca451117e520cbf494a9a1b069ac8",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rpmos_129.sv",
+      "source_sha256": "ed6ad19c01baa299801f6e23a4de1d68b6f8b2fda2985a9cdf5cce40e46b590a",
+      "expected_sha256": "7e4ab2ebf10046aa1db2f37702830069eb960a940dbd1d9f391b54a686e04226",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rpmos_65.sv",
+      "source_sha256": "b0b0828eb5d298d870f2bef195a04fbbf7a52fae062ca0449d009cd82ed6692a",
+      "expected_sha256": "938017adf974c8b4d78f785d7240e2b95891854e2afeb7192b2ca72d9bf58a18",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_array_rpmos_9.sv",
+      "source_sha256": "8917201b47a8a6541cfc9be473dd65e2f0c36fe2205a2968adf0d1f5b8b2ab1a",
+      "expected_sha256": "ac36adce236981d4a4b2dc9a9fda0a58b1ee100f392bd3e6524d43a732be1465",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_pull_generate.sv",
+      "source_sha256": "602813897181900a825d4bd7e85e93294afdd8a937a698a975652901411e45c1",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_pull_interface.sv",
+      "source_sha256": "b8b87598e14f5fca460bc25b469f0aeb7b8b2e1538422bbdae01d2bf02e37ce3",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_pull_module.sv",
+      "source_sha256": "1a49cfdfdd663c006ec39c7b9faeba9d6b0ba234a37aec6d5bd4572ff7e249a0",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_strong_generate.sv",
+      "source_sha256": "1bf7b6ea7cd1770bf2bd23804d13c533b07ecfbb2049e8ad5bc23c530b3b5a7c",
+      "expected_sha256": "3e4646984d1d2579f7a90ec06a1915bd49b016403dbe8f32567261500beaccd7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_strong_interface.sv",
+      "source_sha256": "9b09ec16c07ceae2afe53fcb50da6585d5c43c8f91d482b8586534efb3213616",
+      "expected_sha256": "3e4646984d1d2579f7a90ec06a1915bd49b016403dbe8f32567261500beaccd7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_strong_module.sv",
+      "source_sha256": "4ed09fd1ecbc68b59e61513ceb2f374b732e14147af01a18548e9ac419c2f3ec",
+      "expected_sha256": "3e4646984d1d2579f7a90ec06a1915bd49b016403dbe8f32567261500beaccd7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_supply_generate.sv",
+      "source_sha256": "c5e61555e319446be92b4bc0c6e4d2cd356cec35a849a2e9cbe667ad54c05231",
+      "expected_sha256": "3e4646984d1d2579f7a90ec06a1915bd49b016403dbe8f32567261500beaccd7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_supply_interface.sv",
+      "source_sha256": "9486ea63874b1e91ab087df1312b545a464ed88f43f528459f0fc24b2ff544dd",
+      "expected_sha256": "3e4646984d1d2579f7a90ec06a1915bd49b016403dbe8f32567261500beaccd7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_supply_module.sv",
+      "source_sha256": "55de7aec09bfb517ac95fb43435440fc3323eebc546c8ede2292830ec311aed5",
+      "expected_sha256": "3e4646984d1d2579f7a90ec06a1915bd49b016403dbe8f32567261500beaccd7",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_weak_generate.sv",
+      "source_sha256": "466ef8c4d488ebe1098134a1558106cd527665a51ecd72e39007e64e06e90a9e",
+      "expected_sha256": "95ad5f1db60b3546e67e6b35fc4bef4f45cc3a3f65024cc31473bd89e018faba",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_weak_interface.sv",
+      "source_sha256": "949e3b44cbf9e03936a70b75bd83d10b4259ea8dfac87f264ec9840eaf5b53b7",
+      "expected_sha256": "95ad5f1db60b3546e67e6b35fc4bef4f45cc3a3f65024cc31473bd89e018faba",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_cmos_weak_module.sv",
+      "source_sha256": "a2fe6406f39c6e4697b515aa379423889fbc624ec6dc4298d6a742dc1b9f8ddf",
+      "expected_sha256": "95ad5f1db60b3546e67e6b35fc4bef4f45cc3a3f65024cc31473bd89e018faba",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_expression_cmos.sv",
+      "source_sha256": "ed869ee071ded1d378cb7b49d1374bb7dd0ac135028dbd562382b85022efaf89",
+      "expected_sha256": "588d8506ddb40aa432679eeac1fbf1a7159fbddff4d63500eddc0ed41b7d9b82",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_expression_nmos.sv",
+      "source_sha256": "1a6cb4ff9c5042628c07ca231d4744581cca107fd205b45692e5e165a8a1ded5",
+      "expected_sha256": "588d8506ddb40aa432679eeac1fbf1a7159fbddff4d63500eddc0ed41b7d9b82",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_expression_pmos.sv",
+      "source_sha256": "0e0617cc102cd17a5b9d4651a5a4137a5d8af869248c4dac7e62ea58dca7639f",
+      "expected_sha256": "588d8506ddb40aa432679eeac1fbf1a7159fbddff4d63500eddc0ed41b7d9b82",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_expression_rcmos.sv",
+      "source_sha256": "877ed5d19b465716548586f4effdf8e67d14ecb2524637eaa5fb0da7073355a6",
+      "expected_sha256": "eeb0112b8de0294d808434305f6a55e2acf297d05ec67a4fb6dfa011ac6c7155",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_expression_rnmos.sv",
+      "source_sha256": "b07ad554de740e807e4a5b5cf8902cab5d922b8a7323f20029b2afe492d7c45b",
+      "expected_sha256": "eeb0112b8de0294d808434305f6a55e2acf297d05ec67a4fb6dfa011ac6c7155",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_expression_rpmos.sv",
+      "source_sha256": "01865886af19cf9687b4679c61fbdee4ecbc7080c1a8c57aa6270d4278a1f856",
+      "expected_sha256": "eeb0112b8de0294d808434305f6a55e2acf297d05ec67a4fb6dfa011ac6c7155",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_implicit_supply0.sv",
+      "source_sha256": "ad6e420b2758b522fa48f129ece03546c2fa94e12ba0ac279d892fa2bc5b0b24",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_implicit_supply1.sv",
+      "source_sha256": "6985f75ab93235b02b30a9dc8777fc3587302f7696a6ffa7e070589e3853baf4",
+      "expected_sha256": "3f11ad6bbc7ecca0b2416b713dee77f1a635c00aaeaa946e14cde1c2bfae56d5",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_implicit_tri0.sv",
+      "source_sha256": "35cfc5d4ac3ad7ce6a51d2363eff69a6d9dfef70ae21af3cf018f68253b8e4bf",
+      "expected_sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_implicit_tri1.sv",
+      "source_sha256": "eef42d9e092d8a30af75a082bd79ebf50a0ec2fb3d54438a78d3f04212924ac2",
+      "expected_sha256": "3f11ad6bbc7ecca0b2416b713dee77f1a635c00aaeaa946e14cde1c2bfae56d5",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_inertial_capture.sv",
+      "source_sha256": "669d52fd6e7ba0e448667d0fa1b5904f3c589cbabc2d2939333e80f0315256d3",
+      "expected_sha256": "fbb110e2ba10ea0039e3bd8675544aaae1eb94b91fe92704f5eecde954b79029",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 1,
+        "expected": "z",
+        "reference": "x"
+      },
+      "difference_category": "approved_startup"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_pull_generate.sv",
+      "source_sha256": "c93055762f7e1142590cddb2f8a30dec869b338aee3c329e8f6a172de945e0d4",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_pull_interface.sv",
+      "source_sha256": "16a04e1986a5983c5cfede60962df4de1f8deb0abdd7335d3df0fcaf4768baf8",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_pull_module.sv",
+      "source_sha256": "e3faac390cb131d21d5b052ef1df003096e899fb3ecd105adab477bacb1d9a2a",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_strong_generate.sv",
+      "source_sha256": "7127ce757da8b77489802ad8fa0c5b721cd72072eacd4b43f08d03f6fcf0ef04",
+      "expected_sha256": "402a4a695a9ce7094077154f7ee16cabe0e253d6380d2f6f8c3b334af3e6b212",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_strong_interface.sv",
+      "source_sha256": "da3a11ccb8f808b3ba996e2046bedbd7067f0b7f8fe31e59033d5232fbc4c205",
+      "expected_sha256": "402a4a695a9ce7094077154f7ee16cabe0e253d6380d2f6f8c3b334af3e6b212",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_strong_module.sv",
+      "source_sha256": "a607a8d473203d52805e773c51548fc4a7cf66c48f1c8e36684f1458bc612594",
+      "expected_sha256": "402a4a695a9ce7094077154f7ee16cabe0e253d6380d2f6f8c3b334af3e6b212",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_supply_generate.sv",
+      "source_sha256": "07651b99a8059dc9d93843abe76d47fa1f23001834edad03e1c97fb3837f12dc",
+      "expected_sha256": "402a4a695a9ce7094077154f7ee16cabe0e253d6380d2f6f8c3b334af3e6b212",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_supply_interface.sv",
+      "source_sha256": "83a8765b89428d7aee109eccbe4aff89984f505a337fdba6f9e37d61fa6d7bc4",
+      "expected_sha256": "402a4a695a9ce7094077154f7ee16cabe0e253d6380d2f6f8c3b334af3e6b212",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_supply_module.sv",
+      "source_sha256": "004f8f771cd4def47a185fd848d834ae3f546a86e303a482107236cbd4c07150",
+      "expected_sha256": "402a4a695a9ce7094077154f7ee16cabe0e253d6380d2f6f8c3b334af3e6b212",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_weak_generate.sv",
+      "source_sha256": "d7ba042e83daf2d3055a52c5a9cb9209844007290bc8875eb42a23de4ebb8f3b",
+      "expected_sha256": "b5528ca4e2ab6558d0b62cd1cef708b03ddc2960d06843421504e9301e483007",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_weak_interface.sv",
+      "source_sha256": "40eefe6a9024b84a8d4f458e4e8961ddce616469a4dc624683e3a71232e75c1e",
+      "expected_sha256": "b5528ca4e2ab6558d0b62cd1cef708b03ddc2960d06843421504e9301e483007",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_nmos_weak_module.sv",
+      "source_sha256": "e346ab04de939dea17ccf5d5e6fe8d0e105e407a0813396846c0991d6596571c",
+      "expected_sha256": "b5528ca4e2ab6558d0b62cd1cef708b03ddc2960d06843421504e9301e483007",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_pull_generate.sv",
+      "source_sha256": "58de6259524428e016d9451e6f286ca79c5fc6ae243c47063dc8784af5225f24",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_pull_interface.sv",
+      "source_sha256": "3b1f6b3dd2b7d7b8e8b0b29dd63d53dcee4aa006c1c272c899dc5377809662c9",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_pull_module.sv",
+      "source_sha256": "ba1312277aba8bc3713ba47cc91c1d0f87517c14ef0024ece8f4d3043fd38dd6",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_strong_generate.sv",
+      "source_sha256": "d6558d58cc64eeb90a5a71b50e6e2d0f56202c9ef56929ae1573a9843ad5233b",
+      "expected_sha256": "617e09c9e1e5ab8ffda9739e4a7e2b45486cb9f87c5b63542d0a2bc75b52a295",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_strong_interface.sv",
+      "source_sha256": "f8980dd64a588480b58a9885adcf696320840041f243b55dbe7d3a0536aca5fe",
+      "expected_sha256": "617e09c9e1e5ab8ffda9739e4a7e2b45486cb9f87c5b63542d0a2bc75b52a295",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_strong_module.sv",
+      "source_sha256": "dc60905b93ca7109ffd2dd082ef7b66f4b1f363a725a08cc1031766564970a57",
+      "expected_sha256": "617e09c9e1e5ab8ffda9739e4a7e2b45486cb9f87c5b63542d0a2bc75b52a295",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_supply_generate.sv",
+      "source_sha256": "ad51f8a795f792c9c66548b6508c3655f6159e34d015961517f491eb1fd922f5",
+      "expected_sha256": "617e09c9e1e5ab8ffda9739e4a7e2b45486cb9f87c5b63542d0a2bc75b52a295",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_supply_interface.sv",
+      "source_sha256": "1150f68a0e71bd75dce2f332cbfab9c3ab1dc49c8edb95191e2b61afa9183e20",
+      "expected_sha256": "617e09c9e1e5ab8ffda9739e4a7e2b45486cb9f87c5b63542d0a2bc75b52a295",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_supply_module.sv",
+      "source_sha256": "1e40fb9f5e2c823d178c408447a0d933b2821f71d1320c0bd16b82b1076f1642",
+      "expected_sha256": "617e09c9e1e5ab8ffda9739e4a7e2b45486cb9f87c5b63542d0a2bc75b52a295",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_weak_generate.sv",
+      "source_sha256": "1b921d888b4d99a2d6658e690d7401b53e1c7f0aeb58294f9dea7e5568b6f4d0",
+      "expected_sha256": "b35cd7a30cbf8d7e72dfa86127fb7045832a997414e4e52758aa5dd09b028397",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_weak_interface.sv",
+      "source_sha256": "1cddae478bfa03a97af7137fca6e585ffeae49092718487ef7124eb4ab938f73",
+      "expected_sha256": "b35cd7a30cbf8d7e72dfa86127fb7045832a997414e4e52758aa5dd09b028397",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_pmos_weak_module.sv",
+      "source_sha256": "d2fb7d67c16db19c47049ce3fc707e670a1b800d939d39ef6f0c53291bd794f1",
+      "expected_sha256": "b35cd7a30cbf8d7e72dfa86127fb7045832a997414e4e52758aa5dd09b028397",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_pull_generate.sv",
+      "source_sha256": "b40d1e2cd9a546678ab69f5c46a7734a6d94ee2a07c38c250e41394d5a2b365d",
+      "expected_sha256": "95ad5f1db60b3546e67e6b35fc4bef4f45cc3a3f65024cc31473bd89e018faba",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_pull_interface.sv",
+      "source_sha256": "faf84939a4200f7833492beb3c470881f7acfce833bfc0902a855786ccdeaf2b",
+      "expected_sha256": "95ad5f1db60b3546e67e6b35fc4bef4f45cc3a3f65024cc31473bd89e018faba",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_pull_module.sv",
+      "source_sha256": "546fc9cd8e5fd37ff4a5ce3af68e3ddf85dd44696e2ea8b8a24f4d521551ac23",
+      "expected_sha256": "95ad5f1db60b3546e67e6b35fc4bef4f45cc3a3f65024cc31473bd89e018faba",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_strong_generate.sv",
+      "source_sha256": "a3c7e3d686be00164797acc4ba7a71e4a9110da8341a3eb583200389a67524b2",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_strong_interface.sv",
+      "source_sha256": "c808bb0b6c14e0290964315e9ae4b84d6a37239ff4130b39bde32276d6ba8569",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_strong_module.sv",
+      "source_sha256": "575d572501b0de23ad4671717efaa97f7b9eea1d321d2b7e5a59c04688ebd4a5",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_supply_generate.sv",
+      "source_sha256": "8b006b8c27a660c52a1f075e6a01ea9a06f194d85396c61a895f1d054df9033a",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_supply_interface.sv",
+      "source_sha256": "c3e681b6dfa63d972547f11b6c55a18765c4defed153421fe5da689e0fea8e4c",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_supply_module.sv",
+      "source_sha256": "0563b71d03a035f6504ec97bfbc5e0e1919544fd6635b9040e0cb0ee6a4888c5",
+      "expected_sha256": "89a90c34a184318cbcbb5e21d3426135da6e3780541f4ea01e304215a7049aee",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_weak_generate.sv",
+      "source_sha256": "185e471a84311706b4fe72e7f8c918d09466b50d8ebe26e30b888456c2210402",
+      "expected_sha256": "a12862c905718e768b31fdaaffba6db79e4df60b829667fef17a8165f454f877",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_weak_interface.sv",
+      "source_sha256": "3672370e476f51177dc9138ee35a8dd12156560c99c5504275d1ff1904dd2d89",
+      "expected_sha256": "a12862c905718e768b31fdaaffba6db79e4df60b829667fef17a8165f454f877",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rcmos_weak_module.sv",
+      "source_sha256": "a761a379869ef97f4f66eb0a5bacad505559f69aaae6c9f73759be82eeecbbc0",
+      "expected_sha256": "a12862c905718e768b31fdaaffba6db79e4df60b829667fef17a8165f454f877",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_pull_generate.sv",
+      "source_sha256": "b0c55fd89df9e5078d779ce151c7a1a345689454a5a5e5ce6369c4d2ec64fe34",
+      "expected_sha256": "b5528ca4e2ab6558d0b62cd1cef708b03ddc2960d06843421504e9301e483007",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_pull_interface.sv",
+      "source_sha256": "549fa6a3fe00dc63e4e52c1774145663dc0b7991c04b13819b5a9cccdc3c8c20",
+      "expected_sha256": "b5528ca4e2ab6558d0b62cd1cef708b03ddc2960d06843421504e9301e483007",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_pull_module.sv",
+      "source_sha256": "220f343e6dc33695e784bd18f5ab00c4b710313e3e6d1101a7db55ea52eacd22",
+      "expected_sha256": "b5528ca4e2ab6558d0b62cd1cef708b03ddc2960d06843421504e9301e483007",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_strong_generate.sv",
+      "source_sha256": "09be451f35d439fcaa054777288362af811b357d1311f23bc90d0af483a51007",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_strong_interface.sv",
+      "source_sha256": "ad234a7aa587a2f160a4cac229ad6d98a4a24763a38bedf6d00544fc98ff2894",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_strong_module.sv",
+      "source_sha256": "bbe21eea3527d7a6f4cdb9dae170cd12af0d7f8d1c808c45b58f4031a558a2bd",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_supply_generate.sv",
+      "source_sha256": "2ba23ca7b30321d8fcb6a4cb46e533e334e361471c33c56187a8ddb69861cc75",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_supply_interface.sv",
+      "source_sha256": "3625ee14d361dbc9e205dbefb3b802948bccc77c0c7675c8cf56fae429c5d54d",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_supply_module.sv",
+      "source_sha256": "fce23e954ed0b2f972e08b06302793eedaf8e43041f99476ec69f9414d02f4ba",
+      "expected_sha256": "0a2dfbccbd81cd68bc7c9a2eaa987f86483847e9e58ae98ce37486a85992f895",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_weak_generate.sv",
+      "source_sha256": "fef36895100b1def9c11365326ad69f0c8df3e265a6af0f22b95b2ac0d4827c3",
+      "expected_sha256": "80f8d0b03cdc8e79dd28ebd3396091c5759637877d27090bfa1caeefadfb667e",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_weak_interface.sv",
+      "source_sha256": "7c003f557546301ff5ad28ed7ce166328fdae01028e5a9d500c5274a9b9bee86",
+      "expected_sha256": "80f8d0b03cdc8e79dd28ebd3396091c5759637877d27090bfa1caeefadfb667e",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rnmos_weak_module.sv",
+      "source_sha256": "8c22fb6a194e04f688fdcdc598e09155ef6b38e28486f230bdaf84eedb56b797",
+      "expected_sha256": "80f8d0b03cdc8e79dd28ebd3396091c5759637877d27090bfa1caeefadfb667e",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_pull_generate.sv",
+      "source_sha256": "1f06670f2f198efd5dea0238f077e39a0c8b59e11161b80287a74faf99ce02e9",
+      "expected_sha256": "b35cd7a30cbf8d7e72dfa86127fb7045832a997414e4e52758aa5dd09b028397",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_pull_interface.sv",
+      "source_sha256": "0c933b1841c6b015a2e6e49ac6f80a4412382e0079209b2c0352ebceba8375d7",
+      "expected_sha256": "b35cd7a30cbf8d7e72dfa86127fb7045832a997414e4e52758aa5dd09b028397",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_pull_module.sv",
+      "source_sha256": "dcd9c9acf4e57648d65bcc0d9336e628e3c5372ee53448e5c0e74043b2371cb5",
+      "expected_sha256": "b35cd7a30cbf8d7e72dfa86127fb7045832a997414e4e52758aa5dd09b028397",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_strong_generate.sv",
+      "source_sha256": "3c1a39991a9074916db1e5ed4ac28a731d2dc7de5ffd745944bc19f1c08e4e74",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_strong_interface.sv",
+      "source_sha256": "3f47a039ad0f698de78c758033000baadee159b5244f026239dd6f4e248c0360",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_strong_module.sv",
+      "source_sha256": "b8459d8ba19f0b6df6ded9c5cc163290da6f402547c872805ca4a1ef03b575bf",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_supply_generate.sv",
+      "source_sha256": "510596fcd1c3aabbbb880dbe64376bdd8890ed9b8fe43b30fc2d57e72cb27e69",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_supply_interface.sv",
+      "source_sha256": "3eec6fcb0f73754a1fff75950f36b05910712522d1e9de057e00fe4f69251183",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_supply_module.sv",
+      "source_sha256": "bf124070027c0557c18a078e786551ef1dc776a0b632222fb64fc8085a049253",
+      "expected_sha256": "7f79230e26557b9af62f1e832cfd0a193fe97578281de5de0ef5f4ae2ace24c9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_weak_generate.sv",
+      "source_sha256": "02cb13e5eca2d6706ea8fa29eb062658abbc03e5b597c81bf9a3dccb221050b8",
+      "expected_sha256": "5b69e116f5ea35bf480c48c33f498a291581e331dc497afe57a05bc6fe7be69f",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_weak_interface.sv",
+      "source_sha256": "abc58423b9ae7267337f0e93a64c03e47e79d565b7d51bc6f15d2a46cfa34053",
+      "expected_sha256": "5b69e116f5ea35bf480c48c33f498a291581e331dc497afe57a05bc6fe7be69f",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_rpmos_weak_module.sv",
+      "source_sha256": "b2eef742f266a96caa9a9c51b64c402ed3a9bf2265998235ecfea78dfb24ac9d",
+      "expected_sha256": "5b69e116f5ea35bf480c48c33f498a291581e331dc497afe57a05bc6fe7be69f",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_cmos_129_down.sv",
+      "source_sha256": "6c134027bd3fc10d899ab8dc168d3a00747c5f1919c879562d50bffd89e479a6",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_cmos_129_rank2.sv",
+      "source_sha256": "54f705a9e66206c793e91429fe0a437f861a9c104bfb296b88805c2069718aef",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_cmos_1_down.sv",
+      "source_sha256": "fb5c307362e8dead50ecd718602070d067024ba0c1de4806ad5a2e4faaf08afd",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_cmos_1_rank2.sv",
+      "source_sha256": "83510d068fe97edd273aee3aca16b48b852c805086d764e8725555084b4bda1d",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_cmos_65_down.sv",
+      "source_sha256": "67964b700bc292855a8181fa0850543978395daa5750ad61bbda2afed3ce8153",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_cmos_65_rank2.sv",
+      "source_sha256": "b88ddda003a8ddf6f23eb62f5c8400d5df900b55079fc2e73ce35122e0a9bb03",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_nmos_129_down.sv",
+      "source_sha256": "0e2324e3a432d292eb715a82af4ead0c19fdb1baf286754637494e96794a0463",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_nmos_129_rank2.sv",
+      "source_sha256": "d3da233a42123e3eb60c35400896f47c71485e80ffa57c03dc72b7e39a2af3a7",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_nmos_1_down.sv",
+      "source_sha256": "0db2f09bf1e07bca9b211b69de2c6de011ba0361f43c3a8f0fe8ad654fa05fba",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_nmos_1_rank2.sv",
+      "source_sha256": "44cb520763bdcbb3c12903e43ab6b617147b3b1b434b91462b91e5cc0b7ab6fc",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_nmos_65_down.sv",
+      "source_sha256": "8198f105bea7c5d3467a862525815d935e269327f3a6f35c14e1535bbd107171",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_nmos_65_rank2.sv",
+      "source_sha256": "d02d04dd28df2bd73db3a99fe204bc562d6927c5210f7496d386b0b61970645c",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_pmos_129_down.sv",
+      "source_sha256": "056da78b8150af92b2c8d163c3d1916f702b2f5853d6d857a4f90862979f3f9e",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_pmos_129_rank2.sv",
+      "source_sha256": "e5f83108516c908007dd8aaf45263748d664da7a59a6bec80d5cd1b973b540cc",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_pmos_1_down.sv",
+      "source_sha256": "53e11f4f2bf2d7fbbdb7415d3f901c4b6f62e861aa7eea4edf1266b21406c00a",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_pmos_1_rank2.sv",
+      "source_sha256": "a91810347b1df0af0a8e39db261df29061029b97d85de7349be40f271b49d0ef",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_pmos_65_down.sv",
+      "source_sha256": "a32c04f60c782efc4a5e6ee3548577d93471554c592629bef6ead666753ff3ed",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_pmos_65_rank2.sv",
+      "source_sha256": "31ca6d44a38b5743e1504b1090cb65f43ae532d9a2bd80023f2bcbcca7b1844f",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rcmos_129_down.sv",
+      "source_sha256": "9734125685bb6b29aa9605d69b495b41152ffff9ee01522a344684ecec086cc1",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rcmos_129_rank2.sv",
+      "source_sha256": "774e6ce93df3ef4586d59bc6d8283f4807bae6a6803780d6c29d7f082faad3e6",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rcmos_1_down.sv",
+      "source_sha256": "02d7fd6387049f9eab4f183411f91ac7072fe6b5e02f8578b43a7dab8db56794",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rcmos_1_rank2.sv",
+      "source_sha256": "5c296d3e75c3a96ad1b5686c1e6c1082b525a09b11ffdc9ed1d77d0535137f69",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rcmos_65_down.sv",
+      "source_sha256": "d1023442fcfa596ddb6e05e5bb7f4346389b97ce60727de7ec33379f391e3cef",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rcmos_65_rank2.sv",
+      "source_sha256": "d9f1f5141ea796e01a3fb9364226ec7fb91b1b70800ce1b2fc9ebe9b6eedfc8a",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rnmos_129_down.sv",
+      "source_sha256": "d04e9371b5b3759f38d8da2ab04ee49ac38c8b0e3e1a6ab0895832a4b8466bce",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rnmos_129_rank2.sv",
+      "source_sha256": "661fbc7cdeba5c9a03d97ccc048befbc0e3551a15ae17c0e93220d30aa059566",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rnmos_1_down.sv",
+      "source_sha256": "5d4a027b39bbd93318c2e2df1d80697d29b76693f003fc9658200e9ee86d8b9e",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rnmos_1_rank2.sv",
+      "source_sha256": "e6b2cc691a13938d650c6ac6d9b9d031a64cab3e6cbdd66f0e71d8d0aba043af",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rnmos_65_down.sv",
+      "source_sha256": "88578d0017a2e5d81ebcb1cd3422f848085917e7a62a316302cb28d3aca961f1",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rnmos_65_rank2.sv",
+      "source_sha256": "88622010793ffd0b79a5f5976d7c01418e1fcd13bd836bd9a2bec0d082a40ac3",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rpmos_129_down.sv",
+      "source_sha256": "d699da911e2a7f8a14e08382ce8520fb77f999678b22518f6cc89bc6923a34f5",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rpmos_129_rank2.sv",
+      "source_sha256": "94a6916ca29bc1c3f9ca958ec8385c4333a20ca9b48dc821b595ab3eef602d8b",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rpmos_1_down.sv",
+      "source_sha256": "fb3be2dbee215730638fb6e138bc32a50906fc8fc93641cea35828888af76140",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rpmos_1_rank2.sv",
+      "source_sha256": "f5c797249db2e0ce82c8fdd578b5f77f52aa383aa62b65efa1a38a3b95b8ca49",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rpmos_65_down.sv",
+      "source_sha256": "04d68656f47aced8967f5f3b55aabad8fc55c91b815b6c4457cfc12b36453c20",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_select_rpmos_65_rank2.sv",
+      "source_sha256": "bd876e2adc92eaf1b428a33238bd51eba9c1664a5b1bc3ffa6ba9cec0b23853b",
+      "expected_sha256": "dea28ed653f3957ff40a84e7559009a70c2fa8fdff8f84883990a3de0239dc89",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 6,
+        "expected": "x",
+        "reference": "1"
+      },
+      "difference_category": "full_width_packed_position"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_bufif0_shared.sv",
+      "source_sha256": "fa8c0f5e52104a3566e47364d3116137c59a21f6f2e5408dfec3027b82a87922",
+      "expected_sha256": "6b7269db02852deb254295336fbf86e0297142a72d282a168d8f8829fc18572d",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_bufif0_single.sv",
+      "source_sha256": "4794ed30dedc6aa55628069afc2e25a0c067c8a60ee8f0df22f239aa13b040c4",
+      "expected_sha256": "6b7269db02852deb254295336fbf86e0297142a72d282a168d8f8829fc18572d",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_bufif1_shared.sv",
+      "source_sha256": "4d02d65141d384460ff49c82381e61200d46f4019d5a9a5bd5edf9cafeb42886",
+      "expected_sha256": "73cadb8eddb8f252120bd1a83ef88c36e8e99cca0aa379739071d1e9361e8213",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_bufif1_single.sv",
+      "source_sha256": "8268c87ea51c04b8ed1604b4baa36be3fc739303de91151898d7d23f24de9cd6",
+      "expected_sha256": "73cadb8eddb8f252120bd1a83ef88c36e8e99cca0aa379739071d1e9361e8213",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_notif0_shared.sv",
+      "source_sha256": "24f28c293082cd50481005fbab78a6d829ea868f48f77d9b684a30c648f4859b",
+      "expected_sha256": "0e6fb0bd73e3d7c0dc99d77dea1a2eadf611bdf36a4a801d65a5a26d1dcef0b9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 9,
+        "expected": "x x",
+        "reference": "0 x"
+      },
+      "difference_category": "notif0_interval_transition"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_notif0_single.sv",
+      "source_sha256": "0b07cdb11cdbf9d85e3ca2a5b028c1e2851f57f7e0ee4b6c9a20cf500d98d844",
+      "expected_sha256": "0e6fb0bd73e3d7c0dc99d77dea1a2eadf611bdf36a4a801d65a5a26d1dcef0b9",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 9,
+        "expected": "x x",
+        "reference": "0 x"
+      },
+      "difference_category": "notif0_interval_transition"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_notif1_shared.sv",
+      "source_sha256": "aaca68fff91cea0858c4000685f14ac84758a797fba9459dd8c85a3a80d5c16d",
+      "expected_sha256": "ed99e8c43c1b5698d1c0927c4f2feb0fb303c7a424c7c7b623449935a12912e3",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_notif1_single.sv",
+      "source_sha256": "53a6ae332f6b4c0dbdcddc23c90afaf0b08cd8fa932b729216671b92128718e1",
+      "expected_sha256": "ed99e8c43c1b5698d1c0927c4f2feb0fb303c7a424c7c7b623449935a12912e3",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_startup_resolved.sv",
+      "source_sha256": "0dedf38cc220cef58e9ebdfb2454557ee9382751c508e4e3be3f9f234d65dc08",
+      "expected_sha256": "60d0e9eb391dd7c0bf428e962b33321133cbc979e35ecb122a06c5bdacab5831",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 1,
+        "expected": "z 1",
+        "reference": "x 1"
+      },
+      "difference_category": "approved_startup"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_side_startup_single.sv",
+      "source_sha256": "5a8c5f0b17fbf3da0dbc24cbc45bd2c23d05d5227fb4447308d51770b76043a3",
+      "expected_sha256": "cdd88b4fe00b8b67236cfcf8679d5793094b376d977e305ceb4c227de1ad1579",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": false,
+      "first_difference": {
+        "line": 1,
+        "expected": "x x",
+        "reference": "x 1"
+      },
+      "difference_category": "approved_startup"
+    },
+    {
+      "source": "tests/suite/nets/source_mos_strength_control_capture.sv",
+      "source_sha256": "47401ff92fb8ae65a339b49d41ab21ae52fd7b7d37137214684ed7b27534f8de",
+      "expected_sha256": "be015682ada4cf3e7ca70b0fc51f84c45db98d0beadb8c245c1f770ad5d55a5b",
+      "compile_exit": 0,
+      "run_exit": 0,
+      "matches": true
+    }
+  ],
+  "summary": {
+    "total": 154,
+    "matched": 113,
+    "compile_failed": 0,
+    "difference_categories": {
+      "approved_startup": 3,
+      "full_width_packed_position": 36,
+      "notif0_interval_transition": 2
+    }
+  },
+  "limitations": [
+    "Icarus reports v13_0-dirty; binary hashes identify the executed reference, its source tree was not read.",
+    "These are newly authored tests against the approved contract, not exhaustive Icarus coverage or newly approved historical expectation changes.",
+    "No external simulator implementation or tests were read."
+  ],
+  "commands": {
+    "compile": [
+      "iverilog",
+      "-g2012",
+      "-s",
+      "top",
+      "-o",
+      "test.vvp",
+      "<original-source>"
+    ],
+    "run": [
+      "vvp",
+      "test.vvp"
+    ]
+  }
+}

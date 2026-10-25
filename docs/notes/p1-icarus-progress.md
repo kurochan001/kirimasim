@@ -13,6 +13,23 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Directed MOS sources (partial):** `e7e2ec59` connects [six source MOS kinds](source-mos-execution.md),
+owned ordinary contributions and separately captured controls/selectors to the
+shared strength bank. All 154 new source designs, six positioned boundaries and
+278 focused checks pass. Eleven compiled faults are caught; all mutated source
+bytes are restored. The Icarus 13.0 run compiles all 154 sources: 113 complete
+results match, while 36 full-width selector, three approved-startup and two
+notif0 transition differences remain recorded. The last pair has a reduced
+original reproducer; the reference implementation cause is not confirmed.
+Full local CI completes 17/21 checks successfully; each of the four preset test
+steps fails only `cli/options` (dev/ASan/UBSan 5,361/5,364, release 5,362/5,365;
+two known skips each). The historical nmos rejection remains unchanged pending
+the exact [expectation migration](mos-expectation-migration.md). Lint and policy
+checks pass. Restored focused production passes 281 checks. Ordinary-path
+timings/counters are recorded separately; new source MOS traffic is unmeasured.
+Passive solving, registered-net force, partial/retained port identity and
+full-interval formatting remain work. No whole-tool parity or P1 completion is claimed.
+
 **Declared-network SIR execution:** `cea83470` and `faadf4b7` connect
 [selected reads/shared waits and verified network SIR](strength-network-execution.md)
 to the real Context-owned origin bank. Static declarations, initial ranges,

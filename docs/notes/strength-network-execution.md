@@ -202,3 +202,11 @@ those paths. Source reference comparisons, Icarus-13 gaps, P1 population,
 sv-tests, Linux and minimum compilers were not refreshed. The historical 21
 passing-Icarus-13 probe gaps are not a complete feature inventory. This checkpoint
 does not establish a source-level gap reduction or complete P1/Icarus coverage.
+
+## Subsequent source checkpoint (2026-10-26)
+
+[Directed MOS source execution](source-mos-execution.md) now connects six
+kinds, owned ordinary-driver import and separate control capture. The scope
+and validation above describe the earlier SIR-only checkpoint. Passive
+solving, registered-net force, partial port identity and full formatting
+remain incomplete.

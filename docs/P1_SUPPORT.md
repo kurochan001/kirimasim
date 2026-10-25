@@ -11,14 +11,14 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-25, including fixed-array ports and element-wise net resolution, runtime array reduction/ordering/min/max, multidimensional integral
+This inventory describes tier 1 as of 2026-10-26, including fixed-array ports and element-wise net resolution, runtime array reduction/ordering/min/max, multidimensional integral
 binary input, fixed-aggregate bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
 and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
-API is documented separately as a kernel foundation; it does not enable
-MOS/switch execution. Check `kirimasim --help` for a build's options and
+API and [partial directed MOS source execution](notes/source-mos-execution.md)
+are documented separately; passive switching remains work. Check `kirimasim --help` for a build's options and
 `--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-26)
 separate the latest comparison from historical measurements.
 
@@ -55,7 +55,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
-| Primitives | Built-in logic gates and pulls; combinational and sequential UDPs | No MOS/bidirectional switches or UDP instances with unconnected ports |
+| Primitives | Built-in logic gates and pulls; six directed MOS kinds on eligible fixed terminals; combinational/sequential UDPs | MOS support is partial: registered-net force, partial ports and full strength formatting remain; no passive switches or UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
 | Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a scalar net connected through a port; constant array elements are supported |
 | Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
@@ -153,9 +153,13 @@ verified static nodes/origins, captured load, scalar drive/delay and separate
 strength sensitivity through the VM to those shared kernel APIs. Nineteen new
 tests include 13,465 hand-built SIR executions; sixteen compiled controls pass.
 Full local CI passes all 21 checks.
-Source MOS/switch execution still needs front lowering, ordinary-driver import,
-separate captured controls, passive solving, registered-net force/release, ports
-and formatting.
+[Directed MOS source execution](notes/source-mos-execution.md) now adds front
+lowering, owned ordinary-driver import and separately captured controls. Its
+154 new source designs and six boundaries pass, with eleven compiled faults
+caught. Icarus 13.0 matches 113 complete designs; 41 observed index/startup/transition
+differences are recorded. The historical CLI rejection migration awaits separate
+approval. Passive solving, registered-net force/release, partial/retained port
+identity and full strength formatting remain incomplete.
 
 ### Fork-local declarations
 
