@@ -252,7 +252,9 @@ event is true only in its own time slot. Ordinary functions can read this state,
 and explicit guards retain dependencies on function-local static events.
 Implicit named-event sensitivity through functions still receives a positioned
 unsupported diagnostic. [Twenty-seven new source cases and 20 kernel tests](notes/managed-event-registry.md)
-cover the correction and the managed-event foundation; automatic event source
+cover the correction and the managed-event foundation. The later
+[kernel runtime ownership checkpoint](notes/managed-event-runtime.md) adds typed
+wait/trigger/monitor pins, 23 tests and 16 caught compiled faults; automatic event source
 construction is not enabled by that foundation.
 
 ## Mixed named-event waits and per-item iff

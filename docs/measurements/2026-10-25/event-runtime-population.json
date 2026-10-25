@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-25",
+  "run_base_revision": "b66834254c657d784a621fa4028d157b9ee3afd7",
+  "run_worktree_uncommitted": true,
+  "configuration": "dev",
+  "platform": "macOS arm64",
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "160f3c471931879a480144c6c12c66a8cb73096dddfb5063d528fedd400f7a2c",
+    "src/kernel/managed_event_runtime.cpp": "8d05ec534d482c9ae5398a09b969906e39568437c4aaec8a9d41430f486ccf4f",
+    "src/kernel/sim.cpp": "8cc2783e12cb1d9d9c6abed8296be8b77ecd86d963e555fb74e7dcd983cbdb6c",
+    "src/kernel/include/kirimasim/kernel/sim.h": "410b6af483e4f85d48a081bcffd1c0ec6d783ae61084391ba136255df6c2173b",
+    "src/kernel/include/kirimasim/kernel/managed_event.h": "235c30c969dbc04201dd6cba1ae38bcdadf3e61ef962540153df5e56b21af4f3",
+    "tests/unit/CMakeLists.txt": "a2cc5e9521007a5dcd70af2125bd9e37299e514feb5425143481821d9baaa1e5",
+    "tests/unit/managed_event_runtime_test.cpp": "489f3f49ea18fe6d8f27ae46f5bd84f5b83723e0e5e62a46700b8adece911259",
+    "tools/mutants.py": "3c2648cbda6944f4bb794cad4c9a37e6361e4848a196afd86c52d2370496abdc"
+  },
+  "tests_revision": "179c55de9c83846be0b7f1c1c79c456fab1d39bd",
+  "total": 1466,
+  "passed": 1451,
+  "failed": 0,
+  "unsupported": 15,
+  "exit": 0,
+  "runner_output": "# P1 gate population (TEST_SUITE.md): kirimasim-tests 179c55de9c83, 1466 of 1853 simulation tests chosen at c983cf799b4d; made by tools/p1_population.py select\npassed 1451, failed 0, unsupported 15 (counted as failed): 99.0% (gate 90%, 1320 of 1466)\n",
+  "manifest_sha256": "e4b43492414247ee535f9969c62f94f5643c82cc2a7b2f3ccf48ec54332614a5",
+  "tests_tree": "git archive of exact selected revision",
+  "linux_remeasured": false,
+  "implementation_revision": "77cb29bd9e7fefa8fc29517f5342982eacb5da32"
+}

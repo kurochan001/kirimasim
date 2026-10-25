@@ -3,6 +3,11 @@
 [English](managed-event-registry.md) が正。状態：カーネル段階を `13006ba7` にコミット、2026-10-25。
 automatic event のソース実行は未有効。
 
+**後続の区切り：** [実行時の操作所有](managed-event-runtime.ja.md)で型付きのカーネル待機・
+trigger・monitorのpinを実装しました（23テスト、コンパイルした16故障を検出）。
+SIR/VM/frontへの接続は残作業です。旧3期待値の移行は別途承認され`11096dc3`にコミット済みです。
+以下は以前の`13006ba7`実行の記録として保持します。
+
 ## 根拠と実装境界
 
 根拠は [承認済み automatic 捕捉契約](automatic-capture-proposal.ja.md) の5・6・8節、

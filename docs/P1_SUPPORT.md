@@ -162,13 +162,15 @@ and value boundary without a mirrored scoped value.
 Front now [lowers shared lexical capture from source](notes/automatic-front-capture.md):
 186 new designs and a full-field/extent checker pass, and five compiled faults are
 detected. The finite automatic-fork probe now passes, leaving 21 historical
-Icarus-13-passing gaps. Three historical rejection tests await separate expectation
-approval; all-green local CI is not claimed.
+Icarus-13-passing gaps. The three historical rejection checks were migrated
+separately in approved commit `11096dc3` without changing their source fixtures.
 The [managed-event kernel checkpoint](notes/managed-event-registry.md) now supplies
 generational identity, runtime pins and retained-scope event roots, with 20 tests
 and a full 32-bit generation audit. Automatic source construction, ordinary/SSA
-root publication and automatic pending-operation pin ownership are not connected;
-owned ref/object providers also remain work.
+root publication are not connected. The [runtime ownership checkpoint](notes/managed-event-runtime.md)
+now supplies typed kernel wait/trigger/monitor operations and automatic pending-operation
+pins, with 23 new tests and 16 caught compiled faults. Their SIR/VM/front connection
+and owned ref/object providers remain work.
 
 ### Fixed-array ports and net arrays
 

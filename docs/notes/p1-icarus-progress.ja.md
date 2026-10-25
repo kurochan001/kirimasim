@@ -12,7 +12,19 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
-**管理eventの区切り：** [カーネル管理表と時刻スロットの修正](managed-event-registry.ja.md)で
+**実行時event所有：** [型付きカーネル操作](managed-event-runtime.ja.md)で、待機・NBA/Re-NBA配送・
+monitor・遅延callbackの間、具体的対象を保持します。新規23テストが通り、allocator初期化修正前の
+コンパイルした16故障を検出し、実行時のhashと当初の検査漏れも記録しました。
+別途、コンパイルしたプロセス再利用の故障で修正後の世代保持を確認しました。
+SIR/VM/frontからのautomatic event有効化は残作業です。固定87プローブ・母集団・sv-testsは
+変わらず、過去のIcarus 13合格との差分は21件です。旧期待値の移行は別途承認され、
+`11096dc3`にコミットされmainに入っています。P1は未完了です。
+
+[統合後の全CI](../measurements/2026-10-25/event-runtime-validation.json)は全21確認成功で、
+dev/ASan/UBSanは4,940/4,942、releaseは4,941/4,943、
+失敗0・各構成の既知スキップ2件です。READMEの件数は新しいdev JUnitと生成器から更新しました。
+
+**以前の管理eventの区切り：** [カーネル管理表と時刻スロットの修正](managed-event-registry.ja.md)で
 20テスト、独自27ソース、関数の暗黙感度12境界を追加し、対象49 CTestが通りました。
 コンパイルした16故障を検出し、本番幅の全4,294,967,295世代を単独検査しました。
 退役を無効にした故障も全範囲を実行して退役数の不変条件で失敗しました。
@@ -20,16 +32,16 @@
 固定87プローブ、母集団、sv-testsは変わらず、過去のIcarus 13合格・native未成功は21件です。
 [全CI](../measurements/2026-10-25/managed-event-validation.json)は17確認が通り、テスト4段階は
 同じ旧期待値3件だけで失敗しました。dev/ASan/UBSanは4,914/4,919、releaseは4,915/4,920で
-各2件スキップです。具体的な再開手順も記録しました。旧期待値移行は人の承認待ちで、
-P1は未完了です。
+各2件スキップです。具体的な再開手順も記録しました。この実行時は旧期待値移行が承認待ちで、
+その後の承認と移行は上に記載しています。
 
 **ソースのautomatic捕捉：** 作業中の実装で[frontが字句環境全体を生成](automatic-front-capture.ja.md)します。
 独自186設計と生成器・メタデータ確認が通り、読まない型付き変数と空のスコープも保持し、
 コンパイルした5故障を検出しました。新しい87プローブ比較ではautomatic_fork_captureだけが
 合格へ変わり、過去のIcarus 13.0合格・native未成功は22件から21件です。
 母集団1,451/1,466と固定sv-tests 244/344は維持しました。旧未対応3テストは
-[別の期待値承認](automatic-capture-expectation-migration.ja.md)待ちで失敗を残しています。
-[全local CI](../measurements/2026-10-25/front-capture-validation.json)は17確認が通り、
+[別の期待値承認](automatic-capture-expectation-migration.ja.md)が必要で、その後`11096dc3`で記録しました。
+以前の[全local CI](../measurements/2026-10-25/front-capture-validation.json)は17確認が通り、
 テストの4段階がこの同じ3件だけで失敗しました。dev/ASan/UBSanは4,865/4,870、
 releaseは4,866/4,871で、各2件スキップです。全合格やautomatic event・P1の完成とは扱いません。
 

@@ -3,6 +3,12 @@
 [日本語](managed-event-registry.ja.md). Status: kernel checkpoint committed as `13006ba7`,
 2026-10-25; automatic-event source execution remains disabled.
 
+**Later checkpoint:** [runtime operation ownership](managed-event-runtime.md) now
+implements typed kernel wait/trigger/monitor pins (23 tests, 16 compiled controls).
+Its SIR/VM/front connection remains work. The historical three-oracle migration
+was separately approved and committed as `11096dc3`; the results below describe
+the earlier `13006ba7` run and are retained as history.
+
 ## Grounds and implementation boundary
 
 The basis is sections 5/6/8 of the [approved automatic-capture contract](automatic-capture-proposal.md),

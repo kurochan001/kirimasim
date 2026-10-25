@@ -241,7 +241,9 @@ endmodule
 通常の関数でこの状態を読め、明示的なguardは関数内static eventへの依存も保持します。
 関数経由の暗黙の名前付きevent感度は、引き続き位置付き未対応診断になります。
 [新規27ソースとカーネル20テスト](notes/managed-event-registry.ja.md)で修正と管理eventの
-土台を検査しました。この土台だけでautomatic eventのソース生成を有効にはしません。
+土台を検査しました。後続の[カーネル実行時所有](notes/managed-event-runtime.ja.md)で
+型付き待機・trigger・monitorのpinを追加し、23テストとコンパイルした16故障の検出を確認しました。
+automatic eventのソース生成は未有効です。
 
 ## 名前付きイベントの混合待ちと項ごとのiff
 

@@ -147,11 +147,13 @@ resource失敗を含み、コンパイルした14故障を検出しました。�
 frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を生成し、新規186設計と
 全フィールド・寿命の確認器が通り、実際にコンパイルした5故障も検出しました。
 有限のautomatic forkプローブは通り、過去のIcarus 13.0合格・native未成功差分は21件です。
-旧未対応3テストの期待値は別途承認待ちで、全local CI合格とは扱いません。
+旧未対応3テストは承認済みの別コミット`11096dc3`で移行し、ソース入力は変更していません。
 [管理eventのカーネル段階](notes/managed-event-registry.ja.md)で世代付き同一性・実行時pin・
 保持スコープのevent rootを提供し、20テストと32ビット全世代を検査しました。
-ソースからのautomatic生成、通常/SSAのroot公開、保留操作のpin自動所有は未接続で、
-所有ref/objectの提供も残作業です。
+ソースからのautomatic生成、通常/SSAのroot公開は未接続です。
+[実行時所有の段階](notes/managed-event-runtime.ja.md)で、型付きのカーネル待機・trigger・monitor操作と
+保留操作のpin自動所有を追加し、新規23テストと実際にコンパイルした16故障の検出を確認しました。
+これらのSIR/VM/frontへの接続と、所有ref/objectの提供は残作業です。
 
 ### 固定長配列ポートとネット配列
 

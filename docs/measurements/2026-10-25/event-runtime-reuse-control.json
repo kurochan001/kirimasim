@@ -1,0 +1,18 @@
+{
+  "name": "kernel: a reused place counts its waits from 0",
+  "source_sha256": "ab536c1ed63066b914f459c0928b63f9aa988c98d1b073df20bd099d59932f8d",
+  "implementation_revision": "6734f90fe88eda601dcdce49c2484f37408f6d26",
+  "initial_control_build_exit": 1,
+  "initial_control_caught": false,
+  "initial_control_note": "Zero assignment left generation unused under Werror; retain an explicit void use so this is a compiled behavioral control.",
+  "build_exit": 0,
+  "test_exit": 8,
+  "restored_build_exit": 0,
+  "restored_test_exit": 0,
+  "source_restored": true,
+  "date": "2026-10-25",
+  "configuration": "dev",
+  "platform": "macOS arm64",
+  "restored_tests_passed": 24,
+  "compile_failures_counted_as_detections": false
+}

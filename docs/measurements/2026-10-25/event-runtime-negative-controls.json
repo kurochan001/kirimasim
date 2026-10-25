@@ -1,0 +1,240 @@
+{
+  "date": "2026-10-25",
+  "run_base_revision": "b66834254c657d784a621fa4028d157b9ee3afd7",
+  "run_worktree_uncommitted": true,
+  "configuration": "dev",
+  "platform": "macOS arm64",
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "160f3c471931879a480144c6c12c66a8cb73096dddfb5063d528fedd400f7a2c",
+    "src/kernel/managed_event_runtime.cpp": "8d05ec534d482c9ae5398a09b969906e39568437c4aaec8a9d41430f486ccf4f",
+    "src/kernel/sim.cpp": "8cc2783e12cb1d9d9c6abed8296be8b77ecd86d963e555fb74e7dcd983cbdb6c",
+    "src/kernel/include/kirimasim/kernel/sim.h": "410b6af483e4f85d48a081bcffd1c0ec6d783ae61084391ba136255df6c2173b",
+    "src/kernel/include/kirimasim/kernel/managed_event.h": "235c30c969dbc04201dd6cba1ae38bcdadf3e61ef962540153df5e56b21af4f3",
+    "tests/unit/CMakeLists.txt": "a2cc5e9521007a5dcd70af2125bd9e37299e514feb5425143481821d9baaa1e5",
+    "tests/unit/managed_event_runtime_test.cpp": "489f3f49ea18fe6d8f27ae46f5bd84f5b83723e0e5e62a46700b8adece911259",
+    "tools/mutants.py": "3c2648cbda6944f4bb794cad4c9a37e6361e4848a196afd86c52d2370496abdc"
+  },
+  "controls": [
+    {
+      "name": "named mixed wait: uses a different wait generation",
+      "path": "src/kernel/sim.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.NamedWaitRetainsTheEvaluatedObjectRatherThanTheCurrentVariable",
+        "ManagedEventRuntime.InvalidNamedOrMonitorValuesDoNotReplaceAnExistingWait",
+        "ManagedEventRuntime.MixedSignalAndNamedItemsShareOneWaitAndKeepPerItemIff",
+        "ManagedEventRuntime.CancellationAndPendingRowReuseRejectOldQueuedSerials",
+        "ManagedEventRuntime.NamedGuardMayCancelItselfCollectAndGrowBothTables",
+        "ManagedEventRuntime.InitialCallbackReplacingAWaitKeepsTheNewBindingAndPins",
+        "ManagedEventRuntime.DeliveryKeepsItsPinWhenTheCallbackCancelsAndReusesTheRecord",
+        "ManagedEventRuntime.NamedWaitStagingFailuresPreserveTheOldBinding"
+      ]
+    },
+    {
+      "name": "kernel: value event loses a named-wait pin",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.NamedWaitRetainsTheEvaluatedObjectRatherThanTheCurrentVariable",
+        "ManagedEventRuntime.InvalidNamedOrMonitorValuesDoNotReplaceAnExistingWait",
+        "ManagedEventRuntime.MixedSignalAndNamedItemsShareOneWaitAndKeepPerItemIff",
+        "ManagedEventRuntime.InitialCallbackReplacingAWaitKeepsTheNewBindingAndPins",
+        "ManagedEventRuntime.ActualTerminationReleasesPendingWaitAndMonitorPins",
+        "ManagedEventRuntime.DeliveryKeepsItsPinWhenTheCallbackCancelsAndReusesTheRecord",
+        "ManagedEventRuntime.NamedWaitStagingFailuresPreserveTheOldBinding"
+      ]
+    },
+    {
+      "name": "kernel: value event loses a pending-trigger pin",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.DeferredTargetsSurviveIssuerReturnAndProcessRecordReuseInBothGroups",
+        "ManagedEventRuntime.CancellationAndPendingRowReuseRejectOldQueuedSerials",
+        "ManagedEventRuntime.ActualTerminationReleasesPendingWaitAndMonitorPins",
+        "ManagedEventRuntime.DeliveryKeepsItsPinWhenTheCallbackCancelsAndReusesTheRecord",
+        "ManagedEventRuntime.PendingAllocationFailureRollsBackAndFreedRowsNeedNoAllocation"
+      ]
+    },
+    {
+      "name": "kernel: value event loses a late-notification pin",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.LateTriggerOwnsItsObjectUntilTheNotificationHasFinished"
+      ]
+    },
+    {
+      "name": "kernel: value event drops its delivery pin before callbacks",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.DeliveryKeepsItsPinWhenTheCallbackCancelsAndReusesTheRecord"
+      ]
+    },
+    {
+      "name": "kernel: value event drops old callback dependencies",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.SelfCancellationKeepsOldDependenciesPinnedThroughTheCallback"
+      ]
+    },
+    {
+      "name": "kernel: value event never publishes captured pins",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.DynamicEventReadsReattachWithoutReevaluatingOnTheOldObject",
+        "ManagedEventRuntime.StaticValueDependenciesDeduplicateAndPinWithoutExecutedReads",
+        "ManagedEventRuntime.SelfCancellationKeepsOldDependenciesPinnedThroughTheCallback",
+        "ManagedEventRuntime.ActualTerminationReleasesPendingWaitAndMonitorPins"
+      ]
+    },
+    {
+      "name": "kernel: value event keeps an obsolete monitored object",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.DynamicEventReadsReattachWithoutReevaluatingOnTheOldObject"
+      ]
+    },
+    {
+      "name": "kernel: value event captures a nested noncapturing monitor",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.NestedNoncapturingMonitorDoesNotPolluteTheOuterReadSet"
+      ]
+    },
+    {
+      "name": "kernel: value event keeps pins after termination",
+      "path": "src/kernel/sim.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.ActualTerminationReleasesPendingWaitAndMonitorPins",
+        "ManagedEventRuntime.ProgramCompletionCancelsWaitsAndAlreadyOwnedPendingTriggers"
+      ]
+    },
+    {
+      "name": "kernel: value event resurrects the superseded wait",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.InitialCallbackReplacingAWaitKeepsTheNewBindingAndPins"
+      ]
+    },
+    {
+      "name": "kernel: value event leaks an overflowing pending target",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.OverflowDropsThePendingPinWhileNullSchedulesNothing"
+      ]
+    },
+    {
+      "name": "kernel: value event replaces the first capture failure",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.FirstCaptureAllocationFailureRemainsAResourceError"
+      ]
+    },
+    {
+      "name": "kernel: value event accepts an unversioned managed alias",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.UnifiedValuesRejectStaleAndUnversionedManagedAliases"
+      ]
+    },
+    {
+      "name": "kernel: value event loses the reactive NBA origin",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.DeferredTargetsSurviveIssuerReturnAndProcessRecordReuseInBothGroups"
+      ]
+    },
+    {
+      "name": "kernel: value event delivers an old canceled queue serial",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "build_exit": 0,
+      "test_exit": 8,
+      "caught": true,
+      "failed_tests": [
+        "ManagedEventRuntime.CancellationAndPendingRowReuseRejectOldQueuedSerials"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "source_restored": true,
+  "baseline_tests": 23,
+  "restored_tests_passed": 23,
+  "compile_failures_counted_as_detections": false,
+  "initial_serial_coverage_hole": {
+    "test_sha256": "1030e9f5d92a02532242a4c47c248915aafdcaa6d9ca5ac96a7968c5d63867e6",
+    "production_sha256": "9a0dd1527f79577838a1b287f6f253085edee8a430c73bfc8bb30d74ff4dc790",
+    "initial": [
+      {
+        "name": "kernel: value event delivers an old canceled queue serial",
+        "path": "src/kernel/managed_event_runtime.cpp",
+        "build_exit": 0,
+        "test_exit": 0,
+        "caught": false
+      }
+    ],
+    "after_timing_assertions_sha256": "31317e8e6d4e726bbe96b550f9959fab14782505107da590a402701c0c609d10",
+    "rerun": [
+      {
+        "name": "kernel: value event delivers an old canceled queue serial",
+        "path": "src/kernel/managed_event_runtime.cpp",
+        "build_exit": 0,
+        "test_exit": 8,
+        "caught": true
+      }
+    ]
+  },
+  "coverage_note": "The same production source first survived the old tests, then was caught by actual wake-time assertions (1 rather than 3). Later first-error/cleanup changes and two more tests precede the final 16-control run; no unchanged-source claim across those later changes.",
+  "observed_resource_error_regression": {
+    "before_test_exit": 8,
+    "expected": "ResourceLimit",
+    "observed": "Internal",
+    "fix": "Latch the first event-read capture error; later invalid reads cannot replace it."
+  },
+  "limits": [
+    "No full uint64 pending-ticket serial exhaustion run.",
+    "PMR budgets do not exhaust every ordinary scheduler-container allocation."
+  ],
+  "implementation_revision": "77cb29bd9e7fefa8fc29517f5342982eacb5da32"
+}

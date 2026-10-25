@@ -1,0 +1,353 @@
+{
+  "date": "2026-10-25",
+  "integration_revision": "9128bc0971cc4cb3aaf64706a0de5e2709847374",
+  "configuration": "all four presets, full local_ci.py",
+  "platform": "macOS arm64",
+  "worktree_uncommitted_documentation": true,
+  "production_sources_match_revision": true,
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "160f3c471931879a480144c6c12c66a8cb73096dddfb5063d528fedd400f7a2c",
+    "src/kernel/managed_event_runtime.cpp": "8d05ec534d482c9ae5398a09b969906e39568437c4aaec8a9d41430f486ccf4f",
+    "src/kernel/sim.cpp": "ab536c1ed63066b914f459c0928b63f9aa988c98d1b073df20bd099d59932f8d",
+    "src/kernel/include/kirimasim/kernel/sim.h": "2f3c5917b3271820c19fe9803ca72371a274500449eb42836d94de1ae8f471ad",
+    "src/kernel/include/kirimasim/kernel/managed_event.h": "235c30c969dbc04201dd6cba1ae38bcdadf3e61ef962540153df5e56b21af4f3",
+    "tests/unit/CMakeLists.txt": "a2cc5e9521007a5dcd70af2125bd9e37299e514feb5425143481821d9baaa1e5",
+    "tests/unit/managed_event_runtime_test.cpp": "489f3f49ea18fe6d8f27ae46f5bd84f5b83723e0e5e62a46700b8adece911259",
+    "tools/mutants.py": "5779158c34c72b7ab7d1e433cbc87a285ba5a772d6844bf07f8fc869aba12841"
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 1.0
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 1.1
+    },
+    {
+      "status": "ok",
+      "name": "dev: test",
+      "seconds": 63.2
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 9.7
+    },
+    {
+      "status": "ok",
+      "name": "release: test",
+      "seconds": 56.0
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 1.0
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 10.1
+    },
+    {
+      "status": "ok",
+      "name": "asan: test",
+      "seconds": 104.5
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 1.2
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 16.4
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: test",
+      "seconds": 90.4
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.2
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.2
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.6
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 97.1
+    }
+  ],
+  "exit": 0,
+  "all_checks_passed": true,
+  "presets": {
+    "dev": {
+      "total": 4942,
+      "passed": 4940,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4943,
+      "passed": 4941,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4942,
+      "passed": 4940,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4942,
+      "passed": 4940,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_kernel_tests": 23,
+  "existing_dump_sir_tests": 29,
+  "expectation_migration_commit": "11096dc30dbfb2e245c0c46d4c730d06751d3b02",
+  "existing_source_fixtures_changed": false,
+  "performance_budget_changes": false,
+  "standard_speed_comparison_remeasured": false,
+  "linux_remeasured": false,
+  "automatic_event_source_enabled": false,
+  "preintegration": {
+    "steps": [
+      {
+        "status": "ok",
+        "name": "dev: configure",
+        "seconds": 1.3
+      },
+      {
+        "status": "ok",
+        "name": "dev: build",
+        "seconds": 0.1
+      },
+      {
+        "status": "FAILED",
+        "name": "dev: test",
+        "seconds": 79.6
+      },
+      {
+        "status": "ok",
+        "name": "release: configure",
+        "seconds": 1.0
+      },
+      {
+        "status": "ok",
+        "name": "release: build",
+        "seconds": 10.5
+      },
+      {
+        "status": "FAILED",
+        "name": "release: test",
+        "seconds": 83.0
+      },
+      {
+        "status": "ok",
+        "name": "asan: configure",
+        "seconds": 1.6
+      },
+      {
+        "status": "ok",
+        "name": "asan: build",
+        "seconds": 20.2
+      },
+      {
+        "status": "FAILED",
+        "name": "asan: test",
+        "seconds": 157.0
+      },
+      {
+        "status": "ok",
+        "name": "ubsan: configure",
+        "seconds": 1.8
+      },
+      {
+        "status": "ok",
+        "name": "ubsan: build",
+        "seconds": 21.2
+      },
+      {
+        "status": "FAILED",
+        "name": "ubsan: test",
+        "seconds": 124.3
+      },
+      {
+        "status": "ok",
+        "name": "check_release_flags",
+        "seconds": 0.1
+      },
+      {
+        "status": "ok",
+        "name": "check_banned",
+        "seconds": 0.6
+      },
+      {
+        "status": "ok",
+        "name": "check_spdx",
+        "seconds": 0.1
+      },
+      {
+        "status": "ok",
+        "name": "check_suite_files",
+        "seconds": 0.1
+      },
+      {
+        "status": "ok",
+        "name": "check_global_state",
+        "seconds": 0.5
+      },
+      {
+        "status": "ok",
+        "name": "check_expected_change",
+        "seconds": 0.0
+      },
+      {
+        "status": "ok",
+        "name": "readme_counts",
+        "seconds": 0.3
+      },
+      {
+        "status": "ok",
+        "name": "clang-format",
+        "seconds": 0.7
+      },
+      {
+        "status": "FAILED",
+        "name": "clang-tidy",
+        "seconds": 112.0
+      }
+    ],
+    "presets": {
+      "dev": {
+        "total": 4942,
+        "passed": 4937,
+        "failed": 3,
+        "skipped": 2,
+        "failures": [
+          "cli/dynamic_containers",
+          "cli/options",
+          "tools/fork_declaration_boundary"
+        ],
+        "skips": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "release": {
+        "total": 4943,
+        "passed": 4938,
+        "failed": 3,
+        "skipped": 2,
+        "failures": [
+          "cli/dynamic_containers",
+          "cli/options",
+          "tools/fork_declaration_boundary"
+        ],
+        "skips": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "asan": {
+        "total": 4942,
+        "passed": 4937,
+        "failed": 3,
+        "skipped": 2,
+        "failures": [
+          "cli/dynamic_containers",
+          "cli/options",
+          "tools/fork_declaration_boundary"
+        ],
+        "skips": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "ubsan": {
+        "total": 4942,
+        "passed": 4937,
+        "failed": 3,
+        "skipped": 2,
+        "failures": [
+          "cli/dynamic_containers",
+          "cli/options",
+          "tools/fork_declaration_boundary"
+        ],
+        "skips": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      }
+    },
+    "exit": 1,
+    "reason": "Three historical capture expectations before integrating approved main migration; clang-tidy also identifies allocator-dependent Process move assignment. Both are addressed before the final integration validation."
+  },
+  "controls_and_datasets_revision": "77cb29bd9e7fefa8fc29517f5342982eacb5da32",
+  "control_scope_note": "Sixteen runtime controls and frozen datasets were executed before allocator initialization correction 8b652e3d. The separate relocated reuse control and full final CI cover the correction. Exact hashes in each record take precedence over abbreviated revision labels.",
+  "checkpoint_requested_by_user": true
+}

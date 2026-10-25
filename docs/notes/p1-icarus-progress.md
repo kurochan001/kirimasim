@@ -13,7 +13,22 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
-**Managed-event checkpoint:** the [kernel registry and event-slot corrections](managed-event-registry.md)
+**Runtime event ownership:** [typed kernel operations](managed-event-runtime.md)
+now retain concrete targets through waits, NBA/Re-NBA delivery, monitors and late
+callbacks. All 23 new tests pass; 16 compiled runtime faults were caught before
+the allocator initialization correction, with exact hashes and an initial
+coverage hole preserved. A separate compiled process-reuse fault verifies the
+correction. SIR/VM/front automatic-event enabling remains work. The frozen
+87 probes, population and sv-tests remain unchanged, leaving 21 historical
+Icarus-13-passing gaps. Historical expectation migration was separately approved
+and committed as `11096dc3`; it is included on main. P1 remains incomplete.
+
+The [integrated full CI](../measurements/2026-10-25/event-runtime-validation.json)
+passes all 21 checks: dev/ASan/UBSan 4,940/4,942, release
+4,941/4,943, zero failures and two known skips per preset.
+README counts come from the generator and the fresh dev JUnit report.
+
+**Earlier managed-event checkpoint:** the [kernel registry and event-slot corrections](managed-event-registry.md)
 add 20 tests, 27 original source designs and 12 implicit-function boundaries.
 All 49 focused CTest cases pass. Sixteen compiled faults are caught, and a
 separate production-width audit traverses all 4,294,967,295 generations; disabling
@@ -23,8 +38,8 @@ The frozen 87-probe comparison, population and sv-tests are unchanged, leaving
 21 historical Icarus-13-passing gaps. The [full CI](../measurements/2026-10-25/managed-event-validation.json) passes
 17 checks; four test steps fail only the same three old expectations.
 Dev/ASan/UBSan pass 4,914/4,919 and release 4,915/4,920, two skips each.
-The checkpoint note records exact resume steps. Historical expectation migration remains
-pending human approval; P1 is incomplete.
+The checkpoint note records exact resume steps. Expectation migration was pending
+at that run; the later approval and migration are recorded above.
 
 **Source automatic capture:** [front now emits complete lexical environments](automatic-front-capture.md)
 in the working implementation. All 186 original source designs plus generator/metadata
@@ -32,8 +47,8 @@ checks pass, including retained unread typed fields and empty scopes; five compi
 faults are caught. Only `automatic_fork_capture` changes in the fresh 87-probe
 comparison, to passed. Historical Icarus-13-passing gaps fall from 22 to 21;
 population stays 1,451/1,466 and pinned sv-tests 244/344. Three historical
-rejection checks need [separate expectation approval](automatic-capture-expectation-migration.md)
-and remain failing until then. The [full local CI](../measurements/2026-10-25/front-capture-validation.json)
+rejection checks needed [separate expectation approval](automatic-capture-expectation-migration.md),
+subsequently recorded in `11096dc3`. The earlier [full local CI](../measurements/2026-10-25/front-capture-validation.json)
 passes 17 checks and fails four test steps only on those three expectations:
 dev/ASan/UBSan 4,865/4,870, release 4,866/4,871, two skips each.
 All-green status and complete automatic event/P1 coverage are not claimed.
