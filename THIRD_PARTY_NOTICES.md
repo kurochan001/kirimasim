@@ -20,7 +20,7 @@ does not ask this of copies that are solely machine-executable object code.
 
 | Component | Version | License | Copyright | Source |
 | --- | --- | --- | --- | --- |
-| slang | main after v12.0 (`3b351a52b15755b896d3b0144ae0432547d86618`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
+| slang | main at the 12.1 release (`16bd3b920dccfbcde000195f9d38d9b00432c9c8`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
 | {fmt} (fetched by slang) | 12.2.0 (`1be298e1bd68957e4cd352e1f676f00e07dcfb57`) | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
 | mimalloc (fetched by slang) | v3.5.3 (`d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45`) | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
 | toml++ (fetched by slang) | v3.4.0 (`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`) | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
