@@ -1,8 +1,10 @@
 # 実行時indexのeventを拒否する旧入力の移行
 
-[English](indexed-event-expectation-migration.md)が正。Status: **proposal (not approved)**、
-2026-10-26。実装とは別に、以下の期待値移行だけを依頼します。
+[English](indexed-event-expectation-migration.md)が正。Status: **approved (2026-10-26)**。
+利用者は、実装と分けた以下の期待値移行だけを承認しました。
 管理eventの命令間safepoint修正案やautomaticの既定event生成を承認するものではありません。
+以下は元の提案と承認前の検証記録です。`src/`変更を含まない独立コミットで移行し、
+全CLIと全local CIを再実行します。
 
 ## 理由と証拠
 
@@ -22,7 +24,7 @@ AI_POLICYの期待値の規則は、変更の理由と規格の節を示し、�
 
 **検証更新（2026-10-26）：** [ソース行列](indexed-event-execution.ja.md)の全160設計と方針境界16件が通り、
 コンパイルした4故障も検出しました。全CIでは予告した旧CLI期待値の失敗を保持しており、
-以下の移行は未承認・未適用です。
+その検証時点では以下の移行は未承認・未適用でした。
 
 ## 依頼する変更の全件
 

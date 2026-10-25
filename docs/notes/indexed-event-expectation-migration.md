@@ -1,9 +1,11 @@
 # Migrate the historical runtime-indexed event rejection input
 
-[日本語](indexed-event-expectation-migration.ja.md). Status: **proposal (not approved)**,
-2026-10-26. This requests only the expectation migration below, separately from
+[日本語](indexed-event-expectation-migration.ja.md). Status: **approved (2026-10-26)**.
+The user approved the exact expectation migration below, separately from
 implementation. It does not approve the managed-event instruction-safepoint
-amendment or automatic default event construction.
+amendment or automatic default event construction. The original proposal and
+pre-approval validation record follow; apply the migration in its own commit
+without `src/` changes and then repeat the complete CLI and local CI checks.
 
 ## Reason and evidence
 
@@ -28,7 +30,7 @@ reason and the clause of the standard, and a human approves it."
 **Validation update (2026-10-26):** the [source matrix](indexed-event-execution.md)
 now passes all 160 designs and 16 policy boundaries. Four compiled faults are
 caught. Full CI preserves the expected historical CLI failure; the migration
-below is still unapproved and unapplied.
+below was still unapproved and unapplied at that validation checkpoint.
 
 ## Exact requested migration
 
