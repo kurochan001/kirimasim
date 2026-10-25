@@ -5,3 +5,4 @@ fork_declaration
 intra_delay_array
 member_run_time_bit
 nonblocking_delay_index
+switch_mos

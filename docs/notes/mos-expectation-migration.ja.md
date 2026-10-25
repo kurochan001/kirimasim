@@ -1,6 +1,6 @@
 # 既存 nmos 拒否入力の期待値移行
 
-[English](mos-expectation-migration.md) が正。Status: **proposal (not approved)**。
+[English](mos-expectation-migration.md) が正。状態：2026-10-26 に提案。**同日に承認され、下のとおり、それだけのコミットで適用した**。
 
 ## 理由と実測
 

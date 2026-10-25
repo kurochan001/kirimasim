@@ -1,6 +1,6 @@
 # Migrate the historical nmos rejection input
 
-[日本語](mos-expectation-migration.ja.md). Status: **proposal (not approved)**.
+[日本語](mos-expectation-migration.ja.md). Status: proposed 2026-10-26; **approved and applied on 2026-10-26**, as written below, in a commit of its own.
 
 ## Reason and measured evidence
 
