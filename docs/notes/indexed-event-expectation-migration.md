@@ -7,6 +7,20 @@ amendment or automatic default event construction. The original proposal and
 pre-approval validation record follow; apply the migration in its own commit
 without `src/` changes and then repeat the complete CLI and local CI checks.
 
+## Applied migration and validation
+
+Approval is recorded in `c53ccfe7`; `28f5c972` applies exactly the three-file
+migration below without `src/` changes. Generation version 19 and every source
+fixture are unchanged. The historical input's SHA-256 is unchanged; exactly one
+acceptance entry is added and six diagnostics removed, with all other diagnostics
+preserved. The standalone CLI check passes all 14 tests.
+
+The [post-migration validation](../measurements/2026-10-26/indexed-event-migration-validation.json)
+passes all 21 local CI checks. Dev/ASan/UBSan pass 5,139/5,141 and release
+5,140/5,142; every preset has zero failures and two known skips. Existing dumps,
+PerfCount and generated counts pass. This approval does not authorize the
+separate event instruction-safepoint amendment. P1 remains incomplete.
+
 ## Reason and evidence
 
 IEEE 1800-2023 7.4.5/9.4.2/15.5, the approved automatic-capture contract 5/7,

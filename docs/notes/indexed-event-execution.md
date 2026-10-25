@@ -1,7 +1,12 @@
 # Runtime fixed-array event selections from source
 
-[日本語](indexed-event-execution.ja.md). Status: implemented and checked, with historical CLI approval pending,
-2026-10-26. Historical CLI expectation migration is not approved.
+[日本語](indexed-event-execution.ja.md). Status: implemented and checked,
+2026-10-26. The historical CLI expectation migration was separately approved
+in `c53ccfe7` and applied in `28f5c972`. The
+[post-migration validation](../measurements/2026-10-26/indexed-event-migration-validation.json)
+passes all 21 local CI checks: dev/ASan/UBSan 5,139/5,141, release 5,140/5,142,
+zero failures and two known skips each. The earlier failed runs below remain
+historical evidence; the instruction-safepoint proposal remains unapproved.
 
 ## Contract and connection
 
@@ -84,10 +89,11 @@ made. The existing 87 native/Icarus-14 statuses and passing output bytes are
 unchanged, leaving 21 historical Icarus-13-passing gaps. No whole-language parity
 or P1 completion follows from these finite observations.
 
-The unchanged `event_var_index.sv` historical CLI input now succeeds silently
-and quiesces at time zero. Its six old unsupported diagnostics still make
-`cli/options` fail. The [exact migration proposal](indexed-event-expectation-migration.md)
-requests a separate one-entry/six-line change, preserving the historical source
-and every other diagnostic. It is **not approved or applied**. Do not suppress
-that failure or report all-green CI before the authorized migration is applied.
-This approval would not authorize automatic construction or new GC timing.
+The unchanged `event_var_index.sv` historical CLI input succeeds silently
+and quiesces at time zero. Its six old unsupported diagnostics caused the
+pre-migration `cli/options` failure above. The separately
+[approved migration](indexed-event-expectation-migration.md), applied in
+`28f5c972`, adds one acceptance entry and removes exactly those six diagnostics,
+preserving the historical source and every other diagnostic. The complete CLI
+suite and full local CI now pass. Automatic construction and new GC timing
+remain separate work; this approval does not authorize them.

@@ -75,6 +75,13 @@ oracles awaiting [separate approval](indexed-event-expectation-migration.md),
 not a new MOS failure. Existing expectations remain unchanged. README counts
 are generated from the fresh full-dev JUnit and retain that one failure.
 
+**Later expectation-only integration:** the
+[approved indexed-event migration](indexed-event-expectation-migration.md) in
+`28f5c972` resolves the unrelated CLI failure recorded above. The
+[post-migration local CI](../measurements/2026-10-26/indexed-event-migration-validation.json)
+passes all 21 checks, with the MOS implementation unchanged. The failed
+pre-migration run remains recorded evidence.
+
 ## Required integration
 
 The next steps remain the contract's typed `strength<w>` SIR operations,
@@ -91,5 +98,5 @@ No new source-level comparison or Icarus gap reduction is claimed at this pure
 operation checkpoint. The existing 21 historical Icarus-13-passing gaps remain
 required work, not a complete feature inventory. Population, sv-tests, Linux
 and speed comparisons were not refreshed. P1 and full Icarus coverage remain
-incomplete. The unrelated indexed-event CLI migration and managed-event
-safepoint proposals remain unapproved.
+incomplete. The indexed-event CLI migration is now approved and applied;
+the separate managed-event safepoint proposal remains unapproved.

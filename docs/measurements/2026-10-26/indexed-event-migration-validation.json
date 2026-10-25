@@ -1,0 +1,199 @@
+{
+  "date": "2026-10-26",
+  "platform": "macOS arm64",
+  "approval_revision": "c53ccfe7dfbdb890038b14c2607639d2b12b78bb",
+  "migration_revision": "28f5c972b285f8b270ae21bdf957802855c54ffe",
+  "implementation_changed": false,
+  "migration_files": [
+    "tests/cli/unsupported_matrix.accepted",
+    "tests/cli/unsupported_matrix.stderr",
+    "tools/gen_unsupported_matrix.py"
+  ],
+  "source_generation_version": 19,
+  "historical_source": {
+    "path": "tests/cli/unsupported_matrix/event_var_index.sv",
+    "sha256_before": "1362bf823fbd40c158a7282e449dfb4dabaecf64be9658711e9a663d3b03e52a",
+    "sha256_after": "1362bf823fbd40c158a7282e449dfb4dabaecf64be9658711e9a663d3b03e52a",
+    "bytes_unchanged": true
+  },
+  "acceptance_entries_added": [
+    "event_var_index"
+  ],
+  "diagnostics_removed": [
+    "unsupported_matrix/event_var_index.sv:10:7: error: unsupported: event selected by an index that is not constant (not implemented yet)",
+    "unsupported_matrix/event_var_index.sv:13:7: error: unsupported: event selected by an index that is not constant (not implemented yet)",
+    "unsupported_matrix/event_var_index.sv:17:7: error: unsupported: event selected by an index that is not constant (not implemented yet)",
+    "unsupported_matrix/event_var_index.sv:22:9: error: unsupported: event selected by an index that is not constant (not implemented yet)",
+    "unsupported_matrix/event_var_index.sv:27:9: error: unsupported: event selected by an index that is not constant (not implemented yet)",
+    "unsupported_matrix/event_var_index.sv:7:7: error: unsupported: event selected by an index that is not constant (not implemented yet)"
+  ],
+  "other_diagnostics_unchanged": true,
+  "all_other_source_fixtures_unchanged": true,
+  "standalone_cli_tests_passed": 14,
+  "expected_change_check": {
+    "base": "28f5c972b285f8b270ae21bdf957802855c54ffe^",
+    "head": "28f5c972b285f8b270ae21bdf957802855c54ffe",
+    "exit": 0
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 1.1
+    },
+    {
+      "status": "ok",
+      "name": "dev: test",
+      "seconds": 69.8
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 1.0
+    },
+    {
+      "status": "ok",
+      "name": "release: test",
+      "seconds": 57.2
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 1.4
+    },
+    {
+      "status": "ok",
+      "name": "asan: test",
+      "seconds": 90.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 1.6
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: test",
+      "seconds": 76.2
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.6
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 103.3
+    }
+  ],
+  "exit": 0,
+  "all_checks_passed": true,
+  "successful_checks": 21,
+  "failed_checks": 0,
+  "presets": {
+    "dev": {
+      "total": 5141,
+      "passed": 5139,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5142,
+      "passed": 5140,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5141,
+      "passed": 5139,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5141,
+      "passed": 5139,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "instruction_safepoint_approval": false,
+  "collection_timing_changed": false,
+  "automatic_event_source_enabled": false,
+  "performance_budgets_changed": false,
+  "reference_observations_refreshed": false,
+  "external_datasets_refreshed": false,
+  "speed_comparison_refreshed": false,
+  "p1_complete": false
+}

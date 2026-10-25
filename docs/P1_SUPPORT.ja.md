@@ -167,8 +167,9 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
 独自160設計と厳格な方針境界16件が通り、コンパイルした4故障も検出しました。
 load済みの名前付き/混合待機・遅延対象・明示的な`.triggered`を含み、妥当な定数対象は
-既存dumpを保ちます。旧CLI入力が未対応診断6行を期待するため、その別途移行は承認待ちで、
-CLI全体はまだ通っていません。
+既存dumpを保ちます。旧CLI入力は1byteも変えず、[別途承認した移行](notes/indexed-event-expectation-migration.ja.md)で
+受理項目1個を追加し、古い診断6行だけを除きました。全CLI14件とlocal CI全21確認が通ります。
+dev/ASan/UBSanは5,139/5,141、releaseは5,140/5,142で、各失敗0・既知スキップ2件です。
 
 ### 固定長配列ポートとネット配列
 

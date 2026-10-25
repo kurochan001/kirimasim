@@ -1,7 +1,10 @@
 # ソースから実行時indexで固定配列eventを選ぶ
 
-[English](indexed-event-execution.md)が正。状態：実装・検証済み、旧CLI期待値の承認待ち、2026-10-26。
-過去のCLI期待値の移行は未承認です。
+[English](indexed-event-execution.md)が正。状態：実装・検証済み、2026-10-26。
+旧CLI期待値の移行は別途`c53ccfe7`で承認を記録し、`28f5c972`で適用しました。
+[移行後の検証](../measurements/2026-10-26/indexed-event-migration-validation.json)はlocal CI全21確認成功です。
+dev/ASan/UBSanは5,139/5,141、releaseは5,140/5,142で、各失敗0・既知スキップ2件です。
+下の移行前の失敗は過去の証拠として保持します。命令間safepoint案は引き続き未承認です。
 
 ## 契約と接続
 
@@ -68,8 +71,8 @@ READMEの生成件数は、以前の全成功の区切りを残すのではな�
 有限の観測で言語全体の同等性やP1完了とは扱いません。
 
 変更していない旧CLI入力`event_var_index.sv`は、無出力で成功し、時刻0で静止します。
-未対応とする旧診断6件が残るため、`cli/options`は失敗します。
-[正確な移行案](indexed-event-expectation-migration.ja.md)では、受理項目1個と診断6行だけを
-別コミットで変え、元ソースと他の全診断を保つことを依頼しています。**未承認・未適用**です。
-失敗を除外したり、承認された移行を適用する前に全CI合格としたりしません。
-この承認にautomatic生成や新しいGC時点は含みません。
+未対応とする旧診断6件が、上に記録した移行前の`cli/options`失敗の原因でした。
+[別途承認された移行](indexed-event-expectation-migration.ja.md)を`28f5c972`で適用し、
+元ソースと他の全診断を保ったまま、受理項目1個を追加し、該当診断6行だけを除きました。
+全CLIと全local CIは現在通ります。automatic生成と新しいGC時点は別の残作業で、
+今回の承認には含みません。

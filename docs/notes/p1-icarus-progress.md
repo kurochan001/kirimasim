@@ -13,6 +13,15 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Approved indexed-event CLI migration:** `c53ccfe7` records the human decision;
+`28f5c972` applies [the exact expectation-only migration](indexed-event-expectation-migration.md).
+The complete historical source is unchanged, one acceptance entry is added and
+only its six obsolete diagnostics removed. All 14 CLI tests and all 21 local CI
+checks pass: dev/ASan/UBSan 5,139/5,141, release 5,140/5,142, zero failures and
+two known skips each. This supersedes the pre-migration failures at the following
+checkpoints, whose results remain recorded. The instruction-safepoint amendment
+remains unapproved; automatic source construction and full P1 coverage remain work.
+
 **Pure full-strength MOS operations:** `59522c50` adds
 [all six MOS kinds and identity/nonresistive/resistive transfer maps](mos-strength-operations.md)
 with independent point/control enumeration. Ten new tests cover all 120 intervals

@@ -188,8 +188,10 @@ Source [runtime fixed-array event selections](notes/indexed-event-execution.md)
 now pass 160 original designs and 16 strict policy boundaries, with four compiled
 faults caught. This covers loaded named/mixed waits, delayed targets and explicit
 `.triggered`; constant valid operands retain existing dumps. The historical CLI
-input still expects six unsupported diagnostics, so its separate migration awaits
-approval and the complete CLI suite is not yet green.
+input is preserved byte for byte. Its [separately approved migration](notes/indexed-event-expectation-migration.md)
+adds one acceptance entry and removes six obsolete diagnostics. All 14 CLI tests
+and all 21 local CI checks now pass; dev/ASan/UBSan pass 5,139/5,141 and release
+5,140/5,142, with zero failures and two known skips per preset.
 
 ### Fixed-array ports and net arrays
 

@@ -58,6 +58,11 @@ dev/ASan/UBSanは5,138/5,141、releaseは5,139/5,142成功、各既知スキッ�
 index付きeventの旧未対応期待値6件による失敗です。既存期待値は変えていません。
 README件数は新しいdev全件JUnitから生成し、この1失敗も残しました。
 
+**後続の期待値だけの接続：** `28f5c972`で[承認済みのevent移行](indexed-event-expectation-migration.ja.md)を
+適用し、上記の無関係なCLI失敗を解消しました。
+[移行後のlocal CI](../measurements/2026-10-26/indexed-event-migration-validation.json)は全21確認成功です。
+MOS実装は変更せず、移行前の失敗も過去の検証として保持します。
+
 ## 必要な接続
 
 契約の型付き`strength<w>` SIR、net/driverごとの区間記憶域、物理的な出力元の同一性、
@@ -70,4 +75,4 @@ force/releaseとport、書式、ソース実行全体が次の作業です。
 この純粋演算の段階ではソースの新規比較やIcarusとの差分縮小は主張しません。
 過去のIcarus 13合格との差分21件は必要な残作業で、機能全体の一覧ではありません。
 母集団・sv-tests・Linux・速度比較も更新していません。P1とIcarus全範囲の対応は未完了で、
-別件のindex付きeventのCLI移行と管理eventのsafepoint案も未承認のままです。
+旧event CLI移行は承認・適用済みで、別の管理event safepoint案は未承認です。
