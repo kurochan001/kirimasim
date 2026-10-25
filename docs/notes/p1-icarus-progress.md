@@ -13,6 +13,13 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Final automatic-wait validation:** `efb3f3d1` passes [all 21 checks](../measurements/2026-10-25/activation-wait-final-validation.json).
+Dev/ASan/UBSan pass 4,569/4,571 and release 4,570/4,572, zero failures and two
+known skips. Seven compiled controls are detected. Fresh native sv-tests is
+244/344; the exact pinned population is 1,451/1,466, zero failures and 15 unsupported.
+All 87 engine statuses and passing judged bytes remain unchanged against both
+references. Source capture and full P1 completion remain work.
+
 **Automatic-storage wait dependencies:** the [kernel connection](automatic-storage-observation.md)
 adds fourteen original tests for owned extents, dynamic/static ranges, edges,
 heap replacement, cancellation and resource failures. After the initial-evaluation

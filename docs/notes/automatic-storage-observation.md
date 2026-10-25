@@ -61,11 +61,25 @@ In-progress read captures now participate in change matching, with nested
 capture ownership restored on return; notices still drain after the entire wait
 is registered. Six [compiled controls](../measurements/2026-10-25/activation-wait-negative-controls.json)
 at `e59c3dd9` all fail actual new tests and restored sources build successfully.
+The [seventh compiled control](../measurements/2026-10-25/activation-wait-initial-control.json)
+at `e9bec784` drops the in-progress capture: the actual initial-evaluation test
+fails, and restoring the source makes all fourteen new tests pass.
 
-After the initial-evaluation fix, full dev validation passes 4,569/4,571:
-zero failures and the same two known skips. Existing expectations, all 29 SIR dumps and PerfCount budgets
-are unchanged. Compiled controls and four-configuration local CI are checked
-separately before publication.
+The [final validation](../measurements/2026-10-25/activation-wait-final-validation.json)
+at `efb3f3d1` passes all 21 local-CI checks. Dev/ASan/UBSan pass 4,569/4,571;
+release passes 4,570/4,572. There are zero failures and the same two known skips.
+The first full run exposed two clang-tidy errors in the new test helper; both
+are corrected. Its root assertions still check exactly one visited root, that
+root's token and successful collection, using a fixed nonallocating buffer.
+Existing expectations, all 29 SIR dumps and PerfCount budgets are unchanged.
+
+The same 87 [comparison probes](icarus-13-comparison.md#automatic-storage-wait-recheck-2026-10-25)
+have identical engine statuses and passing judged bytes. Native sv-tests retains
+all 344 statuses and 244 passes. Reference sv-tests engines and Linux were not
+rerun; these finite checks do not establish full parity.
+The [population recheck](../measurements/2026-10-25/activation-wait-population.json)
+uses an archive of the exact selected test revision `179c55de9c83`, not the
+caller's newer working tree: 1,451/1,466 pass, zero fail and 15 are unsupported.
 
 SIR scope homes/instructions, front lexical capture, VM binding dispatch/unwind,
 refs, managed automatic events and automatic display callbacks remain work.
@@ -74,3 +88,17 @@ claimed closed; the finite inventory still has 22 gaps against each reference.
 Full P1 coverage and the source acceptance matrix remain unproven. Simulation
 wall time was not remeasured for this kernel integration; PERFORMANCE's existing
 procedure remains authoritative.
+
+## Next integration boundary
+
+The VM currently exposes mutable frame-word pointers through `frameVar`,
+`frameElem` and direct `act_.vars` access. Scoped homes need one typed read/write
+path across scalar/wide/packed accesses, references, scanning, binary input,
+random-seed copyback and parameter copyback; mirroring fields into ordinary
+frame words would break shared identity and notifications. `Lowerer::lowerFork`
+currently starts a fresh child `Body`; it needs explicit lexical capture
+metadata, full-scope promotion and per-entry ownership before that rejection
+can be removed. SIR must verify homes, capture compatibility and ownership
+unwind, and root-call storage must precede parameter initialization. These
+are remaining implementation steps under the approved contract, not completed
+source support or a new amendment.

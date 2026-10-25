@@ -1,8 +1,20 @@
 # Icarus 13.0と開発版による比較
 
-[English](icarus-13-comparison.md)。2026-10-25、配列・入力の版`b9906081`のdevビルド、
+[English](icarus-13-comparison.md)。2026-10-25、automatic待機の版`e9bec784`のdevビルド、
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
+
+## automatic記憶域の待機の再確認（2026-10-25）
+
+[13.0](../measurements/2026-10-25/icarus13-activation-wait-probes.json)と
+[開発版](../measurements/2026-10-25/icarus14-activation-wait-probes.json)で87項目を再実行し、
+固定配列の時点から入力・期待値・全エンジンの判定・成功時の比較出力を維持しました。
+参照が通る未対応差分は各22件、参照側の結果不一致は4件/7件です。
+未完了なので`--require-parity`は両方で終了1となります。カーネルの依存APIを追加しても、
+ソースのautomatic捕捉はまだ有効にしていません。
+固定した[sv-testsのnativeのみの再実行](../measurements/2026-10-25/activation-wait-svtests.json)は
+344件すべての判定を維持し、244件成功です。sv-testsの参照エンジンは再実行していません。
+Linuxと全機能の同等性は未確認です。
 
 ## 固定配列ポートの追試（2026-10-25）
 

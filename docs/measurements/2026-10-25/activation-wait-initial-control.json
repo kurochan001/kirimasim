@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "e9bec7840d157c5ab486794da247362a9234dc20",
+  "name": "activation waits: initial evaluation writes lose their read dependencies",
+  "regression_failed_before_fix": true,
+  "regression_passed_after_fix": true,
+  "build_exit": 0,
+  "test_exit": 8,
+  "restored_build_exit": 0,
+  "restored_test_exit": 0
+}

@@ -1,0 +1,201 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "efb3f3d1dbd6876161c8bbcd01e03f061c585f50",
+  "platform": "macOS arm64",
+  "scope": "Shared-kernel automatic-storage wait observation; source capture remains disabled",
+  "code_worktree_clean": true,
+  "uncommitted_changes_during_ci": "Documentation and exported measurements only",
+  "source_sha256": {
+    "src/kernel/activation.cpp": "cf49b7d93c3659b1ac3751dbbbde043f49dee908f43a41b782c9a5e7e4268437",
+    "src/kernel/include/kirimasim/kernel/activation.h": "b338784c24ff9ede4702d33fe90402a7ee4eaed8dd94d3dfb1de0275ddf155bb",
+    "src/kernel/include/kirimasim/kernel/sim.h": "eb6b2dfa2c69156261379306f5eca41ec0a967ce1882bd4078fa63ddb2a2a8f6",
+    "src/kernel/sim.cpp": "4bcaf597b58ee5aaa300d34c4dd0c8767004eb0974b188821a0340f777bb1248",
+    "tests/unit/activation_scheduler_test.cpp": "22c31bf1f59428485ecb26554b8810c62ebe22d12c6148048350561b169cf191",
+    "tools/mutants.py": "4457f1abbc2588399414d666fc561dff8429f99b7b821aadb64f2c71f9addbde"
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 5.4
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 60.1
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 8.9
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 53.9
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 9.0
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 87.7
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.8
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 8.7
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 77.2
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.2,
+      "detail": "3 commit(s) not pushed"
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 81.1
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 4571,
+      "passed": 4569,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4572,
+      "passed": 4570,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4571,
+      "passed": 4569,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4571,
+      "passed": 4569,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_unit_tests": 14,
+  "compiled_negative_controls": 7,
+  "mutation_anchors": 554,
+  "control_records": [
+    "activation-wait-negative-controls.json",
+    "activation-wait-initial-control.json"
+  ],
+  "initial_ci_failure": "All runtime configurations passed; clang-tidy rejected new test index arithmetic and an allocating visitor call. Both corrected; final 21 checks pass.",
+  "unit_assertion_review": "RootBuffer.count == 1, RootBuffer.roots[0].bits == second.value.bits, and successful heap collection preserve the three exact assertions previously using a vector.",
+  "comparison_revision": "e9bec7840d15",
+  "comparison_records": [
+    "icarus13-activation-wait-probes.json",
+    "icarus14-activation-wait-probes.json"
+  ],
+  "passing_icarus_gaps": {
+    "13.0": 22,
+    "14.0-development": 22
+  },
+  "all_87_engine_statuses_and_passing_judged_bytes_unchanged": true,
+  "svtests_native_passed": 244,
+  "svtests_total": 344,
+  "svtests_all_native_statuses_unchanged": true,
+  "svtests_reference_engines_remeasured": false,
+  "population_passed": 1451,
+  "population_total": 1466,
+  "population_failed": 0,
+  "population_unsupported": 15,
+  "population_tests_revision": "179c55de9c83846be0b7f1c1c79c456fab1d39bd",
+  "population_input": "git archive of exact selected revision",
+  "existing_expectations_changed": false,
+  "sir_dump_expectations": "all 29 unchanged; pass",
+  "perfcount_expectations": "unchanged; pass in all four configurations",
+  "public_headers": "C++20 target passes",
+  "external_c_abi": "0.3 unchanged",
+  "new_dependencies": false,
+  "linux_remeasured": false,
+  "simulation_wall_time_remeasured": false,
+  "source_capture_enabled": false,
+  "p1_complete": false
+}

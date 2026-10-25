@@ -1,8 +1,21 @@
 # Icarus 13.0 and development-version comparison
 
 [日本語](icarus-13-comparison.ja.md). Rechecked 2026-10-25 at the
-array/input checkpoint `b9906081`, dev build on macOS/arm64. No installation was added and
+automatic-wait checkpoint `e9bec784`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
+
+## Automatic-storage wait recheck (2026-10-25)
+
+The [13.0](../measurements/2026-10-25/icarus13-activation-wait-probes.json)
+and [development](../measurements/2026-10-25/icarus14-activation-wait-probes.json)
+records retain all 87 inputs/oracles, every engine status and all passing
+judged bytes from the fixed-array checkpoint. There are still 22 passing gaps
+per reference and four/seven reference mismatches. `--require-parity` exits 1
+for both, as expected for this incomplete scope; the kernel dependency API does
+not enable source automatic capture. The pinned native-only
+[sv-tests recheck](../measurements/2026-10-25/activation-wait-svtests.json)
+retains all 344 native statuses and 244 passes; reference sv-tests engines
+were not rerun. Linux and full functional parity remain unconfirmed.
 
 ## Fixed-array port follow-up (2026-10-25)
 
