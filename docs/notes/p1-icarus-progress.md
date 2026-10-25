@@ -13,6 +13,17 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Owned strength SSA execution:** `0ec3cc57` connects
+[typed make/MOS/projection](strength-ssa-execution.md) through the shared kernel
+and VM. Thirteen original tests include 12,384 packed-MOS reference comparisons
+and 2,034 hand-built VM designs, both parallel branch arguments and nested calls.
+Nine compiled full-build faults are caught; all 67 focused cases pass, including
+29 unchanged dumps. Full local CI passes all 21 checks: dev/ASan/UBSan
+5,152/5,154, release 5,153/5,155, zero failures and two known skips each.
+Net/driver stores, load/drive operations, scheduling, passive solving and source
+MOS enabling remain work. No source-level Icarus gap reduction is claimed.
+P1 remains incomplete.
+
 **Approved indexed-event CLI migration:** `c53ccfe7` records the human decision;
 `28f5c972` applies [the exact expectation-only migration](indexed-event-expectation-migration.md).
 The complete historical source is unchanged, one acceptance entry is added and

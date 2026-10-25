@@ -123,8 +123,11 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 
 [MOSの値演算の基盤](notes/mos-strength-operations.ja.md)で、MOS全6種類と、符号付きの恒等/
 非抵抗性/抵抗性の写像を追加しました。新規10テストで全120区間と11,520の制御/素子の組を確認し、
-コンパイルした9故障を検出しました。C++20のカーネル/値の意味の部品であり、ソースのMOS/スイッチ実行には
-net/driver区間記憶域・SIR・スケジュール・受動solver・port・書式が必要です。
+コンパイルした9故障を検出しました。C++20のカーネル/値の意味の部品です。
+[型付きstrength SSAの実行](notes/strength-ssa-execution.ja.md)でmake/MOS/射影をVMへ接続し、
+13テスト・手書きSIR 2,034設計・コンパイルした9故障を検査しました。全local CIの21確認も通ります。
+ソースのMOS/スイッチ実行には、net/driver区間記憶域とload/drive命令、スケジュール・
+受動solver・port・書式が必要です。
 
 ### fork内の宣言
 

@@ -65,7 +65,9 @@ MOS実装は変更せず、移行前の失敗も過去の検証として保持�
 
 ## 必要な接続
 
-契約の型付き`strength<w>` SIR、net/driverごとの区間記憶域、物理的な出力元の同一性、
+`0ec3cc57`の[型付きstrength SSA](strength-ssa-execution.ja.md)でmake/MOS/射影をVMへ接続し、
+完全なpacked値・型検査・block転送・入れ子呼び出しを検証しました。契約の残りのstrength load/drive命令、
+net/driverごとの区間記憶域、物理的な出力元の同一性、
 内部の強さ通知、有向driverのスケジュールとinertial状態、worldの相関を保つ独立の受動回路solver、
 force/releaseとport、書式、ソース実行全体が次の作業です。
 点の写像は受動solverの出力元ごとの強さ伝搬に使えますが、このAPIだけでsolverや相関規則を

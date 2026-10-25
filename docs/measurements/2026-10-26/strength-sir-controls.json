@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "0ec3cc57fe45d2993690412b62b9a24bf9999db4",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/include/kirimasim/kernel/strength_value.h": "54400115409f649929d6d76c3c212b580ed880ab2815d9aa789cbd2aac473028",
+    "src/sir/include/kirimasim/sir/design.h": "e06bd2d0b7dc5efcb8f0346baabfb69eafd222d012f3fff771074c39c09d838c",
+    "src/sir/include/kirimasim/sir/types.h": "afe68e38bc242f3494be92f9d2590dff6cd1408dd05c881d827cda8d4ca37215",
+    "src/sir/types.cpp": "51514fc9a1924c47747bb329eb7701ae8d6cf928ce2c6d5437be6c665f13a2d7",
+    "src/sir/verify.cpp": "a86eb417b59b73cc8ee7db420d88fec0fb67d0ce096c6d86a85a6ef35a738c7d",
+    "src/vm/vm.cpp": "472988741f66f4ec0f5f38606755f4e481365e0c52ebc9a1f424e79e8fb5156d",
+    "tests/unit/CMakeLists.txt": "b3cdfaea3e4f4a4d3627d47f016874bba3859ef72d9dba3e919dd16d47ffa51c",
+    "tests/unit/kernel_headers_cxx20.cpp": "998114674602a10e65b835fa53a98b52eacf740d68044d812159bc53ceae2a50",
+    "tests/unit/strength_sir_test.cpp": "ab9b78e29ad182bd2c63ffcc6dcab623e3319f1c8e59a28b3c7de8f82eb9fb0b",
+    "tests/unit/strength_value_test.cpp": "381178ab045696508eeb186144826b68cc6d86cccef65dae80123d976ad6769b",
+    "tools/mutants.py": "88bd932b872bb4b9a06cba74aa752a68744d5c5b1afc9839cd8a16ae3370a00a"
+  },
+  "controls": [
+    {
+      "name": "strength SSA: packed high endpoint is lost",
+      "path": "src/kernel/include/kirimasim/kernel/strength_value.h",
+      "source_sha256": "54400115409f649929d6d76c3c212b580ed880ab2815d9aa789cbd2aac473028",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthValue.AllIntervalsPackWithoutHostByteOrderOrNeighbourChanges",
+        "StrengthValue.MakeAndProjectionMatchReferenceAcrossEveryRankSideAndLogic",
+        "StrengthValue.VectorMosKeepsAllIntervalsAndIndependentControlChoices",
+        "StrengthVm.MakeMosAndProjectionUseTheIndependentReferenceAtEveryBit",
+        "StrengthVm.ParallelBranchCopiesKeepEveryPackedWordAndDoNotCrossWaits",
+        "StrengthVm.ScalarControlsUseBothStateDomainsAndEitherSignedness",
+        "StrengthVm.NestedFunctionTempsLeaveCallerStrengthValuesIntact"
+      ]
+    },
+    {
+      "name": "strength SSA: zero side begins one bit early",
+      "path": "src/kernel/include/kirimasim/kernel/strength_value.h",
+      "source_sha256": "54400115409f649929d6d76c3c212b580ed880ab2815d9aa789cbd2aac473028",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthValue.MakeAndProjectionMatchReferenceAcrossEveryRankSideAndLogic",
+        "StrengthVm.MakeMosAndProjectionUseTheIndependentReferenceAtEveryBit"
+      ]
+    },
+    {
+      "name": "strength SSA: validation misses the final packed bits",
+      "path": "src/kernel/include/kirimasim/kernel/strength_value.h",
+      "source_sha256": "54400115409f649929d6d76c3c212b580ed880ab2815d9aa789cbd2aac473028",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthValue.MalformedEndpointsAndShapesDoNotPartiallyWriteOutput"
+      ]
+    },
+    {
+      "name": "strength SSA: projection loses unknown state",
+      "path": "src/kernel/include/kirimasim/kernel/strength_value.h",
+      "source_sha256": "54400115409f649929d6d76c3c212b580ed880ab2815d9aa789cbd2aac473028",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthValue.MakeAndProjectionMatchReferenceAcrossEveryRankSideAndLogic",
+        "StrengthVm.MakeMosAndProjectionUseTheIndependentReferenceAtEveryBit",
+        "StrengthVm.ParallelBranchCopiesKeepEveryPackedWordAndDoNotCrossWaits",
+        "StrengthVm.ScalarControlsUseBothStateDomainsAndEitherSignedness",
+        "StrengthVm.NestedFunctionTempsLeaveCallerStrengthValuesIntact"
+      ]
+    },
+    {
+      "name": "strength SSA: VM allocates ordinary value word count",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "472988741f66f4ec0f5f38606755f4e481365e0c52ebc9a1f424e79e8fb5156d",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthVm.MakeMosAndProjectionUseTheIndependentReferenceAtEveryBit",
+        "StrengthVm.ParallelBranchCopiesKeepEveryPackedWordAndDoNotCrossWaits",
+        "StrengthVm.ScalarControlsUseBothStateDomainsAndEitherSignedness",
+        "StrengthVm.NestedFunctionTempsLeaveCallerStrengthValuesIntact"
+      ]
+    },
+    {
+      "name": "strength SSA: VM decodes pmos as nmos",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "472988741f66f4ec0f5f38606755f4e481365e0c52ebc9a1f424e79e8fb5156d",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthVm.MakeMosAndProjectionUseTheIndependentReferenceAtEveryBit",
+        "StrengthVm.ScalarControlsUseBothStateDomainsAndEitherSignedness"
+      ]
+    },
+    {
+      "name": "strength SSA: ordinary syscall accepts metadata",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "a86eb417b59b73cc8ee7db420d88fec0fb67d0ce096c6d86a85a6ef35a738c7d",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthSir.EveryOrdinaryConsumerAndUndeclaredProducerRejectMetadata"
+      ]
+    },
+    {
+      "name": "strength SSA: branch copies only the first packed word",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "472988741f66f4ec0f5f38606755f4e481365e0c52ebc9a1f424e79e8fb5156d",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthVm.ParallelBranchCopiesKeepEveryPackedWordAndDoNotCrossWaits"
+      ]
+    },
+    {
+      "name": "strength SSA: mask width check is missing",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "a86eb417b59b73cc8ee7db420d88fec0fb67d0ce096c6d86a85a6ef35a738c7d",
+      "build_target": "all",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthSir.MakeRanksMasksAndMosKindsControlsAreVerified"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "baseline_tests_passed": 13,
+  "restored_tests_passed": 13,
+  "focused_tests_passed": 67,
+  "source_restored": true,
+  "compile_failures_counted_as_detections": false,
+  "public_cxx20_header_in_mutated_full_builds": true
+}

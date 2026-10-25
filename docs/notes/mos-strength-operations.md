@@ -84,12 +84,14 @@ pre-migration run remains recorded evidence.
 
 ## Required integration
 
-The next steps remain the contract's typed `strength<w>` SIR operations,
+The [typed strength SSA checkpoint](strength-ssa-execution.md), `0ec3cc57`,
+now connects make/MOS/projection through the VM with complete packed values,
+typed verification, block transfer and nested calls. Strength load/drive operations,
 per-net/driver interval storage, physical origin identity, internal strength
 notifications, directed-driver scheduling and inertial state, the independent
 world-preserving passive solver, force/release and ports, formatting and complete
-source execution. The point map can support a passive solver's per-origin
-rank transfer; this API does not implement that solver or its correlation rules.
+source execution remain work. The point map can support a passive solver's
+per-origin rank transfer; this API does not implement that solver or its correlation rules.
 Directed MOS contributions must remain physical roots rather than undirected
 edges. Ordinary net initialization and the separately approved new-device
 startup policy need their real scheduling connection.

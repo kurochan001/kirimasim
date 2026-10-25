@@ -138,8 +138,11 @@ The [pure MOS value-operation foundation](notes/mos-strength-operations.md) now
 covers all six MOS kinds and signed identity/nonresistive/resistive transfers.
 Ten new tests check all 120 intervals and 11,520 control/device combinations;
 nine compiled faults are detected. This is a C++20 kernel/value-semantics
-component. Source MOS/switch execution still needs net/driver interval storage,
-SIR, scheduling, passive solving, ports and formatting.
+component. [Typed strength SSA execution](notes/strength-ssa-execution.md) now
+connects make/MOS/projection through the VM, with 13 tests, 2,034 hand-built
+VM designs and nine caught compiled controls. Full local CI passes all 21 checks.
+Source MOS/switch execution still needs net/driver interval storage and load/drive
+operations, scheduling, passive solving, ports and formatting.
 
 ### Fork-local declarations
 
