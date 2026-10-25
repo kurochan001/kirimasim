@@ -40,6 +40,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('activation waits: initial evaluation writes lose their read dependencies', 'src/kernel/sim.cpp', 'for (auto* capture = scheduler.activationCapture_; capture != nullptr;', 'for (auto* capture = static_cast<ActivationCapture*>(nullptr); capture != nullptr;'),
     ('activation waits: committed changes are not announced', 'src/kernel/sim.cpp', '    if (scheduler.ending_) return;', '    if (true) return;'),
     ('activation waits: packed read ranges cover unrelated bits', 'src/kernel/sim.cpp', 'overlaps(region.lsb, region.width, access.lsb, access.width)', '(static_cast<void>(region.width), true)'),
     ('activation waits: old dynamic read footprints accumulate', 'src/kernel/sim.cpp', 'monitors_[id].activationReads.swap(activation.regions);', 'monitors_[id].activationReads.insert(monitors_[id].activationReads.end(), activation.regions.begin(), activation.regions.end());'),

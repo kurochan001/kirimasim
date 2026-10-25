@@ -1426,10 +1426,19 @@ void Scheduler::changedActivation(void* frame, const ActivationAccess& access) n
             if (!scheduler.live(ref)) continue;
             const auto& monitor = scheduler.monitors_[ref.id];
             const auto matches = [&](const auto& region) { return dependsOn(region, access); };
+            const auto inProgress = [&] {
+                for (auto* capture = scheduler.activationCapture_; capture != nullptr;
+                     capture = capture->previous)
+                    if (capture->monitor.id == ref.id && capture->monitor.serial == ref.serial &&
+                        std::any_of(capture->reads->begin(), capture->reads->end(), matches))
+                        return true;
+                return false;
+            };
             if (!std::any_of(monitor.activationParts.begin(), monitor.activationParts.end(),
                              matches) &&
                 !std::any_of(monitor.activationReads.begin(), monitor.activationReads.end(),
-                             matches))
+                             matches) &&
+                !inProgress())
                 continue;
             LateChange notice;
             notice.heap = true;
@@ -1499,16 +1508,21 @@ bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out)
         return false;
     }
     activation.leases = leases;
+    ActivationCapture capture{{id, serial}, &activation.regions, activationCapture_};
     struct Restore {
         Heap& heap;
         HeapHook previous;
         ActivationStore& store;
         ActivationHook activation;
+        ActivationCapture*& current;
+        ActivationCapture* previousCapture;
         ~Restore() {
+            current = previousCapture;
             heap.setReadHook(previous);
             store.setReadHook(activation);
         }
-    } restore{ctx_.heap(), {}, ctx_.activations(), {}};
+    } restore{ctx_.heap(), {}, ctx_.activations(), {}, activationCapture_, activationCapture_};
+    if (monitors_[id].spec.activation.capture) activationCapture_ = &capture;
     restore.previous = ctx_.heap().setReadHook(
         monitors_[id].spec.heap ? HeapHook{&HeapReads::record, &reads} : HeapHook{});
     restore.activation =

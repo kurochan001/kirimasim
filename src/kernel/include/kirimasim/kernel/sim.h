@@ -588,6 +588,11 @@ private:
         std::uint32_t id = 0;
         std::uint64_t serial = 0;
     };
+    struct ActivationCapture {
+        MonitorRef monitor;
+        const std::pmr::vector<ActivationRegion>* reads = nullptr;
+        ActivationCapture* previous = nullptr;
+    };
     struct Waiter {
         ProcessId process{0};
         std::uint64_t gen = 0;
@@ -828,6 +833,7 @@ private:
     std::size_t heapMonitorCount_ = 0;
     HeapHook previousHeapHook_;
     ActivationHook previousActivationHook_;
+    ActivationCapture* activationCapture_ = nullptr;
     bool heapMonitorLimited_ = false;
     ProcessId heapMonitorProcess_ = kNoHolder;
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }

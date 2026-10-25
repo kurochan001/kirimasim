@@ -597,4 +597,48 @@ TEST(ActivationScheduler, NamedEventCompletionDetachesAutomaticReadsFromTheSameW
     EXPECT_EQ(watch.resumes, 1U);
 }
 
+struct InitialWrite {
+    k::ActivationBinding binding;
+    unsigned evals = 0, resumes = 0;
+    bool valid = true;
+    static void eval(kirima_context* handle, void* frame, std::uint64_t* out) {
+        auto& self = *static_cast<InitialWrite*>(frame);
+        auto& context = k::fromC(handle);
+        ++self.evals;
+        k::W4 before{};
+        self.valid = self.valid && context.activations().read(self.binding, 0, {&before, 1}, 63,
+                                                              1) == k::ActivationError::None;
+        out[0] = before.a;
+        out[1] = before.b;
+        const k::W4 one{1, 0};
+        self.valid =
+            self.valid && context.scheduler().writeActivation(self.binding, 0, {&one, 1}, 63, 1) ==
+                              k::ActivationError::None;
+    }
+    static kirima_status resume(kirima_context*, void* frame) {
+        ++static_cast<InitialWrite*>(frame)->resumes;
+        return static_cast<kirima_status>(k::Status::Done);
+    }
+};
+
+TEST(ActivationScheduler, InitialEvaluationWritesAreAnnouncedAfterTheWholeWaitRegisters) {
+    k::Context context;
+    Scope scope(context);
+    InitialWrite callback{scope.array};
+    const auto process =
+        context.scheduler().addProcess(&InitialWrite::resume, &callback, k::Group::Active);
+    k::MonitorSpec spec;
+    spec.eval = &InitialWrite::eval;
+    spec.frame = &callback;
+    spec.untilTrue = true;
+    spec.activation.capture = true;
+    spec.activation.bindings = {scope.array};
+    context.scheduler().waitAny(process, {}, {&spec, 1});
+    EXPECT_EQ(callback.evals, 2U);
+    EXPECT_TRUE(callback.valid);
+    EXPECT_EQ(context.activations().stats().leases, 1U);
+    EXPECT_EQ(context.scheduler().run(), k::EndReason::Quiescent);
+    EXPECT_EQ(callback.resumes, 1U);
+}
+
 }  // namespace

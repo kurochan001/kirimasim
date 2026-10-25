@@ -46,7 +46,7 @@ writes. The nonallocating typed-root visitor is unchanged.
 
 ## Evidence and remaining work
 
-Thirteen original `ActivationScheduler` tests pass, covering 32 four-state edge
+Fourteen original `ActivationScheduler` tests pass, covering 32 four-state edge
 combinations, wide fields, independent elements/scopes/Contexts, readonly and
 normalized writes, static ranges, parent return, self-cancellation, mixed named
 waits, nested guard writes, container replacement, root reclamation and resource
@@ -54,8 +54,16 @@ failures at every registration allocation and notification allocation.
 Ten thousand replacement waits keep registration storage bounded and return
 the extent lease count to its original value.
 
-Initial full dev validation passes 4,568/4,570: zero failures and the same two
-known skips. Existing expectations, all 29 SIR dumps and PerfCount budgets
+The initial-evaluation follow-up first reproduced a lost notification: an
+expression read a field, wrote it and returned the old value before the first
+footprint was attached. The new test failed before the fix and passes after it.
+In-progress read captures now participate in change matching, with nested
+capture ownership restored on return; notices still drain after the entire wait
+is registered. Six [compiled controls](../measurements/2026-10-25/activation-wait-negative-controls.json)
+at `e59c3dd9` all fail actual new tests and restored sources build successfully.
+
+After the initial-evaluation fix, full dev validation passes 4,569/4,571:
+zero failures and the same two known skips. Existing expectations, all 29 SIR dumps and PerfCount budgets
 are unchanged. Compiled controls and four-configuration local CI are checked
 separately before publication.
 

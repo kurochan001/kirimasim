@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-25",
+  "baseline_revision": "e59c3dd9",
+  "baseline": {
+    "name": "unchanged baseline",
+    "test_exit": 0,
+    "failed_tests": [],
+    "skipped": [
+      "suite/cb/input_sample_1step",
+      "suite/nets/net_port_drivers_part"
+    ]
+  },
+  "controls": [
+    {
+      "name": "activation waits: committed changes are not announced",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationScheduler.ContainerReplacementAndCellMutationShareOneWaitAndTypedRootLifetime",
+        "ActivationScheduler.EdgeControlsUseAllFourStateTransitionsAfterWideSelection"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation waits: packed read ranges cover unrelated bits",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationScheduler.DynamicReadsReattachAndKeepOnePhysicalExtentAfterOwnerReturn"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation waits: old dynamic read footprints accumulate",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationScheduler.DynamicReadsReattachAndKeepOnePhysicalExtentAfterOwnerReturn"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation waits: registrations borrow their lexical extents",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationScheduler.DynamicReadsReattachAndKeepOnePhysicalExtentAfterOwnerReturn"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation waits: static sensitivity ranges are discarded",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationScheduler.SelfCancellationKeepsCallbackBindingsLiveUntilEvaluationReturns"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    },
+    {
+      "name": "activation waits: self-cancellation releases callback storage early",
+      "test_exit": 8,
+      "failed_tests": [
+        "ActivationScheduler.SelfCancellationKeepsCallbackBindingsLiveUntilEvaluationReturns"
+      ],
+      "skipped": [],
+      "build_exit": 0
+    }
+  ],
+  "restored_build_exit": 0,
+  "tool_exit": 0,
+  "judging_self_checks_excluded": true,
+  "scope": "six compiled automatic-storage wait mutations before the initial-evaluation follow-up"
+}
