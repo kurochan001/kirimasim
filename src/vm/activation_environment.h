@@ -37,14 +37,39 @@ public:
         return frame_ != nullptr ? std::span<const sir::FrameVar>(*frame_)
                                  : std::span<const sir::FrameVar>{};
     }
+    [[nodiscard]] std::span<const sir::ActivationScope> scopes() const noexcept {
+        return info_ != nullptr ? std::span<const sir::ActivationScope>(info_->scopes)
+                                : std::span<const sir::ActivationScope>{};
+    }
 
 private:
     friend class ActivationEnvironment;
+    friend class ScopedReferences;
     explicit ActivationPlan(std::pmr::memory_resource* memory) : layouts_(memory) {}
     kernel::ActivationStore* store_ = nullptr;
     const std::vector<sir::FrameVar>* frame_ = nullptr;
     const sir::ActivationInfo* info_ = nullptr;
     std::pmr::vector<kernel::ActivationLayoutId> layouts_;
+};
+
+/// Immutable origin of a promoted value. Captures preserve the declaring
+/// plan/row too, so a ref never consults a returned owner's current frame.
+class ActivationOrigin {
+public:
+    ActivationOrigin() = default;
+    [[nodiscard]] bool valid() const noexcept { return plan_ != nullptr; }
+    [[nodiscard]] kernel::ActivationBinding binding() const noexcept { return binding_; }
+    [[nodiscard]] const ActivationPlan& plan() const noexcept { return *plan_; }
+    [[nodiscard]] sir::FrameVarId row() const noexcept { return row_; }
+
+private:
+    friend class ActivationEnvironment;
+    ActivationOrigin(kernel::ActivationBinding binding, const ActivationPlan& plan,
+                     sir::FrameVarId row)
+        : binding_(binding), plan_(&plan), row_(row) {}
+    kernel::ActivationBinding binding_;
+    const ActivationPlan* plan_ = nullptr;
+    sir::FrameVarId row_ = sir::kNone;
 };
 
 /// A copied reference binding, never a copy of its referred-to value.
@@ -100,6 +125,7 @@ public:
     Error unwind(std::size_t depth) noexcept;
     void finish() noexcept;
     [[nodiscard]] Result<kernel::ActivationBinding> binding(sir::FrameVarId field) const noexcept;
+    [[nodiscard]] Result<ActivationOrigin> origin(sir::FrameVarId field) const noexcept;
     [[nodiscard]] Result<BorrowedReference> reference(sir::FrameVarId field) const noexcept;
     /// Temporary callback ownership includes unread and empty extents too.
     [[nodiscard]] Result<Pins> pin() const noexcept;
@@ -112,7 +138,7 @@ public:
 
 private:
     struct Entry {
-        kernel::ActivationBinding value;
+        ActivationOrigin origin;
         std::optional<BorrowedReference> reference;
     };
     ActivationEnvironment(kernel::ActivationStore& store, const ActivationPlan& plan,

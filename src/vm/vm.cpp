@@ -3,6 +3,7 @@
 
 #include "kirimasim/vm/vm.h"
 
+#include "frame_layout.h"
 #include "frame_value.h"
 
 #include <algorithm>
@@ -668,26 +669,9 @@ public:
         // least significant first, like a slot element (kernel/wide.h). The
         // frame variables come in order, one chunk each when narrow, and the
         // elements of the arrays after them.
-        layouts_.resize(bodies);
-        for (std::uint32_t p = 0; p < bodies; ++p) {
-            const auto& frame = bodyFrame(BodyId{p});
-            Layout& l = layouts_[p];
-            l.offset.assign(frame.size(), 0);
-            l.chunks.assign(frame.size(), 1);
-            l.size = 0;
-            for (std::size_t i = 0; i < frame.size(); ++i) {
-                const bool ref = frame[i].type.kind == sir::TypeKind::Ref;
-                l.chunks[i] = ref ? 1 : chunksOf(frame[i].type);
-                l.offset[i] = l.size;
-                l.size += frame[i].dims.empty() || ref ? l.chunks[i] : 1;
-                if (ref || sir::isContainer(frame[i].type)) l.roots.push_back(i);
-            }
-            for (std::size_t i = 0; i < frame.size(); ++i) {
-                if (frame[i].dims.empty() || frame[i].type.kind == sir::TypeKind::Ref) continue;
-                l.offset[i] = l.size;
-                l.size += sir::elementCount(frame[i]) * l.chunks[i];
-            }
-        }
+        layouts_.reserve(bodies);
+        for (std::uint32_t p = 0; p < bodies; ++p)
+            layouts_.emplace_back(bodyFrame(BodyId{p}));
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const auto& blocks = bodyBlocks(BodyId{p});
             const std::uint32_t n = numTemps(BodyId{p});
@@ -1041,21 +1025,7 @@ private:
     };
     /// Where the frame variables of a body lie (RUNTIME_ABI.md 4.3): a word
     /// pair for each, by number, then the elements of each array in order.
-    struct Layout {
-        std::size_t size = 0;
-        /// By frame variable: where its value starts, or an array's first
-        /// element; and the chunks of the value or of one element.
-        std::vector<std::size_t> offset;
-        std::vector<std::uint32_t> chunks;
-        std::vector<std::size_t> roots;  ///< Typed container/reference fields only.
-        /// Where frame variable fv starts among the activation's words, and
-        /// its chunks: the one place a frame variable's number becomes a
-        /// word offset (#1 took one for the other).
-        [[nodiscard]] std::size_t wordOf(sir::FrameVarId fv) const { return offset[fv.index()]; }
-        [[nodiscard]] std::uint32_t chunksOfVar(sir::FrameVarId fv) const {
-            return chunks[fv.index()];
-        }
-    };
+    using Layout = detail::FrameLayout;
     std::vector<Layout> layouts_;              ///< By body.
     std::vector<kernel::SlotId> kernelSlots_;  ///< By SIR slot: the store's number.
     std::vector<kernel::UdpTable> udpTables_;  ///< By type-table row.
