@@ -173,7 +173,7 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 4,919 | 4,914、2 本は飛ばす、3 本は失敗 | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 4,919 | 4,917、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
