@@ -680,27 +680,27 @@ std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
 }
 
 Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl) {
-    // The element of an event slot, with constant indices (SIR_SPEC.md 3.2.1).
+    // Keep compact legacy slot operands for constant static selections.
+    // Other selections use the shared typed-place/index rules (contract 5).
+    const auto loaded = [&] { return loadPlace(placeOf(e, sl), sl).op; };
     std::vector<std::int64_t> indices;
     const ast::Expression* base = &e;
     while (base->kind == ast::ExpressionKind::ElementSelect) {
         const auto& es = base->as<ast::ElementSelectExpression>();
         const std::optional<std::int64_t> idx = constInt(es.selector());
-        if (!idx) unsupported(sl, "event selected by an index that is not constant");
+        if (!idx) return loaded();
         indices.insert(indices.begin(), *idx);
         base = &es.value();
     }
     const ast::Symbol* sym = namedSymbol(*base);
-    if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym))
-        unsupported(sl, "event given by this expression");
+    if (sym == nullptr || findFrameVar(*sym) || !inSlot(*sym)) return loaded();
     const sir::SlotId s = slotOf(sym->as<ast::ValueSymbol>(), sl);
     const sir::Slot& slot = design().slot(s);
     if (indices.size() != slot.dims.size()) unsupported(sl, "event given by this expression");
     for (std::size_t d = 0; d < indices.size(); ++d) {
         const std::int64_t l = slot.dims[d].left;
         const std::int64_t r = slot.dims[d].right;
-        if (indices[d] < std::min(l, r) || indices[d] > std::max(l, r))
-            unsupported(sl, "event index outside the array");
+        if (indices[d] < std::min(l, r) || indices[d] > std::max(l, r)) return loaded();
     }
     Operand o = Operand::slot(s);
     if (!slot.dims.empty()) {
@@ -721,7 +721,8 @@ Val Lowerer::lowerTriggered(const ast::Expression& ev, Type rt, slang::SourceLoc
     if (implicit) unsupported(sl, "triggered in a function or under an implicit sensitivity");
     if (b_.isSub) triggeredReaders_.insert(b_.sub);
     const Operand o = eventOperand(ev, sl);
-    const Val h = emit(Op::Load, Type{sir::TypeKind::Event, 0}, {o}, sl);
+    const Type event{sir::TypeKind::Event, 0};
+    const Val h = o.kind == Operand::Kind::Slot ? emit(Op::Load, event, {o}, sl) : Val{o, event};
     return coerce(emit(Op::Builtin, sir::u2(1), {Operand::str("triggered"), h.op}, sl), rt, sl);
 }
 

@@ -595,3 +595,12 @@ add_test(NAME tools/event_triggered_function_boundary
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_event_triggered_function_boundary.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/event_triggered_function_boundary PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_indexed_event_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_indexed_event_matrix.py --check)
+set_tests_properties(tools/gen_indexed_event_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/indexed_event_boundaries
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_indexed_event_boundaries.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/indexed_event_boundaries PROPERTIES LABELS Tools)

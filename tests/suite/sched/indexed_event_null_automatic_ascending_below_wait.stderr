@@ -1,0 +1,1 @@
+indexed_event_null_automatic_ascending_below_wait.sv:26: error: wait on a null event [top @ 0ns]

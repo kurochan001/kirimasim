@@ -687,7 +687,7 @@ public:
     /// (a static variable or net, or an element, bit, part or member of
     /// one at a constant position), if it is one.
     std::optional<sir::SlotRange> eventSlot(const ast::Expression& e);
-    /// The event slot element that a named-event expression denotes.
+    /// A compact static slot element or a loaded typed named-event value.
     sir::Operand eventOperand(const ast::Expression& e, slang::SourceLocation sl);
     /// `ev.triggered` (15.5.3).
     Val lowerTriggered(const ast::Expression& ev, sir::Type rt, slang::SourceLocation sl);
