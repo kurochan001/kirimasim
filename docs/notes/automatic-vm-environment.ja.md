@@ -6,7 +6,8 @@ Interpreterへの接続は残作業です。
 
 現在の接続状況：[Interpreterでの実行](automatic-vm-execution.ja.md)を追加しました。
 以下は各部品の段階の記録であり、その時点のVM拒否・残作業は当時の状態です。
-現在は妥当な表現済みSIR homeを実行できますが、frontによるソースの捕捉はまだ有効にしていません。
+現在は妥当なSIR homeを実行でき、[ソースの捕捉](automatic-front-capture.ja.md)も
+`ebb0e14d` に実装しました。過去の期待値の移行はレビュー待ちです。
 
 ## 契約と所有権
 

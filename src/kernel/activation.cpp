@@ -71,6 +71,7 @@ ActivationStore::addLayout(std::span<const ActivationField> fields) noexcept {
             case ActivationKind::Chandle:
             case ActivationKind::Container:
             case ActivationKind::Cell:
+            case ActivationKind::Event:
                 if (input.width != 64) return {{}, ActivationError::InvalidLayout};
                 break;
             default: return {{}, ActivationError::InvalidLayout};
@@ -147,6 +148,7 @@ ActivationResult<ActivationLease> ActivationStore::create(ActivationLayoutId lay
         ++leases_;
         words_ += count;
         rootsChanged_ = true;
+        eventRootsChanged_ = true;
         return {ActivationLease(this, tokenOf(index, record.generation)), ActivationError::None};
     } catch (const std::bad_alloc&) {
         return {{}, ActivationError::ResourceLimit};
@@ -222,6 +224,7 @@ void ActivationStore::reclaim(std::uint32_t index) noexcept {
     --live_;
     std::pmr::vector<std::uint64_t>(memory_).swap(record.values);
     rootsChanged_ = true;
+    eventRootsChanged_ = true;
     if (record.generation != UINT32_MAX) {
         ++record.generation;
         record.next = free_;
@@ -298,6 +301,7 @@ ActivationError ActivationStore::write(const ActivationBinding& binding, std::ui
         if (stride == 2) writeField(words + 1, 2, position, bits, b);
     }
     if (changed) {
+        if (field->kind == ActivationKind::Event) eventRootsChanged_ = true;
         if (field->kind == ActivationKind::Container || field->kind == ActivationKind::Cell)
             rootsChanged_ = true;
         if (changeHook_.fn != nullptr)
@@ -329,6 +333,28 @@ void ActivationStore::visitRoots(void (*visitor)(void*, HeapRoot) noexcept,
             }
         }
     }
+}
+ManagedEventError ActivationStore::visitEventRoots(ManagedEventRoots& roots) const noexcept {
+    for (const auto& record : records_) {
+        if (record.leases == 0) continue;
+        for (const auto& field : layouts_[record.layout.index()].fields) {
+            if (field.kind != ActivationKind::Event) continue;
+            for (std::uint32_t e = 0; e < field.elements; ++e) {
+                const auto bits = record.values[static_cast<std::size_t>(field.offset) + e];
+                // Generation zero is reserved for permanent legacy event slots.
+                if ((bits >> 32) == 0) continue;
+                if (const auto error = roots.add(ManagedEventToken{bits});
+                    error != ManagedEventError::None)
+                    return error;
+            }
+        }
+    }
+    return ManagedEventError::None;
+}
+ManagedEventRootProvider ActivationStore::eventRootProvider() const noexcept {
+    return {this, [](const void* frame, ManagedEventRoots& roots) noexcept {
+                return static_cast<const ActivationStore*>(frame)->visitEventRoots(roots);
+            }};
 }
 ActivationStats ActivationStore::stats() const noexcept {
     return {live_, leases_, words_, records_.size()};

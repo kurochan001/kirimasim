@@ -57,7 +57,9 @@ Fork declarations initialize according to their lifetime in the parent; they
 do not create children or satisfy `join_any`. Static storage is shared, and
 uncaptured automatic declarations initialize per entry. Declaration-only
 forks proceed without a wait. [Seventy-two original source cases and limits](notes/fork-local-declarations.md)
-cover the behavior; automatic variables captured by children remain unsupported.
+cover the behavior. [Automatic shared capture](notes/automatic-front-capture.md) now
+runs 186 new source designs across lifetimes, types and joins; three historical
+rejection checks await separate expectation approval. Automatic events remain unsupported.
 
 ## Wide L/H gate resolution
 
@@ -242,6 +244,16 @@ endmodule
 ```text
 2 8 7 4
 ```
+
+## Named-event state and function reads
+
+An untriggered event stays false even at the largest 64-bit tick. A triggered
+event is true only in its own time slot. Ordinary functions can read this state,
+and explicit guards retain dependencies on function-local static events.
+Implicit named-event sensitivity through functions still receives a positioned
+unsupported diagnostic. [Twenty-seven new source cases and 20 kernel tests](notes/managed-event-registry.md)
+cover the correction and the managed-event foundation; automatic event source
+construction is not enabled by that foundation.
 
 ## Mixed named-event waits and per-item iff
 

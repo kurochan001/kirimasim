@@ -1,8 +1,9 @@
 # Executing lexical automatic environments in tier 1
 
 [日本語](automatic-vm-execution.ja.md). Status: Interpreter integration for the
-currently represented value homes implemented, 2026-10-25; front source capture
-is not enabled.
+currently represented value homes implemented, 2026-10-25. This records the
+Interpreter checkpoint; subsequent [source capture](automatic-front-capture.md)
+is implemented with historical expectation migration awaiting review.
 
 ## Contract and execution
 
@@ -117,11 +118,10 @@ cannot prove full Icarus coverage.
 
 ## Remaining work
 
-Front still rejects source automatic fork capture and emits none of these new
-homes. Next implement lexical promotion/capture lowering and the approved full
-source matrix, including declaration order, loop/block lifetimes, ref qualifiers,
-copyback, cancellation, monitors and typed roots. Hand-built SIR execution alone
-does not close the source feature gap.
+At this Interpreter checkpoint, front still rejected source automatic capture.
+The subsequent [source-lowering record](automatic-front-capture.md) documents
+lexical promotion, 186 original source designs, complete import checks and
+compiled controls, with separate historical expectation approval still pending.
 
 Owned automatic event/ref/object providers remain unsupported; borrowed ref
 formals are a different case. The event construction/rebinding work of contract

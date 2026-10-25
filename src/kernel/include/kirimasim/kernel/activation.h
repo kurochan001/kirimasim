@@ -12,6 +12,7 @@
 
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
+#include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/w4.h"
 
 namespace kirimasim::kernel {
@@ -30,7 +31,8 @@ enum class ActivationKind : std::uint8_t {
     String,
     Chandle,
     Container,
-    Cell
+    Cell,
+    Event
 };
 struct ActivationDim {
     std::int64_t left = 0, right = 0;
@@ -154,6 +156,12 @@ public:
     void visitRoots(void (*visitor)(void*, HeapRoot) noexcept, void* frame) const noexcept;
     [[nodiscard]] bool rootsChanged() const noexcept { return rootsChanged_; }
     void acknowledgeRoots() noexcept { rootsChanged_ = false; }
+    /// Trace all live physical event fields, including unread retained arrays.
+    /// Null and legacy static event handles need no managed-object root.
+    ManagedEventError visitEventRoots(ManagedEventRoots& roots) const noexcept;
+    [[nodiscard]] ManagedEventRootProvider eventRootProvider() const noexcept;
+    [[nodiscard]] bool eventRootsChanged() const noexcept { return eventRootsChanged_; }
+    void acknowledgeEventRoots() noexcept { eventRootsChanged_ = false; }
     [[nodiscard]] ActivationStats stats() const noexcept;
     /// Invalidate all bindings without resetting generations or layouts.
     /// Detach observations before resetting a running Context.
@@ -191,7 +199,7 @@ private:
     std::pmr::vector<Record> records_;
     std::uint32_t free_ = kNone;
     std::uint64_t live_ = 0, leases_ = 0, words_ = 0;
-    bool rootsChanged_ = false;
+    bool rootsChanged_ = false, eventRootsChanged_ = false;
     ActivationHook readHook_, changeHook_;
 };
 

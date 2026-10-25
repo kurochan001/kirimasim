@@ -159,9 +159,16 @@ callbacks and immutable refs. Nineteen execution tests cover calls/copyback,
 reentry, all joins, typed roots, cancellation, program completion and resource
 failure; 14 compiled controls are detected. Ordinary frames share the layout
 and value boundary without a mirrored scoped value.
-Front still emits no capture homes and rejects source automatic fork capture.
-Automatic event construction and owned ref/object providers remain unsupported;
-activation instructions executing in hand-built SIR do not close those source gaps.
+Front now [lowers shared lexical capture from source](notes/automatic-front-capture.md):
+186 new designs and a full-field/extent checker pass, and five compiled faults are
+detected. The finite automatic-fork probe now passes, leaving 21 historical
+Icarus-13-passing gaps. Three historical rejection tests await separate expectation
+approval; all-green local CI is not claimed.
+The [managed-event kernel checkpoint](notes/managed-event-registry.md) now supplies
+generational identity, runtime pins and retained-scope event roots, with 20 tests
+and a full 32-bit generation audit. Automatic source construction, ordinary/SSA
+root publication and automatic pending-operation pin ownership are not connected;
+owned ref/object providers also remain work.
 
 ### Fixed-array ports and net arrays
 

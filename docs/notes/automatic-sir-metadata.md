@@ -11,7 +11,8 @@ owned environments and immutable references remain work before execution is enab
 Current integration: the [Interpreter execution adapter](automatic-vm-execution.md)
 is now connected. This note records the earlier component checkpoint; its load
 gate and remaining-work statements describe that checkpoint. Valid represented
-SIR homes now execute, while front source capture remains disabled.
+SIR homes now execute; [source capture](automatic-front-capture.md) is also
+implemented in `ebb0e14d`, with historical expectation migration pending review.
 
 ## Approved contract and boundaries
 

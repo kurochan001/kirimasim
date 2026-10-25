@@ -356,6 +356,30 @@ EventId Scheduler::addEvent() {
     return EventId{static_cast<std::uint32_t>(events_.size() - 1)};
 }
 
+ManagedEventBackend Scheduler::managedEventBackend() noexcept {
+    return {this,
+            [](void* frame) noexcept -> ManagedEventResult<EventId> {
+                auto& scheduler = *static_cast<Scheduler*>(frame);
+                if (scheduler.events_.size() >= kNone)
+                    return {kNone, ManagedEventError::ResourceLimit};
+                try {
+                    return {scheduler.addEvent()};
+                } catch (const std::bad_alloc&) {
+                    return {kNone, ManagedEventError::ResourceLimit};
+                } catch (const std::length_error&) {
+                    return {kNone, ManagedEventError::ResourceLimit};
+                }
+            },
+            [](void* frame, EventId id) noexcept {
+                auto& event = static_cast<Scheduler*>(frame)->events_[id.index()];
+                event.waiters.clear();
+                event.monitors.clear();
+                event.waiterLimit = event.monitorLimit = 0;
+                event.triggeredAt = UINT64_MAX;
+                event.wasTriggered = false;
+            }};
+}
+
 void Scheduler::ensureSlotTables() {
     if (subscriptions_.size() < store_.size()) {
         subscriptions_.resize(store_.size());
@@ -1700,6 +1724,7 @@ void Scheduler::trigger(EventId e) {
     beginWalk();
     NamedEvent& ev = events_[e.index()];
     ev.triggeredAt = time_;
+    ev.wasTriggered = true;
     if (ctx_.dump().glitches()) ctx_.dump().triggered(e.index(), time_);  // --wave-glitches
     const auto waiters = std::move(ev.waiters);
     events_[e.index()].waiters.clear();
@@ -1734,7 +1759,10 @@ void Scheduler::triggerNb(ProcessId p, EventId e, std::uint64_t delay) {
     schedule(r, {Kind::TriggerNb, r, e.index(), 0}, delay);
 }
 
-bool Scheduler::triggered(EventId e) const { return events_[e.index()].triggeredAt == time_; }
+bool Scheduler::triggered(EventId e) const {
+    const auto& event = events_[e.index()];
+    return event.wasTriggered && event.triggeredAt == time_;
+}
 
 // --- Pending reports (SCHEDULER_SPEC.md 15) -------------------------------------
 

@@ -150,6 +150,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                                                         : sir::TypeId{sir::kNone}),
                                        sir::kNone, dims, prm.type});
                 b_.frameVars.emplace(a, prm.frameVar);
+                ownFrame(*a, prm.frameVar);
+                prm.refStatic = a->flags.has(ast::VariableFlags::RefStatic);
             } else if (a->lifetime == ast::VariableLifetime::Automatic) {
                 prm.frameVar = frameVarOf(*a, a->location);
             } else {
@@ -206,8 +208,12 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 b_.retSlot = slotOf(rv, rv.location);
         }
         argParams_[id] = std::move(shape);
+        if (std::any_of(design_.subroutine(id).params.begin(), design_.subroutine(id).params.end(),
+                        [](const auto& param) { return param.refStatic; }))
+            qualifyReferenceBindings();
         lowerStatement(sym.getBody());
         if (!b_.dead) lowerReturn(nullptr, sym.location);
+        finishLexical();
     } catch (const Unsupported&) {
         b_ = std::move(saved);
         evalSymbol_ = savedEval;
@@ -223,7 +229,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
 
 void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (!b_.isSub) unsupported(sl, "return outside a subroutine");
-    leaveScopes(0, sl);
+    const auto finishReturn = [&] { leaveScopes(0, sl); };
     const Type rt = design_.subroutine(b_.sub).returnType;
     if (b_.retAggregate && b_.retAggregateType != nullptr) {
         // The value goes to $return like an aggregate assignment
@@ -244,10 +250,12 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
             copyAggregate(out, held, *b_.retAggregateType, stores, sl);
             flushStores(stores, false, sl);
         }
+        finishReturn();
         terminate(Op::Ret, {}, sl);
         return;
     }
     if (rt.kind == sir::TypeKind::Void) {
+        finishReturn();
         terminate(Op::Ret, {}, sl);
         return;
     }
@@ -261,7 +269,9 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     } else {
         unsupported(sl, "function without a return value");
     }
-    terminate(Op::Ret, {copyValue(v, rt, sl).op}, sl);
+    const Val result = copyValue(v, rt, sl);
+    finishReturn();
+    terminate(Op::Ret, {result.op}, sl);
 }
 
 Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl) {

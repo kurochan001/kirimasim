@@ -729,6 +729,7 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
     frameVars().push_back({std::string(v.name), t, sir::kNone, std::move(dims), {}});
     b_.frameVars.emplace(&v, id);
+    ownFrame(v, id);
     return id;
 }
 
@@ -951,6 +952,9 @@ void Lowerer::finishDesign() {
                     heapRead = true;
             }
         if (heapRead) report(at, "implicit sensitivity to dynamic container values");
+        if (std::ranges::any_of(called,
+                                [&](const auto sub) { return triggeredReaders_.contains(sub); }))
+            report(at, "implicit sensitivity to named-event triggered values");
     }
 }
 
@@ -2396,6 +2400,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
                 break;
         }
+        finishLexical();
     } catch (const Unsupported&) {
         dropProcesses(first);
     }

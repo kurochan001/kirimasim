@@ -104,7 +104,9 @@ unsupported. See the [execution and verification note](docs/notes/repeated-event
 Fork-local declarations now use parent initialization and shared static
 storage without becoming child processes. Declaration-only forks do not wait.
 [Scope and 72 original source cases](docs/notes/fork-local-declarations.md)
-include all join kinds; automatic variables captured by children remain unsupported.
+include all join kinds. [Shared automatic capture from source](docs/notes/automatic-front-capture.md)
+now passes 186 new designs; migration of three historical rejection checks awaits approval.
+Automatic event construction remains unsupported.
 
 Fixed-array ports now share or copy corresponding elements while preserving
 each declaration's bounds. Net arrays resolve strengths per element with
@@ -219,11 +221,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 4,682 | 4,680, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 4,919 | 4,914, 2 skipped, 3 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 444, `tests/suite/` 4,034 (made by 136 generators under `tools/`), tools 145, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 464, `tests/suite/` 4,247 (made by 138 generators under `tools/`), tools 149, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

@@ -75,7 +75,9 @@ Icarus 13.0・開発版とすべて一致しました。[対応範囲と検証](
 
 fork内の宣言は、親での初期化と共有static記憶域に対応し、子プロセスには数えません。
 宣言だけなら待機も出しません。[対応範囲と独自72ソース](docs/notes/fork-local-declarations.ja.md)で
-全join種類を検査します。子が捕捉するautomatic変数は未対応です。
+全join種類を検査します。[ソースからのautomatic共有捕捉](docs/notes/automatic-front-capture.ja.md)
+は新規186設計で通り、過去の未対応3テストの期待値移行は承認待ちです。
+automatic eventの構築は引き続き未対応です。
 
 固定配列ポートは宣言ごとの範囲を保って要素を共有・コピーし、ネット配列の強さを
 要素ごとに解決します。定数要素のforce/release、遅延、未接続の既定値・pullも含め、
@@ -171,11 +173,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 4,682 | 4,680、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 4,919 | 4,914、2 本は飛ばす、3 本は失敗 | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）444、`tests/suite/` 4,034（`tools/` の 136 個の生成器が作る）、道具 145、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）464、`tests/suite/` 4,247（`tools/` の 138 個の生成器が作る）、道具 149、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
