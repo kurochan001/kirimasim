@@ -13,6 +13,25 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Passive shared-kernel runtime:** `a2aa7573` adds [physical-origin graph worlds and conduction timing](passive-network-execution.md)
+to the real scheduler/Store path. Nineteen tests compare 14,445 reference states,
+including 46,980 destination intervals, rootless rings, shared-world correlation,
+mixed wired kinds, 130-node resistance, potential uwire ownership and scalar
+pending/timing/resource rules. Fifteen new graph faults and thirteen existing
+origin faults all compile and are caught; restored production passes 300 focused
+checks with the earlier directed-MOS sources, unchanged dumps and PerfCount.
+Full local CI completes 17/21 checks successfully: all four preset test steps
+fail only the unchanged historical nmos oracle in `cli/options`. Dev/ASan/UBSan
+pass 5,380/5,383; release 5,381/5,384, each with two known skips. All 110 tidy
+sources and the C++20/no-exception/no-RTTI public-header probe pass. Ordinary
+frame/event counters match; five-pair timing is +1.1%/+2.4%, without graph traffic.
+This is the user's requested stopping checkpoint. The work branch is based on
+`62148877`; `origin/main` at `6432683f` includes a separate slang 12.1 merge,
+whose integration and revalidation remain work. SIR/static-edge transport and
+source passive switches, port identity, registered-net force and full formatting
+also remain work.
+The exact nmos expectation migration remains unapproved and unapplied.
+
 **Directed MOS sources (partial):** `e7e2ec59` connects [six source MOS kinds](source-mos-execution.md),
 owned ordinary contributions and separately captured controls/selectors to the
 shared strength bank. All 154 new source designs, six positioned boundaries and

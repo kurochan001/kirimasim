@@ -145,3 +145,10 @@ counters match exactly. Median peak RSS is 9.203125→9.265625 MiB and
 not a stable speedup/regression proof or seven nightly baselines. Neither design
 uses source MOS, so new strength-network/source-MOS traffic remains unmeasured.
 No budget or warning threshold changed. Earlier timing records are separate runs.
+
+## Subsequent passive-kernel checkpoint (2026-10-26)
+
+[Passive graph execution](passive-network-execution.md) now adds exact worlds
+and scalar conduction timers to the shared origin bank. This note records the
+earlier source-MOS checkpoint; passive SIR/source production, port identity,
+registered-net force and full formatting remain required.

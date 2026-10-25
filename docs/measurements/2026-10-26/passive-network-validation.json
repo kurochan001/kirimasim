@@ -1,0 +1,245 @@
+{
+  "date": "2026-10-26",
+  "revision": "a2aa75737147c79a5054c90c24c6a5fb5b41e39e",
+  "scope": "Native passive graph runtime only; source passive switches and verified SIR edges remain incomplete",
+  "local_ci": {
+    "exit_code": 1,
+    "checks": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 2.0
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 2.5
+      },
+      {
+        "name": "dev: test",
+        "status": "FAILED",
+        "seconds": 117.1
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 1.9
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 56.4
+      },
+      {
+        "name": "release: test",
+        "status": "FAILED",
+        "seconds": 112.1
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 1.8
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 67.1
+      },
+      {
+        "name": "asan: test",
+        "status": "FAILED",
+        "seconds": 173.4
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 2.4
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 55.1
+      },
+      {
+        "name": "ubsan: test",
+        "status": "FAILED",
+        "seconds": 140.6
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.0
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 1.3
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 185.4
+      }
+    ],
+    "passed_checks": 17,
+    "failed_checks": 4,
+    "failure_reason": "All four preset tests fail only cli/options: unchanged switch_mos rejects nmos in its oracle, while execution now succeeds silently. This separate expectation migration remains unapproved and unapplied."
+  },
+  "presets": {
+    "dev": {
+      "total": 5383,
+      "passed": 5380,
+      "failed": [
+        "cli/options"
+      ],
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5384,
+      "passed": 5381,
+      "failed": [
+        "cli/options"
+      ],
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5383,
+      "passed": 5380,
+      "failed": [
+        "cli/options"
+      ],
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5383,
+      "passed": 5380,
+      "failed": [
+        "cli/options"
+      ],
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_unit_tests": 19,
+  "reference_states": {
+    "interval_point_kind": 10800,
+    "three_edge_transfer_control_load": 3645,
+    "destination_interval_comparisons": 46980
+  },
+  "compiled_controls": {
+    "new_passive": 15,
+    "retested_origin": 13,
+    "build_failures_counted_as_detections": 0
+  },
+  "restored_focused_tests": 300,
+  "clang_tidy_sources": 110,
+  "public_header_probe": {
+    "command": [
+      "clang++",
+      "-std=c++20",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-ffp-contract=off",
+      "-Isrc/kernel/include",
+      "-fsyntax-only",
+      "<probe.cpp>"
+    ],
+    "exit_code": 0,
+    "source": "#include <span>\n#include <type_traits>\n#include <utility>\n#include \"kirimasim/kernel/context.h\"\nusing namespace kirimasim::kernel;\nstatic_assert(__cplusplus == 202002L);\nstatic_assert(noexcept(std::declval<Scheduler&>().configureStrengthDrivers(\n    std::declval<std::span<const StrengthNodeSpec>>(),\n    std::declval<std::span<const StrengthOriginSpec>>(),\n    std::declval<std::span<const StrengthEdgeSpec>>())));\nstatic_assert(noexcept(std::declval<Scheduler&>().setStrengthEdge(0, StrengthConduction::On)));\nstatic_assert(noexcept(std::declval<Scheduler&>().setStrengthEdgeDelayed(0, StrengthConduction::Uncertain, 1, 2)));\nstatic_assert(noexcept(std::declval<const StrengthDrivers&>().edge(0)));\n"
+  },
+  "counts": {
+    "ctest": {
+      "total": 5383,
+      "passed": 5380,
+      "skipped": 2
+    },
+    "kinds": {
+      "unit": 610,
+      "suite": 4561,
+      "tools": 153,
+      "dump_sir": 29,
+      "context": 15,
+      "cli": 15
+    },
+    "suite_tests": 4561,
+    "generators": 140
+  },
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "dbf82a40cb6515af757f4f2bcf2b35d7c719153dabf0964355fa4ef1d240a9d9",
+    "src/kernel/include/kirimasim/kernel/sim.h": "62709751d5115c82499d74d4e118c7fb81f7c60d59813a7b6707bde4fbc38b60",
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "5cdb57b76af86761bb0e08b2fdd5565588f0cb17a34ee786f31111f907298d95",
+    "src/kernel/sim.cpp": "51674da51ad4206931292b4b8cb7a4d50888f3656ceb0e3f884968e3ca9d4217",
+    "src/kernel/strength_drivers.cpp": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+    "src/kernel/strength_network.cpp": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+    "src/valsem/CMakeLists.txt": "f692521772d520517159e043401dd291b276f8cb355d334e26798b68ac6f3290",
+    "src/valsem/include/kirimasim/valsem/passive.h": "0d921cc52f17d2299e39e1e566ed48f82f9315be8544f0591f53830b62413964",
+    "src/valsem/passive.cpp": "04527f7b8f2384c03a045d67b557d1b560b9b35043779e82ce7105339690a614",
+    "tests/unit/CMakeLists.txt": "b24dd5ad3f0a64aaedac65c864ac56759e7de3aa3a86af414bc52b3bf80be37f",
+    "tests/unit/passive_network_test.cpp": "c8776340889f8fd92f46c303c3fe973b9755f5a4ad359a44bfb9f76f8f5803e0",
+    "tools/mutants.py": "3e8ecdba19f786b8449b0c61efc3ef02bfe48cd35da07f96a1d01ea993553a8d",
+    "cmake/Dependencies.cmake": "1a513ad1df52bc90f33e72aa9345fe5115941d76542cdef1256455e387d65108"
+  },
+  "source_unchanged_after_ci": true,
+  "expectation_check": {
+    "base": "a2aa75737147c79a5054c90c24c6a5fb5b41e39e^",
+    "head": "a2aa75737147c79a5054c90c24c6a5fb5b41e39e",
+    "exit_code": 0,
+    "result": "implementation changed, existing expectations kept",
+    "automatic_ci_note": "No upstream branch at validation time; manual per-commit check used."
+  },
+  "branch_checkpoint": {
+    "branch": "codex/p1-event-sir",
+    "main_at_fetch": "6432683fb9287f7f9717bb014487961b9afae0de",
+    "merge_base_with_main": "621488772e5872cc60559686a114468713af757f",
+    "slang_configure_version": "12.0.561+3b351a52b",
+    "slang_pin": "3b351a52b15755b896d3b0144ae0432547d86618",
+    "main_integration": "Main includes a separate slang 12.1 merge; this tested branch does not include it. Integration/revalidation remains work."
+  },
+  "limitations": [
+    "Not source bidirectional-switch support, whole Icarus parity or P1 completion.",
+    "Scoped PMR allocation failures and real time overflow are tested; exhaustive global allocator/generation exhaustion is not executed.",
+    "No new external sv-tests, frozen P1 population, Icarus probes, Linux/minimum compiler or five-simulator speed comparison.",
+    "The separate managed-event instruction-safepoint proposal is not approved by this work."
+  ]
+}

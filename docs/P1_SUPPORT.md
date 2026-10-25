@@ -160,6 +160,11 @@ caught. Icarus 13.0 matches 113 complete designs; 41 observed index/startup/tran
 differences are recorded. The historical CLI rejection migration awaits separate
 approval. Passive solving, registered-net force/release, partial/retained port
 identity and full strength formatting remain incomplete.
+[Passive kernel execution](notes/passive-network-execution.md) now adds exact
+physical-origin paths, uncertain-edge worlds and scalar conduction timing to
+the real scheduler/publisher, with nineteen tests, 14,445 reference states and
+28 compiled faults caught. The front end and SIR do not emit passive edges yet;
+this kernel checkpoint does not enable source bidirectional switches.
 
 ### Fork-local declarations
 

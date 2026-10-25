@@ -53,6 +53,8 @@ frontの定数・runtime書式引数への接続は残っているため、ソ�
 完全な区間を保持できるようにし、全区間ペアで検査しました。
 [方向付きMOSのソース実行](docs/notes/source-mos-execution.ja.md)は通常driverを取り込み、
 制御を別に捕捉します。部分対応であり、受動接続、登録netのforce、完全な強さの書式は残作業です。
+[受動網のカーネル実行](docs/notes/passive-network-execution.ja.md)で、物理originの経路と
+不確定な導通のworldを解決します。SIR・ソースとの接続は残作業です。
 
 広い三状態ゲートでも、語をまたぐL/Hマスクの両半分を保持します。新規73ソースは
 Icarus 13.0・開発版とすべて一致しました。[対応範囲と検証](docs/notes/wide-gate-strength.ja.md)を
@@ -184,11 +186,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,364 | 5,361、2 本は飛ばす、1 本は失敗 | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,383 | 5,380、2 本は飛ばす、1 本は失敗 | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）591、`tests/suite/` 4,561（`tools/` の 140 個の生成器が作る）、道具 153、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）610、`tests/suite/` 4,561（`tools/` の 140 個の生成器が作る）、道具 153、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

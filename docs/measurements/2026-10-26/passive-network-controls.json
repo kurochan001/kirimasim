@@ -1,0 +1,470 @@
+{
+  "date": "2026-10-26",
+  "scope": "Native passive graph/origin/conduction runtime; no source-passive support claim",
+  "new_passive_controls": 15,
+  "retested_origin_controls": 13,
+  "all_compiled_and_caught": true,
+  "restored_focused_tests": 300,
+  "controls": [
+    {
+      "name": "passive network: graph resolution bypassed",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.SharedUncertainEdgeResolvesBeforeWorldHullsAndNotifiesRangeOnly",
+        "PassiveNetwork.IntermediateWiredReadoutNeverBecomesAnotherPhysicalRoot",
+        "PassiveNetwork.RingLosesLastRootAndCallbackUpdatesKeepWholeSnapshotsDistinct",
+        "PassiveNetwork.LongResistivePathsCrossPackedAndElementBoundariesBothWays",
+        "PassiveNetwork.UwireCountsPotentialDistinctOriginsNotMultiplePathsOrInitialOff",
+        "PassiveNetwork.DisconnectedRootsInOnePublicationComponentDoNotViolateUwire",
+        "PassiveNetwork.InvalidGraphConfigurationIsRetryableWithoutPublication",
+        "PassiveNetwork.ConfigurationOwnsNodeOriginAndEdgeTables",
+        "PassiveNetwork.EveryConductionTransitionUsesItsDestinationDelayAfterIssuerEnds",
+        "PassiveNetwork.SamePendingStateRetainsDeadlineAndCarriesCurrentDataWithoutPathDelay",
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.DataTraversesCommittedEdgeWhileOffPropagationIsStillPending",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations",
+        "PassiveNetwork.ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResolution",
+        "PassiveNetwork.OverflowPreservesOwnedPendingConductionAndItsDeadline",
+        "PassiveNetwork.MoreThan64UncertainEdgesHaveNoWordMaskCutoffAndHonorWallBudget"
+      ]
+    },
+    {
+      "name": "passive network: local identity origins lose supply rank",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.RingLosesLastRootAndCallbackUpdatesKeepWholeSnapshotsDistinct",
+        "PassiveNetwork.LongResistivePathsCrossPackedAndElementBoundariesBothWays",
+        "PassiveNetwork.DisconnectedRootsInOnePublicationComponentDoNotViolateUwire",
+        "PassiveNetwork.ConfigurationOwnsNodeOriginAndEdgeTables"
+      ]
+    },
+    {
+      "name": "passive network: edges omit strength reduction",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.RingLosesLastRootAndCallbackUpdatesKeepWholeSnapshotsDistinct",
+        "PassiveNetwork.LongResistivePathsCrossPackedAndElementBoundariesBothWays",
+        "PassiveNetwork.UwireCountsPotentialDistinctOriginsNotMultiplePathsOrInitialOff"
+      ]
+    },
+    {
+      "name": "passive network: reverse transport omitted",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.IntermediateWiredReadoutNeverBecomesAnotherPhysicalRoot",
+        "PassiveNetwork.LongResistivePathsCrossPackedAndElementBoundariesBothWays"
+      ]
+    },
+    {
+      "name": "passive network: uncertain edges always conduct",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.SharedUncertainEdgeResolvesBeforeWorldHullsAndNotifiesRangeOnly",
+        "PassiveNetwork.EveryConductionTransitionUsesItsDestinationDelayAfterIssuerEnds",
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations"
+      ]
+    },
+    {
+      "name": "passive network: only first conducting world retained",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.SharedUncertainEdgeResolvesBeforeWorldHullsAndNotifiesRangeOnly",
+        "PassiveNetwork.EveryConductionTransitionUsesItsDestinationDelayAfterIssuerEnds",
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations",
+        "PassiveNetwork.MoreThan64UncertainEdgesHaveNoWordMaskCutoffAndHonorWallBudget"
+      ]
+    },
+    {
+      "name": "passive network: last world replaces hull endpoint",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.SharedUncertainEdgeResolvesBeforeWorldHullsAndNotifiesRangeOnly",
+        "PassiveNetwork.EveryConductionTransitionUsesItsDestinationDelayAfterIssuerEnds",
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations"
+      ]
+    },
+    {
+      "name": "passive network: colocated origins reuse first range",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.SharedUncertainEdgeResolvesBeforeWorldHullsAndNotifiesRangeOnly"
+      ]
+    },
+    {
+      "name": "passive network: uwire ignores remote physical roots",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.UwireCountsPotentialDistinctOriginsNotMultiplePathsOrInitialOff",
+        "PassiveNetwork.InvalidGraphConfigurationIsRetryableWithoutPublication"
+      ]
+    },
+    {
+      "name": "passive network: cross-component edge accepted",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.InvalidGraphConfigurationIsRetryableWithoutPublication"
+      ]
+    },
+    {
+      "name": "passive network: rootless rings preserve cached readout",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.RingLosesLastRootAndCallbackUpdatesKeepWholeSnapshotsDistinct"
+      ]
+    },
+    {
+      "name": "passive network: first path prevents stronger later route",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.RingLosesLastRootAndCallbackUpdatesKeepWholeSnapshotsDistinct"
+      ]
+    },
+    {
+      "name": "passive network: uncertain root points collapse to last point",
+      "path": "src/kernel/strength_network.cpp",
+      "source_sha256": "36721cb1766d1d5c3f3e02b06ded66e9bd6bbb9da69d2e746aa10ea98e634b81",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds",
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.SamePendingStateRetainsDeadlineAndCarriesCurrentDataWithoutPathDelay"
+      ]
+    },
+    {
+      "name": "passive network: uncertain conduction uses on delay",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing"
+      ]
+    },
+    {
+      "name": "passive network: delayed edge timers are discarded",
+      "path": "src/kernel/sim.cpp",
+      "source_sha256": "51674da51ad4206931292b4b8cb7a4d50888f3656ceb0e3f884968e3ca9d4217",
+      "build_target": "all",
+      "test_filter": "^PassiveNetwork[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.EveryConductionTransitionUsesItsDestinationDelayAfterIssuerEnds",
+        "PassiveNetwork.SamePendingStateRetainsDeadlineAndCarriesCurrentDataWithoutPathDelay",
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.DataTraversesCommittedEdgeWhileOffPropagationIsStillPending",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations",
+        "PassiveNetwork.ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResolution",
+        "PassiveNetwork.OverflowPreservesOwnedPendingConductionAndItsDeadline"
+      ]
+    },
+    {
+      "name": "strength origins: startup origins are replaced with zero drive",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.EveryThreeEdgeTransferAndControlCombinationPreservesReconvergence",
+        "PassiveNetwork.SharedUncertainEdgeResolvesBeforeWorldHullsAndNotifiesRangeOnly",
+        "PassiveNetwork.IntermediateWiredReadoutNeverBecomesAnotherPhysicalRoot",
+        "PassiveNetwork.RingLosesLastRootAndCallbackUpdatesKeepWholeSnapshotsDistinct",
+        "PassiveNetwork.LongResistivePathsCrossPackedAndElementBoundariesBothWays",
+        "PassiveNetwork.UwireCountsPotentialDistinctOriginsNotMultiplePathsOrInitialOff",
+        "PassiveNetwork.DisconnectedRootsInOnePublicationComponentDoNotViolateUwire",
+        "PassiveNetwork.InvalidGraphConfigurationIsRetryableWithoutPublication",
+        "PassiveNetwork.ConfigurationOwnsNodeOriginAndEdgeTables",
+        "PassiveNetwork.EveryConductionTransitionUsesItsDestinationDelayAfterIssuerEnds",
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations",
+        "PassiveNetwork.ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResolution",
+        "PassiveNetwork.OverflowPreservesOwnedPendingConductionAndItsDeadline",
+        "PassiveNetwork.MoreThan64UncertainEdgesHaveNoWordMaskCutoffAndHonorWallBudget",
+        "StrengthDrivers.RegistrationOwnsTablesAndPreservesOrdinaryXAndMosZUntilInitialActiveSolve",
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata",
+        "StrengthDrivers.ExplicitPullAndSupplyArePhysicalOriginsRatherThanDuplicatedNetDrivers",
+        "StrengthDrivers.InvalidStaticRowsAreAtomicAndRetryable",
+        "StrengthDrivers.CompleteComponentCommitsBeforeCallbacksAndReentrantDrivesQueueDistinctSnapshots",
+        "StrengthDrivers.RevertingToCommittedRangeCancelsWithoutSchedulingAndImmediateDriveCancelsTimers",
+        "StrengthDrivers.DestinationValueSelectsScalarDelayForEveryValueAndStrengthOnlyChange",
+        "StrengthDrivers.ContextsAndStopRequestsDoNotLeakOriginsOrPublishIncompleteResults"
+      ]
+    },
+    {
+      "name": "strength origins: driver intervals lose the low endpoint",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.RegistrationOwnsTablesAndPreservesOrdinaryXAndMosZUntilInitialActiveSolve",
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata",
+        "StrengthDrivers.RepeatedRootsCoalesceIntoOneCompleteComponentSnapshot",
+        "StrengthDrivers.CompleteRangeNoticesPropagateThroughSixDirectedMosDevicesWithoutOrdinaryEdges",
+        "StrengthDrivers.SamePendingIntervalKeepsDeadlineAndOwnsCapturedValue",
+        "StrengthDrivers.DestinationValueSelectsScalarDelayForEveryValueAndStrengthOnlyChange",
+        "StrengthDrivers.ScalarOriginsHaveIndependentInertialTimers",
+        "StrengthDrivers.OverflowDoesNotReplaceThePreviouslyOwnedPendingRange"
+      ]
+    },
+    {
+      "name": "strength origins: all physical origins reuse the first root",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata",
+        "StrengthDrivers.ExplicitPullAndSupplyArePhysicalOriginsRatherThanDuplicatedNetDrivers",
+        "StrengthDrivers.RepeatedRootsCoalesceIntoOneCompleteComponentSnapshot"
+      ]
+    },
+    {
+      "name": "strength origins: wired tie rules use wire resolution",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata"
+      ]
+    },
+    {
+      "name": "strength origins: dirty components queue more than once",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.RepeatedRootsCoalesceIntoOneCompleteComponentSnapshot",
+        "StrengthDrivers.CompleteComponentCommitsBeforeCallbacksAndReentrantDrivesQueueDistinctSnapshots"
+      ]
+    },
+    {
+      "name": "strength origins: repeated pending results replace deadlines",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.SamePendingStateRetainsDeadlineAndCarriesCurrentDataWithoutPathDelay",
+        "StrengthDrivers.SamePendingIntervalKeepsDeadlineAndOwnsCapturedValue"
+      ]
+    },
+    {
+      "name": "strength origins: stale timers commit a newer pending result",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "PassiveNetwork.ScalarEdgesKeepIndependentPendingGenerations",
+        "StrengthDrivers.DifferentSameValueIntervalCancelsAndReschedulesFromCurrentTime"
+      ]
+    },
+    {
+      "name": "strength origins: strength-only one changes use off delay",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.SamePendingIntervalKeepsDeadlineAndOwnsCapturedValue",
+        "StrengthDrivers.DestinationValueSelectsScalarDelayForEveryValueAndStrengthOnlyChange"
+      ]
+    },
+    {
+      "name": "strength origins: explicit zero commits in Active",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResolution",
+        "StrengthDrivers.ExplicitZeroWaitsForInactiveAndReactiveWritesQueueLaterActiveWork"
+      ]
+    },
+    {
+      "name": "strength origins: committed reversion leaves the pending timer live",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.DifferentPendingStatesCancelAndCommittedReversionSchedulesNothing",
+        "StrengthDrivers.RevertingToCommittedRangeCancelsWithoutSchedulingAndImmediateDriveCancelsTimers"
+      ]
+    },
+    {
+      "name": "strength origins: overflow replaces the owned pending interval",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.OverflowPreservesOwnedPendingConductionAndItsDeadline",
+        "StrengthDrivers.OverflowDoesNotReplaceThePreviouslyOwnedPendingRange"
+      ]
+    },
+    {
+      "name": "strength origins: dirty work follows Reactive ownership",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "PassiveNetwork.ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResolution",
+        "StrengthDrivers.ExplicitZeroWaitsForInactiveAndReactiveWritesQueueLaterActiveWork"
+      ]
+    },
+    {
+      "name": "strength origins: uwire accepts multiple physical roots",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "bae77eb51331c0af60daaf4e05f39c9391a2dd952c930ab3c5bf1abf95ba5b00",
+      "build_target": "all",
+      "test_filter": "^(StrengthDrivers|PassiveNetwork)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.InvalidStaticRowsAreAtomicAndRetryable"
+      ]
+    }
+  ]
+}
