@@ -714,7 +714,7 @@ TEST(ActivationEnvironment, StaticReferenceForwardingNeverFollowsAReusedFormalBi
 TEST(ActivationEnvironment, UnsupportedOwnedProvidersAndMalformedTablesAreRejected) {
     unsigned cases = 0;
     for (const auto type :
-         {s::Type{s::TypeKind::Event, 0}, s::refType(), s::voidType(), s::u4(0)}) {
+         {s::Type{s::TypeKind::Event, 1}, s::refType(), s::voidType(), s::u4(0)}) {
         k::ActivationStore store;
         Body body;
         body.frame = {{"field", type}};

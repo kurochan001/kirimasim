@@ -165,7 +165,7 @@ TEST(ActivationSir, MalformedScopeAndCaptureTablesAreRejectedByTheSharedVerifier
                 expected = "typed storage";
                 break;
             case 11:
-                parent.frame[1].type = {TypeKind::Event, 0};
+                parent.frame[1].type = {TypeKind::Event, 1};
                 expected = "typed storage";
                 break;
             case 12:
