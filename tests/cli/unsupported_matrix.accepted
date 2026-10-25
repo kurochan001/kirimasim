@@ -1,5 +1,6 @@
 automatic_in_fork
 event_named_iff
+event_var_index
 fork_declaration
 intra_delay_array
 member_run_time_bit
