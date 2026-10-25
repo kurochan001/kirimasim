@@ -1,0 +1,380 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "99dafab46300559a0d6f9b7f75aa0f2922c077bd",
+  "publication_revision": "49bd306910f838ec3317ac1108917fed89a07c89",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/front/lower.cpp": "15f932b170d990caea73e032c7c14643ade39601e3d38d44110961ef9ce89ee7",
+    "src/front/lower_expr.cpp": "3a40f4f13ab7c8e0f48f858759be2d4819fbaf6091068ae5921c6e091b8acfb8",
+    "src/kernel/CMakeLists.txt": "4981e9e44b89070022f6c3ef95fe91228482125e0533b062bc6592fa4acc55e2",
+    "src/kernel/format.cpp": "a472a8c21bd5d13e94797c53a54146162eafc7b3cc2d708ee87b0d45f2a7b123",
+    "src/kernel/include/kirimasim/kernel/bits.h": "d2a71071061e7223b8513713d9256dbb99d9db0c80ff80a553d60b87a1c78b40",
+    "src/kernel/include/kirimasim/kernel/context.h": "dc4d5a339ce65c90a37067dbb6ac028389dab571a7e4eb4457b36e1e19938d2b",
+    "src/kernel/include/kirimasim/kernel/sim.h": "c11c68dc5f4ee40b1f73d2205047b624e6455c2e15744e2e52c527310b954e0a",
+    "src/kernel/include/kirimasim/kernel/strength_store.h": "a76cae9174c48f85fea9b2c9b12e572c612d16bc8b8a6e7fcd7f11c4ec54fe1c",
+    "src/kernel/include/kirimasim/kernel/wide.h": "360c905cc747c1e4269c667fc221c20713d78c3064b24b76ba2fe1487ea01d47",
+    "src/kernel/memfile.cpp": "99c51ad32c45f73f60173276225a3c8d0d81a1d52a26163f716008bbefbf6544",
+    "src/kernel/sim.cpp": "af371c2bfd6b8118331262b1fefc6db42cdcd6b529bd91e4c08641c0598e7064",
+    "src/kernel/strength_publication.cpp": "a69309ec765992f9e36890948a98f6d7bb43fe496f7c7e00006d453d7cc06adc",
+    "src/kernel/strength_store.cpp": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+    "src/kernel/wide.cpp": "c7e783994b0ebc373196795d85e33d244cb00ddb903d1f282fb42d9cc9dab064",
+    "src/sir/include/kirimasim/sir/types.h": "6ca381ce872eadfb9fa9d8d277ccbd0bcac4f27bc67c6f83f738e5fdcb2aded9",
+    "src/sir/verify.cpp": "c4fd7d96312bde1620c9f81f88d5e1565ab8487a2e1990a004a58d0f89852c74",
+    "src/valsem/value.cpp": "ed424100d39445126bb7168d1bdb4dd242f2a49176ebd06d38bc6fc1d177a662",
+    "src/vm/vm.cpp": "b01e4088b77ed80ee10bdcabbc15fb39d3c50b342be324573c3a79f988110939",
+    "tests/unit/CMakeLists.txt": "615d2a58a4850ba003582404b801e067bae99ae6e77a10eb5d08b03af8ee4243",
+    "tests/unit/kernel_headers_cxx20.cpp": "c381b6ea3a3c40e19cfc551fedcaea02e9082a59345c3934fade713ca789f438",
+    "tests/unit/storage_width_test.cpp": "c3a541242fba13aa69aa6a87ebd37327f953c483649ef0daccf6463ad5d134d3",
+    "tests/unit/strength_store_test.cpp": "02bea645539a40d6fb6002d5c779c48353c797c35d3c5a148e6bb86a4db426c5",
+    "tools/mutants.py": "37ddee4a842298023d143891741faaa4054c8b3745f511bd5e2ee8d27968549e"
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 1.1
+    },
+    {
+      "status": "ok",
+      "name": "dev: test",
+      "seconds": 66.1
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 12.9
+    },
+    {
+      "status": "ok",
+      "name": "release: test",
+      "seconds": 57.7
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 0.8
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 15.0
+    },
+    {
+      "status": "ok",
+      "name": "asan: test",
+      "seconds": 90.6
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 1.0
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 14.8
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: test",
+      "seconds": 75.0
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.6
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 107.5
+    }
+  ],
+  "exit": 0,
+  "all_checks_passed": true,
+  "successful_checks": 21,
+  "failed_checks": 0,
+  "presets": {
+    "dev": {
+      "total": 5173,
+      "passed": 5171,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5174,
+      "passed": 5172,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5173,
+      "passed": 5171,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5173,
+      "passed": 5171,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "prior_publication_checkpoint_ci": {
+    "source_revision": "49bd306910f838ec3317ac1108917fed89a07c89",
+    "steps": [
+      {
+        "status": "ok",
+        "name": "dev: configure",
+        "seconds": 0.9
+      },
+      {
+        "status": "ok",
+        "name": "dev: build",
+        "seconds": 1.1
+      },
+      {
+        "status": "ok",
+        "name": "dev: test",
+        "seconds": 65.6
+      },
+      {
+        "status": "ok",
+        "name": "release: configure",
+        "seconds": 0.9
+      },
+      {
+        "status": "ok",
+        "name": "release: build",
+        "seconds": 10.7
+      },
+      {
+        "status": "ok",
+        "name": "release: test",
+        "seconds": 58.8
+      },
+      {
+        "status": "ok",
+        "name": "asan: configure",
+        "seconds": 0.9
+      },
+      {
+        "status": "ok",
+        "name": "asan: build",
+        "seconds": 12.5
+      },
+      {
+        "status": "ok",
+        "name": "asan: test",
+        "seconds": 100.4
+      },
+      {
+        "status": "ok",
+        "name": "ubsan: configure",
+        "seconds": 1.0
+      },
+      {
+        "status": "ok",
+        "name": "ubsan: build",
+        "seconds": 12.6
+      },
+      {
+        "status": "ok",
+        "name": "ubsan: test",
+        "seconds": 81.6
+      },
+      {
+        "status": "ok",
+        "name": "check_release_flags",
+        "seconds": 0.1
+      },
+      {
+        "status": "ok",
+        "name": "check_banned",
+        "seconds": 0.4
+      },
+      {
+        "status": "ok",
+        "name": "check_spdx",
+        "seconds": 0.1
+      },
+      {
+        "status": "ok",
+        "name": "check_suite_files",
+        "seconds": 0.1
+      },
+      {
+        "status": "ok",
+        "name": "check_global_state",
+        "seconds": 0.2
+      },
+      {
+        "status": "ok",
+        "name": "check_expected_change",
+        "seconds": 0.0
+      },
+      {
+        "status": "ok",
+        "name": "readme_counts",
+        "seconds": 0.3
+      },
+      {
+        "status": "ok",
+        "name": "clang-format",
+        "seconds": 0.6
+      },
+      {
+        "status": "ok",
+        "name": "clang-tidy",
+        "seconds": 107.5
+      }
+    ],
+    "presets": {
+      "dev": {
+        "total": 5170,
+        "passed": 5168,
+        "failed": 0,
+        "skipped": 2
+      },
+      "release": {
+        "total": 5171,
+        "passed": 5169,
+        "failed": 0,
+        "skipped": 2
+      },
+      "asan": {
+        "total": 5170,
+        "passed": 5168,
+        "failed": 0,
+        "skipped": 2
+      },
+      "ubsan": {
+        "total": 5170,
+        "passed": 5168,
+        "failed": 0,
+        "skipped": 2
+      }
+    }
+  },
+  "new_tests": {
+    "publication": 16,
+    "width_rounding": 3,
+    "total": 19
+  },
+  "interval_bit_position_checks": 88200,
+  "initial_packed_layout_cases": 14,
+  "pmr_failure_positions_per_stage": 32,
+  "allocation_stages": [
+    "registration",
+    "publication preparation"
+  ],
+  "global_allocator_failure_injection_exhaustive": false,
+  "width_cases": {
+    "word_boundaries": 10,
+    "word_apis_checked": 3,
+    "byte_boundaries": 12,
+    "byte_apis_checked": 2,
+    "malformed_huge_constant_designs": 8,
+    "giant_allocations_attempted": false
+  },
+  "watch_reuse_cycles": 512,
+  "watch_rows_after_reuse": 1,
+  "callback_watch_growth": 128,
+  "all_registered_controls_apply": 691,
+  "standalone_header_probe": {
+    "exit": 0,
+    "standard": "c++20",
+    "exceptions": false,
+    "rtti": false,
+    "compile_only": true
+  },
+  "manual_expected_change_checks": [
+    {
+      "base": "49bd306910f838ec3317ac1108917fed89a07c89^",
+      "head": "49bd306910f838ec3317ac1108917fed89a07c89",
+      "exit": 0,
+      "existing_expectations_kept": true
+    },
+    {
+      "base": "99dafab46300559a0d6f9b7f75aa0f2922c077bd^",
+      "head": "99dafab46300559a0d6f9b7f75aa0f2922c077bd",
+      "exit": 0,
+      "existing_expectations_kept": true
+    }
+  ],
+  "source_mos_execution_enabled": false,
+  "physical_driver_origin_table_implemented": false,
+  "strength_load_drive_implemented": false,
+  "active_dirty_component_queue_implemented": false,
+  "passive_network_solver_implemented": false,
+  "registered_strength_hold_integration_implemented": false,
+  "new_c_abi_functions": false,
+  "performance_budgets_changed": false,
+  "event_collection_timing_changed": false,
+  "reference_probes_refreshed": false,
+  "external_datasets_refreshed": false,
+  "external_simulator_speed_comparison_refreshed": false,
+  "p1_complete": false
+}

@@ -1,0 +1,291 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "99dafab46300559a0d6f9b7f75aa0f2922c077bd",
+  "publication_revision": "49bd306910f838ec3317ac1108917fed89a07c89",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/front/lower.cpp": "15f932b170d990caea73e032c7c14643ade39601e3d38d44110961ef9ce89ee7",
+    "src/front/lower_expr.cpp": "3a40f4f13ab7c8e0f48f858759be2d4819fbaf6091068ae5921c6e091b8acfb8",
+    "src/kernel/CMakeLists.txt": "4981e9e44b89070022f6c3ef95fe91228482125e0533b062bc6592fa4acc55e2",
+    "src/kernel/format.cpp": "a472a8c21bd5d13e94797c53a54146162eafc7b3cc2d708ee87b0d45f2a7b123",
+    "src/kernel/include/kirimasim/kernel/bits.h": "d2a71071061e7223b8513713d9256dbb99d9db0c80ff80a553d60b87a1c78b40",
+    "src/kernel/include/kirimasim/kernel/context.h": "dc4d5a339ce65c90a37067dbb6ac028389dab571a7e4eb4457b36e1e19938d2b",
+    "src/kernel/include/kirimasim/kernel/sim.h": "c11c68dc5f4ee40b1f73d2205047b624e6455c2e15744e2e52c527310b954e0a",
+    "src/kernel/include/kirimasim/kernel/strength_store.h": "a76cae9174c48f85fea9b2c9b12e572c612d16bc8b8a6e7fcd7f11c4ec54fe1c",
+    "src/kernel/include/kirimasim/kernel/wide.h": "360c905cc747c1e4269c667fc221c20713d78c3064b24b76ba2fe1487ea01d47",
+    "src/kernel/memfile.cpp": "99c51ad32c45f73f60173276225a3c8d0d81a1d52a26163f716008bbefbf6544",
+    "src/kernel/sim.cpp": "af371c2bfd6b8118331262b1fefc6db42cdcd6b529bd91e4c08641c0598e7064",
+    "src/kernel/strength_publication.cpp": "a69309ec765992f9e36890948a98f6d7bb43fe496f7c7e00006d453d7cc06adc",
+    "src/kernel/strength_store.cpp": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+    "src/kernel/wide.cpp": "c7e783994b0ebc373196795d85e33d244cb00ddb903d1f282fb42d9cc9dab064",
+    "src/sir/include/kirimasim/sir/types.h": "6ca381ce872eadfb9fa9d8d277ccbd0bcac4f27bc67c6f83f738e5fdcb2aded9",
+    "src/sir/verify.cpp": "c4fd7d96312bde1620c9f81f88d5e1565ab8487a2e1990a004a58d0f89852c74",
+    "src/valsem/value.cpp": "ed424100d39445126bb7168d1bdb4dd242f2a49176ebd06d38bc6fc1d177a662",
+    "src/vm/vm.cpp": "b01e4088b77ed80ee10bdcabbc15fb39d3c50b342be324573c3a79f988110939",
+    "tests/unit/CMakeLists.txt": "615d2a58a4850ba003582404b801e067bae99ae6e77a10eb5d08b03af8ee4243",
+    "tests/unit/kernel_headers_cxx20.cpp": "c381b6ea3a3c40e19cfc551fedcaea02e9082a59345c3934fade713ca789f438",
+    "tests/unit/storage_width_test.cpp": "c3a541242fba13aa69aa6a87ebd37327f953c483649ef0daccf6463ad5d134d3",
+    "tests/unit/strength_store_test.cpp": "02bea645539a40d6fb6002d5c779c48353c797c35d3c5a148e6bb86a4db426c5",
+    "tools/mutants.py": "37ddee4a842298023d143891741faaa4054c8b3745f511bd5e2ee8d27968549e"
+  },
+  "controls": [
+    {
+      "name": "storage width: byte count wraps at large widths",
+      "path": "src/kernel/include/kirimasim/kernel/bits.h",
+      "source_sha256": "d2a71071061e7223b8513713d9256dbb99d9db0c80ff80a553d60b87a1c78b40",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StorageWidth.ByteCountsCoverUnalignedAndMaximumWidthsWithoutWrapping"
+      ]
+    },
+    {
+      "name": "storage width: SIR word count wraps at large widths",
+      "path": "src/sir/include/kirimasim/sir/types.h",
+      "source_sha256": "6ca381ce872eadfb9fa9d8d277ccbd0bcac4f27bc67c6f83f738e5fdcb2aded9",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StorageWidth.CeilingWordCountsRemainValidAtTheFullUnsignedWidth",
+        "StorageWidth.TruncatedHugeConstantsAreRejectedWithoutAllocatingTheirDeclaredWidth"
+      ]
+    },
+    {
+      "name": "storage width: SIR byte count wraps at large widths",
+      "path": "src/sir/include/kirimasim/sir/types.h",
+      "source_sha256": "6ca381ce872eadfb9fa9d8d277ccbd0bcac4f27bc67c6f83f738e5fdcb2aded9",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StorageWidth.ByteCountsCoverUnalignedAndMaximumWidthsWithoutWrapping"
+      ]
+    },
+    {
+      "name": "storage width: word count wraps at large widths",
+      "path": "src/kernel/include/kirimasim/kernel/bits.h",
+      "source_sha256": "d2a71071061e7223b8513713d9256dbb99d9db0c80ff80a553d60b87a1c78b40",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StorageWidth.CeilingWordCountsRemainValidAtTheFullUnsignedWidth"
+      ]
+    },
+    {
+      "name": "strength publication: initial projection mismatch is accepted",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.RegistrationRejectsProjectionMismatchUnsupportedDomainsAndExistingHolds"
+      ]
+    },
+    {
+      "name": "strength publication: published ranges lose their high endpoint",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.CompleteIntervalsSurvivePublicationInEveryBitAndArrayElement",
+        "StrengthStore.RangeOnlyChangesNotifyInternalsButDoNotWakeOrdinaryWaitsOrCountValueChanges",
+        "StrengthStore.PublishesAllFieldsBeforeAnyCallbackDespiteRegistryGrowthAndReentry",
+        "StrengthStore.AllocationFailuresDuringRegistrationAndPublicationNeverExposePartialState",
+        "StrengthStore.DistinctCommittedTransitionsSurviveAnOuterNotificationWalk",
+        "StrengthStore.CallbackAllocationFailureReportsACompleteCommitAndDropsPendingNotices",
+        "StrengthStore.AStopDuringInternalNotificationSkipsLaterCallbacksWithoutPartialPublication",
+        "StrengthStore.ContextsOwnIndependentPublishedValuesAndWatchRegistries"
+      ]
+    },
+    {
+      "name": "strength publication: callbacks run before component commitment",
+      "path": "src/kernel/strength_publication.cpp",
+      "source_sha256": "a69309ec765992f9e36890948a98f6d7bb43fe496f7c7e00006d453d7cc06adc",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.RangeOnlyChangesNotifyInternalsButDoNotWakeOrdinaryWaitsOrCountValueChanges",
+        "StrengthStore.PublishesAllFieldsBeforeAnyCallbackDespiteRegistryGrowthAndReentry",
+        "StrengthStore.WatchCancellationReusesRowsWithoutAllocationAndStaleTokensCannotCancelNewRows",
+        "StrengthStore.CallbackCancellationAndImmediateRowReuseWaitForTheNextPublication",
+        "StrengthStore.DistinctCommittedTransitionsSurviveAnOuterNotificationWalk",
+        "StrengthStore.ContextsOwnIndependentPublishedValuesAndWatchRegistries"
+      ]
+    },
+    {
+      "name": "strength publication: range-only changes have no internal notice",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.RangeOnlyChangesNotifyInternalsButDoNotWakeOrdinaryWaitsOrCountValueChanges"
+      ]
+    },
+    {
+      "name": "strength publication: newly registered watches see an old publication",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.PublishesAllFieldsBeforeAnyCallbackDespiteRegistryGrowthAndReentry",
+        "StrengthStore.CallbackCancellationAndImmediateRowReuseWaitForTheNextPublication"
+      ]
+    },
+    {
+      "name": "strength publication: canceled watch generations are reused",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.WatchCancellationReusesRowsWithoutAllocationAndStaleTokensCannotCancelNewRows",
+        "StrengthStore.CallbackCancellationAndImmediateRowReuseWaitForTheNextPublication"
+      ]
+    },
+    {
+      "name": "strength publication: legacy writes bypass metadata ownership",
+      "path": "src/kernel/sim.cpp",
+      "source_sha256": "af371c2bfd6b8118331262b1fefc6db42cdcd6b529bd91e4c08641c0598e7064",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.LegacyWritesAndHoldsCannotBypassARegisteredPublisher"
+      ]
+    },
+    {
+      "name": "strength publication: overlapping updates are accepted",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.MalformedBatchesAndConflictingPartsLeaveAllFieldsAndNoticesUntouched"
+      ]
+    },
+    {
+      "name": "strength publication: preparation exposes partial metadata",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.MalformedBatchesAndConflictingPartsLeaveAllFieldsAndNoticesUntouched",
+        "StrengthStore.AllocationFailuresDuringRegistrationAndPublicationNeverExposePartialState"
+      ]
+    },
+    {
+      "name": "strength publication: termination still invokes later callbacks",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "48fcdf82cacaad03a308a036bc16ee1dd0a5f8d3b49068c0544eb69b62dc482c",
+      "build_target": "all",
+      "test_filter": "^(StrengthStore|StorageWidth)[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthStore.AStopDuringInternalNotificationSkipsLaterCallbacksWithoutPartialPublication"
+      ]
+    },
+    {
+      "name": "vm: force writes the low chunk",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "b01e4088b77ed80ee10bdcabbc15fb39d3c50b342be324573c3a79f988110939",
+      "build_target": "all",
+      "test_filter": "^suite/ports/fixed_array_port_force.*(65|129)$",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/ports/fixed_array_port_force_bounds_rank2_129",
+        "suite/ports/fixed_array_port_force_bounds_rank2_65",
+        "suite/ports/fixed_array_port_force_bounds_up_129",
+        "suite/ports/fixed_array_port_force_bounds_up_65"
+      ]
+    },
+    {
+      "name": "front: a wide default is x in its low word",
+      "path": "src/front/lower.cpp",
+      "source_sha256": "15f932b170d990caea73e032c7c14643ade39601e3d38d44110961ef9ce89ee7",
+      "build_target": "all",
+      "test_filter": "^dump_sir/|^suite/.*wide",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/values/enum_step_wide260_always",
+        "suite/values/enum_step_wide260_final",
+        "suite/values/enum_step_wide260_fork",
+        "suite/values/enum_step_wide260_function",
+        "suite/values/enum_step_wide260_generate",
+        "suite/values/enum_step_wide260_initial",
+        "suite/values/enum_step_wide260_interface",
+        "suite/values/enum_step_wide260_ref",
+        "suite/values/enum_step_wide260_static_task",
+        "suite/values/enum_step_wide260_task",
+        "suite/values/enum_step_wide65_always",
+        "suite/values/enum_step_wide65_final",
+        "suite/values/enum_step_wide65_fork",
+        "suite/values/enum_step_wide65_function",
+        "suite/values/enum_step_wide65_generate",
+        "suite/values/enum_step_wide65_initial",
+        "suite/values/enum_step_wide65_interface",
+        "suite/values/enum_step_wide65_ref",
+        "suite/values/enum_step_wide65_static_task",
+        "suite/values/enum_step_wide65_task",
+        "suite/values/wide_matrix"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "new_publication_controls": 10,
+  "new_rounding_controls": 4,
+  "retargeted_legacy_controls": 2,
+  "baseline_tests_passed": 376,
+  "restored_tests_passed": 376,
+  "focused_tests_passed": 141,
+  "source_restored": true,
+  "compile_failures_counted_as_detections": false,
+  "public_cxx20_header_probe_in_mutated_full_builds": true
+}

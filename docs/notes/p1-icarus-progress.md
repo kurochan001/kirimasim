@@ -13,6 +13,19 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Complete net-strength publication and width bounds:** `49bd3069` connects
+[Context intervals and atomic publication](strength-store-publication.md) to the
+real Store/Scheduler, keeping range-only notices separate from ordinary values,
+edges and VCD. `99dafab4` fixes wrapping word/byte counts across storage paths
+and malformed huge-constant acceptance. Nineteen new tests and sixteen compiled
+full-build controls pass; restored production passes 376 cases, including 29
+unchanged dumps and 328 wide/force source cases. Full local CI passes all 21
+checks: dev/ASan/UBSan 5,171/5,173, release 5,172/5,174, zero failures and two
+known skips each. Two ordinary-path cost probes keep counters/RSS equal with
+no additional regression visible in five alternating pairs. Physical origins,
+SIR load/drive, dirty scheduling, passive solving and source MOS remain work.
+No Icarus gap reduction or P1 completion is claimed.
+
 **Owned strength SSA execution:** `0ec3cc57` connects
 [typed make/MOS/projection](strength-ssa-execution.md) through the shared kernel
 and VM. Thirteen original tests include 12,384 packed-MOS reference comparisons

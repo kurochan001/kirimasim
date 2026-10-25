@@ -81,8 +81,8 @@ dev/ASan/UBSanは5,152/5,154、releaseは5,153/5,155で、各失敗0・既知ス
 
 ## 残る実行の接続
 
-静的に指定したnet範囲と捕捉したindexを完全な区間のloadへ接続し、物理driver ID・originの同一性・
-独立した強さの通知・完全な区間の公開を実装します。スカラー単位の慣性遅延、world間の相関を保つ受動solver、
+[後続のカーネル接続](strength-store-publication.ja.md)で、公開区間の記憶域、内部通知、区間/値の一括公開を実装しました。
+静的に指定したnet範囲と捕捉したindexをSIR load/driveへ接続し、物理driver IDとoriginの同一性を実装します。スカラー単位の慣性遅延、world間の相関を保つ受動solver、
 force/release・portの対応・強さの書式も必要です。プリミティブ配列でも、保留状態はスカラーごとに所有します。
 通常の初期値を保ち、別途承認済みのMOS起動規則を実際のscheduler接続で適用します。
 既存の期待値・ソースと性能予算は保護します。

@@ -126,8 +126,10 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 コンパイルした9故障を検出しました。C++20のカーネル/値の意味の部品です。
 [型付きstrength SSAの実行](notes/strength-ssa-execution.ja.md)でmake/MOS/射影をVMへ接続し、
 13テスト・手書きSIR 2,034設計・コンパイルした9故障を検査しました。全local CIの21確認も通ります。
-ソースのMOS/スイッチ実行には、net/driver区間記憶域とload/drive命令、スケジュール・
-受動solver・port・書式が必要です。
+[完全なnet状態の公開](notes/strength-store-publication.ja.md)で、各Contextに公開区間を持ち、
+全区間/全値をcallbackより先に更新します。新規19公開/幅テストとコンパイルした16故障を検査し、
+全local CIの21確認も通りました。ソースのMOS/スイッチ実行には、物理driver origin、SIR load/driveの接続、
+スケジュール・受動solver・登録netのforce/release・port・書式が必要です。
 
 ### fork内の宣言
 

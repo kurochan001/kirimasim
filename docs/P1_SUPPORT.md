@@ -141,8 +141,12 @@ nine compiled faults are detected. This is a C++20 kernel/value-semantics
 component. [Typed strength SSA execution](notes/strength-ssa-execution.md) now
 connects make/MOS/projection through the VM, with 13 tests, 2,034 hand-built
 VM designs and nine caught compiled controls. Full local CI passes all 21 checks.
-Source MOS/switch execution still needs net/driver interval storage and load/drive
-operations, scheduling, passive solving, ports and formatting.
+[Complete net publication](notes/strength-store-publication.md) now stores
+published intervals in each Context and commits all ranges/values before callbacks.
+Nineteen new publication/width tests and sixteen compiled controls pass; full local
+CI passes all 21 checks. Source MOS/switch execution still needs physical driver
+origins, the SIR load/drive connection, scheduling, passive solving, registered-net
+force/release, ports and formatting.
 
 ### Fork-local declarations
 

@@ -12,6 +12,14 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
+**完全なnet強さの公開と幅の境界：** `49bd3069`で[Context区間と一括公開](strength-store-publication.ja.md)を
+実際のStore/Schedulerへ接続し、強さだけの通知を通常値・辺・VCDから分けました。
+`99dafab4`で記憶域経路のワード/byte数の巡回と、不完全な巨大定数の受理も修正しました。
+新規19テストと全体ビルド後の16故障検出が通り、復元後は既存dump29件・wide/forceソース328件を含む376件が成功します。
+全local CIの21確認が通り、dev/ASan/UBSanは5,171/5,173、releaseは5,172/5,174、各失敗0・既知スキップ2件です。
+通常経路2負荷のカウンタ/RSSは一致し、交互5組の測定で追加の悪化は見えませんでした。
+物理origin、SIR load/drive、dirty予約、受動solver、ソースMOSは残作業で、Icarus差分縮小やP1完了は主張しません。
+
 **所有するstrength SSAの実行：** `0ec3cc57`で[型付きmake/MOS/射影](strength-ssa-execution.ja.md)を
 共有カーネルとVMへ接続しました。独自13テストでpacked MOSと参照の12,384比較、手書きSIR 2,034設計、
 分岐で並行コピーする両引数、入れ子関数を確認しました。全体ビルドに成功した9故障を検出し、

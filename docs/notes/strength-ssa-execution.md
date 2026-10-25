@@ -100,9 +100,10 @@ from the fresh complete dev JUnit. These are local macOS arm64 results.
 
 ## Remaining execution work
 
-Connect statically identified net ranges and captured indices to full interval
-loads; provide physical driver IDs, origin identity, independent strength notices
-and complete interval publication. Add per-scalar inertial scheduling, the passive
+The [subsequent kernel checkpoint](strength-store-publication.md) now provides
+published interval storage, internal notices and atomic range/value publication.
+Connect statically identified net ranges and captured indices through SIR
+load/drive; provide physical driver IDs and origin identity. Add per-scalar inertial scheduling, the passive
 world-preserving solver, force/release, port mappings and strength-aware formatting.
 Primitive arrays must retain their scalar pending-state ownership. Preserve ordinary
 initialization and apply the separately approved MOS startup policy at the real
