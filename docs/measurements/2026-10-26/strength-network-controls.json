@@ -1,0 +1,259 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "faadf4b73e1419fe969c81766c1b6b5681561ce1",
+  "selected_read_wait_revision": "cea8347017f03c1ae749e532d3b867a71d1977a7",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "19bfa120f747cdb783635b774449bc2957687240f42d8774e20455d57eaff703",
+    "src/kernel/include/kirimasim/kernel/sim.h": "001b3a9dca970395c88483004f134747375e7611bc77ef989343d7ca257c4907",
+    "src/kernel/include/kirimasim/kernel/strength_store.h": "7cff423d632809a9ea7ae14addb0b020fde0381710fa98e1a8c50c241c854f20",
+    "src/kernel/sim.cpp": "9b01d0bd5a9e73d3200767d1728d79b5b6ee437461c13980f9269d06afe297c8",
+    "src/kernel/strength_store.cpp": "1fc9803428ebeb393b928d3c00b5d0e7127167c09872713035e50643a685ab46",
+    "src/kernel/strength_wait.cpp": "d0191a0b2d4769317a9c3b620dd04f8ac37309940fcc56dc50f3b3f9ab0ea300",
+    "src/sir/CMakeLists.txt": "0afd0b0bfcccdc1e3f08d460b12c8d0078b9bb90d83a5e6382cac95d60990740",
+    "src/sir/include/kirimasim/sir/design.h": "7ba089d35ae4a4952cd470f3b71567e5309834bb7be59c3905a892b385949e6d",
+    "src/sir/include/kirimasim/sir/strength.h": "8b3f09826b966bdfe4cf2412a3f3295211cad4f826a159620f1c6e3f06198024",
+    "src/sir/strength.cpp": "3976b6c468e6e1c1cc3e041e2bea85a8f5460fa69530d729a122b2e7d8f2d5a5",
+    "src/sir/text.cpp": "c6d10949bc447b06129e6b50ab0dbd3496ce5534fae8695774d31c148ab111ff",
+    "src/sir/types.cpp": "181e441d36d7a88668e2ff872ae6cd78689b6f48f6b6008abf139749aaa68331",
+    "src/sir/verify.cpp": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+    "src/vm/vm.cpp": "9a38265e5cb3f57e74b057515e564db8a1fa2f7580ecbd2e98900d40a544310a",
+    "tests/unit/CMakeLists.txt": "f4e51bcd15ab31724cebc3c751dbac42f70532c3f809fb9565838d26c8c9b293",
+    "tests/unit/strength_network_sir_test.cpp": "f37f7c18f4fde81ea900025782d1dba2655ea11808a9b3ff94131e98f46e89a1",
+    "tests/unit/strength_selection_wait_test.cpp": "d788c2227d7cc6389aaab189be46e3d28d5de521c95cd7e74acf9196d0de505e",
+    "tests/unit/strength_sir_test.cpp": "44927233baa1015e59076e1b7fcf63d747629eede385eaadd0dbb6009e08c432",
+    "tools/mutants.py": "3b84e72d779537a6e2160d2857eb74c7deee6e54728386ecc01da1281112cf5a"
+  },
+  "controls": [
+    {
+      "name": "strength bridge: invalid selected bits become Z",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "1fc9803428ebeb393b928d3c00b5d0e7127167c09872713035e50643a685ab46",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.CapturedArrayAndBitSelectorsRespectBoundsAliasesWideTypesAndPackedTails",
+        "StrengthSelection.CapturedSelectionsPreserveEveryIntervalAndFillOnlyMissingBitsWithStrongX"
+      ]
+    },
+    {
+      "name": "strength bridge: selected arrays read element zero",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "1fc9803428ebeb393b928d3c00b5d0e7127167c09872713035e50643a685ab46",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.CapturedArrayAndBitSelectorsRespectBoundsAliasesWideTypesAndPackedTails",
+        "StrengthSelection.CapturedSelectionsPreserveEveryIntervalAndFillOnlyMissingBitsWithStrongX"
+      ]
+    },
+    {
+      "name": "strength bridge: negative part selections lose the missing low bits",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "1fc9803428ebeb393b928d3c00b5d0e7127167c09872713035e50643a685ab46",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.CapturedArrayAndBitSelectorsRespectBoundsAliasesWideTypesAndPackedTails",
+        "StrengthSelection.CapturedSelectionsPreserveEveryIntervalAndFillOnlyMissingBitsWithStrongX"
+      ]
+    },
+    {
+      "name": "strength bridge: selected reads ignore their parent window",
+      "path": "src/kernel/strength_store.cpp",
+      "source_sha256": "1fc9803428ebeb393b928d3c00b5d0e7127167c09872713035e50643a685ab46",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.CapturedArrayAndBitSelectorsRespectBoundsAliasesWideTypesAndPackedTails",
+        "StrengthSelection.CapturedSelectionsPreserveEveryIntervalAndFillOnlyMissingBitsWithStrongX"
+      ]
+    },
+    {
+      "name": "strength bridge: internal waits use the previous process generation",
+      "path": "src/kernel/strength_wait.cpp",
+      "source_sha256": "d0191a0b2d4769317a9c3b620dd04f8ac37309940fcc56dc50f3b3f9ab0ea300",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.StrengthOnlyChangesReevaluateTheDeviceThroughSharedKernelWaits",
+        "StrengthWait.RepeatedRegistrationReusesOneWatchWithoutStaleWakeups"
+      ]
+    },
+    {
+      "name": "strength bridge: partial wait registration leaks strength subscriptions",
+      "path": "src/kernel/strength_wait.cpp",
+      "source_sha256": "d0191a0b2d4769317a9c3b620dd04f8ac37309940fcc56dc50f3b3f9ab0ea300",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthWait.StagedAllocationFailureOrInvalidRangesKeepThePreviousWait"
+      ]
+    },
+    {
+      "name": "strength bridge: ordinary wait cleanup retains internal subscriptions",
+      "path": "src/kernel/sim.cpp",
+      "source_sha256": "9b01d0bd5a9e73d3200767d1728d79b5b6ee437461c13980f9269d06afe297c8",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.EveryIntervalAndDeviceControlSurvivesLoadMosDriveAndOpposingResolution",
+        "StrengthNetworkVm.StrengthOnlyChangesReevaluateTheDeviceThroughSharedKernelWaits",
+        "StrengthWait.StrengthOnlyChangesWakeOnceAndCancelEveryOrdinaryAlternative",
+        "StrengthWait.OrdinaryChangesCancelAllStrengthAlternativesAndArrayRows",
+        "StrengthWait.WaitReplacementCancellationKillAndProcessReuseDropInternalRegistrations",
+        "StrengthWait.RepeatedRegistrationReusesOneWatchWithoutStaleWakeups",
+        "StrengthWait.StagedAllocationFailureOrInvalidRangesKeepThePreviousWait"
+      ]
+    },
+    {
+      "name": "strength bridge: node coverage ignores missing bits",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkSir.CompleteCoverageUniqueTargetsAndInstructionOwnersAreRequired"
+      ]
+    },
+    {
+      "name": "strength bridge: duplicate scalar nodes are accepted",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkSir.CompleteCoverageUniqueTargetsAndInstructionOwnersAreRequired"
+      ]
+    },
+    {
+      "name": "strength bridge: drive instructions may target another process origin",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkSir.CompleteCoverageUniqueTargetsAndInstructionOwnersAreRequired"
+      ]
+    },
+    {
+      "name": "strength bridge: mutable operations may bypass the component publisher",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkSir.ReadOnlyNetworkOwnershipAndCompleteInstructionShapesAreEnforced"
+      ]
+    },
+    {
+      "name": "strength bridge: static initializers lose their declared published metadata",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "9a38265e5cb3f57e74b057515e564db8a1fa2f7580ecbd2e98900d40a544310a",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.InitialPublishedMetadataIsVisibleToStaticInitBeforeInitialActiveResolution"
+      ]
+    },
+    {
+      "name": "strength bridge: device waits ignore complete-range sensitivity",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "9a38265e5cb3f57e74b057515e564db8a1fa2f7580ecbd2e98900d40a544310a",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.StrengthOnlyChangesReevaluateTheDeviceThroughSharedKernelWaits"
+      ]
+    },
+    {
+      "name": "strength bridge: fixed array selections ignore their captured ordinal",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "9a38265e5cb3f57e74b057515e564db8a1fa2f7580ecbd2e98900d40a544310a",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.CapturedArrayAndBitSelectorsRespectBoundsAliasesWideTypesAndPackedTails"
+      ]
+    },
+    {
+      "name": "strength bridge: unknown bit selectors select position zero",
+      "path": "src/vm/vm.cpp",
+      "source_sha256": "9a38265e5cb3f57e74b057515e564db8a1fa2f7580ecbd2e98900d40a544310a",
+      "build_target": "all",
+      "test_filter": "^(StrengthSelection|StrengthWait|StrengthNetwork)[A-Za-z]*[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthNetworkVm.CapturedArrayAndBitSelectorsRespectBoundsAliasesWideTypesAndPackedTails"
+      ]
+    },
+    {
+      "name": "strength SSA: ordinary syscall accepts metadata",
+      "path": "src/sir/verify.cpp",
+      "source_sha256": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+      "build_target": "all",
+      "test_filter": "^StrengthSir[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthSir.EveryOrdinaryConsumerAndUndeclaredProducerRejectMetadata"
+      ]
+    }
+  ],
+  "new_controls": 15,
+  "retargeted_existing_consumer_controls": 1,
+  "all_caught": true,
+  "baseline_tests_passed": 125,
+  "restored_tests_passed": 125,
+  "unchanged_sir_dumps": 29,
+  "perfcount_passed": true,
+  "source_restored": true,
+  "compile_failures_counted_as_detections": false,
+  "public_cxx20_header_probe_in_mutated_full_builds": true
+}

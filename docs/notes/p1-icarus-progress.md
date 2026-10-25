@@ -13,6 +13,20 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Declared-network SIR execution:** `cea83470` and `faadf4b7` connect
+[selected reads/shared waits and verified network SIR](strength-network-execution.md)
+to the real Context-owned origin bank. Static declarations, initial ranges,
+physical ownership, captured selectors, independent-node load/MOS/drive/delay,
+separate sensitivity and cleanup now run through tier 1. Nineteen new tests
+include 13,465 hand-built SIR executions and before-construction rejection of
+malformed network input. Sixteen full-build compiled controls are caught;
+restored production passes 125 cases including all 29 old dumps and PerfCount.
+Full local CI passes all 21 checks: dev/ASan/UBSan 5,206/5,208,
+release 5,207/5,209, zero failures and two known skips each.
+Front/source MOS, passive graphs/solver, registered-net force/release, ports and
+formatting remain work; no source-level Icarus gap reduction or P1 completion
+is claimed.
+
 **Physical origins and scalar timing:** `f93da11b` connects
 [stable origin tables and inertial updates](strength-driver-execution.md) to the
 shared scheduler and component publisher. Independent nodes resolve complete

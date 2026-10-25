@@ -122,3 +122,12 @@ schedulerが使う既定allocatorへの故障注入と、上限近くの世代�
 保留区間がoriginにつき1個であることは、任意に高速な差し替えで確保済みキュー項目も1個になる保証ではありません。
 
 P1とIcarus全範囲対応は未完了です。管理eventの命令間safepoint修正案は独立した未承認事項です。
+
+## 後続のSIR網への接続
+
+[宣言した網の実行](strength-network-execution.ja.md)、`cea83470`と`faadf4b7`で、選択したmetadata load、
+スカラの即時/遅延origin drive、正規化した静的node/origin宣言、分離した強さ感度をVMへ接続しました。
+共通kernelの待機の片付けで、frame破棄前に購読を解除します。新規19テストとコンパイルした16故障で
+この接続を検査しました。上の該当する残作業はこの進展で置き換わり、以前の測定はその段階の記録です。
+ソース変換/通常driverの取り込み/制御の捕捉、受動graph/solver、登録netのforce/release、port、書式、
+ソースの全実行は残作業です。

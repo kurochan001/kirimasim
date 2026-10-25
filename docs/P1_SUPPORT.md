@@ -148,8 +148,14 @@ CI passes all 21 checks. [Physical origin execution](notes/strength-driver-execu
 now adds stable driver tables, per-scalar inertial updates, coalesced Active work
 and independent-node resolution through that publisher. Sixteen new tests and
 thirteen compiled controls cover complete ranges and timing. Full local CI passes all 21 checks.
-Source MOS/switch execution still needs the SIR load/drive connection, source
-sensitivity, passive solving, registered-net force/release, ports and formatting.
+[Declared-network SIR execution](notes/strength-network-execution.md) now connects
+verified static nodes/origins, captured load, scalar drive/delay and separate
+strength sensitivity through the VM to those shared kernel APIs. Nineteen new
+tests include 13,465 hand-built SIR executions; sixteen compiled controls pass.
+Full local CI passes all 21 checks.
+Source MOS/switch execution still needs front lowering, ordinary-driver import,
+separate captured controls, passive solving, registered-net force/release, ports
+and formatting.
 
 ### Fork-local declarations
 

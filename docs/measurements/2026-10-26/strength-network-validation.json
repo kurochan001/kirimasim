@@ -1,0 +1,256 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "faadf4b73e1419fe969c81766c1b6b5681561ce1",
+  "selected_read_wait_revision": "cea8347017f03c1ae749e532d3b867a71d1977a7",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "19bfa120f747cdb783635b774449bc2957687240f42d8774e20455d57eaff703",
+    "src/kernel/include/kirimasim/kernel/sim.h": "001b3a9dca970395c88483004f134747375e7611bc77ef989343d7ca257c4907",
+    "src/kernel/include/kirimasim/kernel/strength_store.h": "7cff423d632809a9ea7ae14addb0b020fde0381710fa98e1a8c50c241c854f20",
+    "src/kernel/sim.cpp": "9b01d0bd5a9e73d3200767d1728d79b5b6ee437461c13980f9269d06afe297c8",
+    "src/kernel/strength_store.cpp": "1fc9803428ebeb393b928d3c00b5d0e7127167c09872713035e50643a685ab46",
+    "src/kernel/strength_wait.cpp": "d0191a0b2d4769317a9c3b620dd04f8ac37309940fcc56dc50f3b3f9ab0ea300",
+    "src/sir/CMakeLists.txt": "0afd0b0bfcccdc1e3f08d460b12c8d0078b9bb90d83a5e6382cac95d60990740",
+    "src/sir/include/kirimasim/sir/design.h": "7ba089d35ae4a4952cd470f3b71567e5309834bb7be59c3905a892b385949e6d",
+    "src/sir/include/kirimasim/sir/strength.h": "8b3f09826b966bdfe4cf2412a3f3295211cad4f826a159620f1c6e3f06198024",
+    "src/sir/strength.cpp": "3976b6c468e6e1c1cc3e041e2bea85a8f5460fa69530d729a122b2e7d8f2d5a5",
+    "src/sir/text.cpp": "c6d10949bc447b06129e6b50ab0dbd3496ce5534fae8695774d31c148ab111ff",
+    "src/sir/types.cpp": "181e441d36d7a88668e2ff872ae6cd78689b6f48f6b6008abf139749aaa68331",
+    "src/sir/verify.cpp": "7c34e86356bb28b0fa4f37dcab3136322c56ece280cbe7b086afb9d02310a2df",
+    "src/vm/vm.cpp": "9a38265e5cb3f57e74b057515e564db8a1fa2f7580ecbd2e98900d40a544310a",
+    "tests/unit/CMakeLists.txt": "f4e51bcd15ab31724cebc3c751dbac42f70532c3f809fb9565838d26c8c9b293",
+    "tests/unit/strength_network_sir_test.cpp": "f37f7c18f4fde81ea900025782d1dba2655ea11808a9b3ff94131e98f46e89a1",
+    "tests/unit/strength_selection_wait_test.cpp": "d788c2227d7cc6389aaab189be46e3d28d5de521c95cd7e74acf9196d0de505e",
+    "tests/unit/strength_sir_test.cpp": "44927233baa1015e59076e1b7fcf63d747629eede385eaadd0dbb6009e08c432",
+    "tools/mutants.py": "3b84e72d779537a6e2160d2857eb74c7deee6e54728386ecc01da1281112cf5a"
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 1.1
+    },
+    {
+      "status": "ok",
+      "name": "dev: test",
+      "seconds": 63.6
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 14.8
+    },
+    {
+      "status": "ok",
+      "name": "release: test",
+      "seconds": 58.3
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 16.8
+    },
+    {
+      "status": "ok",
+      "name": "asan: test",
+      "seconds": 91.5
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 16.8
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: test",
+      "seconds": 74.4
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.6
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 117.1
+    }
+  ],
+  "exit": 0,
+  "all_checks_passed": true,
+  "successful_checks": 21,
+  "failed_checks": 0,
+  "presets": {
+    "dev": {
+      "total": 5208,
+      "passed": 5206,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5209,
+      "passed": 5207,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5208,
+      "passed": 5206,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5208,
+      "passed": 5206,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_tests": {
+    "kernel_selection": 2,
+    "kernel_wait": 5,
+    "sir_network": 6,
+    "vm_network": 6,
+    "total": 19
+  },
+  "selected_read_matrix_cases": 230400,
+  "selected_interval_checks": 11750400,
+  "wait_row_reuse_cycles": 512,
+  "watch_rows_after_reuse": 1,
+  "pmr_wait_registration_budgets": 16,
+  "hand_built_sir_execution_matrix": {
+    "device_interval_controls": 5760,
+    "array_alias_selectors": 7680,
+    "nested_functions": 8,
+    "normalized_delays": 12,
+    "expected_wide_delay_error": 1,
+    "immediate_and_delayed_strength_only_changes": 2,
+    "initialization_order": 1,
+    "implicit_origins": 1,
+    "total_valid_sir_executions": 13465,
+    "expected_runtime_errors": 1
+  },
+  "malformed_cases": {
+    "static_metadata": 27,
+    "ownership_instruction": 16,
+    "load_wait": 10,
+    "independent_coverage_uniqueness_ownership": 4,
+    "before_store_vm_rejections_including_alias_force": 32
+  },
+  "unit_diagnostic_producer_list_updated_to_include_strength_load": true,
+  "unit_assertions_weakened": false,
+  "suite_dump_or_performance_oracles_changed": false,
+  "all_registered_controls_apply": 719,
+  "standalone_header_probe": {
+    "exit": 0,
+    "standard": "c++20",
+    "exceptions": false,
+    "rtti": false,
+    "compile_only": true
+  },
+  "manual_expected_change_checks": [
+    {
+      "base": "cea8347017f03c1ae749e532d3b867a71d1977a7^",
+      "head": "cea8347017f03c1ae749e532d3b867a71d1977a7",
+      "exit": 0,
+      "protected_expectations_kept": true
+    },
+    {
+      "base": "faadf4b73e1419fe969c81766c1b6b5681561ce1^",
+      "head": "faadf4b73e1419fe969c81766c1b6b5681561ce1",
+      "exit": 0,
+      "protected_expectations_kept": true
+    }
+  ],
+  "global_allocator_failure_injection_exhaustive": false,
+  "source_mos_execution_enabled": false,
+  "independent_node_network_sir_implemented": true,
+  "selected_strength_load_implemented": true,
+  "scalar_strength_drive_sir_implemented": true,
+  "shared_kernel_value_strength_wait_implemented": true,
+  "passive_edge_catalog_implemented": false,
+  "passive_network_solver_implemented": false,
+  "registered_strength_hold_integration_implemented": false,
+  "complete_interval_formatting_connected": false,
+  "sir_format_version": 0,
+  "sir_parser_or_roundtrip_added": false,
+  "new_c_abi_functions": false,
+  "performance_budgets_changed": false,
+  "event_collection_timing_changed": false,
+  "reference_probes_refreshed": false,
+  "external_datasets_refreshed": false,
+  "external_simulator_speed_comparison_refreshed": false,
+  "p1_complete": false
+}

@@ -118,3 +118,12 @@ P1とIcarus全範囲の対応は未完了で、別の管理event命令間safepoi
 上のdriver/時間処理の該当残作業はこの進展で置き換わり、以前の測定値はその段階の記録です。
 SIR load/driveと静的表、ソース感度、受動graph、登録netのforce/release、port、書式、ソースMOSは残作業です。
 公開net値を物理rootに戻したり、向き付き読み出しの循環で受動solverを代用したりするものではありません。
+
+## 後続のSIR網への接続
+
+[宣言した網の実行](strength-network-execution.ja.md)、`cea83470`と`faadf4b7`で、選択したmetadata load、
+スカラの即時/遅延origin drive、正規化した静的node/origin宣言、分離した強さ感度をVMへ接続しました。
+共通kernelの待機の片付けで、frame破棄前に購読を解除します。新規19テストとコンパイルした16故障で
+この接続を検査しました。上の該当する残作業はこの進展で置き換わり、以前の測定はその段階の記録です。
+ソース変換/通常driverの取り込み/制御の捕捉、受動graph/solver、登録netのforce/release、port、書式、
+ソースの全実行は残作業です。

@@ -166,3 +166,15 @@ queue entry under arbitrarily fast replacement.
 
 P1/full Icarus coverage remains incomplete. The managed-event instruction-
 safepoint amendment is independent and remains unapproved.
+
+## Subsequent SIR network connection
+
+[Declared-network execution](strength-network-execution.md), `cea83470` and
+`faadf4b7`, now connects selected metadata loads, scalar immediate/delayed
+origin drives, static normalized node/origin declarations and separate strength
+sensitivity through the VM. Shared kernel wait cleanup cancels those subscriptions
+before frame teardown. Nineteen new tests and sixteen compiled controls validate
+the bridge. This supersedes those corresponding remaining items above, while
+preserving the measurements at that checkpoint. Source lowering/ordinary-driver
+import/control capture, passive graph/solver, registered-net force/release, ports,
+formatting and full source execution still remain.

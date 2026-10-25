@@ -131,7 +131,11 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 全local CIの21確認も通りました。[物理originの実行](notes/strength-driver-execution.ja.md)で、
 安定したdriver表、スカラ単位の慣性更新、Active処理の集約と独立nodeの解決をこのpublisherへ接続しました。
 新規16テストとコンパイルした13故障で完全区間と時間処理を検査しました。全local CIの21確認も通ります。
-ソースのMOS/スイッチ実行には、SIR load/drive、ソース感度、受動solver、登録netのforce/release、port、書式が必要です。
+[宣言した網のSIR実行](notes/strength-network-execution.ja.md)で、検証した静的node/origin、捕捉したload、
+スカラのdrive/delay、分離した強さ感度を、VMから同じkernel APIへ接続しました。
+新規19テストで手書きSIR 13,465実行を含み、コンパイルした16故障も検出しました。全local CIの21確認も通りました。
+ソースのMOS/スイッチ実行には、front変換、通常driverの取り込み、別に捕捉する制御、受動solver、
+登録netのforce/release、port、書式が必要です。
 
 ### fork内の宣言
 

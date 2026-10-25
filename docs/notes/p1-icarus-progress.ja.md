@@ -12,6 +12,16 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
+**宣言した網のSIR実行：** `cea83470`と`faadf4b7`で[選択読み出し/共通待機と検証済みの網SIR](strength-network-execution.ja.md)を
+実際のContext所有origin表へ接続しました。静的な宣言、初期区間、物理所有、捕捉したselector、
+独立nodeのload/MOS/drive/delay、分離した感度と片付けをtier 1で実行します。
+新規19テストで手書きSIR 13,465実行と、不正な網の構築前拒否を確認しました。
+全体ビルドに成功した16故障を検出し、復元後は既存dump全29件とPerfCountを含む125件が通りました。
+全local CIの21確認が通り、dev/ASan/UBSanは5,206/5,208、releaseは5,207/5,209、
+各失敗0・既知スキップ2件です。
+front/ソースMOS、受動graph/solver、登録netのforce/release、port、書式は残作業です。
+ソースでのIcarus差分縮小やP1完了は主張しません。
+
 **物理originとスカラ時間処理：** `f93da11b`で[安定したorigin表と慣性更新](strength-driver-execution.ja.md)を
 共有schedulerとcomponent publisherへ接続しました。強さだけの変更も含む完全区間を独立nodeで解決し、
 利用者processは作りません。新規16テストで参照との12,600比較、callback駆動回路、
