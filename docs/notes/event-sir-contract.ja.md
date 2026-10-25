@@ -3,6 +3,9 @@
 [English](event-sir-contract.md)が正。Status: SIR段階`efebd540`、2026-10-25。
 VMでの実行とautomatic eventのソース生成は未実装です。
 
+**後続の接続（2026-10-26）：** [境界でのVM部品](event-vm-boundaries.ja.md)で型付き形式を
+実行します。以下はSIRだけの段階の過去の記録で、ソース生成と命令間safepointは未有効です。
+
 ## 根拠と境界
 
 根拠は[承認済みautomatic捕捉契約](automatic-capture-proposal.ja.md)5/6/7、

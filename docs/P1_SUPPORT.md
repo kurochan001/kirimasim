@@ -139,8 +139,8 @@ its full implementation remains work.
 Declarations use the parent's lifetime/initialization path rather than becoming
 children. Static storage is shared; uncaptured automatic initialization runs
 per entry, including declaration-only forks. [Seventy-two source cases and limits](notes/fork-local-declarations.md)
-cover eight contexts and typed storage. Automatic variables captured by children
-remain unsupported and are explicitly measured in the expanded comparison.
+cover eight contexts and typed storage. The subsequent source-capture work below
+supports shared automatic variables; automatic event construction remains work.
 The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
 was approved on 2026-10-25; automatic event variables are still unsupported.
 
@@ -166,11 +166,16 @@ Icarus-13-passing gaps. The three historical rejection checks were migrated
 separately in approved commit `11096dc3` without changing their source fixtures.
 The [managed-event kernel checkpoint](notes/managed-event-registry.md) now supplies
 generational identity, runtime pins and retained-scope event roots, with 20 tests
-and a full 32-bit generation audit. Automatic source construction, ordinary/SSA
-root publication are not connected. The [runtime ownership checkpoint](notes/managed-event-runtime.md)
+and a full 32-bit generation audit. The [runtime ownership checkpoint](notes/managed-event-runtime.md)
 now supplies typed kernel wait/trigger/monitor operations and automatic pending-operation
-pins, with 23 new tests and 16 caught compiled faults. Their SIR/VM/front connection
-and owned ref/object providers remain work.
+pins, with 23 new tests and 16 caught compiled faults.
+[Typed field providers](notes/event-activation-roots.md) and
+[SIR event execution in the VM](notes/event-vm-boundaries.md) now connect typed
+storage, waits/triggers and object-read capture at existing region/slot collection
+boundaries. Ordinary/captured arrays and input/return transport are tested in
+hand-built SIR. Source automatic construction, complete SSA publication for
+instruction safepoints and owned ref/object providers remain work. The event-only
+safepoint amendment is not approved; no bounded no-wait source claim is made.
 
 ### Fixed-array ports and net arrays
 

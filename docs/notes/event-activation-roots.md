@@ -3,6 +3,11 @@
 [日本語](event-activation-roots.ja.md). Status: component implemented and checked,
 2026-10-25. Interpreter root publication and source construction remain work.
 
+**Subsequent connection (2026-10-26):** [the VM boundary component](event-vm-boundaries.md)
+now publishes ordinary roots at existing safe points. Full SSA publication for
+instruction safepoints and source construction remain work; the following records
+the earlier component checkpoint.
+
 ## Contract and implementation
 
 The grounds are the approved [automatic-capture contract](automatic-capture-proposal.md)

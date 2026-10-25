@@ -105,8 +105,11 @@ Fork-local declarations now use parent initialization and shared static
 storage without becoming child processes. Declaration-only forks do not wait.
 [Scope and 72 original source cases](docs/notes/fork-local-declarations.md)
 include all join kinds. [Shared automatic capture from source](docs/notes/automatic-front-capture.md)
-now passes 186 new designs; migration of three historical rejection checks awaits approval.
-Automatic event construction remains unsupported.
+now passes 186 new designs; three historical rejection checks were separately
+migrated with approval in `11096dc3`. [Typed SIR event execution](docs/notes/event-vm-boundaries.md)
+and collection at existing region/slot boundaries are connected. Automatic event
+source construction and instruction-level event safepoints remain work; the
+[safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) is not approved.
 
 Fixed-array ports now share or copy corresponding elements while preserving
 each declaration's bounds. Net arrays resolve strengths per element with
@@ -156,7 +159,9 @@ The [implemented inventory](docs/P1_SUPPORT.md) and
 inventory has 87 original probes. At the fixed-array-port checkpoint,
 Icarus `13.0 (stable) (v13_0)` has 22 passing gaps and four reference result
 mismatches. With `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are
-22 and seven.
+22 and seven. Subsequent automatic capture reduces the historical 13.0-passing
+gaps to 21, and the fresh 14.0 run also leaves 21 gaps and seven mismatches;
+there is no fresh 13.0 run at this event-VM checkpoint.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
@@ -168,7 +173,8 @@ source still reaches the native subprocess bound. On the same expanded list,
 the retained baseline had 27/33 gaps and the wide-UDP checkpoint 25/31; the
 later array/input checkpoint had 24/24; fixed-array ports now reduce this to 22/22.
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
-records 32 original programs and was approved on 2026-10-25; implementation remains work.
+records 32 original programs and was approved on 2026-10-25. Shared lexical
+capture is implemented; automatic-event source construction remains work.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
 adds 59 original design observations, with legality boundaries kept separate.
 
@@ -221,11 +227,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 4,956 | 4,954, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 4,969 | 4,967, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 501, `tests/suite/` 4,247 (made by 138 generators under `tools/`), tools 149, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 514, `tests/suite/` 4,247 (made by 138 generators under `tools/`), tools 149, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

@@ -1,6 +1,6 @@
 # P1 expansion toward Icarus coverage
 
-[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-25.
+[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-26.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](phase-renumbering.md)).
 
@@ -11,7 +11,25 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-## Current implementation and review status (2026-10-25)
+## Current implementation and review status (2026-10-26)
+
+**Typed event execution in the VM:** `7e188c56` connects
+[construction, holders, waits/triggers and actual object reads](event-vm-boundaries.md)
+at existing region/slot collection boundaries. Eleven new execution tests and two
+kernel tests cover ordinary/shared arrays, input/return, unread extents,
+Active/Reactive pending targets and callback detachment. `39aa6aaa` fixes the
+reporting regression found by full CI; `09b37d0c` reduces small-wait staging cost.
+Thirteen compiled faults are caught and restored production passes 76 focused
+cases. Automatic source construction and instruction-level collection remain
+gated; the safepoint amendment is not approved. P1 remains incomplete.
+
+The [final full CI](../measurements/2026-10-26/event-vm-validation.json) passes all
+21 checks: dev/ASan/UBSan 4,967/4,969, release 4,968/4,970, zero failures and
+two known skips each. All 87 native/Icarus-14 statuses and passing bytes are
+unchanged, leaving 21 historical Icarus-13-passing gaps. A focused cost check
+keeps counts/RSS equal, with ordinary transport about +0.5% and legacy named-event
+roundtrip about +16.5% after reducing its initial +27% regression. This remaining
+cost is recorded; no performance budget changed. Population/sv-tests were not rerun.
 
 **Typed activation event providers:** `1dc06096` connects canonical event fields
 to [retained lexical roots and ordinary root metadata](event-activation-roots.md).

@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-26",
+  "revision": "7e188c5622b9",
+  "status": "stopped after a confirmed integration regression; not all-green",
+  "failed_test": "VmContainer.HeapMonitorFailuresHavePositionsAndWaitHooksNeverOutliveTheInterpreter",
+  "failure": "WaitEvent classified a heap-monitor resource error as a generic event resource error before the positioned heap-monitor reporter ran.",
+  "existing_expectations_changed": false,
+  "dev-test.log": {
+    "failed_named_test_observed": true,
+    "completed": true
+  },
+  "release-test.log": {
+    "failed_named_test_observed": true,
+    "completed": true
+  }
+}

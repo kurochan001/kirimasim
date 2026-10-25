@@ -3,6 +3,10 @@
 [日本語](event-sir-contract.ja.md). Status: SIR checkpoint `efebd540`, 2026-10-25;
 VM execution and automatic-event source construction remain unimplemented.
 
+**Subsequent connection (2026-10-26):** [the boundary VM component](event-vm-boundaries.md)
+now executes the typed forms. The checkpoint evidence below remains its historical
+SIR-only record; source construction and instruction safepoints remain gated.
+
 ## Grounds and boundary
 
 The [approved automatic-capture contract](automatic-capture-proposal.md) 5/6/7,

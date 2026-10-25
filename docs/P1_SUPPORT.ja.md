@@ -126,7 +126,7 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 宣言は子にせず、親で既存の寿命/初期化を使います。static記憶域は共有し、捕捉のない
 automatic初期化は入るたびに行います。宣言だけのforkにも対応します。
 [独自72ソースと制限](notes/fork-local-declarations.ja.md)で8種類の実行場所と型を検査します。
-子が捕捉するautomatic変数は未対応で、拡張した比較にも明示的に含めています。
+後述のソース捕捉対応でautomatic変数を共有します。automatic event生成は残作業です。
 [記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は2026-10-25承認済みで、
 automatic event変数も未対応です。
 
@@ -150,10 +150,14 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 旧未対応3テストは承認済みの別コミット`11096dc3`で移行し、ソース入力は変更していません。
 [管理eventのカーネル段階](notes/managed-event-registry.ja.md)で世代付き同一性・実行時pin・
 保持スコープのevent rootを提供し、20テストと32ビット全世代を検査しました。
-ソースからのautomatic生成、通常/SSAのroot公開は未接続です。
 [実行時所有の段階](notes/managed-event-runtime.ja.md)で、型付きのカーネル待機・trigger・monitor操作と
 保留操作のpin自動所有を追加し、新規23テストと実際にコンパイルした16故障の検出を確認しました。
-これらのSIR/VM/frontへの接続と、所有ref/objectの提供は残作業です。
+[型付きフィールドのprovider](notes/event-activation-roots.ja.md)と
+[VMでのSIR event実行](notes/event-vm-boundaries.ja.md)で、型付き記憶域・待機/trigger・
+実際の対象読み取りの捕捉を、既存のregion/slot回収境界へ接続しました。
+通常/捕捉配列と入力/戻り値の受け渡しを手組みSIRで検査しています。
+ソースからのautomatic生成、命令間safepointに必要なSSA全体の公開、所有ref/objectの提供は
+残作業です。eventだけのsafepoint修正案は未承認で、待機なしソースの有界性は主張しません。
 
 ### 固定長配列ポートとネット配列
 

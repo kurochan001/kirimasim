@@ -3,6 +3,10 @@
 [English](event-activation-roots.md)が正。状態：部品を実装・検証済み、2026-10-25。
 Interpreterのroot公開とソース生成は残作業です。
 
+**後続の接続（2026-10-26）：** [VMの境界部品](event-vm-boundaries.ja.md)で、通常rootを
+既存safepointへ公開します。命令間safepointに必要なSSA全体の公開とソース生成は残作業で、
+以下は以前の部品段階の記録です。
+
 ## 契約と実装
 
 根拠は承認済みの[automatic捕捉契約](automatic-capture-proposal.ja.md)5/6/7、

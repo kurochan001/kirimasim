@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "7e188c5622b98eed131de58131cf7c717e3ea5e8",
+  "controls": [
+    {
+      "name": "vm: ->> triggers at once",
+      "path": "src/vm/vm.cpp",
+      "relocated": true,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.PendingTypedNbaAndNamedOrMixedWaitRetainTheSelectedObject",
+        "VmEvent.NullDeferredTargetsIgnoreUnrepresentableAndRelativeOverflowDelays"
+      ]
+    },
+    {
+      "name": "vm: wait (expr) misses the triggers of ev.triggered",
+      "path": "src/vm/vm.cpp",
+      "relocated": true,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.TriggeredMonitorsCaptureActualSelectedObjectsAndReplaceOldDependencies",
+        "suite/sched/event_triggered_epoch_function_wait_global_0",
+        "suite/sched/event_triggered_epoch_function_wait_global_18446744073709551615",
+        "suite/sched/event_triggered_epoch_function_wait_global_7",
+        "suite/sched/event_triggered_epoch_function_wait_private_0",
+        "suite/sched/event_triggered_epoch_function_wait_private_18446744073709551615",
+        "suite/sched/event_triggered_epoch_function_wait_private_7"
+      ]
+    },
+    {
+      "name": "vm event: construction publishes null",
+      "path": "src/vm/vm.cpp",
+      "relocated": false,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.FreshSsaValuesAndLoadedLegacySelectionsUseTypedOperations",
+        "VmEvent.TypedSlotsAndOrdinaryOrScopedArraysSurviveRegionCollectionAndRelease",
+        "VmEvent.PendingTypedNbaAndNamedOrMixedWaitRetainTheSelectedObject",
+        "VmEvent.TriggeredMonitorsCaptureActualSelectedObjectsAndReplaceOldDependencies",
+        "VmEvent.NullDeferredTargetsIgnoreUnrepresentableAndRelativeOverflowDelays",
+        "VmEvent.QuiescentReturnDetachesTypedWaitsAndMonitorCallbacksBeforeFramesDie",
+        "VmEvent.AChildThatReadsOnlyAnotherFieldRetainsEveryUnreadEventElement",
+        "VmEvent.InputCopiesAndFunctionReturnsShareTheObjectAcrossCallsAndWaits"
+      ]
+    },
+    {
+      "name": "vm event: ordinary fields are not roots",
+      "path": "src/vm/vm.cpp",
+      "relocated": false,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.TypedSlotsAndOrdinaryOrScopedArraysSurviveRegionCollectionAndRelease",
+        "VmEvent.InputCopiesAndFunctionReturnsShareTheObjectAcrossCallsAndWaits"
+      ]
+    },
+    {
+      "name": "vm event: typed global slots are not roots",
+      "path": "src/vm/vm.cpp",
+      "relocated": false,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.TypedSlotsAndOrdinaryOrScopedArraysSurviveRegionCollectionAndRelease",
+        "VmEvent.TriggeredMonitorsCaptureActualSelectedObjectsAndReplaceOldDependencies",
+        "VmEvent.NullDeferredTargetsIgnoreUnrepresentableAndRelativeOverflowDelays"
+      ]
+    },
+    {
+      "name": "vm event: retained unread extents are not roots",
+      "path": "src/vm/vm.cpp",
+      "relocated": false,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.TypedSlotsAndOrdinaryOrScopedArraysSurviveRegionCollectionAndRelease",
+        "VmEvent.AChildThatReadsOnlyAnotherFieldRetainsEveryUnreadEventElement"
+      ]
+    },
+    {
+      "name": "vm event: collection requires a container mutation",
+      "path": "src/vm/vm.cpp",
+      "relocated": false,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.FreshSsaValuesAndLoadedLegacySelectionsUseTypedOperations",
+        "VmEvent.TypedSlotsAndOrdinaryOrScopedArraysSurviveRegionCollectionAndRelease",
+        "VmEvent.PendingTypedNbaAndNamedOrMixedWaitRetainTheSelectedObject",
+        "VmEvent.BoundaryReuseNeedsNoContainerMutationAndRestoresThePreviousHook",
+        "VmEvent.AChildThatReadsOnlyAnotherFieldRetainsEveryUnreadEventElement",
+        "VmEvent.InputCopiesAndFunctionReturnsShareTheObjectAcrossCallsAndWaits"
+      ]
+    },
+    {
+      "name": "vm event: null wait is an internal failure",
+      "path": "src/vm/vm.cpp",
+      "relocated": false,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "VmEvent.NullNamedAndMixedWaitsArePositionedDesignErrors"
+      ]
+    },
+    {
+      "name": "vm event: normalized delay overflow is discarded",
+      "path": "src/kernel/managed_event_runtime.cpp",
+      "relocated": false,
+      "source_sha256": "85edde3a150ab8ac7e03abbc82a7729d486aa66e2a3e58a996fbdde6123a2cf4",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "ManagedEventRuntime.UnrepresentableDelaysDoNotScheduleNullOrRetainTargets",
+        "VmEvent.NullDeferredTargetsIgnoreUnrepresentableAndRelativeOverflowDelays"
+      ]
+    },
+    {
+      "name": "vm: event-triggered function loses its private event dependency",
+      "path": "src/vm/vm.cpp",
+      "relocated": true,
+      "source_sha256": "220cfc421f967ccb6000a0adba0a8f93f983909c32069738411d25a35236d613",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/event_triggered_epoch_function_wait_global_0",
+        "suite/sched/event_triggered_epoch_function_wait_global_18446744073709551615",
+        "suite/sched/event_triggered_epoch_function_wait_global_7",
+        "suite/sched/event_triggered_epoch_function_wait_private_0",
+        "suite/sched/event_triggered_epoch_function_wait_private_18446744073709551615",
+        "suite/sched/event_triggered_epoch_function_wait_private_7"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "limitation": "Focused controls passed before full CI found a positioned heap-monitor diagnostic regression. Later controls include the unchanged failing integration test and a control that reinstates the regression."
+}

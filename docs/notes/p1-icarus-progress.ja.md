@@ -1,6 +1,6 @@
 # Icarusの機能範囲を目指すP1の拡張
 
-[English](p1-icarus-progress.md)。状態：進行中、2026-10-25。
+[English](p1-icarus-progress.md)。状態：進行中、2026-10-26。
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](phase-renumbering.ja.md)。
 
@@ -10,7 +10,21 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
-## 現在の実装とレビュー状況（2026-10-25）
+## 現在の実装とレビュー状況（2026-10-26）
+
+**型付きeventのVM実行：** `7e188c56`で[生成・保持・待機・trigger・対象の読み取り](event-vm-boundaries.ja.md)を
+既存のregion/slot回収境界へ接続しました。独自11実行テストとカーネル2テストを追加し、
+通常/共有配列、引数/戻り値、未読領域、Active/Reactiveの保留対象、callback解除を検査します。
+全体CIで見つかった診断順序の退行を`39aa6aaa`で修正し、`09b37d0c`で小さい待機の一時確保を減らしました。
+コンパイルした13故障を検出し、復元後の対象76件が通りました。ソースのautomatic生成と
+命令間の回収は未有効で、safepoint修正案は未承認です。P1は未完了です。
+
+[最終の全CI](../measurements/2026-10-26/event-vm-validation.json)は全21確認成功で、
+dev/ASan/UBSanは4,967/4,969、releaseは4,968/4,970、失敗0・各既知スキップ2件です。
+87項目のnative/Icarus 14全判定と成功出力を維持し、過去のIcarus 13合格との差分は21件です。
+小規模コスト確認はカウンタ/RSSが同じで、通常の受け渡しが約+0.5%、従来の名前付きevent往復が
+当初の約+27%から約+16.5%へ縮まりました。残る性能課題を記録し、性能基準は変えていません。
+母集団/sv-testsは再実行していません。
 
 **型付きactivation event provider：** `1dc06096`で正規eventフィールドを
 [保持された字句領域のrootと通常行のroot情報](event-activation-roots.ja.md)へ接続しました。
