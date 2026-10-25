@@ -17,7 +17,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-24）
+## 状況（2026-10-25）
 
 > **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。
 
@@ -89,7 +89,7 @@ P1全体は引き続き未完了です。
 | --- | --- | --- |
 | P0 | 土台：ビルド、CI、詳細仕様書、テストスイート | 完了 |
 | P1 | 中間表現（SIR）への変換、IEEE 1800-2023 のスケジューラを持つ実行カーネル、Icarus Verilog 13.0以上の実行機能を目指す第 1 層（SIR のインタプリタ） | **進行中** |
-| P2 | SIR v1：SIRとカーネル境界をtier 2に渡せる形に確定する（[方針承認済み・詳細レビュー待ち](docs/notes/sir-v1-proposal.ja.md)） | Planned |
+| P2 | SIR v1：SIRとカーネル境界をtier 2に渡せる形に確定する（[方針承認済み・詳細レビュー待ち](docs/notes/sir-v1-proposal.ja.md)） | 予定 |
 | P3 | 第 2 層：速さのため、SIR を前もって C++ に変換する | 予定 |
 | P4 | テストベンチの機能：クラス、動的なデータ、制約付き乱数、並行アサーションとカバレッジ、クロッキングブロック、VPI、DPI-C | 予定。必要な部分はP1へ前倒し |
 | P5 | スイッチのレベルの素子、マルチスレッドでの実行、他のシミュレータに組み込むライブラリ | 予定。必要な部分はP1へ前倒し |
@@ -162,17 +162,17 @@ dev/ASan/UBSanは4,179件中4,177件、releaseは4,180件中4,178件成功、失
 
 | 条件 | 今 | 達成 |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で、Linux と macOS のそれぞれで Icarus Verilog 以上 | Linux：kirimasim 213 本、Icarus Verilog 211 本。macOS：kirimasim 244 本、Icarus Verilog 210 本（14.0 devel、04cc493。合格条件で使う版を、それぞれでビルドしたもの） | 達成 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で、Linux と macOS のそれぞれで Icarus Verilog 以上 | Linux：kirimasim 234 本、Icarus Verilog 211 本。macOS：kirimasim 244 本、Icarus Verilog 210 本（14.0 devel、04cc493。合格条件で使う版を、それぞれでビルドしたもの） | 達成 |
 | 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,451 本が通る（99.0%）。失敗は 0 本で、15 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P4 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
 
-kirimasim の外部 sv-tests は Linux が 2026-10-22、macOS が 2026-10-25、母集団は 2026-10-25 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
+kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、母集団は 2026-10-25 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
 | このリポジトリのテスト（CTest、dev の構成） | 4,652 | 4,650、2 本は飛ばす | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 213（Linux）、244（macOS） | 213 | 321 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
 このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）414、`tests/suite/` 4,034（`tools/` の 136 個の生成器が作る）、道具 145、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
@@ -184,14 +184,12 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 
 件数は、[P1 の合格条件](#p1-の合格条件)の表にあります。release の構成では、CTest のテストが 1 本増えます（`--max-slot-events` の既定の値まで走らせるテスト）。
 
-2026-10-24、nativeソース`52652eb`と件数/誤実装登録の追従を含むローカルCIは全項目通過しました
-（2026-10-24）。dev・ASan・UBSanは各3,317件中3,315件成功、既知の2件のみスキップです。
-releaseは3,318件中3,316件成功、同じ2件のみスキップです。Tools 136件、新規106ソース、
-ユニット5件が通り、releaseフラグ、禁止事項、SPDX、suiteファイル、大域状態、期待値保護、
-README件数、clang-format・clang-tidyも成功しました。既存suiteの本体・期待値・性能回数・
-SIR出力29件は変えていません。
+最新のローカルCIの全項目の記録は`615afa0`（2026-10-25、macOS arm64）のものです。
+21項目すべてが通り、dev・ASan・UBSanは各4,652件中4,650件成功、既知の2件のみスキップ、
+releaseは4,653件中4,651件成功、同じ2件のみスキップです
+（[記録](docs/measurements/2026-10-25/activation-environment-final-validation.json)）。
 
-同じ独自87プローブで、13.0 stableは差分25本・参照不一致4本、14.0 develは31本・7本でした。
+同じ独自87プローブで、13.0 stableは差分22本・参照不一致4本、14.0 develは22本・7本です。
 [最新の検証と承認待ちの項目](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-25)と
 [版ごとの個別記録](docs/notes/icarus-13-comparison.ja.md)を参照してください。
 以下の外部sv-tests・母集団の件数と性能測定は、記載した
@@ -258,16 +256,16 @@ SIR出力29件は変えていません。
 <details>
 <summary>sv-tests の、IEEE 1800-2023 の章ごとの内訳</summary>
 
-章ごとの表は過去の測定結果です。programの実行など、その後に実装した機能もあります。
+下のテストスイートの表は以前の測定で、その後に実装した機能が反映されていないことがあります。
 現在の実行対応は[P1_SUPPORT](docs/P1_SUPPORT.ja.md)を参照してください。
 
-sv-tests のコミット 15490e9 に固定し、種類にシミュレーションを含む手書きのテストを、sv-tests の決まりで判定します。`tools/svtests.py` で測りました。kirimasim は 2026-10-22、比較用の Icarus と Verilator は 2026-10-17 の測定です。版は「テストの結果」の節にあります。
+sv-tests のコミット 15490e9 に固定し、種類にシミュレーションを含む手書きのテストを、sv-tests の決まりで判定します。`tools/svtests.py` で測りました。kirimasim は 2026-10-25 に `652159b`（release、macOS arm64）で、比較用の Icarus Verilog 14.0 (devel) `f190dbb` と Verilator 5.053 devel `8668340` は 2026-10-17 に測りました。
 
 | 章 | 本数 | kirimasim | Icarus | Verilator | 測定した版で止まる所 |
 | --- | --- | --- | --- | --- | --- |
 | 5 字句の決まり | 1 | 1 | 1 | 1 | |
 | 6 データ型 | 16 | 16 | 11 | 14 | |
-| 7 集合のデータ型 | 91 | 31 | 47 | 88 | 動的配列（23）、キュー（17）、連想配列（14）、タグ付きの共用体 |
+| 7 集合のデータ型 | 91 | 61 | 47 | 88 | 連想配列（14）、配列の locator メソッドと `shuffle`（10）、非パック配列のスライス（3）、共用体（3） |
 | 8 クラス | 15 | 9 | 12 | 12 | クラス |
 | 9 プロセス | 6 | 4 | 4 | 6 | シーケンス。1 本は時刻 0 のプロセスの順に依存し、規格（4.7）はその順を決めていない |
 | 10 代入文 | 3 | 3 | 3 | 3 | |
@@ -282,13 +280,13 @@ sv-tests のコミット 15490e9 に固定し、種類にシミュレーショ�
 | 21 入出力のシステムタスクと関数 | 27 | 26 | 25 | 26 | `$dumpports` |
 | 22 コンパイラ指示子 | 6 | 6 | 6 | 6 | |
 | 23 モジュールと階層 | 1 | 1 | 1 | 1 | |
-| 24 program | 1 | 0 | 1 | 1 | program |
+| 24 program | 1 | 1 | 1 | 1 | |
 | 26 パッケージ | 1 | 1 | 1 | 1 | |
 | UVM | 37 | 0 | 0 | 28 | UVMのライブラリにはクラスが要る |
 | UVM の乱数 | 3 | 3 | 3 | 3 | |
-| **合計** | **344** | **213** | **213** | **321** | |
+| **合計** | **344** | **244** | **213** | **321** | |
 
-P1 の合格条件は、sv-tests が固定している Icarus の版（04cc493）と比べます。Linux では 211 本、macOS では 210 本で、kirimasim はどちらも 213 本です。上の Icarus の列は比較用の f190dbb で、2026-10-17 に 213 本が通りました。
+P1 の合格条件は、sv-tests が固定している Icarus の版（04cc493）と比べます。Linux では 211 本、macOS では 210 本です。kirimasim は macOS で 244 本（2026-10-25、`652159b`）、Linux では nightly が最後に測った 234 本（2026-10-24、`c507631`）です。上の Icarus の列は比較用の f190dbb で、2026-10-17 に 213 本が通りました。
 
 </details>
 
@@ -297,7 +295,7 @@ P1 の合格条件は、sv-tests が固定している Icarus の版（04cc493�
 
 TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で、一覧は `tests/gates/p1_population.txt` にあります。テストスイート自体は [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。最後の列は kirimasim が止まる所です。kirimasim が失敗するテストはありません。
 
-| 章 | 本数 | kirimasim | Icarus | Verilator | 測定した版で止まる所 |
+| 章 | 本数 | kirimasim | Icarus | Verilator | kirimasim が止まる所 |
 | --- | --- | --- | --- | --- | --- |
 | 3 設計と検証の構成要素 | 3 | 3 | 1 | 3 | |
 | 4 スケジューリングの意味 | 13 | 13 | 13 | 9 | |
@@ -361,7 +359,7 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 #### Linux で、nvc と Lyra も含めて
 
 2026-10-24 に WSL2（AMD Ryzen 9 7950X）で別に測りました。kirimasim `31160083c77d` と、
-Icarus Verilog 13.0 stable、Verilator 5.050、nvc 1.23.0、Lyra `a2313fd`（`bazel build -c opt`）です。
+Icarus Verilog 13.0 stable（`v13_0-25-g07dd50d37`）、Verilator 5.050（`v5.050-60-g3d2421f3b`）、nvc 1.23.0、Lyra `a2313fd`（`bazel build -c opt`）です。
 機械も Icarus と Verilator の版も上の表と違うので、2 つの表を列どうしで比べません。
 
 | 設計 | `+n=` | kirimasim | Icarus Verilog 13.0 | Verilator 5.050 | nvc 1.23.0 | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
@@ -452,10 +450,13 @@ ctest --preset dev
 | プリセット | フラグ |
 | --- | --- |
 | `dev` | `-O1 -g` |
-| `release` | `-O3` |
+| `release` | `-O3 -DNDEBUG` |
 | `asan` | `-O1 -g -fsanitize=address -fno-omit-frame-pointer`。サニタイザがヒープを見られるように、slang を mimalloc なしで作る |
 | `ubsan` | `-O1 -g -fsanitize=undefined -fno-sanitize-recover=all` |
-| `tsan` | `-O1 -g -fsanitize=thread`。slang を mimalloc なしで作る。状態と Context のテストだけを作って走らせる |
+| `tsan` | `-O1 -g -fsanitize=thread`。slang を mimalloc なしで作る。状態と Context のテストと、スタックのテストを作って走らせる |
+| `fuzz` | `-O1 -g -fsanitize=fuzzer-no-link,address,undefined`。libFuzzer のターゲットだけを作る。libFuzzer のある clang が要る（CONTRIBUTING.ja.md） |
+
+`dev`、`asan`、`ubsan`、`tsan`、`fuzz` は、C++ の標準ライブラリの範囲の検査（`-D_GLIBCXX_ASSERTIONS` と、libc++ の extensive の hardening モード）も有効にします。
 
 ビルドの結果は `build/<プリセット名>/` に出ます。
 
@@ -513,7 +514,7 @@ kirimasim: info: finish at 52 ns
 
 | オプション | 意味 |
 | --- | --- |
-| `-f <ファイル>`、`+incdir+<ディレクトリ>`、`+define+<名前>[=<値>]`、`--top=<名前>` | ソース、インクルードのディレクトリ、マクロ、最上位のモジュール |
+| `-f <ファイル>`、`+incdir+<ディレクトリ>`、`+define+<名前>[=<値>]`、`+libext+<拡張子>`、`--top=<名前>` | ソース、インクルードのディレクトリ、マクロ、ライブラリのファイルの拡張子、最上位のモジュール |
 | `--timescale=<単位>/<精度>` | timescale を書いていない設計要素の時間の単位と精度（既定は `1ns/1ns`） |
 | `--max-time=<時刻>`、`--max-time-ok` | シミュレーションの時刻で止める。終了コードを 4 でなく 0 にする |
 | `--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P3 の第 2 層まで効果は無い） |
@@ -573,7 +574,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ## 文書
 
-どの文書も英語版が正本で、日本語版（`X.md` の隣の `X.ja.md`）を並べて置いています（変更の記録、ライセンス、GitHub の Issue のフォームは英語だけです）。食い違ったときは英語版に従います。下の表のリンクは日本語版を指します。
+どの文書も英語版が正本で、日本語版（`X.md` の隣の `X.ja.md`）を並べて置いています（変更の記録、ライセンス、GitHub の Issue のフォーム、ほかのプロジェクトへの報告の下書きは英語だけです）。食い違ったときは英語版に従います。下の表のリンクは日本語版を指します。
 
 | 文書 | 内容 |
 | --- | --- |
@@ -591,6 +592,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | [docs/spec/WAVEFORM.ja.md](docs/spec/WAVEFORM.ja.md) | 波形：VCD のファイル、`$dump*`、`--wave` |
 | [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) | コマンドライン、終了コード |
 | [docs/spec/TEST_SUITE.ja.md](docs/spec/TEST_SUITE.ja.md) | テストの決まり、P1 の合格条件 |
+| [docs/spec/P1_SCOPE.ja.md](docs/spec/P1_SCOPE.ja.md) | P1 が届くべき実行の範囲 |
 | [docs/spec/RUNTIME_ABI.ja.md](docs/spec/RUNTIME_ABI.ja.md) | カーネルと実行層の境界 |
 | [docs/spec/PERFORMANCE.ja.md](docs/spec/PERFORMANCE.ja.md) | 性能の目標と回数のカウンタ |
 | [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) | このプロジェクトでの AI の使い方 |
@@ -659,7 +661,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 | 用語 | 意味 |
 | --- | --- |
-| 未対応（unsupported） | kirimasim がまだ実装していない構文。位置を示して終了コード 2 で止まり、別の動き方で走らせることはしない |
+| 未対応（unsupported） | kirimasim がまだ実装していない構文。位置を示して終了コード 2 で止まり、別の動き方で走らせないことを目指す（分かっている例外：[クラスの静的な初期化](docs/notes/class-execution-investigation.ja.md)） |
 | 機構の行列 | 1 つの機構の軸（置き場所、読み書きの仕方、名前の綴り、器）を組み合わせて、生成器が作るテスト。不具合を直すとき、その形だけでなく隣の形まで確かめるため |
 | 生成器 | 機構の行列とその期待する出力を、書いた規則から作るスクリプト `tools/gen_*.py`。`--check` で、コミットしたファイルが最新かを確かめる |
 | 器 | 文が実行される場所。モジュールの手続き、タスク、関数、fork の枝、interface、generate、package。同じ文はどの器でも同じ意味になる |
@@ -680,11 +682,11 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ### 今すぐ自分の設計で使えますか？
 
-まだです。開発の初期（P1）で、第 1 層のインタプリタで RTL と簡単なテストベンチを動かせる段階です。どこまで動くかは「できること」と「まだできないこと」の節に書いてあります。試すことはできます。まだ対応していないものがあれば、そのソースの位置を示すエラーで止まります。
+まだです。開発の初期（P1）で、第 1 層のインタプリタで RTL と簡単なテストベンチを動かせる段階です。どこまで動くかは「できること」と「まだできないこと」の節に書いてあります。試すことはできます。まだ対応していないものは、そのソースの位置を示すエラーで止まるようにしています（分かっている例外：[クラスの静的な初期化](docs/notes/class-execution-investigation.ja.md)）。
 
 ### 対応していない構文を、飛ばさずに止まるのはなぜですか？
 
-分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わります（[CLI.ja.md](docs/spec/CLI.ja.md) の 5 節）。
+分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わることを目指しています（[CLI.ja.md](docs/spec/CLI.ja.md) の 5 節）。分かっている例外は[クラスの静的な初期化](docs/notes/class-execution-investigation.ja.md)です。
 
 ### Icarus Verilog や Verilator と何が違いますか？
 

@@ -25,7 +25,7 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-24)
+## Status (2026-10-25)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
@@ -210,17 +210,17 @@ the same two known skips. Other approved P1 mechanisms remain work.
 
 | Criterion | Now | Met |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 213, Icarus Verilog 211; macOS: kirimasim 244, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 234, Icarus Verilog 211; macOS: kirimasim 244, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-10-22 (Linux) and 2026-10-25 (macOS); the population on 2026-10-25. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-25. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
 | This repository's tests (CTest, dev configuration) | 4,652 | 4,650, 2 skipped | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 213 (Linux), 244 (macOS) | 213 | 321 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
 This repository's tests by kind: unit tests (GoogleTest) 414, `tests/suite/` 4,034 (made by 136 generators under `tools/`), tools 145, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
@@ -238,17 +238,14 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-Full local CI passes with native source `52652eb` and the registry/count
-follow-up (2026-10-24). Dev/ASan/UBSan each run 3,317 tests: 3,315 pass and
-two known skips remain. Release runs 3,318: 3,316 pass and the same skips.
-All 136 Tools tests, 106 new source cases and five new unit tests pass.
-Release flags, banned features, SPDX, suite files, global state, expectation
-protection, README counts, clang-format and clang-tidy pass. Existing suite
-bodies/expectations, performance counts and all 29 SIR dumps are unchanged.
+The latest full local CI record is for `615afa0` (2026-10-25, macOS arm64):
+all 21 checks pass; dev, ASan and UBSan each run 4,652 tests, 4,650 pass and
+the two known skips remain; release runs 4,653 and 4,651 pass, with the same
+skips ([record](docs/measurements/2026-10-25/activation-environment-final-validation.json)).
 
 The same 87-probe inventory has separate 13.0-stable and 14.0-development
-results: 13.0 has 25 Icarus-passing gaps and four reference mismatches;
-14.0 has 31 and seven.
+results: 13.0 has 22 Icarus-passing gaps and four reference mismatches;
+14.0 has 22 and seven.
 See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-25)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below
@@ -333,20 +330,21 @@ allocation-failure rollback and exact tracing against an independent model.
 <details>
 <summary>sv-tests by chapter of IEEE 1800-2023</summary>
 
-These chapter tables retain historical measurements. Some gaps, including
-program execution, were implemented afterward. Use
+The own-suite table below keeps an earlier measurement, and features
+implemented since may not show in it. Use
 [P1_SUPPORT](docs/P1_SUPPORT.md) for current execution support.
 
 Pinned sv-tests commit 15490e9, hand-written tests whose type includes
 simulation, judged by sv-tests' rules. Measured with `tools/svtests.py`:
-kirimasim on 2026-10-22; the comparison builds of Icarus and Verilator on
-2026-10-17, as named under Test results.
+kirimasim on 2026-10-25 at `652159b` (release, macOS arm64); the comparison
+builds Icarus Verilog 14.0 (devel) `f190dbb` and Verilator 5.053 devel
+`8668340` on 2026-10-17.
 
 | Chapter | Tests | kirimasim | Icarus | Verilator | Where the measured build stops |
 | --- | --- | --- | --- | --- | --- |
 | 5 Lexical conventions | 1 | 1 | 1 | 1 | |
 | 6 Data types | 16 | 16 | 11 | 14 | |
-| 7 Aggregate data types | 91 | 31 | 47 | 88 | dynamic arrays (23), queues (17) and associative arrays (14); tagged unions |
+| 7 Aggregate data types | 91 | 61 | 47 | 88 | associative arrays (14), array locator methods and `shuffle` (10), unpacked array slices (3), unions (3) |
 | 8 Classes | 15 | 9 | 12 | 12 | classes |
 | 9 Processes | 6 | 4 | 4 | 6 | sequences; one test depends on the order of processes at time 0, which 4.7 leaves open |
 | 10 Assignment statements | 3 | 3 | 3 | 3 | |
@@ -361,14 +359,16 @@ kirimasim on 2026-10-22; the comparison builds of Icarus and Verilator on
 | 21 I/O system tasks and functions | 27 | 26 | 25 | 26 | `$dumpports` |
 | 22 Compiler directives | 6 | 6 | 6 | 6 | |
 | 23 Modules and hierarchy | 1 | 1 | 1 | 1 | |
-| 24 Programs | 1 | 0 | 1 | 1 | programs |
+| 24 Programs | 1 | 1 | 1 | 1 | |
 | 26 Packages | 1 | 1 | 1 | 1 | |
 | UVM | 37 | 0 | 0 | 28 | the UVM library needs classes |
 | UVM random | 3 | 3 | 3 | 3 | |
-| **Total** | **344** | **213** | **213** | **321** | |
+| **Total** | **344** | **244** | **213** | **321** | |
 
 The P1 criterion uses the Icarus build that sv-tests pins (04cc493):
-211 passes on Linux and 210 on macOS, against kirimasim's 213 on each.
+211 passes on Linux and 210 on macOS. kirimasim passes 244 on macOS
+(2026-10-25, `652159b`); the nightly run last measured 234 on Linux
+(2026-10-24, `c507631`).
 The Icarus column above uses the comparison build f190dbb, which passed
 213 on 2026-10-17.
 
@@ -452,7 +452,8 @@ produced the expected result.
 #### On Linux, with nvc and Lyra
 
 Measured separately on 2026-10-24 under WSL2 (AMD Ryzen 9 7950X), kirimasim
-`31160083c77d` with Icarus Verilog 13.0 stable, Verilator 5.050, nvc 1.23.0
+`31160083c77d` with Icarus Verilog 13.0 stable (`v13_0-25-g07dd50d37`),
+Verilator 5.050 (`v5.050-60-g3d2421f3b`), nvc 1.23.0
 and Lyra `a2313fd` (`bazel build -c opt`). The machine and the Icarus and
 Verilator versions differ from the table above, so the two tables are not
 compared column by column.
@@ -622,10 +623,15 @@ ctest --preset dev
 | Preset | Flags |
 | --- | --- |
 | `dev` | `-O1 -g` |
-| `release` | `-O3` |
+| `release` | `-O3 -DNDEBUG` |
 | `asan` | `-O1 -g -fsanitize=address -fno-omit-frame-pointer`; slang built without mimalloc, so that the sanitizer sees the heap |
 | `ubsan` | `-O1 -g -fsanitize=undefined -fno-sanitize-recover=all` |
-| `tsan` | `-O1 -g -fsanitize=thread`; slang built without mimalloc; builds and runs only the tests of state and Contexts |
+| `tsan` | `-O1 -g -fsanitize=thread`; slang built without mimalloc; builds and runs the tests of state and Contexts and of the stack |
+| `fuzz` | `-O1 -g -fsanitize=fuzzer-no-link,address,undefined`; builds only the libFuzzer target and needs a clang with libFuzzer (CONTRIBUTING.md) |
+
+`dev`, `asan`, `ubsan`, `tsan` and `fuzz` also turn on the range checks of
+the C++ standard library (`-D_GLIBCXX_ASSERTIONS`, and libc++'s extensive
+hardening mode).
 
 Each preset builds into `build/<preset>/`.
 
@@ -684,7 +690,7 @@ Options available now:
 
 | Option | Meaning |
 | --- | --- |
-| `-f <file>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `--top=<name>` | Sources, include directories, macros, the top module |
+| `-f <file>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `+libext+<ext>`, `--top=<name>` | Sources, include directories, macros, library file extensions, the top module |
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
 | `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P3) |
@@ -786,9 +792,9 @@ more, this section and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.
 ## Documentation
 
 Every document is written in English, with a Japanese version beside it
-(`X.ja.md` next to `X.md`), except the changelog, the licence, and the
-GitHub issue forms. Where the two differ, the English text
-holds.
+(`X.ja.md` next to `X.md`), except the changelog, the licence, the
+GitHub issue forms and drafts of reports to other projects. Where the two
+differ, the English text holds.
 
 | Document | Content |
 | --- | --- |
@@ -806,6 +812,7 @@ holds.
 | [docs/spec/WAVEFORM.md](docs/spec/WAVEFORM.md) | Waveforms: the VCD file, `$dump*` and `--wave` |
 | [docs/spec/CLI.md](docs/spec/CLI.md) | Command line, exit codes |
 | [docs/spec/TEST_SUITE.md](docs/spec/TEST_SUITE.md) | Test rules, the P1 exit criteria |
+| [docs/spec/P1_SCOPE.md](docs/spec/P1_SCOPE.md) | The execution coverage P1 must reach |
 | [docs/spec/RUNTIME_ABI.md](docs/spec/RUNTIME_ABI.md) | The boundary between the kernel and the tiers |
 | [docs/spec/PERFORMANCE.md](docs/spec/PERFORMANCE.md) | Performance goals and counters |
 | [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) | How AI is used in this project |
@@ -875,7 +882,7 @@ the same table with the Japanese terms.
 
 | Term | Meaning |
 | --- | --- |
-| unsupported | A construct kirimasim does not implement yet: it stops with its position and exit code 2, never runs it some other way |
+| unsupported | A construct kirimasim does not implement yet: it is meant to stop with its position and exit code 2, not run some other way (a known exception: [class static initialization](docs/notes/class-execution-investigation.md)) |
 | mechanism matrix | A test that a generator makes over the axes of one mechanism (places, ways of reading and writing, spellings, containers), so that a fix covers the neighbors of a bug, not only its own shape |
 | generator | A script `tools/gen_*.py` that writes a mechanism matrix and its expected output from the written rules; `--check` tells whether the committed files are up to date |
 | container | Where a statement runs: a module procedure, a task, a function, a fork branch, an interface, a generate block, a package; a statement means the same in all of them |
@@ -899,15 +906,17 @@ the same table with the Japanese terms.
 Not yet. It is in early development (P1): its first tier, an interpreter,
 runs RTL and simple testbenches, and [What works](#what-works) and
 [What does not work yet](#what-does-not-work-yet) say how far it goes. You
-can try it on your design: anything it does not support yet stops the run
-with an error at its source position.
+can try it on your design: what it does not support yet is meant to stop
+the run with an error at its source position (a known exception:
+[class static initialization](docs/notes/class-execution-investigation.md)).
 
 ### Why does it stop at an unsupported construct instead of skipping it?
 
 A simulator that skips what it does not understand prints results that
-look right and are not. kirimasim reports every unsupported construct with
-its position and exits with code 2 before the simulation starts
-([CLI.md](docs/spec/CLI.md) 5).
+look right and are not. kirimasim is meant to report every unsupported
+construct with its position and exit with code 2 before the simulation
+starts ([CLI.md](docs/spec/CLI.md) 5); a known exception is
+[class static initialization](docs/notes/class-execution-investigation.md).
 
 ### How does it differ from Icarus Verilog and Verilator?
 
