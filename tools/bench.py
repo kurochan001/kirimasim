@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 """Measures the simulation speed of kirimasim on the designs under bench/,
-and of Icarus Verilog, Verilator, nvc and Lyra for comparison (PERFORMANCE.md 5).
+and of Icarus Verilog, Verilator and Lyra for comparison (PERFORMANCE.md 5).
 
 Each design takes +n=<count>, the amount of work, and prints one result line
 that starts with its name. Its header gives the count to measure with
@@ -19,11 +19,10 @@ before it is timed, then --runs times with each count, alternating; the
 medians are subtracted.
 
 Icarus is iverilog -g2012, then vvp. Verilator is verilator --binary --timing
-with its default C++ options, then the built program. nvc is nvc -a, then
-nvc -e of the design's top, then nvc -r. Lyra is lyra build with its
-default backend, into an empty cache, then the built program; --lyra-llvm
-does the same with --backend llvm, as a column of its own. Their build steps are timed once and reported
-apart; kirimasim has no build step.
+with its default C++ options, then the built program. Lyra is lyra build
+with its default backend, into an empty cache, then the built program;
+--lyra-llvm does the same with --backend llvm, as a column of its own. Their
+build steps are timed once and reported apart; kirimasim has no build step.
 
 Writes results.json and summary.md to --out and prints the summary. They
 record the tools' versions and the machine's CPU, cores, memory, OS and load
@@ -63,10 +62,10 @@ ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / "bench"
 TIMEOUT = 600
 NAMES = {"kirimasim": "kirimasim", "icarus": "Icarus Verilog", "verilator": "Verilator",
-         "nvc": "nvc", "lyra": "Lyra", "lyra_llvm": "Lyra (LLVM backend)"}
+         "lyra": "Lyra", "lyra_llvm": "Lyra (LLVM backend)"}
 # The option that names each tool's executable.
 OPTIONS = {"kirimasim": "kirimasim", "icarus": "iverilog", "verilator": "verilator",
-           "nvc": "nvc", "lyra": "lyra", "lyra_llvm": "lyra_llvm"}
+           "lyra": "lyra", "lyra_llvm": "lyra_llvm"}
 # How much of a failing step's messages results.json keeps.
 TAIL = 4000
 
@@ -185,9 +184,6 @@ def prepare(tool: str, exe: str, design: Path, work: Path):
         build = build_steps([[exe, "-g2012", "-o", str(compiled), str(design)]], work)
         vvp = str(Path(exe).with_name("vvp"))
         return build, lambda n: [vvp, "-n", str(compiled), f"+n={n}"]
-    if tool == "nvc":
-        build = build_steps([[exe, "-a", str(design)], [exe, "-e", top]], work)
-        return build, lambda n: [exe, "-r", top, f"+n={n}"]
     if tool in ("lyra", "lyra_llvm"):
         program = work / "bench_lyra"
         # An empty cache of its own, so that the build is a whole compile and
@@ -354,7 +350,6 @@ def main() -> int:
     ap.add_argument("--kirimasim", help="the kirimasim executable (a release build)")
     ap.add_argument("--iverilog", help="Icarus Verilog's iverilog; vvp must be next to it")
     ap.add_argument("--verilator", help="the verilator executable")
-    ap.add_argument("--nvc", help="the nvc executable")
     ap.add_argument("--lyra", help="the lyra executable (its default backend)")
     ap.add_argument("--lyra-llvm", help="the lyra executable, run with --backend llvm")
     ap.add_argument("--lyra-version", help="what to record as lyra's version (its commit)")
