@@ -109,3 +109,12 @@ SIR load/driveのソーステスト全体は残作業です。公開ヘッダは
 Icarusプローブ/母集団・sv-tests・外部シミュレータとの速度比較は新たに実行していません。
 過去のIcarus 13合格との差分21件は残作業で、未対応言語全体の一覧ではありません。
 P1とIcarus全範囲の対応は未完了で、別の管理event命令間safepoint案も未承認です。
+
+## 後続の物理origin段階
+
+[物理originの実行](strength-driver-execution.ja.md)、`f93da11b`で、コピーした独立node/origin表、
+完全区間の解決、スカラ単位の慣性世代、Active処理の集約をcomponent publisherへ接続しました。
+新規16テストとコンパイルした13故障でカーネルの新経路を確認しました。
+上のdriver/時間処理の該当残作業はこの進展で置き換わり、以前の測定値はその段階の記録です。
+SIR load/driveと静的表、ソース感度、受動graph、登録netのforce/release、port、書式、ソースMOSは残作業です。
+公開net値を物理rootに戻したり、向き付き読み出しの循環で受動solverを代用したりするものではありません。

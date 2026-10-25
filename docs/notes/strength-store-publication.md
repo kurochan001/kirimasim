@@ -140,3 +140,15 @@ No fresh Icarus probe/population, sv-tests or external simulator speed compariso
 is claimed. The 21 historical Icarus-13-passing gaps remain work and are not the
 entire missing-language inventory. P1/full Icarus coverage remains incomplete.
 The separate managed-event instruction-safepoint proposal remains unapproved.
+
+## Subsequent physical-origin checkpoint
+
+[Physical origin execution](strength-driver-execution.md), `f93da11b`, now
+connects copied independent-node/origin tables, complete-range resolution,
+per-scalar inertial generations and coalesced Active work to the component
+publisher. Sixteen tests and thirteen compiled faults cover the new kernel path.
+This supersedes the corresponding driver/timing items above; those checkpoint
+measurements remain historical. SIR load/drive/static rows, source sensitivity,
+passive graphs, registered-net force/release, port handling, formatting and source
+MOS execution remain work. The bank does not turn published net values into
+physical roots or implement the passive solver by directed readout feedback.

@@ -1,0 +1,215 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "f93da11b0deafc569f3b5c28f15aecad1e0dba06",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "f762660f9cbb968eadb73a0bce010dc220f86c9dde0b63e583e6a8debe081ddf",
+    "src/kernel/include/kirimasim/kernel/context.h": "493972613226d36d958313bd1ca5273f36db5691bddef5f4865e5d0a65788cd1",
+    "src/kernel/include/kirimasim/kernel/sim.h": "cbc975cfd9b2c9a9e65f878127339c7280764a23856742b375d5007936d1d7c6",
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "553a379b35a3697428612bbabf6b5b82bbf19836986c0440b6aa2fec3a38f9f4",
+    "src/kernel/sim.cpp": "19053da40d75ab2472c80c42a7ce30d6f97b7309b42024ad9d050a807e83c2af",
+    "src/kernel/strength_drivers.cpp": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+    "tests/unit/CMakeLists.txt": "11ece834338eb16c09ca12af973fb63fc7f633573e6be24ffe15e26e9de5df9e",
+    "tests/unit/kernel_headers_cxx20.cpp": "285971ec7bf7c0c86e8cb938a24bf6a492ac36720aac84e9be2d6c419917af78",
+    "tests/unit/strength_drivers_test.cpp": "87953f66512569244caebdf8e4a7287fe3a782f109f143febfc9af247b137c82",
+    "tools/mutants.py": "42f590f205d8c8ec28461a2515b2b20e4416aef5d70117a012a4ae506d7e50bd"
+  },
+  "controls": [
+    {
+      "name": "strength origins: startup origins are replaced with zero drive",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.RegistrationOwnsTablesAndPreservesOrdinaryXAndMosZUntilInitialActiveSolve",
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata",
+        "StrengthDrivers.ExplicitPullAndSupplyArePhysicalOriginsRatherThanDuplicatedNetDrivers",
+        "StrengthDrivers.InvalidStaticRowsAreAtomicAndRetryable",
+        "StrengthDrivers.CompleteComponentCommitsBeforeCallbacksAndReentrantDrivesQueueDistinctSnapshots",
+        "StrengthDrivers.RevertingToCommittedRangeCancelsWithoutSchedulingAndImmediateDriveCancelsTimers",
+        "StrengthDrivers.DestinationValueSelectsScalarDelayForEveryValueAndStrengthOnlyChange",
+        "StrengthDrivers.ContextsAndStopRequestsDoNotLeakOriginsOrPublishIncompleteResults"
+      ]
+    },
+    {
+      "name": "strength origins: driver intervals lose the low endpoint",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.RegistrationOwnsTablesAndPreservesOrdinaryXAndMosZUntilInitialActiveSolve",
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata",
+        "StrengthDrivers.RepeatedRootsCoalesceIntoOneCompleteComponentSnapshot",
+        "StrengthDrivers.CompleteRangeNoticesPropagateThroughSixDirectedMosDevicesWithoutOrdinaryEdges",
+        "StrengthDrivers.SamePendingIntervalKeepsDeadlineAndOwnsCapturedValue",
+        "StrengthDrivers.DestinationValueSelectsScalarDelayForEveryValueAndStrengthOnlyChange",
+        "StrengthDrivers.ScalarOriginsHaveIndependentInertialTimers",
+        "StrengthDrivers.OverflowDoesNotReplaceThePreviouslyOwnedPendingRange"
+      ]
+    },
+    {
+      "name": "strength origins: all physical origins reuse the first root",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata",
+        "StrengthDrivers.ExplicitPullAndSupplyArePhysicalOriginsRatherThanDuplicatedNetDrivers",
+        "StrengthDrivers.RepeatedRootsCoalesceIntoOneCompleteComponentSnapshot"
+      ]
+    },
+    {
+      "name": "strength origins: wired tie rules use wire resolution",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.EveryIntervalAgainstEveryPointAndNetTieKindKeepsCompletePackedMetadata"
+      ]
+    },
+    {
+      "name": "strength origins: dirty components queue more than once",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.RepeatedRootsCoalesceIntoOneCompleteComponentSnapshot",
+        "StrengthDrivers.CompleteComponentCommitsBeforeCallbacksAndReentrantDrivesQueueDistinctSnapshots"
+      ]
+    },
+    {
+      "name": "strength origins: repeated pending results replace deadlines",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.SamePendingIntervalKeepsDeadlineAndOwnsCapturedValue"
+      ]
+    },
+    {
+      "name": "strength origins: stale timers commit a newer pending result",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.DifferentSameValueIntervalCancelsAndReschedulesFromCurrentTime"
+      ]
+    },
+    {
+      "name": "strength origins: strength-only one changes use off delay",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.SamePendingIntervalKeepsDeadlineAndOwnsCapturedValue",
+        "StrengthDrivers.DestinationValueSelectsScalarDelayForEveryValueAndStrengthOnlyChange"
+      ]
+    },
+    {
+      "name": "strength origins: explicit zero commits in Active",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.ExplicitZeroWaitsForInactiveAndReactiveWritesQueueLaterActiveWork"
+      ]
+    },
+    {
+      "name": "strength origins: committed reversion leaves the pending timer live",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.RevertingToCommittedRangeCancelsWithoutSchedulingAndImmediateDriveCancelsTimers"
+      ]
+    },
+    {
+      "name": "strength origins: overflow replaces the owned pending interval",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.OverflowDoesNotReplaceThePreviouslyOwnedPendingRange"
+      ]
+    },
+    {
+      "name": "strength origins: dirty work follows Reactive ownership",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.ExplicitZeroWaitsForInactiveAndReactiveWritesQueueLaterActiveWork"
+      ]
+    },
+    {
+      "name": "strength origins: uwire accepts multiple physical roots",
+      "path": "src/kernel/strength_drivers.cpp",
+      "source_sha256": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+      "build_target": "all",
+      "test_filter": "^StrengthDrivers[.]",
+      "build_exit": 0,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "StrengthDrivers.InvalidStaticRowsAreAtomicAndRetryable"
+      ]
+    }
+  ],
+  "all_caught": true,
+  "baseline_tests_passed": 91,
+  "restored_tests_passed": 91,
+  "unchanged_sir_dumps": 29,
+  "perfcount_passed": true,
+  "source_restored": true,
+  "compile_failures_counted_as_detections": false,
+  "public_cxx20_header_probe_in_mutated_full_builds": true
+}

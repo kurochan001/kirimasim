@@ -128,8 +128,10 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 13テスト・手書きSIR 2,034設計・コンパイルした9故障を検査しました。全local CIの21確認も通ります。
 [完全なnet状態の公開](notes/strength-store-publication.ja.md)で、各Contextに公開区間を持ち、
 全区間/全値をcallbackより先に更新します。新規19公開/幅テストとコンパイルした16故障を検査し、
-全local CIの21確認も通りました。ソースのMOS/スイッチ実行には、物理driver origin、SIR load/driveの接続、
-スケジュール・受動solver・登録netのforce/release・port・書式が必要です。
+全local CIの21確認も通りました。[物理originの実行](notes/strength-driver-execution.ja.md)で、
+安定したdriver表、スカラ単位の慣性更新、Active処理の集約と独立nodeの解決をこのpublisherへ接続しました。
+新規16テストとコンパイルした13故障で完全区間と時間処理を検査しました。全local CIの21確認も通ります。
+ソースのMOS/スイッチ実行には、SIR load/drive、ソース感度、受動solver、登録netのforce/release、port、書式が必要です。
 
 ### fork内の宣言
 

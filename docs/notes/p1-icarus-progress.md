@@ -13,6 +13,19 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Physical origins and scalar timing:** `f93da11b` connects
+[stable origin tables and inertial updates](strength-driver-execution.md) to the
+shared scheduler and component publisher. Independent nodes resolve complete
+ranges, including strength-only changes, without creating user processes.
+Sixteen new tests include 12,600 reference comparisons, callback-driven circuits,
+scalar deadlines, overflow and atomic failure. Thirteen compiled full-build
+faults are caught; restored production passes 91 cases with all 29 unchanged
+dumps and PerfCount. Full local CI passes all 21 checks: dev/ASan/UBSan 5,187/5,189,
+release 5,188/5,190, zero failures and two known skips each.
+SIR load/drive and static rows, source sensitivity, the passive solver,
+registered-net force/release, ports, formatting and source MOS remain work.
+No source-level Icarus gap reduction or full P1 completion is claimed.
+
 **Complete net-strength publication and width bounds:** `49bd3069` connects
 [Context intervals and atomic publication](strength-store-publication.md) to the
 real Store/Scheduler, keeping range-only notices separate from ordinary values,

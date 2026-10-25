@@ -1,0 +1,209 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "f93da11b0deafc569f3b5c28f15aecad1e0dba06",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "f762660f9cbb968eadb73a0bce010dc220f86c9dde0b63e583e6a8debe081ddf",
+    "src/kernel/include/kirimasim/kernel/context.h": "493972613226d36d958313bd1ca5273f36db5691bddef5f4865e5d0a65788cd1",
+    "src/kernel/include/kirimasim/kernel/sim.h": "cbc975cfd9b2c9a9e65f878127339c7280764a23856742b375d5007936d1d7c6",
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "553a379b35a3697428612bbabf6b5b82bbf19836986c0440b6aa2fec3a38f9f4",
+    "src/kernel/sim.cpp": "19053da40d75ab2472c80c42a7ce30d6f97b7309b42024ad9d050a807e83c2af",
+    "src/kernel/strength_drivers.cpp": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+    "tests/unit/CMakeLists.txt": "11ece834338eb16c09ca12af973fb63fc7f633573e6be24ffe15e26e9de5df9e",
+    "tests/unit/kernel_headers_cxx20.cpp": "285971ec7bf7c0c86e8cb938a24bf6a492ac36720aac84e9be2d6c419917af78",
+    "tests/unit/strength_drivers_test.cpp": "87953f66512569244caebdf8e4a7287fe3a782f109f143febfc9af247b137c82",
+    "tools/mutants.py": "42f590f205d8c8ec28461a2515b2b20e4416aef5d70117a012a4ae506d7e50bd"
+  },
+  "steps": [
+    {
+      "status": "ok",
+      "name": "dev: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "dev: build",
+      "seconds": 1.1
+    },
+    {
+      "status": "ok",
+      "name": "dev: test",
+      "seconds": 63.8
+    },
+    {
+      "status": "ok",
+      "name": "release: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "release: build",
+      "seconds": 10.6
+    },
+    {
+      "status": "ok",
+      "name": "release: test",
+      "seconds": 59.9
+    },
+    {
+      "status": "ok",
+      "name": "asan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "asan: build",
+      "seconds": 13.1
+    },
+    {
+      "status": "ok",
+      "name": "asan: test",
+      "seconds": 91.5
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: configure",
+      "seconds": 0.9
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: build",
+      "seconds": 11.7
+    },
+    {
+      "status": "ok",
+      "name": "ubsan: test",
+      "seconds": 73.6
+    },
+    {
+      "status": "ok",
+      "name": "check_release_flags",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "check_banned",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_spdx",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_suite_files",
+      "seconds": 0.1
+    },
+    {
+      "status": "ok",
+      "name": "check_global_state",
+      "seconds": 0.4
+    },
+    {
+      "status": "ok",
+      "name": "check_expected_change",
+      "seconds": 0.0
+    },
+    {
+      "status": "ok",
+      "name": "readme_counts",
+      "seconds": 0.3
+    },
+    {
+      "status": "ok",
+      "name": "clang-format",
+      "seconds": 0.6
+    },
+    {
+      "status": "ok",
+      "name": "clang-tidy",
+      "seconds": 106.8
+    }
+  ],
+  "exit": 0,
+  "all_checks_passed": true,
+  "successful_checks": 21,
+  "failed_checks": 0,
+  "presets": {
+    "dev": {
+      "total": 5189,
+      "passed": 5187,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5190,
+      "passed": 5188,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5189,
+      "passed": 5187,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5189,
+      "passed": 5187,
+      "failed": 0,
+      "skipped": 2,
+      "skips": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_tests": 16,
+  "node_resolution_reference_comparisons": 12600,
+  "packed_variable_interval_bit_checks": 12600,
+  "destination_delay_transitions": 30,
+  "malformed_static_table_cases": 14,
+  "pmr_configuration_allocation_budgets": 24,
+  "forced_first_publication_allocation_failure_contexts": 24,
+  "global_allocator_failure_injection_exhaustive": false,
+  "all_registered_controls_apply": 704,
+  "standalone_header_probe": {
+    "exit": 0,
+    "standard": "c++20",
+    "exceptions": false,
+    "rtti": false,
+    "compile_only": true
+  },
+  "manual_expected_change_checks": [
+    {
+      "base": "f93da11b0deafc569f3b5c28f15aecad1e0dba06^",
+      "head": "f93da11b0deafc569f3b5c28f15aecad1e0dba06",
+      "exit": 0,
+      "existing_expectations_kept": true
+    }
+  ],
+  "source_mos_execution_enabled": false,
+  "independent_node_physical_origin_table_implemented": true,
+  "scalar_inertial_state_implemented": true,
+  "strength_load_drive_sir_implemented": false,
+  "active_dirty_component_queue_implemented": true,
+  "passive_network_solver_implemented": false,
+  "registered_strength_hold_integration_implemented": false,
+  "new_c_abi_functions": false,
+  "performance_budgets_changed": false,
+  "event_collection_timing_changed": false,
+  "reference_probes_refreshed": false,
+  "external_datasets_refreshed": false,
+  "external_simulator_speed_comparison_refreshed": false,
+  "p1_complete": false
+}

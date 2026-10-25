@@ -1,0 +1,600 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "f93da11b0deafc569f3b5c28f15aecad1e0dba06",
+  "platform": "macOS arm64",
+  "uncommitted_documentation_during_validation": true,
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "f762660f9cbb968eadb73a0bce010dc220f86c9dde0b63e583e6a8debe081ddf",
+    "src/kernel/include/kirimasim/kernel/context.h": "493972613226d36d958313bd1ca5273f36db5691bddef5f4865e5d0a65788cd1",
+    "src/kernel/include/kirimasim/kernel/sim.h": "cbc975cfd9b2c9a9e65f878127339c7280764a23856742b375d5007936d1d7c6",
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "553a379b35a3697428612bbabf6b5b82bbf19836986c0440b6aa2fec3a38f9f4",
+    "src/kernel/sim.cpp": "19053da40d75ab2472c80c42a7ce30d6f97b7309b42024ad9d050a807e83c2af",
+    "src/kernel/strength_drivers.cpp": "67b62d2355ba4de392ed9cf0cd453dc3c684328e596c22b57f776711cb844fa3",
+    "tests/unit/CMakeLists.txt": "11ece834338eb16c09ca12af973fb63fc7f633573e6be24ffe15e26e9de5df9e",
+    "tests/unit/kernel_headers_cxx20.cpp": "285971ec7bf7c0c86e8cb938a24bf6a492ac36720aac84e9be2d6c419917af78",
+    "tests/unit/strength_drivers_test.cpp": "87953f66512569244caebdf8e4a7287fe3a782f109f143febfc9af247b137c82",
+    "tools/mutants.py": "42f590f205d8c8ec28461a2515b2b20e4416aef5d70117a012a4ae506d7e50bd"
+  },
+  "scope": "Focused ordinary transport and legacy-event costs with an unused physical-origin bank; not a full simulation-speed comparison",
+  "machine": {
+    "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "cores": 18,
+    "load_average": [
+      3.17,
+      6.49,
+      5.8
+    ],
+    "cpu": "Apple M5 Max",
+    "memory_gib": 128
+  },
+  "runs": 5,
+  "count": 200000,
+  "versions": {
+    "before": "kirimasim 0.0.0 (commit 99dafab46300), built with AppleClang 21.0.0.21000334",
+    "after": "kirimasim 0.0.0 (commit f93da11b0dea), built with AppleClang 21.0.0.21000334"
+  },
+  "binary_sha256": {
+    "before": "ffad6a89452ecfd876a87d24968236d1ad043a4e7f744e524d1b1e2c21f157d1",
+    "after": "372803cbf21afe49cd9689d5704aedfceb65238e5786aaf44a2002769ffd38b7"
+  },
+  "workloads": {
+    "frame_access": {
+      "source": "// Original focused transport probe; SIR_SPEC 7/8, RUNTIME_ABI 4/6.\nmodule frame_access;\n  longint n;\n  longint sum;\n  function automatic void update(ref logic [128:0] value, input longint bits);\n    value[65 +: 64] = bits;\n  endfunction\n  function automatic longint step(input longint x);\n    logic [128:0] cells [1:0];\n    cells[0] = 129'(x);\n    cells[1] = 129'(x + 1);\n    update(cells[0], x ^ 32'h13579bdf);\n    return longint'(cells[0][65 +: 64]) + longint'(cells[1]);\n  endfunction\n  initial begin\n    if (!$value$plusargs(\"n=%d\", n)) n = 200000;\n    sum = 0;\n    for (longint i = 0; i < n; i++) sum += step(i);\n    $display(\"frame_access n=%0d sum=%0d\", n, sum);\n  end\nendmodule\n",
+      "observations": {
+        "before": {
+          "small": [
+            {
+              "seconds": 0.006662291008979082,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007447624928317964,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007020374992862344,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.0072778339963406324,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.0068735829554498196,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.2700040419586003,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2598838750272989,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.258679874939844,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2565518750343472,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.25941283302381635,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            }
+          ]
+        },
+        "after": {
+          "small": [
+            {
+              "seconds": 0.00818912498652935,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007096374989487231,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007435374893248081,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007087499951012433,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007490457966923714,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.26839566696435213,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.26516370789613575,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.26309941697400063,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.25893200002610683,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.27745191601570696,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            }
+          ]
+        }
+      },
+      "counters": {
+        "before": {
+          "sir.slots": 2,
+          "sir.processes": 1,
+          "sir.subroutines": 2,
+          "sir.blocks": 12,
+          "sir.instrs": 65,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 1,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 1,
+          "sched.events.inactive": 0,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 1,
+          "proc.created": 1,
+          "proc.finished": 1,
+          "proc.kept_peak": 1,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 9400020
+        },
+        "after": {
+          "sir.slots": 2,
+          "sir.processes": 1,
+          "sir.subroutines": 2,
+          "sir.blocks": 12,
+          "sir.instrs": 65,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 1,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 1,
+          "sched.events.inactive": 0,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 1,
+          "proc.created": 1,
+          "proc.finished": 1,
+          "proc.kept_peak": 1,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 9400020
+        }
+      },
+      "all_counters_equal": true,
+      "summary": {
+        "before": {
+          "small_median_seconds": 0.007020374992862344,
+          "large_median_seconds": 0.25941283302381635,
+          "simulation_seconds": 0.252392458030954,
+          "large_peak_rss_median_mib": 9.203125
+        },
+        "after": {
+          "small_median_seconds": 0.007435374893248081,
+          "large_median_seconds": 0.26516370789613575,
+          "simulation_seconds": 0.25772833300288767,
+          "large_peak_rss_median_mib": 9.203125
+        }
+      },
+      "time_ratio_after_before": 1.021141182322014
+    },
+    "event_bounce": {
+      "source": "// Original named-event transport cost probe; IEEE 1800-2023 9.4/15.5.\nmodule event_bounce;\n  event request, response;\n  longint n;\n  longint sum;\n  initial begin\n    if (!$value$plusargs(\"n=%d\", n)) n = 200000;\n    sum = 0;\n    #0;\n    for (longint i = 0; i < n; ++i) begin\n      -> request;\n      @response;\n      ++sum;\n    end\n    $display(\"event_bounce n=%0d sum=%0d\", n, sum);\n  end\n  initial forever begin\n    @request;\n    -> response;\n  end\nendmodule\n",
+      "observations": {
+        "before": {
+          "small": [
+            {
+              "seconds": 0.006272542057558894,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.007068875012919307,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.006864249939098954,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.006879249936901033,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.007171374978497624,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.05451225000433624,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05352454190142453,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05406337499152869,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05870133300777525,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.055006583919748664,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            }
+          ]
+        },
+        "after": {
+          "small": [
+            {
+              "seconds": 0.007291666930541396,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.00750520802102983,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.007207542075775564,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.006769333966076374,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.007270750007592142,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.05510779202450067,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05442049994599074,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.0536356249358505,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.053595458972267807,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.054985790979117155,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            }
+          ]
+        }
+      },
+      "counters": {
+        "before": {
+          "sir.slots": 4,
+          "sir.processes": 2,
+          "sir.subroutines": 0,
+          "sir.blocks": 15,
+          "sir.instrs": 37,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 2,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 400002,
+          "sched.events.inactive": 1,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 400003,
+          "proc.created": 2,
+          "proc.finished": 1,
+          "proc.kept_peak": 2,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 3400023
+        },
+        "after": {
+          "sir.slots": 4,
+          "sir.processes": 2,
+          "sir.subroutines": 0,
+          "sir.blocks": 15,
+          "sir.instrs": 37,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 2,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 400002,
+          "sched.events.inactive": 1,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 400003,
+          "proc.created": 2,
+          "proc.finished": 1,
+          "proc.kept_peak": 2,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 3400023
+        }
+      },
+      "all_counters_equal": true,
+      "summary": {
+        "before": {
+          "small_median_seconds": 0.006879249936901033,
+          "large_median_seconds": 0.05451225000433624,
+          "simulation_seconds": 0.047633000067435205,
+          "large_peak_rss_median_mib": 9.203125
+        },
+        "after": {
+          "small_median_seconds": 0.007270750007592142,
+          "large_median_seconds": 0.05442049994599074,
+          "simulation_seconds": 0.0471497499383986,
+          "large_peak_rss_median_mib": 9.203125
+        }
+      },
+      "time_ratio_after_before": 0.9898547198716761
+    }
+  },
+  "limitations": [
+    "Five alternating pairs on one macOS arm64 system; not seven nightly baselines or a confidence interval.",
+    "Small-run startup subtraction is an estimate; wall time is not a pass/fail gate.",
+    "Neither workload configures physical strength origins; new driver traffic and source MOS costs are not measured.",
+    "No full standard benchmark, external-simulator, Linux or new managed-event source timing.",
+    "No PerfCount budget or warning threshold changed."
+  ],
+  "baseline_source_revision": "99dafab46300559a0d6f9b7f75aa0f2922c077bd"
+}

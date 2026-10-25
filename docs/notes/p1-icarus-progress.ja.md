@@ -12,6 +12,15 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
+**物理originとスカラ時間処理：** `f93da11b`で[安定したorigin表と慣性更新](strength-driver-execution.ja.md)を
+共有schedulerとcomponent publisherへ接続しました。強さだけの変更も含む完全区間を独立nodeで解決し、
+利用者processは作りません。新規16テストで参照との12,600比較、callback駆動回路、
+スカラ期限、時刻超過、失敗時の一括性を確認しました。全体ビルドに成功した13故障を検出し、
+復元後は既存dump全29件とPerfCountを含む91件が通りました。全local CIの21確認が通り、dev/ASan/UBSanは5,187/5,189、releaseは5,188/5,190、
+各失敗0・既知スキップ2件です。
+SIR load/driveと静的表、ソース感度、受動solver、登録netのforce/release、port、書式、ソースMOSは残作業です。
+ソースでのIcarus差分縮小やP1全体の完了は主張しません。
+
 **完全なnet強さの公開と幅の境界：** `49bd3069`で[Context区間と一括公開](strength-store-publication.ja.md)を
 実際のStore/Schedulerへ接続し、強さだけの通知を通常値・辺・VCDから分けました。
 `99dafab4`で記憶域経路のワード/byte数の巡回と、不完全な巨大定数の受理も修正しました。
