@@ -40,6 +40,7 @@ std::string toString(Type t) {
             return t.detail == kNone ? "ref" : "ref<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::DynArray: return "dynarray<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Queue: return "queue<!" + std::to_string(t.detail.index()) + ">";
+        case TypeKind::Strength: return sized("strength");
     }
     return "?";
 }
@@ -223,6 +224,9 @@ const char* opName(Op op) {
         case Op::DisableScope: return "disable.scope";
         case Op::DisableTask: return "disable.task";
         case Op::Resolve: return "resolve";
+        case Op::StrengthMake: return "strength.make";
+        case Op::StrengthValue: return "strength.value";
+        case Op::StrengthMos: return "strength.mos";
         case Op::Br: return "br";
         case Op::BrIf: return "br.if";
         case Op::Ret: return "ret";

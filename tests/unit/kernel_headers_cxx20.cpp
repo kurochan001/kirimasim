@@ -28,6 +28,7 @@
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength.h"
+#include "kirimasim/kernel/strength_value.h"
 #include "kirimasim/kernel/strings.h"
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/urandom.h"

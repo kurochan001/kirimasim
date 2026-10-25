@@ -21,6 +21,7 @@
 #include <new>
 #include <optional>
 #include <set>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -38,6 +39,7 @@
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/strength.h"
+#include "kirimasim/kernel/strength_value.h"
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/w4ops.h"
@@ -439,6 +441,7 @@ struct InstrInfo {
     /// (empty for the others).
     std::vector<std::vector<kernel::FormatPiece>> formats;
     kernel::NetKind netKind = kernel::NetKind::Wire;  ///< For resolve.
+    kernel::MosKind mosKind = kernel::MosKind::Nmos;  ///< Decoded strength.mos kind.
     /// How values without a specifier print: 'd', or the radix of a b, o
     /// or h form (SYSTEM_TASKS.md 3.1).
     char radix = 'd';
@@ -728,7 +731,9 @@ public:
             tempOff_[p].resize(tempTypes_[p].size());
             for (std::size_t t = 0; t < tempTypes_[p].size(); ++t) {
                 tempOff_[p][t] = at;
-                at += chunksOf(tempTypes_[p][t]);
+                const auto words = chunksOf(tempTypes_[p][t]);
+                if (words > UINT32_MAX - at) throw std::length_error("temporary word capacity");
+                at += words;
             }
             tempTotal_[p] = at;
         }
@@ -1214,8 +1219,9 @@ private:
     W4& temp(sir::TempId id) {
         return tempStack_[act_.base + tempOff_[act_.body.index()][id.index()]];
     }
-    /// The W4 chunks of a value of type t (kernel/wide.h).
+    /// W4 chunks of integral values, or packed strength words (eight bits each).
     static std::uint32_t chunksOf(sir::Type t) {
+        if (t.kind == sir::TypeKind::Strength) return kernel::strengthWordCount(t.width);
         return sir::isIntegral(t) && t.width > 64 ? (t.width - 1) / 64 + 1 : 1;
     }
     /// Enters a body: its temps above the current ones.
@@ -1287,6 +1293,19 @@ private:
             const std::optional<kernel::NetKind> k = netKindOf(in.operands[0].text);
             if (!k && loadError_.empty()) loadError_ = "resolve of net kind " + in.operands[0].text;
             info.netKind = k.value_or(kernel::NetKind::Wire);
+            return info;
+        }
+        if (in.op == Op::StrengthMos && !in.operands.empty()) {
+            static constexpr std::pair<std::string_view, kernel::MosKind> kinds[] = {
+                {"nmos", kernel::MosKind::Nmos},   {"pmos", kernel::MosKind::Pmos},
+                {"rnmos", kernel::MosKind::Rnmos}, {"rpmos", kernel::MosKind::Rpmos},
+                {"cmos", kernel::MosKind::Cmos},   {"rcmos", kernel::MosKind::Rcmos}};
+            for (const auto& [name, kind] : kinds)
+                if (in.operands[0].text == name) {
+                    info.mosKind = kind;
+                    return info;
+                }
+            if (loadError_.empty()) loadError_ = "invalid strength.mos kind";
             return info;
         }
         if (in.op == Op::Builtin && !in.operands.empty()) {
@@ -3249,6 +3268,12 @@ private:
                                             buf.data(), *rise, *fall, *off, sides);
                         break;
                     }
+                    case Op::StrengthMake:
+                    case Op::StrengthValue:
+                    case Op::StrengthMos:
+                        if (!strengthInstruction(in, info_[body.index()][b.index()][k]))
+                            return Exit::Error;
+                        break;
                     case Op::Resolve: resolve(in, info_[body.index()][b.index()][k]); break;
                     case Op::Syscall: {
                         const InstrInfo& info = info_[body.index()][b.index()][k];
@@ -3934,6 +3959,29 @@ private:
             }
         }
         return target.asBlock();
+    }
+
+    bool strengthInstruction(const sir::Instr& in, const InstrInfo& info) {
+        const auto& ops = in.operands;
+        const auto width = in.type.width;
+        std::span<W4> out{&temp(in.result), chunksOf(in.type)};
+        bool ok = false;
+        if (in.op == Op::StrengthMake) {
+            const auto input = chunks(ops[0]);
+            const auto side = ops.size() == 4 ? chunks(ops[3]) : std::vector<W4>{};
+            ok =
+                kernel::makeStrengthValue(out, width, input, static_cast<unsigned>(value(ops[1]).a),
+                                          static_cast<unsigned>(value(ops[2]).a), side);
+        } else if (in.op == Op::StrengthValue) {
+            const auto input = chunks(ops[0]);
+            ok = kernel::projectStrengthValue(out, width, input);
+        } else {
+            const auto input = chunks(ops[1]);
+            ok = kernel::mosStrengthValue(out, width, info.mosKind, input, value(ops[2]),
+                                          ops.size() == 4 ? value(ops[3]) : W4{});
+        }
+        if (!ok) sched_.fail("invalid complete strength value");
+        return ok;
     }
 
     /// Runs one instruction that is not a terminator or a system call.

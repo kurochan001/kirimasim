@@ -30,10 +30,11 @@ enum class TypeKind : std::uint8_t {
     Ref,        ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
     DynArray,   ///< Dynamic-array handle; detail names its type-table row.
     Queue,      ///< Queue handle; detail names its type-table row.
+    Strength,   ///< Internal SSA metadata: strength<w>, one complete range per bit.
 };
 
-/// A value type. Integral kinds carry a bit width of at least 1; other kinds
-/// have width 0.
+/// A value type. Integral and Strength kinds carry a positive width; other
+/// kinds have width 0. Strength is not a SystemVerilog storage type.
 struct Type {
     TypeKind kind = TypeKind::Void;
     std::uint32_t width = 0;
@@ -55,6 +56,7 @@ inline Type u2(std::uint32_t w) { return {TypeKind::U2, w}; }
 inline Type s2(std::uint32_t w) { return {TypeKind::S2, w}; }
 inline Type u4(std::uint32_t w) { return {TypeKind::U4, w}; }
 inline Type s4(std::uint32_t w) { return {TypeKind::S4, w}; }
+inline Type strengthType(std::uint32_t w) { return {TypeKind::Strength, w}; }
 
 inline bool isIntegral(Type t) {
     return t.kind == TypeKind::U2 || t.kind == TypeKind::S2 || t.kind == TypeKind::U4 ||

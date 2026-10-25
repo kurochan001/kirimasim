@@ -377,6 +377,10 @@ enum class Op : std::uint8_t {
     /// side of twice the width gives the sides a driver drives (SIR_SPEC.md
     /// 3.5, VALUE_SEMANTICS.md 5.4).
     Resolve,
+    // Complete strength SSA values (approved MOS/switch contract 7).
+    StrengthMake,   ///< strength.make <i4/s4 value>, <s1>, <s0>[, <i2/s2 side>]
+    StrengthValue,  ///< strength.value <strength<w>> -> i4<w>
+    StrengthMos,    ///< strength.mos "kind", <strength<w>>, <scalar control>...
     // User-defined primitives (SIR_SPEC.md 5.5).
     Udp,     ///< %r = udp !T, <input>...
     UdpSeq,  ///< %r = udp.seq !T, <state>, <previous input>..., <input>...

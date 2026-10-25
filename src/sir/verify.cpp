@@ -272,8 +272,15 @@ private:
         if (!isContainer(t) || t.width != 0 || containerType(t.detail) != t) return nullptr;
         return &d_.types[t.detail.index()].value;
     }
-    void checkValueType(Type t, const std::string& where, SourceLoc loc = {}) {
-        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Queue)) {
+    void checkValueType(Type t, const std::string& where, SourceLoc loc = {},
+                        bool strengthSsa = false) {
+        if (t.kind == TypeKind::Strength) {
+            if (!strengthSsa) error(where, "strength is SSA-only metadata", loc);
+            if (t.width == 0 || t.detail != kNone)
+                error(where, "strength needs positive width and no descriptor", loc);
+            return;
+        }
+        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Strength)) {
             error(where, "unknown value type", loc);
             return;
         }
@@ -874,7 +881,7 @@ private:
         for (std::size_t b = 0; b < nb; ++b) {
             for (const BlockParam& prm : blocks[b].params) {
                 if (prm.type.kind == TypeKind::Void) error(bw(b), "parameter has type void");
-                checkValueType(prm.type, bw(b));
+                checkValueType(prm.type, bw(b), {}, true);
                 define(prm.temp, b, -1, prm.type, {});
             }
             const auto& instrs = blocks[b].instrs;
@@ -1015,7 +1022,7 @@ private:
         else if (in.loc.file >= d_.sources.size())
             bad("source file out of range");
 
-        checkValueType(in.type, bw, in.loc);
+        checkValueType(in.type, bw, in.loc, true);
         if (hasNoResult(in.op)) {
             if (in.result != kNone || in.type.kind != TypeKind::Void) bad("must not have a result");
         } else if ((in.result == kNone) != (in.type.kind == TypeKind::Void)) {
@@ -1075,6 +1082,21 @@ private:
                     break;
                 default: break;
             }
+        }
+
+        // Complete strength values are owned SSA metadata, not ordinary
+        // operands, storage, handles or a new arithmetic state domain.
+        if (rt.kind == TypeKind::Strength && in.op != Op::StrengthMake && in.op != Op::StrengthMos)
+            bad("only strength.make/mos produce strength metadata");
+        for (std::size_t i = 0; i < ops.size(); ++i) {
+            if (ty(i).kind != TypeKind::Strength) continue;
+            const auto& o = ops[i];
+            if (o.kind != Operand::Kind::Temp || o.edge != Edge::Any || o.firstElem != 0 ||
+                o.numElems != 0 || o.lsb != 0 || o.width != 0 || o.count != 0)
+                bad("strength operands must be whole SSA values");
+            if (in.op != Op::StrengthValue && in.op != Op::StrengthMos && in.op != Op::Br &&
+                in.op != Op::BrIf)
+                bad("strength metadata is not an ordinary operand");
         }
 
         // Rule 6, first half: a process declares every slot it writes.
@@ -1636,6 +1658,53 @@ private:
                 if (nOps(2) && (!isIntegral(rt) || ty(0) != rt || !isIntegral(ty(1))))
                     bad("value must have the result type; the amount must be integral");
                 break;
+            case Op::StrengthMake: {
+                bool ok = (ops.size() == 3 || ops.size() == 4) && rt.kind == TypeKind::Strength;
+                if (ok) ok = isValue(0) && isFourState(ty(0)) && ty(0).width == rt.width;
+                for (std::size_t i = 1; ok && i <= 2; ++i) {
+                    ok = ops[i].kind == Operand::Kind::Const && isIntegral(ty(i)) &&
+                         ty(i).width != 0;
+                    if (ok) {
+                        const auto& rank = d_.constants[ops[i].id];
+                        ok = !rank.aWords.empty() && rank.aWords[0] <= 7 &&
+                             std::all_of(rank.aWords.begin() + 1, rank.aWords.end(),
+                                         [](auto word) { return word == 0; }) &&
+                             std::all_of(rank.bWords.begin(), rank.bWords.end(),
+                                         [](auto word) { return word == 0; });
+                        if (ok && isSigned(rank.type) && rank.type.width <= 3)
+                            ok = ((rank.aWords[0] >> (rank.type.width - 1)) & 1U) == 0;
+                    }
+                }
+                if (ok && ops.size() == 4)
+                    ok = isValue(3) && isIntegral(ty(3)) && !isFourState(ty(3)) &&
+                         std::uint64_t{ty(3).width} == std::uint64_t{rt.width} * 2;
+                if (!ok)
+                    bad("needs strength<w>, a captured 4-state value of width w, two static "
+                        "ranks 0..7 and an optional 2-state side of width 2w");
+                break;
+            }
+            case Op::StrengthValue:
+                if (nOps(1) &&
+                    (!isValue(0) || ty(0).kind != TypeKind::Strength || rt != u4(ty(0).width)))
+                    bad("needs strength<w> and returns i4<w>");
+                break;
+            case Op::StrengthMos: {
+                static constexpr std::string_view kinds[] = {"nmos",  "pmos", "rnmos",
+                                                             "rpmos", "cmos", "rcmos"};
+                bool ok =
+                    !ops.empty() && ops[0].kind == Operand::Kind::Text &&
+                    std::find(std::begin(kinds), std::end(kinds), ops[0].text) != std::end(kinds);
+                if (ok) {
+                    const bool parallel = ops[0].text == "cmos" || ops[0].text == "rcmos";
+                    ok = ops.size() == (parallel ? 4U : 3U) && rt.kind == TypeKind::Strength;
+                }
+                if (ok) ok = isValue(1) && ty(1) == rt;
+                for (std::size_t i = 2; ok && i < ops.size(); ++i)
+                    ok = isValue(i) && width1(ty(i));
+                if (!ok)
+                    bad("needs a legal MOS kind, strength<w> input/result and scalar controls");
+                break;
+            }
             case Op::Resolve: {
                 // A net kind, then for each driver a value of the result
                 // type, two constant strengths from 0 to 7 and, for a
