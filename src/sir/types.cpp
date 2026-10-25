@@ -198,6 +198,7 @@ const char* opName(Op op) {
         case Op::Itos: return "itos";
         case Op::Stoi: return "stoi";
         case Op::StrGet: return "str.get";
+        case Op::EventNew: return "event.new";
         case Op::Trigger: return "trigger";
         case Op::TriggerNb: return "trigger.nb";
         case Op::Disable: return "disable";

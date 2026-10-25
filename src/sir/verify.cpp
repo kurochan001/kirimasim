@@ -515,6 +515,13 @@ private:
                 continue;
             }
             if (!c.bytes.empty()) error(where, "only string constants have bytes");
+            if (c.type.kind == TypeKind::Event) {
+                // Event identities are created by event.new or loaded from
+                // typed storage; a constant cannot forge a registry token.
+                if (c.aWords.size() != 1 || c.aWords[0] != 0 || !c.bWords.empty())
+                    error(where, "an event constant must be null");
+                continue;
+            }
             if (c.type.kind == TypeKind::Chandle) {
                 // Only null (VALUE_SEMANTICS.md 7.8).
                 if (c.aWords.size() != 1 || c.aWords[0] != 0 || !c.bWords.empty())
@@ -1030,6 +1037,13 @@ private:
             return ops.size() == n;
         };
         const Type rt = in.type;
+        const auto eventTarget = [&](std::size_t i) {
+            if (ty(i) != Type{TypeKind::Event, 0}) return false;
+            if (ops[i].kind == Operand::Kind::Slot) return true;
+            const auto& o = ops[i];
+            return isValue(i) && o.edge == Edge::Any && o.firstElem == 0 && o.numElems == 0 &&
+                   o.lsb == 0 && o.width == 0 && o.count == 0;
+        };
         // A delay counts ticks, an integral value of any width; 2^64 or more
         // takes the time past the largest time when it runs (SIR_SPEC.md 1).
         const auto delayOk = [&](std::size_t i) { return isIntegral(ty(i)); };
@@ -1772,14 +1786,14 @@ private:
                                 isFourState(rt) || rt.width != 8))
                     bad("needs a string and an index, and gives a two-state byte");
                 break;
+            case Op::EventNew:
+                if (nOps(0) && rt != Type{TypeKind::Event, 0}) bad("must return an event value");
+                break;
             case Op::Trigger:
-                if (nOps(1) && (ops[0].kind != Operand::Kind::Slot ||
-                                slotValueType(ops[0]).kind != TypeKind::Event))
-                    bad("needs an event slot");
+                if (nOps(1) && !eventTarget(0)) bad("needs an event slot");
                 break;
             case Op::TriggerNb:
-                if (ops.empty() || ops.size() > 2 || ops[0].kind != Operand::Kind::Slot ||
-                    slotValueType(ops[0]).kind != TypeKind::Event ||
+                if (ops.empty() || ops.size() > 2 || !eventTarget(0) ||
                     (ops.size() == 2 && !delayOk(1)))
                     bad("needs an event slot and an optional integral delay");
                 break;
@@ -2001,19 +2015,22 @@ private:
                     bad("needs at least one event and a block");
                     break;
                 }
-                // Each item is a slot range or a watch, and may have an iff
-                // guard after it (SIR_SPEC.md 7.2).
+                // Slot ranges, watches and loaded event values each have an
+                // optional iff guard (SIR_SPEC 7.2; capture contract 5/7).
                 bool afterItem = false;
                 for (std::size_t i = 0; i + 1 < ops.size(); ++i) {
                     const Operand& o = ops[i];
                     const bool watch = o.kind == Operand::Kind::Subroutine &&
                                        o.id < d_.subroutines.size() &&
                                        d_.subroutines[o.id].kind == SubroutineKind::Watch;
-                    if (o.kind == Operand::Kind::Slot || watch) {
+                    const bool eventValue = isValue(i) && ty(i) == Type{TypeKind::Event, 0};
+                    if (o.kind == Operand::Kind::Slot || watch || eventValue) {
                         if (watch) checkWaiter(body, o, SubroutineKind::Watch, bad);
                         if (o.kind == Operand::Kind::Slot && ty(i).kind == TypeKind::Event &&
                             (o.edge != Edge::Any || o.lsb != 0 || o.width != 0))
                             bad("named event items have no edge or packed range");
+                        if (eventValue && !eventTarget(i))
+                            bad("named event values have no edge, range or argument count");
                         afterItem = true;
                         continue;
                     }
@@ -2037,9 +2054,7 @@ private:
                 continuation();
                 break;
             case Op::WaitNamed:
-                if (nOps(2) && (ops[0].kind != Operand::Kind::Slot ||
-                                slotValueType(ops[0]).kind != TypeKind::Event))
-                    bad("needs an event slot");
+                if (nOps(2) && !eventTarget(0)) bad("needs an event slot");
                 continuation();
                 break;
             case Op::Fork: {

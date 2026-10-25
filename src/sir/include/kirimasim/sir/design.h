@@ -358,8 +358,9 @@ enum class Op : std::uint8_t {
     Stoi,    ///< string -> integral
     StrGet,  ///< %r = str.get <string>, <index>
     // Events and process control (SCHEDULER_SPEC.md 9.4 and 10).
-    Trigger,      ///< trigger <event slot>
-    TriggerNb,    ///< trigger.nb <event slot>[, <delay>]
+    EventNew,     ///< %r = event.new event (approved automatic-capture contract 5/7)
+    Trigger,      ///< trigger <event slot | event value>
+    TriggerNb,    ///< trigger.nb <event slot | event value>[, <delay>]
     Disable,      ///< disable <process or subroutine>
     DisableFork,  ///< disable.fork
     /// report.defer "<construct>", "<content>", "<scope>": puts a unique,
@@ -411,7 +412,7 @@ enum class Op : std::uint8_t {
     WaitDelay,  ///< wait.delay <ticks>, bbN
     WaitEvent,  ///< wait.event <event> [iff @G]..., bbN
     WaitCond,   ///< wait.cond @G, bbN
-    WaitNamed,  ///< wait.named <event slot>, bbN
+    WaitNamed,  ///< wait.named <event slot | event value>, bbN
     Fork,       ///< fork @P..., "join" | "join_any" | "join_none", bbN
     WaitFork,   ///< wait.fork bbN
     CallTask,   ///< call.task @N, <argument>..., bbN

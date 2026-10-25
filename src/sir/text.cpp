@@ -277,7 +277,7 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
 
 std::string constantText(const Constant& c) {
     if (isContainer(c.type)) return "empty";
-    if (c.type.kind == TypeKind::Chandle) return "null";
+    if (c.type.kind == TypeKind::Chandle || c.type.kind == TypeKind::Event) return "null";
     if (c.type.kind == TypeKind::String) return quoted(c.bytes);
     if (c.type.kind == TypeKind::Real || c.type.kind == TypeKind::ShortReal) {
         const std::uint64_t bits = c.aWords.empty() ? 0 : c.aWords[0];
