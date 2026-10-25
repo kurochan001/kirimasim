@@ -138,11 +138,25 @@ ActivationEnvironment::ActivationEnvironment(kernel::ActivationStore& store,
 }
 ActivationEnvironment::~ActivationEnvironment() { finish(); }
 
+void ActivationEnvironmentDelete::operator()(ActivationEnvironment* environment) const noexcept {
+    if (environment == nullptr) return;
+    environment->~ActivationEnvironment();
+    memory->deallocate(environment, sizeof(ActivationEnvironment), alignof(ActivationEnvironment));
+}
+
 ActivationEnvironment::Result<ActivationEnvironment::Pointer>
 ActivationEnvironment::allocate(kernel::ActivationStore& store, const ActivationPlan& plan,
                                 std::pmr::memory_resource* memory) {
     if (!plan.valid() || plan.store_ != &store) return {{}, Error::InvalidLayout};
-    Pointer environment(new ActivationEnvironment(store, plan, memory));
+    void* storage = memory->allocate(sizeof(ActivationEnvironment), alignof(ActivationEnvironment));
+    ActivationEnvironment* created = nullptr;
+    try {
+        created = new (storage) ActivationEnvironment(store, plan, memory);
+    } catch (...) {
+        memory->deallocate(storage, sizeof(ActivationEnvironment), alignof(ActivationEnvironment));
+        throw;
+    }
+    Pointer environment(created, ActivationEnvironmentDelete{memory});
     if (plan.info_->root != sir::kNone) {
         const auto error = environment->enterOwner(plan.info_->root);
         if (error != Error::None) return {{}, error};

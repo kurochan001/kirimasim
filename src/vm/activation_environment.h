@@ -59,6 +59,12 @@ enum class CaptureJoin : std::uint8_t { All, Any, None };
 using ResolveBorrowedReference =
     kernel::ActivationResult<BorrowedReference> (*)(void*, sir::FrameVarId) noexcept;
 
+class ActivationEnvironment;
+struct ActivationEnvironmentDelete {
+    std::pmr::memory_resource* memory = std::pmr::new_delete_resource();
+    void operator()(ActivationEnvironment* environment) const noexcept;
+};
+
 /// One executing body's automatic owners and imported lexical environment.
 /// No PC, control stack, RNG or mutable SystemVerilog value lives here.
 /// Creation does not initialize source declarations or formal parameters.
@@ -66,7 +72,7 @@ class ActivationEnvironment {
 public:
     using Error = kernel::ActivationError;
     template <class T> using Result = kernel::ActivationResult<T>;
-    using Pointer = std::unique_ptr<ActivationEnvironment>;
+    using Pointer = std::unique_ptr<ActivationEnvironment, ActivationEnvironmentDelete>;
     using Children = std::pmr::vector<Pointer>;
     using Pins = std::pmr::vector<kernel::ActivationLease>;
 

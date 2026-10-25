@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -487,18 +488,29 @@ class FailingMemory final : public std::pmr::memory_resource {
 public:
     std::optional<std::size_t> remaining;
     std::size_t allocated = 0;
+    bool matchingDeallocation = true;
+    bool owns(const void* pointer) const {
+        return pointer != nullptr && std::find(live_.begin(), live_.end(), pointer) != live_.end();
+    }
 
 private:
+    std::array<void*, 64> live_{};
     void* do_allocate(std::size_t bytes, std::size_t alignment) override {
         if (remaining) {
             if (*remaining == 0) throw std::bad_alloc{};
             --*remaining;
         }
         void* result = std::pmr::new_delete_resource()->allocate(bytes, alignment);
+        if (const auto at = std::find(live_.begin(), live_.end(), nullptr); at != live_.end())
+            *at = result;
         allocated += bytes;
         return result;
     }
     void do_deallocate(void* value, std::size_t bytes, std::size_t alignment) override {
+        if (const auto at = std::find(live_.begin(), live_.end(), value); at != live_.end())
+            *at = nullptr;
+        else
+            matchingDeallocation = false;
         allocated -= bytes;
         std::pmr::new_delete_resource()->deallocate(value, bytes, alignment);
     }
@@ -506,6 +518,28 @@ private:
         return this == &other;
     }
 };
+
+TEST(ActivationEnvironment, RootObjectsUseTheirResourceAndMatchingDeallocation) {
+    FailingMemory memory;
+    k::ActivationStore store;
+    const Body body = ownerBody();
+    auto plan = body.compile(store);
+    ASSERT_TRUE(plan);
+    memory.remaining = 0;
+    EXPECT_EQ(Env::root(store, plan.value, &memory).error, Error::ResourceLimit);
+    EXPECT_EQ(memory.allocated, 0U);
+    EXPECT_EQ(store.stats().live, 0U);
+    memory.remaining.reset();
+    auto owner = Env::root(store, plan.value, &memory);
+    ASSERT_TRUE(owner);
+    const auto* address = owner.value.get();
+    EXPECT_TRUE(memory.owns(address));
+    owner.value.reset();
+    EXPECT_FALSE(memory.owns(address));
+    EXPECT_TRUE(memory.matchingDeallocation);
+    EXPECT_EQ(memory.allocated, 0U);
+    EXPECT_EQ(store.stats().live, 0U);
+}
 
 TEST(ActivationEnvironment, EveryGroupAllocationFailureReleasesAllProvisionalOwnership) {
     for (const bool kernelFailure : {false, true}) {
@@ -547,6 +581,8 @@ TEST(ActivationEnvironment, EveryGroupAllocationFailureReleasesAllProvisionalOwn
             }
             EXPECT_EQ(kernelMemory.allocated, 0U);
             EXPECT_EQ(environmentMemory.allocated, 0U);
+            EXPECT_TRUE(kernelMemory.matchingDeallocation);
+            EXPECT_TRUE(environmentMemory.matchingDeallocation);
         }
         EXPECT_TRUE(succeeded);
         EXPECT_GE(failed, kernelFailure ? 3U : 10U);

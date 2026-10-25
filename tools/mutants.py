@@ -40,6 +40,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('activation environment: object storage bypasses its resource', 'src/vm/activation_environment.cpp',
+     'void* storage = memory->allocate(sizeof(ActivationEnvironment), alignof(ActivationEnvironment));',
+     'void* storage = std::pmr::new_delete_resource()->allocate(sizeof(ActivationEnvironment), alignof(ActivationEnvironment));'),
     ('activation environment: descendants omit inherited extents', 'src/vm/activation_environment.cpp',
      'if (info.inheritCaptures)\n            for (const auto& lease : parent->imports_)',
      'if (info.inheritCaptures && false)\n            for (const auto& lease : parent->imports_)'),
