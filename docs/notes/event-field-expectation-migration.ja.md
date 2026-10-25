@@ -1,7 +1,8 @@
 # automatic eventの旧拒否検査3件の移行
 
 [English](event-field-expectation-migration.md)が正。Status: **approved (2026-10-25)**。
-利用者が以下の移行3件を承認しました。対応実装が揃ってから適用します。
+利用者が以下の移行3件を承認しました。正規providerの実装`1dc06096`の後、項目1/2を
+`ecbe4abb`で適用しました。項目3はソース実行全体の接続待ちです。
 以下の提案本文では、期待値変更だけを実装と別に承認依頼しています。
 [automatic捕捉契約](automatic-capture-proposal.ja.md)5/6/7は承認済みですが、
 その承認には既存の期待値変更を含まないと明記されています。

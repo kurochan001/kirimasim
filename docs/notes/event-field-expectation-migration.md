@@ -1,8 +1,9 @@
 # Migrate three historical automatic-event rejection checks
 
 [日本語](event-field-expectation-migration.ja.md). Status: **approved (2026-10-25)**.
-The user approved the exact three migrations below; application awaits the
-corresponding implementation. The original proposal text below requests approval separately
+The user approved the exact three migrations below. Items 1/2 were applied in
+`ecbe4abb`, after the canonical provider implementation `1dc06096`; item 3 still
+awaits complete source execution. The original proposal text below requests approval separately
 from implementation. The [automatic-capture contract](automatic-capture-proposal.md)
 5/6/7 is already approved; its approval explicitly excludes existing oracles.
 

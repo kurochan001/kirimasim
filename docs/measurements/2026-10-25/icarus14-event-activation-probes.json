@@ -1,0 +1,1546 @@
+{
+  "date": "2026-10-25",
+  "source_revision": "a1eb2eb9cf8ae6953f9d1f82b10577e64eedac17",
+  "implementation_revision": "1dc06096be0b0edf4ed3916770450593db4895a1",
+  "platform": "macOS arm64",
+  "source_sha256": {
+    "src/sir/activation.cpp": "b5bc2dc87903b6c15156d4a430d145be94e4b727901ee6bc97a3a48fb6bbb926",
+    "src/vm/activation_environment.cpp": "0a815918002d095af43cb43929b9087d5bf84b816555be7be028813c0d53e4c2",
+    "src/vm/frame_layout.h": "dfec3a2d580d0d09a1a6434dfc0655acc4fe4e56e628ea9b9f5a680e52086dde",
+    "src/vm/frame_value.h": "178156efca93ee5b1e053c22581709bf3b69f2744e88b5f23c930dad2d60bf83",
+    "src/kernel/activation.cpp": "7912394693c81af5b8ea9a9e331537c844783447a1242c4e78cefd626ad626bf",
+    "src/kernel/include/kirimasim/kernel/activation.h": "7ad391026b27fcdf1545713d45cb271ea0e1a24d1407fb41796814712a915dc7",
+    "src/kernel/managed_event.cpp": "f1104b7b20a93071e7223d2b02c2f090fc2e715ee82521b9a77ea55e70903d51",
+    "src/kernel/include/kirimasim/kernel/managed_event.h": "235c30c969dbc04201dd6cba1ae38bcdadf3e61ef962540153df5e56b21af4f3",
+    "tests/unit/event_activation_test.cpp": "6ac30acb1f17f8bc20a03eac0c890605ca678e7620d146b71998ef50c707e117",
+    "tests/unit/activation_sir_test.cpp": "706e701348cc32bce20f9b501678ac82ab170de2be3fe6e6352ebea43d269f74",
+    "tests/unit/activation_environment_test.cpp": "3b0e2119c1ee7fbac4c4d0782a3666df87ed3a9be4ba8b50d78876bb5f57c2dc",
+    "tests/unit/CMakeLists.txt": "324bbb8bee056d7b8f9e2bac0487d7fef9e704c7a11e63c528c213b3126eaaba",
+    "tools/mutants.py": "9e03f26f5d17e3b1ad6f9604db468feb742ea414bebff6461e204debca876869"
+  },
+  "scope": "original finite probes; complete feature parity not confirmed",
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 2866a0b62a05), built with AppleClang 21.0.0.21000334",
+    "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+    "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+  },
+  "gaps": [
+    "class_objects",
+    "mos_switch",
+    "bidirectional_switch",
+    "specify_path",
+    "real_net",
+    "class_constructor",
+    "event_controlled_nba",
+    "mixed_strength_port_bit",
+    "mos_nmos",
+    "mos_pmos",
+    "mos_rnmos",
+    "mos_rpmos",
+    "switch_tranif0",
+    "switch_tranif1",
+    "switch_rtranif0",
+    "switch_rtranif1",
+    "mos_cmos",
+    "mos_rcmos",
+    "switch_rtran",
+    "automatic_event_capture",
+    "dense_udp_coverage"
+  ],
+  "reference_mismatches": [
+    "nested_packed_select_bounds",
+    "class_virtual_dispatch",
+    "dynamic_array_queries",
+    "dynamic_minimum_duplicate",
+    "queue_maximum_duplicate",
+    "dynamic_minimum_with_key",
+    "blocking_repeated_event_one_bit_unknown"
+  ],
+  "probes": [
+    {
+      "name": "wide_integral",
+      "clause": "11.4",
+      "category": "standard",
+      "expected_stdout_hex": "31383434363734343037333730393535313631370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31383434363734343037333730393535313631370a",
+        "compared_stdout_hex": "31383434363734343037333730393535313631370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31383434363734343037333730393535313631370a",
+        "compared_stdout_hex": "31383434363734343037333730393535313631370a"
+      }
+    },
+    {
+      "name": "fixed_arrays",
+      "clause": "7.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "31322035360a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322035360a",
+        "compared_stdout_hex": "31322035360a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322035360a",
+        "compared_stdout_hex": "31322035360a"
+      }
+    },
+    {
+      "name": "dynamic_arrays",
+      "clause": "7.5",
+      "category": "standard",
+      "expected_stdout_hex": "3320370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320370a",
+        "compared_stdout_hex": "3320370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320370a",
+        "compared_stdout_hex": "3320370a"
+      }
+    },
+    {
+      "name": "queues",
+      "clause": "7.10",
+      "category": "standard",
+      "expected_stdout_hex": "34203120370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "34203120370a",
+        "compared_stdout_hex": "34203120370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "34203120370a",
+        "compared_stdout_hex": "34203120370a"
+      }
+    },
+    {
+      "name": "associative_arrays",
+      "clause": "7.8",
+      "category": "standard",
+      "expected_stdout_hex": "312031390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 4
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "class_objects",
+      "clause": "8",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "program_blocks",
+      "clause": "24",
+      "category": "standard",
+      "expected_stdout_hex": "370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a"
+      }
+    },
+    {
+      "name": "mos_switch",
+      "clause": "28.7",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "bidirectional_switch",
+      "clause": "28.8",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "specify_path",
+      "clause": "30",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "real_net",
+      "clause": "Icarus extension: wire real",
+      "category": "icarus_extension",
+      "expected_stdout_hex": "312e350a",
+      "reference": "https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312e350a",
+        "compared_stdout_hex": "312e350a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "ref_memory_files",
+      "clause": "13.5.2, 21.4, 21.5",
+      "category": "standard",
+      "expected_stdout_hex": "31322033342035360a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 3
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033342035360a",
+        "compared_stdout_hex": "31322033342035360a"
+      }
+    },
+    {
+      "name": "scan_binary_u",
+      "clause": "21.3.4.3",
+      "category": "standard",
+      "expected_stdout_hex": "312030303432303034310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312030303432303034310a",
+        "compared_stdout_hex": "312030303432303034310a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312030303432303034310a",
+        "compared_stdout_hex": "312030303432303034310a"
+      }
+    },
+    {
+      "name": "scan_binary_z",
+      "clause": "21.3.4.3",
+      "category": "standard",
+      "expected_stdout_hex": "312031787a300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312031787a300a",
+        "compared_stdout_hex": "312031787a300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312031787a300a",
+        "compared_stdout_hex": "312031787a300a"
+      }
+    },
+    {
+      "name": "binary_output",
+      "clause": "21.2.1.1",
+      "category": "standard",
+      "expected_stdout_hex": "080000000c00000006000000",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "080000000c00000006000000",
+        "compared_stdout_hex": "080000000c00000006000000"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "080000000c00000006000000",
+        "compared_stdout_hex": "080000000c00000006000000"
+      }
+    },
+    {
+      "name": "vcd",
+      "clause": "21.7.1",
+      "category": "standard",
+      "expected_stdout_hex": "",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "56434420696e666f3a2064756d7066696c652070726f62652e766364206f70656e656420666f72206f75747075742e0a",
+        "compared_stdout_hex": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "",
+        "compared_stdout_hex": ""
+      }
+    },
+    {
+      "name": "mixed_named_event_wait",
+      "clause": "9.4.2, 15.5",
+      "category": "standard",
+      "expected_stdout_hex": "666972737420310a7365636f6e6420320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420310a7365636f6e6420320a",
+        "compared_stdout_hex": "666972737420310a7365636f6e6420320a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420310a7365636f6e6420320a",
+        "compared_stdout_hex": "666972737420310a7365636f6e6420320a"
+      }
+    },
+    {
+      "name": "named_event_iff",
+      "clause": "9.4.2.3",
+      "category": "standard",
+      "expected_stdout_hex": "330a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 3
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "330a",
+        "compared_stdout_hex": "330a"
+      }
+    },
+    {
+      "name": "nested_packed_select_bounds",
+      "clause": "7.4.5, 11.5.1",
+      "category": "standard",
+      "expected_stdout_hex": "353538300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "353538300a",
+        "compared_stdout_hex": "353538300a"
+      }
+    },
+    {
+      "name": "delayed_nba_streaming",
+      "clause": "10.4.2, 11.4.14.3",
+      "category": "standard",
+      "expected_stdout_hex": "33342031320a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "33342031320a",
+        "compared_stdout_hex": "33342031320a"
+      }
+    },
+    {
+      "name": "delayed_nba_fixed_array",
+      "clause": "7.6, 10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "31322033340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033340a",
+        "compared_stdout_hex": "31322033340a"
+      }
+    },
+    {
+      "name": "delayed_nba_unpacked_struct",
+      "clause": "10.4.2, 10.9.2",
+      "category": "standard",
+      "expected_stdout_hex": "372031322033340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 5
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "372031322033340a",
+        "compared_stdout_hex": "372031322033340a"
+      }
+    },
+    {
+      "name": "dynamic_resize_copy",
+      "clause": "7.5",
+      "category": "standard",
+      "expected_stdout_hex": "3320313220333420300a300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320313220333420300a300a",
+        "compared_stdout_hex": "3320313220333420300a300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320313220333420300a300a",
+        "compared_stdout_hex": "3320313220333420300a300a"
+      }
+    },
+    {
+      "name": "queue_front_back",
+      "clause": "7.10.2",
+      "category": "standard",
+      "expected_stdout_hex": "37203320300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "37203320300a",
+        "compared_stdout_hex": "37203320300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "37203320300a",
+        "compared_stdout_hex": "37203320300a"
+      }
+    },
+    {
+      "name": "class_constructor",
+      "clause": "8.7",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "class_virtual_dispatch",
+      "clause": "8.20",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "delayed_net_assignment",
+      "clause": "6.7, 4.9.6",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a"
+      }
+    },
+    {
+      "name": "bare_delayed_net",
+      "clause": "6.7, 4.9.6",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "event_controlled_nba",
+      "clause": "10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "delayed_nba_array_index",
+      "clause": "10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "3020370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3020370a",
+        "compared_stdout_hex": "3020370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3020370a",
+        "compared_stdout_hex": "3020370a"
+      }
+    },
+    {
+      "name": "nested_packed_select",
+      "clause": "7.4.1, 11.5.1",
+      "category": "standard",
+      "expected_stdout_hex": "313430300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313430300a",
+        "compared_stdout_hex": "313430300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313430300a",
+        "compared_stdout_hex": "313430300a"
+      }
+    },
+    {
+      "name": "array_slice_assignment",
+      "clause": "7.4.6",
+      "category": "standard",
+      "expected_stdout_hex": "3220330a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mixed_strength_port_bit",
+      "clause": "23.3.3.7, 28.12",
+      "category": "standard",
+      "expected_stdout_hex": "780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "780a",
+        "compared_stdout_hex": "780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "dynamic_value_copy",
+      "clause": "7.5, 7.6",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      }
+    },
+    {
+      "name": "queue_value_copy",
+      "clause": "7.10.4",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      }
+    },
+    {
+      "name": "queue_append_foreach",
+      "clause": "7.4.5, 7.10, 12.7.3",
+      "category": "standard",
+      "expected_stdout_hex": "322031310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 4
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322031310a",
+        "compared_stdout_hex": "322031310a"
+      }
+    },
+    {
+      "name": "queue_actual_ref_bounds",
+      "clause": "6.22.2, 7.10.5, 13.5.2",
+      "category": "standard",
+      "expected_stdout_hex": "3420340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3420340a",
+        "compared_stdout_hex": "3420340a"
+      }
+    },
+    {
+      "name": "nested_queue_value_copy",
+      "clause": "7.6, 7.10.4",
+      "category": "standard",
+      "expected_stdout_hex": "3120390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 134
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120390a",
+        "compared_stdout_hex": "3120390a"
+      }
+    },
+    {
+      "name": "container_delayed_value",
+      "clause": "7.6, 10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 134
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a"
+      }
+    },
+    {
+      "name": "dynamic_array_queries",
+      "clause": "20.7",
+      "category": "standard",
+      "expected_stdout_hex": "3320302032202d310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320302032202d310a",
+        "compared_stdout_hex": "3320302032202d310a"
+      }
+    },
+    {
+      "name": "dynamic_array_foreach",
+      "clause": "7.5, 12.7.3",
+      "category": "standard",
+      "expected_stdout_hex": "360a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a"
+      }
+    },
+    {
+      "name": "queue_runtime_concat",
+      "clause": "7.10.4, 10.10",
+      "category": "standard",
+      "expected_stdout_hex": "33203420390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "33203420390a",
+        "compared_stdout_hex": "33203420390a"
+      }
+    },
+    {
+      "name": "queue_slice",
+      "clause": "7.10.1",
+      "category": "standard",
+      "expected_stdout_hex": "32203720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203720390a",
+        "compared_stdout_hex": "32203720390a"
+      }
+    },
+    {
+      "name": "queue_conditional",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "3120340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "dynamic_array_sum",
+      "clause": "7.12.3",
+      "category": "standard",
+      "expected_stdout_hex": "360a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a"
+      }
+    },
+    {
+      "name": "queue_sort",
+      "clause": "7.12.2",
+      "category": "standard",
+      "expected_stdout_hex": "3420370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3420370a",
+        "compared_stdout_hex": "3420370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3420370a",
+        "compared_stdout_hex": "3420370a"
+      }
+    },
+    {
+      "name": "dynamic_query_dimension",
+      "clause": "20.7",
+      "category": "standard",
+      "expected_stdout_hex": "330a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mixed_dynamic_foreach",
+      "clause": "12.7.3",
+      "category": "standard",
+      "expected_stdout_hex": "340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mos_nmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mos_pmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mos_rnmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mos_rpmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "switch_tranif0",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "switch_tranif1",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "switch_rtranif0",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "switch_rtranif1",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mos_cmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a",
+        "compared_stdout_hex": "7a0a310a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "mos_rcmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a",
+        "compared_stdout_hex": "7a0a310a780a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "switch_rtran",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "integral_fread_ignored_range",
+      "clause": "21.3.4.4",
+      "category": "standard",
+      "expected_stdout_hex": "3220333133320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3220333133320a",
+        "compared_stdout_hex": "3220333133320a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3220333133320a",
+        "compared_stdout_hex": "3220333133320a"
+      }
+    },
+    {
+      "name": "multidimensional_fread",
+      "clause": "21.3.4.4",
+      "category": "standard",
+      "expected_stdout_hex": "322033312033320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322033312033320a",
+        "compared_stdout_hex": "322033312033320a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322033312033320a",
+        "compared_stdout_hex": "322033312033320a"
+      }
+    },
+    {
+      "name": "dynamic_minimum_unique",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120340a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120340a",
+        "compared_stdout_hex": "3120340a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120340a",
+        "compared_stdout_hex": "3120340a"
+      }
+    },
+    {
+      "name": "queue_maximum_unique",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a"
+      }
+    },
+    {
+      "name": "dynamic_minimum_duplicate",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120340a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120340a",
+        "compared_stdout_hex": "3120340a"
+      }
+    },
+    {
+      "name": "queue_maximum_duplicate",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a"
+      }
+    },
+    {
+      "name": "dynamic_minimum_with_key",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a"
+      }
+    },
+    {
+      "name": "dynamic_minimum_empty",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a"
+      }
+    },
+    {
+      "name": "queue_maximum_empty",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a"
+      }
+    },
+    {
+      "name": "blocking_repeated_event_capture",
+      "clause": "9.4.5, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "3720330a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720330a",
+        "compared_stdout_hex": "3720330a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720330a",
+        "compared_stdout_hex": "3720330a"
+      }
+    },
+    {
+      "name": "blocking_repeated_event_zero_unknown",
+      "clause": "9.4.5",
+      "category": "standard",
+      "expected_stdout_hex": "3920300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3920300a",
+        "compared_stdout_hex": "3920300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3920300a",
+        "compared_stdout_hex": "3920300a"
+      }
+    },
+    {
+      "name": "blocking_repeated_event_wide_count",
+      "clause": "9.4.5",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a"
+      }
+    },
+    {
+      "name": "blocking_repeated_event_one_bit_unknown",
+      "clause": "9.4.5",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      }
+    },
+    {
+      "name": "aggregate_nba_rhs_order",
+      "clause": "10.4.2; SIR_SPEC 7.3",
+      "category": "project_policy",
+      "expected_stdout_hex": "313220320a3020370a",
+      "policy": "SIR_SPEC 7.3 evaluates RHS before target selectors; IEEE 10.4.2 leaves their relative order unspecified",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313220320a3020370a",
+        "compared_stdout_hex": "313220320a3020370a"
+      }
+    },
+    {
+      "name": "aggregate_blocking_rhs_order",
+      "clause": "10.4.1; VALUE_SEMANTICS 3.1",
+      "category": "project_policy",
+      "expected_stdout_hex": "313220320a3020370a",
+      "policy": "VALUE_SEMANTICS 3.1 evaluates RHS before target selectors; IEEE 10.4.1 leaves their relative order unspecified",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313220320a3020370a",
+        "compared_stdout_hex": "313220320a3020370a"
+      }
+    },
+    {
+      "name": "array_nba_runtime_prefix",
+      "clause": "7.6, 10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "322037203920300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322037203920300a",
+        "compared_stdout_hex": "322037203920300a"
+      }
+    },
+    {
+      "name": "blocking_array_intra_delay",
+      "clause": "7.6, 9.4.5, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "32203720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203720390a",
+        "compared_stdout_hex": "32203720390a"
+      }
+    },
+    {
+      "name": "blocking_array_intra_repeat",
+      "clause": "7.6, 9.4.5, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "33203720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "33203720390a",
+        "compared_stdout_hex": "33203720390a"
+      }
+    },
+    {
+      "name": "struct_array_declared_bounds",
+      "clause": "7.6, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a"
+      }
+    },
+    {
+      "name": "wide_tristate_masks",
+      "clause": "28.6, 28.12",
+      "category": "standard",
+      "expected_stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+        "compared_stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+        "compared_stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a"
+      }
+    },
+    {
+      "name": "fork_local_declarations",
+      "clause": "6.21, 9.3.2",
+      "category": "standard",
+      "expected_stdout_hex": "3720310a3820310a340a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720310a3820310a340a",
+        "compared_stdout_hex": "3720310a3820310a340a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720310a3820310a340a",
+        "compared_stdout_hex": "3720310a3820310a340a"
+      }
+    },
+    {
+      "name": "automatic_fork_capture",
+      "clause": "6.21, 9.3.2",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a"
+      }
+    },
+    {
+      "name": "automatic_event_capture",
+      "clause": "6.8, 6.21, 9.3.2, 15.5",
+      "category": "standard",
+      "expected_stdout_hex": "370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2
+      }
+    },
+    {
+      "name": "fixed_array_ports",
+      "clause": "4.9.6, 7.6, 23.3.3.5",
+      "category": "standard",
+      "expected_stdout_hex": "31322033340a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033340a",
+        "compared_stdout_hex": "31322033340a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033340a",
+        "compared_stdout_hex": "31322033340a"
+      }
+    },
+    {
+      "name": "resolved_net_array",
+      "clause": "6.6, 28.12",
+      "category": "standard",
+      "expected_stdout_hex": "78782035610a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78782035610a",
+        "compared_stdout_hex": "78782035610a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78782035610a",
+        "compared_stdout_hex": "78782035610a"
+      }
+    },
+    {
+      "name": "wide_udp_comb",
+      "clause": "29.3.2, 29.4",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a"
+      }
+    },
+    {
+      "name": "wide_udp_seq",
+      "clause": "29.3.2, 29.5, 29.6",
+      "category": "standard",
+      "expected_stdout_hex": "310a300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a300a",
+        "compared_stdout_hex": "310a300a"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a300a",
+        "compared_stdout_hex": "310a300a"
+      }
+    },
+    {
+      "name": "dense_udp_coverage",
+      "clause": "29.3.2, 29.6",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a"
+      },
+      "kirimasim": {
+        "status": "limit"
+      }
+    }
+  ],
+  "provenance": {
+    "binary_version_is_actual_configure_time_value": true,
+    "binary_reports_revision": "2866a0b62a05",
+    "provider_sources_were_uncommitted_at_dev_configure_and_later_committed_as": "1dc06096",
+    "source_identity": "use source_sha256, not the configure-time version string",
+    "all_87_statuses_and_passing_bytes_unchanged_from": "icarus14-event-runtime-probes.json",
+    "historical_icarus13_record": "icarus13-activation-wait-probes.json",
+    "historical_icarus13_passing_gaps": [
+      "class_objects",
+      "mos_switch",
+      "bidirectional_switch",
+      "specify_path",
+      "real_net",
+      "class_constructor",
+      "event_controlled_nba",
+      "mixed_strength_port_bit",
+      "mos_nmos",
+      "mos_pmos",
+      "mos_rnmos",
+      "mos_rpmos",
+      "switch_tranif0",
+      "switch_tranif1",
+      "switch_rtranif0",
+      "switch_rtranif1",
+      "mos_cmos",
+      "mos_rcmos",
+      "switch_rtran",
+      "automatic_event_capture",
+      "dense_udp_coverage"
+    ],
+    "fresh_icarus13_run": false,
+    "failed_probe_output_retained": false
+  }
+}

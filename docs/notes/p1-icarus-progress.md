@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Typed activation event providers:** `1dc06096` connects canonical event fields
+to [retained lexical roots and ordinary root metadata](event-activation-roots.md).
+Six new tests pass; five compiled faults are caught. Approved migration items
+1/2 were applied separately in `ecbe4abb`; source item 3 is still pending.
+The full CI passes all 21 checks: dev/ASan/UBSan 4,954/4,956, release 4,955/4,957,
+zero failures and two known skips each. Fresh 87-probe statuses/passing bytes
+are unchanged. Interpreter root publication, typed execution and source
+construction remain work; explicit component collection does not prove bounded
+no-wait execution. The event-only safepoint amendment is not approved.
+
 **Typed SIR event values:** `efebd540` adds [event construction and loaded
 wait/trigger operands](event-sir-contract.md). Eight tests cover 17 valid and
 40 malformed designs; all 75 focused tests pass, and eight compiled faults are
