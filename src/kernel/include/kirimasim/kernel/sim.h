@@ -576,7 +576,7 @@ private:
         ManagedEventError error = ManagedEventError::None;
     };
     struct Process {
-        explicit Process(std::pmr::memory_resource* memory) : eventPins(memory) {}
+        explicit Process(std::pmr::memory_resource* memory) noexcept : eventPins(memory) {}
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;

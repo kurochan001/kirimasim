@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
@@ -230,7 +231,6 @@ void Scheduler::begin() {
 ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     begin();
     ProcessId id{0};
-    Process proc(ctx_.heap().memoryResource());
     if (freeProcesses_.empty()) {
         id = static_cast<ProcessId>(processes_.size());
         processes_.emplace_back(ctx_.heap().memoryResource());
@@ -239,13 +239,19 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
         // stale wake-ups never match (SCHEDULER_SPEC.md 10.8).
         id = freeProcesses_.back();
         freeProcesses_.pop_back();
-        proc.gen = processes_[id.index()].gen + 1;
+        auto& old = processes_[id.index()];
+        const auto generation = old.gen + 1;
+        // Reconstruct with the Context allocator instead of moving a PMR
+        // vector through allocator-dependent assignment.
+        std::destroy_at(&old);
+        std::construct_at(&old, ctx_.heap().memoryResource());
+        old.gen = generation;
     }
+    auto& proc = processes_[id.index()];
     proc.fn = fn;
     proc.frame = frame;
     proc.group = group;
     proc.serial = nextSerial_++;
-    processes_[id.index()] = std::move(proc);
     counters_.increment(cCreated_);
     if (++kept_ > counters_.value(cKeptPeak_)) counters_.set(cKeptPeak_, kept_);
     return id;

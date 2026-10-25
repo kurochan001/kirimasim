@@ -1113,7 +1113,7 @@ MUTANTS = [
     ("sir: verify lets a UDP row have the wrong number of inputs", "src/sir/verify.cpp",
      'error(where, "row \\"" + r.inputs + "\\" is not a row of this UDP");', "(void)0;"),
     ("kernel: a reused place counts its waits from 0", "src/kernel/sim.cpp",
-     "        proc.gen = processes_[id.index()].gen + 1;", "        proc.gen = 0;"),
+     "        old.gen = generation;", "        old.gen = 0;"),
     ("kernel: held reports go by place, not creation", "src/kernel/sim.cpp",
      "        return processes_[a.index()].serial < processes_[b.index()].serial;", "        return a < b;"),
     ("front: an event control drops its iff", "src/front/lower_stmt.cpp",
