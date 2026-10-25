@@ -973,4 +973,33 @@ TEST(ManagedEventRuntime, PendingAllocationFailureRollsBackAndFreedRowsNeedNoAll
     EXPECT_EQ(events.liveObjects(), 0U);
 }
 
+TEST(ManagedEventRuntime, UnrepresentableDelaysDoNotScheduleNullOrRetainTargets) {
+    k::Context context;
+    auto& scheduler = context.scheduler();
+    Receiver issuer;
+    issuer.add(context);
+    auto created = context.managedEvents().create();
+    ASSERT_TRUE(created);
+    const auto managed = value(created.value);
+    const auto legacy = Value::legacy(scheduler.addEvent());
+    EXPECT_EQ(scheduler.triggerNbValue(k::kNone, {}, std::nullopt), Error::None);
+    EXPECT_FALSE(scheduler.takeOverflow());
+    for (const auto target : {managed, legacy}) {
+        EXPECT_EQ(scheduler.triggerNbValue(issuer.process, target, std::nullopt), Error::None);
+        EXPECT_TRUE(scheduler.takeOverflow());
+        EXPECT_FALSE(scheduler.takeOverflow());
+    }
+    EXPECT_EQ(scheduler.triggerNbValue(k::kNone, managed, std::nullopt), Error::InvalidToken);
+    EXPECT_FALSE(scheduler.takeOverflow());
+    EXPECT_EQ(scheduler.triggerNbValue(issuer.process, {UINT64_MAX}, std::nullopt),
+              Error::InvalidToken);
+    EXPECT_FALSE(scheduler.takeOverflow());
+    created.value.reset();
+    ASSERT_EQ(context.managedEvents().collect(), Error::None);
+    EXPECT_EQ(context.managedEvents().liveObjects(), 0U);
+    ASSERT_EQ(scheduler.run(), k::EndReason::Quiescent);
+    EXPECT_EQ(scheduler.time(), 0U);
+    EXPECT_EQ(count(context.counters(), "sched.events.nba"), 0U);
+    EXPECT_EQ(count(context.counters(), "sched.events.re_nba"), 0U);
+}
 }  // namespace

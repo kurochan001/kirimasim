@@ -145,10 +145,19 @@ ManagedEventError Scheduler::triggerValue(EventValue value) noexcept {
 }
 ManagedEventError Scheduler::triggerNbValue(ProcessId p, EventValue value,
                                             std::uint64_t delay) noexcept {
+    return triggerNbValue(p, value, std::optional<std::uint64_t>{delay});
+}
+ManagedEventError Scheduler::triggerNbValue(ProcessId p, EventValue value,
+                                            std::optional<std::uint64_t> normalized) noexcept {
     if (value.bits == 0) return ManagedEventError::None;
     if (p.index() >= processes_.size()) return ManagedEventError::InvalidToken;
     auto bound = bindEventValue(value);
     if (!bound) return bound.error;
+    if (!normalized) {
+        overflow_ = true;
+        return ManagedEventError::None;
+    }
+    const auto delay = *normalized;
     if (bound.value.pin.token().bits == 0) {
         try {
             triggerNb(p, bound.value.event, delay);

@@ -632,9 +632,9 @@ public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
         : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
           files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
-          strings_(ctx.strings()), heap_(ctx.heap()), activations_(ctx.activations()),
-          references_(ctx.activations()), counters_(ctx.counters()), stack_(ctx.stack()),
-          options_(options) {
+          strings_(ctx.strings()), heap_(ctx.heap()), events_(ctx.managedEvents()),
+          activations_(ctx.activations()), references_(ctx.activations()),
+          counters_(ctx.counters()), stack_(ctx.stack()), options_(options) {
         if (!sir::verifyActivationScopes(d).empty()) {
             loadError_ = "invalid automatic scope metadata";
             return;
@@ -773,6 +773,9 @@ public:
             if (heapSlots_.size() <= kernelSlots_.back().index())
                 heapSlots_.resize(kernelSlots_.back().index() + 1, false);
             heapSlots_[kernelSlots_.back().index()] = sir::isContainer(s.type);
+            if (s.type.kind == sir::TypeKind::Event)
+                eventSlots_.push_back(
+                    sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
             if (sir::isContainer(s.type))
                 rootSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
@@ -1048,6 +1051,11 @@ private:
     std::int32_t& randomSeed_;  ///< $random with no argument (SYSTEM_TASKS.md 12.3).
     kernel::Strings& strings_;
     kernel::Heap& heap_;
+    kernel::ManagedEvents& events_;
+    bool eventsReady_ = false;
+    std::vector<sir::SlotId> eventSlots_;
+    std::vector<bool> eventKernelSlots_;
+    std::vector<kernel::ManagedEventToken> eventRoots_;
     kernel::ActivationStore& activations_;
     std::vector<detail::ActivationPlan> plans_;
     detail::ScopedReferences references_;
@@ -1228,10 +1236,10 @@ private:
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
     std::vector<kernel::WaitItem> items_;
-    std::vector<kernel::NamedWaitItem> namedItems_;  ///< Scratch for wait.event.
-    std::vector<kernel::MonitorSpec> monitors_;      ///< Scratch for wait.event.
-    std::vector<kernel::StrengthDriver> drivers_;    ///< Scratch for resolve.
-    std::vector<kernel::ScanValue> scanValues_;      ///< Scratch for $sscanf.
+    std::vector<kernel::NamedValueWaitItem> namedItems_;  ///< Scratch for wait.event.
+    std::vector<kernel::MonitorSpec> monitors_;           ///< Scratch for wait.event.
+    std::vector<kernel::StrengthDriver> drivers_;         ///< Scratch for resolve.
+    std::vector<kernel::ScanValue> scanValues_;           ///< Scratch for $sscanf.
     /// By process: the frame of an override or postponed process.
     std::vector<Frame*> overrides_;
     Frame* monitor_ = nullptr;  ///< The postponed process of the $monitor in effect.
@@ -1255,7 +1263,7 @@ private:
         /// out the called functions' variables.
         std::vector<sir::SlotRange> reads;
         std::vector<kernel::SlotPart> slots;
-        std::vector<sir::SlotId> events;
+        bool events = false;  ///< Capture actual triggered-object reads.
         /// What the body reads through a ref of the waiter's frame: the
         /// frame variable, the leaf of a structure, and whether any element
         /// of an array is read. Found when the wait starts (readsOf).
@@ -2494,10 +2502,15 @@ private:
     static bool rootPendingValue(void* frame, kernel::SlotId slot,
                                  std::span<const std::uint64_t> values) noexcept {
         auto& vm = *static_cast<Interpreter*>(frame);
-        if (slot.index() >= vm.heapSlots_.size() || !vm.heapSlots_[slot.index()]) return true;
+        const bool container = slot.index() < vm.heapSlots_.size() && vm.heapSlots_[slot.index()];
+        const bool event =
+            slot.index() < vm.eventKernelSlots_.size() && vm.eventKernelSlots_[slot.index()];
+        if (!container && !event) return true;
         try {
-            for (const auto value : values)
-                vm.rootContainer(value);
+            for (const auto value : values) {
+                if (container) vm.rootContainer(value);
+                if (event) vm.rootEvent(value);
+            }
             return true;
         } catch (const std::bad_alloc&) {
             return false;
@@ -2507,7 +2520,9 @@ private:
     }
     void collectionLimit() noexcept {
         try {
-            limitAt(heapInstance_, heapSite_, "container collection resource limit");
+            limitAt(heapInstance_, heapSite_,
+                    heapReady_ ? "container collection resource limit"
+                               : "event collection resource limit");
         } catch (...) {
             // Failure to allocate the diagnostic must not escape the
             // kernel callback, or prevent the resource-limit result.
@@ -2516,7 +2531,8 @@ private:
     }
     static void collectSafePoint(void* frame) noexcept {
         auto& vm = *static_cast<Interpreter*>(frame);
-        if (!vm.heapReady_ || vm.running_ != nullptr || vm.callDepth_ != 0) return;
+        if ((!vm.heapReady_ && !vm.eventsReady_) || vm.running_ != nullptr || vm.callDepth_ != 0)
+            return;
         try {
             vm.collectRoots();
         } catch (const std::bad_alloc&) {
@@ -2525,8 +2541,25 @@ private:
             vm.collectionLimit();
         }
     }
+    void rootEvent(std::uint64_t bits) {
+        if ((bits >> 32) != 0) eventRoots_.push_back({bits});
+    }
+    static kernel::ManagedEventError enumerateEvents(const void* raw,
+                                                     kernel::ManagedEventRoots& roots) noexcept {
+        const auto& vm = *static_cast<const Interpreter*>(raw);
+        for (const auto token : vm.eventRoots_) {
+            const auto status = roots.add(token);
+            if (status != kernel::ManagedEventError::None) return status;
+        }
+        return kernel::ManagedEventError::None;
+    }
     void collectRoots() {
         roots_.clear();
+        eventRoots_.clear();
+        if (eventsReady_)
+            for (const auto slot : eventSlots_)
+                for (std::uint64_t e = 0; e < sir::elementCount(d_.slot(slot)); ++e)
+                    rootEvent(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
         rootActivations_.clear();
         rootActivationsSeen_.assign(varSets_.size(), false);
         for (const auto slot : rootSlots_) {
@@ -2577,6 +2610,8 @@ private:
                         }
                     } else if (sir::isContainer(params[i].type))
                         rootContainer(value.a);
+                    else if (eventsReady_ && params[i].type.kind == sir::TypeKind::Event)
+                        rootEvent(value.a);
                 }
             }
         }
@@ -2609,6 +2644,12 @@ private:
                     return;
                 }
             }
+            if (eventsReady_)
+                for (const auto field : layout.eventRoots) {
+                    const auto count = sir::elementCount(fields[field]);
+                    for (std::uint64_t e = 0; e < count; ++e)
+                        rootEvent(vars.words[layout.offset[field] + e * layout.chunks[field]].a);
+                }
             for (const auto field : layout.roots) {
                 const auto& fv = fields[field];
                 const auto at = layout.offset[field];
@@ -2628,6 +2669,24 @@ private:
             collectionLimit();
             return;
         }
+        if (eventsReady_) {
+            // All live SSA is gone at the existing region/slot boundary;
+            // waits and pending operations own their concrete targets.
+            const kernel::ManagedEventRootProvider providers[] = {{this, &enumerateEvents},
+                                                                  activations_.eventRootProvider()};
+            events_.rootsChanged();
+            const auto status = events_.collect(providers);
+            if (status == kernel::ManagedEventError::ResourceLimit) {
+                collectionLimit();
+                return;
+            }
+            if (status != kernel::ManagedEventError::None) {
+                sched_.fail("invalid typed event root at a safe point");
+                return;
+            }
+            activations_.acknowledgeEventRoots();
+        }
+        if (!heapReady_) return;
         const bool same = roots_.size() == publishedRoots_.size() &&
                           std::equal(roots_.begin(), roots_.end(), publishedRoots_.begin(),
                                      [](const auto& a, const auto& b) {
@@ -3069,6 +3128,23 @@ private:
                         resumeAt(f) = ops[1].asBlock();
                         return Exit::Waiting;
                     }
+                    case Op::EventNew: {
+                        if (!heapReady_) {
+                            heapSite_ = in.loc;
+                            heapInstance_ = instanceOf(p);
+                        }
+                        if (!eventsReady_) {
+                            eventKernelSlots_.assign(store_.size(), false);
+                            for (const auto slot : eventSlots_)
+                                eventKernelSlots_[kernelSlot(slot).index()] = true;
+                            eventsReady_ = true;
+                            sched_.setSafePointHook({&collectSafePoint, this});
+                        }
+                        auto created = events_.create();
+                        if (!eventStatus(f, in, created.error)) return Exit::Error;
+                        temp(in.result) = {created.value.token().bits, 0};
+                        break;
+                    }
                     case Op::WaitEvent: {
                         items_.clear();
                         monitors_.clear();
@@ -3094,13 +3170,9 @@ private:
                                     withIff(f, namedItems_.back(), o.asSubroutine());
                                 else
                                     withIff(f, items_.back(), o.asSubroutine());
-                            } else if (d_.slot(o.asSlot()).type.kind == sir::TypeKind::Event) {
-                                const std::optional<kernel::EventId> e = eventOf(o);
-                                if (!e) {
-                                    fail(p, "wait on a null event");
-                                    return Exit::Error;
-                                }
-                                namedItems_.push_back({*e});
+                            } else if (o.kind != Operand::Kind::Slot ||
+                                       d_.slot(o.asSlot()).type.kind == sir::TypeKind::Event) {
+                                namedItems_.push_back({eventValue(o)});
                                 last = LastItem::Named;
                             } else {
                                 kernel::WaitItem item;
@@ -3111,7 +3183,10 @@ private:
                                 last = LastItem::Slot;
                             }
                         }
-                        sched_.waitAny(f.kernelId, items_, monitors_, namedItems_);
+                        if (!eventStatus(
+                                f, in,
+                                sched_.waitAnyValues(f.kernelId, items_, monitors_, namedItems_)))
+                            return Exit::Error;
                         if (reportHeapMonitorLimit(instanceOf(p), in.loc)) return Exit::Stop;
                         resumeAt(f) = ops.back().asBlock();
                         return Exit::Waiting;
@@ -3129,37 +3204,29 @@ private:
                         break;
                     }
                     case Op::WaitNamed: {
-                        const std::optional<kernel::EventId> e = eventOf(ops[0]);
-                        if (!e) {
-                            fail(p, "wait on a null event");
+                        if (!eventStatus(f, in,
+                                         sched_.waitNamedValue(f.kernelId, eventValue(ops[0]))))
                             return Exit::Error;
-                        }
-                        sched_.waitNamed(f.kernelId, *e);
                         resumeAt(f) = ops[1].asBlock();
                         return Exit::Waiting;
                     }
                     case Op::Trigger:
                     case Op::TriggerNb: {
-                        const std::optional<kernel::EventId> e = eventOf(ops[0]);
-                        if (!e) {
-                            fail(p, "trigger of a null event");
-                            return Exit::Error;
-                        }
-                        if (in.op == Op::Trigger) {
-                            sched_.trigger(*e);
-                        } else {
-                            const std::optional<std::uint64_t> t =
-                                ops.size() > 1 ? ticksOf(ops[1]) : std::optional<std::uint64_t>(0);
-                            if (!t) {
-                                designError(f, in,
-                                            "the delay takes the time past the largest time");
-                                return Exit::Error;
-                            }
-                            sched_.triggerNb(f.kernelId, *e, *t);
-                        }
+                        const auto target = eventValue(ops[0]);
+                        const auto status =
+                            in.op == Op::Trigger
+                                ? sched_.triggerValue(target)
+                                : sched_.triggerNbValue(f.kernelId, target,
+                                                        ops.size() > 1
+                                                            ? ticksOf(ops[1])
+                                                            : std::optional<std::uint64_t>{0});
+                        if (!eventStatus(f, in, status)) return Exit::Error;
                         break;
                     }
-                    case Op::Builtin: builtin(in, info_[body.index()][b.index()][k]); break;
+                    case Op::Builtin:
+                        builtin(f, in, info_[body.index()][b.index()][k]);
+                        if (sched_.ending()) return Exit::Error;
+                        break;
                     case Op::DriveDelay: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[0], ops[1]);
                         const std::optional<std::uint64_t> rise = ticksOf(ops[2]);
@@ -3393,6 +3460,8 @@ private:
                     deps.heap = true;
                 if (in.op == Op::Call)
                     collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
+                if (in.op == Op::Builtin && resolveMethod(in.operands[0].text) == Method::Triggered)
+                    deps.events = true;
                 // A ref of the body's own frame (that of the waiter); the
                 // refs of the functions it calls are bound by the call.
                 const bool forwardedRef =
@@ -3430,12 +3499,10 @@ private:
                     if (o.kind != Operand::Kind::Slot || (target && i == 0) ||
                         (in.op == Op::DriveDelay && i >= 5 && (i - 5) % 2 == 0))
                         continue;
-                    const sir::Slot& slot = d_.slot(o.asSlot());
                     const bool whole = in.op != Op::Load;
                     deps.reads.push_back({o.asSlot(), whole ? 0 : o.firstElem,
                                           whole ? 0 : o.numElems, whole ? 0 : o.lsb,
                                           whole ? 0 : o.width});
-                    if (slot.type.kind == sir::TypeKind::Event) deps.events.push_back(o.asSlot());
                 }
             }
         }
@@ -3589,12 +3656,7 @@ private:
             m.slots.push_back({kernelSlot(leafSlot(refSlot(r), rr.leaf)),
                                rr.anyElement ? 0 : refElem(r), rr.anyElement ? 0U : 1U, 0, 0});
         }
-        for (const sir::SlotId s : deps.events) {
-            const auto n = static_cast<std::uint32_t>(sir::elementCount(d_.slot(s)));
-            for (std::uint32_t e = 0; e < n; ++e)
-                if (const std::uint64_t h = *store_.element(kernelSlot(s), e); h != 0)
-                    m.events.push_back(kernel::eventOfHandle(h));
-        }
+        m.captureEvents = deps.events;
         return true;
     }
 
@@ -5296,22 +5358,30 @@ private:
         return sir::isFourState(t) ? r : kernel::to2(r);
     }
 
-    /// The event an element of an event slot holds; nothing for null.
-    std::optional<kernel::EventId> eventOf(const sir::Operand& o) const {
-        const std::uint64_t h = readSlot(o.asSlot(), o.firstElem, 0, 0).a;
-        if (h == 0) return std::nullopt;
-        return kernel::eventOfHandle(h);
+    kernel::EventValue eventValue(const sir::Operand& operand) const {
+        return {operand.kind == Operand::Kind::Slot
+                    ? readSlot(operand.asSlot(), operand.firstElem, 0, 0).a
+                    : value(operand).a};
+    }
+    bool eventStatus(Frame& f, const sir::Instr& in, kernel::ManagedEventError status) {
+        using E = kernel::ManagedEventError;
+        if (status == E::None) return true;
+        if (status == E::Null)
+            designError(f, in, "wait on a null event");
+        else if (status == E::ResourceLimit)
+            limitAt(instanceOf(d_.process(f.process)), in.loc, "event resource limit");
+        else
+            fail(d_.process(f.process), "invalid typed event value or operation");
+        return false;
     }
 
-    void builtin(const sir::Instr& in, const InstrInfo& info) {
+    void builtin(Frame& f, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         const auto v = [&](std::size_t i) { return value(ops[i]); };
         const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
         if (info.method == Method::Triggered) {
-            // False for a null event (15.5.3).
-            const std::uint64_t h = v(1).a;
-            const bool on = h != 0 && sched_.triggered(kernel::eventOfHandle(h));
-            temp(in.result) = {on ? 1U : 0U, 0};
+            const auto result = sched_.triggeredValue({v(1).a});
+            if (eventStatus(f, in, result.error)) temp(in.result) = {result.value ? 1U : 0U, 0};
             return;
         }
         const std::string_view self = strings_.get(v(1).a);

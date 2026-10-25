@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <deque>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -428,6 +429,9 @@ public:
     [[nodiscard]] ManagedEventResult<EventId> resolveEventValue(EventValue value) const noexcept;
     ManagedEventError triggerValue(EventValue value) noexcept;
     ManagedEventError triggerNbValue(ProcessId p, EventValue value, std::uint64_t delay) noexcept;
+    /// An unrepresentable normalized delay overflows only for a nonnull target.
+    ManagedEventError triggerNbValue(ProcessId p, EventValue value,
+                                     std::optional<std::uint64_t> delay) noexcept;
     ManagedEventResult<bool> triggeredValue(EventValue value) noexcept;
     /// Cancel managed pending operations/subscriptions. A callback currently
     /// executing retains its local pin until it returns.
