@@ -17,10 +17,10 @@ struct FrameLayout {
     std::size_t size = 0, logicalSize = 0;
     std::pmr::vector<std::size_t> offset, logical;
     std::pmr::vector<std::uint32_t> chunks;
-    std::pmr::vector<std::size_t> roots;
+    std::pmr::vector<std::size_t> roots, eventRoots;
     explicit FrameLayout(std::span<const sir::FrameVar> frame = {},
                          std::pmr::memory_resource* memory = std::pmr::new_delete_resource())
-        : offset(memory), logical(memory), chunks(memory), roots(memory) {
+        : offset(memory), logical(memory), chunks(memory), roots(memory), eventRoots(memory) {
         offset.resize(frame.size());
         logical.resize(frame.size());
         chunks.resize(frame.size());
@@ -37,6 +37,7 @@ struct FrameLayout {
             offset[i] = size;
             size += words;
             if (ref || sir::isContainer(row.type)) roots.push_back(i);
+            if (row.type.kind == sir::TypeKind::Event) eventRoots.push_back(i);
         }
         for (std::size_t i = 0; i < frame.size(); ++i) {
             const auto& row = frame[i];

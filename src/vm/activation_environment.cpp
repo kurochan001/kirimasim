@@ -22,6 +22,11 @@ Result<kernel::ActivationField> fieldOf(const sir::FrameVar& row) {
     } else {
         field.width = row.type.kind == sir::TypeKind::ShortReal ? 32 : 64;
         switch (row.type.kind) {
+            case sir::TypeKind::Event:
+                if (row.type != sir::Type{sir::TypeKind::Event, 0})
+                    return {{}, Error::InvalidLayout};
+                field.kind = kernel::ActivationKind::Event;
+                break;
             case sir::TypeKind::Real: field.kind = kernel::ActivationKind::Real; break;
             case sir::TypeKind::ShortReal: field.kind = kernel::ActivationKind::ShortReal; break;
             case sir::TypeKind::String: field.kind = kernel::ActivationKind::String; break;

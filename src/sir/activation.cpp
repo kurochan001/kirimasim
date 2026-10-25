@@ -43,6 +43,7 @@ bool sameShape(const FrameVar& a, const FrameVar& b) {
 bool storageType(Type t) {
     if (isIntegral(t)) return t.width != 0;
     switch (t.kind) {
+        case TypeKind::Event: return t == Type{TypeKind::Event, 0};
         case TypeKind::Real:
         case TypeKind::ShortReal:
         case TypeKind::String:
