@@ -245,6 +245,16 @@ endmodule
 2 8 7 4
 ```
 
+## Named-event state and function reads
+
+An untriggered event stays false even at the largest 64-bit tick. A triggered
+event is true only in its own time slot. Ordinary functions can read this state,
+and explicit guards retain dependencies on function-local static events.
+Implicit named-event sensitivity through functions still receives a positioned
+unsupported diagnostic. [Twenty-seven new source cases and 20 kernel tests](notes/managed-event-registry.md)
+cover the correction and the managed-event foundation; automatic event source
+construction is not enabled by that foundation.
+
 ## Mixed named-event waits and per-item iff
 
 A single event control can mix named events, signal edges and expression

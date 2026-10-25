@@ -13,6 +13,19 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Managed-event checkpoint:** the [kernel registry and event-slot corrections](managed-event-registry.md)
+add 20 tests, 27 original source designs and 12 implicit-function boundaries.
+All 49 focused CTest cases pass. Sixteen compiled faults are caught, and a
+separate production-width audit traverses all 4,294,967,295 generations; disabling
+retirement fails the retired-object invariant after that full range. Source
+automatic-event construction and VM-managed pin ownership are not enabled.
+The frozen 87-probe comparison, population and sv-tests are unchanged, leaving
+21 historical Icarus-13-passing gaps. The [full CI](../measurements/2026-10-25/managed-event-validation.json) passes
+17 checks; four test steps fail only the same three old expectations.
+Dev/ASan/UBSan pass 4,914/4,919 and release 4,915/4,920, two skips each.
+The checkpoint note records exact resume steps. Historical expectation migration remains
+pending human approval; P1 is incomplete.
+
 **Source automatic capture:** [front now emits complete lexical environments](automatic-front-capture.md)
 in the working implementation. All 186 original source designs plus generator/metadata
 checks pass, including retained unread typed fields and empty scopes; five compiled

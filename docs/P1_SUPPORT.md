@@ -163,8 +163,12 @@ Front now [lowers shared lexical capture from source](notes/automatic-front-capt
 186 new designs and a full-field/extent checker pass, and five compiled faults are
 detected. The finite automatic-fork probe now passes, leaving 21 historical
 Icarus-13-passing gaps. Three historical rejection tests await separate expectation
-approval; all-green local CI is not claimed. Automatic event construction and
-owned event/ref/object providers remain unsupported.
+approval; all-green local CI is not claimed.
+The [managed-event kernel checkpoint](notes/managed-event-registry.md) now supplies
+generational identity, runtime pins and retained-scope event roots, with 20 tests
+and a full 32-bit generation audit. Automatic source construction, ordinary/SSA
+root publication and automatic pending-operation pin ownership are not connected;
+owned ref/object providers also remain work.
 
 ### Fixed-array ports and net arrays
 
