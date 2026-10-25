@@ -13,6 +13,7 @@
 - **仕様の提案**：`docs/spec/` の下の文書の変更や追加。Issue のフォーム「Specification proposal」から。
 - **不具合の報告**：Issue のフォーム「Bug report」から。
 - **テストの期待値の誤りの報告**：Issue のフォーム「Expected value change」から。
+- **機能の要望**：対応してほしい機能や SystemVerilog の構文。Issue のフォーム「Feature request」から。
 - **議論**：GitHub Discussions で。質問は Q&A のカテゴリに、まだ具体的な提案になっていない考えは Ideas のカテゴリに。
 
 受け付けないもの：
@@ -41,7 +42,7 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 
 テストの期待値は、このプロジェクトにとっての正しい動作の定義なので、守られています。
 
-- **既存の**期待値（`tests/perf_counts/expected.json` の項目、`tests/**/expected*` の行、`:expected_stdout:` の行、`tests/suite/` の下のテストスイートの既存のファイルの本体）を変える・消す・緩める変更は、`src/` の下の実装の変更とは別の、**それだけのコミット**にしてください。既存のテストファイルの削除と名前の変更も同じです。コミットのメッセージに理由を書き、IEEE 1800 の節番号を示してください。CI は `main` に push された各コミットを 1 つずつ確かめます。
+- **既存の**期待値（`tests/perf_counts/expected.json` の項目、`tests/**/expected*`・`tests/**/*.expected`・`tests/**/*.stderr` のファイルの行、`:expected_stdout:` の行、`tests/suite/` の下のテストスイートの既存のファイルの本体）を変える・消す・緩める変更は、`src/` の下の実装の変更とは別の、**それだけのコミット**にしてください。既存のテストファイルの削除と名前の変更、飛ばしてよいテストの一覧 `tests/suite/skips.txt` にテストを足すことも同じです。コミットのメッセージに理由を書き、IEEE 1800 の節番号を示してください。CI は `main` に push された各コミットを 1 つずつ確かめます。
 - ユニットテスト（`tests/unit/`）は、それが呼ぶコードと一緒に直してかまいません（関数の名前を変えたときなど）。CI は、変えたか消した `EXPECT_*`・`ASSERT_*` の行をすべて警告として並べ、レビューする人がアサーションを弱めていないかを確かめます。
 - 新しいテストとその期待値を、実装と同じコミットで足すのはかまいません。レビューする人が、期待値の出どころを確かめます。
 - CI は `tools/check_expected_change.py` でこれを検査します。
@@ -86,7 +87,7 @@ nightly の実行は、tests/suite/ と sv-tests を種にして 30 分 fuzz し
 
 kirimasim 自身のコードは `-Wall -Wextra -Wpedantic` でビルドします。`tools/local_ci.py` と CI の clang のビルドと同じく警告を誤りにするには、configure に `-DKIRIMASIM_WERROR=ON` を付けてください。
 
-CI が走らせる検査（4 つのプリセット、release のフラグの検査、禁止の機能の検査、大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査）を一度に走らせるには：
+CI が走らせる検査（4 つのプリセット、release のフラグの検査、禁止の機能・SPDX・テストスイートのファイル・大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査、README の数の検査）を一度に走らせるには：
 
 ```sh
 python3 tools/local_ci.py

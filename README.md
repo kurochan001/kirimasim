@@ -783,8 +783,8 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 kirimasim is in early development, so for now it accepts **specification
 proposals and issues only**. It does not accept pull requests: they are
 turned off for this repository, so none can be opened. Use the issue forms
-to propose a change to a specification under `docs/spec/`, report a bug, or
-point out a wrong expected value, and use
+to propose a change to a specification under `docs/spec/`, report a bug,
+point out a wrong expected value or request a feature, and use
 [Discussions](https://github.com/kurochan001/kirimasim/discussions) for
 questions (Q&A) and early ideas (Ideas). When the project starts accepting
 more, this section and [CONTRIBUTING.md](CONTRIBUTING.md) will say so.

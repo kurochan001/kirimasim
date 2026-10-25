@@ -19,6 +19,8 @@ We accept:
 - **Bug reports**, through the "Bug report" issue form.
 - **Reports of wrong expected values** in tests, through the "Expected value
   change" issue form.
+- **Feature requests**: a feature or a SystemVerilog construct to support,
+  through the "Feature request" issue form.
 - **Discussion** in GitHub Discussions: questions in the Q&A category, and
   ideas that are not yet a concrete proposal in the Ideas category.
 
@@ -60,11 +62,13 @@ Test expectations are the project's definition of correct behavior, so
 they are protected:
 
 - A change that modifies, removes, or relaxes an **existing** expectation
-  (`tests/perf_counts/expected.json` entries, `tests/**/expected*` lines,
-  `:expected_stdout:` lines, or the body of an existing test-suite file
-  under `tests/suite/`) must be its **own commit**, separate from
-  implementation changes under `src/`. The same applies to deleting or
-  renaming an existing test file. Explain the reason and cite the IEEE 1800
+  (`tests/perf_counts/expected.json` entries, lines of `tests/**/expected*`,
+  `tests/**/*.expected` and `tests/**/*.stderr` files, `:expected_stdout:`
+  lines, or the body of an existing test-suite file under `tests/suite/`)
+  must be its **own commit**, separate from implementation changes under
+  `src/`. The same applies to deleting or renaming an existing test file,
+  and to adding a test to `tests/suite/skips.txt`, the list of tests
+  allowed to be skipped. Explain the reason and cite the IEEE 1800
   section number in the commit message: CI checks each commit pushed to
   `main` on its own.
 - Unit tests (`tests/unit/`) may be edited together with the code they
@@ -167,9 +171,9 @@ kirimasim's own code builds with `-Wall -Wextra -Wpedantic`. Configure with
 and CI's clang builds do.
 
 To run the checks that CI runs (all four presets, the release flag check,
-the banned-feature check, the global-state check, clang-format, clang-tidy,
-and the check that each commit not pushed yet keeps existing expectations)
-in one go:
+the banned-feature, SPDX, suite-file and global-state checks, clang-format,
+clang-tidy, the check that each commit not pushed yet keeps existing
+expectations, and the README counts) in one go:
 
 ```sh
 python3 tools/local_ci.py
