@@ -21,6 +21,16 @@ struct ManagedEventToken {
     std::uint64_t bits = 0;
     friend bool operator==(ManagedEventToken, ManagedEventToken) = default;
 };
+/// The typed value transported by an execution tier: generation zero is
+/// reserved for permanent legacy event objects; zero itself is null.
+struct EventValue {
+    std::uint64_t bits = 0;
+    static constexpr EventValue legacy(EventId event) noexcept {
+        return {std::uint64_t{event.index()} + 1};
+    }
+    static constexpr EventValue managed(ManagedEventToken token) noexcept { return {token.bits}; }
+    friend bool operator==(EventValue, EventValue) = default;
+};
 enum class ManagedEventError : std::uint8_t {
     None,
     Null,

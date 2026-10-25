@@ -170,6 +170,13 @@ struct NamedWaitItem {
     EventId event{0};
     GuardFn guard = nullptr;
     void* guardFrame = nullptr;
+    bool flushPoint = true;
+};
+struct NamedValueWaitItem {
+    EventValue value;
+    GuardFn guard = nullptr;
+    void* guardFrame = nullptr;
+    bool flushPoint = true;
 };
 
 /// Automatic storage owned and observed by one expression monitor.
@@ -188,6 +195,8 @@ struct ActivationReadSpec {
 struct MonitorSpec {
     std::vector<SlotPart> slots;
     std::vector<EventId> events;
+    std::vector<EventValue> eventValues;
+    bool captureEvents = false;
     EvalFn eval = nullptr;
     void* frame = nullptr;
     Domain domain = Domain::Four;  ///< Two, Four or Real.
@@ -345,6 +354,13 @@ public:
     /// for an event control on a named event, false for a wait for children
     /// to end (join, join_any, wait fork).
     void waitNamed(ProcessId p, EventId e, bool flushPoint = true);
+    /// Typed named-event values are resolved once before registration. No
+    /// wait changes on null/invalid input or staging allocation failure.
+    ManagedEventError waitAnyValues(ProcessId p, std::span<const WaitItem> items,
+                                    std::span<const MonitorSpec> monitors,
+                                    std::span<const NamedValueWaitItem> named) noexcept;
+    ManagedEventError waitNamedValue(ProcessId p, EventValue value,
+                                     bool flushPoint = true) noexcept;
 
     /// Writes the bits `at` names from `value`, laid out like a slot element
     /// from bit 0, and wakes the processes whose subscriptions and monitors
@@ -409,6 +425,13 @@ public:
     void triggerNb(ProcessId p, EventId e, std::uint64_t delay);
     /// Whether e was triggered in the current time slot (15.5.3).
     [[nodiscard]] bool triggered(EventId e) const;
+    [[nodiscard]] ManagedEventResult<EventId> resolveEventValue(EventValue value) const noexcept;
+    ManagedEventError triggerValue(EventValue value) noexcept;
+    ManagedEventError triggerNbValue(ProcessId p, EventValue value, std::uint64_t delay) noexcept;
+    ManagedEventResult<bool> triggeredValue(EventValue value) noexcept;
+    /// Cancel managed pending operations/subscriptions. A callback currently
+    /// executing retains its local pin until it returns.
+    void cancelManagedEventOperations() noexcept;
 
     /// Puts a report (a whole line of the messages) on the pending queue of the
     /// running process p (SCHEDULER_SPEC.md 15.3). The queue is dropped
@@ -515,6 +538,7 @@ private:
         Nba,
         NbaDelayed,
         TriggerNb,
+        TriggerValue,
         Show,
         Drive,
         Postponed,
@@ -541,7 +565,18 @@ private:
         Region region = Region::Active;
         Event event;
     };
+    struct EventBinding {
+        EventValue value;
+        EventId event = kNone;
+        ManagedEventPin pin;
+    };
+    struct EventCapture {
+        explicit EventCapture(std::pmr::memory_resource* memory) : reads(memory) {}
+        std::pmr::vector<EventBinding> reads;
+        ManagedEventError error = ManagedEventError::None;
+    };
     struct Process {
+        explicit Process(std::pmr::memory_resource* memory) : eventPins(memory) {}
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
@@ -550,6 +585,7 @@ private:
         bool programStopped = false;
         std::uint64_t gen = 0;                ///< Number of the current wait.
         std::vector<std::uint32_t> monitors;  ///< Monitor records of the current wait.
+        std::pmr::vector<ManagedEventPin> eventPins;
         bool done = false;
         bool flushOnResume = false;          ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
@@ -573,12 +609,13 @@ private:
     };
     struct Monitor {
         explicit Monitor(std::pmr::memory_resource* memory)
-            : heapReads(memory), activationLeases(memory), activationParts(memory),
-              activationReads(memory) {}
+            : eventBindings(memory), heapReads(memory), activationLeases(memory),
+              activationParts(memory), activationReads(memory) {}
         ProcessId process{0};
         std::uint64_t gen = 0;     ///< The process's wait it belongs to.
         std::uint64_t serial = 0;  ///< Changes when the record is reused.
         MonitorSpec spec;
+        std::pmr::vector<EventBinding> eventBindings;
         std::vector<std::uint64_t> last;
         std::pmr::vector<HeapRoot> heapReads;
         std::pmr::vector<ActivationLease> activationLeases;
@@ -609,6 +646,7 @@ private:
         std::uint32_t monitorLimit = 0;
         std::uint64_t triggeredAt = UINT64_MAX;
         bool wasTriggered = false;
+        bool managed = false;
     };
     /// An NBA update. Without a delay, the value lives in the time slot's
     /// arena, freed all at once when the slot ends; with a delay, in the
@@ -685,6 +723,23 @@ private:
     std::vector<std::vector<MonitorRef>> slotMonitors_;  ///< By slot.
     std::uint64_t monitorSerial_ = 0;
     std::vector<NamedEvent> events_;
+    struct PendingEventValue {
+        ManagedEventPin pin;
+        EventId event = kNone;
+        std::uint64_t serial = 0;
+        std::uint32_t next = kNone;
+        bool pending = false;
+    };
+    std::pmr::vector<PendingEventValue> pendingEventValues_;
+    std::uint32_t freeEventValue_ = kNone;
+    EventCapture* eventCapture_ = nullptr;
+    bool usedEventValues_ = false;
+    ManagedEventResult<EventBinding> bindEventValue(EventValue value) noexcept;
+    bool observesEvent(MonitorRef ref, EventId event) const;
+    void attachEventMonitor(EventId event, MonitorRef ref);
+    bool publishEventReads(std::uint32_t id, EventCapture& capture);
+    void releaseEventValue(std::uint32_t id) noexcept;
+    void deliverEventValue(const Event& event);
     std::vector<NbaRecord> slotNbas_;     ///< Updates without a delay, this slot.
     std::vector<std::uint64_t> arena_;    ///< Their values.
     std::vector<NbaRecord> delayedNbas_;  ///< Updates with a delay.
@@ -697,10 +752,12 @@ private:
     /// and trigger events. It is announced when the outermost walk ends, so
     /// that no list changes under a walk (RUNTIME_ABI.md 5).
     struct LateChange {
+        bool canceled = false;
         bool trigger = false;
         bool heap = false;
         MonitorRef monitor;
         EventId event{0};
+        ManagedEventPin eventPin;
         SlotId slot{0};
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
@@ -827,6 +884,7 @@ private:
     bool showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width);
     void evaluateMonitor(std::uint32_t id);
     bool evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out);
+    bool evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out);
     static void changedHeap(void* frame, HeapRoot root) noexcept;
     static void changedActivation(void* frame, const ActivationAccess& access) noexcept;
     bool prepareActivationReads(std::uint32_t id);
@@ -842,6 +900,9 @@ private:
     [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
     /// Adds a monitor record to p's current wait.
     void addMonitor(ProcessId p, const MonitorSpec& m);
+    void registerWait(ProcessId p, std::span<const WaitItem> items,
+                      std::span<const MonitorSpec> monitors, std::span<const NamedWaitItem> named,
+                      std::uint64_t* registered);
     /// Frees the monitor records of p's current wait.
     void freeMonitor(ProcessId p);
     void ensureSlotTables();
