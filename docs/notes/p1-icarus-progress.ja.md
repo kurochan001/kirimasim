@@ -12,6 +12,17 @@
 
 ## 現在の実装とレビュー状況（2026-10-25）
 
+**環境部品の最終検証：** `615afa0d`で[local CI全21項目](../measurements/2026-10-25/activation-environment-final-validation.json)が
+成功しました。dev/ASan/UBSanは4,650/4,652、releaseは4,651/4,653成功、失敗0・既知2スキップです。
+コンパイルした10故障が実際の部品テストで失敗しました。object本体もresourceから確保し、
+初回に残ったobject割り当てへの故障注入の穴を埋めました。Interpreter/scoped refの接続と
+ソースの捕捉は残作業で、比較一覧・母集団・sv-testsは今回再計測していません。
+
+**字句的環境の部品：** [VMの環境構築](automatic-vm-environment.ja.md)にscopeの所有・不変の捕捉・
+継承/未読extent・ref権限・確保失敗の巻き戻し・型付きルートの直接21テストを追加し、
+コンパイルした10故障を検出しました。Interpreterへの接続とソースの捕捉は拒否したままで、
+この部品だけでIcarus差分が解消したとは扱いません。
+
 **VM受け渡しの検証：** `9b30d6d2`で[件数更新後の再確認を含む全21項目](../measurements/2026-10-25/vm-frame-access-final-validation.json)が
 成功しました。dev/ASan/UBSanは4,629/4,631、releaseは4,630/4,632成功、失敗0・既知2スキップです。
 コンパイルした9故障を検出し、初回overrideの36例で既存故障が検出されなかった穴を埋めました。

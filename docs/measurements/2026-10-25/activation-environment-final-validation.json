@@ -1,0 +1,189 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "615afa0d2a558881eaa58ba420e6e5f49216ec41",
+  "platform": "macOS arm64",
+  "scope": "Directly tested VM activation-environment component; Interpreter attachment and source capture remain gated",
+  "code_worktree_clean": true,
+  "uncommitted_changes_during_ci": "Generated README counts, documentation and measurement records only",
+  "source_sha256": {
+    "src/vm/activation_environment.cpp": "cb441ae37831cffbf713becc78e213e5216041165e8760f6f6bd75201bbf330a",
+    "src/vm/activation_environment.h": "33d06e3105fe4b7d7e9302ee2b9c39c8e08faf9ea83ed1265c3e8dee50893784",
+    "tests/unit/activation_environment_test.cpp": "ee08d90eb4decada6dc4daf37253bd7fe8a9708eb95d388716aeed3d06eecd26",
+    "tools/mutants.py": "9019a9c8919339598bc14a83524a43007229d2f00282a615fb9a86e1ea1f1218",
+    "src/vm/vm.cpp": "1f9dbbf84cabcbbf883a90192b5b3a91bd3e1c005ef614dfe7626e34ba93fcac"
+  },
+  "local_ci": [
+    {
+      "check": "dev: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "dev: build",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "check": "dev: test",
+      "status": "ok",
+      "seconds": 59.4
+    },
+    {
+      "check": "release: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "release: build",
+      "status": "ok",
+      "seconds": 2.1
+    },
+    {
+      "check": "release: test",
+      "status": "ok",
+      "seconds": 53.1
+    },
+    {
+      "check": "asan: configure",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "check": "asan: build",
+      "status": "ok",
+      "seconds": 3.1
+    },
+    {
+      "check": "asan: test",
+      "status": "ok",
+      "seconds": 92.6
+    },
+    {
+      "check": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "check": "ubsan: build",
+      "status": "ok",
+      "seconds": 2.9
+    },
+    {
+      "check": "ubsan: test",
+      "status": "ok",
+      "seconds": 80.6
+    },
+    {
+      "check": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "check": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "check": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "check": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.3,
+      "detail": "(7 commit(s) not pushed)"
+    },
+    {
+      "check": "readme_counts",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "check": "clang-format",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "check": "clang-tidy",
+      "status": "ok",
+      "seconds": 92.8
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 4652,
+      "passed": 4650,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 4653,
+      "passed": 4651,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 4652,
+      "passed": 4650,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 4652,
+      "passed": 4650,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "new_unit_tests": 21,
+  "typed_storage_shapes": 120,
+  "ref_qualification_join_cases": 12,
+  "malformed_provider_table_cases": 11,
+  "late_group_failure_repetitions": 1000,
+  "deep_scope_chain": 10000,
+  "group_allocation_failure_method": "Exhaust consecutive PMR allocation budgets through the first successful three-child group, independently for kernel and environment resources; includes the environment object itself and constructor failure cleanup",
+  "object_resource_ownership_and_matching_deallocation_tested": true,
+  "compiled_negative_controls": 10,
+  "negative_controls_record": "activation-environment-negative-controls.json",
+  "mutation_anchors": 578,
+  "existing_expectations_changed": false,
+  "sir_dump_expectations": "all 29 unchanged and passing",
+  "perfcount_expectations": "unchanged and passing in all four configurations",
+  "interpreter_source_unchanged_from": "65848df3",
+  "interpreter_attachment_added": false,
+  "scoped_reference_encoding_execution_added": false,
+  "source_capture_enabled": false,
+  "reference_inventory_remeasured": false,
+  "population_remeasured": false,
+  "svtests_remeasured": false,
+  "simulation_speed_remeasured": false,
+  "linux_remeasured": false,
+  "format_version": 0,
+  "external_c_abi_changed": false,
+  "physical_frame_abi_selected": false,
+  "new_dependencies": false,
+  "p1_complete": false
+}

@@ -42,16 +42,30 @@ VMの型付きルート提供へ渡し、scopeの値のルートは共有kernel 
 
 ## 検証と接続の残作業
 
-独自20テストで全joinの兄弟共有、呼び出しの独立性、ブロック再入、終了した所有者からの転送、
+独自21テストで全joinの兄弟共有、呼び出しの独立性、ブロック再入、終了した所有者からの転送、
 未読の型付きルートと空extent、readonly、ref修飾/joinの12組、仮引数再利用後のstatic ref転送、
-不正/未提供layout、型と形状120通り、Context/planの同一性を調べます。3人の子の環境を作る
-kernel側と環境側の全確保失敗段階で、途中のleaseと値が解放され親が保たれることを確認します。
+不正/未提供layout、型と形状120通り、Context/planの同一性を調べます。3つの子の環境を作る
+kernel側と環境側のPMRの確保失敗段階で、途中のleaseと値が解放され親が保たれることを確認します。
 遅い段階での失敗を1,000回繰り返しても記憶域を再利用します。pin/入場の確保失敗も実行状態を
 保ち、1万scopeの鎖を再帰せず構築・pin・解放します。初回のdev直接テストとclang-tidyは成功しました。
 
-継承extentの欠落、誤ったbinding、外側scopeの欠落、実行所有権の解放遅延、途中グループの公開、
+factoryは状態ベクトルに加えobject本体も指定したPMR resourceで確保します。構築に失敗したら
+object用の領域を返し、構築済みなら対応するresourceのdeleterがfinish・破棄・解放を行います。
+追加した検査では、返ったobjectが指定resourceの所有であること、予算0でResourceLimitを返すこと、
+確保元と一致する解放を確認します。グループの確保失敗予算にobject本体も含め、大域hookは使いません。
+指定resourceは返ったplan・環境・pinより長く生存する必要があります。ソースcallbackとスケジューラを
+含むresource解放は、Interpreter接続時の残作業です。
+
+objectのresourceの迂回、継承extentの欠落、誤ったbinding、外側scopeの欠落、実行所有権の解放遅延、途中グループの公開、
 refの逃避、readonly喪失、`ref static`のautomatic actual、ref転送メタデータの欠落に対する
-故障定義を9件追加します。実際にコンパイルした故障と全体CIの結果は、定義から推測せず実行後に記録します。
+[コンパイルした故障10件](../measurements/2026-10-25/activation-environment-negative-controls.json)は
+すべてビルド成功後に実際の部品テストで失敗し、元へ戻したビルドと21直接テストも成功しました。
+`615afa0d`の[最終検証](../measurements/2026-10-25/activation-environment-final-validation.json)では
+1回の全体実行でlocal CI全21項目が成功しました。dev/ASan/UBSanは4,650/4,652、
+releaseは4,651/4,653成功で、失敗0・従来の2件スキップです。SIRダンプ29件と
+PerfCount基準は変えず成功しました。Interpreterのソースは`65848df3`からバイト単位で
+不変であり、前回の87プローブ・母集団・sv-testsは再実行や今回の部品の新しい証拠とは
+扱いません。速度の新しい主張も加えません。
 
 この部品は`vm`にリンクし、追加テストから直接使います。Interpreterへの環境の登録・接続は
 まだ行わず、新しいSIR homeの拒否も維持します。frontも捕捉メタデータを生成しません。

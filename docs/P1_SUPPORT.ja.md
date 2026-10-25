@@ -141,6 +141,8 @@ VM接続が揃うまで新しいhomeの実行は拒否します。
 [VMのアクセス経路の移行](notes/automatic-vm-frame-access.ja.md)ではframe・ref・
 ファイル/走査・引数を値のビューへ通し、7テストで選択270通りとSIR実行24通りを調べます。
 環境構築とソースの捕捉は残作業です。
+[VM環境の部品](notes/automatic-vm-environment.ja.md)ではscopeの所有・字句的な全体の取り込み・
+不変の捕捉・失敗の巻き戻しを21テストで直接検証しました。Interpreterへの登録とscoped refの表現は残作業です。
 ソースのfork捕捉、activation命令、automatic event・ref・objectの接続はまだ有効にせず、
 上記の未対応診断は維持しています。
 

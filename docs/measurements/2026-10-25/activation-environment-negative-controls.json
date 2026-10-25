@@ -1,0 +1,134 @@
+{
+  "date": "2026-10-25",
+  "implementation_revision": "615afa0d2a558881eaa58ba420e6e5f49216ec41",
+  "scope": "Actual compiled environment-component behavioral controls; Interpreter/source capture remains gated",
+  "controls": [
+    {
+      "name": "activation environment: object storage bypasses its resource",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.EveryGroupAllocationFailureReleasesAllProvisionalOwnership",
+        "ActivationEnvironment.RootObjectsUseTheirResourceAndMatchingDeallocation"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: descendants omit inherited extents",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.DescendantsForwardOriginalExtentsAfterBothOwnersFinish"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: captures bind to the parent root field",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.CallsAndReenteredBlocksKeepDistinctImmutableBindings",
+        "ActivationEnvironment.DescendantsForwardOriginalExtentsAfterBothOwnersFinish",
+        "ActivationEnvironment.ReadonlyViewsKeepIdentityWithoutRegainingWriteRights",
+        "ActivationEnvironment.SiblingsSharePhysicalFieldsAndKeepFullUnreadAndEmptyExtents"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: the outermost full extent is omitted",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.DescendantsForwardOriginalExtentsAfterBothOwnersFinish",
+        "ActivationEnvironment.SiblingsSharePhysicalFieldsAndKeepFullUnreadAndEmptyExtents",
+        "ActivationEnvironment.UnreadTypedFieldsStayRootsUntilTheLastDescendantFinishes"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: finished bodies retain executing owners",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.PinFailureAndScopeEntryFailurePreserveTheExecutingEnvironment",
+        "ActivationEnvironment.ScopeOrderAndSavedDepthAreCheckedBeforeOwnershipChanges",
+        "ActivationEnvironment.SiblingsSharePhysicalFieldsAndKeepFullUnreadAndEmptyExtents"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: partial child groups become successful",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.BorrowedReferencesPreservePayloadQualificationAndActualRights",
+        "ActivationEnvironment.EffectiveConstRightsAndReferenceErrorsCannotBeLostDuringCapture",
+        "ActivationEnvironment.EveryGroupAllocationFailureReleasesAllProvisionalOwnership",
+        "ActivationEnvironment.ForwardedReferenceMetadataMustDeclareInheritedEnvironment",
+        "ActivationEnvironment.MissingFullChainsOrInheritedExtentsNeverCaptureOrdinaryValues",
+        "ActivationEnvironment.PartialGroupsRollbackAndReuseReleasedStorage",
+        "ActivationEnvironment.ReadonlyViewsKeepIdentityWithoutRegainingWriteRights"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: unqualified refs escape asynchronous joins",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.BorrowedReferencesPreservePayloadQualificationAndActualRights"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: reference views lose readonly rights",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.EffectiveConstRightsAndReferenceErrorsCannotBeLostDuringCapture",
+        "ActivationEnvironment.StaticReferenceForwardingNeverFollowsAReusedFormalBinding"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: ref static accepts automatic actuals",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.BorrowedReferencesPreservePayloadQualificationAndActualRights"
+      ],
+      "caught": true
+    },
+    {
+      "name": "activation environment: forwarded references omit inherited metadata",
+      "file": "src/vm/activation_environment.cpp",
+      "build_exit": 0,
+      "test_exit": 1,
+      "failed_tests": [
+        "ActivationEnvironment.ForwardedReferenceMetadataMustDeclareInheritedEnvironment"
+      ],
+      "caught": true
+    }
+  ],
+  "baseline_build_exit": 0,
+  "baseline_test_exit": 0,
+  "restored_build_exit": 0,
+  "restored_test_exit": 0,
+  "all_caught": true,
+  "source_restored": true,
+  "new_unit_tests": 21,
+  "source_sha256": {
+    "src/vm/activation_environment.cpp": "cb441ae37831cffbf713becc78e213e5216041165e8760f6f6bd75201bbf330a",
+    "src/vm/activation_environment.h": "33d06e3105fe4b7d7e9302ee2b9c39c8e08faf9ea83ed1265c3e8dee50893784",
+    "tests/unit/activation_environment_test.cpp": "ee08d90eb4decada6dc4daf37253bd7fe8a9708eb95d388716aeed3d06eecd26"
+  }
+}

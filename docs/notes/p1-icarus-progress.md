@@ -13,6 +13,20 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**Environment-component final check:** `615afa0d` passes
+[all 21 local-CI checks](../measurements/2026-10-25/activation-environment-final-validation.json).
+Dev/ASan/UBSan pass 4,650/4,652 and release 4,651/4,653, with zero failures
+and two known skips. All ten compiled controls fail actual component tests.
+The resource-backed object factory closes the initial object-allocation
+injection gap; Interpreter/scoped-ref attachment and source capture remain work.
+The finite comparison inventory, population and sv-tests are not remeasured here.
+
+**Lexical environment component:** the [VM construction layer](automatic-vm-environment.md)
+adds 21 direct tests for scoped ownership, immutable captures, inherited/unread
+extents, reference rights, allocation rollback and typed roots. Ten compiled
+faults are detected. Interpreter attachment and source capture remain gated;
+this component alone closes no Icarus inventory gap.
+
 **VM transport validation:** [all 21 checks, including the documented count-only retry](../measurements/2026-10-25/vm-frame-access-final-validation.json)
 pass at `9b30d6d2`. Dev/ASan/UBSan pass 4,629/4,631; release 4,630/4,632,
 with zero failures and two known skips. Nine compiled faults are detected;

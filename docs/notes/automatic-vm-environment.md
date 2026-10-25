@@ -56,22 +56,40 @@ publisher; scope value roots remain in the shared kernel store.
 
 ## Verification and remaining integration
 
-Twenty original tests exercise shared sibling values for all three joins,
+Twenty-one original tests exercise shared sibling values for all three joins,
 separate calls, block reentry, forwarding through returned owners, unread typed
 roots and empty extents, readonly rights, 12 ref-qualification/join combinations,
 static-ref forwarding across reuse of a formal, malformed/unsupported layouts,
-120 typed storage shapes and Context/plan identity. Allocation budgets are
+120 typed storage shapes and Context/plan identity. PMR allocation budgets are
 exhausted at each failing step of a three-child group for both kernel and
 environment storage. Failed groups release provisional leases and values;
 1,000 repeated late failures reuse storage. Callback pin failure and scope-entry
 failure preserve the executing state. A 10,000-scope chain is constructed,
 pinned and released iteratively. Initial focused dev tests and clang-tidy pass.
 
-Nine compiled-control definitions cover lost inherited extents, wrong binding
+The factory now allocates its object itself through the supplied PMR resource,
+as well as its state vectors. Constructor failure frees the raw object storage;
+a matching resource deleter finishes and destroys a completed environment before
+freeing it. The added resource-ownership regression checks that the returned
+object belongs to the resource, a zero budget returns ResourceLimit, and object
+release uses the matching allocation domain. Group allocation budgets therefore
+include the object allocation too, without a global hook. Each supplied resource
+must outlive the returned plan, environment or pin set. Source-level callback and
+scheduler resource cleanup remains an Interpreter-integration obligation.
+
+Ten [compiled behavioral controls](../measurements/2026-10-25/activation-environment-negative-controls.json)
+cover object allocation bypass, lost inherited extents, wrong binding
 identity, omitted outer scopes, delayed executing-owner release, partial group
 publication, ref escape, readonly loss, automatic `ref static` actuals and missing
-reference-forwarding metadata. Actual control and full-CI outcomes are recorded
-after running them, not inferred from these definitions.
+reference-forwarding metadata. Every injected fault builds successfully and
+fails actual component tests; the restored build and all 21 direct tests pass.
+The [final check](../measurements/2026-10-25/activation-environment-final-validation.json)
+at `615afa0d` passes all 21 local-CI steps in one complete run. Dev/ASan/UBSan
+pass 4,650/4,652 and release 4,651/4,653, with zero failures and the same two
+known skips. All 29 SIR dump expectations and PerfCount budgets are unchanged
+and pass. The interpreter source is byte-for-byte unchanged from `65848df3`;
+the preceding 87-probe, population and sv-tests observations are not rerun or
+presented as fresh evidence for this component. No timing claim is added.
 
 The component is linked into `vm` and called directly by these tests.
 `Interpreter` does not yet construct or attach these environments, and its

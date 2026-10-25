@@ -3,6 +3,10 @@
 [日本語](automatic-vm-frame-access.ja.md). Status: access-path migration,
 2026-10-25; automatic environment construction is still in progress.
 
+Subsequent checkpoint: the [lexical environment component](automatic-vm-environment.md)
+constructs and directly verifies scoped owners and complete child environments.
+Attaching it to `Interpreter` and constructing immutable scoped refs remain work.
+
 ## Contract and change
 
 This implements the access transport required by sections 2–4/6–8 of the
