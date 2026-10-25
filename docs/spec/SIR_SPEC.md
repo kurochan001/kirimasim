@@ -135,7 +135,7 @@ Rules of the standard (checked: 6.21, 13.3.1, 13.3.2, 13.4.2):
 - Variables in a static subroutine or block are static by default; variables in an automatic one are automatic by default. In either, an individual variable can be changed by marking it `automatic` or `static`.
 - The variables of a static task, **arguments (input, output, inout) included**, are shared by all calls of the same task in progress at once, and keep their values between calls. They are held separately for each module instance, though.
 - The variables of an automatic subroutine are allocated for each call, and initialized to their default initial values (output arguments included) each time the scope is entered. input and inout arguments are initialized with the values of the call's expressions.
-- The lifetime of a fork-join block includes the execution of every process it made.
+- A fork-join block lives until every process it started has finished.
 
 Placement in SIR (rule of this document):
 

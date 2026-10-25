@@ -82,7 +82,7 @@ One time slot is divided into these 17 regions, in this order (checked: 4.4).
 
 The standard gives a reference algorithm that a conforming simulator should implement. Another algorithm may be used if the results the user sees are the same (checked: 4.3, 4.5). kirimasim implements the following steps as they are.
 
-1. At time 0, initialize the values of all nets and variables, and put the initialization events in the time slot of time 0.
+1. At time 0, every net and variable gets its initial value, and the events that initialization makes go into the time slot of time 0.
    - Initial values in declarations of static variables are evaluated before initial and always start (checked: 6.8, 10.5). No text was found in the standard on the order of evaluation among static variables (not confirmed). kirimasim evaluates them in declaration order within one scope (rule of this document). An initial value that may read a static variable before that variable's initial value is set gets the warning `kirima-static-init-order` (rule of this document; the details approved 2026-10-19). That is an initial value that reads a static variable of another instance, as the order between instances is not set, or one of its own instance, package or compilation unit whose initial value is set after its own; generate blocks, named blocks and subroutines count as part of their instance here. Reading a static variable of a package or a compilation unit from an instance gets no warning, as those are set first (SIR_SPEC.md 7.1). Only the variables the expression names count, not those read inside the functions it calls (P1). The warning is given once per initial value, at its position, and names the variables read.
 2. While there is a time slot with events, move to the earliest and run that time slot.
 3. Running a time slot:
@@ -203,11 +203,11 @@ Approved 2026-10-19 (it replaces the order approved on 2026-10-14). The standard
 
 ### 6.3 The implicit sensitivity of `always_comb`
 
-The sensitivity of `always_comb` (and `always_latch`) consists of the longest static prefixes of the nets and variables (and select expressions) read within the block and within the functions the block calls, except the following (checked: 9.2.2.2.1):
+`always_comb` (and `always_latch`) is sensitive to what the block reads and what the functions it calls read: nets, variables and select expressions, each taken by its longest static prefix (checked: 9.2.2.2.1). Three kinds of read do not count:
 
-- Variables declared within the block or within the functions called.
-- Expressions **written** within the block or within the functions called.
-- Identifiers that appear only in expressions of timing controls (`wait`, events, delays).
+- A read of a variable that the block, or a function it calls, declares itself.
+- A read of something that the block, or a function it calls, also **writes**.
+- A name used only inside timing controls (`wait`, event controls, delays).
 
 Other rules (checked: 9.2.2.2.1):
 
@@ -447,7 +447,7 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
 ## 12. Continuous assignments and their delays
 
 - A continuous assignment evaluates the whole right side when the value of any operand of the right side changes, and assigns to the left side only when the new value differs from the previous one (checked: 10.3.2).
-- Nets may be driven by several continuous assignments, primitive outputs and module outputs (resolution is VALUE_SEMANTICS.md 5). A variable can be driven only by one continuous assignment, or one primitive output or module output. A variable driven by a continuous assignment or output having a declaration initial value or procedural assignments is an error (checked: 10.3.2). This check, as in 6.4, is done by slang's analysis stage (checked on 2026-10-16 that slang reports two continuous assignments to a variable, a mix of continuous and procedural assignments, a declaration initial value with a continuous assignment, and driving from two output ports) (approved 2026-10-16).
+- Nets may be driven by several continuous assignments, primitive outputs and module outputs (resolution is VALUE_SEMANTICS.md 5). A variable has at most one such driver: a single continuous assignment, or a single primitive or module output. Once a variable has that driver, giving it an initial value in its declaration or assigning it procedurally is an error (checked: 10.3.2). This check, as in 6.4, is done by slang's analysis stage (checked on 2026-10-16 that slang reports two continuous assignments to a variable, a mix of continuous and procedural assignments, a declaration initial value with a continuous assignment, and driving from two output ports) (approved 2026-10-16).
 - Continuous assignments with delays (checked: 10.3.3):
   - The delay is the time from a change of an operand of the right side to the assignment to the left side.
   - Vector nets can have up to 3 delays. When the right side changes from a nonzero value to 0 the fall delay is used, when it changes to z the turn-off delay, and otherwise the rise delay. Scalar nets follow the same rules as gate delays (28.16 of the standard).
@@ -472,7 +472,7 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
 ## 13. Details of nonblocking assignments (NBAs)
 
 - NBAs to automatic variables and to elements of arrays whose size changes are errors (checked: 10.4.2). They are detected at elaboration.
-- What needs evaluation on the left side (indices, class handles, virtual interface references) is evaluated at the same time as the right side (when the statement runs). Whether the left or the right side is evaluated first is not set by the standard (checked: 10.4.2, 4.9.4). kirimasim evaluates the right side first and the left side after (rule of this document).
+- Any part of the left side that has to be computed (an index, a class handle, a virtual interface reference) is computed when the statement runs, together with the right side. Whether the left or the right side is evaluated first is not set by the standard (checked: 10.4.2, 4.9.4). kirimasim evaluates the right side first and the left side after (rule of this document).
 - An NBA update is the last assignment of the time slot, with an exception: a process woken by an NBA update may do blocking assignments, which are processed after the NBA (checked: 10.4.2). This follows naturally from the reference algorithm (3) returning to Active after NBA.
 - NBAs whose order of execution is clear are updated in that order (4.1). When two concurrent processes write the same variable by NBA, the final value is not set by the standard (checked: 10.4.2). kirimasim gives the result decided by sequence-number order (4.3). Race exploration mode keeps this order, and perturbs it only with `--race-nba` (11; approved 2026-10-19).
 - An NBA with a delay schedules its update in the NBA region of the time after the delay (checked: 4.9.4). The value and target are decided when the statement runs and kept in the record (5).
@@ -501,7 +501,7 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
   - If there is neither a continuous assignment nor an `assign` in effect, the value does not change at once, and it keeps its present value until the next procedural assignment.
   - If there is a continuous assignment or an `assign` in effect, it is restored and evaluated again in the region where that continuous assignment is scheduled.
   - A continuous assignment is in effect on a variable when the variable is its left side. A write inside a function that a continuous assignment calls is a procedural statement (checked: 6.5) and does not make one (added 2026-10-20, approved; SIR_SPEC.md 3.4).
-- `force` on a net overrides every driver of the net (gate outputs, module outputs, continuous assignments). When `release`d, the net takes at once the value decided by its drivers (checked: 10.6.2).
+- While a net is forced, the forced value replaces what its drivers give, whether gates, module outputs or continuous assignments. When `release`d, the net takes at once the value decided by its drivers (checked: 10.6.2).
 
 ### 14.4 Handling in kirimasim (rule of this document)
 
@@ -518,10 +518,10 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 
 - `unique` and `priority`: a violation if no condition matches and there is no explicit else (default for case) (checked: 12.4.2).
 - `unique0`: no violation even if none matches (checked: 12.4.2).
-- `unique` and `unique0`: a violation if two or more conditions are true. Conditions may be evaluated in any order, and evaluation continues after a true condition is found. Even on a violation, only the statement of the **first written** true condition runs. After finding a violation, evaluation may stop, and there is no need to try many evaluation orders (checked: 12.4.2). kirimasim evaluates every condition in the order written (rule of this document; to fix the result when conditions have side effects).
+- `unique` and `unique0`: a violation if two or more conditions are true. Their order of evaluation is free, and finding one true condition does not end the evaluation of the others. Even on a violation, only the statement of the **first written** true condition runs. After finding a violation, evaluation may stop, and there is no need to try many evaluation orders (checked: 12.4.2). kirimasim evaluates every condition in the order written (rule of this document; to fix the result when conditions have side effects).
 - `priority`: evaluated in the order written (checked: 12.4.2).
 - For case (checked: 12.5.3, 12.5.3.1, 12.5.3.2):
-  - The expression is evaluated once, before the items. For `unique` and `unique0`, items may be evaluated and compared in any order, continuing after a match is found. If two or more items match it is a violation, and only the statement of the first written matching item runs.
+  - The expression is evaluated once, before the items. For `unique` and `unique0`, the items may be taken in any order, and a match does not end the comparison with the other items. If two or more items match it is a violation, and only the statement of the first written matching item runs.
   - Several expressions within one item matching is not a violation. Once one expression of an item matches, the rest of the same item need not be evaluated.
   - `unique` and `priority` are violated if no item matches (`unique0` is not). Violations decided at compile time may be reported at compile time.
   - `priority` acts only on the first match.
@@ -543,7 +543,7 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 - When a process reaches a flush point, **everything** on its pending queue is discarded (checked: 12.4.2.1, 16.4.2). Flush points are:
   - When a process stopped on an event control or `wait` resumes.
   - When an `always_comb` or `always_latch` process starts again on a change of a signal it depends on.
-  - (Deferred immediate assertions only) when the outermost scope of the process is `disable`d.
+  - (Deferred immediate assertions only) when a `disable` ends the outermost scope of the process.
 - Pending reports are treated as events of Observed (checked: 12.4.2.1; when a violation is found, the pending report is scheduled in Observed of the present time slot). So if any process has a non-empty pending queue, Observed is taken as a non-empty region. When Observed is reached by the steps of 3 (when everything from Active to Pre-Observed is empty), the pending reports left undiscarded are settled. Deferred assertions of `final` are settled in Postponed. Settled reports are no longer discarded (checked: 12.4.2.1, 16.4.1).
 - Where they go after being settled depends on the kind. Violations of unique and priority are reported when settled. Deferred assertions of `#0` schedule the subroutine (or `$error`) in Reactive. Deferred assertions of `final` run in the same Postponed (checked: 12.4.2.1, 16.4.1).
 - **Static initialization (approved 2026-10-18):** a static-init process (step 1 of 6.1) has a pending queue like any process. It runs to its end without waiting and so reaches no flush point: a unique or priority violation that its initializers' functions find is settled in the Observed region of time 0 and reported with the hierarchical name of the statement's scope and time 0 (rule of this document; the standard does not say where a violation found while static variables are initialized is reported). Whether such a function may schedule what runs after it returns falls under 13.4.4, applied as 6.5 says (approved 2026-10-19): a nonblocking assignment, a `->>` or a `fork ... join_none` reached from an initial value is an error at compile time, while a deferred assertion's action and `$strobe` do not count.
@@ -564,7 +564,7 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 - `$finish` ends the simulator and returns control to the OS. `$stop` suspends the simulation. `$exit` terminates the initial procedures and descendants of the originating program; global finish follows when all programs with initial procedures have ended (24.7, 24.3; corrected and approved 2026-10-23). Outside a program-initial thread, ignore `$exit` without a warning (project choice).
 - `$finish` and `$stop` choose the amount of diagnostics with the argument 0, 1 or 2. 0 prints nothing, 1 (the default) the time and position, and 2 also statistics of memory and CPU time (checked: 20.2, Table 20-1).
 - `$fatal` gives a fatal run-time error and implicitly calls `$finish`. Its first argument means the same as `$finish`'s (checked: 20.10).
-- The messages of `$fatal`, `$error`, `$warning` and `$info` include the file name and line number of the call, the hierarchical name of the calling scope, and the simulation time (checked: 20.10).
+- A message of `$fatal`, `$error`, `$warning` or `$info` tells where the call is (file and line), in which scope (hierarchical name), and when (simulation time) (checked: 20.10).
 - When there are no events at all, the simulation ends automatically (checked: 9.6.1).
 - When there are one or more program blocks and all their `initial`s have ended, each program ends its descendant threads and the simulation ends by an implicit `$finish` (checked: 24.3; details of 24.7 in P4).
 - `cbEndOfSimulation` is called when events run out and on `$finish` (checked: 38.36.3).
@@ -609,8 +609,8 @@ The meaning of the time-related callbacks (checked: 38.36.2), and the regions in
 | `cbAfterDelay` | After the given delay, before the events of that time run. Can be set for times with no events | Pre-Active |
 | `cbNextSimTime` | Before the events of the next time run (the time given is ignored) | Pre-Active |
 | `cbNBASynch` | Just before the NBA events are processed | Pre-NBA |
-| `cbReadWriteSynch` | After the events of the given time have run. May be before or after NBA | Pre-NBA or Post-NBA |
-| `cbAtEndOfSimTime` | After NBA, before entering the read-only phase | Pre-Postponed |
+| `cbReadWriteSynch` | After the events of the given time have run, on either side of the NBA region | Pre-NBA or Post-NBA |
+| `cbAtEndOfSimTime` | After the NBAs, still ahead of the read-only part of the time slot | Pre-Postponed |
 | `cbReadOnlySynch` | The same point as `cbReadWriteSynch`, but no writes or scheduling of events are possible | Postponed |
 
 - The time type given is `vpiScaledRealTime` or `vpiSimTime`. `vpiSuppressTime` or NULL is an error (checked: 38.36.2).

@@ -96,14 +96,14 @@ Those in the standard but not in the design specification's list (approved by a 
 | `%e` `%f` `%g` | Real | 21.2.1.1 |
 
 - Upper and lower case mean the same (checked: Table 21-1). But the real `%E` and `%G` print the exponent letter as upper-case `E`, as C's formats do (3.6; approved 2026-10-17).
-- The integer formats (`%h`, `%x`, `%d`, `%o`, `%b`, `%c`, `%u`, `%z`) can be used for integral types, enumerated types and packed aggregate types. Not for unpacked aggregate types (checked: 21.2.1.1).
+- The integer formats (`%h`, `%x`, `%d`, `%o`, `%b`, `%c`, `%u`, `%z`) take any integral value, which includes enumerated and packed aggregate values, but no unpacked aggregate (checked: 21.2.1.1).
 - The hexadecimal letters a to f are printed in lower case even when written `%H` or `%X` (rule of this document; no text found in the standard; for reference, Icarus and Verilator also use lower case). The case of the letters x and z follows 3.4.
 
 ### 3.3 Display width
 
 - **Automatic width:** with no width written, the number of digits needed for the largest value the expression can take is found from its width, and the value is printed with that many digits. Decimal replaces leading zeros by spaces; other radixes print leading zeros too (checked: 21.2.1.2). Example: a 32-bit value 10 is `        10` (10 digits) with `%d` and `0000000a` (8 digits) with `%h`. The same for signed values and for parameter values (a note of this document; the rule of the standard has no exception).
 - **Decimal digits:** for signed values, the largest number of digits counts the sign too (interpretation; a 32-bit `int` is the 11 characters of `-2147483648`). For reference, Icarus and Verilator print 32-bit signed values in 11 digits.
-- **Width 0:** `%0d` and `%0h` print in the smallest width, with no leading spaces or zeros (checked: 21.2.1.2).
+- **Width 0:** `%0d` and `%0h` print only the digits the value needs, with no spaces or zeros in front (checked: 21.2.1.2).
 - **Explicit width:** a written width is used instead of the automatic width. If the value has fewer digits, it is padded on the left; if more, the field widens. Nothing is truncated. The padding is spaces for decimal and strings, and 0 for hexadecimal, octal and binary (checked: 21.2.1.2). For example, a 32-bit 5 is `005` with `%3h` and `000000000101` with `%12b`. For reference, Verilator follows the standard. Icarus 13.0 ignores a width narrower than the automatic width and prints `00000005`, and pads wide binary, octal and hexadecimal widths with spaces. The test suite's expected values follow the standard.
 - The width and precision of real formats are the same as C's formats (3.6).
 
@@ -139,7 +139,7 @@ Checked (21.2.1.3):
 
 ### 3.8 `%m` and `%l`
 
-- `%m` prints the hierarchical name of the design element, subroutine, named block or labelled statement that called the task (checked: 21.2.1.5). Unnamed `begin`–`end` and `fork`–`join` are not part of the hierarchy (interpretation; they are not among those the standard lists). Unnamed generate blocks are printed with the names the standard sets (`genblk<n>`, 27.6).
+- `%m` prints the hierarchical name of the scope the call is in: a design element, a subroutine, a named block or a labelled statement (checked: 21.2.1.5). Unnamed `begin`–`end` and `fork`–`join` are not part of the hierarchy (interpretation; they are not among those the standard lists). Unnamed generate blocks are printed with the names the standard sets (`genblk<n>`, 27.6).
 - `%l` prints `<library name>.<cell name>` (checked: 21.2.1.1). Until the library features (chapter 33) exist, the library name is `work` (rule of this document).
 
 ### 3.9 `%p` and `%0p`
@@ -213,7 +213,7 @@ unsupported. See the [examples](../P1_FEATURES.md),
 ### 5.1 `$time`, `$stime`, `$realtime`
 
 - `$time` returns the time in the time unit of the calling design element, rounded to a 64-bit integer (checked: 20.3.1). Exactly half goes away from zero (rule of this document; as SCHEDULER_SPEC.md 1).
-- `$stime` returns the same value as a 32-bit unsigned integer; if it does not fit in 32 bits, the low 32 bits (checked: 20.3.2).
+- `$stime` returns the same value as a 32-bit unsigned integer, keeping only the low 32 bits of a larger time (checked: 20.3.2).
 - `$realtime` returns the same time as a real (checked: 20.3.3). The internal 64-bit time divided by the ratio of units is computed in double precision (rule of this document).
 
 ### 5.2 `$timeunit` and `$timeprecision`
@@ -353,8 +353,8 @@ Checked (21.4):
 - Numbers go into the words of successive addresses. An address can be given by `@` followed by a hexadecimal number (no space between `@` and the number).
 - With no address arguments, reading goes up from the lowest address of the memory. With a start only, up from there. With start and end, from start to end (down if start is larger). This direction stays the same after an address in the file.
 - If an address range is given by the arguments and an address in the file is outside it, it is an error and reading stops. A proposal to ignore addresses out of range instead is not taken (decided 2026-10-19; UNSPECIFIED_BEHAVIOR.md 9).
-- If the file has no addresses and the number of words differs from the number of words in the range, a warning is given. Words not given are not changed.
-- **When the arguments give no finish address (rule of this document; approved 2026-10-19):** the range ends at the highest address of the memory, and without a start address it begins at the lowest. The two rules above hold for that range too: an address in the file outside it is an error and reading stops, and a file with no addresses whose number of words differs from the number of words in the range gives the warning. Words past the end of the range are not loaded (checked: 21.4 stops loading at the highest address of the memory).
+- A file without addresses whose word count is not the size of the range gets a warning. Words the file does not give keep their values.
+- **When the arguments give no finish address (rule of this document; approved 2026-10-19):** the range ends at the highest address of the memory, and without a start address it begins at the lowest. The two rules above hold for that range too: an address in the file outside it is an error and reading stops, and a file without addresses whose word count is not the size of the range gets the warning. Words past the end of the range are not loaded (checked: 21.4 stops loading at the highest address of the memory).
 - For 2-state types, x and z become 0. A value out of range of an enumerated type is an error, and reading stops there (21.4.2).
 - **Enumerated types (added 2026-10-21, approved):** a word goes into an element as into a memory of the base type (the low digits; x and z as 0 for a 2-state base type), and must then be the value of one of the type's items; one that is not is out of range (interpretation of 21.4.2). It is a run-time error of the design, as text that is no number is: the run ends there, and the words read before stay (rule of this document; for reference, checked 2026-10-21, Icarus 14.0 devel loads such a word and goes on).
 - Multidimensional unpacked arrays are read in row order (the rightmost dimension changes fastest), each dimension below the first from its low to its high index. An address points to a word of the topmost dimension (checked: 21.4.3).
@@ -474,9 +474,9 @@ This section restates in words the algorithm that Annex N defines by C source co
 
 ### 12.1 Sources
 
-- 20.14: `$random`, `$dist_uniform`, `$dist_normal`, `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang` return integers, and their algorithm is part of the standard so that every implementation gives the same values; Annex N holds it (checked: 20.14).
+- 20.14: `$random`, `$dist_uniform`, `$dist_normal`, `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang` return integers. The standard fixes how they compute their values, in Annex N, so the same seeds give the same sequences in any implementation (checked: 20.14).
 - 20.14.1: `$random` takes an optional seed argument and returns a new 32-bit signed value at each call. The seed argument is an integral variable, given a value before the call (checked: 20.14.1).
-- 20.14.2: every argument is an integer. For `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang`, the mean, the degree of freedom and k_stage are to be greater than 0. The seed is an inout argument: the same seed gives the same result, and only the function updates it. For `$dist_uniform`, start is to be less than end (checked: 20.14.2).
+- 20.14.2: every argument is an integer. The mean, degree-of-freedom and k_stage arguments of `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t` and `$dist_erlang` must be positive. The seed is an inout argument: the same seed gives the same result, and only the function updates it. For `$dist_uniform`, start is to be less than end (checked: 20.14.2).
 - N.1 maps each function to a routine of N.2, and makes `$random` the uniform distribution over the whole range of the C type `long` (checked: N.1).
 - `$random` and `randomize()` are independent (checked: 18.14.3).
 

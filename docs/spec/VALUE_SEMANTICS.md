@@ -91,7 +91,7 @@ A variable with no initial value starts as: all bits x for 4-state integral type
 
 - `==` and `!=` compare bit by bit. The result is x only when x or z leaves it undecided. If known bits differ, the result is 0 (1 for `!=`) even if other bits are x (checked: 11.4.5; checked with Icarus 13.0 that `2'b1x == 2'b0x` is 0).
 - `===` and `!==` compare x and z as values too. The result is always 0 or 1 (checked: 11.4.5).
-- `==?` and `!=?` treat only the x and z bits of **the right operand** as bits that "match any value". x and z of the left operand are not wildcards. The other bits are compared by the same rule as `==`; if undecided, x (checked: 11.4.6).
+- `==?` and `!=?` treat only the x and z bits of **the right operand** as bits that "match any value". An x or z on the left is compared as a value, not as a wildcard. The other bits are compared by the same rule as `==`; if undecided, x (checked: 11.4.6).
 - Comparisons of class handles, chandles and null compare the values of the handles (checked: 11.4.5, 11.4.6).
 
 ### 3.5 Logical operations (`! && || -> <->`)
@@ -127,8 +127,8 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 
 ### 3.8 Shifts (`<< >> <<< >>>`)
 
-- Both kinds of left shift fill the bottom with 0. `>>` fills the top with 0. `>>>` fills with the most significant bit of the left operand if the result type is signed, and with 0 if unsigned (checked: 11.4.10).
-- The shift amount (the right operand) is always treated as unsigned and does not affect the sign of the result (checked: 11.4.10).
+- Both kinds of left shift fill the bottom with 0. `>>` fills the top with 0. `>>>` repeats the left operand's top bit at the top when the result type is signed, and puts 0 there when it is unsigned (checked: 11.4.10).
+- The shift amount (the right operand) is read as an unsigned number whatever its type, and plays no part in the signedness of the result (checked: 11.4.10).
 - If the shift amount has x or z, the result is unknown. kirimasim makes every bit x (checked: 11.4.10; reading "unknown" as all bits x is interpretation; Icarus 13.0 also gave all bits x).
 - A shift by the width or more gives all bits 0 for left shifts and `>>`, and all bits equal to the sign bit for a signed `>>>` (rule of this document; generated code splits this off by a condition to avoid undefined behaviour of C++).
 
@@ -137,7 +137,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - If the condition is true, only the first expression is evaluated and returned; if false, only the second (checked: 11.4.11).
 - If the condition is unknown (x or z), both expressions are evaluated. If the two are equal by `==` (the result is 1), that value is returned. Otherwise, for integral types, both are widened to the same width and combined bit by bit: 0 if both are 0, 1 if both are 1, x otherwise. **A bit that is z on both sides becomes x too** (checked: 11.4.11, Table 11-20).
 - Types that are not integral (checked: 11.4.11). Approved 2026-10-16:
-  - The result type: real if both are real. If one is real and the other shortreal or integral, the other is converted to real. If one is shortreal and the other integral, the integral one is converted to shortreal. If one is integral and the other can be implicitly converted to an integral type, it is treated as integral. Classes and interface classes follow a to e of 11.4.11 (P4). Otherwise the two types must be equivalent (6.22.2) (slang checks).
+  - The result type: real with real, shortreal or integral gives real, the side that is not real converted to real; shortreal with integral gives shortreal, the integral side converted to shortreal; integral with a type that converts implicitly to integral gives integral. Classes and interface classes follow a to e of 11.4.11 (P4). Otherwise the two types must be equivalent (6.22.2) (slang checks).
   - When the condition is unknown and the two values are not equal by `==` (11.4.5): arrays with the same number of elements (associative arrays excepted) are combined element by element, equal elements keeping their value and differing ones taking the value of Table 7-1. Other types take the value of Table 7-1 for the result type: 0.0 for reals, the empty string for strings, null for class handles and the like.
   - Reals and strings are implemented in P1. Arrays and handles are implemented in the stages that implement them.
   - Icarus 13.0 hits an internal error on `?:` of strings with an x condition (checked). Expected values follow the standard.
@@ -150,16 +150,16 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - If nothing matches and any of the comparisons is x, the result is x. The whole is the same as the OR of the results of all comparisons (checked: 11.4.13).
 - A range `[lo:hi]` is compared with `>=` and `<=`. `$` is the smallest or largest value of the left expression's type. A range with lo greater than hi is empty (checked: 11.4.13). The rules of 3.3 apply to comparisons with ranges, so if the left expression has x or z, the comparison with the range is x (interpretation).
 - There are tolerance forms `[A +/- B]` (an absolute tolerance) and `[A +%- B]` (a tolerance as a percentage of A). Whatever the signs of A and B, the two bounds are swapped if needed to make [low:high]. The type of the range is A's type. For an integral A, the tolerance is truncated, not rounded (checked: 11.4.13; whether this was in 1800-2017 is not confirmed).
-- If an element of the list is an unpacked array, its elements are followed down to single values and compared (checked: 11.4.13; dynamic arrays in P4).
+- An unpacked array in the list stands for all of its elements, down to single values, each compared in turn (checked: 11.4.13; dynamic arrays in P4).
 - The order of evaluating elements is not set by the standard (checked: 11.4.13). kirimasim evaluates them in the order written (rule of this document).
 - Icarus 13.0 does not support `inside` (checked by running it).
 
 ### 3.11 Bit- and part-selects
 
-- When a bit-select of a packed value has an index out of range or containing x or z bits, the value read is x for 4-state and 0 for 2-state (checked: 11.5.1).
+- When a bit-select of a packed value has an index out of range or containing x or z bits, the read gives x (0 for a 2-state value) (checked: 11.5.1).
 - When a part-select is entirely out of range, or its position has x or z, the value read is x (for 2-state types, 0 by the conversion of 1.2). A write does nothing (checked: 11.5.1).
 - When a part-select is only partly out of range, the bits out of range read as x, and a write goes only to the bits in range (checked: 11.5.1; checked with Icarus 13.0 that `[6 +: 4]` of `8'hA5` is `xx10`).
-- Reading an unpacked array with an invalid index (out of range, or containing x or z) returns the default value of the element type: x for 4-state integral types, 0 for 2-state, 0.0 for reals, empty for strings, null for handles (checked: 7.4.5, Table 7-1). A write to an invalid index does nothing, except a write to `[$+1]` of a queue and making a new element of an associative array (checked: 7.4.5).
+- Reading an unpacked array with an invalid index (out of range, or containing x or z) returns the default value of the element type: x for 4-state integral types, 0 for 2-state, 0.0 for reals, empty for strings, null for handles (checked: 7.4.5, Table 7-1). Writing through an invalid index changes nothing. Two writes are not covered by this: one at `[$+1]` of a queue, which appends, and one that creates a new element of an associative array (checked: 7.4.5).
 - `--bounds-check` (CLI.md 2.2; approved 2026-10-19) reports, once per place, an index or position out of range at run time, or with x or z bits. It changes no value read or written.
 
 Implementation status (2026-10-23): tier 1 supports `--bounds-check=off|warn`
@@ -210,13 +210,13 @@ Approved 2026-10-17.
 
 - The first statement runs only when the condition is true. False and unknown are both taken as "not true", and the else side runs (checked: 12.4; how truth is decided follows the interpretation of 3.5).
 - Example: `if (2'b1x)` is true (there is a 1 bit), `if (2'b0x)` is false (since it is unknown). The same results were checked with Icarus 13.0.
-- The wording of 12.4 gives true as "a nonzero known value" and false as "a value of 0, or of x or z". It is possible to read `2'b1x` as not a "known value" and so false, since it contains x. kirimasim gives priority to the equivalence with `if (expr != 0)` that 12.4 itself states (interpretation).
+- 12.4 takes a known value other than 0 as true, and 0, x or z as false. Read strictly, `2'b1x` is not a known value because of its x, and so could be taken as false. kirimasim gives priority to the equivalence with `if (expr != 0)` that 12.4 itself states (interpretation).
 - `--cond-x` (CLI.md 2.2; approved 2026-10-19) reports a condition that had x or z bits. It changes no result.
 
 ### 4.2 `case`, `casez`, `casex`
 
 - `case` compares the expression with each item for an exact match with 0, 1, x and z as values (the same as `===`). All expressions are brought to the width of the longest. If any is unsigned, all are treated as unsigned (checked: 12.5).
-- The expression is evaluated once, before the items. Items are evaluated and compared in the order written, and the first that matches runs (checked: 12.5).
+- The expression is evaluated once, before the items. The items are then tried from the first written, and the first match decides which statement runs (checked: 12.5).
 - **A `case` on reals or strings (approved 2026-10-18):** the expression and the items take one common type, as for a comparison: `real` if any is `real` or `realtime`, `shortreal` if any is `shortreal` and none `real`, and `string` when the expression is a string (checked: 12.5 gives the common width and signedness of integral ones; 11.3.1 the rule for reals; slang gives this type). When that type is `real`, `shortreal` or `string`, an item matches when it is equal to the expression by `==` in that type: reals are not rounded to integers, `-0.0` equals `0.0`, an integral item is converted to real first (x and z as 0, 1.5), and a `shortreal` compared with a `real` is widened first, so `shortreal` 1.1 does not match `real` 1.1 (interpretation; 12.5 describes the match of integral values bit by bit only). For reference (checked 2026-10-18): Icarus 13.0 and Verilator 5.052 give the same except for that last case, as they keep a `shortreal` as a `real`. `casez` and `casex` take integral values only (slang checks).
 - `casez` treats z bits, and `casex` x and z bits, as bits not compared. **They are ignored on both the expression's side and the item's side** (checked: 12.5.1). This differs from `==?`, which ignores only x and z of the right operand.
 - `?` in a number is the same as z (checked: 12.5.1).
@@ -282,7 +282,7 @@ The output of one bit of one driver is decided by its value, its 0 strength s0 a
 | Ports connected to variables, and ports connected to expressions | Implicit continuous assignments, so (strong1, strong0) | 4.9.6 |
 | Unconnected input ports under `` `unconnected_drive `` | Taken as the port's net with one more driver, a `pullup` for `pull1` or a `pulldown` for `pull0`, on every bit | 22.9, 28.10 |
 
-- A strength specification applies to every bit of a vector net (interpretation; 10.3.4 says "only to assignments to scalar nets", but slang accepts a specification on vectors, and Icarus 13.0 too applies it bit by bit).
+- A strength specification applies to every bit of a vector net (interpretation; 10.3.4 limits strengths to assignments to scalar nets, but slang accepts a specification on vectors, and Icarus 13.0 too applies it bit by bit).
 - A port connecting a net to a net collapses both sides into one net, and the drivers of both sides are resolved together (checked: 23.3.3.7; the inout of 4.9.6 is a connection that does not change strength). output and input ports with drivers on both sides are changed to inout by slang (23.3.3.1). Connections that cannot be collapsed (SIR_SPEC.md 3.5) are implicit continuous assignments as in the table above.
 - **Unconnected input ports under `` `unconnected_drive `` (approved 2026-10-19):** an input port of a module, interface or program declared where `` `unconnected_drive pull1`` (or `pull0`) is in effect, and left unconnected in an instance, gets one more driver on its net: 1 (or 0) at pull strength on every bit, as a `pullup` (or `pulldown`) on that net would give. It is resolved with the net's other drivers by 5.4. inout and output ports do not change. The direction is the declared one, also where slang reports the port as coerced to inout (23.3.3.1).
   - Interpretation: 22.9 says that such ports are pulled up or down, but names no strength. Pull strength is that of `pullup` and `pulldown` (28.10), and the property of a module definition that records the directive in VPI (`vpiUnconnDrive`, 37.10) takes values named for pull drives (Annex K). Icarus 13.0 too gives Pu1 on every bit (checked 2026-10-19).
@@ -425,7 +425,7 @@ This section was written in P1 (approved 2026-10-15).
 
 ### 7.3 Concatenation and replication of strings
 
-- If any operand is an expression of string type, the concatenation is a string concatenation, and string literals are converted to string type before concatenating. If all are string literals, it is the same as an integral concatenation (checked: 11.4.12.2, Table 6-9 of 6.16).
+- One operand of string type makes the whole concatenation a string concatenation; string literals among the operands become strings first. If all are string literals, it is the same as an integral concatenation (checked: 11.4.12.2, Table 6-9 of 6.16).
 - In a replication of strings, the multiplier need not be constant. 0 gives the empty string (checked: Table 6-9). The result when the multiplier is negative, or contains x or z, is not settled by the wording of the standard (Table 6-9 only requires "an expression that is not negative and not x or z"). kirimasim makes it the empty string and gives one warning at run time (rule of this document).
 - The resulting string is not truncated (checked: 11.4.12.2).
 
@@ -444,7 +444,7 @@ This section was written in P1 (approved 2026-10-15).
 
 ### 7.5 Real operations
 
-- The operations usable on reals are as in Table 11-1. The results of logical operators, relational operators and `inside` are 1 bit. Otherwise, if any operand (except the one before `?`) is `real` the result is `real`, otherwise if there is a `shortreal` it is `shortreal` (checked: 11.3.1).
+- The operations usable on reals are as in Table 11-1. The results of logical operators, relational operators and `inside` are 1 bit. For the other operators, a `real` operand makes the result `real`, and failing that a `shortreal` operand makes it `shortreal`; the condition of `?:` does not count (checked: 11.3.1).
 - In an operation mixing integers and reals, the integer operands are converted to real by the rules of 7.4 before computing (checked: 11.3.1; the conversion rule is 1.5).
 - `real` operations are done in the precision of C's `double`, and `shortreal` operations in that of C's `float` (interpretation; from 6.12 making them the same as the C types). Division by 0, overflow and NaN give C's (IEEE 754's) results as they are (rule of this document).
 - The truth of a real (`if`, `!`, `&&` and so on) is false for 0.0 and true otherwise. NaN is true (interpretation; the same as C's `x != 0`).
