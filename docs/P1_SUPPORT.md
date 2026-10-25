@@ -152,6 +152,10 @@ The [wait-dependency connection](notes/automatic-storage-observation.md) adds
 14 tests for captured/static ranges, retained extents and cancellation.
 The [SIR metadata/verifier checkpoint](notes/automatic-sir-metadata.md) adds
 16 tests; execution of those new homes is gated until the VM adapter is complete.
+The [VM access-path migration](notes/automatic-vm-frame-access.md) routes frame,
+ref, file/scan and argument operations through value views; seven tests cover
+270 selected transports and 24 complete SIR executions. Environment construction
+and source capture remain work.
 Source fork capture, activation instructions and automatic event/ref/object
 integration are not enabled; the existing source boundaries above remain.
 

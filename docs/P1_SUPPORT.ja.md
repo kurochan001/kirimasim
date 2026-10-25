@@ -138,6 +138,9 @@ Context内の世代付きスコープ・共有binding・lease・readonly・型�
 キャンセルに対する独自14テストを追加しました。
 [SIRの表現/検証](notes/automatic-sir-metadata.ja.md)には独自16テストを追加し、
 VM接続が揃うまで新しいhomeの実行は拒否します。
+[VMのアクセス経路の移行](notes/automatic-vm-frame-access.ja.md)ではframe・ref・
+ファイル/走査・引数を値のビューへ通し、7テストで選択270通りとSIR実行24通りを調べます。
+環境構築とソースの捕捉は残作業です。
 ソースのfork捕捉、activation命令、automatic event・ref・objectの接続はまだ有効にせず、
 上記の未対応診断は維持しています。
 

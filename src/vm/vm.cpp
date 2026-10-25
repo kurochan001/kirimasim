@@ -3,6 +3,8 @@
 
 #include "kirimasim/vm/vm.h"
 
+#include "frame_value.h"
+
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -1034,7 +1036,6 @@ private:
     /// variables and where its temps start.
     struct Act {
         BodyId body{0};
-        std::vector<W4>* vars = nullptr;
         std::size_t base = 0;
         VarsId varsId{0};
     };
@@ -1535,8 +1536,7 @@ private:
             case Operand::Kind::Temp:
                 return tempStack_[act_.base + tempOff_[act_.body.index()][o.id]];
             case Operand::Kind::Const: return consts_[constOff_[o.id]];
-            case Operand::Kind::Frame:
-                return (*act_.vars)[layouts_[act_.body.index()].wordOf(o.asFrame())];
+            case Operand::Kind::Frame: return frameVar(o.asFrame());
             default: return {0, 0};
         }
     }
@@ -1694,9 +1694,7 @@ private:
                 return;
             }
             case Operand::Kind::Frame: {
-                const W4* p = &(*act_.vars)[layouts_[act_.body.index()].wordOf(o.asFrame())];
-                for (std::uint32_t k = 0; k < chunks; ++k)
-                    out[k] = p[k];
+                readFrame(o.asFrame(), 0, {out, chunks});
                 return;
             }
             default: out[0] = {0, 0}; return;
@@ -1814,11 +1812,11 @@ private:
         for (;;) {
             Exit e = Exit::Ret;
             if (f.calls.empty()) {
-                enter({bodyOfProcess(f.process), &f.vars, 0, f.varsId});
+                enter({bodyOfProcess(f.process), 0, f.varsId});
                 e = runBody(f, f.block, steps, ret);
             } else {
                 Frame::TaskCall& c = f.calls.back();
-                enter({c.body, &c.vars, 0, c.varsId});
+                enter({c.body, 0, c.varsId});
                 e = runBody(f, c.block, steps, ret);
             }
             if (e == Exit::Entered) continue;  // a task was called
@@ -1882,14 +1880,14 @@ private:
         Frame::TaskCall c = std::move(f.calls.back());
         f.calls.pop_back();
         const sir::Subroutine& s = subOf(c.body);
-        const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.vars);
-        retire(c.varsId);
+        const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.varsId);
         while (!f.scopes.empty() && f.scopes.back().calls > f.calls.size())
             f.scopes.pop_back();
         if (f.calls.empty())
-            writeOuts(s, c.site->operands, outs, f.vars, bodyOfProcess(f.process));
+            writeOuts(s, c.site->operands, outs, f.varsId, bodyOfProcess(f.process));
         else
-            writeOuts(s, c.site->operands, outs, f.calls.back().vars, f.calls.back().body);
+            writeOuts(s, c.site->operands, outs, f.calls.back().varsId, f.calls.back().body);
+        retire(c.varsId);
     }
 
     /// call.task: copies the inputs in and makes the call the innermost
@@ -1904,8 +1902,9 @@ private:
         c.site = &in;
         c.children = f.births;
         c.vars = newVars(c.body);
-        bindArgs(c.body, s, readArgs(s, ops), c.vars);
+        const auto args = readArgs(s, ops);
         c.varsId = enroll(c.vars, c.body);
+        bindArgs(c.body, s, args, c.varsId);
         resumeAt(f) = ops.back().asBlock();
         f.calls.push_back(std::move(c));
         return true;
@@ -1950,15 +1949,58 @@ private:
         freeVarSets_.push_back(id);
     }
 
-    /// Element e of array frame variable fv of the running body: its first
-    /// chunk.
-    W4& frameElem(sir::FrameVarId fv, std::uint64_t e) {
-        const Layout& l = layouts_[act_.body.index()];
-        return (*act_.vars)[l.wordOf(fv) + e * l.chunksOfVar(fv)];
+    /// All frame operations transport values through this short-lived view.
+    /// Binding resolution connects here; new homes are still gated at load.
+    detail::FrameValue framePlace(BodyId body, VarsId vars, sir::FrameVarId fv,
+                                  std::uint64_t element = 0) const {
+        const Layout& l = layouts_[body.index()];
+        const auto& row = bodyFrame(body)[fv.index()];
+        const std::uint32_t width = sir::isIntegral(row.type) ? row.type.width : 64;
+        return {{varSets_[vars.index()].words + l.wordOf(fv) + element * l.chunksOfVar(fv),
+                 l.chunksOfVar(fv)},
+                width,
+                row.readonly};
     }
-    /// Frame variable fv of the running body: its first chunk.
-    W4& frameVar(sir::FrameVarId fv) {
-        return (*act_.vars)[layouts_[act_.body.index()].wordOf(fv)];
+    detail::FrameValue framePlace(sir::FrameVarId fv, std::uint64_t element = 0) const {
+        return framePlace(act_.body, act_.varsId, fv, element);
+    }
+    void frameStatus(kernel::ActivationError error) const {
+        if (error == kernel::ActivationError::ResourceLimit)
+            sched_.resourceLimit();
+        else if (error != kernel::ActivationError::None)
+            sched_.fail("invalid VM frame storage access");
+    }
+    void readFrame(sir::FrameVarId fv, std::uint64_t element, std::span<W4> out) const {
+        frameStatus(framePlace(fv, element).read(out));
+    }
+    void writeFrame(sir::FrameVarId fv, std::uint64_t element, std::span<const W4> value) {
+        frameStatus(framePlace(fv, element).write(value));
+    }
+    W4 frameElem(sir::FrameVarId fv, std::uint64_t element) const {
+        W4 out{};
+        const auto& row = bodyFrame(act_.body)[fv.index()];
+        const auto width = sir::isIntegral(row.type) ? std::min(64U, row.type.width) : 64;
+        frameStatus(framePlace(fv, element).read({&out, 1}, 0, width));
+        return out;
+    }
+    W4 frameVar(sir::FrameVarId fv) const { return frameElem(fv, 0); }
+    void writeFrame(sir::FrameVarId fv, W4 value, std::uint64_t element = 0) {
+        writeFrame(fv, element, {&value, 1});
+    }
+    /// A clipped part commits only its selected range, with no synthetic
+    /// read of the previous value or per-chunk intermediate notification.
+    void writeFrameBits(detail::FrameValue place, std::uint32_t targetWidth,
+                        std::optional<std::int64_t> pos, std::span<const W4> value,
+                        std::uint32_t valueWidth, std::uint32_t parentLsb,
+                        std::uint32_t parentWidth) {
+        if (!pos) return;
+        const auto at = kernel::inside(*pos, valueWidth, targetWidth, parentLsb, parentWidth);
+        if (!at) return;
+        W4 narrow{};
+        std::vector<W4> wide;
+        W4* part = at->n <= 64 ? &narrow : (wide.resize(kernel::wide::chunks(at->n)), wide.data());
+        kernel::wide::bits(part, at->n, value.data(), valueWidth, at->skip);
+        frameStatus(place.write({part, kernel::wide::chunks(at->n)}, at->lo, at->n));
     }
 
     static bool isArrayParam(const sir::Subroutine& s, const sir::Param& p, const sir::Design& d) {
@@ -1987,10 +2029,11 @@ private:
             return out;
         }
         const Layout& l = layouts_[act_.body.index()];
-        const std::uint64_t n =
-            sir::elementCount(bodyFrame(act_.body)[o.asFrame().index()]) * l.chunks[o.id];
-        for (std::uint64_t k = 0; k < n; ++k)
-            out.push_back((*act_.vars)[l.wordOf(o.asFrame()) + k]);
+        const std::uint64_t n = sir::elementCount(bodyFrame(act_.body)[o.asFrame().index()]);
+        const auto c = l.chunksOfVar(o.asFrame());
+        out.resize(n * c);
+        for (std::uint64_t e = 0; e < n; ++e)
+            readFrame(o.asFrame(), e, {out.data() + e * c, c});
         return out;
     }
 
@@ -2020,7 +2063,7 @@ private:
     /// Copies the arguments into the callee's formals (4.9.7). A static
     /// output keeps its value.
     void bindArgs(BodyId body, const sir::Subroutine& s, const std::vector<std::vector<W4>>& args,
-                  std::vector<W4>& vars) {
+                  VarsId vars) {
         const Layout& l = layouts_[body.index()];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
@@ -2030,15 +2073,17 @@ private:
                 for (std::size_t e = 0; e * c < args[i].size(); ++e)
                     writeSlotWide(prm.slot, static_cast<std::uint32_t>(e), 0, 0, &args[i][e * c]);
             } else {
-                for (std::size_t k = 0; k < args[i].size(); ++k)
-                    vars[l.wordOf(prm.frameVar) + k] = args[i][k];
+                const auto c = l.chunksOfVar(prm.frameVar);
+                for (std::size_t e = 0; e * c < args[i].size(); ++e)
+                    frameStatus(
+                        framePlace(body, vars, prm.frameVar, e).write({args[i].data() + e * c, c}));
             }
         }
     }
 
     /// The values of the outputs and inouts at the callee's end, as chunks.
     std::vector<std::vector<W4>> readOuts(BodyId body, const sir::Subroutine& s,
-                                          const std::vector<W4>& vars) const {
+                                          VarsId vars) const {
         const Layout& l = layouts_[body.index()];
         std::vector<std::vector<W4>> outs(s.params.size());
         for (std::size_t i = 0; i < s.params.size(); ++i) {
@@ -2054,10 +2099,12 @@ private:
                 continue;
             }
             const sir::FrameVar& fv = s.frame[prm.frameVar.index()];
-            const std::uint64_t n =
-                (fv.dims.empty() ? 1 : sir::elementCount(fv)) * l.chunksOfVar(prm.frameVar);
-            for (std::uint64_t k = 0; k < n; ++k)
-                outs[i].push_back(vars[l.wordOf(prm.frameVar) + k]);
+            const std::uint64_t n = fv.dims.empty() ? 1 : sir::elementCount(fv);
+            const auto c = l.chunksOfVar(prm.frameVar);
+            outs[i].resize(n * c);
+            for (std::uint64_t e = 0; e < n; ++e)
+                frameStatus(
+                    framePlace(body, vars, prm.frameVar, e).read({outs[i].data() + e * c, c}));
         }
         return outs;
     }
@@ -2065,8 +2112,7 @@ private:
     /// Copies the outputs and inouts back to the caller's places like
     /// blocking assignments (4.9.7).
     void writeOuts(const sir::Subroutine& s, const std::vector<Operand>& ops,
-                   const std::vector<std::vector<W4>>& outs, std::vector<W4>& callerVars,
-                   BodyId callerBody) {
+                   const std::vector<std::vector<W4>>& outs, VarsId callerVars, BodyId callerBody) {
         const Layout& l = layouts_[callerBody.index()];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             if (outs[i].empty()) continue;
@@ -2082,8 +2128,10 @@ private:
                                   &outs[i][e * c]);
                 continue;
             }
-            for (std::size_t k = 0; k < outs[i].size(); ++k)
-                callerVars[l.wordOf(o.asFrame()) + k] = outs[i][k];
+            const auto fc = l.chunksOfVar(o.asFrame());
+            for (std::size_t e = 0; e * fc < outs[i].size(); ++e)
+                frameStatus(framePlace(callerBody, callerVars, o.asFrame(), e)
+                                .write({outs[i].data() + e * fc, fc}));
         }
     }
 
@@ -2112,8 +2160,17 @@ private:
     static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s.index(), std::uint64_t{e} << 1}; }
     static bool isHeapRef(W4 r) { return (r.b >> 63) != 0; }
     static bool isFrameRef(W4 r) { return !isHeapRef(r) && (r.b & 1U) != 0; }
-    W4& refWord(W4 r, std::uint64_t off) {
-        return varSets_[r.a >> 32].words[(r.a & 0xffffffffU) + off];  // frameRef's halves
+    detail::FrameValue refPlace(W4 r, std::uint64_t off, std::uint32_t width) const {
+        const auto& vars = varSets_[r.a >> 32];
+        return {{vars.words + (r.a & 0xffffffffU) + off, kernel::wide::chunks(width)}, width};
+    }
+    W4 refWord(W4 r, std::uint64_t off) const {
+        W4 value{};
+        frameStatus(refPlace(r, off, 64).read({&value, 1}));
+        return value;
+    }
+    void writeRefWord(W4 r, std::uint64_t off, W4 value) {
+        frameStatus(refPlace(r, off, 64).write({&value, 1}));
     }
     static sir::SlotId refSlot(W4 r) { return sir::SlotId{static_cast<std::uint32_t>(r.a)}; }
     static std::uint32_t refElem(W4 r) { return static_cast<std::uint32_t>(r.b >> 1); }
@@ -2389,7 +2446,7 @@ private:
             return heapStatus(f, in,
                               heap_.storeNested(refLayout(r), kernel::CellToken{r.a}, value));
         if (isFrameRef(r))
-            refWord(r, 0) = {value.bits, 0};
+            writeRefWord(r, 0, {value.bits, 0});
         else
             writeSlot(refSlot(r), refElem(r), 0, 0, {value.bits, 0});
         return true;
@@ -2915,8 +2972,7 @@ private:
         o.level = level;
         waitTriggers(o, d_.process(ops[1].asProcess()));
         const Act caller = act_;
-        enter({bodyOfProcess(ops[1].asProcess()), &o.vars, caller.base + bodyTemps(caller.body),
-               o.varsId});
+        enter({bodyOfProcess(ops[1].asProcess()), caller.base + bodyTemps(caller.body), o.varsId});
         W4 ret{0, 0};
         const Exit e = runBody(o, sir::kEntryBlock, steps, ret);
         act_ = caller;
@@ -2943,9 +2999,8 @@ private:
             return false;
         }
         const Act caller = act_;
-        std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
         const VarsId varsId = f.calls.empty() ? f.varsId : f.calls.back().varsId;
-        enter({bodyOf(g), &vars, caller.base + bodyTemps(caller.body), varsId});
+        enter({bodyOf(g), caller.base + bodyTemps(caller.body), varsId});
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         act_ = caller;
         return e == Exit::Ret;
@@ -3119,9 +3174,10 @@ private:
             m.heapReadFrame = &deps;
         }
         m.slots = deps.slots;
-        const std::vector<W4>& vars = f.calls.empty() ? f.vars : f.calls.back().vars;
+        const VarsId vars = f.calls.empty() ? f.varsId : f.calls.back().varsId;
         for (const GuardDeps::RefRead& rr : deps.refs) {
-            const W4 r = vars[layouts_[body.index()].wordOf(rr.var)];
+            W4 r{};
+            frameStatus(framePlace(body, vars, rr.var).read({&r, 1}));
             if (isHeapRef(r)) {
                 m.heap = true;
                 continue;
@@ -3318,8 +3374,8 @@ private:
         std::vector<W4> vars = newVars(body);
         // The arguments are read in the caller before anything is written.
         const std::vector<std::vector<W4>> args = readArgs(s, ops);
-        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars, body)});
-        bindArgs(body, s, args, vars);
+        enter({body, caller.base + bodyTemps(caller.body), enroll(vars, body)});
+        bindArgs(body, s, args, act_.varsId);
         W4 ret{0, 0};
         ++callDepth_;
         f.syncCalls.push_back({body, f.births, &in});
@@ -3331,16 +3387,17 @@ private:
                f.scopes.back().sync > f.syncCalls.size())
             f.scopes.pop_back();
         --callDepth_;
-        const std::vector<std::vector<W4>> outs = readOuts(body, s, vars);
-        retire(act_.varsId);
+        const std::vector<std::vector<W4>> outs = readOuts(body, s, act_.varsId);
+        const VarsId callee = act_.varsId;
         act_ = caller;
+        if (e == Exit::Ret) writeOuts(s, ops, outs, caller.varsId, caller.body);
+        retire(callee);
         if (e == Exit::Waiting) {
             fail(d_.process(f.process),
                  "task " + s.name + " waited; tasks that wait are not supported by the VM yet");
             return Exit::Error;
         }
         if (e != Exit::Ret) return e;
-        writeOuts(s, ops, outs, *act_.vars, act_.body);
         if (in.result != sir::kNone) {
             if (const std::uint32_t c = chunksOf(in.type); c > 1) {
                 W4* r = &temp(in.result);
@@ -3365,8 +3422,8 @@ private:
         const Act caller = act_;
         const BodyId body = bodyOf(s);
         std::vector<W4> vars = newVars(body);
-        bindArgs(body, sub, args, vars);
-        enter({body, &vars, caller.base + bodyTemps(caller.body), enroll(vars, body)});
+        enter({body, caller.base + bodyTemps(caller.body), enroll(vars, body)});
+        bindArgs(body, sub, args, act_.varsId);
         W4 ret{0, 0};
         ++callDepth_;
         f.syncCalls.push_back({body, f.births});
@@ -3582,17 +3639,13 @@ private:
                 return true;
             }
             case Op::Fload: {
-                const W4* src = &frameVar(ops[0].asFrame());
-                for (std::size_t k = 0; k < r.size(); ++k)
-                    r[k] = src[k];
+                readFrame(ops[0].asFrame(), 0, r);
                 setWide(in, r);
                 return true;
             }
             case Op::Fstore: {
                 const std::vector<W4> x = get(1);
-                W4* dst = &frameVar(ops[0].asFrame());
-                for (std::size_t k = 0; k < x.size(); ++k)
-                    dst[k] = x[k];
+                writeFrame(ops[0].asFrame(), 0, x);
                 return true;
             }
             case Op::LoadElem: {
@@ -3605,9 +3658,7 @@ private:
                 if (!e) {
                     fillDefault(r.data(), rt);  // VALUE_SEMANTICS.md 3.11
                 } else if (frame) {
-                    const W4* src = &frameElem(ops[0].asFrame(), *e);
-                    for (std::size_t k = 0; k < r.size(); ++k)
-                        r[k] = src[k];
+                    readFrame(ops[0].asFrame(), *e, r);
                 } else {
                     readSlotWide(ops[0].asSlot(), *e, 0, 0, r.data());
                 }
@@ -3626,9 +3677,7 @@ private:
                 if (!e) return true;  // an invalid index writes nothing
                 const std::vector<W4> x = get(dims.size() + 1);
                 if (frame) {
-                    W4* dst = &frameElem(ops[0].asFrame(), *e);
-                    for (std::size_t k = 0; k < x.size(); ++k)
-                        dst[k] = x[k];
+                    writeFrame(ops[0].asFrame(), *e, x);
                 } else if (in.op == Op::StoreElem) {
                     writeSlotWide(ops[0].asSlot(), *e, 0, 0, x.data());
                 } else {
@@ -3665,9 +3714,7 @@ private:
                 std::vector<W4> part(kw::chunks(at->n));
                 kw::bits(part.data(), at->n, x.data(), vw, at->skip);
                 if (frame) {
-                    W4* cell = dims.empty() ? &frameVar(ops[0].asFrame())
-                                            : &frameElem(ops[0].asFrame(), e);
-                    kw::put(cell, at->lo, part.data(), at->n);
+                    frameStatus(framePlace(ops[0].asFrame(), e).write(part, at->lo, at->n));
                 } else if (in.op == Op::StoreBits) {
                     writeSlotWide(ops[0].asSlot(), e, at->lo, at->n, part.data());
                 } else {
@@ -3915,8 +3962,7 @@ private:
             if (load) {
                 W4* out = &temp(in.result);
                 if (isFrameRef(r)) {
-                    for (std::uint32_t j = 0; j < c; ++j)
-                        out[j] = refWord(r, k + j);
+                    frameStatus(refPlace(r, k, vt.width).read({out, c}));
                 } else {
                     readSlotWide(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0,
                                  0, out);
@@ -3929,8 +3975,7 @@ private:
                     fail(p, "nonblocking assignment to an automatic variable through a ref");
                     return true;
                 }
-                for (std::uint32_t j = 0; j < c; ++j)
-                    refWord(r, k + j) = x[j];
+                frameStatus(refPlace(r, k, vt.width).write(x));
             } else if (in.op == Op::StoreRef) {
                 writeSlotWide(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0, 0,
                               x.data());
@@ -3959,8 +4004,7 @@ private:
         if (in.op == Op::LoadRefElem) {
             W4* out = &temp(in.result);
             if (isFrameRef(r)) {
-                for (std::uint32_t j = 0; j < c; ++j)
-                    out[j] = refWord(r, std::uint64_t{e} * c + j);
+                frameStatus(refPlace(r, std::uint64_t{e} * c, fv.target.width).read({out, c}));
             } else {
                 readSlotWide(refSlot(r), refElem(r) + e, 0, 0, out);
             }
@@ -3969,8 +4013,7 @@ private:
         if (in.op == Op::StoreRefElem) {
             const std::vector<W4> x = chunks(ops[n + 1]);
             if (isFrameRef(r)) {
-                for (std::uint32_t j = 0; j < c; ++j)
-                    refWord(r, std::uint64_t{e} * c + j) = x[j];
+                frameStatus(refPlace(r, std::uint64_t{e} * c, fv.target.width).write(x));
             } else {
                 writeSlotWide(refSlot(r), refElem(r) + e, 0, 0, x.data());
             }
@@ -3988,7 +4031,8 @@ private:
         std::vector<W4> part(kw::chunks(at->n));
         kw::bits(part.data(), at->n, x.data(), vw, at->skip);
         if (isFrameRef(r))
-            kw::put(&refWord(r, std::uint64_t{e} * c), at->lo, part.data(), at->n);
+            frameStatus(
+                refPlace(r, std::uint64_t{e} * c, fv.target.width).write(part, at->lo, at->n));
         else
             writeSlotWide(refSlot(r), refElem(r) + e, at->lo, at->n, part.data());
         return true;
@@ -4363,7 +4407,7 @@ private:
                 if (!e) return true;  // an invalid index writes nothing
                 const std::size_t valueAt = ops.size() - (delayedTarget ? 2 : 1);
                 if (frame)
-                    frameElem(ops[0].asFrame(), *e) = v(valueAt);
+                    writeFrame(ops[0].asFrame(), v(valueAt), *e);
                 else if (in.op == Op::StoreElem)
                     writeSlot(ops[0].asSlot(), *e, 0, 0, v(valueAt));
                 else
@@ -4386,12 +4430,11 @@ private:
                 }
                 const std::size_t n = dims.size();
                 if (frame) {
-                    W4& cell =
-                        dims.empty() ? frameVar(ops[0].asFrame()) : frameElem(ops[0].asFrame(), e);
-                    if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
-                        cell = kernel::writeBits4(
-                            cell, bodyFrame(act_.body)[ops[0].asFrame().index()].type.width, *pos,
-                            v(n + 2), t(n + 2).width, ops[0].lsb, ops[0].width);
+                    const W4 x = v(n + 2);
+                    writeFrameBits(framePlace(ops[0].asFrame(), e),
+                                   bodyFrame(act_.body)[ops[0].asFrame().index()].type.width,
+                                   indexOf(ops[n + 1]), {&x, 1}, t(n + 2).width, ops[0].lsb,
+                                   ops[0].width);
                     return true;
                 }
                 storeBits(f, ops[0].asSlot(), e, indexOf(ops[n + 1]), v(n + 2), t(n + 2).width,
@@ -4519,7 +4562,7 @@ private:
                         fail(p, "nonblocking assignment to an automatic variable through a ref");
                         return false;
                     }
-                    refWord(r, k) = x;
+                    writeRefWord(r, k, x);
                 } else if (in.op == Op::StoreRef) {
                     writeSlot(leafSlot(refSlot(r), static_cast<std::uint32_t>(k)), refElem(r), 0, 0,
                               x);
@@ -4552,14 +4595,14 @@ private:
                     set(isFrameRef(r) ? refWord(r, e) : readSlot(refSlot(r), refElem(r) + e, 0, 0));
                 } else if (in.op == Op::StoreRefElem) {
                     if (isFrameRef(r))
-                        refWord(r, e) = v(n + 1);
+                        writeRefWord(r, e, v(n + 1));
                     else
                         writeSlot(refSlot(r), refElem(r) + e, 0, 0, v(n + 1));
                 } else if (isFrameRef(r)) {
-                    W4& cell = refWord(r, e);
-                    if (const std::optional<std::int64_t> pos = indexOf(ops[n + 1]))
-                        cell = kernel::writeBits4(cell, fv.target.width, *pos, v(n + 2),
-                                                  t(n + 2).width, ops[0].lsb, ops[0].width);
+                    const W4 x = v(n + 2);
+                    writeFrameBits(refPlace(r, e, fv.target.width), fv.target.width,
+                                   indexOf(ops[n + 1]), {&x, 1}, t(n + 2).width, ops[0].lsb,
+                                   ops[0].width);
                 } else {
                     storeBits(f, refSlot(r), refElem(r) + e, indexOf(ops[n + 1]), v(n + 2),
                               t(n + 2).width, false, 0, ops[0].lsb, ops[0].width);
@@ -4607,7 +4650,7 @@ private:
                 return true;
             }
             case Op::Fload: set(frameVar(ops[0].asFrame())); return true;
-            case Op::Fstore: frameVar(ops[0].asFrame()) = v(1); return true;
+            case Op::Fstore: writeFrame(ops[0].asFrame(), v(1)); return true;
             case Op::Add: set(kernel::add4(v(0), v(1), w)); return true;
             case Op::Sub: set(kernel::sub4(v(0), v(1), w)); return true;
             case Op::Mul: set(kernel::mul4(v(0), v(1), w)); return true;
@@ -4772,6 +4815,27 @@ private:
             kernel::wide::to2(out, r.data(), t.width);
         else
             std::copy(r.begin(), r.end(), out);
+    }
+    void scanFrame(const kernel::ScanValue& value, const Operand& target) {
+        const sir::Type t = typeOf(target);
+        W4 narrow{};
+        std::vector<W4> wide;
+        const auto c = chunksOf(t);
+        W4* out = c == 1 ? &narrow : (wide.resize(c), wide.data());
+        scanned(value, t, out);
+        writeFrame(target.asFrame(), 0, {out, c});
+    }
+    void writeFrameText(sir::FrameVarId target, sir::Type type, std::string_view text) {
+        if (type.kind == sir::TypeKind::String) {
+            writeFrame(target, {strings_.intern(text), 0});
+            return;
+        }
+        W4 narrow{};
+        std::vector<W4> wide;
+        const auto count = chunksOf(type);
+        W4* value = count == 1 ? &narrow : (wide.resize(count), wide.data());
+        kernel::wide::fromText(value, type.width, text);
+        writeFrame(target, 0, {value, count});
     }
     W4 scannedWord(const kernel::ScanValue& v, sir::Type t) {
         if (t.kind == sir::TypeKind::String)
@@ -5379,10 +5443,10 @@ private:
                     readSlotWide(m.asSlot(), e, 0, 0, v.data());
                 else if (ref && !isFrameRef(reference))
                     readSlotWide(refSlot(reference), refElem(reference) + e, 0, 0, v.data());
+                else if (ref)
+                    frameStatus(refPlace(reference, std::uint64_t{e} * c, et.width).read(v));
                 else
-                    for (std::uint32_t k = 0; k < c; ++k)
-                        v[k] = ref ? refWord(reference, std::uint64_t{e} * c + k)
-                                   : (&frameElem(m.asFrame(), e))[k];
+                    readFrame(m.asFrame(), e, v);
                 words = packed(v.data(), c, sir::isFourState(et));
                 text +=
                     kernel::formatInt({words.data(), et.width, sir::isFourState(et), false}, spec);
@@ -5417,10 +5481,11 @@ private:
             else if (ref && !isFrameRef(reference))
                 writeSlotWide(refSlot(reference), refElem(reference) + w.elem, 0, 0,
                               w.value.data());
+            else if (ref)
+                frameStatus(
+                    refPlace(reference, std::uint64_t{w.elem} * c, et.width).write(w.value));
             else
-                for (std::uint32_t k = 0; k < c; ++k)
-                    (ref ? refWord(reference, std::uint64_t{w.elem} * c + k)
-                         : (&frameElem(m.asFrame(), w.elem))[k]) = w.value[k];
+                writeFrame(m.asFrame(), w.elem, w.value);
         }
         if (!l.range.empty()) warnOnce(in, std::string(task) + ": " + l.range);
         if (!l.count.empty()) warnOnce(in, std::string(task) + ": " + l.count);
@@ -5645,10 +5710,7 @@ private:
                     files_.readLine(value(ops[2]), text ? 0 : t.width / 8, line, notOpen);
                 if (notOpen) warnOnce(in, "$fgets: " + notReadableText(value(ops[2])));
                 if (!line.empty()) {
-                    if (text)
-                        frameVar(ops[1].asFrame()) = {strings_.intern(line), 0};
-                    else
-                        kernel::wide::fromText(&frameVar(ops[1].asFrame()), t.width, line);
+                    writeFrameText(ops[1].asFrame(), t, line);
                 }
                 temp(in.result) = {line.size(), 0};
                 return true;
@@ -5690,7 +5752,7 @@ private:
                     files_.scan(value(ops[1]), plan.format, scanValues_, notOpen, scanWidths(in));
                 if (notOpen) warnOnce(in, "$fscanf: " + notReadableText(value(ops[1])));
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
-                    scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].asFrame()));
+                    scanFrame(scanValues_[i], ops[3 + i]);
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};
                 return true;
             }
@@ -5705,12 +5767,19 @@ private:
                 bool notOpen = false;
                 files_.readBytes(value(ops[2]), nbytes, bytes, notOpen);
                 if (notOpen) warnOnce(in, "$fread: " + notReadableText(value(ops[2])));
-                W4* v = &frameVar(ops[1].asFrame());
-                for (std::size_t k = 0; k < bytes.size(); ++k) {
-                    const W4 byte{static_cast<unsigned char>(bytes[k]), 0};
-                    const auto low = static_cast<unsigned>((nbytes - 1 - k) * 8);
-                    if (low < t.width)
-                        kernel::wide::put(v, low, &byte, std::min(8U, t.width - low));
+                if (!bytes.empty()) {
+                    const auto lsb = static_cast<unsigned>((nbytes - bytes.size()) * 8);
+                    const auto width = t.width - lsb;
+                    W4 narrow{};
+                    std::vector<W4> wide;
+                    const auto count = kernel::wide::chunks(width);
+                    W4* data = count == 1 ? &narrow : (wide.resize(count), wide.data());
+                    for (std::size_t k = 0; k < bytes.size(); ++k) {
+                        const W4 byte{static_cast<unsigned char>(bytes[k]), 0};
+                        const auto low = static_cast<unsigned>((bytes.size() - 1 - k) * 8);
+                        kernel::wide::put(data, low, &byte, std::min(8U, width - low));
+                    }
+                    frameStatus(framePlace(ops[1].asFrame()).write({data, count}, lsb, width));
                 }
                 temp(in.result) = {bytes.size(), 0};
                 return true;
@@ -5756,10 +5825,7 @@ private:
                 std::string text;
                 const int e = files_.error(value(ops[1]), text);
                 const sir::Type t = typeOf(ops[2]);
-                if (t.kind == sir::TypeKind::String)
-                    frameVar(ops[2].asFrame()) = {strings_.intern(text), 0};
-                else
-                    kernel::wide::fromText(&frameVar(ops[2].asFrame()), t.width, text);
+                writeFrameText(ops[2].asFrame(), t, text);
                 temp(in.result) = {static_cast<std::uint32_t>(e), 0};
                 return true;
             }
@@ -5802,7 +5868,7 @@ private:
                                           : "the mean") +
                                      " is 0 or less; the result is 0");
                 if (own)
-                    frameVar(ops[1].asFrame()) = {static_cast<std::uint32_t>(local), 0};
+                    writeFrame(ops[1].asFrame(), {static_cast<std::uint32_t>(local), 0});
                 else
                     randomSeed_ = local;
                 temp(in.result) = {static_cast<std::uint32_t>(r.value), 0};
@@ -5883,7 +5949,7 @@ private:
                 scanValues_.clear();
                 n = kernel::scanString(input, plan.format, scanValues_, scanWidths(in));
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
-                    scanned(scanValues_[i], typeOf(ops[3 + i]), &frameVar(ops[3 + i].asFrame()));
+                    scanFrame(scanValues_[i], ops[3 + i]);
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};
                 return true;
             }
@@ -5910,7 +5976,7 @@ private:
                     if (!std::string_view(a).starts_with(plan.prefix)) continue;
                     const kernel::ScanValue v =
                         kernel::plusargValue(a.substr(plan.prefix.size()), plan.conv);
-                    scanned(v, typeOf(ops[2]), &frameVar(ops[2].asFrame()));
+                    scanFrame(v, ops[2]);
                     temp(in.result) = {1, 0};
                     break;
                 }

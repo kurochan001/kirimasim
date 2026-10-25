@@ -13,6 +13,12 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-25)
 
+**VM frame transport:** the [access-path migration](automatic-vm-frame-access.md)
+removes mutable word references from instruction, ref, file/scan and argument
+operations. Seven original tests include 270 selection cases and 24 complete
+SIR executions. Scoped bindings are tested directly; SIR environment construction
+and source capture remain gated, with no Icarus gap counted as closed.
+
 **Final automatic-SIR check:** `56a10e05` passes [all 21 checks](../measurements/2026-10-25/activation-sir-final-validation.json).
 Dev/ASan/UBSan pass 4,585/4,587 and release 4,586/4,588, zero failures and two
 known skips. All nine compiled verifier controls are detected. This is SIR
