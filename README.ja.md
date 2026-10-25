@@ -361,22 +361,37 @@ TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で�
 #### Linux で、開発版の最新と Lyra
 
 2026-10-25 に WSL2（AMD Ryzen 9 7950X）で、各ツールを開発中の最新のコミットにして別に測りました。
-kirimasim `8a8607690aa6`、Icarus Verilog 14.0 devel `2b8d42dc088f`、Verilator 5.053 devel `1838b6ed035c`、
-Lyra `63922502ff0a`（`bazel build -c opt`）です。機械もツールの版も上の表と違うので、2 つの表を列どうしで
-比べません。
+kirimasim `b66834254c65`、Icarus Verilog 14.0 devel `2b8d42dc088f`、Verilator 5.053 devel `1838b6ed035c`、
+Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、別の仕組みを測る 7 つを足した 11 個です。
+機械もツールの版も上の表と違うので、2 つの表を列どうしで比べません。
 
 | 設計 | `+n=` | kirimasim | Icarus Verilog 14.0 devel | Verilator 5.053 devel | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
 | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.288 s | 9.838 s | 0.218 s | 31.399 s | 2.821 s |
-| `nba_shift` | 1,000,000 | 22.459 s | 25.899 s | 0.195 s | 139.227 s | 5.706 s |
-| `proc_wait` | 1,000,000 | 6.313 s | 5.571 s | 2.190 s | 72.489 s | 5.990 s |
-| `fork_join` | 4,000,000 | 4.162 s | 4.973 s | 1.177 s | 15.492 s | 4.776 s |
+| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 31.915 s | 2.878 s |
+| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 140.711 s | 5.900 s |
+| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 73.445 s | 6.164 s |
+| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 15.826 s | 4.860 s |
+| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 6.236 s | 0.380 s |
+| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 23.079 s | 2.705 s |
+| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 7.887 s | 0.395 s |
+| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 18.770 s | 0.279 s |
+| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 16.275 s | 0.412 s |
+| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | 未対応 | 未対応 |
+| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 22.159 s | 0.466 s |
 
-- 方法、設計、回数、期待する結果は上と同じで、測った本来の回数の実行はすべて期待する結果を出しました。
+- 新しい 7 つの設計：`wide_arith` は 256 ビットの値の演算（加算、128 ビットの積、シフト、比較）、
+  `mem_rw` は 1024 語のメモリーをクロックごとに番地を変えて読み書き、`func_call` は `inout` と `output` の
+  引数を持つタスクと 4 段再帰する関数の呼び出し、`string_fmt` は `$sformatf` で書式を作り文字をハッシュ、
+  `dyn_queue` は動的配列のまわりでキューに入れて取り出し、`gate_udp` は 32 個の xor ゲートと組み合わせ回路の
+  UDP 32 個、`casez_struct` は `casez` で packed 構造体へ振り分けます。
+- 方法と確かめ方は上と同じで、測った本来の回数の実行はすべて期待する結果を出しました。Lyra はゲートと
+  UDP にまだ対応していないので、`gate_udp` のプログラムを作れません。
 - Lyra の既定の backend は C++ backend で、LLVM backend は別の列にしました。どちらも Lyra の既定の
   `-O 0` で、設計ごとに空のキャッシュへビルドしました。
-- ここでは kirimasim は、Icarus Verilog より 3 つの設計で約 1.15〜1.19 倍速く、`proc_wait` では約 1.13 倍
-  遅くなりました。ビルドの時間、起動、サンプリングした Linux の RSS と再実行コマンドは
+- ここでは kirimasim は、Icarus Verilog より `proc_wait`、`wide_arith`（2.4 倍）、`mem_rw`、`gate_udp` で遅く、
+  `func_call`、`string_fmt`、`dyn_queue` ではっきり速く、残りの 4 つは差が 6% ほどの範囲でした。
+  `dyn_queue` では、kirimasim の最大メモリーが回数とともに増えます（4,000,000 回で 547 MiB）。
+  ビルドの時間、起動、サンプリングした Linux の RSS と再実行コマンドは
   [測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2で開発版の最新2026-10-25)にあります。
 
 ### できること

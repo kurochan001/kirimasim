@@ -454,27 +454,46 @@ produced the expected result.
 #### On Linux, development versions, with Lyra
 
 Measured separately on 2026-10-25 under WSL2 (AMD Ryzen 9 7950X), with each
-tool at its newest development commit: kirimasim `8a8607690aa6`, Icarus
+tool at its newest development commit: kirimasim `b66834254c65`, Icarus
 Verilog 14.0 devel `2b8d42dc088f`, Verilator 5.053 devel `1838b6ed035c` and
-Lyra `63922502ff0a` (`bazel build -c opt`). The machine and the tool versions
-differ from the table above, so the two tables are not compared column by
-column.
+Lyra `63922502ff0a` (`bazel build -c opt`), on eleven designs: the four above
+and seven more for other mechanisms. The machine and the tool versions differ
+from the table above, so the two tables are not compared column by column.
 
 | Design | `+n=` | kirimasim | Icarus Verilog 14.0 devel | Verilator 5.053 devel | Lyra (C++ backend, default) | Lyra (LLVM backend) |
 | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.288 s | 9.838 s | 0.218 s | 31.399 s | 2.821 s |
-| `nba_shift` | 1,000,000 | 22.459 s | 25.899 s | 0.195 s | 139.227 s | 5.706 s |
-| `proc_wait` | 1,000,000 | 6.313 s | 5.571 s | 2.190 s | 72.489 s | 5.990 s |
-| `fork_join` | 4,000,000 | 4.162 s | 4.973 s | 1.177 s | 15.492 s | 4.776 s |
+| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 31.915 s | 2.878 s |
+| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 140.711 s | 5.900 s |
+| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 73.445 s | 6.164 s |
+| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 15.826 s | 4.860 s |
+| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 6.236 s | 0.380 s |
+| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 23.079 s | 2.705 s |
+| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 7.887 s | 0.395 s |
+| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 18.770 s | 0.279 s |
+| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 16.275 s | 0.412 s |
+| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | not supported | not supported |
+| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 22.159 s | 0.466 s |
 
-- Same method, designs, counts and expected results as above; every
-  measured large run produced the expected result.
+- The seven new designs: `wide_arith` mixes 256-bit values (additions, a
+  128-bit product, shifts, compares); `mem_rw` writes and reads a 1024-word
+  memory at moving addresses on every clock edge; `func_call` calls a task
+  with `inout` and `output` arguments and a function that recurses four deep;
+  `string_fmt` formats with `$sformatf` and hashes the characters;
+  `dyn_queue` feeds and drains a queue around a dynamic array; `gate_udp`
+  drives 32 xor gates and 32 instances of a combinational UDP; and
+  `casez_struct` decodes with `casez` into a packed struct.
+- Same method and checks as above; every measured large run produced the
+  expected result. Lyra does not support gates or UDPs yet, so it builds no
+  program for `gate_udp`.
 - Lyra's default backend is its C++ backend; its LLVM backend is a column of
   its own. Both run at Lyra's default `-O 0`, each design built into an empty
   cache.
-- Here kirimasim was about 1.15–1.19 times faster than Icarus Verilog on three
-  designs and about 1.13 times slower on `proc_wait`. Build times, startup,
-  sampled Linux RSS and reproduction commands are in the
+- Here kirimasim was slower than Icarus Verilog on `proc_wait`, `wide_arith`
+  (2.4 times), `mem_rw` and `gate_udp`; clearly faster on `func_call`,
+  `string_fmt` and `dyn_queue`; and within about 6% on the other four. On
+  `dyn_queue`, its peak memory grows with the count (547 MiB at 4,000,000).
+  Build times,
+  startup, sampled Linux RSS and reproduction commands are in the
   [measurement details](docs/BENCHMARKS.md#development-versions-on-linux-wsl2-2026-10-25).
 
 ### What works

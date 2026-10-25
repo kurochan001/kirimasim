@@ -4,8 +4,8 @@
 
 This record contains two separate tier 1 measurements: macOS on 2026-10-23
 at `dec94ff21979`, and [Linux (WSL2) on 2026-10-25](#development-versions-on-linux-wsl2-2026-10-25)
-at `8a8607690aa6`, with the newest development versions of Icarus Verilog,
-Verilator and Lyra. It supports the
+at `b66834254c65`, on eleven designs with the newest development versions of
+Icarus Verilog, Verilator and Lyra. It supports the
 [README summary](../README.md) without changing performance acceptance criteria.
 
 The execution-control options in [P1 features](P1_FEATURES.md), container
@@ -94,12 +94,13 @@ maximum over all samples.
 
 ## Development versions on Linux (WSL2), 2026-10-25
 
-Measured on 2026-10-25, 08:09–08:41 UTC, with the same four designs, counts
-and expected results, by [tools/bench.py](../tools/bench.py), each tool at
-its newest development commit of that day. It is a separate measurement from
-the macOS one above: another machine, and other tool versions.
+Measured on 2026-10-25, 10:55–11:42 UTC, on eleven designs: the four above
+and seven written for other mechanisms, with the same method, by
+[tools/bench.py](../tools/bench.py), each tool at its newest development
+commit of that day. It is a separate measurement from the macOS one above:
+another machine, and other tool versions.
 
-- kirimasim 0.0.0, commit `8a8607690aa6` (main), release build
+- kirimasim 0.0.0, commit `b66834254c65` (main), release build
   (`-O3 -DNDEBUG`), clang 20.1.8.
 - Icarus Verilog 14.0 devel, `2b8d42dc088f` (master), built with the steps of
   `tools/build_icarus.sh`.
@@ -115,45 +116,79 @@ the macOS one above: another machine, and other tool versions.
 - AMD Ryzen 9 7950X (32 logical CPUs under WSL2), 110 GiB, Ubuntu 24.04.4 LTS
   on WSL2, kernel 6.18.33.1, glibc 2.39. The runs started once the 1-minute
   load average had stayed under 1.2 with no other build or test running;
-  0.33–1.21 during them. The benchmark runs were sequential; these load
+  0.22–1.15 during them. The benchmark runs were sequential; these load
   observations do not establish the absence of background work.
 
-Seconds (large-run median less the `+n=1` median). All 100 large runs had
-exit status 0 and the expected line, and every `+n=1` run printed `n=1`.
+The seven new designs, under [bench/](../bench/), each print one checksum
+line that kirimasim, Icarus Verilog and Verilator printed alike at its count
+when it was added; none depends on X or Z, so two-state Verilator agrees:
+
+| Design | What it does | `+n=` |
+| --- | --- | --- |
+| `wide_arith` | 256-bit additions, a 128-bit product, shifts and compares in one loop | 1,500,000 |
+| `mem_rw` | A 1024-word memory written and read at moving addresses on every clock edge | 4,000,000 |
+| `func_call` | A task with `inout` and `output` arguments calling a function that recurses four deep | 1,500,000 |
+| `string_fmt` | `$sformatf`, `substr`, concatenation and a hash of every character | 500,000 |
+| `dyn_queue` | A queue fed and drained around a dynamic array | 4,000,000 |
+| `gate_udp` | 32 xor gates and 32 instances of a combinational UDP | 400,000 |
+| `casez_struct` | `casez` decoding into a packed struct and a register file | 5,000,000 |
+
+Seconds (large-run median less the `+n=1` median). All 265 large runs that
+were built had exit status 0 and the expected line, and every `+n=1` run
+printed `n=1`. Lyra does not support gates or UDPs yet, so it built no
+program for `gate_udp`.
 
 | Design | `+n=` | kirimasim | Icarus Verilog | Verilator | Lyra (C++ backend, default) | Lyra (LLVM backend) |
 | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.288 s | 9.838 s | 0.218 s | 31.399 s | 2.821 s |
-| `nba_shift` | 1,000,000 | 22.459 s | 25.899 s | 0.195 s | 139.227 s | 5.706 s |
-| `proc_wait` | 1,000,000 | 6.313 s | 5.571 s | 2.190 s | 72.489 s | 5.990 s |
-| `fork_join` | 4,000,000 | 4.162 s | 4.973 s | 1.177 s | 15.492 s | 4.776 s |
+| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 31.915 s | 2.878 s |
+| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 140.711 s | 5.900 s |
+| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 73.445 s | 6.164 s |
+| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 15.826 s | 4.860 s |
+| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 6.236 s | 0.380 s |
+| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 23.079 s | 2.705 s |
+| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 7.887 s | 0.395 s |
+| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 18.770 s | 0.279 s |
+| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 16.275 s | 0.412 s |
+| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | not supported | not supported |
+| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 22.159 s | 0.466 s |
 
-- The spread of the five large runs was 0.4–7.6% of their median, but 10.5%
-  for kirimasim and 15.5% for Lyra's LLVM backend on `nba_shift`.
-- Here kirimasim was about 1.15–1.19 times faster than Icarus Verilog on three
-  designs and about 1.13 times slower on `proc_wait`. Verilator was about
-  2.9–115 times faster than kirimasim. Lyra's default backend was about
-  3.7–11.5 times slower than kirimasim; its LLVM backend was about 2.9 times
-  faster on `comb_chain`, about 3.9 times on `nba_shift` (where both spreads
-  are wide) and about 1.05 times on `proc_wait`, and about 1.15 times slower
-  on `fork_join`.
-- `+n=1` runs took 2–6 ms for every tool. Builds, timed apart: Icarus
-  0.004–0.025 s; Verilator 0.32–0.37 s with a warm ccache, and 2.82–3.01 s
-  once each with ccache turned off; Lyra 5.9–6.4 s (default) and 0.45–0.51 s
-  (LLVM backend) into an empty cache.
+- The spread of the five large runs was at most 7.8% of their median, but
+  14.7% for Verilator on `comb_chain`.
+- kirimasim was slower than Icarus Verilog on `proc_wait` (1.19 times),
+  `wide_arith` (2.4 times), `mem_rw` (1.35 times) and `gate_udp` (1.53
+  times); faster on `func_call` (1.53 times), `string_fmt` (1.61 times) and
+  `dyn_queue` (1.63 times); and within about 6% on the other four. Verilator
+  was faster than kirimasim on every design. Lyra's default backend was
+  slower than kirimasim on every design it built; its LLVM backend was faster
+  on all of them but `fork_join`, where the two were within 1%.
+- kirimasim at `b66834254c65` was slower than at `8a8607690aa6`, measured the
+  same morning (`comb_chain` 9.249 s against 8.288 s), while Icarus Verilog
+  and Verilator kept their times. Run alternately three times each, the later
+  commit took 1.08 times as long on `comb_chain` and `proc_wait` and 1.14
+  times on `fork_join`. A bisection on `fork_join` puts the change at
+  `b17234e420b6` (4.26 s at its parent, 4.96 s with it).
+- On `dyn_queue`, kirimasim's peak memory grows with the count: GNU time gave
+  44 MiB at 100,000, 164 MiB at 1,000,000 and 541 MiB at 4,000,000, about
+  130 bytes per iteration, while the queue never holds more than 33 elements.
+  Why is not confirmed.
+- `+n=1` runs took 1–6 ms for every tool. Builds, timed apart: Icarus
+  0.005–0.024 s; Verilator 0.34–1.06 s with ccache; Lyra 5.4–6.3 s (default)
+  and 0.44–0.50 s (LLVM backend) into an empty cache.
 - Sampled RSS high-water values (median of the five large runs, MiB):
-  kirimasim 21.5–25.4, Icarus 7.8–8.4, Verilator 3.8–4.0, Lyra 4.5–4.9
-  (default) and 5.1–5.8 (LLVM). On Linux, tools/bench.py samples each
-  program's `VmHWM` every 10 ms. A peak near process exit can fall after the
-  last sample, so these are observed high-water values, not guaranteed final
-  peak RSS. `ru_maxrss` of a child also counts the Python process it was
-  started from, so earlier Linux numbers, including the nightly job's
-  before the sampling, cannot be below about 19 MiB. The sampling breaks
-  direct comparison with that earlier Linux RSS history; macOS still uses
-  `ru_maxrss`.
-- The tool versions and kirimasim's commit differ from the 2026-10-24 Linux
-  run, so its numbers are not a change of any one tool.
-- Raw data: [bench.json](measurements/2026-10-25-wsl2/bench.json).
+  kirimasim 21.6–25.3 and 547.5 on `dyn_queue`, Icarus 7.7–8.2, Verilator
+  1.4–3.9, Lyra 4.3–4.8 (default) and 5.2–5.7 (LLVM). On Linux,
+  tools/bench.py samples each program's `VmHWM` every 10 ms. A peak near
+  process exit can fall after the last sample, so these are observed
+  high-water values, not guaranteed final peak RSS; Verilator's 1.4 MiB on
+  `func_call`, a run of a few milliseconds, is such a sample. `ru_maxrss` of a
+  child also counts the Python process it was started from, so earlier Linux
+  numbers, including the nightly job's before the sampling, cannot be below
+  about 19 MiB. The sampling breaks direct comparison with that earlier Linux
+  RSS history; macOS still uses `ru_maxrss`.
+- An earlier run the same morning, on the four first designs with kirimasim
+  `8a8607690aa6`, is kept as raw data in
+  [measurements/2026-10-25-wsl2/bench.json](measurements/2026-10-25-wsl2/bench.json).
+- Raw data: [bench.json](measurements/2026-10-25-wsl2-designs/bench.json).
 
 ### Reproducing the Linux comparison
 
@@ -234,11 +269,14 @@ build plus run may differ from the total by 0.01 s.
 
 ## Raw data and reproduction
 
-- [Linux bench.json](measurements/2026-10-25-wsl2/bench.json): the five tool/backend
-  columns of 2026-10-25, every run and the build commands. Reproduction is
-  described in the Linux section above. The earlier Linux run of 2026-10-24,
-  with older tool versions, is kept in
-  [measurements/2026-10-24-wsl2/bench.json](measurements/2026-10-24-wsl2/bench.json).
+- [Linux bench.json](measurements/2026-10-25-wsl2-designs/bench.json): the eleven
+  designs and five tool/backend columns of 2026-10-25, every run and the build
+  commands. Reproduction is described in the Linux section above. The earlier
+  Linux runs, of the four first designs, are kept in
+  [measurements/2026-10-25-wsl2/bench.json](measurements/2026-10-25-wsl2/bench.json)
+  (the same morning, kirimasim `8a8607690aa6`) and
+  [measurements/2026-10-24-wsl2/bench.json](measurements/2026-10-24-wsl2/bench.json)
+  (older tool versions).
 - [bench.json](measurements/2026-10-23/bench.json): all five timing samples,
   medians, RSS, versions, load, options and SHA-256 hashes of the designs,
   script and kirimasim binary.

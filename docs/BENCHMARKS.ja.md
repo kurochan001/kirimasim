@@ -3,8 +3,8 @@
 [English](BENCHMARKS.md) · 英語版が主で、日本語版はそれに従います。
 
 第 1 層について、2026-10-23 の macOS（`dec94ff21979`）と、Icarus Verilog・Verilator・Lyra を
-開発中の最新の版にした [2026-10-25 の Linux（WSL2）](#linuxwsl2で開発版の最新2026-10-25)
-（`8a8607690aa6`）という、別々の測定を記録しています。
+開発中の最新の版にして 11 個の設計で測った [2026-10-25 の Linux（WSL2）](#linuxwsl2で開発版の最新2026-10-25)
+（`b66834254c65`）という、別々の測定を記録しています。
 [README の要約](../README.ja.md)に対応します。性能の合否基準を変更する文書ではありません。
 
 [P1 の使用例](P1_FEATURES.ja.md)にある実行制御オプション、コンテナの統合、
@@ -86,11 +86,11 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
 
 ## Linux（WSL2）で開発版の最新（2026-10-25）
 
-2026-10-25 の 08:09〜08:41 UTC に、同じ 4 つの設計・回数・期待する結果で、各ツールをその日の開発中の
-最新のコミットにして、[tools/bench.py](../tools/bench.py) で測りました。上の macOS の測定とは別の測定で、
-機械も、ツールの版も違います。
+2026-10-25 の 10:55〜11:42 UTC に、上の 4 つの設計と、別の仕組みを測るために書いた 7 つの設計の、
+合わせて 11 個を、同じ方法で、各ツールをその日の開発中の最新のコミットにして、
+[tools/bench.py](../tools/bench.py) で測りました。上の macOS の測定とは別の測定で、機械も、ツールの版も違います。
 
-- kirimasim 0.0.0、コミット `8a8607690aa6`（main）、release ビルド（`-O3 -DNDEBUG`）、clang 20.1.8。
+- kirimasim 0.0.0、コミット `b66834254c65`（main）、release ビルド（`-O3 -DNDEBUG`）、clang 20.1.8。
 - Icarus Verilog 14.0 devel、`2b8d42dc088f`（master）。`tools/build_icarus.sh` と同じ手順でビルドしました。
 - Verilator 5.053 devel、`1838b6ed035c`（master）。configure の既定でビルドしました。生成した C++ は
   `ccache g++ -Os`（g++ 15.2.0）でコンパイルし、mold でリンクしています。
@@ -100,37 +100,67 @@ kirimasim 本体のクリーンビルド時間は今回測定していません�
   設計ごとに空のキャッシュへ 1 回ビルドしました。設計は clang 20.1.8 でコンパイルされます。
 - AMD Ryzen 9 7950X（WSL2 から 32 論理 CPU）、110 GiB、Ubuntu 24.04.4 LTS on WSL2、kernel 6.18.33.1、
   glibc 2.39。1 分の負荷平均が 1.2 を下回り、ほかのビルドやテストが動いていない状態が続いてから始め、
-  測定中は 0.33〜1.21 でした。ベンチマークは順番に実行しましたが、この負荷の観測だけで背景処理が
+  測定中は 0.22〜1.15 でした。ベンチマークは順番に実行しましたが、この負荷の観測だけで背景処理が
   なかったことは確かめられません。
 
-秒数（本来の回数の中央値から `+n=1` の中央値を引いたもの）。本来の回数の実行 100 回はすべて
-終了コード 0 で期待する行を出し、`+n=1` の実行はすべて `n=1` を出しました。
+新しい 7 つの設計は [bench/](../bench/) にあり、それぞれ 1 行のチェックサムを出します。足したときに、
+その回数で kirimasim、Icarus Verilog、Verilator が同じ行を出しました。X や Z に左右されないので、
+2 値の Verilator とも一致します。
+
+| 設計 | 内容 | `+n=` |
+| --- | --- | --- |
+| `wide_arith` | 256 ビットの加算、128 ビットの積、シフト、比較を 1 つのループで | 1,500,000 |
+| `mem_rw` | 1024 語のメモリーを、クロックの立ち上がりごとに番地を変えて読み書き | 4,000,000 |
+| `func_call` | `inout` と `output` の引数を持つタスクが、4 段再帰する関数を呼ぶ | 1,500,000 |
+| `string_fmt` | `$sformatf`、`substr`、連結と、全文字のハッシュ | 500,000 |
+| `dyn_queue` | 動的配列のまわりで、キューに入れて取り出す | 4,000,000 |
+| `gate_udp` | 32 個の xor ゲートと、組み合わせ回路の UDP 32 個 | 400,000 |
+| `casez_struct` | `casez` で packed 構造体へ振り分け、レジスターファイルを更新 | 5,000,000 |
+
+秒数（本来の回数の中央値から `+n=1` の中央値を引いたもの）。ビルドできた本来の回数の実行 265 回は
+すべて終了コード 0 で期待する行を出し、`+n=1` の実行はすべて `n=1` を出しました。Lyra はゲートと UDP に
+まだ対応していないので、`gate_udp` のプログラムを作れませんでした。
 
 | 設計 | `+n=` | kirimasim | Icarus Verilog | Verilator | Lyra（C++ backend、既定） | Lyra（LLVM backend） |
 | --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 8.288 s | 9.838 s | 0.218 s | 31.399 s | 2.821 s |
-| `nba_shift` | 1,000,000 | 22.459 s | 25.899 s | 0.195 s | 139.227 s | 5.706 s |
-| `proc_wait` | 1,000,000 | 6.313 s | 5.571 s | 2.190 s | 72.489 s | 5.990 s |
-| `fork_join` | 4,000,000 | 4.162 s | 4.973 s | 1.177 s | 15.492 s | 4.776 s |
+| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 31.915 s | 2.878 s |
+| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 140.711 s | 5.900 s |
+| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 73.445 s | 6.164 s |
+| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 15.826 s | 4.860 s |
+| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 6.236 s | 0.380 s |
+| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 23.079 s | 2.705 s |
+| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 7.887 s | 0.395 s |
+| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 18.770 s | 0.279 s |
+| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 16.275 s | 0.412 s |
+| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | 未対応 | 未対応 |
+| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 22.159 s | 0.466 s |
 
-- 本来の回数の 5 回の幅は中央値の 0.4〜7.6% でしたが、`nba_shift` の kirimasim は 10.5%、Lyra の
-  LLVM backend は 15.5% でした。
-- ここでは kirimasim は、Icarus Verilog より 3 つの設計で約 1.15〜1.19 倍速く、`proc_wait` では約 1.13 倍
-  遅くなりました。Verilator は kirimasim より約 2.9〜115 倍速く、Lyra の既定の backend は kirimasim より
-  約 3.7〜11.5 倍遅くなりました。Lyra の LLVM backend は、`comb_chain` で約 2.9 倍、`nba_shift` で約 3.9 倍
-  （両方の幅が大きい設計です）、`proc_wait` で約 1.05 倍速く、`fork_join` で約 1.15 倍遅くなりました。
-- `+n=1` の実行は、どのツールも 2〜6 ms でした。別に計ったビルドの時間は、Icarus が 0.004〜0.025 s、
-  Verilator が温まった ccache で 0.32〜0.37 s、ccache を切って各 1 回で 2.82〜3.01 s、Lyra が空の
-  キャッシュで 5.9〜6.4 s（既定）と 0.45〜0.51 s（LLVM backend）です。
-- サンプリングした RSS の最大値（本来の回数の 5 回の中央値、MiB）は、kirimasim 21.5〜25.4、Icarus 7.8〜8.4、
-  Verilator 3.8〜4.0、Lyra 4.5〜4.9（既定）と 5.1〜5.8（LLVM）です。Linux では、tools/bench.py は各プログラムの
-  `VmHWM` を 10 ms ごとに読みます。終了の直前の最大は最後の読み取りより後になることがあるので、これは観測した
-  最大値で、最終的な最大 RSS を保証するものではありません。子の `ru_maxrss` には起動元の Python の分も入るので、
-  サンプリングより前の夜間のジョブを含む Linux の値は、約 19 MiB を下回ることがありません。サンプリングの前後で、
-  Linux の RSS の履歴は直接には比べられません。macOS は引き続き `ru_maxrss` を使います。
-- ツールの版も kirimasim のコミットも 2026-10-24 の Linux の測定と違うので、その数値の差を、どれか 1 つの
-  ツールの変化とは言いません。
-- 生データ：[bench.json](measurements/2026-10-25-wsl2/bench.json)。
+- 本来の回数の 5 回の幅は中央値の 7.8% 以下でしたが、`comb_chain` の Verilator は 14.7% でした。
+- kirimasim は Icarus Verilog より、`proc_wait`（1.19 倍）、`wide_arith`（2.4 倍）、`mem_rw`（1.35 倍）、
+  `gate_udp`（1.53 倍）で遅く、`func_call`（1.53 倍）、`string_fmt`（1.61 倍）、`dyn_queue`（1.63 倍）で速く、
+  残りの 4 つは差が 6% ほどの範囲でした。Verilator はすべての設計で kirimasim より速く、Lyra の既定の
+  backend はビルドできたすべての設計で kirimasim より遅く、LLVM backend は `fork_join`（差は 1% 以内）を除いて
+  速くなりました。
+- kirimasim は `b66834254c65` で、同じ日の朝の `8a8607690aa6` より遅くなりました（`comb_chain` で 9.249 s と
+  8.288 s）。Icarus Verilog と Verilator の時間は変わっていません。2 つの版を交互に 3 回ずつ走らせると、
+  新しい版は `comb_chain` と `proc_wait` で 1.08 倍、`fork_join` で 1.14 倍の時間でした。`fork_join` での
+  bisect では、変化は `b17234e420b6` にあります（親で 4.26 s、このコミットで 4.96 s）。
+- `dyn_queue` では、kirimasim の最大メモリーが回数とともに増えます。GNU time で 100,000 回で 44 MiB、
+  1,000,000 回で 164 MiB、4,000,000 回で 541 MiB と、1 回あたり約 130 バイトで、キューの要素は 33 個を
+  超えません。理由は確かめていません。
+- `+n=1` の実行は、どのツールも 1〜6 ms でした。別に計ったビルドの時間は、Icarus が 0.005〜0.024 s、
+  Verilator が ccache ありで 0.34〜1.06 s、Lyra が空のキャッシュで 5.4〜6.3 s（既定）と 0.44〜0.50 s
+  （LLVM backend）です。
+- サンプリングした RSS の最大値（本来の回数の 5 回の中央値、MiB）は、kirimasim 21.6〜25.3 と `dyn_queue` の
+  547.5、Icarus 7.7〜8.2、Verilator 1.4〜3.9、Lyra 4.3〜4.8（既定）と 5.2〜5.7（LLVM）です。Linux では、
+  tools/bench.py は各プログラムの `VmHWM` を 10 ms ごとに読みます。終了の直前の最大は最後の読み取りより後に
+  なることがあるので、これは観測した最大値で、最終的な最大 RSS を保証するものではありません。`func_call` の
+  Verilator の 1.4 MiB は、数 ms で終わる実行のそうした値です。子の `ru_maxrss` には起動元の Python の分も
+  入るので、サンプリングより前の夜間のジョブを含む Linux の値は、約 19 MiB を下回ることがありません。
+  サンプリングの前後で、Linux の RSS の履歴は直接には比べられません。macOS は引き続き `ru_maxrss` を使います。
+- 同じ日の朝に、最初の 4 つの設計を kirimasim `8a8607690aa6` で測った記録は、生データとして
+  [measurements/2026-10-25-wsl2/bench.json](measurements/2026-10-25-wsl2/bench.json) に残しています。
+- 生データ：[bench.json](measurements/2026-10-25-wsl2-designs/bench.json)。
 
 ### Linux の比較を再実行する方法
 
@@ -200,9 +230,11 @@ Linux の `max_rss_mib` はサンプリングした `VmHWM` で、観測でき�
 
 ## 生データと再現
 
-- [Linux の bench.json](measurements/2026-10-25-wsl2/bench.json)：2026-10-25 の 5 つのツール・backend の列、
-  全実行とビルドのコマンド。再実行方法は上の Linux の節にあります。古い版で測った 2026-10-24 の
-  Linux の測定は [measurements/2026-10-24-wsl2/bench.json](measurements/2026-10-24-wsl2/bench.json) に残しています。
+- [Linux の bench.json](measurements/2026-10-25-wsl2-designs/bench.json)：2026-10-25 の 11 個の設計と 5 つの
+  ツール・backend の列、全実行とビルドのコマンド。再実行方法は上の Linux の節にあります。最初の 4 つの設計で
+  測った前の Linux の記録は、[measurements/2026-10-25-wsl2/bench.json](measurements/2026-10-25-wsl2/bench.json)
+  （同じ日の朝、kirimasim `8a8607690aa6`）と
+  [measurements/2026-10-24-wsl2/bench.json](measurements/2026-10-24-wsl2/bench.json)（古い版）に残しています。
 - [bench.json](measurements/2026-10-23/bench.json)：各 5 回の経過時間、中央値、RSS、
   版、負荷、実行条件、設計・スクリプト・kirimasim バイナリの SHA-256。
 - [svtests.json](measurements/2026-10-23/svtests.json)：各テストの判定と時間。
