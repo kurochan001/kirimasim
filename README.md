@@ -969,6 +969,42 @@ C++ with two-state values and is far faster today
 ([Simulation speed](#simulation-speed)); kirimasim's tier 2 (P3) will
 compile to C++ too.
 
+### Which version of the standard does it follow?
+
+IEEE 1800-2023. kirimasim always runs slang with `--std=1800-2023`, and
+keeps slang's diagnostics strict by default ([CLI.md](docs/spec/CLI.md) 2.1). Where
+the standard leaves a choice to the implementation, the specifications say
+which reading kirimasim takes;
+[UNSPECIFIED_BEHAVIOR.md](docs/spec/UNSPECIFIED_BEHAVIOR.md) collects those
+points.
+
+### My design prints something different from Icarus Verilog or Verilator. Which is right?
+
+Look at the standard first. Where it fixes the result, kirimasim's
+specifications follow it, and each test is checked against the clauses it
+cites; where Icarus Verilog or Verilator differs from the standard, the
+test's header says so. Where the standard leaves an order open, for example
+which of several processes woken at the same time runs first, more than one
+output is correct: kirimasim always takes the same order
+([SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) 4.3), and another
+simulator may take another. If you think kirimasim is wrong, a bug report
+that names the clause of the standard helps most.
+
+### Is there a two-state mode for speed?
+
+No. Values are always four-state, and four-state variables without an
+initial value start at x, as the standard says. Speed is to come from tier
+2 (P3), whose analysis is to keep values two-state only where an x can
+never arrive, so that results do not change ([How it works](#how-it-works)).
+
+### How fast is it?
+
+Its first tier is an interpreter. On the benchmark designs of
+[Simulation speed](#simulation-speed) it runs at about the speed of Icarus
+Verilog, faster on some designs and slower on others. Verilator, which
+compiles the design to C++, is much faster. Compiling to C++ is tier 2
+(P3).
+
 ### Does it run UVM?
 
 Not yet. The required Icarus-supported class and container mechanisms are
@@ -977,11 +1013,32 @@ plans. A tested SystemVerilog dynamic-array/queue subset uses the shared
 heap; broader container forms and classes remain unfinished. UVM is to run as ordinary SystemVerilog source, with no special
 handling of its classes.
 
+### Does it support VPI, DPI-C or cocotb?
+
+Not yet. The VPI mechanisms that Icarus Verilog supports are part of P1
+under the approved scope; DPI-C and the rest of VPI belong to later phases
+([Phases](#phases)). cocotb needs VPI, so it does not run yet.
+
 ### Can it write waveforms?
 
 Yes, as 4-state VCD: from the design's `$dumpvars`, or from the command
 line with `--wave=<file>.vcd` (WAVEFORM.md). FST waits for a decision on a
 new dependency.
+
+### How do I stop a run that does not end?
+
+`--max-time=<time>` stops it at a simulation time (exit code 4, or 0 with
+`--max-time-ok`), and `--max-wall-time=<seconds>` after that much
+wall-clock time (exit code 4). A design that loops without advancing time
+is stopped by the zero-time limits, which have default values (exit code
+5). Ctrl-C stops the run with exit code 130. See [Usage](#usage).
+
+### Does it use more than one thread?
+
+One simulation runs on one thread; multithreaded execution is planned for
+P5. Each simulation keeps its state in its own Context, with no global
+state ([RUNTIME_ABI.md](docs/spec/RUNTIME_ABI.md) 9), which CI checks under
+ThreadSanitizer.
 
 ### Which platforms does it run on?
 
@@ -993,15 +1050,19 @@ GCC 16 and with Clang 23, and as C++26. Windows is not tested.
 ### Is slang modified?
 
 No. kirimasim uses [slang](https://github.com/MikePopoloski/slang)
-unmodified for parsing and elaboration, pinned to one commit. Bugs found in
-slang are reported upstream, and kirimasim works around them until the
-pinned commit has the fix ([SIR_SPEC.md](docs/spec/SIR_SPEC.md) 6).
+unmodified for parsing and elaboration, pinned to one commit of its main
+branch. Bugs found in slang are reported upstream, and kirimasim works
+around them until the pinned commit has the fix
+([SIR_SPEC.md](docs/spec/SIR_SPEC.md) 6). Where slang's maintainer keeps a
+behavior on purpose, kirimasim follows slang, as it did for slang issue
+#2040 ([SCHEDULER_SPEC.md](docs/spec/SCHEDULER_SPEC.md) 6.4).
 
 ### Is the code written by AI?
 
-Most of it, by Claude Code. Humans are responsible for the specifications,
-the tests and the review; [AI_POLICY.md](docs/spec/AI_POLICY.md) explains
-how AI is used.
+Most of it, by AI tools: mostly Claude Code, and also Codex and OpenCode.
+Each commit names the tool in its `Assisted-by` trailer. Humans are
+responsible for the specifications, the tests and the review;
+[AI_POLICY.md](docs/spec/AI_POLICY.md) explains how AI is used.
 
 ### How can I help?
 
