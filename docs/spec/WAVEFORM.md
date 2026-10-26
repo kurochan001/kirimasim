@@ -16,7 +16,7 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 ## 1. Scope
 
 - **In P1:** the 4-state VCD (21.7.1, 21.7.2) with `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush`, and `--wave=<file>.vcd` with `--wave-scope` and `--wave-glitches` (CLI.md 2.2).
-- **Later:** FST (`--wave=<file>.fst`) needs libfstapi, a new dependency, which a person decides on before it comes (CLAUDE.md); until then `.fst` is an error of the command line. The extended VCD of 21.7.3 and 21.7.4 (`$dumpports` and the rest) is reported as unsupported.
+- **Later:** FST (`--wave=<file>.fst`) backend implementation remains work. The user requested its libfstapi dependency setup on 2026-10-26; the build is now prepared ([record](../notes/fst-dependency-setup.md)). Until the backend is implemented, `.fst` remains an error of the command line. The extended VCD of 21.7.3 and 21.7.4 (`$dumpports` and the rest) is reported as unsupported.
 
 ## 2. What is dumped
 
@@ -69,6 +69,6 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 
 ## 7. Not confirmed, to be written later
 
-- FST (P1, with the decision on libfstapi).
+- FST (P1; dependency build prepared 2026-10-26, waveform backend pending).
 - The extended VCD of 21.7.3 (P5, with strengths).
 - What a dump of the variables of a program, an interface or a class gives (P4).

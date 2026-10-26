@@ -43,3 +43,6 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(slang googletest)
+
+# FST library preparation requested 2026-10-26; waveform output remains separate.
+include(${CMAKE_CURRENT_LIST_DIR}/FstDependency.cmake)

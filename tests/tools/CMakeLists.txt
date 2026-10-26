@@ -613,3 +613,15 @@ add_test(NAME tools/source_mos_boundaries
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_source_mos_boundaries.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/source_mos_boundaries PROPERTIES LABELS Tools)
+
+# The future generated-code boundary is C++20 and cannot use exceptions or RTTI.
+add_executable(kirimasim_fst_dependency fst_dependency.cpp)
+target_link_libraries(kirimasim_fst_dependency PRIVATE kirimasim::fstapi)
+set_target_properties(kirimasim_fst_dependency PROPERTIES
+    CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(kirimasim_fst_dependency PRIVATE -fno-exceptions -fno-rtti -ffp-contract=off)
+endif()
+add_test(NAME tools/fst_dependency
+    COMMAND kirimasim_fst_dependency ${CMAKE_CURRENT_BINARY_DIR}/fst-dependency)
+set_tests_properties(tools/fst_dependency PROPERTIES LABELS Tools)

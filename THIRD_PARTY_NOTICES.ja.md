@@ -2,7 +2,7 @@
 
 [English](THIRD_PARTY_NOTICES.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions です（`LICENSE` を見てください）。このリポジトリには、第三者のソースの写しを含めていません。下の部品は、構成のときに CMake の `FetchContent` で取得し、挙げた版に固定して、kirimasim かそのテストにコンパイルして組み込みます。ライセンスと著作権の表示は、2026-10-21 に、取得したソースのライセンスのファイルとファイルの先頭の注記から読みました。ライセンスの全文は、このファイルの終わりにあります。
+kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions です（`LICENSE` を見てください）。このリポジトリには、第三者のソースの写しを含めていません。下の部品は、構成のときに CMake の `FetchContent` で取得し、挙げた版に固定して、kirimasim かそのテストにコンパイルして組み込みます。ライセンスと著作権の表示は、2026-10-21 に、取得したソースのライセンスのファイルとファイルの先頭の注記から読みました。ライセンスの全文は、このファイルの終わりにあります。FST設定とシステム圧縮ライブラリの表示は、別に2026-10-26に確認しました。
 
 ビルドした kirimasim は、まだ公開していません。ビルドした実行ファイル `kirimasim` を配布する人は、このファイルを一緒に配ります。MIT License は、ソフトウェアのすべての複製と重要な部分に、著作権の表示と許諾の表示を含めることを求めているからです。Boost Software License 1.0 は、機械が実行するオブジェクトコードだけの複製には、これを求めていません。
 
@@ -34,6 +34,26 @@ slang の `REUSE.toml` は、これらのファイルを、slang の著作権と
 | `include/slang/util/Hash.h` | ハッシュは unordered_dense から取ったもので、wyhash を削って小さくしたもの | unordered_dense：MIT、Copyright (c) 2022 Martin Leitner-Ankerl。wyhash：パブリックドメインとして公開。どちらも 2026-10-21 に各プロジェクトの既定の枝で読んだ |
 | `include/slang/text/CharInfo.h` | Christopher Wellons による、パブリックドメインの分岐のない UTF-8 デコーダ | パブリックドメインとして公開（その `UNLICENSE`。2026-10-21 に読んだ） |
 | `include/slang/util/Function.h`、`include/slang/util/IntervalMap.h`、`source/numeric/SVIntHelpers.h` | LLVM プロジェクトのコードに基づく、またはそれに着想を得たもの | 今の LLVM は Apache-2.0 WITH LLVM-exception。slang がどの版から取ったかは未確認。ライセンスを変える前の LLVM のコードは、University of Illinois/NCSA のライセンスだった |
+
+## FST対応に向けて準備したもの
+
+2026-10-26の依存設定の依頼に沿い、独立したlibfstの静的ターゲットをkernelから私有の依存として
+リンクする。APIのsmokeテストでは使うが、kirimasimの波形backendはまだ呼ばない。
+以下の完全なcommitで取得し、GTKWave・GLib・上流のテスト・他シミュレータのruntimeは取り込まない。
+GitHubの複合ライセンス表示から推測せず、固定commitの公式 `LICENSE` を確認した。
+上流の表示全文は末尾に載せる。
+
+| 部品 | 版 | ライセンス | 著作権 | 取得元 |
+| --- | --- | --- | --- | --- |
+| libfst | project version 1.0.0、commit `17f6a5d27b2f576d65b550114fbde3c035cc74a8`（release tagは主張しない） | MIT | Copyright (c) 2009-2025 Tony Bybell | https://github.com/gtkwave/libfst |
+| 同梱LZ4 | 同じlibfst commit。個別の版番号は主張しない | BSD-2-Clause | Copyright (c) 2011-2020, Yann Collet | libfstの `LICENSE` |
+| 同梱FastLZ | 同じlibfst commit。個別の版番号は主張しない | MIT | Copyright (C) 2005-2007 Ariya Hidayat | libfstの `LICENSE` |
+
+システムの開発用パッケージでzlib（最小1.2.0、Zlibライセンス）とbzip2（最小1.0.0、bzip2ライセンス）を
+用意する。手元のmacOS SDKではCMakeがそれぞれ1.2.12・1.0.8を検出した。他環境はその環境の版を使い、
+本プロジェクトではダウンロード・同梱しない。2026-10-26の `otool -L` では、準備後の実行ファイルに `/usr/lib/libz.1.dylib` と `/usr/lib/libbz2.1.0.dylib` も見える。zlibの公式v1.2.12 READMEと、sourceware.orgの公式bzip2 1.0.8
+配布物から取得した表示を末尾に再録する。異なる版や静的リンクしたシステムライブラリも配布する場合には、
+その版の表示を保持する。
 
 ## テストだけで使うもの
 
@@ -132,4 +152,165 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+### libfst, bundled LZ4 and FastLZ
+
+Official `LICENSE` at libfst commit `17f6a5d27b2f576d65b550114fbde3c035cc74a8`:
+
+```text
+MIT License
+
+Copyright (c) 2009-2025 Tony Bybell
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+=============================================================================
+
+Parts of libfst are based on these libraries:
+
+-----------------------------------------------------------------------------
+
+LZ4 Library
+Copyright (c) 2011-2020, Yann Collet
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-----------------------------------------------------------------------------
+
+FastLZ - lightning-fast lossless compression library
+
+Copyright (C) 2007 Ariya Hidayat (ariya@kde.org)
+Copyright (C) 2006 Ariya Hidayat (ariya@kde.org)
+Copyright (C) 2005 Ariya Hidayat (ariya@kde.org)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+### System zlib
+
+The upstream zlib v1.2.12 `README` copyright notice (the version found in the local SDK):
+
+```text
+(C) 1995-2022 Jean-loup Gailly and Mark Adler
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
+  Jean-loup Gailly        Mark Adler
+  jloup@gzip.org          madler@alumni.caltech.edu
+```
+
+### System bzip2
+
+The `LICENSE` from the official bzip2 1.0.8 source distribution:
+
+```text
+
+--------------------------------------------------------------------------
+
+This program, "bzip2", the associated library "libbzip2", and all
+documentation, are copyright (C) 1996-2019 Julian R Seward.  All
+rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. The origin of this software must not be misrepresented; you must
+   not claim that you wrote the original software.  If you use this
+   software in a product, an acknowledgment in the product
+   documentation would be appreciated but is not required.
+
+3. Altered source versions must be plainly marked as such, and must
+   not be misrepresented as being the original software.
+
+4. The name of the author may not be used to endorse or promote
+   products derived from this software without specific prior written
+   permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Julian Seward, jseward@acm.org
+bzip2/libbzip2 version 1.0.8 of 13 July 2019
+
+--------------------------------------------------------------------------
 ```

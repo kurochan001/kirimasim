@@ -1,0 +1,10 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+/* Platform probes from the pinned upstream build definitions. */
+#cmakedefine HAVE_FSEEKO 1
+#cmakedefine HAVE_REALPATH 1
+
+/* The P1 writer is prepared without background writer threads. */
+#undef FST_WRITER_PARALLEL
+#undef HAVE_LIBPTHREAD

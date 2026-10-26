@@ -239,7 +239,7 @@ Dependencies run only in the directions listed here.
 | `analysis` | X-reachability, static islands, levelization, observability | `sir` | Empty |
 | `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
 | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Empty |
-| `kernel` | The execution kernel | libfstapi (later); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD output, typed container heap API, event counters, context |
+| `kernel` | The execution kernel | libfstapi (dependency prepared; FST backend pending); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD output, typed container heap API, event counters, context |
 | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P4 |
 | `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P4 |
 | `valsem` | Reference implementations of value semantics | nothing | Value instructions, edges, net resolution with strengths, UDP tables, integral-container cell model |

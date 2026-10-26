@@ -130,7 +130,7 @@ CASES = [
     ([DESIGN], 0, "hello\n", ") seed=0 args: "),
     (["--seed=12345", DESIGN], 0, "hello\n", ") seed=12345 args: --seed=12345"),
     (["--seed=x", DESIGN], 2, "", "--seed=x needs a whole number"),
-    # A waveform is a .vcd file; FST waits for libfstapi (WAVEFORM.md 1, 5).
+    # FST dependencies are prepared; its backend remains unsupported (WAVEFORM.md 1, 5).
     (["--wave=w.fst", DESIGN], 2, "", "--wave=w.fst: FST is not supported yet; use a .vcd file"),
     (["--wave=w", DESIGN], 2, "", "--wave=w needs a file ending in .vcd"),
     (["--wave=.vcd", DESIGN], 2, "", "--wave=.vcd needs a file ending in .vcd"),

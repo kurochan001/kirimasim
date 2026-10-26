@@ -239,11 +239,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,383 | 5,381, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,384 | 5,382, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 610, `tests/suite/` 4,561 (made by 140 generators under `tools/`), tools 153, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 610, `tests/suite/` 4,561 (made by 140 generators under `tools/`), tools 154, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -648,7 +648,11 @@ Clang 19 or later with libstdc++ 13 or later; or Apple clang 17 or later
 every push CI builds and tests with each of these oldest versions, and with
 Clang 22 on x86-64 Linux and Apple clang 21 on arm64 macOS; kirimasim is
 developed with Apple clang 21 on macOS arm64.
-The first configure downloads slang and GoogleTest.
+The first configure downloads slang, GoogleTest and the pinned standalone libfst.
+FST build preparation also needs zlib and bzip2 development headers/libraries.
+On Debian/Ubuntu, install `zlib1g-dev libbz2-dev`; macOS uses the Command Line
+Tools SDK. Meson, GTKWave, GLib and a separate LZ4 package are not required.
+See [FST dependency setup](docs/notes/fst-dependency-setup.md).
 
 kirimasim is written in C++23 and uses no C++26 feature. It moves to C++26
 once the compilers above all support it; until then the nightly runs build
@@ -1049,8 +1053,8 @@ under the approved scope; DPI-C and the rest of VPI belong to later phases
 ### Can it write waveforms?
 
 Yes, as 4-state VCD: from the design's `$dumpvars`, or from the command
-line with `--wave=<file>.vcd` (WAVEFORM.md). FST waits for a decision on a
-new dependency.
+line with `--wave=<file>.vcd` (WAVEFORM.md). FST dependencies are prepared,
+but the waveform backend remains unimplemented; `.fst` output is not enabled yet.
 
 ### How do I stop a run that does not end?
 

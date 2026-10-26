@@ -23,6 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Show tool versions
         run: |
           c++ --version
@@ -36,7 +39,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-${{ matrix.os }}-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-${{ matrix.os }}-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - run: cmake --preset ${{ matrix.preset }}
       - run: cmake --build --preset ${{ matrix.preset }}
@@ -73,6 +76,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Install LLVM 22 (apt.llvm.org packages)
         if: runner.os == 'Linux'
         run: |
@@ -93,7 +99,7 @@ jobs:
             build/tsan/_deps/*-subbuild
             build/tsan/_deps/*-tmp
             build/tsan/CMakeFiles/fc-stamp
-          key: fetchcontent-${{ matrix.os }}-${{ matrix.cc }}-tsan-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-${{ matrix.os }}-${{ matrix.cc }}-tsan-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - run: cmake --preset tsan
       - run: cmake --build --preset tsan
@@ -105,6 +111,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
 
       - name: Show tool versions
         run: |
@@ -119,7 +128,7 @@ jobs:
             build/dev/_deps/*-subbuild
             build/dev/_deps/*-tmp
             build/dev/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-arm-dev-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-arm-dev-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - run: cmake --preset dev
       - run: cmake --build --preset dev
@@ -131,6 +140,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
 
       - name: Install GCC 16 (Ubuntu universe package)
         run: |
@@ -150,6 +162,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
 
       - name: Install Clang 23 (apt.llvm.org packages of the LLVM 23 release)
         run: |
@@ -193,6 +208,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Install GCC 16 (Ubuntu universe package)
         if: matrix.compiler == 'gcc-16'
         run: |
@@ -223,6 +241,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Cache FetchContent downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -231,7 +252,7 @@ jobs:
             build/release/_deps/*-subbuild
             build/release/_deps/*-tmp
             build/release/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-release-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-release-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Cache the Icarus build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -345,6 +366,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Install LLVM 22 with libFuzzer (apt.llvm.org packages)
         run: |
           wget -q https://apt.llvm.org/llvm.sh
@@ -360,7 +384,7 @@ jobs:
             build/fuzz/_deps/*-subbuild
             build/fuzz/_deps/*-tmp
             build/fuzz/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-clang22-fuzz-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-clang22-fuzz-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - run: cmake --preset fuzz
       - run: cmake --build --preset fuzz
@@ -402,6 +426,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Cache FetchContent downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -410,7 +437,7 @@ jobs:
             build/release/_deps/*-subbuild
             build/release/_deps/*-tmp
             build/release/CMakeFiles/fc-stamp
-          key: fetchcontent-macos-26-release-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-macos-26-release-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Cache the Icarus build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -453,6 +480,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Cache FetchContent downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -461,7 +491,7 @@ jobs:
             build/release/_deps/*-subbuild
             build/release/_deps/*-tmp
             build/release/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-release-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-release-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - run: cmake --preset release
       # slang first, so that the time is that of kirimasim's own code.
@@ -526,6 +556,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Cache FetchContent downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -534,7 +567,7 @@ jobs:
             build/dev/_deps/*-subbuild
             build/dev/_deps/*-tmp
             build/dev/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-dev-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-dev-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - run: cmake --preset dev
       - run: cmake --build --preset dev
@@ -555,6 +588,9 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
 
       - name: Show tool versions
         run: |

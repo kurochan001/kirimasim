@@ -35,6 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Install LLVM 22 (apt.llvm.org packages)
         run: |
           wget -q https://apt.llvm.org/llvm.sh
@@ -58,7 +61,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
@@ -93,6 +96,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Show tool versions
         run: |
           c++ --version
@@ -106,7 +112,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }}
@@ -131,6 +137,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Install LLVM 22 (apt.llvm.org packages)
         run: |
           wget -q https://apt.llvm.org/llvm.sh
@@ -150,7 +159,7 @@ jobs:
             build/tsan/_deps/*-subbuild
             build/tsan/_deps/*-tmp
             build/tsan/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-clang22-tsan-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-ubuntu-24.04-clang22-tsan-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset tsan -DKIRIMASIM_WERROR=ON
@@ -176,6 +185,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Show tool versions
         run: |
           c++ --version
@@ -190,7 +202,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-macos-26-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-macos-26-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
@@ -254,6 +266,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
+
       - name: Install LLVM (apt.llvm.org packages)
         if: matrix.llvm
         run: |
@@ -284,7 +299,7 @@ jobs:
             build/dev/_deps/*-subbuild
             build/dev/_deps/*-tmp
             build/dev/CMakeFiles/fc-stamp
-          key: fetchcontent-${{ matrix.os }}-min-${{ matrix.id }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-${{ matrix.os }}-min-${{ matrix.id }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset dev
@@ -303,6 +318,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+
+      - name: Prepare FST compression dependencies
+        uses: ./.github/actions/fst-dependencies
 
       # LLVM 22, the same major version as the Homebrew LLVM used on the
       # development Mac, from apt.llvm.org.
@@ -336,7 +354,7 @@ jobs:
             build/dev/_deps/*-subbuild
             build/dev/_deps/*-tmp
             build/dev/CMakeFiles/fc-stamp
-          key: fetchcontent-lint-ubuntu-24.04-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: fetchcontent-lint-ubuntu-24.04-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure for clang-tidy
         env:

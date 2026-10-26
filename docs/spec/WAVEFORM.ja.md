@@ -15,7 +15,7 @@
 ## 1. 範囲
 
 - **P1：** `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush` による 4 値の VCD（21.7.1、21.7.2）と、`--wave=<file>.vcd` と `--wave-scope`、`--wave-glitches`（CLI.md の 2.2 節）。
-- **後で：** FST（`--wave=<file>.fst`）は、新しい依存の libfstapi が要り、入れる前に人が決める（CLAUDE.md）。それまで `.fst` はコマンドラインの誤りである。21.7.3 節と 21.7.4 節の拡張 VCD（`$dumpports` など）は、未対応として報告する。
+- **後で：** FST（`--wave=<file>.fst`）のバックエンドは未実装。2026-10-26 の利用者の依頼で libfstapi の依存ビルドを準備した（[記録](../notes/fst-dependency-setup.ja.md)）。バックエンドを実装するまでは `.fst` はコマンドラインの誤りのままとする。21.7.3 節と 21.7.4 節の拡張 VCD（`$dumpports` など）は、未対応として報告する。
 
 ## 2. 書き出すもの
 
@@ -68,6 +68,6 @@
 
 ## 7. 未確認・後で書くこと
 
-- FST（P1。libfstapi を入れるかの決定とともに）。
+- FST（P1。2026-10-26 に依存ビルドを準備し、波形バックエンドは未実装）。
 - 21.7.3 節の拡張 VCD（P5。強さとともに）。
 - program、interface、クラスの変数を書き出したときに何になるか（P4）。

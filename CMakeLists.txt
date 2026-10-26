@@ -7,8 +7,8 @@ project(kirimasim VERSION 0.0.0 LANGUAGES C CXX)
 
 # kirimasim is written in C++23 and uses no C++26 feature. The nightly job
 # cxx26 also builds it with -DCMAKE_CXX_STANDARD=26, to see when it can move
-# to C++26; no other standard is accepted. The one target with a standard of
-# its own is the C++20 check of the kernel's public headers (tests/unit).
+# to C++26; no other standard is accepted. The kernel-header and FST-interface
+# checks use C++20 (tests/).
 if(NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 23)
 elseif(NOT CMAKE_CXX_STANDARD MATCHES "^(23|26)$")

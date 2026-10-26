@@ -218,7 +218,7 @@ int parseArgs(int argc, char** argv, Options& o) {
             // during elaboration (CLI.md 2.2, SCHEDULER_SPEC.md 12).
             o.slangArgs.emplace_back("--timing=" + std::string(choice));
         } else if (arg.starts_with("--wave=")) {
-            // A VCD file; FST waits for the decision on libfstapi
+            // A VCD file; FST dependencies are ready, but the backend is not implemented
             // (WAVEFORM.md 1).
             o.waveFile = arg.substr(std::string_view("--wave=").size());
             if (o.waveFile.ends_with(".fst")) {

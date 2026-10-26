@@ -188,11 +188,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,383 | 5,381、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,384 | 5,382、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）610、`tests/suite/` 4,561（`tools/` の 140 個の生成器が作る）、道具 153、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）610、`tests/suite/` 4,561（`tools/` の 140 個の生成器が作る）、道具 154、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -470,7 +470,11 @@ Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、�
 
 ## ビルド
 
-必要なもの：CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 のコンパイラ。コンパイラは、GCC 13 以上、Clang 18 以上と libc++ 18 以上の組、Clang 19 以上と libstdc++ 13 以上の組、Apple clang 17 以上（Xcode 26）のどれかです。libstdc++ と組み合わせると、Clang 17 と 18 では slang を C++23 としてビルドできません。CI は push のたびに、これらの最も古い版でビルドとテストをします。x86-64 の Linux の Clang 22 と、arm64 の macOS の Apple clang 21 でもします。開発は macOS arm64 の Apple clang 21 で行っています。最初の configure で slang と GoogleTest を取得します。
+必要なもの：CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 のコンパイラ。コンパイラは、GCC 13 以上、Clang 18 以上と libc++ 18 以上の組、Clang 19 以上と libstdc++ 13 以上の組、Apple clang 17 以上（Xcode 26）のどれかです。libstdc++ と組み合わせると、Clang 17 と 18 では slang を C++23 としてビルドできません。CI は push のたびに、これらの最も古い版でビルドとテストをします。x86-64 の Linux の Clang 22 と、arm64 の macOS の Apple clang 21 でもします。開発は macOS arm64 の Apple clang 21 で行っています。最初の configure で slang、GoogleTest、固定版の独立した libfst を取得します。
+FST の依存ビルドには zlib・bzip2 の開発用ヘッダとライブラリも必要です。
+Debian/Ubuntu では `zlib1g-dev libbz2-dev`、macOS では Command Line Tools の SDKを使います。
+Meson・GTKWave・GLib・別の LZ4 パッケージは不要です。
+[FST 依存設定](docs/notes/fst-dependency-setup.ja.md)を参照してください。
 
 kirimasim は C++23 で書き、C++26 の機能は使いません。上のコンパイラがすべて C++26 に対応したら、C++26 に移ります。それまでは、夜間の CI が C++26 でもビルドとテストをします。
 
@@ -757,7 +761,7 @@ IEEE 1800-2023 です。kirimasim は slang を常に `--std=1800-2023` で動�
 
 ### 波形を出せますか？
 
-はい、4 値の VCD を出せます。設計の `$dumpvars` からでも、コマンドラインの `--wave=<file>.vcd` からでも出します（WAVEFORM.md）。FST は、新しい依存を入れるかの決定を待っています。
+はい、4 値の VCD を出せます。設計の `$dumpvars` からでも、コマンドラインの `--wave=<file>.vcd` からでも出します（WAVEFORM.md）。FST 用の依存は準備しましたが、波形バックエンドは未実装で、まだ `.fst` 出力は使えません。
 
 ### 終わらない実行を止めるには？
 
