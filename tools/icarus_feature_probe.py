@@ -255,6 +255,11 @@ EXTENDED.extend([
 
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
+    # Compiler abort diagnostics can name the reference installation and
+    # temporary build directories, independently of the probe directory.
+    # Only saved diagnostics are normalized; status and stdout comparisons
+    # above continue to use the original subprocess bytes.
+    text = re.sub(r"/(?:Users|home|private|var|tmp)/[^\s\"'<>]+", "<external-path>", text)
     return re.sub(r"^kirimasim: info: .*\n?", "", text, flags=re.M)[:4000]
 
 
