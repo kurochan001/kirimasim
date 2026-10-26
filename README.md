@@ -181,6 +181,13 @@ gaps to 21, and the fresh 14.0 run also leaves 21 gaps and seven mismatches;
 there is no fresh 13.0 run at this event-VM checkpoint. With directed MOS
 execution, a fresh run against both on 2026-10-26 leaves 14 gaps, with four
 (13.0) and seven (14.0) reference mismatches.
+The later [source-passive checkpoint](docs/notes/source-passive-execution.md),
+measured on the same date, reduces the gaps to **eight against each reference**,
+with four/seven reference mismatches unchanged. Its stable compiler and runtime
+both report `13.0 (stable) (v13_0-dirty)`; the exact observations are retained in
+[the Icarus 13.0 record](docs/measurements/2026-10-26/icarus13-source-passive-probes.json)
+and [the development record](docs/measurements/2026-10-26/icarus14-source-passive-probes.json).
+The subsequent SSA-region component did not rerun these probes.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
