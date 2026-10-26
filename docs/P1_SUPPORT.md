@@ -222,8 +222,13 @@ instruction safepoints and owned ref/object providers remain work. The event-onl
 2026-10-26; the publication protocol remains work, and no bounded no-wait source
 claim is made. The [SSA-region component](notes/event-temporaries.md) now keeps
 caller event temporaries visible across nested calls and vector relocation;
-seven component tests and eight compiled controls pass. Transfers and complete
-instruction-point publication remain unfinished.
+seven component tests and eight compiled controls pass.
+[Typed transfer ownership](notes/event-transfers.md) now retains inputs, copyback
+snapshots and scalar returns through synchronous/task/deferred call boundaries.
+Six component tests and four VM tests (nine SIR designs, including five resource
+failure paths) pass; 12 compiled controls are caught. These are SIR transport
+checks, not new source event-rebinding support. Complete active-field and
+instruction-point publication remains unfinished.
 
 Source [runtime fixed-array event selections](notes/indexed-event-execution.md)
 now pass 160 original designs and 16 strict policy boundaries, with four compiled

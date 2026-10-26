@@ -10,6 +10,11 @@ migration was separately approved and applied in `77c9d188`. The
 post-migration validation. Failure counts, unapproved/unapplied statements and
 unmerged status below describe the earlier measured checkpoint.
 
+**Subsequent transfer ownership (2026-10-26):** the [call-transfer component](event-transfers.md)
+now owns typed input/output snapshots and scalar returns. Its tests and remaining
+publication requirements are recorded separately; the earlier checklist below
+retains the state at this SSA-region checkpoint.
+
 ## Contract and implementation
 
 The grounds are RUNTIME_ABI 6's [event-only exception approved on 2026-10-26](managed-event-safepoints-proposal.md),

@@ -210,8 +210,11 @@ cancellation, delayed-target and allocation-failure matrix, physical-row bounds,
 compiled omitted-root/premature-reuse controls and ordinary-path measurements.
 Implementation status (2026-10-26): a [typed SSA-region provider](../notes/event-temporaries.md)
 now preserves active caller regions across vector relocation and clears event
-words on body exit. Complete field/transfer publication, SSA liveness and the
-full VM/source matrix remain pending; instruction collection and source
+words on body exit. [Typed call transfers](../notes/event-transfers.md) retain
+input/output snapshots and pin scalar returns before SSA retirement, using the
+Context allocation source for spill storage. Complete active-field and
+instruction-point publication, SSA liveness and the full VM/source matrix remain
+pending; instruction collection and source
 automatic-event construction are not enabled. The approval is not evidence of
 completion.
 It adds no dependency, C function-table ABI version, option, hidden knob,

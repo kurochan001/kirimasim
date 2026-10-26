@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Latest local implementation:** `1d2b7e6e` adds [event transfer ownership](event-transfers.md)
+for input/copyback snapshots and returns, with six component tests and four VM
+tests covering nine SIR designs. Five real VM allocation-failure paths stop
+before callee effects or partial output replacement. All 12 compiled faults
+are caught; full dev CTest passes 5,551/5,553 with zero failures/two known skips,
+and all four presets pass 98 related tests. Five-pair ordinary frame/event cost
+observations are +2.1%/+3.9%, with identical counters. Active-field/instruction
+publication and automatic source construction remain work. This checkpoint is
+local, not merged/pushed; external source probes were not refreshed.
+
 **Main integration:** the current main integration includes source passive
 switches, typed SSA event regions, the approved event-only safepoint contract
 and the README's remaining-feature inventory. The user separately approved the

@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-26",
+  "implementation_commit": "1d2b7e6eb07253d058876ed3102d5e2b4f787ae5",
+  "scope": "Typed event transfer ownership at current SIR call/copyback boundaries; complete instruction/root publication remains work",
+  "platform": "macOS arm64",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "source_sha256": {
+    "src/vm/vm.cpp": "51dc53601aab0e70c5bbb61cf235a208bb2614d1d53eb5567924857f5b561f43",
+    "src/vm/event_transfers.h": "d5da852e95d1ebabc7562df0ab2b39a4fa1f644b86a501855d0e7d5b626618b2",
+    "tests/unit/event_transfers_test.cpp": "f9f0d0850acd1ba5247182281566e09c20e037626094e66bf92516076c74e7cc",
+    "tests/unit/vm_event_test.cpp": "a4f8125ac1811ef5724b2520c2d07f7fd2276faaead18c736a9e1c2f22e60418",
+    "tests/unit/CMakeLists.txt": "a48729fdbdc0058949f5c1669a3158e33d1de0346845945ffa130bcbfceefade",
+    "tools/mutants.py": "911ef9770f49047b3b07a858d80e555ad60d5dc1b21a5a7a5e3f4abda91abf7c"
+  },
+  "dev_full_ctest": {
+    "total": 5553,
+    "passed": 5551,
+    "failed": 0,
+    "skipped": [
+      "suite/cb/input_sample_1step",
+      "suite/nets/net_port_drivers_part"
+    ],
+    "elapsed_seconds": 71.0
+  },
+  "full_builds": [
+    "dev",
+    "release",
+    "asan",
+    "ubsan"
+  ],
+  "focused_tests_per_preset": {
+    "dev": 98,
+    "release": 98,
+    "asan": 98,
+    "ubsan": 98
+  },
+  "new_component_tests": 6,
+  "new_vm_tests": 4,
+  "new_verified_sir_designs": 9,
+  "vm_allocation_failure_paths": [
+    "synchronous input",
+    "waiting-task input",
+    "deferred input",
+    "synchronous output copyback",
+    "waiting-task output copyback"
+  ],
+  "compiled_controls": {
+    "component": 8,
+    "vm_allocation_source": 4,
+    "all_detected": true,
+    "record": "event-transfers-controls.json"
+  },
+  "cost_record": "event-transfers-speed.json",
+  "checks": {
+    "clang_tidy": "Changed VM and both unit files pass with custom checks; new header is included",
+    "clang_format": "Changed C++ files and header pass",
+    "banned": "64 source files clean",
+    "global_state": "117 source files checked",
+    "spdx": "390 tracked code/build/tool files checked",
+    "mutation_anchors": "779 apply exactly once",
+    "release_flags": "114 units pass",
+    "expected_change": "Implementation commit passes; all existing oracles preserved"
+  },
+  "initial_development_issue": "A new test copied a nontrivial Operand in its loop and failed the warning-as-error build. Changed that new loop to a const reference, then reran focused and full dev tests, all four builds/focused presets and compiled controls. No assertion or expected value was weakened.",
+  "build_provenance": "Measured binaries were configured before the implementation commit and retain a 1c970f5d version banner. The exact changed runtime bytes match the implementation commit and are recorded above.",
+  "not_run": [
+    "Full tools/local_ci.py for this checkpoint",
+    "Full release/ASan/UBSan CTest suites",
+    "Linux/minimum compiler execution",
+    "Refreshed population/sv-tests/87-probe comparison",
+    "Full benchmark or five-simulator speed table",
+    "Automatic instruction collection or source automatic-event matrix"
+  ],
+  "automatic_event_source_enabled": false,
+  "instruction_collection_enabled": false,
+  "container_heap_timing_changed": false,
+  "new_dependency": false,
+  "existing_oracles_changed": false,
+  "main_integrated": false,
+  "pushed": false,
+  "p1_complete": false
+}

@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-26",
+  "scope": "Eight transfer-owner component faults and four real VM allocation-source faults. No automatic instruction collection enabled.",
+  "controls": [
+    {
+      "name": "event transfers: first managed holder is dropped",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "1 - EventTransfers.ScalarNullAndLegacyNeedNoAllocationAndReleaseAtScopeExit (Failed)",
+        "2 - EventTransfers.TypedArrayParametersOwnSnapshotsWithoutGuessingOpaqueAliases (Failed)",
+        "3 - EventTransfers.NestedTransfersAndRuntimePinsReleaseIndependentOwnership (Failed)",
+        "4 - EventTransfers.StaleValuesAndMalformedPlansRollBackOnlyTheNewBatch (Failed)",
+        "5 - EventTransfers.SpillAllocationFailureRollsBackEveryPartOfTheArgumentBatch (Failed)",
+        "6 - EventTransfers.RepeatedExceptionalTransfersReuseRowsAndNeverRetainInactiveValues (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: typed parameter indices are ignored",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "2 - EventTransfers.TypedArrayParametersOwnSnapshotsWithoutGuessingOpaqueAliases (Failed)",
+        "4 - EventTransfers.StaleValuesAndMalformedPlansRollBackOnlyTheNewBatch (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: failed batches discard earlier owners",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "4 - EventTransfers.StaleValuesAndMalformedPlansRollBackOnlyTheNewBatch (Failed)",
+        "5 - EventTransfers.SpillAllocationFailureRollsBackEveryPartOfTheArgumentBatch (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: duplicate parameter indices are accepted",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "4 - EventTransfers.StaleValuesAndMalformedPlansRollBackOnlyTheNewBatch (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: allocation failure reports success",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "5 - EventTransfers.SpillAllocationFailureRollsBackEveryPartOfTheArgumentBatch (Failed)",
+        "541 - VmEvent.TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: legacy values are retained as managed tokens",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "1 - EventTransfers.ScalarNullAndLegacyNeedNoAllocationAndReleaseAtScopeExit (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: explicit ownership release is omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "3 - EventTransfers.NestedTransfersAndRuntimePinsReleaseIndependentOwnership (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: first typed parameter is omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "2 - EventTransfers.TypedArrayParametersOwnSnapshotsWithoutGuessingOpaqueAliases (Failed)",
+        "4 - EventTransfers.StaleValuesAndMalformedPlansRollBackOnlyTheNewBatch (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: synchronous inputs bypass their allocation source",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "541 - VmEvent.TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: task inputs bypass their allocation source",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "541 - VmEvent.TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: copyback bypasses its allocation source",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "541 - VmEvent.TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback (Failed)"
+      ]
+    },
+    {
+      "name": "event transfers: deferred inputs bypass their allocation source",
+      "compiled": true,
+      "caught": true,
+      "test_exit_code": 8,
+      "failed_tests": [
+        "541 - VmEvent.TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback (Failed)"
+      ]
+    }
+  ],
+  "compiled_caught": 12,
+  "restored_test_exit_code": 0,
+  "source_sha256": {
+    "src/vm/event_transfers.h": "d5da852e95d1ebabc7562df0ab2b39a4fa1f644b86a501855d0e7d5b626618b2",
+    "src/vm/vm.cpp": "51dc53601aab0e70c5bbb61cf235a208bb2614d1d53eb5567924857f5b561f43"
+  },
+  "test_source_sha256": {
+    "tests/unit/event_transfers_test.cpp": "f9f0d0850acd1ba5247182281566e09c20e037626094e66bf92516076c74e7cc",
+    "tests/unit/vm_event_test.cpp": "a4f8125ac1811ef5724b2520c2d07f7fd2276faaead18c736a9e1c2f22e60418"
+  },
+  "elapsed_seconds": 64.509,
+  "compilation_failures_count_as_detection": false,
+  "implementation_commit": "1d2b7e6eb07253d058876ed3102d5e2b4f787ae5"
+}

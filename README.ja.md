@@ -88,7 +88,9 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 [safepoint修正案](docs/notes/managed-event-safepoints-proposal.ja.md)は2026-10-26に承認されました。
 [型付きSSA領域](docs/notes/event-temporaries.ja.md)で、入れ子実行とvector再確保をまたぐ
 呼び出し元の一時値を保護し、新規7部品テストとコンパイルした8故障の検出が通りました。
-転送値の所有、完全な公開、ソース受入行列は残作業です。
+[event転送の所有](docs/notes/event-transfers.ja.md)で、型付き入力/出力snapshotと戻り値を
+保護し、VMでの確保失敗5経路も確認しました。部品6テスト、VM4テスト、コンパイルした12故障の
+検出が通りました。活動中フィールド/命令回収点の完全公開とソース受入行列は残作業です。
 
 [実行時indexでの固定配列event選択](docs/notes/indexed-event-execution.ja.md)を型付き値へ接続し、
 名前付き/混合待機・遅延対象・`.triggered`を独自160ソースで検査しました。
@@ -149,7 +151,7 @@ P1の完了にはなりません。
 ランタイムはいずれも`13.0 (stable) (v13_0-dirty)`を返し、実測は
 [13.0の記録](docs/measurements/2026-10-26/icarus13-source-passive-probes.json)と
 [開発版の記録](docs/measurements/2026-10-26/icarus14-source-passive-probes.json)に保ちます。
-後続のSSA領域の部品では、このプローブは再実行していません。
+後続のSSA領域と転送所有の部品では、このプローブは再実行していません。
 比較対象の版を分け、[結果と条件](docs/notes/icarus-13-comparison.ja.md)を記録しました。
 全面的な同等性は未確認です。プローブがすべて通っても全機能の対応を証明できず、
 仕組みやインターフェースを確認するごとに棚卸しを広げます。
@@ -204,11 +206,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,543 | 5,541、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,553 | 5,551、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）625、`tests/suite/` 4,704（`tools/` の 141 個の生成器が作る）、道具 155、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）635、`tests/suite/` 4,704（`tools/` の 141 個の生成器が作る）、道具 155、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -476,8 +478,8 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
   オブジェクトの寿命・回収。プロパティを使わないstatic関数が動く例だけでオブジェクト対応とは
   扱いません。staticプロパティ初期化の副作用を落とす既知の不具合も残っています。
 - **automatic eventと保持値：** ソースのautomaticスカラー/配列event生成、活動中フィールドと
-  SSA値の完全なルート公開、callbackをまたぐ引数・戻り値・copyback値の所有。
-  型付きevent管理表、カーネル操作、SSA領域の部品はありますが、命令境界の回収とソース生成は、
+  SSA値の完全なルート公開。型付きevent管理表、カーネル操作、SSA領域、呼び出し転送の所有の
+  部品はありますが、命令境界の回収とソース生成は、
   完全な公開と寿命の検証が揃ってから有効にします。
 - **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
   イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。

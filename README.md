@@ -119,8 +119,11 @@ source construction and instruction-level event safepoints remain work; the
 [safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) was approved
 on 2026-10-26. [Typed SSA regions](docs/notes/event-temporaries.md) now retain
 caller temporaries across nested execution and vector relocation; seven new
-component tests and eight compiled fault controls pass. Transfer ownership,
-complete publication and the source acceptance matrix remain work.
+component tests and eight compiled fault controls pass.
+[Event transfer ownership](docs/notes/event-transfers.md) now protects typed
+input/output snapshots and return values, including five VM allocation-failure
+paths; six component tests, four VM tests and 12 compiled controls pass.
+Complete active-field/instruction publication and the source matrix remain work.
 
 [Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
 now support named/mixed waits, delayed targets and `.triggered` through typed
@@ -193,7 +196,7 @@ with four/seven reference mismatches unchanged. Its stable compiler and runtime
 both report `13.0 (stable) (v13_0-dirty)`; the exact observations are retained in
 [the Icarus 13.0 record](docs/measurements/2026-10-26/icarus13-source-passive-probes.json)
 and [the development record](docs/measurements/2026-10-26/icarus14-source-passive-probes.json).
-The subsequent SSA-region component did not rerun these probes.
+The subsequent SSA-region and transfer-ownership components did not rerun these probes.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
@@ -260,11 +263,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,543 | 5,541, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,553 | 5,551, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 625, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 635, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -653,9 +656,9 @@ record implemented forms, evidence and limitations.
   static function does not establish object support; static-property
   initialization also has a known missing-side-effect case.
 - **Automatic events and retained values:** source-level automatic scalar/array
-  event construction, complete roots for active fields and SSA values, and
-  ownership of arguments, returns and copyback values across callbacks. The
-  typed event registry, kernel operations and SSA-region component exist;
+  event construction and complete roots for active fields and SSA values. The
+  typed event registry, kernel operations, SSA regions and call-transfer
+  ownership components exist;
   instruction-boundary collection and source construction remain gated on the
   complete publication and lifetime checks.
 - **Event-controlled updates and remaining control forms:** event-controlled

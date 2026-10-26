@@ -195,7 +195,10 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 2026-10-26に承認されましたが、公開手順は未完了で、待機なしソースの有界性は主張しません。
 [SSA領域の部品](notes/event-temporaries.ja.md)で、入れ子呼び出しとvector再確保をまたぐ
 callerのevent一時値を保護し、部品7テストとコンパイルした8故障の検出が通りました。
-転送値と命令回収点の完全な公開は未完了です。
+[型付き転送の所有](notes/event-transfers.ja.md)で、同期/task/deferredの入力・copyback snapshotと
+スカラー戻り値を保持します。部品6テストとVM4テスト（SIR9設計、確保失敗5経路を含む）、
+コンパイルした12故障の検出が通りました。SIR転送の検査であり、ソースのevent再束縛を新たに
+有効化するものではありません。活動中フィールドと命令回収点の完全公開は未完了です。
 
 ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
 独自160設計と厳格な方針境界16件が通り、コンパイルした4故障も検出しました。
