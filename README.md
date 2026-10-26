@@ -27,6 +27,12 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
+The local process-limit topic implements [`--max-procs`](docs/notes/process-limit-execution.md)
+under the approved CLI 2.7 contract. It counts unfinished runtime children in
+the shared kernel, preserves capacity across record retention/reuse, and stops
+before registering an over-limit child. This topic is not committed, merged or
+pushed; P1 remains incomplete.
+
 Main adds [non-parameterized static properties](docs/notes/class-static-execution.md),
 including eager initialization of unused declarations, in `9e6a149d`. Its [full local CI](docs/measurements/2026-10-27/class-static-validation.json)
 passes 21/21 steps, with 568 new CTest entries and seven caught compiled faults.
@@ -283,11 +289,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 6,627 | 6,625, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 6,639 | 6,637, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 5,755 (made by 145 generators under `tools/`), tools 162, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 658, `tests/suite/` 5,755 (made by 146 generators under `tools/`), tools 163, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -656,6 +662,7 @@ their limits, system tasks/functions and implemented command-line options.
   reference algorithm, including pending reports confirmed in the Observed
   region and `$strobe`/`$monitor` in the Postponed region.
 - **Execution controls:** `--autoflush` publishes stdout during a run;
+  `--max-procs` limits unfinished runtime children;
   `--stop=finish|ignore|error` chooses what `$stop` does; `--max-wall-time`
   limits elapsed simulation seconds and runs final procedures before ending.
 - **Bounds diagnostics:** `--bounds-check=warn` reports invalid packed
@@ -718,7 +725,7 @@ record implemented forms, evidence and limitations.
   backend pending), program-scope VCD output, source `%p`, resolved-strength
   `%v`, and the remaining `$fread`/scan and packed-format forms in P1_SUPPORT.
 - **Remaining specified CLI behavior:** options such as `--cond-x`,
-  `--init-values` and `--max-procs` are not currently implemented; the executable's
+  `--init-values` are not currently implemented; the executable's
   `--help` is the authority for accepted options.
 
 Completing P1 also requires wider mechanism/interaction validation against
@@ -859,6 +866,7 @@ Options available now:
 | `--max-wall-time=<seconds>` | Limit simulation wall-clock time (whole seconds, 0 disables); exit code 4 even with `--max-time-ok` |
 | `--stop=finish\|ignore\|error` | End normally, continue after `$stop`, or end with code 1 (default `finish`) |
 | `--autoflush` | Flush stdout after every display/write/monitor task; off by default |
+| `--max-procs=<n>` | Limit unfinished runtime children (default 1000000, 0 disables); static processes and retained ended records are excluded; exit code 6 with `final` execution |
 | `--max-call-depth=<n>` | Limit nested calls (default 10000); exceeding the limit ends with exit code 6 |
 | `--seed=<n>` | Seed for `$urandom`, `$urandom_range` and `randcase` (default 0) |
 | `--mintypmax=min\|typ\|max` | Select the minimum, typical or maximum expression of `min:typ:max` delays (default `typ`) |
@@ -873,7 +881,7 @@ or `--stop=error`; 2
 for an error in the input, including an unsupported construct, or a
 run-time error of the design; 3 for an internal error; 4 when `--max-time`
 or `--max-wall-time` is reached; 5 when a zero-time limit is reached; 6 for excessive call
-depth or insufficient stack space;
+depth, insufficient stack space or the live runtime-process limit;
 130 when SIGINT (Ctrl-C) stops the run. The full command line is
 in [docs/spec/CLI.md](docs/spec/CLI.md).
 

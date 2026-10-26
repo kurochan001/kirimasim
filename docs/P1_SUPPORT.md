@@ -11,7 +11,9 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-27 on main, including class-static
+This inventory describes tier 1 as of 2026-10-27 on the local process-limit
+topic (not yet committed, merged or pushed), including main
+class-static
 implementation `9e6a149d` ([integration record](measurements/2026-10-27/class-static-main-integration.json)).
 The earlier main baseline `ca72b91f` includes
 [event initialization copies](notes/event-initializer-execution.md); main now also supports
@@ -532,6 +534,7 @@ and full source-context coverage remain unconfirmed.
 | Run / inspect | `kirimasim [options] <files> [+plusargs]`, `kirimasim parse`, `--help`, `--version` |
 | Source input | `-f`, `+incdir+`, `+define+`, `--top` through slang |
 | Time selection | `--timescale=<unit>/<precision>`, `--mintypmax=min\|typ\|max` |
+| Live runtime processes | `--max-procs=<n>`; default 1000000, 0 disables. Counts unfinished runtime children, excluding static processes and retained ended records. Rejected children do not start; ends with `resource_limit` / code 6 and runs `final` ([evidence](notes/process-limit-execution.md)) |
 | Simulation limits | `--max-time`, `--max-time-ok`, `--max-zero-delay`, `--max-slot-events`, `--max-steps`, `--max-call-depth` |
 | Live output | `--autoflush` flushes stdout after each display/write/strobe/monitor, including file tasks directed to stdout; default off |
 | Stop policy | `--stop=finish\|ignore\|error`; default `finish`; `ignore` resumes the caller, `error` ends with code 1 and reason `stop`; `$stop(2)` requests statistics at the eventual end |
@@ -543,8 +546,8 @@ and full source-context coverage remain unconfirmed.
 
 `--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
-automatically implemented: for example, `--cond-x`, `--init-values` and
-`--max-procs` are not current driver options. Use `--help` to inspect a build.
+automatically implemented: for example, `--cond-x` and `--init-values`
+are not current driver options. Use `--help` to inspect a build.
 FST output is not implemented. The wall-clock limit is checked before events
 and at VM branches, including static initialization; it does not preempt
 a blocking host operation. Final procedures finish without that deadline.

@@ -54,6 +54,7 @@ struct Case {
     std::string file;
     std::vector<std::string> plusargs;
     std::uint64_t maxTime = UINT64_MAX;  ///< In the design's time precision.
+    std::uint64_t maxProcs = kernel::Limits{}.maxProcs;
 };
 
 std::vector<Case> cases() {
@@ -65,6 +66,9 @@ std::vector<Case> cases() {
         {.file = "plusargs.sv", .plusargs = {"mode=fast", "count=12"}},
         {.file = "time_limit.sv", .maxTime = 50},
         {.file = "class_static.sv"},
+        {.file = "process_limit.sv", .maxProcs = 1},
+        {.file = "process_limit.sv", .maxProcs = 2},
+        {.file = "process_limit.sv", .maxProcs = 0},
     };
 }
 
@@ -129,6 +133,7 @@ Result run(const Case& c, const Compiled& compiled) {
         kernel::Context context(kernel::OutputDestinations{out.get(), err.get()});
         kernel::Limits limits;
         limits.maxTime = c.maxTime;
+        limits.maxProcs = c.maxProcs;
         context.scheduler().setLimits(limits);
         kirimasim::vm::RunOptions options;
         options.plusargs = c.plusargs;

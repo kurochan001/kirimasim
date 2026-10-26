@@ -660,3 +660,7 @@ add_test(NAME tools/class_static_contracts
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_class_static_contracts.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/class_static_contracts PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_process_limit_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_process_limit_matrix.py --check)
+set_tests_properties(tools/gen_process_limit_matrix PROPERTIES LABELS Tools)

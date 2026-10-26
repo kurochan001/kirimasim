@@ -19,6 +19,10 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
+ローカルprocess-limit topicで、承認済みCLI 2.7の[`--max-procs`](docs/notes/process-limit-execution.ja.md)を
+実装しました。共有kernelで未終了のruntime childを数え、記録の保持・再利用と区別して、
+上限を超える子を登録する前に停止します。未commit・未merge・未pushで、P1は未完です。
+
 mainに`9e6a149d`を取り込み、未使用宣言の事前初期化を含む
 [非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)を追加しました。
 [全local CI](docs/measurements/2026-10-27/class-static-validation.json)は21/21項目成功で、
@@ -226,11 +230,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 6,627 | 6,625、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 6,639 | 6,637、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 5,755（`tools/` の 145 個の生成器が作る）、道具 162、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）658、`tests/suite/` 5,755（`tools/` の 146 個の生成器が作る）、道具 163、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 16。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -480,7 +484,7 @@ Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、�
   `$sscanf`・`$fscanf` は同じ語形式を読み、空白・NULもデータとして保ち、完全な
   フィールドだけを代入する。幅0は幅の省略と同じ。
 - **メモリファイルの参照引数：** readmem/writemem 系は固定メモリへの `ref`、参照の転送、配列の行への参照に対応。writemem は `const ref` にも対応する。
-- **実行制御：** `--autoflush` で実行中の標準出力を反映する。`--stop=finish|ignore|error` で `$stop` の動作を選ぶ。`--max-wall-time` でシミュレーションの実時間に上限を設け、final を実行して終了する。
+- **実行制御：** `--max-procs`で未終了のruntime childの上限を設ける。`--autoflush` で実行中の標準出力を反映する。`--stop=finish|ignore|error` で `$stop` の動作を選ぶ。`--max-wall-time` でシミュレーションの実時間に上限を設け、final を実行して終了する。
 - **範囲の診断：** `--bounds-check=warn` で、packed 値の選択や固定長の unpacked 配列の不正な添字を、ソース位置ごとに 1 回警告し、最後に回数を出す。読み書きや NBA の値は変えない。
 - **波形：** `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush`、またはコマンドラインの `--wave=<file>.vcd`（`--wave-scope` と `--wave-glitches` も）による 4 値の VCD
 - **スケジューリング：** IEEE 1800-2023 の時刻スロットのすべての領域と参照アルゴリズム。Observed 領域での保留の報告の確定と、Postponed 領域での `$strobe`・`$monitor` を含む
@@ -527,7 +531,7 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
   扱いません。
 - **波形・書式・入力：** FST出力（依存設定済み、backendは残作業）、programスコープのVCD、
   ソースの`%p`、解決した強さの`%v`、P1_SUPPORTに記載した`$fread`/scan・packed書式の未対応形。
-- **仕様にあるCLIの残り：** `--cond-x`・`--init-values`・`--max-procs`などは現在の実行ファイルには
+- **仕様にあるCLIの残り：** `--cond-x`・`--init-values`などは現在の実行ファイルには
   未実装です。受理するオプションは、その実行ファイルの`--help`で確認してください。
 
 P1完了には、さらに広い仕組みと組み合わせのIcarus比較、既存の回帰/ファジング条件、資源・寿命の
@@ -650,6 +654,7 @@ kirimasim: info: finish at 52 ns
 | `--max-wall-time=<秒数>` | 実行の実時間の上限（整数秒、0 で無効）。`--max-time-ok` があっても終了コード 4 |
 | `--stop=finish\|ignore\|error` | `$stop` で通常終了・継続・終了コード 1 を選ぶ（既定 `finish`） |
 | `--autoflush` | display・write・monitor 系の出力ごとに標準出力をフラッシュする。既定は無効 |
+| `--max-procs=<n>` | 未終了のruntime childの上限（既定1000000、0で無効）。静的プロセスと終了後の保持記録は除外。finalを実行して終了コード6 |
 | `--max-call-depth=<n>` | 呼び出しの深さの上限（既定は 10000）。超えると終了コード 6 |
 | `--seed=<n>` | `$urandom`、`$urandom_range`、`randcase` のシード（既定は 0） |
 | `--mintypmax=min\|typ\|max` | `min:typ:max` の遅延で使う式を選ぶ（既定は `typ`） |
@@ -659,7 +664,7 @@ kirimasim: info: finish at 52 ns
 | `--stats=json` | 実行の回数のカウンタを JSON で出す |
 | `+<名前>[=<値>]` | `$test$plusargs` と `$value$plusargs` のためのプラスアーグ |
 
-終了コード：0 は `$finish`、既定の `$stop`、事象が尽きた。1 は `$fatal` または `--stop=error`。2 は入力の誤り（未対応の構文を含む）、または実行時の設計の誤り。3 は内部エラー。4 は `--max-time` または `--max-wall-time` に達した。5 は時刻が進まない実行の上限に達した。6 は呼び出しが深すぎるか、スタックの残量が足りない。130 は SIGINT（Ctrl-C）で止めた。コマンドラインのすべては [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) にあります。
+終了コード：0 は `$finish`、既定の `$stop`、事象が尽きた。1 は `$fatal` または `--stop=error`。2 は入力の誤り（未対応の構文を含む）、または実行時の設計の誤り。3 は内部エラー。4 は `--max-time` または `--max-wall-time` に達した。5 は時刻が進まない実行の上限に達した。6 は呼び出しが深すぎるか、スタックの残量が足りないか、未終了のruntime childの上限に達した。130 は SIGINT（Ctrl-C）で止めた。コマンドラインのすべては [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) にあります。
 
 ## 仕組み
 

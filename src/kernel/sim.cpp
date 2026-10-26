@@ -272,11 +272,30 @@ ProcessId Scheduler::addProgramInitial(ResumeFn fn, void* frame, ProgramId progr
 }
 
 ProcessId Scheduler::addChildProcess(ResumeFn fn, void* frame, ProcessId parent) {
+    // The shared admission gate counts running and waiting children alike.
+    // Static processes and records retained after completion do not count.
+    if (limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs) {
+        endNote_ =
+            "resource limit reached: " + std::to_string(liveRuntime_) +
+            " live processes made at run time (--max-procs=" + std::to_string(limits_.maxProcs) +
+            ")";
+        resourceLimit();
+        return kNone;
+    }
     const Group group = processes_[parent.index()].group;
     const ProgramId program = processes_[parent.index()].program;
     const ProcessId child = addProcess(fn, frame, group);
     processes_[child.index()].program = program;
+    processes_[child.index()].runtimeCreated = true;
+    ++liveRuntime_;
     return child;
+}
+
+void Scheduler::markProcessDone(ProcessId p) {
+    Process& process = processes_[p.index()];
+    if (process.done) return;
+    process.done = true;
+    if (process.runtimeCreated) --liveRuntime_;
 }
 
 void Scheduler::initialEnded(ProcessId p) {
@@ -336,7 +355,7 @@ void Scheduler::kill(ProcessId p) {
     // Killing that callback must detach it before its frame can be released.
     detachDisplayMonitor(p);
     freeMonitor(p);
-    proc.done = true;
+    markProcessDone(p);
     ++proc.gen;
     counters_.increment(cFinished_);
     initialEnded(p);
@@ -347,7 +366,7 @@ void Scheduler::ended(ProcessId p) {
     Process& proc = processes_[p.index()];
     const bool wasDone = proc.done;
     if (!wasDone) counters_.increment(cFinished_);
-    proc.done = true;
+    markProcessDone(p);
     ++proc.gen;
     if (!wasDone) initialEnded(p);
 }
@@ -757,7 +776,7 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
         counters_.increment(cWakeups_);
         const auto st =
             static_cast<Status>(processes_[p.index()].fn(toC(ctx_), processes_[p.index()].frame));
-        processes_[p.index()].done = true;
+        markProcessDone(p);
         ++processes_[p.index()].gen;
         counters_.increment(cFinished_);
         // A run-time error of the design, or a limit on resources, that

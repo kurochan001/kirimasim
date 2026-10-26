@@ -74,7 +74,7 @@ void printUsage(std::FILE* out) {
         "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
         "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
         "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn, --autoflush,\n"
-        "         --stop=finish|ignore|error, --max-wall-time=<seconds>,\n"
+        "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
         "         --wave=<file>.vcd,\n"
         "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
         out);
@@ -103,6 +103,7 @@ struct Options {
     std::uint64_t maxSlotEvents = 100000000;
     std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxWallTime = 0;
+    std::uint64_t maxProcs = kirimasim::kernel::Limits{}.maxProcs;
     std::uint64_t maxSccIter = 0;  // no effect until tier 2 has islands (P3)
     std::uint64_t maxCallDepth = kirimasim::vm::kDefaultCallDepth;  // CLI.md 2.7
     std::uint64_t seed = 0;                                         // --seed (SYSTEM_TASKS.md 13.2)
@@ -158,6 +159,7 @@ int parseArgs(int argc, char** argv, Options& o) {
               {"--max-slot-events", &o.maxSlotEvents},
               {"--max-steps", &o.maxSteps},
               {"--max-wall-time", &o.maxWallTime},
+              {"--max-procs", &o.maxProcs},
               {"--max-scc-iter", &o.maxSccIter},
               {"--seed", &o.seed}}) {
             if (!arg.starts_with(name) || arg.size() <= name.size() || arg[name.size()] != '=')
@@ -373,6 +375,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     }
     limits.maxZeroDelay = o.maxZeroDelay;
     limits.maxSlotEvents = o.maxSlotEvents;
+    limits.maxProcs = o.maxProcs;
     context.scheduler().setLimits(limits);
     kirimasim::vm::RunOptions run;
     run.maxSteps = o.maxSteps;
@@ -405,7 +408,9 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     if (reason == kirimasim::kernel::EndReason::Internal) {
         std::fprintf(stderr, "kirimasim: internal error: %s\n", result.error.c_str());
     } else {
-        if (reason == kirimasim::kernel::EndReason::WallTimeLimit)
+        if ((reason == kirimasim::kernel::EndReason::WallTimeLimit ||
+             reason == kirimasim::kernel::EndReason::ResourceLimit) &&
+            !context.scheduler().endNote().empty())
             std::fprintf(stderr, "kirimasim: error: %s\n", context.scheduler().endNote().c_str());
         else if (!context.scheduler().endNote().empty())
             std::fprintf(stderr, "kirimasim: error: time did not advance: %s\n",

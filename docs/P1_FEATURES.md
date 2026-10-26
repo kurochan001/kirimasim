@@ -35,6 +35,24 @@ instance-field initializer does not run. Qualified, alias, inherited and static
 method access use ordinary typed storage. See the [implementation and limits](notes/class-static-execution.md).
 Parameterized static storage and object execution remain work.
 
+## Live runtime-process limits
+
+```sh
+build/dev/src/driver/kirimasim --max-procs=1 tests/cli/process_limit_matrix/burst_module_join_1.sv
+```
+
+```text
+final=0
+```
+
+This original design attempts two children in one fork. At limit one, the
+second registration is rejected before any child starts; `final` runs and the
+exit code is 6, with reason `resource_limit`. The diagnostic identifies
+`--max-procs=1`. Use 2 for this design to complete, or 0 to disable the limit;
+the default is 1000000. Static processes do not count. Ended children return
+capacity even when their records remain for descendants or pending reports.
+See the [implementation, validation and limits](notes/process-limit-execution.md).
+
 ## Fixed-array ports
 
 Fixed-array input/output and compatible net inout ports match elements in

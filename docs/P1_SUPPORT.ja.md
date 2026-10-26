@@ -10,7 +10,7 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
-2026-10-27時点のmainの第1層です。クラスstatic記憶域の実装`9e6a149d`を含みます
+2026-10-27時点のローカルprocess-limit topicの第1層です。未commit・未merge・未pushです。クラスstatic記憶域の実装`9e6a149d`を含みます
 （[取り込み記録](measurements/2026-10-27/class-static-main-integration.json)）。
 mainの基準`ca72b91f`には[event初期化コピー](notes/event-initializer-execution.ja.md)が入り、
 mainで[非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)を追加します。
@@ -441,6 +441,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 | 実行・確認 | `kirimasim [options] <files> [+plusargs]`、`kirimasim parse`、`--help`、`--version` |
 | ソースの入力 | slang を通した `-f`、`+incdir+`、`+define+`、`--top` |
 | 時間の選択 | `--timescale=<unit>/<precision>`、`--mintypmax=min\|typ\|max` |
+| 未終了のruntime process | `--max-procs=<n>`。既定1000000、0で無効。未終了のruntime childを数え、静的プロセス・終了後の保持記録は除外。拒否した子は開始せず、finalを実行し`resource_limit`・終了コード6（[検証](notes/process-limit-execution.ja.md)） |
 | シミュレーションの上限 | `--max-time`、`--max-time-ok`、`--max-zero-delay`、`--max-slot-events`、`--max-steps`、`--max-call-depth` |
 | 実行中の出力 | `--autoflush`。display・write・strobe・monitor ごとに標準出力をフラッシュ。標準出力宛のファイルタスクも含む。既定は無効 |
 | 停止の方針 | `--stop=finish\|ignore\|error`（既定 `finish`）。`ignore` は呼び出し元を継続。`error` は理由 `stop` のまま終了コード 1。`$stop(2)` は継続後の実行終了時にも統計を要求する |
@@ -452,7 +453,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 
 `--max-scc-iter` は受け付けますが、P3 の静的な島の実装までは効果がありません。
 [CLI 仕様](spec/CLI.ja.md)にあるオプションがすべて実装済みというわけではありません。
-例えば `--cond-x`、`--init-values`、`--max-procs` は、現在の driver のオプションでは
+例えば `--cond-x`、`--init-values` は、現在の driver のオプションでは
 ありません。各ビルドの `--help` で確認してください。FST 出力は未対応です。
 実時間の上限は、イベント実行前と VM の分岐（静的初期化を含む）で検査します。
 待っているホスト側の処理を強制的に中断するものではありません。final は期限に止められず完了します。

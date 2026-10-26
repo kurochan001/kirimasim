@@ -1,0 +1,632 @@
+[
+  {
+    "source": "burst_module_join_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_module_join_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_module_join_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_module_join_any_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_module_join_any_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_module_join_any_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_module_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_module_join_none_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_module_join_none_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_static_task_join_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_static_task_join_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_static_task_join_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_static_task_join_any_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_static_task_join_any_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_static_task_join_any_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_static_task_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_static_task_join_none_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_static_task_join_none_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_automatic_task_join_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_automatic_task_join_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_automatic_task_join_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_automatic_task_join_any_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_automatic_task_join_any_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_automatic_task_join_any_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_automatic_task_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_automatic_task_join_none_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_automatic_task_join_none_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_function_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_function_join_none_2.sv",
+    "limit": 2,
+    "stdout": "final=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_function_join_none_0.sv",
+    "limit": 0,
+    "stdout": "final=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_interface_join_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_interface_join_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_interface_join_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_interface_join_any_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_interface_join_any_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_interface_join_any_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_interface_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_interface_join_none_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_interface_join_none_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_program_join_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_program_join_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "burst_program_join_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "burst_program_join_any_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_program_join_any_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "burst_program_join_any_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "burst_program_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_program_join_none_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "burst_program_join_none_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "burst_generate_join_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_generate_join_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_generate_join_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_generate_join_any_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_generate_join_any_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_generate_join_any_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_generate_join_none_1.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "burst_generate_join_none_2.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "burst_generate_join_none_0.sv",
+    "limit": 0,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "churn_module.sv",
+    "limit": 1,
+    "stdout": "done=40\nfinal=40\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "retained_ancestor_module.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "disable_module.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "churn_static_task.sv",
+    "limit": 1,
+    "stdout": "done=40\nfinal=40\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "retained_ancestor_static_task.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "disable_static_task.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "churn_automatic_task.sv",
+    "limit": 1,
+    "stdout": "done=40\nfinal=40\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "retained_ancestor_automatic_task.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "disable_automatic_task.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "churn_interface.sv",
+    "limit": 1,
+    "stdout": "done=40\nfinal=40\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "retained_ancestor_interface.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "disable_interface.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "churn_program.sv",
+    "limit": 1,
+    "stdout": "done=40\nfinal=40\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "retained_ancestor_program.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "disable_program.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "churn_generate.sv",
+    "limit": 1,
+    "stdout": "done=40\nfinal=40\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "retained_ancestor_generate.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "disable_generate.sv",
+    "limit": 2,
+    "stdout": "done=2\nfinal=2\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "waiting_delay.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "waiting_event.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "waiting_guard.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "pending_reports_module.sv",
+    "limit": 1,
+    "stdout": "late\nlate\nlate\ndone=0\nfinal=0\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "pending_reports_program.sv",
+    "limit": 1,
+    "stdout": "late\nlate\nlate\ndone=0\nfinal=0\n",
+    "exit": 0,
+    "reason": "finish"
+  },
+  {
+    "source": "rejected_capture_integer.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "rejected_capture_queue.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "rejected_capture_string.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "rejected_capture_event.sv",
+    "limit": 1,
+    "stdout": "final=0\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "parent_initializer_module.sv",
+    "limit": 1,
+    "stdout": "final=1\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "parent_initializer_program.sv",
+    "limit": 1,
+    "stdout": "final=1\n",
+    "exit": 6,
+    "reason": "resource_limit"
+  },
+  {
+    "source": "static_exclusion_1.sv",
+    "limit": 1,
+    "stdout": "done=1\nfinal=1\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "static_exclusion_0.sv",
+    "limit": 0,
+    "stdout": "done=1\nfinal=1\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "static_exclusion_None.sv",
+    "limit": null,
+    "stdout": "done=1\nfinal=1\n",
+    "exit": 0,
+    "reason": "quiescent"
+  },
+  {
+    "source": "static_exclusion_18446744073709551615.sv",
+    "limit": 18446744073709551615,
+    "stdout": "done=1\nfinal=1\n",
+    "exit": 0,
+    "reason": "quiescent"
+  }
+]

@@ -35,6 +35,22 @@ calls=2 trace=12
 [実装と制限](notes/class-static-execution.ja.md)を参照してください。
 パラメータ付きstatic記憶域とオブジェクト実行は残作業です。
 
+## 未終了のruntime processの上限
+
+```sh
+build/dev/src/driver/kirimasim --max-procs=1 tests/cli/process_limit_matrix/burst_module_join_1.sv
+```
+
+```text
+final=0
+```
+
+この独自設計は1つのforkで子を2つ作ろうとします。上限1では2つ目の登録を拒否し、
+子が開始する前に停止します。finalを実行し、理由`resource_limit`・終了コード6で終わり、
+診断に`--max-procs=1`を示します。この設計を完走するには2を指定し、0なら上限を無効に
+できます。既定は1000000です。静的プロセスは数えません。終了した子は、子孫やレポートの
+ために記録が残っていても枠を返します。[実装・検証・制限](notes/process-limit-execution.ja.md)を参照してください。
+
 ## 固定配列ポート
 
 固定配列のinput/outputと互換netのinoutが、宣言順に要素を対応させて実行できます。

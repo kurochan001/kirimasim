@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-27",
+  "base_commit": "691117e41cf9b6fc1b1dbe77c26df5bef8c9e763",
+  "scope": "eight compiled live-runtime-process faults; mutation anchor checks excluded as detectors",
+  "source_sha256": {
+    "src/kernel/sim.cpp": "fa02fdcedb50b21bb15f4880289422c30b609bfc04fbbdfd26477d4a58f826fa",
+    "src/driver/main.cpp": "b57394c462adddc7bbaf9e81131dd5b932353c4b7b555b57665feaa55faa49d0",
+    "src/vm/vm.cpp": "b44f7e651d671e68f41b42d6790172a03c073a852ba681b53404093323a6553c"
+  },
+  "controls": [
+    {
+      "name": "process limit: admission bypassed",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "3 - ProcessLimit.RejectedChildHasNoRecordCounterOrCallback (Failed)",
+        "4 - ProcessLimit.NormalCompletionReturnsCapacityBeforeRecordsAreReleased (Failed)",
+        "5 - ProcessLimit.KillReturnsCapacityExactlyOnce (Failed)",
+        "6 - ProcessLimit.ReusedStaticRecordDoesNotReleaseAnotherChildsCapacity (Failed)",
+        "7 - ProcessLimit.EndedAncestorDoesNotCountWhileItsDescendantRemains (Failed)",
+        "8 - ProcessLimit.TimeAndNamedEventWaitersRemainLive (Failed)",
+        "9 - ProcessLimit.ProgramCompletionReturnsAllItsDescendantsCapacity (Failed)",
+        "10 - ProcessLimit.CapacityAndTerminationBelongToEachContext (Failed)",
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    },
+    {
+      "name": "process limit: one extra live child allowed",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "3 - ProcessLimit.RejectedChildHasNoRecordCounterOrCallback (Failed)",
+        "4 - ProcessLimit.NormalCompletionReturnsCapacityBeforeRecordsAreReleased (Failed)",
+        "5 - ProcessLimit.KillReturnsCapacityExactlyOnce (Failed)",
+        "6 - ProcessLimit.ReusedStaticRecordDoesNotReleaseAnotherChildsCapacity (Failed)",
+        "7 - ProcessLimit.EndedAncestorDoesNotCountWhileItsDescendantRemains (Failed)",
+        "8 - ProcessLimit.TimeAndNamedEventWaitersRemainLive (Failed)",
+        "9 - ProcessLimit.ProgramCompletionReturnsAllItsDescendantsCapacity (Failed)",
+        "10 - ProcessLimit.CapacityAndTerminationBelongToEachContext (Failed)",
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    },
+    {
+      "name": "process limit: unlimited zero rejects every child",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "1 - ProcessLimit.PublicDefaultAndUnlimitedConfiguration (Failed)",
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    },
+    {
+      "name": "process limit: static registrations consume capacity",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "2 - ProcessLimit.StaticAndProgramInitialProcessesDoNotConsumeCapacity (Failed)",
+        "3 - ProcessLimit.RejectedChildHasNoRecordCounterOrCallback (Failed)",
+        "4 - ProcessLimit.NormalCompletionReturnsCapacityBeforeRecordsAreReleased (Failed)",
+        "5 - ProcessLimit.KillReturnsCapacityExactlyOnce (Failed)",
+        "7 - ProcessLimit.EndedAncestorDoesNotCountWhileItsDescendantRemains (Failed)",
+        "8 - ProcessLimit.TimeAndNamedEventWaitersRemainLive (Failed)",
+        "9 - ProcessLimit.ProgramCompletionReturnsAllItsDescendantsCapacity (Failed)",
+        "10 - ProcessLimit.CapacityAndTerminationBelongToEachContext (Failed)",
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    },
+    {
+      "name": "process limit: completed records retain capacity",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "4 - ProcessLimit.NormalCompletionReturnsCapacityBeforeRecordsAreReleased (Failed)",
+        "5 - ProcessLimit.KillReturnsCapacityExactlyOnce (Failed)",
+        "6 - ProcessLimit.ReusedStaticRecordDoesNotReleaseAnotherChildsCapacity (Failed)",
+        "7 - ProcessLimit.EndedAncestorDoesNotCountWhileItsDescendantRemains (Failed)",
+        "9 - ProcessLimit.ProgramCompletionReturnsAllItsDescendantsCapacity (Failed)",
+        "10 - ProcessLimit.CapacityAndTerminationBelongToEachContext (Failed)",
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    },
+    {
+      "name": "process limit: repeated completion returns capacity twice",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "4 - ProcessLimit.NormalCompletionReturnsCapacityBeforeRecordsAreReleased (Failed)",
+        "5 - ProcessLimit.KillReturnsCapacityExactlyOnce (Failed)"
+      ]
+    },
+    {
+      "name": "process limit: driver omits configured capacity",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    },
+    {
+      "name": "process limit: failed registration reaches child scheduling",
+      "built": true,
+      "caught": true,
+      "detecting_tests": [
+        "659 - context_sequential (Failed)                       Context",
+        "660 - context_parallel (Failed)                         Context",
+        "661 - context_churn (Failed)                            Context",
+        "6475 - cli/process_limit (Failed)                        Cli"
+      ]
+    }
+  ],
+  "source_restored_exactly": true,
+  "restored_build_passed": true,
+  "restored_tests_passed": true,
+  "checked_at_utc": "2026-10-26T21:57:08.871170+00:00"
+}

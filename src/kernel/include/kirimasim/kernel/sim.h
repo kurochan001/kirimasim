@@ -228,11 +228,12 @@ struct DisplayReadSpec {
 /// assign (SCHEDULER_SPEC.md 14).
 enum class Hold : std::uint8_t { Assign, Force };
 
-/// Limits of a run (CLI.md 2.2, 2.6). 0 means no limit for the counts.
+/// Limits of a run (CLI.md 2.2, 2.6, 2.7). 0 means no limit for the counts.
 struct Limits {
     std::uint64_t maxTime = UINT64_MAX;
-    std::uint64_t maxZeroDelay = 0;   ///< Moves into Active or Reactive per time slot.
-    std::uint64_t maxSlotEvents = 0;  ///< Events run per time slot, in any region.
+    std::uint64_t maxZeroDelay = 0;    ///< Moves into Active or Reactive per time slot.
+    std::uint64_t maxSlotEvents = 0;   ///< Events run per time slot, in any region.
+    std::uint64_t maxProcs = 1000000;  ///< Unfinished children made at run time (CLI.md 2.7).
 };
 
 /// The scheduler of one Context.
@@ -297,6 +298,8 @@ public:
     ProgramId addProgram();
     ProcessId addProgramInitial(ResumeFn fn, void* frame, ProgramId program);
     /// A fork child inherits its caller's group and program-initial origin.
+    /// At the live-child limit, returns kNone and requests ResourceLimit
+    /// before registering the rejected child (CLI.md 2.7).
     ProcessId addChildProcess(ResumeFn fn, void* frame, ProcessId parent);
     /// $exit ends the originating program; without such an origin, no-op.
     void exitProgram(ProcessId caller);
@@ -664,7 +667,8 @@ private:
         std::pmr::vector<ManagedEventPin> eventPins;
         std::pmr::vector<StrengthWatchToken> strengthWaits;
         bool done = false;
-        bool flushOnResume = false;          ///< Woken by an event: a flush point.
+        bool runtimeCreated = false;  ///< Counts until done, independent of record retention.
+        bool flushOnResume = false;   ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
         std::uint32_t observed = 0;          ///< Those confirmed in the Observed region.
         std::uint64_t serial = 0;            ///< Creation order, for 15.4 (10.8).
@@ -676,6 +680,7 @@ private:
     std::vector<Program> programs_;
     std::uint32_t activePrograms_ = 0;
     std::vector<ProcessId> endedProgramProcesses_;
+    void markProcessDone(ProcessId p);
     void initialEnded(ProcessId p);
     void completeProgram(ProgramId program);
 
@@ -780,6 +785,7 @@ private:
     /// Released places to reuse, and the number of records kept (10.8).
     std::vector<ProcessId> freeProcesses_;
     std::uint64_t kept_ = 0;
+    std::uint64_t liveRuntime_ = 0;  ///< Unfinished runtime children, not retained records.
     std::uint64_t nextSerial_ = 0;
     /// A released place whose wait number reached this is not reused, so
     /// that the next process has room to count its waits (10.8).

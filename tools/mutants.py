@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('process limit: admission bypassed', 'src/kernel/sim.cpp', 'limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs', 'limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs && false'),
+    ('process limit: one extra live child allowed', 'src/kernel/sim.cpp', 'liveRuntime_ >= limits_.maxProcs', 'liveRuntime_ > limits_.maxProcs'),
+    ('process limit: unlimited zero rejects every child', 'src/kernel/sim.cpp', 'limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs', 'liveRuntime_ >= limits_.maxProcs'),
+    ('process limit: static registrations consume capacity', 'src/kernel/sim.cpp', '    counters_.increment(cCreated_);', '    ++liveRuntime_;\n    counters_.increment(cCreated_);'),
+    ('process limit: completed records retain capacity', 'src/kernel/sim.cpp', '    if (process.runtimeCreated) --liveRuntime_;', '    static_cast<void>(process.runtimeCreated);'),
+    ('process limit: repeated completion returns capacity twice', 'src/kernel/sim.cpp', '    if (process.done) return;', '    if (process.done && false) return;'),
+    ('process limit: driver omits configured capacity', 'src/driver/main.cpp', '    limits.maxProcs = o.maxProcs;', '    static_cast<void>(o.maxProcs);'),
+    ('process limit: failed registration reaches child scheduling', 'src/vm/vm.cpp', 'if (c.kernelId == kernel::kNone)\n                    throw StorageFailure{kernel::ActivationError::ResourceLimit};', 'if (c.kernelId == kernel::kNone && false)\n                    throw StorageFailure{kernel::ActivationError::ResourceLimit};'),
+
     ('class static: declaration stop escapes compile', 'src/front/lower.cpp', '    try {\n        lowerer.lower(compilation->getRoot());\n    } catch (const Unsupported&) {\n        // Declaration discovery can stop before any procedure owns a catch.\n        // The diagnostic is already recorded, including a low-stack stop.\n        result.diagnostics += lowerer.diagnostics();\n        result.numWarnings += lowerer.numWarnings();\n        result.numErrors += lowerer.numErrors();\n        result.unsupported = true;\n        return result;\n    }', '    lowerer.lower(compilation->getRoot());'),
     ('class static: unreferenced declaration skipped', 'src/front/lower.cpp', '    declareScope(type);', '    static_cast<void>(type);'),
     ('class static: scalar initializer omitted', 'src/front/lower.cpp', 'if (member.kind != ast::SymbolKind::Net && v.getInitializer() != nullptr)', 'if (member.kind == ast::SymbolKind::Variable && v.getInitializer() != nullptr)'),

@@ -1,0 +1,347 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-26T22:09:42.259057+00:00",
+  "base_commit": "691117e41cf9b6fc1b1dbe77c26df5bef8c9e763",
+  "branch": "codex/p1-process-limit",
+  "publication_state": "uncommitted local topic; not merged or pushed",
+  "scope": "approved CLI 2.7 runtime resource policy; no claim of Icarus language-feature parity",
+  "platform": "macOS/arm64",
+  "source_sha256": {
+    "src/driver/main.cpp": "b57394c462adddc7bbaf9e81131dd5b932353c4b7b555b57665feaa55faa49d0",
+    "src/kernel/include/kirimasim/kernel/sim.h": "c076afbbe811784bec189814617b4eedbd63e943928980195c5b3d2949cdae04",
+    "src/kernel/sim.cpp": "fa02fdcedb50b21bb15f4880289422c30b609bfc04fbbdfd26477d4a58f826fa",
+    "src/vm/vm.cpp": "b44f7e651d671e68f41b42d6790172a03c073a852ba681b53404093323a6553c",
+    "tests/cli/CMakeLists.txt": "c89672355ae9db73be8a7be11bfed849448df0b450547811353fb8af681c5470",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_0.sv": "8734133eb46334edad20cb26e3a9424a4e99bc84cb26c429f3127e5fe212a8a3",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_1.sv": "8734133eb46334edad20cb26e3a9424a4e99bc84cb26c429f3127e5fe212a8a3",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_2.sv": "8734133eb46334edad20cb26e3a9424a4e99bc84cb26c429f3127e5fe212a8a3",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_any_0.sv": "ac6cf8acddc677a321b14d6fa8129cf727b69f3a29033ba060903c2fc2e26e8a",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_any_1.sv": "ac6cf8acddc677a321b14d6fa8129cf727b69f3a29033ba060903c2fc2e26e8a",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_any_2.sv": "ac6cf8acddc677a321b14d6fa8129cf727b69f3a29033ba060903c2fc2e26e8a",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_none_0.sv": "808c36d0967340b31bf0426b38c580bfb5791616a899186047cb6b31dd4b7642",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_none_1.sv": "808c36d0967340b31bf0426b38c580bfb5791616a899186047cb6b31dd4b7642",
+    "tests/cli/process_limit_matrix/burst_automatic_task_join_none_2.sv": "808c36d0967340b31bf0426b38c580bfb5791616a899186047cb6b31dd4b7642",
+    "tests/cli/process_limit_matrix/burst_function_join_none_0.sv": "bd61f38a578b3fc357d554de988d97c411a3d93a2d0c8202f6cfe116a0e2a7b5",
+    "tests/cli/process_limit_matrix/burst_function_join_none_1.sv": "bd61f38a578b3fc357d554de988d97c411a3d93a2d0c8202f6cfe116a0e2a7b5",
+    "tests/cli/process_limit_matrix/burst_function_join_none_2.sv": "bd61f38a578b3fc357d554de988d97c411a3d93a2d0c8202f6cfe116a0e2a7b5",
+    "tests/cli/process_limit_matrix/burst_generate_join_0.sv": "b6d7e62392dfad04a6614af8c990b7621637cacec153ab336620eeb97d2a4367",
+    "tests/cli/process_limit_matrix/burst_generate_join_1.sv": "b6d7e62392dfad04a6614af8c990b7621637cacec153ab336620eeb97d2a4367",
+    "tests/cli/process_limit_matrix/burst_generate_join_2.sv": "b6d7e62392dfad04a6614af8c990b7621637cacec153ab336620eeb97d2a4367",
+    "tests/cli/process_limit_matrix/burst_generate_join_any_0.sv": "22ea9cb304f3fbfb703ffc6b886a9a224919ac29a1c71a724372bfc61f136ba3",
+    "tests/cli/process_limit_matrix/burst_generate_join_any_1.sv": "22ea9cb304f3fbfb703ffc6b886a9a224919ac29a1c71a724372bfc61f136ba3",
+    "tests/cli/process_limit_matrix/burst_generate_join_any_2.sv": "22ea9cb304f3fbfb703ffc6b886a9a224919ac29a1c71a724372bfc61f136ba3",
+    "tests/cli/process_limit_matrix/burst_generate_join_none_0.sv": "457550604071dc2ecb3cc445f4185c37f316cee2fbeb24e80bb99a4e32c43eae",
+    "tests/cli/process_limit_matrix/burst_generate_join_none_1.sv": "457550604071dc2ecb3cc445f4185c37f316cee2fbeb24e80bb99a4e32c43eae",
+    "tests/cli/process_limit_matrix/burst_generate_join_none_2.sv": "457550604071dc2ecb3cc445f4185c37f316cee2fbeb24e80bb99a4e32c43eae",
+    "tests/cli/process_limit_matrix/burst_interface_join_0.sv": "5beb3e171299efb04a95f3d96abca6449c174cb3453df088672a064c0836e7df",
+    "tests/cli/process_limit_matrix/burst_interface_join_1.sv": "5beb3e171299efb04a95f3d96abca6449c174cb3453df088672a064c0836e7df",
+    "tests/cli/process_limit_matrix/burst_interface_join_2.sv": "5beb3e171299efb04a95f3d96abca6449c174cb3453df088672a064c0836e7df",
+    "tests/cli/process_limit_matrix/burst_interface_join_any_0.sv": "2df7db9e81387cf1f1a29cf78d96bcb4e862c19e960aeca220af7dee8f4819d5",
+    "tests/cli/process_limit_matrix/burst_interface_join_any_1.sv": "2df7db9e81387cf1f1a29cf78d96bcb4e862c19e960aeca220af7dee8f4819d5",
+    "tests/cli/process_limit_matrix/burst_interface_join_any_2.sv": "2df7db9e81387cf1f1a29cf78d96bcb4e862c19e960aeca220af7dee8f4819d5",
+    "tests/cli/process_limit_matrix/burst_interface_join_none_0.sv": "587a91d9a492c5d03a45fca255baf7e67be649be4954b6616f1aa909810a22c3",
+    "tests/cli/process_limit_matrix/burst_interface_join_none_1.sv": "587a91d9a492c5d03a45fca255baf7e67be649be4954b6616f1aa909810a22c3",
+    "tests/cli/process_limit_matrix/burst_interface_join_none_2.sv": "587a91d9a492c5d03a45fca255baf7e67be649be4954b6616f1aa909810a22c3",
+    "tests/cli/process_limit_matrix/burst_module_join_0.sv": "70073c225bf1aed94117b16846ea397f43406dbab13d6abdc52c00e493e79e2b",
+    "tests/cli/process_limit_matrix/burst_module_join_1.sv": "70073c225bf1aed94117b16846ea397f43406dbab13d6abdc52c00e493e79e2b",
+    "tests/cli/process_limit_matrix/burst_module_join_2.sv": "70073c225bf1aed94117b16846ea397f43406dbab13d6abdc52c00e493e79e2b",
+    "tests/cli/process_limit_matrix/burst_module_join_any_0.sv": "a72ded395a1274207718c60ec7d298be7c108ae66bd4142758530d62a165828d",
+    "tests/cli/process_limit_matrix/burst_module_join_any_1.sv": "a72ded395a1274207718c60ec7d298be7c108ae66bd4142758530d62a165828d",
+    "tests/cli/process_limit_matrix/burst_module_join_any_2.sv": "a72ded395a1274207718c60ec7d298be7c108ae66bd4142758530d62a165828d",
+    "tests/cli/process_limit_matrix/burst_module_join_none_0.sv": "1ec4bb3283d1c716f8541174d25809398e7ac1a4bde6b9229eecbd38b81ab550",
+    "tests/cli/process_limit_matrix/burst_module_join_none_1.sv": "1ec4bb3283d1c716f8541174d25809398e7ac1a4bde6b9229eecbd38b81ab550",
+    "tests/cli/process_limit_matrix/burst_module_join_none_2.sv": "1ec4bb3283d1c716f8541174d25809398e7ac1a4bde6b9229eecbd38b81ab550",
+    "tests/cli/process_limit_matrix/burst_program_join_0.sv": "62964dbfef942d8f2096ce4d9df117176f37d4a54bc60def16a45840536050c9",
+    "tests/cli/process_limit_matrix/burst_program_join_1.sv": "62964dbfef942d8f2096ce4d9df117176f37d4a54bc60def16a45840536050c9",
+    "tests/cli/process_limit_matrix/burst_program_join_2.sv": "62964dbfef942d8f2096ce4d9df117176f37d4a54bc60def16a45840536050c9",
+    "tests/cli/process_limit_matrix/burst_program_join_any_0.sv": "93dd61b50fef8dc37a1a8546caa365be9634fafb9b7b0ef8dea7a1f8987df534",
+    "tests/cli/process_limit_matrix/burst_program_join_any_1.sv": "93dd61b50fef8dc37a1a8546caa365be9634fafb9b7b0ef8dea7a1f8987df534",
+    "tests/cli/process_limit_matrix/burst_program_join_any_2.sv": "93dd61b50fef8dc37a1a8546caa365be9634fafb9b7b0ef8dea7a1f8987df534",
+    "tests/cli/process_limit_matrix/burst_program_join_none_0.sv": "00524c72ee68b73f9477655e9ac4bba271124220f258cedfba74dafbb4a75cd2",
+    "tests/cli/process_limit_matrix/burst_program_join_none_1.sv": "00524c72ee68b73f9477655e9ac4bba271124220f258cedfba74dafbb4a75cd2",
+    "tests/cli/process_limit_matrix/burst_program_join_none_2.sv": "00524c72ee68b73f9477655e9ac4bba271124220f258cedfba74dafbb4a75cd2",
+    "tests/cli/process_limit_matrix/burst_static_task_join_0.sv": "d6345c021c4d4e50695d10390a37749b8fc431627e3b84c29fd3a06c475d5c64",
+    "tests/cli/process_limit_matrix/burst_static_task_join_1.sv": "d6345c021c4d4e50695d10390a37749b8fc431627e3b84c29fd3a06c475d5c64",
+    "tests/cli/process_limit_matrix/burst_static_task_join_2.sv": "d6345c021c4d4e50695d10390a37749b8fc431627e3b84c29fd3a06c475d5c64",
+    "tests/cli/process_limit_matrix/burst_static_task_join_any_0.sv": "bdfa07fda36abe97bff91dd6d55c0dc4ca4f589acf1cafbbef8a761a821f5dba",
+    "tests/cli/process_limit_matrix/burst_static_task_join_any_1.sv": "bdfa07fda36abe97bff91dd6d55c0dc4ca4f589acf1cafbbef8a761a821f5dba",
+    "tests/cli/process_limit_matrix/burst_static_task_join_any_2.sv": "bdfa07fda36abe97bff91dd6d55c0dc4ca4f589acf1cafbbef8a761a821f5dba",
+    "tests/cli/process_limit_matrix/burst_static_task_join_none_0.sv": "560b35faa0a4ba6671034c3aaf888dcd50b22efbb1e9aa78e15b7476f660b787",
+    "tests/cli/process_limit_matrix/burst_static_task_join_none_1.sv": "560b35faa0a4ba6671034c3aaf888dcd50b22efbb1e9aa78e15b7476f660b787",
+    "tests/cli/process_limit_matrix/burst_static_task_join_none_2.sv": "560b35faa0a4ba6671034c3aaf888dcd50b22efbb1e9aa78e15b7476f660b787",
+    "tests/cli/process_limit_matrix/cases.json": "7ca37908dc334b283ca7fe03fdb68ef74d0b468c9ef9992ba58fe1172fb9e024",
+    "tests/cli/process_limit_matrix/churn_automatic_task.sv": "d7e520b29174d08809510e5f98741a68b1cca7adbbda8f35da3f178d977a06ba",
+    "tests/cli/process_limit_matrix/churn_generate.sv": "16e051098e50d269674cf1509409af343c14f0247b02adc99b34dcd596215ac9",
+    "tests/cli/process_limit_matrix/churn_interface.sv": "f383a9c2a43f2c0c94fdf2f5db564f212e78d03ac63242da3297ecfc7f6382c4",
+    "tests/cli/process_limit_matrix/churn_module.sv": "eb4e36c3d794b9e4b4e3b63656ca3de62d21ffe09359d3ddf35b047a12a9ac9e",
+    "tests/cli/process_limit_matrix/churn_program.sv": "662f75c095df4af6b4bba8a800b37b3fe4821deab35ced0bfed7b2f7e290ab1f",
+    "tests/cli/process_limit_matrix/churn_static_task.sv": "4a7e6c108b1abcd789bd2e2e2a2e634a03b0c3f425e96e59e903aed402d861f8",
+    "tests/cli/process_limit_matrix/disable_automatic_task.sv": "e68ec63fe90aabc49df00f5d7c6fb548d6830ea4fb652ce035932e4cacdfe0be",
+    "tests/cli/process_limit_matrix/disable_generate.sv": "c9628571ef32354216b5eb6dc0642eec92a2e49dcb869b473111ae56f7e5c3f3",
+    "tests/cli/process_limit_matrix/disable_interface.sv": "f3da93736a0001bb40d59aa49153b220a17c0271bfe8f1a0ce13a433fc903ba1",
+    "tests/cli/process_limit_matrix/disable_module.sv": "8aac6606e64f9b70d2c089a257533f4a663bf23cd96bca2bb72dc9efa330683f",
+    "tests/cli/process_limit_matrix/disable_program.sv": "dc4f8700b027026f62ead495bce63398e2e47e9e685ed31247d610e4cd1c6def",
+    "tests/cli/process_limit_matrix/disable_static_task.sv": "e2c44e8f335f9c33e44069298962c91b44977d8b3b2277d8098ae7d41218f9ea",
+    "tests/cli/process_limit_matrix/parent_initializer_module.sv": "6e2f44730a45e48e83db2a2f7745a78c62c4ce6a9bf8411b0fa141fb9832df19",
+    "tests/cli/process_limit_matrix/parent_initializer_program.sv": "a8f96bb8db22333a9536b89bb606207e52db17c8eed9342489112bb253309c11",
+    "tests/cli/process_limit_matrix/pending_reports_module.sv": "167f36a1e0d767e076cd9f4ff3b70cb9d682b8eb86110c851f8ace9f14df0d8d",
+    "tests/cli/process_limit_matrix/pending_reports_program.sv": "3257452b45281cb609d88a6706f349e194121af01d5980fc5ff3cba16e50b89d",
+    "tests/cli/process_limit_matrix/rejected_capture_event.sv": "fc1ffa0a00f69b73056ef8595d96366706eaeff128e1db4facdd384c738406cd",
+    "tests/cli/process_limit_matrix/rejected_capture_integer.sv": "19b409224c16fe794e92e954c505439f85fff99b8bac0bb9c24f330243cfba4a",
+    "tests/cli/process_limit_matrix/rejected_capture_queue.sv": "a24d98535ee878e85a13fac2e9420c6026fe6081c36c5bde81249363c8304e31",
+    "tests/cli/process_limit_matrix/rejected_capture_string.sv": "acd82a84ab10b6600b5595d591b10cde1cc28c45229f20ddb13ba18882c9215e",
+    "tests/cli/process_limit_matrix/retained_ancestor_automatic_task.sv": "7993c168362e95a81c75b25ce232bee945e1932f0d83e6a0c43487fddab07dea",
+    "tests/cli/process_limit_matrix/retained_ancestor_generate.sv": "8dafb44126c7d61d89504a0c9e8476e754b5deea551d15d3b04288875b72c4f9",
+    "tests/cli/process_limit_matrix/retained_ancestor_interface.sv": "9252ce8e97e846ac686596d485b7bc9e6b950259bf0422f56db6554b10e4ac8d",
+    "tests/cli/process_limit_matrix/retained_ancestor_module.sv": "f684f66bc05a57a20ac16d4cd1c6f2f02710f8db86409e14695f776140eca644",
+    "tests/cli/process_limit_matrix/retained_ancestor_program.sv": "1912185f33bb0cbff3a622f5bc261cf262f46ab133e5c68683992a29fcd23418",
+    "tests/cli/process_limit_matrix/retained_ancestor_static_task.sv": "462e2c86587fd0ddaa8cfb4d0543afa6ad98fc15e7dc6fb6595d423a7d3ab381",
+    "tests/cli/process_limit_matrix/static_exclusion_0.sv": "c6cfe23e46ec14084c33ccafed3272872a256057d37a488f6d1170de0ab5a3b1",
+    "tests/cli/process_limit_matrix/static_exclusion_1.sv": "c6cfe23e46ec14084c33ccafed3272872a256057d37a488f6d1170de0ab5a3b1",
+    "tests/cli/process_limit_matrix/static_exclusion_18446744073709551615.sv": "c6cfe23e46ec14084c33ccafed3272872a256057d37a488f6d1170de0ab5a3b1",
+    "tests/cli/process_limit_matrix/static_exclusion_None.sv": "c6cfe23e46ec14084c33ccafed3272872a256057d37a488f6d1170de0ab5a3b1",
+    "tests/cli/process_limit_matrix/waiting_delay.sv": "c9b609f26cf0f3aa5ffd9e39de72debbe1ae1d5249658b8e6cb061799a86f1d3",
+    "tests/cli/process_limit_matrix/waiting_event.sv": "6022ee492af3429c57399b4755801f5fa738c620e570f7b44b6ee696065abc9f",
+    "tests/cli/process_limit_matrix/waiting_guard.sv": "05f4dd6638a8da02c12bc934dbeb9161918d783cc17759c85a46ef4f1132d603",
+    "tests/cli/run_process_limit_tests.py": "c667e38589f335ef664533996ac353fcab4300d675a8c3d11f633a0c120bfddf",
+    "tests/context/context_test.cpp": "1c3f5e00fdb1841ed14b3810f9b6e1b7ba3b543f422408761a9da83d7cde2697",
+    "tests/context/designs/process_limit.sv": "fb5d8977ab3c4413a7a30c1e07fb3909ae9a61803c4b8dc5ce59db12c22f1500",
+    "tests/tools/CMakeLists.txt": "a64616e46f468820e5cc0bebcf31de6163e300e7f947d05c67110c40cbf4c1a1",
+    "tests/unit/CMakeLists.txt": "4531ab8a3e90c6e5c30db3e119bb980275406719a4f012f340d2d2d449213d1e",
+    "tests/unit/process_limit_test.cpp": "3ade265188ee62084cdbf2aae21a1e525009a3c656a9b68137cb657ee3b9af9a",
+    "tools/gen_process_limit_matrix.py": "7ec6e80a82b99ca79738913932ef1362b653bba5f25d186829d53248edd9371e",
+    "tools/mutants.py": "703faf6f39f45d409fd40c8ef6950489738a59beee139a10a67f24d80d1f92a3"
+  },
+  "full_local_ci": {
+    "passed": 21,
+    "total": 21,
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 1.9,
+        "detail": ""
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 108.7,
+        "detail": ""
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 1.2,
+        "detail": ""
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 20.1,
+        "detail": ""
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 80.0,
+        "detail": ""
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 1.2,
+        "detail": ""
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 23.9,
+        "detail": ""
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 122.8,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 1.2,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 24.3,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 107.6,
+        "detail": ""
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.5,
+        "detail": ""
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.5,
+        "detail": ""
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.0,
+        "detail": "no upstream branch: nothing to check"
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.5,
+        "detail": ""
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 0.8,
+        "detail": ""
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 156.1,
+        "detail": ""
+      }
+    ]
+  },
+  "ctest": {
+    "dev": {
+      "total": 6639,
+      "passed": 6637,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "release": {
+      "total": 6640,
+      "passed": 6638,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "asan": {
+      "total": 6639,
+      "passed": 6637,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "ubsan": {
+      "total": 6639,
+      "passed": 6637,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    }
+  },
+  "new_ctest_entries": 12,
+  "generated_cli_source_designs": 90,
+  "additional_cli_contracts": 13,
+  "new_kernel_tests": 10,
+  "context_design_capacities": [
+    0,
+    1,
+    2
+  ],
+  "compiled_faults": {
+    "built": 8,
+    "caught": 8,
+    "restored_selected_tests": 16,
+    "record": "process-limit-controls.json"
+  },
+  "before_after": {
+    "original_sources": 5,
+    "default_and_unlimited_stdout_and_all_counters_unchanged": true,
+    "record": "process-limit-before-after.json"
+  },
+  "fresh_regressions": {
+    "population": {
+      "passed": 1456,
+      "total": 1466,
+      "failed": 0,
+      "unsupported": 10,
+      "record": "process-limit-population.txt"
+    },
+    "svtests": {
+      "passed": 244,
+      "total": 344,
+      "unsupported": 62,
+      "no_previous_pass_lost": true,
+      "record": "process-limit-svtests.json"
+    },
+    "original_probes": {
+      "count_per_reference": 87,
+      "gaps_per_reference": 7,
+      "reference_mismatches": [
+        4,
+        7
+      ],
+      "native_status_and_stdout_unchanged": true,
+      "records": [
+        "icarus13-process-limit-probes.json",
+        "icarus14-process-limit-probes.json"
+      ]
+    }
+  },
+  "existing_oracles_or_suite_bodies_changed": false,
+  "specifications_changed": false,
+  "performance_budget_changed": false,
+  "dependencies_added": false,
+  "limits": [
+    "P1 remains incomplete. This option is a resource policy, not an implementation of the remaining language mechanisms.",
+    "No wall-clock speed, Linux run or hosted CI result claimed.",
+    "local_ci has no upstream for commit-only expectation checks; protected existing files are unchanged against base in the worktree."
+  ]
+}

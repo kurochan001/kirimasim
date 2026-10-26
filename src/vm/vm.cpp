@@ -1670,6 +1670,8 @@ private:
                 c.rng = rng.child();
                 c.ownRng = true;
                 c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
+                if (c.kernelId == kernel::kNone)
+                    throw StorageFailure{kernel::ActivationError::ResourceLimit};
             }
             for (Frame* child : children)
                 sched_.start(child->kernelId);

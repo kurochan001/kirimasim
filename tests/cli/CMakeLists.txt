@@ -81,3 +81,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
             --kirimasim $<TARGET_FILE:kirimasim> --slot-event-default)
     set_tests_properties(cli/slot_event_default PROPERTIES LABELS Cli)
 endif()
+
+add_test(NAME cli/process_limit
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_process_limit_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/process_limit PROPERTIES LABELS Cli)
