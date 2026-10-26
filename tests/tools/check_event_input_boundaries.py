@@ -19,6 +19,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='kirimasim-event-input-') as directory:
         source = Path(directory, 'probe.sv')
         cases = []
+        initialized = []
         for home in ('initial', 'task', 'function'):
             for statement in ('a=b;', '$display("%0d",a==b);', 'automatic event shared=a;'):
                 body = statement
@@ -27,8 +28,12 @@ def main():
                 else:
                     ret = 'void ' if home == 'function' else ''
                     body = f'{home} automatic {ret}run();{body}end{home} initial run();'
-                cases.append(('module top;event a,b;\n' + body + '\nendmodule\n',
-                              'unsupported: event used as a value', r'probe\.sv:2:\d+: error:'))
+                text = 'module top;event a,b;\n' + body + '\nendmodule\n'
+                if statement == 'automatic event shared=a;':
+                    initialized.append(text)
+                else:
+                    cases.append((text, 'unsupported: event used as a value',
+                                  r'probe\.sv:2:\d+: error:'))
         for direction in ('output', 'inout'):
             for dimensions in ('', '[0:1]'):
                 cases.append((f'module top;event a{dimensions};\n'
@@ -55,6 +60,14 @@ def main():
             assert re.search(position, result.stderr), result.stderr
             assert 'internal error' not in result.stderr, result.stderr
             checked += 1
+        assert len(initialized) == 3
+        for text in initialized:
+            source.write_text(text)
+            result = subprocess.run([binary, source.name], cwd=directory, capture_output=True,
+                                    text=True, timeout=15, check=False)
+            assert result.returncode == 0 and not result.stdout, result.stdout + result.stderr
+            assert ': error:' not in result.stderr, result.stderr
+            assert 'internal error' not in result.stderr, result.stderr
         for index, after in (('0', 0), ('index++', 1)):
             source.write_text(f'''module top;
 typedef int row_t[3:2];typedef row_t matrix_t[-1:1];
@@ -73,7 +86,7 @@ endmodule
             assert result.returncode == 0, result.stderr
             assert result.stdout == f'calls=1 index={after} values=17,29\n', result.stdout
             assert ': error:' not in result.stderr, result.stderr
-    print(f'{checked} positioned event-input policy boundaries and 2 effectful aggregate bases checked')
+    print(f'{checked} positioned event-input boundaries, 3 initialization copies and 2 effectful aggregate bases checked')
     return 0
 
 

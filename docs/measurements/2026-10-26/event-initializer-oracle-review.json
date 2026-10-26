@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-26",
+  "baseline_commit": "63c64d837a30fc75c5b1581d801adde15435481e",
+  "baseline_binary_sha256": "ef9ce02b9cee0cf28617bcb4f676d27f40c4debfa605a69a7632c3d650ae0cac",
+  "cases": [
+    {
+      "home": "initial",
+      "source": "module top;event a,b;\ninitial begin automatic event shared=a; end\nendmodule\n",
+      "source_sha256": "fb9b2870327cc2703bc271b785bb3405daf0c71111781380dd026cc81e570778",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:38: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "",
+        "errors": []
+      }
+    },
+    {
+      "home": "task",
+      "source": "module top;event a,b;\ntask automatic run();automatic event shared=a;endtask initial run();\nendmodule\n",
+      "source_sha256": "7652c7dc3646b3931e8e168e6d9f8a2e0d02c8df8a0ae6b88073102add126321",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:45: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "",
+        "errors": []
+      }
+    },
+    {
+      "home": "function",
+      "source": "module top;event a,b;\nfunction automatic void run();automatic event shared=a;endfunction initial run();\nendmodule\n",
+      "source_sha256": "9d036e9de7fee0d106a986001ebb80a0b4b87486da08144cda9e756c4969dd43",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:54: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "",
+        "errors": []
+      }
+    }
+  ]
+}

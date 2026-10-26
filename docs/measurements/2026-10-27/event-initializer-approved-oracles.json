@@ -1,0 +1,411 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Asia/Tokyo",
+  "checked_at_utc": "2026-10-26T15:09:30+00:00",
+  "status": "user-approved exact three-case migration applied",
+  "original_inputs_preserved_byte_for_byte": true,
+  "inputs": 24,
+  "changed_oracles": 3,
+  "unchanged_oracles": 21,
+  "rejected_after": 19,
+  "accepted_after": 5,
+  "source_review": "../2026-10-26/event-initializer-oracle-review.json",
+  "checker_sha256_before": "1faa3dfbd4402191013862cbee5e5e44457d0b35a8d497ccf6ffe272cf04507a",
+  "checker_sha256_after": "c22462e69d38ca8ac258e12dda25403ab3d05f7c0d1055097a05ae1db0267f38",
+  "cases": [
+    {
+      "source_sha256": "72a142a5b79c310390baca290c8c193aca5a7d0b16650dba853166c2e4ef3399",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:17: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:17: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "a1beb9bff4d30b70753703b7c50e890e61cda9bf9164a89db47e1c0118f9301f",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:30: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:30: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "fb9b2870327cc2703bc271b785bb3405daf0c71111781380dd026cc81e570778",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:38: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "",
+        "errors": []
+      }
+    },
+    {
+      "source_sha256": "c33e170a8af2434978132c9b134b39514c30c00320e4cff814ecb137eaedcf6b",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:24: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:24: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "21d6e26b7c86482d65f48f0dcca41269dfb5dfc046dd77cc85fc952922a56186",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:37: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:37: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "7652c7dc3646b3931e8e168e6d9f8a2e0d02c8df8a0ae6b88073102add126321",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:45: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "",
+        "errors": []
+      }
+    },
+    {
+      "source_sha256": "f5e6eaadb51b26e8f825425364d5130b37b4ded690e0be897de70c8010aeaeee",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:33: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:33: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "497e5e54e1b8b2e8f5c9cd5722dffc397652d53e7a375cefb2ef58ef859802ee",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:46: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:46: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "9d036e9de7fee0d106a986001ebb80a0b4b87486da08144cda9e756c4969dd43",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:54: error: unsupported: event used as a value (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "",
+        "errors": []
+      }
+    },
+    {
+      "source_sha256": "49ab6ddda5e969f601c92cb7fdd33dc3d573bd7c699f8b2751a22992be586882",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:33: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:33: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "1187b5b57146a0a7685e541ea60731fdf82ce36cdcfa3db8c3a11e89711eaef5",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:33: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:33: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "2a4c069ae24c84f7d623ebcab0282fc0dda488d0df04bca689cbc15da25b66e2",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:32: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:32: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "a53db8f0c760086a215dcf64236b0bb118922329a80e3beba36cf18500d7732d",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:32: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2:32: error: unsupported: automatic event argument (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "fe275cd6360dc09fd320a39589eec80dbedc681e78e4e846472e5856d5a53abe",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2: error: wait on a null event [top @ 0ns]"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:2: error: wait on a null event [top @ 0ns]"
+        ]
+      }
+    },
+    {
+      "source_sha256": "81cf4a6009066644f6850e3f9c8ed218eceffcf87268e1ed176979cfcd02af4e",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "d6ecddcc36c07d1b1cf3763833d2022883b09557e189e8f4493f325db363aaaa",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "304b7276e29a304c081032aeafe481f775f785c7043b4a2d1c4b468f2e4a23f0",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "1ef30a39fd8a99df0149a43a63530621a71f105af6fce346e288253873f25667",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:8: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:8: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "522915acff8973dec276a04a5d393e31ced97794b4522a3c42d638a2fa37e324",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "30c05d5c57ecebef541851dab1eff4f074521a68f6d228da05e99e9e34d303f7",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "2d78e223420521d9ebdcdb4ef96be28ff6b7171f29ec14349229c5fdcb25077c",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:1: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "1ab17f90686bbf75bf30957f7f4af8c008cd08ccff5df7fba57b005970face8d",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:8: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      },
+      "after": {
+        "exit": 2,
+        "stdout": "",
+        "errors": [
+          "probe.sv:4:8: error: unsupported: implicit sensitivity to named-event triggered values (not implemented yet)"
+        ]
+      }
+    },
+    {
+      "source_sha256": "b7908c8fea4f73f72b8316ac1abf4120203948626a329451bf4a6cbc7c9f9bdf",
+      "before": {
+        "exit": 0,
+        "stdout": "calls=1 index=0 values=17,29\n",
+        "errors": []
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "calls=1 index=0 values=17,29\n",
+        "errors": []
+      }
+    },
+    {
+      "source_sha256": "a973e3b05995b23a2443d86c0e244d928d613375a62597e47f1fdcb725f80151",
+      "before": {
+        "exit": 0,
+        "stdout": "calls=1 index=1 values=17,29\n",
+        "errors": []
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "calls=1 index=1 values=17,29\n",
+        "errors": []
+      }
+    }
+  ]
+}
