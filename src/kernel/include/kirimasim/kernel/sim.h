@@ -572,6 +572,11 @@ public:
     [[nodiscard]] const std::string& endNote() const { return endNote_; }
 
     [[nodiscard]] bool ending() const { return ending_; }
+    /// RUNTIME_ABI 6's event-only exception excludes termination/final.
+    /// The caller must still publish complete typed roots and operation pins.
+    [[nodiscard]] bool permitsEventCollection() const noexcept {
+        return !ending_ && !runningFinal_;
+    }
     [[nodiscard]] EndReason reason() const { return ending_ ? reason_ : EndReason::Quiescent; }
     [[nodiscard]] int level() const { return level_; }
     [[nodiscard]] std::uint64_t time() const { return time_; }

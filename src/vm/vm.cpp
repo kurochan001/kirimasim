@@ -559,6 +559,7 @@ struct Frame {
     std::uint32_t reports = 0;  ///< Its deferred assertion calls on the kernel's queues.
     bool finished = false;
     bool released = false;        ///< Its record was released; the frame waits to be reused.
+    std::size_t nativeDepth = 0;  ///< Native execution still borrowing this record.
     std::uint64_t group = 0;      ///< The parent's fork group it belongs to (0: none).
     std::uint64_t forkGroup = 0;  ///< This frame's latest join or join_any group.
     std::uint32_t groupSize = 0;
@@ -1136,6 +1137,30 @@ private:
         std::size_t base = 0;
         VarsId varsId{sir::kNone};
     };
+    /// Publishes native activations by stable variable-set IDs. A canceled
+    /// callback's record remains allocated until the native stack unwinds.
+    struct NativeRoots {
+        Interpreter& vm;
+        Frame& frame;
+        VarsId vars;
+        NativeRoots* previous;
+        bool linked = true;
+        NativeRoots(Interpreter& owner, Frame& f, VarsId id) noexcept
+            : vm(owner), frame(f), vars(id), previous(owner.nativeRoots_) {
+            ++frame.nativeDepth;
+            vm.nativeRoots_ = this;
+        }
+        NativeRoots(const NativeRoots&) = delete;
+        NativeRoots& operator=(const NativeRoots&) = delete;
+        void clear() noexcept {
+            if (!linked) return;
+            vm.nativeRoots_ = previous;
+            --frame.nativeDepth;
+            linked = false;
+        }
+        ~NativeRoots() { clear(); }
+    };
+    NativeRoots* nativeRoots_ = nullptr;
     /// Restores execution state even if copy-in, callbacks or a nested call
     /// exhaust resources. Data owners end without depending on the C++ stack.
     struct CallCleanup {
@@ -1145,6 +1170,7 @@ private:
         VarsId callee;
         std::uint32_t depth;
         std::size_t sync;
+        NativeRoots native{vm, frame, callee};
         ~CallCleanup() {
             if (frame.syncCalls.size() > sync)
                 frame.syncCalls.erase(frame.syncCalls.begin() + static_cast<std::ptrdiff_t>(sync),
@@ -1154,6 +1180,7 @@ private:
                 frame.scopes.pop_back();
             vm.callDepth_ = depth;
             vm.act_ = caller;
+            native.clear();
             try {
                 vm.retire(callee);
             } catch (...) {
@@ -1470,7 +1497,7 @@ private:
     /// reports the kernel still holds are looked at again later (sweep).
     void tryRelease(Frame& f) {
         if (f.released || !f.finished || !f.children.empty() || f.reports != 0) return;
-        if (&f == running_ || sched_.hasPending(f.kernelId)) {
+        if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId)) {
             later_.push_back(&f);
             return;
         }
@@ -2136,6 +2163,23 @@ private:
         Ret = 0xff,
     };
 
+    /// A settled report or final call may start after its owner ended. A
+    /// transfer stops only on cancellation newly requested by its callbacks.
+    struct TransferProgress {
+        Interpreter& vm;
+        Frame& frame;
+        bool ending = vm.sched_.ending();
+        bool finished = frame.finished;
+        bool stopped = vm.sched_.programStopped(frame.kernelId);
+        Exit state() const {
+            if (!ending && vm.sched_.ending()) return Exit::Stop;
+            if ((!finished && frame.finished) ||
+                (!stopped && vm.sched_.programStopped(frame.kernelId)))
+                return Exit::Killed;
+            return Exit::Ret;
+        }
+    };
+
     /// Where the innermost activation of a frame goes on after a wait.
     static sir::BlockId& resumeAt(Frame& f) {
         return f.calls.empty() ? f.block : f.calls.back().block;
@@ -2146,6 +2190,7 @@ private:
     bool returnFromTask(Frame& f) {
         Frame::TaskCall c = std::move(f.calls.back());
         f.calls.pop_back();
+        NativeRoots native{*this, f, c.varsId};
         try {
             const sir::Subroutine& s = subOf(c.body);
             const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.varsId);
@@ -2156,9 +2201,11 @@ private:
                                                 bodyOfProcess(f.process))
                                     : writeOuts(f, *c.site, s, c.site->operands, outs,
                                                 f.calls.back().varsId, f.calls.back().body);
+            native.clear();
             retire(c.varsId);
             return copied;
         } catch (...) {
+            native.clear();
             try {
                 retire(c.varsId);
             } catch (...) {
@@ -2169,10 +2216,10 @@ private:
     }
 
     /// call.task: copies the inputs in and makes the call the innermost
-    /// one; the caller goes on at the block the instruction names. False
-    /// when the call would nest too deep.
-    bool enterTask(Frame& f, const sir::Instr& in) {
-        if (tooDeep(f, in)) return false;
+    /// one; the caller goes on at the block the instruction names. Stops
+    /// before publication if copy-in fails or a callback cancels the call.
+    Exit enterTask(Frame& f, const sir::Instr& in) {
+        if (tooDeep(f, in)) return Exit::Error;
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutines[ops[0].id];
         f.calls.reserve(f.calls.size() + 1);
@@ -2184,17 +2231,24 @@ private:
         const auto args = readArgs(s, ops);
         detail::EventTransfers inputPins{events_, heap_.memoryResource()};
         if (!eventStatus(f, in, inputPins.retainArguments(args, eventParameters_[c.body.index()])))
-            return false;
+            return Exit::Error;
         c.varsId = enroll(c.vars, c.body);
+        NativeRoots native{*this, f, c.varsId};
         try {
-            bindArgs(c.body, s, args, c.varsId);
+            const auto bound = bindArgs(f, c.body, s, args, c.varsId);
+            if (bound != Exit::Ret) {
+                native.clear();
+                retire(c.varsId);
+                return bound;
+            }
         } catch (...) {
+            native.clear();
             retire(c.varsId);
             throw;
         }
         resumeAt(f) = ops.back().asBlock();
         f.calls.push_back(std::move(c));
-        return true;
+        return Exit::Entered;
     }
 
     // --- Frames and arguments (SIR_SPEC.md 7.4, 8) ---
@@ -2420,23 +2474,31 @@ private:
 
     /// Copies the arguments into the callee's formals (4.9.7). A static
     /// output keeps its value.
-    void bindArgs(BodyId body, const sir::Subroutine& s, const std::vector<std::vector<W4>>& args,
-                  VarsId vars) {
+    Exit bindArgs(Frame& f, BodyId body, const sir::Subroutine& s,
+                  const std::vector<std::vector<W4>>& args, VarsId vars) {
+        const TransferProgress progress{*this, f};
         const Layout& l = layouts_[body.index()];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
             if (args[i].empty()) continue;  // an output
             if (prm.frameVar == sir::kNone) {
                 const std::uint32_t c = chunksOf(d_.slot(prm.slot).type);
-                for (std::size_t e = 0; e * c < args[i].size(); ++e)
+                for (std::size_t e = 0; e * c < args[i].size(); ++e) {
                     writeSlotWide(prm.slot, static_cast<std::uint32_t>(e), 0, 0, &args[i][e * c]);
+                    if (const auto state = progress.state(); state != Exit::Ret) return state;
+                }
             } else {
                 const auto c = l.chunksOfVar(prm.frameVar);
-                for (std::size_t e = 0; e * c < args[i].size(); ++e)
-                    frameStatus(framePlace(body, vars, prm.frameVar, e, isRefParam(prm))
-                                    .write({args[i].data() + e * c, c}));
+                for (std::size_t e = 0; e * c < args[i].size(); ++e) {
+                    const auto error = framePlace(body, vars, prm.frameVar, e, isRefParam(prm))
+                                           .write({args[i].data() + e * c, c});
+                    frameStatus(error);
+                    if (error != kernel::ActivationError::None) return Exit::Error;
+                    if (const auto state = progress.state(); state != Exit::Ret) return state;
+                }
             }
         }
+        return Exit::Ret;
     }
 
     /// The values of the outputs and inouts at the callee's end, as chunks.
@@ -2472,6 +2534,7 @@ private:
     bool writeOuts(Frame& f, const sir::Instr& site, const sir::Subroutine& s,
                    const std::vector<Operand>& ops, const std::vector<std::vector<W4>>& outs,
                    VarsId callerVars, BodyId callerBody) {
+        const TransferProgress progress{*this, f};
         detail::EventTransfers outputPins{events_, heap_.memoryResource()};
         const auto body = bodyOf(ops[0].asSubroutine());
         if (!eventStatus(f, site, outputPins.retainArguments(outs, eventParameters_[body.index()])))
@@ -2484,17 +2547,24 @@ private:
             if (o.kind == Operand::Kind::Slot) {
                 if (!isArrayParam(s, s.params[i], d_)) {
                     writeSlotWide(o.asSlot(), o.firstElem, o.lsb, o.width, outs[i].data());
+                    if (progress.state() != Exit::Ret) return false;
                     continue;
                 }
-                for (std::size_t e = 0; e * c < outs[i].size(); ++e)
+                for (std::size_t e = 0; e * c < outs[i].size(); ++e) {
                     writeSlotWide(o.asSlot(), static_cast<std::uint32_t>(o.firstElem + e), 0, 0,
                                   &outs[i][e * c]);
+                    if (progress.state() != Exit::Ret) return false;
+                }
                 continue;
             }
             const auto fc = l.chunksOfVar(o.asFrame());
-            for (std::size_t e = 0; e * fc < outs[i].size(); ++e)
-                frameStatus(framePlace(callerBody, callerVars, o.asFrame(), e)
-                                .write({outs[i].data() + e * fc, fc}));
+            for (std::size_t e = 0; e * fc < outs[i].size(); ++e) {
+                const auto error = framePlace(callerBody, callerVars, o.asFrame(), e)
+                                       .write({outs[i].data() + e * fc, fc});
+                frameStatus(error);
+                if (error != kernel::ActivationError::None || progress.state() != Exit::Ret)
+                    return false;
+            }
         }
         return true;
     }
@@ -2630,11 +2700,11 @@ private:
             return false;
         }
     }
-    void collectionLimit() noexcept {
+    void collectionLimit(bool eventsOnly = false) noexcept {
         try {
             limitAt(heapInstance_, heapSite_,
-                    heapReady_ ? "container collection resource limit"
-                               : "event collection resource limit");
+                    heapReady_ && !eventsOnly ? "container collection resource limit"
+                                              : "event collection resource limit");
         } catch (...) {
             // Failure to allocate the diagnostic must not escape the
             // kernel callback, or prevent the resource-limit result.
@@ -2665,7 +2735,7 @@ private:
         }
         return kernel::ManagedEventError::None;
     }
-    void collectRoots() {
+    void collectRoots(bool eventsOnly = false) {
         roots_.clear();
         eventRoots_.clear();
         if (eventsReady_)
@@ -2674,6 +2744,11 @@ private:
                     rootEvent(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
         rootActivations_.clear();
         rootActivationsSeen_.assign(varSets_.size(), false);
+        for (const auto* native = nativeRoots_; native != nullptr; native = native->previous)
+            if (!rootActivation(native->vars)) {
+                sched_.fail("invalid native activation at an event safe point");
+                return;
+            }
         for (const auto slot : rootSlots_) {
             const auto count = sir::elementCount(d_.slot(slot));
             for (std::uint64_t e = 0; e < count; ++e)
@@ -2778,19 +2853,18 @@ private:
             }
         }
         if (!sched_.visitPendingValues(&rootPendingValue, this)) {
-            collectionLimit();
+            collectionLimit(eventsOnly);
             return;
         }
         if (eventsReady_) {
-            // The SSA provider is empty at the existing region/slot boundary.
-            // Publishing its regions does not enable instruction collection;
-            // transfers and every other holder must also be covered first.
+            // At instruction points native fields, SSA and transfer pins
+            // retain the complete currently implemented event value types.
             const kernel::ManagedEventRootProvider providers[] = {
                 {this, &enumerateEvents}, activations_.eventRootProvider(), eventTemps_.provider()};
             events_.rootsChanged();
             const auto status = events_.collect(providers);
             if (status == kernel::ManagedEventError::ResourceLimit) {
-                collectionLimit();
+                collectionLimit(eventsOnly);
                 return;
             }
             if (status != kernel::ManagedEventError::None) {
@@ -2799,7 +2873,7 @@ private:
             }
             activations_.acknowledgeEventRoots();
         }
-        if (!heapReady_) return;
+        if (eventsOnly || !heapReady_) return;
         const bool same = roots_.size() == publishedRoots_.size() &&
                           std::equal(roots_.begin(), roots_.end(), publishedRoots_.begin(),
                                      [](const auto& a, const auto& b) {
@@ -3113,6 +3187,7 @@ private:
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret,
                  kernel::ManagedEventPin* eventReturn = nullptr) {
+        NativeRoots native{*this, f, act_.varsId};
         detail::EventTemporaries::Region eventRegion{eventTemps_, act_.base, bodyTemps(act_.body),
                                                      eventTempOff_[act_.body.index()]};
         // A confirmed report can run after its originating process ended.
@@ -3177,7 +3252,7 @@ private:
                             }
                         }
                         return Exit::Ret;
-                    case Op::CallTask: return enterTask(f, in) ? Exit::Entered : Exit::Error;
+                    case Op::CallTask: return enterTask(f, in);
                     case Op::Call: {
                         const Exit e = call(f, in, steps);
                         if (e == Exit::Disabled && unwindsHere(f)) {
@@ -3260,6 +3335,23 @@ private:
                                 eventKernelSlots_[kernelSlot(slot).index()] = true;
                             eventsReady_ = true;
                             sched_.setSafePointHook({&collectSafePoint, this});
+                        }
+                        if (sched_.permitsEventCollection() && events_.allocatedObjects() != 0 &&
+                            !events_.hasReusableObject()) {
+                            const auto previousSite = heapSite_;
+                            const auto previousInstance = heapInstance_;
+                            heapSite_ = in.loc;
+                            heapInstance_ = instanceOf(p);
+                            try {
+                                collectRoots(true);
+                            } catch (const std::bad_alloc&) {
+                                collectionLimit(true);
+                            } catch (const std::length_error&) {
+                                collectionLimit(true);
+                            }
+                            heapSite_ = previousSite;
+                            heapInstance_ = previousInstance;
+                            if (sched_.ending()) return Exit::Error;
                         }
                         auto created = events_.create();
                         if (!eventStatus(f, in, created.error)) return Exit::Error;
@@ -4045,11 +4137,13 @@ private:
         const VarsId callee = enroll(vars, body);
         CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
         enter({body, caller.base + bodyTemps(caller.body), callee});
-        bindArgs(body, s, args, act_.varsId);
-        W4 ret{0, 0};
-        kernel::ManagedEventPin returnPin;
         ++callDepth_;
         f.syncCalls.push_back({body, f.births, &in, act_.varsId});
+        if (const auto bound = bindArgs(f, body, s, args, act_.varsId); bound != Exit::Ret)
+            return bound;
+        inputPins.clear();
+        W4 ret{0, 0};
+        kernel::ManagedEventPin returnPin;
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret,
                                s.returnType.kind == sir::TypeKind::Event ? &returnPin : nullptr);
         std::vector<W4> wide;
@@ -4095,10 +4189,12 @@ private:
         const VarsId callee = enroll(vars, body);
         CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
         enter({body, caller.base + bodyTemps(caller.body), callee});
-        bindArgs(body, sub, args, act_.varsId);
-        W4 ret{0, 0};
         ++callDepth_;
         f.syncCalls.push_back({body, f.births, nullptr, act_.varsId});
+        if (const auto bound = bindArgs(f, body, sub, args, act_.varsId); bound != Exit::Ret)
+            return bound;
+        inputPins.clear();
+        W4 ret{0, 0};
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
         return e;
     }

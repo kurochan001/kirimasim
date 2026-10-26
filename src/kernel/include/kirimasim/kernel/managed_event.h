@@ -119,6 +119,8 @@ public:
     [[nodiscard]] std::size_t liveObjects() const noexcept { return live_; }
     [[nodiscard]] std::size_t allocatedObjects() const noexcept { return rows_.size(); }
     [[nodiscard]] std::size_t retiredObjects() const noexcept { return retired_; }
+    /// Whether create can reuse bookkeeping and a scheduler object without growth.
+    [[nodiscard]] bool hasReusableObject() const noexcept { return free_ != kNone; }
 
 private:
     friend class ManagedEventPin;

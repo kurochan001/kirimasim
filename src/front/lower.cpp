@@ -724,9 +724,10 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
         (!dims.empty() && unpackedStruct(et) != nullptr))
         unsupported(sl, "automatic variable of type '" + v.getType().toString() + "'");
     const sir::Type t = typeOf(et, sl);
-    // An event slot gets its event when the design starts (SIR_SPEC.md
-    // 3.2.1); a frame would need one each time it is made.
-    if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
+    // Declaration defaults construct their objects at each execution. Event
+    // formal transport remains separate from automatic declarations.
+    if (t.kind == sir::TypeKind::Event && v.kind == ast::SymbolKind::FormalArgument)
+        unsupported(sl, "automatic event argument");
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
     frameVars().push_back({std::string(v.name), t, sir::kNone, std::move(dims), {}});
     b_.frameVars.emplace(&v, id);

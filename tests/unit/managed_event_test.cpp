@@ -81,6 +81,27 @@ TEST(ManagedEvent, TypedHoldersAndDuplicateRootsRetainOnePhysicalObject) {
     EXPECT_FALSE(store.valid(token));
 }
 
+TEST(ManagedEvent, ReusableRowQueryChangesOnlyAfterCollectionAndConsumption) {
+    k::Context context;
+    auto& store = context.managedEvents();
+    EXPECT_FALSE(store.hasReusableObject());
+    auto first = store.create();
+    ASSERT_TRUE(first);
+    const auto stale = first.value.token();
+    ASSERT_EQ(store.collect(), Error::None);
+    EXPECT_FALSE(store.hasReusableObject());
+    first.value.reset();
+    EXPECT_FALSE(store.hasReusableObject());
+    ASSERT_EQ(store.collect(), Error::None);
+    EXPECT_TRUE(store.hasReusableObject());
+    auto next = store.create();
+    ASSERT_TRUE(next);
+    EXPECT_FALSE(store.hasReusableObject());
+    EXPECT_FALSE(store.valid(stale));
+    EXPECT_NE(next.value.token(), stale);
+    EXPECT_EQ(store.allocatedObjects(), 1U);
+}
+
 TEST(ManagedEvent, PinsShareIdentityMoveOnceAndRemainIndependentOfTypedHolders) {
     k::Context context;
     auto& store = context.managedEvents();
