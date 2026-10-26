@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1 as of 2026-10-26. P1 is still in progress;
+These examples describe tier 1 as of 2026-10-27. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), save one example at a time as
@@ -94,8 +94,20 @@ The collector publishes complete typed roots before physical event-row growth;
 container-heap and final-cleanup timing are unchanged. See [execution and
 validation](notes/instruction-event-execution.md). [Event input arguments](notes/event-input-execution.md)
 share the same object through synchronous/waiting calls, fixed arrays, recursion
-and deferred actions. Initializer aliases and automatic structure event fields remain unsupported;
-rebinding, comparisons and event-containing dynamic containers are not enabled.
+and deferred actions. [Declaration initializers](notes/event-initializer-execution.md)
+now share an existing event object for scalar values and fixed-array patterns,
+including null. Static initializers run once before time zero; automatic ones
+run at each declaration entry. Automatic structure event fields, scalar
+event-return/conditional expressions and the broader rebinding/comparison
+contract remain work.
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/sched/event_initializer_capture_module_join_none_named_managed_nba.sv
+```
+
+```text
+total=3 errors=0
+```
 
 ## Wide L/H gate resolution
 

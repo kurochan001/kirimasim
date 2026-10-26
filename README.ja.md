@@ -17,14 +17,15 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-26）
+## 状況（2026-10-27）
 
-mainの実装の区切りは `63c64d83` で、
-[event入力引数と実行時選択による入力部分配列](docs/notes/event-input-execution.ja.md)を含みます。
-[コミット後のlocal CI](docs/measurements/2026-10-26/event-input-committed-validation.json)は
-21/21成功、dev/ASan/UBSanは各5,847/5,849、releaseは5,848/5,850で、
+ローカル作業では`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initializer-execution.ja.md)を追加し、
+人が承認した期待値3件の移行を`2da32daa`に分けました。mainへのマージとpushはしていません。
+[全local CI](docs/measurements/2026-10-27/event-initializer-validation.json)は
+21/21成功、dev/ASan/UBSanは各6,057/6,059、releaseは6,058/6,060で、
 失敗0・既知skip各2件です。母集団・sv-tests・Icarus 13/14のprobeも再実行し、以前の成功を
-維持しました。P1は未完了で、[日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
+維持しました。P1は未完了です。公開済みmainの実装基準は引き続き`63c64d83`で、
+[日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
 以前の承認・失敗・公開状態をその時点の履歴として保持します。
 
 > **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。
@@ -213,15 +214,15 @@ dev/ASan/UBSanは4,179件中4,177件、releaseは4,180件中4,178件成功、失
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
 | 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 87 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 7 本、参照の不一致が 4 本（14.0 devel とでは 7 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
 
-kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-26、母集団は 2026-10-26、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
+kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、母集団は 2026-10-27、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,849 | 5,847、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 6,059 | 6,057、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 4,984（`tools/` の 143 個の生成器が作る）、道具 158、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 5,192（`tools/` の 144 個の生成器が作る）、道具 160、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -488,10 +489,10 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 - **クラス実行：** オブジェクト生成、コンストラクタ、プロパティ、メソッド呼び出し、継承、
   オブジェクトの寿命・回収。プロパティを使わないstatic関数が動く例だけでオブジェクト対応とは
   扱いません。staticプロパティ初期化の副作用を落とす既知の不具合も残っています。
-- **eventの値と保持object：** 初期化子の別名、automatic structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
+- **eventの値と保持object：** scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
   [scalar/固定配列の入力引数](docs/notes/event-input-execution.ja.md)、既定値生成と
-  公開済み命令境界での回収は実装し、過去の拒否期待値1件の
-  別移行は承認後に`4ba6b63d`で適用しました。
+  [宣言初期化によるコピー](docs/notes/event-initializer-execution.ja.md)、公開済み命令境界での
+  回収は実装済みです。過去の拒否期待値の移行は承認を記録し、実装と別に保持します。
 - **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
   イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。
 - **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、コンテナの条件式、

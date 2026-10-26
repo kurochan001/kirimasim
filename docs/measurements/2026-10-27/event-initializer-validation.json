@@ -1,0 +1,274 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Asia/Tokyo",
+  "checked_at_utc": "2026-10-26T15:23:56+00:00",
+  "implementation_commit": "dfddb94b79dff09ea5139e72869734421ed349d5",
+  "approved_oracle_commit": "2da32daa19d2213aee1ed944b38853c10b139b57",
+  "validated_commit": "2da32daa19d2213aee1ed944b38853c10b139b57",
+  "base_commit": "f0799b3c04d4c899fbcec2bb3ede473a7f378c47",
+  "source_sha256": {
+    "src/front/lower.cpp": "6c26aa081184ee12ea22f61e71a5423dab3dca10f1c5f34397770a852a09af37",
+    "src/front/lower_expr.cpp": "4a592eb7f4a000c4a2d41b6f5b1a5a01ca74dc277a904202ce580d4d68e1633d",
+    "src/front/lower_stmt.cpp": "a996a9b823cc1278922eceedeab298538a83e3328aba7b5741838ed51aeba99a",
+    "src/front/lower_sub.cpp": "a2e4f9540bb8f2260503ba854499c54beda1e5d2fd600030c19250c93bedaf8a",
+    "src/front/lowerer.h": "646d2970d361a2657551bc846d5b4e05bd55288e786ab259be2da8b776b3c7f8",
+    "tools/gen_event_initializer_matrix.py": "a00e08a5c9e7cbfdcf4481f79d40c568cc3681b86e865ed12123202e334a50c6",
+    "tests/tools/check_event_initializer_contracts.py": "77c1de179dbceae1a2b6173c18edade32bc23cce2480d75e9b98c8eb8bb77ba4",
+    "tests/tools/check_event_input_boundaries.py": "c22462e69d38ca8ac258e12dda25403ab3d05f7c0d1055097a05ae1db0267f38"
+  },
+  "runtime_and_tests_match_validated_commit": true,
+  "full_local_ci": {
+    "passed": 21,
+    "total": 21,
+    "steps": [
+      {
+        "name": "dev: configure",
+        "seconds": 1.2,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "dev: build",
+        "seconds": 1.2,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "dev: test",
+        "seconds": 84.5,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "release: configure",
+        "seconds": 1.2,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "release: build",
+        "seconds": 7.7,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "release: test",
+        "seconds": 93.5,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "asan: configure",
+        "seconds": 1.5,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "asan: build",
+        "seconds": 11.6,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "asan: test",
+        "seconds": 139.5,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "ubsan: configure",
+        "seconds": 1.2,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "ubsan: build",
+        "seconds": 11.1,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "ubsan: test",
+        "seconds": 127.8,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "check_release_flags",
+        "seconds": 0.1,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "check_banned",
+        "seconds": 0.7,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "check_spdx",
+        "seconds": 0.1,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "check_suite_files",
+        "seconds": 0.1,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "check_global_state",
+        "seconds": 0.5,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "check_expected_change",
+        "seconds": 0.0,
+        "status": "passed",
+        "detail": "(no upstream branch: nothing to check)"
+      },
+      {
+        "name": "readme_counts",
+        "seconds": 0.3,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "clang-format",
+        "seconds": 0.7,
+        "status": "passed",
+        "detail": ""
+      },
+      {
+        "name": "clang-tidy",
+        "seconds": 154.3,
+        "status": "passed",
+        "detail": ""
+      }
+    ],
+    "presets": {
+      "dev": {
+        "total": 6059,
+        "passed": 6057,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "release": {
+        "total": 6060,
+        "passed": 6058,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "asan": {
+        "total": 6059,
+        "passed": 6057,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "ubsan": {
+        "total": 6059,
+        "passed": 6057,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      }
+    },
+    "expected_change_note": "The new branch initially had no upstream. Both commits were additionally checked individually with check_expected_change; both pass. The branch now tracks origin/main."
+  },
+  "generated_source_designs": 208,
+  "new_positioned_rejections": 14,
+  "new_sir_constructor_checks": 4,
+  "compiled_controls": {
+    "caught": 7,
+    "total": 7,
+    "restored_related_checks": 386,
+    "record": "event-initializer-controls.json"
+  },
+  "approved_migration": {
+    "changed": 3,
+    "original_programs": 24,
+    "all_original_source_bytes_preserved": true,
+    "remaining_strict_rejections": 19,
+    "record": "event-initializer-approved-oracles.json"
+  },
+  "population": {
+    "total": 1466,
+    "passed": 1456,
+    "failed": 0,
+    "unsupported": 10,
+    "tests_commit": "179c55de9c83846be0b7f1c1c79c456fab1d39bd"
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "unsupported": 62,
+    "lost_passes": [],
+    "native_only_refresh": true,
+    "tests_commit": "15490e95fd97"
+  },
+  "probes": {
+    "13": {
+      "probes": 87,
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "native_stdout_changes": [],
+      "lost_passes": []
+    },
+    "14": {
+      "probes": 87,
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "dynamic_minimum_duplicate",
+        "queue_maximum_duplicate",
+        "dynamic_minimum_with_key",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "native_stdout_changes": [],
+      "lost_passes": []
+    }
+  },
+  "performance": "Existing PerfCount budgets pass without changes; no fresh wall-clock benchmark or threshold change.",
+  "scope_limits": [
+    "Complete Icarus parity is not established by finite populations.",
+    "Scalar event-return/conditional expressions, automatic structure event fields and broader rebinding/interfaces remain work.",
+    "No fresh hosted CI or Linux comparison is claimed."
+  ],
+  "publication": "Local topic-branch implementation and approved migration; not merged into main or pushed."
+}

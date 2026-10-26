@@ -1,6 +1,6 @@
 # P1 expansion toward Icarus coverage
 
-[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-26.
+[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](phase-renumbering.md)).
 
@@ -11,9 +11,21 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-## Current implementation and review status (2026-10-26)
+## Current implementation and review status (2026-10-27)
 
-**Main implementation `63c64d83`:** [source event inputs](event-input-execution.md)
+**Local topic branch, not merged/pushed:** [event initialization copies](event-initializer-execution.md)
+in `dfddb94b` share objects for scalar values and fixed-array patterns, including
+null; static initialization remains once before time zero. The user approved
+the exact three-case oracle migration, separately applied in `2da32daa` with
+all 24 original checker inputs byte-identical. New coverage has 208 source
+designs, 14 strict boundaries, four SIR constructor checks and seven caught
+compiled faults. [Full local CI](../measurements/2026-10-27/event-initializer-validation.json)
+passes 21/21 steps: dev/ASan/UBSan 6,057/6,059 and release 6,058/6,060,
+zero failures and two known skips each. Fresh fixed population/sv-tests and
+both 87-probe comparisons preserve every prior pass and native stdout.
+P1 remains incomplete; these finite comparisons are not a parity proof.
+
+**Published main baseline `63c64d83`:** [source event inputs](event-input-execution.md)
 now share object identity through scalar/fixed-array calls, waiting tasks,
 retained descendants and deferred snapshots. Runtime-selected input subarrays
 use the common typed storage copier. The 104 new designs, policy boundaries

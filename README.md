@@ -25,14 +25,15 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-26)
+## Status (2026-10-27)
 
-The main implementation checkpoint is `63c64d83`, including
-[source event inputs and runtime-selected input subarrays](docs/notes/event-input-execution.md).
-[Committed local CI](docs/measurements/2026-10-26/event-input-committed-validation.json)
-passes 21/21 checks; dev/ASan/UBSan pass 5,847/5,849 and release 5,848/5,850,
+The local working checkpoint adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
+in `dfddb94b`; the user's three-case oracle migration is separate in `2da32daa`.
+These changes are not merged into main or pushed. [Full local CI](docs/measurements/2026-10-27/event-initializer-validation.json)
+passes 21/21 checks; dev/ASan/UBSan pass 6,057/6,059 and release 6,058/6,060,
 with zero failures and two known skips each. Fresh population, sv-tests and
-Icarus 13/14 probes preserve the earlier passes. P1 remains incomplete;
+Icarus 13/14 probes preserve the earlier passes. P1 remains incomplete.
+The published main implementation baseline remains `63c64d83`;
 [dated checkpoint notes](docs/notes/p1-icarus-progress.md) preserve earlier
 approval, failure and publication states.
 
@@ -270,15 +271,15 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 | Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 7 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (7 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-26 (macOS); the population on 2026-10-26; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-27 (macOS); the population on 2026-10-27; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,849 | 5,847, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 6,059 | 6,057, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 4,984 (made by 143 generators under `tools/`), tools 158, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 5,192 (made by 144 generators under `tools/`), tools 160, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -666,11 +667,13 @@ record implemented forms, evidence and limitations.
   dispatch, inheritance and object lifetime/collection. A working property-free
   static function does not establish object support; static-property
   initialization also has a known missing-side-effect case.
-- **Event values and retained objects:** initializer aliases and automatic
-  structure event fields remain unsupported;
+- **Event values and retained objects:** scalar event-return/conditional expressions
+  and automatic structure event fields remain unsupported;
   rebinding, comparisons and event-containing dynamic containers remain work.
   [Scalar/fixed-array input arguments](docs/notes/event-input-execution.md),
-  default construction and published instruction collection are implemented; one historical rejection-oracle migration was approved and applied in `4ba6b63d`.
+  default construction, [declaration initialization copies](docs/notes/event-initializer-execution.md)
+  and published instruction collection are implemented. Historical rejection-oracle
+  migrations are recorded separately with their approvals.
 - **Event-controlled updates and remaining control forms:** event-controlled
   NBA, including repeat counts and retained targets/values; event-controlled
   nonblocking event triggers; named-fork disable and `wait_order`.

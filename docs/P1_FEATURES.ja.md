@@ -4,7 +4,7 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-26 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
+2026-10-27 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
 [開発用のビルド](../README.ja.md)の後、例を 1 つずつ `demo.sv` に保存し、
@@ -87,8 +87,18 @@ checked=256 errors=0
 collectorは物理event行を増やす前に全typed rootを公開し、コンテナheapとfinalの回収時点は
 保ちます。[実行と検証](notes/instruction-event-execution.ja.md)を参照してください。
 [eventの入力引数](notes/event-input-execution.ja.md)は、同期/待機呼び出し・固定配列・再帰・
-遅延アクションで同じobjectを共有します。初期化子の別名・automatic structのevent fieldは未対応で、
-再関連付け・比較・eventを含む動的コンテナも有効にしていません。
+遅延アクションで同じobjectを共有します。[宣言初期化](notes/event-initializer-execution.ja.md)も、
+nullを含むscalarと固定配列patternで既存event objectを共有します。staticは時刻0前に一度、
+automaticは宣言へ入るたびに初期化します。automatic structのevent field、scalar eventの
+戻り値/条件式、広い再関連付け/比較の契約は残作業です。
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/sched/event_initializer_capture_module_join_none_named_managed_nba.sv
+```
+
+```text
+total=3 errors=0
+```
 
 ## 広いネットでL/Hを解決する
 
