@@ -1,7 +1,11 @@
 # 古い受動スイッチ拒否期待の移行
 
-[English](passive-expectation-migration.md)。Status: **proposal (not approved)**、
-2026-10-26。パッチは未適用です。
+[English](passive-expectation-migration.md)が正です。Status: **approved and applied
+(2026-10-26)**。mainへのコミット・push依頼の後、人がこの具体的な移行を明示的に承認しました。
+レビュー済みのパッチを、`src/`変更なしの独立した期待値コミットで適用しました。
+全ソースfixtureと境界入力6件は不変です。下の元の提案は決定の記録として残し、承認要求と
+未適用の記述は承認前の状態を表します。統合全体の検証は
+[main統合の区切り](main-integration-2026-10-26.ja.md)に記録します。
 
 ## 理由と証拠
 

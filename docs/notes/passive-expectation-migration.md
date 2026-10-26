@@ -1,7 +1,13 @@
 # Migrate historical passive-switch rejection expectations
 
-[日本語](passive-expectation-migration.ja.md). Status: **proposal (not approved)**,
-2026-10-26. The patch is unapplied.
+[日本語](passive-expectation-migration.ja.md). Status: **approved and applied
+(2026-10-26)**. The user explicitly approved this exact migration after the
+main-commit/push request. The reviewed patch is applied in a separate
+expectation-only commit with no `src/` changes. All source fixture bytes and
+all six boundary inputs are unchanged. The original proposal below is retained
+as the decision record; its approval requests and unapplied status refer to
+the state before this approval. Full integration validation is recorded in
+[the main integration checkpoint](main-integration-2026-10-26.md).
 
 ## Reason and evidence
 
