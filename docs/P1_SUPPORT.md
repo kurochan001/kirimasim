@@ -11,9 +11,9 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-27 on the local process-limit
-topic (not yet committed, merged or pushed), including main
-class-static
+This inventory describes tier 1 as of 2026-10-27 on main, including process-limit
+implementation `624123b2` ([integration record](measurements/2026-10-27/process-limit-main-integration.json))
+and class-static
 implementation `9e6a149d` ([integration record](measurements/2026-10-27/class-static-main-integration.json)).
 The earlier main baseline `ca72b91f` includes
 [event initialization copies](notes/event-initializer-execution.md); main now also supports

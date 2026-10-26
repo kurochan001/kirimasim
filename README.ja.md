@@ -19,9 +19,11 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
-ローカルprocess-limit topicで、承認済みCLI 2.7の[`--max-procs`](docs/notes/process-limit-execution.ja.md)を
+mainに`624123b2`を取り込み、承認済みCLI 2.7の[`--max-procs`](docs/notes/process-limit-execution.ja.md)を
 実装しました。共有kernelで未終了のruntime childを数え、記録の保持・再利用と区別して、
-上限を超える子を登録する前に停止します。未commit・未merge・未pushで、P1は未完です。
+上限を超える子を登録する前に停止します。
+[取り込み記録](docs/measurements/2026-10-27/process-limit-main-integration.json)で検証済みコード・テストの
+不変とcommit単位の期待値保護を確認します。全local CIは21/21成功で、P1は未完です。
 
 mainに`9e6a149d`を取り込み、未使用宣言の事前初期化を含む
 [非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)を追加しました。
@@ -243,13 +245,15 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 
 件数は、[P1 の合格条件](#p1-の合格条件)の表にあります。release の構成では、CTest のテストが 1 本増えます（`--max-slot-events` の既定の値まで走らせるテスト）。
 
-最新のローカルCIの全項目の記録は`615afa0`（2026-10-25、macOS arm64）のものです。
+過去の`615afa0`（2026-10-25、macOS arm64）の全local CIは、次の件数でした。
 21項目すべてが通り、dev・ASan・UBSanは各4,652件中4,650件成功、既知の2件のみスキップ、
 releaseは4,653件中4,651件成功、同じ2件のみスキップです
 （[記録](docs/measurements/2026-10-25/activation-environment-final-validation.json)）。
 
-同じ独自87プローブで、13.0 stableは差分22本・参照不一致4本、14.0 develは22本・7本です。
-[最新の検証と承認待ちの項目](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-26)と
+現在の[process-limit検証](docs/measurements/2026-10-27/process-limit-validation.json)は全local CIが21/21成功、
+dev/ASan/UBSanは各6,637/6,639、releaseは6,638/6,640、失敗0・既知skip各2件です。
+同じ独自87プローブの現在の差は両参照とも7本、参照不一致は13.0 stableが4本・14.0 develが7本です。
+[最新の検証と制限](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-27)と
 [版ごとの個別記録](docs/notes/icarus-13-comparison.ja.md)を参照してください。
 以下の外部sv-tests・母集団の件数と性能測定は、記載した
 コミット・測定日の値を保っています。

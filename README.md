@@ -27,11 +27,13 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
-The local process-limit topic implements [`--max-procs`](docs/notes/process-limit-execution.md)
-under the approved CLI 2.7 contract. It counts unfinished runtime children in
+Main implements [`--max-procs`](docs/notes/process-limit-execution.md)
+under the approved CLI 2.7 contract in `624123b2`. It counts unfinished runtime children in
 the shared kernel, preserves capacity across record retention/reuse, and stops
-before registering an over-limit child. This topic is not committed, merged or
-pushed; P1 remains incomplete.
+before registering an over-limit child. The
+[integration record](docs/measurements/2026-10-27/process-limit-main-integration.json)
+confirms unchanged validated code/tests and commit-level expectation protection.
+Full local CI passes 21/21 steps; P1 remains incomplete.
 
 Main adds [non-parameterized static properties](docs/notes/class-static-execution.md),
 including eager initialization of unused declarations, in `9e6a149d`. Its [full local CI](docs/measurements/2026-10-27/class-static-validation.json)
@@ -308,15 +310,17 @@ The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
 
-The latest full local CI record is for `615afa0` (2026-10-25, macOS arm64):
+The historical full local CI record for `615afa0` (2026-10-25, macOS arm64) has these results:
 all 21 checks pass; dev, ASan and UBSan each run 4,652 tests, 4,650 pass and
 the two known skips remain; release runs 4,653 and 4,651 pass, with the same
 skips ([record](docs/measurements/2026-10-25/activation-environment-final-validation.json)).
 
-The same 87-probe inventory has separate 13.0-stable and 14.0-development
-results: 13.0 has 22 Icarus-passing gaps and four reference mismatches;
-14.0 has 22 and seven.
-See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-26)
+The current [process-limit validation](docs/measurements/2026-10-27/process-limit-validation.json)
+passes 21/21 local CI steps: dev/ASan/UBSan 6,637/6,639 and release
+6,638/6,640, with zero failures and two known skips each. The same original
+87-probe inventory now retains seven Icarus-passing gaps for each reference,
+and four/seven reference mismatches for 13.0-stable/14.0-development.
+See the [current validation and limits](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.

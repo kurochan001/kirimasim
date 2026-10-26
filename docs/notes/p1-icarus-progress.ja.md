@@ -12,11 +12,14 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
-**現在のローカルtopic：** [未終了のruntime processの上限](process-limit-execution.ja.md)を、
+**main取り込み `624123b2`：** [未終了のruntime processの上限](process-limit-execution.ja.md)を、
 承認済みCLI 2.7に従って実装します。共有kernelの登録・終了の規則で、静的プロセス・終了後の
 保持記録は数えず、上限を超える子は開始しません。独自90設計、CLI契約13条件、kernel単体10件、
-Context別の上限と、コンパイルした8故障の検出を含みます。最終検証はリンク先に記録します。
-未commit・未merge・未pushで、既存の期待値・仕様・予算は変更していません。P1は未完です。
+Context別の上限と、コンパイルした8故障の検出を含みます。
+[取り込み記録](../measurements/2026-10-27/process-limit-main-integration.json)で検証済みコード・テストの
+不変とcommit単位の期待値保護を確認します。全local CIは21/21成功、dev/ASan/UBSanは各
+6,637/6,639、releaseは6,638/6,640、失敗0・既知skip各2件です。
+既存の期待値・仕様・予算は変更していません。P1は未完です。
 
 **main取り込み `9e6a149d`：** [非パラメータ化クラスのstatic記憶域](class-static-execution.ja.md)を
 追加し、未参照宣言の事前初期化・継承したslotの共有・staticメソッドからの操作を

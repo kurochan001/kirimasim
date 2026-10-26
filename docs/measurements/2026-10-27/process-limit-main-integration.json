@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-26T22:14:04.408915+00:00",
+  "base_main": "691117e41cf9b6fc1b1dbe77c26df5bef8c9e763",
+  "implementation_commit": "624123b24f337d96951cb18e3ff78d054f3f9367",
+  "integration_method": "fast-forward",
+  "publication_target": "origin/main",
+  "scope": "approved CLI 2.7 runtime resource policy; P1 remains incomplete",
+  "source_sha256_matches_full_local_ci": true,
+  "validated_trees": {
+    "src": "eb9ffdff3a9616b016aa322e3c735c29b3dc5a3c",
+    "tests": "ba35f18409e49b55ff21c1906dfee837375acf2e",
+    "tools": "c5b19419b70a5d797fd946fa7e5b329da1418594"
+  },
+  "validation_record": "process-limit-validation.json",
+  "validation_record_preserved_as_measurement_time_history": true,
+  "full_local_ci": {
+    "passed": 21,
+    "total": 21,
+    "ctest": {
+      "dev": {
+        "total": 6639,
+        "passed": 6637,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      },
+      "release": {
+        "total": 6640,
+        "passed": 6638,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      },
+      "asan": {
+        "total": 6639,
+        "passed": 6637,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      },
+      "ubsan": {
+        "total": 6639,
+        "passed": 6637,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      }
+    }
+  },
+  "additional_checks": {
+    "implementation_commit_expectation_guard": "passed",
+    "generated_process_limit_matrix": "passed",
+    "readme_counts": "passed",
+    "source_hashes": "passed"
+  },
+  "documentation_commit": "the commit containing this integration record changes current documentation only",
+  "hosted_ci": "not checked; no hosted result claimed"
+}

@@ -10,7 +10,8 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
-2026-10-27時点のローカルprocess-limit topicの第1層です。未commit・未merge・未pushです。クラスstatic記憶域の実装`9e6a149d`を含みます
+2026-10-27時点のmainの第1層です。process上限の実装`624123b2`を含みます
+（[取り込み記録](measurements/2026-10-27/process-limit-main-integration.json)）。クラスstatic記憶域の実装`9e6a149d`を含みます
 （[取り込み記録](measurements/2026-10-27/class-static-main-integration.json)）。
 mainの基準`ca72b91f`には[event初期化コピー](notes/event-initializer-execution.ja.md)が入り、
 mainで[非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)を追加します。

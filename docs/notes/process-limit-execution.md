@@ -1,7 +1,11 @@
 # Live runtime-process limits
 
-[日本語](process-limit-execution.ja.md). Status: implemented on a local topic,
-2026-10-27; not committed, merged or pushed. P1 remains incomplete.
+[日本語](process-limit-execution.ja.md). Status: implemented and locally validated,
+2026-10-27. Implementation `624123b2` is integrated into main. The
+[integration record](../measurements/2026-10-27/process-limit-main-integration.json)
+confirms unchanged validated code/tests and commit-level expectation protection.
+The original validation record retains its measurement-time publication state.
+P1 remains incomplete.
 
 ## Approved rule and implementation
 

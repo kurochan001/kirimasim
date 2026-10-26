@@ -13,13 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Current local topic:** [live runtime-process limits](process-limit-execution.md)
+**Main integration `624123b2`:** [live runtime-process limits](process-limit-execution.md)
 implement approved CLI 2.7 with one kernel admission/completion rule. Static
 processes and retained ended records do not count; over-limit children never
 start. Coverage includes 90 original designs, 13 CLI contracts, ten kernel
 tests, independent Context limits and eight caught compiled faults.
-The linked note records final validation; this topic is not committed, merged
-or pushed. No existing oracle/specification/budget is changed. P1 remains incomplete.
+The [integration record](../measurements/2026-10-27/process-limit-main-integration.json)
+confirms unchanged validated code/tests and commit-level expectation protection.
+Full local CI passes 21/21 steps: dev/ASan/UBSan 6,637/6,639 and release
+6,638/6,640, with zero failures and two known skips each.
+No existing oracle/specification/budget is changed. P1 remains incomplete.
 
 **Main integration `9e6a149d`:** [non-parameterized class static storage](class-static-execution.md)
 adds eager initializer discovery, canonical inherited slots and static-method

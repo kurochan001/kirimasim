@@ -1,7 +1,9 @@
 # 未終了のruntime processの上限
 
-[English](process-limit-execution.md)。状態：2026-10-27、ローカルtopicで実装。
-未commit・未merge・未pushで、P1は未完です。
+[English](process-limit-execution.md)。状態：2026-10-27、実装・ローカル検証済み。
+実装`624123b2`をmainへ取り込みました。
+[取り込み記録](../measurements/2026-10-27/process-limit-main-integration.json)で、検証済みコード・テストの
+不変とcommit単位の期待値保護を確認します。元の検証記録は測定時の公開状態を保持します。P1は未完です。
 
 ## 承認済みの規則と実装
 
