@@ -194,7 +194,7 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 宣言時の固有object、現在のevent SIRに必要なnative/SSA/転送の完全公開、物理行を増やす前の
 回収を実装しました。VM12テストのSIR32設計、新規生成ソース176件、コンパイルした12故障の
 検出が通りました。コンテナheapの回収時点とfinalの除外は保ち、
-[過去の拒否期待値1件の移行](notes/automatic-event-expectation-migration.ja.md)は承認待ちです。
+[過去の拒否期待値1件の移行](notes/automatic-event-expectation-migration.ja.md)は承認後に`4ba6b63d`で適用しました。
 automatic eventの値仮引数・初期化子の別名・automatic structのevent fieldは未対応で、
 object/refのインターフェースとevent値全体の対応も部分的です。SSAは型付きbody語数に
 応じて保守的に保持し、最終使用直後の生存解析ではありません。制限と計測は実装ノートを参照してください。

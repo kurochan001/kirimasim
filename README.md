@@ -121,7 +121,7 @@ physical event-row growth. Automatic scalar/fixed-array declarations without
 initializers construct fresh objects and preserve retained descendants.
 176 new source designs, 32 verified SIR designs and 12 compiled controls pass.
 The [historical rejection-oracle migration](docs/notes/automatic-event-expectation-migration.md)
-awaits approval. Event value/formal/structure coverage remains partial.
+was approved and applied in `4ba6b63d`. Event value/formal/structure coverage remains partial.
 
 [Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
 now support named/mixed waits, delayed targets and `.triggered` through typed
@@ -211,7 +211,7 @@ later array/input checkpoint had 24/24; fixed-array ports now reduce this to 22/
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
 records 32 original programs and was approved on 2026-10-25. Shared lexical
 capture and [automatic scalar/fixed-array event construction](docs/notes/instruction-event-execution.md)
-are implemented; the separate historical rejection-oracle migration awaits approval.
+are implemented; the separate historical rejection-oracle migration was approved and applied in `4ba6b63d`.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
 adds 59 original design observations, with legality boundaries kept separate.
 
@@ -265,7 +265,7 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,743 | 5,740, 2 skipped, 1 failed | — | — |
+| This repository's tests (CTest, dev configuration) | 5,743 | 5,741, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
@@ -292,7 +292,7 @@ skips ([record](docs/measurements/2026-10-25/activation-environment-final-valida
 The same 87-probe inventory has separate 13.0-stable and 14.0-development
 results: 13.0 has 22 Icarus-passing gaps and four reference mismatches;
 14.0 has 22 and seven.
-See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-25)
+See the [current validation and pending reviews](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-26)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
@@ -661,7 +661,7 @@ record implemented forms, evidence and limitations.
   initializer aliases and automatic structure event fields remain unsupported;
   rebinding, comparisons and event-containing dynamic containers remain work.
   Scalar/fixed-array default construction and published instruction collection
-  are implemented; one historical rejection-oracle migration awaits approval.
+  are implemented; one historical rejection-oracle migration was approved and applied in `4ba6b63d`.
 - **Event-controlled updates and remaining control forms:** event-controlled
   NBA, including repeat counts and retained targets/values; event-controlled
   nonblocking event triggers; named-fork disable and `wait_order`.

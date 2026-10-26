@@ -214,7 +214,7 @@ to pre-growth event collection and scalar/fixed-array automatic declaration
 defaults. Its tests include nonwaiting loops, recursion, callbacks, arrays,
 delayed targets, cancellation, final exclusion and failure/reuse. Source event
 value/formal/structure coverage remains partial; one historical rejection-oracle
-migration awaits separate approval. SSA regions retain all typed body words
+migration was separately approved and applied in `4ba6b63d`. SSA regions retain all typed body words
 conservatively rather than using minimal last-use liveness. The implementation
 note records the evidence and unconfirmed scratch-allocation audit; approval
 alone and finite tests do not establish full P1 completion.

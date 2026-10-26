@@ -19,10 +19,10 @@ roots before physical growth. Its 176 source designs, 12 VM tests with 32 verifi
 SIR designs, one registry query test and 12 compiled controls pass. Both 87-probe
 comparisons reduce gaps from eight to seven; four/seven reference mismatches stay.
 The fixed population remains 1,456/1,466 with zero failures and ten unsupported;
-sv-tests remains 244/344. Full local CI passes 17/21 steps; every preset fails
-only the unchanged historical rejection check. The
-[one historical rejection-oracle migration](automatic-event-expectation-migration.md)
-awaits approval. This work is local, not merged/pushed, and P1 remains incomplete.
+sv-tests remains 244/344. The [one historical rejection-oracle migration](automatic-event-expectation-migration.md)
+was separately approved and applied in `4ba6b63d`. [Post-approval local CI](../measurements/2026-10-26/automatic-event-approved-validation.json)
+passes 21/21 steps: dev/ASan/UBSan 5,741/5,743, release 5,742/5,744,
+with zero failures and two known skips each. This work is local, not merged/pushed, and P1 remains incomplete.
 
 **Earlier transfer checkpoint:** `1d2b7e6e` adds [event transfer ownership](event-transfers.md)
 for input/copyback snapshots and returns, with six component tests and four VM

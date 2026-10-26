@@ -88,7 +88,7 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 物理行を増やす前に、native field、SSA領域、転送全体のpinを公開します。初期化子のない
 automatic scalar/固定配列eventの宣言は、固有のobjectを生成し、子孫の保持も守ります。
 新規ソース176件、検証済みSIR32設計、コンパイルした12故障の検出が通りました。
-[過去の拒否期待値1件の移行](docs/notes/automatic-event-expectation-migration.ja.md)は承認待ちです。
+[過去の拒否期待値1件の移行](docs/notes/automatic-event-expectation-migration.ja.md)は承認後に`4ba6b63d`で適用しました。
 eventの値・仮引数・structの対応はまだ部分的です。
 
 [実行時indexでの固定配列event選択](docs/notes/indexed-event-execution.ja.md)を型付き値へ接続し、
@@ -163,7 +163,7 @@ P1の完了にはなりません。
 [automatic記憶域の共有・eventの修正案](docs/notes/automatic-capture-proposal.ja.md)に
 独自32プログラムを記録し、2026-10-25承認済みです。共有字句捕捉は実装済みで、
 [automaticスカラー/固定配列eventの生成](docs/notes/instruction-event-execution.ja.md)も実装しました。
-過去の拒否期待値1件の別移行は承認待ちです。
+過去の拒否期待値1件の別移行は承認後に`4ba6b63d`で適用しました。
 [配列ポート・解決の修正案](docs/notes/fixed-array-ports-proposal.ja.md)にも独自59本を記録し、
 違法な接続を未対応機能と分けています。
 
@@ -209,7 +209,7 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-26、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,743 | 5,740、2 本は飛ばす、1 本は失敗 | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,743 | 5,741、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
@@ -228,7 +228,7 @@ releaseは4,653件中4,651件成功、同じ2件のみスキップです
 （[記録](docs/measurements/2026-10-25/activation-environment-final-validation.json)）。
 
 同じ独自87プローブで、13.0 stableは差分22本・参照不一致4本、14.0 develは22本・7本です。
-[最新の検証と承認待ちの項目](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-25)と
+[最新の検証と承認待ちの項目](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-26)と
 [版ごとの個別記録](docs/notes/icarus-13-comparison.ja.md)を参照してください。
 以下の外部sv-tests・母集団の件数と性能測定は、記載した
 コミット・測定日の値を保っています。
@@ -483,7 +483,7 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 - **eventの値と保持object：** automatic eventの値仮引数、初期化子の別名、automatic
   structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
   scalar/固定配列の既定値生成と公開済み命令境界での回収は実装し、過去の拒否期待値1件の
-  別移行は承認待ちです。
+  別移行は承認後に`4ba6b63d`で適用しました。
 - **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
   イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。
 - **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、コンテナの条件式、

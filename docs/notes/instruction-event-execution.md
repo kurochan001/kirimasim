@@ -1,7 +1,18 @@
 # Automatic event construction and published instruction collection
 
 [日本語](instruction-event-execution.ja.md). Status: implemented and locally checked at `e909f022`,
-2026-10-26; one historical rejection-oracle migration awaits approval.
+2026-10-26. The historical rejection-oracle migration was approved and applied
+in `4ba6b63d`; all 21 post-approval local CI steps pass.
+
+## Latest post-approval validation
+
+After oracle-only migration `4ba6b63d`, [full local CI](../measurements/2026-10-26/automatic-event-approved-validation.json)
+passes 21/21 steps. Dev/ASan/UBSan each pass 5,741/5,743; release passes
+5,742/5,744, with zero failures and two known skips each. All original source
+inputs and four strict rejection boundaries remain. Runtime/unit source bytes
+are unchanged from `e909f022`, so the comparison, cost and compiled-control
+records below still describe this implementation. The pre-migration failure
+below is resolved by the approval; full P1 coverage remains incomplete.
 
 ## Contract and mechanism
 
@@ -85,10 +96,10 @@ with 64 nonwaiting declaration entries each. Retained-task checks cover
 module/program origins, all joins, the four shapes, named/mixed/triggered waits
 and immediate/delayed-NBA triggers. An original full-extent rejection input now
 executes successfully. Its [exact oracle migration](automatic-event-expectation-migration.md)
-requires separate human approval; its input and current expectation have not
-been changed to hide the failure.
+was separately approved and applied in `4ba6b63d`, retaining the input and
+requiring successful exit, exact output and no error diagnostic.
 
-[Full local validation](../measurements/2026-10-26/instruction-events-validation.json)
+**Before the approved oracle migration:** [full local validation](../measurements/2026-10-26/instruction-events-validation.json)
 has 17/21 passing steps. All four full preset builds succeed; dev/ASan/UBSan each
 have 5,740 passes out of 5,743, release 5,741/5,744, with two known skips and one
 failure each. Every failure is the unchanged historical metadata rejection

@@ -222,7 +222,7 @@ publication for the currently supported event SIR, and collection before physica
 growth. Twelve VM tests contain 32 verified designs; 176 new generated source designs
 and 12 compiled controls pass. Container heap timing and final exclusions remain in
 force. One [historical rejection-oracle migration](notes/automatic-event-expectation-migration.md)
-awaits approval. Automatic event value formals, initializer aliases and automatic
+was approved and applied in `4ba6b63d`. Automatic event value formals, initializer aliases and automatic
 structure event fields remain unsupported; object/ref interfaces and the broader
 event value model remain partial. Conservative SSA retention is bounded by typed
 body words, not minimal last-use liveness. See the note for limits and measurements.

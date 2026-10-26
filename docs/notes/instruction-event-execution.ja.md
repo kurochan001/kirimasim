@@ -1,7 +1,16 @@
 # automatic event の構築と公開済み命令境界での回収
 
 [English](instruction-event-execution.md) が正です。状態：`e909f022`で実装し、ローカル検証済み、
-2026-10-26。過去の拒否期待値 1 件の移行は承認待ちです。
+2026-10-26。過去の拒否期待値 1 件の移行は承認後に `4ba6b63d` で適用し、
+承認後の local CI 全 21 項目が通りました。
+
+## 承認後の最新検証
+
+期待値だけの移行 `4ba6b63d` の後、[全 local CI](../measurements/2026-10-26/automatic-event-approved-validation.json)
+が 21/21 成功しました。dev/ASan/UBSan は各 5,743 本中 5,741 成功、release は
+5,744 本中 5,742 成功で、各失敗 0・既知スキップ 2 件です。全入力本体と拒否境界 4 件を
+保持しました。実装と unit のソースは `e909f022` から不変で、以下の比較・費用・故障注入の
+記録を継承します。以下の移行前の失敗はこの承認で解消済みです。P1 全体は未完了です。
 
 ## 契約と実装
 
@@ -64,9 +73,10 @@ loop、lexical 再入、読み出さない配列、深さ 64 の再帰、入れ�
 宣言再入を検査します。保持 task は module/program、join 3 種、形状 4 種、
 named/mixed/triggered 待ち、即時/遅延 NBA trigger を組み合わせます。既存の範囲全体の
 拒否入力も正常実行するようになりました。[期待値 1 件の移行](automatic-event-expectation-migration.ja.md)
-は別の承認が必要で、失敗を隠すために入力や現在の期待値を変更していません。
+は別途承認後に `4ba6b63d` で適用し、入力を保持したまま正常終了・正確な出力・
+エラーなしを検査します。
 
-[全 local CI](../measurements/2026-10-26/instruction-events-validation.json) は 21 項目中 17 成功です。
+**期待値移行前の記録：** [全 local CI](../measurements/2026-10-26/instruction-events-validation.json) は 21 項目中 17 成功です。
 4 構成すべての全体ビルドが通り、dev/ASan/UBSan は各 5,743 本中 5,740 成功、release は
 5,744 本中 5,741 成功で、各既知スキップ 2 件・失敗 1 件です。失敗はすべて承認待ちの
 同じ metadata 拒否期待値で、方針・全 format/tidy・生成件数・既存期待値保護は通りました。

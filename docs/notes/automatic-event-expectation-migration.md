@@ -50,3 +50,10 @@ pass after restoration. Ordinary-path counters match, and both fresh 87-probe
 comparisons reduce gaps eight to seven. The implementation note records the
 cost observations and limitations. Approval here does not establish P1
 completion, authorize event rebinding or approve any other oracle change.
+
+## Post-approval validation
+
+Migration commit `4ba6b63d` preserves every source string byte for byte and all
+four strict rejection boundaries. [Post-approval full local CI](../measurements/2026-10-26/automatic-event-approved-validation.json)
+passes 21/21 steps; every preset has zero failures and two known skips.
+The failure counts above remain the pre-approval decision record.

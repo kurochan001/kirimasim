@@ -16,8 +16,9 @@
 追加しました。native/SSA/転送を公開し、宣言ごとにscalar/固定配列のobjectを生成します。
 新規ソース176件、SIR32設計を含むVM12テスト、registry1テストと12故障の検出が通りました。
 87プローブの両参照との差分は8→7本、不一致4/7本は不変です。母集団は1,466本中1,456成功・
-失敗0・未対応10、sv-testsは344本中244成功で、以前の結果を維持しています。local CIは21項目中17成功で、4構成の失敗はすべて
-同じ承認待ちチェックです。[過去の拒否期待値1件](automatic-event-expectation-migration.ja.md)は承認待ちです。
+失敗0・未対応10、sv-testsは344本中244成功で、以前の結果を維持しています。[過去の拒否期待値1件](automatic-event-expectation-migration.ja.md)は承認後に`4ba6b63d`で
+別に移行しました。[承認後のlocal CI](../measurements/2026-10-26/automatic-event-approved-validation.json)は
+21/21成功で、dev/ASan/UBSanは各5,741/5,743、releaseは5,742/5,744、失敗0・既知スキップ各2件です。
 main統合・pushはしておらず、P1は未完了です。
 
 **以前の転送の区切り：** `1d2b7e6e`で、入力/copyback snapshotと戻り値の[event転送所有](event-transfers.ja.md)を
