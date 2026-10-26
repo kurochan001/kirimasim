@@ -1,0 +1,221 @@
+{
+  "date": "2026-10-26",
+  "validated_commit": "3ab8a7661eb624ea4354e47b85376d6949a06528",
+  "prior_remote_main": "07b7de82450e388c4ab16e1c5eff5a29935cb5ca",
+  "scope": "Local macOS arm64 integration validation before publication; P1 remains incomplete",
+  "local_ci_command": "python3 tools/local_ci.py --llvm-bin <LLVM-22-bin>",
+  "build_parallelism": 6,
+  "test_parallelism": 6,
+  "versions": {
+    "commit": "3ab8a7661eb6",
+    "system": "Darwin 27.0.0 arm64",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "cmake version 4.4.4",
+    "format": "Homebrew clang-format version 22.1.8",
+    "tidy": "Homebrew LLVM version 22.1.8"
+  },
+  "steps": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.2,
+      "detail": ""
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 26.4,
+      "detail": ""
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 73.3,
+      "detail": ""
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.2,
+      "detail": ""
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 27.1,
+      "detail": ""
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 67.5,
+      "detail": ""
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 1.1,
+      "detail": ""
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 40.2,
+      "detail": ""
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 118.6,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.2,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 37.2,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 88.1,
+      "detail": ""
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.4,
+      "detail": ""
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.4,
+      "detail": ""
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.7,
+      "detail": "14 commit(s) not pushed"
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.3,
+      "detail": ""
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.7,
+      "detail": ""
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 148.5,
+      "detail": ""
+    }
+  ],
+  "checks_passed": 21,
+  "presets": {
+    "dev": {
+      "total": 5543,
+      "passed": 5541,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5544,
+      "passed": 5542,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5543,
+      "passed": 5541,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5543,
+      "passed": 5541,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "clang_tidy_cpp_units": 113,
+  "runtime_source_sha256": {
+    "src/front/lower.cpp": "5facc6961096bcd28806da723096927cf8534fc292496222bc6aaf8bbadf204f",
+    "src/front/lower_strength.cpp": "fd1fb6410de4ee7b856da26e78618ac6fe9e9e75eff9f3095d600f3067f39c37",
+    "src/front/lowerer.h": "a39db49503648f50d752f5f3e33c4d1d96a18dafcdd15d654e0b2cf9acbd59ac",
+    "src/kernel/include/kirimasim/kernel/sim.h": "bd257a3195c2f1ce6a69422887ea62282d9549e2a2147312a21ed667299f0412",
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "1ec07d10750add81a6dd7d10fbe75dc7a819fd609710e1ba067c78d13236ed03",
+    "src/kernel/strength_drivers.cpp": "398445a36d925a71eaef882f33a8a06727c7872b0453248efcd0684936d8a0a6",
+    "src/kernel/strength_network.cpp": "54c39503f4843ef37ed430f0127321c0b0bb6662d35e4f7af50bcc97f5e5e3f7",
+    "src/sir/include/kirimasim/sir/design.h": "676489ebc847fb6fc815a07d91e4d77d3a4fe3be09363e4205910bfdbe3718e5",
+    "src/sir/include/kirimasim/sir/strength.h": "c9b8769364eabf19dd627788713e4accba49857bc763e3f5eaf1536a837f87e8",
+    "src/sir/strength.cpp": "db76dc3487895a8a0dd99020eb585d2d24982d7503e02fccb6aedf6d11dd46ca",
+    "src/sir/text.cpp": "f53569708d2318ff68a98d40a22912d5cf696b1cf7d864eb50c2bd2064f3f3e0",
+    "src/sir/types.cpp": "4f36760f0284d45e369a0fc041842e9a163c525214744f89759c881c958c71ac",
+    "src/sir/verify.cpp": "e7353f20926a6e8cb3fcaff0be742917e4d68164405cfd492bb691f7d31d44a6",
+    "src/valsem/include/kirimasim/valsem/passive.h": "269280a2a5774d1dcc6678b471ba5037e15082644e90873f50395d2accd0858a",
+    "src/valsem/passive.cpp": "7db1c6ba248bad0d63136b20287da7ab4d98371c32507639a499cc505afb0b72",
+    "src/vm/event_temporaries.h": "fface30cec870a559b64bf99e65a28ff7ca52db970735893fa911b3c965a1f57",
+    "src/vm/vm.cpp": "034df0003b392f8df16becdc5595469120476c5fe1a98eb491a6d65c59e63740"
+  },
+  "approved_expectation_migration": "77c9d188",
+  "expectation_guard_scope": "Each of the 14 unpushed commits checked separately, as the push workflow does; final validation-document commit checked separately after this run.",
+  "historical_tran_source_unchanged": true,
+  "six_boundary_input_sources_unchanged": true,
+  "other_five_positioned_error_assertions_preserved": true,
+  "perfcount_oracle_unchanged": true,
+  "focused_migration_checks": 16,
+  "new_source_features_beyond_preintegration_commits": false,
+  "new_dependencies": false,
+  "budgets_changed": false,
+  "p1_complete": false,
+  "not_run": [
+    "Linux and minimum-supported-compiler builds locally",
+    "hosted GitHub Actions before publication",
+    "new external population/sv-tests/probe or five-simulator speed measurements"
+  ],
+  "summary": "local CI summary\n  commit:   3ab8a7661eb6\n  system:   Darwin 27.0.0 arm64\n  compiler: Apple clang version 21.0.0 (clang-2100.3.34.2)\n  cmake:    cmake version 4.4.4\n  format:   Homebrew clang-format version 22.1.8\n  tidy:     Homebrew LLVM version 22.1.8\n  ok       dev: configure                   1.2s\n  ok       dev: build                      26.4s\n  ok       dev: test                       73.3s\n  ok       release: configure               1.2s\n  ok       release: build                  27.1s\n  ok       release: test                   67.5s\n  ok       asan: configure                  1.1s\n  ok       asan: build                     40.2s\n  ok       asan: test                     118.6s\n  ok       ubsan: configure                 1.2s\n  ok       ubsan: build                    37.2s\n  ok       ubsan: test                     88.1s\n  ok       check_release_flags              0.1s\n  ok       check_banned                     0.4s\n  ok       check_spdx                       0.1s\n  ok       check_suite_files                0.1s\n  ok       check_global_state               0.4s\n  ok       check_expected_change            0.7s  (14 commit(s) not pushed)\n  ok       readme_counts                    0.3s\n  ok       clang-format                     0.7s\n  ok       clang-tidy                     148.5s\nresult: all checks passed"
+}

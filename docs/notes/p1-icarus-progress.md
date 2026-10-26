@@ -18,8 +18,10 @@ switches, typed SSA event regions, the approved event-only safepoint contract
 and the README's remaining-feature inventory. The user separately approved the
 exact tran expectation migration, applied in `77c9d188` without source fixture
 changes. [Integration validation](main-integration-2026-10-26.md) records the
-post-migration checks; older integration/failure/approval statements below
-remain historical measurements. Complete P1 coverage remains unproven.
+post-migration checks: all 21 local CI steps pass; dev/ASan/UBSan pass
+5,541/5,543 and release 5,542/5,544, each with zero failures and two known skips.
+Older integration/failure/approval statements below remain historical
+measurements. Complete P1 coverage remains unproven.
 
 ### Earlier checkpoints before this integration
 

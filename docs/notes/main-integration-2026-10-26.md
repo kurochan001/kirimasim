@@ -1,8 +1,10 @@
 # Main integration of passive switches and SSA event regions
 
-[日本語](main-integration-2026-10-26.ja.md). Status: integration validation in
-progress, 2026-10-26. Publication was requested by the user. This note will
-record the completed local CI before push; no pending check is counted as passed.
+[日本語](main-integration-2026-10-26.ja.md). Status: **locally integrated and
+validated (2026-10-26)**. The user requested main integration and publication.
+[Full local CI](../measurements/2026-10-26/main-integration-validation.json) passes
+all 21 checks on `3ab8a7661eb6`; the final validation-document commit changes no
+runtime/test bytes and receives its own expectation-separation and doc checks.
 
 ## Included changes
 
@@ -24,10 +26,25 @@ guard is checked per unpushed commit, as the push workflow does.
 
 ## Validation
 
-The 16 focused CLI/tool checks pass after migration. A full dev run passes
-5,541/5,543 tests with zero failures and two known skips. Full local CI is pending.
-Results and exact source provenance will be appended when it finishes.
+The 16 focused CLI/tool checks pass after migration. Full local CI passes all
+21 checks, including every configure/build/test, format/tidy, policy,
+expected-change and generated-count check:
+
+- dev: 5,541 passed out of 5,543; zero failed, two known skips.
+- release: 5,542 passed out of 5,544; zero failed, two known skips.
+- ASan and UBSan: each 5,541 passed out of 5,543; zero failed, two known skips.
+- All 113 tracked C++ units pass clang-tidy; release flag checks cover 113 units.
+- All 14 unpushed commits pass the expectation guard individually. The final
+  validation-document commit is checked separately.
+
+The known skips are `suite/cb/input_sample_1step` and
+`suite/nets/net_port_drivers_part`. The validation JSON records exact runtime
+source hashes, versions and local CI steps; source and expectation bytes remain
+unchanged after the validated head. Historical checkpoint JSON files preserve
+their original preapproval/unmerged state, not the current integration status.
 Linux, minimum-compiler and hosted GitHub Actions results are not claimed here.
+Population, sv-tests, probe and five-simulator speed results are earlier
+measurements, not refreshed by this publication.
 
 P1 remains incomplete. The finite probes and population pass rate do not
 establish feature parity; no test input, budget, dependency or runtime meaning
