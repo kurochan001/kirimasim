@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-26",
+  "scope": "Explicit-collector SSA-region component controls; not VM instruction safepoint or automatic-event source validation",
+  "source_sha256": "fface30cec870a559b64bf99e65a28ff7ca52db970735893fa911b3c965a1f57",
+  "controls": [
+    {
+      "name": "event temporaries: outer regions are omitted",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: callback exit discards the caller region",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: event words remain after unwind",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "1 - EventTemporaries.TracesDeclaredWordsAndNeverGuessesOpaqueBits (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: typed word offsets are ignored",
+      "compiled": false,
+      "caught": false
+    },
+    {
+      "name": "event temporaries: typed holders are not marked",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "1 - EventTemporaries.TracesDeclaredWordsAndNeverGuessesOpaqueBits (Failed)",
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)",
+        "5 - EventTemporaries.StaleTypedRootAbortsTheWholeSweep (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: overlapping active regions are accepted",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "6 - EventTemporaries.MalformedRegionsNeverSweepAPartialRootSet (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: legacy values are treated as registry tokens",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "7 - EventTemporaries.LegacyNullAndInFlightPinsKeepTheirDifferentOwnershipRules (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: malformed publication allows a partial sweep",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "6 - EventTemporaries.MalformedRegionsNeverSweepAPartialRootSet (Failed)"
+      ]
+    }
+  ],
+  "restored_component_tests": 7,
+  "restored_test_exit_code": 0,
+  "elapsed_seconds": 41.22,
+  "existing_oracles_changed": false,
+  "initial_control_definition_issue": "The first word-offset fault failed compilation because it left offset unused under -Werror. It is excluded from detection counts. The corrected fault preserves syntactic use of offset while multiplying it by zero; see the separate rerun."
+}

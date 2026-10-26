@@ -116,13 +116,17 @@ migrated with approval in `11096dc3`. [Typed SIR event execution](docs/notes/eve
 and collection at existing region/slot boundaries are connected. Automatic event
 source construction and instruction-level event safepoints remain work; the
 [safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) was approved
-on 2026-10-26. Complete root publication and its acceptance matrix remain work.
+on 2026-10-26. [Typed SSA regions](docs/notes/event-temporaries.md) now retain
+caller temporaries across nested execution and vector relocation; seven new
+component tests and eight compiled fault controls pass. Transfer ownership,
+complete publication and the source acceptance matrix remain work.
 
 [Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
 now support named/mixed waits, delayed targets and `.triggered` through typed
 values, with 160 original source designs. The historical CLI input's six old
-unsupported diagnostics await [separate migration approval](docs/notes/indexed-event-expectation-migration.md);
-the CLI suite is not yet all-green at this checkpoint.
+unsupported diagnostics were [separately approved for migration](docs/notes/indexed-event-expectation-migration.md)
+and migrated in `28f5c972`. Current remaining CLI failures concern the separate
+[tran expectation migration](docs/notes/passive-expectation-migration.md).
 
 Fixed-array ports now share or copy corresponding elements while preserving
 each declaration's bounds. Net arrays resolve strengths per element with
@@ -243,11 +247,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,536 | 5,532, 2 skipped, 2 failed | — | — |
+| This repository's tests (CTest, dev configuration) | 5,543 | 5,539, 2 skipped, 2 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 618, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 625, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

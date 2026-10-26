@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-26",
+  "implementation_commit": "53dbe0e179d24de0a2dfa0c02d544c9939f0e84c",
+  "approved_contract_commit": "05115862",
+  "scope": "Typed SSA-region publication component; complete instruction-boundary and automatic-event source publication remain pending",
+  "source_sha256": {
+    "src/vm/vm.cpp": "034df0003b392f8df16becdc5595469120476c5fe1a98eb491a6d65c59e63740",
+    "src/vm/event_temporaries.h": "fface30cec870a559b64bf99e65a28ff7ca52db970735893fa911b3c965a1f57",
+    "tests/unit/event_temporaries_test.cpp": "f2eeffa49124f4e47e055c76fd5db4238714cc40ac3b19b0884c3f7fd9d0f350",
+    "tests/unit/CMakeLists.txt": "2c5fcfd0bae08319b56b256e5c12fae92b35146de8f9906f5985de3e3dd05784",
+    "tools/mutants.py": "d0b3f642c9340bccc90c31abf159cb85445561638e29d735dccd17e49a547fd2"
+  },
+  "dev_full_ctest": {
+    "total": 5543,
+    "passed": 5539,
+    "failed": [
+      "cli/options",
+      "tools/source_mos_boundaries"
+    ],
+    "skipped": [
+      "suite/cb/input_sample_1step",
+      "suite/nets/net_port_drivers_part"
+    ],
+    "elapsed_seconds": 73.62,
+    "failure_reason": "Unchanged historical tran rejection expectations; the proposed passive migration remains unapproved and unapplied."
+  },
+  "presets": {
+    "dev": {
+      "full_build": "passed",
+      "focused_tests": 69,
+      "focused_passed": 69,
+      "includes": [
+        "EventTemporaries",
+        "VmEvent",
+        "EventActivation",
+        "ManagedEvent",
+        "PerfCount"
+      ]
+    },
+    "release": {
+      "full_build": "passed",
+      "focused_tests": 69,
+      "focused_passed": 69,
+      "includes": [
+        "EventTemporaries",
+        "VmEvent",
+        "EventActivation",
+        "ManagedEvent",
+        "PerfCount"
+      ]
+    },
+    "asan": {
+      "full_build": "passed",
+      "focused_tests": 69,
+      "focused_passed": 69,
+      "includes": [
+        "EventTemporaries",
+        "VmEvent",
+        "EventActivation",
+        "ManagedEvent",
+        "PerfCount"
+      ]
+    },
+    "ubsan": {
+      "full_build": "passed",
+      "focused_tests": 69,
+      "focused_passed": 69,
+      "includes": [
+        "EventTemporaries",
+        "VmEvent",
+        "EventActivation",
+        "ManagedEvent",
+        "PerfCount"
+      ]
+    }
+  },
+  "new_component_tests": 7,
+  "compiled_caught_controls": 8,
+  "controls_record": "event-temporaries-controls.json",
+  "speed_record": "event-temporaries-speed.json",
+  "checks": {
+    "clang_format": "Changed header and C++ units pass",
+    "clang_tidy": "vm.cpp and new event_temporaries_test.cpp pass with repository custom checks",
+    "banned": "63 source files clean",
+    "global_state": "116 source files checked",
+    "spdx": "388 tracked source/build/tool files checked",
+    "mutation_anchors": "767 apply exactly once",
+    "release_flags": "113 units pass",
+    "readme_counts": "Regenerated from final dev JUnit; check passes",
+    "expected_change": "Implementation commit preserves all existing expectations"
+  },
+  "initial_issues": [
+    "The first word-offset fault did not compile due to its unused loop variable; corrected control compiles and is caught, with original attempt retained separately.",
+    "Initial test lint found implicit unsigned multiplication widening and a missing integer-switch default; corrected without changing cases or assertions, followed by all four focused suites and all eight compiled controls."
+  ],
+  "not_run": [
+    "full release/ASan/UBSan CTest suites",
+    "full tools/local_ci.py",
+    "Linux/minimum compiler execution",
+    "refreshed P1 population",
+    "refreshed external sv-tests",
+    "refreshed 87-probe comparison",
+    "full benchmark or five-simulator speed table"
+  ],
+  "vm_instruction_collection_enabled": false,
+  "automatic_event_source_enabled": false,
+  "container_heap_timing_changed": false,
+  "external_abi_version_changed": false,
+  "existing_oracles_changed": false,
+  "main_integrated": false,
+  "pushed": false,
+  "p1_complete": false
+}

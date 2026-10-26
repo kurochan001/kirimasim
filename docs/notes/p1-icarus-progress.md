@@ -38,6 +38,17 @@ acceptance matrix remain implementation work; source automatic-event constructio
 and the new collection timing are not enabled by approval alone. Older checkpoint
 statements below retain their measurement-time approval status.
 
+**Typed SSA event regions:** `53dbe0e1` installs [nonallocating active-region providers](event-temporaries.md)
+using immutable typed word offsets. Caller roots survive nested calls/callbacks
+and vector relocation, and regions retire on every body exit. Seven component
+tests and eight compiled controls pass; all four presets pass 69 focused tests.
+Final full dev CTest has 5,539 passes, two known skips and the same two historical
+tran-rejection failures. Five-pair ordinary frame/event timings differ by
++0.3%/+0.5%, with every counter unchanged. Complete transfer/field publication,
+SSA liveness, instruction collection and source automatic-event construction
+remain work. Population, external probes and sv-tests were not refreshed for
+this component; no source coverage reduction or full-P1 completion is claimed.
+
 ### Previous SIR checkpoint
 
 **Passive-edge SIR/VM execution:** `9c663835` connects

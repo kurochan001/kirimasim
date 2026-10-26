@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-26",
+  "scope": "Explicit-collector SSA-region component controls; not VM instruction safepoint or automatic-event source validation",
+  "source_sha256": "fface30cec870a559b64bf99e65a28ff7ca52db970735893fa911b3c965a1f57",
+  "controls": [
+    {
+      "name": "event temporaries: outer regions are omitted",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: callback exit discards the caller region",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: event words remain after unwind",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "1 - EventTemporaries.TracesDeclaredWordsAndNeverGuessesOpaqueBits (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: typed word offsets are ignored",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "1 - EventTemporaries.TracesDeclaredWordsAndNeverGuessesOpaqueBits (Failed)",
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)",
+        "5 - EventTemporaries.StaleTypedRootAbortsTheWholeSweep (Failed)",
+        "6 - EventTemporaries.MalformedRegionsNeverSweepAPartialRootSet (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: typed holders are not marked",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "1 - EventTemporaries.TracesDeclaredWordsAndNeverGuessesOpaqueBits (Failed)",
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)",
+        "5 - EventTemporaries.StaleTypedRootAbortsTheWholeSweep (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: overlapping active regions are accepted",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "6 - EventTemporaries.MalformedRegionsNeverSweepAPartialRootSet (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: legacy values are treated as registry tokens",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "7 - EventTemporaries.LegacyNullAndInFlightPinsKeepTheirDifferentOwnershipRules (Failed)"
+      ]
+    },
+    {
+      "name": "event temporaries: malformed publication allows a partial sweep",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "6 - EventTemporaries.MalformedRegionsNeverSweepAPartialRootSet (Failed)"
+      ]
+    }
+  ],
+  "restored_component_tests": 7,
+  "restored_test_exit_code": 0,
+  "elapsed_seconds": 45.671,
+  "existing_oracles_changed": false,
+  "implementation_commit": "53dbe0e1",
+  "compiled_caught": 8,
+  "initial_record": "event-temporaries-controls-initial.json",
+  "corrected_offset_record": "event-temporaries-controls-offset-rerun.json",
+  "compilation_failures_count_as_detection": false,
+  "test_source_sha256": "f2eeffa49124f4e47e055c76fd5db4238714cc40ac3b19b0884c3f7fd9d0f350"
+}

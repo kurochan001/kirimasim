@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-26",
+  "scope": "Explicit-collector SSA-region component controls; not VM instruction safepoint or automatic-event source validation",
+  "source_sha256": "fface30cec870a559b64bf99e65a28ff7ca52db970735893fa911b3c965a1f57",
+  "controls": [
+    {
+      "name": "event temporaries: typed word offsets are ignored",
+      "compiled": true,
+      "test_exit_code": 8,
+      "caught": true,
+      "failed_tests": [
+        "1 - EventTemporaries.TracesDeclaredWordsAndNeverGuessesOpaqueBits (Failed)",
+        "2 - EventTemporaries.NestedCallbackKeepsCallerRootsAcrossVectorRelocation (Failed)",
+        "3 - EventTemporaries.RecursiveRegionsRetireInOrderWithNoNativePointersIntoWords (Failed)",
+        "4 - EventTemporaries.UnwindAndRepeatedReentryDropOnlyInactiveEventWords (Failed)",
+        "5 - EventTemporaries.StaleTypedRootAbortsTheWholeSweep (Failed)",
+        "6 - EventTemporaries.MalformedRegionsNeverSweepAPartialRootSet (Failed)"
+      ]
+    }
+  ],
+  "restored_component_tests": 7,
+  "restored_test_exit_code": 0,
+  "elapsed_seconds": 10.281,
+  "existing_oracles_changed": false
+}

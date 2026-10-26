@@ -219,16 +219,21 @@ hand-built SIR. Source automatic construction, complete SSA publication for
 instruction safepoints and owned ref/object providers remain work. The event-only
 [safepoint amendment](notes/managed-event-safepoints-proposal.md) was approved on
 2026-10-26; the publication protocol remains work, and no bounded no-wait source
-claim is made.
+claim is made. The [SSA-region component](notes/event-temporaries.md) now keeps
+caller event temporaries visible across nested calls and vector relocation;
+seven component tests and eight compiled controls pass. Transfers and complete
+instruction-point publication remain unfinished.
 
 Source [runtime fixed-array event selections](notes/indexed-event-execution.md)
 now pass 160 original designs and 16 strict policy boundaries, with four compiled
 faults caught. This covers loaded named/mixed waits, delayed targets and explicit
 `.triggered`; constant valid operands retain existing dumps. The historical CLI
 input is preserved byte for byte. Its [separately approved migration](notes/indexed-event-expectation-migration.md)
-adds one acceptance entry and removes six obsolete diagnostics. All 14 CLI tests
-and all 21 local CI checks now pass; dev/ASan/UBSan pass 5,139/5,141 and release
-5,140/5,142, with zero failures and two known skips per preset.
+adds one acceptance entry and removes six obsolete diagnostics. At that earlier
+checkpoint all 14 CLI tests and all 21 local CI checks passed; dev/ASan/UBSan
+passed 5,139/5,141 and release 5,140/5,142, with zero failures and two known skips
+per preset. The later source-passive checkpoint has the two separate historical
+tran-rejection failures described above.
 
 ### Fixed-array ports and net arrays
 

@@ -208,8 +208,12 @@ exit. Do not retry source side effects. The [approved event amendment](../notes/
 defines the required nonwaiting-loop, reentry, recursion, transfer, array, guard,
 cancellation, delayed-target and allocation-failure matrix, physical-row bounds,
 compiled omitted-root/premature-reuse controls and ordinary-path measurements.
-Implementation status (2026-10-26): this publication protocol and its complete
-VM/source validation remain pending; the approval is not evidence of completion.
+Implementation status (2026-10-26): a [typed SSA-region provider](../notes/event-temporaries.md)
+now preserves active caller regions across vector relocation and clears event
+words on body exit. Complete field/transfer publication, SSA liveness and the
+full VM/source matrix remain pending; instruction collection and source
+automatic-event construction are not enabled. The approval is not evidence of
+completion.
 It adds no dependency, C function-table ABI version, option, hidden knob,
 performance-budget change or permission to change existing expectations.
 

@@ -192,13 +192,17 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 ソースからのautomatic生成、命令間safepointに必要なSSA全体の公開、所有ref/objectの提供は
 残作業です。[eventだけのsafepoint修正](notes/managed-event-safepoints-proposal.ja.md)は
 2026-10-26に承認されましたが、公開手順は未完了で、待機なしソースの有界性は主張しません。
+[SSA領域の部品](notes/event-temporaries.ja.md)で、入れ子呼び出しとvector再確保をまたぐ
+callerのevent一時値を保護し、部品7テストとコンパイルした8故障の検出が通りました。
+転送値と命令回収点の完全な公開は未完了です。
 
 ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
 独自160設計と厳格な方針境界16件が通り、コンパイルした4故障も検出しました。
 load済みの名前付き/混合待機・遅延対象・明示的な`.triggered`を含み、妥当な定数対象は
 既存dumpを保ちます。旧CLI入力は1byteも変えず、[別途承認した移行](notes/indexed-event-expectation-migration.ja.md)で
-受理項目1個を追加し、古い診断6行だけを除きました。全CLI14件とlocal CI全21確認が通ります。
-dev/ASan/UBSanは5,139/5,141、releaseは5,140/5,142で、各失敗0・既知スキップ2件です。
+受理項目1個を追加し、古い診断6行だけを除きました。その以前の区切りでは全CLI14件とlocal CI全21確認が通り、
+dev/ASan/UBSanは5,139/5,141、releaseは5,140/5,142で、各失敗0・既知スキップ2件でした。
+その後の受動スイッチ実装では、上に記した別件の古いtran拒否期待2か所が失敗しています。
 
 ### 固定長配列ポートとネット配列
 
