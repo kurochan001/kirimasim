@@ -1,13 +1,17 @@
 # 公開済みVM命令境界での管理event回収
 
 [English](managed-event-safepoints-proposal.md)が正。Status: **approved (2026-10-26)**、
-実装は未完了です。人が推奨案1を選択しました。2026-10-25の提案本文は決定の記録として残し、
+人が推奨案1を選択しました。2026-10-25の提案本文は決定の記録として残し、
 下の承認要求・従来の契約の説明は提案時点のものです。
 承認した例外を[RUNTIME_ABI 6](../spec/RUNTIME_ABI.ja.md)と
 [automatic捕捉契約5/6/8](automatic-capture-proposal.ja.md)へ反映しました。
 下記の完全公開と検証の全条件を守る実装を認めますが、承認だけで回収やソースのautomatic
 eventを有効化しません。コンテナheapの回収時点・依存・既存期待値・性能予算は変えません。
 別件の[tran期待値移行](passive-expectation-migration.ja.md)は今回の承認に含めません。
+
+**実装の追記：** [main の `304e1aec`](automatic-event-main-integration.ja.md)で、公開済み命令境界の
+回収と automatic scalar/固定配列 event の既定値生成を公開しました。下の元の提案は実装前の
+文面を保ちます。event の値・インターフェース全体と P1 全面対応は残作業です。
 
 ## 承認が必要な理由
 

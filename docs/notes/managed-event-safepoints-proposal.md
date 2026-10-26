@@ -1,7 +1,6 @@
 # Managed-event collection at published VM instruction boundaries
 
-[日本語](managed-event-safepoints-proposal.ja.md). Status: **approved (2026-10-26);
-implementation pending**. The user selected recommended option 1. The original
+[日本語](managed-event-safepoints-proposal.ja.md). Status: **approved (2026-10-26)**. The user selected recommended option 1. The original
 2026-10-25 proposal body below is retained as the decision record; its approval
 requests and descriptions of the prior contract refer to that date.
 The approved exception is incorporated into [RUNTIME_ABI 6](../spec/RUNTIME_ABI.md#6-typed-heap-gc-and-safepoints-p1-amendment-approved-2026-10-23)
@@ -11,6 +10,11 @@ below; approval alone does not enable collection or source automatic events.
 Container-heap timing, dependencies, existing expectations and performance
 budgets are unchanged. The separate [tran expectation migration](passive-expectation-migration.md)
 is not approved by this decision.
+
+**Implementation follow-up:** [main `304e1aec`](automatic-event-main-integration.md)
+now includes published instruction collection and automatic scalar/fixed-array
+event defaults. The original proposal below retains its pre-implementation
+wording; broader event value/interface forms and full P1 parity remain work.
 
 ## Why review is needed
 

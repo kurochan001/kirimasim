@@ -1,7 +1,10 @@
 # Lowering shared lexical automatic storage from source
 
 [日本語](automatic-front-capture.ja.md). Status: source implementation committed as `ebb0e14d`, 2026-10-25;
-historical expectation migration awaits approval.
+the three historical expectation changes were later approved and applied
+separately in `11096dc3`. Current [main `304e1aec`](automatic-event-main-integration.md)
+also includes automatic scalar/fixed-array event construction. Unsupported forms,
+pending reviews and failure counts below retain the `ebb0e14d` checkpoint state.
 
 ## Contract and implementation
 
@@ -81,7 +84,7 @@ unsupported. The pinned 344-design sv-tests set remains 244 pass. Both use
 archived exact revisions, not the current external checkout. Linux and the
 standard speed comparison have not been remeasured in this checkpoint.
 
-## Pending review and remaining work
+## Review and remaining work at this checkpoint
 
 The [separate expectation migration](automatic-capture-expectation-migration.md)
 retains the old source inputs and proposes successful output/exit expectations

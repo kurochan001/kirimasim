@@ -1,7 +1,11 @@
 # カーネル実行中の管理eventの所有
 
 [English](managed-event-runtime.md). Status: カーネル実装の区切り、2026-10-25。
-ソースからのautomatic event実行は引き続き未対応です。
+この区切りではソースからのautomatic event実行は未対応でした。
+
+**現在の公開状況（2026-10-26）：** [main の `304e1aec`](automatic-event-main-integration.ja.md)は、
+automatic scalar/固定配列 event の生成と公開済み命令境界での回収を含みます。以下のソース無効化や
+公開手順の未完了という記述は、この部品の以前の区切りを指し、現在の実装の状態ではありません。
 
 根拠は[承認済みautomatic捕捉契約](automatic-capture-proposal.ja.md)の5/6/8、
 [仕様との対応](p1-execution-contracts-2026-10-25.ja.md)、SIR_SPEC 3.2.1/7/8、

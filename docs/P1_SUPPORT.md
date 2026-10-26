@@ -11,7 +11,10 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-26, including fixed-array ports and element-wise net resolution, runtime array reduction/ordering/min/max, multidimensional integral
+This inventory describes tier 1 as of 2026-10-26, published on main at
+[`304e1aec`](notes/automatic-event-main-integration.md), including automatic
+scalar/fixed-array event defaults, retained task/fork extents, published
+instruction-point event collection, fixed-array ports and element-wise net resolution, runtime array reduction/ordering/min/max, multidimensional integral
 binary input, fixed-aggregate bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
 and queues, wide three-state masks, whole-aggregate blocking timing, value capture before target effects, repeated blocking
 event controls, corrected integral `$fread`
@@ -51,8 +54,8 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots | Event-controlled NBAs and delayed NBAs through refs/string characters are not implemented; automatic NBA targets remain illegal |
-| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Automatic event construction remains work |
-| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of supported named blocks and tasks | Capture follows the typed subset below; automatic event/object fields and named-fork disable remain incomplete |
+| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Event value formals, initializer aliases and automatic structure event fields remain unsupported |
+| Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of supported named blocks and tasks | Capture follows the typed subset below; object fields and named-fork disable remain incomplete; automatic event limits are listed below |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
@@ -183,9 +186,10 @@ Declarations use the parent's lifetime/initialization path rather than becoming
 children. Static storage is shared; uncaptured automatic initialization runs
 per entry, including declaration-only forks. [Seventy-two source cases and limits](notes/fork-local-declarations.md)
 cover eight contexts and typed storage. The subsequent source-capture work below
-supports shared automatic variables; automatic event construction remains work.
-The [shared-storage and automatic-event proposal](notes/automatic-capture-proposal.md)
-was approved on 2026-10-25; automatic event variables are still unsupported.
+supports shared automatic variables. [Automatic scalar/fixed-array event
+defaults](notes/instruction-event-execution.md) now construct fresh objects per
+entry and preserve retained descendants. Value formals, initializer aliases and
+automatic unpacked-structure event fields remain unsupported.
 
 ### Automatic-storage execution boundary
 
@@ -204,8 +208,9 @@ failure; 14 compiled controls are detected. Ordinary frames share the layout
 and value boundary without a mirrored scoped value.
 Front now [lowers shared lexical capture from source](notes/automatic-front-capture.md):
 186 new designs and a full-field/extent checker pass, and five compiled faults are
-detected. The finite automatic-fork probe now passes, leaving 21 historical
-Icarus-13-passing gaps. The three historical rejection checks were migrated
+detected. At that capture checkpoint, the automatic-fork probe passed and the historical
+Icarus-13-passing gap count was 21. The [current comparison](notes/icarus-13-comparison.md#automatic-event-recheck-2026-10-26-latest)
+has seven gaps against each reference. The three historical rejection checks were migrated
 separately in approved commit `11096dc3` without changing their source fixtures.
 The [managed-event kernel checkpoint](notes/managed-event-registry.md) now supplies
 generational identity, runtime pins and retained-scope event roots, with 20 tests

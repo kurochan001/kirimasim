@@ -10,7 +10,7 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
-2026-10-25時点の第1層を、固定集約値へのビット問い合わせ、ヒープを使うファイルモニターの生存期間検査、
+2026-10-26時点の第1層を、固定集約値へのビット問い合わせ、ヒープを使うファイルモニターの生存期間検査、
 動的配列・キュー、広い三状態マスク、集約値全体のブロッキング時間制御、
 対象の副作用より前の集約値の保持、
 繰り返しイベントのブロッキング代入、
@@ -33,6 +33,9 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 最近の機能の実行例は[使い方と制限](P1_FEATURES.ja.md)、ビルド手順と完成条件は
 [README](../README.ja.md)を参照してください。
 
+公開済みの実装は main の [`304e1aec`](notes/automatic-event-main-integration.ja.md)です。
+automatic scalar/固定配列 event の既定値、task/fork の保持範囲、公開済み命令境界での event 回収を含みます。
+
 ## 言語と実行
 
 | 分野 | 対応する形 | 主な制限 |
@@ -51,8 +54,8 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA | イベント制御付きNBA、ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
-| イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択 | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。automatic event生成は残作業 |
-| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。automatic event/objectフィールドと名前付きforkのdisableは残作業 |
+| イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値 | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。eventの値仮引数・初期化子の別名・automatic structのevent fieldは未対応 |
+| 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動の強さ | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
@@ -160,9 +163,9 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 宣言は子にせず、親で既存の寿命/初期化を使います。static記憶域は共有し、捕捉のない
 automatic初期化は入るたびに行います。宣言だけのforkにも対応します。
 [独自72ソースと制限](notes/fork-local-declarations.ja.md)で8種類の実行場所と型を検査します。
-後述のソース捕捉対応でautomatic変数を共有します。automatic event生成は残作業です。
-[記憶域の共有・automatic eventの修正案](notes/automatic-capture-proposal.ja.md)は2026-10-25承認済みで、
-automatic event変数も未対応です。
+後述のソース捕捉対応でautomatic変数を共有します。[automatic scalar/固定配列eventの
+既定値](notes/instruction-event-execution.ja.md)は、宣言実行ごとに固有objectを作り、子孫の
+活動まで保持します。値仮引数、初期化子の別名、automatic unpacked structのevent fieldは未対応です。
 
 ### automatic記憶域の実行境界
 
@@ -180,7 +183,8 @@ resource失敗を含み、コンパイルした14故障を検出しました。�
 共用し、scopeの値の複製を残しません。
 frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を生成し、新規186設計と
 全フィールド・寿命の確認器が通り、実際にコンパイルした5故障も検出しました。
-有限のautomatic forkプローブは通り、過去のIcarus 13.0合格・native未成功差分は21件です。
+その捕捉の区切りではautomatic forkプローブが通り、Icarus 13.0合格・native未成功差分は21件でした。
+[現在の比較](notes/icarus-13-comparison.ja.md)は両参照とも7件です。
 旧未対応3テストは承認済みの別コミット`11096dc3`で移行し、ソース入力は変更していません。
 [管理eventのカーネル段階](notes/managed-event-registry.ja.md)で世代付き同一性・実行時pin・
 保持スコープのevent rootを提供し、20テストと32ビット全世代を検査しました。

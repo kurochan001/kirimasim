@@ -1,7 +1,9 @@
 # ソースから共有する字句的 automatic 記憶域へ変換する
 
 [English](automatic-front-capture.md) が正。状態：ソース実装を `ebb0e14d` にコミット、2026-10-25。
-過去の期待値の移行は承認待ち。
+その後、過去の期待値3件は別途承認後に `11096dc3` で移行しました。
+現在の [main `304e1aec`](automatic-event-main-integration.ja.md) は automatic scalar/固定配列eventの
+生成も含みます。以下の未対応・レビュー待ち・失敗数は `ebb0e14d` 時点の記録です。
 
 ## 契約と実装
 
@@ -67,7 +69,7 @@ const ref static への書き込み、読まない automatic event の5境界は
 固定版 sv-tests 344件は合格244を維持した。外部 checkout の現在の版は使っていない。
 Linux と標準の速度比較は、この段階では測り直していない。
 
-## レビュー待ちと残作業
+## この区切りでのレビュー待ちと残作業
 
 [別の期待値移行案](automatic-capture-expectation-migration.ja.md) は既存入力を残し、
 旧未対応3テストを正常出力・終了の期待値に移す提案である。未承認で未適用。

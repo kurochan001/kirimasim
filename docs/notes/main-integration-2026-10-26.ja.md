@@ -1,9 +1,14 @@
 # 受動スイッチとSSA event領域のmain統合
 
-[English](main-integration-2026-10-26.md)が正です。状態：**ローカル統合・検証済み（2026-10-26）**。
-人からmainへの統合と公開を依頼されています。[全local CI](../measurements/2026-10-26/main-integration-validation.json)は
+[English](main-integration-2026-10-26.md)が正です。状態：**以前のmain統合の記録（2026-10-26）**。
+`1c970f5d`として公開済みで、後続のautomatic event公開は下のリンクで示します。[全local CI](../measurements/2026-10-26/main-integration-validation.json)は
 `3ab8a7661eb6`で21項目すべて成功しました。最後の検証文書コミットは実行コード/テストの
 バイト列を変えず、期待値分離と文書の検査を別途行います。
+
+
+**後続の main 公開：** [automatic event と呼び出し転送](automatic-event-main-integration.ja.md)を
+後に main の `304e1aec` として公開し、新しい件数と hosted 検証を記録しました。以下の統合内容や
+未実装という記述は、以前の `1c970f5d` の区切りの範囲と証拠を保持します。
 
 ## 含める変更
 

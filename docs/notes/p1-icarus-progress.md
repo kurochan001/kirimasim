@@ -13,7 +13,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
-**Latest local implementation:** `e909f022` adds [automatic declaration events and
+**Published implementation on main:** `e909f022` adds [automatic declaration events and
 instruction collection](instruction-event-execution.md), publishing native/SSA/transfer
 roots before physical growth. Its 176 source designs, 12 VM tests with 32 verified
 SIR designs, one registry query test and 12 compiled controls pass. Both 87-probe
@@ -22,7 +22,16 @@ The fixed population remains 1,456/1,466 with zero failures and ten unsupported;
 sv-tests remains 244/344. The [one historical rejection-oracle migration](automatic-event-expectation-migration.md)
 was separately approved and applied in `4ba6b63d`. [Post-approval local CI](../measurements/2026-10-26/automatic-event-approved-validation.json)
 passes 21/21 steps: dev/ASan/UBSan 5,741/5,743, release 5,742/5,744,
-with zero failures and two known skips each. This work is local, not merged/pushed, and P1 remains incomplete.
+with zero failures and two known skips each. The six commits after `1c970f5d`
+were fast-forwarded into main and pushed as `304e1aec` on 2026-10-26;
+[the publication record](automatic-event-main-integration.md) identifies the
+hosted CI snapshot (all 14 jobs successful) and preserved validation. P1 remains incomplete.
+
+### Earlier component and integration checkpoints
+
+The following paragraphs retain their measurement-time counts, approvals and
+local/unmerged status. They do not reopen resolved approvals or describe the
+current publication state.
 
 **Earlier transfer checkpoint:** `1d2b7e6e` adds [event transfer ownership](event-transfers.md)
 for input/copyback snapshots and returns, with six component tests and four VM
@@ -34,7 +43,7 @@ observations are +2.1%/+3.9%, with identical counters. Active-field/instruction
 publication and automatic source construction remain work. This checkpoint is
 local, not merged/pushed; external source probes were not refreshed.
 
-**Main integration:** the current main integration includes source passive
+**Earlier main integration (`1c970f5d`):** that integration includes source passive
 switches, typed SSA event regions, the approved event-only safepoint contract
 and the README's remaining-feature inventory. The user separately approved the
 exact tran expectation migration, applied in `77c9d188` without source fixture
@@ -46,7 +55,7 @@ measurements. Complete P1 coverage remains unproven.
 
 ### Earlier checkpoints before this integration
 
-**Current integration:** main `07b7de82` includes slang 12.1, the passive kernel,
+**Earlier integration:** main `07b7de82` includes slang 12.1, the passive kernel,
 and the separately applied nmos oracle migration (`6f301460`). Its pre-change
 full local CI passes all 21 checks. The older checkpoint paragraphs below
 retain their original validation and pending-review statements; these do not

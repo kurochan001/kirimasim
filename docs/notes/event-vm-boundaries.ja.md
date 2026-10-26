@@ -1,6 +1,10 @@
 # 既存の回収境界で型付きSIR eventを実行する
 
-[English](event-vm-boundaries.md)が正。状態：境界で動く部品を実装・検証済み、2026-10-26。ソースのautomatic eventはまだ有効にしていません。
+[English](event-vm-boundaries.md)が正。状態：境界で動く部品を実装・検証済み、2026-10-26。この部品の区切りではソースのautomatic eventは未有効でした。
+
+**現在の公開状況（2026-10-26）：** [main の `304e1aec`](automatic-event-main-integration.ja.md)は、
+automatic scalar/固定配列 event の生成と公開済み命令境界での回収を含みます。以下のソース無効化や
+公開手順の未完了という記述は、この部品の以前の区切りを指し、現在の実装の状態ではありません。
 
 **後の承認（2026-10-26）：** 人が別途、[管理eventのsafe point修正](managed-event-safepoints-proposal.ja.md)の
 推奨案1を承認し、RUNTIME_ABI 6へ反映しました。以下の未承認という記述は以前の区切りの

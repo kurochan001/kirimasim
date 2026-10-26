@@ -1,0 +1,127 @@
+{
+  "date": "2026-10-26",
+  "observed_at_utc": "2026-10-26 12:52:13 UTC",
+  "published_main": "304e1aecaeab3c6482261e4e46632ac9324d53ef",
+  "previous_main": "1c970f5d323c6d93bddee487d139a724c741d43f",
+  "integration_method": "Fast-forward of six existing commits; approved expectation migration remains separate from implementation",
+  "included_commits": [
+    "1d2b7e6e",
+    "ee71fdd0",
+    "e909f022",
+    "954b5350",
+    "4ba6b63d",
+    "304e1aec"
+  ],
+  "local_validation": {
+    "record": "automatic-event-approved-validation.json",
+    "validated_commit": "4ba6b63d",
+    "steps_passed": 21,
+    "steps_total": 21,
+    "runtime_and_test_sources_unchanged_at_published_head": true
+  },
+  "hosted_ci": {
+    "conclusion": "success",
+    "createdAt": "2026-10-26T12:02:55Z",
+    "headSha": "304e1aecaeab3c6482261e4e46632ac9324d53ef",
+    "status": "completed",
+    "updatedAt": "2026-10-26T12:41:16Z",
+    "url": "https://github.com/kurochan001/kirimasim/actions/runs/40319556353",
+    "workflowName": "CI",
+    "run_id": 40319556353,
+    "total_jobs": 14,
+    "successful_jobs": 14,
+    "failed_jobs": 0,
+    "jobs": [
+      {
+        "id": 121560692807,
+        "name": "sanitizers (linux, gcc, ubsan)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560692974,
+        "name": "min-compilers (apple-clang-17, Xcode 26.0.1)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693004,
+        "name": "build-test (linux, dev)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693028,
+        "name": "sanitizers (linux, gcc, asan)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693034,
+        "name": "macos (release)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693076,
+        "name": "macos (ubsan)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693094,
+        "name": "macos (dev)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693112,
+        "name": "min-compilers (gcc-13)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693128,
+        "name": "tsan (linux, clang-22)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693140,
+        "name": "min-compilers (clang-18, libc++ 18)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693174,
+        "name": "lint",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693258,
+        "name": "min-compilers (clang-19, libstdc++ 13)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560693284,
+        "name": "macos (asan)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 121560773032,
+        "name": "build-test (linux, release)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "scope": "Publication and CI status; older measurement records retain their pre-publication states.",
+  "limitations": [
+    "A CI snapshot describes the identified commit and observation time, not later documentation edits.",
+    "Regular CI is not evidence of seven nightly fuzz passes or refreshed external simulator/population/speed measurements.",
+    "P1 remains incomplete; the original 87-probe inventory still has seven Icarus-passing gaps per reference and does not establish full parity."
+  ]
+}

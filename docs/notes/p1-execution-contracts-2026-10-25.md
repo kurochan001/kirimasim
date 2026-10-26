@@ -6,6 +6,13 @@ array-method checkpoint. Their operative clauses below are normative amendments;
 evidence and original observations remain historical records, not copied test
 oracles. The English proposal texts are authoritative.
 
+
+**Later publication (2026-10-26):** the separate tran expectation migration was
+approved and applied in `77c9d188`; the automatic-event metadata migration was
+approved and applied in `4ba6b63d`. Both are in [published main `304e1aec`](automatic-event-main-integration.md).
+The implementation/migration status in the final addendum is the status at that
+decision, not a current pending request. The approved execution contracts remain authoritative.
+
 - [Fixed array ports and element-wise resolution, sections 1–6](fixed-array-ports-proposal.md).
 - [Shared automatic activations, captures and automatic events, sections 1–8](automatic-capture-proposal.md).
 - [Event-controlled NBA: scheduler, lifetime and SIR/kernel boundary contracts](event-nba-proposal.md).

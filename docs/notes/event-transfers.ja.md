@@ -1,7 +1,8 @@
 # 引数・戻り値の転送をまたぐevent所有
 
-[English](event-transfers.md)が正です。状態：部品の実装と検査済み、2026-10-26。
-命令回収点での完全公開と、ソースのautomatic event生成は引き続き実装中です。
+[English](event-transfers.md)が正です。状態：2026-10-26の部品の区切り。
+現在の[公開済み実装](automatic-event-main-integration.ja.md)は、命令境界の回収と automatic
+scalar/固定配列 event の既定値生成を含みます。以下の部品の説明と測定は元の範囲の記録です。
 
 **後続の実装（2026-10-26）：** [命令境界event](instruction-event-execution.ja.md)でnative fieldの
 公開、物理行増加前の回収、automatic scalar/固定配列のソース生成を追加しました。入力pinは

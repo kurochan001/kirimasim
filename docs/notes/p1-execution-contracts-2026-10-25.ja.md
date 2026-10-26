@@ -5,6 +5,12 @@
 下記の実行契約の節を仕様修正として採用します。観測や根拠は過去の記録として保ち、
 テストの期待値を他プロジェクトからコピーしません。英語の契約本文が正です。
 
+
+**後続の公開状況（2026-10-26）：** 別件のtran期待値移行は承認後に `77c9d188`、
+automatic eventのmetadata期待値移行は承認後に `4ba6b63d` で適用し、
+[main `304e1aec`](automatic-event-main-integration.ja.md) に公開済みです。
+末尾の追記にある実装/移行状態は、その承認時点の記録です。承認済みの実行契約自体は引き続き有効です。
+
 - [固定配列ポート・要素ごとの解決、1–6節](fixed-array-ports-proposal.ja.md).
 - [automatic活動の共有・捕捉・自動イベント、1–8節](automatic-capture-proposal.ja.md).
 - [イベント制御付きNBA：スケジューラ・寿命・SIR/カーネル境界の契約](event-nba-proposal.ja.md).

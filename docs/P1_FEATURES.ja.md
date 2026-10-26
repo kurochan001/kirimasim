@@ -4,7 +4,7 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-25 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
+2026-10-26 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
 [開発用のビルド](../README.ja.md)の後、例を 1 つずつ `demo.sv` に保存し、
@@ -55,8 +55,39 @@ fork内の宣言は、親で寿命どおり初期化し、子に数えたり`joi
 static記憶域は共有し、捕捉のないautomatic宣言は入るたびに初期化します。
 宣言だけのforkは待機せず進みます。[独自72ソースと制限](notes/fork-local-declarations.ja.md)を
 参照してください。[automaticの共有捕捉](notes/automatic-front-capture.ja.md)は寿命・型・joinを
-またぐ新規186ソースで通りました。旧未対応3テストの期待値は別途承認待ちです。
-automatic eventは引き続き未対応です。
+またぐ新規186ソースで通りました。旧未対応3テストの期待値は別途承認後に`11096dc3`で移行済みです。
+automatic scalar/固定配列eventの既定値も、下記の範囲で実装しました。
+
+## taskの復帰後も保持するautomatic event
+
+初期化子のないautomatic scalar eventは、宣言を実行するたびに固有objectを作ります。
+固定配列の各要素も別のobjectで、昇順・降順・多次元には通常の型付き添字規則を使います。
+子はtaskの復帰後も囲んでいるautomatic範囲を保持します。次の独自例は、独立したtask活動を
+2つ作り、`join_none`の後で両方の子孫を待ってから合計を表示します。
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/sched/automatic_event_capture_module_join_none_scalar_named_active.sv
+```
+
+```text
+total=3 errors=0
+```
+
+もう1つの独自例は、時刻を進めずに関数の二次元宣言へ64回入り直し、全要素が毎回
+未発火の状態から始まることを検査します。
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/sched/automatic_event_default_function_rank2.sv
+```
+
+```text
+checked=256 errors=0
+```
+
+collectorは物理event行を増やす前に全typed rootを公開し、コンテナheapとfinalの回収時点は
+保ちます。[実行と検証](notes/instruction-event-execution.ja.md)を参照してください。
+automatic eventの値仮引数・初期化子の別名・automatic structのevent fieldは未対応で、
+再関連付け・比較・eventを含む動的コンテナも有効にしていません。
 
 ## 広いネットでL/Hを解決する
 
@@ -243,7 +274,8 @@ endmodule
 [新規27ソースとカーネル20テスト](notes/managed-event-registry.ja.md)で修正と管理eventの
 土台を検査しました。後続の[カーネル実行時所有](notes/managed-event-runtime.ja.md)で
 型付き待機・trigger・monitorのpinを追加し、23テストとコンパイルした16故障の検出を確認しました。
-automatic eventのソース生成は未有効です。
+後続の[公開済み命令境界の回収](notes/instruction-event-execution.ja.md)で、native/SSA/転送の完全な
+rootとautomatic scalar/固定配列の宣言既定値を接続し、ソース176件と12故障の検出が通りました。
 
 ## 名前付きイベントの混合待ちと項ごとのiff
 
@@ -251,8 +283,9 @@ automatic eventのソース生成は未有効です。
 各項の任意の `iff` は、その項のイベントが起きたときに評価します。偽・Xなら
 待ちを保ち、条件の変化だけでは再開しません。最初に条件を満たした項が待ち全体を
 終え、他の名前付き項・購読・監視も解除します。同じ時刻でも、次の待ちで同じ
-イベントへ再登録できます。programはReactive側で再開します。実行時のイベント添字は
-未対応です。C++と追加方式のC ABI 0.3は同じカーネルへ到達します。
+イベントへ再登録できます。programはReactive側で再開します。[実行時の固定配列event添字](notes/indexed-event-execution.ja.md)は、
+named/mixed待ち、遅延対象、明示的な`.triggered`に対応します。対象は登録時に1回評価し、
+nullを待つ場合は位置付き実行時エラーの方針を保ちます。C++と追加方式のC ABI 0.3は同じカーネルへ到達します。
 
 ```systemverilog
 `timescale 1ns/1ns
@@ -703,8 +736,8 @@ nba 00 ff
 ノンブロッキング代入は、`payload` が変わる前の右辺の値を保持します。4 値の
 代入先は X と Z を保ち、2 値の代入先は 0 に変換します。配列は foreach の順、
 構造体はメンバの宣言の順です。スライスの幅は定数にします。automatic な変数は
-ノンブロッキング代入先にはできません。動的なコンテナと `with` は P4 の予定で、
-入れ子のストリーミング代入先も未対応です。最後の短いスライスの扱いは
+ノンブロッキング代入先にはできません。動的コンテナのストリーミング、`with`、
+入れ子のストリーミング代入先は未対応で、P1の必須部分は[P1_SCOPE](spec/P1_SCOPE.ja.md)に従います。最後の短いスライスの扱いは
 [値の意味の仕様書の 8 節](spec/VALUE_SEMANTICS.ja.md)を参照してください。
 
 ## 実行時に決まる読み取り書式

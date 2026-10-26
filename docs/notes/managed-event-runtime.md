@@ -1,7 +1,12 @@
 # Managed-event ownership during kernel execution
 
 [日本語](managed-event-runtime.ja.md). Status: kernel implementation checkpoint,
-2026-10-25; automatic-event source execution remains disabled.
+2026-10-25; automatic-event source execution was disabled at this checkpoint.
+
+**Current publication (2026-10-26):** [main `304e1aec`](automatic-event-main-integration.md)
+includes automatic scalar/fixed-array event construction and published instruction
+collection. Source gating and incomplete-publication statements below describe
+this earlier component checkpoint, not the current implementation.
 
 The grounds are sections 5/6/8 of the [approved automatic-capture contract](automatic-capture-proposal.md),
 [its specification mapping](p1-execution-contracts-2026-10-25.md), SIR_SPEC

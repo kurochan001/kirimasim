@@ -17,7 +17,14 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-25）
+## 状況（2026-10-26）
+
+公開済みの実装の区切りは main の `304e1aec` で、
+[automatic event の生成と寿命の処理](docs/notes/automatic-event-main-integration.ja.md)を含みます。
+local CI は21/21成功、dev/ASan/UBSan は各5,741/5,743、release は5,742/5,744で、
+失敗0・既知スキップ各2件です。[hosted CI](https://github.com/kurochan001/kirimasim/actions/runs/40319556353)も
+全14ジョブ成功で完了しました。P1は未完了で、[日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
+以前の承認・失敗・公開状態をその時点の履歴として保持します。
 
 > **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。
 

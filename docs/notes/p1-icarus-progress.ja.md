@@ -12,14 +12,21 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
-**最新のローカル実装：** `e909f022`で[automatic eventの生成と命令境界回収](instruction-event-execution.ja.md)を
+**main の公開済み実装：** `e909f022`で[automatic eventの生成と命令境界回収](instruction-event-execution.ja.md)を
 追加しました。native/SSA/転送を公開し、宣言ごとにscalar/固定配列のobjectを生成します。
 新規ソース176件、SIR32設計を含むVM12テスト、registry1テストと12故障の検出が通りました。
 87プローブの両参照との差分は8→7本、不一致4/7本は不変です。母集団は1,466本中1,456成功・
 失敗0・未対応10、sv-testsは344本中244成功で、以前の結果を維持しています。[過去の拒否期待値1件](automatic-event-expectation-migration.ja.md)は承認後に`4ba6b63d`で
 別に移行しました。[承認後のlocal CI](../measurements/2026-10-26/automatic-event-approved-validation.json)は
 21/21成功で、dev/ASan/UBSanは各5,741/5,743、releaseは5,742/5,744、失敗0・既知スキップ各2件です。
-main統合・pushはしておらず、P1は未完了です。
+`1c970f5d`後の6コミットをmainへfast-forwardし、2026-10-26に`304e1aec`としてpushしました。
+[公開記録](automatic-event-main-integration.ja.md)に、hosted CI全14ジョブ成功と引き継ぐ検証を記録します。
+P1全体は未完了です。
+
+### 以前の部品・統合の区切り
+
+以下の段落は、各測定時点の件数・承認・ローカル/未統合状態を保持します。
+解消済みの承認を再び求める記述でも、現在の公開状態でもありません。
 
 **以前の転送の区切り：** `1d2b7e6e`で、入力/copyback snapshotと戻り値の[event転送所有](event-transfers.ja.md)を
 追加しました。部品6テストとVM4テストでSIR9設計を検査し、実際の確保失敗5経路でもcalleeの
@@ -29,7 +36,7 @@ main統合・pushはしておらず、P1は未完了です。
 活動中フィールド/命令回収点の完全公開とautomaticソース生成は残作業です。この区切りは
 ローカルで、main統合・pushはしていません。外部ソースプローブも再計測していません。
 
-**main統合：** 今回のmain統合は、ソースの受動スイッチ、型付きSSA event領域、承認済みの
+**以前のmain統合（`1c970f5d`）：** その統合は、ソースの受動スイッチ、型付きSSA event領域、承認済みの
 event専用safe point契約と、READMEの残機能一覧を含みます。人が別途承認したtran期待値の
 具体的な移行を`77c9d188`で適用し、ソースfixtureを保っています。
 [統合検証](main-integration-2026-10-26.ja.md)はlocal CI全21項目成功で、dev/ASan/UBSanは
@@ -38,7 +45,7 @@ event専用safe point契約と、READMEの残機能一覧を含みます。人�
 
 ### 今回の統合前の記録
 
-**現在の統合状態：** main `07b7de82` に slang 12.1、受動網カーネルと、別に適用した
+**以前の統合状態：** main `07b7de82` に slang 12.1、受動網カーネルと、別に適用した
 nmos 期待値移行（`6f301460`）が含まれます。変更前 main の全 local CI は 21 項目すべて
 通りました。以下の過去の記録は元の検証・承認待ちの状態を保持したもので、現在の main で
 移行済みの nmos 期待が失敗するという意味ではありません。

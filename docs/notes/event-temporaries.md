@@ -1,8 +1,9 @@
 # Typed SSA event regions across native calls
 
-[日本語](event-temporaries.ja.md). Status: component implemented and checked,
-2026-10-26. Full instruction-boundary publication and source automatic-event
-construction remain in progress.
+[日本語](event-temporaries.ja.md). Status: component checkpoint, 2026-10-26.
+The current [published implementation](automatic-event-main-integration.md)
+includes instruction collection and automatic scalar/fixed-array event defaults.
+The component description and measurements below retain their original scope.
 
 **Subsequent main integration (2026-10-26):** the exact tran expectation
 migration was separately approved and applied in `77c9d188`. The

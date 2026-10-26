@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1 as of 2026-10-25. P1 is still in progress;
+These examples describe tier 1 as of 2026-10-26. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), save one example at a time as
@@ -59,7 +59,42 @@ uncaptured automatic declarations initialize per entry. Declaration-only
 forks proceed without a wait. [Seventy-two original source cases and limits](notes/fork-local-declarations.md)
 cover the behavior. [Automatic shared capture](notes/automatic-front-capture.md) now
 runs 186 new source designs across lifetimes, types and joins; three historical
-rejection checks await separate expectation approval. Automatic events remain unsupported.
+rejection checks were separately approved and migrated in `11096dc3`.
+Automatic scalar/fixed-array event defaults are also implemented as described below.
+
+## Automatic events retained after a task returns
+
+An automatic scalar event without an initializer gets a fresh object each time
+its declaration executes. Each fixed-array element gets a separate object;
+ascending/descending and multidimensional shapes use the ordinary typed index
+rules. Children retain their enclosing automatic extent, even after the task
+returns. The original example below starts two independent task activations,
+uses `join_none`, and waits for both descendants before printing the total.
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/sched/automatic_event_capture_module_join_none_scalar_named_active.sv
+```
+
+```text
+total=3 errors=0
+```
+
+A second original case reenters a function's two-dimensional declaration 64
+times without advancing simulation time; every element starts untriggered.
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/sched/automatic_event_default_function_rank2.sv
+```
+
+```text
+checked=256 errors=0
+```
+
+The collector publishes complete typed roots before physical event-row growth;
+container-heap and final-cleanup timing are unchanged. See [execution and
+validation](notes/instruction-event-execution.md). Automatic event value formals,
+initializer aliases and automatic structure event fields remain unsupported;
+rebinding, comparisons and event-containing dynamic containers are not enabled.
 
 ## Wide L/H gate resolution
 
@@ -254,8 +289,10 @@ Implicit named-event sensitivity through functions still receives a positioned
 unsupported diagnostic. [Twenty-seven new source cases and 20 kernel tests](notes/managed-event-registry.md)
 cover the correction and the managed-event foundation. The later
 [kernel runtime ownership checkpoint](notes/managed-event-runtime.md) adds typed
-wait/trigger/monitor pins, 23 tests and 16 caught compiled faults; automatic event source
-construction is not enabled by that foundation.
+wait/trigger/monitor pins, 23 tests and 16 caught compiled faults. The subsequent
+[published instruction collector](notes/instruction-event-execution.md) connects
+complete native/SSA/transfer roots and automatic scalar/fixed-array declaration
+defaults, with 176 source cases and 12 caught compiled faults.
 
 ## Mixed named-event waits and per-item iff
 
@@ -265,8 +302,11 @@ occurs. A false or X condition keeps the item registered; changing only
 the condition does not wake the process. The first satisfied item ends
 the entire wait, including other named items, subscriptions and watches.
 A subsequent wait can register the same event again in the same time slot.
-Programs resume in their Reactive group. Runtime event indices remain
-unsupported. Both C++ and the additive C ABI 0.3 entry reach the same kernel.
+Programs resume in their Reactive group. [Runtime fixed-array event indices](notes/indexed-event-execution.md)
+are supported in named/mixed waits, delayed targets and explicit `.triggered`.
+A selected target is evaluated once at registration; null waits retain the
+positioned runtime-error policy. Both C++ and the additive C ABI 0.3 entry reach
+the same kernel.
 
 ```systemverilog
 `timescale 1ns/1ns
@@ -743,8 +783,9 @@ The nonblocking assignment captures the right-hand value before `payload`
 changes. Four-state destinations retain X and Z; two-state destinations convert
 them to zero. Arrays follow foreach order and structures follow member
 declaration order. Slice sizes must be constant. Automatic variables cannot be
-nonblocking assignment targets. Dynamic containers and `with` remain P4 work;
-nested streaming targets are not supported yet. See
+nonblocking assignment targets. Streaming dynamic containers, `with` and
+nested streaming targets remain unsupported. The required P1 subset follows
+[P1_SCOPE](spec/P1_SCOPE.md). See
 [value semantics, section 8](spec/VALUE_SEMANTICS.md#8-not-confirmed-to-be-written-later)
 for the handling of a final short slice.
 

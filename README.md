@@ -25,7 +25,16 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-25)
+## Status (2026-10-26)
+
+The published implementation checkpoint is `304e1aec` on `main`, including
+[automatic-event construction and lifetime handling](docs/notes/automatic-event-main-integration.md).
+Local CI passes 21/21 checks; dev/ASan/UBSan pass 5,741/5,743 and release
+5,742/5,744, with zero failures and two known skips each. Its
+[hosted CI run](https://github.com/kurochan001/kirimasim/actions/runs/40319556353)
+also completed successfully across all 14 jobs. P1 remains incomplete;
+[dated checkpoint notes](docs/notes/p1-icarus-progress.md) preserve earlier
+approval, failure and publication states.
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its

@@ -110,5 +110,6 @@ root 公開の作業領域は既存の
 provider 失敗時の非 sweep、Context 確保失敗と再利用の検査とは区別します。
 
 P1 は未完了です。event の値・仮引数・struct と [P1_SUPPORT](../P1_SUPPORT.ja.md) の
-他の必須機能が残り、有限のプローブから Icarus 全面同等とは判定しません。この変更は
-ローカルで、main への統合と push はしていません。
+他の必須機能が残り、有限のプローブから Icarus 全面同等とは判定しません。実装と承認済み移行は
+[main の `304e1aec` で公開済み](automatic-event-main-integration.ja.md)です。以前の JSON の
+ローカル/未統合という記述は公開前の区切りを指し、その後の hosted 検証は公開ノートへ記録します。

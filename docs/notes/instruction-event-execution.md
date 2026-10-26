@@ -141,5 +141,7 @@ separate deterministic tests; they are not a substitute for that audit.
 
 P1 remains incomplete. Event value/formal/structure coverage and other required
 mechanisms in [P1_SUPPORT](../P1_SUPPORT.md) remain work; finite source probes
-cannot establish full Icarus parity. These changes are local and have not been
-merged into main or pushed.
+cannot establish full Icarus parity. The implementation and approved migration
+are [published on main as `304e1aec`](automatic-event-main-integration.md).
+Earlier JSON records that say local/unmerged describe their pre-publication
+checkpoints; the publication note records subsequent hosted validation.

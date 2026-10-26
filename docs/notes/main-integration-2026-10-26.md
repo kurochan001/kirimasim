@@ -1,10 +1,17 @@
 # Main integration of passive switches and SSA event regions
 
-[日本語](main-integration-2026-10-26.ja.md). Status: **locally integrated and
-validated (2026-10-26)**. The user requested main integration and publication.
+[日本語](main-integration-2026-10-26.ja.md). Status: **earlier main integration
+checkpoint (2026-10-26)**, published as `1c970f5d`. The subsequent automatic-event
+publication is linked below.
 [Full local CI](../measurements/2026-10-26/main-integration-validation.json) passes
 all 21 checks on `3ab8a7661eb6`; the final validation-document commit changes no
 runtime/test bytes and receives its own expectation-separation and doc checks.
+
+
+**Later main publication:** [automatic events and call transfers](automatic-event-main-integration.md)
+were subsequently published as main `304e1aec`, with newer counts and hosted
+validation. The integration and pending-implementation statements below retain
+this earlier `1c970f5d` checkpoint's scope and evidence.
 
 ## Included changes
 

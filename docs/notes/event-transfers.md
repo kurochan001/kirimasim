@@ -1,8 +1,9 @@
 # Event ownership across argument and result transfers
 
-[日本語](event-transfers.ja.md). Status: component implemented and checked,
-2026-10-26. Complete instruction-point publication and source automatic-event
-construction remain in progress.
+[日本語](event-transfers.ja.md). Status: component checkpoint, 2026-10-26.
+The current [published implementation](automatic-event-main-integration.md)
+includes instruction collection and automatic scalar/fixed-array event defaults.
+The component description and measurements below retain their original scope.
 
 **Subsequent implementation (2026-10-26):** [instruction events](instruction-event-execution.md)
 adds native-field publication, pre-growth collection and automatic scalar/fixed-array

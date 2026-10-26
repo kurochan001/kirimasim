@@ -1,7 +1,8 @@
 # ネイティブ呼び出しをまたぐ型付きSSA event領域
 
-[English](event-temporaries.md)が正です。状態：部品の実装と検査済み、2026-10-26。
-命令境界の完全公開と、ソースのautomatic event生成は引き続き実装中です。
+[English](event-temporaries.md)が正です。状態：2026-10-26の部品の区切り。
+現在の[公開済み実装](automatic-event-main-integration.ja.md)は、命令境界の回収と automatic
+scalar/固定配列 event の既定値生成を含みます。以下の部品の説明と測定は元の範囲の記録です。
 
 **後続のmain統合（2026-10-26）：** tran期待値の具体的な移行は別途承認後に`77c9d188`で
 適用しました。移行後の検証は[main統合の区切り](main-integration-2026-10-26.ja.md)に記録します。

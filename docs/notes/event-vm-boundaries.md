@@ -1,6 +1,11 @@
 # Executing typed SIR events at existing collection boundaries
 
-[日本語](event-vm-boundaries.ja.md). Status: boundary component implemented and checked, 2026-10-26. Source automatic events remain gated.
+[日本語](event-vm-boundaries.ja.md). Status: boundary component implemented and checked, 2026-10-26. At this component checkpoint, source automatic events were still gated.
+
+**Current publication (2026-10-26):** [main `304e1aec`](automatic-event-main-integration.md)
+includes automatic scalar/fixed-array event construction and published instruction
+collection. Source gating and incomplete-publication statements below describe
+this earlier component checkpoint, not the current implementation.
 
 **Later approval (2026-10-26):** the user separately approved recommended option 1
 of the [managed-event safepoint amendment](managed-event-safepoints-proposal.md),
