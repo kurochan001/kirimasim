@@ -2731,7 +2731,8 @@ Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t
 }
 
 void Lowerer::assignArray(ArrayBase s, std::vector<std::int64_t> indices,
-                          const ast::Expression& rhs, Stores& out, slang::SourceLocation sl) {
+                          const ast::Expression& rhs, Stores& out, slang::SourceLocation sl,
+                          bool initializeEvents) {
     const ast::Expression* r = &rhs;
     while (r->kind == ast::ExpressionKind::Conversion &&
            r->as<ast::ConversionExpression>().operand().type->getCanonicalType().isUnpackedArray())
@@ -2740,7 +2741,10 @@ void Lowerer::assignArray(ArrayBase s, std::vector<std::int64_t> indices,
     const std::size_t level = indices.size();
     if (level == dims.size()) {
         // One element: its value, for its constant indices (SIR_SPEC.md 5.3).
-        const Val v = snapshotValue(coerce(lowerExpr(*r), elemTypeOf(s), sl), sl);
+        const Type type = elemTypeOf(s);
+        const Val v = initializeEvents && type.kind == sir::TypeKind::Event
+                          ? lowerEventCopy(*r)
+                          : snapshotValue(coerce(lowerExpr(*r), type, sl), sl);
         out.emplace_back(elementPlace(s, indices), v);
         return;
     }
@@ -2756,7 +2760,7 @@ void Lowerer::assignArray(ArrayBase s, std::vector<std::int64_t> indices,
         if (elems.size() != count) unsupported(sl, "an assignment pattern of this size");
         for (std::size_t k = 0; k < count; ++k) {
             indices.push_back(d.left + static_cast<std::int64_t>(k) * step);
-            assignArray(s, indices, *elems[k], out, sl);
+            assignArray(s, indices, *elems[k], out, sl, initializeEvents);
             indices.pop_back();
         }
         return;

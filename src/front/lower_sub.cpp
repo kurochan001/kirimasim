@@ -459,16 +459,16 @@ std::optional<Lowerer::LaterWork> Lowerer::laterWork(const ast::SubroutineSymbol
     return found;
 }
 
-Val Lowerer::lowerInput(const ast::Expression& e, Type type) {
+Val Lowerer::lowerEventCopy(const ast::Expression& e) {
     const auto sl = e.sourceRange.start();
-    if (type.kind != sir::TypeKind::Event) return copyValue(lowerExpr(e), type, sl);
+    const Type type{sir::TypeKind::Event, 0};
     checkStack(sl);
     if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
-    // This entry is confined to input copy-in (automatic-capture contract 5,
-    // SIR_SPEC 8). Do not enable general event expressions or rebinding.
+    // Only input and declaration initialization use this entry (capture
+    // contract 5; SIR_SPEC 7.4/8). General event rebinding stays unsupported.
     if (e.kind == ast::ExpressionKind::Conversion) {
         const auto& operand = e.as<ast::ConversionExpression>().operand();
-        if (operand.type->isEvent() || operand.type->isNull()) return lowerInput(operand, type);
+        if (operand.type->isEvent() || operand.type->isNull()) return lowerEventCopy(operand);
     }
     if (e.kind == ast::ExpressionKind::NullLiteral) return constant(type, 0);
     if (e.type->isEvent()) {
@@ -476,7 +476,7 @@ Val Lowerer::lowerInput(const ast::Expression& e, Type type) {
         return operand.kind == Operand::Kind::Slot ? emit(Op::Load, type, {operand}, sl)
                                                    : Val{operand, type};
     }
-    unsupported(sl, "event input of this expression");
+    unsupported(sl, "event copy from this expression");
 }
 
 Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) {
@@ -571,7 +571,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         }
         if (prm.dir == sir::Direction::Input) {
             ops.push_back((prm.type.kind == sir::TypeKind::Event
-                               ? lowerInput(*args[i], prm.type)
+                               ? lowerEventCopy(*args[i])
                                : copyValue(lowerExpr(*args[i]), prm.type, sl))
                               .op);
             continue;

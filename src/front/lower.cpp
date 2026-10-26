@@ -2436,11 +2436,13 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
             flushStores(stores, false, sl);
         } else if (!design_.slot(slot).dims.empty()) {
             Stores stores;
-            assignArray(slot, {}, *v.getInitializer(), stores, sl);  // element by element
+            assignArray(slot, {}, *v.getInitializer(), stores, sl, true);  // element by element
             flushStores(stores, false, sl);
         } else {
             const sir::Type t = design_.slot(slot).type;
-            const Val val = copyValue(lowerExpr(*v.getInitializer()), t, sl);
+            const Val val = t.kind == sir::TypeKind::Event
+                                ? lowerEventCopy(*v.getInitializer())
+                                : copyValue(lowerExpr(*v.getInitializer()), t, sl);
             emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
             noteWrite({slot, 0, 0, 0, 0});
         }

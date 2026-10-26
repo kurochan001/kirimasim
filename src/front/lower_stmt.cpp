@@ -192,7 +192,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 const ArrayBase a{Place::Home::Frame, f};
                 Stores stores;
                 if (init != nullptr) {
-                    assignArray(a, {}, *init, stores, sl);
+                    assignArray(a, {}, *init, stores, sl, true);
                 } else {
                     std::vector<Place> places;
                     arrayPlaces(a, {}, places);
@@ -202,7 +202,9 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 flushStores(stores, false, sl);
                 return;
             }
-            const Val value = init != nullptr ? copyValue(lowerExpr(*init), t, sl) : initial(t);
+            const Val value = init == nullptr                  ? initial(t)
+                              : t.kind == sir::TypeKind::Event ? lowerEventCopy(*init)
+                                                               : copyValue(lowerExpr(*init), t, sl);
             emitVoid(Op::Fstore, {Operand::frame(f), value.op}, sl);
             return;
         }
@@ -1160,7 +1162,7 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
             }
             passed.push_back(a);
             if (!call->isSystemCall() && a->type->isEvent()) {
-                values.push_back(lowerInput(*a, Type{sir::TypeKind::Event, 0}));
+                values.push_back(lowerEventCopy(*a));
             } else {
                 values.push_back(lowerExpr(*a));
             }

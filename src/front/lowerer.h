@@ -289,8 +289,8 @@ public:
 
     // Expressions (lower_expr.cpp).
     Val lowerExpr(const ast::Expression& e);
-    /// Copy-in only: event values share an object before the formal's waits.
-    Val lowerInput(const ast::Expression& e, sir::Type type);
+    /// Input/initialization copies share an object before the new variable waits.
+    Val lowerEventCopy(const ast::Expression& e);
     Val lowerElementSelect(const ast::Expression& e);
     Val lowerRangeSelect(const ast::Expression& e);
     Val lowerUnary(const ast::Expression& e);
@@ -422,7 +422,7 @@ public:
     /// Computes an unpacked array value (a pattern, another array, or nested
     /// ones) for the (sub-)array of s at `indices`, element by element.
     void assignArray(ArrayBase s, std::vector<std::int64_t> indices, const ast::Expression& rhs,
-                     Stores& out, slang::SourceLocation sl);
+                     Stores& out, slang::SourceLocation sl, bool initializeEvents = false);
     void copyArray(ArrayBase to, std::vector<std::int64_t> toIndices, ArrayBase from,
                    std::vector<std::int64_t> fromIndices, Stores& out, slang::SourceLocation sl);
     /// The number of the element at the given declared indices
