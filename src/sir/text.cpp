@@ -3,6 +3,7 @@
 
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/pattern.h"
+#include "kirimasim/sir/strength.h"
 
 #include <array>
 #include <bit>
@@ -95,6 +96,7 @@ std::string operandText(const Design& d, const Operand& o) {
         case Operand::Kind::Type: return "!" + std::to_string(o.id);
         case Operand::Kind::Scope: return "#" + std::to_string(o.id);
         case Operand::Kind::StrengthOrigin: return "!d" + std::to_string(o.id);
+        case Operand::Kind::StrengthEdge: return "!e" + std::to_string(o.id);
     }
     return "?";
 }
@@ -406,6 +408,13 @@ std::string toText(const Design& d) {
                " initial=(" + std::to_string(origin.initial.lo) + "," +
                std::to_string(origin.initial.hi) + ")" + locText(origin.loc) + "\n";
     }
+    for (std::size_t i = 0; i < d.strengthEdges.size(); ++i) {
+        const auto& edge = d.strengthEdges[i];
+        out += "strength-edge !e" + std::to_string(i) + " nodes=(!n" + std::to_string(edge.first) +
+               ",!n" + std::to_string(edge.second) + ") kind=" + strengthEdgeName(edge.kind) +
+               " owner=" + (edge.owner == kNone ? "-" : "@" + std::to_string(edge.owner.index())) +
+               (edge.delayed ? " delayed" : "") + locText(edge.loc) + "\n";
+    }
     for (const NameEntry& n : d.names) {
         if (n.slot.index() < d.slots.size() && n.path == d.slot(n.slot).name) continue;
         out += "alias " + quoted(n.path) + " -> %s" + std::to_string(n.slot.index()) + "\n";
@@ -451,6 +460,11 @@ std::string toText(const Design& d) {
             out += " strength-writes=";
             for (std::size_t k = 0; k < p.strengthWrites.size(); ++k)
                 out += (k == 0 ? "!d" : ",!d") + std::to_string(p.strengthWrites[k].index());
+        }
+        if (!p.strengthEdgeWrites.empty()) {
+            out += " strength-edge-write=";
+            for (std::size_t k = 0; k < p.strengthEdgeWrites.size(); ++k)
+                out += (k == 0 ? "!e" : ",!e") + std::to_string(p.strengthEdgeWrites[k].index());
         }
         if (!p.writes.empty()) {
             out += " writes=";

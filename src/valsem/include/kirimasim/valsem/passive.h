@@ -13,6 +13,7 @@
 
 namespace kirimasim::valsem {
 enum class Conduction : std::uint8_t { Off, On, Uncertain };
+Conduction passiveConduction(Logic control, bool activeHigh);
 struct PassiveEdge {
     std::uint32_t first = 0, second = 0;
     StrengthTransfer transfer = StrengthTransfer::Nonresistive;

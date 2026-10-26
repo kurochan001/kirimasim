@@ -443,7 +443,8 @@ struct InstrInfo {
     std::vector<std::vector<kernel::FormatPiece>> formats;
     kernel::NetKind netKind = kernel::NetKind::Wire;  ///< For resolve.
     kernel::MosKind mosKind = kernel::MosKind::Nmos;  ///< Decoded strength.mos kind.
-    sir::StrengthLoadShape strengthLoad;              ///< Static shape, decoded before execution.
+    bool strengthEdgeActiveHigh = true;   ///< Decoded static conditional-device polarity.
+    sir::StrengthLoadShape strengthLoad;  ///< Static shape, decoded before execution.
     /// How values without a specifier print: 'd', or the radix of a b, o
     /// or h form (SYSTEM_TASKS.md 3.1).
     char radix = 'd';
@@ -1313,6 +1314,16 @@ private:
                 info.strengthLoad = *shape;
             return info;
         }
+        if (in.op == Op::StrengthEdge || in.op == Op::StrengthEdgeDelay) {
+            const auto count = in.op == Op::StrengthEdge ? 2U : 4U;
+            if (in.operands.size() != count || in.operands[0].kind != Operand::Kind::StrengthEdge ||
+                in.operands[0].id >= d_.strengthEdges.size())
+                loadError_ = "invalid strength.edge target";
+            else
+                info.strengthEdgeActiveHigh =
+                    sir::activeHighStrengthEdge(d_.strengthEdges[in.operands[0].id].kind);
+            return info;
+        }
         if (in.op == Op::StrengthDrive || in.op == Op::StrengthDriveDelay) {
             const auto count = in.op == Op::StrengthDrive ? 2U : 5U;
             if (in.operands.size() != count ||
@@ -1717,6 +1728,8 @@ private:
             case Op::Nba:
             case Op::NbaDelay:
             case Op::DriveDelay:
+            case Op::StrengthEdge:
+            case Op::StrengthEdgeDelay:
             case Op::StrengthDrive:
             case Op::StrengthDriveDelay:
             case Op::NbaElem:
@@ -3310,6 +3323,35 @@ private:
                                             buf.data(), *rise, *fall, *off, sides);
                         break;
                     }
+                    case Op::StrengthEdge:
+                    case Op::StrengthEdgeDelay: {
+                        const auto state = kernel::strengthConduction(
+                            value(ops[1]),
+                            info_[body.index()][b.index()][k].strengthEdgeActiveHigh);
+                        kernel::StrengthError error;
+                        if (in.op == Op::StrengthEdge)
+                            error = sched_.setStrengthEdge(ops[0].id, state);
+                        else {
+                            const auto on = ticksOf(ops[2]), off = ticksOf(ops[3]);
+                            if (!on || !off) {
+                                designError(f, in,
+                                            "the delay takes the time past the largest time");
+                                return Exit::Error;
+                            }
+                            error = sched_.setStrengthEdgeDelayed(ops[0].id, state, *on, *off);
+                        }
+                        if (error != kernel::StrengthError::None) {
+                            if (sched_.takeOverflow())
+                                designError(f, in,
+                                            "the delay takes the time past the largest time");
+                            else if (error == kernel::StrengthError::ResourceLimit)
+                                sched_.resourceLimit();
+                            else
+                                sched_.fail("invalid passive strength edge");
+                            return Exit::Error;
+                        }
+                        break;
+                    }
                     case Op::StrengthDrive:
                     case Op::StrengthDriveDelay: {
                         const auto captured = chunks(ops[1]);
@@ -4080,7 +4122,19 @@ private:
         origins.reserve(d_.strengthOrigins.size());
         for (const auto& origin : d_.strengthOrigins)
             origins.push_back({origin.node, {origin.initial.lo, origin.initial.hi}});
-        auto error = sched_.configureStrengthDrivers(nodes, origins);
+        std::vector<kernel::StrengthEdgeSpec> edges;
+        edges.reserve(d_.strengthEdges.size());
+        for (const auto& edge : d_.strengthEdges) {
+            const auto transfer =
+                edge.kind == sir::StrengthEdgeKind::Identity ? kernel::StrengthTransfer::Identity
+                : sir::resistiveStrengthEdge(edge.kind)      ? kernel::StrengthTransfer::Resistive
+                                                        : kernel::StrengthTransfer::Nonresistive;
+            edges.push_back({edge.first, edge.second, transfer,
+                             sir::conditionalStrengthEdge(edge.kind)
+                                 ? kernel::StrengthConduction::Off
+                                 : kernel::StrengthConduction::On});
+        }
+        auto error = sched_.configureStrengthDrivers(nodes, origins, edges);
         if (error == kernel::StrengthError::None) error = sched_.startStrengthDrivers();
         if (error == kernel::StrengthError::None) return true;
         if (error == kernel::StrengthError::ResourceLimit)

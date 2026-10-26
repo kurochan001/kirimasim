@@ -42,6 +42,8 @@ struct ProcessTag;
 using ProcessId = Id<ProcessTag>;
 struct StrengthOriginTag;
 using StrengthOriginId = Id<StrengthOriginTag>;
+struct StrengthEdgeTag;
+using StrengthEdgeId = Id<StrengthEdgeTag>;
 
 /// Every body starts at its block 0, as the text form numbers them (bb0).
 inline constexpr BlockId kEntryBlock{0};
@@ -383,6 +385,8 @@ enum class Op : std::uint8_t {
     StrengthLoad,        ///< strength.load <net window>[, <indices>...][, <position>]
     StrengthDrive,       ///< strength.drive !dN, <strength<1>>
     StrengthDriveDelay,  ///< strength.drive.delay !dN, <strength<1>>, <rise>, <fall>, <off>
+    StrengthEdge,        ///< strength.edge !eN, <scalar control>
+    StrengthEdgeDelay,   ///< strength.edge.delay !eN, <scalar control>, <on>, <off>
     StrengthMake,        ///< strength.make <i4/s4 value>, <s1>, <s0>[, <i2/s2 side>]
     StrengthValue,       ///< strength.value <strength<w>> -> i4<w>
     StrengthMos,         ///< strength.mos "kind", <strength<w>>, <scalar control>...
@@ -455,6 +459,7 @@ struct Operand {
         Type,            ///< A row of the type table (!N).
         Scope,           ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
         StrengthOrigin,  ///< A static physical output (!dN); never a language value.
+        StrengthEdge,    ///< A static passive edge (!eN); never a language value.
     };
     Kind kind = Kind::Temp;
     std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
@@ -511,6 +516,7 @@ struct Operand {
     static Operand strengthOrigin(StrengthOriginId id) {
         return of(Kind::StrengthOrigin, id.index());
     }
+    static Operand strengthEdge(StrengthEdgeId id) { return of(Kind::StrengthEdge, id.index()); }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
         o.text = std::move(s);
@@ -627,6 +633,25 @@ struct StrengthOrigin {
     SourceLoc loc;
 };
 
+/// Static passive connectivity and its one control/delay owner (contract 3/6/7).
+/// Unconditional/identity edges have no owner; conditional edges start off.
+enum class StrengthEdgeKind : std::uint8_t {
+    Identity,
+    Tran,
+    Rtran,
+    Tranif0,
+    Tranif1,
+    Rtranif0,
+    Rtranif1
+};
+struct StrengthEdge {
+    std::uint32_t first = 0, second = 0;
+    StrengthEdgeKind kind = StrengthEdgeKind::Tran;
+    ProcessId owner = kNone;
+    bool delayed = false;  ///< Conditional owner supplies exactly two normalized delays.
+    SourceLoc loc;
+};
+
 /// One item of a process's sensitivity: a slot range, the edge, and the
 /// iff guard, which reads the process's frame (SIR_SPEC.md 7.1, 7.2).
 struct Trigger {
@@ -668,6 +693,7 @@ struct Process {
     std::vector<SlotRange> strengthTriggers;  ///< Internal full-range sensitivity, separate from @.
     std::vector<StrengthOriginId>
         strengthWrites;  ///< Owned physical contributions, not net writes.
+    std::vector<StrengthEdgeId> strengthEdgeWrites;  ///< Owned conditional conduction updates.
 };
 
 /// Kinds of subroutines (SIR_SPEC.md 8). A guard is the iff condition of a
@@ -778,6 +804,7 @@ struct Design {
     std::vector<DumpVar> dumpVars;
     std::vector<StrengthNode> strengthNodes;
     std::vector<StrengthOrigin> strengthOrigins;
+    std::vector<StrengthEdge> strengthEdges;
 
     /// The rows the typed numbers name.
     Slot& slot(SlotId s) { return slots[s.index()]; }

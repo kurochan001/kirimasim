@@ -4,8 +4,32 @@
 #include <algorithm>
 
 namespace kirimasim::sir {
+const char* strengthEdgeName(StrengthEdgeKind kind) {
+    switch (kind) {
+        case StrengthEdgeKind::Identity: return "identity";
+        case StrengthEdgeKind::Tran: return "tran";
+        case StrengthEdgeKind::Rtran: return "rtran";
+        case StrengthEdgeKind::Tranif0: return "tranif0";
+        case StrengthEdgeKind::Tranif1: return "tranif1";
+        case StrengthEdgeKind::Rtranif0: return "rtranif0";
+        case StrengthEdgeKind::Rtranif1: return "rtranif1";
+    }
+    return "?";
+}
+bool conditionalStrengthEdge(StrengthEdgeKind kind) {
+    return kind == StrengthEdgeKind::Tranif0 || kind == StrengthEdgeKind::Tranif1 ||
+           kind == StrengthEdgeKind::Rtranif0 || kind == StrengthEdgeKind::Rtranif1;
+}
+bool resistiveStrengthEdge(StrengthEdgeKind kind) {
+    return kind == StrengthEdgeKind::Rtran || kind == StrengthEdgeKind::Rtranif0 ||
+           kind == StrengthEdgeKind::Rtranif1;
+}
+bool activeHighStrengthEdge(StrengthEdgeKind kind) {
+    return kind == StrengthEdgeKind::Tranif1 || kind == StrengthEdgeKind::Rtranif1;
+}
+
 bool hasStrengthNetwork(const Design& d) {
-    return !d.strengthNodes.empty() || !d.strengthOrigins.empty() ||
+    return !d.strengthNodes.empty() || !d.strengthOrigins.empty() || !d.strengthEdges.empty() ||
            std::any_of(d.slots.begin(), d.slots.end(),
                        [](const Slot& slot) { return (slot.flags & kNeedsStrength) != 0; });
 }

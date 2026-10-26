@@ -40,6 +40,16 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('passive SIR: registered edge table omitted', 'src/vm/vm.cpp', 'configureStrengthDrivers(nodes, origins, edges)', 'configureStrengthDrivers(nodes, origins, {})'),
+    ('passive SIR: decoded control polarity inverted', 'src/vm/vm.cpp', 'sir::activeHighStrengthEdge(d_.strengthEdges[in.operands[0].id].kind)', '!sir::activeHighStrengthEdge(d_.strengthEdges[in.operands[0].id].kind)'),
+    ('passive SIR: unknown control becomes off', 'src/kernel/include/kirimasim/kernel/strength_drivers.h', 'if ((control.b & 1U) != 0) return StrengthConduction::Uncertain;', 'if ((control.b & 1U) != 0) return StrengthConduction::Off;'),
+    ('passive SIR: conditional startup conducts', 'src/vm/vm.cpp', 'sir::conditionalStrengthEdge(edge.kind)\n                                 ? kernel::StrengthConduction::Off', 'sir::conditionalStrengthEdge(edge.kind)\n                                 ? kernel::StrengthConduction::On'),
+    ('passive SIR: inertial conduction becomes immediate', 'src/vm/vm.cpp', 'error = sched_.setStrengthEdgeDelayed(ops[0].id, state, *on, *off);', 'error = sched_.setStrengthEdge(ops[0].id, state);'),
+    ('passive SIR: on and off delays swapped', 'src/vm/vm.cpp', 'setStrengthEdgeDelayed(ops[0].id, state, *on, *off)', 'setStrengthEdgeDelayed(ops[0].id, state, *off, *on)'),
+    ('passive SIR: uwire verifier loses remote roots', 'src/sir/verify.cpp', '++possible[find(origin.node)];', '++possible[origin.node];'),
+    ('passive SIR: control signature loses delay ownership', 'src/sir/verify.cpp', 'edge.delayed == delayed &&', '(edge.delayed == delayed || true) &&'),
+    ('passive SIR: resistive edges become nonresistive', 'src/sir/strength.cpp', 'return kind == StrengthEdgeKind::Rtran || kind == StrengthEdgeKind::Rtranif0 ||\n           kind == StrengthEdgeKind::Rtranif1;', 'return (kind == StrengthEdgeKind::Rtran || kind == StrengthEdgeKind::Rtranif0 ||\n            kind == StrengthEdgeKind::Rtranif1) && false;'),
+
     ('passive network: graph resolution bypassed', 'src/kernel/strength_drivers.cpp', 'if (part.edgeCount != 0) {', 'if (part.edgeCount != 0 && false) {'),
     ('passive network: local identity origins lose supply rank', 'src/kernel/strength_network.cpp', 'bank.routes_[std::size_t{source} * 8 + rank] = rank;', 'bank.routes_[std::size_t{source} * 8 + rank] = static_cast<std::uint8_t>(std::min<unsigned>(rank, 6));'),
     ('passive network: edges omit strength reduction', 'src/kernel/strength_network.cpp', 'transferStrengthPoint(edge.spec.transfer, carried)', 'transferStrengthPoint(StrengthTransfer::Identity, carried)'),

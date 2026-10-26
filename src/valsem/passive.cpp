@@ -8,6 +8,16 @@
 #include <vector>
 
 namespace kirimasim::valsem {
+Conduction passiveConduction(Logic control, bool activeHigh) {
+    switch (control) {
+        case Logic::Zero: return activeHigh ? Conduction::Off : Conduction::On;
+        case Logic::One: return activeHigh ? Conduction::On : Conduction::Off;
+        case Logic::X:
+        case Logic::Z: return Conduction::Uncertain;
+    }
+    return Conduction::Uncertain;
+}
+
 namespace {
 bool core(NetKind kind) {
     switch (kind) {

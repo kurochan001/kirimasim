@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <numeric>
 #include <optional>
 #include <set>
 #include <span>
@@ -42,6 +43,8 @@ bool hasNoResult(Op op) {
         case Op::Nba:
         case Op::NbaDelay:
         case Op::DriveDelay:
+        case Op::StrengthEdge:
+        case Op::StrengthEdgeDelay:
         case Op::StrengthDrive:
         case Op::StrengthDriveDelay:
         case Op::StoreElem:
@@ -563,6 +566,60 @@ private:
                           origin.loc);
             }
         }
+        std::vector<std::uint32_t> parent(d_.strengthNodes.size());
+        std::iota(parent.begin(), parent.end(), 0U);
+        const auto find = [&](std::uint32_t node) {
+            auto root = node;
+            while (parent[root] != root)
+                root = parent[root];
+            while (parent[node] != node) {
+                const auto next = parent[node];
+                parent[node] = root;
+                node = next;
+            }
+            return root;
+        };
+        for (std::size_t i = 0; i < d_.strengthEdges.size(); ++i) {
+            const auto& edge = d_.strengthEdges[i];
+            const auto where = "strength edge !e" + std::to_string(i);
+            if (edge.loc.line == 0 || edge.loc.column == 0 || edge.loc.file >= d_.sources.size())
+                error(where, "invalid source location", edge.loc);
+            if (static_cast<unsigned>(edge.kind) >
+                static_cast<unsigned>(StrengthEdgeKind::Rtranif1))
+                error(where, "invalid passive edge kind", edge.loc);
+            if (edge.first >= d_.strengthNodes.size() || edge.second >= d_.strengthNodes.size())
+                error(where, "passive endpoint out of range", edge.loc);
+            else {
+                if (d_.strengthNodes[edge.first].component !=
+                    d_.strengthNodes[edge.second].component)
+                    error(where, "passive endpoints need the same publication component", edge.loc);
+                parent[find(edge.first)] = find(edge.second);
+            }
+            if (conditionalStrengthEdge(edge.kind)) {
+                if (edge.owner.index() >= d_.processes.size())
+                    error(where, "conditional edge needs a static cont owner", edge.loc);
+                else {
+                    const auto& owner = d_.process(edge.owner);
+                    if (owner.kind != ProcessKind::Cont || owner.parent.kind != Owner::Kind::None ||
+                        std::ranges::find(owner.strengthEdgeWrites,
+                                          StrengthEdgeId{static_cast<std::uint32_t>(i)}) ==
+                            owner.strengthEdgeWrites.end())
+                        error(where,
+                              "conditional edge needs its static cont owner's declared write",
+                              edge.loc);
+                }
+            } else if (edge.owner != kNone || edge.delayed)
+                error(where, "unconditional edge has neither control owner nor delay", edge.loc);
+        }
+        if (!d_.strengthEdges.empty()) {
+            std::vector<std::uint64_t> possible(d_.strengthNodes.size());
+            for (const auto& origin : d_.strengthOrigins)
+                if (origin.node < parent.size()) ++possible[find(origin.node)];
+            for (std::uint32_t n = 0; n < d_.strengthNodes.size(); ++n)
+                if (d_.strengthNodes[n].kind == SlotKind::Uwire && possible[find(n)] > 1)
+                    error("strength node !n" + std::to_string(n),
+                          "uwire has multiple potential physical origins", d_.strengthNodes[n].loc);
+        }
     }
 
     void checkNames() {
@@ -844,6 +901,14 @@ private:
                 d_.strengthOrigins[origin.index()].kind != StrengthOriginKind::Process ||
                 d_.strengthOrigins[origin.index()].owner != id)
                 error(where, "strength write does not name an owned process origin", p.loc);
+        }
+        std::set<StrengthEdgeId> edges;
+        for (const auto edge : p.strengthEdgeWrites) {
+            if (!edges.insert(edge).second) error(where, "duplicate strength edge write", p.loc);
+            if (edge.index() >= d_.strengthEdges.size() ||
+                !conditionalStrengthEdge(d_.strengthEdges[edge.index()].kind) ||
+                d_.strengthEdges[edge.index()].owner != id)
+                error(where, "strength edge write does not name an owned conditional edge", p.loc);
         }
         // Only a cont process drives, and only what it writes (SIR_SPEC.md
         // 3.4, 10).
@@ -1227,6 +1292,9 @@ private:
             if (operand.kind == Operand::Kind::StrengthOrigin &&
                 ((in.op != Op::StrengthDrive && in.op != Op::StrengthDriveDelay) || i != 0))
                 bad("physical origin IDs are not ordinary operands");
+            if (operand.kind == Operand::Kind::StrengthEdge &&
+                ((in.op != Op::StrengthEdge && in.op != Op::StrengthEdgeDelay) || i != 0))
+                bad("passive edge IDs are not ordinary operands");
             if (operand.kind != Operand::Kind::Slot || !isStrengthNet(d_, operand.asSlot()))
                 continue;
             bool readOnly = in.op == Op::Load || in.op == Op::LoadElem ||
@@ -1818,6 +1886,33 @@ private:
                 for (std::size_t i = 1; i < ops.size(); ++i)
                     if (!rawValue(i) || !isIntegral(ty(i)) || ty(i).width == 0)
                         bad("strength selectors must be captured integral values");
+                break;
+            }
+            case Op::StrengthEdge:
+            case Op::StrengthEdgeDelay: {
+                const bool delayed = in.op == Op::StrengthEdgeDelay;
+                if (!nOps(delayed ? 4U : 2U)) break;
+                const auto& target = ops[0];
+                bool valid = target.kind == Operand::Kind::StrengthEdge &&
+                             target.id < d_.strengthEdges.size() && target.edge == Edge::Any &&
+                             target.firstElem == 0 && target.numElems == 0 && target.lsb == 0 &&
+                             target.width == 0 && target.count == 0 && target.text.empty() &&
+                             body.process != nullptr && body.process->kind == ProcessKind::Cont &&
+                             body.owner.kind == Owner::Kind::Process && rawValue(1) &&
+                             isIntegral(ty(1)) && ty(1).width == 1;
+                if (valid) {
+                    const auto& edge = d_.strengthEdges[target.id];
+                    valid = conditionalStrengthEdge(edge.kind) && edge.delayed == delayed &&
+                            edge.owner == body.owner.asProcess() &&
+                            std::ranges::find(body.process->strengthEdgeWrites,
+                                              StrengthEdgeId{target.id}) !=
+                                body.process->strengthEdgeWrites.end();
+                }
+                for (std::size_t i = 2; i < ops.size(); ++i)
+                    valid = valid && rawValue(i) && delayOk(i);
+                if (!valid)
+                    bad("needs an owned declared conditional edge, captured scalar control and "
+                        "matching normalized delays");
                 break;
             }
             case Op::StrengthDrive:

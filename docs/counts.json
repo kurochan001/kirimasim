@@ -1,12 +1,12 @@
 {
   "measured": "2026-10-25",
   "ctest": {
-    "total": 5384,
-    "passed": 5382,
+    "total": 5391,
+    "passed": 5389,
     "skipped": 2
   },
   "kinds": {
-    "unit": 610,
+    "unit": 617,
     "suite": 4561,
     "tools": 154,
     "dump_sir": 29,

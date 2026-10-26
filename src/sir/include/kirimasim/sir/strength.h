@@ -8,6 +8,10 @@
 #include <optional>
 
 namespace kirimasim::sir {
+const char* strengthEdgeName(StrengthEdgeKind kind);
+bool conditionalStrengthEdge(StrengthEdgeKind kind);
+bool resistiveStrengthEdge(StrengthEdgeKind kind);
+bool activeHighStrengthEdge(StrengthEdgeKind kind);
 struct StrengthLoadShape {
     std::uint32_t indices = 0;
     bool position = false;

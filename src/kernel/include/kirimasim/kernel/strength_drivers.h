@@ -32,6 +32,11 @@ struct StrengthOriginState {
 };
 
 enum class StrengthConduction : std::uint8_t { Off, On, Uncertain };
+/// Scalar four-state control, independent of the source container (contract 3).
+constexpr StrengthConduction strengthConduction(W4 control, bool activeHigh) noexcept {
+    if ((control.b & 1U) != 0) return StrengthConduction::Uncertain;
+    return ((control.a & 1U) != 0) == activeHigh ? StrengthConduction::On : StrengthConduction::Off;
+}
 struct StrengthEdgeSpec {
     std::uint32_t first = 0, second = 0;
     StrengthTransfer transfer = StrengthTransfer::Nonresistive;
