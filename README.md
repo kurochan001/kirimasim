@@ -478,19 +478,19 @@ Lyra `63922502ff0a` (`bazel build -c opt`), on eleven designs: the four above
 and seven more for other mechanisms. The machine and the tool versions differ
 from the table above, so the two tables are not compared column by column.
 
-| Design | `+n=` | kirimasim | Icarus Verilog 14.0 devel | Verilator 5.053 devel | Lyra (C++ backend, default) | Lyra (LLVM backend) |
-| --- | --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 31.915 s | 2.878 s |
-| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 140.711 s | 5.900 s |
-| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 73.445 s | 6.164 s |
-| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 15.826 s | 4.860 s |
-| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 6.236 s | 0.380 s |
-| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 23.079 s | 2.705 s |
-| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 7.887 s | 0.395 s |
-| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 18.770 s | 0.279 s |
-| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 16.275 s | 0.412 s |
-| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | not supported | not supported |
-| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 22.159 s | 0.466 s |
+| Design | `+n=` | kirimasim | Icarus Verilog 14.0 devel | Verilator 5.053 devel | Lyra (LLVM backend) |
+| --- | --- | --- | --- | --- | --- |
+| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 2.878 s |
+| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 5.900 s |
+| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 6.164 s |
+| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 4.860 s |
+| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 0.380 s |
+| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 2.705 s |
+| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 0.395 s |
+| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 0.279 s |
+| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 0.412 s |
+| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | not supported |
+| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 0.466 s |
 
 - The seven new designs: `wide_arith` mixes 256-bit values (additions, a
   128-bit product, shifts, compares); `mem_rw` writes and reads a 1024-word
@@ -503,9 +503,12 @@ from the table above, so the two tables are not compared column by column.
 - Same method and checks as above; every measured large run produced the
   expected result. Lyra does not support gates or UDPs yet, so it builds no
   program for `gate_udp`.
-- Lyra's default backend is its C++ backend; its LLVM backend is a column of
-  its own. Both run at Lyra's default `-O 0`, each design built into an empty
-  cache.
+- The Lyra column is its LLVM backend, which Lyra's README calls its main
+  one, at Lyra's default `-O 0`, each design built into an empty cache.
+  Lyra's default backend, used when `--backend` is not given, is its C++
+  backend: on these designs it was 3.3 to 67 times slower than the LLVM
+  backend. Its times are in the
+  [measurement details](docs/BENCHMARKS.md#development-versions-on-linux-wsl2-2026-10-25).
 - Here kirimasim was slower than Icarus Verilog on `proc_wait`, `wide_arith`
   (2.4 times), `mem_rw` and `gate_udp`; clearly faster on `func_call`,
   `string_fmt` and `dyn_queue`; and within about 6% on the other four. On
