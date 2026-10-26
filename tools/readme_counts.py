@@ -8,9 +8,9 @@ The counts live in docs/counts.json: this repository's tests (CTest, dev
 configuration), the tests under tests/suite/ and their generators, the
 sv-tests result against the Icarus build of the P1 criterion on each OS
 that CI runs on (TEST_SUITE.md, "As many as Icarus or more"), and the P1
-population of the own test suite (TEST_SUITE.md), with the fuzz runs and
-the mandatory list of the P1 criteria, and the numbers of the other
-simulators. Each README holds a range between <!-- counts:begin --> and
+population of the own test suite (TEST_SUITE.md), with the fuzz runs,
+the mandatory list and the original probes against Icarus Verilog of the
+P1 criteria (P1_SCOPE.md), and the numbers of the other simulators. Each README holds a range between <!-- counts:begin --> and
 <!-- counts:end -->, which this script writes from that file.
 
   tools/readme_counts.py update [inputs]   # take the inputs, write counts.json and the READMEs
@@ -31,9 +31,10 @@ The tests under tests/suite/ and the generators are counted from the
 repository every time. check fails when a count an input gives differs
 from counts.json, or when a README's range is not what counts.json gives.
 update also sets the date of the measurement when sv-tests or the
-population is given (--date, today in UTC by default). The fuzz runs and
-the mandatory list are edited by hand in counts.json, then written out by
-update.
+population is given (--date, today in UTC by default). The fuzz runs,
+the mandatory list and the Icarus probes (tools/icarus_feature_probe.py
+--extended, against Icarus Verilog 13.0 stable and 14.0 devel) are edited
+by hand in counts.json, then written out by update.
 """
 
 import argparse
@@ -60,6 +61,7 @@ def n(v):
 def render(c, lang):
     """The text between the markers."""
     s, p, f, o, k = c["svtests"], c["population"], c["fuzz"], c["others"], c["kinds"]
+    ip = c["icarus_probes"]
     lin, mac = s["linux"], s["macos"]
     dates = s.get("measured", {"linux": c["measured"], "macos": c["measured"]})
     failed = c["ctest"]["total"] - c["ctest"]["passed"] - c["ctest"]["skipped"]
@@ -95,10 +97,17 @@ def render(c, lang):
             "implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the "
             f"rounds | The nightly fuzz runs passed on {f['nights']} nights in a row, through "
             f"{f['through']} | {yes(fuzz_met)} |",
+            "| Functional execution coverage at least as broad as Icarus Verilog 13.0 "
+            "([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | "
+            f"Of {ip['probes']} original probes, {ip['stable']['gaps']} that Icarus Verilog 13.0 "
+            f"stable runs do not pass in kirimasim yet, with {ip['stable']['mismatches']} "
+            f"reference mismatches ({ip['devel']['gaps']} and {ip['devel']['mismatches']} against "
+            "14.0 devel); the probes alone do not show complete coverage "
+            f"| {yes(ip['met'])} |",
             "",
             "The external sv-tests counts for kirimasim were measured on "
             f"{dates['linux']} (Linux) and {dates['macos']} (macOS); the population on "
-            f"{c['measured']}. Icarus Verilog's and "
+            f"{c['measured']}; the Icarus probes on {ip['measured']}. Icarus Verilog's and "
             f"Verilator's in the last two columns on {o['measured']}, from their main branches "
             "that day. The nightly run measures sv-tests and the population again, and fails "
             "when they differ from these.",
@@ -140,9 +149,16 @@ def render(c, lang):
             "| 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間の"
             f"ファジングを 7 回続けて | 夜間のファジングは {f['nights']} 晩続けて通った"
             f"（{f['through']} まで） | {yes(fuzz_met)} |",
+            "| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）："
+            "Icarus が対応する仕組みが動く | "
+            f"独自のプローブ {ip['probes']} 本のうち、Icarus Verilog 13.0 stable が動かすのに "
+            f"kirimasim がまだ通らないものが {ip['stable']['gaps']} 本、参照の不一致が "
+            f"{ip['stable']['mismatches']} 本（14.0 devel とでは {ip['devel']['gaps']} 本と "
+            f"{ip['devel']['mismatches']} 本）。プローブだけでは範囲のすべてを示せない "
+            f"| {yes(ip['met'])} |",
             "",
             f"kirimasim の外部 sv-tests は Linux が {dates['linux']}、macOS が {dates['macos']}、"
-            f"母集団は {c['measured']} に測ったもので、"
+            f"母集団は {c['measured']}、Icarus のプローブは {ip['measured']} に測ったもので、"
             "右の 2 列の Icarus Verilog と "
             f"Verilator の数は {o['measured']} に、その日の main からビルドして測ったものです。"
             "nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。",

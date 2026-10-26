@@ -170,7 +170,9 @@ Icarus `13.0 (stable) (v13_0)` has 22 passing gaps and four reference result
 mismatches. With `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are
 22 and seven. Subsequent automatic capture reduces the historical 13.0-passing
 gaps to 21, and the fresh 14.0 run also leaves 21 gaps and seven mismatches;
-there is no fresh 13.0 run at this event-VM checkpoint.
+there is no fresh 13.0 run at this event-VM checkpoint. With directed MOS
+execution, a fresh run against both on 2026-10-26 leaves 14 gaps, with four
+(13.0) and seven (14.0) reference mismatches.
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
@@ -231,8 +233,9 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
+| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 14 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (14 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-25. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-25; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |

@@ -55,5 +55,18 @@
       "icarus": 1274,
       "verilator": 1329
     }
+  },
+  "icarus_probes": {
+    "probes": 87,
+    "measured": "2026-10-26",
+    "stable": {
+      "gaps": 14,
+      "mismatches": 4
+    },
+    "devel": {
+      "gaps": 14,
+      "mismatches": 7
+    },
+    "met": false
   }
 }
