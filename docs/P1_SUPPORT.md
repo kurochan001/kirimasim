@@ -173,8 +173,9 @@ original source designs pass, and nine compiled new/reused faults are caught.
 Independent graph groups retain one atomic publication. Icarus 13.0 compiles
 135 designs and matches 110; vector-control/startup/mixed-wired observations
 remain recorded. The 87-probe gaps fall to eight against both references.
-Historical tran rejection expectations await their separate human-approved
-migration; complete switch support and P1 remain unfinished.
+Historical tran rejection expectations were separately approved and migrated
+in `77c9d188`, with all source inputs unchanged. Complete switch support and P1
+remain unfinished; see [main integration validation](notes/main-integration-2026-10-26.md).
 
 ### Fork-local declarations
 

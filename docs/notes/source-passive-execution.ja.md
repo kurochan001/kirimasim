@@ -3,6 +3,10 @@
 [English](source-passive-execution.md)。Status: 実装の途中の記録、2026-10-26。
 古い期待値の移行は人の承認待ちです。
 
+**後続のmain統合（2026-10-26）：** tran期待値の具体的な移行は別途承認後に`77c9d188`で
+適用しました。移行後の検証は[main統合の区切り](main-integration-2026-10-26.ja.md)に記録します。
+以下の失敗数・未承認/未適用・未統合の記述は、以前の測定時の状態です。
+
 ## 範囲と根拠
 
 ソースの `tran`、`rtran`、`tranif0`、`tranif1`、`rtranif0`、`rtranif1` を、

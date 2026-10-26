@@ -55,8 +55,9 @@ frontの定数・runtime書式引数への接続は残っているため、ソ�
 制御を別に捕捉します。部分対応であり、登録 net の force、部分・非結合ポート、完全な強さの
 書式は残作業です。[ソースの受動実行](docs/notes/source-passive-execution.ja.md)では、静的な
 bit・要素・連結の対応とプリミティブ配列を含む双方向 6 種を共有網へ接続しました。
-独立した不定網でも公開は一括のままです。独自 143 設計が通り、古い tran 拒否期待は
-[別の承認](docs/notes/passive-expectation-migration.ja.md)後の移行待ちです。
+独立した不定網でも公開は一括のままです。独自143設計が通り、古いtran拒否期待は
+[別途承認した移行](docs/notes/passive-expectation-migration.ja.md)を`77c9d188`で適用しました。
+全ソース入力は維持しています。
 
 広い三状態ゲートでも、語をまたぐL/Hマスクの両半分を保持します。新規73ソースは
 Icarus 13.0・開発版とすべて一致しました。[対応範囲と検証](docs/notes/wide-gate-strength.ja.md)を
@@ -92,7 +93,9 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 [実行時indexでの固定配列event選択](docs/notes/indexed-event-execution.ja.md)を型付き値へ接続し、
 名前付き/混合待機・遅延対象・`.triggered`を独自160ソースで検査しました。
 旧CLI入力の未対応診断6行は[別途承認した移行](docs/notes/indexed-event-expectation-migration.ja.md)を
-`28f5c972`で適用済みです。現在残るCLI失敗は別件の[tran期待値移行](docs/notes/passive-expectation-migration.ja.md)です。
+`28f5c972`で適用済みです。別件の[tran期待値移行](docs/notes/passive-expectation-migration.ja.md)も
+承認後に`77c9d188`で適用しました。以前に失敗した2検査も
+[main統合の検証](docs/notes/main-integration-2026-10-26.ja.md)に含めます。
 
 固定配列ポートは宣言ごとの範囲を保って要素を共有・コピーし、ネット配列の強さを
 要素ごとに解決します。定数要素のforce/release、遅延、未接続の既定値・pullも含め、
@@ -201,7 +204,7 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,543 | 5,539、2 本は飛ばす、2 本は失敗 | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,543 | 5,541、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
@@ -505,8 +508,8 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 
 P1完了には、さらに広い仕組みと組み合わせのIcarus比較、既存の回帰/ファジング条件、資源・寿命の
 検証も必要です。固定テスト母集団の合格率と87比較プローブは、全機能に対する完成率を表しません。
-古いtran拒否期待2か所は[別の期待値移行](docs/notes/passive-expectation-migration.ja.md)の承認待ちで、
-上記の未実装機能とは別のレビューです。
+古いtran拒否期待2か所は[別途承認した期待値移行](docs/notes/passive-expectation-migration.ja.md)を
+`77c9d188`で適用し、ソース入力を保っています。この移行で上記の未実装機能が完了するわけではありません。
 
 #### 別フェーズの作業
 

@@ -3,6 +3,10 @@
 [English](event-temporaries.md)が正です。状態：部品の実装と検査済み、2026-10-26。
 命令境界の完全公開と、ソースのautomatic event生成は引き続き実装中です。
 
+**後続のmain統合（2026-10-26）：** tran期待値の具体的な移行は別途承認後に`77c9d188`で
+適用しました。移行後の検証は[main統合の区切り](main-integration-2026-10-26.ja.md)に記録します。
+以下の失敗数・未承認/未適用・未統合の記述は、以前の測定時の状態です。
+
 ## 契約と実装
 
 根拠は、RUNTIME_ABI 6の[2026-10-26承認のevent専用例外](managed-event-safepoints-proposal.ja.md)、

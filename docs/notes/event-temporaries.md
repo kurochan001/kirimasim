@@ -4,6 +4,12 @@
 2026-10-26. Full instruction-boundary publication and source automatic-event
 construction remain in progress.
 
+**Subsequent main integration (2026-10-26):** the exact tran expectation
+migration was separately approved and applied in `77c9d188`. The
+[main integration checkpoint](main-integration-2026-10-26.md) records the
+post-migration validation. Failure counts, unapproved/unapplied statements and
+unmerged status below describe the earlier measured checkpoint.
+
 ## Contract and implementation
 
 The grounds are RUNTIME_ABI 6's [event-only exception approved on 2026-10-26](managed-event-safepoints-proposal.md),

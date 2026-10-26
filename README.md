@@ -82,8 +82,9 @@ registered-net force, partial/retained ports and full strength formatting still 
 [Source passive execution](docs/notes/source-passive-execution.md) now connects all six
 bidirectional kinds, including static bit/element/concat mappings and primitive arrays,
 to the shared graph. Independent uncertain graphs retain atomic publication.
-Its 143 original source designs pass; historical tran rejection expectations await
-[separate approval](docs/notes/passive-expectation-migration.md).
+Its 143 original source designs pass; the historical tran rejection expectations
+were [separately approved and migrated](docs/notes/passive-expectation-migration.md)
+in `77c9d188`, with every source input unchanged.
 
 Wide three-state gates now retain both L/H side-mask halves across word
 boundaries. All 73 new source cases match Icarus 13.0 and development builds.
@@ -125,8 +126,10 @@ complete publication and the source acceptance matrix remain work.
 now support named/mixed waits, delayed targets and `.triggered` through typed
 values, with 160 original source designs. The historical CLI input's six old
 unsupported diagnostics were [separately approved for migration](docs/notes/indexed-event-expectation-migration.md)
-and migrated in `28f5c972`. Current remaining CLI failures concern the separate
-[tran expectation migration](docs/notes/passive-expectation-migration.md).
+and migrated in `28f5c972`. The separate
+[tran expectation migration](docs/notes/passive-expectation-migration.md) was
+also approved and applied in `77c9d188`; its two historical failing checks
+are included in the [main integration validation](docs/notes/main-integration-2026-10-26.md).
 
 Fixed-array ports now share or copy corresponding elements while preserving
 each declaration's bounds. Net arrays resolve strengths per element with
@@ -257,7 +260,7 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,543 | 5,539, 2 skipped, 2 failed | — | — |
+| This repository's tests (CTest, dev configuration) | 5,543 | 5,541, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
@@ -695,8 +698,9 @@ Completing P1 also requires wider mechanism/interaction validation against
 Icarus, the existing regression/fuzzing gates and resource/lifetime checks.
 The fixed test population's pass rate and the 87 comparison probes do not
 measure a percentage of whole-feature completion. The two obsolete tran-rejection
-checks still await the [separate expectation migration](docs/notes/passive-expectation-migration.md);
-that review is distinct from implementing the missing features above.
+checks were [separately approved for migration](docs/notes/passive-expectation-migration.md)
+and migrated in `77c9d188`, preserving their source inputs. That migration does
+not complete the missing features above.
 
 #### Work in other phases
 

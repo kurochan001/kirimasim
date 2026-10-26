@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Main integration:** the current main integration includes source passive
+switches, typed SSA event regions, the approved event-only safepoint contract
+and the README's remaining-feature inventory. The user separately approved the
+exact tran expectation migration, applied in `77c9d188` without source fixture
+changes. [Integration validation](main-integration-2026-10-26.md) records the
+post-migration checks; older integration/failure/approval statements below
+remain historical measurements. Complete P1 coverage remains unproven.
+
+### Earlier checkpoints before this integration
+
 **Current integration:** main `07b7de82` includes slang 12.1, the passive kernel,
 and the separately applied nmos oracle migration (`6f301460`). Its pre-change
 full local CI passes all 21 checks. The older checkpoint paragraphs below
