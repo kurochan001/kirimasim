@@ -986,6 +986,16 @@ tenth; the version measured did not build the design with gates and UDPs.
 Lyra's documents name Linux as its platform; kirimasim runs on Linux and
 macOS.
 
+For reference, Lyra's design documents at the measured commit
+(`63922502ff0a`) say more: it keeps a four-state value as a value plane and
+an unknown plane, and a two-state one without the unknown plane
+(`docs/decisions/a-packed-value-is-its-words.md`); its processes run as
+coroutines under a stratified event scheduler with the time-slot regions of
+the standard (`docs/architecture/scheduling.md`); and building it needs an
+x86-64 Linux with glibc 2.34 or newer (`CONTRIBUTING.md`). Which constructs
+it supports is, by its documents, what its conformance tests and its code
+show; this README does not list them.
+
 ### Which version of the standard does it follow?
 
 IEEE 1800-2023. kirimasim always runs slang with `--std=1800-2023`, and

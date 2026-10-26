@@ -729,6 +729,8 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 [Lyra](https://github.com/hankhsu1996/lyra) は、slang の上に作られた、別のオープンソースの SystemVerilog のシミュレータです。その README によれば、モジュール、パッケージ、インターフェースを 1 つずつ別にコンパイルし、シミュレーションの最高の速さよりも、編集してすぐ実行できることを目指しています。主な backend は LLVM で機械語を作り、C++ backend は中間表現を人が読めるようにするためのものです。kirimasim は、まず IEEE 1800-2023 のとおりに、4 値と時刻スロットのすべての領域で設計を動かすことを目指し、今は中間表現を解釈して動かします（第 1 層）。C++ への変換は P3 です。「シミュレーションの速さ」の節のベンチマークの設計では、Lyra の LLVM backend は、ビルドできた 10 の設計のうち 9 つで kirimasim より速く、残りの 1 つでほぼ同じでした。測った版は、ゲートと UDP を使う設計をビルドできませんでした。Lyra の文書は対応する環境を Linux としていて、kirimasim は Linux と macOS で動きます。
 
+参考として、測った版（`63922502ff0a`）の Lyra の設計文書には、さらに次のことが書かれています。4 値の値は「値」と「不定」の 2 つの面で持ち、2 値の値は不定の面を持たない（`docs/decisions/a-packed-value-is-its-words.md`）。プロセスはコルーチンとして、規格の時刻スロットの領域を持つ階層化されたイベントスケジューラで動く（`docs/architecture/scheduling.md`）。ビルドには、x86-64 で glibc 2.34 以上の Linux が要る（`CONTRIBUTING.md`）。どの構文に対応しているかは、Lyra の文書によれば、その適合テストとコードが示すもので、この README には挙げません。
+
 ### 規格のどの版に従っていますか？
 
 IEEE 1800-2023 です。kirimasim は slang を常に `--std=1800-2023` で動かし、既定では slang の診断を緩めません（[CLI.ja.md](docs/spec/CLI.ja.md) の 2.1 節）。規格が処理系に任せている所は、kirimasim がどう読むかを仕様書に書き、[UNSPECIFIED_BEHAVIOR.ja.md](docs/spec/UNSPECIFIED_BEHAVIOR.ja.md) にまとめています。
