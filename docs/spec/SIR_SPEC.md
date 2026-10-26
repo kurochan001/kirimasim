@@ -83,6 +83,32 @@ The SIR of one design consists of the following.
 | Source table | File number → file path |
 | Dump table (added 2026-10-21, approved) | For WAVEFORM.md only: the scopes a dump can name, each with its hierarchical name, its kind (module, begin, fork, task, function) and the scope around it; and the variables, each with its scope, its name, its VCD type, width and reference range, and the slot (and the leaf of an unpacked structure) that holds it. front makes it from slang's model (WAVEFORM.md 2). It is read when dumping starts, to choose what to dump; nothing is looked up by name while the design runs (1). The arguments of `$dumpvars` that name scopes or variables are given to `syscall` as numbers of its rows. The current format-0 dump (9) leaves it out; the selected complete format 1 must preserve it |
 
+How the tables refer to each other:
+
+```mermaid
+flowchart LR
+    proc["Process table<br/>kind, starting rule, write ranges,<br/>frame variables"]
+    sub["Subroutine table<br/>arguments, return type,<br/>frame variables"]
+    bb["basic blocks of instructions"]
+    slot["Slot table"]
+    inst["Instance table"]
+    type["Type table"]
+    const["Constant table"]
+    src["Source table"]
+    name["Name table<br/>not used while the design runs"]
+    dump["Dump table<br/>for waveforms only"]
+    proc --> bb
+    sub --> bb
+    bb -->|"read and write"| slot
+    bb -->|"call"| sub
+    bb -->|"types of values"| type
+    bb -->|"large constants, reals, strings"| const
+    bb -->|"source positions"| src
+    slot -->|"owner"| inst
+    name -->|"hierarchical name to slot"| slot
+    dump -->|"variables to dump"| slot
+```
+
 ## 3. Storage and slots
 
 ### 3.1 Slots
@@ -535,6 +561,26 @@ typed instructions of 5.8 rather than embedded heap objects.
 | `fork children, kind of join, cont` | Makes child processes (7.5). Acts as a wait for `join` and `join_any`, and proceeds to the continuation at once for `join_none` |
 | `wait.fork cont` | Waits until all direct children have ended |
 | `call.task subroutine, args..., cont` | Calls a task that may wait (8). When the task returns, proceeds to the continuation |
+
+For example, this procedure becomes three basic blocks, cut at its two waits:
+
+```systemverilog
+initial begin
+  a = 1;
+  #5;
+  b = 2;
+  @(posedge clk);
+  c = 3;
+end
+```
+
+```mermaid
+flowchart LR
+    b0["bb0<br/>a = 1<br/>wait.delay d, bb1<br/>d: the delay of 5 units, in steps"]
+    b1["bb1<br/>b = 2<br/>wait.event posedge clk, bb2"]
+    b2["bb2<br/>c = 3<br/>the process ends"]
+    b0 -->|"after the delay"| b1 -->|"on the edge"| b2
+```
 
 - **`iff`:** each event of `wait.event` can have an `iff` condition. The condition is represented by a function with no waits (placed in the subroutine table) that receives the frame of the waiting process, and it is evaluated **only when that event occurs** (checked: 9.4.2.3). Rewriting it as a loop that "waits, then checks the condition and waits again if false" would check the condition also when another event listed with `or` occurs, which is wrong.
 - **Named event items:** a `wait.event` slot operand of event type denotes one named-event object and may have its own `iff` guard. It has no edge or packed range. Slot subscriptions, expression watches and named-event items register in one kernel generation. A false guard retains its item; the first satisfied item invalidates all other items. Preserve the compact `wait.named` spelling for a single unguarded named event. Guard-local writes and event triggers follow the existing callback rules in RUNTIME_ABI 5.

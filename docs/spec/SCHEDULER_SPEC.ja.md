@@ -369,6 +369,23 @@ flowchart TD
 - fork-join_any と fork-join_none の中では、参照渡し（`ref`）の形式引数を参照できるのは、ブロック項目の初期化式の中だけ（`ref static` を除く。規格で確認：9.3.2）。
 - fork の中の文全体を begin-end で包むと、全体が 1 つのプロセスになる（規格で確認：9.3.2）。
 
+子を 2 つ持つ fork での、上の規則の順序：
+
+```mermaid
+sequenceDiagram
+    participant P as 親
+    participant R as 親のスレッドの組の評価の領域
+    participant C1 as 子 1
+    participant C2 as 子 2
+    P->>R: fork が子 1 と子 2 を作り、作った順に並べる
+    Note over P: join_none はすぐに先へ進み、join と join_any は親を join で止める
+    P->>P: 止まるか終わるまで走る
+    R->>C1: 子 1 が走る
+    R->>C2: 子 2 が走る
+    C1-->>P: join_any は、最初の子が終わったら親を再開する
+    C2-->>P: join は、すべての子が終わったら親を再開する
+```
+
 ### 10.3 `wait fork`
 
 今のプロセスが直接作った子プロセス（孫以下は含まない）がすべて終わるまで止まる（規格で確認：9.6.1）。
@@ -397,6 +414,26 @@ flowchart TD
   - WAITING の状態で止められていたプロセスは、再び待ちに反応するようにする。条件がすでに真か、元の遅延がすでに過ぎていれば、今の時刻の Active か Reactive に入れる。
   - SUSPENDED でないプロセスに対しては何もしない。
 - `kill()`、`await()`、`suspend()`、`resume()` は、`initial`、`always`、およびそれらの中の fork で作ったプロセスに対してだけ使える（規格で確認：9.7）。
+
+`status()` が返す状態と、プロセスを状態の間で移すもの（上の規則のまとめ）：
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> RUNNING: プロセスが始まる
+    RUNNING --> WAITING: 事象、条件、遅延を待つ
+    WAITING --> RUNNING: 待っていたことが起きる
+    RUNNING --> FINISHED: 終わりに着く
+    RUNNING --> SUSPENDED: suspend()
+    WAITING --> SUSPENDED: suspend()。待っていたものに反応しなくなる
+    SUSPENDED --> RUNNING: RUNNING のときに止められたものの resume()
+    SUSPENDED --> WAITING: WAITING のときに止められたものの resume()
+    RUNNING --> KILLED: kill() か disable
+    WAITING --> KILLED: kill() か disable
+    SUSPENDED --> KILLED: kill() か disable
+    FINISHED --> [*]
+    KILLED --> [*]
+```
 
 ### 10.7 kill と disable の後始末（本書の決まり）
 
@@ -544,6 +581,30 @@ flowchart TD
 - **静的な初期化（2026-10-18 に承認）：** static-init のプロセス（6.1 節の手順 1）も、ほかのプロセスと同じく保留の列を持つ。待たずに終わりまで走るので flush point に来ない。初期値の式が呼ぶ関数が見つけた unique・priority の違反は、時刻 0 の Observed で確定し、文のあるスコープの階層名と時刻 0 で報告する（本書の決まり。静的変数を初期化している間に見つかった違反をどこで報告するかを、規格は書いていない）。そうした関数が、戻った後に動くものを予定してよいかは 13.4.4 の決まりに当たり、6.5 節のとおりに当てはめる（2026-10-19 に承認）。初期値から届くノンブロッキング代入、`->>`、`fork ... join_none` はコンパイルの時点の誤りにし、遅延アサーションの動作と `$strobe` は数えない。
 - 確定した後でも、Reactive からの書き込みで active 側がもう一度回れば、同じ文が再び実行されて新しい報告が生まれうる。`#0` の遅延アサーションは、この種のグリッチまでは防がない（規格で確認：16.4.1）。
 - unique・priority の違反の報告は、アサーションの制御のシステムタスクで止められる（規格で確認：12.4.2.1。20.11 の詳細は P4）。
+
+保留の報告 1 つがたどる道（上の規則のまとめ）：
+
+```mermaid
+flowchart TD
+    found["unique か priority の違反、または遅延アサーションの報告が<br/>見つかる。プロセスが呼ぶ関数やタスクの中でも同じ"]
+    queue["今走っているプロセスの保留の列に入る"]
+    flush{"そのプロセスが先に flush point に来るか<br/>イベント制御か wait から再開する、always_comb か<br/>always_latch が再び起動する、または disable が<br/>一番外のスコープを終わらせる（遅延アサーションだけ）"}
+    drop["列の全部を捨てる"]
+    kind{"種類は"}
+    obs["Observed に着いたときに確定する"]
+    fin["Postponed で確定する"]
+    uq["unique と priority の違反を報告する"]
+    sub0["observed の遅延アサーションは、サブルーチン<br/>（または $error）を Reactive に予定する"]
+    subf["final の遅延アサーションは、サブルーチン<br/>（または $error）を同じ Postponed で動かす"]
+    found --> queue --> flush
+    flush -- "来る" --> drop
+    flush -- "来ない" --> kind
+    kind -- "unique、priority、observed の遅延アサーション" --> obs
+    kind -- "final の遅延アサーション" --> fin
+    obs --> uq
+    obs --> sub0
+    fin --> subf
+```
 
 ### 15.4 kirimasim での表し方（本書の決まり）
 

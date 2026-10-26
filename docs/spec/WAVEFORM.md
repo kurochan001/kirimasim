@@ -22,7 +22,21 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 
 - **Scopes (interpretation of 21.7.2.3 and 21.7.5):** module instances (scope type `module`), named `begin` and `fork` blocks (`begin`, `fork`), and tasks and functions that hold static variables (`task`, `function`). A named generate block is a `begin` scope (rule of this document; the 4-state VCD has no type for it). An unpacked structure variable is a `fork` scope whose members are its variables (checked: 21.7.5).
 - **Variables and nets:** the nets and the static variables of those scopes, of the types of Table 21-11 and their 1364 equivalents. Unpacked arrays and automatic variables are left out (checked: 21.7.5); nor are strings, chandles, class handles and other dynamic data, which have no VCD type (rule of this document), nor parameters (rule of this document: the 4-state VCD can only list them with a value, outside the value changes).
-- **Types (checked: 21.7.5, 21.7.2.3):** `bit`, `logic` and packed arrays and structures are `reg` of their whole width; `int` and `enum` are `integer` 32 (an enum with a base type takes that type's mapping); `byte`, `shortint` and `longint` are `reg` 8, 16 and 64; `integer` is `integer`, `time` is `time`; `real` and `shortreal` are `real`, `realtime` is `realtime`, all of size 64 (rule of this document: 21.7.2.3 makes the size the number of bits, and Table 21-11 gives none for them; added 2026-10-21, approved); nets take their kind (`wire`, `tri`, `wand`, `wor`, `triand`, `trior`, `tri0`, `tri1`, `supply0`, `supply1`), `uwire` as `wire` (checked: 21.7.2.3); `event` is `event` of size 1 (rule of this document, added 2026-10-21, approved).
+- **Types (checked: 21.7.5, 21.7.2.3):**
+
+  | Declared type | VCD type and size |
+  | --- | --- |
+  | `bit`, `logic`, packed arrays and structures | `reg` of their whole width |
+  | `int`, `enum` | `integer` 32; an enum with a base type takes that type's row |
+  | `byte`, `shortint`, `longint` | `reg` 8, 16 and 64 |
+  | `integer` | `integer` |
+  | `time` | `time` |
+  | `real`, `shortreal` | `real` of size 64 (rule of this document) |
+  | `realtime` | `realtime` of size 64 (rule of this document) |
+  | Nets | their kind: `wire`, `tri`, `wand`, `wor`, `triand`, `trior`, `tri0`, `tri1`, `supply0`, `supply1`; `uwire` as `wire` (checked: 21.7.2.3) |
+  | `event` | `event` of size 1 (rule of this document, added 2026-10-21, approved) |
+
+  The size 64 of the real types is a rule of this document: 21.7.2.3 makes the size the number of bits, and Table 21-11 gives none for them (added 2026-10-21, approved).
 - **Reference:** the variable's name, with `[msb:lsb]` when it was declared with one packed range, as declared, and `[width-1:0]` for the other integral types wider than one bit (rule of this document). The range follows the name after a space, as in `$var reg 4 ! a [3:0] $end` (added 2026-10-21, approved).
 - **Order and identifier codes (rule of this document):** scopes depth first in the order of elaboration, and in each scope its nets and variables in the order of declaration, then its sub-scopes. Identifier codes are numbers in base 94 written with the characters `!` to `~` (33 to 126), most significant first, given in that order from `!`. Names that are one net after port collapsing (VALUE_SEMANTICS.md 5) share one code (checked: 21.7.2.3 allows it).
 

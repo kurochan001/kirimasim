@@ -97,6 +97,40 @@ sv-tests judges a `simulation` test by the `:assert: <Python expression>` lines 
 - **A bound on what a run writes (added 2026-10-20, approved):** kirimasim's standard output and standard error are each kept up to 16 MiB, in `kirimasim parse` and in the run. A run that writes more is stopped, and the test fails. The bound is far above every expected output (the largest in `tests/suite/` is about 160 KB, 2026-10-25). Without it, a design caught in a loop that prints, as a mistake put in by the negative controls can make, used up the memory of the machine and stopped the tests running beside it (#27; `tools/bounded_run.py`).
 - **Where a test runs (added 2026-10-20, approved):** kirimasim runs in an empty temporary directory made for each test, and is given the test's file by its absolute path, so that the files a test writes do not meet those of the tests running beside it, and are removed after it. Its standard input is empty (added 2026-10-21, approved; SYSTEM_TASKS.md 6.3), so that a test that reads it does not wait for the terminal (`tools/run_suite_test.py`).
 
+How one test is judged (a summary of the rules above):
+
+```mermaid
+flowchart TD
+    hdr{"can its header be read as written?"}
+    c{"does it have :dpi_c: or :vpi_c:?"}
+    sf{"is it expected to fail?"}
+    exp2{"exit code 2 with the diagnostic<br/>at the intended position?"}
+    run["kirimasim parse, then the run of a simulation test,<br/>in an empty temporary directory, output bounded at 16 MiB"]
+    unsup{"stopped at an unsupported construct?"}
+    listed{"listed in tests/suite/skips.txt?"}
+    cmp{"standard output, exit code and<br/>standard error as expected?"}
+    onlist{"listed in tests/suite/skips.txt?"}
+    pass(["passes"])
+    skip(["skipped"])
+    fail(["fails"])
+    hdr -- "no" --> fail
+    hdr -- "yes" --> c
+    c -- "yes, not run" --> listed
+    c -- "no" --> sf
+    sf -- "yes" --> exp2
+    exp2 -- "yes" --> pass
+    exp2 -- "no" --> fail
+    sf -- "no" --> run --> unsup
+    unsup -- "yes" --> listed
+    listed -- "yes" --> skip
+    listed -- "no" --> fail
+    unsup -- "no" --> cmp
+    cmp -- "no" --> fail
+    cmp -- "yes" --> onlist
+    onlist -- "no" --> pass
+    onlist -- "yes" --> fail
+```
+
 ## Categories
 
 | Category | Content | Treatment |

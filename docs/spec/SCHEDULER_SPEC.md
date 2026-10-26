@@ -374,6 +374,23 @@ Each of the following is one process (flow of execution) (checked: 9.5): `initia
 - Inside fork-join_any and fork-join_none, formal arguments passed by reference (`ref`) can be referred to only in initializers of block items (except `ref static`; checked: 9.3.2).
 - Wrapping all the statements of a fork in a begin-end makes the whole one process (checked: 9.3.2).
 
+The order of the rules above, for a fork with two children:
+
+```mermaid
+sequenceDiagram
+    participant P as parent
+    participant R as evaluation region of its thread set
+    participant C1 as child 1
+    participant C2 as child 2
+    P->>R: the fork makes child 1 and child 2, queued in the order made
+    Note over P: join_none goes on at once, join and join_any stop the parent at the join
+    P->>P: runs until it stops or ends
+    R->>C1: child 1 runs
+    R->>C2: child 2 runs
+    C1-->>P: join_any resumes the parent when the first child ends
+    C2-->>P: join resumes the parent when every child has ended
+```
+
 ### 10.3 `wait fork`
 
 Stops until all child processes made directly by the present process (not grandchildren and below) have ended (checked: 9.6.1).
@@ -402,6 +419,26 @@ Ends every descendant of the present process (not only direct children, but also
   - A process stopped while WAITING reacts to its wait again. If the condition is already true, or the original delay has already passed, it is put in Active or Reactive of the present time.
   - It does nothing to a process that is not SUSPENDED.
 - `kill()`, `await()`, `suspend()` and `resume()` can be used only on processes made by `initial`, `always`, and forks within them (checked: 9.7).
+
+The states that `status()` returns, and what moves a process between them (a summary of the rules above):
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> RUNNING: the process starts
+    RUNNING --> WAITING: it waits on an event, a condition or a delay
+    WAITING --> RUNNING: what it waits on happens
+    RUNNING --> FINISHED: it reaches its end
+    RUNNING --> SUSPENDED: suspend()
+    WAITING --> SUSPENDED: suspend(), which stops it reacting to its wait
+    SUSPENDED --> RUNNING: resume() of one stopped while RUNNING
+    SUSPENDED --> WAITING: resume() of one stopped while WAITING
+    RUNNING --> KILLED: kill() or disable
+    WAITING --> KILLED: kill() or disable
+    SUSPENDED --> KILLED: kill() or disable
+    FINISHED --> [*]
+    KILLED --> [*]
+```
 
 ### 10.7 Cleaning up after kill and disable (rule of this document)
 
@@ -549,6 +586,30 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
 - **Static initialization (approved 2026-10-18):** a static-init process (step 1 of 6.1) has a pending queue like any process. It runs to its end without waiting and so reaches no flush point: a unique or priority violation that its initializers' functions find is settled in the Observed region of time 0 and reported with the hierarchical name of the statement's scope and time 0 (rule of this document; the standard does not say where a violation found while static variables are initialized is reported). Whether such a function may schedule what runs after it returns falls under 13.4.4, applied as 6.5 says (approved 2026-10-19): a nonblocking assignment, a `->>` or a `fork ... join_none` reached from an initial value is an error at compile time, while a deferred assertion's action and `$strobe` do not count.
 - Even after settling, if writes from Reactive make the active side run once more, the same statement can run again and produce new reports. `#0` deferred assertions do not prevent glitches of this kind (checked: 16.4.1).
 - Reports of unique and priority violations can be stopped by the assertion-control system tasks (checked: 12.4.2.1; details of 20.11 in P4).
+
+The path of one pending report (a summary of the rules above):
+
+```mermaid
+flowchart TD
+    found["a violation of unique or priority, or a report of a<br/>deferred assertion, is found, also inside a function<br/>or task that the process calls"]
+    queue["it goes on the pending queue of the process now running"]
+    flush{"does that process reach a flush point first?<br/>it resumes from an event control or wait,<br/>always_comb or always_latch starts again, or a disable<br/>ends its outermost scope (deferred assertions only)"}
+    drop["the whole queue is discarded"]
+    kind{"which kind?"}
+    obs["settled when Observed is reached"]
+    fin["settled in Postponed"]
+    uq["a unique or priority violation is reported"]
+    sub0["an observed deferred assertion schedules its<br/>subroutine, or $error, in Reactive"]
+    subf["a final deferred assertion runs its subroutine,<br/>or $error, in the same Postponed"]
+    found --> queue --> flush
+    flush -- "yes" --> drop
+    flush -- "no" --> kind
+    kind -- "unique, priority, observed deferred assertion" --> obs
+    kind -- "final deferred assertion" --> fin
+    obs --> uq
+    obs --> sub0
+    fin --> subf
+```
 
 ### 15.4 Representation in kirimasim (rule of this document)
 
