@@ -585,6 +585,7 @@ private:
     void deliverStrengthEdge(std::uint32_t edge, std::uint64_t generation) noexcept;
     bool takeStrengthInterrupt() noexcept;
     bool solvePassiveStrengthComponent(std::uint32_t component) noexcept;
+    bool solvePassiveStrengthIsland(std::uint32_t island) noexcept;
     void resolveStrengthComponent(std::uint32_t component) noexcept;
     StrengthError queueStrengthComponent(std::uint32_t component) noexcept;
     /// Show: a released held variable shows its value (id: the slot, gen:

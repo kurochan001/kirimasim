@@ -625,3 +625,7 @@ endif()
 add_test(NAME tools/fst_dependency
     COMMAND kirimasim_fst_dependency ${CMAKE_CURRENT_BINARY_DIR}/fst-dependency)
 set_tests_properties(tools/fst_dependency PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_source_passive_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_source_passive_matrix.py --check)
+set_tests_properties(tools/gen_source_passive_matrix PROPERTIES LABELS Tools)

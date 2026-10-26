@@ -142,6 +142,65 @@ struct Script {
     }
 };
 
+struct AtomicIslands {
+    Network* net;
+    std::vector<R> expected;
+    unsigned calls = 0, errors = 0;
+    static void notice(void* raw, k::SlotBits, std::span<const R>, std::span<const R>) noexcept {
+        auto& self = *static_cast<AtomicIslands*>(raw);
+        ++self.calls;
+        for (unsigned n = 0; n < self.expected.size(); ++n) {
+            R actual;
+            if (self.net->ctx.strengths().read(self.net->nodes[n].at, {&actual, 1}) != E::None ||
+                actual != self.expected[n])
+                ++self.errors;
+        }
+    }
+};
+TEST(PassiveNetwork, IndependentUncertainIslandsRetainOneAtomicPublication) {
+    Network n(132, 66);
+    std::vector<Root> roots;
+    std::vector<Edge> edges;
+    AtomicIslands snapshot{&n, std::vector<R>(132)};
+    const std::array<R, 5> ranges{{{7, 7}, {1, 6}, {-6, -1}, {-7, 7}, {0, 0}}};
+    const auto expected = [&](unsigned i, R range) {
+        const auto result = v::resolvePassive(
+            std::array{v::NetKind::Wire, v::NetKind::Wire},
+            std::array<v::PassiveRoot, 2>{{{0, {range.lo, range.hi}}, {1, {3, 3}}}},
+            std::array<v::PassiveEdge, 1>{
+                {{0, 1, static_cast<v::StrengthTransfer>(i % 3), v::Conduction::Uncertain}}});
+        ASSERT_TRUE(result.has_value());
+        snapshot.expected[i] = {static_cast<std::int8_t>((*result)[0].lo),
+                                static_cast<std::int8_t>((*result)[0].hi)};
+        snapshot.expected[i + 66] = {static_cast<std::int8_t>((*result)[1].lo),
+                                     static_cast<std::int8_t>((*result)[1].hi)};
+    };
+    for (unsigned i = 0; i < 65; ++i) {
+        roots.push_back({i, ranges[i % ranges.size()]});
+        roots.push_back({i + 66, {3, 3}});
+        edges.push_back({i, i + 66, static_cast<T>(i % 3), C::Uncertain});
+        expected(i, ranges[i % ranges.size()]);
+    }
+    roots.push_back({65, {5, 5}});
+    snapshot.expected[65] = {5, 5};
+    n.start(roots, edges);
+    for (const auto& node : n.nodes)
+        ASSERT_EQ(n.ctx.strengths().subscribe(node.at, &AtomicIslands::notice, &snapshot).error,
+                  E::None);
+    ASSERT_EQ(n.ctx.scheduler().run(), k::EndReason::Quiescent);
+    ASSERT_GT(snapshot.calls, 0U);
+    EXPECT_EQ(snapshot.errors, 0U);
+    for (unsigned i = 0; i < n.nodes.size(); ++i)
+        EXPECT_EQ(n.read(i), snapshot.expected[i]);
+    expected(0, {});
+    const auto calls = snapshot.calls;
+    ASSERT_EQ(n.ctx.scheduler().driveStrength(0, {}), E::None);
+    ASSERT_EQ(n.ctx.scheduler().run(), k::EndReason::Quiescent);
+    EXPECT_GT(snapshot.calls, calls);
+    EXPECT_EQ(snapshot.errors, 0U);
+    EXPECT_EQ(count(n.ctx, "proc.created"), 0U);
+}
+
 TEST(PassiveNetwork, AllIntervalsAndOpposingPointsMatchIndependentDestinationKinds) {
     unsigned checked = 0;
     for (const auto kind : {k::NetKind::Wire, k::NetKind::Tri, k::NetKind::Wand, k::NetKind::Triand,

@@ -873,6 +873,15 @@ private:
         sir::SlotRange target;
         sir::SourceLoc loc;
     };
+    struct PassiveConnection {
+        sir::SlotRange first, second;
+        sir::StrengthEdgeKind kind = sir::StrengthEdgeKind::Tran;
+        sir::ProcessId owner = sir::kNone;
+        bool delayed = false;
+        sir::SourceLoc loc;
+    };
+    std::vector<PassiveConnection> passiveConnections_;
+    void lowerPassive(const ast::PrimitiveInstanceSymbol&, const std::string& prefix);
     std::map<sir::ProcessId, MosOutput> mosOutputs_;
     std::map<sir::SlotId, sir::SourceLoc> strengthNets_;
     std::map<sir::SlotId, sir::ProcessId> netResolvers_;

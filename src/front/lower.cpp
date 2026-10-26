@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "kirimasim/front/front.h"
+#include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
 #include "kirimasim/sir/verify.h"
@@ -1734,8 +1735,13 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
         lowerMos(g, prefix);
         return;
     }
+    if (kind == "tran" || kind == "rtran" || kind == "tranif0" || kind == "tranif1" ||
+        kind == "rtranif0" || kind == "rtranif1") {
+        lowerPassive(g, prefix);
+        return;
+    }
     if (!logic && !tri && !pull && kind != "buf" && kind != "not") {
-        // Passive switching still needs the approved world-preserving solver.
+        // Other device families need their own execution contracts.
         report(g.location, "switch '" + kind + "'");
         return;
     }
@@ -1840,6 +1846,114 @@ void Lowerer::lowerPrimitive(const ast::PrimitiveInstanceSymbol& g, const std::s
         },
         strength, g.getDelay());
     if (side && design_.processes.size() > first.index()) sides_[first] = *side;
+}
+
+void Lowerer::lowerPassive(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {
+    const std::string kind(g.primitiveType.name);
+    static constexpr std::pair<std::string_view, sir::StrengthEdgeKind> kinds[]{
+        {"tran", sir::StrengthEdgeKind::Tran},
+        {"rtran", sir::StrengthEdgeKind::Rtran},
+        {"tranif0", sir::StrengthEdgeKind::Tranif0},
+        {"tranif1", sir::StrengthEdgeKind::Tranif1},
+        {"rtranif0", sir::StrengthEdgeKind::Rtranif0},
+        {"rtranif1", sir::StrengthEdgeKind::Rtranif1}};
+    const auto found =
+        std::ranges::find_if(kinds, [&](const auto& item) { return item.first == kind; });
+    if (found == std::end(kinds)) throw std::logic_error("missing passive device kind");
+    const auto edgeKind = found->second;
+    const bool conditional = sir::conditionalStrengthEdge(edgeKind);
+    const auto conns = g.getPortConnections();
+    if (conns.size() != (conditional ? 3U : 2U)) return;  // slang checks terminal counts.
+    const auto sl = g.location;
+    const auto first = sir::ProcessId{static_cast<std::uint32_t>(design_.processes.size())};
+    PassiveConnection connection;
+    connection.kind = edgeKind;
+    connection.loc = loc(sl);
+    connection.owner = conditional ? first : sir::ProcessId{sir::kNone};
+    connection.delayed = g.getDelay() != nullptr;
+    lowerCont(primitiveName(g, prefix, "switch"), sl, g, [&] {
+        const auto terminal = [&](const ast::Expression& expr) {
+            Place at = placeOf(*outputPlace(&expr), sl);
+            while (at.kind == Place::Kind::Concat && at.base.size() == 1) {
+                Place next = at.base[0];
+                at = std::move(next);
+            }
+            if (at.type.width != 1) {
+                slang::SmallVector<slang::ConstantRange> dims;
+                g.getArrayDimensions(dims);
+                if (dims.empty() || dims.size() != g.arrayPath.size())
+                    unsupported(sl, "a vector passive terminal without a matching primitive array");
+                std::uint64_t count = 1, position = 0;
+                for (std::size_t i = 0; i < dims.size(); ++i) {
+                    const auto width = static_cast<std::uint64_t>(dims[i].width());
+                    if (width == 0 || count > UINT32_MAX / width || g.arrayPath[i] >= width)
+                        unsupported(sl, "a passive primitive array outside the SIR range");
+                    count *= width;
+                    const auto index = static_cast<std::int64_t>(dims[i].lower()) + g.arrayPath[i];
+                    const auto right = static_cast<std::int64_t>(dims[i].right);
+                    const auto bit =
+                        static_cast<std::uint64_t>(index > right ? index - right : right - index);
+                    position = position * width + bit;
+                }
+                if (count != at.type.width)
+                    unsupported(sl,
+                                "a passive terminal width that does not match its primitive array");
+                // Bit positions are relative to the right edge of the actual,
+                // including concatenations, selections and ascending instance bounds.
+                while (at.kind == Place::Kind::Concat) {
+                    std::optional<Place> selected;
+                    for (auto it = at.base.rbegin(); it != at.base.rend(); ++it) {
+                        if (position < it->type.width) {
+                            selected = *it;
+                            break;
+                        }
+                        position -= it->type.width;
+                    }
+                    if (!selected) unsupported(sl, "an invalid passive concatenation mapping");
+                    at = std::move(*selected);
+                }
+                at = narrow(std::move(at), static_cast<std::int64_t>(position), 1, sl);
+            }
+            const bool fixed = at.home == Place::Home::Slot && at.type.width == 1 &&
+                               (at.kind == Place::Kind::Slot || at.kind == Place::Kind::Element ||
+                                at.kind == Place::Kind::Bits) &&
+                               !at.pos && (at.indices.empty() || at.elem.has_value());
+            if (!fixed || design_.slot(at.slot).kind == sir::SlotKind::Var ||
+                !sir::isFourState(at.type))
+                unsupported(sl, "a non-static or non-four-state passive terminal");
+            auto range = sir::physicalRange(design_, rangeOf(at));
+            if (range.lsb >= design_.slot(range.slot).type.width ||
+                (at.kind == Place::Kind::Bits &&
+                 (at.lsb < 0 ||
+                  at.lsb + at.width >
+                      (at.windowWidth == 0 ? design_.slot(at.slot).type.width : at.windowWidth))))
+                unsupported(sl, "an out-of-range passive terminal");
+            range.firstElem = at.elem.value_or(0);
+            range.numElems = range.width = 1;
+            return range;
+        };
+        connection.first = terminal(*conns[0]);
+        connection.second = terminal(*conns[1]);
+        if (!conditional) {
+            if (connection.delayed) unsupported(sl, "a delay on an unconditional passive switch");
+            return;
+        }
+        std::vector<sir::Operand> args{sir::Operand::strengthEdge(sir::kNone),
+                                       coerce(lowerExpr(*conns[2]), sir::u4(1), sl).op};
+        if (const auto* delay = g.getDelay()) {
+            const auto values = delaysOf(*delay, sl);
+            args.push_back(values[0].op);
+            args.push_back(values[1].op);
+        }
+        emitVoid(connection.delayed ? sir::Op::StrengthEdgeDelay : sir::Op::StrengthEdge,
+                 std::move(args), sl);
+    });
+    if (design_.processes.size() <= first.index()) return;
+    // Static endpoint normalization leaves no executing process for an always-on edge.
+    if (!conditional) dropProcesses(first);
+    strengthNets_.try_emplace(connection.first.slot, connection.loc);
+    strengthNets_.try_emplace(connection.second.slot, connection.loc);
+    passiveConnections_.push_back(connection);
 }
 
 void Lowerer::lowerMos(const ast::PrimitiveInstanceSymbol& g, const std::string& prefix) {

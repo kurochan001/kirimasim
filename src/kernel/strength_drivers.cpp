@@ -124,6 +124,9 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         queue_.swap(staged.queue_);
         choices_.swap(staged.choices_);
         states_.swap(staged.states_);
+        islands_.swap(staged.islands_);
+        islandNodes_.swap(staged.islandNodes_);
+        islandEdges_.swap(staged.islandEdges_);
         configured_ = true;
         return StrengthError::None;
     } catch (const std::bad_alloc&) {

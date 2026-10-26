@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('source passive: control sensitivity discarded', 'src/front/lower.cpp', '    // Static endpoint normalization leaves no executing process for an always-on edge.', '    if (conditional) design_.process(first).triggers.clear();\n    // Static endpoint normalization leaves no executing process for an always-on edge.'),
+    ('source passive: array bit order reversed', 'src/front/lower.cpp', 'const auto right = static_cast<std::int64_t>(dims[i].right);', 'const auto right = static_cast<std::int64_t>(dims[i].left);'),
+    ('source passive: concatenation walks from the wrong side', 'src/front/lower.cpp', 'for (auto it = at.base.rbegin(); it != at.base.rend(); ++it) {', 'for (auto it = at.base.begin(); it != at.base.end(); ++it) {'),
+    ('source passive: static unpacked element lost', 'src/front/lower.cpp', 'range.firstElem = at.elem.value_or(0);', 'range.firstElem = 0;'),
+    ('source passive: turn-on delay discarded', 'src/front/lower.cpp', 'args.push_back(values[0].op);', 'args.push_back(constant(sir::u2(64), 0).op);'),
+    ('source passive: physical components are not merged', 'src/front/lower_strength.cpp', 'find(design_.strengthNodes[b].component);', '(static_cast<void>(b), find(design_.strengthNodes[a].component));'),
+    ('source passive: only the first independent island is solved', 'src/kernel/strength_network.cpp', 'i < part.islandCount; ++i', 'i < std::min(part.islandCount, 1U); ++i'),
+    ('source passive: later components reuse the first island table', 'src/kernel/strength_network.cpp', 'component.islandFirst = static_cast<std::uint32_t>(islands_.size());', 'component.islandFirst = 0;'),
+
     ('passive SIR: registered edge table omitted', 'src/vm/vm.cpp', 'configureStrengthDrivers(nodes, origins, edges)', 'configureStrengthDrivers(nodes, origins, {})'),
     ('passive SIR: decoded control polarity inverted', 'src/vm/vm.cpp', 'sir::activeHighStrengthEdge(d_.strengthEdges[in.operands[0].id].kind)', '!sir::activeHighStrengthEdge(d_.strengthEdges[in.operands[0].id].kind)'),
     ('passive SIR: unknown control becomes off', 'src/kernel/include/kirimasim/kernel/strength_drivers.h', 'if ((control.b & 1U) != 0) return StrengthConduction::Uncertain;', 'if ((control.b & 1U) != 0) return StrengthConduction::Off;'),
@@ -60,7 +69,7 @@ MUTANTS = [
     ('passive network: colocated origins reuse first range', 'src/kernel/strength_network.cpp', 'bank.order_[originNode.first + r]', 'bank.order_[originNode.first]'),
     ('passive network: uwire ignores remote physical roots', 'src/kernel/strength_network.cpp', '++roots[find(origin.node)];', '++roots[origin.node];'),
     ('passive network: cross-component edge accepted', 'src/kernel/strength_network.cpp', 'if (nodes_[edge.first].spec.component != nodes_[edge.second].spec.component)', 'if (nodes_[edge.first].spec.component != nodes_[edge.second].spec.component && false)'),
-    ('passive network: rootless rings preserve cached readout', 'src/kernel/strength_network.cpp', 'bank.values_[bank.componentNodes_[part.first + j]] = {};', '{ const auto n = bank.componentNodes_[part.first + j]; static_cast<void>(ctx_.strengths().read(bank.nodes_[n].spec.at, {&bank.values_[n], 1})); }'),
+    ('passive network: rootless rings preserve cached readout', 'src/kernel/strength_network.cpp', 'bank.values_[bank.islandNodes_[part.first + j]] = {};', '{ const auto n = bank.islandNodes_[part.first + j]; static_cast<void>(ctx_.strengths().read(bank.nodes_[n].spec.at, {&bank.values_[n], 1})); }'),
     ('passive network: first path prevents stronger later route', 'src/kernel/strength_network.cpp', 'if (value > best) {', 'if (value > best && best == 0) {'),
     ('passive network: uncertain root points collapse to last point', 'src/kernel/strength_network.cpp', 'if (point < range.lo || point > range.hi) continue;', 'if (point != range.hi) continue;'),
     ('passive network: uncertain conduction uses on delay', 'src/kernel/strength_drivers.cpp', 'std::min(on, off);', 'on;'),

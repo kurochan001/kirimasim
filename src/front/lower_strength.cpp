@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <map>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -156,6 +157,42 @@ void Lowerer::finishStrengthNets() {
     const auto nodeOf = [&](sir::SlotRange at) {
         return firstNode.at(at.slot) + at.firstElem * design_.slot(at.slot).type.width + at.lsb;
     };
+    if (!passiveConnections_.empty()) {
+        std::vector<std::uint32_t> parent(component);
+        std::iota(parent.begin(), parent.end(), 0U);
+        const auto find = [&](std::uint32_t id) {
+            auto root = id;
+            while (parent[root] != root)
+                root = parent[root];
+            while (parent[id] != id) {
+                const auto next = parent[id];
+                parent[id] = root;
+                id = next;
+            }
+            return root;
+        };
+        for (const auto& edge : passiveConnections_) {
+            const auto a = nodeOf(edge.first), b = nodeOf(edge.second);
+            parent[find(design_.strengthNodes[a].component)] =
+                find(design_.strengthNodes[b].component);
+            const auto id =
+                sir::StrengthEdgeId{static_cast<std::uint32_t>(design_.strengthEdges.size())};
+            design_.strengthEdges.push_back({a, b, edge.kind, edge.owner, edge.delayed, edge.loc});
+            if (edge.owner == sir::kNone) continue;
+            auto& owner = design_.process(edge.owner);
+            owner.strengthEdgeWrites.push_back(id);
+            for (auto& block : owner.blocks)
+                for (auto& in : block.instrs)
+                    if (in.op == sir::Op::StrengthEdge || in.op == sir::Op::StrengthEdgeDelay)
+                        in.operands[0] = sir::Operand::strengthEdge(id);
+        }
+        std::map<std::uint32_t, std::uint32_t> dense;
+        for (auto& node : design_.strengthNodes) {
+            const auto root = find(node.component);
+            node.component =
+                dense.try_emplace(root, static_cast<std::uint32_t>(dense.size())).first->second;
+        }
+    }
     const auto origin = [&](sir::ProcessId owner, sir::SlotRange at, Range initial,
                             sir::SourceLoc where) {
         const auto id =

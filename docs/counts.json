@@ -1,20 +1,20 @@
 {
   "measured": "2026-10-25",
   "ctest": {
-    "total": 5391,
-    "passed": 5389,
+    "total": 5536,
+    "passed": 5532,
     "skipped": 2
   },
   "kinds": {
-    "unit": 617,
-    "suite": 4561,
-    "tools": 154,
+    "unit": 618,
+    "suite": 4704,
+    "tools": 155,
     "dump_sir": 29,
     "context": 15,
     "cli": 15
   },
-  "suite_tests": 4561,
-  "generators": 140,
+  "suite_tests": 4704,
+  "generators": 141,
   "svtests": {
     "total": 344,
     "icarus_build": "14.0 devel, 04cc493",
@@ -60,11 +60,11 @@
     "probes": 87,
     "measured": "2026-10-26",
     "stable": {
-      "gaps": 14,
+      "gaps": 8,
       "mismatches": 4
     },
     "devel": {
-      "gaps": 14,
+      "gaps": 8,
       "mismatches": 7
     },
     "met": false

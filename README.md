@@ -233,17 +233,17 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
-| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 14 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (14 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
+| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 8 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (8 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
 The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-25; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,391 | 5,389, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,536 | 5,532, 2 skipped, 2 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 617, `tests/suite/` 4,561 (made by 140 generators under `tools/`), tools 154, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 618, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

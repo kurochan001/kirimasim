@@ -84,16 +84,60 @@ StrengthError StrengthDrivers::configureEdges(std::span<const StrengthEdgeSpec> 
         adjacency_[next[edge.first]++] = e;
         adjacency_[next[edge.second]++] = e;
     }
+    // Factor only potentially disconnected graphs. Their root choices cannot
+    // meet, while the enclosing component still publishes one atomic snapshot.
+    std::pmr::vector<std::uint32_t> islandOf(nodes_.size(), UINT32_MAX, memory_);
+    islands_.reserve(nodes_.size());
+    islandNodes_.resize(nodes_.size());
+    islandEdges_.resize(edges.size());
+    for (auto& component : components_) {
+        component.islandFirst = static_cast<std::uint32_t>(islands_.size());
+        for (std::uint32_t j = 0; j < component.count; ++j) {
+            const auto n = componentNodes_[component.first + j];
+            auto& island = islandOf[find(n)];
+            if (island == UINT32_MAX) {
+                island = static_cast<std::uint32_t>(islands_.size());
+                islands_.emplace_back();
+                ++component.islandCount;
+            }
+            ++islands_[island].count;
+        }
+    }
+    for (const auto& edge : edges)
+        ++islands_[islandOf[find(edge.first)]].edgeCount;
+    std::uint32_t nodeFirst = 0, edgeFirst = 0;
+    for (auto& island : islands_) {
+        island.first = nodeFirst;
+        island.edgeFirst = edgeFirst;
+        nodeFirst += island.count;
+        edgeFirst += island.edgeCount;
+        island.count = island.edgeCount = 0;
+    }
+    for (std::uint32_t n = 0; n < nodes_.size(); ++n) {
+        auto& island = islands_[islandOf[find(n)]];
+        islandNodes_[island.first + island.count++] = n;
+    }
+    for (std::uint32_t e = 0; e < edges.size(); ++e) {
+        auto& island = islands_[islandOf[find(edges[e].first)]];
+        islandEdges_[island.edgeFirst + island.edgeCount++] = e;
+    }
     return StrengthError::None;
 }
 
 bool Scheduler::solvePassiveStrengthComponent(std::uint32_t component) noexcept {
+    const auto& part = ctx_.strengthDrivers().components_[component];
+    for (std::uint32_t i = 0; i < part.islandCount; ++i)
+        if (!solvePassiveStrengthIsland(part.islandFirst + i)) return false;
+    return true;
+}
+
+bool Scheduler::solvePassiveStrengthIsland(std::uint32_t island) noexcept {
     auto& bank = ctx_.strengthDrivers();
-    const auto& part = bank.components_[component];
+    const auto& part = bank.islands_[island];
     bool nonzero = false;
     for (std::uint32_t j = 0; j < part.count; ++j) {
         if (takeStrengthInterrupt()) return false;
-        const auto n = bank.componentNodes_[part.first + j];
+        const auto n = bank.islandNodes_[part.first + j];
         bank.values_[n] = {7, -7};  // accumulator, never exposed before completion.
         const auto& node = bank.nodes_[n];
         for (std::uint32_t r = 0; r < node.count; ++r) {
@@ -104,18 +148,18 @@ bool Scheduler::solvePassiveStrengthComponent(std::uint32_t component) noexcept 
     if (!nonzero) {
         // With no nonzero root, every possible graph is floating, even a ring.
         for (std::uint32_t j = 0; j < part.count; ++j)
-            bank.values_[bank.componentNodes_[part.first + j]] = {};
+            bank.values_[bank.islandNodes_[part.first + j]] = {};
         return true;
     }
     for (std::uint32_t e = 0; e < part.edgeCount; ++e)
-        bank.choices_[bank.componentEdges_[part.edgeFirst + e]] = 0;
+        bank.choices_[bank.islandEdges_[part.edgeFirst + e]] = 0;
     bool more = true;
     while (more) {
         if (takeStrengthInterrupt()) return false;
         for (std::uint32_t j = 0; j < part.count; ++j)
-            bank.states_[bank.componentNodes_[part.first + j]] = detail::stateBit(0, 1);
+            bank.states_[bank.islandNodes_[part.first + j]] = detail::stateBit(0, 1);
         for (std::uint32_t j = 0; j < part.count; ++j) {
-            const auto source = bank.componentNodes_[part.first + j];
+            const auto source = bank.islandNodes_[part.first + j];
             const auto& originNode = bank.nodes_[source];
             for (std::uint32_t r = 0; r < originNode.count; ++r) {
                 if (takeStrengthInterrupt()) return false;
@@ -125,7 +169,7 @@ bool Scheduler::solvePassiveStrengthComponent(std::uint32_t component) noexcept 
                 // this physical origin and this fixed graph. Queue membership
                 // is bounded by the node count; route improvements are finite.
                 for (std::uint32_t k = 0; k < part.count; ++k) {
-                    const auto n = bank.componentNodes_[part.first + k];
+                    const auto n = bank.islandNodes_[part.first + k];
                     std::fill_n(bank.routes_.begin() + std::size_t{n} * 8, 8, 0);
                     bank.inQueue_[n] = 0;
                 }
@@ -176,7 +220,7 @@ bool Scheduler::solvePassiveStrengthComponent(std::uint32_t component) noexcept 
                 }
                 for (std::uint32_t k = 0; k < part.count; ++k) {
                     if (takeStrengthInterrupt()) return false;
-                    const auto n = bank.componentNodes_[part.first + k];
+                    const auto n = bank.islandNodes_[part.first + k];
                     const auto states = bank.states_[n];
                     std::uint32_t combined = 0;
                     // Keep exact point images: do not fill holes by taking an
@@ -194,7 +238,7 @@ bool Scheduler::solvePassiveStrengthComponent(std::uint32_t component) noexcept 
         }
         for (std::uint32_t j = 0; j < part.count; ++j) {
             if (takeStrengthInterrupt()) return false;
-            const auto n = bank.componentNodes_[part.first + j];
+            const auto n = bank.islandNodes_[part.first + j];
             const auto value = detail::finishRange(bank.nodes_[n].spec.kind, bank.states_[n]);
             bank.values_[n].lo = std::min(bank.values_[n].lo, value.lo);
             bank.values_[n].hi = std::max(bank.values_[n].hi, value.hi);
@@ -202,7 +246,7 @@ bool Scheduler::solvePassiveStrengthComponent(std::uint32_t component) noexcept 
         // A carry chain, not an integer world mask: no 32/64-device cutoff.
         more = false;
         for (std::uint32_t j = 0; j < part.edgeCount; ++j) {
-            const auto e = bank.componentEdges_[part.edgeFirst + j];
+            const auto e = bank.islandEdges_[part.edgeFirst + j];
             if (bank.edges_[e].state.committed != StrengthConduction::Uncertain) continue;
             bank.choices_[e] ^= 1;
             if (bank.choices_[e] != 0) {

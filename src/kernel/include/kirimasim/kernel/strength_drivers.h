@@ -55,7 +55,8 @@ public:
         : memory_(memory), nodes_(memory), origins_(memory), order_(memory), components_(memory),
           componentNodes_(memory), values_(memory), updates_(memory), edges_(memory),
           componentEdges_(memory), adjacencyOffsets_(memory), adjacency_(memory), routes_(memory),
-          inQueue_(memory), queue_(memory), choices_(memory), states_(memory) {}
+          inQueue_(memory), queue_(memory), choices_(memory), states_(memory), islands_(memory),
+          islandNodes_(memory), islandEdges_(memory) {}
     StrengthDrivers(const StrengthDrivers&) = delete;
     StrengthDrivers& operator=(const StrengthDrivers&) = delete;
     [[nodiscard]] bool configured() const noexcept { return configured_; }
@@ -84,6 +85,7 @@ private:
         std::uint32_t first = 0, count = 0;
         bool queued = false;
         std::uint32_t edgeFirst = 0, edgeCount = 0;
+        std::uint32_t islandFirst = 0, islandCount = 0;
     };
     std::pmr::memory_resource* memory_;
     std::pmr::vector<Node> nodes_;
@@ -101,6 +103,8 @@ private:
     std::pmr::vector<std::uint32_t> queue_;
     std::pmr::vector<std::uint8_t> choices_;
     std::pmr::vector<std::uint32_t> states_;
+    std::pmr::vector<Component> islands_;  ///< Potential connectivity, independent of publication.
+    std::pmr::vector<std::uint32_t> islandNodes_, islandEdges_;
     bool configured_ = false, started_ = false;
 
     StrengthError configure(const StrengthStorage& storage, std::span<const StrengthNodeSpec> nodes,
