@@ -651,3 +651,12 @@ add_test(NAME tools/event_initializer_contracts
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_event_initializer_contracts.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/event_initializer_contracts PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_class_static_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_static_matrix.py --check)
+set_tests_properties(tools/gen_class_static_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/class_static_contracts
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_class_static_contracts.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/class_static_contracts PROPERTIES LABELS Tools)

@@ -37,6 +37,7 @@
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
 #include "slang/ast/statements/MiscStatements.h"
+#include "slang/ast/symbols/ClassSymbols.h"
 #include "slang/ast/symbols/CompilationUnitSymbols.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
@@ -358,8 +359,7 @@ std::uint32_t leafOffset(const ast::UnpackedStructType& st, const ast::FieldSymb
 
 bool inSlot(const ast::Symbol& s) {
     if (s.kind == ast::SymbolKind::Net) return true;
-    if (s.kind != ast::SymbolKind::Variable && s.kind != ast::SymbolKind::FormalArgument)
-        return false;
+    if (!isVariable(s)) return false;
     return s.as<ast::VariableSymbol>().lifetime == ast::VariableLifetime::Static;
 }
 
@@ -652,6 +652,15 @@ sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocatio
 sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& member,
                              const ast::Type& type, const std::vector<sir::ArrayDim>& outer,
                              slang::SourceLocation sl) {
+    if (v.kind == ast::SymbolKind::ClassProperty) {
+        for (const ast::Scope* scope = v.getParentScope(); scope != nullptr;
+             scope = scope->asSymbol().getParentScope()) {
+            if (scope->asSymbol().kind != ast::SymbolKind::ClassType) continue;
+            const auto& classType = scope->asSymbol().as<ast::ClassType>();
+            if (classType.genericClass != nullptr || classType.isUninstantiated)
+                unsupported(sl, "static property of a parameterized class");
+        }
+    }
     // A variable or net of a package or of a compilation unit ($unit,
     // 3.12.1) belongs to its row, one in the design (SIR_SPEC.md 3.3).
     const std::optional<sir::InstanceId> row = rowOf(v);
@@ -806,6 +815,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
         b_ = std::move(saved);
     }
     checkStaticInitOrder();
+    if (numErrors_ == 0) checkGenericClassStatics();
     buildDumpTable();
     if (numErrors_ != 0) return;
     finishDesign();
@@ -1185,28 +1195,37 @@ void Lowerer::resolveNets() {
 void Lowerer::declarePackages(const ast::RootSymbol& root) {
     // The rows of the packages and compilation units with variables or
     // nets first, in source order: a package where it is declared, a
-    // compilation unit at its first variable or net. One with subroutines
+    // compilation unit at its first static storage, including class data.
+    // One with subroutines
     // alone gets its row when one of them is lowered (rowFor); it has
     // nothing to initialize.
-    const auto holds = [](const ast::Symbol& m) {
-        return m.kind == ast::SymbolKind::Variable || m.kind == ast::SymbolKind::Net;
+    const auto holds = [&](const ast::Symbol& m) {
+        if (m.kind == ast::SymbolKind::GenericClassDef)
+            return hasGenericClassStatics(m.as<ast::GenericClassDefSymbol>());
+        return m.kind == ast::SymbolKind::Variable || m.kind == ast::SymbolKind::Net ||
+               (m.kind == ast::SymbolKind::ClassType && hasClassStatics(m.as<ast::ClassType>()));
     };
-    const auto holdsAny = [&](const ast::Scope& sc) {
+    const auto holdsAny = [&](const ast::Scope& sc, const auto& self) -> bool {
         for (const ast::Symbol& m : sc.members())
-            if (holds(m)) return true;
+            if (holds(m) || (m.kind == ast::SymbolKind::AnonymousProgram &&
+                             self(m.as<ast::AnonymousProgramSymbol>(), self)))
+                return true;
         return false;
     };
     std::vector<const ast::Symbol*> order;
     for (const ast::CompilationUnitSymbol* unit : root.compilationUnits) {
         for (const ast::Symbol& m : unit->members()) {
-            if (m.kind == ast::SymbolKind::Package && holdsAny(m.as<ast::PackageSymbol>()))
+            if (m.kind == ast::SymbolKind::Package &&
+                holdsAny(m.as<ast::PackageSymbol>(), holdsAny))
                 order.push_back(&m);
-            else if (holds(m) && std::find(order.begin(), order.end(), unit) == order.end())
+            else if ((holds(m) || (m.kind == ast::SymbolKind::AnonymousProgram &&
+                                   holdsAny(m.as<ast::AnonymousProgramSymbol>(), holdsAny))) &&
+                     std::find(order.begin(), order.end(), unit) == order.end())
                 order.push_back(unit);
         }
     }
     for (const ast::PackageSymbol* pkg : root.getCompilation().getPackages())
-        if (std::find(order.begin(), order.end(), pkg) == order.end() && holdsAny(*pkg))
+        if (std::find(order.begin(), order.end(), pkg) == order.end() && holdsAny(*pkg, holdsAny))
             order.push_back(pkg);
     for (const ast::Symbol* sym : order)
         rowFor(*sym);
@@ -1388,12 +1407,82 @@ void Lowerer::aliasNets(const ast::NetAliasSymbol& alias) {
     }
 }
 
+bool Lowerer::hasClassStatics(const ast::ClassType& type) {
+    checkStack(type.location);
+    if (type.isUninstantiated) return false;
+    for (const ast::Symbol& member : type.members()) {
+        if (member.getParentScope() != &type) continue;
+        if (member.kind == ast::SymbolKind::ClassProperty &&
+            member.as<ast::ClassPropertySymbol>().lifetime == ast::VariableLifetime::Static)
+            return true;
+        if (member.kind == ast::SymbolKind::ClassType &&
+            hasClassStatics(member.as<ast::ClassType>()))
+            return true;
+        if (member.kind == ast::SymbolKind::GenericClassDef &&
+            hasGenericClassStatics(member.as<ast::GenericClassDefSymbol>()))
+            return true;
+    }
+    return false;
+}
+
+bool Lowerer::hasGenericClassStatics(const ast::GenericClassDefSymbol& type) {
+    checkStack(type.location);
+    if (std::find(genericClassStatics_.begin(), genericClassStatics_.end(), &type) ==
+        genericClassStatics_.end())
+        genericClassStatics_.push_back(&type);
+    // Snapshot before querying members, which may elaborate more types. Only
+    // the Boolean result is used; hash iteration never assigns SIR identities.
+    std::vector<const ast::ClassType*> concrete;
+    for (const auto& specialization : type.specializations()) {
+        const auto& canonical = specialization.getCanonicalType();
+        if (canonical.kind == ast::SymbolKind::ClassType)
+            concrete.push_back(&canonical.as<ast::ClassType>());
+    }
+    for (const auto* specialization : concrete)
+        if (hasClassStatics(*specialization)) return true;
+    return false;
+}
+
+void Lowerer::checkGenericClassStatics() {
+    std::set<slang::SourceLocation> unsupported;
+    std::vector<std::size_t> previous;
+    for (;;) {
+        for (std::size_t i = 0; i < genericClassStatics_.size(); ++i) {
+            const auto* type = genericClassStatics_[i];
+            if (hasGenericClassStatics(*type)) unsupported.insert(type->location);
+        }
+        std::vector<std::size_t> current;
+        current.reserve(genericClassStatics_.size());
+        for (const auto* type : genericClassStatics_)
+            current.push_back(type->numSpecializations());
+        if (current == previous) break;
+        previous = std::move(current);
+    }
+    // One positioned diagnostic per declaration, in source-location order.
+    for (const auto at : unsupported)
+        report(at, "static storage of a parameterized class");
+}
+
+void Lowerer::declareClassStatics(const ast::ClassType& type) {
+    checkStack(type.location);
+    if (type.genericClass != nullptr || type.isUninstantiated) return;
+    if (!declaredClassStatics_.insert(&type).second) return;
+    // Only the declaring class initializes a property. Inherited names keep
+    // that same symbol/storage, and instance fields wait for construction.
+    declareScope(type);
+}
+
 void Lowerer::declareScope(const ast::Scope& scope) {
     // Aliased nets first, so that they share one slot from the start.
     for (const ast::Symbol& member : scope.members())
         if (member.kind == ast::SymbolKind::NetAlias) aliasNets(member.as<ast::NetAliasSymbol>());
     for (const ast::Symbol& member : scope.members()) {
         switch (member.kind) {
+            case ast::SymbolKind::ClassProperty:
+                if (member.getParentScope() != &scope ||
+                    member.as<ast::ClassPropertySymbol>().lifetime != ast::VariableLifetime::Static)
+                    break;
+                [[fallthrough]];
             case ast::SymbolKind::Variable:
             case ast::SymbolKind::Net: {
                 const auto& v = member.as<ast::ValueSymbol>();
@@ -1402,7 +1491,7 @@ void Lowerer::declareScope(const ast::Scope& scope) {
                         // One slot per member; the initial value or the
                         // members' defaults (7.2.2) in static-init.
                         const sir::SlotId first = structSlots(v, v.location);
-                        if (member.kind == ast::SymbolKind::Variable &&
+                        if (member.kind != ast::SymbolKind::Net &&
                             (v.getInitializer() != nullptr || hasMemberDefaults(v.getType())))
                             lowerStaticInit(member.as<ast::VariableSymbol>(), first, v.location);
                         break;
@@ -1410,7 +1499,7 @@ void Lowerer::declareScope(const ast::Scope& scope) {
                     const sir::SlotId s = slotOf(v, v.location);
                     // A net's initializer is a continuous assignment
                     // (10.3.1), lowered with the processes.
-                    if (member.kind == ast::SymbolKind::Variable && v.getInitializer() != nullptr)
+                    if (member.kind != ast::SymbolKind::Net && v.getInitializer() != nullptr)
                         lowerStaticInit(member.as<ast::VariableSymbol>(), s, v.location);
                 } catch (const Unsupported&) {
                     continue;  // already reported
@@ -1419,6 +1508,15 @@ void Lowerer::declareScope(const ast::Scope& scope) {
             }
             case ast::SymbolKind::Instance:
                 declareInstance(member.as<ast::InstanceSymbol>(), instance_);
+                break;
+            case ast::SymbolKind::ClassType:
+                declareClassStatics(member.as<ast::ClassType>());
+                break;
+            case ast::SymbolKind::GenericClassDef:
+                hasGenericClassStatics(member.as<ast::GenericClassDefSymbol>());
+                break;
+            case ast::SymbolKind::AnonymousProgram:
+                declareScope(member.as<ast::AnonymousProgramSymbol>());
                 break;
             case ast::SymbolKind::InstanceArray:
                 forEachArrayElement<ast::InstanceSymbol>(
@@ -1452,8 +1550,11 @@ void Lowerer::lowerInstance(const ast::InstanceSymbol& inst) {
 void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
     for (const ast::Symbol& member : scope.members()) {
         switch (member.kind) {
-            case ast::SymbolKind::Variable:   // declareScope made the slot
-            case ast::SymbolKind::Parameter:  // constants, used where they are named
+            case ast::SymbolKind::Variable:         // declareScope made the slot
+            case ast::SymbolKind::GenericClassDef:  // specialization storage checked after binding
+            case ast::SymbolKind::ClassType:        // static fields declared; objects require
+                                                    // construction
+            case ast::SymbolKind::Parameter:        // constants, used where they are named
             case ast::SymbolKind::TypeParameter:
             case ast::SymbolKind::TypeAlias:
             case ast::SymbolKind::ForwardingTypedef:
@@ -2379,7 +2480,7 @@ void Lowerer::checkStaticInitOrder() {
         // inside the functions it calls (P1).
         std::vector<const ast::Symbol*> early;
         const auto read = [&](const ast::Symbol& s) {
-            if (s.kind != ast::SymbolKind::Variable || &s == &v || !inSlot(s)) return;
+            if (!isVariable(s) || &s == &v || !inSlot(s)) return;
             const std::optional<sir::InstanceId> inst = instanceOf(s);
             if (!inst) return;
             // Another instance's variable: the standard sets no order
@@ -2629,7 +2730,17 @@ CompileResult compile(std::span<const std::string> args) {
     if (result.numErrors != 0) return result;
 
     Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation));
-    lowerer.lower(compilation->getRoot());
+    try {
+        lowerer.lower(compilation->getRoot());
+    } catch (const Unsupported&) {
+        // Declaration discovery can stop before any procedure owns a catch.
+        // The diagnostic is already recorded, including a low-stack stop.
+        result.diagnostics += lowerer.diagnostics();
+        result.numWarnings += lowerer.numWarnings();
+        result.numErrors += lowerer.numErrors();
+        result.unsupported = true;
+        return result;
+    }
     result.diagnostics += lowerer.diagnostics();
     result.numWarnings += lowerer.numWarnings();
     if (lowerer.numErrors() != 0) {

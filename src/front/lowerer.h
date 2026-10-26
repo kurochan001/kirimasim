@@ -842,6 +842,9 @@ private:
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<const ast::Symbol*, sir::SlotId> structSlots_;  ///< The first leaf's slot.
+    /// Declaration visits only; never iterated to assign storage identities.
+    std::set<const ast::ClassType*> declaredClassStatics_;
+    std::vector<const ast::GenericClassDefSymbol*> genericClassStatics_;
     /// The values of the iterators of the with clauses being lowered.
     std::map<const ast::Symbol*, Val> iterators_;
     std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
@@ -1003,6 +1006,10 @@ private:
     /// The row of a package or compilation unit, made on first use.
     sir::InstanceId rowFor(const ast::Symbol& scope);
     void declareScope(const ast::Scope& scope);
+    bool hasClassStatics(const ast::ClassType& type);
+    bool hasGenericClassStatics(const ast::GenericClassDefSymbol& type);
+    void checkGenericClassStatics();
+    void declareClassStatics(const ast::ClassType& type);
     /// The nets of an alias statement share one slot (SIR_SPEC.md 3.5).
     void aliasNets(const ast::NetAliasSymbol& alias);
     void lowerInstance(const ast::InstanceSymbol& inst);

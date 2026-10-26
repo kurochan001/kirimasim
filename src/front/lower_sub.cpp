@@ -596,9 +596,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                     ops.push_back(Operand::frame(*f));
                     continue;
                 }
-            } else if ((v.kind == ast::SymbolKind::Variable ||
-                        v.kind == ast::SymbolKind::FormalArgument) &&
-                       v.as<ast::VariableSymbol>().lifetime == ast::VariableLifetime::Static) {
+            } else if (isVariable(v) && inSlot(v)) {
                 const sir::SlotId s = slotOf(v.as<ast::VariableSymbol>(), sl);
                 if (design_.slot(s).dims.empty() && design_.slot(s).type == prm.type) {
                     ops.push_back(Operand::slot(s));

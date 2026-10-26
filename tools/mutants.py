@@ -40,6 +40,14 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('class static: declaration stop escapes compile', 'src/front/lower.cpp', '    try {\n        lowerer.lower(compilation->getRoot());\n    } catch (const Unsupported&) {\n        // Declaration discovery can stop before any procedure owns a catch.\n        // The diagnostic is already recorded, including a low-stack stop.\n        result.diagnostics += lowerer.diagnostics();\n        result.numWarnings += lowerer.numWarnings();\n        result.numErrors += lowerer.numErrors();\n        result.unsupported = true;\n        return result;\n    }', '    lowerer.lower(compilation->getRoot());'),
+    ('class static: unreferenced declaration skipped', 'src/front/lower.cpp', '    declareScope(type);', '    static_cast<void>(type);'),
+    ('class static: scalar initializer omitted', 'src/front/lower.cpp', 'if (member.kind != ast::SymbolKind::Net && v.getInitializer() != nullptr)', 'if (member.kind == ast::SymbolKind::Variable && v.getInitializer() != nullptr)'),
+    ('class static: instance field initialized eagerly', 'src/front/lower.cpp', 'member.as<ast::ClassPropertySymbol>().lifetime != ast::VariableLifetime::Static)', '(member.as<ast::ClassPropertySymbol>().lifetime != ast::VariableLifetime::Static && false))'),
+    ('class static: declaring class initialized twice', 'src/front/lower.cpp', '    declareScope(type);', '    declareScope(type);\n    declareScope(type);'),
+    ('class static: generic omission accepted', 'src/front/lower.cpp', '    for (const auto at : unsupported)\n', '    unsupported.clear();\n    for (const auto at : unsupported)\n'),
+    ('class static: initialization order warning omitted', 'src/front/lower.cpp', 'if (!isVariable(s) || &s == &v || !inSlot(s)) return;', 'if (s.kind != ast::SymbolKind::Variable || &s == &v || !inSlot(s)) return;'),
+
     ('source passive: control sensitivity discarded', 'src/front/lower.cpp', '    // Static endpoint normalization leaves no executing process for an always-on edge.', '    if (conditional) design_.process(first).triggers.clear();\n    // Static endpoint normalization leaves no executing process for an always-on edge.'),
     ('source passive: array bit order reversed', 'src/front/lower.cpp', 'const auto right = static_cast<std::int64_t>(dims[i].right);', 'const auto right = static_cast<std::int64_t>(dims[i].left);'),
     ('source passive: concatenation walks from the wrong side', 'src/front/lower.cpp', 'for (auto it = at.base.rbegin(); it != at.base.rend(); ++it) {', 'for (auto it = at.base.begin(); it != at.base.end(); ++it) {'),

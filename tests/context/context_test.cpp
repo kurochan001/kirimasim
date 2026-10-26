@@ -64,6 +64,7 @@ std::vector<Case> cases() {
         {.file = "runtime_error.sv"},
         {.file = "plusargs.sv", .plusargs = {"mode=fast", "count=12"}},
         {.file = "time_limit.sv", .maxTime = 50},
+        {.file = "class_static.sv"},
     };
 }
 

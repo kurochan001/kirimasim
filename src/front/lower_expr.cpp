@@ -441,7 +441,8 @@ std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
 }
 
 bool isVariable(const ast::Symbol& s) {
-    return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument;
+    return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument ||
+           s.kind == ast::SymbolKind::ClassProperty;
 }
 
 bool expressionHasSideEffects(const ast::Expression& e) { return sideEffects(e); }
@@ -3621,9 +3622,7 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
 bool Lowerer::readsAutomatic(const ast::Expression& e) const {
     bool automatic = false;
     auto finder = ast::makeVisitor([&](auto&, const ast::NamedValueExpression& n) {
-        if (n.symbol.kind == ast::SymbolKind::Variable ||
-            n.symbol.kind == ast::SymbolKind::FormalArgument)
-            automatic = automatic || !inSlot(n.symbol);
+        if (isVariable(n.symbol)) automatic = automatic || !inSlot(n.symbol);
     });
     e.visit(finder);
     return automatic;
@@ -3906,6 +3905,9 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
                                        ? e.as<ast::ArbitrarySymbolExpression>().symbol.get()
                                        : namedSymbol(e);
             if (s == nullptr) unsupported(at, "$dumpvars of this argument");
+            // WAVEFORM 7 does not yet define class scopes or their variables.
+            if (s->kind == ast::SymbolKind::ClassProperty || s->kind == ast::SymbolKind::ClassType)
+                unsupported(at, "$dumpvars of a class scope or property");
             const bool value = s->kind == ast::SymbolKind::Variable ||
                                s->kind == ast::SymbolKind::Net ||
                                s->kind == ast::SymbolKind::FormalArgument;

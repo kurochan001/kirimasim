@@ -19,6 +19,12 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
+ローカルclass-static topicで、未使用宣言の事前初期化を含む
+[非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)を追加しました。
+[全local CI](docs/measurements/2026-10-27/class-static-validation.json)は21/21項目成功で、
+新規CTest568件・コンパイルした7故障の検出も通りました。未commit・未merge・未pushです。
+クラスオブジェクトとパラメータ付きstatic記憶域は残作業です。
+
 mainでは`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initializer-execution.ja.md)を追加し、
 人が承認した期待値3件の移行を`2da32daa`に分けました。3コミットを
 [`f100cd86`までmainへ取り込みました](docs/measurements/2026-10-27/event-initializer-main-integration.json)。
@@ -29,7 +35,7 @@ mainでは`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initi
 [日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
 以前の承認・失敗・公開状態をその時点の履歴として保持します。
 
-> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。
+> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラスオブジェクト、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。[非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)は共有する型付き記憶域と事前初期化に対応しました。オブジェクト実行は残作業です。
 
 `4c69843`で型付きpatternのSIR・検証器・text・実行処理を共有表示APIへ接続しました。
 frontの定数・runtime書式引数への接続は残っているため、ソース`%p`は引き続き未対応です。
@@ -178,7 +184,7 @@ P1の完了にはなりません。
 違法な接続を未対応機能と分けています。
 
 [クラスの独自46プログラムによる調査](docs/notes/class-execution-investigation.ja.md)も別に記録しました。
-static初期化の既知の不一致を含み、クラス実行は引き続きP1の残作業です。
+過去のstatic初期化の不一致を含みます。[非パラメータ化クラスのstatic記憶域](docs/notes/class-static-execution.ja.md)でこの欠落を修正しました。オブジェクト実行は引き続きP1の残作業です。
 [クラス実行の詳細契約案](docs/notes/class-runtime-proposal.ja.md)は独自14本の追加観測を含み、2026-10-25承認済みです。
 
 直近の[MOS・スイッチの調査](docs/notes/mos-switch-investigation.ja.md)は、
@@ -219,11 +225,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 6,059 | 6,057、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 6,627 | 6,625、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 5,192（`tools/` の 144 個の生成器が作る）、道具 160、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 5,755（`tools/` の 145 個の生成器が作る）、道具 162、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -459,6 +465,7 @@ Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、�
 - **ネット：** `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。駆動の強さと、複数のドライバの解決。ネット宣言の代入を含む連続代入の遅延（立ち上がり、立ち下がり、ターンオフ）。組み込みのゲートとプル。利用者定義のプリミティブ（組み合わせと順序）。`alias`
 - **手続きと時間：** `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`。ブロッキングと NBA（代入の中の遅延を含む）。遅延とイベント制御（信号と式。`iff` を含む）。`wait (式)`。名前付きイベント（`->`、`->>`、`.triggered`）。`fork` と `join`、`join_any`、`join_none`。`wait fork`、`disable fork`。どのプロセスからでも働くブロックとタスクの `disable`。`assign`・`deassign` と `force`・`release`
 - **関数とタスク：** static と automatic、再帰、`input`・`output`・`inout`・`ref` の引数、引数の既定値、unpacked の構造体と配列の引数、unpacked の構造体と配列を返す関数
+- **クラスのstaticプロパティ：** 非パラメータ化宣言、事前初期化、継承・別名による記憶域共有、staticメソッド。[対応する型と制限](docs/notes/class-static-execution.ja.md)。
 - **文と式：** `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。違反の報告を含む `unique`、`unique0`、`priority`。ループ（`for (;;)` を含む）、`break`、`continue`、`return`。ストリーミング、`inside`、ワイルドカードの等価、代入の演算子と増減を含む演算子。代入のパターン
 - **ストリーミング代入：** 64 ビットを超える変数・固定長配列・構造体への分解。`>>` と `<<` のブロック順、ブロッキング代入と NBA に対応。
 - **アサーション：** 即時の `assert`、`assume`、`cover` と、遅延のもの（`#0`、`final`）
@@ -487,9 +494,10 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 実装済みの形と細かな制限・証拠は
 [機能一覧](docs/P1_SUPPORT.ja.md)と[最新の進捗](docs/notes/p1-icarus-progress.ja.md)を参照してください。
 
-- **クラス実行：** オブジェクト生成、コンストラクタ、プロパティ、メソッド呼び出し、継承、
-  オブジェクトの寿命・回収。プロパティを使わないstatic関数が動く例だけでオブジェクト対応とは
-  扱いません。staticプロパティ初期化の副作用を落とす既知の不具合も残っています。
+- **クラス実行：** オブジェクト生成、コンストラクタ、instanceプロパティ、メソッドdispatch、
+  オブジェクトの継承・寿命・回収、パラメータ付きstatic記憶域。
+  [非パラメータ化staticプロパティ](docs/notes/class-static-execution.ja.md)は事前初期化・
+  継承した記憶域の共有・staticメソッドからの操作に対応しました。オブジェクト対応の認定ではありません。
 - **eventの値と保持object：** scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
   [scalar/固定配列の入力引数](docs/notes/event-input-execution.ja.md)、既定値生成と
   [宣言初期化によるコピー](docs/notes/event-initializer-execution.ja.md)、公開済み命令境界での
@@ -781,7 +789,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 | 用語 | 意味 |
 | --- | --- |
-| 未対応（unsupported） | kirimasim がまだ実装していない構文。位置を示して終了コード 2 で止まり、別の動き方で走らせないことを目指す（分かっている例外：[クラスの静的な初期化](docs/notes/class-execution-investigation.ja.md)） |
+| 未対応（unsupported） | kirimasim がまだ実装していない構文。位置を示して終了コード 2 で止まり、別の動き方で走らせないことを目指す |
 | 機構の行列 | 1 つの機構の軸（置き場所、読み書きの仕方、名前の綴り、器）を組み合わせて、生成器が作るテスト。不具合を直すとき、その形だけでなく隣の形まで確かめるため |
 | 生成器 | 機構の行列とその期待する出力を、書いた規則から作るスクリプト `tools/gen_*.py`。`--check` で、コミットしたファイルが最新かを確かめる |
 | 器 | 文が実行される場所。モジュールの手続き、タスク、関数、fork の枝、interface、generate、package。同じ文はどの器でも同じ意味になる |
@@ -802,11 +810,11 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 ### 今すぐ自分の設計で使えますか？
 
-まだです。開発の初期（P1）で、第 1 層のインタプリタで RTL と簡単なテストベンチを動かせる段階です。どこまで動くかは「できること」と「まだできないこと」の節に書いてあります。試すことはできます。まだ対応していないものは、そのソースの位置を示すエラーで止まるようにしています（分かっている例外：[クラスの静的な初期化](docs/notes/class-execution-investigation.ja.md)）。
+まだです。開発の初期（P1）で、第 1 層のインタプリタで RTL と簡単なテストベンチを動かせる段階です。どこまで動くかは「できること」と「まだできないこと」の節に書いてあります。試すことはできます。まだ対応していないものは、そのソースの位置を示すエラーで止まるようにしています。
 
 ### 対応していない構文を、飛ばさずに止まるのはなぜですか？
 
-分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わることを目指しています（[CLI.ja.md](docs/spec/CLI.ja.md) の 5 節）。分かっている例外は[クラスの静的な初期化](docs/notes/class-execution-investigation.ja.md)です。
+分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わることを目指しています（[CLI.ja.md](docs/spec/CLI.ja.md) の 5 節）。パラメータ付きクラスのstatic記憶域は現在、明示的な未対応診断を出します。
 
 ### Icarus Verilog や Verilator と何が違いますか？
 

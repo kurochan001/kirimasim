@@ -17,6 +17,24 @@ build/dev/src/driver/kirimasim demo.sv
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
 
+## クラスのstaticプロパティ
+
+staticプロパティは、オブジェクトを生成しなくても初期化されます。
+[未使用宣言の独自テスト](../tests/suite/proc/class_static_discovery_unit_unused.sv)を実行します。
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/proc/class_static_discovery_unit_unused.sv
+```
+
+```text
+calls=2 trace=12
+```
+
+2つのstatic初期化がmoduleのinitialより先に実行され、instance fieldの初期化は実行されません。
+修飾名・別名・継承名・staticメソッドから通常の型付き記憶域を操作します。
+[実装と制限](notes/class-static-execution.ja.md)を参照してください。
+パラメータ付きstatic記憶域とオブジェクト実行は残作業です。
+
 ## 固定配列ポート
 
 固定配列のinput/outputと互換netのinoutが、宣言順に要素を対応させて実行できます。

@@ -11,8 +11,11 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-26, published on main at
-[`304e1aec`](notes/automatic-event-main-integration.md), including automatic
+This inventory describes tier 1 as of 2026-10-27 on the local class-static topic,
+not yet merged or pushed. Main baseline `ca72b91f` includes
+[event initialization copies](notes/event-initializer-execution.md); this topic adds
+[non-parameterized class static properties](notes/class-static-execution.md).
+The supported range also includes automatic
 scalar/fixed-array event defaults, retained task/fork extents, published
 instruction-point event collection, fixed-array ports and element-wise net resolution, runtime array reduction/ordering/min/max, multidimensional integral
 binary input, fixed-aggregate bit queries, heap-backed file-monitor lifetime checks, dynamic arrays
@@ -23,7 +26,7 @@ bounded packed selections and mixed named-event waits. The strength-interval
 API and [partial directed MOS source execution](notes/source-mos-execution.md)
 and [source passive switches](notes/source-passive-execution.md) are documented separately;
 registered-net force, partial port identities and full strength formatting remain work. Check `kirimasim --help` for a build's options and
-`--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-26)
+`--version` for its revision. The [current validation and limits](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
 separate the latest comparison from historical measurements.
 
 P1 is in progress. “Supported” below means that the listed forms can be
@@ -42,7 +45,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | --- | --- | --- |
 | Front end | Preprocessing, parsing, type checking and elaboration through unmodified, pinned slang | slang accepting a construct does not make it executable in kirimasim |
 | Hierarchy | Modules; `input`, `output`, `inout`; parameters, `localparam`, `defparam`; generate blocks; instance arrays; hierarchical names | Module `ref` ports and part-select connections to `inout` ports are not implemented |
-| Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces and classes are not implemented |
+| Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces and class objects are not implemented; non-parameterized static properties are described below |
 | Configuration | Source-level configs, top selection and bindings; specparams, including in specify blocks | Library map files, specify module paths and timing checks are not supported |
 | Integral values | Arbitrary-width 2-state and 4-state values, signed and unsigned arithmetic, X/Z propagation and conversions | Practical memory and execution limits still apply |
 | Other scalar values | `real`, `shortreal`, `realtime`, `string`, named events, null `chandle` | Non-null handles need DPI-C, which is not implemented |
@@ -67,16 +70,22 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 `randcase` weights wider than 32 bits are not implemented.
 
-### Known class and static-initialization boundary
+### Class static properties and remaining object boundary
 
-The [46-program investigation](notes/class-execution-investigation.md) runs one
-property-free static function, while class object execution remains unsupported.
-An unused class static-property initializer can lose its side effects and exit
-0 without a diagnostic. This is a known defect; successful execution alone
-does not establish class support. These observations are separate from the
-87-probe comparison and the approved test suite.
-The approved [class runtime contract](notes/class-runtime-proposal.md) specifies
-initialization, dispatch, GC and scheduled access; it is not implemented support.
+[Non-parameterized static properties](notes/class-static-execution.md) use ordinary
+typed slots and pre-time-zero initialization, including unreferenced declarations.
+Qualified/aliased/inherited access, hidden redeclarations and static methods share
+the same lowering paths as other static variables. Supported types include packed
+2/4-state values, real/shortreal, string, event, fixed arrays, supported unpacked
+structures and integral queues/dynamic arrays. Waiting tasks, NBA, sensitivity and
+argument directions retain the existing restrictions of each type.
+
+Parameterized class static storage is explicitly unsupported, including unused
+specializations with initializer effects. Property-free generic static methods
+remain usable. Object construction, handles, fields, dispatch, RNG and lifetime/GC
+remain incomplete. The approved [class runtime contract](notes/class-runtime-proposal.md)
+is broader than this implementation. The [46-program investigation](notes/class-execution-investigation.md)
+retains its dated pre-fix observations; finite checks do not establish full class support.
 
 ### UDP input counts and compilation limits
 
@@ -270,7 +279,7 @@ finishes and runs final procedures. Empty programs cause no automatic finish.
 The [program matrix](../tools/gen_program_execution_matrix.py) covers 124
 suite cases; seven kernel tests and a SIR test cover lifetime, reuse and
 metadata. The CLI checks 15 illegal-input cases and two program identities.
-This does not enable classes, clocking blocks or concurrent assertions.
+This does not enable class objects, clocking blocks or concurrent assertions.
 Program scopes are not yet included in VCD dumping (WAVEFORM 7).
 
 ## Dynamic-container foundation

@@ -27,6 +27,12 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
+The local class-static topic adds [non-parameterized static properties](docs/notes/class-static-execution.md),
+including eager initialization of unused declarations. Its [full local CI](docs/measurements/2026-10-27/class-static-validation.json)
+passes 21/21 steps, with 568 new CTest entries and seven caught compiled faults.
+It is not committed, merged or pushed; class objects and parameterized static
+storage remain work.
+
 The main implementation adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
 in `dfddb94b`; the user's three-case oracle migration is separate in `2da32daa`.
 The three commits are [integrated into main through `f100cd86`](docs/measurements/2026-10-27/event-initializer-main-integration.json). [Full local CI](docs/measurements/2026-10-27/event-initializer-validation.json)
@@ -40,13 +46,12 @@ approval, failure and publication states.
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
 > first execution tier, an interpreter that for now runs SIR directly
-> (compiling SIR to bytecode comes later). Classes,
+> (compiling SIR to bytecode comes later). Class objects,
 > constrained randomization, concurrent assertions, VPI and DPI-C
 > are not there yet. Tier 1 has had performance and memory fixes; C++
 > generation is planned for P3. Unsupported forms generally stop with a
-> positioned diagnostic. A known class static-initialization omission is
-> recorded in the [class investigation](docs/notes/class-execution-investigation.md);
-> successful execution alone does not establish support.
+> positioned diagnostic. [Non-parameterized class static properties](docs/notes/class-static-execution.md)
+> now use shared typed storage with eager initialization; object execution remains work.
 
 At `4c69843`, typed pattern layouts, verification, text and execution are
 connected to the shared renderer. Front's literal/runtime argument bridge
@@ -226,7 +231,9 @@ The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-prop
 adds 59 original design observations, with legality boundaries kept separate.
 
 A separate [46-program class investigation](docs/notes/class-execution-investigation.md)
-records a known static-initialization mismatch. Class execution remains required P1 work.
+records a historical static-initialization mismatch. The
+[non-parameterized static-storage implementation](docs/notes/class-static-execution.md)
+fixes that omission; object execution remains required P1 work.
 A [detailed class runtime amendment](docs/notes/class-runtime-proposal.md)
 adds fourteen original boundary observations and was approved on 2026-10-25.
 
@@ -275,11 +282,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 6,059 | 6,057, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 6,627 | 6,625, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 5,192 (made by 144 generators under `tools/`), tools 160, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 5,755 (made by 145 generators under `tools/`), tools 162, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -594,6 +601,8 @@ their limits, system tasks/functions and implemented command-line options.
   `output`, `inout` and `ref` arguments, default argument values, unpacked
   structures and arrays as arguments, functions returning unpacked
   structures and arrays.
+- **Class static properties:** non-parameterized declarations, eager initialization,
+  inherited/aliased storage and static methods; [supported types and limits](docs/notes/class-static-execution.md).
 - **Statements and expressions:** `if`, `case`, `casez`, `casex`,
   `case inside`, `randcase`; `unique`, `unique0` and `priority` with their violation
   reports; loops (including `for (;;)`), `break`, `continue`, `return`; operators
@@ -663,10 +672,11 @@ a complete mapping of the remaining forms to Icarus 13.0 coverage is
 [feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
 record implemented forms, evidence and limitations.
 
-- **Class execution:** object construction, constructors, properties, method
-  dispatch, inheritance and object lifetime/collection. A working property-free
-  static function does not establish object support; static-property
-  initialization also has a known missing-side-effect case.
+- **Class execution:** object construction, constructors, instance properties,
+  method dispatch, object inheritance/lifetime/collection, and parameterized
+  static storage. [Non-parameterized static properties](docs/notes/class-static-execution.md)
+  now initialize eagerly, share inherited storage and work through static methods.
+  This does not establish object support.
 - **Event values and retained objects:** scalar event-return/conditional expressions
   and automatic structure event fields remain unsupported;
   rebinding, comparisons and event-containing dynamic containers remain work.
@@ -1033,7 +1043,7 @@ the same table with the Japanese terms.
 
 | Term | Meaning |
 | --- | --- |
-| unsupported | A construct kirimasim does not implement yet: it is meant to stop with its position and exit code 2, not run some other way (a known exception: [class static initialization](docs/notes/class-execution-investigation.md)) |
+| unsupported | A construct kirimasim does not implement yet: it is meant to stop with its position and exit code 2, not run some other way |
 | mechanism matrix | A test that a generator makes over the axes of one mechanism (places, ways of reading and writing, spellings, containers), so that a fix covers the neighbors of a bug, not only its own shape |
 | generator | A script `tools/gen_*.py` that writes a mechanism matrix and its expected output from the written rules; `--check` tells whether the committed files are up to date |
 | container | Where a statement runs: a module procedure, a task, a function, a fork branch, an interface, a generate block, a package; a statement means the same in all of them |
@@ -1058,16 +1068,16 @@ Not yet. It is in early development (P1): its first tier, an interpreter,
 runs RTL and simple testbenches, and [What works](#what-works) and
 [What does not work yet](#what-does-not-work-yet) say how far it goes. You
 can try it on your design: what it does not support yet is meant to stop
-the run with an error at its source position (a known exception:
-[class static initialization](docs/notes/class-execution-investigation.md)).
+the run with an error at its source position. The current
+[class-static boundary](docs/notes/class-static-execution.md) is documented separately.
 
 ### Why does it stop at an unsupported construct instead of skipping it?
 
 A simulator that skips what it does not understand prints results that
 look right and are not. kirimasim is meant to report every unsupported
 construct with its position and exit with code 2 before the simulation
-starts ([CLI.md](docs/spec/CLI.md) 5); a known exception is
-[class static initialization](docs/notes/class-execution-investigation.md).
+starts ([CLI.md](docs/spec/CLI.md) 5). Parameterized class static storage
+currently receives an explicit unsupported diagnostic.
 
 ### How does it differ from Icarus Verilog and Verilator?
 

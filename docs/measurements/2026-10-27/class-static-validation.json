@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-26T17:40:19.394170+00:00",
+  "base_commit": "ca72b91fab65c2a5bfb7b9584ad3c3ce5e28632c",
+  "branch": "codex/p1-class-static-storage",
+  "publication_state": "uncommitted local topic; not merged or pushed",
+  "platform": "macOS/arm64",
+  "scope": "non-parameterized class static properties only; P1 remains incomplete",
+  "source_sha256": {
+    "src/front/lower.cpp": "a9132da7ebe6d09b2f4496108006fba9eebaee68f8a12b70ecb883749e2735ed",
+    "src/front/lower_expr.cpp": "bd495199b05324ba8b4b557478d0fd0ad990da50c494a8dca96f65602766f1c3",
+    "src/front/lower_sub.cpp": "80ae697272b917653628e29f4807c9ca68c4cfff74a9b71d5df8c86bf1329d91",
+    "src/front/lowerer.h": "918bb858bfd5fb3130538e82b69f3e69c94b9b73eeb69c6ffbe939c5d182b73a",
+    "tools/gen_class_static_matrix.py": "bbcc44cb8449a682f60e724e3a77b3dc8b19a7d013c5e85af59835e5e8dfab15",
+    "tests/tools/check_class_static_contracts.py": "001e068fcd270a15fcddb22fad5d6c1fc0f1a39f5106e93237390eeb3363861c",
+    "tests/context/context_test.cpp": "752f68270bd4caa143bb56930477c90235d242dab9db168e6b69f582ca592a74",
+    "tests/context/stack_test.cpp": "8edfd2c441d5d055c299aeec9f8543dc15f2b62b6af4d51958e476bfc9fdc21d",
+    "tests/context/CMakeLists.txt": "d477d67a89c475957a8d2658ab280086e5b04489ba11a884a0f2c858cdacbcf9",
+    "tests/context/designs/class_static.sv": "0561cb36384d2591d305e5cac66df7ebec19ee7c97df51c794189d00591a51dd",
+    "tests/tools/CMakeLists.txt": "2a32c4f1508ce3d90caa967853e25e58accae4e627cd435c7958b2bcb1035dd9",
+    "tools/mutants.py": "b3e4d70a75498ec86bcd36695bc279bd5eeefb38303893de0b9fdcb453a57cae"
+  },
+  "full_local_ci": {
+    "passed": 21,
+    "total": 21,
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 1.0,
+        "detail": ""
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 90.8,
+        "detail": ""
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 1.1,
+        "detail": ""
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 4.2,
+        "detail": ""
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 76.2,
+        "detail": ""
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 1.0,
+        "detail": ""
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 6.0,
+        "detail": ""
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 116.3,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 1.1,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 6.6,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 96.8,
+        "detail": ""
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.0,
+        "detail": ""
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.4,
+        "detail": ""
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.2,
+        "detail": ""
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.0,
+        "detail": "no upstream branch: nothing to check"
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.3,
+        "detail": ""
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 0.7,
+        "detail": ""
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 138.8,
+        "detail": ""
+      }
+    ]
+  },
+  "ctest": {
+    "dev": {
+      "total": 6627,
+      "passed": 6625,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "release": {
+      "total": 6628,
+      "passed": 6626,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "asan": {
+      "total": 6627,
+      "passed": 6625,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "ubsan": {
+      "total": 6627,
+      "passed": 6625,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    }
+  },
+  "new_ctest_entries": 568,
+  "generated_source_designs": 563,
+  "compiled_faults": {
+    "built": 7,
+    "caught": 7,
+    "sources_restored_exactly": true,
+    "restored_selected_tests": 571,
+    "record": "class-static-controls.json"
+  },
+  "regressions": {
+    "population": {
+      "passed": 1456,
+      "total": 1466,
+      "failed": 0,
+      "unsupported": 10,
+      "revision": "179c55de9c83846be0b7f1c1c79c456fab1d39bd",
+      "record": "class-static-population.txt"
+    },
+    "svtests": {
+      "passed": 244,
+      "total": 344,
+      "unsupported": 62,
+      "no_previous_pass_lost": true,
+      "record": "class-static-svtests.json"
+    },
+    "original_comparison": {
+      "probes_per_reference": 87,
+      "references": [
+        "Icarus 13.0 (stable) (v13_0)",
+        "Icarus 14.0 (devel) (s20260301-411-gca6b8d376)"
+      ],
+      "gaps_per_reference": 7,
+      "reference_mismatches": [
+        4,
+        7
+      ],
+      "native_status_and_stdout_unchanged": true
+    }
+  },
+  "existing_expectations_and_sv_sources_changed": false,
+  "specifications_changed": false,
+  "dependencies_added": false,
+  "performance_budget_changed": false,
+  "intermediate_validation": "Existing stack_default_thread caught an escaping declaration-discovery stop; the attempt was stopped and the compile boundary corrected with three new thread cases and a seventh compiled fault. A subsequent full run passed all runtime checks and found two clang-tidy findings, fixed with vector capacity reservation and explicit failed CompileResult handling. This record describes the fresh complete final run.",
+  "limits": [
+    "Parameterized class static execution, objects, constructors, instance fields, dispatch, RNG and object GC remain work.",
+    "No wall-clock speed benchmark, Linux run or hosted CI claimed.",
+    "Finite probes and pass rates do not establish P1 parity.",
+    "local_ci expectation step has no upstream; protected existing files were checked directly against base in this uncommitted worktree."
+  ]
+}

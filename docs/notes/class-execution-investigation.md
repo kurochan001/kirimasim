@@ -9,6 +9,10 @@ record a separate exploratory cohort. They do not expand the established
 87-probe comparison, certify class support, or approve new runtime semantics.
 No class implementation or existing test expectation changes accompany this record.
 
+**2026-10-27 follow-up:** [non-parameterized static storage](class-static-execution.md)
+fixes eager initialization and adds positioned generic-static boundaries. The
+observations below retain their original date and pre-fix source.
+
 ## What ran
 
 The compiler/runtime versions are Icarus `13.0 (stable) (v13_0)` and

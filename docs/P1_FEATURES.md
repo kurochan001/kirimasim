@@ -17,6 +17,24 @@ build/dev/src/driver/kirimasim demo.sv
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
 
+## Class static properties
+
+A class needs no constructed object for its static properties. Run the original
+[unused-declaration check](../tests/suite/proc/class_static_discovery_unit_unused.sv):
+
+```sh
+build/dev/src/driver/kirimasim tests/suite/proc/class_static_discovery_unit_unused.sv
+```
+
+```text
+calls=2 trace=12
+```
+
+Its two static initializers run before the module's initial procedure; the
+instance-field initializer does not run. Qualified, alias, inherited and static
+method access use ordinary typed storage. See the [implementation and limits](notes/class-static-execution.md).
+Parameterized static storage and object execution remain work.
+
 ## Fixed-array ports
 
 Fixed-array input/output and compatible net inout ports match elements in

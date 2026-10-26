@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-27",
+  "base_commit": "ca72b91fab65c2a5bfb7b9584ad3c3ce5e28632c",
+  "platform": "macOS/arm64",
+  "scope": "original eager-initialization regressions; finite checks do not establish class parity",
+  "versions": {
+    "before": "kirimasim 0.0.0 (commit 2da32daa19d2), built with AppleClang 21.0.0.21000334",
+    "after": "kirimasim 0.0.0 (commit ca72b91fab65), built with AppleClang 21.0.0.21000334"
+  },
+  "binary_sha256": {
+    "before": "d4d2ff566ca90f120fab76472ee27462493eaa40dceb1624034514d624c82c61",
+    "after": "451761d41574534529fe62b3b7f0c1d626172e68de198801e5b1e3fdea39462c"
+  },
+  "cases": [
+    {
+      "source": "tests/suite/proc/class_static_discovery_unit_unused.sv",
+      "source_sha256": "1f66a4848a261129431cf6452a6f5faa8a3911675832a29d18ec516ba304f2d5",
+      "results": {
+        "before": {
+          "exit": 0,
+          "stdout": "calls=0 trace=0\n",
+          "errors": []
+        },
+        "after": {
+          "exit": 0,
+          "stdout": "calls=2 trace=12\n",
+          "errors": []
+        }
+      }
+    },
+    {
+      "source": "tests/suite/proc/class_static_discovery_package_unused.sv",
+      "source_sha256": "da87677903823d3084559eda797a69425aab164e3f07619b417eede56de6db86",
+      "results": {
+        "before": {
+          "exit": 0,
+          "stdout": "calls=0 trace=0\n",
+          "errors": []
+        },
+        "after": {
+          "exit": 0,
+          "stdout": "calls=2 trace=12\n",
+          "errors": []
+        }
+      }
+    },
+    {
+      "source": "tests/suite/proc/class_static_discovery_module_unused.sv",
+      "source_sha256": "5b2787acaf29e352f6dfc365081c63dc4dd0fc2b8ddb7636c9d983df60a0bfe7",
+      "results": {
+        "before": {
+          "exit": 2,
+          "stdout": "",
+          "errors": [
+            "probe.sv:23:7: error: unsupported: module member 'ClassType' (not implemented yet)",
+            "probe.sv:24:7: error: unsupported: module member 'ClassType' (not implemented yet)"
+          ]
+        },
+        "after": {
+          "exit": 0,
+          "stdout": "calls=2 trace=12\n",
+          "errors": []
+        }
+      }
+    },
+    {
+      "source": "tests/suite/proc/class_static_discovery_anonymous_unused.sv",
+      "source_sha256": "62cf452bb43cdb0aa07aa483c48064eb615a10fef6b6ee682fa3c75ea8452fd6",
+      "results": {
+        "before": {
+          "exit": 0,
+          "stdout": "calls=0 trace=0\n",
+          "errors": []
+        },
+        "after": {
+          "exit": 0,
+          "stdout": "calls=2 trace=12\n",
+          "errors": []
+        }
+      }
+    }
+  ]
+}

@@ -218,6 +218,18 @@ std::vector<Case> cases() {
         {"deferred_small", 4, deferred(kCalls), Expect::RunStops, ""},
         {"deferred_large", 512, deferred(kCalls), Expect::Runs, "depth=9998\n"},
         {"default_thread", 0, function(10), Expect::Either, "depth=10\n"},
+        {"class_static_unit_thread", 0,
+         "class Box;static int data=7;endclass "
+         "module top;initial $display(\"value=%0d\",Box::data);endmodule",
+         Expect::Either, "value=7\n"},
+        {"class_static_package_thread", 0,
+         "package pkg;class Box;static int data=7;endclass endpackage "
+         "module top;initial $display(\"value=%0d\",pkg::Box::data);endmodule",
+         Expect::Either, "value=7\n"},
+        {"class_static_module_thread", 0,
+         "module top;class Box;static int data=7;endclass "
+         "initial $display(\"value=%0d\",Box::data);endmodule",
+         Expect::Either, "value=7\n"},
     };
 }
 

@@ -10,7 +10,10 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
-2026-10-26時点の第1層を、固定集約値へのビット問い合わせ、ヒープを使うファイルモニターの生存期間検査、
+2026-10-27時点のローカルclass-static topicの第1層です。mainへ未取り込み・未pushです。
+mainの基準`ca72b91f`には[event初期化コピー](notes/event-initializer-execution.ja.md)が入り、
+このtopicで[非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)を追加します。
+既存の範囲は、固定集約値へのビット問い合わせ、ヒープを使うファイルモニターの生存期間検査、
 動的配列・キュー、広い三状態マスク、集約値全体のブロッキング時間制御、
 対象の副作用より前の集約値の保持、
 繰り返しイベントのブロッキング代入、
@@ -21,7 +24,7 @@
 [ソースの受動スイッチ](notes/source-passive-execution.ja.md)とともに別に記載します。
 登録 net の force、部分ポートの同一性、完全な強さの書式は残作業です。
 各ビルドのオプションは`kirimasim --help`、コミットは`--version`で確認してください。
-[最新の検証と承認待ちの項目](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-26)で、
+[最新の検証と制限](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-27)で、
 現在の比較と過去の測定を区別しています。
 
 P1 は進行中です。この一覧の「対応」は、記載した形を SIR に変換してインタプリタで
@@ -42,7 +45,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | --- | --- | --- |
 | フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
 | 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | module の `ref` ポート、`inout` ポートへの部分選択の接続は未対応 |
-| 共有する宣言 | package、import、`$unit`、interface、modport | virtual interface とクラスは未対応 |
+| 共有する宣言 | package、import、`$unit`、interface、modport | virtual interface とクラスオブジェクトは未対応。非パラメータ化staticプロパティは下記参照 |
 | 構成 | ソース内の config によるトップ選択と束縛。specify 内を含む specparam | ライブラリ対応表のファイル、specify のモジュールパスとタイミングチェックは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |
 | その他の単一値 | `real`、`shortreal`、`realtime`、`string`、名前付きイベント、null の `chandle` | null 以外のハンドルに必要な DPI-C は未対応 |
@@ -67,15 +70,20 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 
 32 ビットを超える重みの `randcase` は未対応です。
 
-### クラスとstatic初期化の既知の境界
+### クラスのstaticプロパティと残るオブジェクトの境界
 
-[独自46プログラムの調査](notes/class-execution-investigation.ja.md)では、プロパティを使わない
-static関数の1例が動きますが、クラスオブジェクトの実行は未対応です。未使用クラスの
-staticプロパティ初期化の副作用を落とす例は、診断なしに終了コード0で終わります。
-既知の不具合として扱い、実行できたことをクラス対応の根拠にはしません。
-この調査は既存87プローブの比較・承認済みのテストとは別です。
-[詳細なクラス契約案](notes/class-runtime-proposal.ja.md)は初期化・dispatch・GC・時間処理を
-規定する2026-10-25承認済みの契約で、実装済み機能ではありません。
+[非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)は、参照のない宣言も
+含め、通常の型付きslotと時刻0前の初期化を使います。修飾名・別名・継承名・隠蔽した再宣言と
+staticメソッドも、通常のstatic変数と同じ変換経路を使います。packedの2/4値、real/shortreal、
+string、event、固定配列、対応するunpacked構造体、整数要素のqueue/動的配列に対応します。
+待つtask・NBA・感度・各方向の引数は、それぞれの型の既存の制限を引き継ぎます。
+
+パラメータ付きクラスのstatic記憶域は、初期化の副作用を持つ未使用の特殊化も含め、明示的に
+未対応と診断します。プロパティのないgenericのstaticメソッドは利用できます。
+オブジェクト生成・handle・field・dispatch・RNG・寿命/GCは未完です。
+[承認済みのクラス契約](notes/class-runtime-proposal.ja.md)全体の実装ではありません。
+[46プログラムの調査](notes/class-execution-investigation.ja.md)は修正前の日付付き観測として残します。
+有限の検査でクラス全体の対応を認定するものではありません。
 
 ### UDPの入力数とコンパイルの制限
 
@@ -233,7 +241,7 @@ programのinitialと連続代入はreactive側で実行し、呼び出し・fork
 initialを持つ全programが終わるとfinalを実行して終了します。空のprogramだけでは
 暗黙のfinishを行いません。[programの行列](../tools/gen_program_execution_matrix.py)は
 124本、カーネル7本・SIR1本のユニットテストは終了・再利用・メタデータを確認します。
-CLIは15組の不正入力と2インスタンスの識別を確認します。クラス・クロッキングブロック・
+CLIは15組の不正入力と2インスタンスの識別を確認します。クラスオブジェクト・クロッキングブロック・
 並行アサーションの対応は含みません。programのスコープのVCD出力は未対応です（WAVEFORM 7）。
 
 ## 動的コンテナの共通基盤
