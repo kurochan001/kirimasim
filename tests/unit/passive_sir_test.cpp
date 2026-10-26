@@ -307,7 +307,7 @@ TEST(PassiveVm, CapturedConductionTimersKeepDeadlinesAndCarryCurrentData) {
     m.d.processes[0].triggers = {{{control}}, {{marker}}};
     const auto captured = value(0, 0, s::Op::Load, s::u4(1), {O::slot(control)});
     value(0, 0, s::Op::Load, s::u4(1), {O::slot(marker)});
-    m.emit(0, s::Op::StrengthEdgeDelay, {Model::edge(), captured, m.integer(4), m.integer(3)});
+    m.emit(0, s::Op::StrengthEdgeDelay, {Model::edge(), captured, m.integer(8), m.integer(6)});
     m.emit(0, s::Op::Ret);
     m.d.strengthOrigins[0].owner = s::ProcessId{root};
     m.d.processes[root].strengthWrites = {s::StrengthOriginId{0}};
@@ -342,7 +342,7 @@ TEST(PassiveVm, CapturedConductionTimersKeepDeadlinesAndCarryCurrentData) {
     for (const auto& update : updates) {
         if (update.time != time) {
             m.emit(issuer, s::Op::WaitDelay,
-                   {m.integer(update.time - time), O::block(s::BlockId{block + 1})}, block);
+                   {m.integer(2 * (update.time - time)), O::block(s::BlockId{block + 1})}, block);
             ++block;
             time = update.time;
         }
@@ -351,7 +351,9 @@ TEST(PassiveVm, CapturedConductionTimersKeepDeadlinesAndCarryCurrentData) {
     }
     m.emit(issuer, s::Op::Ret, {}, block);
     time = 0;
-    const std::array<unsigned, 7> times{6, 9, 12, 14, 19, 22, 25};
+    // Sample strictly between the two possible swapped turn-off deadlines.
+    // Every observation is outside the correct conduction commit time.
+    const std::array<unsigned, 7> times{12, 18, 24, 27, 38, 44, 50};
     for (unsigned i = 0; i < times.size(); ++i) {
         m.emit(observer, s::Op::WaitDelay,
                {m.integer(times[i] - time), O::block(s::BlockId{i + 1})}, i);
