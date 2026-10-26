@@ -274,11 +274,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,743 | 5,741, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,849 | 5,847, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 4,880 (made by 142 generators under `tools/`), tools 156, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 4,984 (made by 143 generators under `tools/`), tools 158, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -666,11 +666,11 @@ record implemented forms, evidence and limitations.
   dispatch, inheritance and object lifetime/collection. A working property-free
   static function does not establish object support; static-property
   initialization also has a known missing-side-effect case.
-- **Event values and retained objects:** automatic event value formals,
-  initializer aliases and automatic structure event fields remain unsupported;
+- **Event values and retained objects:** initializer aliases and automatic
+  structure event fields remain unsupported;
   rebinding, comparisons and event-containing dynamic containers remain work.
-  Scalar/fixed-array default construction and published instruction collection
-  are implemented; one historical rejection-oracle migration was approved and applied in `4ba6b63d`.
+  [Scalar/fixed-array input arguments](docs/notes/event-input-execution.md),
+  default construction and published instruction collection are implemented; one historical rejection-oracle migration was approved and applied in `4ba6b63d`.
 - **Event-controlled updates and remaining control forms:** event-controlled
   NBA, including repeat counts and retained targets/values; event-controlled
   nonblocking event triggers; named-fork disable and `wait_order`.

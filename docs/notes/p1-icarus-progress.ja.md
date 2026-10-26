@@ -12,6 +12,14 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
+**未公開の作業ブランチ：** [ソースのevent入力](event-input-execution.ja.md)で、scalar/固定配列の
+呼び出し、待機task、保持した子孫、遅延snapshotがobjectを共有します。実行時選択の入力部分配列は
+型付き記憶域の共通コピーを使います。新規104設計、方針境界、コンパイルした4故障が通り、
+全local CIは21/21項目成功です。dev/ASan/UBSanは5,849本中5,847成功、releaseは
+5,850本中5,848成功で、失敗0・既知skip 2件です。母集団・sv-tests・両87 probe比較も
+再実行して以前の件数と成功を維持しました。作業ソースのdigestと制限はリンク先に残し、
+既存期待値と仕様は変更していません。
+
 **main の公開済み実装：** `e909f022`で[automatic eventの生成と命令境界回収](instruction-event-execution.ja.md)を
 追加しました。native/SSA/転送を公開し、宣言ごとにscalar/固定配列のobjectを生成します。
 新規ソース176件、SIR32設計を含むVM12テスト、registry1テストと12故障の検出が通りました。

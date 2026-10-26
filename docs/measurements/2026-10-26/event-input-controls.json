@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-26",
+  "source": "src/front/lower_sub.cpp",
+  "sha256": "f30f88cbedb30287455335162b0731beafc7fcd48b72098b8a9409a88320e494",
+  "controls": [
+    {
+      "name": "front event input: shared object becomes null",
+      "compiled": true,
+      "caught": true,
+      "failing_tests": [
+        "suite/sched/event_input_deferred_final",
+        "suite/sched/event_input_deferred_observed",
+        "suite/sched/event_input_recursive_gc",
+        "suite/sched/event_input_scalar_module_automatic_function_constant_select",
+        "suite/sched/event_input_scalar_module_automatic_function_frame",
+        "suite/sched/event_input_scalar_module_automatic_function_frame_select",
+        "suite/sched/event_input_scalar_module_automatic_function_hierarchical",
+        "suite/sched/event_input_scalar_module_automatic_function_slot",
+        "suite/sched/event_input_scalar_module_automatic_function_slot_select",
+        "suite/sched/event_input_scalar_module_automatic_task_constant_select",
+        "suite/sched/event_input_scalar_module_automatic_task_frame",
+        "suite/sched/event_input_scalar_module_automatic_task_frame_select",
+        "suite/sched/event_input_scalar_module_automatic_task_hierarchical",
+        "suite/sched/event_input_scalar_module_automatic_task_slot",
+        "suite/sched/event_input_scalar_module_automatic_task_slot_select",
+        "suite/sched/event_input_scalar_module_static_function_frame",
+        "suite/sched/event_input_scalar_module_static_function_frame_select",
+        "suite/sched/event_input_scalar_module_static_function_slot_select",
+        "suite/sched/event_input_scalar_module_static_task_frame",
+        "suite/sched/event_input_scalar_module_static_task_frame_select",
+        "suite/sched/event_input_scalar_module_static_task_slot_select",
+        "suite/sched/event_input_scalar_program_automatic_function_constant_select",
+        "suite/sched/event_input_scalar_program_automatic_function_frame",
+        "suite/sched/event_input_scalar_program_automatic_function_frame_select",
+        "suite/sched/event_input_scalar_program_automatic_function_slot",
+        "suite/sched/event_input_scalar_program_automatic_function_slot_select",
+        "suite/sched/event_input_scalar_program_automatic_task_constant_select",
+        "suite/sched/event_input_scalar_program_automatic_task_frame",
+        "suite/sched/event_input_scalar_program_automatic_task_frame_select",
+        "suite/sched/event_input_scalar_program_automatic_task_slot",
+        "suite/sched/event_input_scalar_program_automatic_task_slot_select",
+        "suite/sched/event_input_scalar_program_static_function_frame",
+        "suite/sched/event_input_scalar_program_static_function_frame_select",
+        "suite/sched/event_input_scalar_program_static_function_slot_select",
+        "suite/sched/event_input_scalar_program_static_task_frame",
+        "suite/sched/event_input_scalar_program_static_task_frame_select",
+        "suite/sched/event_input_scalar_program_static_task_slot_select",
+        "suite/sched/event_input_wait_module_mixed_active",
+        "suite/sched/event_input_wait_module_mixed_nba",
+        "suite/sched/event_input_wait_module_named_active",
+        "suite/sched/event_input_wait_module_named_nba",
+        "suite/sched/event_input_wait_module_triggered_active",
+        "suite/sched/event_input_wait_module_triggered_nba",
+        "suite/sched/event_input_wait_program_mixed_active",
+        "suite/sched/event_input_wait_program_mixed_nba",
+        "suite/sched/event_input_wait_program_named_active",
+        "suite/sched/event_input_wait_program_named_nba",
+        "suite/sched/event_input_wait_program_triggered_active",
+        "suite/sched/event_input_wait_program_triggered_nba"
+      ]
+    },
+    {
+      "name": "front event input: actual is evaluated twice",
+      "compiled": true,
+      "caught": true,
+      "failing_tests": [
+        "suite/sched/event_input_scalar_module_automatic_function_frame_select",
+        "suite/sched/event_input_scalar_module_automatic_function_slot_select",
+        "suite/sched/event_input_scalar_module_automatic_task_frame_select",
+        "suite/sched/event_input_scalar_module_automatic_task_slot_select",
+        "suite/sched/event_input_scalar_module_static_function_frame_select",
+        "suite/sched/event_input_scalar_module_static_function_slot_select",
+        "suite/sched/event_input_scalar_module_static_task_frame_select",
+        "suite/sched/event_input_scalar_module_static_task_slot_select",
+        "suite/sched/event_input_scalar_program_automatic_function_frame_select",
+        "suite/sched/event_input_scalar_program_automatic_function_slot_select",
+        "suite/sched/event_input_scalar_program_automatic_task_frame_select",
+        "suite/sched/event_input_scalar_program_automatic_task_slot_select",
+        "suite/sched/event_input_scalar_program_static_function_frame_select",
+        "suite/sched/event_input_scalar_program_static_function_slot_select",
+        "suite/sched/event_input_scalar_program_static_task_frame_select",
+        "suite/sched/event_input_scalar_program_static_task_slot_select"
+      ]
+    },
+    {
+      "name": "front event input: null constructs an event",
+      "compiled": true,
+      "caught": true,
+      "failing_tests": [
+        "suite/sched/event_input_null"
+      ]
+    },
+    {
+      "name": "front event input: deferred snapshot is ignored",
+      "compiled": true,
+      "caught": true,
+      "failing_tests": [
+        "suite/sched/event_input_deferred_final",
+        "suite/sched/event_input_deferred_observed"
+      ]
+    }
+  ],
+  "restored_tests": 106,
+  "restored_source_matches": true
+}

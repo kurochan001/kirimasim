@@ -92,8 +92,9 @@ checked=256 errors=0
 
 The collector publishes complete typed roots before physical event-row growth;
 container-heap and final-cleanup timing are unchanged. See [execution and
-validation](notes/instruction-event-execution.md). Automatic event value formals,
-initializer aliases and automatic structure event fields remain unsupported;
+validation](notes/instruction-event-execution.md). [Event input arguments](notes/event-input-execution.md)
+share the same object through synchronous/waiting calls, fixed arrays, recursion
+and deferred actions. Initializer aliases and automatic structure event fields remain unsupported;
 rebinding, comparisons and event-containing dynamic containers are not enabled.
 
 ## Wide L/H gate resolution

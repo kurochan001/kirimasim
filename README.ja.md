@@ -216,11 +216,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-26、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,743 | 5,741、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,849 | 5,847、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 4,880（`tools/` の 142 個の生成器が作る）、道具 156、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 4,984（`tools/` の 143 個の生成器が作る）、道具 158、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -487,9 +487,9 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 - **クラス実行：** オブジェクト生成、コンストラクタ、プロパティ、メソッド呼び出し、継承、
   オブジェクトの寿命・回収。プロパティを使わないstatic関数が動く例だけでオブジェクト対応とは
   扱いません。staticプロパティ初期化の副作用を落とす既知の不具合も残っています。
-- **eventの値と保持object：** automatic eventの値仮引数、初期化子の別名、automatic
-  structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
-  scalar/固定配列の既定値生成と公開済み命令境界での回収は実装し、過去の拒否期待値1件の
+- **eventの値と保持object：** 初期化子の別名、automatic structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
+  [scalar/固定配列の入力引数](docs/notes/event-input-execution.ja.md)、既定値生成と
+  公開済み命令境界での回収は実装し、過去の拒否期待値1件の
   別移行は承認後に`4ba6b63d`で適用しました。
 - **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
   イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。

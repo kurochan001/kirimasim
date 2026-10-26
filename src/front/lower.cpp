@@ -724,9 +724,10 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
         (!dims.empty() && unpackedStruct(et) != nullptr))
         unsupported(sl, "automatic variable of type '" + v.getType().toString() + "'");
     const sir::Type t = typeOf(et, sl);
-    // Declaration defaults construct their objects at each execution. Event
-    // formal transport remains separate from automatic declarations.
-    if (t.kind == sir::TypeKind::Event && v.kind == ast::SymbolKind::FormalArgument)
+    // Input events share their actual's object. Copyback would rebind an
+    // existing event variable and remains outside the approved contract.
+    if (t.kind == sir::TypeKind::Event && v.kind == ast::SymbolKind::FormalArgument &&
+        v.as<ast::FormalArgumentSymbol>().direction != ast::ArgumentDirection::In)
         unsupported(sl, "automatic event argument");
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
     frameVars().push_back({std::string(v.name), t, sir::kNone, std::move(dims), {}});

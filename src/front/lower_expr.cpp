@@ -824,7 +824,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     checkStack(sl);
     if (!substitutions_.empty())
         if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
-    // Assigning, comparing and printing events come with their handles (P4).
+    // General event value expressions need a separate value contract.
     if (e.type->isEvent()) unsupported(sl, "event used as a value");
     // slang's constant, unless something in the expression is not pure.
     // The walks over the whole expression come last, only for a constant:
@@ -2669,9 +2669,12 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
     if (e.kind == ast::ExpressionKind::ElementSelect) {
         const auto& es = e.as<ast::ElementSelectExpression>();
         if (!es.value().type->getCanonicalType().isUnpackedArray()) return std::nullopt;
-        std::optional<ArrayTarget> t = arrayTarget(es.value());
         const std::optional<std::int64_t> i = constInt(es.selector());
-        if (!t || !i) return std::nullopt;
+        // Discover a runtime prefix before lowering its base: the shared
+        // storage path must evaluate that base only once.
+        if (!i) return std::nullopt;
+        std::optional<ArrayTarget> t = arrayTarget(es.value());
+        if (!t) return std::nullopt;
         t->indices.push_back(*i);
         return t;
     }

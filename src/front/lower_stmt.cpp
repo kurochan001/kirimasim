@@ -1159,7 +1159,11 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
                 continue;
             }
             passed.push_back(a);
-            values.push_back(lowerExpr(*a));
+            if (!call->isSystemCall() && a->type->isEvent()) {
+                values.push_back(lowerInput(*a, Type{sir::TypeKind::Event, 0}));
+            } else {
+                values.push_back(lowerExpr(*a));
+            }
         }
     }
     const std::string owner = b_.isSub ? design_.subroutine(b_.sub).name : proc().name;

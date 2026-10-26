@@ -86,7 +86,8 @@ checked=256 errors=0
 
 collectorは物理event行を増やす前に全typed rootを公開し、コンテナheapとfinalの回収時点は
 保ちます。[実行と検証](notes/instruction-event-execution.ja.md)を参照してください。
-automatic eventの値仮引数・初期化子の別名・automatic structのevent fieldは未対応で、
+[eventの入力引数](notes/event-input-execution.ja.md)は、同期/待機呼び出し・固定配列・再帰・
+遅延アクションで同じobjectを共有します。初期化子の別名・automatic structのevent fieldは未対応で、
 再関連付け・比較・eventを含む動的コンテナも有効にしていません。
 
 ## 広いネットでL/Hを解決する

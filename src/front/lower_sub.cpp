@@ -373,7 +373,14 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     // again (4.9.7: an input is evaluated once, at the call).
     if (a)
         copyArray(ArrayBase{Place::Home::Frame, fv}, {}, baseOf(*a), a->indices, stores, sl);
-    else
+    else if (actual.kind == ast::ExpressionKind::ElementSelect) {
+        const auto src = storageOf(actual, sl);
+        if (!src) unsupported(sl, "an input array argument of this actual");
+        Storage dst;
+        dst.frame = true;
+        dst.var = fv;
+        copyArrayStorage(dst, *src, stores, sl);
+    } else
         assignArray(ArrayBase{Place::Home::Frame, fv}, {}, actual, stores, sl);
     flushStores(stores, false, sl);
     return Operand::frame(fv);
@@ -450,6 +457,26 @@ std::optional<Lowerer::LaterWork> Lowerer::laterWork(const ast::SubroutineSymbol
     f.visit(visitor);  // its declarations and its body
     laterWork_[&f] = found;
     return found;
+}
+
+Val Lowerer::lowerInput(const ast::Expression& e, Type type) {
+    const auto sl = e.sourceRange.start();
+    if (type.kind != sir::TypeKind::Event) return copyValue(lowerExpr(e), type, sl);
+    checkStack(sl);
+    if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
+    // This entry is confined to input copy-in (automatic-capture contract 5,
+    // SIR_SPEC 8). Do not enable general event expressions or rebinding.
+    if (e.kind == ast::ExpressionKind::Conversion) {
+        const auto& operand = e.as<ast::ConversionExpression>().operand();
+        if (operand.type->isEvent() || operand.type->isNull()) return lowerInput(operand, type);
+    }
+    if (e.kind == ast::ExpressionKind::NullLiteral) return constant(type, 0);
+    if (e.type->isEvent()) {
+        const auto operand = eventOperand(e, sl);
+        return operand.kind == Operand::Kind::Slot ? emit(Op::Load, type, {operand}, sl)
+                                                   : Val{operand, type};
+    }
+    unsupported(sl, "event input of this expression");
 }
 
 Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) {
@@ -543,7 +570,10 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             continue;
         }
         if (prm.dir == sir::Direction::Input) {
-            ops.push_back(copyValue(lowerExpr(*args[i]), prm.type, sl).op);
+            ops.push_back((prm.type.kind == sir::TypeKind::Event
+                               ? lowerInput(*args[i], prm.type)
+                               : copyValue(lowerExpr(*args[i]), prm.type, sl))
+                              .op);
             continue;
         }
         if (sir::isContainer(prm.type)) {
