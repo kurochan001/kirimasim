@@ -3,6 +3,7 @@
 
 #include "kirimasim/vm/vm.h"
 
+#include "event_temporaries.h"
 #include "frame_layout.h"
 #include "frame_value.h"
 #include "scoped_reference.h"
@@ -734,11 +735,13 @@ public:
         // The temps of a body, one chunk each when narrow.
         tempOff_.resize(bodies);
         tempTotal_.assign(bodies, 0);
+        eventTempOff_.resize(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p) {
             std::uint32_t at = 0;
             tempOff_[p].resize(tempTypes_[p].size());
             for (std::size_t t = 0; t < tempTypes_[p].size(); ++t) {
                 tempOff_[p][t] = at;
+                if (tempTypes_[p][t].kind == sir::TypeKind::Event) eventTempOff_[p].push_back(at);
                 const auto words = chunksOf(tempTypes_[p][t]);
                 if (words > UINT32_MAX - at) throw std::length_error("temporary word capacity");
                 at += words;
@@ -1112,6 +1115,8 @@ private:
     /// The temps of the running body and of the calls below it. Temps never
     /// live across a wait (SIR_SPEC.md 5.1), so a process starts at 0.
     std::vector<W4> tempStack_;
+    std::vector<std::vector<std::uint32_t>> eventTempOff_;
+    detail::EventTemporaries eventTemps_{tempStack_};
     /// The body being run: a process or a called subroutine, its frame
     /// variables and where its temps start.
     struct Act {
@@ -2744,10 +2749,11 @@ private:
             return;
         }
         if (eventsReady_) {
-            // All live SSA is gone at the existing region/slot boundary;
-            // waits and pending operations own their concrete targets.
-            const kernel::ManagedEventRootProvider providers[] = {{this, &enumerateEvents},
-                                                                  activations_.eventRootProvider()};
+            // The SSA provider is empty at the existing region/slot boundary.
+            // Publishing its regions does not enable instruction collection;
+            // transfers and every other holder must also be covered first.
+            const kernel::ManagedEventRootProvider providers[] = {
+                {this, &enumerateEvents}, activations_.eventRootProvider(), eventTemps_.provider()};
             events_.rootsChanged();
             const auto status = events_.collect(providers);
             if (status == kernel::ManagedEventError::ResourceLimit) {
@@ -3073,6 +3079,8 @@ private:
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
+        detail::EventTemporaries::Region eventRegion{eventTemps_, act_.base, bodyTemps(act_.body),
+                                                     eventTempOff_[act_.body.index()]};
         // A confirmed report can run after its originating process ended.
         // Stop only when this execution is newly canceled by the kernel.
         const bool wasStopped = sched_.programStopped(f.kernelId);
