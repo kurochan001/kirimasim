@@ -171,6 +171,9 @@ not complete P1.
   the shared kernel, strict slang diagnostics and existing test expectations.
 - Meet all existing pass-rate and reference-value fuzzing gates below.
 
+See [remaining P1 functionality](#remaining-p1-functionality-2026-10-26) for
+missing features and limitations of partial support.
+
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
 inventory has 87 original probes. At the fixed-array-port checkpoint,
@@ -633,13 +636,75 @@ their limits, system tasks/functions and implemented command-line options.
 
 ### What does not work yet
 
-| Not yet | Scope and status |
-| --- | --- |
-| FST, `%p`, resolved-strength `%v`, the unsupported `$fread` shapes listed in P1_SUPPORT | P1 work remains |
-| Dynamic arrays and queues | P1, partial language execution; constructors, copies, elements, methods, refs, delays, explicit waits, dynamic foreach and first-dimension queries tested; remaining forms in P1_SUPPORT |
-| Required Icarus-supported class, VPI, switch-level, specify and timing mechanisms, and other comparison gaps | P1 under the approved scope; see the measured inventory |
-| Broader UVM, randomization/constraints, covergroups, concurrent assertions and sampled-value functions, clocking, virtual interfaces, `let`, DPI-C | Unimplemented; existing later-phase plans apply beyond required Icarus coverage |
-| Tier 2 C++ generation and further RTL speed optimizations | P3 |
+#### Remaining P1 functionality (2026-10-26)
+
+The following are major missing mechanisms and limitations of partial support.
+The required subset follows the approved [P1 scope](docs/spec/P1_SCOPE.md);
+a complete mapping of the remaining forms to Icarus 13.0 coverage is
+**not confirmed**. Extend the original comparison probes to establish that mapping. The detailed
+[feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
+record implemented forms, evidence and limitations.
+
+- **Class execution:** object construction, constructors, properties, method
+  dispatch, inheritance and object lifetime/collection. A working property-free
+  static function does not establish object support; static-property
+  initialization also has a known missing-side-effect case.
+- **Automatic events and retained values:** source-level automatic scalar/array
+  event construction, complete roots for active fields and SSA values, and
+  ownership of arguments, returns and copyback values across callbacks. The
+  typed event registry, kernel operations and SSA-region component exist;
+  instruction-boundary collection and source construction remain gated on the
+  complete publication and lifetime checks.
+- **Event-controlled updates and remaining control forms:** event-controlled
+  NBA, including repeat counts and retained targets/values; event-controlled
+  nonblocking event triggers; named-fork disable and `wait_order`.
+- **Dynamic data and array methods:** associative arrays; remaining dynamic
+  array/queue forms such as queue-slice assignment, conditional container
+  expressions, additional search/shuffle methods, mixed/omitted-index `foreach`,
+  nested/runtime dimension queries and unsupported aggregate/class/event element
+  representations. Container-dependent implicit sensitivity and effectful or
+  unverified-pure ordering keys also remain unsupported. Existing construction,
+  copies, refs, explicit waits, reductions, ordering and min/max remain partial
+  implemented support.
+- **Nets, switches and connectivity:** complete physical identity for remaining
+  partial ports/aliases, force/release on registered strength nets and the
+  unsupported scalar port-net forms, complete strength formatting, delayed net
+  declarations without assignments, and remaining charge-storage/switch forms.
+  All six directed MOS and all six passive switch kinds already execute for
+  the documented static terminals; those kinds are not wholly unimplemented.
+- **Specify and timing:** module paths, timing checks and their required
+  interactions. Specparams and ordinary procedural/gate delays already work.
+  SDF and other annotation interfaces still need the separate inventory below.
+- **VPI and integration:** the runtime VPI interface and the Icarus-supported
+  interfaces required for integration, including the foundation used by cocotb.
+- **Remaining aggregate and selection forms:** unsupported structure refs and
+  array arguments/copyback slices, runtime-position packed parents, streaming
+  `with`, string targets and nested streaming assignments. Details and legal
+  boundaries are listed in P1_SUPPORT.
+- **UDP coverage and scaling:** unconnected UDP ports and the dense-table source
+  compilation boundary in pinned slang. Wider UDP evaluation is implemented;
+  passing the existing wide-input cases does not resolve dense-table compilation.
+- **Waveforms, formatting and input:** FST output (dependencies prepared;
+  backend pending), program-scope VCD output, source `%p`, resolved-strength
+  `%v`, and the remaining `$fread`/scan and packed-format forms in P1_SUPPORT.
+- **Remaining specified CLI behavior:** options such as `--cond-x`,
+  `--init-values` and `--max-procs` are not currently implemented; the executable's
+  `--help` is the authority for accepted options.
+
+Completing P1 also requires wider mechanism/interaction validation against
+Icarus, the existing regression/fuzzing gates and resource/lifetime checks.
+The fixed test population's pass rate and the 87 comparison probes do not
+measure a percentage of whole-feature completion. The two obsolete tran-rejection
+checks still await the [separate expectation migration](docs/notes/passive-expectation-migration.md);
+that review is distinct from implementing the missing features above.
+
+#### Work in other phases
+
+P2 finalizes SIR v1; P3 implements tier 2 C++ generation and further RTL speed
+optimizations. Broader UVM, randomization/constraints, covergroups, concurrent
+assertions and sampled-value functions, clocking, virtual interfaces, `let` and
+DPI-C remain unimplemented. Their later-phase plans apply beyond the required
+Icarus coverage; P4/P5 labels do not defer any subset required by P1_SCOPE.
 
 ### Other unsupported forms and comparison work
 
