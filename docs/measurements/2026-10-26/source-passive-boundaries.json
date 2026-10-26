@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-26",
+  "scope": "six original positioned rejection observations; no diagnostic loosening",
+  "cases": [
+    {
+      "name": "variable_terminal",
+      "source": "module top;\nlogic a,b;tran t(a,b);\nendmodule\n",
+      "exit": 2,
+      "stdout": "",
+      "errors": [
+        "probe.sv:2:18: error: 'a' cannot be connected to 'inout' port (only nets are allowed)",
+        "probe.sv:2:20: error: 'b' cannot be connected to 'inout' port (only nets are allowed)"
+      ]
+    },
+    {
+      "name": "dynamic_terminal",
+      "source": "module top;\nwire[8:0]a,b;logic i;tran t(a[i],b[0]);\nendmodule\n",
+      "exit": 2,
+      "stdout": "",
+      "errors": [
+        "probe.sv:2:31: error: reference to non-constant variable 'i' is not allowed in a constant expression"
+      ]
+    },
+    {
+      "name": "two_state_net",
+      "source": "module top;\nwire bit a,b;tran t(a,b);\nendmodule\n",
+      "exit": 2,
+      "stdout": "",
+      "errors": [
+        "probe.sv:2:10: error: 'bit' is not a valid type for a net; only 4-state integral types and unpacked structs/unions and arrays of such types are allowed",
+        "probe.sv:2:12: error: 'bit' is not a valid type for a net; only 4-state integral types and unpacked structs/unions and arrays of such types are allowed"
+      ]
+    },
+    {
+      "name": "uwire_terminal",
+      "source": "module top;\nuwire a,b;assign a=0;tran t(a,b);\nendmodule\n",
+      "exit": 2,
+      "stdout": "",
+      "errors": [
+        "probe.sv:2:29: error: 'uwire' net 'a' cannot be connected to 'inout' port",
+        "probe.sv:2:31: error: 'uwire' net 'b' cannot be connected to 'inout' port"
+      ]
+    },
+    {
+      "name": "array_width_mismatch",
+      "source": "module top;\nwire[8:0]a;wire[7:0]b;tran t[7:0](a,b);\nendmodule\n",
+      "exit": 2,
+      "stdout": "",
+      "errors": [
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)",
+        "probe.sv:2:28: error: unsupported: a passive terminal width that does not match its primitive array (not implemented yet)"
+      ]
+    },
+    {
+      "name": "registered_force",
+      "source": "module top;\nwire a,b;assign a=1'b1;tran t(a,b);initial force b=0;\nendmodule\n",
+      "exit": 2,
+      "stdout": "",
+      "errors": [
+        "probe.sv:2:29: error: unsupported: force/release of a MOS strength net (not implemented yet)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-26",
+  "scope": "eight original compiled faults plus one reused side-mask fault; actual source/native snapshot tests, not anchor self-checks",
+  "controls": [
+    {
+      "name": "source passive: control sensitivity discarded",
+      "source": "src/front/lower.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_tranif0_weak_module"
+      ]
+    },
+    {
+      "name": "source passive: array bit order reversed",
+      "source": "src/front/lower.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_array_tranif1_129_controls"
+      ]
+    },
+    {
+      "name": "source passive: concatenation walks from the wrong side",
+      "source": "src/front/lower.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_mapping_tranif1_concat"
+      ]
+    },
+    {
+      "name": "source passive: static unpacked element lost",
+      "source": "src/front/lower.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_static_terminal_unpacked"
+      ]
+    },
+    {
+      "name": "source passive: turn-on delay discarded",
+      "source": "src/front/lower.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_delayed_conduction_rtranif1"
+      ]
+    },
+    {
+      "name": "source passive: physical components are not merged",
+      "source": "src/front/lower_strength.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_array_tran_129",
+        "suite/nets/source_passive_array_tran_65",
+        "suite/nets/source_passive_array_tran_9",
+        "suite/nets/source_passive_array_tranif0_129",
+        "suite/nets/source_passive_array_tranif0_65",
+        "suite/nets/source_passive_delayed_conduction_rtranif1"
+      ]
+    },
+    {
+      "name": "source passive: only the first independent island is solved",
+      "source": "src/kernel/strength_network.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_array_tran_129",
+        "suite/nets/source_passive_array_tran_65",
+        "suite/nets/source_passive_array_tran_9",
+        "suite/nets/source_passive_array_tranif0_129",
+        "suite/nets/source_passive_array_tranif0_65"
+      ]
+    },
+    {
+      "name": "source passive: later components reuse the first island table",
+      "source": "src/kernel/strength_network.cpp",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/nets/source_passive_tranif0_weak_module"
+      ]
+    },
+    {
+      "name": "existing source MOS fault: imported highz side mask omitted",
+      "source": "src/front/lower_strength.cpp",
+      "compiled": true,
+      "caught": true,
+      "failed_tests": 4,
+      "failure": "standard output differs: x replaces known one-sided values",
+      "restored_tests": 4,
+      "restored_exit": 0,
+      "source_restored_sha256": "fd1fb6410de4ee7b856da26e78618ac6fe9e9e75eff9f3095d600f3067f39c37",
+      "harness_note": "Initial collection assertion looked for stdout instead of standard output; verified the saved four failures and restored baseline explicitly."
+    }
+  ],
+  "runtime_source_restored": true,
+  "source_sha256": {
+    "src/front/lower.cpp": "5facc6961096bcd28806da723096927cf8534fc292496222bc6aaf8bbadf204f",
+    "src/front/lower_strength.cpp": "fd1fb6410de4ee7b856da26e78618ac6fe9e9e75eff9f3095d600f3067f39c37",
+    "src/kernel/strength_network.cpp": "54c39503f4843ef37ed430f0127321c0b0bb6662d35e4f7af50bcc97f5e5e3f7"
+  },
+  "baseline_exit": 0,
+  "restored_exit": 0
+}

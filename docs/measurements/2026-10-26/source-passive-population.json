@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-26",
+  "tests_revision": "a733b8381c01ea48f0b4772d71275b7db0c79609",
+  "fixed_list_original_revision": "179c55de9c83",
+  "fixed_list_count": 1466,
+  "selected_paths_clean_at_current_revision": true,
+  "selected_source_expected_paths_changed_since_original_selection": [
+    "tests/ch6/test_enum_method_edge.sv",
+    "tests/ch6/test_enum_methods_name_num.sv",
+    "tests/ch6/test_enum_methods_navigation.sv"
+  ],
+  "selected_inputs_manifest_sha256": "94dfc904ce955be3409f4aca61445e3d31713b7667399abbc3de5f8b93703f62",
+  "total": 1466,
+  "passed": 1456,
+  "failed": 0,
+  "unsupported": 10,
+  "rate_percent": 99.3,
+  "native_implementation": "76203da2",
+  "scope": "same fixed P1 path list, current clean selected inputs at the recorded tests revision; not a whole-feature coverage claim",
+  "chapter28_subset": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0,
+    "unsupported": 0
+  }
+}

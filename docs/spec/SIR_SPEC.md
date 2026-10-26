@@ -811,3 +811,10 @@ format-0 text and shared-kernel execution are recorded in
 [passive SIR execution](../notes/passive-sir-execution.md). This connects the
 existing approved contract; it does not enable source switch lowering or
 freeze the P2 text grammar.
+
+Source integration checkpoint (2026-10-26): [passive source execution](../notes/source-passive-execution.md)
+connects the approved scalar edges to static terminals, arrays, controls and
+conduction delays. Independent potential graphs are solved separately before
+the existing complete component publication. This is implementation of the
+approved MOS/switch contract, with source force/retained ports/formatting still
+incomplete; no format-1 or C ABI change is selected.

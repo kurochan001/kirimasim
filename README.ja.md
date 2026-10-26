@@ -52,9 +52,11 @@ frontの定数・runtime書式引数への接続は残っているため、ソ�
 [共通の強さの解決処理](docs/notes/strength-range-foundation.ja.md)は、値への射影前の
 完全な区間を保持できるようにし、全区間ペアで検査しました。
 [方向付きMOSのソース実行](docs/notes/source-mos-execution.ja.md)は通常driverを取り込み、
-制御を別に捕捉します。部分対応であり、受動接続、登録netのforce、完全な強さの書式は残作業です。
-[受動網のカーネル実行](docs/notes/passive-network-execution.ja.md)で、物理originの経路と
-不確定な導通のworldを解決します。SIR・ソースとの接続は残作業です。
+制御を別に捕捉します。部分対応であり、登録 net の force、部分・非結合ポート、完全な強さの
+書式は残作業です。[ソースの受動実行](docs/notes/source-passive-execution.ja.md)では、静的な
+bit・要素・連結の対応とプリミティブ配列を含む双方向 6 種を共有網へ接続しました。
+独立した不定網でも公開は一括のままです。独自 143 設計が通り、古い tran 拒否期待は
+[別の承認](docs/notes/passive-expectation-migration.ja.md)後の移行待ちです。
 
 広い三状態ゲートでも、語をまたぐL/Hマスクの両半分を保持します。新規73ソースは
 Icarus 13.0・開発版とすべて一致しました。[対応範囲と検証](docs/notes/wide-gate-strength.ja.md)を
@@ -179,18 +181,18 @@ dev/ASan/UBSanは4,179件中4,177件、releaseは4,180件中4,178件成功、失
 | 条件 | 今 | 達成 |
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト（固定したコミット、手書きのテスト 344 本）で、Linux と macOS のそれぞれで Icarus Verilog 以上 | Linux：kirimasim 234 本、Icarus Verilog 211 本。macOS：kirimasim 244 本、Icarus Verilog 210 本（14.0 devel、04cc493。合格条件で使う版を、それぞれでビルドしたもの） | 達成 |
-| 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,451 本が通る（99.0%）。失敗は 0 本で、15 本は後で作る構文で止まる | 達成 |
+| 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,456 本が通る（99.3%）。失敗は 0 本で、10 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P4 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
 | 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 87 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 8 本、参照の不一致が 4 本（14.0 devel とでは 8 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
 
-kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、母集団は 2026-10-25、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
+kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、母集団は 2026-10-26、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
 | このリポジトリのテスト（CTest、dev の構成） | 5,536 | 5,532、2 本は飛ばす、2 本は失敗 | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
-| 自前のテストスイートの P1 の母集団 | 1,466 | 1,451 | 1,274 | 1,329 |
+| 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
 このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）618、`tests/suite/` 4,704（`tools/` の 141 個の生成器が作る）、道具 155、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
@@ -311,6 +313,12 @@ P1 の合格条件は、sv-tests が固定している Icarus の版（04cc493�
 <summary>自前のテストスイートの、IEEE 1800-2023 の章ごとの内訳</summary>
 
 TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で、一覧は `tests/gates/p1_population.txt` にあります。テストスイート自体は [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。最後の列は kirimasim が止まる所です。kirimasim が失敗するテストはありません。
+
+この章別表は native の 2026-10-25 の記録を保っています。
+[2026-10-26 の再計測](docs/measurements/2026-10-26/source-passive-population.json)では
+1,466 本中 1,456 成功、失敗ゼロ、未対応 10 本で、28 章の部分集合は 22 本すべて通りました。
+固定のパス一覧は変更せず、選択入力は tests 版 `a733b838` で未変更の状態です。
+元の選択時からソース 3 ファイルが変わっています。他シミュレータの列は過去の計測を保持します。
 
 | 章 | 本数 | kirimasim | Icarus | Verilator | kirimasim が止まる所 |
 | --- | --- | --- | --- | --- | --- |

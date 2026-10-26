@@ -1,0 +1,45 @@
+--- a/tools/gen_unsupported_matrix.py
++++ b/tools/gen_unsupported_matrix.py
+@@ -46,5 +46,5 @@
+ # Acceptance, stdout and diagnostics are checked by the CLI runner.
+ ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
+-            "automatic_in_fork", "event_var_index", "switch_mos"}
++            "automatic_in_fork", "event_var_index", "switch_mos", "switch_bidirectional"}
+ # The standard output of accepted inputs that print (unsupported_matrix/<name>.expected).
+ EXPECTED = {"automatic_in_fork": "5\n"}
+--- a/tests/cli/unsupported_matrix.accepted
++++ b/tests/cli/unsupported_matrix.accepted
+@@ -6,3 +6,4 @@
+ member_run_time_bit
+ nonblocking_delay_index
++switch_bidirectional
+ switch_mos
+--- a/tests/cli/unsupported_matrix.stderr
++++ b/tests/cli/unsupported_matrix.stderr
+@@ -270,7 +270,4 @@
+ unsupported_matrix/stream_with.sv:6:5: error: unsupported: streaming with a with clause (not implemented yet)
+ unsupported_matrix/stream_with.sv:9:5: error: unsupported: streaming with a with clause (not implemented yet)
+-unsupported_matrix/switch_bidirectional.sv:12:10: error: unsupported: switch 'tran' (not implemented yet)
+-unsupported_matrix/switch_bidirectional.sv:4:8: error: unsupported: switch 'tran' (not implemented yet)
+-unsupported_matrix/switch_bidirectional.sv:9:8: error: unsupported: switch 'tran' (not implemented yet)
+ unsupported_matrix/system_function.sv:12:9: error: unsupported: system function $system (not implemented yet)
+ unsupported_matrix/system_function.sv:15:9: error: unsupported: system function $system (not implemented yet)
+--- a/tests/tools/check_source_mos_boundaries.py
++++ b/tests/tools/check_source_mos_boundaries.py
+@@ -20,5 +20,5 @@
+         ("wire a,q,r;alias q=r;assign a=1'b1;nmos m(q,a,1'b1);initial force r=0;",
+          'force/release of a MOS strength net'),
+-        ("wire a,b;tran m(a,b);", "switch 'tran'"),
++        ("wire a,b;tran m(a,b);", None),
+         ('wire a,q;nmos m(q,a,1\'b1);initial $display("%v",q);', 'format specifier %v'),
+         ("wire bit a,q;assign a=1'b1;nmos m(q,a,1'b1);", "'bit' is not a valid type for a net"),
+@@ -32,4 +32,9 @@
+             result = subprocess.run([binary, source.name], cwd=directory, capture_output=True,
+                                     text=True, timeout=15, check=False)
++            if diagnostic is None:
++                assert result.returncode == 0 and not result.stdout, result.stdout+result.stderr
++                assert not [line for line in result.stderr.splitlines()
++                            if not line.startswith('kirimasim: info:')], result.stderr
++                continue
+             assert result.returncode == 2 and not result.stdout, result.stdout+result.stderr
+             assert diagnostic in result.stderr, result.stderr

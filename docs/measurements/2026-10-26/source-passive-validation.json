@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-26",
+  "implementation_commit": "76203da2",
+  "diagnostic_normalization_commit": "c859ad58",
+  "scope": "source six-kind passive switch integration and independent connected-graph factorization; full P1 remains incomplete",
+  "platform": "macOS arm64",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "dev_full_ctest": {
+    "total": 5536,
+    "passed": 5532,
+    "failed": [
+      "cli/options",
+      "tools/source_mos_boundaries"
+    ],
+    "skipped": [
+      "suite/cb/input_sample_1step",
+      "suite/nets/net_port_drivers_part"
+    ],
+    "failure_reason": "unchanged historical tran rejection expectations; proposed separate migration is not approved"
+  },
+  "final_focused": {
+    "dev": {
+      "full_build": "passed",
+      "focused_tests": 224,
+      "passed": 224,
+      "failed": 0
+    },
+    "release": {
+      "full_build": "passed",
+      "focused_tests": 224,
+      "passed": 224,
+      "failed": 0
+    },
+    "asan": {
+      "full_build": "passed",
+      "focused_tests": 224,
+      "passed": 224,
+      "failed": 0
+    },
+    "ubsan": {
+      "full_build": "passed",
+      "focused_tests": 224,
+      "passed": 224,
+      "failed": 0
+    }
+  },
+  "source_designs": 143,
+  "compiled_controls": 9,
+  "controls_caught": 9,
+  "strict_boundaries": 6,
+  "reference_matrix": {
+    "total": 143,
+    "compiled": 135,
+    "matches": 110,
+    "output_differences": 25,
+    "compile_not_supported_or_aborted": 8
+  },
+  "probes": {
+    "total": 87,
+    "icarus13": {
+      "gaps": 8,
+      "mismatches": 4
+    },
+    "icarus14": {
+      "gaps": 8,
+      "mismatches": 7
+    },
+    "complete_parity_proven": false
+  },
+  "population": {
+    "total": 1466,
+    "passed": 1456,
+    "failed": 0,
+    "unsupported": 10,
+    "chapter28_subset_passed": 22,
+    "chapter28_subset_total": 22,
+    "provenance": "source-passive-population.json"
+  },
+  "checks": {
+    "expected_change": "existing expectations unchanged; manual commit check passed",
+    "clang_tidy": "five changed C++ units pass",
+    "clang_format": "changed C++ and headers formatted",
+    "public_headers": "C++20 without exceptions or RTTI passes",
+    "banned": "passed",
+    "global_state": "passed",
+    "spdx": "passed",
+    "suite_files": "passed",
+    "release_flags": "112 translation units optimized",
+    "mutation_anchors": "759 apply",
+    "readme_counts": "regenerated from final dev JUnit, current probes and population"
+  },
+  "runtime_source_sha256": {
+    "src/front/lower.cpp": "5facc6961096bcd28806da723096927cf8534fc292496222bc6aaf8bbadf204f",
+    "src/front/lower_strength.cpp": "fd1fb6410de4ee7b856da26e78618ac6fe9e9e75eff9f3095d600f3067f39c37",
+    "src/front/lowerer.h": "a39db49503648f50d752f5f3e33c4d1d96a18dafcdd15d654e0b2cf9acbd59ac",
+    "src/kernel/include/kirimasim/kernel/sim.h": "bd257a3195c2f1ce6a69422887ea62282d9549e2a2147312a21ed667299f0412",
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "1ec07d10750add81a6dd7d10fbe75dc7a819fd609710e1ba067c78d13236ed03",
+    "src/kernel/strength_drivers.cpp": "398445a36d925a71eaef882f33a8a06727c7872b0453248efcd0684936d8a0a6",
+    "src/kernel/strength_network.cpp": "54c39503f4843ef37ed430f0127321c0b0bb6662d35e4f7af50bcc97f5e5e3f7"
+  },
+  "build_provenance_note": "Measurements used the working-tree implementation later committed as 76203da2; all changed runtime source bytes equal that commit. Executable version banners retain the prior CMake configure head 00235b07ad73.",
+  "not_run": [
+    "full release/ASan/UBSan CTest suites for this checkpoint",
+    "tools/local_ci.py for this checkpoint",
+    "refreshed external sv-tests",
+    "Linux/minimum compiler execution",
+    "formal graph performance comparison or five-simulator speed table"
+  ],
+  "pending_approval": [
+    "passive-expectation-migration.md",
+    "managed-event-safepoints-proposal.md"
+  ],
+  "main_integrated": false,
+  "pushed": false,
+  "p1_complete": false
+}

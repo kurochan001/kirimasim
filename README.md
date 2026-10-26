@@ -78,9 +78,12 @@ The [shared strength resolver](docs/notes/strength-range-foundation.md) now
 retains complete intervals before value projection, with exhaustive interval
 pair checks. [Directed MOS source execution](docs/notes/source-mos-execution.md)
 now imports ordinary drivers and captures controls separately. This remains partial:
-passive switching, registered-net force and full strength formatting still need work.
-The [passive kernel runtime](docs/notes/passive-network-execution.md) now resolves
-physical-origin paths and uncertain conducting worlds; its SIR/source connection remains work.
+registered-net force, partial/retained ports and full strength formatting still need work.
+[Source passive execution](docs/notes/source-passive-execution.md) now connects all six
+bidirectional kinds, including static bit/element/concat mappings and primitive arrays,
+to the shared graph. Independent uncertain graphs retain atomic publication.
+Its 143 original source designs pass; historical tran rejection expectations await
+[separate approval](docs/notes/passive-expectation-migration.md).
 
 Wide three-state gates now retain both L/H side-mask halves across word
 boundaries. All 73 new source cases match Icarus 13.0 and development builds.
@@ -230,18 +233,18 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | Criterion | Now | Met |
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 234, Icarus Verilog 211; macOS: kirimasim 244, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
-| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,451 pass (99.0%), 0 fail; 15 stop at constructs of later work | Yes |
+| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,456 pass (99.3%), 0 fail; 10 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 | Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 8 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (8 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-25; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-26; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
 | This repository's tests (CTest, dev configuration) | 5,536 | 5,532, 2 skipped, 2 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
-| Own test suite, P1 population | 1,466 | 1,451 | 1,274 | 1,329 |
+| Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
 This repository's tests by kind: unit tests (GoogleTest) 618, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
@@ -401,6 +404,13 @@ The P1 population of TEST_SUITE.md: 1,466 tests of the test suite,
 listed in `tests/gates/p1_population.txt`. The suite itself is in
 [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests). The last column is where
 kirimasim stops; it fails no test.
+
+This chapter table retains the 2026-10-25 native snapshot. The
+[2026-10-26 remeasurement](docs/measurements/2026-10-26/source-passive-population.json)
+passes 1,456/1,466 with zero failures and ten unsupported cases; its chapter-28
+subset passes all 22. The fixed path list is unchanged; selected inputs are clean
+at tests revision `a733b838`, with three source files changed since the original
+selection. Other simulators' columns retain their historical measurements.
 
 | Chapter | Tests | kirimasim | Icarus | Verilator | kirimasim stops at |
 | --- | --- | --- | --- | --- | --- |

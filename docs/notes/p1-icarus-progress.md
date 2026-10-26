@@ -19,6 +19,23 @@ full local CI passes all 21 checks. The older checkpoint paragraphs below
 retain their original validation and pending-review statements; these do not
 mean the migrated nmos oracle still fails on current main.
 
+**Source passive switches:** `76203da2` connects [all six bidirectional kinds](source-passive-execution.md)
+through the same typed graph. All 143 original source designs and four presets'
+224 focused checks pass; nine compiled faults are caught. The independent-graph
+factorization keeps publication atomic, including 65 uncertain groups and
+132-node snapshots. Final dev CTest has 5,532 passed, two known skips and two
+obsolete tran-rejection failures. The [exact migration](passive-expectation-migration.md)
+is proposed and unapplied pending human approval. The 87 original probes now
+have eight Icarus-passing gaps against each reference, with four/seven reference
+mismatches. Source comparison records preserve 110 matches out of 135 compiled
+Icarus 13.0 designs (143 total), plus reduced array/scalar observations.
+Force/ports/formatting and the broader P1 goal remain unfinished. This work is
+committed locally, not integrated into main or pushed. The separate
+[managed-event instruction-boundary safepoint amendment](managed-event-safepoints-proposal.md)
+also remains unapproved; general continuation does not approve that specification change.
+
+### Previous SIR checkpoint
+
 **Passive-edge SIR/VM execution:** `9c663835` connects
 [static edges, control ownership and conduction timers](passive-sir-execution.md)
 to the existing shared graph. Seven new tests include 4,560 independent

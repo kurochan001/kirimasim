@@ -1,5 +1,5 @@
 {
-  "measured": "2026-10-25",
+  "measured": "2026-10-26",
   "ctest": {
     "total": 5536,
     "passed": 5532,
@@ -33,9 +33,9 @@
   },
   "population": {
     "total": 1466,
-    "passed": 1451,
+    "passed": 1456,
     "failed": 0,
-    "unsupported": 15,
+    "unsupported": 10,
     "gate": 90
   },
   "mandatory": {

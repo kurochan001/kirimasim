@@ -18,7 +18,8 @@ event controls, corrected integral `$fread`
 copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API and [partial directed MOS source execution](notes/source-mos-execution.md)
-are documented separately; passive switching remains work. Check `kirimasim --help` for a build's options and
+and [source passive switches](notes/source-passive-execution.md) are documented separately;
+registered-net force, partial port identities and full strength formatting remain work. Check `kirimasim --help` for a build's options and
 `--version` for its revision. The [current validation and pending reviews](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-26)
 separate the latest comparison from historical measurements.
 
@@ -55,7 +56,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
-| Primitives | Built-in logic gates and pulls; six directed MOS kinds on eligible fixed terminals; combinational/sequential UDPs | MOS support is partial: registered-net force, partial ports and full strength formatting remain; no passive switches or UDP instances with unconnected ports |
+| Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: registered-net force, partial ports and full strength formatting remain; no UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
 | Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a scalar net connected through a port; constant array elements are supported |
 | Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
@@ -158,7 +159,7 @@ lowering, owned ordinary-driver import and separately captured controls. Its
 154 new source designs and six boundaries pass, with eleven compiled faults
 caught. Icarus 13.0 matches 113 complete designs; 41 observed index/startup/transition
 differences are recorded. The historical nmos CLI rejection migration is applied separately on main
-(`6f301460`). Source passive switches, registered-net force/release,
+(`6f301460`). Registered-net force/release,
 partial/retained port identity and full strength formatting remain incomplete.
 [Passive kernel execution](notes/passive-network-execution.md) now adds exact
 physical-origin paths, uncertain-edge worlds and scalar conduction timing to
@@ -166,8 +167,14 @@ the real scheduler/publisher, with nineteen tests, 14,445 reference states and
 28 compiled faults caught. [Passive-edge SIR execution](notes/passive-sir-execution.md)
 now connects verified edge tables and owned scalar control/delay instructions
 through tier 1, with seven tests including 4,560 independent reference designs.
-The front end does not emit source passive edges yet; these checkpoints do not
-enable source bidirectional switches.
+[Source passive execution](notes/source-passive-execution.md) now lowers all six kinds,
+including static selections/concatenations and 1/9/65/129-bit arrays. Its 143
+original source designs pass, and nine compiled new/reused faults are caught.
+Independent graph groups retain one atomic publication. Icarus 13.0 compiles
+135 designs and matches 110; vector-control/startup/mixed-wired observations
+remain recorded. The 87-probe gaps fall to eight against both references.
+Historical tran rejection expectations await their separate human-approved
+migration; complete switch support and P1 remain unfinished.
 
 ### Fork-local declarations
 

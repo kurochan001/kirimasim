@@ -1,0 +1,146 @@
+{
+  "date": "2026-10-26",
+  "scope": "original reduced array-vs-scalar control observations; reference implementation cause not confirmed",
+  "cases": [
+    {
+      "kind": "tranif0",
+      "shape": "array",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;tranif0 t[8:0](a,b,control);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "z1xxzz11z\n",
+      "native_exit": 0,
+      "native_stdout": "z1xxzz11z\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "zzzzzzzzz\n"
+    },
+    {
+      "kind": "tranif0",
+      "shape": "scalar_select",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;tranif0 t0(a[0],b[0],control[0]);tranif0 t1(a[1],b[1],control[1]);tranif0 t2(a[2],b[2],control[2]);tranif0 t3(a[3],b[3],control[3]);tranif0 t4(a[4],b[4],control[4]);tranif0 t5(a[5],b[5],control[5]);tranif0 t6(a[6],b[6],control[6]);tranif0 t7(a[7],b[7],control[7]);tranif0 t8(a[8],b[8],control[8]);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "z1xxzz11z\n",
+      "native_exit": 0,
+      "native_stdout": "z1xxzz11z\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "z1xxzz11z\n"
+    },
+    {
+      "kind": "tranif0",
+      "shape": "scalar_literal",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;tranif0 t0(a[0],b[0],1'b1);tranif0 t1(a[1],b[1],1'b0);tranif0 t2(a[2],b[2],1'b0);tranif0 t3(a[3],b[3],1'b1);tranif0 t4(a[4],b[4],1'b1);tranif0 t5(a[5],b[5],1'bz);tranif0 t6(a[6],b[6],1'bx);tranif0 t7(a[7],b[7],1'b0);tranif0 t8(a[8],b[8],1'b1);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "z1xxzz11z\n",
+      "native_exit": 0,
+      "native_stdout": "z1xxzz11z\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "z1xxzz11z\n"
+    },
+    {
+      "kind": "tranif1",
+      "shape": "array",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;tranif1 t[8:0](a,b,control);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "1zxx11zz1\n",
+      "native_exit": 0,
+      "native_stdout": "1zxx11zz1\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "111111111\n"
+    },
+    {
+      "kind": "tranif1",
+      "shape": "scalar_select",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;tranif1 t0(a[0],b[0],control[0]);tranif1 t1(a[1],b[1],control[1]);tranif1 t2(a[2],b[2],control[2]);tranif1 t3(a[3],b[3],control[3]);tranif1 t4(a[4],b[4],control[4]);tranif1 t5(a[5],b[5],control[5]);tranif1 t6(a[6],b[6],control[6]);tranif1 t7(a[7],b[7],control[7]);tranif1 t8(a[8],b[8],control[8]);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "1zxx11zz1\n",
+      "native_exit": 0,
+      "native_stdout": "1zxx11zz1\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "1zxx11zz1\n"
+    },
+    {
+      "kind": "tranif1",
+      "shape": "scalar_literal",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;tranif1 t0(a[0],b[0],1'b1);tranif1 t1(a[1],b[1],1'b0);tranif1 t2(a[2],b[2],1'b0);tranif1 t3(a[3],b[3],1'b1);tranif1 t4(a[4],b[4],1'b1);tranif1 t5(a[5],b[5],1'bz);tranif1 t6(a[6],b[6],1'bx);tranif1 t7(a[7],b[7],1'b0);tranif1 t8(a[8],b[8],1'b1);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "1zxx11zz1\n",
+      "native_exit": 0,
+      "native_stdout": "1zxx11zz1\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "1zxx11zz1\n"
+    },
+    {
+      "kind": "rtranif0",
+      "shape": "array",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;rtranif0 t[8:0](a,b,control);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "z1xxzz11z\n",
+      "native_exit": 0,
+      "native_stdout": "z1xxzz11z\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "zzzzzzzzz\n"
+    },
+    {
+      "kind": "rtranif0",
+      "shape": "scalar_select",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;rtranif0 t0(a[0],b[0],control[0]);rtranif0 t1(a[1],b[1],control[1]);rtranif0 t2(a[2],b[2],control[2]);rtranif0 t3(a[3],b[3],control[3]);rtranif0 t4(a[4],b[4],control[4]);rtranif0 t5(a[5],b[5],control[5]);rtranif0 t6(a[6],b[6],control[6]);rtranif0 t7(a[7],b[7],control[7]);rtranif0 t8(a[8],b[8],control[8]);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "z1xxzz11z\n",
+      "native_exit": 0,
+      "native_stdout": "z1xxzz11z\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "z1xxzz11z\n"
+    },
+    {
+      "kind": "rtranif0",
+      "shape": "scalar_literal",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;rtranif0 t0(a[0],b[0],1'b1);rtranif0 t1(a[1],b[1],1'b0);rtranif0 t2(a[2],b[2],1'b0);rtranif0 t3(a[3],b[3],1'b1);rtranif0 t4(a[4],b[4],1'b1);rtranif0 t5(a[5],b[5],1'bz);rtranif0 t6(a[6],b[6],1'bx);rtranif0 t7(a[7],b[7],1'b0);rtranif0 t8(a[8],b[8],1'b1);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "z1xxzz11z\n",
+      "native_exit": 0,
+      "native_stdout": "z1xxzz11z\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "z1xxzz11z\n"
+    },
+    {
+      "kind": "rtranif1",
+      "shape": "array",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;rtranif1 t[8:0](a,b,control);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "1zxx11zz1\n",
+      "native_exit": 0,
+      "native_stdout": "1zxx11zz1\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "111111111\n"
+    },
+    {
+      "kind": "rtranif1",
+      "shape": "scalar_select",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;rtranif1 t0(a[0],b[0],control[0]);rtranif1 t1(a[1],b[1],control[1]);rtranif1 t2(a[2],b[2],control[2]);rtranif1 t3(a[3],b[3],control[3]);rtranif1 t4(a[4],b[4],control[4]);rtranif1 t5(a[5],b[5],control[5]);rtranif1 t6(a[6],b[6],control[6]);rtranif1 t7(a[7],b[7],control[7]);rtranif1 t8(a[8],b[8],control[8]);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "1zxx11zz1\n",
+      "native_exit": 0,
+      "native_stdout": "1zxx11zz1\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "1zxx11zz1\n"
+    },
+    {
+      "kind": "rtranif1",
+      "shape": "scalar_literal",
+      "source": "module top;wire[8:0]a,b,control;assign a='1;assign control=9'b10xz11001;rtranif1 t0(a[0],b[0],1'b1);rtranif1 t1(a[1],b[1],1'b0);rtranif1 t2(a[2],b[2],1'b0);rtranif1 t3(a[3],b[3],1'b1);rtranif1 t4(a[4],b[4],1'b1);rtranif1 t5(a[5],b[5],1'bz);rtranif1 t6(a[6],b[6],1'bx);rtranif1 t7(a[7],b[7],1'b0);rtranif1 t8(a[8],b[8],1'b1);initial begin #1;$display(\"%b\",b);end endmodule\n",
+      "expected": "1zxx11zz1\n",
+      "native_exit": 0,
+      "native_stdout": "1zxx11zz1\n",
+      "reference_compile_exit": 0,
+      "reference_exit": 0,
+      "reference_stdout": "1zxx11zz1\n"
+    }
+  ],
+  "reference_versions": {
+    "iverilog": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+  },
+  "reference_binary_sha256": {
+    "iverilog": "a3c72702e0826bb7b12860c0d4d9dded384efa8e7b30bbb4d782c495becc365a",
+    "vvp": "8c3bb33305a6570222f6e721e8d0fb5b0fc86919a12c99a8d43733f1d9d73bc9"
+  }
+}
