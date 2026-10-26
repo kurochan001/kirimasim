@@ -249,12 +249,13 @@ TEST(PassiveVm, ScalarSignednessDomainsAndExplicitZeroDelayUseKernelControlMeani
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 const auto state = ctx.strengthDrivers().edge(0);
                 ASSERT_TRUE(state.has_value());
+                const auto actual = state.value_or(k::StrengthEdgeState{});
                 const auto expected =
                     code >= 2 ? v::Conduction::Uncertain
                               : v::passiveConduction(code == 0 ? v::Logic::Zero : v::Logic::One,
                                                      (kind == E::Tranif1 || kind == E::Rtranif1));
-                EXPECT_EQ(static_cast<unsigned>(state->committed), static_cast<unsigned>(expected));
-                EXPECT_FALSE(state->hasPending);
+                EXPECT_EQ(static_cast<unsigned>(actual.committed), static_cast<unsigned>(expected));
+                EXPECT_FALSE(actual.hasPending);
             }
 }
 
@@ -273,9 +274,10 @@ TEST(PassiveVm, WideDelaysRejectOverflowAndNormalizeUnknownToZero) {
         EXPECT_EQ(result.reason, unknown ? k::EndReason::Quiescent : k::EndReason::Error);
         const auto state = ctx.strengthDrivers().edge(0);
         ASSERT_TRUE(state.has_value());
-        EXPECT_EQ(state->committed,
+        const auto actual = state.value_or(k::StrengthEdgeState{});
+        EXPECT_EQ(actual.committed,
                   unknown ? k::StrengthConduction::On : k::StrengthConduction::Off);
-        EXPECT_FALSE(state->hasPending);
+        EXPECT_FALSE(actual.hasPending);
     }
 }
 
@@ -342,7 +344,9 @@ TEST(PassiveVm, CapturedConductionTimersKeepDeadlinesAndCarryCurrentData) {
     for (const auto& update : updates) {
         if (update.time != time) {
             m.emit(issuer, s::Op::WaitDelay,
-                   {m.integer(2 * (update.time - time)), O::block(s::BlockId{block + 1})}, block);
+                   {m.integer(std::uint64_t{2} * (update.time - time)),
+                    O::block(s::BlockId{block + 1})},
+                   block);
             ++block;
             time = update.time;
         }
@@ -377,7 +381,8 @@ TEST(PassiveVm, CapturedConductionTimersKeepDeadlinesAndCarryCurrentData) {
     }
     const auto edge = ctx.strengthDrivers().edge(0);
     ASSERT_TRUE(edge.has_value());
-    EXPECT_EQ(edge->committed, k::StrengthConduction::On);
-    EXPECT_FALSE(edge->hasPending);
+    const auto actual = edge.value_or(k::StrengthEdgeState{});
+    EXPECT_EQ(actual.committed, k::StrengthConduction::On);
+    EXPECT_FALSE(actual.hasPending);
 }
 }  // namespace
