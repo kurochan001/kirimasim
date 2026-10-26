@@ -13,6 +13,23 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
+**Current integration:** main `07b7de82` includes slang 12.1, the passive kernel,
+and the separately applied nmos oracle migration (`6f301460`). Its pre-change
+full local CI passes all 21 checks. The older checkpoint paragraphs below
+retain their original validation and pending-review statements; these do not
+mean the migrated nmos oracle still fails on current main.
+
+**Passive-edge SIR/VM execution:** `9c663835` connects
+[static edges, control ownership and conduction timers](passive-sir-execution.md)
+to the existing shared graph. Seven new tests include 4,560 independent
+interval/control/direction comparisons, malformed entry rejection, potential
+uwire ownership and actual inertial control/data execution. Full dev CTest
+passes 5,389/5,391 with zero failures and the two known skips. Source passive
+switches, port identity, registered-net force and full strength formatting
+remain work; no new source-probe gap reduction or complete parity is claimed.
+
+### Earlier validation checkpoints
+
 **Passive shared-kernel runtime:** `a2aa7573` adds [physical-origin graph worlds and conduction timing](passive-network-execution.md)
 to the real scheduler/Store path. Nineteen tests compare 14,445 reference states,
 including 46,980 destination intervals, rootless rings, shared-world correlation,

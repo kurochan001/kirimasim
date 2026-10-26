@@ -157,14 +157,17 @@ Full local CI passes all 21 checks.
 lowering, owned ordinary-driver import and separately captured controls. Its
 154 new source designs and six boundaries pass, with eleven compiled faults
 caught. Icarus 13.0 matches 113 complete designs; 41 observed index/startup/transition
-differences are recorded. The historical CLI rejection migration awaits separate
-approval. Passive solving, registered-net force/release, partial/retained port
-identity and full strength formatting remain incomplete.
+differences are recorded. The historical nmos CLI rejection migration is applied separately on main
+(`6f301460`). Source passive switches, registered-net force/release,
+partial/retained port identity and full strength formatting remain incomplete.
 [Passive kernel execution](notes/passive-network-execution.md) now adds exact
 physical-origin paths, uncertain-edge worlds and scalar conduction timing to
 the real scheduler/publisher, with nineteen tests, 14,445 reference states and
-28 compiled faults caught. The front end and SIR do not emit passive edges yet;
-this kernel checkpoint does not enable source bidirectional switches.
+28 compiled faults caught. [Passive-edge SIR execution](notes/passive-sir-execution.md)
+now connects verified edge tables and owned scalar control/delay instructions
+through tier 1, with seven tests including 4,560 independent reference designs.
+The front end does not emit source passive edges yet; these checkpoints do not
+enable source bidirectional switches.
 
 ### Fork-local declarations
 

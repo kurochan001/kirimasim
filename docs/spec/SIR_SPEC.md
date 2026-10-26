@@ -802,3 +802,12 @@ preserves existing expectations and external ABI versions.
 - [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
 - [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
 - [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).
+
+Implementation checkpoint (2026-10-26): the approved MOS/switch contract's
+static edge/control binding is represented by `strength-edge !eN` rows,
+per-process `strength-edge-write` declarations and `strength.edge` /
+`strength.edge.delay` instructions. Their exact operand/ownership checks,
+format-0 text and shared-kernel execution are recorded in
+[passive SIR execution](../notes/passive-sir-execution.md). This connects the
+existing approved contract; it does not enable source switch lowering or
+freeze the P2 text grammar.

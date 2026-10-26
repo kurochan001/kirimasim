@@ -760,3 +760,9 @@ SIR の検証器は、デバッグビルドと CI で常に動かす。次のこ
 - [遅延付き三状態ゲート：修正案の節](../notes/delayed-gate-side-proposal.ja.md).
 - [完全な強さのMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
 - [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).
+
+実装の途中の記録（2026-10-26）：承認済み MOS/スイッチ契約の静的な辺と制御の binding を、
+`strength-edge !eN` の行、プロセスごとの `strength-edge-write` 宣言、`strength.edge` /
+`strength.edge.delay` 命令で表します。具体的なオペランド・所有の検査、形式 0 の出力、
+共通カーネルでの実行は [受動 SIR 実行](../notes/passive-sir-execution.ja.md) に記録しました。
+既存の承認済み契約を接続したもので、ソースのスイッチ変換や P2 の文法確定ではありません。

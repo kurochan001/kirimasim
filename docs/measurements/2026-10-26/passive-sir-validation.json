@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-26",
+  "baseline": "07b7de82",
+  "implementation": "9c663835",
+  "timing_observation_refinement": "cff657be",
+  "static_analysis_test_guards": "2a04020b",
+  "scope": "typed passive edge declarations and tier-1 control/timer execution; source switch lowering remains pending",
+  "platform": "macOS arm64",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "dev_full_ctest": {
+    "total": 5391,
+    "passed": 5389,
+    "failed": 0,
+    "skipped": 2,
+    "note": "before the test-only timing refinement; final focused reruns pass in every preset"
+  },
+  "final_focused": {
+    "dev": {
+      "full_build": "passed",
+      "focused_tests": 48,
+      "passed": 48,
+      "failed": 0
+    },
+    "release": {
+      "full_build": "passed",
+      "focused_tests": 48,
+      "passed": 48,
+      "failed": 0
+    },
+    "asan": {
+      "full_build": "passed",
+      "focused_tests": 48,
+      "passed": 48,
+      "failed": 0
+    },
+    "ubsan": {
+      "full_build": "passed",
+      "focused_tests": 48,
+      "passed": 48,
+      "failed": 0
+    }
+  },
+  "reference_designs": 4560,
+  "reference_destination_intervals": 9120,
+  "negative_controls": {
+    "command": "python3 tools/mutants.py --only 'passive SIR:'",
+    "compiled": 9,
+    "caught": [
+      "passive SIR: registered edge table omitted",
+      "passive SIR: decoded control polarity inverted",
+      "passive SIR: unknown control becomes off",
+      "passive SIR: conditional startup conducts",
+      "passive SIR: inertial conduction becomes immediate",
+      "passive SIR: on and off delays swapped",
+      "passive SIR: uwire verifier loses remote roots",
+      "passive SIR: control signature loses delay ownership",
+      "passive SIR: resistive edges become nonresistive"
+    ],
+    "problems": 0,
+    "excluded_self_checks": [
+      "tools/mutants_apply",
+      "tools/negative_controls"
+    ],
+    "strict_timing_repeat": {
+      "fault": "on/off delays swapped",
+      "compiled": true,
+      "detected_by": "PassiveVm.CapturedConductionTimersKeepDeadlinesAndCarryCurrentData",
+      "observation_tick": 27,
+      "restored_focus_passed": 7
+    },
+    "all_changed_runtime_sources_match_implementation_commit": true
+  },
+  "checks": {
+    "changed_cpp_clang_tidy": "7 units pass; after first test-only findings, the corrected test passes a focused rerun",
+    "changed_cpp_headers_clang_format": "passed",
+    "public_headers_cxx20_no_exceptions_no_rtti": "passed",
+    "banned": "passed",
+    "spdx": "passed",
+    "global_state": "passed",
+    "suite_files": "passed",
+    "release_flags": "112 translation units optimized",
+    "expected_change": "existing expectations kept",
+    "readme_counts": "matches dev JUnit",
+    "mutation_anchors": "751 apply"
+  },
+  "runtime_source_sha256": {
+    "src/kernel/include/kirimasim/kernel/strength_drivers.h": "f1222f2f5c2cd1e6c82e4d154d76d528e0bb9a146c5fe9742238f8bb07989fb1",
+    "src/sir/include/kirimasim/sir/design.h": "676489ebc847fb6fc815a07d91e4d77d3a4fe3be09363e4205910bfdbe3718e5",
+    "src/sir/include/kirimasim/sir/strength.h": "c9b8769364eabf19dd627788713e4accba49857bc763e3f5eaf1536a837f87e8",
+    "src/sir/strength.cpp": "db76dc3487895a8a0dd99020eb585d2d24982d7503e02fccb6aedf6d11dd46ca",
+    "src/sir/text.cpp": "f53569708d2318ff68a98d40a22912d5cf696b1cf7d864eb50c2bd2064f3f3e0",
+    "src/sir/types.cpp": "4f36760f0284d45e369a0fc041842e9a163c525214744f89759c881c958c71ac",
+    "src/sir/verify.cpp": "e7353f20926a6e8cb3fcaff0be742917e4d68164405cfd492bb691f7d31d44a6",
+    "src/valsem/include/kirimasim/valsem/passive.h": "269280a2a5774d1dcc6678b471ba5037e15082644e90873f50395d2accd0858a",
+    "src/valsem/passive.cpp": "7db1c6ba248bad0d63136b20287da7ab4d98371c32507639a499cc505afb0b72",
+    "src/vm/vm.cpp": "ad3b380ae52d1a953c8236958c06ea18d6d3515637c2659bcfb76bee7e35f98b"
+  },
+  "final_test_sha256": "355834866bda730009a9f3d1f7c740145f840b899837246a8e3f5f2ff00119b3",
+  "not_run": [
+    "new external sv-tests and population comparisons",
+    "new Icarus probes",
+    "Linux and minimum compiler runs",
+    "graph performance measurements",
+    "full release/ASan/UBSan CTest suites for this checkpoint",
+    "tools/local_ci.py for this checkpoint"
+  ],
+  "p1_complete": false,
+  "source_bidirectional_switches_enabled": false
+}
