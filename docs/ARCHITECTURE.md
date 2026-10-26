@@ -14,14 +14,14 @@ Processing flows one way:
 ```mermaid
 flowchart TD
     src["SystemVerilog sources"]
-    slang["slang<br/>parsing, preprocessing,<br/>type checking, elaboration"]
+    slang["slang<br/>preprocessing, parsing,<br/>type checking, elaboration"]
     front["front<br/>lowers the elaborated design to SIR"]
     sir["SIR<br/>storage slots and statically typed instructions"]
-    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
+    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability<br/>(for tier 2, P3)"]
     subgraph tiers["Execution tiers"]
         t1["tier 1: VM<br/>interprets SIR (P1)"]
         t2["tier 2: generated C++<br/>built ahead of time (P3)"]
-        t3["tier 3: JIT<br/>(later)"]
+        t3["tier 3: JIT<br/>(possible, decided after P3)"]
     end
     kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
     src --> slang --> front --> sir

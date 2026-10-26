@@ -565,25 +565,25 @@ kirimasim: info: finish at 52 ns
 
 ```mermaid
 flowchart TD
-    src["SystemVerilog sources"]
-    slang["slang<br/>parsing, preprocessing,<br/>type checking, elaboration"]
-    front["front<br/>lowers the elaborated design to SIR"]
-    sir["SIR<br/>storage slots and statically typed instructions"]
-    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability"]
-    subgraph tiers["Execution tiers"]
-        t1["tier 1: VM<br/>interprets SIR (P1)"]
-        t2["tier 2: generated C++<br/>built ahead of time (P3)"]
-        t3["tier 3: JIT<br/>(later)"]
+    src["SystemVerilog のソース"]
+    slang["slang<br/>前処理、構文解析、<br/>型検査、エラボレーション"]
+    front["front<br/>エラボレーションした設計を SIR に変換する"]
+    sir["SIR<br/>格納のスロットと、静的に型の決まった命令"]
+    analysis["analysis<br/>X 到達解析、静的な島、<br/>レベル化、可観測性<br/>（第 2 層のため、P3）"]
+    subgraph tiers["実行の層"]
+        t1["第 1 層：VM<br/>SIR を解釈する（P1）"]
+        t2["第 2 層：生成した C++<br/>前もってビルドする（P3）"]
+        t3["第 3 層：JIT<br/>（候補。P3 の後に決める）"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations, VCD,<br/>typed container heap API<br/>(remaining container forms, classes, VPI, DPI-C: pending)"]
+    kernel["実行カーネル<br/>すべての領域を持つスケジューラ、値の演算、<br/>ファイルの入出力、書式と読み取り、VCD、<br/>第 1 層と結合した型付きコンテナのヒープ<br/>（クラス、VPI、DPI-C は未実装）"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
     sir --> t2
     sir --> t3
-    t1 -->|"resume function and frame"| kernel
-    t2 -->|"resume function and frame"| kernel
-    t3 -->|"resume function and frame"| kernel
+    t1 -->|"再開の関数とフレーム"| kernel
+    t2 -->|"再開の関数とフレーム"| kernel
+    t3 -->|"再開の関数とフレーム"| kernel
 ```
 
 [slang](https://github.com/MikePopoloski/slang) は改変せず、1 つのコミットに固定して使います。どの実行層も、1 つの実行カーネルにプロセスを登録します。スケジューラと値の演算はカーネルが持つので、別の層のプロセスを 1 つのシミュレーションで一緒に動かせ、層の違いは出力の違いとして表に出ます。詳しくは [docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) を見てください。
