@@ -27,13 +27,13 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
-The local working checkpoint adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
+The main implementation adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
 in `dfddb94b`; the user's three-case oracle migration is separate in `2da32daa`.
-These changes are not merged into main or pushed. [Full local CI](docs/measurements/2026-10-27/event-initializer-validation.json)
+The three commits are [integrated into main through `f100cd86`](docs/measurements/2026-10-27/event-initializer-main-integration.json). [Full local CI](docs/measurements/2026-10-27/event-initializer-validation.json)
 passes 21/21 checks; dev/ASan/UBSan pass 6,057/6,059 and release 6,058/6,060,
 with zero failures and two known skips each. Fresh population, sv-tests and
 Icarus 13/14 probes preserve the earlier passes. P1 remains incomplete.
-The published main implementation baseline remains `63c64d83`;
+Earlier main checkpoints are retained in the history;
 [dated checkpoint notes](docs/notes/p1-icarus-progress.md) preserve earlier
 approval, failure and publication states.
 

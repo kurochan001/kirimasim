@@ -1,8 +1,10 @@
 # event宣言の初期化とobjectの共有
 
 [English](event-initializer-execution.md)が正です。状態：2026-10-27、実装と全ローカル検証が通りました。
-実装`dfddb94b`と承認済み期待値移行`2da32daa`はローカルの作業ブランチにあり、
-mainへのマージとpushはしていません。P1は未完了です。
+実装`dfddb94b`と承認済み期待値移行`2da32daa`を、`f100cd86`までmainへ取り込みました。
+[取り込みの記録](../measurements/2026-10-27/event-initializer-main-integration.json)でfast-forwardと
+検証済み実装/テストの一致を確認しています。以前の検証記録の公開状態は、取り込み前の
+日付付き証拠として保ちます。P1は未完了です。
 
 ## 契約と一つの変換入口
 

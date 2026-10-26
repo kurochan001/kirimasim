@@ -19,12 +19,13 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
-ローカル作業では`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initializer-execution.ja.md)を追加し、
-人が承認した期待値3件の移行を`2da32daa`に分けました。mainへのマージとpushはしていません。
+mainでは`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initializer-execution.ja.md)を追加し、
+人が承認した期待値3件の移行を`2da32daa`に分けました。3コミットを
+[`f100cd86`までmainへ取り込みました](docs/measurements/2026-10-27/event-initializer-main-integration.json)。
 [全local CI](docs/measurements/2026-10-27/event-initializer-validation.json)は
 21/21成功、dev/ASan/UBSanは各6,057/6,059、releaseは6,058/6,060で、
 失敗0・既知skip各2件です。母集団・sv-tests・Icarus 13/14のprobeも再実行し、以前の成功を
-維持しました。P1は未完了です。公開済みmainの実装基準は引き続き`63c64d83`で、
+維持しました。P1は未完了で、以前のmainの区切りは履歴に残します。
 [日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
 以前の承認・失敗・公開状態をその時点の履歴として保持します。
 

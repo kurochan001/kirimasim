@@ -2,7 +2,10 @@
 
 [日本語](event-initializer-execution.ja.md). Status: implemented and fully locally validated,
 2026-10-27. Implementation `dfddb94b` and the approved oracle-only migration
-`2da32daa` are on the local topic branch; not merged into main or pushed.
+`2da32daa` are integrated into main through `f100cd86`.
+The [integration record](../measurements/2026-10-27/event-initializer-main-integration.json)
+confirms the fast-forward and unchanged validated runtime/tests. The earlier
+validation record retains its pre-integration publication state as dated evidence.
 P1 remains incomplete.
 
 ## Contract and one lowering entry

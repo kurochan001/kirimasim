@@ -12,7 +12,7 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
-**ローカルtopic、main未取り込み・未push：** `dfddb94b`で[event初期化コピー](event-initializer-execution.ja.md)を
+**main取り込み `f100cd86`：** `dfddb94b`で[event初期化コピー](event-initializer-execution.ja.md)を
 追加し、nullを含むscalarと固定配列patternでobjectを共有します。static初期化は時刻0前に一度です。
 人が承認した期待値3件の移行を別の`2da32daa`で適用し、元の24入力をbyte単位で保ちました。
 新規208設計、厳格な境界14件、SIR生成数4設計と、コンパイルした7故障の検出が通りました。
@@ -20,8 +20,10 @@
 dev/ASan/UBSanは6,059本中6,057成功、releaseは6,060本中6,058成功、失敗0・既知skip各2件です。
 母集団・sv-tests・両87 probe比較も再実行し、以前の成功とnative stdoutを維持しました。
 P1は未完了であり、有限の比較を同等性の証明とは扱いません。
+[main取り込みの記録](../measurements/2026-10-27/event-initializer-main-integration.json)で、
+検証済みソースの一致と、分離した承認履歴を確認できます。
 
-**公開済みmainの基準 `63c64d83`：** [ソースのevent入力](event-input-execution.ja.md)で、scalar/固定配列の
+**以前のmainの基準 `63c64d83`：** [ソースのevent入力](event-input-execution.ja.md)で、scalar/固定配列の
 呼び出し、待機task、保持した子孫、遅延snapshotがobjectを共有します。実行時選択の入力部分配列は
 型付き記憶域の共通コピーを使います。新規104設計、方針境界、コンパイルした4故障が通り、
 全local CIは21/21項目成功です。dev/ASan/UBSanは5,849本中5,847成功、releaseは

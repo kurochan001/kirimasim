@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Asia/Tokyo",
+  "observed_at_utc": "2026-10-26T15:38:44+00:00",
+  "stage": "Local main integration before status-documentation commit and push",
+  "previous_main": "f0799b3c04d4c899fbcec2bb3ede473a7f378c47",
+  "integrated_main": "f100cd865a49ef9f23c17b217a3bedd10fafd1f8",
+  "integration_method": "Fast-forward; implementation and approved oracle migration remain separate commits",
+  "included_commits": [
+    "dfddb94b79dff09ea5139e72869734421ed349d5",
+    "2da32daa19d2213aee1ed944b38853c10b139b57",
+    "f100cd865a49ef9f23c17b217a3bedd10fafd1f8"
+  ],
+  "local_validation": {
+    "record": "event-initializer-validation.json",
+    "validated_commit": "2da32daa19d2213aee1ed944b38853c10b139b57",
+    "passed": 21,
+    "total": 21,
+    "runtime_tests_and_build_configuration_unchanged": true,
+    "per_commit_expected_change_checks": "All three integrated commits checked individually and passed."
+  },
+  "implementation_commit": "dfddb94b79dff09ea5139e72869734421ed349d5",
+  "approved_oracle_commit": "2da32daa19d2213aee1ed944b38853c10b139b57",
+  "source_sha256": {
+    "src/front/lower.cpp": "6c26aa081184ee12ea22f61e71a5423dab3dca10f1c5f34397770a852a09af37",
+    "src/front/lower_expr.cpp": "4a592eb7f4a000c4a2d41b6f5b1a5a01ca74dc277a904202ce580d4d68e1633d",
+    "src/front/lower_stmt.cpp": "a996a9b823cc1278922eceedeab298538a83e3328aba7b5741838ed51aeba99a",
+    "src/front/lower_sub.cpp": "a2e4f9540bb8f2260503ba854499c54beda1e5d2fd600030c19250c93bedaf8a",
+    "src/front/lowerer.h": "646d2970d361a2657551bc846d5b4e05bd55288e786ab259be2da8b776b3c7f8",
+    "tools/gen_event_initializer_matrix.py": "a00e08a5c9e7cbfdcf4481f79d40c568cc3681b86e865ed12123202e334a50c6",
+    "tests/tools/check_event_initializer_contracts.py": "77c1de179dbceae1a2b6173c18edade32bc23cce2480d75e9b98c8eb8bb77ba4",
+    "tests/tools/check_event_input_boundaries.py": "c22462e69d38ca8ac258e12dda25403ab3d05f7c0d1055097a05ae1db0267f38"
+  },
+  "presets": {
+    "dev": {
+      "total": 6059,
+      "passed": 6057,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 6060,
+      "passed": 6058,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 6059,
+      "passed": 6057,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 6059,
+      "passed": 6057,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "hosted_ci": "No result for this integration is claimed."
+}

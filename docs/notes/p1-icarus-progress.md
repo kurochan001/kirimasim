@@ -13,7 +13,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Local topic branch, not merged/pushed:** [event initialization copies](event-initializer-execution.md)
+**Main integration `f100cd86`:** [event initialization copies](event-initializer-execution.md)
 in `dfddb94b` share objects for scalar values and fixed-array patterns, including
 null; static initialization remains once before time zero. The user approved
 the exact three-case oracle migration, separately applied in `2da32daa` with
@@ -24,8 +24,10 @@ passes 21/21 steps: dev/ASan/UBSan 6,057/6,059 and release 6,058/6,060,
 zero failures and two known skips each. Fresh fixed population/sv-tests and
 both 87-probe comparisons preserve every prior pass and native stdout.
 P1 remains incomplete; these finite comparisons are not a parity proof.
+The [main integration record](../measurements/2026-10-27/event-initializer-main-integration.json)
+confirms unchanged validated source and preserves the separate approval history.
 
-**Published main baseline `63c64d83`:** [source event inputs](event-input-execution.md)
+**Earlier main baseline `63c64d83`:** [source event inputs](event-input-execution.md)
 now share object identity through scalar/fixed-array calls, waiting tasks,
 retained descendants and deferred snapshots. Runtime-selected input subarrays
 use the common typed storage copier. The 104 new designs, policy boundaries
