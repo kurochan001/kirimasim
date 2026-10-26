@@ -19,11 +19,12 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-26）
 
-公開済みの実装の区切りは main の `304e1aec` で、
-[automatic event の生成と寿命の処理](docs/notes/automatic-event-main-integration.ja.md)を含みます。
-local CI は21/21成功、dev/ASan/UBSan は各5,741/5,743、release は5,742/5,744で、
-失敗0・既知スキップ各2件です。[hosted CI](https://github.com/kurochan001/kirimasim/actions/runs/40319556353)も
-全14ジョブ成功で完了しました。P1は未完了で、[日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
+mainの実装の区切りは `63c64d83` で、
+[event入力引数と実行時選択による入力部分配列](docs/notes/event-input-execution.ja.md)を含みます。
+[コミット後のlocal CI](docs/measurements/2026-10-26/event-input-committed-validation.json)は
+21/21成功、dev/ASan/UBSanは各5,847/5,849、releaseは5,848/5,850で、
+失敗0・既知skip各2件です。母集団・sv-tests・Icarus 13/14のprobeも再実行し、以前の成功を
+維持しました。P1は未完了で、[日付付きの記録](docs/notes/p1-icarus-progress.ja.md)は
 以前の承認・失敗・公開状態をその時点の履歴として保持します。
 
 > **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラス、制約付きの乱数化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。ただし、クラスのstatic初期化には副作用を落とす既知の不具合があり、[クラスの調査](docs/notes/class-execution-investigation.ja.md)に記録しています。実行の成功だけでは対応を確認できません。

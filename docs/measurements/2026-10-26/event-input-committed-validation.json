@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-26",
+  "checked_at_utc": "2026-10-26T14:31:42+00:00",
+  "stage": "Committed validation and local main integration, before publication",
+  "validated_commit": "63c64d837a30fc75c5b1581d801adde15435481e",
+  "previous_main": "5563871fcd96d4ff5979bfa60a08ff889f71d197",
+  "integration_method": "Fast-forward; subsequent status documentation contains no runtime or test changes",
+  "local_ci": {
+    "passed": 21,
+    "total": 21,
+    "steps": [
+      {
+        "name": "dev: configure",
+        "seconds": 1.3,
+        "status": "passed"
+      },
+      {
+        "name": "dev: build",
+        "seconds": 1.4,
+        "status": "passed"
+      },
+      {
+        "name": "dev: test",
+        "seconds": 88.1,
+        "status": "passed"
+      },
+      {
+        "name": "release: configure",
+        "seconds": 1.2,
+        "status": "passed"
+      },
+      {
+        "name": "release: build",
+        "seconds": 1.1,
+        "status": "passed"
+      },
+      {
+        "name": "release: test",
+        "seconds": 79.5,
+        "status": "passed"
+      },
+      {
+        "name": "asan: configure",
+        "seconds": 1.3,
+        "status": "passed"
+      },
+      {
+        "name": "asan: build",
+        "seconds": 1.6,
+        "status": "passed"
+      },
+      {
+        "name": "asan: test",
+        "seconds": 129.7,
+        "status": "passed"
+      },
+      {
+        "name": "ubsan: configure",
+        "seconds": 1.2,
+        "status": "passed"
+      },
+      {
+        "name": "ubsan: build",
+        "seconds": 1.9,
+        "status": "passed"
+      },
+      {
+        "name": "ubsan: test",
+        "seconds": 110.1,
+        "status": "passed"
+      },
+      {
+        "name": "check_release_flags",
+        "seconds": 0.1,
+        "status": "passed"
+      },
+      {
+        "name": "check_banned",
+        "seconds": 0.5,
+        "status": "passed"
+      },
+      {
+        "name": "check_spdx",
+        "seconds": 0.1,
+        "status": "passed"
+      },
+      {
+        "name": "check_suite_files",
+        "seconds": 0.1,
+        "status": "passed"
+      },
+      {
+        "name": "check_global_state",
+        "seconds": 0.5,
+        "status": "passed"
+      },
+      {
+        "name": "check_expected_change",
+        "seconds": 0.1,
+        "status": "passed"
+      },
+      {
+        "name": "readme_counts",
+        "seconds": 0.3,
+        "status": "passed"
+      },
+      {
+        "name": "clang-format",
+        "seconds": 0.7,
+        "status": "passed"
+      },
+      {
+        "name": "clang-tidy",
+        "seconds": 159.7,
+        "status": "passed"
+      }
+    ],
+    "presets": {
+      "dev": {
+        "total": 5849,
+        "passed": 5847,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "release": {
+        "total": 5850,
+        "passed": 5848,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "asan": {
+        "total": 5849,
+        "passed": 5847,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      },
+      "ubsan": {
+        "total": 5849,
+        "passed": 5847,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ]
+      }
+    }
+  },
+  "source_sha256": {
+    "src/front/lower.cpp": "6e2689be5d610815846578ca3974b5cef9ff805e2166fe30385d5bd8f09d3dde",
+    "src/front/lower_expr.cpp": "753c04ca53e1d9288b82feaf5fcdebe4d65ced8f0707a140734a2462e4c5be44",
+    "src/front/lower_stmt.cpp": "47a89640dd8ac9c8ecb2aeb43301a6ab5a2bea668dfb15d7af4d1c426f389934",
+    "src/front/lower_sub.cpp": "f30f88cbedb30287455335162b0731beafc7fcd48b72098b8a9409a88320e494",
+    "src/front/lowerer.h": "377284c4cc0ba8141e436f5bf4876800847a239707c0b26cc336fdc65589745a",
+    "tools/gen_event_input_matrix.py": "df3ee437e3b36bd90afd9f17d82a6b1ee4f2377f683f3db8b863f20a03055dd3",
+    "tests/tools/check_event_input_boundaries.py": "1faa3dfbd4402191013862cbee5e5e44457d0b35a8d497ccf6ffe272cf04507a"
+  },
+  "runtime_and_test_sources_match_validated_commit": true,
+  "existing_expectations": "check_expected_change passes for the implementation commit; existing expectations are unchanged",
+  "preserved_measurements": "event-input-validation.json records four compiled controls and fresh population/sv-tests/Icarus 13 and 14 probes for these same source digests",
+  "hosted_ci": "No result for this new integration is claimed; the earlier successful hosted run belongs to 304e1aec."
+}

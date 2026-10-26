@@ -1,7 +1,9 @@
 # ソースのevent入力引数と実行時選択による入力部分配列
 
-[English](event-input-execution.md)。状態：2026-10-26、作業ブランチに実装し、ローカル検証済みです。
-mainへのマージとpushはしていません。P1全体は未完了です。
+[English](event-input-execution.md)。状態：2026-10-26、`63c64d83`をmainに取り込み、ローカル検証済みです。
+P1全体は未完了です。[コミット後の検証](../measurements/2026-10-26/event-input-committed-validation.json)で
+コミットした全テストのlocal CI 21項目が通りました。下の作業ツリーの記録は取り込み前の
+日付付き証拠として残し、現在のブランチ/公開状態を示すものではありません。
 
 ## 契約と実装
 

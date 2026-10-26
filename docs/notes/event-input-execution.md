@@ -1,7 +1,11 @@
 # Source event inputs and runtime-selected input subarrays
 
-[日本語](event-input-execution.ja.md). Status: implemented on the working branch;
-locally validated, 2026-10-26. Not merged or pushed. P1 remains incomplete.
+[日本語](event-input-execution.ja.md). Status: integrated into main as `63c64d83`;
+locally validated, 2026-10-26. P1 remains incomplete.
+[Post-commit validation](../measurements/2026-10-26/event-input-committed-validation.json)
+passes all 21 local CI steps on the complete committed tests. The earlier
+working-tree record below is retained as dated pre-integration evidence;
+it does not describe the current branch/publication state.
 
 ## Contract and implementation
 

@@ -27,12 +27,12 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-26)
 
-The published implementation checkpoint is `304e1aec` on `main`, including
-[automatic-event construction and lifetime handling](docs/notes/automatic-event-main-integration.md).
-Local CI passes 21/21 checks; dev/ASan/UBSan pass 5,741/5,743 and release
-5,742/5,744, with zero failures and two known skips each. Its
-[hosted CI run](https://github.com/kurochan001/kirimasim/actions/runs/40319556353)
-also completed successfully across all 14 jobs. P1 remains incomplete;
+The main implementation checkpoint is `63c64d83`, including
+[source event inputs and runtime-selected input subarrays](docs/notes/event-input-execution.md).
+[Committed local CI](docs/measurements/2026-10-26/event-input-committed-validation.json)
+passes 21/21 checks; dev/ASan/UBSan pass 5,847/5,849 and release 5,848/5,850,
+with zero failures and two known skips each. Fresh population, sv-tests and
+Icarus 13/14 probes preserve the earlier passes. P1 remains incomplete;
 [dated checkpoint notes](docs/notes/p1-icarus-progress.md) preserve earlier
 approval, failure and publication states.
 

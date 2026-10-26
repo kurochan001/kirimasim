@@ -13,7 +13,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
-**Working branch, not published:** [source event inputs](event-input-execution.md)
+**Main implementation `63c64d83`:** [source event inputs](event-input-execution.md)
 now share object identity through scalar/fixed-array calls, waiting tasks,
 retained descendants and deferred snapshots. Runtime-selected input subarrays
 use the common typed storage copier. The 104 new designs, policy boundaries
@@ -21,9 +21,11 @@ and four compiled controls pass. Full local CI passes 21/21 steps, with
 dev/ASan/UBSan at 5,847/5,849 and release at 5,848/5,850, zero failures and
 two known skips. Fresh population/sv-tests and both 87-probe comparisons
 preserve the prior counts and all prior passes; the linked note records the
-working-source digests and limits. No existing expectation or specification is changed.
+implementation digests and limits. [Post-commit local CI](../measurements/2026-10-26/event-input-committed-validation.json)
+also passes all 21 steps before main integration. No existing expectation or
+specification is changed.
 
-**Published implementation on main:** `e909f022` adds [automatic declaration events and
+**Earlier automatic-event main checkpoint:** `e909f022` adds [automatic declaration events and
 instruction collection](instruction-event-execution.md), publishing native/SSA/transfer
 roots before physical growth. Its 176 source designs, 12 VM tests with 32 verified
 SIR designs, one registry query test and 12 compiled controls pass. Both 87-probe
