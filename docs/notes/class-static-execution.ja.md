@@ -1,7 +1,9 @@
 # クラスのstatic記憶域と事前初期化
 
-[English](class-static-execution.md)。状態：2026-10-27、ローカルtopicで実装。
-mainへ未取り込み・未pushです。P1とクラスオブジェクト実行は未完です。
+[English](class-static-execution.md)。状態：2026-10-27、実装・ローカル検証済み。
+実装`9e6a149d`をmainへ取り込みました。
+[取り込み記録](../measurements/2026-10-27/class-static-main-integration.json)で検証済みの実装・テストの不変を確認します。
+元の検証記録は、測定時点の未commit状態を履歴として保持します。P1とクラスオブジェクト実行は未完です。
 
 ## 契約と実装
 
@@ -76,8 +78,9 @@ genericの黙った省略の受理、初期化順警告の省略、宣言探索�
 に記載します。最終の全local CIは**21/21項目成功**です。dev/ASan/UBSanは各
 6,625/6,627、releaseは6,626/6,628、失敗0・既知skip各2件です。
 PerfCount・804件の故障置換箇所・format・clang-tidyの115翻訳単位も通りました。
-既存の保護されたテスト本体・期待値は基準commitから不変です。topicにupstreamがないため、
-commitだけを調べる検査とは別に作業ツリーの差分を確認しています。
+既存の保護されたテスト本体・期待値は基準commitから不変です。測定時はcommit前で
+topicにupstreamがなかったため作業ツリーの差分を確認しました。その後、実装commit単位の
+期待値保護検査も通過したことを取り込み記録に示しています。
 
 [固定母集団](../measurements/2026-10-27/class-static-population.txt)は
 1,456/1,466、失敗0・未対応10です。

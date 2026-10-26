@@ -13,11 +13,15 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Current local topic:** [non-parameterized class static storage](class-static-execution.md)
+**Main integration `9e6a149d`:** [non-parameterized class static storage](class-static-execution.md)
 adds eager initializer discovery, canonical inherited slots and static-method
 access through existing typed storage. Parameterized static storage is rejected
 explicitly instead of silently omitting effects; objects remain incomplete.
-The note records validation and publication state. No existing oracle or spec changes.
+The [integration record](../measurements/2026-10-27/class-static-main-integration.json)
+confirms unchanged validated implementation/tests and the commit-level oracle
+guard. Full local CI passes 21/21 steps: dev/ASan/UBSan 6,625/6,627 and
+release 6,626/6,628, with zero failures and two known skips each.
+No existing oracle or specification changes; P1 remains incomplete.
 
 **Main integration `f100cd86`:** [event initialization copies](event-initializer-execution.md)
 in `dfddb94b` share objects for scalar values and fixed-array patterns, including

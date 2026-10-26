@@ -1,7 +1,10 @@
 # Class static storage and eager initialization
 
-[日本語](class-static-execution.ja.md). Status: implemented on a local topic,
-2026-10-27; not merged or pushed. P1 and class object execution remain incomplete.
+[日本語](class-static-execution.ja.md). Status: implemented and locally validated,
+2026-10-27. Implementation `9e6a149d` is integrated into main; the
+[integration record](../measurements/2026-10-27/class-static-main-integration.json)
+confirms unchanged validated implementation/tests. The validation record retains
+its measurement-time uncommitted state. P1 and class object execution remain incomplete.
 
 ## Contract and implementation
 
@@ -92,7 +95,9 @@ The final full local CI passes **21/21 steps**: dev/ASan/UBSan each pass
 6,625/6,627, release passes 6,626/6,628, with zero failures and the same two known
 skips each. PerfCount, 804 mutation anchors, formatting and all 115 clang-tidy
 translation units pass. Existing protected test sources/expectations are
-unchanged against the base; the topic has no upstream for commit-only checks.
+unchanged against the base. That run preceded the implementation commit and the
+topic had no upstream; the implementation commit now also passes the explicit
+commit-level expectation guard, as the integration record shows.
 
 The [fixed population](../measurements/2026-10-27/class-static-population.txt) is
 1,456/1,466, zero failures, ten unsupported; native

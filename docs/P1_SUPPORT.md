@@ -11,9 +11,10 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-This inventory describes tier 1 as of 2026-10-27 on the local class-static topic,
-not yet merged or pushed. Main baseline `ca72b91f` includes
-[event initialization copies](notes/event-initializer-execution.md); this topic adds
+This inventory describes tier 1 as of 2026-10-27 on main, including class-static
+implementation `9e6a149d` ([integration record](measurements/2026-10-27/class-static-main-integration.json)).
+The earlier main baseline `ca72b91f` includes
+[event initialization copies](notes/event-initializer-execution.md); main now also supports
 [non-parameterized class static properties](notes/class-static-execution.md).
 The supported range also includes automatic
 scalar/fixed-array event defaults, retained task/fork extents, published

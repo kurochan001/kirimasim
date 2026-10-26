@@ -27,13 +27,14 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
-The local class-static topic adds [non-parameterized static properties](docs/notes/class-static-execution.md),
-including eager initialization of unused declarations. Its [full local CI](docs/measurements/2026-10-27/class-static-validation.json)
+Main adds [non-parameterized static properties](docs/notes/class-static-execution.md),
+including eager initialization of unused declarations, in `9e6a149d`. Its [full local CI](docs/measurements/2026-10-27/class-static-validation.json)
 passes 21/21 steps, with 568 new CTest entries and seven caught compiled faults.
-It is not committed, merged or pushed; class objects and parameterized static
-storage remain work.
+The [integration record](docs/measurements/2026-10-27/class-static-main-integration.json)
+confirms unchanged validated implementation and tests. Class objects and
+parameterized static storage remain work.
 
-The main implementation adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
+The earlier main checkpoint adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
 in `dfddb94b`; the user's three-case oracle migration is separate in `2da32daa`.
 The three commits are [integrated into main through `f100cd86`](docs/measurements/2026-10-27/event-initializer-main-integration.json). [Full local CI](docs/measurements/2026-10-27/event-initializer-validation.json)
 passes 21/21 checks; dev/ASan/UBSan pass 6,057/6,059 and release 6,058/6,060,

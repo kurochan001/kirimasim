@@ -12,11 +12,14 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
-**現在のローカルtopic：** [非パラメータ化クラスのstatic記憶域](class-static-execution.ja.md)を
+**main取り込み `9e6a149d`：** [非パラメータ化クラスのstatic記憶域](class-static-execution.ja.md)を
 追加し、未参照宣言の事前初期化・継承したslotの共有・staticメソッドからの操作を
 既存の型付き記憶域経由で実行します。パラメータ付きstatic記憶域は副作用を黙って落とさず
-明示的に未対応と診断します。オブジェクト実行は未完です。検証と公開状態はリンク先に記録し、
-既存の期待値や仕様は変えていません。
+明示的に未対応と診断します。オブジェクト実行は未完です。
+[取り込み記録](../measurements/2026-10-27/class-static-main-integration.json)で、検証済みの実装・テストが
+不変であることと、commit単位の期待値保護検査の成功を確認します。全local CIは21/21成功、
+dev/ASan/UBSanは各6,625/6,627、releaseは6,626/6,628、失敗0・既知skip各2件です。
+既存の期待値や仕様は変えていません。P1は未完です。
 
 **main取り込み `f100cd86`：** `dfddb94b`で[event初期化コピー](event-initializer-execution.ja.md)を
 追加し、nullを含むscalarと固定配列patternでobjectを共有します。static初期化は時刻0前に一度です。

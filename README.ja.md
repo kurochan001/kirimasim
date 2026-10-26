@@ -19,13 +19,14 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
-ローカルclass-static topicで、未使用宣言の事前初期化を含む
+mainに`9e6a149d`を取り込み、未使用宣言の事前初期化を含む
 [非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)を追加しました。
 [全local CI](docs/measurements/2026-10-27/class-static-validation.json)は21/21項目成功で、
-新規CTest568件・コンパイルした7故障の検出も通りました。未commit・未merge・未pushです。
+新規CTest568件・コンパイルした7故障の検出も通りました。
+[取り込み記録](docs/measurements/2026-10-27/class-static-main-integration.json)で、検証済みの実装・テストが不変であることを確認しています。
 クラスオブジェクトとパラメータ付きstatic記憶域は残作業です。
 
-mainでは`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initializer-execution.ja.md)を追加し、
+以前のmainの区切りでは`dfddb94b`で[event宣言の初期化コピー](docs/notes/event-initializer-execution.ja.md)を追加し、
 人が承認した期待値3件の移行を`2da32daa`に分けました。3コミットを
 [`f100cd86`までmainへ取り込みました](docs/measurements/2026-10-27/event-initializer-main-integration.json)。
 [全local CI](docs/measurements/2026-10-27/event-initializer-validation.json)は

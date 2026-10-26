@@ -10,9 +10,10 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
-2026-10-27時点のローカルclass-static topicの第1層です。mainへ未取り込み・未pushです。
+2026-10-27時点のmainの第1層です。クラスstatic記憶域の実装`9e6a149d`を含みます
+（[取り込み記録](measurements/2026-10-27/class-static-main-integration.json)）。
 mainの基準`ca72b91f`には[event初期化コピー](notes/event-initializer-execution.ja.md)が入り、
-このtopicで[非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)を追加します。
+mainで[非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)を追加します。
 既存の範囲は、固定集約値へのビット問い合わせ、ヒープを使うファイルモニターの生存期間検査、
 動的配列・キュー、広い三状態マスク、集約値全体のブロッキング時間制御、
 対象の副作用より前の集約値の保持、
