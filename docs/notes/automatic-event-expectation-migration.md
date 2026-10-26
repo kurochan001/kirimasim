@@ -1,9 +1,10 @@
 # Automatic event: migration of a historical rejection check
 
-[日本語](automatic-event-expectation-migration.ja.md). Status: **proposal (not approved)**,
-2026-10-26. Implementation is authorized by the approved automatic-capture and
-managed-event safepoint contracts. This separate request concerns one existing
-test oracle, under CLAUDE.md and AI_POLICY's protected-expectation rule.
+[日本語](automatic-event-expectation-migration.ja.md). Status: **approved and applied
+(2026-10-26)**. The user approved this exact one-case migration after reviewing
+the proposal. It is applied separately from implementation, with every source
+input preserved. The original request and pre-approval evidence below are kept
+as the decision record; their approval requests and failures refer to that checkpoint.
 
 ## Exact decision requested
 

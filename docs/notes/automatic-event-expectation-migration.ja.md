@@ -1,9 +1,9 @@
 # automatic event：過去の拒否チェックの期待値移行
 
 [English](automatic-event-expectation-migration.md) が正です。Status:
-**proposal (not approved)**、2026-10-26。実装は承認済みの automatic-capture と
-managed-event safepoint の契約に基づきます。今回は CLAUDE.md と AI_POLICY の
-期待値保護規則に従い、既存テストの期待値 1 件について別途承認を求めます。
+**approved and applied (2026-10-26)**。人がこの具体的な 1 件の移行を承認しました。
+実装とは別に適用し、すべてのソース入力を保持します。以下の提案本文と承認前の検証は
+決定の記録として保ち、承認要求や失敗の記述は以前の区切りの状態を指します。
 
 ## 承認を求める具体的な変更
 

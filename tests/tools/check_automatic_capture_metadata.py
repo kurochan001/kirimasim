@@ -72,10 +72,6 @@ initial begin automatic int actual;run(actual);end endmodule
 ''', '''module top;int actual;
 task automatic run(const ref static int value);fork begin #1;value=7;end join_none endtask
 initial begin run(actual);#3;end endmodule
-''', '''module top;
-task automatic run();event unread;int value=7;
-fork begin #1;$display("%0d",value);end join_none endtask
-initial begin run();#3;end endmodule
 ''']
         for source in rejected:
             path.write_text(source)
@@ -83,7 +79,17 @@ initial begin run();#3;end endmodule
             assert result.returncode == 2 and not result.stdout, result.stdout+result.stderr
             assert re.search(r'probe\.sv:\d+:\d+: error:', result.stderr), result.stderr
             assert 'internal error' not in result.stderr, result.stderr
-    print('full typed lexical imports, empty extents, descendants and five strict boundaries checked')
+        accepted = '''module top;
+task automatic run();event unread;int value=7;
+fork begin #1;$display("%0d",value);end join_none endtask
+initial begin run();#3;end endmodule
+'''
+        path.write_text(accepted)
+        result = run()
+        assert result.returncode == 0 and result.stdout == '7\n', result.stdout+result.stderr
+        assert not re.search(r'(?m)^.*\berror:', result.stderr), result.stderr
+        assert 'internal error' not in result.stderr, result.stderr
+    print('full typed lexical imports, empty extents, descendants, four strict boundaries and one automatic-event extent checked')
     return 0
 
 
