@@ -71,10 +71,28 @@ cmake --build --preset "$p" --target kirimasim_fst_dependency
 ctest --preset "$p" -R '^tools/fst_dependency$' --output-on-failure
 ```
 
-Full release/ASan/UBSan suites and `tools/local_ci.py` were not run for this
-setup; only the focused dependency target was built and tested in those three
-configurations. Linux and hosted CI execution are **not confirmed**: run the
-configured workflows after publication to check package installation, compiler
-variants and the smoke test there. Actual waveform values, viewer compatibility,
-dump-task integration and performance require the future FST backend and its
-tests. Existing VCD behavior and existing expected values are unchanged.
+The initial setup check above built and tested only the focused dependency
+target in release/ASan/UBSan. The subsequent main integration check below
+extends this to the full suites.
+
+## Main integration validation (2026-10-26)
+
+Before pushing to main, `tools/local_ci.py` ran on implementation commit
+`15e3096514e3` with the four default presets and LLVM 22.1.8 lint tools.
+All 21 steps passed:
+
+- dev, release, ASan and UBSan: configure, full build and full CTest. Each
+  configuration had 5,384 tests, with 5,382 passed, zero failed and the same
+  two skips listed above. The FST dependency smoke passes in all four.
+- Release optimization flags, banned constructs, SPDX notices, suite files,
+  global state (including the clang-tidy probe), preservation of existing
+  expectations, and README counts.
+- clang-format and clang-tidy across the tracked source files covered by the
+  local CI script.
+
+This validation-record update changes documentation only. Linux and hosted CI
+execution are **not confirmed**: run the configured workflows after publication
+to check package installation, compiler variants and the smoke test there.
+Actual waveform values, viewer compatibility, dump-task integration and
+performance require the future FST backend and its tests. Existing VCD behavior
+and existing expected values are unchanged.
