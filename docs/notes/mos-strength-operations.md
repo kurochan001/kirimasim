@@ -3,6 +3,11 @@
 [日本語](mos-strength-operations.ja.md). Status: pure operations implemented and checked,
 2026-10-26. Source MOS/switch execution remains work.
 
+**Later approval (2026-10-26):** the user separately approved recommended option 1
+of the [managed-event safepoint amendment](managed-event-safepoints-proposal.md),
+now incorporated into RUNTIME_ABI 6. References to its unapproved status below
+record the earlier checkpoint; complete publication and validation remain work.
+
 ## Contract and implementation
 
 The [approved MOS/switch contract](mos-switch-proposal.md) section 2 and its

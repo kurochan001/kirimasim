@@ -26,8 +26,10 @@ nmos 期待値移行（`6f301460`）が含まれます。変更前 main の全 l
 Icarus 13.0 は 143 設計中 135 設計をコンパイルでき、110 設計が一致しました。
 配列とスカラーの縮小観測も記録しています。force・ポート・書式と P1 全体は未完成です。
 この変更はローカルのコミットで、main 統合や push はしていません。
-別の [管理 event の命令境界 safe point 修正](managed-event-safepoints-proposal.ja.md)も未承認です。
-一般的な継続指示はその仕様変更の承認とは扱いません。
+別の [管理 event の命令境界 safe point 修正](managed-event-safepoints-proposal.ja.md)の推奨案1は
+2026-10-26に承認され、RUNTIME_ABI 6とautomatic捕捉契約5・6・8へ反映しました。
+完全なルート公開と受入行列の実装は残作業で、承認だけでソースのautomatic event生成や
+新しい回収タイミングを有効にしません。以下の過去の記録は各測定時の承認状況を保ちます。
 
 ### 直前の SIR の記録
 

@@ -132,6 +132,7 @@ README 集計も通ります。この途中の実装に対する release・ASan�
 `tools/local_ci.py`、Linux・最小コンパイラ、グラフ性能比較は未実行です。
 未確認の検査を成功としては記録しません。
 
-別の [管理 event の safe point 修正案](managed-event-safepoints-proposal.ja.md)も未承認です。
+別の [管理 event の safe point 修正案](managed-event-safepoints-proposal.ja.md)の推奨案1は、
+今回の受動スイッチ計測後の2026-10-26に別途承認されました。完全公開と検証の実装は未完了です。
 これは今後の automatic event 実行に関するもので、この受動スイッチ実装とは別です。
 継続指示や承認の有無を尋ねる発言を、どちらの提案の承認とも解釈していません。

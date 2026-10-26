@@ -3,6 +3,11 @@
 [日本語](strength-driver-execution.ja.md). Status: implemented kernel checkpoint,
 2026-10-26. Source MOS/switch execution remains work.
 
+**Later approval (2026-10-26):** the user separately approved recommended option 1
+of the [managed-event safepoint amendment](managed-event-safepoints-proposal.md),
+now incorporated into RUNTIME_ABI 6. References to its unapproved status below
+record the earlier checkpoint; complete publication and validation remain work.
+
 ## Grounds and scope
 
 `f93da11b` implements the independent-node physical-origin and timing part of the

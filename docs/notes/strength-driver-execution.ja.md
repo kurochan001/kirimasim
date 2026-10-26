@@ -3,6 +3,10 @@
 [English](strength-driver-execution.md)が正。状態：カーネルの実装段階、2026-10-26。
 ソースのMOS/スイッチ実行は残作業です。
 
+**後の承認（2026-10-26）：** 人が別途、[管理eventのsafe point修正](managed-event-safepoints-proposal.ja.md)の
+推奨案1を承認し、RUNTIME_ABI 6へ反映しました。以下の未承認という記述は以前の区切りの
+状態を記録したものです。完全な公開手順と検証の実装は残作業です。
+
 ## 根拠と範囲
 
 `f93da11b`で、承認済みの[MOS/スイッチ契約](mos-switch-proposal.ja.md)1/6/7と

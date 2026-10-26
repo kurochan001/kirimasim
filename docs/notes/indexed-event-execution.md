@@ -8,6 +8,11 @@ passes all 21 local CI checks: dev/ASan/UBSan 5,139/5,141, release 5,140/5,142,
 zero failures and two known skips each. The earlier failed runs below remain
 historical evidence; the instruction-safepoint proposal remains unapproved.
 
+**Later approval (2026-10-26):** the user separately approved recommended option 1
+of the [managed-event safepoint amendment](managed-event-safepoints-proposal.md),
+now incorporated into RUNTIME_ABI 6. References to its unapproved status below
+record the earlier checkpoint; complete publication and validation remain work.
+
 ## Contract and connection
 
 The grounds are the approved automatic-capture contract 5/7, SIR_SPEC 3.2.1/7/8,

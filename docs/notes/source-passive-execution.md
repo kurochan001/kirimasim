@@ -161,6 +161,8 @@ anchors and regenerated README counts pass. Full release/ASan/UBSan suites,
 were not run for this checkpoint. No missing check is represented as a pass.
 
 The separate [managed-event safepoint amendment](managed-event-safepoints-proposal.md)
-also remains unapproved; it concerns a future automatic-event execution step,
+was separately approved as recommended option 1 on 2026-10-26, after this
+passive-switch measurement. Its complete publication protocol and evidence
+remain implementation work. It concerns a future automatic-event execution step,
 not this passive switch implementation. Approval of either proposal is not
 inferred from general continuation or from asking about approval status.

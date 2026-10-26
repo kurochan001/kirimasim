@@ -8,6 +8,12 @@ six contracts together on 2026-10-25. See the [specification mapping](p1-executi
 Approval does not claim implemented support, authorize changes to existing
 expectations, or introduce dependencies.
 
+**Amendment approved 2026-10-26:** recommended option 1 of the
+[managed-event safepoint contract](managed-event-safepoints-proposal.md) amends
+sections 5, 6 and 8 below. RUNTIME_ABI 6 contains the operative event-only
+exception. The original 2026-10-25 approval and observations remain historical;
+this later approval authorizes its implementation, not completed support.
+
 ## Why the existing contract needs amendment
 
 The [implemented fork-declaration path](fork-local-declarations.md) initializes
@@ -165,6 +171,11 @@ reference and deep-copy rules remain unchanged.
 
 ## 5. Automatic event construction and ownership
 
+**2026-10-26 amendment:** source construction requires the complete publication
+protocol of RUNTIME_ABI 6, including a legal collection opportunity before
+physical event-row growth. Explicit caller collection alone does not establish
+bounded reuse for source execution.
+
 An automatic scalar event without an initializer gets a fresh event object
 when its declaration executes (6.8). Each fixed-array element gets its own
 object per activation, with the existing dimension order. Capturing the event
@@ -226,9 +237,13 @@ Normal integers must not become roots. Class/object and other future field
 kinds require their own real root provider before source execution is enabled;
 opaque unknown fields must not be treated as safely untraced.
 
-Root-only lease changes make collection eligible at the existing safe points,
-even without a heap mutation. Never collect while source/guard code, argument
-marshalling or a store transaction still has unpublished temporaries. Enumerate
+Root-only lease changes make collection eligible even without a heap mutation.
+Container-heap collection retains the existing boundary-only safepoints.
+Managed events may additionally use published VM instruction boundaries under
+the event-only exception approved on 2026-10-26 in RUNTIME_ABI 6, including
+synchronous functions and guards after complete publication and pin retention.
+Never collect while source/guard code, argument marshalling or a store
+transaction still has unpublished temporaries. Enumerate
 roots without allocating or executing source callbacks. Freeing a scope drops
 its value roots and event associations; it does not run a SystemVerilog task.
 
@@ -280,6 +295,13 @@ The kernel imports no slang, SIR or LLVM. Add all new public headers to the
 existing C++20 header test. This selects no new external C ABI version.
 
 ## 8. Exactness, resources and acceptance
+
+**2026-10-26 amendment:** before enabling instruction-boundary collection or
+source automatic events, complete all publication, cleanup, physical-row-bound,
+nonwaiting-loop and compiled-fault requirements in the
+[approved safepoint contract](managed-event-safepoints-proposal.md). Preserve
+DPI and termination/final exclusions, existing oracles/PerfCount budgets and
+ordinary non-event fast paths. This adds no new dependency or C ABI version.
 
 Validate field dimensions/offsets before allocation. Fork registration acquires
 all capture/extent ownership transactionally before making children runnable;

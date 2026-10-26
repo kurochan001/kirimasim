@@ -190,7 +190,8 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 実際の対象読み取りの捕捉を、既存のregion/slot回収境界へ接続しました。
 通常/捕捉配列と入力/戻り値の受け渡しを手組みSIRで検査しています。
 ソースからのautomatic生成、命令間safepointに必要なSSA全体の公開、所有ref/objectの提供は
-残作業です。eventだけのsafepoint修正案は未承認で、待機なしソースの有界性は主張しません。
+残作業です。[eventだけのsafepoint修正](notes/managed-event-safepoints-proposal.ja.md)は
+2026-10-26に承認されましたが、公開手順は未完了で、待機なしソースの有界性は主張しません。
 
 ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
 独自160設計と厳格な方針境界16件が通り、コンパイルした4故障も検出しました。

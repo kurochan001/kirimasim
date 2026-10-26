@@ -21,3 +21,13 @@ tier 1のC++ API直接呼出し、formatVersion 0、C ABI 0.3は維持します�
 PerfCount予算の保護は継続し、必要な期待値移行は理由を示した別のレビューにします。
 依存・道具のインストールや大域状態の例外は承認に含めません。この承認や有限の比較プローブで
 P1完了とは扱いません。
+
+## 2026-10-26承認の管理event改訂
+
+人が別途、[管理eventのsafe point修正案](managed-event-safepoints-proposal.ja.md)の推奨案1を
+選択しました。RUNTIME_ABI 6とautomatic捕捉契約5・6・8を修正し、完全なルート公開と
+具体的な実行中pinの保持を条件に、同期関数やguardを含むVM命令境界でeventだけを回収できます。
+コンテナheapの境界限定、DPIと終了/finalの回収禁止は保ちます。新しい回収タイミングや
+ソースのautomatic event生成の有効化前に、完全公開と列挙した証拠をすべて揃えます。
+実装の許可であり、完了の主張ではありません。別件の[tran期待値移行](passive-expectation-migration.ja.md)は
+未承認・未適用で、期待値・依存・性能予算は変えません。

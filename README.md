@@ -115,7 +115,8 @@ now passes 186 new designs; three historical rejection checks were separately
 migrated with approval in `11096dc3`. [Typed SIR event execution](docs/notes/event-vm-boundaries.md)
 and collection at existing region/slot boundaries are connected. Automatic event
 source construction and instruction-level event safepoints remain work; the
-[safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) is not approved.
+[safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) was approved
+on 2026-10-26. Complete root publication and its acceptance matrix remain work.
 
 [Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
 now support named/mixed waits, delayed targets and `.triggered` through typed

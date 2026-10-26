@@ -112,5 +112,6 @@
   ],
   "main_integrated": false,
   "pushed": false,
-  "p1_complete": false
+  "p1_complete": false,
+  "pending_approval_snapshot_note": "The pending_approval list records the measurement-time state. After measurement, the user approved managed-event-safepoints option 1 on 2026-10-26; normative docs record it separately. The tran expectation migration remains unapproved and unapplied. No measured test result is changed by that approval."
 }

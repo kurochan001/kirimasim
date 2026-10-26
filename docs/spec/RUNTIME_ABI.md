@@ -170,8 +170,8 @@ match the actual destination. Language assignments still use the explicit
 copy operation first. A Context may receive an allocation source for its heap,
 which must outlive it, so adapter failures can be checked deterministically.
 
-Collection traces exact typed roots supplied by each tier: slots, process and
-call frames, temporaries, retained reference cells, pending writes and events,
+Container-heap collection traces exact typed roots supplied by each tier: slots,
+process and call frames, temporaries, retained reference cells, pending writes and events,
 reports and callbacks. It follows nested containers and reachable detached
 cells. Collection runs only between time slots or at region boundaries with
 all temporaries registered and no DPI call in progress. A suspended DPI task
@@ -181,7 +181,39 @@ unbounded scalability from deferred collection. Unreachable table entries may
 be reused, but stale tokens must never name a different value. Collection and
 mutation report allocation failure without a partial replacement.
 
-Implementation status (2026-10-24): the interpreter installs a scoped
+**Managed-event exception (approved 2026-10-26):** the managed-event registry
+may additionally collect at a VM instruction boundary, including inside a
+synchronous function or guard evaluation, when the complete event root set has
+been published and every in-flight kernel operation retains its concrete event
+pins. Collection executes no source callbacks, creates no simulated event and
+changes no scheduling region or simulation time. Collector reentrancy and
+collection during a partially published event store, argument/return transfer
+or registration are forbidden. A DPI call, including a suspended task, still
+forbids collection. Missing or unsupported event root providers forbid both
+collection and enabling source execution that needs those providers; failure
+must not sweep a partial root set. The container heap retains the boundary-only
+rule above. Termination and `final` retain SCHEDULER_SPEC 16.2's deferred cleanup;
+this exception adds no collection there.
+
+Before enabling this exception or source automatic-event construction, publish
+typed slots, ordinary/scoped/captured fields, input values, every active SSA
+region across nested/reentrant calls and callbacks, deferred arguments and
+unpublished transfer values. Retain runtime wait/trigger/monitor pins; never
+infer event handles from numeric, real, string or reference encoding bits.
+Before `event.new` requires physical growth, allow complete-root collection;
+any batching overhead must be bounded by retained roots and pending operations.
+Clear inactive roots on every unwind/return/disable/completion/failure, preserve
+retained descendants and pending operations, and restore prior hooks on every
+exit. Do not retry source side effects. The [approved event amendment](../notes/managed-event-safepoints-proposal.md)
+defines the required nonwaiting-loop, reentry, recursion, transfer, array, guard,
+cancellation, delayed-target and allocation-failure matrix, physical-row bounds,
+compiled omitted-root/premature-reuse controls and ordinary-path measurements.
+Implementation status (2026-10-26): this publication protocol and its complete
+VM/source validation remain pending; the approval is not evidence of completion.
+It adds no dependency, C function-table ABI version, option, hidden knob,
+performance-budget change or permission to change existing expectations.
+
+Container implementation status (2026-10-24): the interpreter installs a scoped
 `SafePointHook` when it first uses the container heap, and restores the prior
 hook on every exit. The scheduler calls it after an outer region drains and
 after the time-slot NBA arena is cleared, outside process and guard callbacks.
@@ -198,7 +230,8 @@ owned immediate/delayed NBA snapshots, pending drivers and held base/override
 values; the interpreter filters them by their destination slot's type before
 interpreting any bits. Numeric, real and other opaque words are never guessed
 to be handles. SSA temporaries cannot cross a wait (SIR_SPEC 5.1), and
-collection is suppressed while a native process or synchronous call is active.
+container-heap collection is suppressed while a native process or synchronous
+call is active.
 
 The heap records committed graph mutations. The interpreter also compares
 the typed root set, so dropping the last reference triggers collection without

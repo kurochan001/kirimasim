@@ -8,6 +8,11 @@ now publishes ordinary roots at existing safe points. Full SSA publication for
 instruction safepoints and source construction remain work; the following records
 the earlier component checkpoint.
 
+**Later approval (2026-10-26):** the user separately approved recommended option 1
+of the [managed-event safepoint amendment](managed-event-safepoints-proposal.md),
+now incorporated into RUNTIME_ABI 6. References to its unapproved status below
+record the earlier checkpoint; complete publication and validation remain work.
+
 ## Contract and implementation
 
 The grounds are the approved [automatic-capture contract](automatic-capture-proposal.md)

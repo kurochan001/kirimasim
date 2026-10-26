@@ -3,6 +3,10 @@
 [English](mos-strength-operations.md)が正。状態：純粋な演算を実装・検証済み、2026-10-26。
 ソースからのMOS/スイッチ実行は残作業です。
 
+**後の承認（2026-10-26）：** 人が別途、[管理eventのsafe point修正](managed-event-safepoints-proposal.ja.md)の
+推奨案1を承認し、RUNTIME_ABI 6へ反映しました。以下の未承認という記述は以前の区切りの
+状態を記録したものです。完全な公開手順と検証の実装は残作業です。
+
 ## 契約と実装
 
 根拠は[承認済みMOS/スイッチ契約](mos-switch-proposal.ja.md)2と

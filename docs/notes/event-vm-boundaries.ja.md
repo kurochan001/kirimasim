@@ -2,6 +2,10 @@
 
 [English](event-vm-boundaries.md)が正。状態：境界で動く部品を実装・検証済み、2026-10-26。ソースのautomatic eventはまだ有効にしていません。
 
+**後の承認（2026-10-26）：** 人が別途、[管理eventのsafe point修正](managed-event-safepoints-proposal.ja.md)の
+推奨案1を承認し、RUNTIME_ABI 6へ反映しました。以下の未承認という記述は以前の区切りの
+状態を記録したものです。完全な公開手順と検証の実装は残作業です。
+
 ## 根拠と実装
 
 根拠は承認済みの[automatic捕捉契約](automatic-capture-proposal.ja.md)5/6/7、

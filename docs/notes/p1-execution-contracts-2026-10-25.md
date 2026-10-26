@@ -26,3 +26,17 @@ and PerfCount budgets stay protected. Any necessary expectation migration gets
 its separate reasoned review. No dependency, tool installation or global-state
 exception is approved here. Neither this approval nor finite comparison probes
 establishes P1 completion.
+
+## Managed-event amendment approved on 2026-10-26
+
+The user separately selected recommended option 1 of the
+[managed-event safepoint proposal](managed-event-safepoints-proposal.md).
+It amends RUNTIME_ABI 6 and automatic-capture 5/6/8 to permit event-only
+collection at completely published VM instruction boundaries, including
+synchronous functions and guards, with concrete runtime pins retained.
+The container heap retains boundary-only collection; DPI and termination/final
+exclusions remain. Complete publication and all listed evidence are required
+before enabling the new timing or source automatic-event construction.
+This is an implementation authorization, not a completion claim. The separate
+[tran expectation migration](passive-expectation-migration.md) remains unapproved
+and unapplied; no expectation, dependency or performance budget is changed.

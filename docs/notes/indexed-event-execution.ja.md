@@ -6,6 +6,10 @@
 dev/ASan/UBSanは5,139/5,141、releaseは5,140/5,142で、各失敗0・既知スキップ2件です。
 下の移行前の失敗は過去の証拠として保持します。命令間safepoint案は引き続き未承認です。
 
+**後の承認（2026-10-26）：** 人が別途、[管理eventのsafe point修正](managed-event-safepoints-proposal.ja.md)の
+推奨案1を承認し、RUNTIME_ABI 6へ反映しました。以下の未承認という記述は以前の区切りの
+状態を記録したものです。完全な公開手順と検証の実装は残作業です。
+
 ## 契約と接続
 
 根拠は承認済みautomatic捕捉契約5/7、SIR_SPEC 3.2.1/7/8、VALUE_SEMANTICS 3.11、

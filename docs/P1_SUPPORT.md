@@ -217,7 +217,9 @@ storage, waits/triggers and object-read capture at existing region/slot collecti
 boundaries. Ordinary/captured arrays and input/return transport are tested in
 hand-built SIR. Source automatic construction, complete SSA publication for
 instruction safepoints and owned ref/object providers remain work. The event-only
-safepoint amendment is not approved; no bounded no-wait source claim is made.
+[safepoint amendment](notes/managed-event-safepoints-proposal.md) was approved on
+2026-10-26; the publication protocol remains work, and no bounded no-wait source
+claim is made.
 
 Source [runtime fixed-array event selections](notes/indexed-event-execution.md)
 now pass 160 original designs and 16 strict policy boundaries, with four compiled

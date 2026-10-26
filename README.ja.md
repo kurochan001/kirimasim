@@ -84,7 +84,8 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 は新規186設計で通り、過去の未対応3テストは承認済みの別コミット`11096dc3`で移行しました。
 [型付きSIR event実行](docs/notes/event-vm-boundaries.ja.md)と既存のregion/slot境界での回収も
 接続しました。ソースのautomatic event生成と命令間のevent safepointは残作業で、
-[safepoint修正案](docs/notes/managed-event-safepoints-proposal.ja.md)は未承認です。
+[safepoint修正案](docs/notes/managed-event-safepoints-proposal.ja.md)は2026-10-26に承認されました。
+完全なルート公開と受入行列の実装は残作業です。
 
 [実行時indexでの固定配列event選択](docs/notes/indexed-event-execution.ja.md)を型付き値へ接続し、
 名前付き/混合待機・遅延対象・`.triggered`を独自160ソースで検査しました。

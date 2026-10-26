@@ -32,7 +32,11 @@ Icarus 13.0 designs (143 total), plus reduced array/scalar observations.
 Force/ports/formatting and the broader P1 goal remain unfinished. This work is
 committed locally, not integrated into main or pushed. The separate
 [managed-event instruction-boundary safepoint amendment](managed-event-safepoints-proposal.md)
-also remains unapproved; general continuation does not approve that specification change.
+was approved as recommended option 1 on 2026-10-26 and incorporated into
+RUNTIME_ABI 6 and automatic-capture 5/6/8. Complete root publication and its
+acceptance matrix remain implementation work; source automatic-event construction
+and the new collection timing are not enabled by approval alone. Older checkpoint
+statements below retain their measurement-time approval status.
 
 ### Previous SIR checkpoint
 
