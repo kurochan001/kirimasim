@@ -514,6 +514,145 @@ TEST(VmEvent, InputCopiesAndFunctionReturnsShareTheObjectAcrossCallsAndWaits) {
     }
 }
 
+TEST(VmEvent, EventReturnAndOutputCopybackKeepDistinctObjectsAndCapturedHomes) {
+    for (const bool scoped : {false, true}) {
+        Model m;
+        const auto answer = m.slot(s::u2(1), {{0, 1}});
+        m.d.processes[0].frame = {{"output", event}, {"returned", event}};
+        s::Subroutine function;
+        function.name = "top.make";
+        function.kind = s::SubroutineKind::Function;
+        function.automatic = true;
+        function.returnType = event;
+        function.loc = {0, 2, 3};
+        function.frame = {{"output", event}};
+        if (scoped) {
+            function.frame[0].home = s::FrameHome::Scoped;
+            function.frame[0].activationScope = s::ActivationScopeId{0};
+            function.activation.root = s::ActivationScopeId{0};
+            function.activation.scopes = {{s::kNone, {s::FrameVarId{0}}}};
+        }
+        function.params = {{"output", s::Direction::Output, event, s::kNone, s::FrameVarId{0}}};
+        function.numTemps = 2;
+        function.blocks = {
+            {{},
+             {{Op::EventNew, event, s::TempId{0}, {}, {0, 3, 1}},
+              {Op::Fstore,
+               s::voidType(),
+               s::kNone,
+               {field(0), Operand::temp(s::TempId{0})},
+               {0, 3, 1}},
+              {Op::EventNew, event, s::TempId{1}, {}, {0, 3, 1}},
+              {Op::Ret, s::voidType(), s::kNone, {Operand::temp(s::TempId{1})}, {0, 3, 1}}}}};
+        m.d.subroutines.push_back(std::move(function));
+        const auto returned =
+            m.emit(0, 0, Op::Call, {Operand::subroutine(s::SubroutineId{0}), field(0)}, event);
+        m.store(0, 0, field(1), returned);
+        m.wait(0, 0, 1, 1);
+        const auto output = m.emit(0, 1, Op::Fload, {field(0)}, event);
+        const auto saved = m.emit(0, 1, Op::Fload, {field(1)}, event);
+        m.emit(0, 1, Op::Trigger, {output});
+        m.emit(0, 1, Op::StoreElem, {answer, m.ticks(0), m.triggered(0, 1, saved)});
+        m.emit(0, 1, Op::Trigger, {saved});
+        m.emit(0, 1, Op::StoreElem, {answer, m.ticks(1), m.triggered(0, 1, saved)});
+        m.emit(0, 1, Op::Ret);
+        ASSERT_TRUE(m.valid());
+        k::Context ctx;
+        const auto result = kirimasim::vm::run(m.d, ctx);
+        ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_EQ(word(ctx, answer, 0), 0U);
+        EXPECT_EQ(word(ctx, answer, 1), 1U);
+        EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
+        EXPECT_EQ(ctx.activations().stats().live, 0U);
+    }
+}
+
+TEST(VmEvent, WaitingTaskCopiesEveryEventArrayElementBackToItsCaller) {
+    Model m;
+    const auto answer = m.slot(s::u2(1), {{0, 2}});
+    m.d.processes[0].frame = {{"output", event, s::kNone, {{-1, 1}}}};
+    s::Subroutine task;
+    task.name = "top.make_array";
+    task.kind = s::SubroutineKind::Task;
+    task.automatic = task.mayWait = true;
+    task.returnType = s::voidType();
+    task.loc = {0, 2, 3};
+    task.frame = {{"output", event, s::kNone, {{-1, 1}}}};
+    task.params = {{"output", s::Direction::Output, event, s::kNone, s::FrameVarId{0}}};
+    task.numTemps = 3;
+    task.blocks.resize(2);
+    for (unsigned i = 0; i < 3; ++i) {
+        const auto index = m.constant(s::s2(64), static_cast<std::uint64_t>(i) - 1);
+        task.blocks[0].instrs.push_back({Op::EventNew, event, s::TempId{i}, {}, {0, 3, 1}});
+        task.blocks[0].instrs.push_back({Op::StoreElem,
+                                         s::voidType(),
+                                         s::kNone,
+                                         {field(0), index, Operand::temp(s::TempId{i})},
+                                         {0, 3, 1}});
+    }
+    task.blocks[0].instrs.push_back(
+        {Op::WaitDelay, s::voidType(), s::kNone, {m.ticks(1), block(1)}, {0, 3, 1}});
+    task.blocks[1].instrs.push_back({Op::Ret, s::voidType(), s::kNone, {}, {0, 3, 1}});
+    m.d.subroutines.push_back(std::move(task));
+    m.emit(0, 0, Op::CallTask, {Operand::subroutine(s::SubroutineId{0}), field(0), block(1)});
+    for (unsigned i = 0; i < 3; ++i) {
+        const auto index = m.constant(s::s2(64), static_cast<std::uint64_t>(i) - 1);
+        const auto value = m.emit(0, 1, Op::LoadElem, {field(0), index}, event);
+        m.emit(0, 1, Op::Trigger, {value});
+        m.emit(0, 1, Op::StoreElem, {answer, m.ticks(i), m.triggered(0, 1, value)});
+    }
+    m.emit(0, 1, Op::Ret);
+    ASSERT_TRUE(m.valid());
+    k::Context ctx;
+    const auto result = kirimasim::vm::run(m.d, ctx);
+    ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(ctx.scheduler().time(), 1U);
+    for (unsigned i = 0; i < 3; ++i)
+        EXPECT_EQ(word(ctx, answer, i), 1U);
+    EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
+}
+
+TEST(VmEvent, SettledDeferredCallUsesCapturedEventAfterIssuerReturnsAndSourceIsReplaced) {
+    Model m;
+    const auto answer = m.slot(s::u2(1));
+    m.d.processes[0].frame = {{"source", event}};
+    s::Subroutine action;
+    action.name = "top.action";
+    action.kind = s::SubroutineKind::Function;
+    action.automatic = true;
+    action.returnType = s::voidType();
+    action.loc = {0, 2, 3};
+    action.frame = {{"input", event}};
+    action.params = {{"input", s::Direction::Input, event, s::kNone, s::FrameVarId{0}}};
+    action.numTemps = 2;
+    action.blocks = {
+        {{},
+         {{Op::Fload, event, s::TempId{0}, {field(0)}, {0, 3, 1}},
+          {Op::Trigger, s::voidType(), s::kNone, {Operand::temp(s::TempId{0})}, {0, 3, 1}},
+          {Op::Builtin,
+           s::u2(1),
+           s::TempId{1},
+           {Operand::str("triggered"), Operand::temp(s::TempId{0})},
+           {0, 3, 1}},
+          {Op::Store, s::voidType(), s::kNone, {answer, Operand::temp(s::TempId{1})}, {0, 3, 1}},
+          {Op::Ret, s::voidType(), s::kNone, {}, {0, 3, 1}}}}};
+    m.d.subroutines.push_back(std::move(action));
+    const auto original = m.emit(0, 0, Op::EventNew, {}, event);
+    m.store(0, 0, field(0), original);
+    const auto captured = m.emit(0, 0, Op::Fload, {field(0)}, event);
+    m.emit(0, 0, Op::ReportCall,
+           {Operand::str("#0"), Operand::subroutine(s::SubroutineId{0}), captured});
+    const auto replacement = m.emit(0, 0, Op::EventNew, {}, event);
+    m.store(0, 0, field(0), replacement);
+    m.emit(0, 0, Op::Ret);
+    ASSERT_TRUE(m.valid());
+    k::Context ctx;
+    const auto result = kirimasim::vm::run(m.d, ctx);
+    ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(word(ctx, answer), 1U);
+    EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
+}
+
 struct Memory : std::pmr::memory_resource {
     bool fail = false;
     void* do_allocate(std::size_t bytes, std::size_t alignment) override {
@@ -527,6 +666,119 @@ struct Memory : std::pmr::memory_resource {
         return this == &other;
     }
 };
+struct ArmTransferFailure {
+    Memory* memory;
+    k::SlotId arm;
+    k::ProcessId process = k::kNone;
+    std::vector<k::SlotId> outputs;
+    std::vector<std::uint64_t> initial;
+    unsigned visits = 0;
+    static int guard(kirima_context*, void* frame) {
+        auto& self = *static_cast<ArmTransferFailure*>(frame);
+        ++self.visits;
+        self.memory->fail = true;
+        return 0;
+    }
+    static kirima_status resume(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<ArmTransferFailure*>(frame);
+        auto& context = k::fromC(raw);
+        for (const auto slot : self.outputs)
+            self.initial.push_back(*context.store().element(slot, 0));
+        const k::WaitItem item{{self.arm}, k::Edge::Any, &guard, &self};
+        context.scheduler().waitEvent(self.process, {&item, 1});
+        return static_cast<kirima_status>(k::Status::Waiting);
+    }
+};
+
+TEST(VmEvent, TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback) {
+    for (unsigned path = 0; path < 5; ++path) {
+        SCOPED_TRACE(path);
+        const bool output = path >= 3, waiting = path == 1 || path == 4;
+        Model m;
+        const auto armSlot = m.slot(s::u2(1)), answer = m.slot(s::u2(1));
+        std::vector<Operand> targets;
+        s::Subroutine sub;
+        sub.name = "top.transfer";
+        sub.kind = waiting ? s::SubroutineKind::Task : s::SubroutineKind::Function;
+        sub.automatic = true;
+        sub.mayWait = waiting;
+        sub.returnType = s::voidType();
+        sub.loc = {0, 2, 3};
+        sub.blocks.resize(path == 4 ? 2 : 1);
+        std::vector<Operand> args{Operand::subroutine(s::SubroutineId{0})};
+        for (unsigned i = 0; i < 3; ++i) {
+            sub.frame.push_back({"value" + std::to_string(i), event});
+            sub.params.push_back({"value" + std::to_string(i),
+                                  output ? s::Direction::Output : s::Direction::Input, event,
+                                  s::kNone, s::FrameVarId{i}});
+            if (output) {
+                targets.push_back(m.slot(event));
+                args.push_back(targets.back());
+                sub.blocks[0].instrs.push_back({Op::EventNew, event, s::TempId{i}, {}, {0, 3, 1}});
+                sub.blocks[0].instrs.push_back({Op::Fstore,
+                                                s::voidType(),
+                                                s::kNone,
+                                                {field(i), Operand::temp(s::TempId{i})},
+                                                {0, 3, 1}});
+            } else {
+                args.push_back(m.emit(0, 0, Op::EventNew, {}, event));
+            }
+        }
+        sub.numTemps = output ? 3 : 0;
+        if (output) {
+            if (path == 4)
+                sub.blocks[0].instrs.push_back(
+                    {Op::WaitDelay, s::voidType(), s::kNone, {m.ticks(1), block(1)}, {0, 3, 1}});
+            sub.blocks.back().instrs.push_back({Op::Store,
+                                                s::voidType(),
+                                                s::kNone,
+                                                {armSlot, m.constant(s::u2(1), 1)},
+                                                {0, 3, 1}});
+        } else {
+            sub.blocks[0].instrs.push_back(
+                {Op::Store, s::voidType(), s::kNone, {answer, m.constant(s::u2(1), 1)}, {0, 3, 1}});
+        }
+        sub.blocks.back().instrs.push_back({Op::Ret, s::voidType(), s::kNone, {}, {0, 3, 1}});
+        m.d.subroutines.push_back(std::move(sub));
+        if (path == 2) {
+            args.insert(args.begin(), Operand::str("#0"));
+            m.emit(0, 0, Op::ReportCall, args);
+        }
+        if (!output) m.store(0, 0, armSlot, m.constant(s::u2(1), 1));
+        if (path != 2) {
+            if (waiting) args.push_back(block(1));
+            m.emit(0, 0, waiting ? Op::CallTask : Op::Call, args);
+        }
+        const unsigned continuation = waiting ? 1 : 0;
+        if (output) m.store(0, continuation, answer, m.constant(s::u2(1), 1));
+        m.emit(0, continuation, Op::Ret);
+        ASSERT_TRUE(m.valid());
+        Memory memory;
+        Capture capture;
+        ASSERT_NE(capture.file, nullptr);
+        k::Context ctx({capture.file, capture.file}, nullptr, &memory);
+        ArmTransferFailure failure{&memory, k::SlotId{armSlot.id}};
+        for (const auto& target : targets)
+            failure.outputs.push_back(k::SlotId{target.id});
+        failure.process =
+            ctx.scheduler().addProcess(&ArmTransferFailure::resume, &failure, k::Group::Active);
+        ctx.scheduler().start(failure.process);
+        const auto result = kirimasim::vm::run(m.d, ctx);
+        EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
+        EXPECT_EQ(failure.visits, 1U);
+        EXPECT_EQ(word(ctx, answer), 0U);
+        ASSERT_EQ(failure.initial.size(), targets.size());
+        for (unsigned i = 0; i < targets.size(); ++i)
+            EXPECT_EQ(word(ctx, targets[i]), failure.initial[i]);
+        EXPECT_EQ(capture.text(), "vm_event.sv:7: error: event resource limit [top @ " +
+                                      std::string(path == 4 ? "1" : "0") + "ns]\n");
+        ctx.scheduler().cancelWait(failure.process);
+        memory.fail = false;
+        ASSERT_EQ(ctx.managedEvents().collect(), k::ManagedEventError::None);
+        EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
+    }
+}
+
 TEST(VmEvent, EventCreationResourceFailureReturnsTheExistingLimitAndRestoresHooks) {
     Model m;
     m.emit(0, 0, Op::EventNew, {}, event);

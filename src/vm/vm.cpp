@@ -4,6 +4,7 @@
 #include "kirimasim/vm/vm.h"
 
 #include "event_temporaries.h"
+#include "event_transfers.h"
 #include "frame_layout.h"
 #include "frame_value.h"
 #include "scoped_reference.h"
@@ -736,6 +737,7 @@ public:
         tempOff_.resize(bodies);
         tempTotal_.assign(bodies, 0);
         eventTempOff_.resize(bodies);
+        eventParameters_.resize(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p) {
             std::uint32_t at = 0;
             tempOff_[p].resize(tempTypes_[p].size());
@@ -747,6 +749,15 @@ public:
                 at += words;
             }
             tempTotal_[p] = at;
+            const BodyId body{p};
+            if (isSubBody(body)) {
+                const auto& params = subOf(body).params;
+                for (std::size_t i = 0; i < params.size(); ++i)
+                    if (params[i].type.kind == sir::TypeKind::Event && !isRefParam(params[i])) {
+                        if (i > UINT32_MAX) throw std::length_error("event parameter capacity");
+                        eventParameters_[p].push_back(static_cast<std::uint32_t>(i));
+                    }
+            }
         }
         // After every temp has its type, which a later block may give.
         for (std::uint32_t p = 0; p < bodies; ++p) {
@@ -1023,7 +1034,7 @@ public:
             vm.freeDeferred_.push_back(token);
             if (run != 0) {
                 std::uint64_t steps = 0;
-                vm.callWith(*f, d.subroutine, d.args, steps);
+                vm.callWith(*f, *d.site, d.subroutine, d.args, steps);
                 vm.counters_.increment(vm.cInstrs_, steps);
             }
             --f->reports;
@@ -1116,6 +1127,7 @@ private:
     /// live across a wait (SIR_SPEC.md 5.1), so a process starts at 0.
     std::vector<W4> tempStack_;
     std::vector<std::vector<std::uint32_t>> eventTempOff_;
+    std::vector<std::vector<std::uint32_t>> eventParameters_;
     detail::EventTemporaries eventTemps_{tempStack_};
     /// The body being run: a process or a called subroutine, its frame
     /// variables and where its temps start.
@@ -1270,6 +1282,7 @@ private:
     struct Deferred {
         sir::SubroutineId subroutine{0};
         std::vector<std::vector<W4>> args;  ///< Each argument's chunks.
+        const sir::Instr* site = nullptr;
     };
     std::vector<Deferred> deferred_;
     std::vector<std::uint32_t> freeDeferred_;
@@ -2087,7 +2100,7 @@ private:
             }
             if (e != Exit::Ret) return static_cast<kernel::Status>(e);
             if (f.calls.empty()) break;
-            returnFromTask(f);  // and go on in its caller
+            if (!returnFromTask(f)) return kernel::Status::Stop;
         }
         switch (p.kind) {
             case sir::ProcessKind::Cont:
@@ -2130,18 +2143,29 @@ private:
 
     /// The end of a task called with call.task: outputs and inouts back to
     /// the caller's places (4.9.7), then the call is gone.
-    void returnFromTask(Frame& f) {
+    bool returnFromTask(Frame& f) {
         Frame::TaskCall c = std::move(f.calls.back());
         f.calls.pop_back();
-        const sir::Subroutine& s = subOf(c.body);
-        const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.varsId);
-        while (!f.scopes.empty() && f.scopes.back().calls > f.calls.size())
-            f.scopes.pop_back();
-        if (f.calls.empty())
-            writeOuts(s, c.site->operands, outs, f.varsId, bodyOfProcess(f.process));
-        else
-            writeOuts(s, c.site->operands, outs, f.calls.back().varsId, f.calls.back().body);
-        retire(c.varsId);
+        try {
+            const sir::Subroutine& s = subOf(c.body);
+            const std::vector<std::vector<W4>> outs = readOuts(c.body, s, c.varsId);
+            while (!f.scopes.empty() && f.scopes.back().calls > f.calls.size())
+                f.scopes.pop_back();
+            const bool copied = f.calls.empty()
+                                    ? writeOuts(f, *c.site, s, c.site->operands, outs, f.varsId,
+                                                bodyOfProcess(f.process))
+                                    : writeOuts(f, *c.site, s, c.site->operands, outs,
+                                                f.calls.back().varsId, f.calls.back().body);
+            retire(c.varsId);
+            return copied;
+        } catch (...) {
+            try {
+                retire(c.varsId);
+            } catch (...) {
+                sched_.resourceLimit();
+            }
+            throw;
+        }
     }
 
     /// call.task: copies the inputs in and makes the call the innermost
@@ -2158,6 +2182,9 @@ private:
         c.children = f.births;
         c.vars = newVars(c.body);
         const auto args = readArgs(s, ops);
+        detail::EventTransfers inputPins{events_, heap_.memoryResource()};
+        if (!eventStatus(f, in, inputPins.retainArguments(args, eventParameters_[c.body.index()])))
+            return false;
         c.varsId = enroll(c.vars, c.body);
         try {
             bindArgs(c.body, s, args, c.varsId);
@@ -2442,8 +2469,13 @@ private:
 
     /// Copies the outputs and inouts back to the caller's places like
     /// blocking assignments (4.9.7).
-    void writeOuts(const sir::Subroutine& s, const std::vector<Operand>& ops,
-                   const std::vector<std::vector<W4>>& outs, VarsId callerVars, BodyId callerBody) {
+    bool writeOuts(Frame& f, const sir::Instr& site, const sir::Subroutine& s,
+                   const std::vector<Operand>& ops, const std::vector<std::vector<W4>>& outs,
+                   VarsId callerVars, BodyId callerBody) {
+        detail::EventTransfers outputPins{events_, heap_.memoryResource()};
+        const auto body = bodyOf(ops[0].asSubroutine());
+        if (!eventStatus(f, site, outputPins.retainArguments(outs, eventParameters_[body.index()])))
+            return false;
         const Layout& l = layouts_[callerBody.index()];
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             if (outs[i].empty()) continue;
@@ -2464,6 +2496,7 @@ private:
                 frameStatus(framePlace(callerBody, callerVars, o.asFrame(), e)
                                 .write({outs[i].data() + e * fc, fc}));
         }
+        return true;
     }
 
     // --- References (SIR_SPEC.md 8) ---
@@ -3078,7 +3111,8 @@ private:
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
-    Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
+    Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret,
+                 kernel::ManagedEventPin* eventReturn = nullptr) {
         detail::EventTemporaries::Region eventRegion{eventTemps_, act_.base, bodyTemps(act_.body),
                                                      eventTempOff_[act_.body.index()]};
         // A confirmed report can run after its originating process ended.
@@ -3131,6 +3165,11 @@ private:
                     case Op::Ret:
                         if (!ops.empty()) {
                             ret = value(ops[0]);
+                            if (eventReturn != nullptr && (ret.a >> 32) != 0) {
+                                auto pin = events_.retain({ret.a});
+                                if (!eventStatus(f, in, pin.error)) return Exit::Error;
+                                *eventReturn = std::move(pin.value);
+                            }
                             // A value wider than 64 bits goes back in retWide_.
                             if (const std::uint32_t c = chunksOf(typeOf(ops[0])); c > 1) {
                                 retWide_.resize(c);
@@ -4000,20 +4039,26 @@ private:
         std::vector<W4> vars = newVars(body);
         // The arguments are read in the caller before anything is written.
         const std::vector<std::vector<W4>> args = readArgs(s, ops);
+        detail::EventTransfers inputPins{events_, heap_.memoryResource()};
+        if (!eventStatus(f, in, inputPins.retainArguments(args, eventParameters_[body.index()])))
+            return Exit::Error;
         const VarsId callee = enroll(vars, body);
         CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
         enter({body, caller.base + bodyTemps(caller.body), callee});
         bindArgs(body, s, args, act_.varsId);
         W4 ret{0, 0};
+        kernel::ManagedEventPin returnPin;
         ++callDepth_;
         f.syncCalls.push_back({body, f.births, &in, act_.varsId});
-        const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
+        const Exit e = runBody(f, sir::kEntryBlock, steps, ret,
+                               s.returnType.kind == sir::TypeKind::Event ? &returnPin : nullptr);
         std::vector<W4> wide;
         if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
         const std::vector<std::vector<W4>> outs =
             e == Exit::Ret ? readOuts(body, s, act_.varsId) : std::vector<std::vector<W4>>{};
         act_ = caller;
-        if (e == Exit::Ret) writeOuts(s, ops, outs, caller.varsId, caller.body);
+        if (e == Exit::Ret && !writeOuts(f, in, s, ops, outs, caller.varsId, caller.body))
+            return Exit::Error;
         if (e == Exit::Waiting) {
             fail(d_.process(f.process),
                  "task " + s.name + " waited; tasks that wait are not supported by the VM yet");
@@ -4034,8 +4079,8 @@ private:
 
     /// Runs function s, of input arguments only, with these values, for
     /// frame f (a deferred assertion's call, SIR_SPEC.md 5.7).
-    Exit callWith(Frame& f, sir::SubroutineId s, const std::vector<std::vector<W4>>& args,
-                  std::uint64_t& steps) {
+    Exit callWith(Frame& f, const sir::Instr& site, sir::SubroutineId s,
+                  const std::vector<std::vector<W4>>& args, std::uint64_t& steps) {
         const sir::Subroutine& sub = d_.subroutine(s);
         if (stack_.nearlyUsedUp()) {
             stackLimit(sub.instance, sub.loc);
@@ -4043,6 +4088,9 @@ private:
         }
         const Act caller = act_;
         const BodyId body = bodyOf(s);
+        detail::EventTransfers inputPins{events_, heap_.memoryResource()};
+        if (!eventStatus(f, site, inputPins.retainArguments(args, eventParameters_[body.index()])))
+            return Exit::Error;
         std::vector<W4> vars = newVars(body);
         const VarsId callee = enroll(vars, body);
         CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
@@ -5372,6 +5420,7 @@ private:
                 // The kernel runs or drops it (SCHEDULER_SPEC.md 15.2).
                 Deferred d;
                 d.subroutine = ops[1].asSubroutine();
+                d.site = &in;
                 for (std::size_t i = 2; i < ops.size(); ++i) {
                     std::vector<W4> a(chunksOf(t(i)));
                     readOperand(ops[i], a.data(), static_cast<std::uint32_t>(a.size()));
