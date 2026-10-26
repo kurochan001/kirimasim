@@ -190,15 +190,14 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 [VMでのSIR event実行](notes/event-vm-boundaries.ja.md)で、型付き記憶域・待機/trigger・
 実際の対象読み取りの捕捉を、既存のregion/slot回収境界へ接続しました。
 通常/捕捉配列と入力/戻り値の受け渡しを手組みSIRで検査しています。
-ソースからのautomatic生成、命令間safepointに必要なSSA全体の公開、所有ref/objectの提供は
-残作業です。[eventだけのsafepoint修正](notes/managed-event-safepoints-proposal.ja.md)は
-2026-10-26に承認されましたが、公開手順は未完了で、待機なしソースの有界性は主張しません。
-[SSA領域の部品](notes/event-temporaries.ja.md)で、入れ子呼び出しとvector再確保をまたぐ
-callerのevent一時値を保護し、部品7テストとコンパイルした8故障の検出が通りました。
-[型付き転送の所有](notes/event-transfers.ja.md)で、同期/task/deferredの入力・copyback snapshotと
-スカラー戻り値を保持します。部品6テストとVM4テスト（SIR9設計、確保失敗5経路を含む）、
-コンパイルした12故障の検出が通りました。SIR転送の検査であり、ソースのevent再束縛を新たに
-有効化するものではありません。活動中フィールドと命令回収点の完全公開は未完了です。
+後続の[automatic eventの区切り](notes/instruction-event-execution.ja.md)で、scalar/固定配列の
+宣言時の固有object、現在のevent SIRに必要なnative/SSA/転送の完全公開、物理行を増やす前の
+回収を実装しました。VM12テストのSIR32設計、新規生成ソース176件、コンパイルした12故障の
+検出が通りました。コンテナheapの回収時点とfinalの除外は保ち、
+[過去の拒否期待値1件の移行](notes/automatic-event-expectation-migration.ja.md)は承認待ちです。
+automatic eventの値仮引数・初期化子の別名・automatic structのevent fieldは未対応で、
+object/refのインターフェースとevent値全体の対応も部分的です。SSAは型付きbody語数に
+応じて保守的に保持し、最終使用直後の生存解析ではありません。制限と計測は実装ノートを参照してください。
 
 ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
 独自160設計と厳格な方針境界16件が通り、コンパイルした4故障も検出しました。

@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "e909f022",
+  "comparison": "Same original 87-probe inventory, after the source-passive checkpoint. Finite probes do not establish full parity.",
+  "records": {
+    "13": {
+      "probes": 87,
+      "native_status_changes": [
+        "automatic_event_capture"
+      ],
+      "reference_status_changes": [],
+      "previous_native_passing_bytes_preserved": true,
+      "previous_reference_passing_bytes_preserved": true,
+      "written_oracles_unchanged": true,
+      "gaps": 7,
+      "reference_mismatches": 4
+    },
+    "14": {
+      "probes": 87,
+      "native_status_changes": [
+        "automatic_event_capture"
+      ],
+      "reference_status_changes": [],
+      "previous_native_passing_bytes_preserved": true,
+      "previous_reference_passing_bytes_preserved": true,
+      "written_oracles_unchanged": true,
+      "gaps": 7,
+      "reference_mismatches": 7
+    }
+  }
+}

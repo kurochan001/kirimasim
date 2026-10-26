@@ -3,6 +3,10 @@
 [English](event-transfers.md)が正です。状態：部品の実装と検査済み、2026-10-26。
 命令回収点での完全公開と、ソースのautomatic event生成は引き続き実装中です。
 
+**後続の実装（2026-10-26）：** [命令境界event](instruction-event-execution.ja.md)でnative fieldの
+公開、物理行増加前の回収、automatic scalar/固定配列のソース生成を追加しました。入力pinは
+全引数の束縛完了で外します。以下の未対応・保持期間・検証数は、この部品の以前の測定時点の記録です。
+
 ## 契約と実装
 
 根拠はRUNTIME_ABI 6の承認済みevent専用改訂、[automatic捕捉契約5・6・8](automatic-capture-proposal.ja.md)、

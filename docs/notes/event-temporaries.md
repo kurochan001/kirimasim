@@ -15,6 +15,11 @@ now owns typed input/output snapshots and scalar returns. Its tests and remainin
 publication requirements are recorded separately; the earlier checklist below
 retains the state at this SSA-region checkpoint.
 
+**Subsequent implementation (2026-10-26):** [instruction events](instruction-event-execution.md)
+adds native-field publication, pre-growth collection and automatic scalar/fixed-array
+source construction. Input pins now end after complete binding. The remaining-work,
+retention-period and validation statements below describe the earlier component checkpoint.
+
 ## Contract and implementation
 
 The grounds are RUNTIME_ABI 6's [event-only exception approved on 2026-10-26](managed-event-safepoints-proposal.md),

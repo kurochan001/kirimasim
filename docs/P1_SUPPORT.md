@@ -216,19 +216,16 @@ pins, with 23 new tests and 16 caught compiled faults.
 [SIR event execution in the VM](notes/event-vm-boundaries.md) now connect typed
 storage, waits/triggers and object-read capture at existing region/slot collection
 boundaries. Ordinary/captured arrays and input/return transport are tested in
-hand-built SIR. Source automatic construction, complete SSA publication for
-instruction safepoints and owned ref/object providers remain work. The event-only
-[safepoint amendment](notes/managed-event-safepoints-proposal.md) was approved on
-2026-10-26; the publication protocol remains work, and no bounded no-wait source
-claim is made. The [SSA-region component](notes/event-temporaries.md) now keeps
-caller event temporaries visible across nested calls and vector relocation;
-seven component tests and eight compiled controls pass.
-[Typed transfer ownership](notes/event-transfers.md) now retains inputs, copyback
-snapshots and scalar returns through synchronous/task/deferred call boundaries.
-Six component tests and four VM tests (nine SIR designs, including five resource
-failure paths) pass; 12 compiled controls are caught. These are SIR transport
-checks, not new source event-rebinding support. Complete active-field and
-instruction-point publication remains unfinished.
+hand-built SIR. The subsequent [automatic-event checkpoint](notes/instruction-event-execution.md)
+implements fresh scalar/fixed-array declaration defaults, complete native/SSA/transfer
+publication for the currently supported event SIR, and collection before physical-row
+growth. Twelve VM tests contain 32 verified designs; 176 new generated source designs
+and 12 compiled controls pass. Container heap timing and final exclusions remain in
+force. One [historical rejection-oracle migration](notes/automatic-event-expectation-migration.md)
+awaits approval. Automatic event value formals, initializer aliases and automatic
+structure event fields remain unsupported; object/ref interfaces and the broader
+event value model remain partial. Conservative SSA retention is bounded by typed
+body words, not minimal last-use liveness. See the note for limits and measurements.
 
 Source [runtime fixed-array event selections](notes/indexed-event-execution.md)
 now pass 160 original designs and 16 strict policy boundaries, with four compiled

@@ -4,6 +4,20 @@
 automatic-wait checkpoint `e9bec784`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
+## Automatic-event recheck (2026-10-26, latest)
+
+[The implementation](instruction-event-execution.md) has source revision `e909f022`.
+Fresh [13.0](../measurements/2026-10-26/icarus13-instruction-events-probes.json) and
+[14.0](../measurements/2026-10-26/icarus14-instruction-events-probes.json) runs of the
+same 87 original probes move `automatic_event_capture` from unsupported to passing.
+Gaps fall eight to seven per reference. [Comparison checks](../measurements/2026-10-26/instruction-events-comparison.json)
+confirm unchanged written oracles, every reference status and every previously
+passing judged output. Reference mismatches remain four/seven. Records include
+binary hashes and explain the pre-commit embedded build label `ee71fdd0`.
+The fixed population remains 1,456/1,466, zero failures and ten unsupported;
+sv-tests remains 244/344. Reference sv-tests engines and Linux were not rerun;
+full parity remains unconfirmed. Earlier sections retain their measurement-time states.
+
 ## Automatic-storage wait recheck (2026-10-25)
 
 The [13.0](../measurements/2026-10-25/icarus13-activation-wait-probes.json)

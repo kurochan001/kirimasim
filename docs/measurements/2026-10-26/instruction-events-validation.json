@@ -1,0 +1,244 @@
+{
+  "date": "2026-10-26",
+  "source_revision": "e909f022",
+  "scope": "Automatic scalar/fixed-array declaration defaults and complete published instruction collection for current event SIR; not full event/P1 coverage.",
+  "source_sha256": {
+    "src/front/lower.cpp": "2855a8b3fbea9b1d654dbf0264af0edd92a3d42ddc259ad963c69364505bbed9",
+    "src/front/lower_stmt.cpp": "fe187ade45a5872bf1a529383aee4c1248ab28cdadc57bb01e6db743d6347be5",
+    "src/kernel/include/kirimasim/kernel/managed_event.h": "8953df53d80878c3f3a348b4f8d0e3da5a0433ff9969247875dbc621c2d698a2",
+    "src/kernel/include/kirimasim/kernel/sim.h": "cbc51fb9d79c697681d34dd94e3b539ae1f136aa59a8658de858cb00eb65de7d",
+    "src/vm/vm.cpp": "ca1d1cef00fcc81edd1252640a0343addba868975e559270b42c2824da58f5f6",
+    "tests/unit/vm_event_gc_test.cpp": "f773d63d1cb2213b0d6983a71b5d26511dfa46d472cfdca1c2d34215960dde66",
+    "tests/unit/managed_event_test.cpp": "20b4abb8e084ca4e36fb2e7ce1bc30d835f7fb3814185f2f827021d6d566fc89",
+    "tools/gen_automatic_event_matrix.py": "f8dcc8d50f524368b39c1f436973f2a2d8d8d2f658a615703a7578f43a2b26b0",
+    "tools/mutants.py": "6e45d02a5bbdb0b8cf7332cc8357afe3345ed409e4e72706aee416faf51011e9"
+  },
+  "new_tests": {
+    "source_designs": 176,
+    "vm_tests": 12,
+    "verified_sir_designs": 32,
+    "registry_query_tests": 1,
+    "compiled_faults": 12,
+    "caught_compiled_faults": 12,
+    "restored_focused_checks": 288
+  },
+  "presets": {
+    "dev": {
+      "total": 5743,
+      "passed": 5740,
+      "failed": 1,
+      "skipped": 2,
+      "failed_tests": [
+        "tools/automatic_capture_metadata"
+      ],
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 5744,
+      "passed": 5741,
+      "failed": 1,
+      "skipped": 2,
+      "failed_tests": [
+        "tools/automatic_capture_metadata"
+      ],
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 5743,
+      "passed": 5740,
+      "failed": 1,
+      "skipped": 2,
+      "failed_tests": [
+        "tools/automatic_capture_metadata"
+      ],
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 5743,
+      "passed": 5740,
+      "failed": 1,
+      "skipped": 2,
+      "failed_tests": [
+        "tools/automatic_capture_metadata"
+      ],
+      "skipped_tests": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "local_ci": {
+    "exit_code": 1,
+    "total_steps": 21,
+    "passed_steps": 17,
+    "failed_steps": 4,
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 1.1
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 1.1
+      },
+      {
+        "name": "dev: test",
+        "status": "FAILED",
+        "seconds": 72.0
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 1.1
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 1.0
+      },
+      {
+        "name": "release: test",
+        "status": "FAILED",
+        "seconds": 67.2
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 1.1
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 25.7
+      },
+      {
+        "name": "asan: test",
+        "status": "FAILED",
+        "seconds": 103.9
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 1.0
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 25.8
+      },
+      {
+        "name": "ubsan: test",
+        "status": "FAILED",
+        "seconds": 86.0
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.3
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 138.9
+      }
+    ],
+    "reason": "Every preset fails only the unchanged historical automatic-event rejection oracle. All configure/build and policy/format/tidy/count steps pass."
+  },
+  "expectation_review": {
+    "approved": false,
+    "applied": false,
+    "test": "tests/tools/check_automatic_capture_metadata.py",
+    "proposal": "docs/notes/automatic-event-expectation-migration.md",
+    "existing_input_unchanged": true,
+    "old_expectation": "exit 2 and empty stdout with a positioned error",
+    "proposed_expectation": "exit 0, stdout exactly 7 followed by newline, no error diagnostic"
+  },
+  "policies": {
+    "existing_expectations_kept": true,
+    "new_dependencies": false,
+    "banned_files_clean": 64,
+    "spdx_files": 392,
+    "global_state_files_checked": 117,
+    "mutation_anchors_checked": 791,
+    "mutation_anchor_failures": 0,
+    "public_kernel_headers_cxx20_built": true,
+    "full_clang_format": "passed",
+    "full_clang_tidy": "passed",
+    "release_compilation_units_checked": 115
+  },
+  "external_checks": {
+    "probes_per_reference": 87,
+    "icarus13_gaps": 7,
+    "icarus14_gaps": 7,
+    "reference_mismatches_13": 4,
+    "reference_mismatches_14": 7,
+    "only_native_status_change": "automatic_event_capture: unsupported -> passed",
+    "previous_passing_judged_bytes_preserved": true,
+    "population": {
+      "total": 1466,
+      "passed": 1456,
+      "failed": 0,
+      "unsupported": 10
+    },
+    "svtests": {
+      "total": 344,
+      "passed": 244,
+      "unsupported": 62,
+      "reference_engines_rerun": false
+    }
+  },
+  "limitations": [
+    "A historical oracle migration needs separate human approval; no existing oracle was changed to force green.",
+    "Scratch root-publication allocations are caught before sweeping, but deterministic failure at every standard-allocation site is not confirmed.",
+    "No new Linux, TSan, nightly-fuzz sequence, external-simulator speed or complete parity evidence.",
+    "SSA roots are conservative until body exit, not minimal last-use liveness.",
+    "Automatic event value formals, initializer aliases, automatic structure fields and the wider event/object interfaces remain partial.",
+    "These changes are local and have not been merged or pushed."
+  ]
+}

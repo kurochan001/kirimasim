@@ -208,15 +208,16 @@ exit. Do not retry source side effects. The [approved event amendment](../notes/
 defines the required nonwaiting-loop, reentry, recursion, transfer, array, guard,
 cancellation, delayed-target and allocation-failure matrix, physical-row bounds,
 compiled omitted-root/premature-reuse controls and ordinary-path measurements.
-Implementation status (2026-10-26): a [typed SSA-region provider](../notes/event-temporaries.md)
-now preserves active caller regions across vector relocation and clears event
-words on body exit. [Typed call transfers](../notes/event-transfers.md) retain
-input/output snapshots and pin scalar returns before SSA retirement, using the
-Context allocation source for spill storage. Complete active-field and
-instruction-point publication, SSA liveness and the full VM/source matrix remain
-pending; instruction collection and source
-automatic-event construction are not enabled. The approval is not evidence of
-completion.
+Implementation status (2026-10-26): the [instruction-event checkpoint](../notes/instruction-event-execution.md)
+connects typed SSA regions, pinned call payloads and native activation publication
+to pre-growth event collection and scalar/fixed-array automatic declaration
+defaults. Its tests include nonwaiting loops, recursion, callbacks, arrays,
+delayed targets, cancellation, final exclusion and failure/reuse. Source event
+value/formal/structure coverage remains partial; one historical rejection-oracle
+migration awaits separate approval. SSA regions retain all typed body words
+conservatively rather than using minimal last-use liveness. The implementation
+note records the evidence and unconfirmed scratch-allocation audit; approval
+alone and finite tests do not establish full P1 completion.
 It adds no dependency, C function-table ABI version, option, hidden knob,
 performance-budget change or permission to change existing expectations.
 

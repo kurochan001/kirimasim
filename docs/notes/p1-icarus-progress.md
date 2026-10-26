@@ -13,7 +13,18 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-26)
 
-**Latest local implementation:** `1d2b7e6e` adds [event transfer ownership](event-transfers.md)
+**Latest local implementation:** `e909f022` adds [automatic declaration events and
+instruction collection](instruction-event-execution.md), publishing native/SSA/transfer
+roots before physical growth. Its 176 source designs, 12 VM tests with 32 verified
+SIR designs, one registry query test and 12 compiled controls pass. Both 87-probe
+comparisons reduce gaps from eight to seven; four/seven reference mismatches stay.
+The fixed population remains 1,456/1,466 with zero failures and ten unsupported;
+sv-tests remains 244/344. Full local CI passes 17/21 steps; every preset fails
+only the unchanged historical rejection check. The
+[one historical rejection-oracle migration](automatic-event-expectation-migration.md)
+awaits approval. This work is local, not merged/pushed, and P1 remains incomplete.
+
+**Earlier transfer checkpoint:** `1d2b7e6e` adds [event transfer ownership](event-transfers.md)
 for input/copyback snapshots and returns, with six component tests and four VM
 tests covering nine SIR designs. Five real VM allocation-failure paths stop
 before callee effects or partial output replacement. All 12 compiled faults

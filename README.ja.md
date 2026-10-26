@@ -84,13 +84,12 @@ fork内の宣言は、親での初期化と共有static記憶域に対応し、�
 全join種類を検査します。[ソースからのautomatic共有捕捉](docs/notes/automatic-front-capture.ja.md)
 は新規186設計で通り、過去の未対応3テストは承認済みの別コミット`11096dc3`で移行しました。
 [型付きSIR event実行](docs/notes/event-vm-boundaries.ja.md)と既存のregion/slot境界での回収も
-接続しました。ソースのautomatic event生成と命令間のevent safepointは残作業で、
-[safepoint修正案](docs/notes/managed-event-safepoints-proposal.ja.md)は2026-10-26に承認されました。
-[型付きSSA領域](docs/notes/event-temporaries.ja.md)で、入れ子実行とvector再確保をまたぐ
-呼び出し元の一時値を保護し、新規7部品テストとコンパイルした8故障の検出が通りました。
-[event転送の所有](docs/notes/event-transfers.ja.md)で、型付き入力/出力snapshotと戻り値を
-保護し、VMでの確保失敗5経路も確認しました。部品6テスト、VM4テスト、コンパイルした12故障の
-検出が通りました。活動中フィールド/命令回収点の完全公開とソース受入行列は残作業です。
+接続しました。承認済みの[automatic eventの命令境界回収](docs/notes/instruction-event-execution.ja.md)で、
+物理行を増やす前に、native field、SSA領域、転送全体のpinを公開します。初期化子のない
+automatic scalar/固定配列eventの宣言は、固有のobjectを生成し、子孫の保持も守ります。
+新規ソース176件、検証済みSIR32設計、コンパイルした12故障の検出が通りました。
+[過去の拒否期待値1件の移行](docs/notes/automatic-event-expectation-migration.ja.md)は承認待ちです。
+eventの値・仮引数・structの対応はまだ部分的です。
 
 [実行時indexでの固定配列event選択](docs/notes/indexed-event-execution.ja.md)を型付き値へ接続し、
 名前付き/混合待機・遅延対象・`.triggered`を独自160ソースで検査しました。
@@ -151,7 +150,10 @@ P1の完了にはなりません。
 ランタイムはいずれも`13.0 (stable) (v13_0-dirty)`を返し、実測は
 [13.0の記録](docs/measurements/2026-10-26/icarus13-source-passive-probes.json)と
 [開発版の記録](docs/measurements/2026-10-26/icarus14-source-passive-probes.json)に保ちます。
-後続のSSA領域と転送所有の部品では、このプローブは再実行していません。
+後続の[automatic eventの区切り](docs/notes/instruction-event-execution.ja.md)では、両方の実行ファイルで
+全87件を再計測し、差分は**両参照とも7本**、参照の不一致は4/7本でした
+（[13.0](docs/measurements/2026-10-26/icarus13-instruction-events-probes.json)、
+[14.0](docs/measurements/2026-10-26/icarus14-instruction-events-probes.json)）。
 比較対象の版を分け、[結果と条件](docs/notes/icarus-13-comparison.ja.md)を記録しました。
 全面的な同等性は未確認です。プローブがすべて通っても全機能の対応を証明できず、
 仕組みやインターフェースを確認するごとに棚卸しを広げます。
@@ -160,7 +162,8 @@ P1の完了にはなりません。
 保持した旧baselineが27/33件、広いUDPの区切りが25/31件で、後の配列・入力の区切りでは24/24件、固定配列ポート対応後は22/22件です。
 [automatic記憶域の共有・eventの修正案](docs/notes/automatic-capture-proposal.ja.md)に
 独自32プログラムを記録し、2026-10-25承認済みです。共有字句捕捉は実装済みで、
-ソースのautomatic event生成は残作業です。
+[automaticスカラー/固定配列eventの生成](docs/notes/instruction-event-execution.ja.md)も実装しました。
+過去の拒否期待値1件の別移行は承認待ちです。
 [配列ポート・解決の修正案](docs/notes/fixed-array-ports-proposal.ja.md)にも独自59本を記録し、
 違法な接続を未対応機能と分けています。
 
@@ -200,17 +203,17 @@ dev/ASan/UBSanは4,179件中4,177件、releaseは4,180件中4,178件成功、失
 | 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,456 本が通る（99.3%）。失敗は 0 本で、10 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P4 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
-| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 87 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 8 本、参照の不一致が 4 本（14.0 devel とでは 8 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
+| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 87 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 7 本、参照の不一致が 4 本（14.0 devel とでは 7 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
 
-kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-25、母集団は 2026-10-26、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
+kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-26、母集団は 2026-10-26、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 5,553 | 5,551、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 5,743 | 5,740、2 本は飛ばす、1 本は失敗 | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）635、`tests/suite/` 4,704（`tools/` の 141 個の生成器が作る）、道具 155、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）648、`tests/suite/` 4,880（`tools/` の 142 個の生成器が作る）、道具 156、`tests/dump_sir/` 29、状態と Context 15、コマンドラインと事象の回数 15。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -477,10 +480,10 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 - **クラス実行：** オブジェクト生成、コンストラクタ、プロパティ、メソッド呼び出し、継承、
   オブジェクトの寿命・回収。プロパティを使わないstatic関数が動く例だけでオブジェクト対応とは
   扱いません。staticプロパティ初期化の副作用を落とす既知の不具合も残っています。
-- **automatic eventと保持値：** ソースのautomaticスカラー/配列event生成、活動中フィールドと
-  SSA値の完全なルート公開。型付きevent管理表、カーネル操作、SSA領域、呼び出し転送の所有の
-  部品はありますが、命令境界の回収とソース生成は、
-  完全な公開と寿命の検証が揃ってから有効にします。
+- **eventの値と保持object：** automatic eventの値仮引数、初期化子の別名、automatic
+  structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
+  scalar/固定配列の既定値生成と公開済み命令境界での回収は実装し、過去の拒否期待値1件の
+  別移行は承認待ちです。
 - **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
   イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。
 - **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、コンテナの条件式、

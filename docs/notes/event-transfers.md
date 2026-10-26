@@ -4,6 +4,11 @@
 2026-10-26. Complete instruction-point publication and source automatic-event
 construction remain in progress.
 
+**Subsequent implementation (2026-10-26):** [instruction events](instruction-event-execution.md)
+adds native-field publication, pre-growth collection and automatic scalar/fixed-array
+source construction. Input pins now end after complete binding. The remaining-work,
+retention-period and validation statements below describe the earlier component checkpoint.
+
 ## Contract and implementation
 
 The grounds are RUNTIME_ABI 6's approved event-only amendment,

@@ -1,0 +1,596 @@
+{
+  "date": "2026-10-26",
+  "baseline_source_revision": "1d2b7e6e (runtime bytes also used by ee71fdd0)",
+  "after_source_revision": "working tree on ee71fdd0; exact source hashes below",
+  "scope": "Focused cost of native root publication and event instruction collection on ordinary frame/call and static named-event paths",
+  "machine": {
+    "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "cores": 18,
+    "load_average": [
+      3.27,
+      4.19,
+      4.14
+    ],
+    "cpu": "Apple M5 Max",
+    "memory_gib": 128
+  },
+  "runs": 5,
+  "count": 200000,
+  "options": [
+    "+n=<count>"
+  ],
+  "versions": {
+    "before": "kirimasim 0.0.0 (commit 1c970f5d323c), built with AppleClang 21.0.0.21000334",
+    "after": "kirimasim 0.0.0 (commit ee71fdd0df19), built with AppleClang 21.0.0.21000334"
+  },
+  "binary_sha256": {
+    "before": "b5ef7fa45963916f13e39c3372181aa342024ff6c90f6f0b151410d3d2105da8",
+    "after": "e7ae6ba7235cc58c1569fcb8467be18be8dc2fce59187cc252c1c3ef42cd9485"
+  },
+  "workloads": {
+    "frame_access": {
+      "source": "// Original focused transport probe; SIR_SPEC 7/8, RUNTIME_ABI 4/6.\nmodule frame_access;\n  longint n;\n  longint sum;\n  function automatic void update(ref logic [128:0] value, input longint bits);\n    value[65 +: 64] = bits;\n  endfunction\n  function automatic longint step(input longint x);\n    logic [128:0] cells [1:0];\n    cells[0] = 129'(x);\n    cells[1] = 129'(x + 1);\n    update(cells[0], x ^ 32'h13579bdf);\n    return longint'(cells[0][65 +: 64]) + longint'(cells[1]);\n  endfunction\n  initial begin\n    if (!$value$plusargs(\"n=%d\", n)) n = 200000;\n    sum = 0;\n    for (longint i = 0; i < n; i++) sum += step(i);\n    $display(\"frame_access n=%0d sum=%0d\", n, sum);\n  end\nendmodule\n",
+      "observations": {
+        "before": {
+          "small": [
+            {
+              "seconds": 0.008022499969229102,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007311665918678045,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007072458043694496,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007147290976718068,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007172415964305401,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.27176595898345113,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.26666283304803073,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2671254170127213,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.27044199989177287,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2711702911183238,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            }
+          ]
+        },
+        "after": {
+          "small": [
+            {
+              "seconds": 0.007820875151082873,
+              "max_rss_mib": 9.28125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.006937624886631966,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.0074700829572975636,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007139292079955339,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            },
+            {
+              "seconds": 0.007852958980947733,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=1 sum=324508640"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.2699725409038365,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2720379999373108,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2738300410564989,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2755629578605294,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            },
+            {
+              "seconds": 0.2753057081717998,
+              "max_rss_mib": 9.265625,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "frame_access n=200000 sum=64906770317312"
+            }
+          ]
+        }
+      },
+      "counters": {
+        "before": {
+          "sir.slots": 2,
+          "sir.processes": 1,
+          "sir.subroutines": 2,
+          "sir.blocks": 12,
+          "sir.instrs": 65,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 1,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 1,
+          "sched.events.inactive": 0,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 1,
+          "proc.created": 1,
+          "proc.finished": 1,
+          "proc.kept_peak": 1,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 9400020
+        },
+        "after": {
+          "sir.slots": 2,
+          "sir.processes": 1,
+          "sir.subroutines": 2,
+          "sir.blocks": 12,
+          "sir.instrs": 65,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 1,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 1,
+          "sched.events.inactive": 0,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 1,
+          "proc.created": 1,
+          "proc.finished": 1,
+          "proc.kept_peak": 1,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 9400020
+        }
+      },
+      "summary": {
+        "before": {
+          "small_median_seconds": 0.007172415964305401,
+          "large_median_seconds": 0.27044199989177287,
+          "simulation_seconds": 0.26326958392746747,
+          "large_peak_rss_median_mib": 9.1875
+        },
+        "after": {
+          "small_median_seconds": 0.0074700829572975636,
+          "large_median_seconds": 0.2738300410564989,
+          "simulation_seconds": 0.2663599580992013,
+          "large_peak_rss_median_mib": 9.265625
+        }
+      },
+      "all_counters_equal": true,
+      "time_ratio_after_before": 1.0117384398365794
+    },
+    "event_bounce": {
+      "source": "// Original named-event transport cost probe; IEEE 1800-2023 9.4/15.5.\nmodule event_bounce;\n  event request, response;\n  longint n;\n  longint sum;\n  initial begin\n    if (!$value$plusargs(\"n=%d\", n)) n = 200000;\n    sum = 0;\n    #0;\n    for (longint i = 0; i < n; ++i) begin\n      -> request;\n      @response;\n      ++sum;\n    end\n    $display(\"event_bounce n=%0d sum=%0d\", n, sum);\n  end\n  initial forever begin\n    @request;\n    -> response;\n  end\nendmodule\n",
+      "observations": {
+        "before": {
+          "small": [
+            {
+              "seconds": 0.006404625019058585,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.006947417045012116,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.007029375061392784,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.007192709017544985,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.00789612508378923,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.05674029211513698,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05730474996380508,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05762870912440121,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.06052058399654925,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.058270958019420505,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            }
+          ]
+        },
+        "after": {
+          "small": [
+            {
+              "seconds": 0.007212249794974923,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.00723566603846848,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.0071643751580268145,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.006935332901775837,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            },
+            {
+              "seconds": 0.0073112500831484795,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=1 sum=1"
+            }
+          ],
+          "large": [
+            {
+              "seconds": 0.05788287497125566,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05763508379459381,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.058876957977190614,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.05988458404317498,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            },
+            {
+              "seconds": 0.057187207974493504,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false,
+              "result_line": "event_bounce n=200000 sum=200000"
+            }
+          ]
+        }
+      },
+      "counters": {
+        "before": {
+          "sir.slots": 4,
+          "sir.processes": 2,
+          "sir.subroutines": 0,
+          "sir.blocks": 15,
+          "sir.instrs": 37,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 2,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 400002,
+          "sched.events.inactive": 1,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 400003,
+          "proc.created": 2,
+          "proc.finished": 1,
+          "proc.kept_peak": 2,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 3400023
+        },
+        "after": {
+          "sir.slots": 4,
+          "sir.processes": 2,
+          "sir.subroutines": 0,
+          "sir.blocks": 15,
+          "sir.instrs": 37,
+          "sched.time_slots": 1,
+          "sched.time_advances": 0,
+          "sched.active_loops": 2,
+          "sched.reactive_loops": 0,
+          "sched.events.preponed": 0,
+          "sched.events.pre_active": 0,
+          "sched.events.active": 400002,
+          "sched.events.inactive": 1,
+          "sched.events.pre_nba": 0,
+          "sched.events.nba": 0,
+          "sched.events.post_nba": 0,
+          "sched.events.pre_observed": 0,
+          "sched.events.observed": 0,
+          "sched.events.post_observed": 0,
+          "sched.events.reactive": 0,
+          "sched.events.re_inactive": 0,
+          "sched.events.pre_re_nba": 0,
+          "sched.events.re_nba": 0,
+          "sched.events.post_re_nba": 0,
+          "sched.events.pre_postponed": 0,
+          "sched.events.postponed": 0,
+          "proc.wakeups": 400003,
+          "proc.created": 2,
+          "proc.finished": 1,
+          "proc.kept_peak": 2,
+          "slot.writes": 200002,
+          "slot.changes": 200001,
+          "nba.scheduled": 0,
+          "wait.subscriptions": 0,
+          "wait.monitor_evals": 0,
+          "sim.end_time": 0,
+          "sim.end_reason": "quiescent",
+          "vm.instrs": 3400023
+        }
+      },
+      "summary": {
+        "before": {
+          "small_median_seconds": 0.007029375061392784,
+          "large_median_seconds": 0.05762870912440121,
+          "simulation_seconds": 0.05059933406300843,
+          "large_peak_rss_median_mib": 9.1875
+        },
+        "after": {
+          "small_median_seconds": 0.007212249794974923,
+          "large_median_seconds": 0.05788287497125566,
+          "simulation_seconds": 0.05067062517628074,
+          "large_peak_rss_median_mib": 9.1875
+        }
+      },
+      "all_counters_equal": true,
+      "time_ratio_after_before": 1.001408933824772
+    }
+  },
+  "source_sha256": {
+    "src/vm/vm.cpp": "ca1d1cef00fcc81edd1252640a0343addba868975e559270b42c2824da58f5f6",
+    "src/front/lower.cpp": "2855a8b3fbea9b1d654dbf0264af0edd92a3d42ddc259ad963c69364505bbed9",
+    "src/front/lower_stmt.cpp": "fe187ade45a5872bf1a529383aee4c1248ab28cdadc57bb01e6db743d6347be5",
+    "src/kernel/include/kirimasim/kernel/managed_event.h": "8953df53d80878c3f3a348b4f8d0e3da5a0433ff9969247875dbc621c2d698a2",
+    "src/kernel/include/kirimasim/kernel/sim.h": "cbc51fb9d79c697681d34dd94e3b539ae1f136aa59a8658de858cb00eb65de7d"
+  },
+  "limitations": [
+    "Five alternating before/after pairs on one macOS arm64 system, not seven nightly baselines or a confidence interval.",
+    "Simulation time estimates subtract median +n=1 startup from median +n=200000; wall time is not a pass/fail gate.",
+    "Baseline is the unchanged previous release binary: its hash matches the after binary of instruction-events-speed.json. Its embedded build label predates that runtime source checkpoint; hashes distinguish artifacts.",
+    "No full benchmark table, external simulator speed or Linux measured. The separate managed-event scaling observations measure the new source path.",
+    "No performance threshold or PerfCount oracle changed."
+  ]
+}

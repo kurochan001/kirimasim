@@ -1,0 +1,371 @@
+{
+  "date": "2026-10-26",
+  "scope": "New automatic-event source path; five runs per size on one macOS arm64 system, no wall-time gate",
+  "machine": {
+    "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "cores": 18,
+    "load_average": [
+      3.07,
+      3.96,
+      4.05
+    ],
+    "cpu": "Apple M5 Max",
+    "memory_gib": 128
+  },
+  "runs": 5,
+  "version": "kirimasim 0.0.0 (commit ee71fdd0df19), built with AppleClang 21.0.0.21000334",
+  "binary_sha256": "e7ae6ba7235cc58c1569fcb8467be18be8dc2fce59187cc252c1c3ef42cd9485",
+  "workloads": {
+    "event_scalar_reentry": {
+      "source": "module top;\nlongint n,seen;\ninitial begin\n if (!$value$plusargs(\"n=%d\",n)) n=200000;\n for (longint round=0;round<n;++round) begin\n  automatic event e;\n  begin\n   if (e.triggered) $fatal(1,\"unexpected prior trigger\");\n   -> e;\n   seen += e.triggered;\n  end\n end\n $display(\"seen=%0d\",seen);\nend\nendmodule\n",
+      "sizes": {
+        "1": {
+          "observations": [
+            {
+              "seconds": 0.007775500183925033,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.007304375059902668,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006587249925360084,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006473708897829056,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006347083020955324,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.006587249925360084,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0
+        },
+        "2000": {
+          "observations": [
+            {
+              "seconds": 0.006809415994212031,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.007974375039339066,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.007347167003899813,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006980292033404112,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006688124965876341,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.006980292033404112,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0.0003930421080440283
+        },
+        "20000": {
+          "observations": [
+            {
+              "seconds": 0.013009124901145697,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.012856082990765572,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.012714667012915015,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.012737583834677935,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.012624291935935616,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.012737583834677935,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0.006150333909317851
+        },
+        "200000": {
+          "observations": [
+            {
+              "seconds": 0.06792745785787702,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.07222691690549254,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.06983787496574223,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.07002087496221066,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.07095104199834168,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.07002087496221066,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0.06343362503685057
+        }
+      }
+    },
+    "event_array_reentry": {
+      "source": "module top;\nlongint n,seen;\ninitial begin\n if (!$value$plusargs(\"n=%d\",n)) n=200000;\n for (longint round=0;round<n;++round) begin\n  automatic event e[-1:1];\n  for(int i=-1;i<=1;++i) begin\n   if (e[i].triggered) $fatal(1,\"unexpected prior trigger\");\n   -> e[i];\n   seen += e[i].triggered;\n  end\n end\n $display(\"seen=%0d\",seen);\nend\nendmodule\n",
+      "sizes": {
+        "1": {
+          "observations": [
+            {
+              "seconds": 0.006614415906369686,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006206833990290761,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006373124895617366,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.0065071668941527605,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.006330332951620221,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.006373124895617366,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0
+        },
+        "2000": {
+          "observations": [
+            {
+              "seconds": 0.008914083009585738,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.008915625046938658,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.009693208849057555,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.009016084019094706,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.008536375127732754,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.008915625046938658,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0.002542500151321292
+        },
+        "20000": {
+          "observations": [
+            {
+              "seconds": 0.032846958143636584,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.03288475004956126,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.03329183277674019,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.034192082937806845,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.03328291606158018,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.03328291606158018,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0.026909791165962815
+        },
+        "200000": {
+          "observations": [
+            {
+              "seconds": 0.26814633305184543,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.2712079589255154,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.26898474991321564,
+              "max_rss_mib": 9.203125,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.262652917066589,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            },
+            {
+              "seconds": 0.2704370829742402,
+              "max_rss_mib": 9.1875,
+              "rss_source": "ru_maxrss",
+              "exit_code": 0,
+              "timed_out": false
+            }
+          ],
+          "median_seconds": 0.26898474991321564,
+          "median_peak_rss_mib": 9.1875,
+          "startup_subtracted_median_seconds": 0.26261162501759827
+        }
+      }
+    }
+  },
+  "limitations": [
+    "RSS is a process observation, not a registry-row measurement; physical-row bounds are asserted by VmEventGc.",
+    "One machine and five runs are not seven nightly baselines or confidence bounds.",
+    "No external simulator speed comparison, Linux result, new performance threshold or changed PerfCount oracle."
+  ]
+}

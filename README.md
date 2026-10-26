@@ -114,16 +114,14 @@ storage without becoming child processes. Declaration-only forks do not wait.
 include all join kinds. [Shared automatic capture from source](docs/notes/automatic-front-capture.md)
 now passes 186 new designs; three historical rejection checks were separately
 migrated with approval in `11096dc3`. [Typed SIR event execution](docs/notes/event-vm-boundaries.md)
-and collection at existing region/slot boundaries are connected. Automatic event
-source construction and instruction-level event safepoints remain work; the
-[safepoint amendment](docs/notes/managed-event-safepoints-proposal.md) was approved
-on 2026-10-26. [Typed SSA regions](docs/notes/event-temporaries.md) now retain
-caller temporaries across nested execution and vector relocation; seven new
-component tests and eight compiled fault controls pass.
-[Event transfer ownership](docs/notes/event-transfers.md) now protects typed
-input/output snapshots and return values, including five VM allocation-failure
-paths; six component tests, four VM tests and 12 compiled controls pass.
-Complete active-field/instruction publication and the source matrix remain work.
+and collection at region/slot boundaries are connected. The approved
+[automatic-event instruction collector](docs/notes/instruction-event-execution.md)
+now publishes native fields, SSA regions and complete transfer payloads before
+physical event-row growth. Automatic scalar/fixed-array declarations without
+initializers construct fresh objects and preserve retained descendants.
+176 new source designs, 32 verified SIR designs and 12 compiled controls pass.
+The [historical rejection-oracle migration](docs/notes/automatic-event-expectation-migration.md)
+awaits approval. Event value/formal/structure coverage remains partial.
 
 [Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
 now support named/mixed waits, delayed targets and `.triggered` through typed
@@ -196,7 +194,10 @@ with four/seven reference mismatches unchanged. Its stable compiler and runtime
 both report `13.0 (stable) (v13_0-dirty)`; the exact observations are retained in
 [the Icarus 13.0 record](docs/measurements/2026-10-26/icarus13-source-passive-probes.json)
 and [the development record](docs/measurements/2026-10-26/icarus14-source-passive-probes.json).
-The subsequent SSA-region and transfer-ownership components did not rerun these probes.
+The later [automatic-event checkpoint](docs/notes/instruction-event-execution.md) reruns
+all 87 probes against both binaries: **seven gaps against each**, with the same
+four/seven reference mismatches ([13.0](docs/measurements/2026-10-26/icarus13-instruction-events-probes.json),
+[14.0](docs/measurements/2026-10-26/icarus14-instruction-events-probes.json)).
 These are separate reference baselines. See the
 [versioned results and conditions](docs/notes/icarus-13-comparison.md).
 Complete functional parity remains unconfirmed. A passing probe inventory
@@ -209,7 +210,8 @@ the retained baseline had 27/33 gaps and the wide-UDP checkpoint 25/31; the
 later array/input checkpoint had 24/24; fixed-array ports now reduce this to 22/22.
 The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
 records 32 original programs and was approved on 2026-10-25. Shared lexical
-capture is implemented; automatic-event source construction remains work.
+capture and [automatic scalar/fixed-array event construction](docs/notes/instruction-event-execution.md)
+are implemented; the separate historical rejection-oracle migration awaits approval.
 The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
 adds 59 original design observations, with legality boundaries kept separate.
 
@@ -257,17 +259,17 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,456 pass (99.3%), 0 fail; 10 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
-| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 8 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (8 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
+| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 7 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (7 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-25 (macOS); the population on 2026-10-26; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-26 (macOS); the population on 2026-10-26; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 5,553 | 5,551, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 5,743 | 5,740, 2 skipped, 1 failed | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 635, `tests/suite/` 4,704 (made by 141 generators under `tools/`), tools 155, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
+This repository's tests by kind: unit tests (GoogleTest) 648, `tests/suite/` 4,880 (made by 142 generators under `tools/`), tools 156, `tests/dump_sir/` 29, state and Contexts 15, command line and event counts 15.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -655,12 +657,11 @@ record implemented forms, evidence and limitations.
   dispatch, inheritance and object lifetime/collection. A working property-free
   static function does not establish object support; static-property
   initialization also has a known missing-side-effect case.
-- **Automatic events and retained values:** source-level automatic scalar/array
-  event construction and complete roots for active fields and SSA values. The
-  typed event registry, kernel operations, SSA regions and call-transfer
-  ownership components exist;
-  instruction-boundary collection and source construction remain gated on the
-  complete publication and lifetime checks.
+- **Event values and retained objects:** automatic event value formals,
+  initializer aliases and automatic structure event fields remain unsupported;
+  rebinding, comparisons and event-containing dynamic containers remain work.
+  Scalar/fixed-array default construction and published instruction collection
+  are implemented; one historical rejection-oracle migration awaits approval.
 - **Event-controlled updates and remaining control forms:** event-controlled
   NBA, including repeat counts and retained targets/values; event-controlled
   nonblocking event triggers; named-fork disable and `wait_order`.

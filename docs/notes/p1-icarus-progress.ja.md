@@ -12,7 +12,15 @@
 
 ## 現在の実装とレビュー状況（2026-10-26）
 
-**最新のローカル実装：** `1d2b7e6e`で、入力/copyback snapshotと戻り値の[event転送所有](event-transfers.ja.md)を
+**最新のローカル実装：** `e909f022`で[automatic eventの生成と命令境界回収](instruction-event-execution.ja.md)を
+追加しました。native/SSA/転送を公開し、宣言ごとにscalar/固定配列のobjectを生成します。
+新規ソース176件、SIR32設計を含むVM12テスト、registry1テストと12故障の検出が通りました。
+87プローブの両参照との差分は8→7本、不一致4/7本は不変です。母集団は1,466本中1,456成功・
+失敗0・未対応10、sv-testsは344本中244成功で、以前の結果を維持しています。local CIは21項目中17成功で、4構成の失敗はすべて
+同じ承認待ちチェックです。[過去の拒否期待値1件](automatic-event-expectation-migration.ja.md)は承認待ちです。
+main統合・pushはしておらず、P1は未完了です。
+
+**以前の転送の区切り：** `1d2b7e6e`で、入力/copyback snapshotと戻り値の[event転送所有](event-transfers.ja.md)を
 追加しました。部品6テストとVM4テストでSIR9設計を検査し、実際の確保失敗5経路でもcalleeの
 副作用・部分的な出力置換の前に停止します。コンパイルした12故障を検出し、dev全体は
 5,553本中5,551成功、失敗0・既知スキップ2本、4構成の各98関連検査も通りました。

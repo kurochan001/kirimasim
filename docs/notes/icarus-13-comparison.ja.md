@@ -4,6 +4,19 @@
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
+## automatic eventの再確認（2026-10-26、最新）
+
+[今回の実装](instruction-event-execution.ja.md)のソースは`e909f022`です。
+[13.0](../measurements/2026-10-26/icarus13-instruction-events-probes.json)と
+[14.0](../measurements/2026-10-26/icarus14-instruction-events-probes.json)で独自87件を再計測し、
+`automatic_event_capture`が未対応から成功へ移り、差分は両参照とも8→7本でした。
+[比較検査](../measurements/2026-10-26/instruction-events-comparison.json)で、書いた期待値、
+全参照の状態、以前の成功の判定用出力を維持していることを確認しました。参照側の不一致は4/7本のままです。
+レコードに実測バイナリのhashと、commit前のビルドラベル`ee71fdd0`の説明を残します。
+母集団は1,466本中1,456成功・失敗0・未対応10、sv-testsは344本中244成功を維持しました。
+sv-testsの参照側とLinuxは再計測しておらず、全機能の同等性は未確認です。
+以下の区切りは元の測定時点の記録です。
+
 ## automatic記憶域の待機の再確認（2026-10-25）
 
 [13.0](../measurements/2026-10-25/icarus13-activation-wait-probes.json)と

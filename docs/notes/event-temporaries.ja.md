@@ -11,6 +11,10 @@
 入力/出力snapshotとスカラー戻り値を保持します。検査と残る公開要件は別に記録し、以下の
 古い残作業一覧はSSA領域の区切り時点のものです。
 
+**後続の実装（2026-10-26）：** [命令境界event](instruction-event-execution.ja.md)でnative fieldの
+公開、物理行増加前の回収、automatic scalar/固定配列のソース生成を追加しました。入力pinは
+全引数の束縛完了で外します。以下の未対応・保持期間・検証数は、この部品の以前の測定時点の記録です。
+
 ## 契約と実装
 
 根拠は、RUNTIME_ABI 6の[2026-10-26承認のevent専用例外](managed-event-safepoints-proposal.ja.md)、
