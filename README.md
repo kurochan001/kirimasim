@@ -969,6 +969,23 @@ C++ with two-state values and is far faster today
 ([Simulation speed](#simulation-speed)); kirimasim's tier 2 (P3) will
 compile to C++ too.
 
+### How does it differ from Lyra?
+
+[Lyra](https://github.com/hankhsu1996/lyra) is another open-source
+SystemVerilog simulator built on slang. By its README, it compiles each
+module, package and interface on its own and aims at a fast edit-run loop
+rather than peak simulation speed; its main backend makes machine code
+through LLVM, and its C++ backend is there to make its intermediate
+representation readable. kirimasim aims first at running designs as IEEE
+1800-2023 says, with four-state values and every region of the time slot,
+and today interprets its intermediate representation (tier 1); compiling to
+C++ comes in P3. On the benchmark designs of
+[Simulation speed](#simulation-speed), Lyra's LLVM backend was faster than
+kirimasim on nine of the ten designs it built and about as fast on the
+tenth; the version measured did not build the design with gates and UDPs.
+Lyra's documents name Linux as its platform; kirimasim runs on Linux and
+macOS.
+
 ### Which version of the standard does it follow?
 
 IEEE 1800-2023. kirimasim always runs slang with `--std=1800-2023`, and
