@@ -11,10 +11,11 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
-The local [source event-NBA stage](notes/event-nba-source-execution.md) adds
-1,018 original designs on main `81799982`. Historical rejection migration was approved and applied
-separately in `16c033a4`; [all 21 local CI checks pass](measurements/2026-10-27/nba-front-validation.json). This local extension is
-distinct from the earlier main checkpoints below.
+The [source event-NBA stage](notes/event-nba-source-execution.md) `c4be8ade` adds
+1,018 original designs, integrated with main fixes `9a81a55e` and `b91bd3d7`.
+Historical rejection migration was approved and applied separately in `16c033a4`.
+The [main-integration record](measurements/2026-10-27/nba-front-main-integration.json)
+qualifies the pre-push checks; earlier measurements retain their original scope.
 
 This inventory includes main commits `a8bb17cc` (container conditionals) and
 `7bc5fa85` (captured NBA payloads; source event-NBA was unfinished there), with an
@@ -68,7 +69,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 | Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits; blocking and nonblocking assignments, including delayed streaming NBAs | No `with` clause, string target or nested streaming target; automatic targets cannot receive an NBA |
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
-| Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots; local source event-NBA with retained values/count/targets, signal/named/expression controls and guards | Event-NBA ref-array/nested-ref windows and managed-event value forms remain unsupported or unconfirmed; delayed NBAs through refs/string characters remain unimplemented; automatic NBA targets remain illegal |
+| Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots; source event-NBA with retained values/count/targets, signal/named/expression controls and guards | Event-NBA ref-array/nested-ref windows and managed-event value forms remain unsupported or unconfirmed; delayed NBAs through refs/string characters remain unimplemented; automatic NBA targets remain illegal |
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults, input arguments and declaration initialization copies | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Scalar event-return/conditional expressions and automatic structure event fields remain unsupported; output/inout rebinding is not added |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of supported named blocks and tasks | Capture follows the typed subset below; object fields and named-fork disable remain incomplete; automatic event limits are listed below |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
@@ -93,7 +94,7 @@ notifications. That checkpoint preceded the typed SIR/VM work below.
 
 The [typed SIR/VM checkpoint](notes/event-nba-sir-execution.md) `6f43e387` adds the typed
 instruction/layouts, verifier/text and fresh callback bridge for original native
-SIR. It did not enable source event-NBA. The local [source stage](notes/event-nba-source-execution.md)
+SIR. It did not enable source event-NBA. The [source stage](notes/event-nba-source-execution.md)
 now exercises capture order and fresh callbacks with all 21 local CI checks passing;
 see its remaining boundaries and unexplained reference observations.
 
@@ -135,7 +136,7 @@ structure variables with array members retain their existing limitation.
 The [72 original source cases and verification](notes/aggregate-value-capture.md)
 cover these forms. Another [74 original cases](notes/blocking-aggregate-timing.md) cover
 whole-aggregate blocking delay/event/repeat, per-activation typed snapshots
-and differing-bound structure copies. The local event-NBA source stage is described above.
+and differing-bound structure copies. The event-NBA source stage is described above.
 
 ### Repeated blocking event controls
 
@@ -145,7 +146,7 @@ waits, preserving count width and signedness. Named, mixed, watched and guarded
 events use the existing wait machinery. The [75 original source cases](notes/repeated-event-controls.md)
 include automatic targets, real/string values, packed concatenations and
 container snapshots. Whole fixed arrays and unpacked structures now use the
-same blocking timing rules. The local event-NBA source stage is described above.
+same blocking timing rules. The event-NBA source stage is described above.
 
 ### Strength-resolution kernel
 

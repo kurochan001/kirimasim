@@ -12,13 +12,15 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
-**main `81799982`上のローカルなソースevent-NBA段階：**
+**ソースevent-NBAの区切り`c4be8ade`をmainの修正と統合：**
 [ソース変換と制限](event-nba-source-execution.ja.md)で独自1,018設計が通り、コンパイルした6故障を
 検出しました。固定95プローブは`event_controlled_nba`だけが新たに通り、有限の一覧の残差は6件です。
 母集団1,456/1,466とsv-tests 244/344の既存の成功を維持しました。
 [過去の拒否期待の移行](event-nba-expectation-migration.ja.md)は承認済みの期待値専用コミット`16c033a4`で適用しました。
 [local CI全21項目が成功](../measurements/2026-10-27/nba-front-validation.json)し、各構成で失敗0・同じ既知スキップ2件です。
-main統合、原因未確認の参照観測、P1の完全な同等性は残作業です。以下の過去の区切りは計測時の範囲を維持します。
+[main統合の記録](../measurements/2026-10-27/nba-front-main-integration.json)で、
+`9a81a55e`・`b91bd3d7`と合わせた後の検査を再確認します。原因未確認の参照観測とP1の完全な同等性は残作業です。
+以下の過去の区切りは計測時の範囲を維持します。
 
 **main取り込み用の型付きSIR/VMの区切り`6f43e387`：**
 [イベントNBAの配置表と一時的なcallback](event-nba-sir-execution.ja.md)で、非終端命令、

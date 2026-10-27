@@ -1,6 +1,6 @@
 # ソースからのイベントNBA変換
 
-[English](event-nba-source-execution.md)。状態：ローカルのソース対応の区切りを検証済み、2026-10-27。
+[English](event-nba-source-execution.md)。状態：ソース対応の区切り`c4be8ade`をmainへ統合、2026-10-27。
 main `81799982`が基です。過去の拒否期待は[承認後に移行](event-nba-expectation-migration.ja.md)し、
 期待値専用コミット`16c033a4`に分けました。
 イベントNBA全体やP1の完全な同等性を示すものではありません。
@@ -77,7 +77,9 @@ optional参照4か所・vector事前確保1か所のlint指摘を保存します
 [最終検証](../measurements/2026-10-27/nba-front-validation.json)は全21項目が成功し、
 dev/ASan/UBSanは8,129/8,131、releaseは8,130/8,132、失敗0・同じ既知スキップ2件です。
 単体773件と既存ダンプ29件も成功しました。最終ソース比較のbinary hashは最終devと一致します。
-実装・テスト・文書はローカルに保持し、未コミットです。過去のnativeの休眠制御ベンチマークからソースevent-NBAの速度は主張しません。
+実装を`c4be8ade`に記録し、mainの修正`9a81a55e`・`b91bd3d7`と合わせました。
+[main統合の記録](../measurements/2026-10-27/nba-front-main-integration.json)でpush前の検査を再確認し、
+過去の測定記録は維持します。過去のnativeの休眠制御ベンチマークからソースevent-NBAの速度は主張しません。
 適格なstaticの単一値/コンテナ、固定集約値、packed選択、連結、ストリーミングを検査しますが、
 全組み合わせではありません。ref経由の配列要素・入れ子のpacked窓、event値の一般の再関連付け/戻り値、
 managed-event保持値の差し替え、字句activation/回収の全行列は未対応または未確認です。

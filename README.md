@@ -31,12 +31,13 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
-Local [source event-NBA lowering](docs/notes/event-nba-source-execution.md) runs
+Main includes [source event-NBA lowering](docs/notes/event-nba-source-execution.md)
+from `c4be8ade`, alongside the portability/lint fixes `9a81a55e` and `b91bd3d7`. It runs
 1,018 new original designs and detects all six compiled source faults. Both
 95-probe inventories gain `event_controlled_nba`; six finite-inventory gaps remain.
 The old rejection-oracle migration was approved and applied separately in `16c033a4`;
-[Local CI passes all 21 checks](docs/measurements/2026-10-27/nba-front-validation.json);
-source-stage main integration and P1 remain unfinished.
+[Main-integration validation](docs/measurements/2026-10-27/nba-front-main-integration.json)
+records the pre-push checks. P1 and the remaining source boundaries are unfinished.
 
 Main now includes container conditionals (`a8bb17cc`) and captured NBA payloads
 (`7bc5fa85`). The [integration record](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
@@ -361,7 +362,7 @@ all 21 checks pass; dev, ASan and UBSan each run 4,652 tests, 4,650 pass and
 the two known skips remain; release runs 4,653 and 4,651 pass, with the same
 skips ([record](docs/measurements/2026-10-25/activation-environment-final-validation.json)).
 
-The current [main integration](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
+The earlier [main integration](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
 includes container conditionals (`a8bb17cc`) and captured NBA payloads (`7bc5fa85`).
 All 21 local CI checks are confirmed after README regeneration and a dev rerun:
 dev/ASan/UBSan 7,013/7,015 and release

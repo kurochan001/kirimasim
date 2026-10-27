@@ -13,7 +13,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Local source event-NBA stage on main `81799982`:**
+**Source event-NBA checkpoint `c4be8ade` integrated with main fixes:**
 [Source lowering and limits](event-nba-source-execution.md) add 1,018 original
 source designs and six detected compiled faults. The fixed 95-probe inventories
 gain only `event_controlled_nba` (six finite-inventory gaps remain); population
@@ -21,8 +21,10 @@ gain only `event_controlled_nba` (six finite-inventory gaps remain); population
 [historical rejection migration](event-nba-expectation-migration.md) was approved
 and applied in expectation-only commit `16c033a4`.
 [All 21 local CI checks pass](../measurements/2026-10-27/nba-front-validation.json),
-with zero failures and the same two known skips in each configuration. Main
-integration, unexplained reference observations and complete P1 parity remain work.
+with zero failures and the same two known skips in each configuration. The
+[main-integration record](../measurements/2026-10-27/nba-front-main-integration.json)
+adds fresh checks after combining `9a81a55e`/`b91bd3d7`. Unexplained reference
+observations and complete P1 parity remain work.
 The earlier checkpoint records below retain their measurement-time scope.
 
 **Typed SIR/VM checkpoint `6f43e387` for main integration:**

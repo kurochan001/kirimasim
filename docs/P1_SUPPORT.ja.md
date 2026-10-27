@@ -10,10 +10,10 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
-main `81799982`上のローカルな[ソースevent-NBA変換](notes/event-nba-source-execution.ja.md)を、
-独自1,018設計で検査します。過去の拒否期待は承認済みの別コミット`16c033a4`で移行し、
-[local CI全21項目が成功](measurements/2026-10-27/nba-front-validation.json)しました。
-このローカルな拡張は、下記の過去のmainの区切りとは別です。
+[ソースevent-NBA変換](notes/event-nba-source-execution.ja.md)`c4be8ade`の独自1,018設計を、
+mainの修正`9a81a55e`・`b91bd3d7`と合わせます。過去の拒否期待は承認済みの別コミット`16c033a4`で移行しました。
+[main統合の記録](measurements/2026-10-27/nba-front-main-integration.json)にpush前の検証を記録し、
+過去の測定は当時の範囲を維持します。
 
 mainのコンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を含みます
 （[取り込み記録](measurements/2026-10-27/conditional-nba-main-integration.json)）。その区切りではソースevent-NBAは残作業でした。
@@ -66,7 +66,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入とNBA、ストリーミング対象への遅延付きNBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
-| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA。ローカルで値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard | event-NBAのref配列/入れ子ref窓、managed-event値の形は未対応または未確認。ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
+| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard | event-NBAのref配列/入れ子ref窓、managed-event値の形は未対応または未確認。ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
 | イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、output/inoutの再関連付けは追加しない |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
@@ -89,7 +89,7 @@ mainの[式monitorの区切り](notes/event-nba-expression-monitors.ja.md)で、
 
 [型付きSIR/VMの区切り](notes/event-nba-sir-execution.ja.md)`6f43e387`で、独自SIR用の型付き命令・
 配置表、verifier/text、新しいcallback転送を追加します。ソースevent-NBAの対応ではなく、
-その区切りではfront変換と実ソース行列は残作業でした。ローカルの[ソース段階](notes/event-nba-source-execution.ja.md)で値保持の順序とcallbackを検査します。
+その区切りではfront変換と実ソース行列は残作業でした。[ソース段階](notes/event-nba-source-execution.ja.md)で値保持の順序とcallbackを検査します。
 
 ### クラスのstaticプロパティと残るオブジェクトの境界
 
@@ -123,7 +123,7 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 配列メンバー付き構造体変数には既存の制限が残ります。[独自72件と検証](notes/aggregate-value-capture.ja.md)を
 参照してください。別の[独自74件](notes/blocking-aggregate-timing.ja.md)で、集約値全体の
 ブロッキング遅延・イベント・repeat、活動ごとの型付き保持、異なる範囲の構造体コピーも
-検査しています。ローカルのイベントNBAのソース段階は上記を参照してください。
+検査しています。イベントNBAのソース段階は上記を参照してください。
 
 ### 繰り返しイベントのブロッキング制御
 
@@ -131,7 +131,7 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 0以下・X/Zの回数はイベントを待たず、回数の幅と符号を保ちます。名前付き・混合・式の監視・
 項のguardは既存の待機処理を使います。[独自ソース75件](notes/repeated-event-controls.ja.md)は
 自動変数、実数・文字列、packed連結、コンテナの値の保持も含みます。固定配列・unpacked
-構造体全体にも同じブロッキング制御を適用します。ローカルのイベントNBAのソース段階は上記を参照してください。
+構造体全体にも同じブロッキング制御を適用します。イベントNBAのソース段階は上記を参照してください。
 
 ### 駆動強さの解決カーネル
 

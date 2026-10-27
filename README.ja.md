@@ -23,10 +23,12 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
-ローカルの[ソースevent-NBA変換](docs/notes/event-nba-source-execution.ja.md)で独自1,018設計が成功し、
+[ソースevent-NBA変換](docs/notes/event-nba-source-execution.ja.md)`c4be8ade`を、
+移植性/lint修正`9a81a55e`・`b91bd3d7`と合わせてmainへ取り込みます。独自1,018設計が成功し、
 コンパイルした6故障をすべて検出しました。2版の固定95プローブは`event_controlled_nba`が新たに通り、
 有限の一覧の残差は6件です。古い拒否期待は承認済みの別コミット`16c033a4`で移行しました。
-[local CI全21項目が成功](docs/measurements/2026-10-27/nba-front-validation.json)し、ソース段階のmain統合とP1は未完です。
+[main統合の検証](docs/measurements/2026-10-27/nba-front-main-integration.json)にpush前の確認を記録します。
+P1とソースの残る境界は未完です。
 
 mainへコンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を取り込みました。
 [取り込み記録](docs/measurements/2026-10-27/conditional-nba-main-integration.json)で、検証済みの
@@ -287,7 +289,7 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 releaseは4,653件中4,651件成功、同じ2件のみスキップです
 （[記録](docs/measurements/2026-10-25/activation-environment-final-validation.json)）。
 
-現在の[main取り込み](docs/measurements/2026-10-27/conditional-nba-main-integration.json)は、
+以前の[main取り込み](docs/measurements/2026-10-27/conditional-nba-main-integration.json)は、
 コンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を含みます。README再生成後のdev再確認を含め、
 local CI全21項目を確認しました。
 dev/ASan/UBSanは各7,013/7,015、releaseは7,014/7,016、失敗0・既知skip各2件です。

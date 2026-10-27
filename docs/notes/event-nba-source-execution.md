@@ -1,6 +1,7 @@
 # Source event-NBA lowering
 
-[日本語](event-nba-source-execution.ja.md). Status: validated local source checkpoint, 2026-10-27, on main `81799982`. The historical rejection
+[日本語](event-nba-source-execution.ja.md). Status: validated source checkpoint
+`c4be8ade` for main integration, 2026-10-27, originally based on main `81799982`. The historical rejection
 expectations were [approved and migrated](event-nba-expectation-migration.md)
 in separate expectation-only commit `16c033a4`.
 This is not a complete event-NBA or P1 parity claim.
@@ -97,7 +98,10 @@ are rerun on the corrected source. [Final validation](../measurements/2026-10-27
 passes all 21 local CI checks: dev/ASan/UBSan pass 8,129/8,131, release passes
 8,130/8,132, with zero failures and the same two known skips. All 773 unit tests
 and 29 existing dump tests pass. Final source comparisons use the exact final
-dev binary hash. The implementation/tests/documents remain local and uncommitted. No source
+dev binary hash. The implementation is committed as `c4be8ade` and combined
+with main fixes `9a81a55e`/`b91bd3d7`; the separate
+[main-integration record](../measurements/2026-10-27/nba-front-main-integration.json)
+records fresh pre-push checks. The earlier measurement-time records are preserved. No source
 event-NBA performance claim is made from the earlier dormant native benchmark.
 Eligible static scalar/container targets, fixed aggregates, packed selections,
 concatenation and streaming forms are exercised; this does not cover all
