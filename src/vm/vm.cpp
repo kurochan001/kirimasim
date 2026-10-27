@@ -4293,10 +4293,11 @@ private:
         std::vector<kernel::StrengthEdgeSpec> edges;
         edges.reserve(d_.strengthEdges.size());
         for (const auto& edge : d_.strengthEdges) {
-            const auto transfer =
-                edge.kind == sir::StrengthEdgeKind::Identity ? kernel::StrengthTransfer::Identity
-                : sir::resistiveStrengthEdge(edge.kind) ? kernel::StrengthTransfer::Resistive
-                                                        : kernel::StrengthTransfer::Nonresistive;
+            auto transfer = kernel::StrengthTransfer::Nonresistive;
+            if (edge.kind == sir::StrengthEdgeKind::Identity)
+                transfer = kernel::StrengthTransfer::Identity;
+            else if (sir::resistiveStrengthEdge(edge.kind))
+                transfer = kernel::StrengthTransfer::Resistive;
             edges.push_back({edge.first, edge.second, transfer,
                              sir::conditionalStrengthEdge(edge.kind)
                                  ? kernel::StrengthConduction::Off
