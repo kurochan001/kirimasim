@@ -6374,7 +6374,7 @@ private:
                 return;
             }
             case Method::Putc: {
-                // Outside the string, or the character 0: no change (6.16.3).
+                // Outside the string, or the character 0: no change (6.16.2).
                 std::string text(self);
                 const std::optional<std::int64_t> i = index(2);
                 const auto c = static_cast<char>(v(3).a & ~v(3).b & 0xffU);
@@ -6440,7 +6440,7 @@ private:
             case Method::HexToA:
             case Method::OctToA:
             case Method::BinToA: {
-                // Like $sformatf with %0d, %0h, %0o and %0b (6.16.12).
+                // Like $sformatf with %0d, %0h, %0o and %0b (6.16.11 to 6.16.14).
                 const char conv = info.method == Method::ItoA     ? 'd'
                                   : info.method == Method::HexToA ? 'h'
                                   : info.method == Method::OctToA ? 'o'

@@ -2883,7 +2883,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             const ast::Expression& base = element ? lhs.as<ast::ElementSelectExpression>().value()
                                                   : lhs.as<ast::RangeSelectExpression>().value();
             if (element && base.type->isString()) {
-                // s[i] is written as s.putc(i, c) (6.16.3).
+                // s[i] is written as s.putc(i, c) (6.16.2).
                 p.kind = Place::Kind::StringChar;
                 p.base.push_back(placeOf(base, sl));
                 p.indices.push_back(
@@ -3257,7 +3257,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         }
         case Place::Kind::StringChar: {
             if (delay) unsupported(sl, "delayed nonblocking assignment to a string character");
-            // s[i] = c is s.putc(i, c) (6.16.3): the new string to s.
+            // s[i] = c is s.putc(i, c) (6.16.2): the new string to s.
             const Type st{sir::TypeKind::String, 0};
             const Val str = loadPlace(p.base[0], sl);
             const Val c = coerce(v, sir::u2(8), sl);

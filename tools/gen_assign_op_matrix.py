@@ -257,8 +257,8 @@ def part_cases():
 
 
 def string_cases(container):
-    """The string methods that change their string (6.16.2, 6.16.9 to
-    6.16.13) and s[i] = c, which writes one character (6.16): the string
+    """The string methods that change their string (6.16.2, 6.16.11 to
+    6.16.15) and s[i] = c, which writes one character (6.16): the string
     is read and written as one target, its index evaluated once."""
     out = [
         ("s.putc(0, \"x\")", [("string", "s", "abc")], ['s.putc(0, "x");'], [("s", "%s")], "xbc"),
