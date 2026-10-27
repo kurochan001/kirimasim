@@ -18,7 +18,7 @@ module compare -1 1 0 0 1
 module relational 111011
 module substr [str] [s] [] []
 module atoi0 12345
-module atoi1 0
+module atoi1 -5
 module atohex2 31
 module atooct3 15
 module atobin4 5
@@ -46,7 +46,7 @@ function compare -1 1 0 0 1
 function relational 111011
 function substr [str] [s] [] []
 function atoi0 12345
-function atoi1 0
+function atoi1 -5
 function atohex2 31
 function atooct3 15
 function atobin4 5

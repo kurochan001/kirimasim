@@ -17,7 +17,7 @@ known only at run time (0 gives ""). s[i] out of range reads 0, and a
 write of 0 or out of range changes nothing. The methods: len, putc and
 getc (out of range: no change, 0), toupper, tolower, compare and
 icompare (-1, 0, 1), substr (out of range: ""), atoi, atohex, atooct and
-atobin (digits and _ only, no sign), atoreal, itoa, hextoa (lower case),
+atobin (one leading minus, a digit at once, then digits and _), atoreal, itoa, hextoa (lower case),
 octtoa, bintoa and realtoa (%g). The axes: the operation, values at and
 past the ends, widths of one and of two words, and the container (module
 variables and automatic variables of a function).
@@ -34,7 +34,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 NAME = "string_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 
 def int_to_string(value, width):
@@ -50,15 +50,20 @@ def string_to_int(s, width):
 
 
 def digits(s, base, chars):
-    n, seen = 0, False
+    negative = s.startswith("-")
+    if negative:
+        s = s[1:]
+    if not s or s[0].lower() not in chars:
+        return 0
+    n = 0
     for c in s:
         if c == "_":
             continue
         if c.lower() not in chars:
             break
         n = n * base + int(c, base)
-        seen = True
-    return n if seen else 0
+    n = (-n if negative else n) & 0xFFFFFFFF  # the low 32 bits, as an integer
+    return n - (1 << 32) if n >> 31 else n
 
 
 def compare(a, b):
