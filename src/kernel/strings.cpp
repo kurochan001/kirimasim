@@ -29,8 +29,8 @@ std::optional<double> stringToReal(std::string_view text) noexcept try {
         auto exponent = pos + 1;
         if (exponent < text.size() && (text[exponent] == '+' || text[exponent] == '-')) ++exponent;
         if (exponent < text.size() && digit(text[exponent])) {
-            number.append(text.substr(pos, exponent - pos));
-            pos = exponent;
+            while (pos < exponent)
+                number += text[pos++];
             digits();
         }
     }

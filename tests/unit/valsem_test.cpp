@@ -6,6 +6,7 @@
 // Icarus Verilog 13.0).
 
 #include <cstdint>
+#include <limits>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -42,7 +43,7 @@ TEST(StringReal, ScansOnlyTheRealConstantPrefix) {
         EXPECT_DOUBLE_EQ(kirimasim::valsem::stringToReal(c.text), c.value);
         const auto actual = kirimasim::kernel::stringToReal(c.text);
         ASSERT_TRUE(actual);
-        EXPECT_DOUBLE_EQ(*actual, c.value);
+        EXPECT_DOUBLE_EQ(actual.value_or(std::numeric_limits<double>::quiet_NaN()), c.value);
     }
 }
 
@@ -54,7 +55,8 @@ TEST(StringReal, MatchesTheIndependentReferenceAcrossSeparatorsAndSuffixes) {
                 SCOPED_TRACE(text);
                 const auto actual = kirimasim::kernel::stringToReal(text);
                 ASSERT_TRUE(actual);
-                EXPECT_DOUBLE_EQ(*actual, kirimasim::valsem::stringToReal(text));
+                EXPECT_DOUBLE_EQ(actual.value_or(std::numeric_limits<double>::quiet_NaN()),
+                                 kirimasim::valsem::stringToReal(text));
             }
 }
 
