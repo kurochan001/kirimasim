@@ -10,10 +10,16 @@ Checks: >
   -bugprone-easily-swappable-parameters,
   -bugprone-narrowing-conversions,
   -bugprone-branch-clone,
+  -bugprone-signed-bitwise,
+  -bugprone-std-exception-baseclass,
   -performance-enum-size
 # bugprone-easily-swappable-parameters: fires on most two-argument functions.
 # bugprone-narrowing-conversions: bit-level code narrows on purpose.
 # bugprone-branch-clone: truth tables and switch tables repeat on purpose.
+# bugprone-signed-bitwise: C++20 arithmetic right shifts and promoted
+# small-integer bit masks are intentional in the value operations.
+# bugprone-std-exception-baseclass: internal error tags are caught locally
+# and returned as status values; tests also exercise nonstandard exceptions.
 # performance-enum-size: enum sizes are chosen per type already.
 WarningsAsErrors: '*'
 # Global state (RUNTIME_ABI.md 9.3, 9.4): in src/, a variable of static or

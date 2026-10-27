@@ -388,7 +388,7 @@ void Lowerer::reportError(slang::SourceLocation sl, std::string_view what,
             diags_ += "kirimasim: ";
         diags_ += kind;
         diags_ += text;
-        diags_ += "\n";
+        diags_ += '\n';
     };
     line(sl, "error: ", what);
     if (noteAt.valid()) line(noteAt, "note: ", note);
@@ -405,7 +405,7 @@ void Lowerer::warning(slang::SourceLocation sl, std::string_view what) {
         diags_ += "kirimasim: ";
     diags_ += "warning: ";
     diags_ += what;
-    diags_ += "\n";
+    diags_ += '\n';
 }
 
 void Lowerer::report(slang::SourceLocation sl, std::string_view what) {

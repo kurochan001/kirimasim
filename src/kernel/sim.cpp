@@ -837,7 +837,7 @@ bool Scheduler::moveFirst(Region first, Region last, Region to) {
             note += to == Region::Active ? "Active" : "Reactive";
             note += " region in one time slot (--max-zero-delay=";
             note += n;
-            note += ")";
+            note += ')';
             setEndNote(std::move(note));
             requestEnd(EndReason::ZeroTimeLimit, 1);
         }
@@ -933,7 +933,7 @@ void Scheduler::runRegion(Region r) {
             std::string note = n;
             note += " events ran in one time slot (--max-slot-events=";
             note += n;
-            note += ")";
+            note += ')';
             setEndNote(std::move(note));
             requestEnd(EndReason::ZeroTimeLimit, 1);
             return;

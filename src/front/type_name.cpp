@@ -55,7 +55,7 @@ std::string prefixOf(const ast::Scope& ns) {
 /// or z bits: 32'sd0.
 std::string enumValueText(const slang::SVInt& v) {
     std::string text = std::to_string(v.getBitWidth()) + "'";
-    if (v.isSigned()) text += "s";
+    if (v.isSigned()) text += 's';
     if (v.hasUnknown()) return text + "b" + v.toString(slang::LiteralBase::Binary, false);
     return text + "d" + v.toString(slang::LiteralBase::Decimal, false);
 }
@@ -141,14 +141,14 @@ std::string Lowerer::typeName(const ast::Type& type, slang::SourceLocation sl) {
                       ast::PredefinedIntegerType::Int &&
                   base.isSigned()))
                 body += " " + typeName(e.baseType, sl);
-            body += "{";
+            body += '{';
             bool first = true;
             for (const ast::EnumValueSymbol& v : e.values()) {
-                if (!first) body += ",";
+                if (!first) body += ',';
                 first = false;
                 body += std::string(v.name) + "=" + enumValueText(v.getValue().integer());
             }
-            body += "}";
+            body += '}';
         } else {
             body = t.isStruct() ? "struct" : "union";
             if (t.kind == ast::SymbolKind::PackedUnionType && t.as<ast::PackedUnionType>().isTagged)
@@ -157,12 +157,12 @@ std::string Lowerer::typeName(const ast::Type& type, slang::SourceLocation sl) {
                 t.as<ast::UnpackedUnionType>().isTagged)
                 body += " tagged";
             if (t.isIntegral()) body += t.isSigned() ? " packed signed" : " packed";
-            body += "{";
+            body += '{';
             for (const ast::Symbol& m : t.as<ast::Scope>().members())
                 if (m.kind == ast::SymbolKind::Field)
                     body += typeName(m.as<ast::FieldSymbol>().getType(), sl) + " " +
                             std::string(m.name) + ";";
-            body += "}";
+            body += '}';
         }
         if (const ast::TypeAliasType* a = aliasDeclaring(t))
             return body + prefixOf(*a->getParentScope()) + std::string(a->name);

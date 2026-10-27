@@ -259,12 +259,12 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.original.emplace_back(argv[i]);
         } else if (arg.starts_with("--top=") || arg.starts_with("--timescale=")) {
             o.slangArgs.emplace_back(arg);
-        } else if (arg.starts_with("+")) {
+        } else if (arg.starts_with('+')) {
             if (isSlangPlusOption(arg))
                 o.slangArgs.emplace_back(arg);
             else
                 o.plusargs.emplace_back(arg);
-        } else if (arg.starts_with("-")) {
+        } else if (arg.starts_with('-')) {
             std::fprintf(stderr, "kirimasim: error: unknown option '%s'\n", argv[i]);
             printUsage(stderr);
             return kExitInputError;

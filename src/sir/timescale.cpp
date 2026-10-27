@@ -93,12 +93,12 @@ std::optional<int> parseTimeExponent(std::string_view text) {
     } else if (text.starts_with("10")) {
         digits = 1;
         text.remove_prefix(2);
-    } else if (text.starts_with("1")) {
+    } else if (text.starts_with('1')) {
         text.remove_prefix(1);
     } else {
         return std::nullopt;
     }
-    while (text.starts_with(" "))
+    while (text.starts_with(' '))
         text.remove_prefix(1);
     for (const UnitName& u : kUnits) {
         if (text != u.name) continue;

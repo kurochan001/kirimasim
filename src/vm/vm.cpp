@@ -3225,7 +3225,7 @@ private:
                     note += n;
                     note += " instructions without waiting (--max-steps=";
                     note += n;
-                    note += ")";
+                    note += ')';
                     sched_.setEndNote(std::move(note));
                     sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
                     return Exit::Stop;
@@ -4295,7 +4295,7 @@ private:
         for (const auto& edge : d_.strengthEdges) {
             const auto transfer =
                 edge.kind == sir::StrengthEdgeKind::Identity ? kernel::StrengthTransfer::Identity
-                : sir::resistiveStrengthEdge(edge.kind)      ? kernel::StrengthTransfer::Resistive
+                : sir::resistiveStrengthEdge(edge.kind) ? kernel::StrengthTransfer::Resistive
                                                         : kernel::StrengthTransfer::Nonresistive;
             edges.push_back({edge.first, edge.second, transfer,
                              sir::conditionalStrengthEdge(edge.kind)
@@ -5555,7 +5555,7 @@ private:
                 // SYSTEM_TASKS.md 10.4; the kernel holds it until the
                 // Observed region (SCHEDULER_SPEC.md 15.3).
                 std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
-                line += ":";
+                line += ':';
                 line += std::to_string(in.loc.line);
                 line += ": warning: ";
                 line += ops[0].text;
@@ -5565,7 +5565,7 @@ private:
                 line += ops[2].text;
                 line += " @ ";
                 line += messageTime(sched_.time(), d_.timePrecision);
-                line += "]";
+                line += ']';
                 sched_.deferReport(f.kernelId, std::move(line));
                 return true;
             }
@@ -6498,7 +6498,7 @@ private:
                         return false;
                     }
                 }
-                timeFormat_ = tf;
+                timeFormat_ = std::move(tf);
                 return true;
             }
             case SysTask::MonitorOn:

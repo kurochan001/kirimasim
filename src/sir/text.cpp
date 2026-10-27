@@ -115,10 +115,10 @@ std::string operandsText(const Design& d, const Instr& in) {
         }
         out += (k == 0 ? " " : ", ") + operandText(d, o);
         if (o.kind != Operand::Kind::Block || o.count == 0) continue;
-        out += "(";
+        out += '(';
         for (std::uint32_t a = 0; a < o.count && k + 1 < ops.size(); ++a)
             out += (a == 0 ? "" : ", ") + operandText(d, ops[++k]);
-        out += ")";
+        out += ')';
     }
     return out;
 }
@@ -140,7 +140,7 @@ std::string slotFlags(std::uint32_t f) {
     std::string out;
     for (const auto& n : kNames) {
         if ((f & n.bit) == 0) continue;
-        if (!out.empty()) out += ",";
+        if (!out.empty()) out += ',';
         out += n.name;
     }
     return out.empty() ? "" : " flags(" + out + ")";
@@ -179,7 +179,7 @@ std::string frameText(const std::vector<FrameVar>& frame) {
             out += " home=capture%f" + std::to_string(f.captureSource.index());
         if (f.readonly) out += " readonly";
         if (f.refStatic) out += " ref-static";
-        out += "\n";
+        out += '\n';
     }
     return out;
 }
@@ -203,7 +203,7 @@ std::string activationText(const ActivationInfo& info) {
         for (auto scope : info.extents)
             out += " #" + std::to_string(scope.index());
         if (info.inheritCaptures) out += " inherited";
-        out += "\n";
+        out += '\n';
     }
     return out;
 }
@@ -214,12 +214,12 @@ std::string blocksText(const Design& d, const std::vector<BasicBlock>& blocks) {
         out += "bb" + std::to_string(b);
         const auto& params = blocks[b].params;
         if (!params.empty()) {
-            out += "(";
+            out += '(';
             for (std::size_t i = 0; i < params.size(); ++i) {
                 out += (i == 0 ? "%t" : ", %t") + std::to_string(params[i].temp.index()) + ": " +
                        toString(params[i].type);
             }
-            out += ")";
+            out += ')';
         }
         out += ":\n";
         for (const Instr& in : blocks[b].instrs) {
@@ -383,10 +383,10 @@ std::string toText(const Design& d) {
         if (!s.driverElements.empty()) {
             out += " driver-elements=[";
             for (std::size_t k = 0; k < s.driverElements.size(); ++k) {
-                if (k != 0) out += ",";
+                if (k != 0) out += ',';
                 out += std::to_string(s.driverElements[k]);
             }
-            out += "]";
+            out += ']';
         }
         out += slotFlags(s.flags) + "\n";
     }
@@ -446,7 +446,7 @@ std::string toText(const Design& d) {
             out += " trigger=";
             for (std::size_t k = 0; k < p.triggers.size(); ++k) {
                 const Trigger& t = p.triggers[k];
-                if (k != 0) out += ",";
+                if (k != 0) out += ',';
                 out += std::string(edgeName(t.edge)) + "(" + slotRef(t.range) + ")";
                 if (t.guard != kNone) out += " iff @" + std::to_string(t.guard.index());
             }

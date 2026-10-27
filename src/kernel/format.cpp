@@ -176,7 +176,7 @@ std::string formatDecimal(const IntValue& v, int width, bool left, bool zero) {
     // The 0 flag pads with 0 after the sign, and a lone x or z too; - wins
     // over it (3.12).
     if (zero && !left && width > 0) {
-        if (digits.starts_with("-")) return "-" + padLeft(digits.substr(1), w - 1, '0');
+        if (digits.starts_with('-')) return "-" + padLeft(digits.substr(1), w - 1, '0');
         return padLeft(std::move(digits), w, '0');
     }
     return place(std::move(digits), w, left, ' ');
@@ -448,7 +448,7 @@ std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, in
     for (const char c : text.substr(0, epos))
         if (c != '.') digits += c;
     std::string_view es = text.substr(epos + 1);
-    if (es.starts_with("+")) es.remove_prefix(1);
+    if (es.starts_with('+')) es.remove_prefix(1);
     int exp10 = 0;
     std::from_chars(es.data(), es.data() + es.size(), exp10);
     // The value in units of tf.unit with tf.decimals digits after the
