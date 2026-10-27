@@ -53,13 +53,14 @@ template <class T> struct HeapResult {
 };
 
 /// One word of a flattened element. Nested containers name a previously
-/// registered container type; other handles (strings, for example) are
-/// immutable values or opaque handles, not tracing edges of this heap.
+/// registered container type; string marks a string-table tracing edge.
+/// Other handles remain opaque and are never guessed to be tracing edges.
 struct HeapWord {
     std::uint64_t mask = ~std::uint64_t{0};
     bool fourState = false;
     W4 initial{0, 0};
     HeapTypeId nested = kNone;
+    bool string = false;
 };
 struct HeapType {
     ContainerKind kind = ContainerKind::DynamicArray;
@@ -88,6 +89,12 @@ struct HeapStats {
     std::uint64_t cells = 0;
     std::uint64_t containerEntries = 0;
     std::uint64_t cellEntries = 0;
+};
+/// Typed string leaves encountered during a complete heap mark. Failure
+/// aborts marking before any heap object is swept.
+struct HeapStringRoots {
+    bool (*mark)(void*, std::uint64_t) noexcept = nullptr;
+    void* frame = nullptr;
 };
 
 class Heap {
@@ -167,13 +174,14 @@ public:
     /// Caller supplies ALL roots at a permitted safe point, outside DPI.
     /// Marking failure leaves all objects alive. Tokens include generations;
     /// reclaimed entries can be reused without making old tokens valid again.
-    HeapStatus collect(std::span<const HeapRoot> roots) noexcept;
+    HeapStatus collect(std::span<const HeapRoot> roots, HeapStringRoots strings = {}) noexcept;
     /// Read-only graph query for monitor ownership filtering. Observations
     /// are not tracing roots and querying does not invoke the read hook.
     HeapResult<bool> reaches(std::span<const HeapRoot> roots, HeapRoot target) const noexcept;
     /// The heap graph changed since successful collection. The caller
     /// must also compare its root set: dropping a root needs no heap write.
     [[nodiscard]] bool needsCollection() const noexcept { return changed_; }
+    [[nodiscard]] bool underPressure() const noexcept { return allocated_ >= nextCollection_; }
     [[nodiscard]] HeapStats stats() const noexcept;
 
 private:
@@ -226,6 +234,8 @@ private:
     Pool<Container> containers_;
     Pool<Cell> cells_;
     bool changed_ = false;
+    bool collecting_ = false;
+    std::uint64_t allocated_ = 0, nextCollection_ = 1024;
     HeapHook readHook_, changeHook_, allocationHook_;
     mutable bool lastChange_ = true;
     void recordRead(HeapRoot root) const noexcept;

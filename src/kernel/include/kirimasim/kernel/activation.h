@@ -154,6 +154,8 @@ public:
     /// Enumerate only fields explicitly typed as container/cell roots;
     /// ordinary integers, strings and real bits never become heap roots.
     void visitRoots(void (*visitor)(void*, HeapRoot) noexcept, void* frame) const noexcept;
+    bool visitStringRoots(bool (*visitor)(void*, std::uint64_t) noexcept,
+                          void* frame) const noexcept;
     [[nodiscard]] bool rootsChanged() const noexcept { return rootsChanged_; }
     void acknowledgeRoots() noexcept { rootsChanged_ = false; }
     /// Trace all live physical event fields, including unread retained arrays.

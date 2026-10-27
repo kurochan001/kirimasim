@@ -1,0 +1,8 @@
+combined=left=123:discard=2999
+detached=kept=73 size=0
+delayed=pending=91
+event=watch=18
+watched=watch=18
+copy=left=123:discard=2999
+fork=captured=42
+scoped=16890

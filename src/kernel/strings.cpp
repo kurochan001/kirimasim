@@ -3,7 +3,9 @@
 
 #include "kirimasim/kernel/strings.h"
 
+#include <algorithm>
 #include <cstdlib>
+#include <limits>
 #include <new>
 #include <stdexcept>
 
@@ -41,14 +43,115 @@ std::optional<double> stringToReal(std::string_view text) noexcept try {
     return std::nullopt;
 }
 
+void Strings::Pin::reset() noexcept {
+    if (owner_ != nullptr && handle_ != 0) {
+        auto& entry = owner_->texts_[static_cast<std::uint32_t>(handle_) - 1];
+        --entry.pins;
+    }
+    owner_ = nullptr;
+    handle_ = 0;
+}
+StringError Strings::pin(std::uint64_t handle, Pin& output) noexcept {
+    if (handle != 0) {
+        const auto low = static_cast<std::uint32_t>(handle);
+        if (low == 0 || low > texts_.size()) return StringError::InvalidHandle;
+        auto& entry = texts_[low - 1];
+        if (!entry.live || entry.generation != handle >> 32) return StringError::InvalidHandle;
+        if (entry.pins == UINT64_MAX) return StringError::ResourceLimit;
+        ++entry.pins;
+        if (collecting_) entry.marked = true;
+    }
+    output.reset();
+    output.owner_ = this;
+    output.handle_ = handle;
+    return StringError::None;
+}
 std::uint64_t Strings::intern(std::string_view s) {
     if (s.empty()) return 0;
-    std::string key(s);
-    if (auto it = handles_.find(key); it != handles_.end()) return it->second;
-    texts_.push_back(key);
-    const auto h = static_cast<std::uint64_t>(texts_.size());
-    handles_.emplace(std::move(key), h);
-    return h;
+    if (auto it = handles_.find(s); it != handles_.end()) return it->second;
+    if (collecting_ || s.size() > UINT64_MAX - bytes_) throw std::bad_alloc{};
+    std::pmr::string value(s, memory_);
+    const bool grow = freeCount_ == 0;
+    std::uint32_t index = 0;
+    if (grow) {
+        if (texts_.size() >= UINT32_MAX) throw std::bad_alloc{};
+        if (free_.size() < texts_.size() + 1)
+            free_.resize(std::max(texts_.size() + 1, free_.size() * 2));
+        index = static_cast<std::uint32_t>(texts_.size());
+        texts_.emplace_back(memory_);
+    } else {
+        index = free_[freeCount_ - 1];
+    }
+    auto& entry = texts_[index];
+    const auto handle = (std::uint64_t{entry.generation} << 32) | (std::uint64_t{index} + 1);
+    try {
+        handles_.emplace(value, handle);
+    } catch (...) {
+        if (grow) texts_.pop_back();
+        throw;
+    }
+    entry.text = std::move(value);
+    entry.live = true;
+    entry.marked = false;
+    if (!grow) --freeCount_;
+    ++live_;
+    bytes_ += entry.text.size();
+    return handle;
+}
+
+StringError Strings::beginCollection(std::span<const std::uint64_t> roots) noexcept {
+    if (collecting_) return StringError::InvalidState;
+    for (auto& entry : texts_)
+        entry.marked = entry.pins != 0;
+    collecting_ = true;
+    failed_ = false;
+    for (const auto root : roots) {
+        if (const auto error = mark(root); error != StringError::None) {
+            cancelCollection();
+            return error;
+        }
+    }
+    return StringError::None;
+}
+StringError Strings::mark(std::uint64_t handle) noexcept {
+    if (!collecting_) return StringError::InvalidState;
+    if (handle == 0) return StringError::None;
+    const auto low = static_cast<std::uint32_t>(handle);
+    if (low == 0 || low > texts_.size()) {
+        failed_ = true;
+        return StringError::InvalidHandle;
+    }
+    auto& entry = texts_[low - 1];
+    if (!entry.live || entry.generation != handle >> 32) {
+        failed_ = true;
+        return StringError::InvalidHandle;
+    }
+    entry.marked = true;
+    return StringError::None;
+}
+void Strings::finishCollection() noexcept {
+    if (!collecting_) return;
+    if (failed_) {
+        cancelCollection();
+        return;
+    }
+    for (std::uint32_t i = 0; i < texts_.size(); ++i) {
+        auto& entry = texts_[i];
+        if (!entry.live || entry.marked) continue;
+        handles_.erase(entry.text);
+        --live_;
+        bytes_ -= entry.text.size();
+        std::pmr::string empty(memory_);
+        entry.text.swap(empty);
+        entry.live = false;
+        if (entry.generation == UINT32_MAX) continue;
+        ++entry.generation;
+        free_[freeCount_++] = i;
+    }
+    const auto twice = [](std::uint64_t n) { return n > UINT64_MAX / 2 ? UINT64_MAX : n * 2; };
+    nextObjects_ = std::max(std::uint64_t{256}, twice(live_));
+    nextBytes_ = std::max(std::uint64_t{65536}, twice(bytes_));
+    collecting_ = false;
 }
 
 }  // namespace kirimasim::kernel

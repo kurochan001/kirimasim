@@ -134,10 +134,15 @@ template <class T> void Heap::Pool<T>::release(std::uint32_t index) noexcept {
     free[freeCount++] = index;
 }
 
-Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(h.memory_) {}
+Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(h.memory_) {
+    if (heap.collecting_) throw HeapFault{HeapError::InvalidType};
+}
 Heap::Transaction::~Transaction() {
     if (committed) {
         heap.changed_ = true;
+        const std::uint64_t count = containers.size() + cells.size();
+        heap.allocated_ =
+            count > UINT64_MAX - heap.allocated_ ? UINT64_MAX : heap.allocated_ + count;
         if (heap.allocationHook_.fn != nullptr) {
             const auto announce = [&](const auto& pool, std::uint32_t index, HeapRoot::Kind kind) {
                 const auto token = (std::uint64_t{pool.entries[index].generation} << 32) |
@@ -198,8 +203,12 @@ HeapResult<HeapWord> Heap::describeWord(HeapLayoutId layout, std::size_t word) c
 }
 HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexcept {
     return protectValue<HeapLayoutId>([&] {
+        if (collecting_) throw HeapFault{HeapError::InvalidType};
         if (words.empty()) throw HeapFault{HeapError::InvalidType};
         for (const HeapWord& w : words) {
+            if (w.string && (w.nested != kNone || w.mask != UINT64_MAX || w.fourState ||
+                             w.initial.a != 0 || w.initial.b != 0))
+                throw HeapFault{HeapError::InvalidType};
             if (w.mask == 0 || ((w.initial.a | w.initial.b) & ~w.mask) != 0 ||
                 (!w.fourState && w.initial.b != 0))
                 throw HeapFault{HeapError::InvalidType};
@@ -219,7 +228,7 @@ HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexce
             for (std::size_t i = 0; i < words.size(); ++i) {
                 const HeapWord &a = old.words[i], &b = words[i];
                 if (a.mask != b.mask || a.fourState != b.fourState || a.initial.a != b.initial.a ||
-                    a.initial.b != b.initial.b ||
+                    a.initial.b != b.initial.b || a.string != b.string ||
                     ((a.nested == kNone || b.nested == kNone)
                          ? a.nested != b.nested
                          : !equivalentTypes(a.nested, b.nested))) {
@@ -239,6 +248,7 @@ HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexce
 }
 HeapResult<HeapTypeId> Heap::addType(HeapType type) noexcept {
     return protectValue<HeapTypeId>([&] {
+        if (collecting_) throw HeapFault{HeapError::InvalidType};
         if (!layoutOf(type.element) ||
             (type.kind != ContainerKind::DynamicArray && type.kind != ContainerKind::Queue) ||
             (type.kind == ContainerKind::DynamicArray && type.maxElements != 0))
@@ -510,6 +520,7 @@ HeapStatus Heap::writeCell(HeapLayoutId layout, CellToken cell, std::span<const 
 HeapStatus Heap::swapValues(HeapTypeId type, ContainerToken value,
                             std::optional<std::int64_t> first,
                             std::optional<std::int64_t> second) noexcept {
+    if (collecting_) return failure(HeapError::InvalidType);
     if (const auto error = check(type, value); error != HeapError::None) return failure(error);
     if (value.bits == 0) return {};
     const auto& container = *containers_.get(value.bits);
@@ -530,6 +541,7 @@ HeapStatus Heap::swapValues(HeapTypeId type, ContainerToken value,
 }
 
 HeapStatus Heap::storeNested(HeapLayoutId layout, CellToken cell, ContainerToken value) noexcept {
+    if (collecting_) return failure(HeapError::InvalidType);
     const Layout* l = layoutOf(layout);
     if (!l || l->words.size() != 1 || l->words[0].nested == kNone)
         return failure(HeapError::InvalidType);
@@ -633,6 +645,7 @@ HeapStatus Heap::pop(HeapTypeId type, ContainerToken& value, bool front,
 }
 HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,
                        std::optional<std::int64_t> index) noexcept {
+    if (collecting_) return failure(HeapError::InvalidType);
     if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
     if (types_[type.index()].kind != ContainerKind::Queue) return failure(HeapError::InvalidType);
     Container* c = containers_.get(value.bits);
@@ -644,6 +657,7 @@ HeapStatus Heap::erase(HeapTypeId type, ContainerToken& value,
     return {};
 }
 HeapStatus Heap::clear(HeapTypeId type, ContainerToken& value) noexcept {
+    if (collecting_) return failure(HeapError::InvalidType);
     if (const HeapError e = check(type, value); e != HeapError::None) return failure(e);
     changed_ = changed_ || value.bits != 0;
     value = {};
@@ -681,8 +695,15 @@ HeapResult<bool> Heap::reaches(std::span<const HeapRoot> roots, HeapRoot target)
     });
 }
 
-HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
+HeapStatus Heap::collect(std::span<const HeapRoot> roots, HeapStringRoots strings) noexcept {
+    if (collecting_) return failure(HeapError::InvalidType);
+    struct Collection {
+        bool& active;
+        explicit Collection(bool& flag) : active(flag) { active = true; }
+        ~Collection() { active = false; }
+    } collection(collecting_);
     return protect([&] {
+        std::uint64_t live = 0;
         for (auto& e : containers_.entries)
             e.marked = false;
         for (auto& e : cells_.entries)
@@ -700,6 +721,7 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
                 auto& entry = containers_.entries[static_cast<std::uint32_t>(root.bits) - 1];
                 if (entry.marked) continue;
                 entry.marked = true;
+                ++live;
                 for (const CellToken cell : c->cells)
                     work.push_back(HeapRoot::cell(cell));
             } else if (root.kind == HeapRoot::Kind::Cell) {
@@ -708,10 +730,15 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
                 auto& entry = cells_.entries[static_cast<std::uint32_t>(root.bits) - 1];
                 if (entry.marked) continue;
                 entry.marked = true;
+                ++live;
                 const auto& ws = layouts_[c->layout.index()].words;
-                for (std::size_t i = 0; i < ws.size(); ++i)
+                for (std::size_t i = 0; i < ws.size(); ++i) {
+                    if (ws[i].string &&
+                        (strings.mark == nullptr || !strings.mark(strings.frame, c->words[i].a)))
+                        return failure(HeapError::InvalidHandle);
                     if (ws[i].nested != kNone)
                         work.push_back(HeapRoot::container(ContainerToken{c->words[i].a}));
+                }
             } else {
                 return failure(HeapError::InvalidType);
             }
@@ -723,6 +750,9 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots) noexcept {
             if (cells_.entries[i].value && !cells_.entries[i].marked)
                 cells_.release(static_cast<std::uint32_t>(i));
         changed_ = false;
+        allocated_ = 0;
+        nextCollection_ =
+            std::max(std::uint64_t{1024}, live > UINT64_MAX / 2 ? UINT64_MAX : live * 2);
         return HeapStatus{};
     });
 }

@@ -218,6 +218,7 @@ struct MonitorSpec {
     HeapResult<bool> (*heapReadFilter)(const void*, HeapRoot) noexcept = nullptr;
     const void* heapReadFrame = nullptr;
     ActivationReadSpec activation;
+    bool stringValue = false;  ///< The expression's Handle words are typed strings.
 };
 
 /// Ordered event items sharing one independent countdown. These descriptors
@@ -617,6 +618,11 @@ public:
     [[nodiscard]] bool permitsEventCollection() const noexcept {
         return !ending_ && !runningFinal_;
     }
+    [[nodiscard]] bool permitsTransientCollection() const noexcept {
+        return !ending_ && !runningFinal_ && walking_ == 0 && !draining_;
+    }
+    bool visitMonitorStrings(bool (*visitor)(void*, std::uint64_t) noexcept,
+                             void* frame) const noexcept;
     [[nodiscard]] EndReason reason() const { return ending_ ? reason_ : EndReason::Quiescent; }
     [[nodiscard]] int level() const { return level_; }
     [[nodiscard]] std::uint64_t time() const { return time_; }

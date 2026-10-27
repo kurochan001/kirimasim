@@ -334,6 +334,20 @@ void ActivationStore::visitRoots(void (*visitor)(void*, HeapRoot) noexcept,
         }
     }
 }
+bool ActivationStore::visitStringRoots(bool (*visitor)(void*, std::uint64_t) noexcept,
+                                       void* frame) const noexcept {
+    for (const auto& record : records_) {
+        if (record.leases == 0) continue;
+        for (const auto& field : layouts_[record.layout.index()].fields) {
+            if (field.kind != ActivationKind::String) continue;
+            for (std::uint32_t e = 0; e < field.elements; ++e)
+                if (visitor == nullptr ||
+                    !visitor(frame, record.values[static_cast<std::size_t>(field.offset) + e]))
+                    return false;
+        }
+    }
+    return true;
+}
 ManagedEventError ActivationStore::visitEventRoots(ManagedEventRoots& roots) const noexcept {
     for (const auto& record : records_) {
         if (record.leases == 0) continue;

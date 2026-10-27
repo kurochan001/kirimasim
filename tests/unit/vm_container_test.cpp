@@ -1345,6 +1345,53 @@ TEST(VmContainer, RegionCollectionKeepsTypedFramesCellsAndBoundedPools) {
                 }
 }
 
+// No wait/delay boundary occurs: a branch must collect with the live SSA published.
+TEST(VmContainer, ZeroTimeLoopsBoundContainerAndUniqueStringStorage) {
+    for (const bool string : {false, true}) {
+        SCOPED_TRACE(string);
+        Program p;
+        const Type valueType = string ? Type{TypeKind::String, 0} : p.container(s4(32), true);
+        const auto home = p.slot(valueType), counter = p.slot(u2(64));
+        const auto zero = p.constant(u2(64), 0), one = p.constant(u2(64), 1),
+                   count = p.constant(u2(64), 10000);
+        p.store(counter, zero);
+        p.emit(Op::Br, voidType(), {Operand::block(BlockId{1})});
+        const auto i = p.emitAt(1, Op::Load, u2(64), {counter});
+        const auto value =
+            string ? p.emitAt(1, Op::Syscall, valueType,
+                              {Operand::str("$sformatf"), Operand::str("value=%0d"), i})
+                   : p.emitAt(1, Op::ContainerPack, valueType, {p.constant(s4(32), 73)});
+        p.emitAt(1, Op::Store, voidType(), {home, value});
+        const auto next = p.emitAt(1, Op::Add, u2(64), {i, one});
+        p.emitAt(1, Op::Store, voidType(), {counter, next});
+        const auto again = p.emitAt(1, Op::Lt, u2(1), {next, count});
+        p.emitAt(1, Op::BrIf, voidType(),
+                 {again, Operand::block(BlockId{1}), Operand::block(BlockId{2})});
+        p.emitAt(2, Op::Ret, voidType(), {});
+        ASSERT_TRUE(verifies(p.d));
+        Capture output;
+        ASSERT_NE(output.file, nullptr);
+        k::Context context(k::OutputDestinations{output.file, output.file});
+        const auto result = kirimasim::vm::run(p.d, context);
+        ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << output.text();
+        EXPECT_EQ(context.scheduler().time(), 0U);
+        EXPECT_EQ(stored(context, counter, u2(64))[0].a, 10000U);
+        const auto token = stored(context, home, valueType)[0].a;
+        if (string) {
+            EXPECT_EQ(context.strings().get(token), "value=9999");
+            EXPECT_LE(context.strings().stats().entries, 256U);
+        } else {
+            const auto type = context.heap().actualType({token});
+            ASSERT_TRUE(type);
+            std::array<k::W4, 1> leaf{};
+            ASSERT_TRUE(context.heap().read(type.value, {token}, 0, leaf));
+            EXPECT_EQ(leaf[0].a, 73U);
+            EXPECT_LE(context.heap().stats().containerEntries, 1025U);
+            EXPECT_LE(context.heap().stats().cellEntries, 1025U);
+        }
+    }
+}
+
 TEST(VmContainer, DroppingTheLastReferenceCollectsWithoutAnotherHeapMutation) {
     Program p;
     const auto q = p.container(s4(32), true);

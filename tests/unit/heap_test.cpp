@@ -114,6 +114,226 @@ private:
     }
 };
 
+TEST(StringCollection, RetainsLiveInterningAndRejectsReusedGenerations) {
+    Strings strings;
+    const auto live = strings.intern("live"), dead = strings.intern("dead");
+    const std::array roots{live};
+    ASSERT_EQ(strings.beginCollection(roots), StringError::None);
+    strings.finishCollection();
+    EXPECT_EQ(strings.get(live), "live");
+    EXPECT_EQ(strings.intern("live"), live);
+    EXPECT_TRUE(strings.get(dead).empty());
+    const auto reused = strings.intern("replacement");
+    EXPECT_NE(reused, dead);
+    EXPECT_EQ(static_cast<std::uint32_t>(reused), static_cast<std::uint32_t>(dead));
+    EXPECT_TRUE(strings.get(dead).empty());
+    EXPECT_EQ(strings.get(reused), "replacement");
+}
+
+TEST(StringCollection, NativePinsSurviveReentryAndRejectStaleRetains) {
+    Strings strings;
+    const auto handle = strings.intern("native owner");
+    Strings::Pin pin;
+    ASSERT_EQ(strings.pin(handle, pin), StringError::None);
+    Strings::Pin moved(std::move(pin));
+    for (unsigned i = 0; i < 1000; ++i)
+        strings.intern(std::to_string(i));
+    ASSERT_EQ(strings.beginCollection({}), StringError::None);
+    strings.finishCollection();
+    EXPECT_EQ(strings.get(moved.handle()), "native owner");
+    moved.reset();
+    ASSERT_EQ(strings.beginCollection({}), StringError::None);
+    strings.finishCollection();
+    const auto replacement = strings.intern("replacement");
+    ASSERT_EQ(strings.pin(replacement, pin), StringError::None);
+    EXPECT_EQ(strings.pin(handle, pin), StringError::InvalidHandle);
+    EXPECT_EQ(pin.handle(), replacement);
+    ASSERT_EQ(strings.beginCollection({}), StringError::None);
+    strings.finishCollection();
+    EXPECT_EQ(strings.get(replacement), "replacement");
+}
+
+TEST(StringCollection, ComputedMonitorLastValueRemainsCanonicalAndRetiresWithWait) {
+    Context context(OutputDestinations{nullptr, nullptr});
+    auto& scheduler = context.scheduler();
+    const auto input = context.store().add(Domain::Two, 32, 1, Init::Zero);
+    struct Expression {
+        unsigned value = 0, wakes = 0;
+        static void eval(kirima_context* raw, void* frame, std::uint64_t* out) {
+            auto& expression = *static_cast<Expression*>(frame);
+            *out = fromC(raw).strings().intern("watch=" + std::to_string(expression.value / 2));
+        }
+        static kirima_status resume(kirima_context*, void* frame) {
+            ++static_cast<Expression*>(frame)->wakes;
+            return static_cast<kirima_status>(Status::Done);
+        }
+    } expression;
+    const auto process = scheduler.addProcess(&Expression::resume, &expression, Group::Active);
+    MonitorSpec monitor;
+    monitor.slots = {{input, 0, 0, 0, 0}};
+    monitor.eval = &Expression::eval;
+    monitor.frame = &expression;
+    monitor.domain = Domain::Handle;
+    monitor.width = 64;
+    monitor.stringValue = true;
+    scheduler.waitMonitor(process, monitor);
+    const auto retained = context.strings().intern("watch=0");
+    for (unsigned i = 0; i < 1000; ++i)
+        context.strings().intern(std::to_string(i));
+    const auto collect = [&] {
+        EXPECT_EQ(context.strings().beginCollection({}), StringError::None);
+        EXPECT_TRUE(scheduler.visitMonitorStrings(
+            [](void* raw, std::uint64_t handle) noexcept {
+                return static_cast<Strings*>(raw)->mark(handle) == StringError::None;
+            },
+            &context.strings()));
+        context.strings().finishCollection();
+    };
+    collect();
+    EXPECT_EQ(context.strings().get(retained), "watch=0");
+    EXPECT_EQ(context.strings().stats().live, 1U);
+    for (std::uint64_t value : {1U, 2U}) {
+        expression.value = static_cast<unsigned>(value);
+        scheduler.write({.slot = input}, &value);
+        scheduler.run();
+        EXPECT_EQ(expression.wakes, value == 1 ? 0U : 1U);
+    }
+    collect();
+    EXPECT_EQ(context.strings().stats().live, 0U);
+}
+
+TEST(StringCollection, InvalidRootsAndFailedMarksNeverSweepValues) {
+    Strings strings;
+    const auto a = strings.intern("first"), b = strings.intern("second");
+    const std::array invalid{a, std::uint64_t{1}};
+    EXPECT_EQ(strings.beginCollection(invalid), StringError::InvalidHandle);
+    strings.finishCollection();
+    EXPECT_EQ(strings.get(a), "first");
+    EXPECT_EQ(strings.get(b), "second");
+    ASSERT_EQ(strings.beginCollection(std::span(&a, 1)), StringError::None);
+    EXPECT_EQ(strings.mark(1), StringError::InvalidHandle);
+    strings.finishCollection();
+    EXPECT_EQ(strings.stats().live, 2U);
+    EXPECT_EQ(strings.intern("second"), b);
+}
+
+TEST(StringCollection, DeterministicPressureBoundsDiscardedUniqueValues) {
+    Strings strings;
+    const auto keep = strings.intern("persistent");
+    for (unsigned n = 0; n < 10000; ++n) {
+        const auto current = strings.intern(std::to_string(n));
+        if (strings.underPressure()) {
+            const std::array roots{keep, current};
+            ASSERT_EQ(strings.beginCollection(roots), StringError::None);
+            strings.finishCollection();
+        }
+        EXPECT_EQ(strings.get(keep), "persistent");
+        EXPECT_LE(strings.stats().entries, 256U);
+    }
+}
+
+TEST(StringCollection, InternAllocationFailurePreservesPublishedHandles) {
+    bool completed = false;
+    for (unsigned budget = 0; budget < 20; ++budget) {
+        FailingMemory memory;
+        Strings strings(&memory);
+        const auto keep = strings.intern("persistent");
+        memory.arm(budget);
+        try {
+            const auto value = strings.intern(std::string(256, 'x'));
+            EXPECT_EQ(strings.get(value), std::string(256, 'x'));
+            completed = true;
+        } catch (const std::bad_alloc&) {
+            EXPECT_EQ(strings.stats().live, 1U);
+        }
+        memory.disarm();
+        EXPECT_EQ(strings.get(keep), "persistent");
+        EXPECT_EQ(strings.intern("persistent"), keep);
+        if (completed) break;
+    }
+    EXPECT_TRUE(completed);
+}
+
+TEST(Heap, TypedStringLeavesAreMarkedBeforeEitherTableIsSwept) {
+    Strings strings;
+    Heap heap;
+    HeapWord word;
+    word.string = true;
+    const auto layout = heap.addLayout(std::span(&word, 1));
+    ASSERT_TRUE(layout);
+    const auto type = heap.addType({ContainerKind::Queue, layout.value});
+    ASSERT_TRUE(type);
+    const auto kept = strings.intern("in a detached cell"), dead = strings.intern("garbage");
+    const std::array<W4, 1> values{{{kept, 0}}};
+    const auto value = heap.fromValues(type.value, values);
+    ASSERT_TRUE(value);
+    const auto cell = heap.cell(type.value, value.value, 0);
+    ASSERT_TRUE(cell);
+    const std::array roots{HeapRoot::cell(cell.value)};
+    ASSERT_EQ(strings.beginCollection({}), StringError::None);
+    const auto status = heap.collect(roots, {[](void* raw, std::uint64_t token) noexcept {
+                                                 return static_cast<Strings*>(raw)->mark(token) ==
+                                                        StringError::None;
+                                             },
+                                             &strings});
+    ASSERT_TRUE(status);
+    strings.finishCollection();
+    EXPECT_EQ(heap.stats().containers, 0U);
+    EXPECT_EQ(heap.stats().cells, 1U);
+    EXPECT_EQ(strings.get(kept), "in a detached cell");
+    EXPECT_TRUE(strings.get(dead).empty());
+    EXPECT_FALSE(heap.collect(roots));  // A missing string provider must fail closed.
+    EXPECT_EQ(heap.stats().cells, 1U);
+}
+
+TEST(Heap, FailedJointMarkPreservesBothContainerAndStringTables) {
+    bool completed = false;
+    unsigned failures = 0;
+    for (unsigned budget = 0; budget < 16; ++budget) {
+        FailingMemory memory;
+        Heap heap(&memory);
+        Strings strings;
+        HeapWord word;
+        word.string = true;
+        const auto layout = heap.addLayout(std::span(&word, 1));
+        ASSERT_TRUE(layout);
+        const auto type = heap.addType({ContainerKind::Queue, layout.value});
+        ASSERT_TRUE(type);
+        const auto live = strings.intern("live"), dead = strings.intern("unrooted");
+        const std::array<W4, 3> leaves{{{live, 0}, {live, 0}, {live, 0}}};
+        const auto a = heap.fromValues(type.value, leaves), b = heap.fromValues(type.value, leaves);
+        ASSERT_TRUE(a);
+        ASSERT_TRUE(b);
+        const std::array roots{HeapRoot::container(a.value)};
+        ASSERT_EQ(strings.beginCollection({}), StringError::None);
+        memory.arm(budget);
+        const auto status = heap.collect(roots, {[](void* raw, std::uint64_t handle) noexcept {
+                                                     return static_cast<Strings*>(raw)->mark(
+                                                                handle) == StringError::None;
+                                                 },
+                                                 &strings});
+        memory.disarm();
+        if (status) {
+            strings.finishCollection();
+            EXPECT_EQ(heap.stats().containers, 1U);
+            EXPECT_EQ(heap.stats().cells, 3U);
+            EXPECT_TRUE(strings.get(dead).empty());
+            completed = true;
+        } else {
+            strings.cancelCollection();
+            EXPECT_EQ(status.error, HeapError::ResourceLimit);
+            EXPECT_EQ(heap.stats().containers, 2U);
+            EXPECT_EQ(heap.stats().cells, 6U);
+            EXPECT_EQ(strings.get(dead), "unrooted");
+            ++failures;
+        }
+        EXPECT_EQ(strings.get(live), "live");
+        if (completed) break;
+    }
+    EXPECT_TRUE(completed);
+    EXPECT_GE(failures, 2U);
+}
+
 TEST(Heap, DescriptorAndHandleValidation) {
     Heap h;
     EXPECT_EQ(h.addLayout({}).status.error, HeapError::InvalidType);

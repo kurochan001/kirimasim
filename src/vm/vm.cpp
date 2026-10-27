@@ -8,6 +8,7 @@
 #include "frame_layout.h"
 #include "frame_value.h"
 #include "scoped_reference.h"
+#include "value_temporaries.h"
 
 #include <algorithm>
 #include <array>
@@ -747,18 +748,36 @@ public:
         tempTotal_.assign(bodies, 0);
         eventTempOff_.resize(bodies);
         eventParameters_.resize(bodies);
+        valueTempRoots_.resize(bodies);
+        bodyCollects_.resize(bodies, false);
         for (std::uint32_t p = 0; p < bodies; ++p) {
             std::uint32_t at = 0;
             tempOff_[p].resize(tempTypes_[p].size());
             for (std::size_t t = 0; t < tempTypes_[p].size(); ++t) {
                 tempOff_[p][t] = at;
                 if (tempTypes_[p][t].kind == sir::TypeKind::Event) eventTempOff_[p].push_back(at);
+                const auto type = tempTypes_[p][t];
+                using RootKind = detail::ValueTemporaries::Kind;
+                if (sir::isContainer(type))
+                    valueTempRoots_[p].push_back({at, RootKind::Container});
+                else if (type.kind == sir::TypeKind::Ref)
+                    valueTempRoots_[p].push_back({at, RootKind::Reference});
+                else if (type.kind == sir::TypeKind::String)
+                    valueTempRoots_[p].push_back({at, RootKind::String});
+                hasStrings_ = hasStrings_ || type.kind == sir::TypeKind::String;
                 const auto words = chunksOf(tempTypes_[p][t]);
                 if (words > UINT32_MAX - at) throw std::length_error("temporary word capacity");
                 at += words;
             }
             tempTotal_[p] = at;
             const BodyId body{p};
+            bodyCollects_[p] = !valueTempRoots_[p].empty();
+            for (const auto& field : bodyFrame(body)) {
+                hasStrings_ = hasStrings_ || field.type.kind == sir::TypeKind::String;
+                bodyCollects_[p] = bodyCollects_[p] || sir::isContainer(field.type) ||
+                                   field.type.kind == sir::TypeKind::Ref ||
+                                   field.type.kind == sir::TypeKind::String;
+            }
             if (isSubBody(body)) {
                 const auto& params = subOf(body).params;
                 for (std::size_t i = 0; i < params.size(); ++i)
@@ -775,9 +794,16 @@ public:
                 for (std::size_t k = 0; k < blocks[b].instrs.size(); ++k) {
                     const sir::Instr& in = blocks[b].instrs[k];
                     info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);
+                    if (in.op == Op::Call || in.op == Op::CallTask) bodyCollects_[p] = true;
                 }
             }
         }
+        for (const auto& value : d_.constants)
+            hasStrings_ = hasStrings_ || value.type.kind == sir::TypeKind::String;
+        for (const auto& slot : d_.slots)
+            hasStrings_ = hasStrings_ || slot.type.kind == sir::TypeKind::String;
+        for (const auto& type : d_.types)
+            hasStrings_ = hasStrings_ || type.value.kind == sir::TypeKind::String;
     }
 
     RunResult run() {
@@ -795,6 +821,7 @@ public:
                 scheduler.setSafePointHook(old);
             }
         } hook{*this, sched_, sched_.setSafePointHook({})};
+        if (hasStrings_) sched_.setSafePointHook({&collectSafePoint, this});
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
             if (s.viewOf != sir::kNone) {
@@ -809,6 +836,12 @@ public:
             if (heapSlots_.size() <= kernelSlots_.back().index())
                 heapSlots_.resize(kernelSlots_.back().index() + 1, false);
             heapSlots_[kernelSlots_.back().index()] = sir::isContainer(s.type);
+            if (stringKernelSlots_.size() <= kernelSlots_.back().index())
+                stringKernelSlots_.resize(kernelSlots_.back().index() + 1, false);
+            stringKernelSlots_[kernelSlots_.back().index()] = s.type.kind == sir::TypeKind::String;
+            if (s.type.kind == sir::TypeKind::String)
+                stringSlots_.push_back(
+                    sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
             if (s.type.kind == sir::TypeKind::Event)
                 eventSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
@@ -997,6 +1030,7 @@ public:
     static void evalNbaValue(void* raw, std::uint64_t* out) noexcept {
         const auto& invocation = *static_cast<const NbaInvocation*>(raw);
         auto& vm = *invocation.origin->vm;
+        CollectionHold callback{vm};
         std::uint64_t steps = 0;
         try {
             try {
@@ -1060,6 +1094,7 @@ public:
     static int evalIff(kirima_context* /*ctx*/, void* iff) {
         const auto* g = static_cast<const Frame::Callback*>(iff);
         Interpreter& vm = *g->frame->vm;
+        CollectionHold callback{vm};
         std::uint64_t steps = 0;
         bool on = false;
         try {
@@ -1077,6 +1112,7 @@ public:
     static void evalWatch(kirima_context* /*ctx*/, void* watch, std::uint64_t* out) {
         const auto* w = static_cast<const Frame::Callback*>(watch);
         Interpreter& vm = *w->frame->vm;
+        CollectionHold callback{vm};
         std::uint64_t steps = 0;
         try {
             W4 ret{0, 0};
@@ -1164,6 +1200,34 @@ private:
     std::vector<sir::PatternShape> patternShapes_;
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
+    bool hasStrings_ = false, collectingValues_ = false, rootPublicationFailed_ = false;
+    std::size_t collectionHolds_ = 0;
+    class CollectionHold {
+    public:
+        explicit CollectionHold(Interpreter& vm) noexcept : vm_(vm) { acquire(); }
+        CollectionHold(const CollectionHold&) = delete;
+        CollectionHold& operator=(const CollectionHold&) = delete;
+        ~CollectionHold() { release(); }
+        void acquire() noexcept {
+            if (!held_) {
+                ++vm_.collectionHolds_;
+                held_ = true;
+            }
+        }
+        void release() noexcept {
+            if (held_) {
+                --vm_.collectionHolds_;
+                held_ = false;
+            }
+        }
+
+    private:
+        Interpreter& vm_;
+        bool held_ = false;
+    };
+    std::vector<sir::SlotId> stringSlots_;
+    std::vector<bool> stringKernelSlots_;
+    std::vector<std::uint64_t> stringRoots_;
     bool heapMonitorReported_ = false;
     std::set<std::array<std::uint32_t, 3>> heapWarned_;
     std::vector<bool> heapSlots_;
@@ -1201,6 +1265,9 @@ private:
     std::vector<std::vector<std::uint32_t>> eventTempOff_;
     std::vector<std::vector<std::uint32_t>> eventParameters_;
     detail::EventTemporaries eventTemps_{tempStack_};
+    std::vector<std::vector<detail::ValueTemporaries::Root>> valueTempRoots_;
+    std::vector<bool> bodyCollects_;
+    detail::ValueTemporaries valueTemps_{tempStack_};
     /// The body being run: a process or a called subroutine, its frame
     /// variables and where its temps start.
     struct Act {
@@ -2172,8 +2239,10 @@ private:
         if (!readsOf(f, bodyOf(o.asSubroutine()), m)) return m;
         m.eval = &evalWatch;
         m.frame = &f.watches.emplace_back(Frame::Callback{&f, o.asSubroutine()});
-        m.domain = sir::isFourState(t) ? kernel::Domain::Four : kernel::Domain::Two;
+        m.domain = kernelDomain(sir::domainOf(t));
+        m.stringValue = t.kind == sir::TypeKind::String;
         m.width = t.width;
+        if (!sir::isIntegral(t)) m.width = t.kind == sir::TypeKind::ShortReal ? 32 : 64;
         m.edge = kernelEdge(o.edge);
         return m;
     }
@@ -2402,6 +2471,7 @@ private:
                         const auto type = d_.subroutine(event.watch).returnType;
                         bound.width = type.width;
                         bound.domain = kernelDomain(sir::domainOf(type));
+                        bound.stringValue = type.kind == sir::TypeKind::String;
                         bound.edge = kernelEdge(event.edge);
                         bound.eval = &evalNbaWatch;
                         bound.frame = &callbacks->watches.emplace_back(
@@ -2525,6 +2595,7 @@ private:
     /// The end of a task called with call.task: outputs and inouts back to
     /// the caller's places (4.9.7), then the call is gone.
     bool returnFromTask(Frame& f) {
+        CollectionHold transport{*this};
         Frame::TaskCall c = std::move(f.calls.back());
         f.calls.pop_back();
         NativeRoots native{*this, f, c.varsId};
@@ -2556,6 +2627,7 @@ private:
     /// one; the caller goes on at the block the instruction names. Stops
     /// before publication if copy-in fails or a callback cancels the call.
     Exit enterTask(Frame& f, const sir::Instr& in) {
+        CollectionHold transport{*this};
         if (tooDeep(f, in)) return Exit::Error;
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutines[ops[0].id];
@@ -3024,11 +3096,14 @@ private:
         const bool container = slot.index() < vm.heapSlots_.size() && vm.heapSlots_[slot.index()];
         const bool event =
             slot.index() < vm.eventKernelSlots_.size() && vm.eventKernelSlots_[slot.index()];
-        if (!container && !event) return true;
+        const bool string =
+            slot.index() < vm.stringKernelSlots_.size() && vm.stringKernelSlots_[slot.index()];
+        if (!container && !event && !string) return true;
         try {
             for (const auto value : values) {
                 if (container) vm.rootContainer(value);
                 if (event) vm.rootEvent(value);
+                if (string) vm.stringRoots_.push_back(value);
             }
             return true;
         } catch (const std::bad_alloc&) {
@@ -3040,20 +3115,47 @@ private:
     void collectionLimit(bool eventsOnly = false) noexcept {
         try {
             limitAt(heapInstance_, heapSite_,
-                    heapReady_ && !eventsOnly ? "container collection resource limit"
-                                              : "event collection resource limit");
+                    eventsOnly   ? "event collection resource limit"
+                    : heapReady_ ? "container collection resource limit"
+                                 : "string collection resource limit");
         } catch (...) {
             // Failure to allocate the diagnostic must not escape the
             // kernel callback, or prevent the resource-limit result.
             sched_.resourceLimit();
         }
     }
+    void collectAtInstruction(Frame& frame, const sir::Instr& instruction) noexcept {
+        if (collectionHolds_ != 0 || collectingValues_ || !sched_.permitsTransientCollection())
+            return;
+        if (!(heapReady_ && heap_.underPressure()) && !(hasStrings_ && strings_.underPressure()))
+            return;
+        const auto previousSite = heapSite_;
+        const auto previousInstance = heapInstance_;
+        heapSite_ = instruction.loc;
+        heapInstance_ = instanceOf(d_.process(frame.process));
+        struct Collection {
+            bool& active;
+            ~Collection() { active = false; }
+        } scope{collectingValues_};
+        collectingValues_ = true;
+        try {
+            collectRoots();
+        } catch (const std::bad_alloc&) {
+            collectionLimit();
+        } catch (const std::length_error&) {
+            collectionLimit();
+        }
+        heapSite_ = previousSite;
+        heapInstance_ = previousInstance;
+    }
     static void collectSafePoint(void* frame) noexcept {
         auto& vm = *static_cast<Interpreter*>(frame);
         if (vm.running_ != nullptr || vm.callDepth_ != 0) return;
         try {
             vm.sweepCallbackOrigins();
-            if (!vm.heapReady_ && !vm.eventsReady_) return;
+            if (!vm.heapReady_ && !vm.eventsReady_) {
+                if (!vm.hasStrings_) return;
+            }
             vm.collectRoots();
         } catch (const std::bad_alloc&) {
             vm.collectionLimit();
@@ -3063,6 +3165,42 @@ private:
     }
     void rootEvent(std::uint64_t bits) {
         if ((bits >> 32) != 0) eventRoots_.push_back({bits});
+    }
+    static bool publishString(void* frame, std::uint64_t value) noexcept {
+        auto& vm = *static_cast<Interpreter*>(frame);
+        try {
+            vm.stringRoots_.push_back(value);
+            return true;
+        } catch (const std::bad_alloc&) {
+            vm.rootPublicationFailed_ = true;
+        } catch (const std::length_error&) {
+            vm.rootPublicationFailed_ = true;
+        }
+        return false;
+    }
+    static bool publishTemporary(void* frame, detail::ValueTemporaries::Kind kind,
+                                 W4 value) noexcept {
+        auto& vm = *static_cast<Interpreter*>(frame);
+        try {
+            using Kind = detail::ValueTemporaries::Kind;
+            if (kind == Kind::String) return publishString(frame, value.a);
+            if (kind == Kind::Container) vm.rootContainer(value.a);
+            if (kind == Kind::Reference && (value.a != 0 || value.b != 0)) {
+                if (isScopedRef(value)) {
+                    const auto selected = vm.references_.resolveWord(value.a, 0);
+                    // A scoped ticket is nonowning and is retired on scope
+                    // unwind. Its unused SSA alias then names no live value.
+                    return selected || selected.error == kernel::ActivationError::InvalidBinding;
+                }
+                return vm.rootReference(value);
+            }
+            return true;
+        } catch (const std::bad_alloc&) {
+            vm.rootPublicationFailed_ = true;
+        } catch (const std::length_error&) {
+            vm.rootPublicationFailed_ = true;
+        }
+        return false;
     }
     static kernel::ManagedEventError enumerateEvents(const void* raw,
                                                      kernel::ManagedEventRoots& roots) noexcept {
@@ -3076,12 +3214,34 @@ private:
     void collectRoots(bool eventsOnly = false) {
         roots_.clear();
         eventRoots_.clear();
+        stringRoots_.clear();
+        rootPublicationFailed_ = false;
+        if (!eventsOnly && hasStrings_) {
+            for (std::size_t i = 0; i < d_.constants.size(); ++i)
+                if (d_.constants[i].type.kind == sir::TypeKind::String)
+                    stringRoots_.push_back(consts_[constOff_[i]].a);
+            for (const auto slot : stringSlots_)
+                for (std::uint64_t e = 0; e < sir::elementCount(d_.slot(slot)); ++e)
+                    stringRoots_.push_back(
+                        *store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
+            if (!activations_.visitStringRoots(&publishString, this) ||
+                !sched_.visitMonitorStrings(&publishString, this)) {
+                if (rootPublicationFailed_) throw std::bad_alloc{};
+                sched_.fail("invalid typed string roots");
+                return;
+            }
+        }
         if (eventsReady_)
             for (const auto slot : eventSlots_)
                 for (std::uint64_t e = 0; e < sir::elementCount(d_.slot(slot)); ++e)
                     rootEvent(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
         rootActivations_.clear();
         rootActivationsSeen_.assign(varSets_.size(), false);
+        if (!eventsOnly && !valueTemps_.visit(&publishTemporary, this)) {
+            if (rootPublicationFailed_) throw std::bad_alloc{};
+            sched_.fail("invalid typed temporary roots");
+            return;
+        }
         for (const auto* native = nativeRoots_; native != nullptr; native = native->previous)
             if (!rootActivation(native->vars)) {
                 sched_.fail("invalid native activation at an event safe point");
@@ -3139,6 +3299,8 @@ private:
                         rootContainer(value.a);
                     else if (eventsReady_ && params[i].type.kind == sir::TypeKind::Event)
                         rootEvent(value.a);
+                    else if (!eventsOnly && params[i].type.kind == sir::TypeKind::String)
+                        stringRoots_.push_back(value.a);
                 }
             }
         }
@@ -3148,6 +3310,11 @@ private:
             const VarSet& vars = varSets_[rootActivations_[i].index()];
             const auto& fields = bodyFrame(vars.body);
             const auto& layout = layouts_[vars.body.index()];
+            if (!eventsOnly)
+                for (const auto field : layout.stringRoots)
+                    for (std::uint64_t e = 0; e < sir::elementCount(fields[field]); ++e)
+                        stringRoots_.push_back(
+                            vars.words[layout.offset[field] + e * layout.chunks[field]].a);
             if (vars.environment) {
                 struct ReferenceRoots {
                     Interpreter* vm;
@@ -3213,14 +3380,30 @@ private:
             }
             activations_.acknowledgeEventRoots();
         }
-        if (eventsOnly || !heapReady_) return;
+        if (eventsOnly) return;
         const bool same = roots_.size() == publishedRoots_.size() &&
                           std::equal(roots_.begin(), roots_.end(), publishedRoots_.begin(),
                                      [](const auto& a, const auto& b) {
                                          return a.kind == b.kind && a.bits == b.bits;
                                      });
-        if (same && !heap_.needsCollection()) return;
-        const auto status = heap_.collect(roots_);
+        if (!hasStrings_ && (!heapReady_ || (same && !heap_.needsCollection()))) return;
+        if (hasStrings_ && strings_.beginCollection(stringRoots_) != kernel::StringError::None) {
+            sched_.fail("invalid typed string root at a safe point");
+            return;
+        }
+        struct StringCollection {
+            kernel::Strings& strings;
+            bool owned;
+            ~StringCollection() {
+                if (owned) strings.cancelCollection();
+            }
+        } stringsScope{strings_, hasStrings_};
+        const kernel::HeapStringRoots stringEdges{
+            [](void* raw, std::uint64_t token) noexcept {
+                return static_cast<kernel::Strings*>(raw)->mark(token) == kernel::StringError::None;
+            },
+            &strings_};
+        const auto status = heapReady_ ? heap_.collect(roots_, stringEdges) : kernel::HeapStatus{};
         if (status.error == kernel::HeapError::ResourceLimit) {
             collectionLimit();
             return;
@@ -3229,6 +3412,7 @@ private:
             sched_.fail("invalid typed root at a heap safe point");
             return;
         }
+        if (hasStrings_) strings_.finishCollection();
         publishedRoots_.swap(roots_);
     }
 
@@ -3277,7 +3461,8 @@ private:
                     const bool four = sir::isFourState(e);
                     words.push_back(
                         {mask, four, four ? W4{mask, mask} : W4{0, 0},
-                         sir::isContainer(e) ? heapTypes_[e.detail.index()] : kernel::kNone});
+                         sir::isContainer(e) ? heapTypes_[e.detail.index()] : kernel::kNone,
+                         e.kind == sir::TypeKind::String});
                 }
                 const auto l = heap_.addLayout(words);
                 if (!heapStatus(f, in, l.status)) return false;
@@ -3530,12 +3715,15 @@ private:
         NativeRoots native{*this, f, act_.varsId};
         detail::EventTemporaries::Region eventRegion{eventTemps_, act_.base, bodyTemps(act_.body),
                                                      eventTempOff_[act_.body.index()]};
+        detail::ValueTemporaries::Region valueRegion{valueTemps_, act_.base, bodyTemps(act_.body),
+                                                     valueTempRoots_[act_.body.index()]};
         // A confirmed report can run after its originating process ended.
         // Stop only when this execution is newly canceled by the kernel.
         const bool wasStopped = sched_.programStopped(f.kernelId);
         const bool wasFinished = f.finished;
         const sir::Process& p = d_.process(f.process);
         const BodyId body = act_.body;
+        const bool collectsValues = bodyCollects_[body.index()];
         for (;;) {
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
             bool jumped = false;
@@ -3569,12 +3757,20 @@ private:
                         b = takeBranch(ops, 0);
                         jumped = true;
                         if (sched_.takeInterrupt()) return Exit::Stop;
+                        if (collectsValues) {
+                            collectAtInstruction(f, in);
+                            if (sched_.ending()) return Exit::Stop;
+                        }
                         break;
                     case Op::BrIf: {
                         const std::size_t second = 2 + ops[1].count;
                         b = takeBranch(ops, isTrue(value(ops[0])) ? 1 : second);
                         jumped = true;
                         if (sched_.takeInterrupt()) return Exit::Stop;
+                        if (collectsValues) {
+                            collectAtInstruction(f, in);
+                            if (sched_.ending()) return Exit::Stop;
+                        }
                         break;
                     }
                     case Op::Ret:
@@ -4472,6 +4668,7 @@ private:
     /// Inputs and inouts are copied in, outputs and inouts copied back to
     /// the caller's places like blocking assignments (SIR_SPEC.md 8, 4.9.7).
     Exit call(Frame& f, const sir::Instr& in, std::uint64_t& steps) {
+        CollectionHold transport{*this};
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutine(ops[0].asSubroutine());
         if (tooDeep(f, in)) return Exit::Error;
@@ -4493,8 +4690,10 @@ private:
         inputPins.clear();
         W4 ret{0, 0};
         kernel::ManagedEventPin returnPin;
+        transport.release();
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret,
                                s.returnType.kind == sir::TypeKind::Event ? &returnPin : nullptr);
+        transport.acquire();
         std::vector<W4> wide;
         if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
         const std::vector<std::vector<W4>> outs =
@@ -4526,6 +4725,7 @@ private:
                   const std::vector<std::vector<W4>>& args, std::uint64_t& steps,
                   W4* result = nullptr, std::vector<W4>* wideResult = nullptr,
                   FunctionEntry entry = FunctionEntry::Language) {
+        CollectionHold transport{*this};
         const sir::Subroutine& sub = d_.subroutine(s);
         if (stack_.nearlyUsedUp()) {
             stackLimit(sub.instance, sub.loc);
@@ -4555,7 +4755,9 @@ private:
             return bound;
         inputPins.clear();
         W4 ret{0, 0};
+        transport.release();
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
+        transport.acquire();
         if (e == Exit::Ret) {
             if (result != nullptr) *result = ret;
             if (wideResult != nullptr && chunksOf(sub.returnType) > 1)

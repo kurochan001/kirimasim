@@ -830,6 +830,16 @@ void Scheduler::safePoint() noexcept {
     if (!ending_ && walking_ == 0 && !draining_ && safePoint_.fn != nullptr)
         safePoint_.fn(safePoint_.frame);
 }
+bool Scheduler::visitMonitorStrings(bool (*visitor)(void*, std::uint64_t) noexcept,
+                                    void* frame) const noexcept {
+    for (std::uint32_t i = 0; i < monitors_.size(); ++i) {
+        const auto& monitor = monitors_[i];
+        if (!monitor.spec.stringValue || !live({i, monitor.serial})) continue;
+        for (const auto word : monitor.last)
+            if (visitor == nullptr || !visitor(frame, word)) return false;
+    }
+    return true;
+}
 bool Scheduler::visitPendingValues(PendingValueVisitor visitor, void* frame) const noexcept {
     for (const NbaRecord& n : slotNbas_)
         if (!visitor(frame, n.slot, {arena_.data() + n.arenaOffset, n.words})) return false;

@@ -13,6 +13,7 @@
 
 #include "event_temporaries.h"
 #include "kirimasim/kernel/context.h"
+#include "value_temporaries.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -29,6 +30,74 @@ k::ManagedEventToken create(k::Context& context, k::W4& word) {
     const auto token = value.value.token();
     word = {token.bits, 0};
     return token;
+}
+
+TEST(ValueTemporaries, PublishesOnlyTypedWordsAcrossGrowthAndUnwind) {
+    using Temps = kirimasim::vm::detail::ValueTemporaries;
+    using Kind = Temps::Kind;
+    std::vector<k::W4> words(8, {42, 17});
+    Temps temps(words);
+    const std::array<Temps::Root, 3> roots{
+        {{1, Kind::Container}, {3, Kind::Reference}, {5, Kind::String}}};
+    struct Values {
+        std::array<k::W4, 6> words{};
+        std::size_t count = 0;
+        static bool add(void* raw, Kind, k::W4 value) noexcept {
+            auto& output = *static_cast<Values*>(raw);
+            if (output.count == output.words.size()) return false;
+            output.words[output.count++] = value;
+            return true;
+        }
+    } output;
+    try {
+        Temps::Region outer(temps, 0, 8, roots);
+        for (const auto root : roots) {
+            EXPECT_EQ(words[root.offset].a, 0U);
+            words[root.offset] = {root.offset, 0};
+        }
+        words.resize(words.capacity() + 1024);
+        {
+            Temps::Region inner(temps, 8, 8, roots);
+            for (const auto root : roots)
+                words[8 + root.offset] = {100 + root.offset, 0};
+            ASSERT_TRUE(temps.visit(&Values::add, &output));
+            ASSERT_EQ(output.count, 6U);
+            EXPECT_EQ(output.words.front().a, 101U);
+            EXPECT_EQ(output.words.back().a, 5U);
+            throw 7;
+        }
+    } catch (int value) {
+        EXPECT_EQ(value, 7);
+    }
+    output.count = 0;
+    ASSERT_TRUE(temps.visit(&Values::add, &output));
+    EXPECT_EQ(output.count, 0U);
+    EXPECT_EQ(words[0].a, 42U);
+    EXPECT_EQ(words[0].b, 17U);
+    for (const auto root : roots) {
+        EXPECT_EQ(words[root.offset].a, 0U);
+        EXPECT_EQ(words[8 + root.offset].a, 0U);
+    }
+}
+
+TEST(ValueTemporaries, MalformedRangesFailBeforePublishingPartialRoots) {
+    using Temps = kirimasim::vm::detail::ValueTemporaries;
+    for (unsigned shape = 0; shape < 6; ++shape) {
+        std::vector<k::W4> words(16);
+        Temps temps(words);
+        const std::array<Temps::Root, 1> outerRoots{{{1, Temps::Kind::String}}};
+        Temps::Region outer(temps, 0, 4, outerRoots);
+        std::array<Temps::Root, 2> roots{{{0, Temps::Kind::String}, {2, Temps::Kind::Container}}};
+        std::size_t base = 4, size = 4;
+        if (shape == 0) base = std::numeric_limits<std::size_t>::max();
+        if (shape == 1) size = std::numeric_limits<std::size_t>::max();
+        if (shape == 2) roots[1].offset = 4;
+        if (shape == 3) roots[1].offset = 0;
+        if (shape == 4) base = 2;
+        Temps::Region bad(temps, base, size, roots);
+        if (shape == 5) words.resize(4);
+        EXPECT_FALSE(temps.visit([](void*, Temps::Kind, k::W4) noexcept { return true; }, nullptr));
+    }
 }
 
 TEST(EventTemporaries, TracesDeclaredWordsAndNeverGuessesOpaqueBits) {

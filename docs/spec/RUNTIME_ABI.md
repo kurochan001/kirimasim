@@ -393,7 +393,8 @@ Under the transient-value amendment in section 6, unreachable strings may be
 reclaimed. Handle 0 remains empty; equal simultaneously live strings share
 one handle. Reused entries have a new generation, so a stale token cannot
 name another value. String views are borrowed until the next mutation or
-collection; native code retaining a view across reentry must own or pin it.
+collection; native code retaining a value across reentry must own its bytes
+or pin its handle and reacquire the view afterward.
 
 ### 9.5 What the standard tends to make global
 

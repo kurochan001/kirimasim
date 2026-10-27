@@ -41,8 +41,9 @@ public:
     explicit Context(OutputDestinations to, std::FILE* in = nullptr,
                      std::pmr::memory_resource* heapMemory = std::pmr::new_delete_resource())
         : output_(to), files_(output_, in), strengths_(store_, heapMemory),
-          strengthDrivers_(heapMemory), heap_(heapMemory), managedEvents_(heapMemory),
-          activations_(heapMemory), dump_(output_, store_), scheduler_(*this, store_, counters_) {
+          strengthDrivers_(heapMemory), strings_(heapMemory), heap_(heapMemory),
+          managedEvents_(heapMemory), activations_(heapMemory), dump_(output_, store_),
+          scheduler_(*this, store_, counters_) {
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }
     Context(const Context&) = delete;
