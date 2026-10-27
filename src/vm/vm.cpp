@@ -1717,16 +1717,17 @@ private:
         const std::string& join = ops[ops.size() - 2].text;
         const bool none = join == "join_none";
         const std::size_t count = ops.size() - 2;
-        std::vector<const detail::ActivationPlan*> plans;
-        plans.reserve(count);
         bool environments = environmentOf(act_.varsId) != nullptr;
         for (std::size_t i = 0; i < count; ++i) {
             const auto body = bodyOfProcess(ops[i].asProcess()).index();
-            plans.push_back(&plans_[body]);
             environments = environments || environmentNeeded_[body];
         }
         Environment::Children prepared;
         if (environments) {
+            std::vector<const detail::ActivationPlan*> plans;
+            plans.reserve(count);
+            for (std::size_t i = 0; i < count; ++i)
+                plans.push_back(&plans_[bodyOfProcess(ops[i].asProcess()).index()]);
             BorrowFrame source{this, act_.body, act_.varsId};
             auto result = Environment::children(activations_, plans_[act_.body.index()],
                                                 environmentOf(act_.varsId), plans,
@@ -1737,26 +1738,29 @@ private:
             if (!result) throw StorageFailure{result.error};
             prepared = std::move(result.value);
         }
-        std::vector<Frame*> children;
-        children.reserve(count);
+        std::array<Frame*, 8> localChildren{};
+        std::vector<Frame*> overflowChildren;
+        if (count > localChildren.size()) overflowChildren.resize(count);
+        const auto storage = count > localChildren.size() ? std::span(overflowChildren)
+                                                          : std::span(localChildren).first(count);
+        std::size_t created = 0;
         f.children.reserve(f.children.size() + count);
         auto rng = rngOf(f);
         try {
             for (std::size_t i = 0; i < count; ++i) {
                 Frame& c = newFrame(ops[i].asProcess(),
                                     environments ? std::move(prepared[i]) : Environment::Pointer{});
-                children.push_back(
-                    &c);  // Reserved, so even process-registration failure is tracked.
+                storage[created++] = &c;  // Track even a failed process registration.
                 c.rng = rng.child();
                 c.ownRng = true;
                 c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
                 if (c.kernelId == kernel::kNone)
                     throw StorageFailure{kernel::ActivationError::ResourceLimit};
             }
-            for (Frame* child : children)
+            for (Frame* child : storage)
                 sched_.start(child->kernelId);
         } catch (...) {
-            for (Frame* child : children) {
+            for (Frame* child : storage.first(created)) {
                 if (child->kernelId != kernel::kNone) {
                     sched_.kill(child->kernelId);
                     // Queued stale wakes retain their process/frame until sweep.
@@ -1777,7 +1781,7 @@ private:
             f.groupSize = static_cast<std::uint32_t>(count);
             f.pending = join == "join" ? Frame::Join::All : Frame::Join::Any;
         }
-        for (Frame* child : children) {
+        for (Frame* child : storage) {
             child->parent = &f;
             child->group = none ? 0 : f.forkGroup;
             child->birth = f.births++;

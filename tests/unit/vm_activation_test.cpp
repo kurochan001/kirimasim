@@ -641,6 +641,47 @@ TEST(VmActivation, KernelAllocationFailuresReturnResourceLimitAndReleaseWholeFor
     EXPECT_GT(passed, 0U);
 }
 
+TEST(VmActivation, LargeForkAllocationFailuresRollBackBeforeAnyChildRuns) {
+    Model m;
+    const auto answer = m.slot(s::u2(32));
+    m.root(mainBody, {{"value", s::u2(32)}});
+    const auto child = m.child(mainBody, {0});
+    auto& branch = m.d.processes[child.id];
+    branch.frame.push_back({"local", s::u4(129)});
+    branch.frame[1].home = s::FrameHome::Scoped;
+    branch.frame[1].activationScope = s::ActivationScopeId{0};
+    branch.activation.root = s::ActivationScopeId{0};
+    branch.activation.scopes = {{s::kNone, {s::FrameVarId{1}}}};
+    std::vector<s::Owner> branches(12, child);
+    m.fork(mainBody, 0, branches, "join", 1);
+    m.emit(mainBody, 1, Op::Ret);
+    m.store(child, 0, answer, m.constant(s::u2(32), 31));
+    m.emit(child, 0, Op::Ret);
+    ASSERT_TRUE(m.valid());
+    unsigned failed = 0, passed = 0;
+    for (std::size_t budget = 0; budget < 256; ++budget) {
+        SCOPED_TRACE(budget);
+        AllocationBudget memory;
+        memory.remaining = budget;
+        {
+            k::Context context({nullptr, nullptr}, nullptr, &memory);
+            const auto result = kirimasim::vm::run(m.d, context);
+            if (result.reason == k::EndReason::Quiescent) {
+                ++passed;
+                EXPECT_EQ(word(context, answer), 31U);
+            } else {
+                ++failed;
+                EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
+                if (context.store().size() != 0) EXPECT_EQ(word(context, answer), 0U);
+            }
+            released(context);
+        }
+        EXPECT_EQ(memory.live, 0U);
+    }
+    EXPECT_GT(failed, 5U);
+    EXPECT_GT(passed, 0U);
+}
+
 TEST(VmActivation, NamedDisableUnwindsLocalOwnersAndCancelsQueuedChildren) {
     Model m;
     m.d.numScopes = 92;
