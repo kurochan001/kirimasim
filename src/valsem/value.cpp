@@ -25,7 +25,7 @@ std::uint32_t stringToInteger(const std::string& text, unsigned base) {
                               : base == 8  ? "[0-7]"
                               : base == 10 ? "[0-9]"
                                            : "[0-9a-fA-F]";
-    const std::regex syntax("^(-?)(" + digit + "(" + digit + "|_)*)");
+    const std::regex syntax("^(-?)((" + digit + "|_)*)");
     std::smatch match;
     if (!std::regex_search(text, match, syntax)) return 0;
     std::uint64_t n = 0;  // Exact modulo 2^64, so its low 32 bits are the number's.

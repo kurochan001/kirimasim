@@ -32,8 +32,8 @@ namespace kirimasim::kernel {
 std::optional<double> stringToReal(std::string_view text) noexcept;
 
 /// atoi, atohex, atooct and atobin (6.16.9, VALUE_SEMANTICS.md 7.6): one
-/// optional leading minus, a digit of the base at once, then digits and
-/// underscores; the low 32 bits of the number, negated after a minus.
+/// optional leading minus, then digits of the base and underscores; the low
+/// 32 bits of the number, negated after a minus, and 0 without a digit.
 std::uint32_t stringToInteger(std::string_view text, unsigned base) noexcept;
 
 enum class StringError : std::uint8_t { None, InvalidHandle, InvalidState, ResourceLimit };

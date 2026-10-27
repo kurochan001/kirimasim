@@ -82,7 +82,6 @@ std::uint32_t stringToInteger(std::string_view text, unsigned base) noexcept {
     std::size_t pos = 0;
     const bool negative = !text.empty() && text.front() == '-';
     if (negative) ++pos;
-    if (pos == text.size() || digit(text[pos]) == base) return 0;
     std::uint32_t n = 0;
     for (; pos < text.size(); ++pos) {
         if (text[pos] == '_') continue;

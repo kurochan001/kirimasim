@@ -181,8 +181,9 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
 /// Whether an expression contains something whose slang constant is not
 /// used and that is computed at run time instead, where kirimasim reads the
 /// standard otherwise than slang (SIR_SPEC.md 6): a conversion of a real to
-/// an integer (VALUE_SEMANTICS.md 7.4: NaN and the infinities) and a unary
-/// plus of a four-state value (3.2: x or z makes every bit x).
+/// an integer (VALUE_SEMANTICS.md 7.4: NaN and the infinities), a unary
+/// plus of a four-state value (3.2: x or z makes every bit x), and atoi,
+/// atohex, atooct and atobin (7.6: an underscore before the first digit).
 bool untrustedConstant(const ast::Expression& e) {
     const auto any = [](std::span<const ast::Expression* const> es) {
         for (const ast::Expression* x : es)
@@ -195,6 +196,10 @@ bool untrustedConstant(const ast::Expression& e) {
         case ast::ExpressionKind::Call: {
             const auto& call = e.as<ast::CallExpression>();
             const auto name = call.getSubroutineName();
+            if (call.isSystemCall() && !call.arguments().empty() &&
+                call.arguments()[0]->type->isString() &&
+                (name == "atoi" || name == "atohex" || name == "atooct" || name == "atobin"))
+                return true;  // slang needs a digit before any underscore.
             if (call.isSystemCall() && !call.arguments().empty() &&
                 call.arguments()[0]->type->isUnpackedArray() &&
                 (name == "sum" || name == "product" || name == "and" || name == "or" ||
