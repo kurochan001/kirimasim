@@ -343,7 +343,7 @@ KINDS = {
                  "its indices evaluated once", "11.4.1 11.4.3 11.4.8 11.4.10 11.8"),
     "string": ("string_change", "String methods that change their string, and the writing of "
                "one character, read and write the string with its indices evaluated once",
-               "6.16 6.16.2 6.16.9 6.16.10 6.16.12"),
+               "6.16 6.16.2 6.16.11 6.16.12 6.16.14"),
 }
 
 

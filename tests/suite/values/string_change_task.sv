@@ -3,7 +3,7 @@
 :description: String methods that change their string, and the writing of one character, read and write the string with its indices evaluated once, variables of a static task
 :tags: values
 :type: simulation
-:lrm: 1800-2023 6.16 6.16.2 6.16.9 6.16.10 6.16.12 6.21 13.3
+:lrm: 1800-2023 6.16 6.16.2 6.16.11 6.16.12 6.16.14 6.21 13.3
 :oracle: spec verilator@5.052
 :spec_check: ai
 :fourstate: no
