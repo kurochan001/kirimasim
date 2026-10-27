@@ -13,7 +13,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Local typed SIR/VM stage on main `7cdd2a2e`:**
+**Typed SIR/VM checkpoint `6f43e387` for main integration:**
 [Event-NBA layouts and transient callbacks](event-nba-sir-execution.md) add the
 nonterminating instruction, verifier/text and native VM binding. Original
 SIR matrices cover fresh private activations, origin RNG/depth, ordered owned

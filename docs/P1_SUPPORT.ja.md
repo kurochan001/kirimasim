@@ -80,9 +80,9 @@ mainの[NBA保持値の土台](notes/event-nba-payload-foundation.ja.md)で、ke
 NBAの対応ではありません。mainの[具体的な購読の中核](notes/event-nba-concrete-controls.ja.md)で、
 固定slot・名前付きイベントの持続する購読、全幅の回数、callback元の保持を追加しました。
 mainの[式monitorの区切り](notes/event-nba-expression-monitors.ja.md)で、共通評価・
-動的依存先の保持・heap/activation通知のまとめ方を追加しました。型付きSIR/front/VMのソース転送は残ります。
+動的依存先の保持・heap/activation通知のまとめ方を追加しました。この区切りは下記の型付きSIR/VM対応より前です。
 
-ローカルの[型付きSIR/VMの段階](notes/event-nba-sir-execution.ja.md)で、独自SIR用の型付き命令・
+[型付きSIR/VMの区切り](notes/event-nba-sir-execution.ja.md)`6f43e387`で、独自SIR用の型付き命令・
 配置表、verifier/text、新しいcallback転送を追加します。ソースevent-NBAの対応ではなく、
 front変換と実ソースの行列は残ります。
 

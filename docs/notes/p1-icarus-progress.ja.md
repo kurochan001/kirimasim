@@ -12,7 +12,7 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
-**main `7cdd2a2e`上のローカルな型付きSIR/VMの段階：**
+**main取り込み用の型付きSIR/VMの区切り`6f43e387`：**
 [イベントNBAの配置表と一時的なcallback](event-nba-sir-execution.ja.md)で、非終端命令、
 verifier/text、独自SIRからのVM転送を追加します。新しいprivate領域、発行元のRNGと呼び出し深さ、
 順序付きの所有した書き込み、Contextの確保失敗を検査します。front変換と実ソースの検証は残り、

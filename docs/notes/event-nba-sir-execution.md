@@ -1,7 +1,7 @@
 # Typed event-NBA SIR and transient VM callbacks
 
-[日本語](event-nba-sir-execution.ja.md). Status: local implementation in progress,
-2026-10-27, based on main `7cdd2a2e`. Source event-controlled NBA is still
+[日本語](event-nba-sir-execution.ja.md). Status: validated native checkpoint
+`6f43e387` for main integration, 2026-10-27, based on main `7cdd2a2e`. Source event-controlled NBA is still
 unsupported. This stage is not a P1 exit or a whole-language parity claim.
 
 ## Basis and boundary

@@ -123,12 +123,12 @@ The SIR/front/VM source path remains unfinished.
 The [expression-monitor checkpoint](docs/notes/event-nba-expression-monitors.md)
 is integrated into main as `012af2ca`, adding shared evaluation and grouped
 heap/activation notices. [Integration validation](docs/measurements/2026-10-27/nba-monitors-main-integration.json)
-records the pre-push checks. Unfinished SIR/VM work stays local; source
-event-controlled NBA remains unsupported.
+records that checkpoint’s pre-push checks. Source event-controlled NBA remains
+unsupported.
 
-A local [typed SIR/VM stage](docs/notes/event-nba-sir-execution.md) adds layouts,
-verification/text and fresh origin callbacks, checked with original native SIR.
-It remains uncommitted; front lowering and source event-NBA are still unfinished.
+The [typed SIR/VM checkpoint](docs/notes/event-nba-sir-execution.md) `6f43e387` adds
+layouts, verification/text and fresh origin callbacks, checked with original native
+SIR. Front lowering and source event-NBA remain unfinished and local.
 
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent

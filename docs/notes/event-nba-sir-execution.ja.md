@@ -1,6 +1,6 @@
 # 型付きイベントNBAのSIRと一時的なVM callback
 
-[English](event-nba-sir-execution.md)。状態：ローカル実装・検証中、2026-10-27。
+[English](event-nba-sir-execution.md)。状態：検証済みの独自SIR用の区切り`6f43e387`をmainへ取り込み、2026-10-27。
 main `7cdd2a2e`が基です。ソースからのイベント制御付きNBAは引き続き未対応で、
 P1の合格や、言語全体の同等性を示すものではありません。
 

@@ -92,11 +92,11 @@ CI全21項目、新規kernel/SIR-nativeテスト33件とコンパイルした18�
 
 [式monitorの区切り](docs/notes/event-nba-expression-monitors.ja.md)を`012af2ca`としてmainへ取り込み、
 共通評価とheap/activation通知のまとめ方を追加しました。[統合の検証](docs/measurements/2026-10-27/nba-monitors-main-integration.json)に
-push前の検査を記録します。未完成のSIR/VM作業はローカルに保持し、ソースからのイベント制御付きNBAは未対応です。
+この区切りのpush前の検査を記録します。ソースからのイベント制御付きNBAは未対応です。
 
-ローカルの[型付きSIR/VMの段階](docs/notes/event-nba-sir-execution.ja.md)で、配置表、
-verifier/text、新しい発行元callbackを追加し、独自SIRで検査します。未コミットで、
-front変換とソースからのイベントNBAは未完です。
+[型付きSIR/VMの区切り](docs/notes/event-nba-sir-execution.ja.md)`6f43e387`で、配置表、
+verifier/text、新しい発行元callbackを追加し、独自SIRで検査しました。
+front変換とソースからのイベントNBAは未完で、作業中の変更をローカルに保持しています。
 
 mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
 値の所有と保留中の発行順を追加し、独立した単体24件で検査します。上の実装は

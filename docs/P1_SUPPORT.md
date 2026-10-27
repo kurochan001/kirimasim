@@ -84,9 +84,9 @@ Its 24 independent tests do not enable source event-controlled NBA. The
 and named-event subscriptions, full-width counts and retained callback origins.
 The main [expression-monitor checkpoint](notes/event-nba-expression-monitors.md) adds
 shared evaluation, retained dynamic dependencies and grouped heap/activation
-notifications. Typed SIR/front/VM source transport still remains.
+notifications. That checkpoint preceded the typed SIR/VM work below.
 
-The local [typed SIR/VM stage](notes/event-nba-sir-execution.md) adds the typed
+The [typed SIR/VM checkpoint](notes/event-nba-sir-execution.md) `6f43e387` adds the typed
 instruction/layouts, verifier/text and fresh callback bridge for original native
 SIR. It does not enable source event-NBA; front lowering and source matrices remain.
 
