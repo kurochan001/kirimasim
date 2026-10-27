@@ -804,6 +804,13 @@ public:
             hasStrings_ = hasStrings_ || slot.type.kind == sir::TypeKind::String;
         for (const auto& type : d_.types)
             hasStrings_ = hasStrings_ || type.value.kind == sir::TypeKind::String;
+        // A numeric-only producer may allocate through synchronous observers.
+        // Its next branch must check pressure after callback publication ends.
+        if (hasStrings_ || std::any_of(d_.types.begin(), d_.types.end(), [](const auto& type) {
+                return type.kind == sir::TypeEntryKind::DynArray ||
+                       type.kind == sir::TypeEntryKind::Queue;
+            }))
+            std::fill(bodyCollects_.begin(), bodyCollects_.end(), true);
     }
 
     RunResult run() {

@@ -1260,6 +1260,8 @@ MUTANTS = [
     ('transient values: omit instruction collection', 'src/vm/vm.cpp',
      'if (collectionHolds_ != 0 || collectingValues_ || !sched_.permitsTransientCollection())',
      'if (true || collectionHolds_ != 0 || collectingValues_ || !sched_.permitsTransientCollection())'),
+    ('transient values: numeric bodies miss callback garbage', 'src/vm/vm.cpp',
+     'std::fill(bodyCollects_.begin(), bodyCollects_.end(), true);', '(void)0;'),
     ('transient values: retired scoped SSA tickets fail collection', 'src/vm/vm.cpp',
      'return selected || selected.error == kernel::ActivationError::InvalidBinding;',
      'return static_cast<bool>(selected);'),

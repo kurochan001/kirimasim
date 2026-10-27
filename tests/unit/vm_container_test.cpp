@@ -1392,6 +1392,69 @@ TEST(VmContainer, ZeroTimeLoopsBoundContainerAndUniqueStringStorage) {
     }
 }
 
+TEST(VmContainer, NumericProducerCollectsValuesAllocatedByObserverCallbacks) {
+    for (const bool string : {false, true}) {
+        SCOPED_TRACE(string);
+        Program p;
+        const auto valueType = string ? Type{TypeKind::String, 0} : p.container(s4(32), true);
+        const auto counter = p.slot(u2(64));
+        const auto zero = p.constant(u2(64), 0), one = p.constant(u2(64), 1),
+                   count = p.constant(u2(64), 10000), never = p.constant(u2(1), 0);
+        p.store(counter, zero);
+        p.emit(Op::Br, voidType(), {Operand::block(BlockId{1})});
+        const auto value = p.emitAt(1, Op::Load, u2(64), {counter});
+        const auto next = p.emitAt(1, Op::Add, u2(64), {value, one});
+        p.emitAt(1, Op::Store, voidType(), {counter, next});
+        const auto again = p.emitAt(1, Op::Lt, u2(1), {next, count});
+        p.emitAt(1, Op::BrIf, voidType(),
+                 {again, Operand::block(BlockId{1}), Operand::block(BlockId{2})});
+        p.emitAt(2, Op::Ret, voidType(), {});
+        Subroutine guard;
+        guard.name = "top.observer";
+        guard.frameOf = {Owner::Kind::Process, 0};
+        guard.kind = SubroutineKind::Guard;
+        guard.returnType = u2(1);
+        guard.numTemps = 2;
+        guard.blocks.resize(1);
+        guard.blocks[0].instrs = {
+            {Op::Load, u2(64), TempId{0}, {counter}, {0, 1, 1}},
+            {string ? Op::Syscall : Op::ContainerPack,
+             valueType,
+             TempId{1},
+             string ? std::vector<Operand>{Operand::str("$sformatf"), Operand::str("%0d"),
+                                           Operand::temp(TempId{0})}
+                    : std::vector<Operand>{p.constant(s4(32), 7)},
+             {0, 1, 1}},
+            {Op::Ret, voidType(), kNone, {never}, {0, 1, 1}}};
+        p.d.subroutines.push_back(std::move(guard));
+        Process waiter;
+        waiter.name = "top.waiter";
+        waiter.blocks.resize(2);
+        waiter.blocks[0].instrs = {
+            {Op::WaitCond,
+             voidType(),
+             kNone,
+             {Operand::subroutine(SubroutineId{0}), Operand::block(BlockId{1})},
+             {0, 1, 1}}};
+        waiter.blocks[1].instrs = {{Op::Ret, voidType(), kNone, {}, {0, 1, 1}}};
+        p.d.processes.insert(p.d.processes.begin(), std::move(waiter));
+        ASSERT_TRUE(verifies(p.d));
+        Capture output;
+        ASSERT_NE(output.file, nullptr);
+        k::Context context(k::OutputDestinations{output.file, output.file});
+        const auto result = kirimasim::vm::run(p.d, context);
+        ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << output.text();
+        EXPECT_EQ(context.scheduler().time(), 0U);
+        EXPECT_EQ(stored(context, counter, u2(64))[0].a, 10000U);
+        if (string) {
+            EXPECT_LE(context.strings().stats().entries, 256U);
+        } else {
+            EXPECT_LE(context.heap().stats().containerEntries, 1025U);
+            EXPECT_LE(context.heap().stats().cellEntries, 1025U);
+        }
+    }
+}
+
 TEST(VmContainer, DroppingTheLastReferenceCollectsWithoutAnotherHeapMutation) {
     Program p;
     const auto q = p.container(s4(32), true);
