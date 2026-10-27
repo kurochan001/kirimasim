@@ -40,6 +40,16 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('foreach: break exits only the innermost dimension', 'src/front/lower_stmt.cpp',
+     'const auto loop = b_.loops.back().breakOwner.value_or(b_.loops.size() - 1);',
+     'const auto loop = b_.loops.size() - 1;'),
+    ('ports: explicitly empty inputs use their default', 'src/front/lower.cpp',
+     '            pullUnconnected(child, ps);\n            continue;',
+     '            if (const auto* fallback = ps.getInitializer()) ext = fallback;\n'
+     '            else { pullUnconnected(child, ps); continue; }'),
+    ('string real: separators terminate conversion', 'src/kernel/strings.cpp',
+     'return std::strtod(number.c_str(), nullptr);',
+     'return std::strtod(std::string(text).c_str(), nullptr);'),
     ('NBA source: repeat width is narrowed', 'src/front/lower_nba.cpp', '    return count;', '    return coerce(count, sir::s2(32), sl);'),
     ('NBA source: skipped counts evaluate named selectors', 'src/front/lower_nba.cpp', 'const auto positive = emit(Op::Gt, truth, {count.op, constant(count.type, 0).op}, sl);', 'const auto positive = constant(truth, 1);'),
     ('NBA source: earlier aggregate leaves disappear', 'src/front/lower_nba.cpp', '    switch (p.kind) {', '    event.layout.targets.clear();\n    switch (p.kind) {'),
