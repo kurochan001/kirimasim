@@ -67,6 +67,12 @@ MUTANTS = [
      '            pullUnconnected(child, ps);\n            continue;',
      '            if (const auto* fallback = ps.getInitializer()) ext = fallback;\n'
      '            else { pullUnconnected(child, ps); continue; }'),
+    ('string real: a leading sign is not read', 'src/kernel/strings.cpp',
+     "if (!text.empty() && (text.front() == '+' || text.front() == '-')) number += text[pos++];",
+     ''),
+    ('string real: a point may follow the sign', 'src/kernel/strings.cpp',
+     'if (pos == text.size() || !digit(text[pos])) return 0;',
+     "if (pos == text.size() || (!digit(text[pos]) && text[pos] != '.')) return 0;"),
     ('string real: separators terminate conversion', 'src/kernel/strings.cpp',
      'return std::strtod(number.c_str(), nullptr);',
      'return std::strtod(std::string(text).c_str(), nullptr);'),

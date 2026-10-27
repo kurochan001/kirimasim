@@ -5,6 +5,7 @@
 // records as checked against the standard (and, where noted there, against
 // Icarus Verilog 13.0).
 
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -58,6 +59,49 @@ TEST(StringReal, MatchesTheIndependentReferenceAcrossSeparatorsAndSuffixes) {
                 EXPECT_DOUBLE_EQ(actual.value_or(std::numeric_limits<double>::quiet_NaN()),
                                  kirimasim::valsem::stringToReal(text));
             }
+}
+
+TEST(StringReal, ReadsOneLeadingSignFollowedByADigit) {  // VALUE_SEMANTICS.md 7.6
+    struct Case {
+        const char* text;
+        double value;
+    };
+    for (const Case c : {Case{"-2.5", -2.5},
+                         {"+2.5", 2.5},
+                         {"-7_2.5", -72.5},
+                         {"-1e3", -1000},
+                         {"+1.5E-2", 0.015},
+                         {"-2.5e3x", -2500},
+                         {"-.5", 0},
+                         {"- 2.5", 0},
+                         {"--2.5", 0},
+                         {"+-1", 0},
+                         {"-_1", 0},
+                         {"-", 0},
+                         {"+", 0},
+                         {" -1", 0},
+                         {"-x", 0}}) {
+        SCOPED_TRACE(c.text);
+        EXPECT_DOUBLE_EQ(kirimasim::valsem::stringToReal(c.text), c.value);
+        const auto actual = kirimasim::kernel::stringToReal(c.text);
+        ASSERT_TRUE(actual);
+        EXPECT_DOUBLE_EQ(actual.value_or(std::numeric_limits<double>::quiet_NaN()), c.value);
+    }
+    // A minus zero keeps its sign (IEEE 754, 5.7.2).
+    EXPECT_TRUE(std::signbit(kirimasim::valsem::stringToReal("-0.0")));
+    EXPECT_TRUE(std::signbit(kirimasim::kernel::stringToReal("-0.0").value_or(0.0)));
+}
+
+TEST(StringReal, SignedTextMatchesTheIndependentReference) {
+    for (const char* sign : {"+", "-", "+-", "-_", "- "})
+        for (const char* body : {"0", "19.25", "2_5e-1", ".5", "1e+", "x", ""}) {
+            const std::string text = std::string(sign) + body;
+            SCOPED_TRACE(text);
+            const auto actual = kirimasim::kernel::stringToReal(text);
+            ASSERT_TRUE(actual);
+            EXPECT_DOUBLE_EQ(actual.value_or(std::numeric_limits<double>::quiet_NaN()),
+                             kirimasim::valsem::stringToReal(text));
+        }
 }
 
 using namespace kirimasim::valsem;

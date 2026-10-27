@@ -49,9 +49,9 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 公開済みの実装は main の [`304e1aec`](notes/automatic-event-main-integration.ja.md)です。
 automatic scalar/固定配列 event の既定値、task/fork の保持範囲、公開済み命令境界での event 回収を含みます。
 
-基準`13fe2b65`の既知差分として、一部の負の`string.atoreal()`が0になります。
-固定母集団の4件は旧版/新版slangの両方で失敗し、[依存更新の比較](notes/slang-e2d1021-update.ja.md)に
-同じ結果を保存しています。以下の文字列メソッドの対応は検証した部分集合です。
+`string.atoreal()`は再び先頭の符号を1つ読みます（VALUE_SEMANTICS.md 7.6、2026-10-28に承認）。
+`13fe2b65`と[依存更新の比較](notes/slang-e2d1021-update.ja.md)で失敗していた母集団の4件は通ります。
+以下の文字列メソッドの対応は検証した部分集合です。
 
 ## 言語と実行
 

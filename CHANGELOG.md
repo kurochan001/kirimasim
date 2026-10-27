@@ -649,3 +649,10 @@ own. CONTRIBUTING.md says what goes in this file.
   restriction, not a missing P1 feature. New source tests cover dynamic arrays
   and queues with whole-element, bit and part targets; whole-value NBAs to
   eligible static container variables remain separate.
+
+- `string.atoreal()` reads one leading `+` or `-` and then a real constant
+  as 5.7.2 writes it, so a negative number written by `realtoa` reads back
+  (6.16.10, 6.16.15; VALUE_SEMANTICS.md 7.6, approved 2026-10-28). Since
+  5eae2ecf a leading sign gave 0, and four tests of the P1 population
+  failed. Underscores are dropped, and leading white space, a leading point
+  or a sign not followed by a digit still give 0 (#57).

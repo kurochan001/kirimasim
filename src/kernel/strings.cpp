@@ -13,9 +13,11 @@ namespace kirimasim::kernel {
 
 std::optional<double> stringToReal(std::string_view text) noexcept try {
     const auto digit = [](char c) { return c >= '0' && c <= '9'; };
-    if (text.empty() || !digit(text.front())) return 0;
     std::string number;
     std::size_t pos = 0;
+    // One leading sign, which a digit must follow (VALUE_SEMANTICS.md 7.6).
+    if (!text.empty() && (text.front() == '+' || text.front() == '-')) number += text[pos++];
+    if (pos == text.size() || !digit(text[pos])) return 0;
     const auto digits = [&] {
         while (pos < text.size() && (digit(text[pos]) || text[pos] == '_')) {
             if (text[pos] != '_') number += text[pos];

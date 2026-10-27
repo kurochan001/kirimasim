@@ -148,7 +148,7 @@ Value writeBits(const Value& x, const Value& pos, const Value& v);
 
 // Strings (6.16).
 
-/// Reference scanner for string.atoreal() (6.16.10, 5.7.2).
+/// Reference scanner for string.atoreal() (6.16.10, 5.7.2, VALUE_SEMANTICS.md 7.6).
 double stringToReal(const std::string& text);
 
 /// The bytes of x as characters, the most significant first; zero bytes

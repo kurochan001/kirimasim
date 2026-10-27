@@ -26,7 +26,8 @@
 
 namespace kirimasim::kernel {
 
-/// atoreal (6.16.10): scan a real-constant prefix, ignoring its underscores.
+/// atoreal (6.16.10, VALUE_SEMANTICS.md 7.6): scan one optional sign and a
+/// real-constant prefix, ignoring its underscores.
 /// No value means allocation failure; malformed input still converts to zero.
 std::optional<double> stringToReal(std::string_view text) noexcept;
 
