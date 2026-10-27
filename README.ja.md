@@ -86,17 +86,17 @@ snapshot、入れ子の内容比較を扱います。独自351設計が実行場
 [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)は21項目すべて成功しました。全面対応ではありません。
 
 mainの[具体的なイベント購読](docs/notes/event-nba-concrete-controls.ja.md)で、固定slot・名前付きイベントの
-継続的な購読、全幅の回数、callback元の保持を実装しました。mainのこの区切りには、下記のローカルな
-式monitorの段階は含みません。SIR/front/VMのソース転送は残作業です。[ローカル検証](docs/measurements/2026-10-27/nba-events-validation.json)では
+継続的な購読、全幅の回数、callback元の保持を実装しました。下記の式monitorの区切りは、
+この中核を拡張します。SIR/front/VMのソース転送は残作業です。[ローカル検証](docs/measurements/2026-10-27/nba-events-validation.json)では
 CI全21項目、新規kernel/SIR-nativeテスト33件とコンパイルした18故障の検出が成功しました。
 
-[main統合の検証](docs/measurements/2026-10-27/nba-events-main-integration.json)に、
-push前のCI再実行を記録します。後続のローカルな[式monitorの段階](docs/notes/event-nba-expression-monitors.ja.md)で、
-共通評価とheap/activation通知のまとめ方を追加します。SIR/front/VMのソース転送は残ります。
+[式monitorの区切り](docs/notes/event-nba-expression-monitors.ja.md)を`012af2ca`としてmainへ取り込み、
+共通評価とheap/activation通知のまとめ方を追加しました。[統合の検証](docs/measurements/2026-10-27/nba-monitors-main-integration.json)に
+push前の検査を記録します。未完成のSIR/VM作業はローカルに保持し、ソースからのイベント制御付きNBAは未対応です。
 
 mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
 値の所有と保留中の発行順を追加し、独立した単体24件で検査します。上の実装は
-slot・名前付き購読とcallback元の保持を追加し、後続のローカル段階で式monitorを追加します。ソースの
+slot・名前付き購読とcallback元の保持を追加し、上記のmainの区切りで式monitorを追加しました。ソースの
 `nba.event`転送は残り、
 ソースからのイベント制御付きNBAは引き続き未対応です。
 [最終配置のlocal CI](docs/measurements/2026-10-27/nba-payload-validation.json)は21項目すべて成功しました。
@@ -261,11 +261,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 7,055 | 7,053、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 7,082 | 7,080、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）717、`tests/suite/` 6,107（`tools/` の 148 個の生成器が作る）、道具 165、`tests/dump_sir/` 29、状態と Context 21、コマンドラインと事象の回数 16。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）744、`tests/suite/` 6,107（`tools/` の 148 個の生成器が作る）、道具 165、`tests/dump_sir/` 29、状態と Context 21、コマンドラインと事象の回数 16。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

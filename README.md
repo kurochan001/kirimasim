@@ -115,21 +115,21 @@ passes all 21 steps. Existing feature coverage remains partial.
 
 The [concrete event controls](docs/notes/event-nba-concrete-controls.md) now
 cover persistent fixed-slot/named subscriptions, full-width counts and callback-origin
-ownership. Its main checkpoint does not yet include the local expression-monitor
-stage below. The SIR/front/VM source path remains unfinished.
+ownership. The expression-monitor checkpoint below extends this core.
+The SIR/front/VM source path remains unfinished.
 [Local validation](docs/measurements/2026-10-27/nba-events-validation.json) passes all
 21 CI steps, with 33 new kernel/SIR-native tests and 18 caught compiled faults.
 
-[Main-integration validation](docs/measurements/2026-10-27/nba-events-main-integration.json)
-records the fresh pre-push CI run. The subsequent local
-[expression-monitor stage](docs/notes/event-nba-expression-monitors.md) adds shared
-evaluation and grouped heap/activation notices. SIR/front/VM source transport
-remains unfinished.
+The [expression-monitor checkpoint](docs/notes/event-nba-expression-monitors.md)
+is integrated into main as `012af2ca`, adding shared evaluation and grouped
+heap/activation notices. [Integration validation](docs/measurements/2026-10-27/nba-monitors-main-integration.json)
+records the pre-push checks. Unfinished SIR/VM work stays local; source
+event-controlled NBA remains unsupported.
 
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
 unit tests. The concrete core above adds slot/named subscriptions and origin
-retention; the subsequent local stage adds expression monitors. Source
+retention; the main checkpoint above adds expression monitors. Source
 `nba.event` transport remains unfinished.
 Source event-controlled NBAs are still unsupported.
 [Final-layout local CI](docs/measurements/2026-10-27/nba-payload-validation.json) passes all 21 checks.
@@ -327,11 +327,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 7,055 | 7,053, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 7,082 | 7,080, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 717, `tests/suite/` 6,107 (made by 148 generators under `tools/`), tools 165, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 744, `tests/suite/` 6,107 (made by 148 generators under `tools/`), tools 165, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

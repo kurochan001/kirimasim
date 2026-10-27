@@ -1,7 +1,7 @@
 # Event-NBA expression-monitor ownership and notifications
 
-[日本語](event-nba-expression-monitors.ja.md). Status: locally verified kernel stage
-(uncommitted), 2026-10-27, based on main `e94315a0`. This stage does **not** enable
+[日本語](event-nba-expression-monitors.ja.md). Status: kernel checkpoint integrated into
+main as `012af2ca`, 2026-10-27; originally validated on `e94315a0`. This stage does **not** enable
 source event-controlled NBA. Whole P1/Icarus functional parity remains unproven.
 
 ## Basis and one shared rule
@@ -99,6 +99,13 @@ Active/Reactive × slot/named test preserves all its assertions; a compiled faul
 restores the unsafe in-place walk and is detected.
 
 ## Verification
+
+[Main-integration validation](../measurements/2026-10-27/nba-monitors-main-integration.json)
+records fresh pre-push checks after combining this checkpoint with main
+`a0a0d973`. The measurements below retain their original source hashes and
+counts. All 21 integration checks pass: dev/ASan/UBSan pass 7,080/7,082
+and release passes 7,081/7,083, with zero failures and the same two skips.
+Unfinished SIR/VM work is excluded from this integration.
 
 The [validation record](../measurements/2026-10-27/nba-monitors-validation.json)
 records final source hashes, full local CI, unit tests, fuzz settings and explicit

@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T05:09:11.545589+00:00",
+  "scope": "pre-push integration of the validated kernel expression-monitor checkpoint with current main; unfinished SIR/VM work stays in a separate worktree",
+  "previous_main": "a0a0d973",
+  "implementation_commit": "012af2cafb933fbec592ea8f503625d9974aa5d0",
+  "original_validation": "nba-monitors-validation.json",
+  "preserved_history": "Original measurement and mutation records retain the exact earlier source hashes and counts; their publication_state describes measurement time",
+  "platform": "macOS/arm64",
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 19.1
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 99.5
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 20.8
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 88.4
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 28.1
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 130.1
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 26.4
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 106.2
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.3
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 145.5
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 7082,
+      "passed": 7080,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "release": {
+      "total": 7083,
+      "passed": 7081,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "asan": {
+      "total": 7082,
+      "passed": 7080,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "ubsan": {
+      "total": 7082,
+      "passed": 7080,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    }
+  },
+  "all_unit_tests": 744,
+  "new_kernel_tests": 27,
+  "source_test_tool_sha256": {
+    "src/kernel/heap.cpp": {
+      "sha256": "5474d6fcd64f7784982d27f45c05b1458463265c8ce25b8a0f432abcaf6bbe49",
+      "matches_original_validation": true
+    },
+    "src/kernel/include/kirimasim/kernel/heap.h": {
+      "sha256": "7dd4304939b47493665e0351aca591bca43c36849e5a32d820413f6822e3b448",
+      "matches_original_validation": true
+    },
+    "src/kernel/include/kirimasim/kernel/nba.h": {
+      "sha256": "63f34b9ef1729d5ca86829f5f225f3c97e26f7ccc162f960bbad9f4a3b85b3e1",
+      "matches_original_validation": true
+    },
+    "src/kernel/include/kirimasim/kernel/sim.h": {
+      "sha256": "bac4e1e7170dfabdd75bb153639c5b473e0514e785fda90fdf525cf900ac20f2",
+      "matches_original_validation": true
+    },
+    "src/kernel/managed_event_runtime.cpp": {
+      "sha256": "cffce98265f9caa982e919a551d0785963a0057fa0b1f77e129442c8f1c96cb4",
+      "matches_original_validation": true
+    },
+    "src/kernel/nba_event.cpp": {
+      "sha256": "f2e35999a2ca43a400a8f3ab4f1168a921e46648adac89eedd97165739b46171",
+      "matches_original_validation": true
+    },
+    "src/kernel/sim.cpp": {
+      "sha256": "3212b67464856c11ef4ff58893eb7280c4367cc8169131e232c27aef28f2b5d2",
+      "matches_original_validation": false
+    },
+    "tests/unit/CMakeLists.txt": {
+      "sha256": "0454d32b83cdf5038d7a04e61a29a929bccb5678b7cd64f460a2952dac6420d2",
+      "matches_original_validation": true
+    },
+    "tests/unit/nba_monitor_test.cpp": {
+      "sha256": "7477a37b7cd4b31770ad3ba70fcf5ca2555b376a368eb69454e67983130ab92b",
+      "matches_original_validation": true
+    },
+    "tools/mutants.py": {
+      "sha256": "5bcb072e6b1ac759d687a19acd78014d960ac996733851ab2f3cf0070f59a830",
+      "matches_original_validation": false
+    }
+  },
+  "integration_differences": {
+    "src/kernel/sim.cpp": "Only the two single-character closing-parenthesis appends use the character overload, as already on main; exact normalized text equality checked",
+    "tools/mutants.py": "Preserve main updates for moved time-format assignment and character overload anchors, and the removal of the unreachable primitive fallback control; all 858 remaining anchors apply"
+  },
+  "mutation_anchors": "mutants: 858 checked, 0 do not apply",
+  "compiled_controls": "The original 32 compiled detections remain historical evidence, not a fresh full mutation run after integration",
+  "expectation_policy": "No existing test oracle, suite body, skip or PerfCount budget changed; local CI checked the implementation commit; the following documentation commit is checked separately before push",
+  "excluded": "Unfinished typed nba.event SIR layouts, verifier/text additions, VM bridge and repeat-count helper extraction remain local and uncommitted in the worktree",
+  "source_event_nba": "unsupported",
+  "P1": "incomplete; no whole-language parity claim",
+  "Linux_execution": "not confirmed for this checkpoint; run CI on Linux",
+  "versions": {
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "cmake version 4.4.4",
+    "format": "Homebrew clang-format version 22.1.8",
+    "tidy": "Homebrew LLVM version 22.1.8"
+  }
+}

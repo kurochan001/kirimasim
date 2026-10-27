@@ -1,7 +1,7 @@
 # イベントNBAの式monitorの所有と通知
 
-[English](event-nba-expression-monitors.md)。状態：kernel段階をローカル検証済み（未コミット）、2026-10-27。
-main `e94315a0`が基です。**ソースからのイベント制御付きNBAを有効にはしません**。
+[English](event-nba-expression-monitors.md)。状態：kernelの区切りを`012af2ca`としてmainへ統合、2026-10-27。
+初回の検証はmain `e94315a0`が基です。**ソースからのイベント制御付きNBAを有効にはしません**。
 P1とIcarusの機能範囲全体の同等性は未確認です。
 
 ## 根拠と共通の規則
@@ -75,6 +75,12 @@ Active/Reactive × slot/名前付きの4条件の検査を弱めず、不正なi
 コンパイル済み故障も検出します。
 
 ## 検証
+
+[main統合の検証](../measurements/2026-10-27/nba-monitors-main-integration.json)に、
+main `a0a0d973`と合わせた後のpush前検査を記録します。以下の計測は当時のhashと件数を
+そのまま保存します。統合のCIは全21項目成功、dev/ASan/UBSanは各7,080/7,082、
+releaseは7,081/7,083で、失敗0・同じ既知skip各2件です。
+未完成のSIR/VM作業は、この取り込みに含めません。
 
 [検証記録](../measurements/2026-10-27/nba-monitors-validation.json)に、最終ハッシュ、全local CI、
 単体検査、fuzz設定、明示的な期待値保護を記録します。CI全21項目が成功し、dev/ASan/UBSanは各

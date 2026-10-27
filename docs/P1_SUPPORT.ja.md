@@ -79,8 +79,8 @@ mainの[NBA保持値の土台](notes/event-nba-payload-foundation.ja.md)で、ke
 後からのready化、共通の保留発行順を追加します。独立した単体24件の成功は、ソースからのイベント制御付き
 NBAの対応ではありません。mainの[具体的な購読の中核](notes/event-nba-concrete-controls.ja.md)で、
 固定slot・名前付きイベントの持続する購読、全幅の回数、callback元の保持を追加しました。
-ローカルの[式monitorの段階](notes/event-nba-expression-monitors.ja.md)で、共通評価・
-動的依存先の保持・heap/activation通知のまとめ方を追加します。型付きSIR/front/VMのソース転送は残ります。
+mainの[式monitorの区切り](notes/event-nba-expression-monitors.ja.md)で、共通評価・
+動的依存先の保持・heap/activation通知のまとめ方を追加しました。型付きSIR/front/VMのソース転送は残ります。
 
 ### クラスのstaticプロパティと残るオブジェクトの境界
 

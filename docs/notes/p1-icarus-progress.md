@@ -13,7 +13,7 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Local expression-monitor stage on `e94315a0`:**
+**Expression-monitor checkpoint `012af2ca` integrated into main:**
 [Independent monitor ownership and grouped notifications](event-nba-expression-monitors.md)
 share ordinary-wait evaluation, retain dynamic dependencies and coalesce atomic
 heap/activation changes. The new 27 kernel tests do not establish source
@@ -23,10 +23,10 @@ called-local dependency and source-purity differences, separately from the
 stable 95 probes; the seven gaps there are not an exhaustive P1 remainder.
 
 
-[Fresh main-integration validation](../measurements/2026-10-27/nba-events-main-integration.json)
-checks this checkpoint again before publication. The earlier measurement-time
-records remain unchanged; unfinished expression-monitor work is retained locally
-and excluded from the committed implementation.
+[Fresh main-integration validation](../measurements/2026-10-27/nba-monitors-main-integration.json)
+checks this checkpoint after combining it with main `a0a0d973`. The earlier
+measurement-time records remain unchanged; unfinished SIR/VM work stays local
+and is excluded from the committed implementation.
 
 **Concrete event-control core `eb4ad76d`, integrated with current main:**
 [Persistent slot/named subscriptions and callback origins](event-nba-concrete-controls.md)
@@ -34,8 +34,8 @@ add shared-kernel full-width counts, one decrement per notification, ordered
 non-short-circuit guards, managed pins and deferred callback cleanup. Ended VM
 frame roots are retained until the last control releases them. New independent
 kernel/SIR-native checks include an unrelated VM entry that forces reclamation
-while an origin is still pinned. That committed checkpoint excludes the later
-local expression-monitor stage above. SIR/front/VM source transport, source
+while an origin is still pinned. That earlier checkpoint preceded the
+expression-monitor integration above. SIR/front/VM source transport, source
 event-NBA and P1 remain incomplete.
 [Local validation](../measurements/2026-10-27/nba-events-validation.json) passes
 21/21 CI steps: dev/ASan/UBSan 7,046/7,048 and release 7,047/7,049, zero failures
