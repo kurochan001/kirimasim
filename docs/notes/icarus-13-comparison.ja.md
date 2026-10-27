@@ -4,7 +4,21 @@
 macOS/arm64で計測しました。追加インストールはせず、他のシミュレータの
 ソース・テストも読んでいません。
 
-## automatic eventの再確認（2026-10-26、最新）
+## コンテナ条件式・NBA保持値の再確認（2026-10-27、最新）
+
+mainにはコンテナ条件式`a8bb17cc`とkernelのNBA保持値の前提部分`7bc5fa85`を含みます。
+棚卸しは**独自95プローブ**へ拡張しました。追加した条件式8件はnativeで成功し、両Icarusでは
+コンパイル時に拒否されます。以前の87件中`queue_conditional`は未対応から成功へ改善し、
+他の86件のnativeの状態・stdoutは不変です。
+[条件式の比較](../measurements/2026-10-27/container-conditional-comparison.json)と
+[NBA保持値の比較](../measurements/2026-10-27/nba-payload-comparison.json)に変更と不変の確認を記録します。
+最新の[13.0](../measurements/2026-10-27/icarus13-nba-payload-probes.json)と
+[14.0](../measurements/2026-10-27/icarus14-nba-payload-probes.json)でも、
+Icarusで動いてnativeで通らない差分は**各7件**、参照不一致は4/7件です。
+ソースからのイベント制御付きNBAは引き続き未対応です。有限の観測であり、P1全面対応は未確認です。
+以下の過去の節は計測時点の結果を保ちます。
+
+## automatic eventの再確認（2026-10-26）
 
 [今回の実装](instruction-event-execution.ja.md)のソースは`e909f022`です。
 [13.0](../measurements/2026-10-26/icarus13-instruction-events-probes.json)と

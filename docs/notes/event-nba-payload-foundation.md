@@ -1,8 +1,8 @@
 # Owned NBA payloads and pending issue order
 
-[日本語](event-nba-payload-foundation.ja.md). Status: local implementation,
-2026-10-27, alongside the uncommitted conditional-container checkpoint based on main
-`1650064d`. This is a shared-kernel prerequisite, **not source event-NBA support**.
+[日本語](event-nba-payload-foundation.ja.md). Status: integrated into main in `7bc5fa85` on
+2026-10-27, following the conditional-container implementation `a8bb17cc`.
+This is a shared-kernel prerequisite, **not source event-NBA support**.
 P1 remains incomplete.
 
 ## Approved contract and boundary

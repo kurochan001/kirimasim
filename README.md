@@ -27,6 +27,11 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
+Main now includes container conditionals (`a8bb17cc`) and captured NBA payloads
+(`7bc5fa85`). The [integration record](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
+checks the validated code/tests and each commit's expectation guard. Event-controlled
+NBA source execution remains unfinished.
+
 Main implements [`--max-procs`](docs/notes/process-limit-execution.md)
 under the approved CLI 2.7 contract in `624123b2`. It counts unfinished runtime children in
 the shared kernel, preserves capacity across record retention/reuse, and stops
@@ -98,13 +103,13 @@ sensitivity are among the remaining forms. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
-A local, uncommitted [conditional-container implementation](docs/notes/container-conditional-execution.md)
+The [conditional-container implementation](docs/notes/container-conditional-execution.md)
 adds `?:` for supported dynamic arrays/queues, including unknown-condition
 whole-element defaults, snapshots and nested contents. Its 351 original designs
 span nine execution homes; [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)
 passes all 21 steps. Existing feature coverage remains partial.
 
-A local [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
+The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
 unit tests. Event subscriptions, callback-origin retention and source `nba.event`
 transport remain unfinished; source event-controlled NBAs are still unsupported.
@@ -297,9 +302,9 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,456 pass (99.3%), 0 fail; 10 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
-| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 87 original probes, 7 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (7 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
+| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 95 original probes, 7 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (7 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-27 (macOS); the population on 2026-10-27; the Icarus probes on 2026-10-26. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) and 2026-10-27 (macOS); the population on 2026-10-27; the Icarus probes on 2026-10-27. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
@@ -327,10 +332,12 @@ all 21 checks pass; dev, ASan and UBSan each run 4,652 tests, 4,650 pass and
 the two known skips remain; release runs 4,653 and 4,651 pass, with the same
 skips ([record](docs/measurements/2026-10-25/activation-environment-final-validation.json)).
 
-The current [process-limit validation](docs/measurements/2026-10-27/process-limit-validation.json)
-passes 21/21 local CI steps: dev/ASan/UBSan 6,637/6,639 and release
-6,638/6,640, with zero failures and two known skips each. The same original
-87-probe inventory now retains seven Icarus-passing gaps for each reference,
+The current [main integration](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
+includes container conditionals (`a8bb17cc`) and captured NBA payloads (`7bc5fa85`).
+All 21 local CI checks are confirmed after README regeneration and a dev rerun:
+dev/ASan/UBSan 7,013/7,015 and release
+7,014/7,016, with zero failures and two known skips each. The expanded
+95-probe inventory retains seven Icarus-passing gaps for each reference,
 and four/seven reference mismatches for 13.0-stable/14.0-development.
 See the [current validation and limits](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
 and [portable per-probe records](docs/notes/icarus-13-comparison.md).

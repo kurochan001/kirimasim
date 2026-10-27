@@ -4,7 +4,24 @@
 automatic-wait checkpoint `e9bec784`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.
 
-## Automatic-event recheck (2026-10-26, latest)
+## Container-conditional and NBA-payload recheck (2026-10-27, latest)
+
+Main includes container conditionals in `a8bb17cc` and the kernel NBA-payload
+prerequisite in `7bc5fa85`. The inventory now has **95 original probes**.
+Eight added conditional probes pass natively; both Icarus versions reject them
+at compilation. In the earlier 87 probes, `queue_conditional` improves from
+unsupported to passing; the other 86 native statuses and stdout are unchanged.
+The [conditional comparison](../measurements/2026-10-27/container-conditional-comparison.json)
+and [NBA-payload comparison](../measurements/2026-10-27/nba-payload-comparison.json)
+record the changes and preservation checks. The latest
+[13.0](../measurements/2026-10-27/icarus13-nba-payload-probes.json) and
+[14.0](../measurements/2026-10-27/icarus14-nba-payload-probes.json) observations
+retain **seven Icarus-passing gaps** per reference and four/seven reference
+mismatches. Event-controlled NBA source execution remains unsupported.
+These are finite observations; complete P1 parity remains unconfirmed.
+Earlier sections retain their measurement-time results.
+
+## Automatic-event recheck (2026-10-26)
 
 [The implementation](instruction-event-execution.md) has source revision `e909f022`.
 Fresh [13.0](../measurements/2026-10-26/icarus13-instruction-events-probes.json) and

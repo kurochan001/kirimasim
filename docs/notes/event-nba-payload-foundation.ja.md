@@ -1,7 +1,7 @@
 # NBAの保持値と保留中の発行順
 
-[English](event-nba-payload-foundation.md)。状態：2026-10-27、main `1650064d`を基にした
-未コミットの条件式対応と同じローカル作業へ実装しました。共有kernelの前提部分であり、
+[English](event-nba-payload-foundation.md)。状態：2026-10-27、条件式対応`a8bb17cc`に続き、
+`7bc5fa85`でmainへ統合しました。共有kernelの前提部分であり、
 **ソースからのイベント制御付きNBAの対応ではありません**。P1は未完です。
 
 ## 承認済み契約と境界

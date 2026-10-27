@@ -1,0 +1,377 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T00:24:40.016063+00:00",
+  "base_main": "1650064d21c70e70545e4258ae649b0d9ff3cc6a",
+  "implementation_commits": {
+    "container_conditionals": "a8bb17cc4daee5c0c7650e85d01ae71e41a99475",
+    "captured_nba_payloads": "7bc5fa85b18c077367fcbcd4b0ebf9200034b18a"
+  },
+  "integration_method": "fast-forward",
+  "publication_target": "origin/main",
+  "scope": "supported container conditionals and a shared-kernel NBA-payload prerequisite; source event-NBA and whole P1 remain unfinished",
+  "source_sha256_matches_prior_full_local_ci": true,
+  "validated_file_count": 1071,
+  "validated_trees": {
+    "src": "71dfb837ea6e4bce28139077d56ad049e3238258",
+    "tests": "b1049681374681fc91acf5dd72582a49de574d37",
+    "tools": "6228c3aafb55618ba1454ea50dee63c0e38c9d66",
+    "bench": "de7155c9ecb12824af0893edaf6f2cbfb7576c0d"
+  },
+  "measurement_time_records_preserved": [
+    "container-conditional-validation.json",
+    "nba-payload-validation.json"
+  ],
+  "local_ci": {
+    "initial_run": {
+      "passed": 20,
+      "total": 21,
+      "steps": [
+        {
+          "name": "dev: configure",
+          "status": "ok",
+          "seconds": 3.5
+        },
+        {
+          "name": "dev: build",
+          "status": "ok",
+          "seconds": 31.5
+        },
+        {
+          "name": "dev: test",
+          "status": "FAILED",
+          "seconds": 90.0
+        },
+        {
+          "name": "release: configure",
+          "status": "ok",
+          "seconds": 1.2
+        },
+        {
+          "name": "release: build",
+          "status": "ok",
+          "seconds": 25.9
+        },
+        {
+          "name": "release: test",
+          "status": "ok",
+          "seconds": 78.8
+        },
+        {
+          "name": "asan: configure",
+          "status": "ok",
+          "seconds": 3.5
+        },
+        {
+          "name": "asan: build",
+          "status": "ok",
+          "seconds": 42.6
+        },
+        {
+          "name": "asan: test",
+          "status": "ok",
+          "seconds": 127.0
+        },
+        {
+          "name": "ubsan: configure",
+          "status": "ok",
+          "seconds": 3.5
+        },
+        {
+          "name": "ubsan: build",
+          "status": "ok",
+          "seconds": 44.3
+        },
+        {
+          "name": "ubsan: test",
+          "status": "ok",
+          "seconds": 109.4
+        },
+        {
+          "name": "check_release_flags",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_banned",
+          "status": "ok",
+          "seconds": 0.4
+        },
+        {
+          "name": "check_spdx",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_suite_files",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_global_state",
+          "status": "ok",
+          "seconds": 0.4
+        },
+        {
+          "name": "check_expected_change",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "readme_counts",
+          "status": "ok",
+          "seconds": 0.4
+        },
+        {
+          "name": "clang-format",
+          "status": "ok",
+          "seconds": 0.7
+        },
+        {
+          "name": "clang-tidy",
+          "status": "ok",
+          "seconds": 170.4
+        }
+      ],
+      "failure": "tools/readme_counts: counts source changed from 87 to 95 before regenerating the README ranges"
+    },
+    "correction": "Regenerate both README counts ranges from docs/counts.json with tools/readme_counts.py; no implementation/test/expectation changes",
+    "corrective_rerun": {
+      "command": "python3 tools/local_ci.py --presets dev --skip-lint --llvm-bin <existing LLVM bin directory>",
+      "passed": 9,
+      "total": 9,
+      "steps": [
+        {
+          "name": "dev: configure",
+          "status": "ok",
+          "seconds": 1.2
+        },
+        {
+          "name": "dev: build",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "dev: test",
+          "status": "ok",
+          "seconds": 94.8
+        },
+        {
+          "name": "check_banned",
+          "status": "ok",
+          "seconds": 0.5
+        },
+        {
+          "name": "check_spdx",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_suite_files",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_global_state",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_expected_change",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "readme_counts",
+          "status": "ok",
+          "seconds": 0.4
+        }
+      ]
+    },
+    "final_status_by_check": {
+      "passed": 21,
+      "total": 21,
+      "steps": [
+        {
+          "name": "dev: configure",
+          "status": "ok",
+          "seconds": 1.2
+        },
+        {
+          "name": "dev: build",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "dev: test",
+          "status": "ok",
+          "seconds": 94.8
+        },
+        {
+          "name": "release: configure",
+          "status": "ok",
+          "seconds": 1.2
+        },
+        {
+          "name": "release: build",
+          "status": "ok",
+          "seconds": 25.9
+        },
+        {
+          "name": "release: test",
+          "status": "ok",
+          "seconds": 78.8
+        },
+        {
+          "name": "asan: configure",
+          "status": "ok",
+          "seconds": 3.5
+        },
+        {
+          "name": "asan: build",
+          "status": "ok",
+          "seconds": 42.6
+        },
+        {
+          "name": "asan: test",
+          "status": "ok",
+          "seconds": 127.0
+        },
+        {
+          "name": "ubsan: configure",
+          "status": "ok",
+          "seconds": 3.5
+        },
+        {
+          "name": "ubsan: build",
+          "status": "ok",
+          "seconds": 44.3
+        },
+        {
+          "name": "ubsan: test",
+          "status": "ok",
+          "seconds": 109.4
+        },
+        {
+          "name": "check_release_flags",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_banned",
+          "status": "ok",
+          "seconds": 0.5
+        },
+        {
+          "name": "check_spdx",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_suite_files",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_global_state",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "check_expected_change",
+          "status": "ok",
+          "seconds": 0.1
+        },
+        {
+          "name": "readme_counts",
+          "status": "ok",
+          "seconds": 0.4
+        },
+        {
+          "name": "clang-format",
+          "status": "ok",
+          "seconds": 0.7
+        },
+        {
+          "name": "clang-tidy",
+          "status": "ok",
+          "seconds": 170.4
+        }
+      ]
+    },
+    "ctest": {
+      "dev": {
+        "total": 7015,
+        "passed": 7013,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      },
+      "release": {
+        "total": 7016,
+        "passed": 7014,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      },
+      "asan": {
+        "total": 7015,
+        "passed": 7013,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      },
+      "ubsan": {
+        "total": 7015,
+        "passed": 7013,
+        "failed": 0,
+        "skipped": [
+          "suite/cb/input_sample_1step",
+          "suite/nets/net_port_drivers_part"
+        ],
+        "PerfCount": "passed"
+      }
+    }
+  },
+  "commit_expectation_guards": [
+    {
+      "base": "1650064d21c70e70545e4258ae649b0d9ff3cc6a",
+      "head": "a8bb17cc4daee5c0c7650e85d01ae71e41a99475",
+      "exit_code": 0,
+      "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+    },
+    {
+      "base": "a8bb17cc4daee5c0c7650e85d01ae71e41a99475",
+      "head": "7bc5fa85b18c077367fcbcd4b0ebf9200034b18a",
+      "exit_code": 0,
+      "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+    }
+  ],
+  "new_original_source_designs": 351,
+  "new_kernel_unit_tests": 24,
+  "comparison_records_preserved": [
+    "container-conditional-comparison.json",
+    "nba-payload-comparison.json"
+  ],
+  "icarus_probe_inventory": 95,
+  "known_icarus_passing_gaps_per_reference": 7,
+  "not_published": "Unfinished event-subscription and callback-origin source changes are preserved in the separate local implementation worktree",
+  "unchanged": [
+    "existing source-test bodies and expected values",
+    "existing skips",
+    "PerfCount expectations/budgets",
+    "detailed specifications",
+    "SIR formatVersion 0",
+    "C ABI 0.3",
+    "dependencies"
+  ],
+  "completion": "P1 is incomplete; no whole-language functional coverage percentage is claimed"
+}

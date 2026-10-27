@@ -10,6 +10,9 @@
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。
 
+mainのコンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を含みます
+（[取り込み記録](measurements/2026-10-27/conditional-nba-main-integration.json)）。ソースからのイベント制御付きNBAは残作業です。
+
 2026-10-27時点のmainの第1層です。process上限の実装`624123b2`を含みます
 （[取り込み記録](measurements/2026-10-27/process-limit-main-integration.json)）。クラスstatic記憶域の実装`9e6a149d`を含みます
 （[取り込み記録](measurements/2026-10-27/class-static-main-integration.json)）。
@@ -72,7 +75,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 
 32 ビットを超える重みの `randcase` は未対応です。
 
-ローカルの[NBA保持値の土台](notes/event-nba-payload-foundation.ja.md)で、kernelによる値の所有、
+mainの[NBA保持値の土台](notes/event-nba-payload-foundation.ja.md)で、kernelによる値の所有、
 後からのready化、共通の保留発行順を追加します。独立した単体24件の成功は、ソースからのイベント制御付き
 NBAの対応ではありません。持続する購読、callback元の生存期間、型付きSIR/VMの転送が残っています。
 
@@ -328,7 +331,7 @@ frontから共通ヒープへ接続し、SystemVerilogから実行できるよ�
 - 添字を明記した1段以上の動的次元の`foreach`。本体内の待機・continueにも対応。
   第1次元の`$size`・`$left`・`$right`・`$low`・`$high`・`$increment`。
 
-ローカルの未コミットの[コンテナ条件式](notes/container-conditional-execution.ja.md)では、対応済みの
+mainの[コンテナ条件式](notes/container-conditional-execution.ja.md)では、対応済みの
 動的配列・キュー表現の`?:`を実行します。既知条件は片側だけ、不定条件は左から両側を捕捉し、
 長さが異なれば空、不一致・不定な等価の要素は型の既定値にします。入れ子は内容で比較し、結果の
 記憶域は独立します。独自351設計が実行場所9種類、ref、関数、遅延NBA、明示的waitを検査します。

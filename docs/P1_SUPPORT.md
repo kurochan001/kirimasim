@@ -11,6 +11,10 @@ See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader
 later-phase plans.
 
+This inventory includes main commits `a8bb17cc` (container conditionals) and
+`7bc5fa85` (captured NBA payloads; source event-NBA remains unfinished), with an
+[integration record](measurements/2026-10-27/conditional-nba-main-integration.json).
+
 This inventory describes tier 1 as of 2026-10-27 on main, including process-limit
 implementation `624123b2` ([integration record](measurements/2026-10-27/process-limit-main-integration.json))
 and class-static
@@ -73,7 +77,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 `randcase` weights wider than 32 bits are not implemented.
 
-The local [NBA payload foundation](notes/event-nba-payload-foundation.md) adds
+The [NBA payload foundation](notes/event-nba-payload-foundation.md) adds
 kernel-owned value capture, later readiness and common pending issue order.
 Its 24 independent tests do not enable source event-controlled NBA: persistent
 subscriptions, callback-origin lifetime and typed SIR/VM transport still remain.
@@ -394,7 +398,7 @@ errors. Existing source bodies and expectations are unchanged.
   waits/continue in the body; first-dimension `$size`, `$left`, `$right`, `$low`,
   `$high` and `$increment` queries.
 
-The local, uncommitted [conditional-container work](notes/container-conditional-execution.md)
+The [conditional-container implementation](notes/container-conditional-execution.md)
 adds `?:` for supported dynamic-array/queue representations: known conditions
 evaluate one side, unknown conditions capture both left to right; unequal lengths
 return empty and unequal/unknown-equal elements take their type default. Nested

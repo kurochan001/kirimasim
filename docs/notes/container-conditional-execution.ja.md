@@ -1,7 +1,6 @@
 # 動的配列・キューの条件式
 
-[English](container-conditional-execution.md)。状態：main `1650064d` を基にした
-ローカルの未コミット作業へ実装、2026-10-27。P1は未完です。
+[English](container-conditional-execution.md)。状態：`a8bb17cc`でmainへ統合、2026-10-27。P1は未完です。
 
 ## 規則と実装
 
@@ -76,7 +75,8 @@ stdoutは維持しました。参照側が成功する既知の差分7件は残�
 故障の全820登録の照合も通りました。固定P1母集団は1,466件中1,456成功・失敗0・未対応10、
 native sv-testsは244/344・未対応62で、以前の成功を失っていません。
 [比較記録](../measurements/2026-10-27/container-conditional-comparison.json)に既存1項目の改善と
-追加8項目を記録しました。ステージ済み差分の期待値保護も通りました。未コミット・未pushです。
+追加8項目を記録しました。計測時点のステージ済み差分の期待値保護も通りました。
+mainへの取り込みは別の[記録](../measurements/2026-10-27/conditional-nba-main-integration.json)に残します。
 
 全CI後、新規136ソースの末尾空白を生成器で除去しました。トークン・行番号・期待値・実装の
 byteは不変で、選択した356検査を再実行して成功しました。検証記録には全CI時と最終状態の

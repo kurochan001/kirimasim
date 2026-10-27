@@ -57,8 +57,8 @@
     }
   },
   "icarus_probes": {
-    "probes": 87,
-    "measured": "2026-10-26",
+    "probes": 95,
+    "measured": "2026-10-27",
     "stable": {
       "gaps": 7,
       "mismatches": 4

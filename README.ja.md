@@ -19,6 +19,10 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
+mainへコンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を取り込みました。
+[取り込み記録](docs/measurements/2026-10-27/conditional-nba-main-integration.json)で、検証済みの
+コード・テストの不変と各commitの期待値保護を確認します。ソースからのイベント制御付きNBAは残作業です。
+
 mainに`624123b2`を取り込み、承認済みCLI 2.7の[`--max-procs`](docs/notes/process-limit-execution.ja.md)を
 実装しました。共有kernelで未終了のruntime childを数え、記録の保持・再利用と区別して、
 上限を超える子を登録する前に停止します。
@@ -72,12 +76,12 @@ frontの定数・runtime書式引数への接続は残っているため、ソ�
 [実装状況](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)と
 [承認済みの契約](docs/notes/dynamic-containers-proposal.ja.md)を参照してください。
 
-ローカルの未コミット作業で[コンテナの条件式](docs/notes/container-conditional-execution.ja.md)を
+mainへ[コンテナの条件式](docs/notes/container-conditional-execution.ja.md)を
 追加しました。対応済みの動的配列・キューで`?:`を実行し、不定条件での要素全体の既定値、
 snapshot、入れ子の内容比較を扱います。独自351設計が実行場所9種類を横断し、
 [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)は21項目すべて成功しました。全面対応ではありません。
 
-ローカルの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
+mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
 値の所有と保留中の発行順を追加し、独立した単体24件で検査します。イベント購読、callback元の
 保持、ソースの`nba.event`転送は残り、ソースからのイベント制御付きNBAは引き続き未対応です。
 [最終配置のlocal CI](docs/measurements/2026-10-27/nba-payload-validation.json)は21項目すべて成功しました。
@@ -236,9 +240,9 @@ dev/ASan/UBSanは4,179件中4,177件、releaseは4,180件中4,178件成功、失
 | 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,456 本が通る（99.3%）。失敗は 0 本で、10 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P4 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
-| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 87 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 7 本、参照の不一致が 4 本（14.0 devel とでは 7 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
+| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 95 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 7 本、参照の不一致が 4 本（14.0 devel とでは 7 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
 
-kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、母集団は 2026-10-27、Icarus のプローブは 2026-10-26 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
+kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、母集団は 2026-10-27、Icarus のプローブは 2026-10-27 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
@@ -260,9 +264,11 @@ sv-tests の差の大部分は 7、8、16 章にあります。動的配列、�
 releaseは4,653件中4,651件成功、同じ2件のみスキップです
 （[記録](docs/measurements/2026-10-25/activation-environment-final-validation.json)）。
 
-現在の[process-limit検証](docs/measurements/2026-10-27/process-limit-validation.json)は全local CIが21/21成功、
-dev/ASan/UBSanは各6,637/6,639、releaseは6,638/6,640、失敗0・既知skip各2件です。
-同じ独自87プローブの現在の差は両参照とも7本、参照不一致は13.0 stableが4本・14.0 develが7本です。
+現在の[main取り込み](docs/measurements/2026-10-27/conditional-nba-main-integration.json)は、
+コンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を含みます。README再生成後のdev再確認を含め、
+local CI全21項目を確認しました。
+dev/ASan/UBSanは各7,013/7,015、releaseは7,014/7,016、失敗0・既知skip各2件です。
+拡張した独自95プローブの差は両参照とも7本、参照不一致は13.0 stableが4本・14.0 develが7本です。
 [最新の検証と制限](docs/notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-27)と
 [版ごとの個別記録](docs/notes/icarus-13-comparison.ja.md)を参照してください。
 以下の外部sv-tests・母集団の件数と性能測定は、記載した

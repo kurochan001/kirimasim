@@ -1,7 +1,7 @@
 # Conditional dynamic-array and queue values
 
-[日本語](container-conditional-execution.ja.md). Status: implemented on a local,
-uncommitted topic based on main `1650064d`, 2026-10-27. P1 remains incomplete.
+[日本語](container-conditional-execution.ja.md). Status: integrated into main in `a8bb17cc`,
+2026-10-27. P1 remains incomplete.
 
 ## Rule and implementation
 
@@ -99,7 +99,9 @@ P1 population remains 1,456 passed, zero failed and ten unsupported out of
 1,466. Native sv-tests remains 244/344, 62 unsupported, with no previous pass
 lost. The [comparison record](../measurements/2026-10-27/container-conditional-comparison.json)
 records the one existing probe improvement and all eight added probes.
-The staged-change expectation guard passes; the topic is not committed or pushed.
+The staged-change expectation guard passed at this measurement-time checkpoint.
+Main integration is recorded separately in the
+[integration record](../measurements/2026-10-27/conditional-nba-main-integration.json).
 
 After full CI, the generator removes trailing whitespace from 136 new source
 files. Tokens, line numbers, expected outputs and implementation bytes are
