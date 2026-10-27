@@ -148,6 +148,9 @@ Value writeBits(const Value& x, const Value& pos, const Value& v);
 
 // Strings (6.16).
 
+/// Reference scanner for string.atoreal() (6.16.10, 5.7.2).
+double stringToReal(const std::string& text);
+
 /// The bytes of x as characters, the most significant first; zero bytes
 /// are dropped, and X and Z bits read as 0.
 std::string toText(const Value& x);

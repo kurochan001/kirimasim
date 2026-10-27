@@ -6215,10 +6215,12 @@ private:
             case Method::AtoOct: num(parseDigits(self, 8)); return;
             case Method::AtoBin: num(parseDigits(self, 2)); return;
             case Method::AtoReal: {
-                const std::string text(self);
-                char* end = nullptr;
-                const double d = std::strtod(text.c_str(), &end);
-                temp(in.result) = fromReal(d, rt);
+                const auto number = kernel::stringToReal(self);
+                if (!number) {
+                    sched_.resourceLimit();
+                    return;
+                }
+                temp(in.result) = fromReal(*number, rt);
                 return;
             }
             case Method::ItoA:

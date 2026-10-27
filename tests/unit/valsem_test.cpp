@@ -10,9 +10,53 @@
 
 #include <gtest/gtest.h>
 
+#include "kirimasim/kernel/strings.h"
 #include "kirimasim/valsem/value.h"
 
 namespace {
+
+TEST(StringReal, ScansOnlyTheRealConstantPrefix) {
+    struct Case {
+        const char* text;
+        double value;
+    };
+    for (const Case c : {Case{"7_2.5", 72.5},
+                         {" 4.5", 0},
+                         {".75", 0},
+                         {"", 0},
+                         {"_12", 0},
+                         {"+1.5", 0},
+                         {"-1.5", 0},
+                         {"nan", 0},
+                         {"inf", 0},
+                         {"0x1p4", 0},
+                         {"2.5e3x", 2500},
+                         {"1E-2", 0.01},
+                         {"1e+2", 100},
+                         {"1e+tail", 1},
+                         {"12.", 12},
+                         {"9__9", 99},
+                         {"1.2_3", 1.23},
+                         {"1e1_2", 1e12}}) {
+        SCOPED_TRACE(c.text);
+        EXPECT_DOUBLE_EQ(kirimasim::valsem::stringToReal(c.text), c.value);
+        const auto actual = kirimasim::kernel::stringToReal(c.text);
+        ASSERT_TRUE(actual);
+        EXPECT_DOUBLE_EQ(*actual, c.value);
+    }
+}
+
+TEST(StringReal, MatchesTheIndependentReferenceAcrossSeparatorsAndSuffixes) {
+    for (int n : {0, 1, 19, 257, 9999})
+        for (const char* separator : {"", "_", "__"})
+            for (const char* suffix : {"", "tail", "e+2", "E-2", "e+", "_5"}) {
+                const std::string text = std::to_string(n) + separator + ".25" + suffix;
+                SCOPED_TRACE(text);
+                const auto actual = kirimasim::kernel::stringToReal(text);
+                ASSERT_TRUE(actual);
+                EXPECT_DOUBLE_EQ(*actual, kirimasim::valsem::stringToReal(text));
+            }
+}
 
 using namespace kirimasim::valsem;
 

@@ -5,8 +5,20 @@
 
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
+#include <regex>
 
 namespace kirimasim::valsem {
+
+double stringToReal(const std::string& text) {
+    const std::regex syntax("^[0-9][0-9_]*(\\.[0-9][0-9_]*)?([eE][+-]?[0-9][0-9_]*)?");
+    std::smatch match;
+    if (!std::regex_search(text, match, syntax)) return 0;
+    std::string number;
+    for (const char c : match.str())
+        if (c != '_') number += c;
+    return std::strtod(number.c_str(), nullptr);
+}
 
 namespace {
 
