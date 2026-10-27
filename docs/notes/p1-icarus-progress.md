@@ -13,6 +13,19 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
+**Local uncommitted topic on `1650064d`:** [conditional dynamic-array/queue values](container-conditional-execution.md)
+add shared front lowering of short-circuit branches, independent operand snapshots,
+whole-element unknown defaults and nested content equality. New coverage has
+351 source designs across nine execution homes, a Context fixture and eight caught
+compiled faults. Both reference inventories now have 95 original probes; all
+eight additions pass natively and both Icarus versions reject them. The previous
+87 probes improve `queue_conditional` from unsupported to passed; the other 86
+retain their native status/stdout, and seven known gaps remain.
+[Full local CI](../measurements/2026-10-27/container-conditional-validation.json)
+passes 21/21 steps: dev/ASan/UBSan 6,989/6,991 and release 6,990/6,992,
+zero failures and two known skips each. Existing oracles/specifications/budgets
+are unchanged. P1 remains incomplete.
+
 **Main integration `624123b2`:** [live runtime-process limits](process-limit-execution.md)
 implement approved CLI 2.7 with one kernel admission/completion rule. Static
 processes and retained ended records do not count; over-limit children never

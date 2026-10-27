@@ -40,6 +40,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('container conditional: true branch evaluates right', 'src/front/lower_container.cpp', 'const auto a = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);', 'const auto a = snapshotValue(coerce(lowerExpr(expression.right()), type, sl), sl);'),
+    ('container conditional: unknown takes false branch', 'src/front/lower_container.cpp', 'const auto zero = emit(Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 0).op}, sl);', 'const auto zero = emit(Op::Cne, sir::u2(1), {condition.op, constant(condition.type, 1).op}, sl);'),
+    ('container conditional: left snapshot omitted', 'src/front/lower_container.cpp', 'const auto left = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);', 'const auto left = coerce(lowerExpr(expression.left()), type, sl);'),
+    ('container conditional: different lengths merge anyway', 'src/front/lower_container.cpp', '// Unequal lengths take the default value of the whole array: empty.\n    terminate(Op::BrIf, {equalSize.op, Operand::block(head), Operand::block(done)}, sl);', '// Unequal lengths take the default value of the whole array: empty.\n    terminate(Op::BrIf, {constant(sir::u2(1), 1).op, Operand::block(head), Operand::block(done)}, sl);'),
+    ('container conditional: unequal integral elements merge bits', 'src/front/lower_container.cpp', 'terminate(Op::Br, {Operand::block(append, 1), initial.op}, sl);', 'const auto incorrect = sir::isIntegral(element) ? emit(Op::Select, element, {constant(sir::u4(1), 1, 1).op, a.op, b.op}, sl) : initial;\n    terminate(Op::Br, {Operand::block(append, 1), incorrect.op}, sl);'),
+    ('container conditional: unknown equality keeps value', 'src/front/lower_container.cpp', 'return emit(Op::Ceq, sir::u2(1), {equal.op, constant(equal.type, 1).op}, sl);', 'return emit(Op::Cne, sir::u2(1), {equal.op, constant(equal.type, 0).op}, sl);'),
+    ('container conditional: copied nested arrays unequal', 'src/front/lower_container.cpp', 'const auto element = design_.types[left.type.detail.index()].value;', 'if (left.op.id != right.op.id) return constant(sir::u2(1), 0);\n    const auto element = design_.types[left.type.detail.index()].value;'),
+    ('container conditional: expression uses formal queue bound', 'src/front/lower_container.cpp', 'const auto type = unboundedContainerType(typeOf(*expression.type, sl), sl);', 'const auto type = typeOf(*expression.type, sl);'),
+
     ('process limit: admission bypassed', 'src/kernel/sim.cpp', 'limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs', 'limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs && false'),
     ('process limit: one extra live child allowed', 'src/kernel/sim.cpp', 'liveRuntime_ >= limits_.maxProcs', 'liveRuntime_ > limits_.maxProcs'),
     ('process limit: unlimited zero rejects every child', 'src/kernel/sim.cpp', 'limits_.maxProcs != 0 && liveRuntime_ >= limits_.maxProcs', 'liveRuntime_ >= limits_.maxProcs'),

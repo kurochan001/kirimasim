@@ -1,0 +1,108 @@
+{
+  "date": "2026-10-27",
+  "scope": "original finite probes and pinned native regression populations; whole-language coverage remains unconfirmed",
+  "references": {
+    "13": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 1650064d21c7), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+        "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+      },
+      "previous_probes": 87,
+      "current_probes": 95,
+      "previous_native_differences": [
+        {
+          "name": "queue_conditional",
+          "before": "run_failed",
+          "after": "passed"
+        }
+      ],
+      "previous_native_pass_losses": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "new_native_passes": [
+        "dynamic_conditional_true",
+        "dynamic_conditional_false",
+        "dynamic_conditional_unknown",
+        "dynamic_conditional_lengths",
+        "queue_conditional_true",
+        "queue_conditional_unknown",
+        "queue_conditional_unknown_elements",
+        "queue_conditional_wide_truth"
+      ]
+    },
+    "14": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 1650064d21c7), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+        "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+      },
+      "previous_probes": 87,
+      "current_probes": 95,
+      "previous_native_differences": [
+        {
+          "name": "queue_conditional",
+          "before": "run_failed",
+          "after": "passed"
+        }
+      ],
+      "previous_native_pass_losses": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "dynamic_minimum_duplicate",
+        "queue_maximum_duplicate",
+        "dynamic_minimum_with_key",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "new_native_passes": [
+        "dynamic_conditional_true",
+        "dynamic_conditional_false",
+        "dynamic_conditional_unknown",
+        "dynamic_conditional_lengths",
+        "queue_conditional_true",
+        "queue_conditional_unknown",
+        "queue_conditional_unknown_elements",
+        "queue_conditional_wide_truth"
+      ]
+    }
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "unsupported": 62,
+    "previous_pass_losses": [],
+    "prior_measurement": "process-limit-svtests.json",
+    "current_measurement": "container-conditional-svtests.json"
+  },
+  "p1_population": {
+    "total": 1466,
+    "passed": 1456,
+    "failed": 0,
+    "unsupported": 10,
+    "measurement": "container-conditional-population.txt"
+  }
+}

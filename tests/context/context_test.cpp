@@ -66,6 +66,7 @@ std::vector<Case> cases() {
         {.file = "plusargs.sv", .plusargs = {"mode=fast", "count=12"}},
         {.file = "time_limit.sv", .maxTime = 50},
         {.file = "class_static.sv"},
+        {.file = "container_conditional.sv"},
         {.file = "process_limit.sv", .maxProcs = 1},
         {.file = "process_limit.sv", .maxProcs = 2},
         {.file = "process_limit.sv", .maxProcs = 0},

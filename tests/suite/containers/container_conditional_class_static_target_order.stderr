@@ -1,0 +1,1 @@
+container_conditional_class_static_target_order.sv:22:26: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

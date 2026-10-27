@@ -287,6 +287,31 @@ endmodule
 5
 ```
 
+## 動的配列・キューの条件式
+
+[ローカルのコンテナ条件式](notes/container-conditional-execution.ja.md)は、結果の記憶域が独立する
+`?:`に対応します。既知条件は片側だけを評価します。不定条件なら左から両値を捕捉し、同じ長さの
+配列は要素全体が確実に等しい場合に残し、それ以外を型の既定値にします。異なる長さなら空です。
+整数要素をビット単位で統合する処理ではありません。次の例では4値の既定値Xを使います。
+
+```systemverilog
+module top;
+  logic [3:0] a[$], b[$], result[$];
+  logic condition;
+  initial begin
+    a = '{4'd3, 4'd6};
+    b = '{4'd3, 4'd7};
+    condition = 'x;
+    result = condition ? a : b;
+    $display("%b %b", result[0], result[1]);
+  end
+endmodule
+```
+
+```text
+0011 xxxx
+```
+
 ## 実行時の連結とキューのスライス
 
 unpacked連結では配列・キュー全体と個々の要素を組み合わせられます。

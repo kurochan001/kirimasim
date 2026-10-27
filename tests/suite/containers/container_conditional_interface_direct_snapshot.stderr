@@ -1,0 +1,1 @@
+container_conditional_interface_direct_snapshot.sv:21:45: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

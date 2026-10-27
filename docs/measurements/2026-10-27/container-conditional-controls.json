@@ -1,0 +1,108 @@
+{
+  "date": "2026-10-27",
+  "scope": "eight compiled conditional-container faults; observable source-suite failures, not registry failures",
+  "source_sha256": {
+    "src/front/lower_container.cpp": "80c178b8220dcd5379c12627a446b10a93581dd96d3b87db97a680d197636cf0"
+  },
+  "controls": [
+    {
+      "name": "container conditional: true branch evaluates right",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_automatic_effects",
+        "suite/containers/container_conditional_fork_effects",
+        "suite/containers/container_conditional_generate_effects"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\nknown_left 1 0 1 1 2\nknown_right 0 1 1 9 3\nboth 1 1 1 9 1 0\n--- got ---\nknown_left 0 1 1 9 3\nknown_right 0 1 1 9 3\nboth 1 1 1 9 1 0\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_generate_effects.sv\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_generate_effects.sv:32:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]\nr=decide(c,condition_calls)?first(a,left_calls):second(a,right_calls);\n                                  ~                    ^\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_generate_effects.sv:35:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined ["
+    },
+    {
+      "name": "container conditional: unknown takes false branch",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_initial_effects"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\nknown_left 1 0 1 1 2\nknown_right 0 1 1 9 3\nboth 1 1 1 9 1 0\n--- got ---\nknown_left 1 0 1 1 2\nknown_right 0 1 1 9 3\nboth 0 1 1 9 1 3\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_initial_effects.sv\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_initial_effects.sv:31:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]\nr=decide(c,condition_calls)?first(a,left_calls):second(a,right_calls);\n                                  ~                    ^\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_initial_effects.sv:34:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wr",
+      "sir_verifier": "passed; detection is runtime output mismatch, with both CFG branches retained"
+    },
+    {
+      "name": "container conditional: left snapshot omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_initial_direct_snapshot"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\nsnapshot 2 1 0 9\n--- got ---\nsnapshot 2 0 0 9\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_initial_direct_snapshot.sv\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_initial_direct_snapshot.sv:24:45: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]\ninitial begin a='{1,2}; c='x; r=c?a:replace(a);\n                                  ~         ^\nkirimasim: info: quiescent at 0 ns\n\n\n194/351 Test #1302: suite/containers/container_conditional_static_task_array_bit_4 ........   Passed    0.07 sec\n195/351 Test #1262: suite/containers/container_conditional_program_array_bit_32 ...........   Passed    0.07 sec\n196/351 Test #1093: suite/containers/container_conditional_fork_queue_logic_32 .."
+    },
+    {
+      "name": "container conditional: different lengths merge anyway",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_automatic_array_bit_129",
+        "suite/containers/container_conditional_automatic_array_bit_32",
+        "suite/containers/container_conditional_automatic_array_bit_4",
+        "suite/containers/container_conditional_automatic_array_bit_64",
+        "suite/containers/container_conditional_automatic_array_bit_65"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 0\nempty 0\n--- got ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 3\nempty 0\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_automatic_array_bit_64.sv\nkirimasim: info: quiescent at 0 ns\n\n\n  8/351 Test  #988: suite/containers/container_conditional_automatic_array_bit_129 ........***Failed    0.07 sec\nFAIL: standard output differs\n--- expected ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 0\nempty 0\n--- got ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 3\nempty 0\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/contai"
+    },
+    {
+      "name": "container conditional: unequal integral elements merge bits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_automatic_effects",
+        "suite/containers/container_conditional_fork_effects",
+        "suite/containers/container_conditional_generate_effects",
+        "suite/containers/container_conditional_initial_direct_snapshot"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\nknown_left 1 0 1 1 2\nknown_right 0 1 1 9 3\nboth 1 1 1 9 1 0\n--- got ---\nknown_left 1 0 1 1 2\nknown_right 0 1 1 9 3\nboth 1 1 1 9 1 2\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_generate_effects.sv\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_generate_effects.sv:32:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]\nr=decide(c,condition_calls)?first(a,left_calls):second(a,right_calls);\n                                  ~                    ^\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_generate_effects.sv:35:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined ["
+    },
+    {
+      "name": "container conditional: unknown equality keeps value",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_automatic_queue_logic_65",
+        "suite/containers/container_conditional_fork_queue_logic_1",
+        "suite/containers/container_conditional_fork_queue_logic_65",
+        "suite/containers/container_conditional_package_array_logic_65",
+        "suite/containers/container_conditional_program_array_logic_129"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 0\nempty 0\nxz_equal 1 1\nwhole_element 1\n--- got ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 0\nempty 0\nxz_equal 0 1\nwhole_element 1\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_program_array_logic_129.sv\n\n\n 20/351 Test #1091: suite/containers/container_conditional_fork_queue_logic_1 .............***Failed    0.07 sec\nFAIL: standard output differs\n--- expected ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 0\nempty 0\nxz_equal 1 1\n--- got ---\ntrue 3 1\nfalse 3 1\nunknown 3 1 1 1\nindependent 1\nhigh_z 3 1\nwide_true 1\nlength 0\nempty 0\nxz_equal 0 1\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <external-path>"
+    },
+    {
+      "name": "container conditional: copied nested arrays unequal",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_generate_nested"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\nnested 3 2 1 0 0\ndeep_copy 1\nunknown_row 0\nempty_row 1 0\nknown_copy 0 1\n--- got ---\nnested 3 0 0 0 0\ndeep_copy 1\nunknown_row 0\nempty_row 1 0\nknown_copy 0 1\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_generate_nested.sv\nkirimasim: info: quiescent at 0 ns\n\n\n 62/351 Test #1009: suite/containers/container_conditional_automatic_queue_bit_32 .........   Passed    0.07 sec\n 63/351 Test #1268: suite/containers/container_conditional_program_array_logic_32 .........   Passed    0.07 sec\n 64/351 Test #1266: suite/containers/container_conditional_program_array_logic_1 ..........   Passed    0.07 sec\n 65/351 Test #1007: suite/containers/container_conditional_automatic_queue_bit_1 ..........   Passed    0.07 sec\n 66/351 Test #1184: suite/containers/container_conditional_interface_array_bit_32 .........   Passed    0."
+    },
+    {
+      "name": "container conditional: expression uses formal queue bound",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "suite/containers/container_conditional_fork_bounds"
+      ],
+      "failure_excerpt": "FAIL: standard output differs\n--- expected ---\nunbounded_expression 4 6\nactual_bounds 4 6\ndifferent_bounds 0\n--- got ---\nunbounded_expression 2 0\nactual_bounds 4 6\ndifferent_bounds 2\nFAIL: warning and error lines differ\n--- expected ---\n\n--- got ---\ncontainer_conditional_fork_bounds.sv:22:51: warning: queue operation exceeds its declared bound\ncontainer_conditional_fork_bounds.sv:25:9: warning: queue operation exceeds its declared bound\n--- stderr ---\nkirimasim: info: kirimasim 0.0.0 (commit 1650064d21c7) seed=0 args: --top=top <worktree>/tests/suite/containers/container_conditional_fork_bounds.sv\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_fork_bounds.sv:22:51: warning: queue operation exceeds its declared bound\n../../../../../../..<worktree>/tests/suite/containers/container_conditional_fork_bounds.sv:25:9: warning: queue operation exceeds its declared "
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_sha256": {
+    "src/front/lower_container.cpp": "80c178b8220dcd5379c12627a446b10a93581dd96d3b87db97a680d197636cf0"
+  },
+  "sources_restored": true
+}

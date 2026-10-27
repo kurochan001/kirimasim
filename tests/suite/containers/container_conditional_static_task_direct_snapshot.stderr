@@ -1,0 +1,1 @@
+container_conditional_static_task_direct_snapshot.sv:24:43: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

@@ -972,7 +972,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::BinaryOp: return lowerBinary(e);
         case ast::ExpressionKind::ConditionalOp: {
             const auto& c = e.as<ast::ConditionalExpression>();
-            if (isDynamicContainer(*e.type)) unsupported(sl, "dynamic container conditional value");
+            if (isDynamicContainer(*e.type)) return lowerContainerConditional(c, sl);
             if (c.conditions.size() != 1 || c.conditions[0].pattern != nullptr)
                 unsupported(sl, "conditional operator with a pattern");
             const Type rt = typeOf(*e.type, sl);

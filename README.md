@@ -98,6 +98,12 @@ sensitivity are among the remaining forms. See the
 [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
 and [approved contract](docs/notes/dynamic-containers-proposal.md).
 
+A local, uncommitted [conditional-container implementation](docs/notes/container-conditional-execution.md)
+adds `?:` for supported dynamic arrays/queues, including unknown-condition
+whole-element defaults, snapshots and nested contents. Its 351 original designs
+span nine execution homes; [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)
+passes all 21 steps. Existing feature coverage remains partial.
+
 The [shared strength resolver](docs/notes/strength-range-foundation.md) now
 retains complete intervals before value projection, with exhaustive interval
 pair checks. [Directed MOS source execution](docs/notes/source-mos-execution.md)
@@ -291,11 +297,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 6,639 | 6,637, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 6,991 | 6,989, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 658, `tests/suite/` 5,755 (made by 146 generators under `tools/`), tools 163, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 658, `tests/suite/` 6,106 (made by 147 generators under `tools/`), tools 164, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -700,8 +706,8 @@ record implemented forms, evidence and limitations.
   NBA, including repeat counts and retained targets/values; event-controlled
   nonblocking event triggers; named-fork disable and `wait_order`.
 - **Dynamic data and array methods:** associative arrays; remaining dynamic
-  array/queue forms such as queue-slice assignment, conditional container
-  expressions, additional search/shuffle methods, mixed/omitted-index `foreach`,
+  array/queue forms such as queue-slice assignment, additional search/shuffle
+  methods, mixed/omitted-index `foreach`,
   nested/runtime dimension queries and unsupported aggregate/class/event element
   representations. Container-dependent implicit sensitivity and effectful or
   unverified-pure ordering keys also remain unsupported. Existing construction,

@@ -193,6 +193,9 @@ public:
     Val snapshotValue(const Val& value, slang::SourceLocation sl);
     Val lowerContainerValue(const ast::Expression& e);
     Val lowerQueueSlice(const ast::Expression&, slang::SourceLocation);
+    Val lowerContainerConditional(const ast::ConditionalExpression&, slang::SourceLocation);
+    Val definitelyEqualValues(const Val&, const Val&, slang::SourceLocation);
+    Val mergeContainerConditional(const Val&, const Val&, slang::SourceLocation);
     sir::Type sequenceBufferType(sir::Type element);
     void appendContainerSequence(sir::Type buffer, const Val& receiver, const Val& source,
                                  slang::SourceLocation sl);

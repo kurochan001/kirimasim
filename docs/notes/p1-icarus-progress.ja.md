@@ -12,6 +12,16 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
+**`1650064d`を基にしたローカルの未コミット作業：** [動的配列・キューの条件式](container-conditional-execution.ja.md)を
+共通front処理で実装し、片側評価・独立したsnapshot・不定条件の要素全体の既定値・入れ子の内容比較を
+扱います。独自351設計が実行場所9種類を横断し、Context設計とコンパイルした8故障の検出も通ります。
+両参照との独自比較項目は95件になり、新規8件はnativeで成功・両Icarusでは拒否されます。
+以前の87項目中`queue_conditional`が未対応から成功へ改善し、他の86項目のnative状態・stdoutは
+維持しました。既知の差分7件は残ります。
+[全local CI](../measurements/2026-10-27/container-conditional-validation.json)は21/21成功、
+dev/ASan/UBSanは各6,989/6,991、releaseは6,990/6,992、失敗0・既知skip各2件です。
+既存の期待値・仕様・予算は変えません。P1は未完です。
+
 **main取り込み `624123b2`：** [未終了のruntime processの上限](process-limit-execution.ja.md)を、
 承認済みCLI 2.7に従って実装します。共有kernelの登録・終了の規則で、静的プロセス・終了後の
 保持記録は数えず、上限を超える子は開始しません。独自90設計、CLI契約13条件、kernel単体10件、

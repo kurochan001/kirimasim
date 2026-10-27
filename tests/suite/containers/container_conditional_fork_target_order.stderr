@@ -1,0 +1,1 @@
+container_conditional_fork_target_order.sv:25:26: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

@@ -253,6 +253,37 @@ EXTENDED.extend([
 ])
 
 
+# Original conditional-container probes extend the earlier 87-case inventory.
+# The relative order of effectful operands is tested in the source matrix,
+# not assumed to be the same in a reference simulator.
+EXTENDED.extend([
+    ("dynamic_conditional_true", "11.4.11",
+     "module top;logic[3:0] a[],b[],r[];logic c;initial begin a=new[2];b=new[1];a[0]=3;a[1]=7;b[0]=9;c=1;r=c?a:b;$display(\"%0d %h %h\",r.size(),r[0],r[1]);end endmodule",
+     "2 3 7\n", []),
+    ("dynamic_conditional_false", "11.4.11",
+     "module top;logic[3:0] a[],b[],r[];logic c;initial begin a=new[1];b=new[2];a[0]=3;b[0]=5;b[1]=6;c=0;r=c?a:b;$display(\"%0d %h %h\",r.size(),r[0],r[1]);end endmodule",
+     "2 5 6\n", []),
+    ("dynamic_conditional_unknown", "11.4.11",
+     "module top;logic[3:0] a[],b[],r[];logic c;initial begin a=new[2];b=new[2];a[0]=3;a[1]=6;b[0]=3;b[1]=7;c='x;r=c?a:b;$display(\"%0d %b %b\",r.size(),r[0],r[1]);end endmodule",
+     "2 0011 xxxx\n", []),
+    ("dynamic_conditional_lengths", "11.4.11",
+     "module top;bit[3:0] a[],b[],r[];logic c;initial begin a=new[1];b=new[2];c='z;r=c?a:b;$display(\"%0d\",r.size());end endmodule",
+     "0\n", []),
+    ("queue_conditional_true", "11.4.11",
+     "module top;bit[3:0] a[$],b[$],r[$];logic c;initial begin a.push_back(3);a.push_back(7);b.push_back(9);c=1;r=c?a:b;r[0]=0;$display(\"%0d %h %h %h\",r.size(),r[0],r[1],a[0]);end endmodule",
+     "2 0 7 3\n", []),
+    ("queue_conditional_unknown", "11.4.11",
+     "module top;logic[3:0] a[$],b[$],r[$];logic c;initial begin a.push_back(3);a.push_back(6);b.push_back(3);b.push_back(7);c='z;r=c?a:b;$display(\"%0d %b %b\",r.size(),r[0],r[1]);end endmodule",
+     "2 0011 xxxx\n", []),
+    ("queue_conditional_unknown_elements", "11.4.11",
+     "module top;logic[3:0] a[$],b[$],r[$];logic c;initial begin a.push_back(4'bzzzz);a.push_back(4'b0x01);b=a;c='x;r=c?a:b;$display(\"%b %b\",r[0],r[1]);end endmodule",
+     "xxxx xxxx\n", []),
+    ("queue_conditional_wide_truth", "11.4.11",
+     "module top;bit[3:0] a[$],b[$],r[$];logic[128:0] c;initial begin a.push_back(3);b.push_back(7);c='x;c[128]=1;r=c?a:b;$display(\"%0d %h\",r.size(),r[0]);end endmodule",
+     "1 3\n", []),
+])
+
+
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
     # Compiler abort diagnostics can name the reference installation and

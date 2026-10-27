@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-27",
+  "scope": "staged implementation/tests checked through an unattached commit object; branch history unchanged",
+  "base": "1650064d21c70e70545e4258ae649b0d9ff3cc6a",
+  "tree": "4cfab8057376e446125c840b4651947cbe5a1335",
+  "guard_exit": 0,
+  "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+}

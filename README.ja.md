@@ -72,6 +72,11 @@ frontの定数・runtime書式引数への接続は残っているため、ソ�
 [実装状況](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)と
 [承認済みの契約](docs/notes/dynamic-containers-proposal.ja.md)を参照してください。
 
+ローカルの未コミット作業で[コンテナの条件式](docs/notes/container-conditional-execution.ja.md)を
+追加しました。対応済みの動的配列・キューで`?:`を実行し、不定条件での要素全体の既定値、
+snapshot、入れ子の内容比較を扱います。独自351設計が実行場所9種類を横断し、
+[local CI](docs/measurements/2026-10-27/container-conditional-validation.json)は21項目すべて成功しました。全面対応ではありません。
+
 [共通の強さの解決処理](docs/notes/strength-range-foundation.ja.md)は、値への射影前の
 完全な区間を保持できるようにし、全区間ペアで検査しました。
 [方向付きMOSのソース実行](docs/notes/source-mos-execution.ja.md)は通常driverを取り込み、
@@ -232,11 +237,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 6,639 | 6,637、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 6,991 | 6,989、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）658、`tests/suite/` 5,755（`tools/` の 146 個の生成器が作る）、道具 163、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 16。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）658、`tests/suite/` 6,106（`tools/` の 147 個の生成器が作る）、道具 164、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 16。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -513,7 +518,7 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
   回収は実装済みです。過去の拒否期待値の移行は承認を記録し、実装と別に保持します。
 - **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
   イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。
-- **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、コンテナの条件式、
+- **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、
   その他の検索/shuffle、固定/動的次元の混在・添字省略の`foreach`、実行時/入れ子の次元クエリ、
   未対応の固定複合型・class・eventの要素表現。コンテナに依存する暗黙感度と、副作用を持つ、
   または純粋性未確認の整列キーも未対応です。構築・コピー・ref・明示待機・縮約・整列・min/maxは、

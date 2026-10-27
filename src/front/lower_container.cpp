@@ -12,6 +12,7 @@
 
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/MiscExpressions.h"
+#include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/expressions/SelectExpressions.h"
 
 namespace kirimasim::front {
@@ -221,6 +222,126 @@ Val Lowerer::lowerQueueSlice(const ast::Expression& expression, slang::SourceLoc
         emit(Op::RefMake, sir::refType(buffer.detail), {Operand::frame(storage)}, sl);
     appendContainerRange(buffer, receiver, source, first, limit, sl);
     return coerce(emit(Op::Fload, buffer, {Operand::frame(storage)}, sl), type, sl);
+}
+
+// Conditional arrays compare complete elements with ==, keeping an element
+// only when equality is definitely true (VALUE_SEMANTICS 3.9/3.14). Nested
+// containers compare their contents, never the implementation's handles.
+Val Lowerer::definitelyEqualValues(const Val& left, const Val& right, slang::SourceLocation sl) {
+    checkStack(sl);
+    if (!sir::isContainer(left.type)) {
+        const auto equal = compareValues(Op::Eq, left, right, sl);
+        return emit(Op::Ceq, sir::u2(1), {equal.op, constant(equal.type, 1).op}, sl);
+    }
+    const auto element = design_.types[left.type.detail.index()].value;
+    const auto indexType = sir::u2(64);
+    const auto count = emit(Op::ContainerSize, indexType, {left.op}, sl);
+    const auto other = emit(Op::ContainerSize, indexType, {right.op}, sl);
+    const auto equalSize = emit(Op::Eq, sir::u2(1), {count.op, other.op}, sl);
+    const auto index = newFrameVar(indexType);
+    emitVoid(Op::Fstore, {Operand::frame(index), constant(indexType, 0).op}, sl);
+    const auto head = newBlock(), body = newBlock(), advance = newBlock(), yes = newBlock(),
+               no = newBlock(), done = newBlock();
+    const auto result = blockParam(done, sir::u2(1));
+    terminate(Op::BrIf, {equalSize.op, Operand::block(head), Operand::block(no)}, sl);
+    setBlock(head);
+    const auto current = emit(Op::Fload, indexType, {Operand::frame(index)}, sl);
+    const auto more = emit(Op::Lt, sir::u2(1), {current.op, count.op}, sl);
+    terminate(Op::BrIf, {more.op, Operand::block(body), Operand::block(yes)}, sl);
+    setBlock(body);
+    const auto a = emit(Op::ContainerRead, element, {left.op, current.op}, sl);
+    const auto b = emit(Op::ContainerRead, element, {right.op, current.op}, sl);
+    const auto same = definitelyEqualValues(a, b, sl);
+    terminate(Op::BrIf, {same.op, Operand::block(advance), Operand::block(no)}, sl);
+    setBlock(advance);
+    const auto next = emit(Op::Add, indexType, {current.op, constant(indexType, 1).op}, sl);
+    emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
+    jump(head, sl);
+    setBlock(yes);
+    terminate(Op::Br, {Operand::block(done, 1), constant(sir::u2(1), 1).op}, sl);
+    setBlock(no);
+    terminate(Op::Br, {Operand::block(done, 1), constant(sir::u2(1), 0).op}, sl);
+    setBlock(done);
+    return result;
+}
+
+Val Lowerer::mergeContainerConditional(const Val& left, const Val& right,
+                                       slang::SourceLocation sl) {
+    const auto type = left.type;
+    const auto element = design_.types[type.detail.index()].value;
+    const auto buffer = sequenceBufferType(element);
+    const auto storage = newFrameVar(buffer);
+    emitVoid(Op::Fstore, {Operand::frame(storage), constant(buffer, 0).op}, sl);
+    const auto receiver =
+        emit(Op::RefMake, sir::refType(buffer.detail), {Operand::frame(storage)}, sl);
+    const auto indexType = sir::u2(64);
+    const auto count = emit(Op::ContainerSize, indexType, {left.op}, sl);
+    const auto other = emit(Op::ContainerSize, indexType, {right.op}, sl);
+    const auto equalSize = emit(Op::Eq, sir::u2(1), {count.op, other.op}, sl);
+    const auto index = newFrameVar(indexType);
+    emitVoid(Op::Fstore, {Operand::frame(index), constant(indexType, 0).op}, sl);
+    const auto head = newBlock(), body = newBlock(), keep = newBlock(), fallback = newBlock(),
+               append = newBlock(), done = newBlock();
+    // Unequal lengths take the default value of the whole array: empty.
+    terminate(Op::BrIf, {equalSize.op, Operand::block(head), Operand::block(done)}, sl);
+    setBlock(head);
+    const auto current = emit(Op::Fload, indexType, {Operand::frame(index)}, sl);
+    const auto more = emit(Op::Lt, sir::u2(1), {current.op, count.op}, sl);
+    terminate(Op::BrIf, {more.op, Operand::block(body), Operand::block(done)}, sl);
+    setBlock(body);
+    const auto a = emit(Op::ContainerRead, element, {left.op, current.op}, sl);
+    const auto b = emit(Op::ContainerRead, element, {right.op, current.op}, sl);
+    const auto equal = definitelyEqualValues(a, b, sl);
+    const auto value = blockParam(append, element);
+    terminate(Op::BrIf, {equal.op, Operand::block(keep), Operand::block(fallback)}, sl);
+    setBlock(keep);
+    terminate(Op::Br, {Operand::block(append, 1), a.op}, sl);
+    setBlock(fallback);
+    const auto initial = element.kind == sir::TypeKind::String ? stringConstant("")
+                         : sir::isFourState(element)           ? allXConstant(element)
+                                                               : constant(element, 0);
+    terminate(Op::Br, {Operand::block(append, 1), initial.op}, sl);
+    setBlock(append);
+    emitVoid(Op::QueuePushBack, {Operand::typeRow(buffer.detail), receiver.op, value.op}, sl);
+    const auto next = emit(Op::Add, indexType, {current.op, constant(indexType, 1).op}, sl);
+    emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
+    jump(head, sl);
+    setBlock(done);
+    return coerce(emit(Op::Fload, buffer, {Operand::frame(storage)}, sl), type, sl);
+}
+
+Val Lowerer::lowerContainerConditional(const ast::ConditionalExpression& expression,
+                                       slang::SourceLocation sl) {
+    if (expression.conditions.size() != 1 || expression.conditions[0].pattern != nullptr)
+        unsupported(sl, "conditional operator with a pattern");
+    // Expressions retain all values; only a language assignment applies the
+    // actual destination's bounds, including the bounds of nested queues.
+    const auto type = unboundedContainerType(typeOf(*expression.type, sl), sl);
+    auto condition = lowerExpr(*expression.conditions[0].expr);
+    condition = emit(Op::Truth, sir::isFourState(condition.type) ? sir::u4(1) : sir::u2(1),
+                     {condition.op}, sl);
+    const auto first = newBlock(), notOne = newBlock(), second = newBlock(), both = newBlock(),
+               done = newBlock();
+    const auto result = blockParam(done, type);
+    const auto one = emit(Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 1).op}, sl);
+    terminate(Op::BrIf, {one.op, Operand::block(first), Operand::block(notOne)}, sl);
+    setBlock(notOne);
+    const auto zero = emit(Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 0).op}, sl);
+    terminate(Op::BrIf, {zero.op, Operand::block(second), Operand::block(both)}, sl);
+    setBlock(first);
+    const auto a = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);
+    terminate(Op::Br, {Operand::block(done, 1), a.op}, sl);
+    setBlock(second);
+    const auto b = snapshotValue(coerce(lowerExpr(expression.right()), type, sl), sl);
+    terminate(Op::Br, {Operand::block(done, 1), b.op}, sl);
+    setBlock(both);
+    // Capture the entire left value before evaluating the right expression.
+    const auto left = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);
+    const auto right = snapshotValue(coerce(lowerExpr(expression.right()), type, sl), sl);
+    const auto merged = mergeContainerConditional(left, right, sl);
+    terminate(Op::Br, {Operand::block(done, 1), merged.op}, sl);
+    setBlock(done);
+    return result;
 }
 
 Val Lowerer::lowerContainerValue(const ast::Expression& e) {

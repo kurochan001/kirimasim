@@ -1,0 +1,3 @@
+container_conditional_automatic_effects.sv:31:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
+container_conditional_automatic_effects.sv:34:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
+container_conditional_automatic_effects.sv:37:56: warning: 'a' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]

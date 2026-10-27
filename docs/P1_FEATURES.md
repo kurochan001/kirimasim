@@ -304,6 +304,33 @@ endmodule
 5
 ```
 
+## Conditional dynamic arrays and queues
+
+The [local conditional-container implementation](notes/container-conditional-execution.md)
+supports `?:` with independent result storage. A known condition evaluates only
+one branch. An unknown condition captures both values left to right; equal-length
+arrays retain definitely equal whole elements and replace other elements with
+their type defaults. Different lengths return empty. Integral array elements
+are not merged bit by bit. This source uses the four-state default X.
+
+```systemverilog
+module top;
+  logic [3:0] a[$], b[$], result[$];
+  logic condition;
+  initial begin
+    a = '{4'd3, 4'd6};
+    b = '{4'd3, 4'd7};
+    condition = 'x;
+    result = condition ? a : b;
+    $display("%b %b", result[0], result[1]);
+  end
+endmodule
+```
+
+```text
+0011 xxxx
+```
+
 ## Runtime concatenation and queue slices
 
 Unpacked concatenation combines whole array/queue values with individual

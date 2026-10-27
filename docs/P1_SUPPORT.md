@@ -389,8 +389,18 @@ errors. Existing source bodies and expectations are unchanged.
   waits/continue in the body; first-dimension `$size`, `$left`, `$right`, `$low`,
   `$high` and `$increment` queries.
 
+The local, uncommitted [conditional-container work](notes/container-conditional-execution.md)
+adds `?:` for supported dynamic-array/queue representations: known conditions
+evaluate one side, unknown conditions capture both left to right; unequal lengths
+return empty and unequal/unknown-equal elements take their type default. Nested
+elements compare contents and the result has independent storage. Its 351 source
+cases span nine execution homes, refs, functions, delayed NBAs and explicit waits.
+Unsupported element representations and mixed fixed/dynamic operand forms remain
+unimplemented or unconfirmed. Existing conditional fixed-aggregate lowering is
+separate and unchanged.
+
 Remaining forms include queue slices as assignment targets,
-container conditional values, other locator methods and shuffle, mixed
+other locator methods and shuffle, mixed
 or omitted dynamic foreach dimensions, runtime/nested query dimensions and
 fixed-aggregate/class/event elements. Implicit sensitivity (`always_comb`,
 `always_latch`, `always @*`, continuous assignments) to container values gives

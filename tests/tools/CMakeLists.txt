@@ -17,6 +17,10 @@ add_test(NAME tools/gen_container_sequence_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_container_sequence_matrix.py --check)
 set_tests_properties(tools/gen_container_sequence_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_container_conditional_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_container_conditional_matrix.py --check)
+set_tests_properties(tools/gen_container_conditional_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_dynamic_container_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_dynamic_container_matrix.py --check)
 set_tests_properties(tools/gen_dynamic_container_matrix PROPERTIES LABELS Tools)
