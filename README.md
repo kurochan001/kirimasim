@@ -338,7 +338,7 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | Criterion | Now | Met |
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 244, Icarus Verilog 211; macOS: kirimasim 244, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
-| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,450 pass (98.9%), 6 fail; 10 stop at constructs of later work | Yes |
+| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,456 pass (99.3%), 0 fail; 10 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 | Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 95 original probes, 6 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (6 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
@@ -349,7 +349,7 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 | --- | --- | --- | --- | --- |
 | This repository's tests (CTest, dev configuration) | 8,160 | 8,158, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
-| Own test suite, P1 population | 1,466 | 1,450 | 1,274 | 1,329 |
+| Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
 This repository's tests by kind: unit tests (GoogleTest) 792, `tests/suite/` 7,132 (made by 151 generators under `tools/`), tools 170, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
 <!-- counts:end -->

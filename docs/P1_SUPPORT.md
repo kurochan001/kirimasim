@@ -55,13 +55,10 @@ For build instructions and completion criteria, see the [README](../README.md).
 `string.atoreal()` reads one leading sign again (VALUE_SEMANTICS.md 7.6,
 approved 2026-10-28); the four population tests that failed on `13fe2b65`
 and in the [dependency comparison](notes/slang-e2d1021-update.md) pass.
-Known population gap: `atoi`, `atohex`, `atooct` and `atobin` read a leading
-minus as slang does (VALUE_SEMANTICS.md 7.6, amended 2026-10-28), and six
-frozen population tests (`ch6/test_string_atoi`, `ch6/test_string_atoi_2`,
-`ch6/test_string_conversion`, `ch6/test_string_edge`,
-`ch6/test_string_functions_comprehensive`, `ch6/test_string_ops_edge_cases`)
-still expect 0 for a negative string, the earlier reading, until the test
-suite changes. String-method support below is a tested subset.
+`atoi`, `atohex`, `atooct` and `atobin` read a leading minus as slang does
+(VALUE_SEMANTICS.md 7.6, amended 2026-10-28); the six population tests that
+expected 0 for a negative string accept either reading since kirimasim-tests
+`41085fe3`. String-method support below is a tested subset.
 
 ## Language and execution
 
