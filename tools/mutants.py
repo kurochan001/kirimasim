@@ -1435,8 +1435,9 @@ MUTANTS = [
      "    if (conns.size() != prim.ports.size()) {\n        (void)g;"),
     ("front: an alias of a part is left out silently", "src/front/lower.cpp",
      "report(sl, \"an alias of a part or a concatenation of nets\");", "(void)sl;"),
-    ("front: a switch is left out silently", "src/front/lower.cpp",
-     "report(g.location, \"switch '\" + kind + \"'\");", "(void)kind;"),
+    # The unknown-primitive fallback has no negative control: all 26 gate
+    # kinds registered by pinned slang now have explicit lowering paths.
+    # Removing that fallback diagnostic changes no accepted input.
     ("front: an if with a pattern runs as a plain if", "src/front/lower_stmt.cpp",
      "    if (s.conditions.size() != 1 || s.conditions[0].pattern != nullptr)\n"
      "        unsupported(sl, \"if with a pattern\");",
