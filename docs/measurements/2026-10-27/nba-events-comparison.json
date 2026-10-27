@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T01:01:51.219887+00:00",
+  "scope": "concrete shared-kernel control/origin foundation; source event-NBA remains unsupported; no feature gap is claimed closed",
+  "binary_sha256": "8bd37e705c19b510d9b45ed751ec8e600f204557ae64578fa8ad949088a3f552",
+  "input_commits": {
+    "population": "179c55de9c83846be0b7f1c1c79c456fab1d39bd",
+    "svtests": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78"
+  },
+  "population": {
+    "total": 1466,
+    "passed": 1456,
+    "failed": 0,
+    "unsupported": 10,
+    "measurement": "nba-events-population.txt"
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "unsupported": 62,
+    "previous_pass_losses": [],
+    "previous_measurement": "nba-payload-svtests.json",
+    "current_measurement": "nba-events-svtests.json"
+  },
+  "references": {
+    "13": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 31731f906fc0), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+        "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+      },
+      "count": 95,
+      "native_status_stdout_differences": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "prior_measurement": "icarus13-nba-payload-probes.json",
+      "current_measurement": "icarus13-nba-events-probes.json"
+    },
+    "14": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 31731f906fc0), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+        "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+      },
+      "count": 95,
+      "native_status_stdout_differences": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "dynamic_minimum_duplicate",
+        "queue_maximum_duplicate",
+        "dynamic_minimum_with_key",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "prior_measurement": "icarus14-nba-payload-probes.json",
+      "current_measurement": "icarus14-nba-events-probes.json"
+    }
+  }
+}

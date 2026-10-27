@@ -249,6 +249,7 @@ void Scheduler::deliverEventValue(const Event& event) {
         fail("invalid pending event trigger");
 }
 void Scheduler::cancelManagedEventOperations() noexcept {
+    cancelManagedNbaEvents();
     if (!usedEventValues_) return;
     for (std::uint32_t i = 0; i < pendingEventValues_.size(); ++i)
         releaseEventValue(i);

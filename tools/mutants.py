@@ -40,6 +40,24 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('NBA event: stale generation cancels a reused control', 'src/kernel/nba_event.cpp', 'nbaEvents_[ticket.index].serial == ticket.serial &&', 'nbaEvents_[ticket.index].serial != 0 &&'),
+    ('NBA event: slot-only notifications omitted', 'src/kernel/sim.cpp', '(liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&\n                          !nbaEventSlots_[s.index()].empty())', '(false && liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&\n                          !nbaEventSlots_[s.index()].empty())'),
+    ('NBA event: negative count waits', 'src/kernel/nba_event.cpp', 'if (unknown || negative || !nonzero)', 'if (unknown || (negative && false) || !nonzero)'),
+    ('NBA event: unknown count waits', 'src/kernel/nba_event.cpp', 'if (unknown || negative || !nonzero)', 'if ((unknown && false) || negative || !nonzero)'),
+    ('NBA event: repeat count replaced with one', 'src/kernel/nba_event.cpp', 'staged.remaining.back() &= topMask(repeat.width);', 'staged.remaining.assign(staged.remaining.size(), 0);\n        staged.remaining[0] = 1;'),
+    ('NBA event: top padding becomes a count bit', 'src/kernel/nba_event.cpp', 'staged.remaining.back() &= topMask(repeat.width);', 'staged.remaining.back() |= ~topMask(repeat.width);'),
+    ('NBA event: false iff qualifies', 'src/kernel/nba_event.cpp', 'accepted = guard(toC(ctx_), frame) != 0;', 'accepted = (guard(toC(ctx_), frame), true);'),
+    ('NBA event: OR items short circuit', 'src/kernel/nba_event.cpp', 'qualified = qualified || accepted;', 'qualified = qualified || accepted;\n            if (qualified) break;'),
+    ('NBA event: notification decrements twice', 'src/kernel/nba_event.cpp', 'if (detail::decrementNbaCount(nbaEvents_[ticket.index].remaining))', 'if (detail::decrementNbaCount(nbaEvents_[ticket.index].remaining) ||\n            detail::decrementNbaCount(nbaEvents_[ticket.index].remaining))'),
+    ('NBA event: callback cleanup happens before return', 'src/kernel/nba_event.cpp', 'record.callbacks != 0)', '(record.callbacks != 0 && false))'),
+    ('NBA event: managed object pin is dropped', 'src/kernel/nba_event.cpp', 'bound.binding = std::move(binding.value);', 'bound.binding.event = binding.value.event;'),
+    ('NBA event: origin record released while pinned', 'src/kernel/sim.cpp', 'if (hasCallbackOrigins(p)) return;', 'if (hasCallbackOrigins(p) && false) return;'),
+    ('NBA event: origin release epoch is lost', 'src/kernel/nba_event.cpp', 'if (--processes_[origin.index()].nbaOrigins == 0) ++callbackReleaseEpoch_;', 'if ((--processes_[origin.index()].nbaOrigins, false)) ++callbackReleaseEpoch_;'),
+    ('NBA event: cancellation publishes a new control', 'src/kernel/nba_event.cpp', 'if (ending_ || runningFinal_ || cancelingNbaEvents_)', 'if (ending_ || runningFinal_ || (cancelingNbaEvents_ && false))'),
+    ('NBA event: wide countdown borrow stops early', 'src/kernel/include/kirimasim/kernel/nba.h', 'if (before != 0) break;', 'if (before == 0) break;'),
+    ('NBA event: VM ignores callback origin retention', 'src/vm/vm.cpp', 'if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId) ||\n            sched_.hasCallbackOrigins(f.kernelId)) {', 'if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId)) {'),
+    ('NBA event: VM omits finished pinned frame roots', 'src/vm/vm.cpp', 'if (f.released || ((f.finished || sched_.finished(f.kernelId)) &&\n                               !sched_.hasCallbackOrigins(f.kernelId)))', 'if (f.released || f.finished || sched_.finished(f.kernelId))'),
+    ('NBA event: VM never revisits released origins', 'src/vm/vm.cpp', 'callbackReleaseEpoch_ = epoch;\n        sweep();', 'callbackReleaseEpoch_ = epoch;'),
     ('NBA payload: captured words replaced with zero', 'src/kernel/nba.cpp', 'staged.value.insert(staged.value.end(), write.value.begin(), write.value.end());', 'staged.value.resize(staged.value.size() + write.value.size(), 0);'),
     ('NBA payload: issuer group lost', 'src/kernel/nba.cpp', 'record.group = processes_[origin.index()].group;', 'record.group = Group::Active;'),
     ('NBA payload: readiness order replaces issue order', 'src/kernel/nba.cpp', 'enqueueNba(region, {Kind::NbaCaptured, region, ticket.index, ticket.serial}, issue);', 'enqueueNba(region, {Kind::NbaCaptured, region, ticket.index, ticket.serial}, issue == 0 ? 0 : nextNbaIssue_ - 1);'),
@@ -1444,8 +1462,9 @@ MUTANTS = [
      "static_cast<std::uint32_t>(f.syncCalls.size()),\n"
      "                                            f.children.size(), act_.varsId, activationDepth(act_.varsId)});"),
     ("vm: a process is released while the kernel holds its reports", "src/vm/vm.cpp",
-     "if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId)) {",
-     "if (&f == running_ || f.nativeDepth != 0) {"),
+     "if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId) ||\n"
+     "            sched_.hasCallbackOrigins(f.kernelId)) {",
+     "if (&f == running_ || f.nativeDepth != 0 || sched_.hasCallbackOrigins(f.kernelId)) {"),
     ("vm: a function's result wider than 64 bits keeps its low chunk", "src/vm/vm.cpp",
      "if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);",
      "(void)retWide_;"),

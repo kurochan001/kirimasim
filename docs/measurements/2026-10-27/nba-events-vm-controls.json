@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-27",
+  "scope": "three compiled VM-origin faults after adding a second VM entry to exercise deferred reclamation",
+  "source_sha256": {
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961"
+  },
+  "controls": [
+    {
+      "name": "NBA event: VM ignores callback origin retention",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "FailureStopsBeforeAnyPayloadUpdate\n      Start 20: NbaEvent.EmptyPayloadStillEvaluatesControlAndGuard\n      Start  7: NbaEvent.CountIsCopiedAtFullWidthAndPaddingIsIgnored\n 6/32 Test #27: NbaEvent.ContextsDoNotShareSubscriptionsCountersOrOrigins ...................................   Passed    0.00 sec\n      Start 11: NbaEvent.InvalidCountsAndPartsLeavePayloadAndCleanupWithCaller\n 7/32 Test #26: NbaEvent.DestructionReleasesControlsBeforeCallbackFramesAndManagedStorage ...................   Passed    0.00 sec\n      Start 18: NbaEvent.ManagedBindingsPinCapturedObjectsAndManagedCancellationLeavesLegacyControls\n 8/32 Test #16: NbaEvent.CallbackWritesAreSeparateDeferredNotificationsWithoutRecursiveMatching .............   Passed    0.00 sec\n      Start 13: NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl\n 9/32 Test #25: NbaEvent.NotificationAllocationFailureStopsBefo"
+    },
+    {
+      "name": "NBA event: VM omits finished pinned frame roots",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\nExpected: (c.heap().stats().containers) > (0U), actual: 0 vs 0\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:100: Failure\nExpected: (c.heap().stats().cells) >= (2U), actual: 0 vs 2\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:99: Failure\nExpected: (c.heap().stats().containers) > (0U), actual: 0 vs 0\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:100: Failure\nExpected: (c.heap().stats().cells) >= (2U), actual: 0 vs 2\n\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary (0 ms)\n[----------] 1 test from VmNbaOrigin (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUn"
+    },
+    {
+      "name": "NBA event: VM never revisits released origins",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\nValue of: first == f.origin || second == f.origin\n  Actual: false\nExpected: true\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:115: Failure\nValue of: first == f.origin || second == f.origin\n  Actual: false\nExpected: true\n\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary (0 ms)\n[----------] 1 test from VmNbaOrigin (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n\n 1 FAILED TEST\n\n 2/32 Test #12: NbaEvent.BoundPayloadCannotBeReadiedDiscardedOrBoundTwice ...................................   Passed    0.00 sec\n 3/32 Test #27: NbaEvent.ContextsDoNotShareSubscriptionsCountersOrOrigin"
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_sha256": {
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961"
+  },
+  "sources_restored": true
+}

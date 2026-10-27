@@ -81,9 +81,15 @@ mainへ[コンテナの条件式](docs/notes/container-conditional-execution.ja.
 snapshot、入れ子の内容比較を扱います。独自351設計が実行場所9種類を横断し、
 [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)は21項目すべて成功しました。全面対応ではありません。
 
+ローカルの[具体的なイベント購読](docs/notes/event-nba-concrete-controls.ja.md)で、固定slot・名前付きイベントの
+継続的な購読、全幅の回数、callback元の保持を実装しました。式monitorとSIR/front/VMのソース実行への
+転送は残作業です。[ローカル検証](docs/measurements/2026-10-27/nba-events-validation.json)では
+CI全21項目、新規kernel/SIR-nativeテスト33件とコンパイルした18故障の検出が成功しました。
+
 mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
-値の所有と保留中の発行順を追加し、独立した単体24件で検査します。イベント購読、callback元の
-保持、ソースの`nba.event`転送は残り、ソースからのイベント制御付きNBAは引き続き未対応です。
+値の所有と保留中の発行順を追加し、独立した単体24件で検査します。上のローカル実装は
+slot・名前付き購読とcallback元の保持を追加します。式monitorとソースの`nba.event`転送は残り、
+ソースからのイベント制御付きNBAは引き続き未対応です。
 [最終配置のlocal CI](docs/measurements/2026-10-27/nba-payload-validation.json)は21項目すべて成功しました。
 
 [共通の強さの解決処理](docs/notes/strength-range-foundation.ja.md)は、値への射影前の
@@ -246,11 +252,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-24、macOS が 2026-10-27、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 7,015 | 7,013、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 7,048 | 7,046、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 234（Linux）、244（macOS） | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）682、`tests/suite/` 6,106（`tools/` の 147 個の生成器が作る）、道具 164、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 16。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）715、`tests/suite/` 6,106（`tools/` の 147 個の生成器が作る）、道具 164、`tests/dump_sir/` 29、状態と Context 18、コマンドラインと事象の回数 16。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

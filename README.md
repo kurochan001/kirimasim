@@ -109,10 +109,17 @@ whole-element defaults, snapshots and nested contents. Its 351 original designs
 span nine execution homes; [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)
 passes all 21 steps. Existing feature coverage remains partial.
 
+Local [concrete event controls](docs/notes/event-nba-concrete-controls.md) now
+cover persistent fixed-slot/named subscriptions, full-width counts and callback-origin
+ownership. Expression monitors and the SIR/front/VM source path remain unfinished.
+[Local validation](docs/measurements/2026-10-27/nba-events-validation.json) passes all
+21 CI steps, with 33 new kernel/SIR-native tests and 18 caught compiled faults.
+
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
-unit tests. Event subscriptions, callback-origin retention and source `nba.event`
-transport remain unfinished; source event-controlled NBAs are still unsupported.
+unit tests. The local concrete core above adds slot/named subscriptions and origin
+retention; expression monitors and source `nba.event` transport remain unfinished.
+Source event-controlled NBAs are still unsupported.
 [Final-layout local CI](docs/measurements/2026-10-27/nba-payload-validation.json) passes all 21 checks.
 
 The [shared strength resolver](docs/notes/strength-range-foundation.md) now
@@ -308,11 +315,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-24 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 7,015 | 7,013, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 7,048 | 7,046, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 234 (Linux), 244 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 682, `tests/suite/` 6,106 (made by 147 generators under `tools/`), tools 164, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 715, `tests/suite/` 6,106 (made by 147 generators under `tools/`), tools 164, `tests/dump_sir/` 29, state and Contexts 18, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

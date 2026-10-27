@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-27",
+  "scope": "eighteen compiled concrete-control/origin faults; original kernel and SIR/native tests are the detectors, not registry checks",
+  "source_sha256": {
+    "src/kernel/nba_event.cpp": "9f15a8380faeec4c037aa4e620f07c6c2c449a4ed5b31a5d8e307205c0bab1f2",
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961",
+    "src/kernel/include/kirimasim/kernel/nba.h": "47a325a6d263351555ee98861788d1a2956141ec9d4e08445b39555b5215a11a",
+    "src/kernel/sim.cpp": "1c4780a79c3098c73bf8d27381167ad9c8448b8cc8d978b1cf8a494e3f308a84"
+  },
+  "controls": [
+    {
+      "name": "NBA event: stale generation cancels a reused control",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.CleanupCanCancelOtherControlsAndRegisterAgainWithoutDoubleReleasingOrigin"
+      ],
+      "failure_excerpt": "Failure\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n 1/32 Test  #1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary .......   Passed    0.00 sec\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites\n 2/32 Test  #8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord ..............   Passed    0.00 sec\n 3/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n 4/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 5/32 Test #30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents ...........................................   Passed    0.00 sec\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start  "
+    },
+    {
+      "name": "NBA event: slot-only notifications omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference",
+        "NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites",
+        "NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents"
+      ],
+      "failure_excerpt": "Failure\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n 1/32 Test  #8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord ..............   Passed    0.00 sec\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 2/32 Test #17: NbaEvent.CleanupCanCancelOtherControlsAndRegisterAgainWithoutDoubleReleasingOrigin ..........   Passed    0.00 sec\n 3/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 4/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 5/32 Test #30: NbaEvent.RealAndHandleSlot"
+    },
+    {
+      "name": "NBA event: negative count waits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n 1/32 Test #29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites ...................................   Passed    0.00 sec\n 2/32 Test #30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents ...........................................   Passed    0.00 sec\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 3/32 Test  #4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference .........................   Passed    0.00 sec\n 4/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 5/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLater"
+    },
+    {
+      "name": "NBA event: unknown count waits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 1/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 2/32 Test #10: NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards ....................................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards\n[==========] Running 1 test from 1 test suite.\n[---"
+    },
+    {
+      "name": "NBA event: repeat count replaced with one",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.SynchronousNamedTriggersCountWithoutSuspendingOrCreatingChildren",
+        "NbaEvent.SoleSlotSubscriptionObservesEveryCommittedWrite",
+        "NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce",
+        "NbaEvent.FalseGuardsDoNotCountAndMixedKindsShareOneCountdown",
+        "NbaEvent.HugeUnsignedCountsNeitherTruncateNorSaturateToSmallValues",
+        "NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder"
+      ],
+      "failure_excerpt": "Failure\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 1/32 Test #10: NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards ....................................   Passed    0.00 sec\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 2/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n 3/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites\n 4/32 Test  #8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtThe"
+    },
+    {
+      "name": "NBA event: top padding becomes a count bit",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary",
+        "NbaEvent.CleanupCanCancelOtherControlsAndRegisterAgainWithoutDoubleReleasingOrigin",
+        "NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents"
+      ],
+      "failure_excerpt": "Failure\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 6/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites\n 7/32 Test #32: NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder ..................   Passed    0.01 sec\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n 8/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 9/32 Test  #8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtThe"
+    },
+    {
+      "name": "NBA event: false iff qualifies",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.FalseGuardsDoNotCountAndMixedKindsShareOneCountdown",
+        "NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n 1/32 Test  #1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary .......   Passed    0.00 sec\n 2/32 Test #17: NbaEvent.CleanupCanCancelOtherControlsAndRegisterAgainWithoutDoubleReleasingOrigin ..........   Passed    0.00 sec\n 3/32 Test #30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents ...........................................   Passed    0.00 sec\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites\n 4/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 5/32 Test #31: NbaEvent.T"
+    },
+    {
+      "name": "NBA event: OR items short circuit",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 1/32 Test  #6: NbaEvent.FalseGuardsDoNotCountAndMixedKindsShareOneCountdown ................................   Passed    0.00 sec\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 2/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 3/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n 4/32 Test  #8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord ..............   Passed    0.00 se"
+    },
+    {
+      "name": "NBA event: notification decrements twice",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce",
+        "NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 1/32 Test  #5: NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce ...............***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaEvent\n[ RUN      ] NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce\n<worktree>/t"
+    },
+    {
+      "name": "NBA event: callback cleanup happens before return",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n 1/32 Test  #5: NbaEvent.DuplicateAndOverlappingItemsVisitEveryGuardInSourceOrderButCountOnce ...............   Passed    0.00 sec\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 2/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 3/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n 4/32 Test  #8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord ..............   Passed    0.00 se"
+    },
+    {
+      "name": "NBA event: managed object pin is dropped",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n 1/32 Test #14: NbaEvent.SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn .......................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaEvent.SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaEvent\n[ RUN      ] NbaEvent.SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn\n<worktree>/tests/unit/nba_ev"
+    },
+    {
+      "name": "NBA event: origin record released while pinned",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n 1/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 2/32 Test #14: NbaEvent.SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn .......................   Passed    0.00 sec\n 3/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrel"
+    },
+    {
+      "name": "NBA event: origin release epoch is lost",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n 1/32 Test  #1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary .......***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from VmNbaOrigin\n[ RUN      ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n<home>/Projects/k"
+    },
+    {
+      "name": "NBA event: cancellation publishes a new control",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure"
+      ],
+      "failure_excerpt": "Failure\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n 1/32 Test  #1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary .......   Passed    0.00 sec\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n 2/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure\n[==========] Running 1 test from 1 test suite.\n[----------] Glo"
+    },
+    {
+      "name": "NBA event: wide countdown borrow stops early",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord"
+      ],
+      "failure_excerpt": "Failure\n      Start 32: NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder\n      Start 31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards\n      Start  4: NbaEvent.AllFourStateEdgesAndWideSelectedBitsMatchTheValueReference\n      Start  8: NbaEvent.FullWidthCountdownBorrowsAcrossEveryWordAndStopsAtTheFirstNonzeroWord\n      Start  1: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n 1/32 Test #28: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n      Start 30: NbaEvent.RealAndHandleSlotsOnlyAcceptChangeEvents\n 2/32 Test #31: NbaEvent.TerminationInsideGuardDoesNotPublishThePayloadOrCallLaterGuards ....................   Passed    0.00 sec\n      Start 29: NbaEvent.SlotElementAndBitSelectionsIgnoreUnrelatedWrites\n 3/32 Test  #8: NbaEvent.Full"
+    },
+    {
+      "name": "NBA event: VM ignores callback origin retention",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "FailureStopsBeforeAnyPayloadUpdate\n      Start 20: NbaEvent.EmptyPayloadStillEvaluatesControlAndGuard\n      Start  7: NbaEvent.CountIsCopiedAtFullWidthAndPaddingIsIgnored\n 6/32 Test #27: NbaEvent.ContextsDoNotShareSubscriptionsCountersOrOrigins ...................................   Passed    0.00 sec\n      Start 11: NbaEvent.InvalidCountsAndPartsLeavePayloadAndCleanupWithCaller\n 7/32 Test #26: NbaEvent.DestructionReleasesControlsBeforeCallbackFramesAndManagedStorage ...................   Passed    0.00 sec\n      Start 18: NbaEvent.ManagedBindingsPinCapturedObjectsAndManagedCancellationLeavesLegacyControls\n 8/32 Test #16: NbaEvent.CallbackWritesAreSeparateDeferredNotificationsWithoutRecursiveMatching .............   Passed    0.00 sec\n      Start 13: NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl\n 9/32 Test #25: NbaEvent.NotificationAllocationFailureStopsBefo"
+    },
+    {
+      "name": "NBA event: VM omits finished pinned frame roots",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\nExpected: (c.heap().stats().containers) > (0U), actual: 0 vs 0\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:100: Failure\nExpected: (c.heap().stats().cells) >= (2U), actual: 0 vs 2\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:99: Failure\nExpected: (c.heap().stats().containers) > (0U), actual: 0 vs 0\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:100: Failure\nExpected: (c.heap().stats().cells) >= (2U), actual: 0 vs 2\n\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary (0 ms)\n[----------] 1 test from VmNbaOrigin (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUn"
+    },
+    {
+      "name": "NBA event: VM never revisits released origins",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\nValue of: first == f.origin || second == f.origin\n  Actual: false\nExpected: true\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:115: Failure\nValue of: first == f.origin || second == f.origin\n  Actual: false\nExpected: true\n\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary (0 ms)\n[----------] 1 test from VmNbaOrigin (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n\n 1 FAILED TEST\n\n 2/32 Test #12: NbaEvent.BoundPayloadCannotBeReadiedDiscardedOrBoundTwice ...................................   Passed    0.00 sec\n 3/32 Test #27: NbaEvent.ContextsDoNotShareSubscriptionsCountersOrOrigin"
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_sha256": {
+    "src/kernel/nba_event.cpp": "9f15a8380faeec4c037aa4e620f07c6c2c449a4ed5b31a5d8e307205c0bab1f2",
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961",
+    "src/kernel/include/kirimasim/kernel/nba.h": "47a325a6d263351555ee98861788d1a2956141ec9d4e08445b39555b5215a11a",
+    "src/kernel/sim.cpp": "1c4780a79c3098c73bf8d27381167ad9c8448b8cc8d978b1cf8a494e3f308a84"
+  },
+  "sources_restored": true,
+  "detector_sha256": {
+    "tests/unit/nba_event_test.cpp": "1230127d6502dadf388c2fb9ece53e9c9a0ed67675e9c91dd97286f4f35e24af",
+    "tests/unit/vm_nba_origin_test.cpp": "563d5645f2f92d04a8609d2e69448ae4171221b6abaa5c7c9802c1aff123b815"
+  },
+  "history": {
+    "initial": "nba-events-initial-controls.json",
+    "initial_survivor": "NBA event: VM ignores callback origin retention",
+    "correction": "Add a second VM process so its entry calls sweep while the finished origin is pinned; observe the origin among recycled records independently of free-list order",
+    "corrective_vm_controls": "nba-events-vm-controls.json",
+    "supplementary_test_change": "Termination/final-phase test added afterward; existing kernel detectors and implementation bytes preserved"
+  },
+  "diagnostic_normalization": "Worktree and home prefixes replaced with placeholders; failure statuses and assertions are unchanged"
+}

@@ -954,6 +954,7 @@ public:
         for (const kernel::ProcessId k : combs)
             sched_.start(k);
         sched_.run();
+        sweepCallbackOrigins();
         sched_.runFinal(finals);
         if (!boundsCounts_.empty()) {
             std::uint64_t count = 0;
@@ -1497,7 +1498,8 @@ private:
     /// reports the kernel still holds are looked at again later (sweep).
     void tryRelease(Frame& f) {
         if (f.released || !f.finished || !f.children.empty() || f.reports != 0) return;
-        if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId)) {
+        if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId) ||
+            sched_.hasCallbackOrigins(f.kernelId)) {
             later_.push_back(&f);
             return;
         }
@@ -1524,6 +1526,14 @@ private:
     /// Looks again at the frames tryRelease left for later, and releases
     /// the frames of file monitors the kernel ended because their files
     /// closed (SYSTEM_TASKS.md 6.2).
+    std::uint64_t callbackReleaseEpoch_ = 0;
+    void sweepCallbackOrigins() {
+        const auto epoch = sched_.callbackReleaseEpoch();
+        if (epoch == callbackReleaseEpoch_) return;
+        callbackReleaseEpoch_ = epoch;
+        sweep();
+    }
+
     void sweep() {
         kernel::ProcessId endedProcess = kernel::kNone;
         while (sched_.takeEndedProgramProcess(endedProcess)) {
@@ -2715,9 +2725,10 @@ private:
     }
     static void collectSafePoint(void* frame) noexcept {
         auto& vm = *static_cast<Interpreter*>(frame);
-        if ((!vm.heapReady_ && !vm.eventsReady_) || vm.running_ != nullptr || vm.callDepth_ != 0)
-            return;
+        if (vm.running_ != nullptr || vm.callDepth_ != 0) return;
         try {
+            vm.sweepCallbackOrigins();
+            if (!vm.heapReady_ && !vm.eventsReady_) return;
             vm.collectRoots();
         } catch (const std::bad_alloc&) {
             vm.collectionLimit();
@@ -2777,7 +2788,9 @@ private:
             },
             &automaticBuffer);
         for (const Frame& f : frames_) {
-            if (f.released || f.finished || sched_.finished(f.kernelId)) continue;
+            if (f.released || ((f.finished || sched_.finished(f.kernelId)) &&
+                               !sched_.hasCallbackOrigins(f.kernelId)))
+                continue;
             if (!rootActivation(f.varsId)) {
                 sched_.fail("invalid activation at a heap safe point");
                 return;
@@ -3856,6 +3869,7 @@ private:
     }
 
     void dropHeapWaits() noexcept {
+        sched_.cancelNbaEvents();
         for (const auto& f : frames_) {
             if (f.released || f.kernelId == kernel::kNone) continue;
             sched_.detachDisplayMonitor(f.kernelId);

@@ -10,6 +10,7 @@
 
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/store.h"
+#include "kirimasim/kernel/w4.h"
 
 namespace kirimasim::kernel {
 
@@ -35,6 +36,30 @@ enum class NbaError : std::uint8_t {
     InvalidPhase,
     ResourceLimit
 };
+/// The captured repeat operand, before normalization. Words are little-endian
+/// a/b pairs; unused top bits are ignored. A two-state operand must have no b bits.
+struct NbaRepeat {
+    std::uint32_t width = 1;
+    bool isSigned = false;
+    bool fourState = true;
+    std::span<const W4> words;
+};
+struct NbaEventTicket {
+    std::uint32_t index = kNone;
+    std::uint64_t serial = 0;
+    friend bool operator==(NbaEventTicket, NbaEventTicket) = default;
+};
+struct NbaEventRegistration {
+    NbaEventTicket ticket;
+    NbaError error = NbaError::None;
+    explicit operator bool() const { return error == NbaError::None; }
+};
+struct NbaEventStats {
+    std::uint64_t records = 0;
+    std::uint64_t live = 0;
+    std::uint64_t callbacks = 0;
+    std::uint64_t subscriptions = 0;
+};
 struct NbaCapture {
     NbaTicket ticket;
     NbaError error = NbaError::None;
@@ -47,6 +72,18 @@ struct NbaStorageStats {
 };
 
 namespace detail {
+/// Decrement one normalized, nonempty positive little-endian countdown.
+/// The return value says whether this notification exhausted the count.
+constexpr bool decrementNbaCount(std::span<std::uint64_t> remaining) noexcept {
+    for (auto& word : remaining) {
+        const auto before = word;
+        --word;
+        if (before != 0) break;
+    }
+    for (const auto word : remaining)
+        if (word != 0) return false;
+    return true;
+}
 /// A pure counter step shared by ordinary and captured NBAs. Zero is the
 /// failure sentinel; exhaustion leaves the counter unchanged, never wrapping.
 constexpr std::uint64_t takeNbaIssue(std::uint64_t& next) noexcept {

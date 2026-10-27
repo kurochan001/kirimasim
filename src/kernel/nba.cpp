@@ -65,6 +65,7 @@ NbaCapture Scheduler::captureNba(ProcessId origin, std::span<const NbaWrite> wri
         record.serial = serial;
         record.group = processes_[origin.index()].group;
         record.issue = detail::takeNbaIssue(nextNbaIssue_);
+        record.control = kNone;
         record.fields.swap(staged.fields);
         record.value.swap(staged.value);
         record.state = NbaState::Waiting;
@@ -109,6 +110,7 @@ void Scheduler::enqueueNba(Region region, Event event, std::uint64_t issue) {
 
 NbaError Scheduler::readyNba(NbaTicket ticket) noexcept {
     if (!liveNba(ticket, NbaState::Waiting)) return NbaError::InvalidTicket;
+    if (capturedNbas_[ticket.index].control != kNone) return NbaError::InvalidTicket;
     if (ending_ || runningFinal_) return NbaError::InvalidPhase;
     if (capturedNbas_[ticket.index].fields.empty()) {
         releaseCapturedNba(ticket.index);
@@ -145,6 +147,7 @@ void Scheduler::releaseCapturedNba(std::uint32_t index) noexcept {
 
 NbaError Scheduler::discardNba(NbaTicket ticket) noexcept {
     if (!liveNba(ticket, NbaState::Waiting)) return NbaError::InvalidTicket;
+    if (capturedNbas_[ticket.index].control != kNone) return NbaError::InvalidTicket;
     releaseCapturedNba(ticket.index);
     return NbaError::None;
 }

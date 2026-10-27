@@ -13,6 +13,22 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
+**Local concrete event-control core on `31731f90`:**
+[Persistent slot/named subscriptions and callback origins](event-nba-concrete-controls.md)
+add shared-kernel full-width counts, one decrement per notification, ordered
+non-short-circuit guards, managed pins and deferred callback cleanup. Ended VM
+frame roots are retained until the last control releases them. New independent
+kernel/SIR-native checks include an unrelated VM entry that forces reclamation
+while an origin is still pinned. Expression monitors and SIR/front/VM source
+transport remain unfinished; source event-NBA and P1 remain incomplete.
+[Local validation](../measurements/2026-10-27/nba-events-validation.json) passes
+21/21 CI steps: dev/ASan/UBSan 7,046/7,048 and release 7,047/7,049, zero failures
+and two known skips each. New tests are 32 kernel and one SIR/native test. All
+18 compiled faults are caught after strengthening the VM fixture; the initial
+miss and corrective run are preserved. A separate seeded 100x model passes
+300,000 notifications. Fresh population/sv-tests and both 95-probe native
+status/stdout inventories retain the previous results; seven known gaps remain.
+
 The [main integration record](../measurements/2026-10-27/conditional-nba-main-integration.json)
 preserves the earlier measurement-time records and verifies unchanged validated
 implementation/tests, fresh local CI checks with a corrected dev rerun, and

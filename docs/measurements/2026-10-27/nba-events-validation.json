@@ -1,0 +1,240 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T01:14:04.377813+00:00",
+  "base_commit": "31731f906fc05b99dfbf74cc07945c3c52f92e6e",
+  "branch": "codex/p1-container-conditional",
+  "publication_state": "uncommitted local follow-on to main 31731f90; not merged or pushed",
+  "scope": "concrete slot/named event-NBA controls and callback-origin ownership; expression monitors and SIR/front/VM source execution remain incomplete",
+  "platform": "macOS/arm64",
+  "versions": {
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "cmake version 4.4.4",
+    "format": "Homebrew clang-format version 22.1.8",
+    "tidy": "Homebrew LLVM version 22.1.8"
+  },
+  "source_sha256": {
+    "src/kernel/CMakeLists.txt": "0c697d0b68cf72b57d62b198f2c1976c0522ff6ec9d74db41970502f1e911eee",
+    "src/kernel/include/kirimasim/kernel/nba.h": "47a325a6d263351555ee98861788d1a2956141ec9d4e08445b39555b5215a11a",
+    "src/kernel/include/kirimasim/kernel/sim.h": "fa13c20bcae7a8e403e129896391ce93f28474e7e257e60e375e8d48e811d545",
+    "src/kernel/managed_event_runtime.cpp": "9f0c82ce28b26583366ecabc72469dc09db767e00ca5e96186fa0002febb0d99",
+    "src/kernel/nba.cpp": "43397401bcb5c7ccffd6e88f4f4f8462698c4a3cc5b5c2d5ee81818aa8f2363c",
+    "src/kernel/nba_event.cpp": "9f15a8380faeec4c037aa4e620f07c6c2c449a4ed5b31a5d8e307205c0bab1f2",
+    "src/kernel/sim.cpp": "1c4780a79c3098c73bf8d27381167ad9c8448b8cc8d978b1cf8a494e3f308a84",
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961",
+    "tests/unit/CMakeLists.txt": "378da3116b02e62866f62b9ea7e6c9a938d1c81edece97e50b11a6ddb260001b",
+    "tests/unit/nba_event_test.cpp": "1230127d6502dadf388c2fb9ece53e9c9a0ed67675e9c91dd97286f4f35e24af",
+    "tests/unit/vm_nba_origin_test.cpp": "563d5645f2f92d04a8609d2e69448ae4171221b6abaa5c7c9802c1aff123b815",
+    "tools/mutants.py": "31d6a319f38748d50ad2c2cde5d4fafb0ed4f30b2204fc3784722122eeb1f0a2"
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 45.0
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 89.1
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 66.9
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 91.6
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 1.2
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 95.9
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 137.7
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.2
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 102.7
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 110.0
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 150.8
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 7048,
+      "passed": 7046,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "release": {
+      "total": 7049,
+      "passed": 7047,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "asan": {
+      "total": 7048,
+      "passed": 7046,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "ubsan": {
+      "total": 7048,
+      "passed": 7046,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    }
+  },
+  "new_kernel_tests": 32,
+  "new_sir_native_tests": 1,
+  "new_source_event_nba_designs": 0,
+  "compiled_controls": 18,
+  "mutation_registry_entries": 848,
+  "compiled_controls_record": "nba-events-controls.json",
+  "control_history": {
+    "initial": "nba-events-initial-controls.json",
+    "initial_compiled_and_caught": 17,
+    "initial_total": 18,
+    "corrective_vm_record": "nba-events-vm-controls.json",
+    "corrective_vm_compiled_and_caught": 3,
+    "correction": "Add a second VM entry to force reclamation while the old origin remains pinned; retain all root assertions and check recycled origin independently of free-list order"
+  },
+  "scaled_fuzz": {
+    "test": "NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder",
+    "scale": 100,
+    "requested_seed": 20261027,
+    "derived_seed": "0x553e21e71e9de062",
+    "rounds": 6000,
+    "controls": 120000,
+    "notifications": 300000,
+    "passed": true,
+    "not_claimed": "not the seven-night whole-value regression gate"
+  },
+  "process_layout_macOS_arm64_cxx20": {
+    "before": {
+      "size": 176,
+      "alignment": 8,
+      "selected_offsets": {
+        "observed": 160,
+        "serial": 168
+      }
+    },
+    "after": {
+      "size": 176,
+      "alignment": 8,
+      "selected_offsets": {
+        "observed": 160,
+        "nbaOrigins": 164,
+        "serial": 168
+      }
+    }
+  },
+  "comparison": "nba-events-comparison.json",
+  "performance": "nba-events-benchmark.json",
+  "expectation_guard": "nba-events-expectation-guard.json",
+  "unchanged": [
+    "existing source test bodies and oracles",
+    "existing skips",
+    "PerfCount expectations/budgets",
+    "detailed specifications",
+    "SIR formatVersion 0",
+    "C ABI 0.3",
+    "dependencies"
+  ],
+  "completion": "P1 is incomplete; seven known Icarus-passing source gaps remain and whole-language parity is not confirmed",
+  "not_confirmed": {
+    "Linux_execution": "Run full local CI and the same versioned native gates on Linux before claiming cross-platform evidence",
+    "other_process_layout_ABIs": "Inspect before/after clang record-layout dumps on that ABI; the measured 176-byte Process size applies to macOS/arm64 here",
+    "remaining_event_nba_source_contract": "Implement expression-monitor ownership/notification identity, typed SIR and source adapters, then run the complete original source matrix including RNG/scope and scalar-only origin collection"
+  }
+}

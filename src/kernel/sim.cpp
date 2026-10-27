@@ -202,7 +202,14 @@ const char* regionName(Region r) {
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
     : ctx_(ctx), store_(store), counters_(counters),
       pendingEventValues_(ctx.heap().memoryResource()), capturedNbas_(ctx.heap().memoryResource()),
-      lateChanges_(ctx.heap().memoryResource()), monitor_(ctx.heap().memoryResource()) {}
+      nbaEvents_(ctx.heap().memoryResource()), nbaEventSlots_(ctx.heap().memoryResource()),
+      nbaEventNames_(ctx.heap().memoryResource()), lateChanges_(ctx.heap().memoryResource()),
+      monitor_(ctx.heap().memoryResource()) {}
+
+Scheduler::~Scheduler() {
+    ending_ = true;
+    cancelNbaEvents();
+}
 
 void Scheduler::begin() {
     if (begun_) return;
@@ -336,6 +343,7 @@ bool Scheduler::takeEndedProgramProcess(ProcessId& process) {
 }
 
 void Scheduler::releaseProcess(ProcessId p) {
+    if (hasCallbackOrigins(p)) return;
     detachDisplayMonitor(p);
     Process& proc = processes_[p.index()];
     proc.fn = nullptr;
@@ -722,6 +730,7 @@ EndReason Scheduler::run() {
         if (!anyEvents(Region::Preponed, Region::Postponed) && !advance()) break;
         runSlot();
     }
+    cancelNbaEvents();
     cancelCapturedNbas();
     if (ending_) cancelManagedEventOperations();
     counters_.set(cEndTime_, time_);
@@ -1294,7 +1303,9 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     }
     std::uint64_t* p = store_.element(s, elem);
     const bool watched = !subscriptions_[s.index()].empty() || !slotMonitors_[s.index()].empty() ||
-                         monitorSlot_[s.index()] != 0;
+                         monitorSlot_[s.index()] != 0 ||
+                         (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
+                          !nbaEventSlots_[s.index()].empty());
     // During a walk, the change waits for its end with its own copies.
     const bool late = watched && walking_ > 0;
     LateChange change;
@@ -1378,9 +1389,28 @@ void Scheduler::markDue(DisplayMonitor& m, SlotId s, std::uint32_t elem, std::ui
     }
 }
 
+bool Scheduler::slotEventMatches(const WaitItem& item, SlotId s, const SlotLayout& layout,
+                                 std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                                 const std::uint64_t* old, const std::uint64_t* now) {
+    const auto& part = item.part;
+    if (part.slot != s) return false;
+    const auto plsb = part.width == 0 ? 0 : part.lsb;
+    const auto pwidth = part.width == 0 ? layout.width : part.width;
+    if (!overlaps(part.firstElem, part.numElems, elem, 1) || !overlaps(plsb, pwidth, lsb, width) ||
+        sameBits(layout.domain, old, now, plsb, pwidth))
+        return false;
+    return item.edge == Edge::Any || edgeMatches(item.edge, logicAt(layout.domain, old, plsb),
+                                                 logicAt(layout.domain, now, plsb));
+}
+
 void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const std::uint64_t* old, const std::uint64_t* now) {
     beginWalk();
+    notifyNbaSlot(s, elem, lsb, width, old, now);
+    if (ending_) {
+        endWalk();
+        return;
+    }
     const SlotLayout& l = store_.layout(s);
     // Subscriptions. Waking a process makes its other items stale; they
     // are dropped here or on the next write of their slot.
@@ -1390,16 +1420,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         const Subscription sub = subs[i];
         if (processes_[sub.process.index()].gen != sub.gen) continue;  // stale
         subs[keep++] = sub;
-        const SlotPart& part = sub.item.part;
-        const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
-        const std::uint32_t pwidth = part.width == 0 ? l.width : part.width;
-        if (!overlaps(part.firstElem, part.numElems, elem, 1) ||
-            !overlaps(plsb, pwidth, lsb, width))
-            continue;
-        if (sameBits(l.domain, old, now, plsb, pwidth)) continue;
-        if (sub.item.edge != Edge::Any &&
-            !edgeMatches(sub.item.edge, logicAt(l.domain, old, plsb), logicAt(l.domain, now, plsb)))
-            continue;
+        if (!slotEventMatches(sub.item, s, l, elem, lsb, width, old, now)) continue;
         if (sub.item.guard != nullptr && sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0)
             continue;
         wake(sub.process, true);  // an event control: a flush point (15.4)
@@ -1803,7 +1824,12 @@ void Scheduler::trigger(EventId e) {
     ev.triggeredAt = time_;
     ev.wasTriggered = true;
     if (ctx_.dump().glitches()) ctx_.dump().triggered(e.index(), time_);  // --wave-glitches
-    const auto waiters = std::move(ev.waiters);
+    notifyNbaNamed(e);
+    if (ending_) {
+        endWalk();
+        return;
+    }
+    const auto waiters = std::move(events_[e.index()].waiters);
     events_[e.index()].waiters.clear();
     for (const Waiter& w : waiters) {
         if (processes_[w.process.index()].gen != w.gen) continue;

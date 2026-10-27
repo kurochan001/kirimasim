@@ -26,6 +26,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "kirimasim/kernel/abi.h"
@@ -185,6 +186,10 @@ struct NamedValueWaitItem {
     bool flushPoint = true;
 };
 
+/// Ordered concrete event items. Expression monitors are connected separately;
+/// none of these items creates a language process or suspends the issuer.
+using NbaEventItem = std::variant<WaitItem, NamedValueWaitItem>;
+
 /// Automatic storage owned and observed by one expression monitor.
 struct ActivationReadSpec {
     /// Capture executed reads only from these owned lexical extents.
@@ -250,6 +255,7 @@ struct DelayedSideUpdate {
 class Scheduler {
 public:
     Scheduler(Context& ctx, Store& store, Counters& counters);
+    ~Scheduler();
 
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
@@ -316,12 +322,17 @@ public:
     [[nodiscard]] Group processGroup(ProcessId p) const { return processes_[p.index()].group; }
     /// Gives back the record of a process that has ended and holds no
     /// report (SCHEDULER_SPEC.md 10.8). Not while the process is running:
-    /// the kernel marks it ended after it returns.
+    /// the kernel marks it ended after it returns. A caller must preserve its
+    /// frame while hasCallbackOrigins is true; release then has no effect.
     void releaseProcess(ProcessId p);
     /// Whether a process holds reports not yet confirmed (SCHEDULER_SPEC.md 15).
     [[nodiscard]] bool hasPending(ProcessId p) const {
         return !processes_[p.index()].pending.empty();
     }
+    [[nodiscard]] bool hasCallbackOrigins(ProcessId p) const {
+        return processes_[p.index()].nbaOrigins != 0;
+    }
+    [[nodiscard]] std::uint64_t callbackReleaseEpoch() const { return callbackReleaseEpoch_; }
     /// Schedules a process to run in the current time slot, in Active or
     /// Reactive by its group.
     void start(ProcessId p);
@@ -483,6 +494,16 @@ public:
     /// Discard an unready capture. Ready/executing payloads are committed.
     NbaError discardNba(NbaTicket ticket) noexcept;
     [[nodiscard]] NbaStorageStats nbaStorageStats() const noexcept;
+    /// Bind a captured payload to an independent persistent concrete control.
+    /// All descriptors/counts/pins are staged before publication. onRelease is
+    /// transferred only on success, and runs after the last callback returns.
+    /// Cancellation cleanup rejects new registrations until cancellation ends.
+    NbaEventRegistration registerNbaEvent(ProcessId origin, NbaTicket payload, NbaRepeat repeat,
+                                          std::span<const NbaEventItem> items,
+                                          SafePointHook onRelease = {}) noexcept;
+    NbaError discardNbaEvent(NbaEventTicket ticket) noexcept;
+    void cancelNbaEvents() noexcept;
+    [[nodiscard]] NbaEventStats nbaEventStats() const noexcept;
     /// `-> e`: wakes the processes waiting for e now.
     void trigger(EventId e);
     /// `->> e`: triggers e in the NBA region, `delay` ticks from now.
@@ -687,7 +708,8 @@ private:
         bool flushOnResume = false;   ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
         std::uint32_t observed = 0;          ///< Those confirmed in the Observed region.
-        std::uint64_t serial = 0;            ///< Creation order, for 15.4 (10.8).
+        std::uint32_t nbaOrigins = 0;  ///< Pending controls/current callbacks, not live children.
+        std::uint64_t serial = 0;      ///< Creation order, for 15.4 (10.8).
     };
     struct Program {
         std::uint32_t initials = 0;
@@ -856,6 +878,7 @@ private:
         std::uint64_t issue = 0;
         std::uint64_t serial = 0;
         std::uint32_t next = kNone;
+        std::uint32_t control = kNone;
         std::pmr::vector<NbaField> fields;
         std::pmr::vector<std::uint64_t> value;
     };
@@ -867,6 +890,47 @@ private:
     void cancelCapturedNbas() noexcept;
     void deliverCapturedNba(NbaTicket ticket);
     void enqueueNba(Region region, Event event, std::uint64_t issue);
+    enum class NbaEventState : std::uint8_t { Free, Active, Retiring, Releasing };
+    struct NbaBoundItem {
+        bool named = false;
+        WaitItem slot;
+        EventBinding binding;
+        GuardFn guard = nullptr;
+        void* frame = nullptr;
+    };
+    struct NbaEventRecord {
+        explicit NbaEventRecord(std::pmr::memory_resource* memory)
+            : remaining(memory), items(memory), slots(memory), events(memory) {}
+        NbaEventState state = NbaEventState::Free;
+        std::uint64_t serial = 0, issue = 0;
+        std::uint32_t next = kNone, callbacks = 0;
+        ProcessId origin = kNone;
+        NbaTicket payload;
+        SafePointHook release;
+        bool managed = false, ready = false;
+        std::pmr::vector<std::uint64_t> remaining;
+        std::pmr::vector<NbaBoundItem> items;
+        std::pmr::vector<std::uint32_t> slots, events;
+    };
+    std::pmr::vector<NbaEventRecord> nbaEvents_;
+    std::pmr::vector<std::pmr::vector<NbaEventTicket>> nbaEventSlots_, nbaEventNames_;
+    std::uint32_t freeNbaEvent_ = kNone;
+    std::uint64_t liveNbaEvents_ = 0, callbackReleaseEpoch_ = 0;
+    bool cancelingNbaEvents_ = false;
+    [[nodiscard]] bool liveNbaEvent(NbaEventTicket ticket) const noexcept;
+    void finishNbaEvent(NbaEventTicket ticket, bool ready) noexcept;
+    void releaseNbaEvent(NbaEventTicket ticket) noexcept;
+    void endNbaEventCallback(NbaEventTicket ticket) noexcept;
+    void notifyNbaSlot(SlotId slot, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                       const std::uint64_t* old, const std::uint64_t* now) noexcept;
+    void notifyNbaNamed(EventId event) noexcept;
+    void matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, bool named,
+                        std::uint32_t source, std::uint32_t elem, std::uint32_t lsb,
+                        std::uint32_t width, const std::uint64_t* old, const std::uint64_t* now);
+    void cancelManagedNbaEvents() noexcept;
+    static bool slotEventMatches(const WaitItem& item, SlotId slot, const SlotLayout& layout,
+                                 std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                                 const std::uint64_t* old, const std::uint64_t* now);
     std::vector<std::uint64_t> old_;  ///< Scratch: an element before a write.
     std::vector<std::uint64_t> now_;  ///< Scratch: the element after it.
     /// A change of a watched slot, or a trigger, made while the kernel walks

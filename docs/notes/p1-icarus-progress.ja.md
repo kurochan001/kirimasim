@@ -12,6 +12,18 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
+**`31731f90`を基にしたローカルの具体的なイベント購読の中核：**
+[持続するslot/名前付き購読とcallback元の保持](event-nba-concrete-controls.ja.md)を追加し、
+共有kernelで全幅の回数、通知ごとに1回の計数、全guardの順序付き評価、managed pin、
+callbackが戻ってからの解除を扱います。最後の購読が外れるまで終了VMフレームもルートに残します。
+独立kernel/SIR-native検査には、元をpin中に別VM実行で解放検査を発生させる条件を含めます。
+式monitorとSIR/front/VMのソース実行への転送は残り、ソースevent-NBAもP1も未完です。
+[ローカル検証](../measurements/2026-10-27/nba-events-validation.json)はCI 21/21成功、
+dev/ASan/UBSanは各7,046/7,048、releaseは7,047/7,049、失敗0・既知skip各2件です。
+新規テストはkernel 32件とSIR/native 1件で、VM検査の強化後はコンパイルした18故障を
+すべて検出しました。初回の見逃しと修正後の再検査も保存します。別のseed付き100倍モデルで
+300,000通知が通り、母集団・sv-tests・両95プローブのnative状態とstdoutも維持しました。既知差分7件は残ります。
+
 [main取り込みの記録](../measurements/2026-10-27/conditional-nba-main-integration.json)は、
 過去の計測時点の記録を保存し、検証済み実装・テストの不変、今回のlocal CIとREADME修正後の
 dev再実行、commit単位の期待値保護を確認します。
